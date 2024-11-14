@@ -753,6 +753,12 @@ export interface WhatsAppTemplateComponent {
   buttons?: WhatsAppTemplateButton[];
 }
 
+export interface IWhatsappHeaderType {
+  type: string;
+  format: string;
+  text: string;
+}
+
 export interface WhatsAppTemplateButton {
   type: string;
   text: string;

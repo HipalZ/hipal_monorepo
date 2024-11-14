@@ -42,8 +42,9 @@ export const useCreateTemplate = () => {
 
     const data = (await res.json()) as MainResponseHandling;
     setIsLoading(false);
-    if (data?.err) {
+    if (data?.err || res.status === 400) {
       setStep(Step.SETUP);
+      setShowSuccessPopup(false);
       return toast.error(
         data?.data?.error?.error_user_msg || "Failed to create template",
       );
@@ -80,8 +81,9 @@ export const useEditTemplate = () => {
     const data = await res.json();
     setIsLoading(false);
     // Handle error response
-    if (data?.err) {
+    if (data?.err || res.status === 400) {
       setStep(Step.SETUP);
+      setShowSuccessPopup(false);
       toast.error(
         data?.data?.error?.error_user_msg || "Failed to update template",
       );
@@ -122,7 +124,7 @@ export const useMediaUpload = () => {
 
   const [isUploading, setIsUploading] = useState(false);
 
-  const uploadMedia = async (): Promise<string> => {
+  const uploadMedia = async (): Promise<{ url: string; handle: string }> => {
     try {
       if (!imageFiles) {
         throw new Error("No image files to upload");
@@ -176,7 +178,10 @@ export const useMediaUpload = () => {
 
       setIsUploading(false);
 
-      return uploadResponse.data.h; // Return the final handle
+      return {
+        url: storageResponse.data.url as string,
+        handle: uploadResponse.data.h as string,
+      };
     } catch (error) {
       setIsUploading(false);
       console.error("Upload failed:", error);

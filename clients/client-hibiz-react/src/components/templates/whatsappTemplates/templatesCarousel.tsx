@@ -79,7 +79,7 @@ const MemoTemplatesCarousel = () => {
                     diwali
                   }
                   alt={template.name || "Template"}
-                  className="max-w-full max-h-[240px] md:max-w-[240px] lg:max-h-[170px] object-cover w-full h-full"
+                  className="max-w-full max-h-[400px] md:max-w-[240px] lg:max-h-[400px] object-cover w-full h-full"
                 />
                 <article className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
                   <h3 className="text-lg font-semibold text-white truncate">

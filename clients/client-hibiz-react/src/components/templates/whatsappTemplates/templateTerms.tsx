@@ -38,8 +38,8 @@ const MemoTemplateTerms = () => {
     setShowSuccessPopup,
     confirmCreate,
     setConfirmCreate,
-    imageUrl,
     imageFiles,
+    imagePreview,
   } = useWhatsapp((s) => ({
     templateId: s.templateId,
     templateName: s.templateName,
@@ -57,8 +57,8 @@ const MemoTemplateTerms = () => {
     setShowSuccessPopup: s.setShowSuccessPopup,
     confirmCreate: s.confirmCreate,
     setConfirmCreate: s.setConfirmCreate,
-    imageUrl: s.imageUrl,
     imageFiles: s.imageFiles,
+    imagePreview: s.imagePreview,
   }));
 
   const { setIsLoading } = useTempStore((s) => ({
@@ -75,14 +75,17 @@ const MemoTemplateTerms = () => {
     }
     // Step 1: Upload media if required
     setIsLoading(true);
-    let whatsappImageHandler = "";
+    let whatsappImageHandler = imagePreview || "";
+    let storageImageUrl = "";
     if (
       headerType === HeaderInterface.Image &&
-      Object.keys(imageFiles).length > 0
+      imagePreview.length > 0 &&
+      imagePreview.includes("data:")
     ) {
-      whatsappImageHandler = await uploadMedia();
+      const { url, handle } = await uploadMedia();
+      whatsappImageHandler = handle;
+      storageImageUrl = url;
     }
-
     // Step 2: Prepare the payload
     const payload: WhatsAppTemplatePayload = {
       businessId: businessId,
@@ -91,7 +94,7 @@ const MemoTemplateTerms = () => {
       ...(templateId?.length > 0 && { templateId: templateId }),
       category: templateType,
       components: [
-        ...(headerType && headerText
+        ...(headerType
           ? [
               {
                 type: "HEADER",
@@ -129,10 +132,10 @@ const MemoTemplateTerms = () => {
             ]
           : []),
       ],
-      ...(imageUrl && { imageUrl: imageUrl }),
+      ...(storageImageUrl && { imageUrl: storageImageUrl }),
       bodyVariableSequence: bodyVariableSequence,
     };
-
+    console.log("payload", payload);
     // Step 3: Call the appropriate API (create or edit)
     if (templateId?.length > 0) {
       await editTemplate(payload);
@@ -159,12 +162,11 @@ const MemoTemplateTerms = () => {
     templateId,
     uploadMedia,
     setShowSuccessPopup,
-    imageUrl,
     bodyVariableSequence,
     createTemplate,
     editTemplate,
     setIsLoading,
-    imageFiles,
+    imagePreview,
   ]);
 
   const [isAccepted, setIsAccepted] = useState(false);

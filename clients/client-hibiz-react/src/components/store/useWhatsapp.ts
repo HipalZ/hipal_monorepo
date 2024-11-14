@@ -2,6 +2,7 @@ import { create } from "zustand";
 import useBusinessData from "./useBusinessData";
 import type {
   ICouponzLinks,
+  IWhatsappHeaderType,
   WhatsAppTemplatePayload,
 } from "../types/businessData";
 import { createJSONStorage, persist } from "zustand/middleware";
@@ -93,6 +94,12 @@ export interface defaultOptions {
   label: string;
 }
 
+export interface IMerchantDetails {
+  businessId: string;
+  razorpayKeyId: string;
+  razorpayMerchantId: string;
+}
+
 interface whatsappTemplate {
   step: Step;
   setStep: (step: Step) => void;
@@ -100,8 +107,8 @@ interface whatsappTemplate {
   whatzAppSteps: whastappSteps;
   setWhatzAppSteps: (whatzAppSteps: whastappSteps) => void;
 
-  templates: any[];
-  setTemplates: (templates: any) => void;
+  templates: WhatsAppTemplatePayload[];
+  setTemplates: (templates: WhatsAppTemplatePayload[]) => void;
 
   templateType: string;
   setTemplateType: (templateType: string) => void;
@@ -166,7 +173,7 @@ interface whatsappTemplate {
   templateId: string;
   setTemplateId: (templateId: string) => void;
 
-  setTemplateData: (data: any) => void;
+  setTemplateData: (data: WhatsAppTemplatePayload) => void;
 
   templateStatus: string;
   setTemplateStatus: (status: string) => void;
@@ -207,11 +214,11 @@ interface whatsappTemplate {
   setShowCropper: (showCropper: boolean) => void;
 
   cropping: {
-    image: any;
-    type: string;
+    image: string | null;
+    type: string | null;
   };
 
-  setCropping: (cropping: { image: any; type: string }) => void;
+  setCropping: (cropping: { image: string; type: string }) => void;
 
   imageFiles: File | null;
 
@@ -230,13 +237,13 @@ interface whatsappTemplate {
   setTemplateAnalytics: (analytics: ITemplateAnalytics[]) => void;
 
   totalData: ITotalData[];
-  setTotalData: (totalData: ITotalData) => void;
+  setTotalData: (totalData: ITotalData[]) => void;
 
   walletHistory: WalletTransaction[];
   setWalletHistory: (walletHistory: WalletTransaction[]) => void;
 
   couponzLinks: ICouponzLinks[];
-  setCouponzLinks: (couponzLinks: ICouponzLinks) => void;
+  setCouponzLinks: (couponzLinks: ICouponzLinks[]) => void;
 
   selectedCoupon: string;
   setSelectedCoupon: (selectedCoupon: string) => void;
@@ -244,8 +251,8 @@ interface whatsappTemplate {
   confirmCreate: boolean;
   setConfirmCreate: (confirmCreate: boolean) => void;
 
-  merchantDetails: any;
-  setMerchantDetails: (merchantDetails: any) => void;
+  merchantDetails: IMerchantDetails;
+  setMerchantDetails: (merchantDetails: IMerchantDetails) => void;
 
   showError: boolean;
   setShowError: (showError: boolean) => void;
@@ -270,7 +277,8 @@ export const useWhatsapp = create(
           set({ whatzAppSteps }),
 
         templates: [],
-        setTemplates: (templates: any) => set({ templates }),
+        setTemplates: (templates: WhatsAppTemplatePayload[]) =>
+          set({ templates }),
 
         templateType: TemplateType?.Marketing,
         setTemplateType: (templateType: string) => set({ templateType }),
@@ -385,16 +393,16 @@ export const useWhatsapp = create(
 
         setTemplateData: (data: any) => {
           const headerComponent = data.components.find(
-            (component: any) => component.type === "HEADER",
+            (component: IWhatsappHeaderType) => component.type === "HEADER",
           );
           const bodyComponent = data.components.find(
-            (component: any) => component.type === "BODY",
+            (component: IWhatsappHeaderType) => component.type === "BODY",
           );
           const footerComponent = data.components.find(
-            (component: any) => component.type === "FOOTER",
+            (component: IWhatsappHeaderType) => component.type === "FOOTER",
           );
           const buttonsComponent = data.components.find(
-            (component: any) => component.type === "BUTTONS",
+            (component: IWhatsappHeaderType) => component.type === "BUTTONS",
           );
 
           const variables =
@@ -404,7 +412,7 @@ export const useWhatsapp = create(
           set({
             templateType: data.category,
             templateName: data.name,
-            headerType: headerComponent?.format,
+            headerType: headerComponent?.format || HeaderInterface.Text,
             headerText: headerComponent?.text,
             imagePreview: headerImage || headerComponent?.imagePreview,
             bodyText: bodyComponent?.text,
@@ -552,8 +560,13 @@ export const useWhatsapp = create(
         confirmCreate: false,
         setConfirmCreate: (confirmCreate: boolean) => set({ confirmCreate }),
 
-        merchantDetails: {},
-        setMerchantDetails: (merchantDetails: any) => set({ merchantDetails }),
+        merchantDetails: {
+          businessId: "",
+          razorpayKeyId: "",
+          razorpayMerchantId: "",
+        },
+        setMerchantDetails: (merchantDetails: IMerchantDetails) =>
+          set({ merchantDetails }),
 
         showError: false,
         setShowError: (showError: boolean) => set({ showError }),

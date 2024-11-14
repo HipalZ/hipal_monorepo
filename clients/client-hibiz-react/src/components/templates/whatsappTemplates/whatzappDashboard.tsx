@@ -24,6 +24,7 @@ const MemoWhatzappDashboard = () => {
     setPreDefinedTemplate,
     setTemplateType,
     resetTemplateData,
+    setShowSuccessPopup,
   } = useWhatsapp((s) => ({
     setStep: s.setStep,
     setTemplateSteps: s.setTemplateSteps,
@@ -32,6 +33,7 @@ const MemoWhatzappDashboard = () => {
     setPreDefinedTemplate: s.setPreDefinedTemplate,
     setTemplateType: s.setTemplateType,
     resetTemplateData: s.resetTemplateData,
+    setShowSuccessPopup: s.setShowSuccessPopup,
   }));
   const businessId = useBusinessData((s) => s.businessData?._id);
 
@@ -41,6 +43,7 @@ const MemoWhatzappDashboard = () => {
     (type: string) => {
       // reset old data and navigate inside
       resetTemplateData();
+      setShowSuccessPopup(false);
       setStep(Step.CREATE_EDIT);
       setTemplateSteps(TemplateSteps.CREATE_EDIT);
       setPreDefinedTemplate(false);
@@ -52,6 +55,7 @@ const MemoWhatzappDashboard = () => {
       setPreDefinedTemplate,
       setTemplateType,
       resetTemplateData,
+      setShowSuccessPopup,
     ],
   );
 

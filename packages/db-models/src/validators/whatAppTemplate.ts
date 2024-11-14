@@ -69,7 +69,7 @@ export const headerSchemaForImage = z
   .object({
     example: z
       .object({
-        header_handle: z.array(z.string().min(3).max(300)),
+        header_handle: z.array(z.string().min(3).max(1000)),
       })
       .optional(),
   })
