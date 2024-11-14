@@ -2,7 +2,7 @@ import { apiRpc } from "@hi/common";
 import { memo, useCallback } from "react";
 import { useMerchantDetails } from "@/hooks/merchantSecret";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import toast, { CheckmarkIcon } from "react-hot-toast";
+import toast from "react-hot-toast";
 import useBusinessData from "@/components/store/useBusinessData";
 import usePayment from "@/components/store/usePayment";
 import useWhatsapp, { Step } from "@/components/store/useWhatsapp";
@@ -10,11 +10,74 @@ import { useState } from "react";
 import BottomButton from "@/components/atom/bottomButton";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useErrorHandling } from "@/components/utils/errorHandling";
+import { useTempStore } from "@/components/store/useTempStore";
 
 const pricingPlans = [
   {
     id: "5000",
-    name: "Basic",
+    name: "Wallet",
+    price: 5000,
+    marketingPrice: 0.89,
+    utilityPrice: 0.2,
+    messages: 5000,
+    isPopular: false,
+    features: [
+      "Custom Templates",
+      "Analytics",
+      "Marketing Templates 5,600+ msgs Approx (or)",
+      "Utility Templates 25,000 msgs Approx",
+    ],
+  },
+  {
+    id: "10000",
+    name: "Piggy Bank",
+    price: 10000,
+    marketingPrice: 0.89,
+    utilityPrice: 0.2,
+    messages: 10000,
+    isPopular: false,
+    features: [
+      "Custom Templates",
+      "Advanced Analytics",
+      "Marketing Templates 11,200+ msgs Approx (or)",
+      "Utility Templates 50,000 msgs Approx",
+    ],
+  },
+  {
+    id: "25000",
+    name: "Vault",
+    price: 25000,
+    marketingPrice: 0.85,
+    utilityPrice: 0.2,
+    messages: 25000,
+    isPopular: true,
+    features: [
+      "Custom Templates",
+      "Advanced Analytics",
+      "Marketing Templates 29,000+ Approx (or)",
+      "Utility Templates 1,25,000 msgs Approx",
+    ],
+  },
+  {
+    id: "50000",
+    name: "Treasure Box",
+    price: 50000,
+    marketingPrice: 0.85,
+    utilityPrice: 0.2,
+    messages: 50000,
+    isPopular: false,
+    features: [
+      "Custom Templates",
+      "Advanced Analytics",
+      "Marketing Templates 58,800+ Approx (or)",
+      "Utility Templates 2,50,000 msgs Approx",
+    ],
+  },
+];
+const MemoWhatzappPayment = () => {
+  const [selectedPlan, setSelectedPlan] = useState({
+    id: "5000",
+    name: "Wallet",
     price: 5000,
     marketingPrice: 0.89,
     utilityPrice: 0.2,
@@ -22,68 +85,18 @@ const pricingPlans = [
     features: [
       "Custom Templates",
       "Analytics",
-      "Marketing Templates for 0.89/- only",
-      "Utility Templates for 0.2/- only",
+      "Marketing Templates 5600+ msgs Approx (or)",
+      "Utility Templates 25000 msgs Approx",
     ],
-  },
-  {
-    id: "10000",
-    name: "Growth",
-    price: 10000,
-    marketingPrice: 0.89,
-    utilityPrice: 0.2,
-    messages: 10000,
-    features: [
-      "Custom Templates",
-      "Advanced Analytics",
-      "Marketing Templates for 0.89/- only",
-      "Utility Templates for 0.2/- only",
-    ],
-  },
-  {
-    id: "25000",
-    name: "Pro",
-    price: 25000,
-    marketingPrice: 0.85,
-    utilityPrice: 0.2,
-    messages: 25000,
-    features: [
-      "Custom Templates",
-      "Advanced Analytics",
-      "Marketing Templates for 0.85/- only",
-      "Utility Templates for 0.2/- only",
-    ],
-  },
-  {
-    id: "50000",
-    name: "Enterprise",
-    price: 50000,
-    marketingPrice: 0.85,
-    utilityPrice: 0.2,
-    messages: 50000,
-    features: [
-      "Custom Templates",
-      "Advanced Analytics",
-      "Marketing Templates for 0.85/- only",
-      "Utility Templates for 0.2/- only",
-    ],
-  },
-];
-const MemoWhatzappPayment = () => {
-  const [selectedPlan, setSelectedPlan] = useState({
-    id: "5000",
-    name: "Basic",
-    price: 5000,
-    marketingPrice: 0.89,
-    utilityPrice: 0.2,
-    messages: 5000,
-    features: ["24/7 Support", "Basic Analytics"],
   });
-  const [isLoading, setIsLoading] = useState(false);
   const { setStep, merchantDetails, setShowError } = useWhatsapp((s) => ({
     setStep: s.setStep,
     merchantDetails: s.merchantDetails,
     setShowError: s.setShowError,
+  }));
+  const { isLoading, setIsLoading } = useTempStore((s) => ({
+    isLoading: s.isLoading,
+    setIsLoading: s.setIsLoading,
   }));
   const { user } = useOwnerLogin((s) => ({
     user: s.user,
@@ -244,7 +257,7 @@ const MemoWhatzappPayment = () => {
           merchantId: merchantDetails.razorpayMerchantId,
         },
         json: {
-          businessId: businessDetails?._id,
+          businessId: businessDetails?._id || "",
           total: total,
           currency: "INR",
           billValue: total,
@@ -255,7 +268,9 @@ const MemoWhatzappPayment = () => {
         setIsLoading(false);
         errorText(res.status);
       }
-      const response = (await res.json()) as unknown as { data: string };
+      const response = (await res.json()) as unknown as {
+        data: { order_id: string };
+      };
       const orderId = response.data.order_id;
       setRazorPayOrderId(orderId);
       return orderId;
@@ -280,11 +295,11 @@ const MemoWhatzappPayment = () => {
       setRazorPayPaymentId(response.razorpay_payment_id);
     },
     [
-      setIsLoading,
       setRazorPaySignature,
       setRazorPayOrderId,
       setRazorPayPaymentId,
       sendPaymentResponse,
+      setIsLoading,
     ],
   );
 
@@ -332,52 +347,125 @@ const MemoWhatzappPayment = () => {
               <div
                 key={plan.id}
                 onClick={() => setSelectedPlan(plan)}
-                onKeyDown={() => setSelectedPlan(plan)}
-                className={`h-[425px] relative bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 transform hover:scale-105 ${
-                  selectedPlan?.id === plan.id ? "ring-4 ring-black" : ""
-                }`}
+                onKeyDown={(e) => e.key === "Enter" && setSelectedPlan(plan)}
+                tabIndex={0}
+                role="button"
+                aria-pressed={selectedPlan?.id === plan.id}
+                className={`
+            relative h-full bg-white pb-24 rounded-xl shadow-lg overflow-hidden hover:scale-102 hover:shadow-xl
+            ${selectedPlan?.id === plan.id ? "ring-4 ring-green-500" : ""}
+            focus:outline-none focus:ring-4 focus:ring-green-300
+          `}
               >
-                <div className="p-6">
-                  <h2 className="mb-2 text-2xl font-bold text-gray-900">
-                    {plan.name}
-                  </h2>
-                  <p className="mb-4 text-4xl font-extrabold text-green-600">
-                    ₹{plan.price.toLocaleString("en-IN")}
-                  </p>
-                  <ul className="mb-6 text-sm text-gray-600">
-                    <li className="mb-2">
+                {plan.isPopular && (
+                  <div className="absolute top-0 right-0 px-3 py-1 text-xs font-bold text-white bg-green-500 rounded-bl-lg">
+                    Most Popular
+                  </div>
+                )}
+                <div className="p-6 space-y-6">
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      {plan.name}
+                    </h2>
+                    <p className="text-5xl font-extrabold text-green-600">
+                      ₹{plan.price.toLocaleString("en-IN")}
+                    </p>
+                  </div>
+                  <ul className="space-y-3 text-sm text-gray-600">
+                    <li className="flex items-center">
+                      <svg
+                        className="w-5 h-5 mr-2 text-green-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
                       Up to {plan.messages.toLocaleString()} messages
                     </li>
-                    <li className="mb-2">
+                    <li className="flex items-center">
+                      <svg
+                        className="w-5 h-5 mr-2 text-green-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
                       Marketing: ₹{plan.marketingPrice}/msg
                     </li>
-                    <li className="mb-2">Utility: ₹{plan.utilityPrice}/msg</li>
+                    <li className="flex items-center">
+                      <svg
+                        className="w-5 h-5 mr-2 text-green-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      Utility: ₹{plan.utilityPrice}/msg
+                    </li>
                   </ul>
-                  <div className="pt-4 border-t border-gray-200">
-                    <ul className="text-sm text-gray-600">
+                  <div className="pt-6 border-t border-gray-200">
+                    <ul className="space-y-3 text-sm text-gray-600">
                       {plan.features.map((feature, index) => (
                         <li
                           key={index?.toString()}
-                          className="flex items-center mb-2"
+                          className="flex items-start"
                         >
-                          <CheckmarkIcon className="w-5 h-5 mr-2 text-green-500" />
+                          <svg
+                            className="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
                           {feature}
                         </li>
                       ))}
                     </ul>
                   </div>
                 </div>
-                <div className="absolute bottom-0 w-full p-4">
+                <div className="absolute bottom-0 w-full p-6 bg-gray-50">
                   <button
                     type="button"
                     onClick={() => setSelectedPlan(plan)}
-                    className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                      selectedPlan.id === plan.id
-                        ? "bg-black hover:bg-black"
-                        : "bg-green-500 hover:bg-green-600"
-                    } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500`}
+                    className={`
+                w-full py-3 px-4 rounded-lg text-sm font-semibold
+                ${
+                  selectedPlan?.id === plan.id
+                    ? "bg-green-600 text-white hover:bg-green-700"
+                    : "bg-white text-green-600 border-2 border-green-600 hover:bg-green-50"
+                }
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500
+              `}
                   >
-                    {selectedPlan.id === plan.id ? "Selected" : "Select Plan"}
+                    {selectedPlan?.id === plan.id ? "Selected" : "Select Plan"}
                   </button>
                 </div>
               </div>
