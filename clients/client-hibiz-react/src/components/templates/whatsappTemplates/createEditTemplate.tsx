@@ -4,7 +4,6 @@ import type { CropperRef } from "@/components/types/businessData";
 import PopUp from "@/components/atom/popUp";
 import EasyReactCropper from "@/components/cropper/cropper";
 import { useWhatzappCroppedImg } from "@/components/helpers/whatzAppHelpers";
-import { useMediaUpload } from "@/hooks/useTemplates";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useTempStore } from "@/components/store/useTempStore";
 
@@ -59,12 +58,6 @@ const MemoCreateEditTemplate = () => {
         <StepHeader />
         <div className="grid gap-8 md:mt-4 md:grid-cols-2">
           <TemplatePreview />
-          {templateSteps === TemplateSteps.MODIFY && (
-            <section>
-              <PreDefinedContent />
-              <CallOfAction />
-            </section>
-          )}
           {templateSteps === TemplateSteps.CREATE_EDIT && (
             <section>
               <Content />

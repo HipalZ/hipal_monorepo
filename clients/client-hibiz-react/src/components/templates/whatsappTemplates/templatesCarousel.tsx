@@ -13,14 +13,12 @@ const MemoTemplatesCarousel = () => {
     setStep,
     setTemplateSteps,
     setTemplateData,
-    setPreDefinedTemplate,
     allTemplates,
     setShowSuccessPopup,
   } = useWhatsapp((s) => ({
     setStep: s.setStep,
     setTemplateSteps: s.setTemplateSteps,
     setTemplateData: s.setTemplateData,
-    setPreDefinedTemplate: s.setPreDefinedTemplate,
     allTemplates: s.allTemplates,
     setShowSuccessPopup: s.setShowSuccessPopup,
   }));
@@ -30,16 +28,9 @@ const MemoTemplatesCarousel = () => {
       setTemplateData(template);
       setStep(Step.CREATE_EDIT);
       setTemplateSteps(TemplateSteps.CREATE_EDIT);
-      setPreDefinedTemplate(false);
       setShowSuccessPopup(false);
     },
-    [
-      setStep,
-      setTemplateData,
-      setTemplateSteps,
-      setPreDefinedTemplate,
-      setShowSuccessPopup,
-    ],
+    [setStep, setTemplateData, setTemplateSteps, setShowSuccessPopup],
   );
 
   return (

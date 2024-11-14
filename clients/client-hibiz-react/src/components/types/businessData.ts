@@ -857,3 +857,33 @@ export interface MainResponseHandling {
   err: boolean;
   message: string;
 }
+
+interface IBulk {
+  name: string;
+  phone: string;
+}
+export interface ISendOptionsPayload {
+  templateId: number;
+  businessId: string;
+  businessName: string;
+  customerPhone: string;
+  bulkCustomers: IBulk[];
+  groupIds: string[];
+}
+
+interface IUserWallet {
+  name: string;
+  _id: string;
+  email: string;
+}
+export interface IWalletHistory {
+  _id: string;
+  businessId: string;
+  userId: IUserWallet;
+  amount: number;
+  type: string;
+  transactionId: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}

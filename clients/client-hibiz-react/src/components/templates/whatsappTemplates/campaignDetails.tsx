@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -9,7 +10,6 @@ import {
   type TooltipItem,
 } from "chart.js";
 import type { Campaign } from "./campaignAnalytics";
-import { memo } from "react";
 
 // Register necessary Chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
@@ -18,7 +18,6 @@ const MemoCampaignDetails: React.FC<{ campaign: Campaign }> = ({
   campaign,
 }) => {
   // Data and options for Chart.js
-  console.log("campaign", campaign);
   const data = {
     labels: ["Sent", "Delivered", "Read", "Clicked"],
     datasets: [

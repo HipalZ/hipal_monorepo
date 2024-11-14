@@ -38,7 +38,6 @@ const MemoWhatzapp = () => {
     setNotEditPopup,
     templateSteps,
     setTemplateSteps,
-    preDefinedTemplate,
   } = useWhatsapp((s) => ({
     step: s.step,
     setStep: s.setStep,
@@ -46,7 +45,6 @@ const MemoWhatzapp = () => {
     setNotEditPopup: s.setNotEditPopup,
     templateSteps: s.templateSteps,
     setTemplateSteps: s.setTemplateSteps,
-    preDefinedTemplate: s.preDefinedTemplate,
   }));
 
   const businessData = useBusinessData((s) => s.businessData);
@@ -61,11 +59,7 @@ const MemoWhatzapp = () => {
           setStep(Step.SETUP);
           break;
         case TemplateSteps.SHOW_OPTIONS:
-          if (preDefinedTemplate) {
-            setTemplateSteps(TemplateSteps.MODIFY);
-          } else {
-            setTemplateSteps(TemplateSteps.CREATE_EDIT);
-          }
+          setTemplateSteps(TemplateSteps.CREATE_EDIT);
           break;
         case TemplateSteps.SEND:
           setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
@@ -87,15 +81,7 @@ const MemoWhatzapp = () => {
           break;
       }
     }
-  }, [
-    setStep,
-    step,
-    templateSteps,
-    setTemplateSteps,
-    navigate,
-    businessData,
-    preDefinedTemplate,
-  ]);
+  }, [setStep, step, templateSteps, setTemplateSteps, navigate, businessData]);
   return (
     <main>
       <div className="mx-auto">

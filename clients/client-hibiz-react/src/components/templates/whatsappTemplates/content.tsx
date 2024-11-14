@@ -173,9 +173,9 @@ const MemoContent = () => {
                         value={bodyVariableSequence[index]}
                         onChange={(e) => {
                           const selectedOption = e.target.selectedOptions[0];
-                          const label = e.target.value; // `option.label` comes from `value`
+                          const label = e.target.value;
                           const value =
-                            selectedOption.getAttribute("aria-valuetext"); // `option.value` from `aria-valuetext`
+                            selectedOption.getAttribute("aria-valuetext") || "";
 
                           updateBodySequenceVariable(index, label);
                           updateDisplayBodySequenceVariable(index, value);

@@ -8,6 +8,9 @@ import useWhatsapp, { Step } from "@/components/store/useWhatsapp";
 import { useMutation } from "@tanstack/react-query";
 import { useMessageRecipientsStore } from "@/components/store/useMessageRecipientsStore";
 import type {
+  ICouponzLinks,
+  ISendOptionsPayload,
+  IWalletHistory,
   MainResponseHandling,
   WhatsAppTemplatePayload,
 } from "@/components/types/businessData";
@@ -54,7 +57,6 @@ export const useCreateTemplate = () => {
     setShowSuccessPopup(true);
     setTemplateStatus(data?.data?.status);
     toast.success("Template created successfully");
-    console.log("data", data);
     setTemplateData(data?.data);
     return data;
   };
@@ -194,17 +196,6 @@ export const useMediaUpload = () => {
     isUploading,
   };
 };
-export const useSendMessages = () => {
-  const sendMessage = useCallback(async (payload: any) => {
-    const res = await apiRpc.whatsapp.template.campaign.$post({
-      json: payload,
-    });
-    const response = await res.json();
-    return response;
-  }, []);
-
-  return { sendMessage };
-};
 
 export const useSendOptions = () => {
   const setStep = useWhatsapp((s) => s.setStep);
@@ -212,7 +203,7 @@ export const useSendOptions = () => {
     (s) => s.clearMessageRecipientsStore,
   );
   return useMutation({
-    mutationFn: async (payload: any) => {
+    mutationFn: async (payload: ISendOptionsPayload) => {
       const res = await apiRpc.whatsapp.template.campaign.$post({
         json: payload,
       });
@@ -274,6 +265,7 @@ export const useWalletBalance = () => {
   }, [businessId, setWalletBalance]);
 
   const getWalletHistory = useCallback(async () => {
+    if (!businessId) return;
     const res = await apiRpc.whatsapp.whatsapp_wallet.history[
       ":businessId"
     ].$get({
@@ -281,7 +273,7 @@ export const useWalletBalance = () => {
         businessId,
       },
     });
-    const response = await res.json();
+    const response: { data: IWalletHistory[] } = await res.json();
     setWalletHistory(response?.data);
     return response;
   }, [businessId, setWalletHistory]);
@@ -301,7 +293,8 @@ export const useCouponzLinks = () => {
         businessId,
       },
     });
-    const response = await res.json();
+    const response: { data: ICouponzLinks[]; err: boolean; message: string } =
+      await res.json();
     setCouponzLinks(response?.data);
     return response;
   }, [businessId, setCouponzLinks]);

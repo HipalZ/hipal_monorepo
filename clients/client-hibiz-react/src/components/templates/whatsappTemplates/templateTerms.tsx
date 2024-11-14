@@ -38,7 +38,6 @@ const MemoTemplateTerms = () => {
     setShowSuccessPopup,
     confirmCreate,
     setConfirmCreate,
-    imageFiles,
     imagePreview,
   } = useWhatsapp((s) => ({
     templateId: s.templateId,
@@ -57,7 +56,6 @@ const MemoTemplateTerms = () => {
     setShowSuccessPopup: s.setShowSuccessPopup,
     confirmCreate: s.confirmCreate,
     setConfirmCreate: s.setConfirmCreate,
-    imageFiles: s.imageFiles,
     imagePreview: s.imagePreview,
   }));
 

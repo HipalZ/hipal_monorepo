@@ -207,9 +207,6 @@ interface whatsappTemplate {
     displayBodyVariableSequence: string[],
   ) => void;
 
-  preDefinedTemplate: boolean;
-  setPreDefinedTemplate: (modifyTemplate: boolean) => void;
-
   showCropper: boolean;
   setShowCropper: (showCropper: boolean) => void;
 
@@ -511,10 +508,6 @@ export const useWhatsapp = create(
         setDisplayBodyVariableSequence: (
           displayBodyVariableSequence: string[],
         ) => set({ displayBodyVariableSequence }),
-
-        preDefinedTemplate: false,
-        setPreDefinedTemplate: (modifyTemplate: boolean) =>
-          set({ preDefinedTemplate: modifyTemplate }),
 
         showCropper: false,
         setShowCropper: (showCropper: boolean) => set({ showCropper }),
