@@ -5,7 +5,6 @@ import {
   WhatAppOrder,
   WhatAppTemplate,
   WhatsAppPayment,
-  WhatsAppTemplateLimit,
   WhatsAppWallet,
   WhatsAppWalletHistory,
 } from "@hi/db-models";
@@ -15,7 +14,6 @@ import {
   campaignSchema,
   validatePaymentSchema,
   validateWhatAppTemplateSchema,
-  whatsAppLimitSchema,
   whatsAppOrderSchema,
   whatsAppWalletHistorySchema,
 } from "@hi/db-models/src/validators";
@@ -1284,54 +1282,7 @@ const whatsappRouter = new Hono()
       );
     },
   )
-  .post(
-    "/template_config",
-    zValidator("json", whatsAppLimitSchema),
 
-    async (c) => {
-      const {
-        businessId,
-        templateLimit,
-        marketingTemplateCharge,
-        utilityTemplateCharge,
-      } = await c.req.json();
-
-      const config = await WhatsAppTemplateLimit.findOneAndUpdate(
-        {
-          businessId,
-        },
-        {
-          templateLimit,
-          marketingTemplateCharge,
-          utilityTemplateCharge,
-        },
-        {
-          new: true,
-          upsert: true,
-        },
-      );
-
-      if (!config) {
-        return c.json(
-          {
-            message: "config not found",
-            err: true,
-            data: {},
-          },
-          404,
-        );
-      }
-
-      return c.json(
-        {
-          message: "config credited",
-          err: false,
-          data: config,
-        },
-        200,
-      );
-    },
-  )
   .get(
     "/coupon_link/:businessId",
     zValidator("param", z.object({ businessId: z.string() })),
@@ -1632,6 +1583,129 @@ const whatsappRouter = new Hono()
         },
         400,
       );
+    },
+  )
+
+  .get(
+    "/wa-webhooks",
+
+    async (c) => {
+      const mode = c.req.query("hub.mode");
+      const challenge = c.req.query("hub.challenge");
+      const token = c.req.query("hub.verify_token");
+      console.log("mode", mode);
+      console.log("challenge", challenge);
+      console.log("token", token);
+
+      if (mode === "subscribe" && token === "token") {
+        return c.text(challenge ?? "", 200);
+      }
+
+      return c.json({
+        message: "Webhook not verified",
+        err: true,
+        data: {},
+      });
+    },
+  )
+
+  .post(
+    "/wa-webhooks",
+
+    // zValidator(
+    //   "json",
+    //   z.object({
+    //     object: z.string(),
+    //     entry: z.array(
+    //       z.object({
+    //         id: z.string(),
+    //         time: z.number(),
+    //         changes: z.array(
+    //           z.object({
+    //             field: z.string(),
+    //             value: z.object({
+    //               messages: z.array(
+    //                 z.object({
+    //                   type: z.string(),
+    //                   text: z.object({
+    //                     body: z.string(),
+    //                   }),
+    //                   image: z.object({
+    //                     url: z.string(),
+    //                   }),
+    //                 }),
+    //               ),
+    //             }),
+    //           }),
+    //         ),
+    //       }),
+    //     ),
+    //   }),
+    // ),
+
+    async (c) => {
+      const body = await c.req.json();
+
+      console.log(JSON.stringify(body, null, 2));
+      console.log("body", body);
+      if (body.object) {
+        if (body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
+          const phon_no_id =
+            body.entry[0].changes[0].value.metadata.phone_number_id;
+          const from = body.entry[0].changes[0].value.messages[0].from;
+          const msg_body = body.entry[0].changes[0].value.messages[0].text.body;
+          console.log("phon_no_id", phon_no_id);
+          console.log("from", from);
+          console.log("msg_body", msg_body);
+          axios({
+            method: "POST",
+            url: `https://graph.facebook.com/v21.0/${phon_no_id}/messages?access_token=${whatsAppConfig.token}`,
+            data: {
+              messaging_product: "whatsapp",
+              to: from,
+              text: {
+                body: "Explore our menu: https://www.hipalz.com/coffeecup?tableName=Qrscan",
+              },
+            },
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          return c.json({
+            message: "Webhook verified",
+            err: false,
+            data: {},
+          });
+        }
+      }
+
+      return c.json({
+        message: "Webhook not verified",
+        err: true,
+        data: {},
+      });
+    },
+  )
+
+  .get(
+    "/testing",
+    // authTokenValidator,
+    // requireAuthorization([
+    //   ClientRoles.OWNER,
+    //   ClientRoles.HIPAL_CUSTOMER,
+    //   ClientRoles.CAPTAIN,
+    // ]),
+    // zValidator("query", whatsAppWebhookValidation),
+    // zValidator("param", z.object({ merchantId: z.string() })),
+
+    async (c) => {
+      //@ts-ignore
+
+      const redirectUrl =
+        "https://wa.me/7075179325?text=Hi I'm interested in your menu Can you share more";
+
+      return c.redirect(redirectUrl);
     },
   );
 

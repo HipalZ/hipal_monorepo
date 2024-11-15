@@ -47,7 +47,7 @@ export * from "./userTag";
 export * from "./whatAppTemplate";
 export * from "./whatsAppOrder";
 export * from "./whatsAppPayment";
+export * from "./whatsAppPlan";
 export * from "./whatsAppTemplateAnalytics";
-export * from "./whatsAppTemplateLimit";
 export * from "./whatsAppWallet";
 export * from "./whatsAppWalletHistory";
