@@ -119,12 +119,12 @@ export const useAddTemplate = () => {
 
   const addTemplateName = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value.replace(/ /g, "_");
-      const regex = /^[a-z0-9_]*$/;
+      const value = e.target.value
+        .replace(/\s+/g, "_") // Replace spaces with underscores
+        .replace(/[^a-zA-Z0-9_]/g, "") // Remove anything that is not a letter, number, or underscore
+        .toLowerCase();
 
-      if (regex.test(value)) {
-        setTemplateName(value);
-      }
+      setTemplateName(value);
     },
     [setTemplateName],
   );

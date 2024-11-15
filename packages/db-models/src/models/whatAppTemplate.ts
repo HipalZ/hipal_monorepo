@@ -46,6 +46,22 @@ const whatAppTemplateSchema = new mongoose.Schema<WhatAppTemplateType>(
       required: true,
       default: false,
     },
+    templateName: {
+      type: String,
+      required: true,
+    },
+    languageCode: {
+      type: String,
+      required: true,
+    },
+    imageUrl: {
+      type: String,
+      required: false,
+    },
+    category: {
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,

@@ -18,7 +18,7 @@ const CartItemSchema = z.object({
   dish: dishSchema,
   portion: portionSchema.nullable(),
   extras: z
-    .array(ObjectIdSchema, {
+    .array(z.object({}), {
       message: "addOnIds is required",
     })
     .default([]),
@@ -32,6 +32,7 @@ export const cartSchema = z.object({
   tableName: z.string().min(1).max(50).optional(),
   cart: z.array(CartItemSchema),
   date: z.number().optional(),
+  message: z.string().optional(),
   createdAt: z.date().optional(),
 });
 

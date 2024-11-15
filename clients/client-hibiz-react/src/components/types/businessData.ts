@@ -97,6 +97,48 @@ export type IBusinessDetails = {
   logo: string;
 };
 
+export interface IOutletInfo {
+  _id: string;
+  businessId: string;
+  __v: number;
+  address: string;
+  amenities: string[];
+  customTiming: {
+    day: string;
+    openTime: string;
+    closeTime: string;
+  }[][];
+  description: string;
+  isCustomTime: boolean;
+  location: string;
+  socialMediaLinks: {
+    icon: string;
+    link: string;
+    _id: string;
+  }[];
+  tags: string[];
+  logoUrl: string;
+  specialBannerUrl: string;
+  name: string;
+  endBannerUrl: string;
+  fssai: string;
+  gst: string;
+  billingEndTime: string;
+  billingStartTime: string;
+  branchName: string;
+  brandName: string;
+  footerDescription: string;
+  phone: string;
+  avgPricingForTwo: number;
+  fixCloseTime: string;
+  fixOpenTime: string;
+  outLetType: string;
+  placeId: string;
+  placeUrl: string;
+  gstPercentage: number;
+  serviceChargePercentage: number;
+}
+
 export interface Order {
   _id: string;
   businessId: string;
@@ -744,27 +786,40 @@ export interface ICoupon {
 }
 
 export interface WhatsAppTemplateComponent {
-  example: any;
+  example?: {
+    header_handle?: string[];
+  };
   type: string;
-  format?: string; // Optional, only applies to HEADER component
+  format?: string;
   text?: string;
   buttons?: WhatsAppTemplateButton[];
+}
+
+export interface IWhatsappHeaderType {
+  type: string;
+  format: string;
+  text: string;
 }
 
 export interface WhatsAppTemplateButton {
   type: string;
   text: string;
+  url?: string; // Optional, only applies to URL button
+  phone_number?: string; // Optional, only applies to PHONE_NUMBER button
 }
 
-export interface WhatsAppTemplate {
-  name: string;
+export interface WhatsAppTemplatePayload {
   parameter_format: string;
-  components: WhatsAppTemplateComponent[];
-  language: string;
   status: string;
-  category: string;
-  bodyVariableSequence: string[];
   id: string;
+  businessId: string;
+  name: string;
+  language: string;
+  templateId?: string; // Optional, only applies to existing templates
+  category: string;
+  components: WhatsAppTemplateComponent[];
+  imageUrl?: string; // Optional, only applies if imageUrl is present
+  bodyVariableSequence: string[];
 }
 
 export interface CropperRef {
@@ -816,19 +871,61 @@ export interface UseBannerStylesProps {
   selectedBannerType: string;
 }
 
-export interface WhatsAppTemplateComponent {
-  type: "HEADER" | "BODY" | "FOOTER";
-  format?: "TEXT" | "IMAGE" | "VIDEO" | "DOCUMENT";
-  text?: string;
-  image?: { link: string };
+export interface ICouponzLinks {
+  name: string;
+  link: string;
 }
 
-export interface WhatsAppTemplatePayload {
-  name: string;
-  parameter_format: "POSITIONAL";
-  components: WhatsAppTemplateComponent[];
-  language: string;
-  status: "APPROVED" | "REJECTED" | "PENDING";
-  category: "UTILITY" | "MARKETING" | "TRANSACTIONAL";
+export interface WhatsappError {
+  error_user_msg: string;
+  error_user_title?: string;
+  message?: string;
+  type?: string;
+  code?: number;
+  error_subcode?: number;
+  is_transient?: boolean;
+  fbtrace_id?: string;
+}
+
+export interface WhatsappResponseErrorData {
+  error: WhatsappError;
   id: string;
+  status: string;
+  err: boolean;
+}
+
+export interface MainResponseHandling {
+  data: WhatsappResponseErrorData;
+  err: boolean;
+  message: string;
+}
+
+interface IBulk {
+  name: string;
+  phone: string;
+}
+export interface ISendOptionsPayload {
+  templateId: number;
+  businessId: string;
+  businessName: string;
+  customerPhone: string;
+  bulkCustomers: IBulk[];
+  groupIds: string[];
+}
+
+interface IUserWallet {
+  name: string;
+  _id: string;
+  email: string;
+}
+export interface IWalletHistory {
+  _id: string;
+  businessId: string;
+  userId: IUserWallet;
+  amount: number;
+  type: string;
+  transactionId: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 }

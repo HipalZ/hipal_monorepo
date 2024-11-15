@@ -7,26 +7,15 @@ import {
   DisclosurePanel,
 } from "@headlessui/react";
 import { BiChevronDown, BiChevronUp } from "react-icons/bi";
-import { FiClock, FiSend, FiSmartphone } from "react-icons/fi";
+import { FiClock, FiSend } from "react-icons/fi";
 import { useMessageRecipientsStore } from "@/components/store/useMessageRecipientsStore";
-import { useSendOptions } from "@/hooks/useTemplates";
-import useWhatsapp from "@/components/store/useWhatsapp";
-import useBusinessData from "@/components/store/useBusinessData";
 
 const sendingOptions = [
-  { value: "sendTest", label: "Send Test Number", icon: FiSmartphone },
   { value: "sendNow", label: "Send Now", icon: FiSend },
   { value: "sendLater", label: "Send Later", icon: FiClock },
 ];
 
 const MemoSendTemplate = () => {
-  const { businessId, businessName } = useBusinessData((s) => ({
-    businessId: s.businessData?._id,
-    businessName: s.businessData?.name,
-  }));
-  const { templateId } = useWhatsapp((s) => ({
-    templateId: s.templateId,
-  }));
   const {
     setSendLaterTime,
     sendOptions,
@@ -48,27 +37,10 @@ const MemoSendTemplate = () => {
     testNumber: s.testNumber,
     setTestNumber: s.setTestNumber,
   }));
-  const { sendOptions: sendOptionsFunction } = useSendOptions();
-
-  // sending only to test customer
-  const sendToTestNumber = useCallback(() => {
-    const payload = {
-      templateId: Number(templateId),
-      businessId,
-      businessName,
-      customerPhone: testNumber,
-      bulkCustomers: [],
-      groupIds: [],
-    };
-    sendOptionsFunction(payload);
-  }, [templateId, businessId, businessName, testNumber, sendOptionsFunction]);
 
   // handle send button click
   const handleSend = useCallback(() => {
     switch (sendOptions) {
-      case "sendTest":
-        sendToTestNumber();
-        break;
       case "sendLater": {
         const dateTimeString = `${scheduledDate}T${scheduledTime}:00`;
         const timestamp = new Date(dateTimeString).getTime();
@@ -76,13 +48,7 @@ const MemoSendTemplate = () => {
         break;
       }
     }
-  }, [
-    sendOptions,
-    scheduledDate,
-    scheduledTime,
-    setSendLaterTime,
-    sendToTestNumber,
-  ]);
+  }, [sendOptions, scheduledDate, scheduledTime, setSendLaterTime]);
   return (
     <div className="space-y-4 bg-gray-100 lg:mx-auto">
       <h2 className="text-2xl font-bold text-gray-800">

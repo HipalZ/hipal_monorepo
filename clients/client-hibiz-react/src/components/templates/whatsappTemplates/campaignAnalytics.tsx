@@ -1,11 +1,16 @@
-import { memo, useCallback, useState } from "react";
-import CampaignDetails from "./campaignDetails";
+import { memo, useCallback, useState, lazy } from "react";
 import { useQuery } from "@tanstack/react-query";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useTemplateAnalytics } from "@/hooks/useTemplates";
-import useWhatsapp, { Tabs } from "@/components/store/useWhatsapp";
+import useWhatsapp, {
+  Step,
+  Tabs,
+  TemplateSteps,
+} from "@/components/store/useWhatsapp";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
+import toast from "react-hot-toast";
 
+const CampaignDetails = lazy(() => import("./campaignDetails"));
 export interface Campaign {
   templateName: string;
   sent: number;
@@ -17,10 +22,24 @@ export interface Campaign {
 
 const MemoCampaignAnalytics: React.FC = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
-  const { activeTab, templateAnalytics, totalData } = useWhatsapp((s) => ({
+  const {
+    activeTab,
+    allTemplates,
+    setActiveTab,
+    setTemplateData,
+    templateAnalytics,
+    totalData,
+    setTemplateSteps,
+    setStep,
+  } = useWhatsapp((s) => ({
     activeTab: s.activeTab,
+    allTemplates: s.allTemplates,
+    setActiveTab: s.setActiveTab,
+    setTemplateData: s.setTemplateData,
     templateAnalytics: s.templateAnalytics,
     totalData: s.totalData,
+    setTemplateSteps: s.setTemplateSteps,
+    setStep: s.setStep,
   }));
   const { getTemplateAnalytics } = useTemplateAnalytics();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
@@ -32,6 +51,29 @@ const MemoCampaignAnalytics: React.FC = () => {
       prev?.templateName === campaign.templateName ? null : campaign,
     );
   }, []);
+
+  const handleCampaign = useCallback(
+    (campaign: Campaign) => {
+      const filteredCampaign = allTemplates?.find(
+        (template) => template.name === campaign.templateName,
+      );
+      console.log(filteredCampaign);
+      if (filteredCampaign) {
+        if (filteredCampaign.status === "REJECTED") {
+          toast.error(
+            "This template is rejected. You cannot start a campaign.",
+          );
+          return;
+        }
+        setTemplateData(filteredCampaign);
+        setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
+        setStep(Step.CREATE_EDIT);
+      } else {
+        setActiveTab(Tabs.TEMPLATES);
+      }
+    },
+    [setTemplateData, setActiveTab, allTemplates, setTemplateSteps, setStep],
+  );
 
   const { isPending } = useQuery({
     queryKey: ["templatesAnalytics", businessId, activeTab],
@@ -95,27 +137,39 @@ const MemoCampaignAnalytics: React.FC = () => {
                   <th className="p-2 text-left">Read</th>
                   <th className="p-2 text-left">Clicked</th>
                   <th className="p-2 text-left">Actions</th>
+                  <th className="p-2 text-left">Campaign</th>
                 </tr>
               </thead>
               {templateAnalytics.map((campaign) => {
                 return (
                   <tbody key={campaign?.templateName}>
                     <tr className="border-b">
-                      <td className="p-2">{campaign?.templateName}</td>
-                      <td className="p-2">{campaign?.sent}</td>
-                      <td className="p-2">{campaign?.delivered}</td>
-                      <td className="p-2">{campaign?.read}</td>
-                      <td className="p-2">{campaign?.clicked}</td>
-                      <td className="p-2">
+                      <td className="w-10 p-2 truncate">
+                        {campaign?.templateName}
+                      </td>
+                      <td className="w-10 p-2">{campaign?.sent}</td>
+                      <td className="w-10 p-2">{campaign?.delivered}</td>
+                      <td className="w-10 p-2">{campaign?.read}</td>
+                      <td className="w-10 p-2">{campaign?.clicked}</td>
+                      <td className="w-24 p-2">
                         <button
                           type="button"
-                          className="w-full p-1 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                          className="w-12 p-1 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                           onClick={() => handleViewClick(campaign)}
                         >
                           {selectedCampaign?.templateName ===
                           campaign?.templateName
                             ? "Hide"
                             : "View"}
+                        </button>
+                      </td>
+                      <td className="w-12 p-2">
+                        <button
+                          type="button"
+                          className="w-24 p-1 text-white bg-green-500 rounded-md md:w-36 hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                          onClick={() => handleCampaign(campaign)}
+                        >
+                          Start Campaign
                         </button>
                       </td>
                     </tr>

@@ -33,7 +33,8 @@ export const whatsAppOrderSchema = z.object({
     })
     .max(200, {
       message: "Receipt must be at most 100 characters",
-    }),
+    })
+    .optional(),
   billValue: z.coerce
     .number({
       message: "Bill value must be a number",
@@ -58,9 +59,14 @@ export const whatsAppOrderSchema = z.object({
     })
     .max(200, {
       message: "Order id must be at most 150 characters",
-    }),
+    })
+    .optional(),
 
-  date: z.number(),
+  date: z.coerce
+    .number({
+      message: "Date must be a number",
+    })
+    .optional(),
 });
 
 export type WhatAppOrderType = z.infer<typeof whatsAppOrderSchema>;

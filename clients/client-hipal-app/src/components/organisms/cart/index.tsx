@@ -1,8 +1,8 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useState } from "react";
 import { GiKnifeFork } from "react-icons/gi";
+import { FiShare, FiUsers, FiBriefcase } from "react-icons/fi";
 import CartItem from "./cartItem";
 import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
-import MemoCallTheWaiterComponent from "@/components/molecules/bottomButton/callTheWaiter";
 import useTableData from "@/components/store/useTableData";
 import { useCartStore } from "@/components/store/useCartStore";
 import { useUserToken } from "@hi/common/src/useUserToken";
@@ -12,30 +12,21 @@ import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { apiRpc } from "@hi/common";
 import { useLogin } from "@/components/store/useLogin";
 import { useParams, useRouter } from "next/navigation";
-import toast from "react-hot-toast";
 import { BUSINESS_KEYID } from "@/configs";
-import CommonBottomButton from "@/components/atoms/bottomButton";
-
-type ClickedButton = "US" | "FRENDZ";
+import { MdOutlineRemoveShoppingCart } from "react-icons/md";
+import { toast } from "react-toastify";
 
 const Cart = () => {
   const { cart } = useCartStore();
   const { setShowCart } = useCart();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
-  const [callWaiterModal, setCallWaiterModal] = useState(false);
+  const [showShareOptions, setShowShareOptions] = useState(false);
+  const [shareURL, setShareURL] = useState("");
   const tableName = useTableData((s) => s.tableName);
   const accessToken = useUserToken.getState().accessToken;
   const userDetails = useLogin((s) => s.userDetails);
   const router = useRouter();
   const customLink = useParams()?.businessId as string;
-
-  const openCallWaiterModal = useCallback(() => {
-    setCallWaiterModal(true);
-  }, []);
-
-  const closeCallWaiterModal = useCallback(() => {
-    setCallWaiterModal(false);
-  }, []);
 
   const shareWithFriends = async (shareURL: string) => {
     if (shareURL) {
@@ -55,31 +46,21 @@ const Cart = () => {
   };
 
   const shareWithUs = async (shareURL: string) => {
-    if (shareURL) {
-      const message = encodeURIComponent(
-        `Hi, I am interested in this item. Can I know more details?\n*See the cart:* ${shareURL}`,
-      );
-      const whatsappUrl = `https://wa.me/8668229890?text=${message}`;
-      window.open(whatsappUrl, "_blank");
-    }
+    const message = encodeURIComponent(
+      `Hi, I am interested in this item. Can I know more details?\n*See the cart:* ${shareURL}`,
+    );
+    const whatsappUrl = `https://wa.me/8668229890?text=${message}`;
+    window.open(whatsappUrl, "_blank");
   };
 
-  const shareTheUrl = (str: ClickedButton, shareURL: string) => {
-    if (str === "US") {
-      shareWithUs(shareURL);
-    } else {
-      shareWithFriends(shareURL);
-    }
-  };
-
-  const generateCartLink = async (selectedButton: ClickedButton) => {
+  const generateCartLink = async () => {
     if (!accessToken) {
       router.push(`/${customLink}/user/signup`);
-      return null;
+      return;
     }
 
     const sanitizedCart = cart.map((item) => {
-      const { recommendationIds, ...sanitizedDish } = item.dish;
+      const { recommendationIds, addOnIds, ...sanitizedDish } = item.dish;
       return {
         ...item,
         dish: sanitizedDish,
@@ -97,16 +78,48 @@ const Cart = () => {
       const res = await response.json();
 
       if (!res.err) {
-        const newShareURL = `${BUSINESS_KEYID}${customLink}/cart/${res.data.cartID}`;
-        shareTheUrl(selectedButton, newShareURL);
+        const newShareURL = `${BUSINESS_KEYID}${customLink}/cart/${res?.data?.cartID}`;
+        setShareURL(newShareURL);
+        setShowShareOptions(true);
       } else {
         toast.error(res.message || "Failed to create cart link");
-        return null;
       }
     } catch (error) {
       console.error("Error creating cart link:", error);
       toast.error("An error occurred while creating the cart link");
-      return null;
+    }
+  };
+
+  const placeOrder = async () => {
+    if (!accessToken) {
+      router.push(`/${customLink}/user/signup`);
+      return;
+    }
+
+    const sanitizedCart = cart.map((item) => {
+      const { recommendationIds, addOnIds, ...sanitizedDish } = item.dish;
+      return {
+        ...item,
+        dish: sanitizedDish,
+      };
+    });
+
+    const response = await apiRpc.cart.create.$post({
+      json: {
+        businessId: outletInfo?.businessId,
+        userId: userDetails?._id,
+        tableName: tableName,
+        cart: sanitizedCart,
+      },
+    });
+    const res = await response.json();
+
+    if (!res.err) {
+      toast.success("Order placed successfully");
+      setShowCart(false);
+      useCartStore.setState({ cart: [] });
+    } else {
+      toast.error(res.message || "Failed to place order");
     }
   };
 
@@ -126,11 +139,13 @@ const Cart = () => {
       {cart.length === 0 ? (
         <div className="flex flex-col items-center justify-center pt-[20vh]">
           <div className="flex items-center justify-center w-20 h-20 rounded-full bg-base-100">
-            <GiKnifeFork className="text-4xl text-primary-100" />
+            {outletInfo?.outLetType === "OTHER" ? (
+              <MdOutlineRemoveShoppingCart className="text-4xl text-primary-100" />
+            ) : (
+              <GiKnifeFork className="text-4xl text-primary-100" />
+            )}
           </div>
-          <div className="mt-4 text-2xl font-bold">
-            Your {outletInfo?.outLetType !== "OTHER" ? "cart" : "cart"} is empty
-          </div>
+          <div className="mt-4 text-2xl font-bold">Your cart is empty</div>
         </div>
       ) : (
         <div className="w-full px-4">
@@ -139,35 +154,70 @@ const Cart = () => {
           ))}
         </div>
       )}
-      {cart.length > 0 && outletInfo?.outLetType === "OTHER" && (
-        <CommonBottomButton
-          fixed
-          buttons={[
-            {
-              text: "Share with Friends",
-              onClick: () => generateCartLink("FRENDZ"),
-            },
-            {
-              text: "Share with Us",
-              onClick: () => generateCartLink("US"),
-            },
-          ]}
-        />
+      {cart.length > 0 && (
+        <>
+          <button
+            onClick={generateCartLink}
+            type="button"
+            className="fixed w-[92%] mx-4 py-3 rounded-full bg-primary bottom-4 text-base-100 flex items-center justify-center"
+          >
+            <FiShare className="mr-2 text-xl" />
+            Share
+          </button>
+          {showShareOptions && (
+            <MemoBottomPopUp
+              show={showShareOptions}
+              onClose={() => setShowShareOptions(false)}
+            >
+              <div className="p-4">
+                <div className="mb-4 text-xl font-semibold text-center text-primary">
+                  Share
+                </div>
+                <div className="flex justify-around">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      shareWithFriends(shareURL);
+                      setShowShareOptions(false);
+                    }}
+                    className="flex flex-col items-center space-y-2"
+                  >
+                    <FiUsers className="text-4xl text-primary" />
+                    <span className="text-sm font-medium text-primary">
+                      Share with Friends
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      shareWithUs(shareURL);
+                      setShowShareOptions(false);
+                    }}
+                    className="flex flex-col items-center space-y-2"
+                  >
+                    <FiBriefcase className="text-4xl text-primary" />
+                    <span className="text-sm font-medium text-primary">
+                      Share with Business
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </MemoBottomPopUp>
+          )}
+        </>
       )}
-      {accessToken && tableName && outletInfo?.outLetType !== "OTHER" && (
-        <button
-          onClick={openCallWaiterModal}
-          type="button"
-          className="fixed w-[92%] mx-4 py-3 rounded-full bg-primary bottom-4 text-base-100"
-        >
-          Call Captain
-        </button>
-      )}
-      {callWaiterModal && (
-        <MemoBottomPopUp show={callWaiterModal} onClose={closeCallWaiterModal}>
-          <MemoCallTheWaiterComponent onClose={closeCallWaiterModal} />
-        </MemoBottomPopUp>
-      )}
+      {accessToken &&
+        cart.length > 0 &&
+        tableName &&
+        outletInfo?.outLetType !== "OTHER" && (
+          <button
+            onClick={placeOrder}
+            type="button"
+            className="fixed w-[92%] mx-4 py-3 rounded-full bg-primary bottom-4 text-base-100"
+          >
+            Place Order
+          </button>
+        )}
     </div>
   );
 };

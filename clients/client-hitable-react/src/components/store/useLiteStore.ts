@@ -2,6 +2,7 @@ import type {
   Alert,
   NavItemTypes,
   ISalesLite,
+  Cart,
 } from "@/components/types/hiClientzData";
 import { create } from "zustand";
 
@@ -45,6 +46,9 @@ interface ILiteStore {
   setRefetchOnlineAlerts: (fn: () => void) => void;
   setRefetchOfflineAlerts: (fn: () => void) => void;
 
+  refetchCart: () => void;
+  setRefetchCart: (fn: () => void) => void;
+
   // loading states
   loading: boolean;
   setLoading: (value: boolean) => void;
@@ -57,6 +61,10 @@ interface ILiteStore {
   offlineCount: number;
   setOfflineCount: (value: number) => void;
 
+  // cart count
+  cartCount: number;
+  setCartCount: (value: number) => void;
+
   // remove offline count on alert removal
   removeOfflineCount: () => void;
   removeOnlineCount: () => void;
@@ -67,6 +75,10 @@ interface ILiteStore {
 
   notificationStatus: boolean | null;
   setNotificationStatus: (notify: boolean) => void;
+
+  cartData: Cart[];
+  setCartData: (data: Cart[]) => void;
+  removeCart: (id: string) => void;
 }
 
 export const useLiteStore = create<ILiteStore>((set) => ({
@@ -102,6 +114,10 @@ export const useLiteStore = create<ILiteStore>((set) => ({
   refetchOfflineAlerts: () => {},
   setRefetchOnlineAlerts: (fn) => set({ refetchOnlineAlerts: fn }),
   setRefetchOfflineAlerts: (fn) => set({ refetchOfflineAlerts: fn }),
+
+  refetchCart: () => {},
+  setRefetchCart: (fn) => set({ refetchCart: fn }),
+
   loading: false,
   setLoading: (value) => set({ loading: value }),
   onlineCount: 0,
@@ -115,6 +131,17 @@ export const useLiteStore = create<ILiteStore>((set) => ({
   triggerSound: false,
   setTriggerSound: (value) => set({ triggerSound: value }),
 
+  cartData: [],
+  setCartData: (data) => set({ cartData: data }),
+
+  removeCart: (id: string) =>
+    set((state) => ({
+      cartData: state.cartData.filter((cart) => cart._id !== id),
+    })),
+
   notificationStatus: true,
   setNotificationStatus: (value: boolean) => set({ notificationStatus: value }),
+
+  cartCount: 0,
+  setCartCount: (value) => set({ cartCount: value }),
 }));

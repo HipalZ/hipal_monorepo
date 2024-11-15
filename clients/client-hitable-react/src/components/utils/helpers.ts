@@ -2,6 +2,13 @@ import { type ClassValue, clsx } from "clsx";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
+import { CiGlobe } from "react-icons/ci";
+import { RiMoneyRupeeCircleLine } from "react-icons/ri";
+import { GiTakeMyMoney } from "react-icons/gi";
+import { MdOutlineHistory } from "react-icons/md";
+import type { IconType } from "react-icons";
+import { NavItemTypes } from "../types/hiClientzData";
+import { HiOutlineShoppingCart } from "react-icons/hi";
 
 export function timestampToDateTime(timestamp: number): string {
   const IST_OFFSET = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
@@ -80,3 +87,11 @@ export const useErrorHandling = () => {
 
   return { errorText };
 };
+
+export const navItems: Array<{ type: NavItemTypes; icon: IconType }> = [
+  { type: "online", icon: CiGlobe },
+  { type: "on floor", icon: GiTakeMyMoney },
+  { type: "cart", icon: HiOutlineShoppingCart },
+  { type: "history", icon: MdOutlineHistory },
+  { type: "sales", icon: RiMoneyRupeeCircleLine },
+];

@@ -57,6 +57,9 @@ const CartSchema = new Schema<CartType>(
       default: Date.now(),
       expires: 60 * 3600 * 24,
     },
+    message: {
+      type: String,
+    },
   },
   {
     timestamps: true,

@@ -26,9 +26,9 @@ const MemoImageContent = () => {
       const file = event?.target?.files?.[0];
       console.log("file", file);
       if (file) {
-        const maxSizeInBytes = 1 * 1024 * 1024; // 1MB in bytes
+        const maxSizeInBytes = 2 * 1024 * 1024; // 2MB in bytes
         if (file.size > maxSizeInBytes) {
-          toast.error("File size exceeds 1MB. Please select a smaller file.");
+          toast.error("File size exceeds 2MB. Please select a smaller file.");
           return;
         }
         const reader = new FileReader();

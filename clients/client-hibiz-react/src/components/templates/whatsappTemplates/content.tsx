@@ -4,38 +4,8 @@ import { IoMdClose } from "react-icons/io";
 import useWhatsapp, { HeaderInterface } from "@/components/store/useWhatsapp";
 import { useAddTemplate } from "@/components/helpers/whatzAppHelpers";
 
+const CouponContent = lazy(() => import("./couponContent"));
 const ImageContent = lazy(() => import("./imageContent"));
-
-const variableOptions = [
-  {
-    label: "name",
-    value: "Rajesh",
-  },
-  {
-    label: "email",
-    value: "rajesh@gmail.com",
-  },
-  {
-    label: "businessName",
-    value: "business name",
-  },
-  {
-    label: "phone",
-    value: "+913456789090",
-  },
-  {
-    label: "address",
-    value: "Bangalore",
-  },
-  {
-    label: "time",
-    value: "10:00 AM",
-  },
-  {
-    label: "date",
-    value: "31st Dec, 2024",
-  },
-];
 
 const MemoContent = () => {
   const {
@@ -52,6 +22,8 @@ const MemoContent = () => {
     updateVariable,
     templateName,
     updateBodySequenceVariable,
+    updateDisplayBodySequenceVariable,
+    variableOptions,
   } = useWhatsapp((s) => ({
     headerType: s.headerType,
     setHeaderType: s.setHeaderType,
@@ -68,24 +40,14 @@ const MemoContent = () => {
     updateVariable: s.updateVariable,
     templateName: s.templateName,
     updateBodySequenceVariable: s.updateBodySequenceVariable,
+    updateDisplayBodySequenceVariable: s.updateDisplayBodySequenceVariable,
+    variableOptions: s.variableOptions,
   }));
   const { addTemplateName, handleBodyTextChange } = useAddTemplate();
 
   const handleAddVariable = useCallback(() => {
     addVariable();
-    updateBodySequenceVariable(0, "name");
-    updateVariable(0, "Rajesh");
-    setBodyVariableSequence([
-      ...bodyVariableSequence,
-      variableOptions?.[0]?.label,
-    ]);
-  }, [
-    addVariable,
-    setBodyVariableSequence,
-    bodyVariableSequence,
-    updateVariable,
-    updateBodySequenceVariable,
-  ]);
+  }, [addVariable]);
 
   const handleRemoveVariable = useCallback(
     (index: number) => {
@@ -110,7 +72,7 @@ const MemoContent = () => {
             maxLength={100}
             onChange={addTemplateName}
             placeholder="Enter template name"
-            className="w-full px-3 py-2 lowercase border border-gray-300 rounded-md"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
           <small className="absolute text-gray-500 bottom-2 right-3">
             {templateName?.length || 0}/100
@@ -210,13 +172,24 @@ const MemoContent = () => {
                       <select
                         value={bodyVariableSequence[index]}
                         onChange={(e) => {
-                          updateBodySequenceVariable(index, e.target.value);
-                          updateVariable(index, e.target.value);
+                          const selectedOption = e.target.selectedOptions[0];
+                          const label = e.target.value;
+                          const value =
+                            selectedOption.getAttribute("aria-valuetext") || "";
+
+                          updateBodySequenceVariable(index, label);
+                          updateDisplayBodySequenceVariable(index, value);
+                          updateVariable(index, label);
                         }}
                         className="block w-full px-3 py-2 pr-8 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       >
+                        <option value="">Select Variable</option>
                         {variableOptions.map((option) => (
-                          <option key={option?.label} value={option?.value}>
+                          <option
+                            key={option?.label}
+                            value={option?.label}
+                            aria-valuetext={option?.value}
+                          >
                             {option?.label}
                           </option>
                         ))}
@@ -236,6 +209,7 @@ const MemoContent = () => {
             : null}
         </div>
       </div>
+      <CouponContent />
     </section>
   );
 };

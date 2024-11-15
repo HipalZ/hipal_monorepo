@@ -9,6 +9,7 @@ import MenuImage from "@/assets/services/menu.png";
 import StaffImage from "@/assets/services/staff.png";
 import Themes from "@/assets/services/themes.png";
 import Settings from "@/assets/services/setting.png";
+import Review from "@/assets/services/review.png";
 export interface ICardButton {
   Icon: React.ElementType;
   text: string;
@@ -85,17 +86,18 @@ export const liteVersionCardButtons: ILiteVersionCardButton[] = [
     description: "Manage your coupons",
     navigateTo: "coupons",
   },
+
+  {
+    image: HiPeopleImage,
+    text: "WhatzApp",
+    description: "Manage your WhatsApp",
+    navigateTo: "whatzapp",
+  },
   // {
   //   image: Review,
   //   text: "Reviews",
   //   description: "Manage your reviews",
   //   navigateTo: "reviews",
-  // },
-  // {
-  //   image: HiPeopleImage,
-  //   text: "WhatzApp",
-  //   description: "Manage your WhatsApp",
-  //   navigateTo: "whatzapp",
   // },
 ];
 export interface AccessControlMapping {

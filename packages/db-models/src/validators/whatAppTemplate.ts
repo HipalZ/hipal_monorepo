@@ -25,6 +25,8 @@ export const campaignSchema = z.object({
   customerPhone: z.string().min(10).max(13).optional(),
   groupIds: z.array(ObjectIdSchema).default([]),
   businessName: z.string().min(3).max(100),
+  sendLaterTime: z.number().optional(),
+  address: z.string().min(3).max(200).optional(),
 });
 
 export const whatAppTemplateStatusEnum = [
@@ -47,6 +49,10 @@ export const whatAppTemplateSchema = z.object({
   bodyVariableSequence: z.array(z.string().min(1).max(100)).default([]),
   footerVariableSequence: z.array(z.string().min(1).max(100)).default([]),
   isDeleted: z.boolean().default(false),
+  templateName: z.string().min(3).max(100).optional(),
+  languageCode: z.string().min(3).max(100).optional(),
+  imageUrl: z.string().url().min(2).max(200).optional(),
+  category: z.enum(whatAppTemplateCategoryEnum).default("UTILITY"),
 });
 
 export const headerSchemaForText = z
@@ -64,7 +70,7 @@ export const headerSchemaForImage = z
   .object({
     example: z
       .object({
-        header_handle: z.array(z.string().min(3).max(300)),
+        header_handle: z.array(z.string().min(3).max(1000)),
       })
       .optional(),
   })
@@ -149,6 +155,7 @@ export const validateWhatAppTemplateSchema = z.object({
   bodyVariableSequence: z.array(z.string().min(1).max(100)).default([]),
   footerVariableSequence: z.array(z.string().min(1).max(100)).default([]),
   buttonVariableSequence: z.array(z.string().min(1).max(100)).default([]),
+  templateName: z.string().min(3).max(100).optional(),
   businessId: ObjectIdSchema,
 });
 

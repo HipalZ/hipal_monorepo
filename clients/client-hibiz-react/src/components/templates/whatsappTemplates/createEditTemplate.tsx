@@ -1,189 +1,55 @@
-import { memo, lazy, useCallback, useRef, type FormEvent } from "react";
-import useWhatsapp, {
-  ActionType,
-  HeaderInterface,
-  TemplateSteps,
-} from "@/components/store/useWhatsapp";
-import {
-  useCreateTemplateMutation,
-  useEditTemplateMutation,
-  useMediaUpload,
-} from "@/hooks/useTemplates";
-import useBusinessData from "@/components/store/useBusinessData";
+import { memo, lazy, useRef, type FormEvent } from "react";
+import useWhatsapp, { TemplateSteps } from "@/components/store/useWhatsapp";
 import type { CropperRef } from "@/components/types/businessData";
 import PopUp from "@/components/atom/popUp";
 import EasyReactCropper from "@/components/cropper/cropper";
 import { useWhatzappCroppedImg } from "@/components/helpers/whatzAppHelpers";
-import CallOfAction from "./callOfAction";
-import TemplateButtons from "./templateButtons";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
+import { useTempStore } from "@/components/store/useTempStore";
 
+const CallOfAction = lazy(() => import("./callOfAction"));
+const TemplateButtons = lazy(() => import("./templateButtons"));
+const TemplateTerms = lazy(() => import("./templateTerms"));
 const SuccessPopup = lazy(() => import("./successPopup"));
 const Content = lazy(() => import("./content"));
 const ShowOptionsToSend = lazy(() => import("./showOptionsToSend"));
 const StepHeader = lazy(() => import("./stepHeader"));
 const SendTemplate = lazy(() => import("./sendTemplate"));
 const TemplatePreview = lazy(() => import("./templatePreview"));
-const PreDefinedContent = lazy(() => import("./preDefinedContent"));
 const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
 
 const MemoCreateEditTemplate = () => {
-  const { businessId } = useBusinessData((s) => ({
-    businessId: s.businessData?._id,
-  }));
-
   const {
-    templateName,
-    templateType,
-    headerType,
-    headerText,
-    bodyText,
-    footerText,
-    variables,
-    websiteUrl,
-    buttonText,
-    actionType,
-    phoneNumber,
     templateSteps,
-    setTemplateSteps,
-    bodyVariableSequence,
     showCropper,
     setShowCropper,
     cropping,
-    templateId,
     showSuccessPopup,
-    setShowSuccessPopup,
     templateStatus,
-    setTemplateStatus,
+    confirmCreate,
+    setConfirmCreate,
   } = useWhatsapp((s) => ({
-    templateId: s.templateId,
-    templateName: s.templateName,
-    templateType: s.templateType,
-    headerType: s.headerType,
-    headerText: s.headerText,
-    bodyText: s.bodyText,
-    footerText: s.footerText,
-    variables: s.bodyVariables,
-    websiteUrl: s.websiteUrl,
-    buttonText: s.buttonText,
-    actionType: s.actionType,
-    phoneNumber: s.phoneNumber,
     templateSteps: s.templateSteps,
-    setTemplateSteps: s.setTemplateSteps,
-    bodyVariableSequence: s.bodyVariableSequence,
     showCropper: s.showCropper,
     setShowCropper: s.setShowCropper,
     cropping: s.cropping,
     showSuccessPopup: s.showSuccessPopup,
     setShowSuccessPopup: s.setShowSuccessPopup,
     templateStatus: s.templateStatus,
-    setTemplateStatus: s.setTemplateStatus,
+    confirmCreate: s.confirmCreate,
+    setConfirmCreate: s.setConfirmCreate,
   }));
-
   const cropperRef = useRef<CropperRef>(null);
   const { handleCrop } = useWhatzappCroppedImg();
-  const { uploadMedia } = useMediaUpload();
-
-  const createTemplateMutation = useCreateTemplateMutation();
-  const editTemplateMutation = useEditTemplateMutation();
 
   // handle form submit for create and edit template
   const handleSubmitReview = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    let imageUrl = "";
-    if (headerType === HeaderInterface.Image) {
-      imageUrl = await uploadMedia();
-    }
-
-    // payload structure for create/edit template
-    const payload = {
-      businessId: businessId,
-      name: templateName,
-      language: "en_US",
-      ...(templateId?.length > 0 && { templateId: templateId }),
-      category: templateType,
-      components: [
-        ...(headerType && headerText
-          ? [
-              {
-                type: "HEADER",
-                format: headerType === HeaderInterface.Text ? "TEXT" : "IMAGE",
-                ...(headerType === HeaderInterface.Text
-                  ? { text: headerText }
-                  : imageUrl && {
-                      example: {
-                        header_handle: [imageUrl],
-                      },
-                    }),
-              },
-            ]
-          : []),
-        {
-          type: "BODY",
-          text: bodyText,
-          ...(variables.length > 0 && { example: { body_text: [variables] } }),
-        },
-        ...(footerText
-          ? [
-              {
-                type: "FOOTER",
-                text: footerText,
-              },
-            ]
-          : []),
-        ...(buttonText && (websiteUrl || phoneNumber)
-          ? [
-              {
-                type: "BUTTONS",
-                buttons: [
-                  actionType === ActionType.VisitWebsite
-                    ? {
-                        type: "URL",
-                        text: buttonText,
-                        url: websiteUrl,
-                      }
-                    : {
-                        type: "PHONE_NUMBER",
-                        text: buttonText,
-                        phone_number: `+91${phoneNumber}`,
-                      },
-                ],
-              },
-            ]
-          : []),
-      ],
-      bodyVariableSequence: bodyVariableSequence,
-    };
-
-    if (templateId?.length > 0) {
-      editTemplateMutation.mutate(payload, {
-        onSuccess: (data) => {
-          if (data?.status !== "REJECTED") {
-            setShowSuccessPopup(true);
-            setTemplateStatus(data?.status);
-          }
-        },
-      });
-    } else {
-      createTemplateMutation.mutate(payload, {
-        onSuccess: (data) => {
-          if (data?.status !== "REJECTED") {
-            setShowSuccessPopup(true);
-            setTemplateStatus(data?.status);
-          }
-        },
-      });
-    }
+    setConfirmCreate(true);
   };
 
   // proceed forward after success popup
-  const handleProceed = useCallback(() => {
-    setShowSuccessPopup(false);
-    setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
-  }, [setTemplateSteps, setShowSuccessPopup]);
-
-  if (createTemplateMutation.isPending || editTemplateMutation.isPending)
-    return <LoadingSpinner />;
+  const isLoading = useTempStore((s) => s.isLoading);
 
   return (
     <form onSubmit={handleSubmitReview}>
@@ -191,12 +57,6 @@ const MemoCreateEditTemplate = () => {
         <StepHeader />
         <div className="grid gap-8 md:mt-4 md:grid-cols-2">
           <TemplatePreview />
-          {templateSteps === TemplateSteps.MODIFY && (
-            <section>
-              <PreDefinedContent />
-              <CallOfAction />
-            </section>
-          )}
           {templateSteps === TemplateSteps.CREATE_EDIT && (
             <section>
               <Content />
@@ -215,37 +75,35 @@ const MemoCreateEditTemplate = () => {
         </center>
       ) : null}
       <TemplateButtons />
-      <PopUp hide show={showCropper} onClose={() => setShowCropper(false)}>
-        <section className="my-[10rem]">
-          <EasyReactCropper
-            key={cropping.image}
-            image={cropping.image}
-            ref={cropperRef}
-            width={400}
-            height={400}
+      {showCropper && (
+        <PopUp hide show={showCropper} onClose={() => setShowCropper(false)}>
+          <section className="my-[10rem]">
+            <EasyReactCropper
+              key={cropping.image}
+              image={cropping.image}
+              ref={cropperRef}
+              width={400}
+              height={400}
+            />
+          </section>
+          <BottomButton
+            buttons={[
+              {
+                text: "Crop",
+                onClick: () => handleCrop(cropperRef),
+              },
+              {
+                text: "Cancel",
+                onClick: () => setShowCropper(false),
+                type: "button",
+              },
+            ]}
           />
-        </section>
-        <BottomButton
-          buttons={[
-            {
-              text: "Crop",
-              onClick: () => handleCrop(cropperRef),
-            },
-            {
-              text: "Cancel",
-              onClick: () => setShowCropper(false),
-              type: "button",
-            },
-          ]}
-        />
-      </PopUp>
-      {showSuccessPopup && (
-        <SuccessPopup
-          show={showSuccessPopup}
-          onClose={() => setShowSuccessPopup(false)}
-          onProceed={handleProceed}
-        />
+        </PopUp>
       )}
+      {showSuccessPopup && <SuccessPopup />}
+      {confirmCreate ? <TemplateTerms /> : null}
+      {isLoading && <LoadingSpinner />}
     </form>
   );
 };

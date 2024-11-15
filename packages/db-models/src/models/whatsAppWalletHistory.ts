@@ -12,6 +12,7 @@ const whatsAppWalletHistorySchema =
       userId: {
         type: ObjectId,
         required: true,
+        ref: "User",
       },
 
       date: {

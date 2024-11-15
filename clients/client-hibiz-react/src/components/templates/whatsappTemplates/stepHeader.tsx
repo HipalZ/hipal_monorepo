@@ -4,13 +4,11 @@ import { cn } from "@/components/utils/helper";
 import { memo, useCallback } from "react";
 
 const MemoStepHeader = () => {
-  const { templateSteps, templateId, setTemplateSteps, preDefinedTemplate } =
-    useWhatsapp((s) => ({
-      templateSteps: s.templateSteps,
-      templateId: s.templateId,
-      setTemplateSteps: s.setTemplateSteps,
-      preDefinedTemplate: s.preDefinedTemplate,
-    }));
+  const { templateSteps, templateId, setTemplateSteps } = useWhatsapp((s) => ({
+    templateSteps: s.templateSteps,
+    templateId: s.templateId,
+    setTemplateSteps: s.setTemplateSteps,
+  }));
 
   const { selectedOptions } = useMessageRecipientsStore((s) => ({
     selectedOptions: s.selectedOptions,
@@ -26,53 +24,28 @@ const MemoStepHeader = () => {
   return (
     <nav aria-label="Progress" className="pb-4 overflow-x-auto md:pb-0">
       <ol className="flex text-sm font-medium">
-        {preDefinedTemplate ? (
-          <li
-            onClick={() => handleTemplateStep(TemplateSteps.MODIFY)}
-            onKeyDown={() => handleTemplateStep(TemplateSteps.MODIFY)}
-            className={cn(
-              templateSteps === TemplateSteps.MODIFY
-                ? "text-green-600"
-                : "text-gray-400",
-              "flex items-center ml-4 hover:cursor-pointer",
-            )}
-          >
-            <span
-              className={cn(
-                templateSteps === TemplateSteps.MODIFY
-                  ? "bg-green-600 border border-green-600 text-white"
-                  : "border border-gray-300",
-                "flex items-center justify-center w-8 h-8 mr-2 p-4 rounded-full",
-              )}
-            >
-              1
-            </span>
-            <span>Modify template</span>
-          </li>
-        ) : (
-          <li
-            onClick={() => handleTemplateStep(TemplateSteps.CREATE_EDIT)}
-            onKeyDown={() => handleTemplateStep(TemplateSteps.CREATE_EDIT)}
+        <li
+          onClick={() => handleTemplateStep(TemplateSteps.CREATE_EDIT)}
+          onKeyDown={() => handleTemplateStep(TemplateSteps.CREATE_EDIT)}
+          className={cn(
+            templateSteps === TemplateSteps.CREATE_EDIT
+              ? "text-green-600"
+              : "text-gray-400",
+            "flex items-center ml-4 hover:cursor-pointer",
+          )}
+        >
+          <span
             className={cn(
               templateSteps === TemplateSteps.CREATE_EDIT
-                ? "text-green-600"
-                : "text-gray-400",
-              "flex items-center ml-4 hover:cursor-pointer",
+                ? "bg-green-600 border border-green-600 text-white"
+                : "border border-gray-300",
+              "flex items-center justify-center w-8 h-8 mr-2 p-4 rounded-full",
             )}
           >
-            <span
-              className={cn(
-                templateSteps === TemplateSteps.CREATE_EDIT
-                  ? "bg-green-600 border border-green-600 text-white"
-                  : "border border-gray-300",
-                "flex items-center justify-center w-8 h-8 mr-2 p-4 rounded-full",
-              )}
-            >
-              1
-            </span>
-            <span>Create template</span>
-          </li>
-        )}
+            1
+          </span>
+          <span>Create template</span>
+        </li>
         <li className="flex items-center">
           <span className="w-8 ml-2 border-t-2 border-gray-300 border-dashed" />
         </li>

@@ -14,7 +14,7 @@ const MemoTemplatePreview = () => {
     imagePreview,
     bodyText,
     footerText,
-    variables,
+    displayBodyVariableSequence,
     buttonText,
   } = useWhatsapp((s) => ({
     headerType: s.headerType,
@@ -22,9 +22,30 @@ const MemoTemplatePreview = () => {
     imagePreview: s.imagePreview,
     bodyText: s.bodyText,
     footerText: s.footerText,
-    variables: s.bodyVariables,
+    displayBodyVariableSequence: s.displayBodyVariableSequence,
     buttonText: s.buttonText,
   }));
+
+  const renderBodyText = () => {
+    if (typeof bodyText !== "string") {
+      return <p className="text-red-500">{bodyText}</p>;
+    }
+
+    return bodyText
+      .split(/(\{\{\d+\}\})/)
+      .map((part: string, index: number) => {
+        const match = part.match(/\{\{(\d+)\}\}/);
+        if (match) {
+          const varIndex = Number.parseInt(match[1]) - 1;
+          return (
+            <span key={index.toString()} className="text-blue-600 break-words">
+              {displayBodyVariableSequence[varIndex] || part}
+            </span>
+          );
+        }
+        return part;
+      });
+  };
 
   return (
     <div className="md:max-h-[600px] w-full max-w-[300px] mx-auto inter relative border-[10px] border-black rounded-[2rem] shadow-xl">
@@ -71,29 +92,21 @@ const MemoTemplatePreview = () => {
             <img
               src={imagePreview || pastaDummy}
               alt="preview"
-              className="object-cover w-full h-48 p-3 rounded-2xl"
+              className="object-cover w-full p-3 rounded-2xl"
+              style={{
+                height: "175px",
+                objectFit: "cover",
+                objectPosition: "0 -8px",
+              }}
             />
           )}
-          <div className="p-4 space-y-2">
+          <div className="p-3 space-y-2">
             {headerType === HeaderInterface.Text && (
               <h3 className="text-lg font-semibold">{headerText}</h3>
             )}
             {bodyText && (
-              <p className="text-[0.9375rem]">
-                {bodyText
-                  .split(/(\{\{\d+\}\})/)
-                  .map((part: string, index: number) => {
-                    const match = part.match(/\{\{(\d+)\}\}/);
-                    if (match) {
-                      const varIndex = Number.parseInt(match[1]) - 1;
-                      return (
-                        <span key={index?.toString()} className="text-blue-600">
-                          {variables[varIndex] || part}
-                        </span>
-                      );
-                    }
-                    return part;
-                  })}
+              <p className="max-w-[248px] break-words text-[0.9375rem]">
+                {renderBodyText()}
               </p>
             )}
             {footerText && (

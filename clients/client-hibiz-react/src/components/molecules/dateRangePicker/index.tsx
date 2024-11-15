@@ -13,6 +13,8 @@ import {
 } from "date-fns";
 import StartDatePicker from "./start";
 import EndDatePicker from "./end";
+import BottomButton from "@/components/atom/bottomButton";
+import { FaArrowLeft } from "react-icons/fa";
 
 const formatDate = (date: Date) => {
   return `${String(date?.getDate()).padStart(2, "0")}-${String(
@@ -91,7 +93,6 @@ const DateRangePicker: React.FC = memo(() => {
     <div className="flex items-center justify-between pt-4 pl-4 space-x-2">
       <div className="sticky top-0">
         <div className="flex flex-wrap items-center justify-start space-x-2">
-          {/* Your range buttons here */}
           <button
             type="button"
             className={`rounded-md border px-2 py-1 text-xs ${
@@ -142,14 +143,21 @@ const DateRangePicker: React.FC = memo(() => {
             hide
             show={isCustomDate}
             onClose={() => setIsCustomDate(false)}
-            width="w-full max-w-[30rem]"
-            height="h-[100dvh] md:h-[30rem]"
+            width="w-full max-w-[36rem]"
+            height="h-[100dvh] md:h-[80dvh] lg:h-[30rem]"
           >
-            <h3 className="mt-6 font-semibold text-center">
+            <button
+              type="button"
+              className="absolute left-4 top-4 px-2 py-1 text-xs bg-[#ffffff] border rounded-md"
+              onClick={() => setIsCustomDate(false)}
+            >
+              <FaArrowLeft className="mr-1" />
+            </button>
+            <h3 className="mt-4 font-semibold text-center">
               Select the Custom Date Range
             </h3>
             <div className="flex flex-col items-center pt-6 date-picker-container">
-              <div className="flex flex-col items-start">
+              <div className="flex flex-col items-start lg:flex-row lg:gap-4">
                 <div>
                   <p className="text-sm font-medium">Start Date:</p>
                   <StartDatePicker
@@ -192,13 +200,14 @@ const DateRangePicker: React.FC = memo(() => {
                   {validationError}
                 </p>
               )}
-              <button
-                onClick={handleSave}
-                type="button"
-                className="mt-4 py-3 rounded-full text-white w-[92%] bg-black"
-              >
-                Save
-              </button>
+              <BottomButton
+                buttons={[
+                  {
+                    text: "Save",
+                    onClick: handleSave,
+                  },
+                ]}
+              />
             </div>
           </PopUp>
         )}

@@ -16,8 +16,20 @@ const MemoNotifyAndWallet = () => {
   const { getWalletBalance, getWalletHistory } = useWalletBalance();
 
   const handleWallethistory = useCallback(() => {
-    setStep(Step.WALLET_HISTORY);
-  }, [setStep]);
+    if (step === Step.WALLET_HISTORY) {
+      setStep(Step.SETUP);
+    } else {
+      setStep(Step.WALLET_HISTORY);
+    }
+  }, [setStep, step]);
+
+  const handleRecharge = useCallback(() => {
+    if (step === Step.TRANSACTIONS) {
+      setStep(Step.SETUP);
+    } else {
+      setStep(Step.TRANSACTIONS);
+    }
+  }, [setStep, step]);
 
   useQuery({
     queryKey: ["walletBalance", businessData?._id],
@@ -35,26 +47,29 @@ const MemoNotifyAndWallet = () => {
     <div className="flex items-center justify-end gap-2 -mr-4 lg:gap-4 md:mr-0">
       {/* Notifications */}
       {step === Step.SETUP && (
-        <div className="relative flex items-center">
-          <button
-            title="Wallet History"
-            onClick={handleWallethistory}
-            type="button"
-            className="on_active_bounce"
+        <>
+          <div className="relative flex items-center">
+            <button
+              title="Wallet History"
+              onClick={handleWallethistory}
+              type="button"
+              className="p-2 rounded-full on_active_bounce"
+            >
+              <GrHistory size={22} />
+            </button>
+          </div>
+          {/* Wallet */}
+          <div
+            title="Balance"
+            onClick={handleRecharge}
+            onKeyDown={handleRecharge}
+            className="flex items-center gap-2 px-3 py-1 bg-white rounded-full shadow on_active_bounce"
           >
-            <GrHistory size={22} />
-          </button>
-        </div>
+            <BsWallet2 className="text-lg" />
+            <span className="font-semibold">{walletBalance}</span>
+          </div>
+        </>
       )}
-
-      {/* Wallet */}
-      <div
-        title="Balance"
-        className="flex items-center gap-2 px-3 py-1 bg-white rounded-full shadow"
-      >
-        <BsWallet2 className="text-lg" />
-        <span className="font-semibold">{walletBalance}</span>
-      </div>
     </div>
   );
 };

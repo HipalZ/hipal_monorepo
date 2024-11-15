@@ -3,21 +3,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FiCheck, FiClock } from "react-icons/fi";
 import MiddlePopUp from "@/components/atom/middlePopUp";
 import { cn } from "@/components/utils/helper";
+import useWhatsapp, { TemplateSteps } from "@/components/store/useWhatsapp";
 
-interface SuccessPopupProps {
-  show: boolean;
-  onClose: () => void;
-  onProceed: () => void;
-}
-
-const MemoSuccessPopup: React.FC<SuccessPopupProps> = ({
-  show,
-  onClose,
-  onProceed,
-}) => {
+const MemoSuccessPopup = () => {
+  const { setTemplateSteps, showSuccessPopup, setShowSuccessPopup } =
+    useWhatsapp((s) => ({
+      setTemplateSteps: s.setTemplateSteps,
+      showSuccessPopup: s.showSuccessPopup,
+      setShowSuccessPopup: s.setShowSuccessPopup,
+    }));
   const [timer, setTimer] = useState(15);
   const [isTimerStarted, setIsTimerStarted] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleProceed = useCallback(() => {
+    setShowSuccessPopup(false);
+    setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
+  }, [setTemplateSteps, setShowSuccessPopup]);
 
   const startTimer = useCallback(() => {
     if (!isTimerStarted) {
@@ -42,7 +44,7 @@ const MemoSuccessPopup: React.FC<SuccessPopupProps> = ({
   }, []);
 
   return (
-    <MiddlePopUp onlyPopUp show={show} onClose={onClose}>
+    <MiddlePopUp onlyPopUp show={showSuccessPopup} onClose={handleProceed}>
       <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-xl">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -98,7 +100,7 @@ const MemoSuccessPopup: React.FC<SuccessPopupProps> = ({
         <div className="flex justify-center mt-8">
           <button
             type="button"
-            onClick={onProceed}
+            onClick={handleProceed}
             disabled={timer !== 0}
             className={cn(
               timer > 0 ? "opacity-50" : "bg-green-500",

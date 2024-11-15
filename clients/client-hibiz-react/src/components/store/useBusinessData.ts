@@ -1,6 +1,7 @@
 import type {
   IBusinessData,
   ILoyaltyData,
+  IOutletInfo,
 } from "@/components/types/businessData";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
@@ -9,6 +10,8 @@ export const useBusinessData = create(
   persist<{
     businessData: IBusinessData | null;
     setBusinessData: (data: IBusinessData) => void;
+    outletInfo: IOutletInfo | null; // Use the interface here
+    setOutletInfo: (data: IOutletInfo) => void;
     themes: Record<string, any>;
     setThemes: (themes: Record<string, any>) => void;
     existingLoyalty: ILoyaltyData;
@@ -23,6 +26,8 @@ export const useBusinessData = create(
     (set, get) => ({
       businessData: null,
       setBusinessData: (data: IBusinessData) => set({ businessData: data }),
+      outletInfo: null,
+      setOutletInfo: (data: IOutletInfo) => set({ outletInfo: data }),
       themes: {},
       setThemes: (themes) => set({ themes: themes }),
       existingLoyalty: {

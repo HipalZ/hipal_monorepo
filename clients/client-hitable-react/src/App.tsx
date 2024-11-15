@@ -5,13 +5,15 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useHiClientZ } from "./components/store/useHiClientzData";
 import { useFetchAlerts } from "./utils/apiService";
-import type { Alert } from "./components/types/hiClientzData";
+import type { Alert, Cart } from "./components/types/hiClientzData";
 import SpinnerMemo from "./components/atoms/loadingSpinner";
 import toast from "react-hot-toast";
 import { LuBellRing } from "react-icons/lu";
 import { NativeSettings, AndroidSettings } from "capacitor-native-settings";
 import { usePushNotifications } from "./hooks/usePushNotifications";
 import { useUserToken } from "@hi/common/src/useUserToken";
+import { apiRpc } from "@hi/common";
+import { useErrorHandling } from "./components/utils/helpers";
 
 function App() {
   const navigate = useNavigate();
@@ -22,6 +24,7 @@ function App() {
   const businessId = businessIdMatch ? businessIdMatch[1] : null;
   const [isOnline, setIsOnline] = useState(true);
   const [isSlow, setIsSlow] = useState(false);
+  const { errorText } = useErrorHandling();
   const {
     offlineCount,
     onlineCount,
@@ -35,6 +38,9 @@ function App() {
     triggerSound,
     notificationStatus,
     setNotificationStatus,
+    setRefetchCart,
+    setCartData,
+    setCartCount,
   } = useLiteStore();
   const { initializePushNotifications, initializedRef } =
     usePushNotifications();
@@ -87,8 +93,26 @@ function App() {
         sound.pause();
       }, 3000);
     }
-
     return data;
+  };
+
+  const getAllCarts = async () => {
+    if (!businessId) return;
+
+    const response = await apiRpc.cart.$get({
+      query: {
+        businessId: businessId,
+      },
+    });
+    if (response.status === 401) {
+      errorText();
+    }
+    const res = await response.json();
+    setRefetchCart(refetchCart);
+    const carts = res.data as Cart[];
+    setCartData(carts);
+    setCartCount(carts?.length || 0);
+    return res.data;
   };
 
   const handleOfflineAlerts = async () => {
@@ -108,7 +132,6 @@ function App() {
         sound.pause();
       }, 3000);
     }
-
     return data;
   };
 
@@ -158,14 +181,21 @@ function App() {
     queryKey: ["onlineAlerts", businessId, selectedBiz],
     queryFn: handleOnlineAlerts,
     enabled: !!businessId && !!selectedBiz,
-    refetchInterval: isSlow ? 30000 : 17000,
+    refetchInterval: isSlow ? 31000 : 17000,
   });
 
   const { refetch: refetchOfflineAlerts } = useQuery({
     queryKey: ["offlineAlerts", businessId, selectedBiz],
     queryFn: handleOfflineAlerts,
     enabled: !!businessId && !!selectedBiz,
-    refetchInterval: isSlow ? 30000 : 19000,
+    refetchInterval: isSlow ? 23000 : 19000,
+  });
+
+  const { refetch: refetchCart } = useQuery({
+    queryKey: ["carts", businessId],
+    queryFn: getAllCarts,
+    enabled: !!businessId,
+    refetchInterval: isSlow ? 29000 : 23000,
   });
 
   return (

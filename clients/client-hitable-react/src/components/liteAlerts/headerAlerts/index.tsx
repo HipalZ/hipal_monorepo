@@ -1,10 +1,10 @@
+import { memo } from "react";
+import { HiOutlineRefresh } from "react-icons/hi";
 import hipalLogo from "@/assets/img/liteLoginIcon4.png";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useLiteStore } from "@/components/store/useLiteStore";
-import { memo } from "react";
-import { HiOutlineRefresh } from "react-icons/hi";
 import ProfileHeader from "../profileHeader";
-import "./index.css";
+import NavItems from "@/components/atoms/navItems";
 
 const HeaderAlerts = () => {
   const { selectedBiz } = useHiClientZ((s) => ({
@@ -21,6 +21,7 @@ const HeaderAlerts = () => {
     refetchOnlineAlerts: s.refetchOnlineAlerts,
     loading: s.loading,
   }));
+
   const refetchData = () => {
     if (selectedNavItem === "online") {
       refetchOnlineAlerts();
@@ -28,16 +29,15 @@ const HeaderAlerts = () => {
       refetchOfflineAlerts();
     }
   };
+
   return (
-    <header className="sticky top-0 !z-10 flex h-[5rem] w-full items-center justify-between bg-white px-6 py-4">
+    <header className="sticky top-0 z-10 flex items-center justify-between w-full h-20 px-6 py-4 bg-white shadow-md">
       <div className="flex items-center space-x-3">
-        <figure className="w-[3rem]">
+        <figure className="w-12 h-12 overflow-hidden border border-black rounded-full">
           <img
-            className="border border-black rounded-full border-1"
+            className="object-cover w-full h-full"
             src={selectedBiz?.businessId?.logo || hipalLogo}
             alt="logo"
-            width={47}
-            height={47}
           />
         </figure>
         <div>
@@ -46,19 +46,24 @@ const HeaderAlerts = () => {
           </h6>
           <p
             title={selectedBiz?.businessId?.address}
-            className="w-48 text-sm truncate"
+            className="w-48 text-sm text-gray-600 truncate"
           >
             {selectedBiz?.businessId?.address}
           </p>
         </div>
       </div>
+      <section className="nav">
+        <section className="flex lg:mr-[13rem]">
+          <NavItems />
+        </section>
+      </section>
       <div className="flex items-center space-x-3">
         {(selectedNavItem === "online" || selectedNavItem === "on floor") && (
           <HiOutlineRefresh
             onClick={refetchData}
             size={24}
-            className={`cursor-pointer text-green-500 ${
-              loading ? "animate-spin" : ""
+            className={`cursor-pointer text-green-500 transition-transform duration-300 ${
+              loading ? "animate-spin" : "hover:rotate-180"
             }`}
           />
         )}

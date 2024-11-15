@@ -154,7 +154,6 @@ const MemoOutletForm: React.FC = () => {
               value={formData.placeUrl}
               onChange={handleInputChange("placeUrl")}
               className="block w-full pt-2 pb-4 pl-4 pr-4 mb-0 ml-0 mr-0 text-base border border-gray-800 rounded-2xl text-base-content bg-base-100 dark:text-base-100 focus:outline-none focus:border-primary dark:border-gray-600 peer"
-              required
             />
             <label
               htmlFor="placeUrl"
@@ -171,7 +170,6 @@ const MemoOutletForm: React.FC = () => {
               onChange={handleInputChange("placeId")}
               className="block w-full pt-2 pb-4 pl-4 pr-4 mb-0 ml-0 mr-0 text-base border border-gray-800 rounded-2xl text-base-content bg-base-100 dark:text-base-100 focus:outline-none focus:border-primary dark:border-gray-600 peer"
               maxLength={30}
-              required
             />
             <label
               htmlFor="placeId"

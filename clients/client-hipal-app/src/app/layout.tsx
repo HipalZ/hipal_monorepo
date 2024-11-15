@@ -66,7 +66,9 @@ export default function RootLayout({
 
       <body className={`${ubuntu.className}`}>
         <Suspense fallback={<Loading />}>
-          <DynamicToast />
+          <section className="relative !z-[9999]">
+            <DynamicToast />
+          </section>
           <DynamicQueryComponent>
             <div id="root">{children}</div>
           </DynamicQueryComponent>
