@@ -1,9 +1,8 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useState } from "react";
 import { GiKnifeFork } from "react-icons/gi";
 import { FiShare, FiUsers, FiBriefcase } from "react-icons/fi";
 import CartItem from "./cartItem";
 import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
-import MemoCallTheWaiterComponent from "@/components/molecules/bottomButton/callTheWaiter";
 import useTableData from "@/components/store/useTableData";
 import { useCartStore } from "@/components/store/useCartStore";
 import { useUserToken } from "@hi/common/src/useUserToken";
@@ -13,14 +12,14 @@ import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { apiRpc } from "@hi/common";
 import { useLogin } from "@/components/store/useLogin";
 import { useParams, useRouter } from "next/navigation";
-import toast from "react-hot-toast";
 import { BUSINESS_KEYID } from "@/configs";
+import { MdOutlineRemoveShoppingCart } from "react-icons/md";
+import { toast } from "react-toastify";
 
 const Cart = () => {
   const { cart } = useCartStore();
   const { setShowCart } = useCart();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
-  const [callWaiterModal, setCallWaiterModal] = useState(false);
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [shareURL, setShareURL] = useState("");
   const tableName = useTableData((s) => s.tableName);
@@ -28,14 +27,6 @@ const Cart = () => {
   const userDetails = useLogin((s) => s.userDetails);
   const router = useRouter();
   const customLink = useParams()?.businessId as string;
-
-  const openCallWaiterModal = useCallback(() => {
-    setCallWaiterModal(true);
-  }, []);
-
-  const closeCallWaiterModal = useCallback(() => {
-    setCallWaiterModal(false);
-  }, []);
 
   const shareWithFriends = async (shareURL: string) => {
     if (shareURL) {
@@ -69,7 +60,7 @@ const Cart = () => {
     }
 
     const sanitizedCart = cart.map((item) => {
-      const { recommendationIds, ...sanitizedDish } = item.dish;
+      const { recommendationIds, addOnIds, ...sanitizedDish } = item.dish;
       return {
         ...item,
         dish: sanitizedDish,
@@ -99,6 +90,39 @@ const Cart = () => {
     }
   };
 
+  const placeOrder = async () => {
+    if (!accessToken) {
+      router.push(`/${customLink}/user/signup`);
+      return;
+    }
+
+    const sanitizedCart = cart.map((item) => {
+      const { recommendationIds, addOnIds, ...sanitizedDish } = item.dish;
+      return {
+        ...item,
+        dish: sanitizedDish,
+      };
+    });
+
+    const response = await apiRpc.cart.create.$post({
+      json: {
+        businessId: outletInfo?.businessId,
+        userId: userDetails?._id,
+        tableName: tableName,
+        cart: sanitizedCart,
+      },
+    });
+    const res = await response.json();
+
+    if (!res.err) {
+      toast.success("Order placed successfully");
+      setShowCart(false);
+      useCartStore.setState({ cart: [] });
+    } else {
+      toast.error(res.message || "Failed to place order");
+    }
+  };
+
   return (
     <div className="h-[100dvh] overflow-y-auto pb-[5rem] text-primary bg-base-100 relative">
       <section className="sticky top-0 z-50 pb-4 bg-base-100">
@@ -115,11 +139,13 @@ const Cart = () => {
       {cart.length === 0 ? (
         <div className="flex flex-col items-center justify-center pt-[20vh]">
           <div className="flex items-center justify-center w-20 h-20 rounded-full bg-base-100">
-            <GiKnifeFork className="text-4xl text-primary-100" />
+            {outletInfo?.outLetType === "OTHER" ? (
+              <MdOutlineRemoveShoppingCart className="text-4xl text-primary-100" />
+            ) : (
+              <GiKnifeFork className="text-4xl text-primary-100" />
+            )}
           </div>
-          <div className="mt-4 text-2xl font-bold">
-            Your {outletInfo?.outLetType !== "OTHER" ? "cart" : "cart"} is empty
-          </div>
+          <div className="mt-4 text-2xl font-bold">Your cart is empty</div>
         </div>
       ) : (
         <div className="w-full px-4">
@@ -144,11 +170,12 @@ const Cart = () => {
               onClose={() => setShowShareOptions(false)}
             >
               <div className="p-4">
-                <div className="mb-4 text-xl font-semibold text-center">
+                <div className="mb-4 text-xl font-semibold text-center text-primary">
                   Share
                 </div>
                 <div className="flex justify-around">
                   <button
+                    type="button"
                     onClick={() => {
                       shareWithFriends(shareURL);
                       setShowShareOptions(false);
@@ -161,6 +188,7 @@ const Cart = () => {
                     </span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       shareWithUs(shareURL);
                       setShowShareOptions(false);
@@ -178,20 +206,18 @@ const Cart = () => {
           )}
         </>
       )}
-      {accessToken && tableName && outletInfo?.outLetType !== "OTHER" && (
-        <button
-          onClick={openCallWaiterModal}
-          type="button"
-          className="fixed w-[92%] mx-4 py-3 rounded-full bg-primary bottom-4 text-base-100"
-        >
-          Call Captain
-        </button>
-      )}
-      {callWaiterModal && (
-        <MemoBottomPopUp show={callWaiterModal} onClose={closeCallWaiterModal}>
-          <MemoCallTheWaiterComponent onClose={closeCallWaiterModal} />
-        </MemoBottomPopUp>
-      )}
+      {accessToken &&
+        cart.length > 0 &&
+        tableName &&
+        outletInfo?.outLetType !== "OTHER" && (
+          <button
+            onClick={placeOrder}
+            type="button"
+            className="fixed w-[92%] mx-4 py-3 rounded-full bg-primary bottom-4 text-base-100"
+          >
+            Place Order
+          </button>
+        )}
     </div>
   );
 };

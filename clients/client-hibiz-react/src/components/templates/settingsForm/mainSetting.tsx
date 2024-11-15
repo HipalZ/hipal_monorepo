@@ -40,7 +40,7 @@ const MemoSettings = () => {
     const response = (await res.json()).data;
     if (res.status === 200 || res.status === 201) {
       setEntireFormData(response);
-      console.log(response);
+      useBusinessData.getState().setOutletInfo(response);
     }
   };
 
@@ -53,7 +53,6 @@ const MemoSettings = () => {
     const response = (await res.json()).data;
     if (res.status === 200 || res.status === 201) {
       setEntireBusinessFormData(response);
-      console.log(response);
     }
   };
 

@@ -6,7 +6,6 @@ import type { DishType } from "@hi/db-models/src/validators";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { cn } from "@/components/utils/helpers";
-import Head from "next/head";
 
 const PlaceholderImg = dynamic(() => import("@/components/atoms/placeholder"));
 

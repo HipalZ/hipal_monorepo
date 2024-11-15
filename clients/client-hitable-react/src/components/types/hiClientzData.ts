@@ -1,4 +1,4 @@
-export type NavItemTypes = "online" | "on floor" | "history" | "sales";
+export type NavItemTypes = "online" | "on floor" | "history" | "sales" | "cart";
 
 export interface HiClientzData {
   address: string | undefined;
@@ -90,4 +90,60 @@ export interface ISalesLite {
   totalOfflineSale: number;
   coinzIssued: number;
   coinzRedeemed: number;
+}
+export interface CartItem {
+  id: string;
+  dish: Dish;
+  portion: Portion | null;
+  extras: any[]; // Replace `any[]` with a specific type if extras have a defined structure
+  quantity: number;
+  _id: string;
+}
+
+export interface Dish {
+  _id: string;
+  businessId: string;
+  name: string;
+  price: number;
+  visibility: boolean;
+  dishTypes: string[];
+  categoryIds: string[];
+  addOnIds: string[];
+  images: string[];
+  tags: string[];
+  availability: boolean;
+  isDeleted: boolean;
+  portions: Portion[];
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+  description: string;
+}
+
+export interface Portion {
+  name: string;
+  price: number;
+  default: boolean;
+  portionTypes: string[];
+  _id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface User {
+  _id: string;
+  name: string;
+  phone: string;
+}
+
+export interface Cart {
+  _id: string;
+  businessId: string;
+  userId: User | null;
+  tableName: string;
+  cart: CartItem[];
+  date: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 }

@@ -12,6 +12,7 @@ import useBusinessData from "@/components/store/useBusinessData";
 import { useCreateReviewTemplate } from "@/hooks/useReview";
 import { getReviewAttributes } from "@/components/utils/helper";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
+import { cn } from "@hi/common";
 
 export default function ReviewComponent() {
   const {
@@ -34,6 +35,8 @@ export default function ReviewComponent() {
     setModelType: state.setModelType,
   }));
 
+  const placeUrl = useBusinessData((s) => s.outletInfo?.placeUrl);
+
   const { couponStartDate, couponEndDate } = useCouponsStore();
   const existingLoyalty = useBusinessData((state) => state.existingLoyalty);
   const { businessData } = useBusinessData();
@@ -55,6 +58,9 @@ export default function ReviewComponent() {
     } else if (modelType === "COUPONZ" && amount && couponEndDate) {
       const formattedExpiryDate = formatDate(couponEndDate);
       dynamicPart = `We are happy to offer you a special coupon worth ₹${amount}, valid until ${formattedExpiryDate}.`;
+    } else if (modelType === "GOOGLE_REVIEW") {
+      dynamicPart =
+        "We would love for you to share your experience on google & win more coinz. It really helps us ! ";
     } else {
       dynamicPart = "We appreciate your feedback.";
     }
@@ -107,7 +113,10 @@ export default function ReviewComponent() {
     [review?.date, formatDate],
   );
 
-  const closeModel = useCallback(() => setOpen(false), [setOpen]);
+  const closeModel = useCallback(() => {
+    setOpen(false);
+    setModelType("");
+  }, [setOpen, setModelType]);
 
   const createPayload = useMemo(() => {
     const basePayload = {
@@ -132,6 +141,13 @@ export default function ReviewComponent() {
       return { ...basePayload, amount, couponStartDate, couponEndDate };
     }
 
+    if (modelType === "GOOGLE_REVIEW") {
+      return {
+        ...basePayload,
+        placeUrl,
+      };
+    }
+
     return basePayload;
   }, [
     amount,
@@ -147,6 +163,7 @@ export default function ReviewComponent() {
     password,
     userName,
     review?.userId,
+    placeUrl,
   ]);
 
   const handleWhatsAppReply = useCallback(async () => {
@@ -202,11 +219,12 @@ export default function ReviewComponent() {
           <textarea
             value={message}
             onChange={handleMessageChange}
-            className="w-full h-[232px] md:h-[300px] p-4 border rounded-md resize-none font-sans text-sm leading-relaxed"
+            className="w-full p-4 font-sans max-h-[20rem] text-sm leading-relaxed border rounded-md resize-none"
             maxLength={350}
             style={{
               whiteSpace: "pre-wrap",
               overflowWrap: "break-word",
+              height: "calc(100dvh - 55dvh)",
             }}
           />
           <p className="text-sm text-right text-gray-500">{charCount}/350</p>
@@ -214,21 +232,31 @@ export default function ReviewComponent() {
         <section className="flex flex-wrap gap-2">
           <button
             onClick={() => openModel("COINS")}
-            className="px-2.5 md:px-3.5 py-2 md:text-base text-xs bg-[#8C63FF] text-white rounded-3xl"
+            className={cn(
+              "px-2.5 md:px-3.5 py-2 md:text-base text-xs bg-white text-[#8C63FF] rounded-3xl",
+              modelType === "COINS" && "bg-[#8C63FF] text-white",
+            )}
             type="button"
           >
             Add Coins
           </button>
           <button
             onClick={() => openModel("COUPONZ")}
-            className="px-2.5 py-2 md:px-3.5 text-xs md:text-base bg-[#8C63FF] text-white rounded-3xl"
+            className={cn(
+              "px-2.5 py-2 md:px-3.5 text-xs md:text-base bg-white text-[#8C63FF] rounded-3xl",
+              modelType === "COUPONZ" && "bg-[#8C63FF] text-white",
+            )}
             type="button"
           >
             Add Couponz
           </button>
           <button
             type="button"
-            className="px-2 md:px-3 py-2 text-xs md:text-base text-[#8C63FF] bg-[#e2e2e2] rounded-3xl"
+            onClick={() => setModelType("GOOGLE_REVIEW")}
+            className={cn(
+              "px-2 md:px-3 py-2 text-xs md:text-base text-[#8C63FF] bg-white rounded-3xl",
+              modelType === "GOOGLE_REVIEW" && "bg-[#8C63FF] text-white",
+            )}
           >
             Ask for Google Review
           </button>

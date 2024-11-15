@@ -218,5 +218,14 @@ body {
   animation: moveUpDown 2s infinite alternate;
 }
 
+.nav {
+  display: none;
+}
+@media (min-width: 1024px) {
+  .nav {
+    display: block;
+  }
+}
+
 
 /* liteLoginIcon4 remains unchanged, no animation applied */

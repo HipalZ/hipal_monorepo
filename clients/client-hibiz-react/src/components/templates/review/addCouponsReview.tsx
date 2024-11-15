@@ -43,6 +43,7 @@ const MemoAddCouponsReview = ({ call }: { call?: boolean }) => {
     setCouponEndDate(couponEndDate);
     useReview.getState().setOpen(false);
   }, [amount, couponEndDate, setAmount, setCouponEndDate]);
+  console.log(call);
 
   return (
     <>

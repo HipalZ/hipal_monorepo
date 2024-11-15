@@ -40,9 +40,22 @@ const Business = () => {
     return loyaltyData;
   };
 
+  const getBusinessInfo = async (id: string) => {
+    const res = await apiRpc.businesses.outletInfo[":businessId"].$get({
+      param: {
+        businessId: id,
+      },
+    });
+    const response = (await res.json()).data;
+    if (res.status === 200 || res.status === 201) {
+      useBusinessData.getState().setOutletInfo(response);
+    }
+  };
+
   const handleRoute = async (business: IBusinessData) => {
     setBusinessData(business);
     getLoyaltyData(business);
+    getBusinessInfo(business._id);
     useCategoryStore.persist.clearStorage();
     navigate(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](business._id));
   };

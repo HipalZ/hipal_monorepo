@@ -104,34 +104,9 @@ const Business = () => {
           {businessData?.name}
         </motion.h1>
       </motion.section>
-
-      <section className="mx-4">
-        {!businessData?.withPopCorn && (
-          <button
-            type="button"
-            onClick={goToBusinessControl}
-            className="shadow-xl business_Control"
-          >
-            <article className="text-left business_Control_article">
-              <h3 className="text-lg font-semibold">Business Control</h3>
-              <p>All Controls in one panel</p>
-              <button
-                type="button"
-                className="relative px-6 py-2 mt-4 overflow-hidden text-white bg-black rounded-3xl"
-              >
-                Settings
-                <div className="shine" />
-              </button>
-            </article>
-            <figure className="business_Control_figure">
-              <img className="stair_img" src={Stairs} alt="Stairs" />
-            </figure>
-          </button>
-        )}
-      </section>
       {!businessData?.withPopCorn && (
         <>
-          <h6 className="px-4 mt-4 text-2xl">Shortcuts</h6>
+          <h6 className="px-4 mt-4 text-2xl">Services</h6>
           {!businessData?.themeApplied && (
             <center className="px-4 py-2 mt-2 text-sm font-semibold text-[#da0606] bg-[#da060630] flex items-center justify-center">
               <PiSealWarningFill size={32} className="mr-2" />
