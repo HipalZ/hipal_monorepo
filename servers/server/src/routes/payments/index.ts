@@ -302,12 +302,7 @@ const totalSubscribers = async (businessId: string) => {
     businessId,
   }).select("userCount");
 
-  const totalUserCount = subscribers.reduce(
-    (acc, sub) => acc + (sub.userCount ?? 0),
-    0,
-  );
-
-  return totalUserCount;
+  return subscribers.length;
 };
 
 const calculatePercentages = (totalReviewsLength: number, count: number) => {
