@@ -118,8 +118,7 @@ const businessData = [
     date: "16 Nov 2024",
     name: "sashtra",
     bizName: "SASHTRA WELLNESS PRIVATE LIMITED",
-    billValue: 54000,
-    serviceCost: 4500,
+    serviceCost: 4000,
     months: 12,
     address:
       "2nd Floor:6-3-1186/A/5, Bhole Saheb Maqta Road, Behind Blue Moon Hotel, Begumpet, Hyderabad Telangana-500016",
