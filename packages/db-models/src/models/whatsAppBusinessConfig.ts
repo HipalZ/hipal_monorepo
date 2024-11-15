@@ -40,6 +40,10 @@ const whatsAppBusinessConfigSchema =
         type: String,
         required: true,
       },
+      menuRedirection: {
+        type: String,
+        required: true,
+      },
     },
     {
       timestamps: true,
