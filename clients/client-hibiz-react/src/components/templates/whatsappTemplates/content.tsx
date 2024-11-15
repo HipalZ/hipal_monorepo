@@ -72,7 +72,7 @@ const MemoContent = () => {
             maxLength={100}
             onChange={addTemplateName}
             placeholder="Enter template name"
-            className="w-full px-3 py-2 lowercase border border-gray-300 rounded-md"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
           />
           <small className="absolute text-gray-500 bottom-2 right-3">
             {templateName?.length || 0}/100

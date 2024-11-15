@@ -16,7 +16,6 @@ const ShowOptionsToSend = lazy(() => import("./showOptionsToSend"));
 const StepHeader = lazy(() => import("./stepHeader"));
 const SendTemplate = lazy(() => import("./sendTemplate"));
 const TemplatePreview = lazy(() => import("./templatePreview"));
-const PreDefinedContent = lazy(() => import("./preDefinedContent"));
 const BottomButton = lazy(() => import("@/components/atom/bottomButton"));
 
 const MemoCreateEditTemplate = () => {

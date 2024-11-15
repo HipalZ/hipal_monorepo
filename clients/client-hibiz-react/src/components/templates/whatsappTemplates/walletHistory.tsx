@@ -3,14 +3,6 @@ import { motion } from "framer-motion";
 import { format } from "date-fns";
 import useWhatsapp from "@/components/store/useWhatsapp";
 
-interface WalletHistory {
-  _id: string;
-  amount: number;
-  discount: number;
-  date: number;
-  createdAt: string;
-}
-
 const MemoWalletHistory = () => {
   const { walletHistory } = useWhatsapp((s) => ({
     walletHistory: s.walletHistory,
@@ -39,13 +31,15 @@ const MemoWalletHistory = () => {
                 <div className="flex items-center space-x-4">
                   <div
                     className={`p-2 rounded-full ${
-                      transaction.amount > 0 ? "bg-green-100" : "bg-red-100"
+                      transaction?.order_id?.total > 0
+                        ? "bg-green-100"
+                        : "bg-red-100"
                     }`}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className={`w-6 h-6 ${
-                        transaction.amount > 0
+                        transaction?.order_id?.total > 0
                           ? "text-green-600"
                           : "text-red-600"
                       }`}
@@ -58,7 +52,7 @@ const MemoWalletHistory = () => {
                         strokeLinejoin="round"
                         strokeWidth={2}
                         d={
-                          transaction.amount > 0
+                          transaction?.order_id?.total > 0
                             ? "M7 11l5-5m0 0l5 5m-5-5v12"
                             : "M17 13l-5 5m0 0l-5-5m5 5V6"
                         }
@@ -67,7 +61,7 @@ const MemoWalletHistory = () => {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">
-                      {transaction.amount > 0 ? "Credit" : "Debit"}
+                      {transaction?.order_id?.total > 0 ? "Credit" : "Debit"}
                     </p>
                     <p className="text-xs text-gray-500">
                       {format(new Date(transaction.date), "MMM d, yyyy HH:mm")}
@@ -77,17 +71,14 @@ const MemoWalletHistory = () => {
                 <div className="text-right">
                   <p
                     className={`text-lg font-semibold ${
-                      transaction.amount > 0 ? "text-green-600" : "text-red-600"
+                      transaction?.order_id?.total > 0
+                        ? "text-green-600"
+                        : "text-red-600"
                     }`}
                   >
-                    {transaction.amount > 0 ? "+" : "-"}₹
-                    {Math.abs(transaction.amount).toFixed(2)}
+                    {transaction?.order_id?.total > 0 ? "+" : "-"}₹
+                    {Math.abs(transaction?.order_id?.total).toFixed(2)}
                   </p>
-                  {transaction.discount > 0 && (
-                    <p className="text-xs text-gray-500">
-                      Discount: ₹{transaction.discount.toFixed(2)}
-                    </p>
-                  )}
                 </div>
               </div>
               {hoveredId === transaction._id && (

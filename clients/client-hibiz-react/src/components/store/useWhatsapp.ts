@@ -81,10 +81,17 @@ export interface ITemplateAnalytics {
 export interface WalletTransaction {
   _id: string;
   businessId: string;
-  userId: string;
-  amount: number;
-  discount: number;
+  userId: {
+    _id: string;
+    name: string;
+  };
   date: number;
+  status: string;
+  order_id: {
+    _id: string;
+    total: number;
+    billValue: number;
+  };
   createdAt: string;
   updatedAt: string;
 }
