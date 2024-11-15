@@ -1,9 +1,9 @@
+import { Cart, DeviceToken } from "@hi/db-models";
 import { cartSchema } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import { respond } from "../../utils/response";
-import { Cart, DeviceToken } from "@hi/db-models";
 const admin = require("firebase-admin");
 //
 const cartRouter = new Hono()
@@ -49,7 +49,7 @@ const cartRouter = new Hono()
 
     async (c) => {
       const body = await c.req.json();
-      const createCart = await Cart.create(body);
+      const createCart = await Cart.create({ ...body, date: Date.now() });
       if (!createCart) {
         return respond(c, "cart creation failed", true, 400, {});
       }
