@@ -113,6 +113,18 @@ const businessData = [
       "PLOT NO: 48,49 & 50  Vinayak Nagar, Indira Nagar, Gachibowli, Hyderabad, Telangana 500032",
     gst: "36AAZCA6985E1ZW",
   },
+  {
+    id: "012",
+    date: "16 Nov 2024",
+    name: "sashtra",
+    bizName: "SASHTRA WELLNESS PRIVATE LIMITED",
+    billValue: 54000,
+    serviceCost: 4500,
+    months: 12,
+    address:
+      "2nd Floor:6-3-1186/A/5, Bhole Saheb Maqta Road, Behind Blue Moon Hotel, Begumpet, Hyderabad Telangana-500016",
+    gst: "36ABLCS7033G1Z5",
+  },
 ];
 
 const MemoInovices = () => {
