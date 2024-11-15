@@ -104,6 +104,18 @@ const businessData = [
       "588/1 2 1/2, Inner Ring Rd, Survey Colony, Saraswathi Colony, Uppal, Hyderabad, Telangana 500039",
     gst: "36ALAPS3759F1ZX",
   },
+  {
+    id: "009",
+    date: "16 Nov 2024",
+    name: "sashtra",
+    bizName: "SASHTRA WELLNESS PRIVATE LIMITED",
+    billValue: 54000,
+    serviceCost: 4500,
+    months: 12,
+    address:
+      "2nd Floor:6-3-1186/A/5, Bhole Saheb Maqta Road, Behind Blue Moon Hotel, Begumpet, Hyderabad Telangana-500016",
+    gst: "36ABLCS7033G1Z5",
+  },
 ];
 
 const MemoInovices = ({ data }) => {
