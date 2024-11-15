@@ -52,6 +52,7 @@ export const whatAppTemplateSchema = z.object({
   templateName: z.string().min(3).max(100).optional(),
   languageCode: z.string().min(3).max(100).optional(),
   imageUrl: z.string().url().min(2).max(200).optional(),
+  category: z.enum(whatAppTemplateCategoryEnum).default("UTILITY"),
 });
 
 export const headerSchemaForText = z
