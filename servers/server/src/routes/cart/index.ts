@@ -49,7 +49,11 @@ const cartRouter = new Hono()
 
     async (c) => {
       const body = await c.req.json();
-      const createCart = await Cart.create({ ...body, date: Date.now() });
+      const createCart = await Cart.create({
+        ...body,
+        date: Date.now(),
+        createdAt: Date.now(),
+      });
       if (!createCart) {
         return respond(c, "cart creation failed", true, 400, {});
       }
