@@ -199,6 +199,9 @@ const QrInvoices = ({ data }) => {
           <h1>
             <b>CIN : </b> U72200TG2021PTC156074
           </h1>
+          <h1>
+            <b>PAN CARD:- AAMCP3900B</b>
+          </h1>
         </article>
         <center className="mx-4 mt-16 text-xs opacity-50">
           This is a computer generated invoice. All disputes subjected to
