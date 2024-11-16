@@ -50,7 +50,6 @@ const CartSchema = new Schema<CartType>(
     },
     date: {
       type: Number,
-      default: Date.now(),
     },
     createdAt: {
       type: Date,
