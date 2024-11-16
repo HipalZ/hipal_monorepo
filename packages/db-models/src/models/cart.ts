@@ -53,8 +53,7 @@ const CartSchema = new Schema<CartType>(
     },
     createdAt: {
       type: Date,
-      default: Date.now(),
-      expires: 60 * 3600 * 24,
+      expires: 60 * 60 * 24,
     },
     message: {
       type: String,
