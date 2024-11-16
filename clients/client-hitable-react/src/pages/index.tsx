@@ -12,6 +12,7 @@ import { apiRpc } from "@hi/common";
 import { memo, useState } from "react";
 import toast from "react-hot-toast";
 import { useErrorHandling } from "@/components/utils/helpers";
+import { FiDownload } from "react-icons/fi";
 //test//
 const LoginMemo = () => {
   const { errorText } = useErrorHandling();
@@ -74,6 +75,13 @@ const LoginMemo = () => {
   return (
     <center>
       <section className="relative max-w-[30rem]">
+        <a
+          className="fixed w-full top-0 flex items-center justify-center h-10 text-white bg-[#4C4DDC]"
+          href="https://assets.hipalz.com/app-debug%20(6).apk"
+        >
+          <FiDownload className="mr-2 text-white" size={20} />{" "}
+          <span>Update App</span>
+        </a>
         <div className="mobileGrad border-1 mx-[4rem] mt-[4rem] flex h-[28rem] justify-center">
           <div className="flex flex-col items-center">
             <h1 className="mt-[2rem] text-3xl font-bold">HiClientZ</h1>
