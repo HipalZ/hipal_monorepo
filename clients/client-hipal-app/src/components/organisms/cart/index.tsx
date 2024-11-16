@@ -95,6 +95,11 @@ const Cart = () => {
       router.push(`/${customLink}/user/signup`);
       return;
     }
+    if (!tableName) {
+      toast.error("Table name is required");
+      router.push(`/${customLink}/scan`);
+      return;
+    }
 
     const sanitizedCart = cart.map((item) => {
       const { recommendationIds, addOnIds, ...sanitizedDish } = item.dish;
@@ -115,7 +120,7 @@ const Cart = () => {
     const res = await response.json();
 
     if (!res.err) {
-      toast.success("Order placed successfully");
+      toast.success("Cart Share successfully");
       setShowCart(false);
       useCartStore.setState({ cart: [] });
     } else {
@@ -154,7 +159,7 @@ const Cart = () => {
           ))}
         </div>
       )}
-      {cart.length > 0 && (
+      {cart.length > 0 && tableName && outletInfo?.outLetType === "OTHER" && (
         <>
           <button
             onClick={generateCartLink}
@@ -215,7 +220,7 @@ const Cart = () => {
             type="button"
             className="fixed w-[92%] mx-4 py-3 rounded-full bg-primary bottom-4 text-base-100"
           >
-            Place Order
+            Share The Cart
           </button>
         )}
     </div>
