@@ -46,30 +46,28 @@ const MemoNotifyAndWallet = () => {
   return (
     <div className="flex items-center justify-end gap-2 -mr-4 lg:gap-4 md:mr-0">
       {/* Notifications */}
-      {step === Step.SETUP && (
-        <>
-          <div className="relative flex items-center">
-            <button
-              title="Wallet History"
-              onClick={handleWallethistory}
-              type="button"
-              className="p-2 rounded-full on_active_bounce"
-            >
-              <GrHistory size={22} />
-            </button>
-          </div>
-          {/* Wallet */}
-          <div
-            title="Balance"
-            onClick={handleRecharge}
-            onKeyDown={handleRecharge}
-            className="flex items-center gap-2 px-3 py-1 bg-white rounded-full shadow on_active_bounce"
-          >
-            <BsWallet2 className="text-lg" />
-            <span className="font-semibold">{walletBalance}</span>
-          </div>
-        </>
-      )}
+      <div className="relative flex items-center">
+        <button
+          title="Wallet History"
+          onClick={handleWallethistory}
+          type="button"
+          className="p-2 rounded-full on_active_bounce"
+        >
+          <GrHistory size={22} />
+        </button>
+      </div>
+      {/* Wallet */}
+      <div
+        title="Balance"
+        onClick={handleRecharge}
+        onKeyDown={handleRecharge}
+        className="flex items-center gap-2 px-3 py-1 bg-white rounded-full shadow cursor-pointer on_active_bounce"
+      >
+        <BsWallet2 className="text-lg" />
+        <span className="font-semibold">
+          {walletBalance?.toLocaleString("en-IN")}
+        </span>
+      </div>
     </div>
   );
 };

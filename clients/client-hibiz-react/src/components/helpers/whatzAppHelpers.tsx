@@ -1,14 +1,12 @@
 import { useCallback } from "react";
-import useWhatsapp from "../store/useWhatsapp";
+import useWhatsapp, { Step, TemplateSteps } from "../store/useWhatsapp";
 import type { CropperRef } from "../types/businessData";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parse } from "papaparse";
-import { normalizeAndMapKeys } from "@/hooks/useCategory";
 import toast from "react-hot-toast";
 import { useMessageRecipientsStore } from "../store/useMessageRecipientsStore";
 import { apiRpc } from "@hi/common";
 import useBusinessData from "../store/useBusinessData";
-import { setgroups } from "process";
 
 export const useWhatzappCroppedImg = () => {
   const {
@@ -139,8 +137,80 @@ export const useAddTemplate = () => {
   return { addTemplateName, handleBodyTextChange };
 };
 
+export const normalizeAndMapKeys = (
+  obj: any,
+  keyMap: { [key: string]: string },
+) => {
+  const normalizeKey = (key: string) => {
+    return key
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/[\s-_]+/g, " ")
+      .toLowerCase()
+      .replace(/\s+/g, "");
+  };
+
+  return Object.keys(obj).reduce((acc, key) => {
+    const normalizedKey = normalizeKey(key);
+    const newKey = keyMap[normalizedKey] || key;
+    acc[newKey] = obj[key];
+    return acc;
+  }, {} as any);
+};
+
+// Helper function to clean and normalize phone numbers
+const normalizePhoneNumber = (phone: string): string | null => {
+  const cleanedPhone = phone
+    .replace(/\s+/g, "") // Remove all spaces
+    .replace(/^\+91/, "") // Remove +91 prefix only if it exists
+    .trim(); // Remove leading and trailing spaces
+  console.log(
+    "cleanedPhone",
+    cleanedPhone,
+    typeof cleanedPhone,
+    cleanedPhone.length,
+  );
+  // Exclude 12-digit numbers
+  if (cleanedPhone.length !== 10) {
+    return null; // Invalid number
+  }
+
+  return cleanedPhone;
+};
+
+// Helper function to remove duplicate objects by phone number
+const removeDuplicateContacts = (contacts: any[]): any[] => {
+  const uniqueContacts = new Map();
+  for (const contact of contacts) {
+    const normalizedPhone = normalizePhoneNumber(contact.phone);
+    if (!uniqueContacts.has(normalizedPhone)) {
+      uniqueContacts.set(normalizedPhone, contact);
+    }
+  }
+  return Array.from(uniqueContacts.values());
+};
+
+export const calculateCreditScore = (
+  contactsLength: number,
+  balance: number,
+  templateType: string,
+) => {
+  const creditScore =
+    contactsLength * (templateType === "MARKETING" ? 0.9 : 0.2);
+  if (creditScore > balance) {
+    toast.error(`You have need ${creditScore} credits to send this message.`);
+  } else {
+    toast.success(
+      `This operation will remove ${creditScore} credits from your balance.`,
+    );
+  }
+};
+
 export const useBulkUploadContacts = () => {
   const queryClient = useQueryClient();
+  const { walletBalance, templateType } = useWhatsapp((s) => ({
+    walletBalance: s.walletBalance,
+    templateType: s.templateType,
+  }));
   const { setUploadedFileName, setBulkCustomers } = useMessageRecipientsStore(
     (s) => ({
       setUploadedFileName: s.setUploadedFileName,
@@ -149,7 +219,7 @@ export const useBulkUploadContacts = () => {
   );
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (file: File) => {
-      return new Promise((resolve, reject) => {
+      return new Promise(() => {
         setUploadedFileName(file.name);
         parse(file, {
           header: true,
@@ -159,21 +229,33 @@ export const useBulkUploadContacts = () => {
               phone: "phone",
             };
 
-            const data = result.data.map((item) =>
-              normalizeAndMapKeys(item, keyMap),
-            );
+            // Normalize keys and clean phone numbers
+            const data = result.data.map((item) => {
+              const normalizedItem = normalizeAndMapKeys(item, keyMap);
+              if (normalizedItem.phone) {
+                normalizedItem.phone = normalizePhoneNumber(
+                  normalizedItem.phone,
+                );
+              }
+              return normalizedItem;
+            });
 
+            // Filter valid data and remove duplicates
             const validData = data.filter(
               (item) => item.name && item.phone && Object.keys(item).length > 0,
             );
-
-            setBulkCustomers(validData);
+            const uniqueContacts = removeDuplicateContacts(validData);
+            calculateCreditScore(
+              uniqueContacts.length,
+              walletBalance,
+              templateType,
+            );
+            setBulkCustomers(uniqueContacts);
           },
         });
       });
     },
     onSuccess: () => {
-      toast.success("Contacts uploaded successfully");
       queryClient.invalidateQueries(["getContacts"]);
     },
     onError: () => {
@@ -192,7 +274,7 @@ export const useGetAllGroups = () => {
   const fetchAllGroups = async () => {
     const res = await apiRpc.groups.$get({
       query: {
-        businessId,
+        businessId: businessId || "",
       },
     });
 

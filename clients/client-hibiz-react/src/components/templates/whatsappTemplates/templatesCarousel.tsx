@@ -1,36 +1,34 @@
-import { memo, useCallback } from "react";
-import useWhatsapp, {
-  Step,
-  TemplateSteps,
-} from "@/components/store/useWhatsapp";
+import { lazy, memo, useCallback } from "react";
+import useWhatsapp from "@/components/store/useWhatsapp";
 import type { WhatsAppTemplatePayload } from "@/components/types/businessData";
 import { cn } from "@/components/utils/helper";
 import diwali from "@/assets/whatzapp/diwali.jpg";
 import ShimmerImage from "../shimmer";
 
+const OpenConfirmEdit = lazy(() => import("./openConfirmEdit"));
+
 const MemoTemplatesCarousel = () => {
   const {
-    setStep,
-    setTemplateSteps,
     setTemplateData,
     allTemplates,
     setShowSuccessPopup,
+    isOpenEditModal,
+    setIsOpenEditModal,
   } = useWhatsapp((s) => ({
-    setStep: s.setStep,
-    setTemplateSteps: s.setTemplateSteps,
     setTemplateData: s.setTemplateData,
     allTemplates: s.allTemplates,
     setShowSuccessPopup: s.setShowSuccessPopup,
+    isOpenEditModal: s.isOpenEditModal,
+    setIsOpenEditModal: s.setIsOpenEditModal,
   }));
 
   const handleTemplateClick = useCallback(
     (template: WhatsAppTemplatePayload) => {
       setTemplateData(template);
-      setStep(Step.CREATE_EDIT);
-      setTemplateSteps(TemplateSteps.CREATE_EDIT);
+      setIsOpenEditModal(true);
       setShowSuccessPopup(false);
     },
-    [setStep, setTemplateData, setTemplateSteps, setShowSuccessPopup],
+    [setTemplateData, setShowSuccessPopup, setIsOpenEditModal],
   );
 
   return (
@@ -82,8 +80,9 @@ const MemoTemplatesCarousel = () => {
           </div>
         ))
       ) : (
-        <p>No templates available</p>
+        <center>No templates available</center>
       )}
+      {isOpenEditModal && <OpenConfirmEdit />}
     </>
   );
 };

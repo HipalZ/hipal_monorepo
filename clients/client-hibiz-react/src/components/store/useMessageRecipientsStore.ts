@@ -1,11 +1,11 @@
 import { create } from "zustand";
 import { toast } from "react-hot-toast";
 import { persist, createJSONStorage } from "zustand/middleware";
+import useWhatsapp from "./useWhatsapp";
 
 interface Group {
   _id: string;
   userIds: string[];
-  id: string;
   name: string;
   memberCount: number;
 }
@@ -13,6 +13,12 @@ interface Group {
 interface BulkCustomer {
   name: string;
   phone: string;
+}
+
+export enum ShowOptions {
+  ALL_CUSTOMERS = "allCustomers",
+  ADD_GROUPS = "addGroups",
+  BULK_UPLOAD_CUSTOMERS = "bulkUploadCustomers",
 }
 
 interface MessageRecipientsState {
@@ -59,17 +65,12 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>()(
           const isSelected = state.selectedOptions.includes(option);
           const newSelection = isSelected
             ? state.selectedOptions.filter((item) => item !== option)
-            : [...state.selectedOptions, option];
-
-          if (newSelection.length > 2) {
-            toast.error("You can select only 2 options at a time.");
-            return state;
-          }
-
+            : [option];
           return { selectedOptions: newSelection };
         });
       },
       handleGroupToggle: (groupId) => {
+        const walletBalance = useWhatsapp.getState().walletBalance;
         set((state) => {
           const isSelected = state.selectedGroups.includes(groupId);
           const newSelection = isSelected
@@ -81,26 +82,20 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>()(
             return state;
           }
 
-          newSelection.reduce((sum, id) => {
-            const group = state.groups.find((g) => g.id === id);
-            return sum + (group?.memberCount || 0);
+          const count = newSelection.reduce((sum, id) => {
+            const group = state.groups.find((g) => g._id === id);
+            return sum + (group?.userIds?.length || 0);
           }, 0);
-
-          let newSelectedOptions = [...state.selectedOptions];
-          if (
-            newSelection.length > 0 &&
-            !newSelectedOptions.includes("addGroups")
-          ) {
-            newSelectedOptions.push("addGroups");
-          } else if (newSelection.length === 0) {
-            newSelectedOptions = newSelectedOptions.filter(
-              (item) => item !== "addGroups",
+          if (count > 0 && walletBalance < count * 0.9) {
+            toast(
+              `You need at least ${
+                count * 0.9
+              } credits to send to ${count} customers`,
             );
           }
 
           return {
             selectedGroups: newSelection,
-            selectedOptions: newSelectedOptions,
           };
         });
       },
@@ -114,8 +109,8 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>()(
       setBulkCustomers: (customers) => {
         set((state) => {
           const newSelectedOptions = [...state.selectedOptions];
-          if (!newSelectedOptions.includes("bulkUploadCustomers")) {
-            newSelectedOptions.push("bulkUploadCustomers");
+          if (!newSelectedOptions.includes(ShowOptions.BULK_UPLOAD_CUSTOMERS)) {
+            newSelectedOptions.push(ShowOptions.BULK_UPLOAD_CUSTOMERS);
           }
           return {
             bulkCustomers: customers,

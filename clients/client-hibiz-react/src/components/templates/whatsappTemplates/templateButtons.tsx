@@ -1,15 +1,21 @@
 import BottomButton from "@/components/atom/bottomButton";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import useBusinessData from "@/components/store/useBusinessData";
-import { useMessageRecipientsStore } from "@/components/store/useMessageRecipientsStore";
+import {
+  ShowOptions,
+  useMessageRecipientsStore,
+} from "@/components/store/useMessageRecipientsStore";
 import useWhatsapp, {
   Step,
   TemplateSteps,
 } from "@/components/store/useWhatsapp";
 import { useSendOptions } from "@/hooks/useTemplates";
+import { useQueryClient } from "@tanstack/react-query";
 import { memo, useCallback } from "react";
+import toast from "react-hot-toast";
 
 const MemoTemplateButtons = () => {
+  const queryClient = useQueryClient();
   const {
     templateId,
     templateName,
@@ -50,20 +56,28 @@ const MemoTemplateButtons = () => {
   // send customers based on selected options
   const sendCustomers = useCallback(() => {
     const payload = {
-      allCustomers: selectedOptions.includes("allCustomers"),
+      allCustomers: selectedOptions.includes(ShowOptions.ALL_CUSTOMERS),
       templateId: Number(templateId),
       businessId: businessId,
       businessName: businessName,
-      bulkCustomers: bulkCustomers,
-      groupIds: selectedGroups,
+      bulkCustomers: selectedOptions.includes(ShowOptions.BULK_UPLOAD_CUSTOMERS)
+        ? bulkCustomers
+        : [],
+      groupIds: selectedOptions.includes(ShowOptions.ADD_GROUPS)
+        ? selectedGroups
+        : [],
       ...(sendLaterTime && sendLaterTime > 0 && { time: sendLaterTime }),
       ...(testNumber?.length > 0 && { customerPhone: testNumber }),
     };
     sendOptions.mutate(payload, {
       onSuccess: () => {
         setStep(Step.SETUP);
+        setTemplateSteps(TemplateSteps.NONE);
+        queryClient.invalidateQueries({ queryKey: ["walletHistory"] });
       },
       onError: () => {
+        setStep(Step.SETUP);
+        setTemplateSteps(TemplateSteps.NONE);
         console.log("Error sending message");
       },
     });
@@ -78,6 +92,8 @@ const MemoTemplateButtons = () => {
     sendOptions,
     testNumber,
     setStep,
+    setTemplateSteps,
+    queryClient,
   ]);
 
   // handle next button click
@@ -88,13 +104,16 @@ const MemoTemplateButtons = () => {
       if (
         templateId?.length === 0 ||
         selectedOptions?.length === 0 ||
-        (selectedOptions.includes("bulkUploadCustomers") &&
+        (selectedOptions.includes(ShowOptions.BULK_UPLOAD_CUSTOMERS) &&
           uploadedFileName?.length === 0)
-      )
-        return;
+      ) {
+        console.log("Please upload excel file");
+        return toast.error("Please upload excel file");
+      }
       setTemplateSteps(TemplateSteps.SEND);
     } else if (templateSteps === TemplateSteps.SEND) {
       sendCustomers();
+      setTemplateSteps(TemplateSteps.NONE);
     }
   }, [
     templateSteps,
@@ -109,21 +128,22 @@ const MemoTemplateButtons = () => {
       {templateId ? (
         <BottomButton
           fixed
+          colorGrad
           buttons={[
             {
-              text: "Update & Next",
+              text: "Update & Proceed ►",
               type: "submit",
-              disable:
-                !templateName ||
-                !bodyText ||
+              hide:
                 templateSteps === TemplateSteps.SEND ||
                 templateSteps === TemplateSteps.SHOW_OPTIONS,
+              disable: !templateName || !bodyText,
             },
             {
               text: "Proceed to Next ►",
               onClick: handleNext,
               type: "button",
               disable: templateStatus === "REJECTED",
+              hide: templateSteps === TemplateSteps.CREATE_EDIT,
             },
           ]}
         />

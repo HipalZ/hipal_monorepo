@@ -10,7 +10,7 @@ const MemoWalletHistory = () => {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   return (
-    <div className="h-[400px] overflow-y-auto mx-4 overflow-hidden rounded-lg">
+    <div className="h-screen mx-4 overflow-hidden overflow-y-auto rounded-lg">
       <div className="p-6">
         <h2 className="text-2xl font-bold text-center text-gray-800">
           Wallet History
@@ -31,7 +31,7 @@ const MemoWalletHistory = () => {
                 <div className="flex items-center space-x-4">
                   <div
                     className={`p-2 rounded-full ${
-                      transaction?.order_id?.total > 0
+                      transaction?.status === "SUCCESS"
                         ? "bg-green-100"
                         : "bg-red-100"
                     }`}
@@ -39,7 +39,7 @@ const MemoWalletHistory = () => {
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className={`w-6 h-6 ${
-                        transaction?.order_id?.total > 0
+                        transaction?.status === "SUCCESS"
                           ? "text-green-600"
                           : "text-red-600"
                       }`}
@@ -52,7 +52,7 @@ const MemoWalletHistory = () => {
                         strokeLinejoin="round"
                         strokeWidth={2}
                         d={
-                          transaction?.order_id?.total > 0
+                          transaction?.status === "SUCCESS"
                             ? "M7 11l5-5m0 0l5 5m-5-5v12"
                             : "M17 13l-5 5m0 0l-5-5m5 5V6"
                         }
@@ -61,7 +61,7 @@ const MemoWalletHistory = () => {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900">
-                      {transaction?.order_id?.total > 0 ? "Credit" : "Debit"}
+                      {transaction?.status === "SUCCESS" ? "Credit" : "Debit"}
                     </p>
                     <p className="text-xs text-gray-500">
                       {format(new Date(transaction.date), "MMM d, yyyy HH:mm")}
@@ -71,12 +71,12 @@ const MemoWalletHistory = () => {
                 <div className="text-right">
                   <p
                     className={`text-lg font-semibold ${
-                      transaction?.order_id?.total > 0
+                      transaction?.status === "SUCCESS"
                         ? "text-green-600"
                         : "text-red-600"
                     }`}
                   >
-                    {transaction?.order_id?.total > 0 ? "+" : "-"}₹
+                    {transaction?.status === "SUCCESS" ? "+" : "-"}₹
                     {Math.abs(transaction?.order_id?.total).toFixed(2)}
                   </p>
                 </div>

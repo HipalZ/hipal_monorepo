@@ -15,6 +15,7 @@ interface ButtonConfig {
 interface MemoBottomButtonProps {
   buttons: ButtonConfig[];
   fixed?: boolean;
+  colorGrad?: boolean;
 }
 
 const buttonVariants = {
@@ -23,8 +24,8 @@ const buttonVariants = {
 };
 
 const MemoBottomButton = (props: MemoBottomButtonProps) => {
-  const { buttons, fixed } = props;
-
+  const { buttons, fixed, colorGrad } = props;
+  const visibleButtons = buttons.filter((button) => !button.hide);
   return (
     <article
       className={cn(
@@ -37,8 +38,8 @@ const MemoBottomButton = (props: MemoBottomButtonProps) => {
     >
       <div
         className={cn("flex", {
-          "justify-between": buttons.length === 2,
-          "justify-center": buttons.length !== 2,
+          "justify-between": visibleButtons.length === 2,
+          "justify-center": visibleButtons.length !== 2,
         })}
       >
         {buttons.map((button, index) =>
@@ -50,14 +51,14 @@ const MemoBottomButton = (props: MemoBottomButtonProps) => {
                 button?.isLoading ? "pointer-events-none" : "",
                 {
                   "bg-red-500 text-white": button.delete,
-                  "bg-custom-gradient text-white":
-                    !button.delete && index === 1,
                   "bg-black text-white": !button.delete && index !== 1,
+                  "bg-custom-gradient text-white":
+                    (!button.delete && index === 1) || colorGrad,
                   "opacity-50 cursor-not-allowed": button.disable,
                 },
                 {
-                  "w-[48%]": buttons.length === 2,
-                  "w-[100%]": buttons.length !== 2,
+                  "w-[48%]": visibleButtons.length === 2,
+                  "w-[100%]": visibleButtons.length !== 2,
                 },
               )}
               onClick={!button.disable ? button.onClick : undefined}

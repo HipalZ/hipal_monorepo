@@ -16,8 +16,9 @@ import toast from "react-hot-toast";
 import { FiAlertCircle, FiCheckCircle } from "react-icons/fi";
 
 const MemoTemplateTerms = () => {
-  const { businessId } = useBusinessData((s) => ({
+  const { businessId, businessName } = useBusinessData((s) => ({
     businessId: s.businessData?._id,
+    businessName: s.businessData?.name,
   }));
   const { createTemplate } = useCreateTemplate();
   const { editTemplate } = useEditTemplate();
@@ -27,7 +28,6 @@ const MemoTemplateTerms = () => {
     headerType,
     headerText,
     bodyText,
-    footerText,
     variables,
     websiteUrl,
     buttonText,
@@ -46,7 +46,6 @@ const MemoTemplateTerms = () => {
     headerType: s.headerType,
     headerText: s.headerText,
     bodyText: s.bodyText,
-    footerText: s.footerText,
     variables: s.bodyVariables,
     websiteUrl: s.websiteUrl,
     buttonText: s.buttonText,
@@ -92,7 +91,7 @@ const MemoTemplateTerms = () => {
       ...(templateId?.length > 0 && { templateId: templateId }),
       category: templateType,
       components: [
-        ...(headerType
+        ...(headerType && (headerText || whatsappImageHandler)
           ? [
               {
                 type: "HEADER",
@@ -112,7 +111,7 @@ const MemoTemplateTerms = () => {
             example: { body_text: [variables] },
           }),
         },
-        ...(footerText ? [{ type: "FOOTER", text: footerText }] : []),
+        { type: "FOOTER", text: `Powered by ${businessName}` },
         ...(buttonText && (websiteUrl || phoneNumber)
           ? [
               {
@@ -146,12 +145,12 @@ const MemoTemplateTerms = () => {
     setIsLoading(false);
   }, [
     businessId,
+    businessName,
     templateName,
     templateType,
     headerType,
     headerText,
     bodyText,
-    footerText,
     variables,
     websiteUrl,
     buttonText,
