@@ -9,6 +9,7 @@ import {
 import { BiChevronDown, BiChevronUp } from "react-icons/bi";
 import { FiClock, FiSend } from "react-icons/fi";
 import { useMessageRecipientsStore } from "@/components/store/useMessageRecipientsStore";
+import toast from "react-hot-toast";
 
 const sendingOptions = [
   { value: "sendNow", label: "Send Now", icon: FiSend },
@@ -45,6 +46,7 @@ const MemoSendTemplate = () => {
         const dateTimeString = `${scheduledDate}T${scheduledTime}:00`;
         const timestamp = new Date(dateTimeString).getTime();
         setSendLaterTime(timestamp);
+        toast.success("Message scheduled successfully");
         break;
       }
     }
@@ -167,7 +169,7 @@ const MemoSendTemplate = () => {
                             <button
                               type="button"
                               onClick={handleSend}
-                              className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-md hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
+                              className="w-full px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-md hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
                             >
                               Save
                             </button>

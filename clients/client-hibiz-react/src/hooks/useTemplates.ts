@@ -4,8 +4,11 @@ import { useCallback, useState } from "react";
 import axios from "@/axios";
 import toast from "react-hot-toast";
 import useBusinessData from "@/components/store/useBusinessData";
-import useWhatsapp, { Step } from "@/components/store/useWhatsapp";
-import { useMutation } from "@tanstack/react-query";
+import useWhatsapp, {
+  Step,
+  TemplateSteps,
+} from "@/components/store/useWhatsapp";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMessageRecipientsStore } from "@/components/store/useMessageRecipientsStore";
 import type {
   ICouponzLinks,
@@ -17,6 +20,7 @@ import type {
 import { useTempStore } from "@/components/store/useTempStore";
 
 export const useCreateTemplate = () => {
+  const queryClient = useQueryClient();
   const businessId = useBusinessData((s) => s.businessData?._id);
   const setIsLoading = useTempStore((s) => s.setIsLoading);
   const {
@@ -25,12 +29,14 @@ export const useCreateTemplate = () => {
     setTemplateStatus,
     setTemplateData,
     setTemplateId,
+    setTemplateSteps,
   } = useWhatsapp((s) => ({
     setStep: s.setStep,
     setShowSuccessPopup: s.setShowSuccessPopup,
     setTemplateStatus: s.setTemplateStatus,
     setTemplateData: s.setTemplateData,
     setTemplateId: s.setTemplateId,
+    setTemplateSteps: s.setTemplateSteps,
   }));
 
   const createTemplate = async (payload: WhatsAppTemplatePayload) => {
@@ -47,6 +53,7 @@ export const useCreateTemplate = () => {
     setIsLoading(false);
     if (data?.err || res.status === 400) {
       setStep(Step.SETUP);
+      setTemplateSteps(TemplateSteps.NONE);
       setShowSuccessPopup(false);
       return toast.error(
         data?.data?.error?.error_user_msg || "Failed to create template",
@@ -56,8 +63,10 @@ export const useCreateTemplate = () => {
     setTemplateId(data?.data?.id);
     setShowSuccessPopup(true);
     setTemplateStatus(data?.data?.status);
-    toast.success("Template created successfully");
     setTemplateData(data?.data);
+    setStep(Step.SETUP);
+    setTemplateSteps(TemplateSteps.NONE);
+    queryClient.invalidateQueries({ queryKey: ["templates"] });
     return data;
   };
 
@@ -65,13 +74,14 @@ export const useCreateTemplate = () => {
 };
 
 export const useEditTemplate = () => {
-  const { setStep, setShowSuccessPopup, setTemplateStatus } = useWhatsapp(
-    (s) => ({
+  const queryClient = useQueryClient();
+  const { setStep, setShowSuccessPopup, setTemplateStatus, setTemplateSteps } =
+    useWhatsapp((s) => ({
       setStep: s.setStep,
       setShowSuccessPopup: s.setShowSuccessPopup,
       setTemplateStatus: s.setTemplateStatus,
-    }),
-  );
+      setTemplateSteps: s.setTemplateSteps,
+    }));
   const setIsLoading = useTempStore((s) => s.setIsLoading);
   const editTemplate = async (payload: WhatsAppTemplatePayload) => {
     // API call to edit template
@@ -85,6 +95,7 @@ export const useEditTemplate = () => {
     // Handle error response
     if (data?.err || res.status === 400) {
       setStep(Step.SETUP);
+      setTemplateSteps(TemplateSteps.NONE);
       setShowSuccessPopup(false);
       toast.error(
         data?.data?.error?.error_user_msg || "Failed to update template",
@@ -93,7 +104,9 @@ export const useEditTemplate = () => {
     }
     setShowSuccessPopup(true);
     setTemplateStatus(data?.data?.status);
-    toast.success("Template updated successfully");
+    setStep(Step.SETUP);
+    setTemplateSteps(TemplateSteps.NONE);
+    queryClient.invalidateQueries({ queryKey: ["templates"] });
     return data;
   };
 
@@ -252,6 +265,8 @@ export const useWalletBalance = () => {
   const { setWalletBalance, setWalletHistory } = useWhatsapp((s) => ({
     setWalletBalance: s.setWalletBalance,
     setWalletHistory: s.setWalletHistory,
+    setTemplateSteps: s.setTemplateSteps,
+    setStep: s.setStep,
   }));
   const getWalletBalance = useCallback(async () => {
     const res = await apiRpc.whatsapp.whatsapp_wallet[":businessId"].$get({

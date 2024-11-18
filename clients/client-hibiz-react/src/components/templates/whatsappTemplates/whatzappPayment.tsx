@@ -1,5 +1,5 @@
 import { apiRpc } from "@hi/common";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useEffect } from "react";
 import { useMerchantDetails } from "@/hooks/merchantSecret";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import toast from "react-hot-toast";
@@ -134,14 +134,13 @@ const MemoWhatzappPayment = () => {
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
     document.body.appendChild(script);
-
     const timeoutId = setTimeout(() => {
       if (!isScriptLoaded) {
         toast.error("Facing Internet Issue! Please try again.");
         setIsLoading(false);
         document.body.removeChild(script);
       }
-    }, 5000);
+    }, 10000);
 
     script.onload = () => {
       isScriptLoaded = true;
@@ -344,6 +343,8 @@ const MemoWhatzappPayment = () => {
 
   const handleCreateOrder = async () => {
     const orderId = await createRazorPayOrder(selectedPlan?.price);
+    console.log(orderId);
+    setIsLoading(true);
     await creatingRazorPayOptions(orderId);
   };
 
@@ -496,7 +497,7 @@ const MemoWhatzappPayment = () => {
           ]}
         />
       </div>
-      {isLoading && <LoadingSpinner />}
+      {isLoading ? <LoadingSpinner /> : null}
     </>
   );
 };

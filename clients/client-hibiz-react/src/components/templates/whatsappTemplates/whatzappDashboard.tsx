@@ -9,9 +9,9 @@ import { useFetchTemplates } from "@/hooks/useTemplates";
 import { useQuery } from "@tanstack/react-query";
 import useBusinessData from "@/components/store/useBusinessData";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
-import TemplatesCarousel from "./templatesCarousel";
 import BottomButton from "@/components/atom/bottomButton";
 
+const TemplatesCarousel = lazy(() => import("./templatesCarousel"));
 const CampaignAnalytics = lazy(() => import("./campaignAnalytics"));
 // const WhatsappChat = lazy(() => import("./whatsappbot"));
 
@@ -63,7 +63,7 @@ const MemoWhatzappDashboard = () => {
 
   return (
     <main className="container relative px-2 mx-auto">
-      <nav className="mb-4">
+      <nav className="flex items-center justify-between mb-4">
         <ul className="flex space-x-2 overflow-auto">
           {Object.values(Tabs).map((tab) => (
             <li key={tab}>
@@ -81,9 +81,29 @@ const MemoWhatzappDashboard = () => {
             </li>
           ))}
         </ul>
+        <ul className="hidden gap-2 md:flex">
+          <li>
+            <button
+              type="button"
+              className="px-4 py-2 text-white bg-blue-500 rounded-lg shadow-lg hover:bg-blue-400 on_active_bounce"
+              onClick={() => handleCreateTemplate(TemplateType.Marketing)}
+            >
+              + Marketing Template
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              className="px-4 py-2 text-white bg-blue-500 rounded-lg shadow-lg hover:bg-blue-400 on_active_bounce"
+              onClick={() => handleCreateTemplate(TemplateType.Utility)}
+            >
+              + Utility Template
+            </button>
+          </li>
+        </ul>
       </nav>
       {activeTab === Tabs.TEMPLATES && (
-        <section className="mb-10">
+        <section className="mb-20">
           <h2 className="mb-2 text-2xl font-semibold">
             Drafts/Existing templates
           </h2>
@@ -93,21 +113,24 @@ const MemoWhatzappDashboard = () => {
           <div className="relative grid gap-4 transition-transform duration-300 ease-in-out md:h-full md:grid-cols-4 md:transform-none">
             {isPending ? <LoadingSpinner /> : <TemplatesCarousel />}
           </div>
-          <BottomButton
-            fixed
-            buttons={[
-              {
-                text: "Marketing Template",
-                type: "button",
-                onClick: () => handleCreateTemplate(TemplateType.Marketing),
-              },
-              {
-                text: "Utility Template",
-                type: "button",
-                onClick: () => handleCreateTemplate(TemplateType.Utility),
-              },
-            ]}
-          />
+          <article className="md:hidden">
+            <BottomButton
+              fixed
+              colorGrad
+              buttons={[
+                {
+                  text: "Marketing Template",
+                  type: "button",
+                  onClick: () => handleCreateTemplate(TemplateType.Marketing),
+                },
+                {
+                  text: "Utility Template",
+                  type: "button",
+                  onClick: () => handleCreateTemplate(TemplateType.Utility),
+                },
+              ]}
+            />
+          </article>
         </section>
       )}
 

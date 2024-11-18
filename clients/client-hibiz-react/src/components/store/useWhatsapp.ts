@@ -266,6 +266,9 @@ interface whatsappTemplate {
 
   variableOptions: defaultOptions[];
   setVariableOptions: (variableOptions: defaultOptions[]) => void;
+
+  isOpenEditModal: boolean;
+  setIsOpenEditModal: (isOpenEditModal: boolean) => void;
 }
 
 export const useWhatsapp = create(
@@ -607,6 +610,10 @@ export const useWhatsapp = create(
 
         setVariableOptions: (variableOptions: defaultOptions[]) =>
           set({ variableOptions }),
+
+        isOpenEditModal: false,
+        setIsOpenEditModal: (isOpenEditModal: boolean) =>
+          set({ isOpenEditModal }),
       };
     },
     {

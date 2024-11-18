@@ -55,14 +55,29 @@ const MemoWhatzapp = () => {
       switch (templateSteps) {
         case TemplateSteps.MODIFY:
         case TemplateSteps.CREATE_EDIT:
-          setTemplateSteps(TemplateSteps.NONE);
-          setStep(Step.SETUP);
+          if (step === Step.TRANSACTIONS || step === Step.WALLET_HISTORY) {
+            setTemplateSteps(TemplateSteps.CREATE_EDIT);
+            setStep(Step.CREATE_EDIT);
+          } else {
+            setTemplateSteps(TemplateSteps.NONE);
+            setStep(Step.SETUP);
+          }
           break;
         case TemplateSteps.SHOW_OPTIONS:
-          setTemplateSteps(TemplateSteps.CREATE_EDIT);
+          if (step === Step.TRANSACTIONS || step === Step.WALLET_HISTORY) {
+            setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
+            setStep(Step.CREATE_EDIT);
+          } else {
+            setTemplateSteps(TemplateSteps.CREATE_EDIT);
+          }
           break;
         case TemplateSteps.SEND:
-          setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
+          if (step === Step.TRANSACTIONS || step === Step.WALLET_HISTORY) {
+            setTemplateSteps(TemplateSteps.SEND);
+            setStep(Step.CREATE_EDIT);
+          } else {
+            setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
+          }
           break;
         default:
           setTemplateSteps(TemplateSteps.NONE);
