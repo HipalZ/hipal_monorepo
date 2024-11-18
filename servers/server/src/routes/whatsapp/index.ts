@@ -180,12 +180,6 @@ const scheduleCampaign = async (
           },
         },
       );
-
-      return {
-        message: "Template created successfully",
-        err: false,
-        data: res.data,
-      };
     } catch (error) {
       const axiosError = error as AxiosError;
       const message = axiosError.response?.data?.error?.message;
@@ -197,6 +191,8 @@ const scheduleCampaign = async (
       };
     }
   }
+
+  return true;
 };
 const whatsappRouter = new Hono()
   .get(
@@ -738,27 +734,28 @@ const whatsappRouter = new Hono()
         }
 
         if (bulkCustomers.length > 0) {
-          const bulkCustomersList = [
-            {
-              name: "YEYE",
-              phone: "9588413799",
-            },
-            {
-              name: "sankalesh",
-              phone: "8668229890",
-            },
-            {
-              name: "vamsi",
-              phone: "7702605494",
-            },
-            {
-              name: "abhishek",
-              phone: "9160787050",
-            },
-          ];
+          // const bulkCustomersList = [
+          //   {
+          //     name: "YEYE",
+          //     phone: "9588413799",
+          //   },
+          //   {
+          //     name: "sankalesh",
+          //     phone: "8668229890",
+          //   },
+          //   {
+          //     name: "vamsi",
+          //     phone: "7702605494",
+          //   },
+          //   {
+          //     name: "abhishek",
+          //     phone: "9160787050",
+          //   },
+          // ];
+
           let reduceAmount = 0;
           if (template.category === "MARKETING") {
-            const totalCost = bulkCustomersList.length * 0.9;
+            const totalCost = bulkCustomers.length * 0.9;
             if (businessWallet.currentBalance < totalCost) {
               return c.json(
                 {
@@ -772,7 +769,7 @@ const whatsappRouter = new Hono()
 
             reduceAmount = Math.round(totalCost);
           } else {
-            const totalCost = bulkCustomersList.length * 0.2;
+            const totalCost = bulkCustomers.length * 0.2;
             if (businessWallet.currentBalance < totalCost) {
               return c.json(
                 {
@@ -790,7 +787,7 @@ const whatsappRouter = new Hono()
           if (sendLaterTime) {
             schedule(cronExpression, async () => {
               const scheduleCampaignResponse = await scheduleCampaign(
-                bulkCustomersList,
+                bulkCustomers,
                 template,
                 businessName,
                 address,
@@ -818,7 +815,7 @@ const whatsappRouter = new Hono()
           }
 
           const scheduleCampaignResponse = await scheduleCampaign(
-            bulkCustomersList,
+            bulkCustomers,
             template,
             businessName,
             address,
