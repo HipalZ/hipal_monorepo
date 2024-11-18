@@ -1,14 +1,8 @@
 "use client";
-import { memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { memo, useCallback, useMemo, useRef } from "react";
 import Hi from "@/assets/svg/hand.svg";
-import { useParams, useRouter, usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
 import MemoizedHeader from "@/components/atoms/Header";
-import MemoBottomButton from "@/components/molecules/bottomButton";
-import useTableData from "@/components/store/useTableData";
-import { useLogin } from "@/components/store/useLogin";
-import { useUserToken } from "@hi/common/src/useUserToken";
-import useBusinessDetails from "@/components/store/useBusinessDetails";
-import { updateTheme } from "@/components/utils/themes";
 import { BsDownload } from "react-icons/bs";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
@@ -19,9 +13,9 @@ const businessData = [
     date: "02 Aug 2024",
     name: "soukun",
     bizName: "RABH RAKHA HOSPITALITY LLP - Soukun cafe",
-    billValue: 42000,
+    status: false,
     serviceCost: 3500,
-    months: 12,
+    months: 6,
     address: "",
     gst: "",
   },
@@ -30,9 +24,9 @@ const businessData = [
     date: "02 Aug 2024",
     name: "stonewater",
     bizName: "S&D HOSPITALITY - Stone waters",
-    billValue: 42000,
+    status: false,
     serviceCost: 3500,
-    months: 12,
+    months: 6,
     address: "",
     gst: "",
   },
@@ -41,9 +35,9 @@ const businessData = [
     date: "02 Aug 2024",
     name: "hoist",
     bizName: "SONNET HOSPITALITY LLP - Hoist",
-    billValue: 42000,
+    status: false,
     serviceCost: 3500,
-    months: 12,
+    months: 6,
     address: "",
     gst: "",
   },
@@ -52,7 +46,7 @@ const businessData = [
     date: "02 Aug 2024",
     name: "talesoftelugu",
     bizName: "TALES OF TELUGU",
-    billValue: 18000,
+    status: false,
     serviceCost: 3000,
     months: 6,
     address: "",
@@ -63,7 +57,7 @@ const businessData = [
     date: "02 Aug 2024",
     name: "kebabwala",
     bizName: "Kebabwala",
-    billValue: 12000,
+    status: false,
     serviceCost: 2000,
     months: 6,
     address: "",
@@ -74,7 +68,7 @@ const businessData = [
     date: "02 Aug 2024",
     name: "vamsi",
     bizName: "Vamsi",
-    billValue: 1,
+    status: false,
     serviceCost: 1,
     months: 1,
     address: "",
@@ -85,7 +79,7 @@ const businessData = [
     date: "02 Aug 2024",
     name: "zylk",
     bizName: "zylk",
-    billValue: 18000,
+    status: false,
     serviceCost: 3000,
     months: 6,
     address:
@@ -97,7 +91,7 @@ const businessData = [
     date: "19 Sept 2024",
     name: "lifafa",
     bizName: "lifafa",
-    billValue: 10500,
+    status: true,
     serviceCost: 3500,
     months: 3,
     address:
@@ -121,6 +115,7 @@ const businessData = [
     date: "08 Oct 2024",
     name: "skycafe",
     bizName: "AF & NS Food Pvt Ltd - Skycafe",
+    status: false,
     serviceCost: 3500,
     months: 3,
     address:
@@ -132,38 +127,44 @@ const businessData = [
     date: "16 Nov 2024",
     name: "sashtra",
     bizName: "SASHTRA WELLNESS PRIVATE LIMITED",
-    billValue: 54000,
-    serviceCost: 4500,
+    status: false,
+    serviceCost: 4000,
     months: 12,
     address:
       "2nd Floor:6-3-1186/A/5, Bhole Saheb Maqta Road, Behind Blue Moon Hotel, Begumpet, Hyderabad Telangana-500016",
     gst: "36ABLCS7033G1Z5",
   },
+  {
+    id: "013",
+    date: "18 Nov 2024",
+    name: "tugo",
+    bizName: "SARAYU HOSPITALITY",
+    status: false,
+    serviceCost: 3500,
+    months: 12,
+    address:
+      "NO-281-V-1 ROAD NO-10C OPP-BIOLOGICAL EVANS GUEST HOUSE JUBILEE HILLS Hyderabad Telangana-500033",
+    gst: "36AFIFS8692B1ZL",
+  },
+  {
+    id: "014",
+    date: "18 Nov 2024",
+    name: "ichata",
+    bizName: "ICHATA",
+    status: false,
+    serviceCost: 4000,
+    months: 12,
+    address:
+      "H.NO. 8-8-321, ROAD NO. 14 , BANJARA HILLS Hyderabad Telangana-500096",
+    gst: "36AFKFS0924E1Z2",
+  },
 ];
 
-const MemoInovices = ({ data }) => {
-  const pathname = usePathname();
-  const router = useRouter();
+const MemoInovices = () => {
   const params = useParams();
   const printRef = useRef<HTMLDivElement | null>(null);
-  const { direction, setDirection, setInvoiceUrl, invoiceUrl, isLogin } =
-    useLogin((s) => ({
-      direction: s.direction,
-      setDirection: s.setDirection,
-      setInvoiceUrl: s.setInvoiceUrl,
-      invoiceUrl: s.invoiceUrl,
-      isLogin: s.isLogin,
-    }));
-  const setTableName = useTableData((state) => state.setTableName);
-  const { setBusinessDetails } = useBusinessDetails((s) => ({
-    setBusinessDetails: s.setBusinessDetails,
-  }));
-  const { accessToken } = useUserToken((s) => ({
-    accessToken: s.accessToken,
-  }));
-  const businessClient = params?.business as string;
-  const customLink = params?.businessId as string;
 
+  const businessClient = params?.business as string;
   const business = useMemo(() => {
     return (
       businessData.find((b) => b.name === businessClient) || {
@@ -171,7 +172,6 @@ const MemoInovices = ({ data }) => {
         date: "",
         name: "",
         bizName: "",
-        billValue: 0,
         serviceCost: 0,
         months: 0,
         address: "",
@@ -179,29 +179,6 @@ const MemoInovices = ({ data }) => {
       }
     );
   }, [businessClient]);
-
-  const handleNavigate = useCallback(() => {
-    router.push("/");
-  }, []);
-
-  const handleNavigatePayment = useCallback(() => {
-    setTableName(business.bizName);
-    router.push(`/${customLink}/payment?amount=${business.billValue}`);
-  }, [customLink, business.billValue]);
-
-  useEffect(() => {
-    setDirection("invoice");
-    setInvoiceUrl(pathname);
-    setBusinessDetails(data?.data?.business);
-    updateTheme(data?.data?.settings);
-    if (isLogin) {
-      setDirection("");
-      setInvoiceUrl("");
-    }
-    if (!accessToken) {
-      router.push(`/${customLink}/user/signup`);
-    }
-  }, [direction, accessToken, invoiceUrl]);
 
   const handleDownloadInvoice = useCallback(async () => {
     const element = printRef?.current;
@@ -223,16 +200,16 @@ const MemoInovices = ({ data }) => {
     <>
       <article className="linear_gradient_background">
         <MemoizedHeader
-          onBack={handleNavigate}
           title="Invoice"
           isIconBusinessShow={true}
           rightImage={Hi}
+          hideBack
         />
       </article>
       <section ref={printRef}>
         <center className="my-6">
           <h1>HIAUG{business?.id}</h1>
-          <article className="on_active_bounce">
+          <article className="cursor-pointer on_active_bounce">
             <p
               onKeyDown={handleDownloadInvoice}
               onClick={handleDownloadInvoice}
@@ -245,7 +222,7 @@ const MemoInovices = ({ data }) => {
           </article>
         </center>
         <hr className="mx-1 my-4 border-2 border-black" />
-        <article className="mx-6 text-base">
+        <article className="mx-6 text-base capitalize">
           <h1>
             <b>Billed to:</b> {business?.bizName}
           </h1>
@@ -273,25 +250,24 @@ const MemoInovices = ({ data }) => {
           style={{
             boxShadow: "0px 4.55px 4.55px 0px #00000040",
           }}
-          className="text-[#6F649B] mx-4 mt-6 bg-[#F2F2F2] rounded-xl h-[14rem]"
+          className="text-[#6F649B] mx-4 mt-6 bg-[#F2F2F2] rounded-xl h-[7rem]"
         >
           <article className="p-6">
             <h1>&#9679; Service: POPCORN MODEL</h1>
             <p className="p-1 px-2 mt-2 text-sm bg-white rounded-lg">
               Rs {business?.serviceCost} for {business?.months} months{" "}
-              <span className="float-right">₹ {business?.billValue}</span>
-            </p>
-          </article>
-          <article className="px-6">
-            <h1>&#9679; Tax: </h1>
-            <p className="p-1 px-2 mt-2 text-sm bg-white rounded-lg">
-              No Tax <span className="float-right">₹ 0</span>
+              <span className="float-right">
+                ₹ {business?.serviceCost * business?.months}
+              </span>
             </p>
           </article>
         </section>
         <article className="text-[#6F649B] mx-10 my-6 text-xl">
           <h1 className="font-semibold">
-            Grand Total <b className="float-right">₹ {business.billValue}</b>
+            Grand Total{" "}
+            <b className="float-right">
+              ₹ {business?.serviceCost * business?.months}
+            </b>
           </h1>
         </article>
         <hr className="mx-1 my-4 border-[#000000] border-2" />
@@ -312,7 +288,7 @@ const MemoInovices = ({ data }) => {
             <b>CIN : </b> U72200TG2021PTC156074
           </h1>
           <h1>
-            <b>PAN CARD:- AAMCP3900B</b>
+            <b>PAN CARD:-</b> AAMCP3900B
           </h1>
         </article>
         <center className="pb-24 mx-4 mt-24 text-xs opacity-50">
