@@ -2,6 +2,7 @@ import {
   BusinessSettings,
   CouponLink,
   Couponz,
+  User,
   WhatAppOrder,
   WhatAppTemplate,
   WhatsAppPayment,
@@ -1593,9 +1594,6 @@ const whatsappRouter = new Hono()
       const mode = c.req.query("hub.mode");
       const challenge = c.req.query("hub.challenge");
       const token = c.req.query("hub.verify_token");
-      console.log("mode", mode);
-      console.log("challenge", challenge);
-      console.log("token", token);
 
       if (mode === "subscribe" && token === "token") {
         return c.text(challenge ?? "", 200);
@@ -1612,51 +1610,24 @@ const whatsappRouter = new Hono()
   .post(
     "/wa-webhooks",
 
-    // zValidator(
-    //   "json",
-    //   z.object({
-    //     object: z.string(),
-    //     entry: z.array(
-    //       z.object({
-    //         id: z.string(),
-    //         time: z.number(),
-    //         changes: z.array(
-    //           z.object({
-    //             field: z.string(),
-    //             value: z.object({
-    //               messages: z.array(
-    //                 z.object({
-    //                   type: z.string(),
-    //                   text: z.object({
-    //                     body: z.string(),
-    //                   }),
-    //                   image: z.object({
-    //                     url: z.string(),
-    //                   }),
-    //                 }),
-    //               ),
-    //             }),
-    //           }),
-    //         ),
-    //       }),
-    //     ),
-    //   }),
-    // ),
-
     async (c) => {
       const body = await c.req.json();
 
       console.log(JSON.stringify(body, null, 2));
-      console.log("body", body);
       if (body.object) {
         if (body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
           const phon_no_id =
             body.entry[0].changes[0].value.metadata.phone_number_id;
           const from = body.entry[0].changes[0].value.messages[0].from;
-          const msg_body = body.entry[0].changes[0].value.messages[0].text.body;
-          console.log("phon_no_id", phon_no_id);
-          console.log("from", from);
-          console.log("msg_body", msg_body);
+          const userName =
+            body.entry[0].changes[0].value.contacts[0].profile.name;
+          let userPhone = body.entry[0].changes[0].value.contacts[0].wa_id;
+          let tableNumber =
+            body.entry[0].changes[0].value.messages[0].text.body;
+
+          tableNumber = tableNumber.slice(-5);
+          userPhone = userPhone.toString().slice(2);
+
           axios({
             method: "POST",
             url: `https://graph.facebook.com/v21.0/${phon_no_id}/messages?access_token=${whatsAppConfig.token}`,
@@ -1664,13 +1635,32 @@ const whatsappRouter = new Hono()
               messaging_product: "whatsapp",
               to: from,
               text: {
-                body: "Explore our menu: https://www.hipalz.com/coffeecup?tableName=Qrscan",
+                body: "Explore our menu: https://www.hipalz.com/coffeecup?tableName=T-wh",
               },
             },
             headers: {
               "Content-Type": "application/json",
             },
           });
+
+          await User.findOneAndUpdate(
+            {
+              phone: userPhone,
+            },
+            {
+              name: userName,
+              role: [
+                "HIPAL_CUSTOMER",
+                "OWNER",
+                "MANAGER",
+                "CAPTAIN",
+                "CO_OWNER",
+              ],
+            },
+            {
+              upsert: true,
+            },
+          );
 
           return c.json({
             message: "Webhook verified",
@@ -1690,20 +1680,12 @@ const whatsappRouter = new Hono()
 
   .get(
     "/testing",
-    // authTokenValidator,
-    // requireAuthorization([
-    //   ClientRoles.OWNER,
-    //   ClientRoles.HIPAL_CUSTOMER,
-    //   ClientRoles.CAPTAIN,
-    // ]),
-    // zValidator("query", whatsAppWebhookValidation),
-    // zValidator("param", z.object({ merchantId: z.string() })),
 
     async (c) => {
       //@ts-ignore
 
       const redirectUrl =
-        "https://wa.me/7075179325?text=Hi I'm interested in your menu Can you share more";
+        "https://wa.me/7075179325?text=Hi, I'm interested in your menu. Could you share more details? I am sitting at T-01";
 
       return c.redirect(redirectUrl);
     },
