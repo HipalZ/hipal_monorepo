@@ -124,6 +124,42 @@ const businessData = [
       "2nd Floor:6-3-1186/A/5, Bhole Saheb Maqta Road, Behind Blue Moon Hotel, Begumpet, Hyderabad Telangana-500016",
     gst: "36ABLCS7033G1Z5",
   },
+  {
+    id: "013",
+    date: "18 Nov 2024",
+    name: "tugo",
+    bizName: "SARAYU HOSPITALITY",
+    status: false,
+    serviceCost: 3500,
+    months: 12,
+    address:
+      "NO-281-V-1 ROAD NO-10C OPP-BIOLOGICAL EVANS GUEST HOUSE JUBILEE HILLS Hyderabad Telangana-500033",
+    gst: "36AFIFS8692B1ZL",
+  },
+  {
+    id: "014",
+    date: "18 Nov 2024",
+    name: "ichata",
+    bizName: "ICHATA",
+    status: false,
+    serviceCost: 4000,
+    months: 12,
+    address:
+      "H.NO. 8-8-321, ROAD NO. 14 , BANJARA HILLS Hyderabad Telangana-500096",
+    gst: "36AFKFS0924E1Z2",
+  },
+  {
+    id: "015",
+    date: "18 Nov 2024",
+    name: "Meraki Foods",
+    bizName: "Nataka Global Kitchen & Cafe",
+    status: false,
+    serviceCost: 4000,
+    months: 12,
+    address:
+      "8-2-293/82/A/279/A, Road Number 10C, Jubilee Hills Hyderabad Telangana-500033",
+    gst: "36ABUFM7087N1Z3",
+  },
 ];
 
 const MemoInovices = () => {
