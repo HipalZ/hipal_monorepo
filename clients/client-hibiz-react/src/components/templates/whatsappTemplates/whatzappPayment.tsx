@@ -14,9 +14,9 @@ import { useTempStore } from "@/components/store/useTempStore";
 
 const pricingPlans = [
   {
-    id: "1",
+    id: "10",
     name: "Wallet",
-    price: 1,
+    price: 10,
     marketingPrice: 0.89,
     utilityPrice: 0.2,
     messages: 5000,
