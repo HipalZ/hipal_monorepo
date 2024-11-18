@@ -31,7 +31,6 @@ const whatsAppWalletHistorySchema =
         type: ObjectId,
         required: true,
         ref: "whatsAppOrder",
-        unique: true,
       },
       errorReason: {
         type: String,

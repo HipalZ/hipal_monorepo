@@ -1,10 +1,12 @@
 import {
+  Business,
   BusinessSettings,
   CouponLink,
   Couponz,
   User,
   WhatAppOrder,
   WhatAppTemplate,
+  WhatsAppBusinessConfig,
   WhatsAppPayment,
   WhatsAppWallet,
   WhatsAppWalletHistory,
@@ -646,7 +648,7 @@ const whatsappRouter = new Hono()
 
           let reduceAmount = 0;
           if (template.category === "MARKETING") {
-            const totalCost = customersArray.length * 0.9;
+            const totalCost = customersArray.length * 0.89;
             if (businessWallet.currentBalance < totalCost) {
               return c.json(
                 {
@@ -755,7 +757,7 @@ const whatsappRouter = new Hono()
 
           let reduceAmount = 0;
           if (template.category === "MARKETING") {
-            const totalCost = bulkCustomers.length * 0.9;
+            const totalCost = bulkCustomers.length * 0.89;
             if (businessWallet.currentBalance < totalCost) {
               return c.json(
                 {
@@ -864,7 +866,7 @@ const whatsappRouter = new Hono()
 
           let reduceAmount = 0;
           if (template.category === "MARKETING") {
-            const totalCost = groupIdsList.length * 0.9;
+            const totalCost = groupIdsList.length * 0.89;
             if (businessWallet.currentBalance < totalCost) {
               return c.json(
                 {
@@ -1604,42 +1606,49 @@ const whatsappRouter = new Hono()
     },
   )
 
-  .post(
-    "/wa-webhooks",
+  .post("/wa-webhooks", async (c) => {
+    const body = await c.req.json();
 
-    async (c) => {
-      const body = await c.req.json();
+    if (body.object) {
+      const entry = body.entry?.[0];
+      const changes = entry?.changes?.[0];
+      const value = changes?.value;
+      const messages = value?.messages?.[0];
+      const contacts = value?.contacts?.[0];
 
-      console.log(JSON.stringify(body, null, 2));
-      if (body.object) {
-        if (body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
-          const phon_no_id =
-            body.entry[0].changes[0].value.metadata.phone_number_id;
-          const from = body.entry[0].changes[0].value.messages[0].from;
-          const userName =
-            body.entry[0].changes[0].value.contacts[0].profile.name;
-          let userPhone = body.entry[0].changes[0].value.contacts[0].wa_id;
-          let tableNumber =
-            body.entry[0].changes[0].value.messages[0].text.body;
+      if (messages) {
+        const phon_no_id = value?.metadata?.phone_number_id;
+        const from = messages?.from;
+        const userName = contacts?.profile?.name;
+        let userPhone = contacts?.wa_id;
+        let tableNumber = messages?.text?.body;
 
+        if (tableNumber) {
           tableNumber = tableNumber.slice(-5);
-          userPhone = userPhone.toString().slice(2);
+        }
 
-          axios({
+        if (userPhone) {
+          userPhone = userPhone.toString().slice(2);
+        }
+
+        if (phon_no_id && from) {
+          await axios({
             method: "POST",
             url: `https://graph.facebook.com/v21.0/${phon_no_id}/messages?access_token=${whatsAppConfig.token}`,
             data: {
               messaging_product: "whatsapp",
               to: from,
               text: {
-                body: "Explore our menu: https://www.hipalz.com/coffeecup?tableName=T-wh",
+                body: "Explore our menu: https://www.hipalz.com/coffeecup?tableName=T-wa",
               },
             },
             headers: {
               "Content-Type": "application/json",
             },
           });
+        }
 
+        if (userPhone) {
           await User.findOneAndUpdate(
             {
               phone: userPhone,
@@ -1658,22 +1667,22 @@ const whatsappRouter = new Hono()
               upsert: true,
             },
           );
-
-          return c.json({
-            message: "Webhook verified",
-            err: false,
-            data: {},
-          });
         }
-      }
 
-      return c.json({
-        message: "Webhook not verified",
-        err: true,
-        data: {},
-      });
-    },
-  )
+        return c.json({
+          message: "Webhook verified",
+          err: false,
+          data: {},
+        });
+      }
+    }
+
+    return c.json({
+      message: "Webhook not verified",
+      err: true,
+      data: {},
+    });
+  })
 
   .get(
     "/testing",
@@ -1686,6 +1695,38 @@ const whatsappRouter = new Hono()
 
       return c.redirect(redirectUrl);
     },
-  );
+  )
+
+  .get("/update_bulk_whatsapp_config", async (c) => {
+    const allBizs = await Business.find({}).select("_id");
+
+    for (const biz of allBizs) {
+      await WhatsAppBusinessConfig.findOneAndUpdate(
+        {
+          businessId: biz._id,
+        },
+        {
+          $set: {
+            businessId: biz._id,
+            menuRedirection: "Link",
+            phoneId: "365941956611521",
+            templateLimit: 10,
+            token: whatsAppConfig.token,
+            version: whatsAppConfig.version,
+            whatAppAccountId: whatsAppConfig.whatAppAccountId,
+          },
+        },
+        {
+          upsert: true,
+        },
+      );
+    }
+
+    return c.json({
+      message: "Updated successfully",
+      err: false,
+      data: {},
+    });
+  });
 
 export default whatsappRouter;

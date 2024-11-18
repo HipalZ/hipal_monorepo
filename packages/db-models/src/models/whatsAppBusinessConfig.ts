@@ -33,7 +33,7 @@ const whatsAppBusinessConfigSchema =
       },
       planId: {
         type: ObjectId,
-        required: true,
+        required: false,
         ref: "Plan",
       },
       whatsAppPhone: {
