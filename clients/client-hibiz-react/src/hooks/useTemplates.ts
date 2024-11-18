@@ -221,13 +221,16 @@ export const useSendOptions = () => {
         json: payload,
       });
       const response = await res.json();
+      console.log("res  ", response);
       return response;
     },
     onSuccess: (response) => {
-      if (response?.data?.success) {
+      if (response.err) {
+        toast.error(response?.message || "Failed to send message");
+      } else {
         toast.success("Message sent successfully");
-        clearMessageRecipientsStore();
       }
+      clearMessageRecipientsStore();
       setStep(Step.SETUP);
     },
     onError: (error) => {

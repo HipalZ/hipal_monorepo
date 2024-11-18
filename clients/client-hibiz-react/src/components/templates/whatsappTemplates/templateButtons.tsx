@@ -103,12 +103,16 @@ const MemoTemplateButtons = () => {
     } else if (templateSteps === TemplateSteps.SHOW_OPTIONS) {
       if (
         templateId?.length === 0 ||
-        selectedOptions?.length === 0 ||
         (selectedOptions.includes(ShowOptions.BULK_UPLOAD_CUSTOMERS) &&
-          uploadedFileName?.length === 0)
+          uploadedFileName === null)
       ) {
-        console.log("Please upload excel file");
         return toast.error("Please upload excel file");
+      }
+      if (
+        selectedOptions.includes(ShowOptions.ADD_GROUPS) &&
+        selectedGroups.length === 0
+      ) {
+        return toast.error("Please select atleast one group");
       }
       setTemplateSteps(TemplateSteps.SEND);
     } else if (templateSteps === TemplateSteps.SEND) {
@@ -121,6 +125,7 @@ const MemoTemplateButtons = () => {
     sendCustomers,
     templateId,
     selectedOptions,
+    selectedGroups,
     uploadedFileName,
   ]);
   return (
