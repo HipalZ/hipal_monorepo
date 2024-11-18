@@ -34,7 +34,7 @@ const { printMetrics, registerMetrics } = prometheus();
 
 app.use("*", registerMetrics);
 app.get("/metrics", printMetrics);
-app.use(timeout(+Bun.env.TIMEOUT, customTimeoutException));
+app.use(timeout(1800000, customTimeoutException));
 app.use(secureHeaders());
 app.use(prettyJSON());
 app.use(cors());

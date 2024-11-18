@@ -16,7 +16,7 @@ export const whatsAppBusinessConfigSchema = z.object({
   whatsAppAccountId: z.string().min(3).max(200),
   version: z.string().min(3).max(200),
   templateLimit: z.number().int().min(0).max(1000),
-  planId: ObjectIdSchema,
+  planId: ObjectIdSchema.optional(),
   whatsAppPhone: z.string().min(10).max(10),
 });
 

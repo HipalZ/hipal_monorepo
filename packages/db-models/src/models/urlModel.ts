@@ -15,6 +15,12 @@ const urlModelChema = new mongoose.Schema<UrlModelType>(
     urlCode: {
       type: String,
       required: true,
+      unique: true,
+    },
+    businessId: {
+      type: ObjectId,
+      required: false,
+      ref: "Business",
     },
   },
   {
