@@ -151,7 +151,7 @@ const businessData = [
   {
     id: "015",
     date: "18 Nov 2024",
-    name: "Meraki Foods",
+    name: "nataka",
     bizName: "Nataka Global Kitchen & Cafe",
     status: false,
     serviceCost: 4000,
