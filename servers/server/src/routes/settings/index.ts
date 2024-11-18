@@ -376,6 +376,47 @@ const settingsRouter = new Hono()
         razorpayObject,
       );
     },
+  )
+
+  .get(
+    "/:businessId/getPaltribeMerchantKeySecret",
+
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+      let merchant: MerChantDetails | null = (await cache.get(
+        businessId as string,
+      )) as MerChantDetails;
+      if (!merchant) {
+        console.log("from db");
+        merchant = await BusinessSettings.findOne({
+          businessId,
+        })
+          .select("razorpayMerchantId razorpayKeyId businessId")
+          .lean();
+        await cache.set(businessId as string, merchant as MerChantDetails);
+      }
+
+      const razorpayObject = {
+        businessId: merchant?.businessId,
+        razorpayKeyId: merchant?.razorpayKeyId,
+        razorpayMerchantId: merchant?.razorpayMerchantId,
+      };
+
+      return respond(
+        c,
+        "Settings fetched successfully",
+        false,
+        200,
+        razorpayObject,
+      );
+    },
   );
 
 export default settingsRouter;
