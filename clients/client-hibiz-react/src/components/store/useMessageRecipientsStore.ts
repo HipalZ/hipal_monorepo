@@ -52,7 +52,7 @@ interface MessageRecipientsState {
 export const useMessageRecipientsStore = create<MessageRecipientsState>()(
   persist(
     (set) => ({
-      selectedOptions: [],
+      selectedOptions: ["allCustomers"],
       selectedGroups: [],
       customerPhone: "",
       groups: [],
