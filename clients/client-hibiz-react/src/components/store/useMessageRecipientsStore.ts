@@ -71,6 +71,8 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>()(
       },
       handleGroupToggle: (groupId) => {
         const walletBalance = useWhatsapp.getState().walletBalance;
+        const templateType = useWhatsapp.getState().templateType;
+        const typeAmount = templateType === "MARKETING" ? 0.9 : 0.2;
         set((state) => {
           const isSelected = state.selectedGroups.includes(groupId);
           const newSelection = isSelected
@@ -86,10 +88,10 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>()(
             const group = state.groups.find((g) => g._id === id);
             return sum + (group?.userIds?.length || 0);
           }, 0);
-          if (count > 0 && walletBalance < count * 0.9) {
+          if (count > 0 && walletBalance < count * typeAmount) {
             toast(
               `You need at least ${
-                count * 0.9
+                count * typeAmount
               } credits to send to ${count} customers`,
             );
           }
@@ -107,6 +109,9 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>()(
       handleRemoveFile: () =>
         set({ uploadedFileName: null, bulkCustomers: [] }),
       setBulkCustomers: (customers) => {
+        const walletBalance = useWhatsapp.getState().walletBalance;
+        const templateType = useWhatsapp.getState().templateType;
+        const typeAmount = templateType === "MARKETING" ? 0.9 : 0.2;
         set((state) => {
           const newSelectedOptions = [...state.selectedOptions];
           if (!newSelectedOptions.includes(ShowOptions.BULK_UPLOAD_CUSTOMERS)) {
@@ -117,6 +122,16 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>()(
             selectedOptions: newSelectedOptions,
           };
         });
+        if (
+          customers?.length &&
+          walletBalance < customers.length * typeAmount
+        ) {
+          toast(
+            `You need at least ${
+              customers.length * typeAmount
+            } credits to send to ${customers.length} customers`,
+          );
+        }
         toast.success(
           `${customers.length} customers have been added to bulk upload.`,
         );
