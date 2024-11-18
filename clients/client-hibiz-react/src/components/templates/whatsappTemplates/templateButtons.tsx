@@ -104,7 +104,8 @@ const MemoTemplateButtons = () => {
       if (
         templateId?.length === 0 ||
         (selectedOptions.includes(ShowOptions.BULK_UPLOAD_CUSTOMERS) &&
-          uploadedFileName === null)
+          uploadedFileName === null) ||
+        uploadedFileName?.length === 0
       ) {
         return toast.error("Please upload excel file");
       }

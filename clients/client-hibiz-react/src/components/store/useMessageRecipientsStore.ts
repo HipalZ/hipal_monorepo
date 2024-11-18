@@ -109,9 +109,6 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>()(
       handleRemoveFile: () =>
         set({ uploadedFileName: null, bulkCustomers: [] }),
       setBulkCustomers: (customers) => {
-        const walletBalance = useWhatsapp.getState().walletBalance;
-        const templateType = useWhatsapp.getState().templateType;
-        const typeAmount = templateType === "MARKETING" ? 0.9 : 0.2;
         set((state) => {
           const newSelectedOptions = [...state.selectedOptions];
           if (!newSelectedOptions.includes(ShowOptions.BULK_UPLOAD_CUSTOMERS)) {
@@ -122,16 +119,6 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>()(
             selectedOptions: newSelectedOptions,
           };
         });
-        if (
-          customers?.length &&
-          walletBalance < customers.length * typeAmount
-        ) {
-          toast(
-            `You need at least ${
-              customers.length * typeAmount
-            } credits to send to ${customers.length} customers`,
-          );
-        }
         toast.success(
           `${customers.length} customers have been added to bulk upload.`,
         );
