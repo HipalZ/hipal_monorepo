@@ -10,9 +10,10 @@ export const useMerchantDetails = () => {
   const { setMerchantDetails } = useWhatsapp((s) => ({
     setMerchantDetails: s.setMerchantDetails,
   }));
-
   const getMerchantKeySecret = useCallback(async () => {
-    const res = await apiRpc.settings[":businessId"].getMerchantKeySecret.$get({
+    const res = await apiRpc.settings[
+      ":businessId"
+    ].getPaltribeMerchantKeySecret.$get({
       param: {
         businessId: businessId || "",
       },
