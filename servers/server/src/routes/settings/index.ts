@@ -389,14 +389,15 @@ const settingsRouter = new Hono()
     ),
 
     async (c) => {
-      const { businessId } = c.req.param();
+      const businessId = "66b08937c88e8035f92d2f77";
+
       let merchant: MerChantDetails | null = (await cache.get(
         businessId as string,
       )) as MerChantDetails;
       if (!merchant) {
         console.log("from db");
         merchant = await BusinessSettings.findOne({
-          businessId,
+          businessId: "66b08937c88e8035f92d2f77",
         })
           .select("razorpayMerchantId razorpayKeyId businessId")
           .lean();

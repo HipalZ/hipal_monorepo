@@ -1613,7 +1613,6 @@ const whatsappRouter = new Hono()
     async (c) => {
       const body = await c.req.json();
 
-      console.log(JSON.stringify(body, null, 2));
       if (body.object) {
         if (body.entry?.[0]?.changes?.[0]?.value?.messages?.[0]) {
           const phon_no_id =
