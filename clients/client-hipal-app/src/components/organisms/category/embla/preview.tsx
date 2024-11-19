@@ -5,12 +5,13 @@ import type { IDish } from "@/components/types/businessData";
 import Img from "@/assets/img/cake.png";
 import DishQuantityButton from "../../dishDescription/dishQuantityButton";
 import MemoFoodType from "@/components/atoms/foodType";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const MemoLivePreview = ({ dish }: { dish: IDish }) => {
   const [dominantColor, setDominantColor] = useState(
     "rgba(255, 255, 255, 0.9)",
   );
-
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const extractColor = useCallback(
     (image: HTMLImageElement | null) => {
       if (!image || !dish) return;
@@ -58,9 +59,11 @@ const MemoLivePreview = ({ dish }: { dish: IDish }) => {
           }}
         />
       </div>
-      <div className="absolute p-1 bg-white rounded-lg top-2 left-2">
-        <MemoFoodType types={dish?.dishTypes} />
-      </div>
+      {dish?.dishTypes && outletInfo?.outLetType !== "OTHER" && (
+        <div className="absolute p-1 bg-white rounded-lg top-2 left-2">
+          <MemoFoodType types={dish?.dishTypes} />
+        </div>
+      )}
       <div
         className="absolute bottom-0 w-full h-[9rem] md:h-[10rem] lg:h-[10rem] rounded-b-2xl z-20"
         style={{ backgroundColor: dominantColor }}

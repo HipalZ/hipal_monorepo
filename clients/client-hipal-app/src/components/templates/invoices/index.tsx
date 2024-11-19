@@ -13,6 +13,7 @@ const businessData = [
     date: "02 Aug 2024",
     name: "soukun",
     bizName: "RABH RAKHA HOSPITALITY LLP - Soukun cafe",
+    status: false,
     serviceCost: 3500,
     months: 6,
     address: "",
@@ -23,6 +24,7 @@ const businessData = [
     date: "02 Aug 2024",
     name: "stonewater",
     bizName: "S&D HOSPITALITY - Stone waters",
+    status: false,
     serviceCost: 3500,
     months: 6,
     address: "",
@@ -33,6 +35,7 @@ const businessData = [
     date: "02 Aug 2024",
     name: "hoist",
     bizName: "SONNET HOSPITALITY LLP - Hoist",
+    status: false,
     serviceCost: 3500,
     months: 6,
     address: "",
@@ -43,6 +46,7 @@ const businessData = [
     date: "02 Aug 2024",
     name: "talesoftelugu",
     bizName: "TALES OF TELUGU",
+    status: false,
     serviceCost: 3000,
     months: 6,
     address: "",
@@ -53,6 +57,7 @@ const businessData = [
     date: "02 Aug 2024",
     name: "kebabwala",
     bizName: "Kebabwala",
+    status: false,
     serviceCost: 2000,
     months: 6,
     address: "",
@@ -63,6 +68,7 @@ const businessData = [
     date: "02 Aug 2024",
     name: "vamsi",
     bizName: "Vamsi",
+    status: false,
     serviceCost: 1,
     months: 1,
     address: "",
@@ -73,6 +79,7 @@ const businessData = [
     date: "02 Aug 2024",
     name: "zylk",
     bizName: "zylk",
+    status: false,
     serviceCost: 3000,
     months: 6,
     address:
@@ -84,6 +91,7 @@ const businessData = [
     date: "19 Sept 2024",
     name: "lifafa",
     bizName: "lifafa",
+    status: true,
     serviceCost: 3500,
     months: 3,
     address:
@@ -107,6 +115,7 @@ const businessData = [
     date: "08 Oct 2024",
     name: "skycafe",
     bizName: "AF & NS Food Pvt Ltd - Skycafe",
+    status: false,
     serviceCost: 3500,
     months: 3,
     address:
@@ -118,6 +127,7 @@ const businessData = [
     date: "16 Nov 2024",
     name: "sashtra",
     bizName: "SASHTRA WELLNESS PRIVATE LIMITED",
+    status: false,
     serviceCost: 4000,
     months: 12,
     address:
@@ -152,6 +162,7 @@ const businessData = [
     id: "015",
     date: "18 Nov 2024",
     name: "nataka",
+    name: "Meraki Foods",
     bizName: "Nataka Global Kitchen & Cafe",
     status: false,
     serviceCost: 4000,
@@ -290,7 +301,7 @@ const MemoInovices = () => {
             <b>CIN : </b> U72200TG2021PTC156074
           </h1>
           <h1>
-            <b>PAN CARD:- AAMCP3900B</b>
+            <b>PAN CARD:-</b> AAMCP3900B
           </h1>
         </article>
         <center className="pb-24 mx-4 mt-24 text-xs opacity-50">

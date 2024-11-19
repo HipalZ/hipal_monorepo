@@ -2,17 +2,20 @@ import { memo, type ReactNode } from "react";
 import { useTransition, animated } from "@react-spring/web";
 import { FaArrowLeft } from "react-icons/fa";
 import { createPortal } from "react-dom";
+import { cn } from "@hi/common";
 
 function MemoItemDescription({
   children,
   show,
   onClose,
   heading,
+  linearGradTheme,
 }: {
   readonly children: ReactNode;
   readonly show: boolean;
   readonly onClose: () => void;
   readonly heading?: string;
+  readonly linearGradTheme?: boolean;
 }) {
   const transitions = useTransition(show, {
     from: { transform: "translateY(100%)", opacity: 0 },
@@ -36,17 +39,20 @@ function MemoItemDescription({
           <div className="fixed inset-0 flex items-center justify-center bg-[#00000020] backdrop-blur-sm bg-opacity-70">
             <animated.div
               style={styles}
-              className=" h-[100dvh] overflow-auto w-full max-w-[28rem] bg-base-100 "
+              className={cn(
+                " h-[100dvh] overflow-auto w-full max-w-[28rem]",
+                linearGradTheme ? "background-gradient" : "bg-base-100",
+              )}
             >
               <header className="sticky !z-[1000] top-0 bg-base-100 flex items-center pb-2">
                 <button
                   type="button"
                   onClick={() => onClose()}
-                  className="px-2 mt-4 ml-4 rounded-xl bg-base-200 on_active_bounce"
+                  className="px-2 mt-4 ml-4 rounded-xl bg-primary text-base-100 on_active_bounce"
                 >
                   <FaArrowLeft
                     size={28}
-                    className="p-2 text-black rounded-full cursor-pointer"
+                    className="p-2 rounded-full cursor-pointer text-base-100"
                   />
                 </button>
                 <h1 className="mt-4 ml-4 text-2xl font-medium truncate text-base-content">

@@ -115,26 +115,6 @@ const EmblaCarouselPreview: React.FC<PropType> = (props) => {
             ))}
         </div>
       </div>
-
-      {/* <div className="px-6 embla-_controls ">
-        <div className="embla-_buttons ">
-          <PrevButton onClick={onPrevButtonClick} disabled={prevBtnDisabled} />
-          <div className="embla-_dots">
-            {scrollSnaps.map((_, index) => (
-              <DotButton
-                key={index}
-                onClick={() => onDotButtonClick(index)}
-                className={`transition-all duration-500 ease-in-out ${
-                  index === selectedIndex
-                    ? "bg-primary w-[1rem] h-[0.5rem] rounded-xl transition-all delay-200"
-                    : "bg-base-300 rounded-full w-[0.5rem] h-[0.5rem]"
-                }`}
-              />
-            ))}
-          </div>
-          <NextButton onClick={onNextButtonClick} disabled={nextBtnDisabled} />
-        </div>
-      </div> */}
     </div>
   );
 };

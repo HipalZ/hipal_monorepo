@@ -255,7 +255,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
 
       {/* business details */}
 
-      <BottomButton />
+      <BottomButton selected={"rewards"} />
       {isHiCodeModalOpen && (
         <DishData
           show={isHiCodeModalOpen}

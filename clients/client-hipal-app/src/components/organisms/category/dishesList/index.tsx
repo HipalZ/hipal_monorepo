@@ -124,7 +124,7 @@ const DishesList: FC<IDishesProps> = (props) => {
       if (isActiveChildCategory !== "") {
         const element = document.getElementById(isActiveChildCategory);
         if (element) {
-          element.style.scrollMarginTop = "250px";
+          element.style.scrollMarginTop = "300px";
           element.scrollIntoView({ behavior: "smooth" });
         }
         setTimeout(() => {
@@ -136,7 +136,7 @@ const DishesList: FC<IDishesProps> = (props) => {
         timings?.dishIds?.length > 0 && observerActive ? "" : isActiveCategory;
       const element = document.getElementById(active);
       if (element) {
-        element.style.scrollMarginTop = "110px";
+        element.style.scrollMarginTop = "150px";
         element.scrollIntoView({ behavior: "smooth" });
       }
     };

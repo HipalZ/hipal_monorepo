@@ -2,32 +2,42 @@ import React, { memo, useMemo } from "react";
 import FoodType, { type FOOD_TYPES } from "@/components/atoms/foodType";
 import Section from "@/components/molecules/section";
 import { Splide, SplideSlide } from "@splidejs/react-splide";
-import Image from "next/image";
 import { ImSpoonKnife } from "react-icons/im";
 import DishQuantityButton from "../dishQuantityButton";
 import PlaceholderImg from "@/components/atoms/placeholder";
-import { getRandomBlurImg } from "@/components/utils/images";
 import type { DishType } from "@hi/db-models/src/validators";
 import "@splidejs/react-splide/css";
 import ShimmerImage from "@/components/atoms/imageshimmer";
+import { useActiveClass } from "@/components/store/useActiveClass";
+import { useDishesStore } from "@/components/store/useDishesStore";
+import type { IDish } from "@/components/types/businessData";
 
 function RecommendedDishes({
   recommendations,
   openModal,
 }: {
   recommendations: DishType[];
-  openModal: (dish: DishType) => void;
+  openModal?: (dish: DishType) => void;
 }) {
   // Use useMemo to prepare the dishes for rendering
-  const processedDishes = useMemo(() => {
-    return recommendations?.map((dish: DishType) => ({
-      ...dish,
-      image: dish?.images.length > 0 ? dish?.images[0] : "",
-      blurDataURL: getRandomBlurImg(150, 150),
-    }));
-  }, [recommendations]);
+  const { setSelectedDish } = useActiveClass();
+  const dishes = useDishesStore((s) => s.dishes);
 
-  if (processedDishes?.length === 0) return null;
+  const changeTheDish = (dish: DishType) => {
+    if (openModal) {
+      openModal(dish);
+    } else {
+      setSelectedDish(dish);
+    }
+  };
+
+  const processedDishes = useMemo(() => {
+    return recommendations
+      ?.map((dishId) => dishes?.find((dish: IDish) => dish._id === dishId))
+      .filter(Boolean);
+  }, [recommendations, dishes]);
+
+  if (!processedDishes || processedDishes.length === 0) return null;
 
   return (
     <div className="-mt-4">
@@ -75,12 +85,12 @@ function RecommendedDishes({
                     <div className="z-10 px-2 pt-2 flex flex-col overflow-hidden bg-base-300 border w-[8.5rem] rounded-lg border-base-200 text-base-content">
                       <button
                         type="button"
-                        onClick={() => openModal(dish)}
+                        onClick={() => changeTheDish(dish)}
                         className="w-full -mb-4 overflow-hidden"
                       >
-                        {dish?.image ? (
+                        {dish?.images?.length > 0 ? (
                           <ShimmerImage
-                            src={dish?.image}
+                            src={dish?.images?.[0]}
                             quality={95}
                             alt={dish?.name}
                             width={120}
