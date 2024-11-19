@@ -219,38 +219,72 @@ export const useBulkUploadContacts = () => {
   );
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (file: File) => {
-      return new Promise(() => {
+      return new Promise((resolve, reject) => {
         setUploadedFileName(file.name);
         parse(file, {
           header: true,
           complete: async (result) => {
-            const keyMap = {
-              name: "name",
-              phone: "phone",
-            };
+            try {
+              const keyMap = {
+                name: "name",
+                phone: "phone",
+              };
 
-            // Normalize keys and clean phone numbers
-            const data = result.data.map((item) => {
-              const normalizedItem = normalizeAndMapKeys(item, keyMap);
-              if (normalizedItem.phone) {
-                normalizedItem.phone = normalizePhoneNumber(
-                  normalizedItem.phone,
+              // **Step 1: Validate columns**
+              const firstRow = result.data[0];
+              if (
+                !firstRow ||
+                !Object.keys(firstRow).includes(keyMap.name) ||
+                !Object.keys(firstRow).includes(keyMap.phone)
+              ) {
+                throw new Error(
+                  "Invalid file format. Please ensure the file contains 'name' and 'phone' columns.",
                 );
               }
-              return normalizedItem;
-            });
 
-            // Filter valid data and remove duplicates
-            const validData = data.filter(
-              (item) => item.name && item.phone && Object.keys(item).length > 0,
-            );
-            const uniqueContacts = removeDuplicateContacts(validData);
-            calculateCreditScore(
-              uniqueContacts.length,
-              walletBalance,
-              templateType,
-            );
-            setBulkCustomers(uniqueContacts);
+              // **Step 2: Normalize and validate rows**
+              const data = result.data.map((item) => {
+                const normalizedItem = normalizeAndMapKeys(item, keyMap);
+                if (normalizedItem.phone) {
+                  normalizedItem.phone = normalizePhoneNumber(
+                    normalizedItem.phone,
+                  );
+                }
+                return normalizedItem;
+              });
+
+              // Filter valid data and remove duplicates
+              const validData = data.filter(
+                (item) =>
+                  item.name &&
+                  item.phone &&
+                  item.phone !== null &&
+                  Object.keys(item).length > 0,
+              );
+
+              if (validData.length === 0) {
+                throw new Error(
+                  "No valid contacts found in the file. Please check the file format and data.",
+                );
+              }
+
+              const uniqueContacts = removeDuplicateContacts(validData);
+
+              // **Step 3: Validate wallet balance**
+              calculateCreditScore(
+                uniqueContacts.length,
+                walletBalance,
+                templateType,
+              );
+
+              setBulkCustomers(uniqueContacts);
+
+              resolve("Contacts uploaded successfully");
+            } catch (error) {
+              // Handle and display errors
+              toast.error(error.message);
+              reject(error);
+            }
           },
         });
       });
