@@ -93,7 +93,7 @@ const Cart = () => {
         <ShareCartButtons />
       )}
 
-      {accessToken && tableName && outletInfo?.outLetType !== "OTHER" && (
+      {tableName && outletInfo?.outLetType !== "OTHER" && (
         <CommonBottomButton
           fixed
           buttons={
