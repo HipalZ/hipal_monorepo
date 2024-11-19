@@ -134,7 +134,7 @@ const AddAmountModal = memo(() => {
     }
   }, [businessId, tableName]);
   return (
-    <section className="h-[80vh] relative overflow-y-auto overflow-x-hidden mb-[2rem]">
+    <section className="h-[77dvh] relative overflow-y-auto overflow-x-hidden mb-[2rem]">
       <header className="bg-white h-[4.25rem] flex items-center text-primary">
         {business.logoUrl ? (
           <figure className="h-[5rem] p-4 w-[5rem]">

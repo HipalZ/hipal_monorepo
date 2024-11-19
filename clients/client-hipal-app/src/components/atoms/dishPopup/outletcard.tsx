@@ -11,12 +11,13 @@ import CommonBottomButton from "../bottomButton";
 import { BUSINESS_KEYID } from "@/configs";
 import { useParams } from "next/navigation";
 import { useCartStore } from "@/components/store/useCartStore";
-import MemoBottomPopUp from "../bottomPopUp";
 import MemoChoosePortions from "@/components/molecules/choosePortions";
 import ExtraWithDishWithSelect from "@/components/organisms/dishDescription/extras";
 import MemoAlertVariant from "../alertVariant";
 import { useBottomPanel } from "@/components/store/useBottomPanel";
 import Head from "next/head";
+import BottomPopUp from "../bottomPopUp";
+import { useActiveClass } from "@/components/store/useActiveClass";
 
 function generateCartItemId(dishId, portionId, extras) {
   const sortedExtras = [...extras]
@@ -28,7 +29,8 @@ function generateCartItemId(dishId, portionId, extras) {
   }`;
 }
 
-function MemoOutletItemInfo({ dishData }: { dishData: IDish }) {
+function MemoOutletItemInfo() {
+  const { isSelectedDish: dishData } = useActiveClass();
   const isAvailable = dishData?.availability;
   const customLink = useParams()?.businessId as string;
   const { showCart } = useCart();
@@ -130,11 +132,11 @@ function MemoOutletItemInfo({ dishData }: { dishData: IDish }) {
           </div>
         )}
         <section className={cn("mx-4", !showCart ? "" : "mt-4")}>
-          <IndividualItemDescription dishData={dishData} />
+          <IndividualItemDescription />
         </section>
 
         {openBottomPanel && selectedDish._id === dishData._id && (
-          <MemoBottomPopUp show={openBottomPanel} onClose={closeModal}>
+          <BottomPopUp show={openBottomPanel} onClose={closeModal}>
             {cartPopup === "BOTTOM_PANEL" && (
               <div className="relative flex flex-col pb-12 mt-4 overflow-auto z-[103]">
                 <div className="flex flex-col h-[70vh] space-y-4 divide-y-2 divide-base-200 text-base-content">
@@ -151,7 +153,7 @@ function MemoOutletItemInfo({ dishData }: { dishData: IDish }) {
                 </button>
               </div>
             )}
-          </MemoBottomPopUp>
+          </BottomPopUp>
         )}
 
         <CommonBottomButton

@@ -103,7 +103,7 @@ const MemoSubTypes = (props: ISubTypes) => {
   return (
     <>
       {outletInfo?.outLetType === "OTHER" ? (
-        <section className="pb-1 overflow-x-auto shadow-lg no-scrollbar bg-base-100 text-primary">
+        <section className="overflow-x-auto shadow-lg no-scrollbar bg-base-100 text-primary">
           {subTypes.length > 0 && (
             <Splide
               ref={splideRef}
@@ -128,7 +128,7 @@ const MemoSubTypes = (props: ISubTypes) => {
                     <article
                       className={cn(
                         isActiveCategory === item._id?.toString()
-                          ? " underline underline-offset-[0.75rem]"
+                          ? " underline underline-offset-[0.75rem] font-semibold"
                           : "",
                         "flex flex-col items-center justify-center transition-all duration-200 ease-in-out",
                       )}

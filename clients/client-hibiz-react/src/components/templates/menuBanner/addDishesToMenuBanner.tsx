@@ -139,7 +139,7 @@ const MemoAddDishesToMenuBanner = () => {
                   </div>
                   <div className="absolute right-4">
                     <ShimmerImage
-                      src={dish.images[0]}
+                      src={dish?.images?.[0]}
                       alt={dish.name}
                       width={50}
                       height={50}

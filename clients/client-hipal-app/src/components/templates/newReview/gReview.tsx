@@ -1,4 +1,4 @@
-import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
+import BottomPopUp from "@/components/atoms/bottomPopUp";
 import GoogleReviewCard from "@/components/atoms/googleReviewCard";
 import Image from "next/image";
 import React, { memo, useCallback } from "react";
@@ -27,7 +27,7 @@ const MemoGReview = () => {
   return (
     <>
       {googleReviewCount === 0 && showGoogleReview && (
-        <MemoBottomPopUp
+        <BottomPopUp
           show={showGoogleReview}
           onClose={() => setShowGoogleReview(false)}
           hide
@@ -55,7 +55,7 @@ const MemoGReview = () => {
               Skip
             </center>
           </section>
-        </MemoBottomPopUp>
+        </BottomPopUp>
       )}
     </>
   );

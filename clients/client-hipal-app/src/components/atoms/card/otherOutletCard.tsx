@@ -90,7 +90,7 @@ const MemoOtherOutletCard = ({
           show={isModalOpen}
           onClose={closeModal}
         >
-          <OutletItemInfo dishData={isSelectedDish} />
+          <OutletItemInfo />
         </ItemDescriptionPopup>
       )}
     </div>

@@ -3,7 +3,6 @@ import { getPrice } from "@/components/utils/helpers";
 import { memo, useCallback, useMemo, useState } from "react";
 import { AiOutlineWarning } from "react-icons/ai";
 import FoodType from "../foodType";
-import DishData from "../dishDescription";
 import DishPopup from "../dishPopup";
 import NotAvailable from "../notAvailable";
 import PlaceholderImg from "../placeholder";
@@ -12,6 +11,10 @@ import MemoRecommendedDishes from "@/components/organisms/dishDescription/recomm
 import { useCartStore } from "@/components/store/useCartStore";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import ShimmerImage from "../imageshimmer";
+import ItemDescriptionPopup from "../dishDescription/itemDescription";
+import { useActiveClass } from "@/components/store/useActiveClass";
+import CommonBottomButton from "../bottomButton";
+import { useCart } from "@/components/store/useCart";
 
 const MemoHorizontalCard = ({
   dishData,
@@ -23,8 +26,9 @@ const MemoHorizontalCard = ({
   noDescription?: boolean;
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDish, setSelectedDish] = useState({} as DishType);
+  const { isSelectedDish, setSelectedDish } = useActiveClass();
   const { cart } = useCartStore();
+  const { showCart, setShowCart } = useCart();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const openModal = useCallback(
     (dishData: DishType) => {
@@ -148,11 +152,17 @@ const MemoHorizontalCard = ({
             </div>
           )}
           {isModalOpen && (
-            <DishData show={isModalOpen} onClose={closeModal}>
-              <div className="relative">
-                <DishPopup dishData={selectedDish} />
-              </div>
-            </DishData>
+            <ItemDescriptionPopup show={isModalOpen} onClose={closeModal}>
+              <DishPopup dishData={isSelectedDish} />
+              <CommonBottomButton
+                buttons={[
+                  {
+                    text: "Go to cart",
+                    onClick: () => setShowCart(!showCart),
+                  },
+                ]}
+              />
+            </ItemDescriptionPopup>
           )}
         </div>
       </div>

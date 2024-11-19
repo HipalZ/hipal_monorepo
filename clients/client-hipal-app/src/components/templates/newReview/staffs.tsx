@@ -1,4 +1,4 @@
-import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
+import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { useReview } from "@/components/store/useReview";
 import { cn, reviewColors } from "@/components/utils/helpers";
 import { memo, useCallback } from "react";
@@ -65,10 +65,7 @@ const MemoStaffs = () => {
         </div>
       ) : null}
       {showSuggestions && selectedEmoji !== null && (
-        <MemoBottomPopUp
-          show={showSuggestions}
-          onClose={handleCloseSuggestions}
-        >
+        <BottomPopUp show={showSuggestions} onClose={handleCloseSuggestions}>
           <section className="text-black bg-[#FBFEFC] rounded-t-2xl">
             <ul
               className="w-full h-[60vh] mt-0 overflow-y-auto"
@@ -126,7 +123,7 @@ const MemoStaffs = () => {
               Save
             </button>
           </section>
-        </MemoBottomPopUp>
+        </BottomPopUp>
       )}
     </>
   );

@@ -89,7 +89,7 @@ const IndividualItemPage = ({ dishData }: IndividualItemPageProps) => {
       </Head>
 
       <div
-        className="relative w-full max-w-[30rem] bg-base-100 mx-auto overflow-auto text-primary hide-scrollbar"
+        className="relative w-full h-screen max-w-[30rem] bg-base-100 mx-auto overflow-auto text-primary hide-scrollbar"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Carousel or Placeholder */}

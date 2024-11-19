@@ -97,7 +97,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
               </h6>
 
               <ul className="grid justify-start grid-cols-2 px-1 py-2 border rounded-lg flex-col-2 border-base-content/20">
-                {addOn.choices.map((choice) => (
+                {addOn?.choices.map((choice) => (
                   <li
                     key={choice._id}
                     className="flex flex-row gap-2 py-2 text-sm font-normal opacity-60 min-w-fit text-base-content"

@@ -18,7 +18,7 @@ import { apiRpc, cn } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { useCartStore } from "@/components/store/useCartStore";
 import { type IUserData, useLogin } from "@/components/store/useLogin";
-import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
+import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { useParams, useRouter } from "next/navigation";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import SubScribeModal from "../subscribe";
@@ -223,7 +223,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
         <ReadMore text={description} />
       </center>
       {subscribeModal && (
-        <MemoBottomPopUp
+        <BottomPopUp
           show={subscribeModal}
           onClose={closeSubscribeModal}
           hide
@@ -234,12 +234,12 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
             business={business}
             setSubscribeModal={setSubscribeModal}
           />
-        </MemoBottomPopUp>
+        </BottomPopUp>
       )}
       {reviewPopup && (
-        <MemoBottomPopUp show={reviewPopup} onClose={toggleReviewPopup}>
+        <BottomPopUp show={reviewPopup} onClose={toggleReviewPopup}>
           <ReviewModal closeModal={toggleReviewPopup} />
-        </MemoBottomPopUp>
+        </BottomPopUp>
       )}
     </div>
   );

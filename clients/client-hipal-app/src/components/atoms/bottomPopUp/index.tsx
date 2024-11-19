@@ -4,7 +4,7 @@ import { HiX } from "react-icons/hi";
 import { cn } from "@/components/utils/helpers";
 import { createPortal } from "react-dom";
 
-const BottomPopUp = ({
+const MemoBottomPopUp = ({
   children,
   show,
   onClose,
@@ -24,10 +24,8 @@ const BottomPopUp = ({
     config: { tension: 250, friction: 30 },
   });
 
-  // If the popup is not supposed to show, return null
   if (!show) return null;
 
-  // Define the popup content
   const popupContent = transitions(
     (styles, item) =>
       item && (
@@ -37,7 +35,7 @@ const BottomPopUp = ({
             backgroundColor: "rgba(0, 0, 0, 0.2)",
             backdropFilter: "blur(5px)",
           }}
-          className="fixed inset-0 z-[103] overflow-y-auto flex items-end justify-center"
+          className="fixed inset-0 z-[110] overflow-y-auto flex items-end justify-center"
           onClick={onClose}
         >
           <animated.div
@@ -45,7 +43,7 @@ const BottomPopUp = ({
             className={cn(
               "relative w-full max-w-md shadow-md",
               !hide && "rounded-t-[1rem]",
-              linearGradTheme ? "background-gradient" : "bg-base-200",
+              linearGradTheme ? "background-gradient" : "bg-base-100",
             )}
             onClick={(e) => e.stopPropagation()}
           >
@@ -66,5 +64,5 @@ const BottomPopUp = ({
   return createPortal(popupContent, document.body);
 };
 
-const MemoBottomPopUp = memo(BottomPopUp);
-export default MemoBottomPopUp;
+const BottomPopUp = memo(MemoBottomPopUp);
+export default BottomPopUp;

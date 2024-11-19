@@ -1,5 +1,5 @@
 import { memo, useCallback } from "react";
-import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
+import BottomPopUp from "@/components/atoms/bottomPopUp";
 import MemoChoosePortions from "@/components/molecules/choosePortions";
 import ExtraWithDishWithSelect from "@/components/organisms/dishDescription/extras";
 import type { DishType } from "@hi/db-models/src/validators";
@@ -8,6 +8,7 @@ import { HiMinusSm, HiPlusSm } from "react-icons/hi";
 import MemoAlertVariant from "@/components/atoms/alertVariant";
 import { useBottomPanel } from "@/components/store/useBottomPanel";
 import { useCart } from "@/components/store/useCart";
+import CommonBottomButton from "@/components/atoms/bottomButton";
 
 function generateCartItemId(dishId, portionId, extras) {
   const sortedExtras = [...extras]
@@ -160,24 +161,25 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
       )}
 
       {openBottomPanel && selectedDish._id === dishData._id && (
-        <MemoBottomPopUp show={openBottomPanel} onClose={closeModal}>
+        <BottomPopUp show={openBottomPanel} onClose={closeModal}>
           {cartPopup === "BOTTOM_PANEL" && (
             <div className="relative flex flex-col pb-12 mt-4 overflow-auto z-[103]">
-              <div className="flex flex-col h-[70vh] space-y-4 divide-y-2 divide-base-200 text-base-content">
+              <div className="flex flex-col h-[70vh] space-y-4 divide-y-2 divide-base-100 text-base-content">
                 <MemoChoosePortions dishData={selectedDish} />
                 <ExtraWithDishWithSelect dishData={selectedDish} />
                 {displayAlert && <MemoAlertVariant />}
               </div>
-              <button
-                className="absolute on_active_bounce z-[103] bottom-4 rounded-full text-base-100 bg-primary w-[92%] mx-4 py-1.5"
-                type="button"
-                onClick={handleAddToCart}
-              >
-                Add Dish To Cart
-              </button>
+              <CommonBottomButton
+                buttons={[
+                  {
+                    text: "Add Dish To Cart",
+                    onClick: handleAddToCart,
+                  },
+                ]}
+              />
             </div>
           )}
-        </MemoBottomPopUp>
+        </BottomPopUp>
       )}
     </>
   );

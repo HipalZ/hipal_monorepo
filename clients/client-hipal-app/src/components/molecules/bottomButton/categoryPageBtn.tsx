@@ -19,7 +19,7 @@ import { useSearch } from "@/components/store/useSearch";
 import Link from "next/link";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { RiHome4Fill } from "react-icons/ri";
-import MemoBottomPopUp from "@/components/atoms/bottomPopUp";
+import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { IoPersonAddSharp } from "react-icons/io5";
 
@@ -182,20 +182,20 @@ const CategoryPageBtn = () => {
       )}
 
       {inputModal && (
-        <MemoBottomPopUp show={inputModal} onClose={closeModal} linearGradTheme>
+        <BottomPopUp show={inputModal} onClose={closeModal} linearGradTheme>
           <AddAmountModal />
-        </MemoBottomPopUp>
+        </BottomPopUp>
       )}
 
       {callWaiterModal && (
-        <MemoBottomPopUp show={callWaiterModal} onClose={closeCallWaiterModal}>
+        <BottomPopUp show={callWaiterModal} onClose={closeCallWaiterModal}>
           <CallTheWaiterComponent onClose={closeCallWaiterModal} />
-        </MemoBottomPopUp>
+        </BottomPopUp>
       )}
       {showCart && (
-        <MemoBottomPopUp show={showCart} onClose={showingCart} hide>
+        <BottomPopUp show={showCart} onClose={showingCart} hide>
           <Cart />
-        </MemoBottomPopUp>
+        </BottomPopUp>
       )}
     </>
   );

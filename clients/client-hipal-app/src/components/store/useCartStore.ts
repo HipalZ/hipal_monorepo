@@ -4,12 +4,25 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 export type REPEAT = "BOTTOM_PANEL" | "ADD_PREVIOUS" | "ADD_NEW" | "";
 
-interface ICartItem {
+export interface ICartItem {
   id: string;
   dish: DishType;
   portion: { _id: number; name: string; price: number } | null;
   extras: Array<{ id: string; name: string; quantity: number; price: number }>;
   quantity: number;
+}
+
+export interface ICartHistory {
+  businessId: string;
+  cart: ICartItem[];
+  date: number;
+  tableName: string;
+  userId: {
+    _id: string;
+    name: string;
+    phone: string;
+  };
+  _id: string;
 }
 
 function generateCartItemId(
@@ -60,6 +73,9 @@ interface ICartStore {
   removeSelectedChoice: (choiceId: string) => void;
 
   resetSelections: () => void;
+
+  cartHistory: ICartHistory[];
+  setCartHistory: (history: ICartHistory[]) => void;
 
   cart: Array<ICartItem>;
   addToCart: (item: ICartItem) => void;
@@ -137,15 +153,18 @@ export const useCartStore = create(
           );
 
           if (existingItemIndex !== -1) {
-            // Item exists, increase its quantity
             const updatedCart = [...state.cart];
             updatedCart[existingItemIndex].quantity += newItem.quantity;
             return { cart: updatedCart };
           } else {
-            // Item does not exist, add to cart
             return { cart: [...state.cart, newItem] };
           }
         });
+      },
+
+      cartHistory: [],
+      setCartHistory: (history: ICartHistory[]) => {
+        set({ cartHistory: history });
       },
 
       updateCartItem: (item) => {

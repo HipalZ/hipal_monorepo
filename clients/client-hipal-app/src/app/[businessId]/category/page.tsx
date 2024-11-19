@@ -29,8 +29,8 @@ const DishesList = dynamics(
     loading: () => <div className="h-16 text-black"> Loading .....</div>,
   },
 );
-const CategoryPageBtn = dynamics(
-  () => import("@/components/molecules/bottomButton/categoryPageBtn"),
+const BottomButton = dynamics(
+  () => import("@/components/molecules/bottomButton"),
   {
     ssr: false,
     loading: () => <CategorySkeleton />,
@@ -81,7 +81,7 @@ export default async function Page({
         </section>
         <PageName />
       </div>
-      <CategoryPageBtn />
+      <BottomButton selected={"menu"} />
     </main>
   );
 }

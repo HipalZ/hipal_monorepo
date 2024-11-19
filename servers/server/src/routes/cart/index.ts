@@ -43,6 +43,42 @@ const cartRouter = new Hono()
       return respond(c, "carts retrieved successfully", false, 200, carts);
     },
   )
+  .get(
+    "/cartByUser/:userId",
+    zValidator(
+      "param",
+      z.object({
+        userId: z.string(),
+      }),
+    ),
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string(),
+        tableName: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { userId } = c.req.param();
+      const { businessId, tableName } = c.req.query();
+      console.log(businessId, tableName, userId);
+
+      const carts = await Cart.find({
+        businessId,
+        tableName,
+        userId,
+      }).populate({
+        path: "userId",
+        select: "name phone",
+      });
+
+      if (carts.length === 0) {
+        return respond(c, "no carts found", true, 404, []);
+      }
+
+      return respond(c, "carts retrieved successfully", false, 200, carts);
+    },
+  )
   .post(
     "/create",
     zValidator("json", cartSchema),

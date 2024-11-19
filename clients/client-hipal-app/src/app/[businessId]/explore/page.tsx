@@ -152,7 +152,7 @@ export default async function Explore({
           />
           <PageName />
         </div>
-        <BottomButton />
+        <BottomButton selected={"home"} />
       </main>
     </Suspense>
   );

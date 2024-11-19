@@ -6,11 +6,11 @@ import PlaceholderImg from "../placeholder";
 import type { IDish } from "@/components/types/businessData";
 import { memo } from "react";
 import { cn } from "@hi/common";
-import { useCart } from "@/components/store/useCart";
+import MemoRecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes";
 
 function DishPopup({ dishData }: { dishData: IDish }) {
   const isAvailable = dishData?.availability;
-  const { showCart } = useCart();
+
   const handleInsideClick = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
   ) => {
@@ -19,7 +19,7 @@ function DishPopup({ dishData }: { dishData: IDish }) {
 
   return (
     <div
-      className="relative max-h-[80dvh] min-h-[50dvh] overflow-auto text-primary hide-scrollbar"
+      className="relative max-h-[90dvh] overflow-auto text-primary hide-scrollbar pb-[7rem]"
       onClick={(e) => handleInsideClick(e)}
     >
       {!isEmpty(dishData?.images) ? (
@@ -38,9 +38,12 @@ function DishPopup({ dishData }: { dishData: IDish }) {
           <PlaceholderImg className="w-full h-[10rem]" />
         </div>
       )}
-      <section className={cn("mx-4", !showCart ? "" : "mt-8")}>
+      <section className={cn("mx-4 mt-8")}>
         <FoodDescription dishData={dishData} />
       </section>
+      <div className="mx-4">
+        <MemoRecommendedDishes recommendations={dishData?.recommendationIds} />
+      </div>
     </div>
   );
 }
