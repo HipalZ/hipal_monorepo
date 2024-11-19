@@ -40,6 +40,9 @@ const MemoCartHeader = () => {
   };
 
   const showHistoryFn = () => {
+    if (showHistory) {
+      return setShowHistory(false);
+    }
     getOrderByTable();
     setShowHistory(true);
   };
@@ -52,14 +55,16 @@ const MemoCartHeader = () => {
       >
         <BiArrowBack />
       </button>
-      <center className="pt-4 text-2xl text-primary">Cart</center>
+      <center className="pt-4 text-2xl text-primary">
+        {showHistory ? "History" : "Cart"}
+      </center>
       {outletInfo?.outLetType !== "OTHER" && (
         <button
           type="button"
           onClick={showHistoryFn}
           className="top-4 right-4 py-2 rounded-full absolute z-[60] px-4 text-base-100 bg-primary text-xs"
         >
-          History
+          {!showHistory ? "History" : "Cart"}
         </button>
       )}
     </section>

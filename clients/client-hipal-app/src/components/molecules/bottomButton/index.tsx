@@ -1,25 +1,26 @@
 "use client";
-import { type ButtonHTMLAttributes, memo, useCallback, useState } from "react";
-import { MdAccountBalanceWallet, MdMenuBook } from "react-icons/md";
+
+import { useState, useCallback } from "react";
 import Link from "next/link";
-import { useLogin } from "@/components/store/useLogin";
+import { useRouter, useParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { RiHome4Fill, RiCouponFill } from "react-icons/ri";
+import { MdAccountBalanceWallet, MdMenuBook } from "react-icons/md";
 import { LuScanLine } from "react-icons/lu";
-import AddAmountModal from "./addAmountModal";
+import { FaConciergeBell } from "react-icons/fa";
+import { BsBagHeartFill } from "react-icons/bs";
+import { useLogin } from "@/components/store/useLogin";
 import useTableData from "@/components/store/useTableData";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { RiCouponFill, RiHome4Fill } from "react-icons/ri";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
-import { cn } from "@/components/utils/helpers";
-import { FaConciergeBell } from "react-icons/fa";
-import BottomPopUp from "@/components/atoms/bottomPopUp";
-import MemoCallTheWaiterComponent from "./callTheWaiter";
 import { useCart } from "@/components/store/useCart";
-import { motion, AnimatePresence } from "framer-motion";
+import { useCartStore } from "@/components/store/useCartStore";
+import { cn } from "@/components/utils/helpers";
+import BottomPopUp from "@/components/atoms/bottomPopUp";
+import AddAmountModal from "./addAmountModal";
+import MemoCallTheWaiterComponent from "./callTheWaiter";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
-import { BsBagHeartFill } from "react-icons/bs";
-import { useCartStore } from "@/components/store/useCartStore";
 
 const Cart = dynamic(() => import("@/components/organisms/cart"), {
   ssr: false,
@@ -28,20 +29,78 @@ const Cart = dynamic(() => import("@/components/organisms/cart"), {
 
 export type ButtonType = "home" | "menu" | "catalogue" | "rewards";
 
-function MemoBottomButton({
-  selected,
+const MenuItem = ({
+  icon: Icon,
+  label,
+  href,
+  isSelected,
+  onClick,
 }: {
-  selected?: ButtonType;
-} & ButtonHTMLAttributes<HTMLButtonElement>) {
+  icon: any;
+  label: string;
+  href?: string;
+  isSelected: boolean;
+  onClick?: () => void;
+}) => {
+  const content = (
+    <motion.div
+      className={cn(
+        "relative flex flex-col items-center justify-center z-10",
+        isSelected ? "w-16 h-16" : "w-14 h-14",
+      )}
+      animate={isSelected ? { y: -10 } : { y: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    >
+      {isSelected && (
+        <motion.div
+          className="absolute inset-0 w-12 h-12 rounded-full left-2 -top-2.5 bg-base-300"
+          layoutId="outline"
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        />
+      )}
+      <motion.div
+        className={cn(
+          "relative z-10 flex items-center justify-center",
+          isSelected ? "w-12 h-12" : "w-6 h-6",
+        )}
+        animate={isSelected ? { y: -10 } : { y: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      >
+        <Icon
+          size={isSelected ? 28 : 24}
+          className={cn(
+            "relative z-10",
+            isSelected ? "text-primary" : "text-base-100",
+          )}
+        />
+      </motion.div>
+      <span className="relative z-10 mt-1 text-xs text-base-100">{label}</span>
+    </motion.div>
+  );
+
+  if (href) {
+    return <Link href={href}>{content}</Link>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="p-0 bg-transparent border-none"
+    >
+      {content}
+    </button>
+  );
+};
+
+export default function BottomButton({ selected }: { selected?: ButtonType }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const tableName = useTableData((s) => s.tableName);
   const setDirection = useLogin((s) => s.setDirection);
   const accessToken = useUserToken.getState().accessToken;
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const [callWaiterModal, setCallWaiterModal] = useState(false);
   const { setShowCart, showCart, inputModal, setInputModal } = useCart();
-  const isPayment = searchParams.get("pay");
   const customLink = useParams()?.businessId || "";
   const cart = useCartStore((s) => s.cart);
   const { subscribeModal, reviewPopup } = useLogin((s) => ({
@@ -51,7 +110,7 @@ function MemoBottomButton({
 
   const closeModal = useCallback(() => {
     setInputModal(false);
-  }, [inputModal, isPayment]);
+  }, [setInputModal]);
 
   const openModal = useCallback(() => {
     if (selected === "menu" || selected === "catalogue") {
@@ -61,7 +120,7 @@ function MemoBottomButton({
       router.push(`/${customLink}/user/signup`);
     }
     setInputModal(true);
-  }, [selected, accessToken, customLink, inputModal]);
+  }, [selected, accessToken, customLink, setInputModal, setDirection, router]);
 
   const openCallWaiterModal = useCallback(() => {
     setCallWaiterModal(true);
@@ -102,117 +161,64 @@ function MemoBottomButton({
       ? "catalogue"
       : selected;
 
-  const MenuItem = ({
-    icon: Icon,
-    label,
-    href,
-    onClick,
-  }: {
-    icon: any;
-    label: string;
-    href?: string;
-    onClick?: () => void;
-  }) => {
-    const content = (
-      <>
-        {selectedBtn === label.toLowerCase() && (
-          <div className="absolute z-[-1] w-11 h-[32px] rounded-t-full -top-1 bg-base-300" />
-        )}
-        {selectedBtn === label.toLowerCase() && (
-          <div className="absolute z-[-1] w-14  h-2.5 rounded-b-md -top-2 bg-base-300" />
-        )}
-        <Icon
-          size={24}
-          fill={selectedBtn === label.toLowerCase() ? "var(--p)" : "var(--s)"}
-        />
-        <h3
-          className={cn(
-            "text-[0.625rem]",
-            selectedBtn === label.toLowerCase() ? "pt-1" : "mt-0",
-          )}
-        >
-          {label}
-        </h3>
-      </>
-    );
-
-    if (href) {
-      return (
-        <Link href={href} className="">
-          <div
-            className={cn(
-              "relative w-[16.5dvw] max-w-[5rem] flex flex-col items-center justify-center  z-10",
-              selectedBtn === label.toLowerCase() ? "space-y-0" : "space-y-1",
-            )}
-          >
-            {content}
-          </div>
-        </Link>
-      );
-    }
-
-    return (
-      <button
-        type="button"
-        className={cn(
-          "relative w-[16.5dvw] max-w-[5rem] flex flex-col items-center justify-center  z-10",
-          selectedBtn === label.toLowerCase() ? "space-y-0" : "space-y-1",
-        )}
-        onClick={onClick}
-      >
-        {content}
-      </button>
-    );
-  };
-
   return (
     <>
-      <section className="fixed z-10 bottom-0 w-full max-w-[30rem] py-2 bg-primary shadow-lg">
-        <nav className="flex items-center justify-between">
+      <motion.nav
+        className="fixed z-10 bottom-0 w-full max-w-[30rem] bg-primary shadow-lg px-2"
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
+        <div className="flex items-center justify-between">
           <MenuItem
             icon={RiHome4Fill}
             label="Home"
             href={`/${customLink}/explore`}
+            isSelected={selectedBtn === "home"}
           />
           <MenuItem
             icon={RiCouponFill}
             label="Rewards"
             href={`/${customLink}/${accessToken ? "loyalty" : "user/signup"}`}
+            isSelected={selectedBtn === "rewards"}
           />
           {tableName ? (
             <MenuItem
               icon={MdAccountBalanceWallet}
               label="Pay Bill"
               onClick={openModal}
+              isSelected={false}
             />
           ) : (
             <MenuItem
               icon={LuScanLine}
               label="Scan"
               href={`/${customLink}/scan`}
+              isSelected={false}
             />
           )}
-          {outletInfo?.outLetType !== "OTHER" ? (
+          {outletInfo?.outLetType !== "OTHER" && (
             <MenuItem
               icon={FaConciergeBell}
               label="Captain"
               onClick={triggerCallWaiter}
+              isSelected={false}
             />
-          ) : null}
+          )}
           <div className="relative">
             <MenuItem
               icon={BsBagHeartFill}
               label={showCart ? "Menu" : "Cart"}
               onClick={showingCart}
+              isSelected={false}
             />
-            <AnimatePresence initial={false} mode="wait">
+            <AnimatePresence>
               {cart.length > 0 && (
                 <motion.span
-                  className="absolute z-50 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-600 rounded-full -top-4 right-2"
+                  className="absolute z-50 flex items-center justify-center w-5 h-5 text-xs font-bold bg-red-600 rounded-full text-primary-foreground -top-3 right-1"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   exit={{ scale: 0 }}
-                  transition={{ duration: 0.5 }}
                 >
                   {cart.length}
                 </motion.span>
@@ -223,11 +229,12 @@ function MemoBottomButton({
             icon={MdMenuBook}
             label={outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
             href={`/${customLink}/category`}
+            isSelected={selectedBtn === "menu" || selectedBtn === "catalogue"}
           />
-        </nav>
-      </section>
+        </div>
+      </motion.nav>
 
-      {inputModal && (
+      {inputModal && accessToken && (
         <BottomPopUp show={inputModal} onClose={closeModal} linearGradTheme>
           <AddAmountModal />
         </BottomPopUp>
@@ -245,6 +252,3 @@ function MemoBottomButton({
     </>
   );
 }
-
-const BottomButton = memo(MemoBottomButton);
-export default BottomButton;

@@ -37,7 +37,7 @@ const MemoHistoryCartItems = () => {
           >
             <motion.div
               onClick={() => toggleAccordion(cart._id)}
-              className="flex justify-between p-4 cursor-pointer text-base-content bg-base-200/[0.6]"
+              className="flex justify-between p-4 cursor-pointer text-base-content bg-base-200"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -83,23 +83,23 @@ const MemoHistoryCartItems = () => {
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="overflow-hidden bg-gray-50"
+                  className="overflow-hidden bg-base-100"
                 >
-                  <div className="pt-4">
+                  <div className="pb-2">
                     {cart?.cart?.map((item) => (
                       <motion.div
                         key={item._id}
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
-                        className="p-4 bg-white border-b border-primary"
+                        className="px-4 py-2 bg-base-100"
                       >
                         <div className="flex items-start justify-between">
-                          <h4 className="flex items-center text-sm font-medium text-base-content">
+                          <h4 className="flex items-start flex-1 text-sm font-semibold opacity-80 text-base-content">
                             <MdRestaurantMenu className="mr-2 text-primary" />
                             {item?.dish?.name}
                           </h4>
-                          <div className="text-right">
+                          <div className="text-right flex-2">
                             <p className="text-sm font-semibold text-primary">
                               Qty: {item?.quantity}
                             </p>
@@ -112,10 +112,10 @@ const MemoHistoryCartItems = () => {
                             </p>
                           )}
                         </div>
-                        <div className="mt-2 pl-7">
+                        <div className=" pl-7">
                           {item?.extras?.length > 0 && (
                             <div className="text-sm text-base-content">
-                              <p className="font-medium">Extras:</p>
+                              <p className="text-xs font-medium">Extras:</p>
                               {item.extras.map((extra) => (
                                 <p
                                   key={extra.id}
