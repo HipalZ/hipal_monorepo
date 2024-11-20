@@ -284,7 +284,7 @@ const MemoInovices = () => {
             Invoice for <b>Popcorn Plan</b>
           </h1>
         </article>
-        <article className="w-full space-y-1 text-xs sm:text-sm md:text-base sm:w-auto">
+        <article className="flex justify-between w-full space-y-1 text-xs md:block sm:text-sm md:text-base sm:w-auto">
           <div className="flex items-center justify-between gap-2 sm:justify-end sm:gap-9">
             <p className="text-[#4F4F5D]">Status :</p>
             <p className="px-2 py-1 text-red-600 bg-red-100 rounded-full">
