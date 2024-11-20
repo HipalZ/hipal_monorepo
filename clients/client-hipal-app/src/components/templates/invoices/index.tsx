@@ -1,11 +1,12 @@
 "use client";
 import { memo, useCallback, useMemo, useRef } from "react";
-import Hi from "@/assets/svg/hand.svg";
 import { useParams } from "next/navigation";
-import MemoizedHeader from "@/components/atoms/Header";
 import { BsDownload } from "react-icons/bs";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
+import Image from "next/image";
+import Logo from "@/assets/hipalz_blue.png";
+import Invoice from "@/assets/invoice.png";
 
 const businessData = [
   {
@@ -161,7 +162,7 @@ const businessData = [
   {
     id: "015",
     date: "18 Nov 2024",
-    name: "Meraki Foods",
+    name: "nataka",
     bizName: "Nataka Global Kitchen & Cafe",
     status: false,
     serviceCost: 4000,
@@ -169,6 +170,18 @@ const businessData = [
     address:
       "8-2-293/82/A/279/A, Road Number 10C, Jubilee Hills Hyderabad Telangana-500033",
     gst: "36ABUFM7087N1Z3",
+  },
+  {
+    id: "016",
+    date: "20 Nov 2024",
+    name: "ahoy",
+    bizName: "DAILY BREAD ENTERPRISES",
+    status: false,
+    serviceCost: 4000,
+    months: 12,
+    address:
+      "Survey No. 35, Gundla pochampally Road, Kompally Village,Quthbullapur Hyderabad Telangana-500014",
+    gst: "36AANFD8985A1Z3",
   },
 ];
 
@@ -201,114 +214,190 @@ const MemoInovices = () => {
     const pdf = new jsPDF({
       orientation: "p",
       unit: "px",
-      format: [canvas.width, canvas.height],
+      format: [1000, 1000],
     });
 
-    pdf.addImage(data, "PNG", 0, 0, canvas.width, canvas.height);
+    pdf.addImage(data, "PNG", 0, 0, 1000, 1000);
     pdf.save(`invoice_${business.name}.pdf`);
   }, [business.name]);
 
   return (
-    <>
-      <article className="linear_gradient_background">
-        <MemoizedHeader
-          title="Invoice"
-          isIconBusinessShow={true}
-          rightImage={Hi}
-          hideBack
-        />
+    <section ref={printRef} className="max-w-5xl p-4 mx-auto bg-white sm:p-8">
+      {/* Header */}
+      <article className="flex flex-col items-center justify-between mb-6 sm:flex-row sm:items-start sm:mb-8">
+        <article className="flex items-center gap-2 mb-4 sm:gap-4 sm:mb-0">
+          <Image src={Logo} alt="logo" width={40} height={40} />
+          <span className="text-xl sm:text-2xl text-[#838383]">Hipalz</span>
+        </article>
+        {/* <article className="flex items-center gap-2 cursor-pointer md:gap-4 on_active_bounce">
+          <p
+            onKeyDown={handleDownloadInvoice}
+            onClick={handleDownloadInvoice}
+            style={{ cursor: "pointer" }}
+            className="my-2 text-xs md:text-base"
+          >
+            Download Invoice
+          </p>
+          <BsDownload
+            onClick={handleDownloadInvoice}
+            className="text-xs md:text-xl"
+          />
+        </article> */}
+        <article className="text-center sm:text-right">
+          <p className="text-xl sm:text-2xl md:text-3xl text-[#838383]">
+            Inv {business?.id}
+          </p>
+        </article>
       </article>
-      <section ref={printRef}>
-        <center className="my-6">
-          <h1>HIAUG{business?.id}</h1>
-          <article className="cursor-pointer on_active_bounce">
-            <p
-              onKeyDown={handleDownloadInvoice}
-              onClick={handleDownloadInvoice}
-              style={{ cursor: "pointer" }}
-              className="my-2 text-xs"
-            >
-              Download Invoice
-            </p>
-            <BsDownload size={20} onClick={handleDownloadInvoice} />
-          </article>
-        </center>
-        <hr className="mx-1 my-4 border-2 border-black" />
-        <article className="mx-6 text-base capitalize">
-          <h1>
-            <b>Billed to:</b> {business?.bizName}
-          </h1>
-          <h1>
-            <b className="mr-8">Date: </b> {business?.date}
-          </h1>
-          <h1>
-            <b className="mr-4">Status: </b>{" "}
-            <span className="text-red-500">Not Paid</span>
-          </h1>
-          {business?.address?.length > 0 ? (
-            <h1>
-              <b>Address: </b>{" "}
-              <span className="text-sm">{business?.address}</span>
-            </h1>
-          ) : null}
-          {business?.gst?.length > 0 ? (
-            <h1>
-              <b className="mr-2">GST No: </b>{" "}
-              <span className="text-sm">{business?.gst}</span>
-            </h1>
-          ) : null}
+
+      {/* Company Details */}
+      <section className="flex flex-col sm:flex-row justify-between mb-6 sm:mb-8 text-sm sm:text-base md:text-lg text-[#838383] space-y-2 sm:space-y-0">
+        <article className="text-center sm:text-left">
+          <p>
+            Invoice by <b>Paltribe Solutions PVT</b>
+          </p>
+          <p>
+            GST <b>36AAMCP3900B1ZR (Composition Dealer)</b>
+          </p>
         </article>
-        <section
-          style={{
-            boxShadow: "0px 4.55px 4.55px 0px #00000040",
-          }}
-          className="text-[#6F649B] mx-4 mt-6 bg-[#F2F2F2] rounded-xl h-[7rem]"
-        >
-          <article className="p-6">
-            <h1>&#9679; Service: POPCORN MODEL</h1>
-            <p className="p-1 px-2 mt-2 text-sm bg-white rounded-lg">
-              Rs {business?.serviceCost} for {business?.months} months{" "}
-              <span className="float-right">
-                ₹ {business?.serviceCost * business?.months}
-              </span>
-            </p>
-          </article>
-        </section>
-        <article className="text-[#6F649B] mx-10 my-6 text-xl">
-          <h1 className="font-semibold">
-            Grand Total{" "}
-            <b className="float-right">
-              ₹ {business?.serviceCost * business?.months}
-            </b>
-          </h1>
+        <article className="text-center sm:text-right">
+          <p>
+            Email : <b>info@paltribe.in</b>
+          </p>
+          <p>
+            Contact : <b>7386142525</b>
+          </p>
         </article>
-        <hr className="mx-1 my-4 border-[#000000] border-2" />
-        <article className="mx-6 text-base">
-          <h1>
-            <b>Account Name : </b> PALTRIBE SOLUTIONS PTIVATE LIMITED
-          </h1>
-          <h1>
-            <b>Account No: </b> 259177914130
-          </h1>
-          <h1>
-            <b>IFSC Code:</b> INDB0000740
-          </h1>
-          <h1>
-            <b>GST No : </b> 36AAMCP3900B1ZR (Composition Dealer )
-          </h1>
-          <h1>
-            <b>CIN : </b> U72200TG2021PTC156074
-          </h1>
-          <h1>
-            <b>PAN CARD:-</b> AAMCP3900B
-          </h1>
-        </article>
-        <center className="pb-24 mx-4 mt-24 text-xs opacity-50">
-          This is a computer generated invoice. All disputes subjected to
-          exclusive jurisdiction of courts in Hyderabad{" "}
-        </center>
       </section>
-    </>
+
+      {/* Invoice Title */}
+      <section className="flex flex-col items-center justify-between gap-4 p-3 mb-6 bg-gray-100 sm:flex-row sm:p-4 sm:mb-8 rounded-xl">
+        <article className="flex items-center gap-2 md:gap-8">
+          <Image
+            src={Invoice}
+            alt="logo"
+            width={52}
+            height={52}
+            className="w-[52px] h-[52px] sm:w-[72px] sm:h-[72px]"
+          />
+          <h1 className="text-lg sm:text-xl md:text-3xl lg:text-4xl text-[#9490FF]">
+            Invoice for <b>Popcorn Plan</b>
+          </h1>
+        </article>
+        <article className="w-full space-y-1 text-xs sm:text-sm md:text-base sm:w-auto">
+          <div className="flex items-center justify-between gap-2 sm:justify-end sm:gap-9">
+            <p className="text-[#4F4F5D]">Status :</p>
+            <p className="px-2 py-1 text-red-600 bg-red-100 rounded-full">
+              Unpaid
+            </p>
+          </div>
+          <div className="flex justify-between gap-2 sm:gap-4">
+            <p className="text-[#4F4F5D]">Date of invoice :</p>
+            <p>{business?.date}</p>
+          </div>
+        </article>
+      </section>
+
+      {/* Service Details */}
+      <section className="mb-6 overflow-x-auto sm:mb-8">
+        <table className="w-full bg-blue-100/20">
+          <thead>
+            <tr className="text-sm sm:text-base md:text-lg lg:text-xl border border-gray-100 text-[#9490FF]">
+              <th className="px-2 py-2 font-normal text-left border sm:px-4">
+                Service / Product Description
+              </th>
+              <th className="px-2 py-2 font-normal text-right border sm:px-4">
+                Qty
+              </th>
+              <th className="px-2 py-2 font-normal text-right border sm:px-4">
+                Price
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="border border-gray-100">
+              <td className="px-2 py-3 border sm:px-4 sm:py-4">
+                <h3 className="mb-2 font-bold text-sm sm:text-base md:text-lg text-[#9490FF]">
+                  Popcorn Pro Plan{" "}
+                  <span className="text-xs sm:text-sm md:text-base font-medium text-[#838383] block mt-1">
+                    Inclusive of WebApp , - Content Management, - Theme Builder,
+                    - Digital Menu, -Easy Payment gateway, -Menu manager,
+                    -Loyalty management, Coupon management , Bookings , Customer
+                    relationship management, - WhatsApp messaging system, -
+                    Staff management system.
+                  </span>
+                </h3>
+              </td>
+              <td className="px-2 sm:px-4 text-[#9490FF] py-3 sm:py-4 text-sm sm:text-base md:text-lg text-right border align-center whitespace-nowrap">
+                <p className="font-bold">{business?.serviceCost}/</p>
+                <p>month</p>
+                <p>x {business?.months} Months</p>
+              </td>
+              <td className="px-2 py-3 text-sm text-right border sm:px-4 sm:py-4 sm:text-base md:text-lg align-center">
+                <p className="text-[#9490FF]">
+                  {(business?.months * business?.serviceCost).toLocaleString()}
+                </p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      {/* Total */}
+      <article className="text-[#4F4F5D] text-base sm:text-lg md:text-xl flex items-center justify-between py-4 border-t">
+        <p className="font-bold">Total</p>
+        <p className="font-bold">
+          ₹ {(business?.months * business?.serviceCost).toLocaleString()}
+        </p>
+      </article>
+
+      {/* Additional Details Section */}
+      <section className="grid grid-cols-1 gap-4 pt-4 border-t sm:grid-cols-2 sm:gap-8">
+        {/* Business Details */}
+        <article className="bg-[#F6F8FA] p-3 sm:p-4 rounded-lg">
+          <h2 className="mb-2 font-bold text-base sm:text-lg md:text-xl text-[#838383]">
+            Business details
+          </h2>
+          <div className="space-y-1 text-xs sm:text-sm text-[#4F4F5D]">
+            <p>
+              <b>Business Name :</b> {business?.bizName}
+            </p>
+            <p>
+              <b>Address :</b> {business?.address}
+            </p>
+            <p>
+              <b>GST :</b> {business?.gst}
+            </p>
+          </div>
+        </article>
+
+        {/* Payment Options */}
+        <article className="bg-[#F6F8FA] p-3 sm:p-4 rounded-lg">
+          <h2 className="mb-2 font-bold text-base sm:text-lg md:text-xl text-[#838383]">
+            Hipalz payment options
+          </h2>
+          <div className="space-y-1 text-xs sm:text-sm text-[#4F4F5D]">
+            <p>
+              <b>Account Holder :</b> PALTRIBE SOLUTIONS PTIVATE LIMITED
+            </p>
+            <p>
+              <b>Account Number :</b> 259177914130
+            </p>
+            <p>
+              <b>IFSC Code :</b> INDB0000740
+            </p>
+          </div>
+        </article>
+      </section>
+
+      {/* Footer */}
+      <footer className="pt-4 mt-6 sm:mt-8 text-[10px] sm:text-xs text-center text-gray-500">
+        ** This is a computer generated invoice.
+        <br />
+        All disputes subjected to exclusive jurisdiction of courts in Hyderabad
+        **
+      </footer>
+    </section>
   );
 };
 
