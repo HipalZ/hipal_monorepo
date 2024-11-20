@@ -61,7 +61,7 @@ const MemoMainTypes = (props: IMainTypes) => {
           </button>
 
           <CustomModal show={isModalOpen} onClose={() => setIsModalOpen(false)}>
-            <div className="relative flex flex-col items-center justify-center p-4">
+            <div className="relative flex flex-col items-center justify-center p-4 !text-primary">
               <h2 className="absolute mb-4 text-xl font-bold top-4">
                 Categories
               </h2>
@@ -78,7 +78,7 @@ const MemoMainTypes = (props: IMainTypes) => {
                           className={cn(
                             isActiveParentCategory === item._id?.toString()
                               ? " text-primary font-bold"
-                              : " text-base-content",
+                              : " text-primary",
                             "px-4 w-full flex justify-between items-center",
                           )}
                         >

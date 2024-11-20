@@ -14,6 +14,9 @@ import type { EmblaOptionsType } from "embla-carousel";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import OtherOutletCard from "@/components/atoms/card/otherOutletCard";
+import Image from "next/image";
+import ShimmerImage from "@/components/atoms/imageshimmer";
+import MemoPlaceholderImg from "@/components/atoms/placeholder";
 
 interface IDishesProps {
   childCategory: CategoryType[];
@@ -187,7 +190,7 @@ const DishesList: FC<IDishesProps> = (props) => {
         const visibleDishes = category.dishIds.filter(
           (dish: DishType) => dish.visibility && !dish.isDeleted,
         );
-
+        console.log("visibleDishes", category);
         const dishesToRender = filterDishes(visibleDishes, isActiveDishType);
 
         if (dishesToRender.length === 0) return null;
@@ -221,16 +224,37 @@ const DishesList: FC<IDishesProps> = (props) => {
                   className={cn(
                     {
                       "border-t-2 border-primary":
-                        category.dishIds.length !== 0,
+                        category.dishIds?.length !== 0,
                     },
-                    "z-40 flex flex-row justify-between px-2 font-bold prose bg-base-200",
+                    "z-40 flex items-center space-x-4 justify-between h-[4rem] px-2 font-bold prose bg-base-200",
                   )}
                 >
-                  <h3 className="my-4 text-xl font-medium capitalize text-primary">
-                    {category.name || ""}
-                  </h3>
-                  <h4 className="my-4 text-lg font-medium text-primary">
-                    {category.dishIds?.length}
+                  <section className="flex items-start justify-center gap-4 truncate">
+                    {category?.coverImage ? (
+                      <figure className="rounded-full aspect-square h-[48px]">
+                        <ShimmerImage
+                          src={category.coverImage}
+                          alt={`${category.name || "Category"} image`}
+                          quality={95}
+                          width={48}
+                          height={40}
+                          className="object-cover !my-0 rounded-full aspect-square"
+                        />
+                      </figure>
+                    ) : (
+                      <figure className="aspect-square">
+                        <MemoPlaceholderImg className="w-12 h-12 rounded-full bg-base-300" />
+                      </figure>
+                    )}
+                    <h3
+                      className="!text-2xl truncate font-medium capitalize bungee-inline text-primary "
+                      title={category.name || "Unnamed Category"}
+                    >
+                      {category.name || "Unnamed Category"}
+                    </h3>
+                  </section>
+                  <h4 className="-mt-1.5 text-lg font-medium text-primary space-grotesk-700">
+                    {category.dishIds?.length || 0}
                   </h4>
                 </div>
               )}
