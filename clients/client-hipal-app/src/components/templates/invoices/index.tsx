@@ -386,6 +386,12 @@ const MemoInovices = () => {
             <p>
               <b>IFSC Code :</b> INDB0000740
             </p>
+            <p>
+              <b>CIN :</b> U72200TG2021PTC156074
+            </p>
+            <p>
+              <b>PAN CARD :</b> AAMCP3900B
+            </p>
           </div>
         </article>
       </section>
