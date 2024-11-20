@@ -20,7 +20,7 @@ const CustomModal = ({ show, onClose, children }: CustomModalProps) => {
             animate={{ y: "-50%", opacity: 1, scale: 1 }}
             exit={{ y: 0, opacity: 0, scale: 0 }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
-            className="absolute -bottom-[1rem] w-11/12 max-w-md bg-white shadow-lg rounded-xl"
+            className="absolute -bottom-[1rem] w-11/12 bg-base-100 border border-primary max-w-md shadow-lg rounded-xl"
             onClick={(e) => e.stopPropagation()}
           >
             {children}
