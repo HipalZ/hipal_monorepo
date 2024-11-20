@@ -1,8 +1,10 @@
 import {
-  Business,
   BusinessSettings,
   CouponLink,
   Couponz,
+  GroupModel,
+  Subscriber,
+  UrlModel,
   User,
   WhatAppOrder,
   WhatAppTemplate,
@@ -17,6 +19,7 @@ import {
   campaignSchema,
   validatePaymentSchema,
   validateWhatAppTemplateSchema,
+  whatsAppBusinessConfigSchema,
   whatsAppOrderSchema,
   whatsAppWalletHistorySchema,
 } from "@hi/db-models/src/validators";
@@ -31,7 +34,7 @@ import { nanoid } from "nanoid";
 import { schedule } from "node-cron";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
 import { z } from "zod";
-import { getMerchantConfig } from "../../utils/cacheHelper";
+import { getMerchantConfig, getShortUrl } from "../../utils/cacheHelper";
 import {
   type MerchantConfig,
   razorpayWrapper,
@@ -572,65 +575,67 @@ const whatsappRouter = new Hono()
         }
 
         if (allCustomers) {
-          // const allCustomersList = await Subscriber.find({
-          //   businessId,
-          // })
-          //   .select("userId")
-          //   .populate({
-          //     path: "userId",
-          //     select: "phone name email",
-          //   });
+          const allCustomersList = await Subscriber.find({
+            businessId,
+          })
+            .select("userId")
+            .populate({
+              path: "userId",
+              select: "phone name email",
+            })
+            .limit(200)
+            .sort({ _id: -1 });
 
-          const allCustomersList = [
-            {
-              _id: "66b5e75e9bc1f065777a46cd",
-              userId: {
-                _id: "665ee8aab437be96f17c6f64",
-                name: "Datta",
-                phone: "9588413799",
-              },
-            },
-            {
-              _id: "66b5e75e9bc1f065777a46d0",
-              userId: {
-                _id: "665ee910b437be96f17c6f68",
-                name: "vamsi",
-                phone: "7702605494",
-              },
-            },
-            {
-              _id: "66b5e75e9bc1f065777a46d3",
-              userId: {
-                _id: "666007fb241426acafd47fb0",
-                name: "Sankalesh",
-                phone: "8668229890",
-              },
-            },
-            {
-              _id: "66b5e75e9bc1f065777a46d6",
-              userId: {
-                _id: "667670781570550c31c59526",
-                name: "Abhishek",
-                phone: "9160787050",
-              },
-            },
-            {
-              _id: "66b5e75e9bc1f065777a46d9",
-              userId: {
-                _id: "6690e44b80e8eae20f9ac7be",
-                name: "Rishabh",
-                phone: "9177914130",
-              },
-            },
-            {
-              _id: "66b5e75e9bc1f065777a46d9",
-              userId: {
-                _id: "6690e44b80e8eae20f9ac7be",
-                name: "Ravi",
-                phone: "7731843582",
-              },
-            },
-          ];
+          // const allCustomersList = [
+          //   {
+          //     _id: "66b5e75e9bc1f065777a46cd",
+          //     userId: {
+          //       _id: "665ee8aab437be96f17c6f64",
+          //       name: "Datta",
+          //       phone: "9588413799",
+          //     },
+          //   },
+          //   {
+          //     _id: "66b5e75e9bc1f065777a46d0",
+          //     userId: {
+          //       _id: "665ee910b437be96f17c6f68",
+          //       name: "vamsi",
+          //       phone: "7702605494",
+          //     },
+          //   },
+          //   {
+          //     _id: "66b5e75e9bc1f065777a46d3",
+          //     userId: {
+          //       _id: "666007fb241426acafd47fb0",
+          //       name: "Sankalesh",
+          //       phone: "8668229890",
+          //     },
+          //   },
+          //   {
+          //     _id: "66b5e75e9bc1f065777a46d6",
+          //     userId: {
+          //       _id: "667670781570550c31c59526",
+          //       name: "Abhishek",
+          //       phone: "9160787050",
+          //     },
+          //   },
+          //   {
+          //     _id: "66b5e75e9bc1f065777a46d9",
+          //     userId: {
+          //       _id: "6690e44b80e8eae20f9ac7be",
+          //       name: "Rishabh",
+          //       phone: "9177914130",
+          //     },
+          //   },
+          //   {
+          //     _id: "66b5e75e9bc1f065777a46d9",
+          //     userId: {
+          //       _id: "6690e44b80e8eae20f9ac7be",
+          //       name: "Ravi",
+          //       phone: "7731843582",
+          //     },
+          //   },
+          // ];
 
           const customersArray = [] as {
             name: string;
@@ -659,9 +664,8 @@ const whatsappRouter = new Hono()
                 400,
               );
             }
-
-            reduceAmount = Math.round(totalCost);
-          } else {
+          }
+          if (template.category === "UTILITY") {
             const totalCost = customersArray.length * 0.2;
             if (businessWallet.currentBalance < totalCost) {
               return c.json(
@@ -736,6 +740,7 @@ const whatsappRouter = new Hono()
         }
 
         if (bulkCustomers.length > 0) {
+          const newUserCount = 0;
           // const bulkCustomersList = [
           //   {
           //     name: "YEYE",
@@ -756,6 +761,30 @@ const whatsappRouter = new Hono()
           // ];
 
           let reduceAmount = 0;
+
+          for (const customer of bulkCustomers) {
+            if (customer.phone.length === 10 && customer.name) {
+              await User.findOneAndUpdate(
+                {
+                  phone: customer.phone,
+                },
+                {
+                  name: customer.name,
+                  role: [
+                    "HIPAL_CUSTOMER",
+                    "OWNER",
+                    "MANAGER",
+                    "CAPTAIN",
+                    "CO_OWNER",
+                  ],
+                },
+                {
+                  upsert: true,
+                },
+              );
+            }
+          }
+
           if (template.category === "MARKETING") {
             const totalCost = bulkCustomers.length * 0.89;
             if (businessWallet.currentBalance < totalCost) {
@@ -768,9 +797,9 @@ const whatsappRouter = new Hono()
                 400,
               );
             }
+          }
 
-            reduceAmount = Math.round(totalCost);
-          } else {
+          if (template.category === "UTILITY") {
             const totalCost = bulkCustomers.length * 0.2;
             if (businessWallet.currentBalance < totalCost) {
               return c.json(
@@ -845,26 +874,42 @@ const whatsappRouter = new Hono()
         }
 
         if (groupIds.length > 0) {
-          const groupIdsList = [
-            {
-              name: "YEYE",
-              phone: "9588413799",
-            },
-            {
-              name: "sankalesh",
-              phone: "8668229890",
-            },
-            {
-              name: "vamsi",
-              phone: "7702605494",
-            },
-            {
-              name: "abhishek",
-              phone: "9160787050",
-            },
-          ];
+          const groupIdsList = [];
+
+          for (let i = 0; i < groupIds.length; i++) {
+            const group = await GroupModel.findOne({
+              _id: groupIds[i],
+            }).select("userIds");
+
+            if (!group) {
+              return c.json(
+                {
+                  message: "Group not found",
+                  err: true,
+                  data: {},
+                },
+                404,
+              );
+            }
+
+            for (const user of group.userIds || []) {
+              const findUser = await Subscriber.findOne({
+                userId: user,
+              })
+                .select("userId")
+                .populate({
+                  path: "userId",
+                  select: "phone name",
+                });
+              groupIdsList.push({
+                name: findUser?.userId?.name,
+                phone: findUser?.userId?.phone,
+              });
+            }
+          }
 
           let reduceAmount = 0;
+
           if (template.category === "MARKETING") {
             const totalCost = groupIdsList.length * 0.89;
             if (businessWallet.currentBalance < totalCost) {
@@ -877,9 +922,9 @@ const whatsappRouter = new Hono()
                 400,
               );
             }
+          }
 
-            reduceAmount = Math.round(totalCost);
-          } else {
+          if (template.category === "UTILITY") {
             const totalCost = groupIdsList.length * 0.2;
             if (businessWallet.currentBalance < totalCost) {
               return c.json(
@@ -894,27 +939,6 @@ const whatsappRouter = new Hono()
 
             reduceAmount = Math.round(totalCost);
           }
-
-          // for (let i = 0; i < groupIds.length; i++) {
-          //   const group = await GroupModel.findOne({
-          //     _id: groupIds[i],
-          //   }).select("userIds");
-
-          //   for (const user of group.userIds || []) {
-          //     const findUser = await Subscriber.findOne({
-          //       userId: user,
-          //     })
-          //       .select("userId")
-          //       .populate({
-          //         path: "userId",
-          //         select: "phone name",
-          //       });
-          //     groupIdsList.push({
-          //       name: findUser?.userId?.name,
-          //       phone: findUser?.userId?.phone,
-          //     });
-          //   }
-          // }
 
           if (sendLaterTime) {
             schedule(cronExpression, async () => {
@@ -1024,19 +1048,19 @@ const whatsappRouter = new Hono()
       try {
         const { businessId } = c.req.param();
         const currentTimestamp = Math.floor(Date.now() / 1000); // Current timestamp in seconds
-        const thirtyDaysAgoTimestamp = currentTimestamp - 30 * 24 * 60 * 60;
+        const thirtyDaysAgoTimestamp = currentTimestamp - 20 * 24 * 60 * 60;
 
         let allTemplates = await WhatAppTemplate.find({
           businessId,
           isDeleted: false,
-        }).select("templateId");
+        }).select("templateId templateName");
 
         allTemplates = allTemplates
           .map((template) => template.templateId)
           ?.slice(0, 10);
 
         const getWhatAppTemplate = await axios.get(
-          `https://graph.facebook.com/v21.0/${whatsAppConfig.whatAppAccountId}/template_analytics?start=${thirtyDaysAgoTimestamp}&end=${currentTimestamp}&granularity=daily&metric_types=cost,clicked,delivered,read,sent&template_ids=${allTemplates}`,
+          `https://graph.facebook.com/v21.0/${whatsAppConfig.whatAppAccountId}/template_analytics?start=${thirtyDaysAgoTimestamp}&end=${currentTimestamp}&granularity=daily&metric_types=clicked,delivered,read,sent,cost&template_ids=${allTemplates}&limit=1000`,
           {
             headers: {
               Authorization: `Bearer ${whatsAppConfig.token}`,
@@ -1057,14 +1081,9 @@ const whatsappRouter = new Hono()
 
           const anaLyticsObject = dataPoint;
 
-          const getWhatAppTemplateName = await axios.get(
-            `https://graph.facebook.com/${whatsAppConfig.version}/${templateid}`,
-            {
-              headers: {
-                Authorization: `Bearer ${whatsAppConfig.token}`,
-              },
-            },
-          );
+          const getWhatAppTemplateName = await WhatAppTemplate.findOne({
+            templateId: templateid,
+          }).select("templateName");
 
           let calculateTotalclicked = 0;
           if (anaLyticsObject?.clicked) {
@@ -1081,7 +1100,7 @@ const whatsappRouter = new Hono()
           }
 
           const newObj = {
-            templateName: getWhatAppTemplateName.data.name,
+            templateName: getWhatAppTemplateName?.templateName,
             sent: anaLyticsObject.sent,
             read: anaLyticsObject.read,
             delivered: anaLyticsObject.delivered,
@@ -1615,31 +1634,76 @@ const whatsappRouter = new Hono()
       const value = changes?.value;
       const messages = value?.messages?.[0];
       const contacts = value?.contacts?.[0];
+      const statuses = value?.statuses;
 
+      const phon_no_id = value?.metadata?.phone_number_id;
+      const config = await WhatsAppBusinessConfig.findOne({
+        phoneId: phon_no_id,
+      }).select("businessId token");
+      if (statuses && statuses.length > 0) {
+        const firstStatus = statuses[0];
+        const extractedData = {
+          status: firstStatus.status,
+          category: firstStatus.pricing?.category,
+        };
+
+        if (
+          extractedData?.status === "delivered" &&
+          extractedData?.category === "marketing"
+        ) {
+          // Fetch the current balance
+          const wallet = await WhatsAppWallet.findOne({
+            businessId: config?.businessId,
+          });
+
+          if (wallet && wallet.currentBalance >= 0.89) {
+            // Update the balance only if it won't go negative
+            await WhatsAppWallet.findOneAndUpdate(
+              { businessId: config?.businessId },
+              { $inc: { currentBalance: -0.89 } },
+            );
+          } else {
+            console.log("Insufficient balance to decrement");
+          }
+        }
+      }
       if (messages) {
-        const phon_no_id = value?.metadata?.phone_number_id;
         const from = messages?.from;
         const userName = contacts?.profile?.name;
         let userPhone = contacts?.wa_id;
         let tableNumber = messages?.text?.body;
 
+        let longUrl = "";
+
         if (tableNumber) {
           tableNumber = tableNumber.slice(-5);
+
+          const getlongUrl = (await getShortUrl(tableNumber)) as string;
+
+          if (getlongUrl) {
+            longUrl = getlongUrl;
+          } else {
+            const findLongUrl = await UrlModel.findOne({
+              urlCode: tableNumber,
+            }).select("longUrl");
+
+            longUrl = findLongUrl?.longUrl;
+          }
         }
 
         if (userPhone) {
           userPhone = userPhone.toString().slice(2);
         }
 
-        if (phon_no_id && from) {
+        if (phon_no_id && from && longUrl) {
           await axios({
             method: "POST",
-            url: `https://graph.facebook.com/v21.0/${phon_no_id}/messages?access_token=${whatsAppConfig.token}`,
+            url: `https://graph.facebook.com/v21.0/${phon_no_id}/messages?access_token=${config?.token}`,
             data: {
               messaging_product: "whatsapp",
               to: from,
               text: {
-                body: "Explore our menu: https://www.hipalz.com/coffeecup?tableName=T-wa",
+                body: `Explore our menu: ${longUrl}`,
               },
             },
             headers: {
@@ -1648,7 +1712,7 @@ const whatsappRouter = new Hono()
           });
         }
 
-        if (userPhone) {
+        if (userPhone.length === 10) {
           await User.findOneAndUpdate(
             {
               phone: userPhone,
@@ -1691,42 +1755,56 @@ const whatsappRouter = new Hono()
       //@ts-ignore
 
       const redirectUrl =
-        "https://wa.me/7075179325?text=Hi, I'm interested in your menu. Could you share more details? I am sitting at T-01";
+        "https://wa.me/7075179325?text=Hi, I'm interested in your menu. Could you share more details? I am sitting at qpxIq";
 
       return c.redirect(redirectUrl);
     },
   )
 
-  .get("/update_bulk_whatsapp_config", async (c) => {
-    const allBizs = await Business.find({}).select("_id");
+  .post(
+    "/update_whatsapp_config",
 
-    for (const biz of allBizs) {
-      await WhatsAppBusinessConfig.findOneAndUpdate(
-        {
-          businessId: biz._id,
-        },
-        {
-          $set: {
-            businessId: biz._id,
-            menuRedirection: "Link",
-            phoneId: "365941956611521",
-            templateLimit: 10,
-            token: whatsAppConfig.token,
-            version: whatsAppConfig.version,
-            whatAppAccountId: whatsAppConfig.whatAppAccountId,
+    zValidator("json", whatsAppBusinessConfigSchema),
+
+    async (c) => {
+      const requestData = await c.req.json();
+
+      const createWhatsAppConfig =
+        await WhatsAppBusinessConfig.findOneAndUpdate(
+          {
+            businessId: requestData.businessId,
           },
-        },
-        {
-          upsert: true,
-        },
-      );
-    }
+          {
+            $set: {
+              businessId: requestData.businessId,
+              menuRedirection: requestData.menuRedirection,
+              phoneId: requestData.phoneId,
+              templateLimit: requestData.templateLimit,
+              token: requestData.token,
+              version: requestData.version,
+              whatAppAccountId: requestData.whatsAppAccountId,
+              whatsAppPhone: requestData.whatsAppPhone,
+            },
+          },
+          {
+            upsert: true,
+          },
+        );
 
-    return c.json({
-      message: "Updated successfully",
-      err: false,
-      data: {},
-    });
-  });
+      if (!createWhatsAppConfig) {
+        return c.json({
+          message: "Error updating config",
+          err: true,
+          data: {},
+        });
+      }
+
+      return c.json({
+        message: "Updated successfully",
+        err: false,
+        data: createWhatsAppConfig,
+      });
+    },
+  );
 
 export default whatsappRouter;
