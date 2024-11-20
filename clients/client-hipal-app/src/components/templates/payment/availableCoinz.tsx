@@ -1,4 +1,5 @@
 import AlertToRemove from "@/components/atoms/alertToRemove";
+import CommonBottomButton from "@/components/atoms/bottomButton";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import BottomButton from "@/components/molecules/bottomButton";
 import useCouponTemp from "@/components/store/useCouponTemp";
@@ -146,15 +147,16 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
               className="border border-[#000] pl-4 min-h-[3rem] mx-auto font-semibold text-[1rem] rounded-[1rem] min-w-389 min-w-[95%] my-auto !py-2 text-black"
             />
           </div>
-          <BottomButton>
-            <button
-              type="button"
-              className="w-full px-4 py-3 text-white bg-black rounded-full"
-              onClick={handleNextClick}
-            >
-              Apply
-            </button>
-          </BottomButton>
+          <CommonBottomButton
+            fixed
+            buttons={[
+              {
+                text: "Apply",
+                onClick: handleNextClick,
+                type: "button",
+              },
+            ]}
+          />
         </BottomPopUp>
       )}
     </>
