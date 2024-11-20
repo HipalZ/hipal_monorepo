@@ -15,6 +15,7 @@ import posRouter from "./pos";
 import googleReview from "./reviews";
 import settingsRouter from "./settings";
 import subsCriberRouter from "./subscribers";
+import surlRouter from "./surl";
 import tagRouter from "./tags";
 import usersRouter from "./users";
 import whatsappRouter from "./whatsapp";
@@ -43,6 +44,7 @@ export const routes = app
   .route("/pos", posRouter)
   .route("/menu-banner", menuBannerRouter)
   .route("/whatsapp", whatsappRouter)
-  .route("/cart", cartRouter);
+  .route("/cart", cartRouter)
+  .route("/surl", surlRouter);
 
 export type AppType = typeof routes;
