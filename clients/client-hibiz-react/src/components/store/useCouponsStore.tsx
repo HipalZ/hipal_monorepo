@@ -421,6 +421,7 @@ const useCouponsStore = create<ICoupon>((set) => ({
       requiredFields: [],
       termsAndConditions: [],
       allowLateNight: false,
+      links: [],
     })),
 }));
 

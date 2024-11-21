@@ -33,16 +33,17 @@ const MemoOtherOutletCard = ({
     setIsModalOpen(false);
   }, []);
   return (
-    <div className="w-full pb-8">
+    <div className="w-full pb-4">
       <section className="overflow-hidden">
-        <div className="relative w-full h-40">
+        <div className="relative w-full h-52">
           {dishData?.images?.[0] ? (
             <ShimmerImage
               src={dishData.images[0]}
               alt="dish"
               quality={95}
               width={160}
-              height={160}
+              height={200}
+              onClick={openModal}
               className={`object-cover w-full h-full rounded-lg ${
                 dishData.availability ? "" : "grayscale"
               }`}
@@ -52,10 +53,10 @@ const MemoOtherOutletCard = ({
           )}
           <button
             type="button"
-            className="absolute p-2 bg-white rounded-full -top-2 -right-2"
+            className="absolute p-2 rounded-full bg-base-300 -top-2 -right-2"
             onClick={openModal}
           >
-            <AiOutlineExpand className="text-lg text-primary" />
+            <AiOutlineExpand className="mt-1 mr-1 text-lg text-primary" />
           </button>
           {dishData.availability && (
             <div className="absolute right-0 scale-75 bottom-2">
@@ -72,9 +73,11 @@ const MemoOtherOutletCard = ({
             {/* ))} */}
           </section>
         )}
-        <div className="mt-1 ml-1 font-medium text-primary opacity-80">
-          ₹ {Number(price)?.toLocaleString("en-IN")}
-        </div>
+        {Number(price) > 1 && (
+          <div className="mt-1 ml-1 font-medium text-primary opacity-80">
+            ₹ {Number(price)?.toLocaleString("en-IN")}
+          </div>
+        )}
         <div
           className={cn(
             "mt-1 ml-1 text-sm font-medium capitalize text-primary",

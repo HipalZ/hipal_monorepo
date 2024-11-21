@@ -76,9 +76,11 @@ const MemoLivePreview = ({ dish }: { dish: IDish }) => {
         <p className="mt-2 text-sm text-black opacity-70 md:text-sm line-clamp-2">
           {dish.description}
         </p>
-        <p className="absolute z-40 mt-2 font-bold text-gray-800 text-md md:text-lg left-4 bottom-4">
-          ₹ {dish.price}
-        </p>
+        {Number(dish.price) > 1 && (
+          <p className="absolute z-40 mt-2 font-bold text-gray-800 text-md md:text-lg left-4 bottom-4">
+            ₹ {dish.price}
+          </p>
+        )}
       </figcaption>
 
       <div className="absolute z-40 px-3 py-1 text-sm scale-90 rounded-lg md:right-5 bottom-4 lg:right-5 right-2">

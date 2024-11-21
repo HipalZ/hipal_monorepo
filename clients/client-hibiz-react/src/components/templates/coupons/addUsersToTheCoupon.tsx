@@ -247,7 +247,6 @@ const UserGroupList = ({ type }: { type: "people" | "group" }) => {
             onClick: handleSaveSelection,
           },
         ]}
-        fixed
       />
     </>
   );

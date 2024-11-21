@@ -122,7 +122,7 @@ const MemoPreview = () => {
   }, []);
 
   const goNext = useCallback(() => {
-    if (!imageSrc) {
+    if (!imageSrc && !couponImage) {
       return toast.error("Please select image before proceeding");
     }
     setSelectedPage("CUSTOM");

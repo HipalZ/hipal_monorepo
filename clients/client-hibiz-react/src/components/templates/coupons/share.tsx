@@ -29,14 +29,12 @@ const MemoShare = () => {
     startTime,
     endTime,
     minimumBillAmount,
-    couponForEveryOne,
     customDays,
     couponStartDate,
     couponEndDate,
     expiryAfterGrabbed,
     termsAndConditions,
     selectedUserIds,
-    when,
     selectedGroupIds,
     overAllLimit,
     expiryClaimLimitValue,
@@ -219,6 +217,7 @@ const MemoShare = () => {
             </Background>
           </article>
         )}
+
         {eligibilityModal && (
           <PopUp show={eligibilityModal} onClose={closeModal} hide>
             <section className="h-[100dvh] lg:h-[80dvh] overflow-auto hide-scrollbar">

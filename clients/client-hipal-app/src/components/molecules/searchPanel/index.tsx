@@ -3,11 +3,9 @@ import { useSearch } from "@/components/store/useSearch";
 import { Transition } from "@headlessui/react";
 import { Fragment, memo, useMemo, useRef, useState } from "react";
 import { BiDish } from "react-icons/bi";
-import Image from "next/image";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { getRandomBlurImg } from "@/components/utils/images";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import type { ICategory, IDish } from "@/components/types/businessData";
@@ -15,155 +13,169 @@ import { RxCross2 } from "react-icons/rx";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 
 // NOTE: A `relative` tag must be added to the parent of this component
-const SearchPanel = ({ closeSearchBox, categories }: { closeSearchBox: () => void; categories: ICategory[]}) =>{
-    const panel = useRef(null);
-    const { searchText, setSearchText } = useSearch();
-    const setActiveCategory = useActiveClass((s) => s.setActiveCategory);
-    const [search, setSearchOpen] = useState(false);
-    const router = useRouter();
-    const customLink = useParams()?.businessId as string;
-    const handleSearchTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchText(e.target.value);
-        setSearchOpen(true);
-    };
+const SearchPanel = ({
+  closeSearchBox,
+  categories,
+}: { closeSearchBox: () => void; categories: ICategory[] }) => {
+  const panel = useRef(null);
+  const { searchText, setSearchText } = useSearch();
+  const setActiveCategory = useActiveClass((s) => s.setActiveCategory);
+  const [search, setSearchOpen] = useState(false);
+  const router = useRouter();
+  const customLink = useParams()?.businessId as string;
+  const handleSearchTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(e.target.value);
+    setSearchOpen(true);
+  };
 
-	const dishData = useMemo(() => {
-        if (!categories) return [];
-        const allDishes = categories?.flatMap((category) => category.dishes || []);
-        const uniqueDishes = Array.from(new Set(allDishes.map(dish => dish?._id)))
-            .map(id => allDishes.find(dish => dish?._id === id));
+  const dishData = useMemo(() => {
+    if (!categories) return [];
+    const allDishes = categories?.flatMap((category) => category.dishes || []);
+    const uniqueDishes = Array.from(
+      new Set(allDishes.map((dish) => dish?._id)),
+    ).map((id) => allDishes.find((dish) => dish?._id === id));
 
-        return uniqueDishes.filter((dish) => {
-            const matchesSearchText = dish?.name.toLowerCase().includes(searchText.toLowerCase());
-            const categoryMatchesSearchText = categories.some((category) =>
-                category.name.toLowerCase().includes(searchText.toLowerCase())
-            );
+    return uniqueDishes.filter((dish) => {
+      const matchesSearchText = dish?.name
+        .toLowerCase()
+        .includes(searchText.toLowerCase());
+      const categoryMatchesSearchText = categories.some((category) =>
+        category.name.toLowerCase().includes(searchText.toLowerCase()),
+      );
 
-            return matchesSearchText || categoryMatchesSearchText;
-        });
-    }, [searchText, categories]) as IDish[]
+      return matchesSearchText || categoryMatchesSearchText;
+    });
+  }, [searchText, categories]) as IDish[];
 
-    const filterCategory = useMemo(
-        () =>
-            categories?.filter((obj) => {
-                if (obj?.name?.toLowerCase()?.includes(searchText?.toLowerCase())) {
-                    return obj;
-                }
-            }),
-        [categories, searchText]
-    );
+  const filterCategory = useMemo(
+    () =>
+      categories?.filter((obj) => {
+        if (obj?.name?.toLowerCase()?.includes(searchText?.toLowerCase())) {
+          return obj;
+        }
+      }),
+    [categories, searchText],
+  );
 
-    const present = filterCategory?.[0];
+  const present = filterCategory?.[0];
 
-    const redirectToDish = (dishId: string, category: ICategory[]) => {
-        setActiveCategory(category?.[0]?._id);
-        setSearchOpen(!search);
-        router.push(routePaths[PAGE_TYPES.DISH_ID](customLink, dishId));
-    };
+  const redirectToDish = (dishId: string, category: ICategory[]) => {
+    setActiveCategory(category?.[0]?._id);
+    setSearchOpen(!search);
+    router.push(routePaths[PAGE_TYPES.DISH_ID](customLink, dishId));
+  };
 
-    return (
-        <div className="flex w-full m-auto ml-2" ref={panel}>
-            <div
-                className="border-primary bg-base-100 h-8 w-[96%] px-2 overflow-hidden border rounded-lg z-50 flex m-auto"
-            >
-                <input
-                    autoFocus
-                    type="text"
-                    placeholder="Search"
-                    className="w-full py-1 text-sm bg-transparent focus:outline-none"
-                    value={searchText}
-                    onChange={handleSearchTextChange}
-                />
-                <RxCross2 size={24} className="mt-1" onClick={closeSearchBox}/>
-            </div>
-            {search && (
-                <Transition
-                    as={Fragment}
-                    show={search}
-                    enter="transition ease-out duration-200"
-                    enterFrom="opacity-0 -translate-y-1"
-                    enterTo="opacity-100 translate-y-0"
-                    leave="transition ease-in duration-150"
-                    leaveFrom="opacity-100 translate-y-0"
-                    leaveTo="opacity-0 -translate-y-1"
-                >
+  return (
+    <div className="flex w-full m-auto ml-2" ref={panel}>
+      <div className="border-primary bg-base-100 h-8 w-[96%] px-2 overflow-hidden border rounded-lg z-50 flex m-auto">
+        <input
+          autoFocus
+          type="text"
+          placeholder="Search"
+          className="w-full py-1 text-sm bg-transparent focus:outline-none"
+          value={searchText}
+          onChange={handleSearchTextChange}
+        />
+        <RxCross2 size={24} className="mt-1" onClick={closeSearchBox} />
+      </div>
+      {search && (
+        <Transition
+          as={Fragment}
+          show={search}
+          enter="transition ease-out duration-200"
+          enterFrom="opacity-0 -translate-y-1"
+          enterTo="opacity-100 translate-y-0"
+          leave="transition ease-in duration-150"
+          leaveFrom="opacity-100 translate-y-0"
+          leaveTo="opacity-0 -translate-y-1"
+        >
+          <div
+            className="!z-50 pb-14 bg-base-200"
+            style={{
+              position: "absolute",
+              top: "2.5rem",
+              left: 0,
+              width: "100%",
+              height: "100vh",
+              overflowY: "auto",
+            }}
+          >
+            {dishData.length > 0 ? (
+              present ? (
+                <div className="">
+                  <Link
+                    href={`${routePaths.category(customLink)}#${present?._id}`}
+                    passHref
+                  >
                     <div
-                        className="!z-50 pb-14 bg-base-200"
-                        style={{
-                            position: "absolute",
-                            top: "2.5rem",
-                            left: 0,
-                            width: "100%",
-                            height: "100vh",
-                            overflowY: "auto",
-                        }}
+                      onClick={() => setSearchOpen(!search)}
+                      className="mt-14 "
                     >
-                        {dishData.length > 0 ? (
-                            present ? (
-                                <div className="">
-                                    <Link href={`${routePaths.category(customLink)}#${present?._id}`} passHref>
-                                        <div onClick={() => setSearchOpen(!search)} className="mt-14 ">
-                                            <p className="text-[1.125rem] -mb-4 mt-[0.625rem] mx-6">{present.name}</p>
-                                            <p className="text-[0.813rem] -mb-2 flex flex-inline  mx-6">Category</p>
-                                        </div>
-                                        <div className="absolute top-0 right-0 mr-[1.813rem] mt-10 overflow-hidden flex flex-col items-center">
-                                            {!!present?.coverImage ? (
-                                                <ShimmerImage
-                                                    src={present?.coverImage}
-                                                    alt="dish"
-                                                    width={125}
-                                                    height={122}
-                                                    onClick={() => setSearchOpen(!search)}
-                                                    className="on_active_bounce rounded-xl "
-                                                />
-                                            ) : (
-                                                <div>
-                                                    <PlaceholderImg className="absolute top-0 right-0 mr-[1.813rem] mt-10  overflow-hidden" />
-                                                </div>
-                                            )}
-											<p className="text-[0.813rem] underline">View</p>
-                                        </div>
-                                    </Link>
-                                    <hr className="mt-[5rem] opacity-25" />
-                                    <div className="">
-                                        {dishData?.map((dish, index) => (
-                                            <div key={dish?._id}>
-                                                <HorizontalCard
-                                                    key={`${dish.name}${index}`}
-                                                    dishData={dish}
-                                                    noDescription
-                                                    redirection={redirectToDish}
-                                                />
-                                                <hr className="-mt-1 opacity-25" />
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ) : (
-                                dishData?.map((dish, index) => (
-                                    <div key={dish?._id}>
-                                        <HorizontalCard
-                                            key={`${dish.name}${index}`}
-                                            dishData={dish}
-                                            noDescription
-                                            redirection={redirectToDish}
-                                        />
-                                        <hr className="-my-[0.8rem]  opacity-25  " />
-                                    </div>
-                                ))
-                            )
-                        ) : (
-                            <div className="flex flex-col py-10 prose">
-                                <BiDish className="mx-auto text-2xl fill-current text-base-content" />
-                                <h3 className="!my-0  text-center">Nothing Found</h3>
-                            </div>
-                        )}
+                      <p className="text-[1.125rem] -mb-4 mt-[0.625rem] mx-6">
+                        {present.name}
+                      </p>
+                      <p className="text-[0.813rem] -mb-2 flex flex-inline  mx-6">
+                        Category
+                      </p>
                     </div>
-                </Transition>
+                    <div className="absolute top-0 right-0 mr-[1.813rem] mt-10 overflow-hidden flex flex-col items-center">
+                      {!!present?.coverImage ? (
+                        <ShimmerImage
+                          src={present?.coverImage}
+                          alt="dish"
+                          width={125}
+                          height={122}
+                          onClick={() => setSearchOpen(!search)}
+                          className="on_active_bounce rounded-xl "
+                        />
+                      ) : (
+                        <div>
+                          <PlaceholderImg className="absolute top-0 right-0 mr-[1.813rem] mt-10  overflow-hidden" />
+                        </div>
+                      )}
+                      <p className="text-[0.813rem] underline">View</p>
+                    </div>
+                  </Link>
+                  <hr className="mt-[5rem] opacity-25" />
+                  <div className="">
+                    {dishData?.map((dish, index) => (
+                      <div key={dish?._id}>
+                        <HorizontalCard
+                          key={`${dish.name}${index}`}
+                          dishData={dish}
+                          noDescription
+                          redirection={redirectToDish}
+                        />
+                        <hr className="-mt-1 opacity-25" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                dishData?.map((dish, index) => (
+                  <div key={dish?._id}>
+                    <HorizontalCard
+                      key={`${dish.name}${index}`}
+                      dishData={dish}
+                      noDescription
+                      redirection={redirectToDish}
+                    />
+                    <hr className="-my-[0.8rem]  opacity-25  " />
+                  </div>
+                ))
+              )
+            ) : (
+              <div className="flex flex-col py-10 prose">
+                <BiDish className="mx-auto text-2xl fill-current text-base-content" />
+                <h3 className="!my-0  text-center">Nothing Found</h3>
+              </div>
             )}
-        </div>
-    );
-}
+          </div>
+        </Transition>
+      )}
+    </div>
+  );
+};
 
-const MemoizedSearchPanel = memo(SearchPanel)
-export default MemoizedSearchPanel
+const MemoizedSearchPanel = memo(SearchPanel);
+export default MemoizedSearchPanel;

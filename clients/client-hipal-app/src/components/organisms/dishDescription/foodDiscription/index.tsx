@@ -42,9 +42,11 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
             {dishData?.name || ""}
           </div>
           <div className="my-2">
-            <span className="text-base">
-              ₹ {Number(price).toLocaleString("en-IN")}
-            </span>
+            {Number(price) > 1 && (
+              <span className="text-base">
+                ₹ {Number(price).toLocaleString("en-IN")}
+              </span>
+            )}
           </div>
         </div>
         {dishData?.description && (

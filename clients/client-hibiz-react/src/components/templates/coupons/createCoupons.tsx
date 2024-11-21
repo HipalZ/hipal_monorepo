@@ -51,7 +51,7 @@ const MemoCreateCouponPage = () => {
   return (
     <section>
       <div className="flex flex-wrap gap-2 mx-4 mt-4 lg:mx-0">
-        {menuArray.map((menu) => {
+        {menuArray.slice(0, 2).map((menu) => {
           return (
             <button
               type="button"

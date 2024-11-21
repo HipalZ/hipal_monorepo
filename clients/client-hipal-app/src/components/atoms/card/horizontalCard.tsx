@@ -88,7 +88,9 @@ const MemoHorizontalCard = ({
             <div className="underline !underline-offset-4 on_active_bounce !text-sm">
               Know more
             </div>
-            <div className="text-sm font-semibold opacity-70">₹ {price}</div>
+            {Number(price) > 1 && (
+              <div className="text-sm font-semibold opacity-70">₹ {price}</div>
+            )}
           </button>
         </div>
         <div className={"flex flex-col pt-2"}>

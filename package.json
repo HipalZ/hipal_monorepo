@@ -32,6 +32,7 @@
     "nanoid": "^5.0.7",
     "node-cron": "^3.0.3",
     "papaparse": "^5.4.1",
+    "qrcode.react": "^4.1.0",
     "razorpay": "^2.9.4",
     "react-error-boundary": "^4.0.13",
     "react-hot-toast": "^2.4.1",

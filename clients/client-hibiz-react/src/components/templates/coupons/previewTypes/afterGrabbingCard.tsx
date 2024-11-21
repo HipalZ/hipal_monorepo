@@ -24,7 +24,7 @@ const MemoAfterGrabbingCoupon = () => {
       style={{
         backgroundColor: bgColor || "#9267EC",
       }}
-      className="relative max-w-[20rem] p-6 rounded-xl"
+      className="relative max-w-[20rem] p-6 rounded-xl scale-[0.8] -mt-8"
     >
       <img
         src={couponImage || BirthdayPlaceholder}

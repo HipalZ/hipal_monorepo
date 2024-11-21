@@ -6,124 +6,48 @@ import { memo } from "react";
 
 const MemoListCoupons = () => {
   const { coupons, isLoading } = useGetAllCoupons();
-  const {
-    setAddMinimumBillAmount,
-    setAllowLateNight,
-    setSelectedPage,
-    setBgColor,
-    setCouponId,
-    setCouponName,
-    setCouponType,
-    setCouponDiscount,
-    setMinimumBillAmount,
-    setExpiryAfterGrabbed,
-    setCashbackAvailable,
-    setTermsAndConditions,
-    setCouponPrice,
-    setCustomDays,
-    setStartTime,
-    setEndTime,
-    setCouponEndDate,
-    setCouponStartDate,
-    setExpiryClaimLimitValue,
-    setCouponForEveryOne,
-    setPromoteOnBill,
-    setPromote,
-    setIsPublish,
-    setOverAllLimit,
-    setSelectedGroupIds,
-    setSelectedUserIds,
-    setIsActive,
-    setCouponImage,
-    setLinks,
-    setIsUptoPriceActive,
-    setAfterClaim,
-  } = useCouponsStore((s) => ({
-    setAddMinimumBillAmount: s.setAddMinimumBillAmount,
-    setAllowLateNight: s.setAllowLateNight,
-    setSelectedPage: s.setSelectedPage,
-    setBgColor: s.setBgColor,
-    setCouponId: s.setCouponId,
-    setCouponName: s.setCouponName,
-    setCouponType: s.setCouponType,
-    setCouponDiscount: s.setCouponDiscount,
-    setMinimumBillAmount: s.setMinimumBillAmount,
-    setExpiryAfterGrabbed: s.setExpiryAfterGrabbed,
-    setCashbackAvailable: s.setCashbackAvailable,
-    setTermsAndConditions: s.setTermsAndConditions,
-    setCouponPrice: s.setCouponPrice,
-    setCustomDays: s.setCustomDays,
-    setStartTime: s.setStartTime,
-    setEndTime: s.setEndTime,
-    setCouponEndDate: s.setCouponEndDate,
-    setCouponStartDate: s.setCouponStartDate,
-    setExpiryClaimLimitValue: s.setExpiryClaimLimitValue,
-    setCouponForEveryOne: s.setCouponForEveryOne,
-    setPromoteOnBill: s.setPromoteOnBill,
-    setPromote: s.setPromote,
-    setIsPublish: s.setIsPublish,
-    setOverAllLimit: s.setOverAllLimit,
-    setSelectedGroupIds: s.setSelectedGroupIds,
-    setSelectedUserIds: s.setSelectedUserIds,
-    setIsActive: s.setIsActive,
-    setCouponImage: s.setCouponImage,
-    setLinks: s.setLinks,
-    setIsUptoPriceActive: s.setIsUptoPriceActive,
-    setAfterClaim: s.setAfterClaim,
-  }));
 
   const storeCouponInfo = (coupon: any) => {
-    setCouponId(coupon?._id);
-    setLinks(coupon?.links);
-    setCouponName(coupon?.name);
-    setCouponImage(coupon?.image);
-    setCouponType(coupon?.config?.discountType);
-    setCouponDiscount(coupon?.config?.value);
-    setIsUptoPriceActive(
-      coupon?.config?.discountType === "PERCENTAGE"
-        ? !!coupon?.config?.upto
-        : !!coupon?.config?.value,
-    );
-    setBgColor(coupon?.bgColour);
-    setCashbackAvailable(coupon?.cashbackAvailable);
-    setMinimumBillAmount(coupon?.conditions?.billValue);
-    setExpiryAfterGrabbed(coupon?.conditions?.expiryAfterGrabbed);
-    setTermsAndConditions(coupon?.conditions?.tc);
-    setOverAllLimit(coupon?.conditions?.individualUserLimit?.overAllLimit || 0);
-    setAddMinimumBillAmount(!!coupon?.conditions?.billValue);
-    setIsActive(coupon?.isActive);
-    setCouponPrice(
-      coupon.config.discountType === "PERCENTAGE"
-        ? coupon?.config?.upto
-        : coupon?.config?.value,
-    );
-    setCouponStartDate(
-      coupon?.conditions?.couponStartDate
-        ? coupon?.conditions?.couponStartDate
-        : null,
-    );
-    setCouponEndDate(
-      coupon?.conditions?.couponEndDate
-        ? coupon?.conditions?.couponEndDate
-        : null,
-    );
-    setExpiryClaimLimitValue(
-      coupon?.conditions?.expiryClaimLimit?.overAllLimit || 0,
-    );
-    setAfterClaim(!!coupon?.conditions?.individualUserLimit?.overAllLimit);
-    setCouponForEveryOne(coupon?.conditions?.eligibleUser?.allUsers);
-    setCustomDays(coupon?.conditions?.availability?.customDays);
-    setStartTime(coupon?.conditions?.availability?.startTime || 0);
-    setEndTime(coupon?.conditions?.availability?.endTime || 0);
-    setAllowLateNight(
-      coupon?.conditions?.availability?.allowLateNight || false,
-    );
-    setIsPublish(coupon?.isPublish);
-    setPromote(coupon?.promote);
-    setPromoteOnBill(coupon?.promoteOnBill);
-    setSelectedGroupIds(coupon?.conditions?.eligibleUser?.groupIds || []);
-    setSelectedUserIds(coupon?.conditions?.eligibleUser?.userIds || []);
-    setSelectedPage("INFO");
+    useCouponsStore.setState({
+      couponId: coupon?._id,
+      links: coupon?.links,
+      couponName: coupon?.name,
+      couponImage: coupon?.image,
+      couponType: coupon?.config?.discountType,
+      couponDiscount: coupon?.config?.value,
+      isUptoPriceActive:
+        coupon?.config?.discountType === "PERCENTAGE"
+          ? !!coupon?.config?.upto
+          : !!coupon?.config?.value,
+      bgColor: coupon?.bgColour,
+      cashbackAvailable: coupon?.cashbackAvailable,
+      minimumBillAmount: coupon?.conditions?.billValue,
+      expiryAfterGrabbed: coupon?.conditions?.expiryAfterGrabbed,
+      termsAndConditions: coupon?.conditions?.tc,
+      overAllLimit: coupon?.conditions?.individualUserLimit?.overAllLimit || 0,
+      addMinimumBillAmount: !!coupon?.conditions?.billValue,
+      isActive: coupon?.isActive,
+      couponPrice:
+        coupon.config.discountType === "PERCENTAGE"
+          ? coupon?.config?.upto
+          : coupon?.config?.value,
+      couponStartDate: coupon?.conditions?.couponStartDate || null,
+      couponEndDate: coupon?.conditions?.couponEndDate || null,
+      expiryClaimLimitValue:
+        coupon?.conditions?.expiryClaimLimit?.overAllLimit || 0,
+      afterClaim: !!coupon?.conditions?.individualUserLimit?.overAllLimit,
+      couponForEveryOne: coupon?.conditions?.eligibleUser?.allUsers,
+      customDays: coupon?.conditions?.availability?.customDays,
+      startTime: coupon?.conditions?.availability?.startTime || 0,
+      endTime: coupon?.conditions?.availability?.endTime || 0,
+      allowLateNight: coupon?.conditions?.availability?.allowLateNight || false,
+      isPublish: coupon?.isPublish,
+      promote: coupon?.promote,
+      promoteOnBill: coupon?.promoteOnBill,
+      selectedGroupIds: coupon?.conditions?.eligibleUser?.groupIds || [],
+      selectedUserIds: coupon?.conditions?.eligibleUser?.userIds || [],
+      selectedPage: "INFO",
+    });
   };
 
   if (isLoading) {

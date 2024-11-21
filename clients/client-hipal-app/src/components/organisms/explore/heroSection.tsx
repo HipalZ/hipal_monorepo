@@ -167,7 +167,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
             {address && (
               <>
                 <div style={{ overflow: "hidden" }}>
-                  <h6 className="text-xs !font-thin capitalize text-base-100">
+                  <h6 className="text-xs !font-thin capitalize text-base-100 line-clamp-2">
                     {address}
                   </h6>
                 </div>
@@ -178,7 +178,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
               </>
             )}
             <article className="flex gap-1 mt-1">
-              <h6 className="text-xs">⭐ 4.5</h6>
+              <h6 className="text-xs">⭐ 4.7</h6>
               <RestaurantTimeMemo business={data?.business} />
             </article>
           </div>
@@ -223,11 +223,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
         <ReadMore text={description} />
       </center>
       {subscribeModal && (
-        <BottomPopUp
-          show={subscribeModal}
-          onClose={closeSubscribeModal}
-          hide
-        >
+        <BottomPopUp show={subscribeModal} onClose={closeSubscribeModal} hide>
           <SubScribeModal
             closeSubscribeModal={closeSubscribeModal}
             setIsLoader={setIsLoader}

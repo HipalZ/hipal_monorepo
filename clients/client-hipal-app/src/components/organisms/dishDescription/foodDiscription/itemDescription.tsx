@@ -32,7 +32,7 @@ function MemoIndividualItemDescription() {
           ))}
         </section>
       )}
-      {Number(dishData?.price) > 0 && (
+      {Number(dishData?.price) > 1 && (
         <b className="text-base opacity-60">
           ₹ {Number(dishData?.price).toLocaleString("en-IN")}
         </b>

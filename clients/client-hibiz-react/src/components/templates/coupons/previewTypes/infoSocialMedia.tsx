@@ -2,6 +2,7 @@ import useCouponsStore from "@/components/store/useCouponsStore";
 import { memo } from "react";
 import HipalLogo from "@/assets/hipal.png";
 import useBusinessData from "@/components/store/useBusinessData";
+import QRCode from "react-qr-code";
 
 const MemoInfoSocialMedia = () => {
   const {
@@ -11,6 +12,7 @@ const MemoInfoSocialMedia = () => {
     couponImage,
     couponDiscount,
     couponType,
+    links,
   } = useCouponsStore((s) => ({
     couponPrice: s.couponPrice,
     couponName: s.couponName,
@@ -18,9 +20,12 @@ const MemoInfoSocialMedia = () => {
     couponImage: s.couponImage,
     couponDiscount: s.couponDiscount,
     couponType: s.couponType,
+    links: s.links,
   }));
 
   const logo = useBusinessData((s) => s.businessData?.logo);
+  const qrLink = links && links.length > 0 ? links[0].link : "";
+
   return (
     <figure className="relative">
       {/* Image container */}
@@ -37,6 +42,19 @@ const MemoInfoSocialMedia = () => {
           background: `linear-gradient(180deg, rgba(146, 103, 236, 0) 47%, ${bgColor} 77.68%)`,
         }}
       />
+
+      {/* QR Code */}
+      {qrLink && (
+        <div className="absolute p-1 bg-white rounded top-2 right-2">
+          <QRCode
+            value={qrLink}
+            size={64}
+            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+            viewBox={`0 0 64 64`}
+          />
+        </div>
+      )}
+
       <p
         style={{
           fontFamily: "darker",

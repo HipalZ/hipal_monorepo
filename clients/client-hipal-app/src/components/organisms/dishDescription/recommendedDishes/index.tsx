@@ -104,8 +104,10 @@ function RecommendedDishes({
                       <div className="mt-6 overflow-hidden text-xs font-medium text-left capitalize whitespace-nowrap overflow-ellipsis">
                         {dish?.name}
                       </div>
-                      <div className="flex items-center justify-between w-full px-2">
-                        <div className="text-xs">₹{dish?.price}</div>
+                      <div className="flex items-center justify-between w-full pr-2">
+                        {Number(dish?.price) > 1 && (
+                          <div className="text-xs">₹{dish?.price}</div>
+                        )}
                         <div className="mt-1 scale-75">
                           <DishQuantityButton dishData={dish} />
                         </div>
