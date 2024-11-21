@@ -19,7 +19,7 @@ import HistoryCartItems from "./historyItem";
 
 const Cart = () => {
   const { cart } = useCartStore();
-  const { setShowCart, showHistory } = useCart();
+  const { setShowCart, showHistory, setShowHistory } = useCart();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const tableName = useTableData((state) => state.tableName);
   const accessToken = useUserToken.getState().accessToken;
@@ -41,7 +41,7 @@ const Cart = () => {
       router.push(`/${customLink}/user/signup`);
       return;
     }
-    if (!tableName) {
+    if (!tableName && outletInfo?.outLetType !== "OTHER") {
       setDirection("category");
       toast.error("Table name is required");
       router.push(`/${customLink}/scan`);
@@ -88,16 +88,16 @@ const Cart = () => {
           ))}
         </div>
       )}
-      <CartWarning />
-      {cart.length > 0 && tableName && outletInfo?.outLetType === "OTHER" && (
+      {outletInfo?.outLetType !== "OTHER" && <CartWarning />}
+      {cart.length > 0 && outletInfo?.outLetType === "OTHER" && (
         <ShareCartButtons />
       )}
 
-      {accessToken && tableName && outletInfo?.outLetType !== "OTHER" && (
+      {tableName && outletInfo?.outLetType !== "OTHER" && (
         <CommonBottomButton
           fixed
           buttons={
-            cart.length > 0
+            cart.length > 0 && !showHistory
               ? [
                   {
                     text: "Order more",
@@ -110,13 +110,21 @@ const Cart = () => {
                     type: "button",
                   },
                 ]
-              : [
-                  {
-                    text: "Order more",
-                    onClick: () => setShowCart(false),
-                    type: "button",
-                  },
-                ]
+              : cart.length > 0 && showHistory
+                ? [
+                    {
+                      text: "Back",
+                      onClick: () => setShowHistory(false),
+                      type: "button",
+                    },
+                  ]
+                : [
+                    {
+                      text: "Order more",
+                      onClick: () => setShowCart(false),
+                      type: "button",
+                    },
+                  ]
           }
         />
       )}

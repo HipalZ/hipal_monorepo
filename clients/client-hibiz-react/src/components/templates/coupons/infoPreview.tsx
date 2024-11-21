@@ -78,7 +78,7 @@ const MemoInfoPreview = () => {
           {previews[currentIndex].component}
         </motion.div>
 
-        <div className="absolute flex flex-wrap flex-1 gap-4 pb-4 mx-4 text-sm -bottom-2">
+        <div className="absolute flex flex-wrap items-center justify-center flex-1 gap-4 pb-4 mx-4 text-sm -bottom-2">
           {buttonData.map(({ id, label }, index) => (
             <button
               key={id}
@@ -98,7 +98,7 @@ const MemoInfoPreview = () => {
 
         {(buttonData[currentIndex].id === "socialMedia" ||
           buttonData[currentIndex].id === "storySize") && (
-          <div className="w-[92%] mx-auto text-center bg-[#E3CDFE] border border-[#E3CDFE] rounded-2xl px-2 py-2 absolute bottom-[7rem] scale-75">
+          <div className="w-[92%] mx-auto text-center bg-[#E3CDFE] border border-[#E3CDFE] rounded-2xl px-2 py-2 absolute bottom-[10rem] scale-75">
             <button
               type="button"
               onClick={handleDownload}

@@ -37,7 +37,7 @@ function Header({ categories }: { categories: CategoryType[] }) {
     <div
       className={`${
         showHeader
-          ? "sticky top-0 z-50 bg-base-200 opacity-100 translate-y-0"
+          ? "sticky top-0 z-50 bg-base-100 opacity-100 translate-y-0"
           : "opacity-0 -translate-y-full"
       } transition-all duration-300 ease-in-out flex flex-col space-y-2 text-4xl py-2 text-primary overflow-hidden`}
     >

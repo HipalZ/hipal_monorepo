@@ -1,25 +1,38 @@
+import { lazy, memo, Suspense, useCallback } from "react";
 import Hi from "@/assets/svg/hi.svg";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 import MemoizedHeader from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import useCouponsStore, {
   type CouponFlow,
 } from "@/components/store/useCouponsStore";
-import Manage from "@/components/templates/coupons/Manage";
-import AllConditions from "@/components/templates/coupons/allConditions";
-import AllLinkChannels from "@/components/templates/coupons/allLinkChannels";
-import CouponAnalytics from "@/components/templates/coupons/analytics";
-import Channel from "@/components/templates/coupons/channel";
-import CouponAnalyticsInfo from "@/components/templates/coupons/couponAnalyticsInfo";
-import CouponDetails from "@/components/templates/coupons/couponDetails";
-import CreateCouponPage from "@/components/templates/coupons/createCoupons";
-import Custom from "@/components/templates/coupons/custom";
-import Info from "@/components/templates/coupons/info";
-import Preview from "@/components/templates/coupons/preview";
-import Share from "@/components/templates/coupons/share";
-import Terms from "@/components/templates/coupons/terms";
+const Manage = lazy(() => import("@/components/templates/coupons/Manage"));
+const AllConditions = lazy(
+  () => import("@/components/templates/coupons/allConditions"),
+);
+const AllLinkChannels = lazy(
+  () => import("@/components/templates/coupons/allLinkChannels"),
+);
+const CouponAnalytics = lazy(
+  () => import("@/components/templates/coupons/analytics"),
+);
+const Channel = lazy(() => import("@/components/templates/coupons/channel"));
+const CouponAnalyticsInfo = lazy(
+  () => import("@/components/templates/coupons/couponAnalyticsInfo"),
+);
+const CouponDetails = lazy(
+  () => import("@/components/templates/coupons/couponDetails"),
+);
+const CreateCouponPage = lazy(
+  () => import("@/components/templates/coupons/createCoupons"),
+);
+const Custom = lazy(() => import("@/components/templates/coupons/custom"));
+const Info = lazy(() => import("@/components/templates/coupons/info"));
+const Preview = lazy(() => import("@/components/templates/coupons/preview"));
+const Share = lazy(() => import("@/components/templates/coupons/share"));
+const Terms = lazy(() => import("@/components/templates/coupons/terms"));
 import { routeToDashboard } from "@/components/utils/routes";
 import { cn } from "@hi/common";
-import { memo, useCallback } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
@@ -90,7 +103,7 @@ const MemoCoupons = () => {
         setSelectedPage("CUSTOM");
         break;
       case "PREVIEW":
-        setSelectedPage("Terms");
+        setSelectedPage("EXPIRED");
         break;
       case "CUSTOM":
         setSelectedPage("PREVIEW");
@@ -135,35 +148,37 @@ const MemoCoupons = () => {
   }, [selectedPage]);
 
   return (
-    <main className="relative">
-      <section
-        style={{
-          backgroundColor: selectedPage === "PREVIEW" ? bgColor : "#f4f4f4",
-        }}
-        className={cn("sticky top-0 z-50 w-full bg-[#f4f4f4]")}
-      >
-        <MemoizedHeader
-          title={getPageHeading(selectedPage as CouponFlow)}
-          onBack={handleBack}
-          leftIcon={<FaArrowLeft />}
-          rightButton={rightButton()}
-          headingColor={selectedPage === "PREVIEW" ? "#FFFFFF" : ""}
-        />
-      </section>
-      {selectedPage === "MANAGE" && <Manage />}
-      {selectedPage === "CREATE" && <CreateCouponPage />}
-      {selectedPage === "DETAILS" && <CouponDetails />}
-      {selectedPage === "EXPIRED" && <AllConditions />}
-      {selectedPage === "PREVIEW" && <Preview />}
-      {selectedPage === "Terms" && <Terms />}
-      {selectedPage === "CUSTOM" && <Custom />}
-      {selectedPage === "SHARE" && <Share />}
-      {selectedPage === "INFO" && <Info />}
-      {selectedPage === "ANALYTICS" && <CouponAnalytics />}
-      {selectedPage === "ANALYTICS_INFO" && <CouponAnalyticsInfo />}
-      {selectedPage === "LINK_CHANNELS" && <AllLinkChannels />}
-      {selectedPage === "CHANNELS" && <Channel />}
-    </main>
+    <Suspense fallback={<LoadingSpinner />}>
+      <main className="relative">
+        <section
+          style={{
+            backgroundColor: selectedPage === "PREVIEW" ? bgColor : "#f4f4f4",
+          }}
+          className={cn("sticky top-0 z-50 w-full bg-[#f4f4f4]")}
+        >
+          <MemoizedHeader
+            title={getPageHeading(selectedPage as CouponFlow)}
+            onBack={handleBack}
+            leftIcon={<FaArrowLeft />}
+            rightButton={rightButton()}
+            headingColor={selectedPage === "PREVIEW" ? "#FFFFFF" : ""}
+          />
+        </section>
+        {selectedPage === "MANAGE" && <Manage />}
+        {selectedPage === "CREATE" && <CreateCouponPage />}
+        {selectedPage === "DETAILS" && <CouponDetails />}
+        {selectedPage === "EXPIRED" && <AllConditions />}
+        {selectedPage === "PREVIEW" && <Preview />}
+        {selectedPage === "Terms" && <Terms />}
+        {selectedPage === "CUSTOM" && <Custom />}
+        {selectedPage === "SHARE" && <Share />}
+        {selectedPage === "INFO" && <Info />}
+        {selectedPage === "ANALYTICS" && <CouponAnalytics />}
+        {selectedPage === "ANALYTICS_INFO" && <CouponAnalyticsInfo />}
+        {selectedPage === "LINK_CHANNELS" && <AllLinkChannels />}
+        {selectedPage === "CHANNELS" && <Channel />}
+      </main>
+    </Suspense>
   );
 };
 

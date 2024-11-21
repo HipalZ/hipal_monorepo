@@ -90,9 +90,6 @@ export const useDeleteCoupon = () => {
 };
 
 export const useSaveCoupon = () => {
-  const resetFunction = useCouponsStore((s) => s.resetCouponState);
-  const setSelectedPage = useCouponsStore((s) => s.setSelectedPage);
-
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (payload: any) => {
       const response = await apiRpc.couponz.$post({
@@ -103,8 +100,22 @@ export const useSaveCoupon = () => {
     onSuccess: (data) => {
       if (!data.err) {
         toast.success("Coupon saved successfully!");
-        setSelectedPage("MANAGE");
-        resetFunction();
+        const coupon = data.data as any;
+        console.log("coupon", coupon);
+        useCouponsStore.setState({
+          couponId: coupon?._id,
+          links: coupon?.conditions?.links,
+          couponName: coupon?.name,
+          couponImage: coupon?.image,
+          couponType: coupon?.config?.discountType,
+          couponDiscount: coupon?.config?.value,
+          bgColor: coupon?.bgColour,
+          downloadPreviewModal: true,
+          couponPrice:
+            coupon.config.discountType === "PERCENTAGE"
+              ? coupon?.config?.upto
+              : coupon?.config?.value,
+        });
       }
     },
     onError: (error) => {

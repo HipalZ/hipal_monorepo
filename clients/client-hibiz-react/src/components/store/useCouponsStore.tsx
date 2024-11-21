@@ -194,6 +194,9 @@ interface ICoupon {
 
   filter: "active" | "inactive";
   setFilter: (value: "active" | "inactive") => void;
+
+  downloadPreviewModal: boolean;
+  setDownloadPreviewModal: (value: boolean) => void;
 }
 
 const useCouponsStore = create<ICoupon>((set) => ({
@@ -383,6 +386,10 @@ const useCouponsStore = create<ICoupon>((set) => ({
 
   filter: "active",
   setFilter: (value: "active" | "inactive") => set(() => ({ filter: value })),
+
+  downloadPreviewModal: false,
+  setDownloadPreviewModal: (value: boolean) =>
+    set(() => ({ downloadPreviewModal: value })),
 
   resetCouponState: () =>
     set(() => ({

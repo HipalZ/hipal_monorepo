@@ -3,6 +3,7 @@ import birthdayPlaceholder from "@/assets/coupon/birthdayCouponz.png";
 import { memo } from "react";
 import HipalLogo from "@/assets/hipal.png";
 import useBusinessData from "@/components/store/useBusinessData";
+import QRCode from "react-qr-code";
 
 const MemoStorySize = () => {
   const {
@@ -12,6 +13,7 @@ const MemoStorySize = () => {
     couponImage,
     couponDiscount,
     couponType,
+    links,
   } = useCouponsStore((s) => ({
     couponPrice: s.couponPrice,
     couponName: s.couponName,
@@ -19,12 +21,27 @@ const MemoStorySize = () => {
     couponImage: s.couponImage,
     couponDiscount: s.couponDiscount,
     couponType: s.couponType,
+    links: s.links,
   }));
 
   const logo = useBusinessData((s) => s.businessData?.logo);
+  console.log("logo", links);
+  const qrLink = links && links.length > 0 ? links[0].link : "";
+  console.log("qrLink", qrLink);
 
   return (
-    <div className="relative w-[236px] mx-auto h-[420px] overflow-hidden">
+    <div className="relative w-[236px] mx-auto -mt-8 h-[420px] overflow-hidden scale-[0.9]">
+      {qrLink && (
+        <div className="absolute z-50 p-1 bg-white rounded top-2 right-2">
+          <QRCode
+            value={qrLink}
+            size={48}
+            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+            viewBox={`0 0 48 48`}
+          />
+        </div>
+      )}
+
       <div
         className="absolute inset-0 w-[236px] h-[420px]"
         style={{
@@ -37,7 +54,7 @@ const MemoStorySize = () => {
         }}
       />
 
-      <figure className="absolute w-[4rem]  bottom-2 right-2">
+      <figure className="absolute w-[4rem] bottom-2 right-2">
         <img className="filter invert brightness-0" src={HipalLogo} alt="" />
       </figure>
 
@@ -61,7 +78,6 @@ const MemoStorySize = () => {
         }}
         className="absolute w-full text-2xl font-bold text-white left-1/2 bottom-[17%] transform -translate-x-1/2 text-center max-w-[90%] break-words"
       >
-        {/* Centering the logo */}
         <figure className="w-[4rem] h-[4rem] mx-auto mb-2 rounded-full overflow-hidden">
           <img
             src={logo}
@@ -70,7 +86,6 @@ const MemoStorySize = () => {
           />
         </figure>
 
-        {/* Displaying the coupon name below the logo */}
         {couponName || "Coupon"}
       </div>
     </div>
