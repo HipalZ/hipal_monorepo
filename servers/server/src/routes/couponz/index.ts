@@ -326,7 +326,15 @@ const couponzRouter = new Hono()
 
     return respond(c, "Coupon created successfully", false, 201, {
       ...createdCoupon,
-      shortUrl: createShortUrl.shortUrl,
+      links: [
+        {
+          channelId: {
+            _id: channelId?._id,
+            name: "default",
+          },
+          link: createShortUrl.shortUrl,
+        },
+      ],
     });
   })
   .put(
