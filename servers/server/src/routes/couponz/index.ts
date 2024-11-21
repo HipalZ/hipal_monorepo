@@ -324,18 +324,48 @@ const couponzRouter = new Hono()
       }
     }
 
-    return respond(c, "Coupon created successfully", false, 201, {
-      ...createdCoupon,
-      links: [
-        {
-          channelId: {
-            _id: channelId?._id,
-            name: "default",
-          },
-          link: createShortUrl.shortUrl,
+    const couponResponse = {
+      _id: createdCoupon._id,
+      businessId: createdCoupon.businessId,
+      name: createdCoupon.name,
+      config: {
+        value: createdCoupon.config.value,
+        discountType: createdCoupon.config.discountType,
+        upto: createdCoupon.config.upto,
+      },
+      image: createdCoupon.image,
+      bgColour: createdCoupon.bgColour,
+      conditions: {
+        billValue: createdCoupon.conditions.billValue,
+        couponStartDate: createdCoupon.conditions.couponStartDate,
+        couponEndDate: createdCoupon.conditions.couponEndDate,
+        requiredFields: createdCoupon.conditions.requiredFields,
+        availability: {
+          when: createdCoupon.conditions.availability.when,
+          startTime: createdCoupon.conditions.availability.startTime,
+          endTime: createdCoupon.conditions.availability.endTime,
+          customDays: createdCoupon.conditions.availability.customDays,
         },
-      ],
-    });
+        tc: createdCoupon.conditions.tc,
+        links: [
+          {
+            channelId: {
+              _id: channelId?._id,
+              name: "default",
+            },
+            link: createShortUrl.shortUrl,
+          },
+        ],
+      },
+    };
+
+    return respond(
+      c,
+      "Coupon created successfully",
+      false,
+      201,
+      couponResponse,
+    );
   })
   .put(
     "/:couponId",
