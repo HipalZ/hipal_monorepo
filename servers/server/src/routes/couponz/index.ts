@@ -324,7 +324,10 @@ const couponzRouter = new Hono()
       }
     }
 
-    return respond(c, "Coupon created successfully", false, 201, createdCoupon);
+    return respond(c, "Coupon created successfully", false, 201, {
+      ...createdCoupon,
+      shortUrl: createShortUrl.shortUrl,
+    });
   })
   .put(
     "/:couponId",
