@@ -335,6 +335,7 @@ const couponzRouter = new Hono()
       },
       image: createdCoupon.image,
       bgColour: createdCoupon.bgColour,
+      isActive:createdCoupon.isActive,
       conditions: {
         billValue: createdCoupon.conditions.billValue,
         couponStartDate: createdCoupon.conditions.couponStartDate,
@@ -346,6 +347,10 @@ const couponzRouter = new Hono()
           endTime: createdCoupon.conditions.availability.endTime,
           customDays: createdCoupon.conditions.availability.customDays,
         },
+        eligibleUser: {
+          allUsers: createdCoupon.conditions.eligibleUser.allUsers,
+        },
+
         tc: createdCoupon.conditions.tc,
         links: [
           {

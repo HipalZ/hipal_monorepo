@@ -43,6 +43,7 @@ const MemoOtherOutletCard = ({
               quality={95}
               width={160}
               height={200}
+              onClick={openModal}
               className={`object-cover w-full h-full rounded-lg ${
                 dishData.availability ? "" : "grayscale"
               }`}

@@ -15,9 +15,6 @@ import MemoizedHeader from "@/components/molecules/header";
 import { FaArrowLeft } from "react-icons/fa";
 import MemoUserGroupList from "./addUsersToTheCoupon";
 import toast from "react-hot-toast";
-import SocialMedia from "./previewTypes/socialMedia";
-import StorySize from "./previewTypes/storySize";
-import DownloadPreview from "./previewTypes/downloadPreview";
 
 const MemoShare = () => {
   const {
@@ -50,9 +47,6 @@ const MemoShare = () => {
     setEligibilityModal,
     setEligibilityType,
     selectFlow,
-    downloadPreviewModal,
-    setDownloadPreviewModal,
-    reset,
   } = useCouponsStore((s) => ({
     bgColor: s.bgColor,
     promoteOnBill: s.promoteOnBill,
@@ -85,9 +79,6 @@ const MemoShare = () => {
     setEligibilityModal: s.setEligibilityModal,
     setEligibilityType: s.setEligibilityType,
     selectFlow: s.selectFlow,
-    downloadPreviewModal: s.downloadPreviewModal,
-    setDownloadPreviewModal: s.setDownloadPreviewModal,
-    reset: s.resetCouponState,
   }));
 
   const { selectedFile } = useMenuPageStore((s) => ({
@@ -184,12 +175,6 @@ const MemoShare = () => {
       : await saveCoupon(payload);
   };
 
-  const goInMagePage = () => {
-    setDownloadPreviewModal(false);
-    useCouponsStore.setState({ selectedPage: "MANAGE" });
-    reset();
-  };
-
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -233,20 +218,6 @@ const MemoShare = () => {
           </article>
         )}
 
-        {downloadPreviewModal && (
-          <PopUp show={downloadPreviewModal} onClose={goInMagePage} hide>
-            <section className="h-[100dvh] lg:h-[100dvh] overflow-auto hide-scrollbar">
-              <section className="sticky top-0 z-50 w-full bg-[#f4f4f4] lg:rounded-2xl">
-                <MemoizedHeader
-                  title="Download Preview"
-                  onBack={goInMagePage}
-                  leftIcon={<FaArrowLeft />}
-                />
-              </section>
-              <DownloadPreview />
-            </section>
-          </PopUp>
-        )}
         {eligibilityModal && (
           <PopUp show={eligibilityModal} onClose={closeModal} hide>
             <section className="h-[100dvh] lg:h-[80dvh] overflow-auto hide-scrollbar">

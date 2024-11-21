@@ -143,7 +143,7 @@ const MemoTerms = () => {
             </ul>
           )}
         </div>
-        <section className="flex flex-col mt-4">
+        <section className="flex flex-col mt-4 w-full max-w-[30rem]">
           <label htmlFor="terms" className="font-semibold opacity-50">
             Add Terms and Conditions (up to 10)
           </label>

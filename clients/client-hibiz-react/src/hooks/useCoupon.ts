@@ -90,6 +90,8 @@ export const useDeleteCoupon = () => {
 };
 
 export const useSaveCoupon = () => {
+  const resetFunction = useCouponsStore((s) => s.resetCouponState);
+  const setSelectedPage = useCouponsStore((s) => s.setSelectedPage);
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (payload: any) => {
       const response = await apiRpc.couponz.$post({
@@ -101,21 +103,36 @@ export const useSaveCoupon = () => {
       if (!data.err) {
         toast.success("Coupon saved successfully!");
         const coupon = data.data as any;
-        console.log("coupon", coupon);
-        useCouponsStore.setState({
-          couponId: coupon?._id,
-          links: coupon?.conditions?.links,
-          couponName: coupon?.name,
-          couponImage: coupon?.image,
-          couponType: coupon?.config?.discountType,
-          couponDiscount: coupon?.config?.value,
-          bgColor: coupon?.bgColour,
-          downloadPreviewModal: true,
-          couponPrice:
-            coupon.config.discountType === "PERCENTAGE"
-              ? coupon?.config?.upto
-              : coupon?.config?.value,
-        });
+        if (coupon.conditions.eligibleUser.allUsers) {
+          useCouponsStore.setState({
+            couponId: coupon?._id,
+            links: coupon?.conditions?.links,
+            couponName: coupon?.name,
+            couponImage: coupon?.image,
+            couponType: coupon?.config?.discountType,
+            couponDiscount: coupon?.config?.value,
+            minimumBillAmount: coupon?.conditions?.billValue,
+            bgColor: coupon?.bgColour,
+            cashbackAvailable: coupon?.cashbackAvailable,
+            isActive: coupon?.isActive,
+            isPublish: true,
+            couponStartDate: coupon?.conditions?.couponStartDate || null,
+            expiryClaimLimitValue:
+              coupon?.conditions?.expiryClaimLimit?.overAllLimit || 0,
+            customDays: coupon?.conditions?.availability?.customDays,
+            startTime: coupon?.conditions?.availability?.startTime || 0,
+            endTime: coupon?.conditions?.availability?.endTime || 0,
+            couponEndDate: coupon?.conditions?.couponEndDate || null,
+            selectedPage: "INFO",
+            couponPrice:
+              coupon.config.discountType === "PERCENTAGE"
+                ? coupon?.config?.upto
+                : coupon?.config?.value,
+          });
+        } else {
+          resetFunction();
+          setSelectedPage("MANAGE");
+        }
       }
     },
     onError: (error) => {
