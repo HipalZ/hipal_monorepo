@@ -17,12 +17,12 @@ import type {
   MainResponseHandling,
   WhatsAppTemplatePayload,
 } from "@/components/types/businessData";
-import { useTempStore } from "@/components/store/useTempStore";
+import { useWhatsappTempStore } from "@/components/store/useTempStore";
 
 export const useCreateTemplate = () => {
   const queryClient = useQueryClient();
   const businessId = useBusinessData((s) => s.businessData?._id);
-  const setIsLoading = useTempStore((s) => s.setIsLoading);
+  const setIsLoading = useWhatsappTempStore((s) => s.setIsLoading);
   const {
     setStep,
     setShowSuccessPopup,
@@ -82,7 +82,7 @@ export const useEditTemplate = () => {
       setTemplateStatus: s.setTemplateStatus,
       setTemplateSteps: s.setTemplateSteps,
     }));
-  const setIsLoading = useTempStore((s) => s.setIsLoading);
+  const setIsLoading = useWhatsappTempStore((s) => s.setIsLoading);
   const editTemplate = async (payload: WhatsAppTemplatePayload) => {
     // API call to edit template
     const res = await apiRpc.whatsapp.template[":templateid"].$put({
@@ -211,7 +211,11 @@ export const useMediaUpload = () => {
 };
 
 export const useSendOptions = () => {
-  const setStep = useWhatsapp((s) => s.setStep);
+  const queryClient = useQueryClient();
+  const { setStep, setTemplateSteps } = useWhatsapp((s) => ({
+    setStep: s.setStep,
+    setTemplateSteps: s.setTemplateSteps,
+  }));
   const clearMessageRecipientsStore = useMessageRecipientsStore(
     (s) => s.clearMessageRecipientsStore,
   );
@@ -221,7 +225,6 @@ export const useSendOptions = () => {
         json: payload,
       });
       const response = await res.json();
-      console.log("res  ", response);
       return response;
     },
     onSuccess: (response) => {
@@ -230,7 +233,9 @@ export const useSendOptions = () => {
       } else {
         toast.success("Message sent successfully");
       }
+      queryClient.invalidateQueries({ queryKey: ["walletHistory"] });
       clearMessageRecipientsStore();
+      setTemplateSteps(TemplateSteps.NONE);
       setStep(Step.SETUP);
     },
     onError: (error) => {

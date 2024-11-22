@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import useWhatsapp, { Step, TemplateSteps } from "../store/useWhatsapp";
+import useWhatsapp from "../store/useWhatsapp";
 import type { CropperRef } from "../types/businessData";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parse } from "papaparse";
@@ -67,7 +67,6 @@ export const useWhatzappCroppedImg = () => {
   // cropping and setting the updated height n width's imageFile and image
   const handleCrop = async (cropperRef: CropperRef) => {
     const { image, type } = cropping;
-    console.log("type", type);
     if (image && type) {
       const croppedAreaPixels = cropperRef.current?.getCroppedAreaPixels();
       if (croppedAreaPixels) {
@@ -129,7 +128,8 @@ export const useAddTemplate = () => {
 
   const handleBodyTextChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setBodyText(e.target.value);
+      const trimmedValue = normalizeInput(e.target.value);
+      setBodyText(trimmedValue);
     },
     [setBodyText],
   );
@@ -143,8 +143,7 @@ export const normalizeAndMapKeys = (
 ) => {
   const normalizeKey = (key: string) => {
     return key
-      .replace(/([a-z])([A-Z])/g, "$1 $2")
-      .replace(/[\s-_]+/g, " ")
+      .replace(/[\s-_]+/g, " ") // Replace spaces hyphens and underscores with spaces
       .toLowerCase()
       .replace(/\s+/g, "");
   };
@@ -157,18 +156,18 @@ export const normalizeAndMapKeys = (
   }, {} as any);
 };
 
+export const normalizeInput = (value: string): string => {
+  const trimmedValue = value.trimStart(); // Remove leading spaces
+  const normalizedValue = trimmedValue.replace(/\s{3,}/g, " "); // Replace more than two consecutive spaces with a single space
+  return normalizedValue;
+};
+
 // Helper function to clean and normalize phone numbers
 const normalizePhoneNumber = (phone: string): string | null => {
   const cleanedPhone = phone
-    .replace(/\s+/g, "") // Remove all spaces
     .replace(/^\+91/, "") // Remove +91 prefix only if it exists
+    .replace(/\D+/g, "") // Remove all spaces
     .trim(); // Remove leading and trailing spaces
-  console.log(
-    "cleanedPhone",
-    cleanedPhone,
-    typeof cleanedPhone,
-    cleanedPhone.length,
-  );
   // Exclude 12-digit numbers
   if (cleanedPhone.length !== 10) {
     return null; // Invalid number
@@ -278,7 +277,6 @@ export const useBulkUploadContacts = () => {
               );
 
               setBulkCustomers(uniqueContacts);
-
               resolve("Contacts uploaded successfully");
             } catch (error) {
               // Handle and display errors

@@ -1,5 +1,5 @@
 import { apiRpc } from "@hi/common";
-import { memo, useCallback, useEffect } from "react";
+import { memo, useCallback } from "react";
 import { useMerchantDetails } from "@/hooks/merchantSecret";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import toast from "react-hot-toast";
@@ -10,91 +10,109 @@ import { useState } from "react";
 import BottomButton from "@/components/atom/bottomButton";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useErrorHandling } from "@/components/utils/errorHandling";
-import { useTempStore } from "@/components/store/useTempStore";
+import { useWhatsappTempStore } from "@/components/store/useTempStore";
+import { useQueryClient } from "@tanstack/react-query";
 
 const pricingPlans = [
   {
-    id: "5000",
+    id: "10",
     name: "Wallet",
-    price: 5000,
-    marketingPrice: 0.89,
+    price: 10,
+    marketingPrice: 0.85,
     utilityPrice: 0.2,
-    messages: 5000,
+    messages: 10,
     isPopular: false,
     features: [
       "Custom Templates",
       "Analytics",
-      "Marketing Templates 5,600+ msgs Approx (or)",
-      "Utility Templates 25,000 msgs Approx",
+      "Marketing Templates 1,170+ msgs Approx (or)",
+      "Utility Templates 5,000+ msgs Approx",
+    ],
+  },
+  {
+    id: "1000",
+    name: "Wallet",
+    price: 1000,
+    marketingPrice: 0.85,
+    utilityPrice: 0.2,
+    messages: 1000,
+    isPopular: false,
+    features: [
+      "Custom Templates",
+      "Analytics",
+      "Marketing Templates 1,170+ msgs Approx (or)",
+      "Utility Templates 5,000+ msgs Approx",
+    ],
+  },
+  {
+    id: "2500",
+    name: "Piggy Bank",
+    price: 2500,
+    marketingPrice: 0.85,
+    utilityPrice: 0.2,
+    messages: 2500,
+    isPopular: false,
+    features: [
+      "Custom Templates",
+      "Advanced Analytics",
+      "Marketing Templates 2,900+ msgs Approx (or)",
+      "Utility Templates 12,500+ msgs Approx",
+    ],
+  },
+  {
+    id: "5000",
+    name: "Vault",
+    price: 5000,
+    marketingPrice: 0.85,
+    utilityPrice: 0.2,
+    messages: 5000,
+    isPopular: true,
+    features: [
+      "Custom Templates",
+      "Advanced Analytics",
+      "Marketing Templates 5,500+ Approx (or)",
+      "Utility Templates 25,000+ msgs Approx",
     ],
   },
   {
     id: "10000",
-    name: "Piggy Bank",
+    name: "Treasure Box",
     price: 10000,
-    marketingPrice: 0.89,
+    marketingPrice: 0.85,
     utilityPrice: 0.2,
     messages: 10000,
     isPopular: false,
     features: [
       "Custom Templates",
       "Advanced Analytics",
-      "Marketing Templates 11,200+ msgs Approx (or)",
-      "Utility Templates 50,000 msgs Approx",
-    ],
-  },
-  {
-    id: "25000",
-    name: "Vault",
-    price: 25000,
-    marketingPrice: 0.85,
-    utilityPrice: 0.2,
-    messages: 25000,
-    isPopular: true,
-    features: [
-      "Custom Templates",
-      "Advanced Analytics",
-      "Marketing Templates 29,000+ Approx (or)",
-      "Utility Templates 1,25,000 msgs Approx",
-    ],
-  },
-  {
-    id: "50000",
-    name: "Treasure Box",
-    price: 50000,
-    marketingPrice: 0.85,
-    utilityPrice: 0.2,
-    messages: 50000,
-    isPopular: false,
-    features: [
-      "Custom Templates",
-      "Advanced Analytics",
-      "Marketing Templates 58,800+ Approx (or)",
-      "Utility Templates 2,50,000 msgs Approx",
+      "Marketing Templates 11,760+ Approx (or)",
+      "Utility Templates 50,000+ msgs Approx",
     ],
   },
 ];
 const MemoWhatzappPayment = () => {
   const [selectedPlan, setSelectedPlan] = useState({
-    id: "5000",
-    name: "Wallet",
-    price: 5000,
-    marketingPrice: 0.89,
+    id: "2500",
+    name: "Piggy Bank",
+    price: 2500,
+    marketingPrice: 0.85,
     utilityPrice: 0.2,
-    messages: 5000,
+    messages: 2500,
+    isPopular: false,
     features: [
       "Custom Templates",
-      "Analytics",
-      "Marketing Templates 5600+ msgs Approx (or)",
-      "Utility Templates 25000 msgs Approx",
+      "Advanced Analytics",
+      "Marketing Templates 2,900+ msgs Approx (or)",
+      "Utility Templates 12,500+ msgs Approx",
     ],
   });
+  const queryClient = useQueryClient();
   const { setStep, merchantDetails, setShowError } = useWhatsapp((s) => ({
     setStep: s.setStep,
     merchantDetails: s.merchantDetails,
     setShowError: s.setShowError,
   }));
-  const { isLoading, setIsLoading } = useTempStore((s) => ({
+  const { isLoading, setIsLoading } = useWhatsappTempStore((s) => ({
     isLoading: s.isLoading,
     setIsLoading: s.setIsLoading,
   }));
@@ -231,6 +249,7 @@ const MemoWhatzappPayment = () => {
         setRazorPayPaymentId("");
         setIsLoading(false);
         setStep(Step.SETUP);
+        queryClient.invalidateQueries({ queryKey: ["walletBalance"] });
         return;
       }
       toast.error("Payment failed");
@@ -243,6 +262,7 @@ const MemoWhatzappPayment = () => {
       setRazorPayPaymentId,
       errorText,
       setStep,
+      queryClient,
     ],
   );
 
@@ -328,7 +348,6 @@ const MemoWhatzappPayment = () => {
 
   const handleCreateOrder = async () => {
     const orderId = await createRazorPayOrder(selectedPlan?.price);
-    console.log(orderId);
     setIsLoading(true);
     await creatingRazorPayOptions(orderId);
   };
@@ -381,6 +400,7 @@ const MemoWhatzappPayment = () => {
                         viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg"
                       >
+                        <title>Payment Message</title>
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -398,6 +418,7 @@ const MemoWhatzappPayment = () => {
                         viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg"
                       >
+                        <title>Marketing</title>
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -415,6 +436,7 @@ const MemoWhatzappPayment = () => {
                         viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg"
                       >
+                        <title>Utility</title>
                         <path
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -439,6 +461,7 @@ const MemoWhatzappPayment = () => {
                             viewBox="0 0 24 24"
                             xmlns="http://www.w3.org/2000/svg"
                           >
+                            <title>Features</title>
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"

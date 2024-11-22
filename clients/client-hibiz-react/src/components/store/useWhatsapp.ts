@@ -6,6 +6,7 @@ import type {
   WhatsAppTemplatePayload,
 } from "../types/businessData";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { BASE_URL } from "@/configs";
 
 export enum Step {
   SETUP = "setup",
@@ -55,11 +56,6 @@ export interface Notification {
   id: number;
   message: string;
   isRead: boolean;
-}
-
-export enum Tabs {
-  TEMPLATES = "templates",
-  CAMPAIGNS = "campaigns",
 }
 
 export interface ITotalData {
@@ -197,9 +193,6 @@ interface whatsappTemplate {
   walletBalance: number;
   setWalletBalance: (walletBalance: number) => void;
 
-  activeTab: Tabs;
-  setActiveTab: (activeTab: Tabs) => void;
-
   notEditPopup: boolean;
   setNotEditPopup: (notEditPopup: boolean) => void;
 
@@ -239,6 +232,9 @@ interface whatsappTemplate {
 
   templateAnalytics: ITemplateAnalytics[];
   setTemplateAnalytics: (analytics: ITemplateAnalytics[]) => void;
+
+  singleTemplateAnalytics: ITemplateAnalytics;
+  setSingleTemplateAnalytics: (analytic: ITemplateAnalytics) => void;
 
   totalData: ITotalData[];
   setTotalData: (totalData: ITotalData[]) => void;
@@ -389,7 +385,7 @@ export const useWhatsapp = create(
         urlType: "Static",
         setUrlType: (urlType: string) => set({ urlType }),
 
-        websiteUrl: `https://hipalz.com/${businessName}`,
+        websiteUrl: `${BASE_URL}/${businessName}`,
         setWebsiteUrl: (websiteUrl: string) => set({ websiteUrl }),
 
         phoneNumber: "",
@@ -470,7 +466,7 @@ export const useWhatsapp = create(
             actionType: ActionType.VisitWebsite,
             buttonText: "",
             urlType: "Static",
-            websiteUrl: `https://hipal-test.hipalz.com/${
+            websiteUrl: `${BASE_URL}/${
               useBusinessData.getState().businessData?.customLink || ""
             }`,
             phoneNumber: "",
@@ -499,9 +495,6 @@ export const useWhatsapp = create(
 
         walletBalance: 500,
         setWalletBalance: (walletBalance: number) => set({ walletBalance }),
-
-        activeTab: Tabs.TEMPLATES,
-        setActiveTab: (activeTab: Tabs) => set({ activeTab }),
 
         notEditPopup: false,
         setNotEditPopup: (notEditPopup: boolean) => set({ notEditPopup }),
@@ -546,6 +539,10 @@ export const useWhatsapp = create(
         templateAnalytics: [],
         setTemplateAnalytics: (analytics: ITemplateAnalytics[]) =>
           set({ templateAnalytics: analytics }),
+
+        singleTemplateAnalytics: {},
+        setSingleTemplateAnalytics: (analytic: ITemplateAnalytics) =>
+          set({ singleTemplateAnalytics: analytic }),
 
         totalData: [],
         setTotalData: (totalData: ITotalData[]) => set({ totalData }),

@@ -11,11 +11,9 @@ const MemoWalletHistory = () => {
 
   return (
     <div className="h-screen mx-4 overflow-hidden overflow-y-auto rounded-lg">
-      <div className="p-6">
-        <h2 className="text-2xl font-bold text-center text-gray-800">
-          Wallet History
-        </h2>
-      </div>
+      <h2 className="p-6 text-2xl font-bold text-center text-gray-800">
+        Wallet History
+      </h2>
       <section className="grid gap-2 md:grid-cols-3">
         {walletHistory.map((transaction) => (
           <motion.div
@@ -47,6 +45,7 @@ const MemoWalletHistory = () => {
                       viewBox="0 0 24 24"
                       stroke="currentColor"
                     >
+                      <title>Success</title>
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
