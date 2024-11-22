@@ -178,7 +178,7 @@ const businessData = [
     bizName: "DAILY BREAD ENTERPRISES",
     status: false,
     serviceCost: 4000,
-    months: 12,
+    months: 6,
     address:
       "Survey No. 35, Gundla pochampally Road, Kompally Village,Quthbullapur Hyderabad Telangana-500014",
     gst: "36AANFD8985A1Z3",
