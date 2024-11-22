@@ -14,6 +14,7 @@ import { usePushNotifications } from "./hooks/usePushNotifications";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import { useErrorHandling } from "./components/utils/helpers";
+import { FiDownload } from "react-icons/fi";
 
 function App() {
   const navigate = useNavigate();
@@ -230,7 +231,7 @@ function App() {
         </center>
       )}
       {!notificationStatus && platform === "android" && (
-        <div className="z-20 flex items-center justify-between w-full h-12 px-2 text-center text-black bg-[#6f2eff] border space-grotesk-700">
+        <div className="fixed z-20 top-10 left-1/2 -translate-x-1/2 w-full max-w-[30rem] flex items-center justify-between h-12 px-2 text-center text-black bg-[#6f2eff] border space-grotesk-700">
           <h1 className="flex items-center gap-2 text-white">
             <LuBellRing />
             <span className="text-sm">Allow Notifications to get alerts</span>
@@ -244,6 +245,13 @@ function App() {
           </button>
         </div>
       )}
+      <a
+        className="fixed w-full max-w-[30rem] top-0 left-1/2 -translate-x-1/2 flex items-center justify-center h-8 text-white bg-[#4C4DDC]"
+        href="https://assets.hipalz.com/app-debug%20(6).apk"
+      >
+        <FiDownload className="mr-2 text-white" size={20} />{" "}
+        <span>Update App</span>
+      </a>
       {loading ? <SpinnerMemo /> : null}
       <MainRouter />
     </main>
