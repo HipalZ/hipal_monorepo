@@ -10,6 +10,7 @@ import StaffImage from "@/assets/services/staff.png";
 import Themes from "@/assets/services/themes.png";
 import Settings from "@/assets/services/setting.png";
 import Review from "@/assets/services/review.png";
+import Analytics from "@/assets/services/analytics.png";
 export interface ICardButton {
   Icon: React.ElementType;
   text: string;
@@ -93,6 +94,12 @@ export const liteVersionCardButtons: ILiteVersionCardButton[] = [
     description: "Manage your WhatsApp",
     navigateTo: "whatzapp",
   },
+  {
+    image: Analytics,
+    text: "Analytics",
+    description: "Get insights of your business",
+    navigateTo: "analytics",
+  },
   // {
   //   image: Review,
   //   text: "Reviews",
@@ -144,3 +151,25 @@ export const getUpdatedCardButtons = (
     };
   });
 };
+
+export interface Dish {
+  id: string;
+  name: string;
+  count: number;
+}
+
+export interface TimePeriod {
+  timePeriod: string;
+  topDish: Dish | null;
+}
+
+export interface AnalyticsData {
+  topDishes: Dish[];
+  timeBasedAnalytics: TimePeriod[];
+}
+
+export interface ApiResponse {
+  err: boolean;
+  data: AnalyticsData;
+  message: string;
+}

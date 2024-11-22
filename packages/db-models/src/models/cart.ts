@@ -53,11 +53,14 @@ const CartSchema = new Schema<CartType>(
     },
     createdAt: {
       type: Date,
-
-      expires: 60 * 60 * 24,
+      expires: 60 * 60 * 24 * 30,
     },
     message: {
       type: String,
+    },
+    isArchived: {
+      type: Boolean,
+      default: false,
     },
   },
   {

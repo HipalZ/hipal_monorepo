@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 export const useDeleteCart = () => {
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (cartID: string) => {
-      const res = await apiRpc.cart[":id"].$delete({
+      const res = await apiRpc.cart.archive[":id"].$put({
         param: {
           id: cartID,
         },

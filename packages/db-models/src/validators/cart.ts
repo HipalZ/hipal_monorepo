@@ -33,6 +33,7 @@ export const cartSchema = z.object({
   cart: z.array(CartItemSchema),
   date: z.number().optional(),
   message: z.string().optional(),
+  isArchived: z.boolean().optional(),
   createdAt: z.date().optional(),
 });
 
