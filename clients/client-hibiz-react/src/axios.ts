@@ -1,8 +1,8 @@
-import { BASE_URL } from "@/configs";
+import { API_URL } from "@/configs";
 import axiosConstructor from "axios";
 ////
 const axios = axiosConstructor.create({
-  baseURL: BASE_URL,
+  baseURL: API_URL,
 });
 //
 axios.interceptors.request.use(

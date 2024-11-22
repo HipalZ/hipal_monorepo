@@ -1,14 +1,13 @@
 import { memo, useCallback, useState, lazy } from "react";
-import { useQuery } from "@tanstack/react-query";
-import useBusinessData from "@/components/store/useBusinessData";
-import { useTemplateAnalytics } from "@/hooks/useTemplates";
 import useWhatsapp, {
   Step,
-  Tabs,
   TemplateSteps,
 } from "@/components/store/useWhatsapp";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
 import toast from "react-hot-toast";
+import { Tabs, useWhatsappTempStore } from "@/components/store/useTempStore";
+import { apiRpc } from "@hi/common";
+import useBusinessData from "@/components/store/useBusinessData";
+import type { WhatsAppTemplatePayload } from "@/components/types/businessData";
 
 const CampaignDetails = lazy(() => import("./campaignDetails"));
 export interface Campaign {
@@ -23,41 +22,75 @@ export interface Campaign {
 const MemoCampaignAnalytics: React.FC = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
   const {
-    activeTab,
     allTemplates,
-    setActiveTab,
     setTemplateData,
-    templateAnalytics,
-    totalData,
     setTemplateSteps,
     setStep,
+    setSingleTemplateAnalytics,
   } = useWhatsapp((s) => ({
-    activeTab: s.activeTab,
     allTemplates: s.allTemplates,
-    setActiveTab: s.setActiveTab,
     setTemplateData: s.setTemplateData,
-    templateAnalytics: s.templateAnalytics,
-    totalData: s.totalData,
     setTemplateSteps: s.setTemplateSteps,
     setStep: s.setStep,
+    setSingleTemplateAnalytics: s.setSingleTemplateAnalytics,
   }));
-  const { getTemplateAnalytics } = useTemplateAnalytics();
+  const { setActiveTab } = useWhatsappTempStore((s) => ({
+    setActiveTab: s.setActiveTab,
+  }));
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
     null,
   );
+  const [loadingTemplateId, setLoadingTemplateId] = useState<string | null>(
+    null,
+  );
+  const [openAccordionId, setOpenAccordionId] = useState<string | null>(null);
 
-  const handleViewClick = useCallback((campaign: Campaign) => {
-    setSelectedCampaign((prev) =>
-      prev?.templateName === campaign.templateName ? null : campaign,
-    );
-  }, []);
+  const getTemplateAnaylyticsById = useCallback(
+    async (templateId: string) => {
+      setLoadingTemplateId(templateId);
+      try {
+        const res = await apiRpc.whatsapp.analytics.by_template_id.$get({
+          query: {
+            templateId,
+            businessId,
+          },
+        });
+
+        const response = await res.json();
+        if (res.status === 200 || res.status === 201) {
+          setSingleTemplateAnalytics(response?.data);
+          setSelectedCampaign(response?.data);
+          setOpenAccordionId(templateId);
+        } else {
+          toast.error("Failed to fetch analytics data");
+        }
+      } catch (error) {
+        console.error("Error fetching analytics:", error);
+        toast.error("An error occurred while fetching analytics data");
+      } finally {
+        setLoadingTemplateId(null);
+      }
+    },
+    [businessId, setSingleTemplateAnalytics],
+  );
+
+  const handleViewClick = useCallback(
+    async (campaign: WhatsAppTemplatePayload) => {
+      if (openAccordionId === campaign.id) {
+        setOpenAccordionId(null);
+      } else {
+        setOpenAccordionId(campaign.id);
+        await getTemplateAnaylyticsById(campaign.id);
+      }
+    },
+    [getTemplateAnaylyticsById, openAccordionId],
+  );
 
   const handleCampaign = useCallback(
-    (campaign: Campaign) => {
+    (campaign: WhatsAppTemplatePayload) => {
       const filteredCampaign = allTemplates?.find(
-        (template) => template.name === campaign.templateName,
+        (template) => template.name === campaign.name,
       );
-      console.log(filteredCampaign);
       if (filteredCampaign) {
         if (filteredCampaign.status === "REJECTED") {
           toast.error(
@@ -65,6 +98,7 @@ const MemoCampaignAnalytics: React.FC = () => {
           );
           return;
         }
+        console.log("filteredCampaign", filteredCampaign);
         setTemplateData(filteredCampaign);
         setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
         setStep(Step.CREATE_EDIT);
@@ -75,12 +109,6 @@ const MemoCampaignAnalytics: React.FC = () => {
     [setTemplateData, setActiveTab, allTemplates, setTemplateSteps, setStep],
   );
 
-  const { isPending } = useQuery({
-    queryKey: ["templatesAnalytics", businessId, activeTab],
-    queryFn: getTemplateAnalytics,
-    enabled: !!businessId && activeTab === Tabs.CAMPAIGNS,
-  });
-
   return (
     <div className="w-full mx-auto mb-6 bg-white rounded-lg shadow-md">
       <div className="p-2 border-b lg:p-4">
@@ -89,106 +117,73 @@ const MemoCampaignAnalytics: React.FC = () => {
           Overview of your WhatsApp campaign performance
         </p>
       </div>
-      <div className="p-2 lg:p-4">
-        <div className="grid grid-cols-2 gap-4 mb-6 md:grid-cols-4">
-          <div className="p-4 bg-[#8884d8] text-white rounded-lg shadow">
-            <div className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <h3 className="text-sm font-medium">Total Sent</h3>
-            </div>
-            <div className="text-2xl font-bold">
-              {totalData[0]?.totalSent || 0}
-            </div>
-          </div>
-          <div className="p-4 bg-[#82ca9d] text-white rounded-lg shadow">
-            <div className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <h3 className="text-sm font-medium">Total Delivered</h3>
-            </div>
-            <div className="text-2xl font-bold">
-              {totalData[0]?.totalDelivered || 0}
-            </div>
-          </div>
-          <div className="p-4 bg-[#ffc658] text-white rounded-lg shadow">
-            <div className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <h3 className="text-sm font-medium">Total Read</h3>
-            </div>
-            <div className="text-2xl font-bold">
-              {totalData[0]?.totalRead || 0}
-            </div>
-          </div>
-          <div className="p-4 bg-[#ff8042] text-white rounded-lg shadow">
-            <div className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <h3 className="text-sm font-medium">Total Clicked</h3>
-            </div>
-            <div className="text-2xl font-bold">
-              {totalData[0]?.totalClicked || 0}
-            </div>
-          </div>
-        </div>
-        {isPending ? (
-          <LoadingSpinner />
-        ) : (
-          <div className="mt-4 overflow-x-auto min-h-[200px] h-full max-h-[600px] overflow-y-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="p-2 text-left">Name</th>
-                  <th className="p-2 text-left">Sent</th>
-                  <th className="p-2 text-left">Delivered</th>
-                  <th className="p-2 text-left">Read</th>
-                  <th className="p-2 text-left">Clicked</th>
-                  <th className="p-2 text-left">Actions</th>
-                  <th className="p-2 text-left">Campaign</th>
-                </tr>
-              </thead>
-              {templateAnalytics.map((campaign) => {
-                return (
-                  <tbody key={campaign?.templateName}>
-                    <tr className="border-b">
-                      <td className="w-10 p-2 truncate">
-                        {campaign?.templateName}
-                      </td>
-                      <td className="w-10 p-2">{campaign?.sent}</td>
-                      <td className="w-10 p-2">{campaign?.delivered}</td>
-                      <td className="w-10 p-2">{campaign?.read}</td>
-                      <td className="w-10 p-2">{campaign?.clicked}</td>
-                      <td className="w-24 p-2">
-                        <button
-                          type="button"
-                          className="w-12 p-1 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                          onClick={() => handleViewClick(campaign)}
-                        >
-                          {selectedCampaign?.templateName ===
-                          campaign?.templateName
-                            ? "Hide"
-                            : "View"}
-                        </button>
-                      </td>
-                      <td className="w-12 p-2">
-                        <button
-                          type="button"
-                          className="w-24 p-1 text-white bg-green-500 rounded-md md:w-36 hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-                          onClick={() => handleCampaign(campaign)}
-                        >
-                          Start Campaign
-                        </button>
-                      </td>
-                    </tr>
-                    {selectedCampaign?.templateName ===
-                      campaign.templateName && (
-                      <tr>
-                        <td colSpan={7}>
-                          {selectedCampaign && (
-                            <CampaignDetails campaign={selectedCampaign} />
-                          )}
-                        </td>
-                      </tr>
+      <div className="p-2 lg:p-4 overflow-x-auto min-h-[200px] h-full max-h-[600px] overflow-y-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b">
+              <th className="p-2 text-left">Name</th>
+              <th className="p-2 text-left">Category</th>
+              <th className="p-2 text-left">Status</th>
+              <th className="p-2 text-left">Actions</th>
+              <th className="p-2 text-left">Campaign</th>
+            </tr>
+          </thead>
+          {allTemplates?.map((campaign) => (
+            <tbody key={campaign?.templateId}>
+              <tr className="border-b">
+                <td className="w-10 p-2 truncate">{campaign?.name}</td>
+                <td className="w-10 p-2">{campaign?.category}</td>
+                <td className="w-10">
+                  <span
+                    className={`px-2 py-1 lowercase rounded-lg ${
+                      campaign?.status === "APPROVED" ||
+                      campaign?.status === "PENDING"
+                        ? "text-green-500 bg-green-100"
+                        : ""
+                    }`}
+                  >
+                    {campaign?.status}
+                  </span>
+                </td>
+                <td className="w-24 p-2">
+                  <button
+                    type="button"
+                    className="w-12 p-1 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                    onClick={() => handleViewClick(campaign)}
+                    disabled={loadingTemplateId === campaign.id}
+                  >
+                    {loadingTemplateId === campaign.id ? (
+                      <span className="inline-block animate-spin">↻</span>
+                    ) : openAccordionId === campaign.id ? (
+                      "Hide"
+                    ) : (
+                      "View"
                     )}
-                  </tbody>
-                );
-              })}
-            </table>
-          </div>
-        )}
+                  </button>
+                </td>
+                <td className="w-12 p-2">
+                  <button
+                    type="button"
+                    className="w-24 p-1 text-sm text-white bg-green-500 rounded-md md:w-36 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                    onClick={() => handleCampaign(campaign)}
+                  >
+                    Start Campaign
+                  </button>
+                </td>
+              </tr>
+              {openAccordionId === campaign.id && (
+                <tr>
+                  <td colSpan={5}>
+                    {selectedCampaign &&
+                      selectedCampaign.templateName === campaign.name && (
+                        <CampaignDetails campaign={selectedCampaign} />
+                      )}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          ))}
+        </table>
       </div>
     </div>
   );

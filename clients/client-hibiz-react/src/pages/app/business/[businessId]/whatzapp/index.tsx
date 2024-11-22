@@ -51,6 +51,8 @@ const MemoWhatzapp = () => {
   const navigate = useNavigate();
 
   const handleBack = useCallback(() => {
+    console.log("templateSteps", templateSteps);
+    console.log("step", step);
     if (templateSteps !== TemplateSteps.NONE) {
       switch (templateSteps) {
         case TemplateSteps.MODIFY:

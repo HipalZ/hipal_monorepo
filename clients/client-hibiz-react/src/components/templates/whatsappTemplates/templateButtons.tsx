@@ -5,17 +5,12 @@ import {
   ShowOptions,
   useMessageRecipientsStore,
 } from "@/components/store/useMessageRecipientsStore";
-import useWhatsapp, {
-  Step,
-  TemplateSteps,
-} from "@/components/store/useWhatsapp";
+import useWhatsapp, { TemplateSteps } from "@/components/store/useWhatsapp";
 import { useSendOptions } from "@/hooks/useTemplates";
-import { useQueryClient } from "@tanstack/react-query";
 import { memo, useCallback } from "react";
 import toast from "react-hot-toast";
 
 const MemoTemplateButtons = () => {
-  const queryClient = useQueryClient();
   const {
     templateId,
     templateName,
@@ -23,7 +18,6 @@ const MemoTemplateButtons = () => {
     templateSteps,
     setTemplateSteps,
     templateStatus,
-    setStep,
   } = useWhatsapp((s) => ({
     templateId: s.templateId,
     templateName: s.templateName,
@@ -31,7 +25,6 @@ const MemoTemplateButtons = () => {
     templateSteps: s.templateSteps,
     setTemplateSteps: s.setTemplateSteps,
     templateStatus: s.templateStatus,
-    setStep: s.setStep,
   }));
   const { businessName, businessId } = useBusinessData((s) => ({
     businessName: s.businessData?.name,
@@ -69,18 +62,7 @@ const MemoTemplateButtons = () => {
       ...(sendLaterTime && sendLaterTime > 0 && { time: sendLaterTime }),
       ...(testNumber?.length > 0 && { customerPhone: testNumber }),
     };
-    sendOptions.mutate(payload, {
-      onSuccess: () => {
-        setStep(Step.SETUP);
-        setTemplateSteps(TemplateSteps.NONE);
-        queryClient.invalidateQueries({ queryKey: ["walletHistory"] });
-      },
-      onError: () => {
-        setStep(Step.SETUP);
-        setTemplateSteps(TemplateSteps.NONE);
-        console.log("Error sending message");
-      },
-    });
+    sendOptions.mutate(payload);
   }, [
     selectedOptions,
     bulkCustomers,
@@ -91,9 +73,6 @@ const MemoTemplateButtons = () => {
     sendLaterTime,
     sendOptions,
     testNumber,
-    setStep,
-    setTemplateSteps,
-    queryClient,
   ]);
 
   // handle next button click

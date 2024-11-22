@@ -6,7 +6,6 @@ import { memo, useCallback } from "react";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
 import DishStepTwo from "./dishStepTwo";
 import { useAddons } from "@/hooks/useDish";
-import ReactCropper from "@/components/cropper";
 import { handleCrop } from "@/components/utils/helper";
 import LinkItems from "./[editDish]/linkItems";
 import LinkTags from "./[editDish]/linkTags";
@@ -71,7 +70,7 @@ const MemoCreateDish = () => {
         setOpenMenu(false);
         break;
     }
-  }, [dishStep]);
+  }, [setDishStep, setOpenMenu, dishStep]);
 
   const handleHeader = () => {
     switch (dishStep) {

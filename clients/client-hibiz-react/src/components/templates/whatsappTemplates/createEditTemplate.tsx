@@ -5,7 +5,7 @@ import PopUp from "@/components/atom/popUp";
 import EasyReactCropper from "@/components/cropper/cropper";
 import { useWhatzappCroppedImg } from "@/components/helpers/whatzAppHelpers";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
-import { useTempStore } from "@/components/store/useTempStore";
+import { useWhatsappTempStore } from "@/components/store/useTempStore";
 
 const CallOfAction = lazy(() => import("./callOfAction"));
 const TemplateButtons = lazy(() => import("./templateButtons"));
@@ -49,7 +49,7 @@ const MemoCreateEditTemplate = () => {
   };
 
   // proceed forward after success popup
-  const isLoading = useTempStore((s) => s.isLoading);
+  const isLoading = useWhatsappTempStore((s) => s.isLoading);
 
   return (
     <form onSubmit={handleSubmitReview}>

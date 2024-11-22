@@ -2,7 +2,10 @@ import { lazy, memo, useCallback } from "react";
 import { BiPlus } from "react-icons/bi";
 import { IoMdClose } from "react-icons/io";
 import useWhatsapp, { HeaderInterface } from "@/components/store/useWhatsapp";
-import { useAddTemplate } from "@/components/helpers/whatzAppHelpers";
+import {
+  normalizeInput,
+  useAddTemplate,
+} from "@/components/helpers/whatzAppHelpers";
 
 const CouponContent = lazy(() => import("./couponContent"));
 const ImageContent = lazy(() => import("./imageContent"));
@@ -115,7 +118,10 @@ const MemoContent = () => {
               maxLength={512}
               value={headerText}
               placeholder="Enter header text"
-              onChange={(e) => setHeaderText(e.target.value)}
+              onChange={(e) => {
+                const trimmedValue = normalizeInput(e.target.value);
+                setHeaderText(trimmedValue);
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
             <small className="absolute text-gray-500 bottom-2 right-3">

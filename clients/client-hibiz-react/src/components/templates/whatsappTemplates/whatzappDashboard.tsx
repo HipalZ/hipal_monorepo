@@ -1,7 +1,6 @@
 import { lazy, memo, useCallback } from "react";
 import useWhatsapp, {
   Step,
-  Tabs,
   TemplateSteps,
   TemplateType,
 } from "@/components/store/useWhatsapp";
@@ -10,6 +9,9 @@ import { useQuery } from "@tanstack/react-query";
 import useBusinessData from "@/components/store/useBusinessData";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import BottomButton from "@/components/atom/bottomButton";
+import { MdCampaign } from "react-icons/md";
+import { HiOutlineTemplate } from "react-icons/hi";
+import { Tabs, useWhatsappTempStore } from "@/components/store/useTempStore";
 
 const TemplatesCarousel = lazy(() => import("./templatesCarousel"));
 const CampaignAnalytics = lazy(() => import("./campaignAnalytics"));
@@ -19,20 +21,22 @@ const MemoWhatzappDashboard = () => {
   const {
     setStep,
     setTemplateSteps,
-    activeTab,
-    setActiveTab,
     setTemplateType,
     resetTemplateData,
     setShowSuccessPopup,
   } = useWhatsapp((s) => ({
     setStep: s.setStep,
     setTemplateSteps: s.setTemplateSteps,
-    activeTab: s.activeTab,
-    setActiveTab: s.setActiveTab,
     setTemplateType: s.setTemplateType,
     resetTemplateData: s.resetTemplateData,
     setShowSuccessPopup: s.setShowSuccessPopup,
   }));
+
+  const { activeTab, setActiveTab } = useWhatsappTempStore((s) => ({
+    setActiveTab: s.setActiveTab,
+    activeTab: s.activeTab,
+  }));
+
   const businessId = useBusinessData((s) => s.businessData?._id);
 
   const { getTemplates } = useFetchTemplates();
@@ -55,6 +59,17 @@ const MemoWhatzappDashboard = () => {
     ],
   );
 
+  const getTabIcon = useCallback((tab: Tabs) => {
+    switch (tab) {
+      case Tabs.CAMPAIGNS:
+        return <MdCampaign className="w-5 h-5 mr-2" />;
+      case Tabs.TEMPLATES:
+        return <HiOutlineTemplate className="w-5 h-5 mr-2" />;
+      default:
+        return null;
+    }
+  }, []);
+
   const { isPending } = useQuery({
     queryKey: ["templates", businessId, activeTab],
     queryFn: getTemplates,
@@ -69,14 +84,15 @@ const MemoWhatzappDashboard = () => {
             <li key={tab}>
               <button
                 type="button"
-                className={`capitalize px-4 py-2 rounded-lg transition-colors duration-300 ${
+                className={`flex items-center capitalize px-4 py-2 rounded-lg transition-colors duration-300 ${
                   activeTab === tab
                     ? "bg-[#075E54] text-white shadow-lg"
                     : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
                 }`}
                 onClick={() => setActiveTab(tab)}
               >
-                {tab}
+                {getTabIcon(tab)}
+                <span>{tab}</span>
               </button>
             </li>
           ))}

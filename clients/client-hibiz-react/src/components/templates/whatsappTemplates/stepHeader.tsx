@@ -9,17 +9,16 @@ const MemoStepHeader = () => {
     templateId: s.templateId,
     setTemplateSteps: s.setTemplateSteps,
   }));
-
-  const { selectedOptions } = useMessageRecipientsStore((s) => ({
-    selectedOptions: s.selectedOptions,
-  }));
-
   const handleTemplateStep = useCallback(
     (step: TemplateSteps) => {
       setTemplateSteps(step);
     },
     [setTemplateSteps],
   );
+
+  const { selectedOptions } = useMessageRecipientsStore((s) => ({
+    selectedOptions: s.selectedOptions,
+  }));
 
   return (
     <nav aria-label="Progress" className="pb-4 overflow-x-auto md:pb-0">

@@ -1,6 +1,6 @@
 import MiddlePopUp from "@/components/atom/middlePopUp";
 import useBusinessData from "@/components/store/useBusinessData";
-import { useTempStore } from "@/components/store/useTempStore";
+import { useWhatsappTempStore } from "@/components/store/useTempStore";
 import useWhatsapp, {
   ActionType,
   HeaderInterface,
@@ -58,7 +58,7 @@ const MemoTemplateTerms = () => {
     imagePreview: s.imagePreview,
   }));
 
-  const { setIsLoading } = useTempStore((s) => ({
+  const { setIsLoading } = useWhatsappTempStore((s) => ({
     setIsLoading: s.setIsLoading,
   }));
   // calling media api

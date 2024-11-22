@@ -2,6 +2,7 @@ import { memo } from "react";
 import { Switch, Disclosure, DisclosurePanel } from "@headlessui/react";
 import { BiChevronDown } from "react-icons/bi";
 import useWhatsapp, { ActionType } from "@/components/store/useWhatsapp";
+import { normalizeInput } from "@/components/helpers/whatzAppHelpers";
 
 const MemoCallOfAction = () => {
   const {
@@ -101,7 +102,10 @@ const MemoCallOfAction = () => {
                         ? ActionType.VisitWebsite
                         : ActionType.CallUs
                     }
-                    onChange={(e) => setButtonText(e.target.value)}
+                    onChange={(e) => {
+                      const trimmedValue = normalizeInput(e.target.value);
+                      setButtonText(trimmedValue);
+                    }}
                     maxLength={25}
                     className="block w-full pr-16 border-gray-300 rounded-md sm:text-sm focus:ring-blue-500 focus:border-blue-500"
                   />
@@ -129,7 +133,10 @@ const MemoCallOfAction = () => {
                         isButtonEnabled &&
                         actionType === ActionType.VisitWebsite
                       }
-                      onChange={(e) => setWebsiteUrl(e.target.value)}
+                      onChange={(e) => {
+                        const trimmedValue = normalizeInput(e.target.value);
+                        setWebsiteUrl(trimmedValue);
+                      }}
                       maxLength={2000}
                       className="block w-full pr-16 border-gray-300 rounded-md sm:text-sm focus:ring-blue-500 focus:border-blue-500"
                     />
@@ -160,7 +167,12 @@ const MemoCallOfAction = () => {
                         isButtonEnabled && actionType === ActionType.CallUs
                       }
                       value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      onChange={(e) => {
+                        const trimmedValue = normalizeInput(
+                          e.target.value.replace(/\D/g, ""),
+                        );
+                        setPhoneNumber(trimmedValue);
+                      }}
                       maxLength={15}
                       className="block w-full border-gray-300 min-w-28 rounded-r-md sm:text-sm focus:ring-blue-500 focus:border-blue-500"
                     />
