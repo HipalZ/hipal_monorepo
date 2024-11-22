@@ -155,7 +155,6 @@ const businessesRouter = new Hono()
           }
 
           if (themes) {
-            console.log("themes", themes);
             const outLet = await OutLetInfo.findOne({
               businessId: parentOutLetId,
             }).lean();
@@ -164,7 +163,6 @@ const businessesRouter = new Hono()
 
             delete outLet._id;
 
-            console.log("outLet", outLet);
             await OutLetInfo.create(
               [{ ...outLet, businessId: currentBusinessId }],
               { session },
@@ -186,6 +184,14 @@ const businessesRouter = new Hono()
               delete themesData._id;
               await Theme.create(
                 [{ theme: themesData.theme, businessId: currentBusinessId }],
+                { session },
+              );
+
+              await Business.findByIdAndUpdate(
+                currentBusinessId,
+                {
+                  themeApplied: true,
+                },
                 { session },
               );
             }
@@ -839,6 +845,21 @@ const businessesRouter = new Hono()
       if (!existingTheme) return respond(c, "theme not found", true, 404, {});
 
       return respond(c, "theme found", false, 200, existingTheme);
+    },
+  )
+
+  .get(
+    "/all_logos",
+
+    zValidator("param", z.object({ businessId: z.string() })),
+    async (c) => {
+      const existingBusinesses = await Business.find({}).select("logo name");
+
+      return c.json({
+        data: existingBusinesses,
+        status: 200,
+        error: false,
+      });
     },
   );
 

@@ -116,52 +116,79 @@ const settingsRouter = new Hono()
       ClientRoles.HIPAL_CUSTOMER,
       ClientRoles.CAPTAIN,
     ]),
-
     zValidator("json", BusinessSettingsSchema.partial()),
     zValidator("param", z.object({ settingsId: z.string() })),
-
     async (c) => {
-      const requestData = await c.req.json();
+      try {
+        const requestData = await c.req.json();
+        const { settingsId } = c.req.param();
 
-      const {
-        registerName,
-        registerType,
-        establishmentYear,
-        panNumber,
-        gstNumber,
-        bankName,
-        accountNumber,
-        ifscCode,
-        branchName,
-        beneficiaryName,
-      } = requestData;
-      const { settingsId } = c.req.param();
-      const updateSetting = await BusinessSettings.findByIdAndUpdate(
-        settingsId,
-        {
-          registerName,
-          registerType,
-          establishmentYear,
-          panNumber,
-          gstNumber,
-          bankName,
-          accountNumber,
-          ifscCode,
-          branchName,
-          beneficiaryName,
-        },
-        { new: true },
-      );
-      if (!updateSetting)
-        return respond(c, "Error in updating setting", true, 400, {});
+        const updateData = {
+          registerName: requestData.registerName,
+          registerType: requestData.registerType,
+          establishmentYear: requestData.establishmentYear,
+          panNumber: requestData.panNumber,
+          gstNumber: requestData.gstNumber,
+          bankName: requestData.bankName,
+          accountNumber: requestData.accountNumber,
+          ifscCode: requestData.ifscCode,
+          branchName: requestData.branchName,
+          beneficiaryName: requestData.beneficiaryName,
+        };
 
-      return respond(
-        c,
-        "Setting updated successfully",
-        false,
-        200,
-        updateSetting,
-      );
+        const updateSetting = await BusinessSettings.findByIdAndUpdate(
+          settingsId,
+          updateData,
+          { new: true },
+        );
+
+        if (!updateSetting) {
+          return respond(c, "Error in updating setting", true, 400, {});
+        }
+
+        if (
+          requestData.razorpayKeyId &&
+          requestData.razorpayKeySecret &&
+          requestData.razorpayMerchantId &&
+          requestData.razorpayWebhookSecret
+        ) {
+          const deletes = cache.delete(requestData.businessId as string);
+          console.log("deletes", deletes);
+
+          await BusinessSettings.findByIdAndUpdate(settingsId, {
+            razorpayKeyId: requestData.razorpayKeyId,
+            razorpayKeySecret: requestData.razorpayKeySecret,
+            razorpayMerchantId: requestData.razorpayMerchantId,
+            razorpayWebhookSecret: requestData.razorpayWebhookSecret,
+          });
+
+          try {
+            await razorpayWrapper.create(requestData.razorpayMerchantId);
+            console.log(
+              "Razorpay instance created successfully",
+              requestData.razorpayMerchantId,
+            );
+          } catch (err) {
+            return respond(
+              c,
+              "Error in creating Razorpay instance",
+              true,
+              400,
+              {},
+            );
+          }
+        }
+
+        return respond(
+          c,
+          "Setting updated successfully",
+          false,
+          200,
+          updateSetting,
+        );
+      } catch (error) {
+        return respond(c, "Error in updating setting", true, 500, { error });
+      }
     },
   )
   .get(
@@ -336,15 +363,6 @@ const settingsRouter = new Hono()
           .select("razorpayMerchantId razorpayKeyId businessId")
           .lean();
         await cache.set(businessId as string, merchant as MerChantDetails);
-      }
-
-      console.log("form cache", merchant);
-      if (businessId === "66a8032dd1afb0385308ba86") {
-        merchant = {
-          businessId: "66a8032dd1afb0385308ba86",
-          razorpayMerchantId: "OnqWcKffL2kgJx",
-          razorpayKeyId: "rzp_live_j4TGFR1g1Ah1kv",
-        };
       }
 
       const razorpayObject = {

@@ -17,9 +17,11 @@ import {
 } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import type { ClientSession } from "mongoose";
 import { schedule } from "node-cron";
 import { z } from "zod";
 
+import { runInTransaction } from "@hi/utils";
 import { nanoid } from "nanoid";
 import { respond } from "../../utils/response";
 
@@ -208,169 +210,194 @@ const couponzRouter = new Hono()
     },
   )
   .post("/", zValidator("json", couponSchema), async (c) => {
-    const { conditions } = await c.req.json();
-    const requestData = await c.req.json();
-    const { availability, eligibleUser } = conditions;
+    //@ts-ignore
+    return runInTransaction(async (session: ClientSession) => {
+      const { conditions } = await c.req.json();
+      const requestData = await c.req.json();
+      const { availability, eligibleUser } = conditions;
 
-    const noExpiryWhenValues = [
-      "allthetime",
-      "birthday",
-      "birthdayweek",
-      "birthdaymonth",
-    ];
+      const noExpiryWhenValues = [
+        "allthetime",
+        "birthday",
+        "birthdayweek",
+        "birthdaymonth",
+      ];
 
-    if (noExpiryWhenValues.includes(availability.when)) {
-      conditions.couponStartDate = 0;
-      conditions.couponEndDate = 0;
-      availability.startTime = 0;
-      availability.endTime = 24;
-    }
-
-    // Clear requiredFields if eligibleUser has userIds or groupIds
-    if (
-      eligibleUser?.userIds?.length > 0 ||
-      eligibleUser?.groupIds?.length > 0
-    ) {
-      conditions.requiredFields = [];
-    }
-    if (availability.startTime === 0 && availability.endTime === 0) {
-      availability.startTime = 0;
-      availability.endTime = 24;
-    }
-
-    const createdCoupon = await Couponz.create(requestData);
-
-    if (!createdCoupon) {
-      return c.json({
-        err: true,
-        message: "not created",
-        data: {},
-      });
-    }
-
-    // Schedule deactivation if couponEndDate is set
-    if (createdCoupon.conditions.couponEndDate > 0) {
-      const reminderDateObj = new Date(createdCoupon.conditions.couponEndDate);
-      const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
-        reminderDateObj.getMonth() + 1
-      } *`;
-
-      schedule(cronExpression, async () => {
-        await Couponz.findByIdAndUpdate(createdCoupon._id, {
-          isActive: false,
-          isDeleted: true,
-          isExpired: true,
-        });
-      });
-    }
-
-    // Find or create default channel
-    let channelId = await CouponChannel.findOne({
-      name: "default",
-      businessId: createdCoupon.businessId,
-    }).select("_id");
-
-    if (!channelId) {
-      channelId = await CouponChannel.create({
-        businessId: createdCoupon.businessId,
-        name: "default",
-        date: Date.now(),
-        isActive: true,
-      });
-    }
-
-    // Generate short URL
-    const longUrl = `https://api.test.hipalz.com/coupon-analytics/social/${createdCoupon.businessId}/${createdCoupon._id}/${channelId?._id}`;
-    const uniqueOrderId = nanoid(10);
-    let createShortUrl = await UrlModel.findOne({ longUrl });
-
-    if (!createShortUrl) {
-      createShortUrl = await UrlModel.create({
-        longUrl: longUrl,
-        shortUrl: `https://api.test.hipalz.com/hipalz/${uniqueOrderId}`,
-        urlCode: uniqueOrderId,
-      });
-    }
-
-    // Create coupon link
-    await CouponLink.create({
-      businessId: createdCoupon.businessId,
-      couponId: createdCoupon._id,
-      channelId: channelId?._id,
-      date: Date.now(),
-      link: createShortUrl.shortUrl,
-    });
-    const { userIds = [], groupIds = [] } =
-      createdCoupon?.conditions?.eligibleUser || {};
-
-    const scheduleCouponForUser = async (userId: string) => {
-      await createAndScheduleCoupon(
-        userId.toString(),
-        createdCoupon.businessId.toString(),
-        createdCoupon.conditions.expiryAfterGrabbed ?? 0,
-        createdCoupon._id.toString(),
-        createdCoupon.conditions.couponEndDate,
-      );
-    };
-
-    for (const userId of userIds) {
-      await scheduleCouponForUser(userId.toString());
-    }
-
-    for (const groupId of groupIds) {
-      const group = await GroupModel.findById(groupId);
-      for (const userId of group?.userIds || []) {
-        await scheduleCouponForUser(userId.toString());
+      if (noExpiryWhenValues.includes(availability.when)) {
+        conditions.couponStartDate = 0;
+        conditions.couponEndDate = 0;
+        availability.startTime = 0;
+        availability.endTime = 24;
       }
-    }
 
-    const couponResponse = {
-      _id: createdCoupon._id,
-      businessId: createdCoupon.businessId,
-      name: createdCoupon.name,
-      config: {
-        value: createdCoupon.config.value,
-        discountType: createdCoupon.config.discountType,
-        upto: createdCoupon.config.upto,
-      },
-      image: createdCoupon.image,
-      bgColour: createdCoupon.bgColour,
-      isActive:createdCoupon.isActive,
-      conditions: {
-        billValue: createdCoupon.conditions.billValue,
-        couponStartDate: createdCoupon.conditions.couponStartDate,
-        couponEndDate: createdCoupon.conditions.couponEndDate,
-        requiredFields: createdCoupon.conditions.requiredFields,
-        availability: {
-          when: createdCoupon.conditions.availability.when,
-          startTime: createdCoupon.conditions.availability.startTime,
-          endTime: createdCoupon.conditions.availability.endTime,
-          customDays: createdCoupon.conditions.availability.customDays,
-        },
-        eligibleUser: {
-          allUsers: createdCoupon.conditions.eligibleUser.allUsers,
-        },
+      // Clear requiredFields if eligibleUser has userIds or groupIds
+      if (
+        eligibleUser?.userIds?.length > 0 ||
+        eligibleUser?.groupIds?.length > 0
+      ) {
+        conditions.requiredFields = [];
+      }
+      if (availability.startTime === 0 && availability.endTime === 0) {
+        availability.startTime = 0;
+        availability.endTime = 24;
+      }
 
-        tc: createdCoupon.conditions.tc,
-        links: [
-          {
-            channelId: {
-              _id: channelId?._id,
-              name: "default",
+      const createdCoupon = await Couponz.create([requestData], { session });
+
+      if (!createdCoupon) {
+        return c.json({
+          err: true,
+          message: "not created",
+          data: {},
+        });
+      }
+
+      // Schedule deactivation if couponEndDate is set
+      if (createdCoupon[0].conditions.couponEndDate > 0) {
+        const reminderDateObj = new Date(
+          createdCoupon[0].conditions.couponEndDate,
+        );
+        const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
+          reminderDateObj.getMonth() + 1
+        } *`;
+
+        schedule(cronExpression, async () => {
+          await Couponz.findByIdAndUpdate(
+            createdCoupon[0]._id,
+            {
+              isActive: false,
+              isDeleted: true,
+              isExpired: true,
             },
+            { session },
+          );
+        });
+      }
+
+      // Find or create default channel
+      let channelId = await CouponChannel.findOne({
+        name: "default",
+        businessId: createdCoupon[0].businessId,
+      }).select("_id");
+
+      if (!channelId) {
+        channelId = await CouponChannel.create({
+          businessId: createdCoupon[0].businessId,
+          name: "default",
+          date: Date.now(),
+          isActive: true,
+        });
+
+        if (!channelId) {
+          return c.json({
+            err: true,
+            message: "channel not created",
+            data: {},
+          });
+        }
+      }
+
+      // Generate short URL
+      const longUrl = `https://api.test.hipalz.com/coupon-analytics/social/${createdCoupon[0].businessId}/${createdCoupon[0]._id}/${channelId._id}`;
+      const uniqueOrderId = nanoid(10);
+      let createShortUrl = await UrlModel.findOne({ longUrl });
+
+      if (!createShortUrl) {
+        createShortUrl = await UrlModel.create({
+          longUrl: longUrl,
+          shortUrl: `https://api.test.hipalz.com/hipalz/${uniqueOrderId}`,
+          urlCode: uniqueOrderId,
+        });
+
+        if (!createShortUrl) {
+          return c.json({
+            err: true,
+            message: "short url not created",
+            data: {},
+          });
+        }
+      }
+
+      // Create coupon link
+      await CouponLink.create(
+        [
+          {
+            businessId: createdCoupon[0].businessId,
+            couponId: createdCoupon[0]._id,
+            channelId: channelId._id,
+            date: Date.now(),
             link: createShortUrl.shortUrl,
           },
         ],
-      },
-    };
+        { session },
+      );
+      const { userIds = [], groupIds = [] } =
+        createdCoupon?.[0].conditions?.eligibleUser || {};
 
-    return respond(
-      c,
-      "Coupon created successfully",
-      false,
-      201,
-      couponResponse,
-    );
+      const scheduleCouponForUser = async (userId: string) => {
+        await createAndScheduleCoupon(
+          userId.toString(),
+          createdCoupon[0].businessId.toString(),
+          createdCoupon[0].conditions.expiryAfterGrabbed ?? 0,
+          createdCoupon[0]._id.toString(),
+          createdCoupon[0].conditions.couponEndDate,
+        );
+      };
+
+      for (const userId of userIds) {
+        await scheduleCouponForUser(userId.toString());
+      }
+
+      for (const groupId of groupIds) {
+        const group = await GroupModel.findById(groupId);
+        for (const userId of group?.userIds || []) {
+          await scheduleCouponForUser(userId.toString());
+        }
+      }
+
+      const couponResponse = {
+        _id: createdCoupon[0]._id,
+        businessId: createdCoupon[0].businessId,
+        name: createdCoupon[0].name,
+        config: {
+          value: createdCoupon[0].config.value,
+          discountType: createdCoupon[0].config.discountType,
+          upto: createdCoupon[0].config.upto,
+        },
+        image: createdCoupon[0].image,
+        bgColour: createdCoupon[0].bgColour,
+        conditions: {
+          billValue: createdCoupon[0].conditions.billValue,
+          couponStartDate: createdCoupon[0].conditions.couponStartDate,
+          couponEndDate: createdCoupon[0].conditions.couponEndDate,
+          requiredFields: createdCoupon[0].conditions.requiredFields,
+          availability: {
+            when: createdCoupon[0].conditions.availability.when,
+            startTime: createdCoupon[0].conditions.availability.startTime,
+            endTime: createdCoupon[0].conditions.availability.endTime,
+            customDays: createdCoupon[0].conditions.availability.customDays,
+          },
+          tc: createdCoupon[0].conditions.tc,
+          links: [
+            {
+              channelId: {
+                _id: channelId?._id,
+                name: "default",
+              },
+              link: createShortUrl.shortUrl,
+            },
+          ],
+        },
+      };
+
+      return respond(
+        c,
+        "Coupon created successfully",
+        false,
+        201,
+        couponResponse,
+      );
+    });
   })
   .put(
     "/:couponId",

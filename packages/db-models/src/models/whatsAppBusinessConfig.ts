@@ -18,6 +18,7 @@ const whatsAppBusinessConfigSchema =
       phoneId: {
         type: String,
         required: true,
+        unique: true,
       },
       whatsAppAccountId: {
         type: String,
@@ -39,6 +40,7 @@ const whatsAppBusinessConfigSchema =
       whatsAppPhone: {
         type: String,
         required: true,
+        unique: true,
       },
       menuRedirection: {
         type: String,

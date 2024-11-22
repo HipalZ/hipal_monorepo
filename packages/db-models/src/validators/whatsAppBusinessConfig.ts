@@ -18,7 +18,7 @@ export const whatsAppBusinessConfigSchema = z.object({
   templateLimit: z.number().int().min(0).max(1000),
   planId: ObjectIdSchema.optional(),
   whatsAppPhone: z.string().min(10).max(10),
-  menuRedirection: z.string().min(3).max(200),
+  menuRedirection: z.string().min(2).max(200),
 });
 
 export type WhatsAppBusinessConfigType = z.infer<

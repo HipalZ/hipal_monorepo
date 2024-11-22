@@ -96,6 +96,7 @@ export const outLetInfoSchema = z.object({
   serviceChargePercentage: z.coerce.number().default(0).optional(),
   gstPercentage: z.coerce.number().default(5).optional(),
   outLetType: z.string().min(4).max(30).optional(),
+  hideDishPrice: z.boolean().optional(),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;
