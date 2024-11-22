@@ -59,6 +59,7 @@ const BusinessesMemo = memo(() => {
           return (
             <section
               onClick={() => exploreBusiness(biz)}
+              onKeyDown={() => exploreBusiness(biz)}
               key={biz?.businessId?._id}
               className="my-4 flex h-[6rem] items-center justify-between rounded-2xl p-4"
               style={{ backgroundColor: "#f2f2f2" }}

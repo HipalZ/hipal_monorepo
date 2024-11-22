@@ -40,8 +40,7 @@ const LoginMemo = () => {
 
   //apis
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleLogin = async () => {
     setLoading(true);
 
     try {
@@ -75,13 +74,6 @@ const LoginMemo = () => {
   return (
     <center>
       <section className="relative max-w-[30rem]">
-        <a
-          className="fixed w-full top-0 flex items-center justify-center h-10 text-white bg-[#4C4DDC]"
-          href="https://assets.hipalz.com/app-debug%20(6).apk"
-        >
-          <FiDownload className="mr-2 text-white" size={20} />{" "}
-          <span>Update App</span>
-        </a>
         <div className="mobileGrad border-1 mx-[4rem] mt-[4rem] flex h-[28rem] justify-center">
           <div className="flex flex-col items-center">
             <h1 className="mt-[2rem] text-3xl font-bold">HiClientZ</h1>
@@ -204,7 +196,7 @@ const LoginMemo = () => {
         <button
           type="button"
           onClick={handleLogin}
-          className="on_active_bounce fixed bottom-6 z-50 w-[20.5rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem] text-white"
+          className="on_active_bounce fixed bottom-6 z-50 w-full max-w-[25rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem] text-white"
         >
           Get Started
         </button>
