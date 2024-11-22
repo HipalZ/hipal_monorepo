@@ -7,6 +7,7 @@ import { jsPDF } from "jspdf";
 import Image from "next/image";
 import Logo from "@/assets/hipalz_blue.png";
 import Invoice from "@/assets/invoice.png";
+import { cn } from "@/components/utils/helpers";
 
 const businessData = [
   {
@@ -176,7 +177,7 @@ const businessData = [
     date: "20 Nov 2024",
     name: "ahoy",
     bizName: "DAILY BREAD ENTERPRISES",
-    status: false,
+    status: true,
     serviceCost: 4000,
     months: 6,
     address:
@@ -207,29 +208,50 @@ const MemoInovices = () => {
 
   const handleDownloadInvoice = useCallback(async () => {
     const element = printRef?.current;
-    if (element === null) return;
-    const canvas = await html2canvas(element);
-    const data = canvas.toDataURL("image/png");
+    if (!element) return;
 
+    if (typeof window === "undefined") return; // Ensure this runs on the client-side
+
+    // Get the window width
+    const windowWidth = window.innerWidth;
+
+    // Capture the element using html2canvas
+    const canvas = await html2canvas(element, {
+      scale: 2, // Dynamically adjust the scale,
+      width: windowWidth, // Set the width of the canvas
+      allowTaint: true, // Allows tainted images
+    });
+
+    // Determine the canvas dimensions
+    const canvasWidth = canvas.width > 1000 ? 1000 : canvas.width; // Use 1000px max width
+    const canvasHeight = (canvas.height * canvasWidth) / canvas.width; // Maintain aspect ratio
+
+    // Convert canvas to image data
+    const imgData = canvas.toDataURL("image/png");
+
+    // Create the PDF
     const pdf = new jsPDF({
       orientation: "p",
       unit: "px",
-      format: [1000, 1000],
+      format: [canvasWidth, canvasHeight],
     });
 
-    pdf.addImage(data, "PNG", 0, 0, 1000, 1000);
+    // Add the image to the PDF
+    pdf.addImage(imgData, "PNG", 0, 0, canvasWidth, canvasHeight);
+
+    // Save the generated PDF
     pdf.save(`invoice_${business.name}.pdf`);
   }, [business.name]);
 
   return (
-    <section ref={printRef} className="max-w-5xl p-4 mx-auto bg-white sm:p-8">
+    <section ref={printRef} className="max-w-4xl p-4 mx-auto bg-white sm:p-8">
       {/* Header */}
       <article className="flex flex-col items-center justify-between mb-6 sm:flex-row sm:items-start sm:mb-8">
         <article className="flex items-center gap-2 mb-4 sm:gap-4 sm:mb-0">
           <Image src={Logo} alt="logo" width={40} height={40} />
           <span className="text-xl sm:text-2xl text-[#838383]">Hipalz</span>
         </article>
-        {/* <article className="flex items-center gap-2 cursor-pointer md:gap-4 on_active_bounce">
+        <article className="flex items-center gap-2 cursor-pointer md:gap-4 on_active_bounce">
           <p
             onKeyDown={handleDownloadInvoice}
             onClick={handleDownloadInvoice}
@@ -242,7 +264,7 @@ const MemoInovices = () => {
             onClick={handleDownloadInvoice}
             className="text-xs md:text-xl"
           />
-        </article> */}
+        </article>
         <article className="text-center sm:text-right">
           <p className="text-xl sm:text-2xl md:text-3xl text-[#838383]">
             Inv {business?.id}
@@ -251,7 +273,7 @@ const MemoInovices = () => {
       </article>
 
       {/* Company Details */}
-      <section className="flex flex-col sm:flex-row justify-between mb-6 sm:mb-8 text-sm sm:text-base md:text-lg text-[#838383] space-y-2 sm:space-y-0">
+      <section className="flex flex-col sm:flex-row justify-between mb-6 sm:mb-8 text-sm sm:text-base text-[#838383] space-y-2 sm:space-y-0">
         <article className="text-center sm:text-left">
           <p>
             Invoice by <b>Paltribe Solutions PVT</b>
@@ -280,15 +302,20 @@ const MemoInovices = () => {
             height={52}
             className="w-[52px] h-[52px] sm:w-[72px] sm:h-[72px]"
           />
-          <h1 className="text-lg sm:text-xl md:text-3xl lg:text-4xl text-[#9490FF]">
+          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-[#9490FF]">
             Invoice for <b>Popcorn Plan</b>
           </h1>
         </article>
         <article className="flex justify-between w-full space-y-1 text-xs md:block sm:text-sm md:text-base sm:w-auto">
           <div className="flex items-center justify-between gap-2 sm:justify-end sm:gap-9">
             <p className="text-[#4F4F5D]">Status :</p>
-            <p className="px-2 py-1 text-red-600 bg-red-100 rounded-full">
-              Unpaid
+            <p
+              className={cn(
+                business?.status ? "text-green-600" : "text-red-600",
+                "rounded-full",
+              )}
+            >
+              {business?.status ? "Paid" : "Unpaid"}
             </p>
           </div>
           <div className="flex justify-between gap-2 sm:gap-4">
