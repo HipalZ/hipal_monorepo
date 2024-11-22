@@ -802,7 +802,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   style={{
                     boxShadow: "0px 0px 2px 0px #0000001F",
                   }}
-                  className="fixed bottom-0 w-full h-16 bg-white flex items-center justify-between px-4 !font-bold text-black"
+                  className="fixed bottom-0 w-full max-w-[30rem] h-16 bg-white flex items-center justify-between px-4 !font-bold text-black"
                 >
                   {!!tableName ? (
                     <h1 className="text-sm text-left inter">
