@@ -19,10 +19,13 @@ const ProfileHeader = () => {
   }));
   const position = location.pathname.includes("businesses");
   const navigate = useNavigate();
-  const { notification, setNotification } = useHiClientZ((s) => ({
-    notification: s.notification,
-    setNotification: s.setNotification,
-  }));
+  const { notification, setNotification, setSelectedBiz } = useHiClientZ(
+    (s) => ({
+      notification: s.notification,
+      setNotification: s.setNotification,
+      setSelectedBiz: s.setSelectedBiz,
+    }),
+  );
   const { updateNotificationsApi } = useUpdateNotifications();
   const defaultClass =
     "group flex rounded-md items-center w-full px-2 py-2 text-base font-semibold";
@@ -35,7 +38,8 @@ const ProfileHeader = () => {
     setAccessToken("");
     setRefreshToken("");
     navigate("/");
-  }, [navigate, setAccessToken, setRefreshToken]);
+    setSelectedBiz({});
+  }, [navigate, setAccessToken, setRefreshToken, setSelectedBiz]);
 
   const UpdateNotification = useCallback(async () => {
     const updatedNotification = !notification;

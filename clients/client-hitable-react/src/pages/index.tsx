@@ -73,6 +73,13 @@ const LoginMemo = () => {
 
   return (
     <center>
+      <a
+        className="fixed w-full max-w-[30rem] top-0 left-1/2 -translate-x-1/2 flex items-center justify-center h-8 text-white bg-[#4C4DDC]"
+        href="https://assets.hipalz.com/app-debug%20(6).apk"
+      >
+        <FiDownload className="mr-2 text-white" size={20} />{" "}
+        <span>Update App</span>
+      </a>
       <section className="relative max-w-[30rem]">
         <div className="mobileGrad border-1 mx-[4rem] mt-[4rem] flex h-[28rem] justify-center">
           <div className="flex flex-col items-center">
