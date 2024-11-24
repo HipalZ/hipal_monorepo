@@ -1181,6 +1181,126 @@ const whatsappRouter = new Hono()
     },
   )
   .get(
+    "/analytics/by_template_id",
+
+    zValidator(
+      "query",
+      z.object({
+        templateId: z.string(),
+        businessId: z.string(),
+      }),
+    ),
+
+    async (c) => {
+      try {
+        const { templateId, businessId } = c.req.query();
+        const currentTimestamp = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+        const thirtyDaysAgoTimestamp = currentTimestamp - 20 * 24 * 60 * 60;
+
+        const templateById = await WhatAppTemplate.findOne({
+          businessId,
+          isDeleted: false,
+          templateId: templateId,
+        }).select("templateId templateName");
+
+        const getWhatAppTemplate = await axios.get(
+          `https://graph.facebook.com/v21.0/${
+            whatsAppConfig.whatAppAccountId
+          }/template_analytics?start=${thirtyDaysAgoTimestamp}&end=${currentTimestamp}&granularity=daily&metric_types=clicked,delivered,read,sent,cost&template_ids=${[
+            templateById?.templateId,
+          ]}&limit=1000`,
+          {
+            headers: {
+              Authorization: `Bearer ${whatsAppConfig.token}`,
+            },
+          },
+        );
+
+        const templateids = [];
+
+        for (const dataPoint of getWhatAppTemplate.data.data[0].data_points) {
+          const anaLyticsObject = dataPoint;
+
+          let calculateTotalclicked = 0;
+          if (anaLyticsObject?.clicked) {
+            for (const click of anaLyticsObject.clicked) {
+              calculateTotalclicked += click.count || 0;
+            }
+          }
+
+          let calculateTotalcost = 0;
+          if (anaLyticsObject?.cost) {
+            for (const cost of anaLyticsObject.cost) {
+              calculateTotalcost += cost.value || 0;
+            }
+          }
+
+          const newObj = {
+            templateName: templateById?.templateName,
+            sent: anaLyticsObject.sent,
+            read: anaLyticsObject.read,
+            delivered: anaLyticsObject.delivered,
+            clicked: calculateTotalclicked,
+            cost: calculateTotalcost,
+          };
+
+          templateids.push(newObj);
+        }
+
+        // @ts-ignore
+        const mergeTemplates = (templateids) => {
+          const result = {};
+
+          // Using for...of to iterate through templateids
+          for (const item of templateids) {
+            // @ts-ignore
+            if (!result[item.templateName]) {
+              // @ts-ignore
+              result[item.templateName] = { ...item };
+            } else {
+              // @ts-ignore
+              result[item.templateName].sent += item.sent;
+              // @ts-ignore
+              result[item.templateName].read += item.read;
+              // @ts-ignore
+              result[item.templateName].delivered += item.delivered;
+              // @ts-ignore
+              result[item.templateName].clicked += item.clicked;
+              // @ts-ignore
+              result[item.templateName].cost += item.cost;
+            }
+          }
+
+          return Object.values(result);
+        };
+
+        const mergedData = mergeTemplates(templateids);
+
+        return c.json(
+          {
+            message: "fetching  template",
+            err: false,
+            data: mergedData[0],
+          },
+          200,
+        );
+      } catch (error) {
+        const axiosError = error as AxiosError;
+        const message =
+          axiosError.response?.data?.error?.message || axiosError.message;
+
+        return c.json(
+          {
+            message: `Error creating template: ${message}`,
+            err: true,
+            data: axiosError.response?.data || {},
+          },
+          400,
+        );
+      }
+    },
+  )
+  .get(
     "/whatsapp_wallet/:businessId",
     zValidator("param", z.object({ businessId: z.string() })),
 
@@ -1760,6 +1880,36 @@ const whatsappRouter = new Hono()
       return c.redirect(redirectUrl);
     },
   )
+  .get(
+    "/whatsapp_config/:businessId",
+
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER]),
+
+    zValidator("param", z.object({ businessId: z.string() })),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+
+      const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+        businessId,
+      });
+
+      if (!whatsAppConfig) {
+        return c.json({
+          message: "Config not found",
+          err: true,
+          data: {},
+        });
+      }
+
+      return c.json({
+        message: "Config found",
+        err: false,
+        data: whatsAppConfig,
+      });
+    },
+  )
 
   .post(
     "/update_whatsapp_config",
@@ -1782,7 +1932,7 @@ const whatsappRouter = new Hono()
               templateLimit: requestData.templateLimit,
               token: requestData.token,
               version: requestData.version,
-              whatAppAccountId: requestData.whatsAppAccountId,
+              whatsAppAccountId: requestData.whatsAppAccountId,
               whatsAppPhone: requestData.whatsAppPhone,
             },
           },

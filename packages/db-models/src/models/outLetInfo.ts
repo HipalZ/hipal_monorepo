@@ -154,6 +154,10 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: String,
     required: false,
   },
+  hideDishPrice: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const OutLetInfo: Model<OutLetInfoType> = mongoose.model<OutLetInfoType>(

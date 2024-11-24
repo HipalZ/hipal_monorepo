@@ -58,6 +58,10 @@ const CartSchema = new Schema<CartType>(
     message: {
       type: String,
     },
+    isArchived: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

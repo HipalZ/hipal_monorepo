@@ -4,7 +4,6 @@ import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { PiSealWarningFill } from "react-icons/pi";
 import HiPeopleLogo from "@/assets/hibizNewLogo.png";
-import Stairs from "@/assets/Stairs.png";
 import Header from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useSelectedIcon } from "@/components/store/useSelectedIcon";
@@ -61,10 +60,6 @@ const Business = () => {
   const handleBack = useCallback(() => {
     navigate("/app/business");
   }, [navigate]);
-
-  const goToBusinessControl = useCallback(() => {
-    navigate(`/app/business/${businessId}/businessControl`);
-  }, [businessId, navigate]);
 
   return (
     <main className="relative">

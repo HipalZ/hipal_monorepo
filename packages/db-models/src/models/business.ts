@@ -37,7 +37,7 @@ const businessSchema = new mongoose.Schema<BusinessType>(
     status: {
       type: Boolean,
       required: false,
-      default: false,
+      default: true,
     },
     exploreLayout: {
       type: String,
