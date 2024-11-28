@@ -158,7 +158,7 @@ const MemoServiceStepTwo = () => {
       setEditOpenMenu(false);
       setIsLoading(false);
       queryClient.invalidateQueries({ queryKey: ["getAlldishes"] });
-      toast.success(data?.message);
+      toast.success("Updated successfully");
       return;
     }
     setIsLoading(false);

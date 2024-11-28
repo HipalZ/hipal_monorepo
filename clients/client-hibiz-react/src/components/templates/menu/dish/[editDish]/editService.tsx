@@ -104,7 +104,7 @@ const MemoEditService = () => {
       resetDishesStore();
       resetDishStore();
       refetch();
-      toast.success(data?.message);
+      toast.success("Deleted successfully");
       setEditOpenMenu(false);
     }
     if (!data?.success) {

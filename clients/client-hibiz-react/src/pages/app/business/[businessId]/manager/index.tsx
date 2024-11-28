@@ -48,7 +48,7 @@ const MemoiseManager = () => {
   }));
   const navigate = useNavigate();
   const handleBack = () => {
-    navigate(`/business/${businessData?._id}/menu`);
+    navigate(`/app/business/${businessData?._id}/menu`);
   };
 
   const pathname = useLocation().pathname;

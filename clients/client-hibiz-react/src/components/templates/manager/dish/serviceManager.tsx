@@ -174,7 +174,7 @@ const MemoServiceManagerPage = () => {
       </section>
       <MiddlePopUp show={showPopUp} onClose={() => setShowPopUp(false)}>
         <section className="w-full p-4">
-          <h1 className="mb-6 text-2xl font-bold text-gray-800">Categories</h1>
+          <h1 className="mb-6 text-2xl font-bold text-gray-800">Services</h1>
           <div className="h-[60vh] overflow-y-auto pr-2 space-y-4">
             {filteredLinkedCategories && filteredLinkedCategories.length > 0 ? (
               filteredLinkedCategories?.map((category) => (
@@ -232,7 +232,7 @@ const MemoServiceManagerPage = () => {
                 </motion.div>
               ))
             ) : (
-              <p className="text-center text-gray-500">No categories found.</p>
+              <p className="text-center text-gray-500">Not found.</p>
             )}
           </div>
         </section>

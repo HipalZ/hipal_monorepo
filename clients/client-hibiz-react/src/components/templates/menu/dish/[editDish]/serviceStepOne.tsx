@@ -196,7 +196,7 @@ const MemoServiceStepOne = () => {
       setIsLoading(false);
       setOpenMenu(false);
       queryClient.invalidateQueries({ queryKey: ["getAlldishes"] });
-      toast.success(data?.message);
+      toast.success("Updated successfully");
       return;
     }
     setIsLoading(false);
@@ -230,7 +230,7 @@ const MemoServiceStepOne = () => {
               <input
                 type="text"
                 id="name"
-                placeholder="Enter Dish Name"
+                placeholder="Enter service Name"
                 value={dishName}
                 maxLength={50}
                 minLength={3}

@@ -172,7 +172,7 @@ const MemoServiceStepOne = () => {
       setIsLoading(false);
       setOpenMenu(false);
       queryClient.invalidateQueries({ queryKey: ["getAlldishes"] });
-      return toast.success(data?.message);
+      return toast.success("Created successfully");
     }
     setIsLoading(false);
     if (dishResponse?.status === 400 && Array.isArray(data?.error?.issues)) {

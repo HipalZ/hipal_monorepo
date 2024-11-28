@@ -80,7 +80,7 @@ export const useSaveCategory = () => {
       return;
     }
     if (res) {
-      toast.success(res.message);
+      toast.success("Saved successfully");
       setOpenMenu(false);
       if (selectedCategory === "MAIN_CATEGORY") {
         queryClient.invalidateQueries({ queryKey: ["getAllParentCategory"] });
@@ -120,7 +120,7 @@ export const useUpdateCategory = () => {
       return;
     }
     if (!res.err) {
-      toast.success(res.message);
+      toast.success("Updated successfully");
       setOpenMenu(false);
       if (categoryStep === "EDIT_MAIN_CATEGORY") {
         queryClient.invalidateQueries({ queryKey: ["getAllParentCategory"] });
@@ -274,7 +274,7 @@ export const useDeleteCategory = () => {
       return;
     }
     if (!res.err) {
-      toast.success(res.message);
+      toast.success("Deleted successfully");
       setOpenMenu(false);
       setIsCatDelete(false);
       if (categoryStep === "EDIT_MAIN_CATEGORY") {

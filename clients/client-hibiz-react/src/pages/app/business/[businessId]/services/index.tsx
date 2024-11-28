@@ -20,7 +20,7 @@ const menuArray = [
     id: 2,
     title: "Service Manager",
     subTitle:
-      "Organize dishes and categories for efficient menu management and presentation",
+      "Organize Services and Catalogues for efficient menu management and presentation",
     navigate: "serviceManager",
     image: Manager,
   },
