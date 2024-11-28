@@ -2,7 +2,7 @@ import Fuse from "fuse.js";
 import { memo, useCallback, useEffect, useState } from "react";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
-import { useChildCategories } from "@/hooks/useDish";
+import { useChildCategories, useDishes } from "@/hooks/useDish";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import BottomButton from "@/components/atom/bottomButton";
 
@@ -48,6 +48,8 @@ const MemoLinkItems = () => {
   const { dishes } = useDishesStore((s) => ({
     dishes: s.dishes,
   }));
+
+  const { isLoading } = useDishes();
 
   const { data: categoryData } = useChildCategories(dishStep);
   const fuse = new Fuse(categoryData || dishes, {
