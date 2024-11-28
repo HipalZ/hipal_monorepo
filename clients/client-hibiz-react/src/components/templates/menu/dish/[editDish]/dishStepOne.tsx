@@ -24,7 +24,6 @@ import toast from "react-hot-toast";
 import { Switch } from "@headlessui/react";
 import { MdDelete } from "react-icons/md";
 import PendingActions from "./pendingActions";
-import SectionLoader from "@/components/atom/sectionLoader";
 import { useQueryClient } from "@tanstack/react-query";
 import BottomButton from "@/components/atom/bottomButton";
 

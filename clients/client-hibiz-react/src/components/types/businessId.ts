@@ -1,5 +1,3 @@
-import { toast } from "react-hot-toast";
-import type { User } from "../store/useOwnerLogin";
 import CouponsImage from "@/assets/services/coupons.png";
 import HibizImage from "@/assets/services/hibiz.png";
 import BillsImage from "@/assets/services/bills.png";
@@ -10,20 +8,9 @@ import StaffImage from "@/assets/services/staff.png";
 import Themes from "@/assets/services/themes.png";
 import Settings from "@/assets/services/setting.png";
 import Review from "@/assets/services/review.png";
+import Services from "@/assets/services/services.png";
 import Analytics from "@/assets/services/analytics.png";
-export interface ICardButton {
-  Icon: React.ElementType;
-  text: string;
-  class: {
-    background: string;
-    text: string;
-    font: string;
-    bg: string;
-    color: string;
-    opacity?: string;
-  };
-  visible: boolean;
-}
+import useBusinessData from "../store/useBusinessData";
 
 export interface ILiteVersionCardButton {
   image: string;
@@ -32,7 +19,7 @@ export interface ILiteVersionCardButton {
   navigateTo?: string;
 }
 
-export const liteVersionCardButtons: ILiteVersionCardButton[] = [
+export const getButtons = (outletType: string): ILiteVersionCardButton[] => [
   {
     image: Themes,
     text: "Themes ",
@@ -63,12 +50,19 @@ export const liteVersionCardButtons: ILiteVersionCardButton[] = [
     description: "All settings in one place",
     navigateTo: "settings",
   },
-  {
-    image: MenuImage,
-    text: "Menu",
-    description: "Manage your menu",
-    navigateTo: "menu",
-  },
+  outletType === "MENU"
+    ? {
+        image: MenuImage,
+        text: "Menu",
+        description: "Manage your menu",
+        navigateTo: "menu",
+      }
+    : {
+        image: Services,
+        text: "Service",
+        description: "Manage your services",
+        navigateTo: "services",
+      },
   {
     image: HiPeopleImage,
     text: "Hi People",
@@ -107,50 +101,6 @@ export const liteVersionCardButtons: ILiteVersionCardButton[] = [
   //   navigateTo: "reviews",
   // },
 ];
-export interface AccessControlMapping {
-  [key: string]: string;
-}
-export const accessControlMapping: AccessControlMapping = {
-  dish: "Items",
-  staff: "Staff",
-  loyalty: "Loyalty",
-  sale: "Sales",
-  reports: "Reports",
-  zones_tables: "Zones And Tables",
-};
-
-export const getUpdatedCardButtons = (
-  cards: ICardButton[],
-  user: User,
-  handleNoAccess: () => void,
-) => {
-  if (user.role !== "RESTAURANT_MANAGER") {
-    return cards.map((card: ICardButton) => ({ ...card }));
-  }
-
-  if (
-    user.accessControl === undefined ||
-    Object.keys(user.accessControl).length === 0
-  ) {
-    toast.error("You do not have access to this business");
-    localStorage.removeItem("ownerLogin");
-    handleNoAccess();
-    return [];
-  }
-
-  return cards.map((card: ICardButton) => {
-    const hasAccess =
-      user.accessControl &&
-      Object.entries(user.accessControl).some(([key, value]) => {
-        const permissionName = accessControlMapping[key];
-        return permissionName === card.text && value;
-      });
-    return {
-      ...card,
-      visible: hasAccess,
-    };
-  });
-};
 
 export interface Dish {
   id: string;

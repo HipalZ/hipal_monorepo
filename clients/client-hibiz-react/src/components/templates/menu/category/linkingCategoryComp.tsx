@@ -12,7 +12,7 @@ const MemoLinkingCategoryComp = () => {
     selectIds,
     isCatDelete,
     setIsCatDelete,
-    selectSingleParentCat
+    selectSingleParentCat,
   } = useMenuPageStore((s) => ({
     setCategoryStep: s.setCategoryStep,
     categoryStep: s.categoryStep,
@@ -24,7 +24,7 @@ const MemoLinkingCategoryComp = () => {
   }));
 
   console.log(selectSingleParentCat);
-  
+
   return (
     <>
       {categoryStep === "EDIT_MAIN_CATEGORY" && (
