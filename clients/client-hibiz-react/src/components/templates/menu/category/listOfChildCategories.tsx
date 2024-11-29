@@ -9,6 +9,8 @@ import { useCategoryStore } from "@/components/store/useCategoryStore";
 import { BiSolidEditAlt } from "react-icons/bi";
 import { RiImageAddFill } from "react-icons/ri";
 import { PiCameraSlashFill } from "react-icons/pi";
+import useBusinessData from "@/components/store/useBusinessData";
+import { useLocation } from "react-router-dom";
 
 const MemoListOfChildCategory = () => {
   const {
@@ -46,9 +48,11 @@ const MemoListOfChildCategory = () => {
     setRecommendationIds: state.setRecommendationIds,
     setSelectSingleParentCat: state.setSelectSingleParentCat,
   }));
+  const pathname = useLocation().pathname;
   const { subCategories } = useCategoryStore((state) => ({
     subCategories: state.subCategories,
   }));
+  const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
 
   const { isLoading } = useChildCategories();
 
@@ -95,11 +99,13 @@ const MemoListOfChildCategory = () => {
       </div>
     );
   }
+  const isManage = !pathname.includes("allservices");
 
   return (
     <section className="flex relative flex-wrap justify-start py-[7rem] gap-4 mx-4 lg:py-[5rem]">
       <h3 className="absolute left-0 text-xl font-semibold text-black lg:top-[2rem] top-[4rem]">
-        sub category ({filteredCategories?.length})
+        {outLetType === "OTHER" ? "Catalogue" : "Categories"} (
+        {filteredCategories?.length})
       </h3>{" "}
       {filteredCategories?.map((category) => (
         <button
@@ -108,7 +114,7 @@ const MemoListOfChildCategory = () => {
           onClick={() => editCategory(category)}
           className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[21rem] lg:max-w-[20rem] xl:max-w-[20rem] 2xl:max-w-[21.5rem]"
         >
-          {isMenuManager ? (
+          {isManage ? (
             <figure className="flex items-center gap-4">
               {category.coverImage ? (
                 <img
@@ -138,7 +144,7 @@ const MemoListOfChildCategory = () => {
           )}
 
           <article className="flex">
-            {!isMenuManager ? (
+            {!isManage ? (
               <div>
                 {category.visibility ? (
                   <FaEye className="text-green-500" />

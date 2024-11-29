@@ -81,6 +81,7 @@ const MemoBannerImgContainer = () => {
                     style={{ display: "none" }}
                     onChange={handleImageChange}
                     data-type="logo"
+                    accept="image/*"
                   />
                   <label
                     htmlFor="logoBanner"

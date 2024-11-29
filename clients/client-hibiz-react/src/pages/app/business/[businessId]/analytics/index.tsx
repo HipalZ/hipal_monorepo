@@ -6,12 +6,18 @@ import { cn } from "@hi/common";
 import UniversalNav from "@/components/templates/menu/sideNavbaar/universelSidenav";
 import Items from "@/components/templates/analytics/items";
 import UserUnique from "@/components/templates/analytics/user";
+import { useNavigate } from "react-router-dom";
+import useBusinessData from "@/components/store/useBusinessData";
 
 const navItems = [{ text: "Item" }, { text: "User" }];
 
 const ItemAnalytics = () => {
+  const navigate = useNavigate();
+  const businessData = useBusinessData((s) => s.businessData);
   const [selectedTab, setSelectedTab] = useState<"item" | "user">("item");
-
+  const handleBack = () => {
+    navigate(`/app/business/${businessData?._id}`);
+  };
   const changeLayout = (text: string) => {
     setSelectedTab(text.toLowerCase() as "item" | "user");
   };
@@ -24,6 +30,7 @@ const ItemAnalytics = () => {
             title="Item Analytics"
             leftIcon={<FaArrowLeft />}
             rightImage={Hi}
+            onBack={handleBack}
           />
         </article>
 

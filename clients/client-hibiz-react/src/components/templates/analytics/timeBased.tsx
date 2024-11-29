@@ -23,7 +23,7 @@ export const TimeBasedAnalytics: FC<TimeBasedAnalyticsProps> = ({
               <p>{period.topDish.count} orders</p>
             </div>
           ) : (
-            <p>No top dish data available</p>
+            <p>No top item data available</p>
           )}
         </div>
       ))}

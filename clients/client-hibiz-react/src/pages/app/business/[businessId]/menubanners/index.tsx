@@ -79,7 +79,7 @@ const MenuManager = () => {
           <section className="flex items-center justify-between gap-4 pb-2 mx-4">
             <input
               type="search"
-              placeholder="Search dishes..."
+              placeholder="Search items..."
               className="w-full py-2 border rounded-md"
               value={searchItem}
               onChange={(e) => setSearchItem(e.target.value)}

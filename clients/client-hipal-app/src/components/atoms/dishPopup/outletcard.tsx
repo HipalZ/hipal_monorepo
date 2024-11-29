@@ -149,7 +149,7 @@ function MemoOutletItemInfo() {
                   type="button"
                   onClick={handleAddToCart}
                 >
-                  Add Dish To Cart
+                  Add Item To Cart
                 </button>
               </div>
             )}

@@ -7,7 +7,7 @@ import HiPeopleLogo from "@/assets/hibizNewLogo.png";
 import Header from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useSelectedIcon } from "@/components/store/useSelectedIcon";
-import { liteVersionCardButtons } from "@/components/types/businessId";
+import { getButtons } from "@/components/types/businessId";
 import { cn } from "@hi/common";
 
 const Business = () => {
@@ -15,6 +15,7 @@ const Business = () => {
   const navigate = useNavigate();
   const { businessId } = useParams<{ businessId: string }>();
   const businessData = useBusinessData((s) => s.businessData);
+  const outLetType = useBusinessData((s) => s?.outletInfo?.outLetType);
 
   const headerRef = useRef<HTMLElement>(null);
   const { scrollY } = useScroll();
@@ -60,6 +61,8 @@ const Business = () => {
   const handleBack = useCallback(() => {
     navigate("/app/business");
   }, [navigate]);
+
+  const buttons = getButtons(outLetType || "MENU");
 
   return (
     <main className="relative">
@@ -114,7 +117,7 @@ const Business = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ staggerChildren: 0.1, delayChildren: 0.2 }}
           >
-            {liteVersionCardButtons.map((item, index) => {
+            {buttons.map((item, index) => {
               const isDisabled =
                 item.navigateTo !== "businessControl" &&
                 !businessData?.themeApplied;

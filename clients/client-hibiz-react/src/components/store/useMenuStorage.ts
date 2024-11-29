@@ -11,7 +11,9 @@ export type MenuPageType =
   | "MAIN_CATEGORY"
   | "SUB_CATEGORY"
   | "ADD_ON"
-  | "ALERT";
+  | "ALERT"
+  | "SERVICES"
+  | "CATALOGUE";
 export type CategoryTypeToggle = "MAIN_CATEGORY" | "SUB_CATEGORY" | "";
 export type CategoryStep =
   | "CATEGORY_STEP_1"
@@ -85,11 +87,10 @@ export type SetImagePreviewsFunction = (
   update: (prev: ImagePreviews) => ImagePreviews,
 ) => void;
 
-import type Area from 'react-easy-crop';
+import type Area from "react-easy-crop";
 interface CropperRef {
   getCroppedAreaPixels: () => Area | null;
 }
-
 
 interface MenuPageStore {
   selectedPage: MenuPageType;

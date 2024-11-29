@@ -11,6 +11,8 @@ import {
 } from "@headlessui/react";
 import { IoMdArrowDropdown } from "react-icons/io";
 import { CheckmarkIcon } from "react-hot-toast";
+import useBusinessData from "@/components/store/useBusinessData";
+import BottomButton from "@/components/atom/bottomButton";
 
 type Section = {
   portionTypes: ("VEG" | "NON_VEG" | "EGG" | "VEGAN")[];
@@ -31,6 +33,8 @@ const MemoPortionStep = () => {
       dishPrice: state.dishPrice,
     }),
   );
+
+  const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
 
   const [sections, setSections] = useState(
     portions.map((p) => ({
@@ -134,23 +138,25 @@ const MemoPortionStep = () => {
             {({ open }) => (
               <div className="relative mt-1">
                 <section className="flex">
-                  <ListboxButton className="relative flex items-center py-2 text-left bg-white rounded-lg cursor-pointer listbox-button sm:text-sm">
-                    <span className="flex items-center">
-                      <img
-                        src={
-                          foodTypes.find((type) =>
-                            section.portionTypes.includes(type.name),
-                          )?.icon
-                        }
-                        alt="icon"
-                        className="flex-shrink-0 w-6 h-6 mr-1"
-                      />
-                      <IoMdArrowDropdown
-                        className="w-6 h-6 mr-1 text-gray-400"
-                        aria-hidden="true"
-                      />
-                    </span>
-                  </ListboxButton>
+                  {outLetType === "OTHER" ? null : (
+                    <ListboxButton className="relative flex items-center py-2 text-left bg-white rounded-lg cursor-pointer listbox-button sm:text-sm">
+                      <span className="flex items-center">
+                        <img
+                          src={
+                            foodTypes.find((type) =>
+                              section.portionTypes.includes(type.name),
+                            )?.icon
+                          }
+                          alt="icon"
+                          className="flex-shrink-0 w-6 h-6 mr-1"
+                        />
+                        <IoMdArrowDropdown
+                          className="w-6 h-6 mr-1 text-gray-400"
+                          aria-hidden="true"
+                        />
+                      </span>
+                    </ListboxButton>
+                  )}
                   <input
                     type="text"
                     id={`name-${index}`}
@@ -241,9 +247,15 @@ const MemoPortionStep = () => {
           + Add
         </button>
       </section>
-      <button onClick={handleSave} type="button" className="action_btn">
-        Save
-      </button>
+      <BottomButton
+        buttons={[
+          {
+            text: "Save",
+            onClick: handleSave,
+            type: "button",
+          },
+        ]}
+      />
     </section>
   );
 };

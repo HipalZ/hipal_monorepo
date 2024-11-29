@@ -172,7 +172,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
               <CommonBottomButton
                 buttons={[
                   {
-                    text: "Add Dish To Cart",
+                    text: "Add Item To Cart",
                     onClick: handleAddToCart,
                   },
                 ]}

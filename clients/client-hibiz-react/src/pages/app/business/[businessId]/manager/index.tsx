@@ -1,6 +1,5 @@
 import MemoizedHeader from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
-import { routeToDashboard } from "@/components/utils/routes";
 import { memo, useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
@@ -49,7 +48,7 @@ const MemoiseManager = () => {
   }));
   const navigate = useNavigate();
   const handleBack = () => {
-    navigate(routeToDashboard(businessData?._id as string));
+    navigate(`/app/business/${businessData?._id}/menu`);
   };
 
   const pathname = useLocation().pathname;

@@ -21,7 +21,6 @@ import useErrorToasts from "@/hooks/useError";
 import { postDishData } from "@/hooks/useDish";
 import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import SectionLoader from "@/components/atom/sectionLoader";
 import { useQueryClient } from "@tanstack/react-query";
 import BottomButton from "@/components/atom/bottomButton";
 

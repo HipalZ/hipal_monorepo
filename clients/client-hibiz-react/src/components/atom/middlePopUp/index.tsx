@@ -41,7 +41,7 @@ function MemoMiddlePopUp({
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <DialogPanel className="bg-base-100 z-100 relative max-w-md rounded-[1.5rem] shadow-md pointer-events-auto">
+            <DialogPanel className="bg-base-100 w-full z-100 relative max-w-md rounded-[1.5rem] shadow-md pointer-events-auto">
               {children}
               {onlyPopUp ? null : (
                 <>
@@ -54,7 +54,10 @@ function MemoMiddlePopUp({
                   &nbsp;
                   {onSave ? (
                     <div onClick={onSave} className="flex justify-center mb-4">
-                      <button className="on_active_bounce bg-[#7D68FE] text-base-100 z-50 mx-6 w-[90vw] rounded-full py-[0.75rem] text-[18px] font-[600] leading-[1.15rem] pointer-events-auto">
+                      <button
+                        type="button"
+                        className="on_active_bounce bg-[#7D68FE] text-base-100 z-50 mx-6 w-[90vw] rounded-full py-[0.75rem] text-[18px] font-[600] leading-[1.15rem] pointer-events-auto"
+                      >
                         Save
                       </button>
                     </div>

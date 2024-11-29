@@ -7,6 +7,8 @@ import type { DishType } from "@hi/db-models/src/validators";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import type { IDish } from "@/components/types/businessData";
+import { isEmpty } from "lodash-es";
+import { MdMenuBook } from "react-icons/md";
 
 function MemoIndividualItemDescription() {
   const { isSelectedDish: dishData, setSelectedDish } = useActiveClass();
@@ -48,6 +50,35 @@ function MemoIndividualItemDescription() {
       {dishData?.description && (
         <div className="mt-2 text-xs leading-3 text-base-content">
           <ReadMore text={dishData?.description || ""} />
+        </div>
+      )}
+
+      {!isEmpty(dishData?.portions) && (
+        <div className="flex flex-col mt-1 space-y-5">
+          <div className="flex flex-row gap-4 text-base text-primary">
+            <MdMenuBook className="my-auto" />
+            <h4 className="my-auto">
+              {dishData?.portions?.length} Variants available
+            </h4>
+          </div>
+
+          <div className="flex flex-row flex-wrap w-full gap-px divide-base-content bg-base-content/10">
+            {dishData?.portions?.map((portion, key) => (
+              <div
+                key={key}
+                className={
+                  "flex flex-col min-w-[22%] max-w-full mx-auto space-y-1 text-base text-center bg-base-100 flex-grow p-2"
+                }
+              >
+                <span className="text-sm font-normal text-base-content">
+                  {portion?.name}
+                </span>
+                <span className="text-xs font-thin text-base-content">
+                  ₹ {getPrice(portion?.price)}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

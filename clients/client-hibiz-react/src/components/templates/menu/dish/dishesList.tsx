@@ -6,6 +6,7 @@ import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import type { DishType } from "@hi/db-models/src/validators";
 import { useDishes } from "@/hooks/useDish";
+import useBusinessData from "@/components/store/useBusinessData";
 
 const MemoListOfDishes = () => {
   const {
@@ -29,7 +30,7 @@ const MemoListOfDishes = () => {
     setEditOpenMenu: state.setEditOpenMenu,
     setEditDishFunction: state.setEditDishFunction,
   }));
-
+  const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
   const { dishes } = useDishesStore((s) => ({
     dishes: s.dishes,
   }));
@@ -81,7 +82,8 @@ const MemoListOfDishes = () => {
   return (
     <section className="flex relative flex-wrap justify-center mt-[7rem] gap-4 mx-4 lg:mt-[5rem]">
       <h3 className="absolute left-0 text-xl -top-[2.5rem] lg:-top-[3.5rem] font-semibold">
-        Dishes ({filteredDishes?.length})
+        {outLetType === "OTHER" ? "Services" : "Dishes"} (
+        {filteredDishes?.length})
       </h3>
       {filteredDishes
         ? filteredDishes.map((dish) => (
