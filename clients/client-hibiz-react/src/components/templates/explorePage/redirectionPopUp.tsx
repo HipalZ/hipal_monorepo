@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { IoIosSearch } from "react-icons/io";
 import { useBannerStore } from "@/components/store/useBannerStore";
 import { FaArrowLeft } from "react-icons/fa";
+import useBusinessData from "@/components/store/useBusinessData";
 const SubHeader = lazy(() => import("@/components/atom/subHeader"));
 
 interface IProps {
@@ -52,6 +53,8 @@ const MemoRedirectionPopUp = (props: IProps) => {
   const [filteredCategories, setFilteredCategories] = useState<ICategory[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isVisible, setIsVisible] = useState(false);
+
+  const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
 
   // redirection type selection categories
   const handleSelectCategory = useCallback(() => {
@@ -174,14 +177,24 @@ const MemoRedirectionPopUp = (props: IProps) => {
               type="button"
               className="w-full py-2 bg-gray-100 rounded-full"
             >
-              <h1>&#128279; Direct to Category</h1>
+              <h1>
+                &#128279;{" "}
+                {outLetType === "MENU"
+                  ? "Direct to Category"
+                  : "Direct to Catalogue"}
+              </h1>
             </button>
             <button
               onClick={handleSelectDish}
               type="button"
               className="w-full py-2 bg-gray-100 rounded-full"
             >
-              <h1>&#128279; Direct to Dish</h1>
+              <h1>
+                &#128279;{" "}
+                {outLetType === "MENU"
+                  ? "Direct to Dish"
+                  : "Direct to Service"}{" "}
+              </h1>
             </button>
             <button
               onClick={handleExternalLink}
@@ -200,7 +213,7 @@ const MemoRedirectionPopUp = (props: IProps) => {
                 <input
                   type="search"
                   className="h-[2rem] border border-gray-300 rounded-2xl"
-                  placeholder="Search for a dish or category"
+                  placeholder="Search for a items"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />

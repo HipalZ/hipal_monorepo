@@ -48,7 +48,7 @@ const MemoHiSites = () => {
           <img src={HiSiteMiddleImage} alt="HiSiteMiddleImage" loading="lazy" />
           <h1 className="mt-4 mb-2 text-2xl font-semibold">Hi-sites</h1>
           <p className="mx-16 text-[#7D7D7D]">
-            Manage Your business, dishes, offers, rewards and many more
+            Manage Your business, items, offers, rewards and many more
           </p>
         </HisiteHeader>
       </header>

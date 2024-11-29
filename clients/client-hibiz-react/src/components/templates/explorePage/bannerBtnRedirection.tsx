@@ -12,12 +12,15 @@ import {
 } from "../../helpers/bannersHelper";
 import { CiNoWaitingSign } from "react-icons/ci";
 import { useBannerTemp } from "@/components/store/useBannerTemp";
+import useBusinessData from "@/components/store/useBusinessData";
 
 const MemoBannerBtnRedirection = () => {
   const { isButtonExists, onlyImage } = useBannerStore((s) => ({
     isButtonExists: s.isButtonExists,
     onlyImage: s.onlyImage,
   }));
+
+  const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
 
   const { callToAction, setCallToAction, itemName } = useBannerTemp((s) => ({
     itemName: s.itemName,
@@ -123,7 +126,10 @@ const MemoBannerBtnRedirection = () => {
             className="w-full py-2 bg-gray-100 rounded-full"
           >
             <h1>
-              &#128279; Categories | dish{" "}
+              &#128279;{" "}
+              {outLetType === "OTHER"
+                ? "Services | Catalogues"
+                : "Categories | dish"}{" "}
               <span className="font-semibold">{itemName}</span>
             </h1>
           </button>

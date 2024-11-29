@@ -270,26 +270,41 @@ const MemoServiceStepOne = () => {
         {isManagerExists ? null : (
           <article>
             <label className="font-semibold opacity-50" htmlFor="price">
-              Prices
+              Prices & Portions*
             </label>
-            <Background className="relative">
-              <small className="absolute ml-2 text-lg bottom-5 left-4">₹</small>
-              <input
-                minLength={1}
-                maxLength={7}
-                onChange={handleDishPrice}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                value={displayedPrice}
-                placeholder="Enter Price"
-                type="text"
-                required
-                className="bg-white rounded-xl w-full pl-8 focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
-              />
-              <small className="absolute bottom-6 right-6">
-                {dishPrice?.toString()?.length}/{7}
-              </small>
-            </Background>
+            <div className="bg-white rounded-2xl">
+              <div className="relative p-3 mt-2">
+                <small className="absolute ml-2 text-lg bottom-5 left-4">
+                  ₹
+                </small>
+                <input
+                  minLength={1}
+                  maxLength={7}
+                  onChange={handleDishPrice}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
+                  value={displayedPrice}
+                  placeholder="Enter Price"
+                  type="text"
+                  required
+                  className="bg-white rounded-xl w-full pl-8 focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
+                />
+                <small className="absolute bottom-6 right-6">
+                  {dishPrice?.toString()?.length}/{7}
+                </small>
+              </div>
+              <section>
+                <Background>
+                  <button
+                    onClick={() => redirectToSection(DishSteps.PORTION_STEP)}
+                    type="button"
+                    className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center"
+                  >
+                    + Add more portions
+                  </button>
+                </Background>
+              </section>
+            </div>
           </article>
         )}
 

@@ -62,7 +62,7 @@ const MemoSelectCategory = () => {
     <>
       <input
         type="search"
-        placeholder="Search categories..."
+        placeholder="Search ..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className=" w-[92%] p-2 border rounded-2xl mx-6"

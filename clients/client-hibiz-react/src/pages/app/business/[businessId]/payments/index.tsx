@@ -1,8 +1,10 @@
 import Hi from "@/assets/svg/hi.svg";
+import useBusinessData from "@/components/store/useBusinessData";
 import PaymentNavbar from "@/components/templates/menu/sideNavbaar/paymentNavBar";
 import { cn } from "@/components/utils/helper";
 import { lazy, memo, useState } from "react";
 import { FaArrowLeft } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 const DateRangePicker = lazy(
   () => import("@/components/molecules/dateRangePicker"),
 );
@@ -14,6 +16,7 @@ const Payments = () => {
   const [selectedTab, setSelectedTab] = useState<"Overview" | "Sales">(
     "Overview",
   );
+  const businessData = useBusinessData((s) => s.businessData);
 
   const sidebarItems = [
     { text: "Overview", onClick: () => setSelectedTab("Overview") },
@@ -23,6 +26,11 @@ const Payments = () => {
     },
   ];
 
+  const navigate = useNavigate();
+  const handleBack = () => {
+    navigate(`/app/business/${businessData?._id}`);
+  };
+
   return (
     <main>
       <article className="linear_gradient_background">
@@ -30,6 +38,7 @@ const Payments = () => {
           title="Payments"
           leftIcon={<FaArrowLeft />}
           rightImage={Hi}
+          onBack={handleBack}
         />
       </article>
 

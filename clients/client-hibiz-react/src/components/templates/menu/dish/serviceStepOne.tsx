@@ -211,7 +211,7 @@ const MemoServiceStepOne = () => {
 
       <article className="mx-6 lg:mx-16 lg:mt-6">
         <label className="font-semibold opacity-50" htmlFor="price">
-          Prices
+          Prices & variants*
         </label>
         <div className="bg-white rounded-2xl">
           <div className="relative p-3 mt-2">
@@ -232,7 +232,45 @@ const MemoServiceStepOne = () => {
               {dishPrice?.toString()?.length}/{7}
             </small>
           </div>
+          <section>
+            <Background>
+              <button
+                onClick={() => redirectToSection(DishSteps.PORTION_STEP)}
+                type="button"
+                className="bg-[#f4f4f4] w-full py-2 rounded-full flex items-center justify-center"
+              >
+                + Add more variants
+              </button>
+            </Background>
+          </section>
         </div>
+        {portions.length > 0 ? (
+          <div className="relative mb-4 overflow-x-auto">
+            <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+              <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                <tr>
+                  <th scope="col" className="px-6 py-3">
+                    variants Name
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Price
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {portions.map((portion, index) => (
+                  <tr
+                    key={`${portion?.name}+${index}`}
+                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
+                  >
+                    <td className="px-6 py-4">{portion.name}</td>
+                    <td className="px-6 py-4">{portion?.price ?? "N/A"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
       </article>
 
       <section

@@ -10,7 +10,6 @@ import useMenuPageStore, {
 import Sidebar from "@/components/templates/menu/sideNavbaar";
 import { cn } from "@hi/common/src/error-handler";
 import PopUp from "@/components/atom/popUp";
-import CreateCategory from "@/components/templates/menu/category/createCategory";
 import { HiX } from "react-icons/hi";
 import ListOfChildCategory from "@/components/templates/menu/category/listOfChildCategories";
 import Search from "@/components/templates/menu/category/search";
@@ -27,12 +26,8 @@ const MemoizeServicesPageManger = () => {
     selectedPage,
     setSelectedPage,
     openMenu,
-    setOpenMenu,
-    resetStore,
     editOpenMenu,
     setEditOpenMenu,
-    setSelectedCategory,
-    resetEditDish,
     setIsMenuManager,
     showAlertPopUp,
     setTempPage,

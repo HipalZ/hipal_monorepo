@@ -7,18 +7,18 @@ import { IoIosColorPalette } from "react-icons/io";
 import { LuLayoutDashboard } from "react-icons/lu";
 
 const preDefinedOptions = [
-  {
-    id: 1,
-    text: "Change Layout",
-    description: "Customize the landing (Explore page) page design",
-    action: <LuLayoutDashboard size={35} />,
-  },
-  {
-    id: 2,
-    text: "Change Menu Layout",
-    description: "Customize the Menu (Explore page) page design",
-    action: <BsMenuButtonWideFill size={35} />,
-  },
+  // {
+  //   id: 1,
+  //   text: "Change Layout",
+  //   description: "Customize the landing (Explore page) page design",
+  //   action: <LuLayoutDashboard size={35} />,
+  // },
+  // {
+  //   id: 2,
+  //   text: "Change Menu Layout",
+  //   description: "Customize the Menu (Explore page) page design",
+  //   action: <BsMenuButtonWideFill size={35} />,
+  // },
   {
     id: 3,
     text: "Change Themes / color",
@@ -50,7 +50,7 @@ const MemoThemesandlayout = () => {
   };
 
   return (
-    <section className="lg:flex lg:justify-between lg:items-center lg:mt-20">
+    <section className="lg:flex lg:justify-between lg:items-start lg:mt-20">
       <section className="explore_page_container">
         <article className="flex justify-center gap-4 m-4">
           <IphoneExplore

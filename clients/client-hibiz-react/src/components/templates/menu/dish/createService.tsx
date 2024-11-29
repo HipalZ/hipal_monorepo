@@ -11,6 +11,7 @@ import EasyReactCropper from "@/components/cropper/cropper";
 import ServiceStepOne from "./serviceStepOne";
 import ServiceSepTwo from "./serviceStepTwo";
 import LinkItems from "./[editDish]/linkItems";
+import PortionStep from "./[editDish]/portionStep";
 
 const MemoCreateService = () => {
   const {
@@ -46,6 +47,9 @@ const MemoCreateService = () => {
       case DishSteps.LINK_CATEGORY_STEP:
         setDishStep(DishSteps.DISH_STEP_1);
         break;
+      case DishSteps.PORTION_STEP:
+        setDishStep(DishSteps.DISH_STEP_1);
+        break;
       case DishSteps.LINK_ADD_TAGS:
         setDishStep(DishSteps.DISH_STEP_2);
         break;
@@ -64,6 +68,8 @@ const MemoCreateService = () => {
         return "Create Service";
       case DishSteps.DISH_STEP_2:
         return "Create Service";
+      case DishSteps.PORTION_STEP:
+        return "Add Varients";
       case DishSteps.LINK_CATEGORY_STEP:
         return "Link Items";
       case DishSteps.LINK_ADD_TAGS:
@@ -71,7 +77,7 @@ const MemoCreateService = () => {
       case DishSteps.SHOW_CROPPER:
         return "Crop Image";
       default:
-        return "Create Dish";
+        return "Create Service";
     }
   };
 
@@ -100,6 +106,7 @@ const MemoCreateService = () => {
       {dishStep === "DISH_STEP_1" && <ServiceStepOne />}
       {dishStep === "DISH_STEP_2" && <ServiceSepTwo />}
       {dishStep === "LINK_CATEGORY_STEP" && <LinkItems />}
+      {dishStep === "PORTION_STEP" && <PortionStep />}
       {dishStep === "LINK_ADD_TAGS" && <LinkTags />}
       {dishStep === "SHOW_CROPPER" && (
         <>

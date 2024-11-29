@@ -130,16 +130,16 @@ const MemoUniquelyYoursPopUp = () => {
           Uniquely Yours{" "}
           <span className="text-sm">( {selectedDishes?.length}/6 )</span>
         </center>
-        <span className="text-gray-500">Add Best dishes to explore page </span>
+        <span className="text-gray-500">Add Best Items to explore page </span>
         <span className="text-xs text-gray-500">
-          ( Note : Only Dishes with Images are displayed )
+          ( Note : Only Items with Images are displayed )
         </span>
         <input
           type="search"
           onChange={handleSearch}
           value={searchQuery}
           className="w-full px-4 py-2 mt-4 mb-4 border border-gray-300 rounded-2xl"
-          placeholder="Search for a dish"
+          placeholder="Search for a items"
         />
       </div>
       <div className="gap-4 space-y-4">
@@ -159,7 +159,7 @@ const MemoUniquelyYoursPopUp = () => {
                     if (isSelected || selectedDishes.length < 6) {
                       handleDishSelect(dish);
                     } else {
-                      toast.error("You can only select 6 dishes");
+                      toast.error("You can only select 6 items");
                     }
                   }}
                 />
@@ -172,7 +172,7 @@ const MemoUniquelyYoursPopUp = () => {
                   />
                 ) : (
                   <center className="text-gray-500">
-                    Add images to the dishes to display here
+                    Add images to the items to display here
                   </center>
                 )}
                 <h6>{dish?.name}</h6>

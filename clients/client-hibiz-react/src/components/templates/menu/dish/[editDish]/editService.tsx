@@ -18,6 +18,7 @@ import type { Area } from "react-easy-crop";
 import ServiceStepOne from "./serviceStepOne";
 import ServiceStepTwo from "./serviceStepTwo";
 import LinkTags from "./linkTags";
+import PortionStep from "./portionStep";
 interface CropperRef {
   getCroppedAreaPixels: () => Area | null;
 }
@@ -71,7 +72,9 @@ const MemoEditService = () => {
       case DishSteps.DISH_STEP_2:
         setDishStep(DishSteps.DISH_STEP_1);
         break;
-
+      case DishSteps.PORTION_STEP:
+        setDishStep(DishSteps.DISH_STEP_1);
+        break;
       case DishSteps.LINK_CATEGORY_STEP:
         setDishStep(DishSteps.DISH_STEP_1);
         break;
@@ -90,8 +93,12 @@ const MemoEditService = () => {
         return `${editDish?.name}`;
       case DishSteps.PORTION_STEP:
         return `${editDish?.name}'s Portions`;
+
       case DishSteps.LINK_CATEGORY_STEP:
-        return `${editDish?.name}'s Categories`;
+        return "Link Items";
+      case DishSteps.LINK_ADD_TAGS:
+        return `${editDish?.name}'s Tags`;
+
       default:
         return `${editDish?.name}`;
     }
@@ -144,6 +151,7 @@ const MemoEditService = () => {
         {dishStep === "DISH_STEP_2" && <ServiceStepTwo />}
         {dishStep === "LINK_CATEGORY_STEP" && <LinkItems />}
         {dishStep === "LINK_ADD_TAGS" && <LinkTags />}
+        {dishStep === "PORTION_STEP" && <PortionStep />}
         {dishStep === "CONFIRM_DELETE" && (
           <DeleteDish handleDelete={handleDelete} />
         )}
