@@ -184,6 +184,17 @@ const businessData = [
       "Survey No. 35, Gundla pochampally Road, Kompally Village,Quthbullapur Hyderabad Telangana-500014",
     gst: "36AANFD8985A1Z3",
   },
+  {
+    id: "017",
+    date: "29 Nov 2024",
+    name: "papaya",
+    bizName: "ANRISA FOODS LLP",
+    status: false,
+    serviceCost: 4000,
+    months: 3,
+    address: "Road 82 Jubliee hills, film nagar hyderabad Telangana-500033",
+    gst: "36ABVFA3974F1ZZ",
+  },
 ];
 
 const MemoInovices = () => {
