@@ -161,7 +161,7 @@ const MemoPortionStep = () => {
                     type="text"
                     id={`name-${index}`}
                     name="name"
-                    placeholder="Enter Portion Name"
+                    placeholder="Enter Name"
                     maxLength={21}
                     minLength={3}
                     required
