@@ -111,7 +111,7 @@ const MemoStaffs = () => {
                 ))
               ) : (
                 <center className="my-4 text-lg text-gray-500">
-                  No Captains Found
+                  No Staffs Found
                 </center>
               )}
             </ul>

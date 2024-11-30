@@ -114,7 +114,7 @@ const MemoPayOnlineSuccess = () => {
           color: "#CB5A5C",
           subHeader: "Your Payment of",
           amount: `₹ ${amount}`,
-          footer: "Will be confirmed by the waiter",
+          footer: "Will be confirmed by the staff",
           coinzContent: `You will get ${claim} coinz`,
         };
     }

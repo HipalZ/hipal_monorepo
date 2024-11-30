@@ -56,6 +56,7 @@ export interface IBiz {
   phoneNumber: string;
   __v: number;
   id: string;
+  outLetType: string;
 }
 export interface IBanner {
   _id: string;
