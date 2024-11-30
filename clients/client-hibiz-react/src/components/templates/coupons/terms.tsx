@@ -69,7 +69,7 @@ const MemoTerms = () => {
       ? `This coupon works only between ${startTime}:00 AM to ${endTime}:00 AM.`
       : null,
     getExpiryMessage(),
-    dineInOnly ? "This coupon is applicable only on dine-in." : null,
+    dineInOnly ? "This coupon is applicable only on walk-in." : null,
     "Hipalz has no role to play on issues, charges, refunds and other things related to this.",
     "Other T&C may apply.",
   ].filter(Boolean);
