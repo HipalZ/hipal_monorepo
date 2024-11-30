@@ -1,15 +1,9 @@
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { useReview } from "@/components/store/useReview";
 import { cn, reviewColors } from "@/components/utils/helpers";
 import { memo } from "react";
 import { AiTwotoneEdit } from "react-icons/ai";
 import { MdOutlinePerson } from "react-icons/md";
-
-const improvementAreas = [
-  { name: "Food Taste" },
-  { name: "Waiter & Behavior" },
-  { name: "Ambience" },
-  { name: "Hygiene & Cleanliness" },
-];
 
 const MemoImprovements = () => {
   const {
@@ -29,6 +23,17 @@ const MemoImprovements = () => {
     improve: s.improve,
     setImprove: s.setImprove,
   }));
+
+  const { businessDetails } = useBusinessDetails((s) => ({
+    businessDetails: s.businessDetails,
+  }));
+
+  const improvementAreas = [
+    { name: businessDetails?.outLetType !== "MENU" ? "Service" : "Food Taste" },
+    { name: "Staff & Behavior" },
+    { name: "Ambience" },
+    { name: "Hygiene & Cleanliness" },
+  ];
 
   const handleFeedback = (area) => {
     setImprove({

@@ -61,6 +61,7 @@ export const useBusinessDetails = create(
         __v: 0,
         id: "",
         phoneNumber: "",
+        outLetType: "MENU",
       },
       setBusinessDetails: (businessDetails: IBiz) =>
         set({ businessDetails: businessDetails }),
