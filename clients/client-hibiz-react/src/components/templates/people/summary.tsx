@@ -160,7 +160,11 @@ const MemoSummary = () => {
             </>
           ) : (
             <div className="flex flex-col items-center justify-center h-full">
-              <img src={NoData} alt="No Data Found" className="h-auto w-[80%] rounded-2xl" />
+              <img
+                src={NoData}
+                alt="No Data Found"
+                className="h-auto w-[80%] rounded-2xl"
+              />
               <h3 className="text-[#5197F8] mt-4">No Data Found</h3>
             </div>
           )}
@@ -218,7 +222,11 @@ const MemoSummary = () => {
                 >
                   <section className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#6F649B] rounded-full" />
-                    <h3>{key}</h3>
+                    {key === "service"
+                      ? "Staff and Behaviour"
+                      : key === "foodTaste"
+                        ? "Service"
+                        : key}
                   </section>
                   <section className="flex items-center gap-4">
                     <section className="flex items-center gap-1">
