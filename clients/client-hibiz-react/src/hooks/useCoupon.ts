@@ -103,7 +103,7 @@ export const useSaveCoupon = () => {
       if (!data.err) {
         toast.success("Coupon saved successfully!");
         const coupon = data.data as any;
-        if (coupon.conditions.eligibleUser.allUsers) {
+        if (coupon?.conditions?.eligibleUser?.allUsers) {
           useCouponsStore.setState({
             couponId: coupon?._id,
             links: coupon?.conditions?.links,
