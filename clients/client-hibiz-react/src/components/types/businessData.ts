@@ -929,3 +929,23 @@ export interface IWalletHistory {
   updatedAt: string;
   __v: number;
 }
+
+export interface IUserMessage {
+  _id: string;
+  businessId: string;
+  userId: string;
+  text: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface IWhatsAppMessage {
+  _id: string;
+  businessId: string;
+  date: number;
+  isDeleted: boolean;
+  isOwner: boolean;
+  message: string;
+  userId: string;
+  ownerId: string;
+}

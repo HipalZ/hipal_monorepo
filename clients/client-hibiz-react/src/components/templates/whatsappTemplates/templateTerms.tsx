@@ -1,6 +1,6 @@
 import MiddlePopUp from "@/components/atom/middlePopUp";
 import useBusinessData from "@/components/store/useBusinessData";
-import { useWhatsappTempStore } from "@/components/store/useTempStore";
+import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
 import useWhatsapp, {
   ActionType,
   HeaderInterface,

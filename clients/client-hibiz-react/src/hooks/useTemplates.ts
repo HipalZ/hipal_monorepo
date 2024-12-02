@@ -13,11 +13,13 @@ import { useMessageRecipientsStore } from "@/components/store/useMessageRecipien
 import type {
   ICouponzLinks,
   ISendOptionsPayload,
+  IUserMessage,
   IWalletHistory,
   MainResponseHandling,
   WhatsAppTemplatePayload,
 } from "@/components/types/businessData";
-import { useWhatsappTempStore } from "@/components/store/useTempStore";
+import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
+import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 
 export const useCreateTemplate = () => {
   const queryClient = useQueryClient();
@@ -115,7 +117,7 @@ export const useEditTemplate = () => {
 
 export const useFetchTemplates = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
-  const { setAllTemplates } = useWhatsapp((s) => ({
+  const { setAllTemplates } = useWhatsappTempStore((s) => ({
     setAllTemplates: s.setAllTemplates,
   }));
   const getTemplates = async () => {
@@ -323,4 +325,116 @@ export const useCouponzLinks = () => {
   }, [businessId, setCouponzLinks]);
 
   return { getCouponzLinks };
+};
+
+export const useSendWhatsappMessage = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: IUserMessage) => {
+      const res = await apiRpc.whatsapp["send-messages"].$post({
+        json: payload,
+      });
+      const response = await res.json();
+      return response;
+    },
+    onSuccess: (response) => {
+      if (response.err) {
+        toast.error(response?.message || "Failed to send message");
+      } else {
+        toast.success("Message sent successfully");
+      }
+      // queryClient.invalidateQueries({ queryKey: ["fetchUserChats"] });
+      queryClient.invalidateQueries({ queryKey: ["walletBalance"] });
+    },
+    onError: (error) => {
+      toast.error("Failed to send message");
+      console.error("Error sending message:", error);
+    },
+  });
+};
+
+export const useDeleteChats = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      ownerId,
+    }: { userId: string; ownerId: string }) => {
+      await apiRpc.whatsapp["user-messages"][":userId"][":ownerId"].$delete({
+        param: {
+          userId,
+          ownerId,
+        },
+      });
+    },
+    onSuccess: () => {
+      toast.success("Chats deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["fetchUserChats"] });
+      // queryClient.invalidateQueries({ queryKey: ["walletBalance"] });
+    },
+    onError: () => {
+      toast.error("Failed to delete chats");
+    },
+  });
+};
+
+export const useFetchAllUsers = () => {
+  const { setUsers } = useWhatsappTempStore((s) => ({
+    setUsers: s.setUsers,
+  }));
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  const fetchAllUserMessages = async () => {
+    const response = await apiRpc.subscribers.all[":businessId"].$get({
+      param: { businessId },
+    });
+    const userMessages = await response.json();
+    setUsers(userMessages?.data);
+    return userMessages;
+  };
+
+  return { fetchAllUserMessages };
+};
+
+export const useFetchUserChats = () => {
+  const { setUserChat, selectedUser } = useWhatsappTempStore((s) => ({
+    setUserChat: s.setUserChat,
+    selectedUser: s.selectedUser,
+  }));
+  const ownerId = useOwnerLogin((s) => s.user?._id);
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  const fetchUserChats = async () => {
+    const response = await apiRpc.whatsapp["user-messages"][":userId"][
+      ":ownerId"
+    ][":businessId"].$get({
+      param: {
+        userId: selectedUser?._id?.toString(),
+        ownerId,
+        businessId,
+      },
+    });
+    const userMessages = await response.json();
+    setUserChat(userMessages?.data);
+    return userMessages;
+  };
+
+  return { fetchUserChats };
+};
+
+export const useSearchUserByPhone = () => {
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  const searchUserByPhone = async (phone: string) => {
+    const response = await apiRpc.subscribers["subscriber-phone"][
+      ":businessId"
+    ][":phone"].$get({
+      param: {
+        businessId: businessId,
+        phone,
+      },
+    });
+    const user = await response.json();
+    console.log("user", user);
+    return user;
+  };
+
+  return { searchUserByPhone };
 };

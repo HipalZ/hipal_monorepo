@@ -4,22 +4,25 @@ import type { WhatsAppTemplatePayload } from "@/components/types/businessData";
 import { cn } from "@/components/utils/helper";
 import diwali from "@/assets/whatzapp/diwali.jpg";
 import ShimmerImage from "../shimmer";
+import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
 
 const OpenConfirmEdit = lazy(() => import("./openConfirmEdit"));
 
 const MemoTemplatesCarousel = () => {
   const {
     setTemplateData,
-    allTemplates,
     setShowSuccessPopup,
     isOpenEditModal,
     setIsOpenEditModal,
   } = useWhatsapp((s) => ({
     setTemplateData: s.setTemplateData,
-    allTemplates: s.allTemplates,
     setShowSuccessPopup: s.setShowSuccessPopup,
     isOpenEditModal: s.isOpenEditModal,
     setIsOpenEditModal: s.setIsOpenEditModal,
+  }));
+
+  const { allTemplates } = useWhatsappTempStore((s) => ({
+    allTemplates: s.allTemplates,
   }));
 
   const handleTemplateClick = useCallback(

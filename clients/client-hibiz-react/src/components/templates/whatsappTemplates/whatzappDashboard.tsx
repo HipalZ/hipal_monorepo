@@ -11,11 +11,13 @@ import LoadingSpinner from "@/components/atom/loadingSpinner";
 import BottomButton from "@/components/atom/bottomButton";
 import { MdCampaign } from "react-icons/md";
 import { HiOutlineTemplate } from "react-icons/hi";
-import { Tabs, useWhatsappTempStore } from "@/components/store/useTempStore";
+import {
+  Tabs,
+  useWhatsappTempStore,
+} from "@/components/store/useWhatsappTempStore";
 
 const TemplatesCarousel = lazy(() => import("./templatesCarousel"));
 const CampaignAnalytics = lazy(() => import("./campaignAnalytics"));
-// const WhatsappChat = lazy(() => import("./whatsappbot"));
 
 const MemoWhatzappDashboard = () => {
   const {
@@ -149,16 +151,7 @@ const MemoWhatzappDashboard = () => {
           </article>
         </section>
       )}
-
       {activeTab === Tabs.CAMPAIGNS && <CampaignAnalytics />}
-
-      {/* {activeTab === Tabs.AUTOMATION && (
-        <section>
-          <h2 className="mb-6 text-2xl font-semibold">Automation</h2>
-          <p>Automation content goes here.</p>
-        </section>
-      )} */}
-      {/* <WhatsappChat /> */}
     </main>
   );
 };
