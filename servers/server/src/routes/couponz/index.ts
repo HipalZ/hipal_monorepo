@@ -378,6 +378,7 @@ const couponzRouter = new Hono()
             endTime: createdCoupon[0].conditions.availability.endTime,
             customDays: createdCoupon[0].conditions.availability.customDays,
           },
+          eligibleUser: createdCoupon[0].conditions.eligibleUser,
           tc: createdCoupon[0].conditions.tc,
           links: [
             {
