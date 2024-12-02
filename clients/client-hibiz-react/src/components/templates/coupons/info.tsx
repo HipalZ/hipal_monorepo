@@ -32,10 +32,16 @@ const MemoInfo = () => {
       if (!couponId) {
         return toast.error("Coupon ID is missing. Cannot pause.");
       }
-      await editCoupon({
-        payload: { isPublish: isPublish },
-        couponId,
-      });
+
+      try {
+        await editCoupon({
+          payload: { isPublish: isPublish },
+          couponId,
+        });
+      } catch (error) {
+        toast.error("Failed to pause coupon.");
+        console.error("Error pausing coupon:", error);
+      }
     },
     [couponId],
   );

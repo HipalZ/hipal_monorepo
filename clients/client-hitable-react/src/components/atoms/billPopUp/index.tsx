@@ -9,9 +9,9 @@ import { apiRpc } from "@hi/common";
 import { type ChangeEvent, memo, useCallback, useState } from "react";
 import { FiCopy } from "react-icons/fi";
 import { MdOutlineCall } from "react-icons/md";
-import { toast } from "react-toastify";
 import LoadingSpinner from "../loadingSpinner";
 import PopUp from "../popUp";
+import toast from "react-hot-toast";
 
 const BillPopUpMemo = () => {
   const { errorText } = useErrorHandling();
