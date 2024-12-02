@@ -52,3 +52,4 @@ export * from "./whatsAppPlan";
 export * from "./whatsAppTemplateAnalytics";
 export * from "./whatsAppWallet";
 export * from "./whatsAppWalletHistory";
+export * from "./whatsAppUser";

@@ -10,6 +10,7 @@ import {
   WhatAppTemplate,
   WhatsAppBusinessConfig,
   WhatsAppPayment,
+  WhatsAppUser,
   WhatsAppWallet,
   WhatsAppWalletHistory,
 } from "@hi/db-models";
@@ -1759,7 +1760,7 @@ const whatsappRouter = new Hono()
       const phon_no_id = value?.metadata?.phone_number_id;
       const config = await WhatsAppBusinessConfig.findOne({
         phoneId: phon_no_id,
-      }).select("businessId token");
+      }).select("businessId token ownerId");
       if (statuses && statuses.length > 0) {
         const firstStatus = statuses[0];
         const extractedData = {
@@ -1830,6 +1831,46 @@ const whatsappRouter = new Hono()
               "Content-Type": "application/json",
             },
           });
+        } else {
+          const user = await User.findOne({
+            phone: userPhone,
+          }).select("_id");
+
+          if (user && messages?.text?.body) {
+            await WhatsAppUser.create({
+              businessId: config?.businessId,
+              date: Date.now(),
+              message: messages?.text?.body,
+              isOwner: false,
+              userId: user?._id,
+              ownerId: config?.ownerId,
+            });
+
+            const unseenMessages = await WhatsAppUser.find({
+              businessId: config?.businessId,
+              userId: user?._id,
+              isOwner: false,
+              seen: false,
+            }).select("seen");
+
+            console.log("unseenMessages", unseenMessages);
+            console.log("user", user);
+
+            const data = await Subscriber.findOneAndUpdate(
+              {
+                userId: user?._id,
+                businessId: config?.businessId,
+              },
+              {
+                $set: {
+                  whatsappMsgUnseenCount: unseenMessages.length,
+                },
+              },
+              { new: true },
+            );
+
+            console.log("data", data);
+          }
         }
 
         if (userPhone.length === 10) {
@@ -1953,6 +1994,141 @@ const whatsappRouter = new Hono()
         message: "Updated successfully",
         err: false,
         data: createWhatsAppConfig,
+      });
+    },
+  )
+
+  .post(
+    "/send-messages",
+
+    async (c) => {
+      const body = await c.req.json();
+      const { text, phoneNumber, businessId, isOwner, userId, ownerId } = body;
+      const config = await WhatsAppBusinessConfig.findOne({
+        businessId,
+      }).select("token phoneId");
+      console.log(config);
+      const response = await axios({
+        method: "POST",
+        url: `https://graph.facebook.com/v21.0/${config?.phoneId}/messages?access_token=${config?.token}`,
+        data: {
+          messaging_product: "whatsapp",
+          to: phoneNumber?.toString(),
+          text: {
+            body: text,
+          },
+        },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      console.log(response.data);
+      console.log("phone number", phoneNumber);
+      const saveUserMessage = await WhatsAppUser.create({
+        businessId,
+        date: Date.now(),
+        message: text,
+        isOwner: isOwner,
+        userId: userId,
+        ownerId: ownerId,
+      });
+      if (!saveUserMessage) {
+        return c.json({
+          message: "Error sending message",
+          err: true,
+          data: {},
+        });
+      }
+
+      return c.json({
+        message: "Message sent successfully",
+        err: false,
+        data: {},
+      });
+    },
+  )
+
+  .get(
+    "/user-messages/:userId/:ownerId/:businessId",
+
+    async (c) => {
+      const { userId, ownerId, businessId } = c.req.param();
+
+      const user = await WhatsAppUser.find({
+        userId,
+        ownerId,
+        isDeleted: false,
+      });
+
+      await WhatsAppUser.updateMany(
+        {
+          userId,
+          ownerId,
+        },
+        {
+          $set: {
+            seen: true,
+          },
+        },
+      );
+
+      await Subscriber.findOneAndUpdate(
+        {
+          userId: userId,
+          businessId,
+        },
+        {
+          whatsappMsgUnseenCount: 0,
+        },
+      );
+
+      return c.json({
+        message: "Messages found",
+        err: false,
+        data: user,
+      });
+    },
+  )
+  .get(
+    "/allUsers-messages/:ownerId",
+
+    async (c) => {
+      const { ownerId } = c.req.param();
+
+      const user = await WhatsAppUser.find({
+        ownerId,
+      });
+
+      return c.json({
+        message: "Messages found",
+        err: false,
+        data: user,
+      });
+    },
+  )
+
+  .delete(
+    "/user-messages/:userId/:ownerId",
+
+    async (c) => {
+      const { userId, ownerId } = c.req.param();
+
+      const user = await WhatsAppUser.updateMany(
+        {
+          userId,
+          ownerId,
+        },
+        {
+          $set: {
+            isDeleted: true,
+          },
+        },
+      );
+
+      return c.json({
+        message: "Messages found",
+        err: false,
+        data: user,
       });
     },
   );

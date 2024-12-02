@@ -24,6 +24,7 @@ export const businessSubscriberValidator = z.object({
       message: "date must be a number",
     })
     .optional(),
+  whatsappMsgUnseenCount: z.number().default(0).optional(),
 });
 
 export type BusinessSubscriber = z.infer<typeof businessSubscriberValidator>;

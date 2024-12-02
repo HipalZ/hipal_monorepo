@@ -46,6 +46,11 @@ const whatsAppBusinessConfigSchema =
         type: String,
         required: true,
       },
+      ownerId: {
+        type: ObjectId,
+        required: true,
+        ref: "User",
+      },
     },
     {
       timestamps: true,
