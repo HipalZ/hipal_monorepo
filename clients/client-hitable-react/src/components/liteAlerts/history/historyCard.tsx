@@ -98,7 +98,7 @@ const HistoryCard = (props: IOnlineProp) => {
                       : alert?.userId?.name}
                   </p>
                   {alert?.alertType === "ONLINE" ? null : (
-                    <p>Waiter : {alert?.waiterName || "Captain"}</p>
+                    <p>Staff : {alert?.waiterName || "Staff"}</p>
                   )}
                   <article className="space-y-1">
                     <h1 className="text-base text-gray-700">

@@ -95,9 +95,9 @@ const OfflineAlertCard = (props: IOfflineProp) => {
                 <div className="mx-4 my-4 min-h-[9rem] rounded-xl bg-white p-3">
                   <section className="relative flex justify-between mb-2">
                     <article className="flex w-[8rem] items-center rounded-full bg-[#ffe9cf] px-2">
-                      <img src={callwaiter} alt="callwaiter" loading="lazy" />
+                      <img src={callwaiter} alt="call" loading="lazy" />
                       &nbsp;&nbsp;
-                      <h1 className="text-xs">Call the waiter</h1>
+                      <h1 className="text-xs">Call the staff</h1>
                     </article>
                     <article>
                       <h1 className="text-xs text-gray-500">
