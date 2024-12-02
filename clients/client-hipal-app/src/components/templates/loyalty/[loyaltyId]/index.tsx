@@ -11,10 +11,10 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import line from "@/assets/svg/Line.svg";
 import ellipse from "@/assets/svg/ellipse.svg";
-import toast from "react-hot-toast";
 import { apiRpc } from "@hi/common";
 import { useParams, useRouter } from "next/navigation";
 import { useErrorHandling } from "@/utils/helper";
+import { toast } from "react-toastify";
 
 const BackButton = dynamic(() => import("@/components/atoms/backButton"));
 const BottomButton = dynamic(

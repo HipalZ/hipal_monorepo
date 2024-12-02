@@ -62,7 +62,7 @@ const MemoSeeMyCouponz = () => {
     if (tableName) {
       setOpenBillModal((prev) => !prev);
     } else {
-      toast.error("Please scan your table QR code first");
+      toast.error("Please scan your QR code first");
       return router.push(`/${customLink}/scan`);
     }
   }, [openBillModal]);
@@ -83,134 +83,126 @@ const MemoSeeMyCouponz = () => {
   }
 
   return (
-    
-      <main className="bg-[#F1F0F5] min-h-[100vh] h-full py-4 relative pb-[5rem]">
-        <section className="fixed top-0 z-20 flex justify-between w-full gap-4 p-2 bg-white">
-          <article className="flex items-center gap-4">
-            <Link href={`/${customLink}/explore`}>
-              <button
-                type="button"
-                className="py-2 rounded-full z-[60] px-4 text-black bg-[#ffffff70] border"
-              >
-                <BiArrowBack />
-              </button>
-            </Link>
-            <h1 className="text-xl text-black">My Couponz</h1>
-          </article>
-          <picture className="mr-6">
-            <Image src={logoUrl} alt="logoUrl" width={44} height={44} />
-          </picture>
-        </section>
-        <br />
-        <br />
-        {sortedCouponz && sortedCouponz.length > 0 ? (
-          sortedCouponz.map((coupon) => {
-            const startTime = formatTime(
-              coupon?.conditions?.availability?.startTime || 1,
-            );
+    <main className="bg-[#F1F0F5] min-h-[100vh] h-full py-4 relative pb-[5rem]">
+      <section className="fixed top-0 z-20 flex justify-between w-full gap-4 p-2 bg-white">
+        <article className="flex items-center gap-4">
+          <Link href={`/${customLink}/explore`}>
+            <button
+              type="button"
+              className="py-2 rounded-full z-[60] px-4 text-black bg-[#ffffff70] border"
+            >
+              <BiArrowBack />
+            </button>
+          </Link>
+          <h1 className="text-xl text-black">My Couponz</h1>
+        </article>
+        <picture className="mr-6">
+          <Image src={logoUrl} alt="logoUrl" width={44} height={44} />
+        </picture>
+      </section>
+      <br />
+      <br />
+      {sortedCouponz && sortedCouponz.length > 0 ? (
+        sortedCouponz.map((coupon) => {
+          const startTime = formatTime(
+            coupon?.conditions?.availability?.startTime || 1,
+          );
 
-            const endTime = formatTime(
-              coupon?.conditions?.availability?.endTime || 23.5,
-            );
-            return (
-              <section
-                key={coupon?._id}
-                className={`flex max-h-full m-4 rounded-2xl inter ${
-                  coupon?._id === selectedCoupon?._id ? "shake" : ""
-                }`}
-              >
-                <picture className="max-w-[8.5rem] w-full shrink-0 shadow-2xl rounded-2xl">
-                  <Image
-                    src={coupon?.image || birthdayPlaceholder}
-                    alt="bp"
-                    width={200}
-                    height={200}
-                    className="bg-[#CACACA] w-full h-full shadow-2xl aspect-square rounded-l-2xl"
-                    style={{
-                      objectFit: "cover",
-                    }}
-                  />
-                </picture>
-                <article className="px-3 py-2 text-black bg-white shadow-2xl custom-size rounded-r-2xl">
-                  <article className="flex items-start justify-between">
-                    <h1 className="px-1 text-sm leading-none">
-                      {coupon?.name}
-                    </h1>
-                    <button
-                      type="button"
-                      onClick={openPaymentModal}
-                      className="text-sm shrink-0 text-[#f13f8a] font-semibold leading-none"
-                    >
-                      Use Now
-                    </button>
-                  </article>
-                  <div className="relative z-10 grid grid-cols-2 gap-4 px-1 mt-4">
-                    <div className="flex flex-col items-start w-full space-y-1">
-                      <h3 className="text-[0.6rem] text-gray-500">
-                        Min. Bill Amount
-                      </h3>
-                      <p className="text-xs">
-                        ₹{coupon?.conditions?.billValue}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-start space-y-1">
-                      <h3 className="text-[0.6rem]  text-gray-500">
-                        Valid Till
-                      </h3>
-                      <p className="text-xs">
-                        {formatDate(coupon?.conditions?.couponEndDate)}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-start space-y-1">
-                      <h3 className="text-[0.6rem]  text-gray-500">
-                        Applicable on
-                      </h3>
-                      <p className="text-xs text-left capitalize">
-                        {getAvailabilityText(
-                          coupon?.conditions?.availability?.when,
-                          coupon?.conditions?.availability?.customDays || [],
-                        ).map((text, index, array) => (
-                          <React.Fragment key={text}>
-                            {text}
-                            {index + 1 !== array.length && ","}
-                            {(index + 1) % 3 === 0 &&
-                              index + 1 !== array.length && <br />}
-                          </React.Fragment>
-                        ))}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-start space-y-1">
-                      <h3 className="text-[0.6rem]  text-gray-500">Avail on</h3>
-                      <p className="text-xs">
-                        {startTime}-{endTime}
-                      </p>
-                    </div>
-                  </div>
+          const endTime = formatTime(
+            coupon?.conditions?.availability?.endTime || 23.5,
+          );
+          return (
+            <section
+              key={coupon?._id}
+              className={`flex max-h-full m-4 rounded-2xl inter ${
+                coupon?._id === selectedCoupon?._id ? "shake" : ""
+              }`}
+            >
+              <picture className="max-w-[8.5rem] w-full shrink-0 shadow-2xl rounded-2xl">
+                <Image
+                  src={coupon?.image || birthdayPlaceholder}
+                  alt="bp"
+                  width={200}
+                  height={200}
+                  className="bg-[#CACACA] w-full h-full shadow-2xl aspect-square rounded-l-2xl"
+                  style={{
+                    objectFit: "cover",
+                  }}
+                />
+              </picture>
+              <article className="px-3 py-2 text-black bg-white shadow-2xl custom-size rounded-r-2xl">
+                <article className="flex items-start justify-between">
+                  <h1 className="px-1 text-sm leading-none">{coupon?.name}</h1>
+                  <button
+                    type="button"
+                    onClick={openPaymentModal}
+                    className="text-sm shrink-0 text-[#f13f8a] font-semibold leading-none"
+                  >
+                    Use Now
+                  </button>
                 </article>
-              </section>
-            );
-          })
-        ) : (
-          <center className="text-black">No Couponz Found</center>
-        )}
-        <button
-          type="button"
-          onClick={redirectExplore}
-          className="fixed md:absolute z-20 w-[92%] mx-4 text-white bg-black rounded-full btn bottom-4"
+                <div className="relative z-10 grid grid-cols-2 gap-4 px-1 mt-4">
+                  <div className="flex flex-col items-start w-full space-y-1">
+                    <h3 className="text-[0.6rem] text-gray-500">
+                      Min. Bill Amount
+                    </h3>
+                    <p className="text-xs">₹{coupon?.conditions?.billValue}</p>
+                  </div>
+                  <div className="flex flex-col items-start space-y-1">
+                    <h3 className="text-[0.6rem]  text-gray-500">Valid Till</h3>
+                    <p className="text-xs">
+                      {formatDate(coupon?.conditions?.couponEndDate)}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-start space-y-1">
+                    <h3 className="text-[0.6rem]  text-gray-500">
+                      Applicable on
+                    </h3>
+                    <p className="text-xs text-left capitalize">
+                      {getAvailabilityText(
+                        coupon?.conditions?.availability?.when,
+                        coupon?.conditions?.availability?.customDays || [],
+                      ).map((text, index, array) => (
+                        <React.Fragment key={text}>
+                          {text}
+                          {index + 1 !== array.length && ","}
+                          {(index + 1) % 3 === 0 &&
+                            index + 1 !== array.length && <br />}
+                        </React.Fragment>
+                      ))}
+                    </p>
+                  </div>
+                  <div className="flex flex-col items-start space-y-1">
+                    <h3 className="text-[0.6rem]  text-gray-500">Avail on</h3>
+                    <p className="text-xs">
+                      {startTime}-{endTime}
+                    </p>
+                  </div>
+                </div>
+              </article>
+            </section>
+          );
+        })
+      ) : (
+        <center className="text-black">No Couponz Found</center>
+      )}
+      <button
+        type="button"
+        onClick={redirectExplore}
+        className="fixed md:absolute z-20 w-[92%] mx-4 text-white bg-black rounded-full btn bottom-4"
+      >
+        Go to explore
+      </button>
+      {openBillModal && (
+        <BottomPopUp
+          show={openBillModal}
+          onClose={openPaymentModal}
+          linearGradTheme
         >
-          Go to explore
-        </button>
-        {openBillModal && (
-          <BottomPopUp
-            show={openBillModal}
-            onClose={openPaymentModal}
-            linearGradTheme
-          >
-            <AddAmountModal />
-          </BottomPopUp>
-        )}
-      </main>
-    
+          <AddAmountModal />
+        </BottomPopUp>
+      )}
+    </main>
   );
 };
 

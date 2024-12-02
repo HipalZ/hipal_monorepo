@@ -13,7 +13,6 @@ import BottomButton from "@/components/molecules/bottomButton";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import Link from "next/link";
-import toast from "react-hot-toast";
 import { apiRpc } from "@hi/common";
 import { RiArrowLeftLine } from "react-icons/ri";
 import CardSection from "@/components/atoms/cardSection";
@@ -21,6 +20,7 @@ import Avtaar from "@/assets/login/cat.png";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import dynamic from "next/dynamic";
 import { useErrorHandling } from "@/utils/helper";
+import { toast } from "react-toastify";
 
 const CouponzBlink = dynamic(() => import("../newPayment/couponzBlink"), {
   ssr: false,

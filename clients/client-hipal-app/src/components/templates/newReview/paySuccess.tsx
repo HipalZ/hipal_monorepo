@@ -7,7 +7,6 @@ import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
-import toast from "react-hot-toast";
 import { apiRpc } from "@hi/common";
 import CardSection from "@/components/atoms/cardSection";
 import Avtaar from "@/assets/login/cat.png";
@@ -17,6 +16,7 @@ import CurvedText from "@/components/atoms/curvedText";
 import Sunrays from "@/assets/img/sunrays_white.png";
 import { useReview } from "@/components/store/useReview";
 import { useErrorHandling } from "@/utils/helper";
+import { toast } from "react-toastify";
 
 const CouponzBlink = dynamic(() => import("../newPayment/couponzBlink"), {
   ssr: false,
