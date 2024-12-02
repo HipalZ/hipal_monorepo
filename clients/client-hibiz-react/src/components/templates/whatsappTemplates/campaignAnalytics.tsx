@@ -4,7 +4,10 @@ import useWhatsapp, {
   TemplateSteps,
 } from "@/components/store/useWhatsapp";
 import toast from "react-hot-toast";
-import { Tabs, useWhatsappTempStore } from "@/components/store/useTempStore";
+import {
+  Tabs,
+  useWhatsappTempStore,
+} from "@/components/store/useWhatsappTempStore";
 import { apiRpc } from "@hi/common";
 import useBusinessData from "@/components/store/useBusinessData";
 import type { WhatsAppTemplatePayload } from "@/components/types/businessData";
@@ -22,20 +25,19 @@ export interface Campaign {
 const MemoCampaignAnalytics: React.FC = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
   const {
-    allTemplates,
     setTemplateData,
     setTemplateSteps,
     setStep,
     setSingleTemplateAnalytics,
   } = useWhatsapp((s) => ({
-    allTemplates: s.allTemplates,
     setTemplateData: s.setTemplateData,
     setTemplateSteps: s.setTemplateSteps,
     setStep: s.setStep,
     setSingleTemplateAnalytics: s.setSingleTemplateAnalytics,
   }));
-  const { setActiveTab } = useWhatsappTempStore((s) => ({
+  const { setActiveTab, allTemplates } = useWhatsappTempStore((s) => ({
     setActiveTab: s.setActiveTab,
+    allTemplates: s.allTemplates,
   }));
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
     null,

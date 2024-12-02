@@ -10,7 +10,7 @@ import { useState } from "react";
 import BottomButton from "@/components/atom/bottomButton";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useErrorHandling } from "@/components/utils/errorHandling";
-import { useWhatsappTempStore } from "@/components/store/useTempStore";
+import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
 import { useQueryClient } from "@tanstack/react-query";
 
 const pricingPlans = [

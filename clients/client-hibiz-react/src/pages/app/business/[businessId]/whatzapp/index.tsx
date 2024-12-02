@@ -8,9 +8,13 @@ import useWhatsapp, {
   TemplateSteps,
 } from "@/components/store/useWhatsapp";
 import { lazy, memo, useCallback } from "react";
+import { BsWhatsapp } from "react-icons/bs";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
+const WhatsappChats = lazy(
+  () => import("@/components/templates/whatsappTemplates/whatsappChats"),
+);
 const WhatzappPayment = lazy(
   () => import("@/components/templates/whatsappTemplates/whatzappPayment"),
 );
@@ -50,14 +54,21 @@ const MemoWhatzapp = () => {
   const businessData = useBusinessData((s) => s.businessData);
   const navigate = useNavigate();
 
+  const toggleChat = useCallback(() => {
+    if (step === Step.CHATS) return setStep(Step.SETUP);
+    setStep(Step.CHATS);
+  }, [setStep, step]);
+
   const handleBack = useCallback(() => {
-    console.log("templateSteps", templateSteps);
-    console.log("step", step);
     if (templateSteps !== TemplateSteps.NONE) {
       switch (templateSteps) {
         case TemplateSteps.MODIFY:
         case TemplateSteps.CREATE_EDIT:
-          if (step === Step.TRANSACTIONS || step === Step.WALLET_HISTORY) {
+          if (
+            step === Step.TRANSACTIONS ||
+            step === Step.WALLET_HISTORY ||
+            step === Step.CHATS
+          ) {
             setTemplateSteps(TemplateSteps.CREATE_EDIT);
             setStep(Step.CREATE_EDIT);
           } else {
@@ -66,7 +77,11 @@ const MemoWhatzapp = () => {
           }
           break;
         case TemplateSteps.SHOW_OPTIONS:
-          if (step === Step.TRANSACTIONS || step === Step.WALLET_HISTORY) {
+          if (
+            step === Step.TRANSACTIONS ||
+            step === Step.WALLET_HISTORY ||
+            step === Step.CHATS
+          ) {
             setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
             setStep(Step.CREATE_EDIT);
           } else {
@@ -74,7 +89,11 @@ const MemoWhatzapp = () => {
           }
           break;
         case TemplateSteps.SEND:
-          if (step === Step.TRANSACTIONS || step === Step.WALLET_HISTORY) {
+          if (
+            step === Step.TRANSACTIONS ||
+            step === Step.WALLET_HISTORY ||
+            step === Step.CHATS
+          ) {
             setTemplateSteps(TemplateSteps.SEND);
             setStep(Step.CREATE_EDIT);
           } else {
@@ -91,6 +110,7 @@ const MemoWhatzapp = () => {
         case Step.WALLET_HISTORY:
         case Step.CREATE_EDIT:
         case Step.TRANSACTIONS:
+        case Step.CHATS:
           setStep(Step.SETUP);
           break;
         default:
@@ -129,6 +149,21 @@ const MemoWhatzapp = () => {
         {step === Step.WALLET_HISTORY && <WalletHistory />}
         {step === Step.CREATE_EDIT && <CreateEditTemplate />}
         {step === Step.TRANSACTIONS && <WhatzappPayment />}
+        {step === Step.CHATS ? (
+          <WhatsappChats />
+        ) : (
+          <section className="sticky max-w-[69rem] bottom-4 right-0 float-end z-50">
+            <button
+              type="button"
+              onClick={toggleChat}
+              className="bg-[#25D366] text-white p-4 rounded-full shadow-lg hover:bg-[#128C7E] transition-all duration-300 animate-bounce"
+              aria-label="Open WhatsApp chat"
+            >
+              <BsWhatsapp className="w-6 h-6" />
+            </button>
+          </section>
+        )}
+
         {notEditPopup && (
           <MiddlePopUp
             show={notEditPopup}

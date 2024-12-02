@@ -13,6 +13,7 @@ export enum Step {
   CREATE_EDIT = "create_edit",
   WALLET_HISTORY = "wallet_history",
   TRANSACTIONS = "transactions",
+  CHATS = "chats",
 }
 
 export enum HeaderInterface {
@@ -220,9 +221,6 @@ interface whatsappTemplate {
   imageFiles: File | null;
 
   setImageFiles: (imageFiles: File | null) => void;
-
-  allTemplates: WhatsAppTemplatePayload[];
-  setAllTemplates: (allTemplates: WhatsAppTemplatePayload[]) => void;
 
   isButtonEnabled: boolean;
   setIsButtonEnabled: (isButtonEnabled: boolean) => void;
@@ -524,10 +522,6 @@ export const useWhatsapp = create(
 
         imageFiles: null,
         setImageFiles: (imageFile) => set({ imageFiles: imageFile }),
-
-        allTemplates: [],
-        setAllTemplates: (allTemplates: WhatsAppTemplatePayload[]) =>
-          set({ allTemplates }),
 
         isButtonEnabled: false,
         setIsButtonEnabled: (isButtonEnabled) => set({ isButtonEnabled }),

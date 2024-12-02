@@ -51,7 +51,7 @@ const MemoTemplateButtons = () => {
     const payload = {
       allCustomers: selectedOptions.includes(ShowOptions.ALL_CUSTOMERS),
       templateId: Number(templateId),
-      businessId: businessId,
+      businessId: businessId || "",
       businessName: businessName,
       bulkCustomers: selectedOptions.includes(ShowOptions.BULK_UPLOAD_CUSTOMERS)
         ? bulkCustomers
