@@ -21,6 +21,10 @@ const businessSubscriberSchema = new mongoose.Schema<BusinessSubscriber>(
       required: true,
       default: false,
     },
+    whatsappMsgUnseenCount: {
+      type: Number,
+      default: 0,
+    },
     date: {
       type: Number,
       default: 0,
