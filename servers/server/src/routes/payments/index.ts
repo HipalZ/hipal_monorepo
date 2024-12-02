@@ -580,7 +580,7 @@ const paymentsRouter = new Hono()
         if (orderAlreadyExist)
           return respond(
             c,
-            "Order already exists for this table please wait for waiter action!",
+            "A request for this service is already in progress. Please wait for the staff to take action",
             true,
             400,
             {},
