@@ -36,13 +36,7 @@ const dishesRouter = new Hono()
           businessId,
           "categoryIds.0": { $exists: true },
         }).select("_id name images dishTypes");
-        return respond(
-          c,
-          "Dishes fetched successfully",
-          false,
-          200,
-          existingDishes,
-        );
+        return respond(c, "Fetched successfully", false, 200, existingDishes);
       }
 
       if (menu) {
@@ -52,13 +46,7 @@ const dishesRouter = new Hono()
         }).select(
           " _id businessId name images availability tags dishTypes visibility price categoryIds addOnIds recommendationIds",
         );
-        return respond(
-          c,
-          "Dishes fetched successfully",
-          false,
-          200,
-          existingDishes,
-        );
+        return respond(c, "Fetched successfully", false, 200, existingDishes);
       }
 
       const existingDishes = await Dish.find({
@@ -66,13 +54,7 @@ const dishesRouter = new Hono()
         isDeleted: false,
       });
 
-      return respond(
-        c,
-        "Dishes fetched successfully",
-        false,
-        200,
-        existingDishes,
-      );
+      return respond(c, "Fetched successfully", false, 200, existingDishes);
     },
   )
   .put(
@@ -109,8 +91,7 @@ const dishesRouter = new Hono()
           businessId: dish.businessId,
           _id: { $ne: id },
         });
-        if (existingDish)
-          return respond(c, "Dish Already exist", true, 409, {});
+        if (existingDish) return respond(c, "Already exist", true, 409, {});
         const updatedDish = await Dish.findByIdAndUpdate(
           id,
           {
@@ -129,8 +110,7 @@ const dishesRouter = new Hono()
             session: session,
           },
         );
-        if (!updatedDish)
-          return respond(c, "Error in updating dish", true, 400, {});
+        if (!updatedDish) return respond(c, "Error in updating", true, 400, {});
 
         if (removeCategoryIds.length) {
           await Category.updateMany(
@@ -210,7 +190,7 @@ const dishesRouter = new Hono()
           );
         }
 
-        return respond(c, "Dish updated successfully", false, 200, updatedDish);
+        return respond(c, "Updated successfully", false, 200, updatedDish);
       });
     },
   )
@@ -227,7 +207,7 @@ const dishesRouter = new Hono()
         const existingDish = await Dish.findByIdAndUpdate(id, {
           isDeleted: true,
         });
-        if (!existingDish) return respond(c, "Dish not found", true, 404, {});
+        if (!existingDish) return respond(c, "Not found", true, 404, {});
 
         await Category.updateMany(
           { _id: { $in: existingDish.categoryIds ?? [] } },
@@ -239,7 +219,7 @@ const dishesRouter = new Hono()
           { $pull: { dishIds: id } },
         );
 
-        return respond(c, "Dish deleted successfully", false, 200, {});
+        return respond(c, "Deleted successfully", false, 200, {});
       });
     },
   )
@@ -259,14 +239,13 @@ const dishesRouter = new Hono()
           isDeleted: false,
         });
         if (dishAlreadyExists)
-          return respond(c, "Dish already exists", true, 400, {});
+          return respond(c, "Already exists", true, 400, {});
         const menuLayout = await Business.findOne({
           businessId: dish.businessId,
         });
         if (!menuLayout) return respond(c, "Business not found", true, 404, {});
         const createDish = await Dish.create([dish], { session });
-        if (!createDish)
-          return respond(c, "Error in creating dish", true, 400, {});
+        if (!createDish) return respond(c, "Error in creating", true, 400, {});
 
         await Category.updateMany(
           { _id: { $in: dish.categoryIds ?? [] } },
@@ -280,7 +259,7 @@ const dishesRouter = new Hono()
           { session },
         );
 
-        return respond(c, "Dish created successfully", false, 201, createDish);
+        return respond(c, "Created successfully", false, 201, createDish);
       });
     },
   )
@@ -303,14 +282,14 @@ const dishesRouter = new Hono()
         { isDeleted: true },
       );
       if (!removeOldDishes)
-        return respond(c, "Error in updating dishes", true, 400, {});
+        return respond(c, "Error in updating", true, 400, {});
       const createUniquelyYours = await UniquelyYours.insertMany(dishArray);
       if (!createUniquelyYours)
-        return respond(c, "Error in updating dishes", true, 400, {});
+        return respond(c, "Error in updating", true, 400, {});
 
       return respond(
         c,
-        "Dishes updated successfully",
+        "Updated successfully",
         false,
         201,
         createUniquelyYours,
@@ -328,7 +307,7 @@ const dishesRouter = new Hono()
 
       const dishes = await UniquelyYours.find({ businessId, isDeleted: false });
 
-      return respond(c, "Dishes fetched successfully", false, 200, dishes);
+      return respond(c, "fetched successfully", false, 200, dishes);
     },
   )
   .get(
@@ -348,8 +327,8 @@ const dishesRouter = new Hono()
         path: "recommendationIds",
         select: "name price images dishTypes _id",
       });
-      if (!existingDish) return respond(c, "Dish not found", true, 404, {});
-      return respond(c, "Dish fetched successfully", false, 200, existingDish);
+      if (!existingDish) return respond(c, "Not found", true, 404, {});
+      return respond(c, "Fetched successfully", false, 200, existingDish);
     },
   )
   .post(
@@ -373,7 +352,7 @@ const dishesRouter = new Hono()
             const createDish = await Dish.create([dish], { session });
             if (!createDish) {
               return c.json(
-                { err: true, message: "Error in creating dishes", data: {} },
+                { err: true, message: "Error in creating", data: {} },
                 400,
               );
             }
@@ -381,7 +360,7 @@ const dishesRouter = new Hono()
         }
         return c.json({
           err: false,
-          message: "Dishes created successfully",
+          message: "Created successfully",
           data: {},
         });
       });
@@ -395,7 +374,7 @@ const dishesRouter = new Hono()
       return runInTransaction(async (session: ClientSession) => {
         return c.json({
           err: false,
-          message: "Dishes created successfully",
+          message: "Created successfully",
           data: {},
         });
       });

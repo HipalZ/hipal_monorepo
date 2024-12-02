@@ -43,7 +43,7 @@ const categoriesRouter = new Hono()
           isDeleted: false,
         }).select("_id");
         if (existingCategory)
-          return respond(c, "Category already exists", true, 409, {});
+          return respond(c, "Already exists", true, 409, {});
 
         const menuType = await Business.findOne({ businessId });
         console.log("menuType", menuType);
@@ -69,7 +69,7 @@ const categoriesRouter = new Hono()
         );
 
         if (!creatingCategory)
-          return respond(c, "Category creation failed", true, 400, {});
+          return respond(c, "Creation failed", true, 400, {});
 
         if (subCategoryIds.length > 0) {
           await Category.updateMany(
@@ -93,13 +93,7 @@ const categoriesRouter = new Hono()
           );
         }
 
-        return respond(
-          c,
-          "Category created successfully",
-          false,
-          201,
-          creatingCategory,
-        );
+        return respond(c, "created successfully", false, 201, creatingCategory);
       });
     },
   )
@@ -132,7 +126,7 @@ const categoriesRouter = new Hono()
         }).select("_id");
 
         if (existingCategory)
-          return respond(c, "Category already exists", true, 409, {});
+          return respond(c, "Already exists", true, 409, {});
 
         const updatedCategory = await Category.findByIdAndUpdate(
           id,
@@ -144,8 +138,7 @@ const categoriesRouter = new Hono()
           },
           { session },
         );
-        if (!updatedCategory)
-          return respond(c, "Category not found", true, 404, {});
+        if (!updatedCategory) return respond(c, "Not found", true, 404, {});
 
         if (removeSubCategoryIds.length > 0) {
           //extra check for subCategoryIds
@@ -223,13 +216,7 @@ const categoriesRouter = new Hono()
           );
         }
 
-        return respond(
-          c,
-          "Category updated successfully",
-          false,
-          200,
-          updatedCategory,
-        );
+        return respond(c, "Updated successfully", false, 200, updatedCategory);
       });
     },
   )
@@ -246,8 +233,7 @@ const categoriesRouter = new Hono()
         const deletedCategory = await Category.findByIdAndUpdate(id, {
           isDeleted: true,
         });
-        if (!deletedCategory)
-          return respond(c, "Category not found", true, 404, {});
+        if (!deletedCategory) return respond(c, "Not found", true, 404, {});
 
         const pullCategory = await Category.updateMany(
           {
@@ -276,13 +262,7 @@ const categoriesRouter = new Hono()
           },
         );
 
-        return respond(
-          c,
-          "Category deleted successfully",
-          false,
-          200,
-          deletedCategory,
-        );
+        return respond(c, "Deleted successfully", false, 200, deletedCategory);
       });
     },
   )
@@ -312,7 +292,7 @@ const categoriesRouter = new Hono()
 
         return respond(
           c,
-          "Categories fetched successfully",
+          "fetched successfully",
           false,
           200,
           existingCategories,
@@ -337,7 +317,7 @@ const categoriesRouter = new Hono()
 
         return respond(
           c,
-          "Categories fetched successfully",
+          "fetched successfully",
           false,
           200,
           existingCategories,
@@ -356,7 +336,7 @@ const categoriesRouter = new Hono()
 
         return respond(
           c,
-          "Categories fetched successfully",
+          "fetched successfully",
           false,
           200,
           existingCategories,
@@ -375,7 +355,7 @@ const categoriesRouter = new Hono()
 
         return respond(
           c,
-          "Categories fetched successfully",
+          "fetched successfully",
           false,
           200,
           existingCategories,
@@ -387,13 +367,7 @@ const categoriesRouter = new Hono()
         isDeleted: false,
       });
 
-      return respond(
-        c,
-        "Categories fetched successfully",
-        false,
-        200,
-        existingCategories,
-      );
+      return respond(c, "fetched successfully", false, 200, existingCategories);
     },
   )
   .get(
@@ -413,13 +387,7 @@ const categoriesRouter = new Hono()
         hierarchy: "CHILD",
       }).populate("dishIds");
 
-      return respond(
-        c,
-        "Categories fetched successfully",
-        false,
-        200,
-        existingCategories,
-      );
+      return respond(c, "fetched successfully", false, 200, existingCategories);
     },
   )
   .get(
@@ -434,16 +402,9 @@ const categoriesRouter = new Hono()
         isDeleted: false,
       });
 
-      if (!existingCategory)
-        return respond(c, "Category not found", true, 404, {});
+      if (!existingCategory) return respond(c, "Not found", true, 404, {});
 
-      return respond(
-        c,
-        "Categories fetched successfully",
-        false,
-        200,
-        existingCategory,
-      );
+      return respond(c, "Fetched successfully", false, 200, existingCategory);
     },
   )
   .post(
@@ -467,13 +428,7 @@ const categoriesRouter = new Hono()
         );
       }
 
-      return respond(
-        c,
-        "Categories sequence updated successfully",
-        false,
-        200,
-        {},
-      );
+      return respond(c, "sequence updated successfully", false, 200, {});
     },
   )
   .get(
@@ -494,13 +449,7 @@ const categoriesRouter = new Hono()
         dishIds: { $ne: [] },
       }).select("_id name coverImage");
 
-      return respond(
-        c,
-        "Categories fetched successfully",
-        false,
-        200,
-        existingCategories,
-      );
+      return respond(c, "fetched successfully", false, 200, existingCategories);
     },
   );
 
