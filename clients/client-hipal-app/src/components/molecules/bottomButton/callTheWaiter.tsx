@@ -23,7 +23,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
 
   const callTheWaiter = useCallback(async () => {
     if (message === "") {
-      return toast.error("Please select a message to call captain");
+      return toast.error("Please select a message to call staff");
     }
     if (loading) {
       return toast.error("Please wait for a moment");
@@ -45,7 +45,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
       return errorText(res.status);
     }
     if (res.status === 200) {
-      toast.success("Captain will be there soon. Thank you!!");
+      toast.success("Staff will be there soon. Thank you!!");
       onClose();
     }
   }, [businessId, tableName, message]);

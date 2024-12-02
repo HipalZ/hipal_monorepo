@@ -43,7 +43,7 @@ const Cart = () => {
     }
     if (!tableName && outletInfo?.outLetType !== "OTHER") {
       setDirection("category");
-      toast.error("Table name is required");
+      toast.error("Please scan qr");
       router.push(`/${customLink}/scan`);
       return;
     }

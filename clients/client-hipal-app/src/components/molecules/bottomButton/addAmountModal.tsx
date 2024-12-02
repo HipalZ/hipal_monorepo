@@ -100,7 +100,7 @@ const AddAmountModal = memo(() => {
 
   const callTheWaiter = useCallback(async () => {
     if (!tableName) {
-      toast.error("Please Scan the table to call captain");
+      toast.error("Please Scan the table to call staff");
       return;
     }
     if (loading) {
@@ -125,11 +125,11 @@ const AddAmountModal = memo(() => {
       return errorText(res.status);
     }
     if (res.status === 200) {
-      toast.success("Captain will be there soon. Thank you!!");
+      toast.success("Staff will be there soon. Thank you!!");
       setLoading(false);
     }
     if (res.status === 404 || res.status === 400) {
-      toast.error("Table not found");
+      toast.error("Please scan again");
       setLoading(false);
     }
   }, [businessId, tableName]);

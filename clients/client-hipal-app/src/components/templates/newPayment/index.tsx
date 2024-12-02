@@ -428,7 +428,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
 
   const handleCreateOfflineOrder = useCallback(async () => {
     if (tableName === "") {
-      toast.error("Please scan to start");
+      toast.error("Please scan qr to start");
       return router.push(`/${customLink}/scan`);
     }
     if (isLoading) {
@@ -651,7 +651,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         return toast.error("Please save the tip amount");
       }
       if (!tableName) {
-        toast.error("Table Not Found Please Scan Again");
+        toast.error("Please Scan Again");
         return router.push(`/${customLink}/scan`);
       }
       if (billValue - claimedCoinz - claimCouponz + tips === 0)
