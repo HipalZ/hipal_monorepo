@@ -6,7 +6,7 @@ const ObjectIdSchema = Schema.Types.ObjectId;
 const uniquelyYoursSchema = new Schema<UniquelyYoursType>({
   name: { type: String, required: true },
   businessId: { type: ObjectIdSchema, required: true, ref: "Business" },
-  dishId: { type: ObjectIdSchema, required: true, ref: "Dish" },
+  dishId: { type: String, required: true },
   dishTypes: { type: [String], enum: DishTypeEnum, required: true },
   images: { type: [String], required: true },
   isDeleted: { type: Boolean, default: false },
