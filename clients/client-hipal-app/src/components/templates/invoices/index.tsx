@@ -201,7 +201,7 @@ const businessData = [
   {
     id: "018",
     date: "03 Dec 2024",
-    name: "panchantantra",
+    name: "panchatantra",
     bizName: "PANCHATANTRA",
     status: false,
     serviceCost: 3500,
