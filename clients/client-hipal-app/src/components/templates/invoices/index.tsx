@@ -18,8 +18,9 @@ const businessData = [
     status: false,
     serviceCost: 3500,
     months: 6,
-    address: "",
-    gst: "",
+    address:
+      "Durgam Cheruvu Park, 2nd Entrance, Masthan Nagar, CBI Colony, Madhapur, Hyderabad, Telangana 500033",
+    gst: "36ABHFR7808K1ZO",
   },
   {
     id: "002",
@@ -29,8 +30,9 @@ const businessData = [
     status: false,
     serviceCost: 3500,
     months: 6,
-    address: "",
-    gst: "",
+    address:
+      "5th Floor, Aruna Arcade, 1299B, Road No. 1, opposite KBR Park, Jubilee Hills, Hyderabad, Telangana 500033",
+    gst: "36ACRFS3563K1ZF",
   },
   {
     id: "003",
@@ -40,8 +42,9 @@ const businessData = [
     status: false,
     serviceCost: 3500,
     months: 6,
-    address: "",
-    gst: "",
+    address:
+      "Plot number 217, Road No. 2, beside TDP office, Park View Enclave, Banjara Hills, Hyderabad, Telangana 500034",
+    gst: "36AFCFS2869C1ZY",
   },
   {
     id: "004",
@@ -114,12 +117,12 @@ const businessData = [
   // 10 invoice is added previously
   {
     id: "011",
-    date: "08 Oct 2024",
+    date: "03 Dec 2024",
     name: "skycafe",
     bizName: "AF & NS Food Pvt Ltd - Skycafe",
     status: false,
     serviceCost: 3500,
-    months: 3,
+    months: 6,
     address:
       "PLOT NO: 48,49 & 50  Vinayak Nagar, Indira Nagar, Gachibowli, Hyderabad, Telangana 500032",
     gst: "36AAZCA6985E1ZW",
@@ -194,6 +197,30 @@ const businessData = [
     months: 3,
     address: "Road 82 Jubliee hills, film nagar hyderabad Telangana-500033",
     gst: "36ABVFA3974F1ZZ",
+  },
+  {
+    id: "018",
+    date: "03 Dec 2024",
+    name: "panchantantra",
+    bizName: "PANCHATANTRA",
+    status: false,
+    serviceCost: 3500,
+    months: 3,
+    address:
+      "Lane Number 5, Brahman Wadi, Begumpet, Hyderabad, Telangana 500016",
+    gst: "",
+  },
+  {
+    id: "018",
+    date: "03 Dec 2024",
+    name: "raasta",
+    bizName: "raasta",
+    status: false,
+    serviceCost: 3500,
+    months: 6,
+    address:
+      "SALARPURIA SATTVA KNOWLEDGE CITY, Silpa Gram Craft Village, Madhapur, Hyderabad, Telangana 500081",
+    gst: "",
   },
 ];
 
