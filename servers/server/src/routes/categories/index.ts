@@ -1,5 +1,5 @@
 // books.ts
-import { Business, Category, Dish } from "@hi/db-models";
+import { Business, Category, Dish, Pos, Table } from "@hi/db-models";
 
 import {
   categorySchema,
@@ -15,6 +15,7 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
+import { petPoojaCateAndDish, transformData } from "../../utils/helper";
 import { respond } from "../../utils/response";
 
 //updateCategories
@@ -277,10 +278,12 @@ const categoriesRouter = new Hono()
         parent: z.string().optional(),
         child: z.string().optional(),
         dishes: z.string().optional(),
+        tableName: z.string().optional(),
       }),
     ),
     async (c) => {
-      const { businessId, menu, child, parent, dishes } = c.req.query();
+      const { businessId, menu, child, parent, dishes, tableName } =
+        c.req.query();
 
       if (menu) {
         const existingCategories = await Category.find({
@@ -350,8 +353,30 @@ const categoriesRouter = new Hono()
           hierarchy: "CHILD",
         }).populate({
           path: "dishIds",
+          match: { businessId: businessId, isDeleted: false, visibility: true },
           populate: { path: "addOnIds" },
         });
+
+        const isHasPos = await Pos.findOne({
+          businessId,
+        });
+
+        if (isHasPos) {
+          const table = await Table.findOne({
+            businessId,
+          }).select("name");
+
+          const transformedCategories = transformData(petPoojaCateAndDish);
+
+          return c.json(
+            {
+              message: "Data fetched successfully",
+              err: false,
+              data: transformedCategories,
+            },
+            200,
+          );
+        }
 
         return respond(
           c,

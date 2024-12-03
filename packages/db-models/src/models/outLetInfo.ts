@@ -158,6 +158,16 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: Boolean,
     default: false,
   },
+
+  isPosEnabled: {
+    type: Boolean,
+    default: false,
+  },
+
+  restId: {
+    type: String,
+    required: false,
+  },
 });
 
 const OutLetInfo: Model<OutLetInfoType> = mongoose.model<OutLetInfoType>(

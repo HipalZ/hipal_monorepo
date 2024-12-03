@@ -66,10 +66,12 @@ const DishesList: FC<IDishesProps> = (props) => {
       return (
         category.hierarchy === "CHILD" &&
         category.dishIds &&
-        category.dishIds.length > 0 &&
-        category.dishIds.some(
-          (dish: DishType) => !dish.isDeleted && dish.visibility,
-        )
+        category.dishIds.length > 0
+
+        // TODO: Uncomment this after adding visibility to dish
+        // category.dishIds.some(
+        //   (dish: DishType) => !dish.isDeleted && dish.visibility,
+        // )
       );
     };
 
