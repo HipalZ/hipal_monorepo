@@ -9,10 +9,9 @@ const petPoojaPinTempModelSchema =
       required: true,
       ref: "Business",
     },
-    userId: {
-      type: ObjectId,
+    hiCode: {
+      type: Number,
       required: true,
-      ref: "User",
     },
     pin: {
       type: String,

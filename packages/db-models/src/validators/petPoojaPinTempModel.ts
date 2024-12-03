@@ -10,9 +10,9 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 );
 export const petPoojaPinTempModelSchema = z.object({
   businessId: ObjectIdSchema,
-  userId: ObjectIdSchema,
   pin: z.string().min(10).max(10),
   tableName: z.string().min(1).max(20),
+  hiCode: z.coerce.number(),
 });
 
 export type PetPoojaPinTempModelType = z.infer<

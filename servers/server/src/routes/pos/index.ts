@@ -1,4 +1,13 @@
-import { OutLetInfo, Pos, Table, UrlModel, Zone } from "@hi/db-models";
+import {
+  MenuBanner,
+  OutLetInfo,
+  PetPoojaPinTemp,
+  Pos,
+  Table,
+  UniquelyYours,
+  UrlModel,
+  Zone,
+} from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
@@ -476,31 +485,31 @@ const posRouter = new Hono()
             },
           );
 
-          // await UniquelyYours.findOneAndUpdate(
-          //   {
-          //     businessId,
-          //   },
-          //   {
-          //     isDeleted: true,
-          //   },
-          //   {
-          //     new: true,
-          //     session,
-          //   },
-          // );
+          await UniquelyYours.findOneAndUpdate(
+            {
+              businessId,
+            },
+            {
+              isDeleted: true,
+            },
+            {
+              new: true,
+              session,
+            },
+          );
 
-          // await MenuBanner.findOneAndUpdate(
-          //   {
-          //     businessId,
-          //   },
-          //   {
-          //     isPublished: false,
-          //   },
-          //   {
-          //     new: true,
-          //     session,
-          //   },
-          // );
+          await MenuBanner.findOneAndUpdate(
+            {
+              businessId,
+            },
+            {
+              isPublished: false,
+            },
+            {
+              new: true,
+              session,
+            },
+          );
 
           return c.json(
             {
@@ -535,19 +544,118 @@ const posRouter = new Hono()
       "json",
       z.object({
         tableName: z.string().min(1).max(200),
-        restID: z.string().min(1).max(200),
+        internalCart: z.array(z.object({})),
+        businessId: z.string().min(1).max(200),
+        pin: z.string().min(1).max(200),
+        customerName: z.string().min(1).max(200),
       }),
     ),
 
     async (c) => {
-      const { internalCart, tableName, restID, customerName, customerPhone } =
+      const { internalCart, tableName, businessId, pin, customerName } =
         await c.req.json();
+
+      const hiCode = await PetPoojaPinTemp.findOne({
+        tableName: tableName,
+        businessId: businessId,
+      });
+
+      if (hiCode) {
+        if (hiCode.pin !== pin) {
+          return c.json(
+            {
+              message: "this table is already occupied by another user",
+              err: true,
+              data: {
+                success: false,
+              },
+            },
+            404,
+          );
+        }
+      }
+
+      const pos = await Pos.findOne({ businessId: businessId });
+
+      if (!hiCode) {
+        const registerUser = await axios.post(
+          "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
+          {
+            app_key: pos?.accessKey,
+            app_secret: pos?.secretKey,
+            access_token: pos?.authToken,
+            restID: pos?.restId,
+            phone: pin,
+            name: customerName,
+          },
+        );
+
+        if (registerUser.data.success === "1") {
+          const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+          const petPoojaPinTemp = new PetPoojaPinTemp({
+            businessId: businessId,
+            hiCode: hiCode,
+            pin: pin,
+            tableName: tableName,
+          });
+          await petPoojaPinTemp.save();
+          const petpoojaCart = convertToPetpoojaCart(
+            internalCart,
+            pos?.restId,
+            customerName,
+            pin,
+            tableName,
+          );
+          const saveKot = await axios.post(
+            "https://api.petpooja.com/V1/captainorders/save_kot_qr_order",
+            petpoojaCart,
+          );
+
+          if (saveKot.data.success === "1") {
+            return c.json(
+              {
+                message: "Data fetched successfully",
+                err: false,
+                data: {
+                  success: true,
+                  hiCode: hiCode,
+                  pin: pin,
+                },
+              },
+              200,
+            );
+          }
+        } else {
+          return c.json(
+            {
+              message: "Error in registering user",
+              err: true,
+              data: {
+                success: false,
+              },
+            },
+            400,
+          );
+        }
+
+        return c.json(
+          {
+            message: "Error fetching data",
+            err: true,
+            data: {
+              success: false,
+            },
+          },
+          400,
+        );
+      }
 
       const petpoojaCart = convertToPetpoojaCart(
         internalCart,
-        restID,
+        pos?.restId,
         customerName,
-        customerPhone,
+        pin,
         tableName,
       );
       const saveKot = await axios.post(
@@ -560,7 +668,11 @@ const posRouter = new Hono()
           {
             message: "Data fetched successfully",
             err: false,
-            data: saveKot.data,
+            data: {
+              success: true,
+              hiCode: hiCode.hiCode,
+              pin: hiCode?.pin,
+            },
           },
           200,
         );
@@ -578,21 +690,51 @@ const posRouter = new Hono()
       );
     },
   )
-
   .post(
-    "/setup_pos_config",
+    "/validate_hicode",
 
     zValidator(
       "json",
       z.object({
-        posId: z.string().min(3).max(200),
+        hiCode: z.string().min(4).max(200),
       }),
     ),
 
     async (c) => {
-      const { posId } = await c.req.json();
+      const { hiCode } = await c.req.json();
+
+      const hiCodeData = await PetPoojaPinTemp.findOne({
+        hiCode: hiCode,
+      });
+
+      if (!hiCodeData) {
+        return c.json(
+          {
+            message: "Invalid HiCode",
+            err: true,
+            data: {
+              success: false,
+            },
+          },
+          400,
+        );
+      }
+
+      return c.json(
+        {
+          message: "HiCode validated successfully",
+          err: false,
+          data: {
+            success: true,
+            hiCode: hiCodeData.hiCode,
+            pin: hiCodeData.pin,
+          },
+        },
+        200,
+      );
     },
   )
+
   .post(
     "/save_pos_credentials",
 
