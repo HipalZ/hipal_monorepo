@@ -193,7 +193,7 @@ const businessData = [
     name: "papaya",
     bizName: "ANRISA FOODS LLP",
     status: false,
-    serviceCost: 4000,
+    serviceCost: 3500,
     months: 3,
     address: "Road 82 Jubliee hills, film nagar hyderabad Telangana-500033",
     gst: "36ABVFA3974F1ZZ",
