@@ -204,7 +204,7 @@ const businessData = [
     name: "panchatantra",
     bizName: "PANCHATANTRA",
     status: false,
-    serviceCost: 3500,
+    serviceCost: 4000,
     months: 3,
     address:
       "Lane Number 5, Brahman Wadi, Begumpet, Hyderabad, Telangana 500016",
