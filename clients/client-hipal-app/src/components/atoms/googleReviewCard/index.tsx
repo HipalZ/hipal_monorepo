@@ -62,8 +62,7 @@ const MemoGoogleReviewCard = () => {
     }
 
     // Open the intended URL immediately to avoid being blocked
-    const url =
-      businessDetails?.placeUrl || "https://g.page/r/CTI8IdplcFrJEAE/review";
+    const url = businessDetails?.placeUrl || "";
     const newWindow = window.open(url, "_blank");
     try {
       const res = await apiRpc.reviews["update-google-review"].$put({
