@@ -61,6 +61,7 @@ export const razorpayOrderSchema = z.object({
   couponId: ObjectIdSchema.optional(),
   channelId: ObjectIdSchema.optional(),
   cashbackAvailable: z.boolean().optional(),
+  posBillId: z.string().optional(),
 });
 
 export type RazorpayOrderType = z.infer<typeof razorpayOrderSchema>;

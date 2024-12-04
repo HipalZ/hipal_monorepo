@@ -11,6 +11,8 @@ import {
   OutLetInfo,
   Payment,
   PaymentAlert,
+  PetPoojaPinTemp,
+  Pos,
   Reviews,
   Subscriber,
   TagModel,
@@ -18,6 +20,7 @@ import {
   UserAnalytic,
   UserCouponClaim,
   UserCouponGrabb,
+  UserKot,
   UserReward,
   UserRewardHistory,
   UserTags,
@@ -444,6 +447,7 @@ const paymentsRouter = new Hono()
           couponId,
           channelId,
           cashbackAvailable,
+          posBillId,
         } = requestData;
         const { merchantId } = c.req.param();
         const uniqueOrderId = nanoid(15);
@@ -491,6 +495,7 @@ const paymentsRouter = new Hono()
               channelId,
               cashbackAvailable,
               date: Date.now(),
+              posBillId,
             },
           ],
           { session },
@@ -572,6 +577,7 @@ const paymentsRouter = new Hono()
           couponId,
           channelId,
           cashbackAvailable,
+          posBillId,
         } = requestData;
         const uniqueOrderId = nanoid(15);
 
@@ -608,6 +614,7 @@ const paymentsRouter = new Hono()
               channelId,
               cashbackAvailable,
               date: Date.now(),
+              posBillId,
             },
           ],
           { session },
@@ -1144,6 +1151,7 @@ const paymentsRouter = new Hono()
                 channelId: getOrder?.channelId,
                 earnCoins: getCashBack,
                 date: Date.now(),
+                posBillId: getOrder?.posBillId,
               },
             ],
             { session },
@@ -1628,12 +1636,37 @@ const paymentsRouter = new Hono()
                     razorpayPaymentId: nanoid(15),
                     couponId: order?.couponId,
                     channelId: order?.channelId,
+                    posBillId: order?.posBillId,
 
                     waiterName,
                     date: Date.now(),
                   },
                 ],
                 { session },
+              );
+
+              await PetPoojaPinTemp.deleteOne(
+                {
+                  tableName: order.tableName,
+                  businessId: order.businessId,
+                },
+                {
+                  session,
+                },
+              );
+              await UserKot.updateMany(
+                {
+                  tableName: order.tableName,
+                  businessId: order.businessId,
+                },
+                {
+                  $set: {
+                    isSettle: true,
+                  },
+                },
+                {
+                  session,
+                },
               );
             }
           }
@@ -2618,6 +2651,124 @@ const paymentsRouter = new Hono()
         message: "User found",
       });
     },
-  );
+  )
+
+  .post("/razorpay-webhook/3/:merchantId", async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session: ClientSession) => {
+      const { merchantId } = c.req.param();
+      const merchantConfig = (await getMerchantConfig(
+        merchantId,
+      )) as MerchantConfig;
+
+      let RAZORPAY_WEBHOOK_SECRET = "";
+      const body = await c.req.json();
+      if (!merchantConfig) {
+        const merchant = await BusinessSettings.findOne({
+          razorpayMerchantId: merchantId,
+        }).select("razorpayWebhookSecret");
+        RAZORPAY_WEBHOOK_SECRET = merchant?.razorpayWebhookSecret || "";
+      } else {
+        RAZORPAY_WEBHOOK_SECRET = merchantConfig.razorpayWebhookSecret;
+      }
+
+      if (!RAZORPAY_WEBHOOK_SECRET) {
+        console.log("razorpay_webhook_secret missing");
+      }
+
+      const headersResult = RazorpayWebhookHeadersSchema.safeParse(
+        c.req.header(),
+      );
+      if (!headersResult.success) {
+        console.log("Invalid headers");
+        return respond(c, "Invalid headers", true, 200, {});
+      }
+
+      const {
+        "x-razorpay-signature": razorpaySignature,
+        "x-razorpay-event-id": razorpayEventId,
+      } = headersResult.data as RazorpayWebhookHeaders;
+
+      const isSignatureValid = validateWebhookSignature(
+        JSON.stringify(body),
+        razorpaySignature,
+        RAZORPAY_WEBHOOK_SECRET,
+      );
+      if (!isSignatureValid) {
+        console.log("Invalid signature");
+        return respond(c, "Invalid signature", true, 200, {});
+      }
+
+      const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
+
+      if (!bodyResult.success) {
+        console.log("Invalid body", bodyResult);
+
+        return respond(c, "Invalid body", true, 200, {});
+      }
+      //@ts-ignore
+      const { event, payload } = bodyResult.data;
+
+      const getOrder = await Order.findOne({
+        order_id: payload.payment.entity.order_id,
+      });
+
+      if (event === "payment.captured") {
+        const paymentAlreadyExist = await Payment.findOne({
+          razorpayEventId: razorpayEventId,
+        });
+
+        if (!paymentAlreadyExist && getOrder) {
+          const activeTable = await PetPoojaPinTemp.findOne({
+            tableName: getOrder.tableName,
+            businessId: getOrder.businessId,
+          });
+
+          const pos = await Pos.findOne({ businessId: getOrder.businessId });
+
+          const res = await axios.post(
+            "http://api.petpooja.com/V1/captainorders/success_payment/",
+            {
+              app_key: pos?.accessKey,
+              app_secret: pos?.secretKey,
+              access_token: pos?.authToken,
+              restID: pos?.restId,
+              bill_request_id: getOrder.posBillId,
+              amount_paid: getOrder.total,
+              pin: activeTable?.pin,
+            },
+          );
+
+          if (res.data.success === "1") {
+            await PetPoojaPinTemp.deleteOne(
+              {
+                tableName: getOrder.tableName,
+                businessId: getOrder.businessId,
+              },
+              {
+                session,
+              },
+            );
+            await UserKot.updateMany(
+              {
+                tableName: getOrder.tableName,
+                businessId: getOrder.businessId,
+              },
+              {
+                $set: {
+                  isSettle: true,
+                },
+              },
+              {
+                session,
+              },
+            );
+          }
+        }
+      }
+
+      return respond(c, "2 Webhook received successfully", false, 200, {});
+    });
+  });
 
 export default paymentsRouter;

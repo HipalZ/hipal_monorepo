@@ -21,6 +21,10 @@ const petPoojaPinTempModelSchema =
       type: String,
       required: true,
     },
+    customerName: {
+      type: String,
+      required: true,
+    },
   });
 
 const PetPoojaPinTemp: Model<PetPoojaPinTempModelType> =

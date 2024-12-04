@@ -44,6 +44,7 @@ export * from "./user";
 export * from "./userAnalytics";
 export * from "./userCouponClaim";
 export * from "./userGrabbCouponz";
+export * from "./userKot";
 export * from "./userReward";
 export * from "./userRewardHistory";
 export * from "./userTag";

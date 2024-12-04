@@ -6,6 +6,7 @@ import {
   Table,
   UniquelyYours,
   UrlModel,
+  UserKot,
   Zone,
 } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
@@ -26,6 +27,47 @@ interface AxiosError {
   };
   message: string;
 }
+
+const saveUserKot = async (
+  tableName: string,
+  businessId: string,
+  customerName: string,
+  customerPhone: string,
+  internalCart: any,
+) => {
+  const existingUserKot = await UserKot.findOne({
+    tableName: tableName,
+    businessId: businessId,
+    phone: customerPhone,
+  });
+
+  let mergedCart = internalCart;
+
+  if (existingUserKot) {
+    mergedCart = [...existingUserKot.cart, ...internalCart];
+  }
+
+  await UserKot.findOneAndUpdate(
+    {
+      tableName: tableName,
+      businessId: businessId,
+      phone: customerPhone,
+    },
+    {
+      tableName: tableName,
+      businessId: businessId,
+      phone: customerPhone,
+      name: customerName,
+      cart: mergedCart,
+      date: Date.now(),
+    },
+    {
+      upsert: true,
+    },
+  );
+  return true;
+};
+
 const posRouter = new Hono()
   .get("/all_pos", async (c) => {
     const allPos = await Pos.find({}).select("name _id");
@@ -109,6 +151,7 @@ const posRouter = new Hono()
               tableName: getBill.data.order_data.table_no,
 
               subTotal: getBill.data.order_data.core_price,
+              billRequestId: bill_request_id,
             };
             return c.json(
               {
@@ -156,6 +199,7 @@ const posRouter = new Hono()
               customer_phone: getBill.data.order_data.customer_phone,
               customer_name: getBill.data.order_data.customer_name,
               tableName: getBill.data.order_data.table_no,
+              billRequestId: bill_request_id,
 
               subTotal: getBill.data.order_data.core_price,
             };
@@ -546,14 +590,21 @@ const posRouter = new Hono()
         tableName: z.string().min(1).max(200),
         internalCart: z.array(z.object({})),
         businessId: z.string().min(1).max(200),
-        pin: z.string().min(1).max(200),
+        pin: z.string().min(1).max(200).optional(),
         customerName: z.string().min(1).max(200),
+        customerPhone: z.string().min(1).max(200),
       }),
     ),
 
     async (c) => {
-      const { internalCart, tableName, businessId, pin, customerName } =
-        await c.req.json();
+      const {
+        internalCart,
+        tableName,
+        businessId,
+        pin,
+        customerName,
+        customerPhone,
+      } = await c.req.json();
 
       const hiCode = await PetPoojaPinTemp.findOne({
         tableName: tableName,
@@ -564,7 +615,7 @@ const posRouter = new Hono()
         if (hiCode.pin !== pin) {
           return c.json(
             {
-              message: "this table is already occupied by another user",
+              message: `this table is already occupied by ${hiCode.customerName}`,
               err: true,
               data: {
                 success: false,
@@ -598,6 +649,7 @@ const posRouter = new Hono()
             hiCode: hiCode,
             pin: pin,
             tableName: tableName,
+            customerName: customerName,
           });
           await petPoojaPinTemp.save();
           const petpoojaCart = convertToPetpoojaCart(
@@ -613,6 +665,14 @@ const posRouter = new Hono()
           );
 
           if (saveKot.data.success === "1") {
+            await saveUserKot(
+              tableName,
+              businessId,
+              customerName,
+              customerPhone,
+              internalCart,
+            );
+
             return c.json(
               {
                 message: "Data fetched successfully",
@@ -664,6 +724,13 @@ const posRouter = new Hono()
       );
 
       if (saveKot.data.success === "1") {
+        await saveUserKot(
+          tableName,
+          businessId,
+          customerName,
+          customerPhone,
+          internalCart,
+        );
         return c.json(
           {
             message: "Data fetched successfully",
@@ -792,6 +859,81 @@ const posRouter = new Hono()
           },
         },
         201,
+      );
+    },
+  )
+
+  .get(
+    "/fetch_hicode_by_table",
+
+    zValidator(
+      "query",
+      z.object({
+        tableName: z.string().min(1).max(200),
+        businessId: z.string().min(1).max(200),
+      }),
+    ),
+
+    async (c) => {
+      const { tableName, businessId } = c.req.query();
+      const hiCode = await PetPoojaPinTemp.findOne({
+        tableName: tableName,
+        businessId: businessId,
+      });
+
+      if (!hiCode) {
+        return c.json(
+          {
+            message: "HiCode not found",
+            err: true,
+            data: {
+              success: false,
+            },
+          },
+          404,
+        );
+      }
+
+      return c.json(
+        {
+          message: "HiCode fetched successfully",
+          err: false,
+          data: {
+            hiCode: hiCode.hiCode,
+          },
+        },
+        200,
+      );
+    },
+  )
+
+  .get(
+    "/fetch_kot_by_table",
+
+    zValidator(
+      "query",
+      z.object({
+        tableName: z.string().min(1).max(200),
+        businessId: z.string().min(1).max(200),
+      }),
+    ),
+
+    async (c) => {
+      const { tableName, businessId } = c.req.query();
+
+      const userKot = await UserKot.find({
+        tableName: tableName,
+        businessId: businessId,
+        isSettle: false,
+      });
+
+      return c.json(
+        {
+          message: "Data fetched successfully",
+          err: false,
+          data: userKot,
+        },
+        200,
       );
     },
   );
