@@ -9,7 +9,6 @@ import Stairs from "@/assets/backgroundStairs.png";
 import SignUpBonusBackground from "@/assets/bonuscard/signupBonus.svg";
 import Wallet from "@/assets/bonuscard/wallet.png";
 import Coin from "@/assets/bonuscard/coin.png";
-import { useLogin } from "@/components/store/useLogin";
 import Link from "next/link";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import dynamic from "next/dynamic";
@@ -38,10 +37,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
   const logo = useBusinessDetails((s) => s.businessDetails?.logoUrl);
   const customLink = useParams()?.businessId as string;
   const accessToken = useUserToken.getState().accessToken;
-  const { isLogin } = useLogin((s) => ({
-    isLogin: s.isLogin,
-  }));
-
+  const placeUrl = useBusinessDetails((s) => s.businessDetails?.placeUrl);
   const openModal = useCallback(() => {
     setTimeout(() => setIsModalOpen(true), 5000);
   }, [isModalOpen]);
@@ -189,7 +185,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
           )}
         </section>
       </section>
-      <GoogleReviewCard />
+      {placeUrl?.length > 0 ? <GoogleReviewCard /> : null}
     </div>
   );
 };

@@ -84,8 +84,8 @@ const MemoCardThreeLayout = ({
             height={64}
             src={logo || hipalLogo}
             alt="logo"
-            className="absolute top-6 left-6 filter invert-0 mix-blend-screen rounded-xl"
-            style={{ filter: "invert(100%) contrast(150%) brightness(110%)" }}
+            className="absolute top-6 left-6 rounded-xl"
+            // style={{ filter: "invert(100%) contrast(150%) brightness(110%)" }}
           />
           <figcaption className="absolute w-[70%] flex justify-between text-left text-white top-[8.25rem] leading-6 left-8">
             <h3 className="w-[60%] h-[3rem] font-semibold">{name}</h3>

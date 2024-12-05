@@ -11,6 +11,7 @@ const MemoExplorePageReviewCard = ({
     <div className="p-4 mb-4">
       <div
         onClick={signInWithGoogle}
+        onKeyDown={signInWithGoogle}
         className="bg-[#FFC600] w-full min-h-full max-h-[11rem] rounded-2xl p-4 flex relative overflow-hidden"
       >
         <div className="z-10 space-y-4">

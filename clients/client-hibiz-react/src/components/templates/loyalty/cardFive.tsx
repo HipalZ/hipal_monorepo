@@ -86,7 +86,7 @@ const MemoCardFiveLayout = ({
             src={logo || hipalLogo}
             alt="logo"
             className="absolute top-6 right-[5.5rem] filter invert-0 mix-blend-screen rounded-xl"
-            style={{ filter: "invert(100%) contrast(150%) brightness(150%)" }}
+            // style={{ filter: "invert(100%) contrast(150%) brightness(150%)" }}
           />
           <figcaption className="absolute w-[70%] flex justify-between text-left text-white top-[10rem] leading-6 left-8">
             <h3 className="w-[70%] truncate font-semibold">{name}</h3>

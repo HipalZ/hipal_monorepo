@@ -26,7 +26,7 @@ const MemoCardOneLayout = () => {
         width={260}
         height={160}
         alt="Selected Card"
-        className=" w-[100%] max-w-[28rem]  rounded-2xl"
+        className=" w-[100%] max-w-[28rem] rounded-2xl"
       />
       {business?.logoUrl && (
         <Image
