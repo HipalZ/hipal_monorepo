@@ -13991,7 +13991,7 @@ function convertToPetpoojaCart(
           order_type: "D", // Default to dine-in
           table_no: tableName || "A7", // Default table number
           no_of_persons: "",
-          created_on: new Date().toISOString(),
+          created_on: "2019-11-11 18:53:50",
           callback_url: "",
         },
         KotItem: [],
