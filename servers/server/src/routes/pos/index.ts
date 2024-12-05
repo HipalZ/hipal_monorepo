@@ -89,12 +89,16 @@ const posRouter = new Hono()
       z.object({
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
-        pin: z.string().min(1).max(200),
       }),
     ),
 
     async (c) => {
-      const { businessId, tableName, pin } = c.req.query();
+      const { businessId, tableName } = c.req.query();
+
+      const getPin = await PetPoojaPinTemp.findOne({
+        businessId: businessId,
+        tableName: tableName,
+      });
 
       const pos = await Pos.findOne({ businessId: businessId });
 
@@ -118,7 +122,7 @@ const posRouter = new Hono()
           app_secret: pos.secretKey,
           access_token: pos.authToken,
           restID: pos.restId,
-          pin: pin,
+          pin: getPin?.pin,
           table_no: tableName,
         },
       );
