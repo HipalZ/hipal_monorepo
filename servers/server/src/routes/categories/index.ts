@@ -337,6 +337,14 @@ const categoriesRouter = new Hono()
             "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence",
           );
 
+        const isHasPos = await Pos.findOne({
+          businessId,
+        });
+
+        if (isHasPos) {
+          return respond(c, "fetched successfully", false, 200, []);
+        }
+
         return respond(
           c,
           "fetched successfully",
