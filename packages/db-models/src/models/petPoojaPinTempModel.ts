@@ -25,6 +25,10 @@ const petPoojaPinTempModelSchema =
       type: String,
       required: true,
     },
+    phoneNumbers: {
+      type: [String],
+      required: true,
+    },
   });
 
 const PetPoojaPinTemp: Model<PetPoojaPinTempModelType> =

@@ -14,6 +14,7 @@ export const petPoojaPinTempModelSchema = z.object({
   tableName: z.string().min(1).max(20),
   hiCode: z.coerce.number(),
   customerName: z.string().min(1).max(50),
+  phoneNumbers: z.array(z.string().min(10).max(10)),
 });
 
 export type PetPoojaPinTempModelType = z.infer<

@@ -590,7 +590,6 @@ const posRouter = new Hono()
         tableName: z.string().min(1).max(200),
         internalCart: z.array(z.object({})),
         businessId: z.string().min(1).max(200),
-        pin: z.string().min(1).max(200).optional(),
         customerName: z.string().min(1).max(200),
         customerPhone: z.string().min(1).max(200),
       }),
@@ -601,7 +600,6 @@ const posRouter = new Hono()
         internalCart,
         tableName,
         businessId,
-        pin,
         customerName,
         customerPhone,
       } = await c.req.json();
@@ -612,7 +610,7 @@ const posRouter = new Hono()
       });
 
       if (hiCode) {
-        if (hiCode.pin !== pin) {
+        if (!hiCode.phoneNumbers.includes(customerPhone)) {
           return c.json(
             {
               message: `this table is already occupied by ${hiCode.customerName}`,
@@ -621,7 +619,7 @@ const posRouter = new Hono()
                 success: false,
               },
             },
-            404,
+            403,
           );
         }
       }
@@ -636,7 +634,7 @@ const posRouter = new Hono()
             app_secret: pos?.secretKey,
             access_token: pos?.authToken,
             restID: pos?.restId,
-            phone: pin,
+            phone: customerPhone,
             name: customerName,
           },
         );
@@ -647,16 +645,17 @@ const posRouter = new Hono()
           const petPoojaPinTemp = new PetPoojaPinTemp({
             businessId: businessId,
             hiCode: hiCode,
-            pin: pin,
+            pin: customerPhone,
             tableName: tableName,
             customerName: customerName,
+            phoneNumbers: [customerPhone],
           });
           await petPoojaPinTemp.save();
           const petpoojaCart = convertToPetpoojaCart(
             internalCart,
             pos?.restId,
             customerName,
-            pin,
+            customerPhone,
             tableName,
           );
           const saveKot = await axios.post(
@@ -680,7 +679,6 @@ const posRouter = new Hono()
                 data: {
                   success: true,
                   hiCode: hiCode,
-                  pin: pin,
                 },
               },
               200,
@@ -715,7 +713,7 @@ const posRouter = new Hono()
         internalCart,
         pos?.restId,
         customerName,
-        pin,
+        hiCode.pin,
         tableName,
       );
       const saveKot = await axios.post(
@@ -738,7 +736,6 @@ const posRouter = new Hono()
             data: {
               success: true,
               hiCode: hiCode.hiCode,
-              pin: hiCode?.pin,
             },
           },
           200,
@@ -764,14 +761,17 @@ const posRouter = new Hono()
       "json",
       z.object({
         hiCode: z.string().min(4).max(200),
+        customerPhone: z.string().min(4).max(200),
+        businessId: z.string().min(4).max(200),
       }),
     ),
 
     async (c) => {
-      const { hiCode } = await c.req.json();
+      const { hiCode, customerPhone, businessId } = await c.req.json();
 
       const hiCodeData = await PetPoojaPinTemp.findOne({
         hiCode: hiCode,
+        businessId: businessId,
       });
 
       if (!hiCodeData) {
@@ -786,6 +786,20 @@ const posRouter = new Hono()
           400,
         );
       }
+
+      await PetPoojaPinTemp.findOneAndUpdate(
+        {
+          businessId: businessId,
+
+          tableName: hiCodeData.tableName,
+        },
+        {
+          $addToSet: { phoneNumbers: customerPhone },
+        },
+        {
+          new: true,
+        },
+      );
 
       return c.json(
         {
