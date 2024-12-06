@@ -1,6 +1,9 @@
 /* eslint-disable no-undef */
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+import daisyui from "daisyui";
+import flowbitePlugin from "flowbite/plugin";
+
+export default {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -47,5 +50,5 @@ module.exports = {
       },
     ],
   },
-  plugins: [require("daisyui"), require("flowbite/plugin")],
+  plugins: [daisyui, flowbitePlugin],
 };
