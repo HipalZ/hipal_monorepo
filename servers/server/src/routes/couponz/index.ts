@@ -104,8 +104,12 @@ function switchTimeEligibility(
 
 function getCurrentTimeDecimal() {
   const currentDate = new Date();
-  const hours = currentDate.getHours();
-  const minutes = currentDate.getMinutes();
+
+  const options = { timeZone: "Asia/Kolkata", hour12: false };
+  const timeString = currentDate.toLocaleTimeString("en-IN", options);
+
+  const [hours, minutes] = timeString.split(":").map(Number);
+
   return Number(`${hours}.${minutes < 10 ? "0" : ""}${minutes}`);
 }
 
