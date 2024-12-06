@@ -26,7 +26,6 @@ export interface ITag {
   countType: "ABOVE" | "BELOW" | "EQUALS" | "";
 }
 
-
 export type HiPeoplePages =
   | "SUMMARY"
   | "CLIENTS"
@@ -49,7 +48,13 @@ export type AddToGroup =
   | "ADD MORE USERS";
 
 export type DatePicker = "TODAY" | "YESTERDAY" | "ONE MONTH" | "CUSTOM DATE";
-export type TargetGroupsPages = "USERS" | "CREATE GROUP" | "GROUP DETAILS" | "" | "EDIT GROUP" | "ADD TAGS";
+export type TargetGroupsPages =
+  | "USERS"
+  | "CREATE GROUP"
+  | "GROUP DETAILS"
+  | ""
+  | "EDIT GROUP"
+  | "ADD TAGS";
 
 export interface FilterValue {
   value: string;
@@ -100,8 +105,6 @@ const endOfToday = new Date(
   59,
   999,
 ).getTime();
-
-
 
 interface IHiPeople {
   selectedPage: HiPeoplePages;
@@ -309,7 +312,6 @@ interface IHiPeople {
 
   selectedTags: ITag[];
   clearSelectedTags: () => void;
-  
 }
 
 const useHiPeopleStore = create<IHiPeople>((set, get) => ({
@@ -402,7 +404,7 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
       addGroupModal: false,
       selectedGroupId: "",
       selectedGroupName: "",
-      addTags: [], 
+      addTags: [],
       formData: {
         name: "",
         description: "",
@@ -566,17 +568,17 @@ const useHiPeopleStore = create<IHiPeople>((set, get) => ({
       {
         label: "Card Balance",
         key: "cardBalance",
-        heading: "Avg bill spend in the selected period",
+        heading: "Avg loyalty spend in the selected period",
       },
       {
         label: "Coinz rewarded",
         key: "coinzIssued",
-        heading: "Avg bill spend in the selected period",
+        heading: "Avg coinz rewarded in the selected period",
       },
       {
         label: "Coinz used",
         key: "coinzUsed",
-        heading: "Avg bill spend in the selected period",
+        heading: "Avg coinz used in the selected period",
       },
     ],
     filterValues: {
