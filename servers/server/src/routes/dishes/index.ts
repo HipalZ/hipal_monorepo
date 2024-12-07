@@ -371,6 +371,9 @@ const dishesRouter = new Hono()
     ),
     async (c) => {
       const { id } = c.req.param();
+      if (id.length !== 24) {
+        return respond(c, "Not found", true, 404, {});
+      }
       const existingDish = await Dish.findOne({
         _id: id,
         isDeleted: false,

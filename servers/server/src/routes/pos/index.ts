@@ -89,16 +89,27 @@ const posRouter = new Hono()
       z.object({
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
+        generatedBy: z.string().min(1).max(200),
       }),
     ),
 
     async (c) => {
-      const { businessId, tableName } = c.req.query();
+      const { businessId, tableName, generatedBy } = c.req.query();
 
       const getPin = await PetPoojaPinTemp.findOne({
         businessId: businessId,
         tableName: tableName,
       });
+
+      await PetPoojaPinTemp.findOneAndUpdate(
+        {
+          businessId: businessId,
+          tableName: tableName,
+        },
+        {
+          billGeneratedBy: generatedBy,
+        },
+      );
 
       const pos = await Pos.findOne({ businessId: businessId });
 
@@ -608,10 +619,83 @@ const posRouter = new Hono()
         customerPhone,
       } = await c.req.json();
 
+      const pos = await Pos.findOne({ businessId: businessId });
+
+      if (!pos) {
+        return c.json(
+          {
+            message: "POS not found",
+            err: true,
+            data: {
+              success: false,
+            },
+          },
+          404,
+        );
+      }
+
+      const registerUser = await axios.post(
+        "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
+        {
+          app_key: pos?.accessKey,
+          app_secret: pos?.secretKey,
+          access_token: pos?.authToken,
+          restID: pos?.restId,
+          phone: customerPhone,
+          name: customerName,
+        },
+      );
+
+      if (registerUser.data.success === "1") {
+        if (
+          registerUser.data.message === "Customer has already active session."
+        ) {
+          return c.json(
+            {
+              message:
+                "Customer has already active session. please visit after some time",
+              err: true,
+              data: {
+                success: false,
+              },
+            },
+            400,
+          );
+        }
+      }
+
       const hiCode = await PetPoojaPinTemp.findOne({
         tableName: tableName,
         businessId: businessId,
       });
+      const isBillAlreadyGenerated = await axios.post(
+        "http://api.petpooja.com/V1/captainorders/request_bill",
+        {
+          app_key: pos.accessKey,
+          app_secret: pos.secretKey,
+          access_token: pos.authToken,
+          restID: pos.restId,
+          pin: hiCode?.pin,
+          table_no: tableName,
+        },
+      );
+
+      if (isBillAlreadyGenerated.data.success === "1") {
+        const request_bill_id = isBillAlreadyGenerated.data.bill_request_id;
+
+        if (request_bill_id) {
+          return c.json(
+            {
+              message: `Bill already generated for table ${tableName} by ${hiCode?.billGeneratedBy}`,
+              err: true,
+              data: {
+                success: false,
+              },
+            },
+            400,
+          );
+        }
+      }
 
       if (hiCode) {
         if (!hiCode.phoneNumbers.includes(customerPhone)) {
@@ -627,8 +711,6 @@ const posRouter = new Hono()
           );
         }
       }
-
-      const pos = await Pos.findOne({ businessId: businessId });
 
       if (!hiCode) {
         const registerUser = await axios.post(

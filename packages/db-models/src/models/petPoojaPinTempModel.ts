@@ -29,6 +29,11 @@ const petPoojaPinTempModelSchema =
       type: [String],
       required: true,
     },
+
+    billGeneratedBy: {
+      type: String,
+      required: false,
+    },
   });
 
 const PetPoojaPinTemp: Model<PetPoojaPinTempModelType> =
