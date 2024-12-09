@@ -168,8 +168,6 @@ const posRouter = new Hono()
             getBillConfig,
           );
 
-          console.log("Get Bill", getBill.data);
-
           if (getBill.data.success === "1") {
             const billObj = {
               billing_user_name: getBill.data.order_data.billing_user_name,
@@ -206,7 +204,7 @@ const posRouter = new Hono()
           new Promise((resolve) => setTimeout(resolve, ms));
 
         console.log("Bill Request Config", billRequestConfig);
-        await delay(15000);
+        await delay(2000);
         const fetchBillDetails = await axios.post(
           "http://api.petpooja.com/V1/captainorders/check_bill/",
           billRequestConfig,

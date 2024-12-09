@@ -47,7 +47,7 @@ export const razorpayOrderSchema = z.object({
     .string({
       message: "Table name must be a string",
     })
-    .min(3, {
+    .min(1, {
       message: "Table name must be at least 3 characters",
     })
     .max(100, {
