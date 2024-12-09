@@ -59,6 +59,7 @@ export * from "./userKot";
 export * from "./userReward";
 export * from "./userRewardHistory";
 export * from "./userRoles";
+export * from "./userSession";
 export * from "./userTag";
 export * from "./validate_signature";
 export * from "./validate_webhook";

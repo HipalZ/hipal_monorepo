@@ -47,6 +47,7 @@ export * from "./userGrabbCouponz";
 export * from "./userKot";
 export * from "./userReward";
 export * from "./userRewardHistory";
+export * from "./userSession";
 export * from "./userTag";
 export * from "./whatAppTemplate";
 export * from "./whatsAppBusinessConfig";
