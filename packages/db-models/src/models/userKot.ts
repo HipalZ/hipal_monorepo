@@ -31,6 +31,11 @@ const zoneSchema = new mongoose.Schema<UserKotType>(
       type: Number,
       required: true,
     },
+    isSettle: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   {
     timestamps: true,
