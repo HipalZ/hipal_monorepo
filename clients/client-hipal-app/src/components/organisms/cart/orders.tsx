@@ -1,17 +1,12 @@
 import { memo, useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaChevronDown, FaChevronUp, FaUser, FaClock } from "react-icons/fa";
-import {
-  MdRestaurantMenu,
-  MdLocalOffer,
-  MdTableBar,
-  MdAddIcCall,
-} from "react-icons/md";
+import { MdRestaurantMenu, MdLocalOffer, MdTableBar } from "react-icons/md";
 import {
   type ICartHistory,
   useCartStore,
 } from "@/components/store/useCartStore";
-import { BiBowlHot, BiMoney } from "react-icons/bi";
+import { BiMoney } from "react-icons/bi";
 
 const MemoOrders = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -151,7 +146,7 @@ const MemoOrders = () => {
           </motion.div>
         ))
       ) : (
-        <center className="mt-12 text-xl">No history found</center>
+        <center className="mt-12 text-xl">No Order found</center>
       )}
     </div>
   );

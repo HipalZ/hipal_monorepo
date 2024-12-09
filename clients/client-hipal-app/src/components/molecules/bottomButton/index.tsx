@@ -21,6 +21,7 @@ import AddAmountModal from "./addAmountModal";
 import MemoCallTheWaiterComponent from "./callTheWaiter";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 
 const Cart = dynamic(() => import("@/components/organisms/cart"), {
   ssr: false,
@@ -266,9 +267,13 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
         </BottomPopUp>
       )}
       {callWaiterModal && (
-        <BottomPopUp show={callWaiterModal} onClose={closeCallWaiterModal}>
+        <ItemDescriptionPopup
+          show={callWaiterModal}
+          onClose={closeCallWaiterModal}
+          heading="Help"
+        >
           <MemoCallTheWaiterComponent onClose={closeCallWaiterModal} />
-        </BottomPopUp>
+        </ItemDescriptionPopup>
       )}
       {showCart && (
         <BottomPopUp show={showCart} onClose={showingCart} hide>

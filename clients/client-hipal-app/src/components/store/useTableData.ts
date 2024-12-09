@@ -38,3 +38,11 @@ const useTableData = create(
 );
 
 export default useTableData;
+export const resetTableData = () => {
+  useTableData.setState({
+    tableName: "",
+    hiCode: "",
+    hiCodePopup: false,
+    hiCodeUser: { name: "", phone: "", success: false },
+  });
+};

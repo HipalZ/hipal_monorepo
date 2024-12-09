@@ -1,3 +1,5 @@
+"use client";
+
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { useLogin } from "@/components/store/useLogin";
 import useTableData from "@/components/store/useTableData";
@@ -5,7 +7,14 @@ import { apiRpc } from "@hi/common";
 import React, { memo, useCallback, useState } from "react";
 import { toast } from "react-toastify";
 import { useErrorHandling } from "@/utils/helper";
-import { messages } from "@/components/utils/helpers";
+import Bill from "@/assets/call/bill.png";
+import WaterBottle from "@/assets/call/waterBottle.png";
+import Tissue from "@/assets/call/tissue.png";
+import Order from "@/assets/call/order.png";
+import Other from "@/assets/call/other.png";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import CommonBottomButton from "@/components/atoms/bottomButton";
 
 const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
   const { errorText } = useErrorHandling();
@@ -14,11 +23,19 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
   const name = useLogin((s) => s.userDetails?.name);
   const userDetailes = useLogin((s) => s.userDetails);
 
+  const messageImageMap = {
+    "Get Me Water Bottles": WaterBottle,
+    "Get Me Tissue Paper": Tissue,
+    "Please Settle My Table": Bill,
+    "Please Take My Order": Order,
+    Other: Other,
+  };
+
   const [loading, setLoading] = useState<boolean>(false);
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
 
-  const handleSelectMessage = useCallback((message: string) => {
-    setMessage(message);
+  const handleSelectMessage = useCallback((selectedMessage: string) => {
+    setMessage(selectedMessage);
   }, []);
 
   const callTheWaiter = useCallback(async () => {
@@ -48,33 +65,67 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
       toast.success("Staff will be there soon. Thank you!!");
       onClose();
     }
-  }, [businessId, tableName, message]);
+  }, [
+    businessId,
+    tableName,
+    message,
+    name,
+    userDetailes._id,
+    loading,
+    errorText,
+    onClose,
+  ]);
 
   return (
     <>
-      <ul className="h-full overflow-auto text-primary">
-        {messages.map((message) => (
-          <li
-            className="p-2 m-4 transition-colors duration-200 ease-in-out transform rounded-md cursor-pointer hover:bg-primary hover:text-base-100 hover:scale-105"
-            key={`${message} index`}
-            onClick={() => handleSelectMessage(message)}
-          >
-            {message}
-          </li>
-        ))}
-      </ul>
-      <button
-        type="button"
-        disabled={loading}
-        onClick={callTheWaiter}
-        className="w-[92%] mb-4 px-8 py-3 mx-4 text-sm border rounded-full bg-primary text-base-100"
-      >
-        {loading ? (
-          <span className="loader_spinner !border-t-base-100 text-primary" />
-        ) : (
-          "Call Captain"
-        )}
-      </button>
+      <div className="flex flex-col relative max-h-[90dvh] pb-[5rem] overflow-auto bg-base-100">
+        <motion.ul
+          className="grid flex-grow grid-cols-2 gap-4 p-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {Object.entries(messageImageMap).map(([messageText, imageSrc]) => (
+            <motion.li
+              key={messageText}
+              className={` relative cursor-pointer flex flex-col items-center justify-center `}
+              onClick={() => handleSelectMessage(messageText)}
+              whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <motion.div
+                className={`py-4 ${
+                  message === messageText
+                    ? "bg-primary text-base-100 rounded-2xl"
+                    : "bg-base-100 text-base-content"
+                }`}
+              >
+                <Image
+                  src={imageSrc}
+                  alt={messageText}
+                  width={200}
+                  height={150}
+                  objectFit="cover"
+                  className="transition-transform duration-300 ease-in-out transform w-full aspect-[4/3]"
+                />
+              </motion.div>
+              <h3 className="mt-2 text-sm font-medium text-center text-primary">
+                {messageText}
+              </h3>
+            </motion.li>
+          ))}
+        </motion.ul>
+      </div>
+      <CommonBottomButton
+        fixed
+        buttons={[
+          {
+            type: "button",
+            text: "Call captain",
+            onClick: callTheWaiter,
+          },
+        ]}
+      />
     </>
   );
 };

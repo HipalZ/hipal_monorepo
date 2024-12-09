@@ -34,7 +34,7 @@ const HiCodeValidate = dynamic(() => import("./hicodeValidate"), {
 const Orders = dynamic(() => import("./orders"), { ssr: false });
 
 const Cart = () => {
-  const { cart } = useCartStore();
+  const { cart, cartHistory } = useCartStore();
   const { setShowCart, cartPage, setCartPage } = useCart();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const [showPayAlert, setShowPayAlert] = useState<boolean>(false);
@@ -202,18 +202,31 @@ const Cart = () => {
     }
 
     if (cartPage === "order") {
-      return [
-        {
-          text: "Cart",
-          onClick: () => setCartPage("cart"),
-          type: "button" as const,
-        },
-        {
-          text: "Pay Bill",
-          onClick: payBill,
-          type: "button" as const,
-        },
-      ];
+      return cartHistory && cartHistory.length > 0
+        ? [
+            {
+              text: "Cart",
+              onClick: () => setCartPage("cart"),
+              type: "button" as const,
+            },
+            {
+              text: "Pay Bill",
+              onClick: payBill,
+              type: "button" as const,
+            },
+          ]
+        : [
+            {
+              text: "Order more",
+              onClick: () => setShowCart(false),
+              type: "button" as const,
+            },
+            {
+              text: "Cart",
+              onClick: () => setCartPage("cart"),
+              type: "button" as const,
+            },
+          ];
     }
 
     if (cartPage === "history") {
