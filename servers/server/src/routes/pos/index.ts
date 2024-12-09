@@ -173,12 +173,12 @@ const posRouter = new Hono()
           if (getBill.data.success === "1") {
             const billObj = {
               billing_user_name: getBill.data.order_data.billing_user_name,
-              service_charge: getBill.data.order_data.service_charge,
+              serviceCharge: getBill.data.order_data.service_charge,
               discount: getBill.data.order_data.discount,
               tax: getBill.data.order_data.tax,
               total: getBill.data.order_data.total,
-              customer_phone: getBill.data.order_data.customer_phone,
-              customer_name: getBill.data.order_data.customer_name,
+              customerPhone: getBill.data.order_data.customer_phone,
+              customerName: getBill.data.order_data.customer_name,
               tableName: getBill.data.order_data.table_no,
 
               subTotal: getBill.data.order_data.core_price,
@@ -237,12 +237,12 @@ const posRouter = new Hono()
           if (getBill.data.success === "1") {
             const billObj = {
               billing_user_name: getBill.data.order_data.billing_user_name,
-              service_charge: getBill.data.order_data.service_charge,
+              serviceCharge: getBill.data.order_data.service_charge,
               discount: getBill.data.order_data.discount,
               tax: getBill.data.order_data.tax,
               total: getBill.data.order_data.total,
-              customer_phone: getBill.data.order_data.customer_phone,
-              customer_name: getBill.data.order_data.customer_name,
+              customerPhone: getBill.data.order_data.customer_phone,
+              customerName: getBill.data.order_data.customer_name,
               tableName: getBill.data.order_data.table_no,
               billRequestId: bill_request_id,
 
