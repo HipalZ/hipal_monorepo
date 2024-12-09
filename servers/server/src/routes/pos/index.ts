@@ -40,6 +40,7 @@ const saveUserKot = async (
     tableName: tableName,
     businessId: businessId,
     phone: customerPhone,
+    isSettle: false,
   });
 
   let mergedCart = internalCart;
@@ -53,6 +54,7 @@ const saveUserKot = async (
       tableName: tableName,
       businessId: businessId,
       phone: customerPhone,
+      isSettle: false,
     },
     {
       tableName: tableName,
