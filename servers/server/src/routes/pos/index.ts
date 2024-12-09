@@ -137,19 +137,15 @@ const posRouter = new Hono()
         tableNo: tableName,
       };
 
+      console.log("Bill Config", billConfig);
+
       const fetchBill = await axios.post(
         "http://api.petpooja.com/V1/captainorders/request_bill/",
-        {
-          app_key: pos.accessKey,
-          app_secret: pos.secretKey,
-          access_token: pos.authToken,
-          restID: pos.restId,
-          pin: getPin?.pin,
-          table_no: tableName,
-        },
+        billConfig,
       );
 
       console.log("Fetch Bill", fetchBill.data);
+
       if (fetchBill.data.success === "1") {
         const request_id = fetchBill.data.request_id;
 
@@ -157,15 +153,19 @@ const posRouter = new Hono()
           const bill_request_id = fetchBill.data.bill_request_id;
           console.log("Bill Request ID", bill_request_id);
 
+          const getBillConfig = {
+            app_key: pos.accessKey,
+            app_secret: pos.secretKey,
+            access_token: pos.authToken,
+            restID: pos.restId,
+            bill_request_id: bill_request_id,
+          };
+
+          console.log("Get Bill Config", getBillConfig);
+
           const getBill = await axios.post(
             "http://api.petpooja.com/V1/captainorders/get_bill/",
-            {
-              app_key: pos.accessKey,
-              app_secret: pos.secretKey,
-              access_token: pos.authToken,
-              restID: pos.restId,
-              bill_request_id: bill_request_id,
-            },
+            getBillConfig,
           );
 
           console.log("Get Bill", getBill.data);
@@ -195,30 +195,44 @@ const posRouter = new Hono()
           }
         }
 
+        const billRequestConfig = {
+          app_key: pos.accessKey,
+          app_secret: pos.secretKey,
+          access_token: pos.authToken,
+          restID: pos.restId,
+          request_id: request_id,
+        };
+        const delay = (ms: number) =>
+          new Promise((resolve) => setTimeout(resolve, ms));
+
+        console.log("Bill Request Config", billRequestConfig);
+        await delay(4000);
         const fetchBillDetails = await axios.post(
           "http://api.petpooja.com/V1/captainorders/check_bill/",
-          {
-            app_key: pos.accessKey,
-            app_secret: pos.secretKey,
-            access_token: pos.authToken,
-            restID: pos.restId,
-            request_id: request_id,
-          },
+          billRequestConfig,
         );
+
+        console.log("Fetch Bill Details", fetchBillDetails.data);
 
         if (fetchBillDetails.data.success === "1") {
           const bill_request_id = fetchBillDetails.data.bill_request_id;
 
+          const getBillConfig = {
+            app_key: pos.accessKey,
+            app_secret: pos.secretKey,
+            access_token: pos.authToken,
+            restID: pos.restId,
+            bill_request_id: bill_request_id,
+          };
+
+          console.log("Get Bill Config", getBillConfig);
+
           const getBill = await axios.post(
             "http://api.petpooja.com/V1/captainorders/get_bill/",
-            {
-              app_key: pos.accessKey,
-              app_secret: pos.secretKey,
-              access_token: pos.authToken,
-              restID: pos.restId,
-              bill_request_id: bill_request_id,
-            },
+            getBillConfig,
           );
+
+          console.log("Get Bill", getBill.data);
 
           if (getBill.data.success === "1") {
             const billObj = {
@@ -258,177 +272,7 @@ const posRouter = new Hono()
       );
     },
   )
-  .get(
-    "/get_kot_history",
 
-    zValidator(
-      "query",
-      z.object({
-        businessId: z.string().min(3).max(200),
-        tableName: z.string().min(1).max(200),
-        pin: z.string().min(1).max(200),
-      }),
-    ),
-
-    async (c) => {
-      const { businessId, tableName, pin } = c.req.query();
-
-      const pos = await Pos.findOne({ businessId: businessId });
-
-      if (!pos) {
-        return c.json(
-          {
-            message: "POS not found",
-            err: true,
-            data: {
-              success: false,
-            },
-          },
-          404,
-        );
-      }
-
-      const fetchBill = await axios.post(
-        "http://api.petpooja.com/V1/captainorders/request_bill",
-        {
-          app_key: pos.accessKey,
-          app_secret: pos.secretKey,
-          access_token: pos.authToken,
-          restID: pos.restId,
-          pin: pin,
-          table_no: tableName,
-        },
-      );
-      if (fetchBill.data.success === "1") {
-        const request_id = fetchBill.data.request_id;
-
-        if (!request_id) {
-          const bill_request_id = fetchBill.data.bill_request_id;
-
-          const getBill = await axios.post(
-            "http://api.petpooja.com/V1/captainorders/get_bill//",
-            {
-              app_key: pos.accessKey,
-              app_secret: pos.secretKey,
-              access_token: pos.authToken,
-              restID: pos.restId,
-              bill_request_id: bill_request_id,
-            },
-          );
-
-          if (getBill.data.success === "1") {
-            const dishes = getBill.data.items_data.map((dish) => {
-              const regex = /\(([^)]+)\)/;
-              const match = dish.name.match(regex);
-              let extractedPortion = "";
-
-              if (match && match[1]) {
-                extractedPortion = match[1];
-                console.log("Extracted Portion:", extractedPortion);
-              } else {
-                console.log("No match found");
-              }
-
-              return {
-                name: dish.name,
-                quantity: dish.quantity,
-                price: dish.total,
-                extras: dish.extras
-                  ? dish.extras.map((extra) => extra.name)
-                  : [],
-                portion: extractedPortion,
-              };
-            });
-
-            const history = dishes.map((dish) => ({
-              name: dish.name,
-              quantity: dish.quantity,
-              price: dish.price,
-              extras: dish.extras,
-              portion: dish.portion,
-            }));
-
-            return c.json(
-              {
-                message: "Data fetched successfully",
-                err: false,
-                data: history,
-              },
-              200,
-            );
-          }
-        }
-
-        const fetchBillDetails = await axios.post(
-          "http://api.petpooja.com/V1/captainorders/check_bill/",
-          {
-            app_key: pos.accessKey,
-            app_secret: pos.secretKey,
-            access_token: pos.authToken,
-            restID: pos.restId,
-            request_id: request_id,
-          },
-        );
-
-        if (fetchBillDetails.data.success === "1") {
-          const bill_request_id = fetchBillDetails.data.bill_request_id;
-
-          const getBill = await axios.post(
-            "http://api.petpooja.com/V1/captainorders/get_bill//",
-            {
-              app_key: pos.accessKey,
-              app_secret: pos.secretKey,
-              access_token: pos.authToken,
-              restID: pos.restId,
-              bill_request_id: bill_request_id,
-            },
-          );
-
-          if (getBill.data.success === "1") {
-            const dishes = getBill.data.items_data.map((dish) => {
-              const regex = /\(([^)]+)\)/;
-              const match = dish.name.match(regex);
-              let extractedPortion = "";
-
-              if (match && match[1]) {
-                extractedPortion = match[1];
-                console.log("Extracted Portion:", extractedPortion);
-              } else {
-                console.log("No match found");
-              }
-
-              return {
-                name: dish.name,
-                quantity: dish.quantity,
-                price: dish.total,
-                extras: dish.extras
-                  ? dish.extras.map((extra) => extra.name)
-                  : [],
-                portion: extractedPortion,
-              };
-            });
-
-            const history = dishes.map((dish) => ({
-              name: dish.name,
-              quantity: dish.quantity,
-              price: dish.price,
-              extras: dish.extras,
-              portion: dish.portion,
-            }));
-
-            return c.json(
-              {
-                message: "Data fetched successfully",
-                err: false,
-                data: history,
-              },
-              200,
-            );
-          }
-        }
-      }
-    },
-  )
   .post(
     "/setup_pos_config",
 
@@ -831,6 +675,7 @@ const posRouter = new Hono()
         "https://api.petpooja.com/V1/captainorders/save_kot_qr_order",
         petpoojaCart,
       );
+      console.log("Save Kot", saveKot.data);
 
       if (saveKot.data.success === "1") {
         await saveUserKot(
