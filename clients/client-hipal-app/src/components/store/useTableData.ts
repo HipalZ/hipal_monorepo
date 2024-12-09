@@ -1,22 +1,40 @@
-import {create} from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
+
+export interface HiCodeUser {
+  name: string;
+  phone: string;
+  success: boolean;
+}
 
 type TableDataStore = {
-    tableName: string;
-    setTableName: (name: string) => void;
+  tableName: string;
+  setTableName: (name: string) => void;
+  hiCode: string;
+  setHiCode: (hiCode: string) => void;
+  hiCodePopup: boolean;
+  setHiCodePopup: (hiCodePopup: boolean) => void;
+  hiCodeUser: HiCodeUser;
+  setHiCodeUser: (user: HiCodeUser) => void;
 };
 
 const useTableData = create(
-    persist<TableDataStore>(
-        (set) => ({
-            tableName: '',
-            setTableName: (name) => set({ tableName: name }),
-        }),
-        {
-            name: 'table-store',
-            storage:createJSONStorage(()=>localStorage)
-        }
-    )
+  persist<TableDataStore>(
+    (set) => ({
+      tableName: "",
+      setTableName: (name) => set({ tableName: name }),
+      hiCode: "",
+      setHiCode: (hiCode) => set({ hiCode }),
+      hiCodePopup: false,
+      setHiCodePopup: (hiCodePopup) => set({ hiCodePopup }),
+      hiCodeUser: { name: "", phone: "", success: false },
+      setHiCodeUser: (user) => set({ hiCodeUser: user }),
+    }),
+    {
+      name: "table-store",
+      storage: createJSONStorage(() => localStorage),
+    },
+  ),
 );
 
 export default useTableData;

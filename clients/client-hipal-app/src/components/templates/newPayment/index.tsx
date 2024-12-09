@@ -237,7 +237,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         setRazorPaySignature("");
         setRazorPayOrderId("");
         setRazorPayPaymentId("");
-        setTableName("");
+        useTableData.persist.clearStorage();
         setChannelId("");
         return router.push(
           `/${customLink}/review?amount=${total}&mode=online&claim=${Math.round(
@@ -492,7 +492,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       toast.success(
         "We sent notification to the staff for offline payment. Please wait for the staff to confirm the payment.",
       );
-      setTableName("");
+      useTableData.persist.clearStorage();
       router.push(
         `/${customLink}/review?amount=${total}&mode=offline&claim=${Math.round(
           finalReward,

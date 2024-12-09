@@ -14,7 +14,6 @@ import type { EmblaOptionsType } from "embla-carousel";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import OtherOutletCard from "@/components/atoms/card/otherOutletCard";
-import Image from "next/image";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import MemoPlaceholderImg from "@/components/atoms/placeholder";
 
@@ -67,11 +66,6 @@ const DishesList: FC<IDishesProps> = (props) => {
         category.hierarchy === "CHILD" &&
         category.dishIds &&
         category.dishIds.length > 0
-
-        // TODO: Uncomment this after adding visibility to dish
-        // category.dishIds.some(
-        //   (dish: DishType) => !dish.isDeleted && dish.visibility,
-        // )
       );
     };
 
@@ -190,9 +184,8 @@ const DishesList: FC<IDishesProps> = (props) => {
       )}
       {subTypes.map((category: CategoryType, index) => {
         const visibleDishes = category.dishIds.filter(
-          (dish: DishType) => dish.visibility && !dish.isDeleted,
+          (dish: DishType) => dish.visibility,
         );
-        console.log("visibleDishes", category);
         const dishesToRender = filterDishes(visibleDishes, isActiveDishType);
 
         if (dishesToRender.length === 0) return null;

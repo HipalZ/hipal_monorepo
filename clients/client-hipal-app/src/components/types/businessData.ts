@@ -163,6 +163,7 @@ interface IOutlet {
   fixCloseTime: string;
   fixOpenTime: string;
   outLetType: string;
+  isPosEnabled: boolean;
 }
 
 export interface TimingType {

@@ -23,6 +23,8 @@ export interface ICartHistory {
     phone: string;
   };
   _id: string;
+  name?: string;
+  phone?: string;
 }
 
 function generateCartItemId(

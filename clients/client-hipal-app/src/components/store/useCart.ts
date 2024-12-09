@@ -13,7 +13,7 @@ export interface ICartExtra {
 }
 
 export interface ICartVariant {
-  extra?: ICartExtra | {};
+  extra?: ICartExtra;
   portion?: IPortion;
 }
 
@@ -27,6 +27,8 @@ export interface ICart {
   [key: string]: ICartDish;
 }
 
+export type ICartTypes = "cart" | "history" | "order" | "payment";
+
 interface IUseCart {
   showCart: boolean;
   cart: ICart;
@@ -37,6 +39,9 @@ interface IUseCart {
   setShowHistory: (data: boolean) => void;
   inputModal: boolean;
   setInputModal: (data: boolean) => void;
+
+  cartPage: ICartTypes;
+  setCartPage: (data: ICartTypes) => void;
 
   cartItem: object;
   setCartItem: (data: object) => void;
@@ -62,6 +67,9 @@ export const useCart = create<IUseCart>()(
 
       emptyCart: () => set({ cart: {} }),
       setCart: (d: ICart) => set(() => ({ cart: d })),
+
+      cartPage: "cart",
+      setCartPage: (d: ICartTypes) => set(() => ({ cartPage: d })),
 
       cartItem: {},
       setCartItem: (d: object) => set(() => ({ cartItem: d })),

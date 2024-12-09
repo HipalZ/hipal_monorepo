@@ -98,18 +98,18 @@ function MemoOutletItemInfo() {
   return (
     <>
       <Head>
-        <meta property="og:title" content={dishData.name} />
-        <meta property="og:description" content={dishData.description} />
-        <meta property="og:image" content={dishData.images[0]} />
+        <meta property="og:title" content={dishData?.name} />
+        <meta property="og:description" content={dishData?.description} />
+        <meta property="og:image" content={dishData?.images?.[0]} />
         <meta property="og:image:type" content="image/jpeg" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta
           property="og:url"
-          content={`${BUSINESS_KEYID}/${customLink}/${dishData._id}`}
+          content={`${BUSINESS_KEYID}/${customLink}/${dishData?._id}`}
         />
         <meta property="og:type" content="website" />
-        <title>{dishData.name}</title>
+        <title>{dishData?.name}</title>
       </Head>
       <div
         className="relative max-h-[90dvh] overflow-auto text-primary hide-scrollbar"

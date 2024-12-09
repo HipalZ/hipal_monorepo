@@ -113,6 +113,7 @@ const posRouter = new Hono()
       );
 
       const pos = await Pos.findOne({ businessId: businessId });
+      console.log("POS", pos);
 
       if (!pos) {
         return c.json(
@@ -127,6 +128,15 @@ const posRouter = new Hono()
         );
       }
 
+      const billConfig = {
+        app_key: pos.accessKey,
+        app_secret: pos.secretKey,
+        access_token: pos.authToken,
+        restID: pos.restId,
+        pin: getPin?.pin,
+        tableNo: tableName,
+      };
+
       const fetchBill = await axios.post(
         "http://api.petpooja.com/V1/captainorders/request_bill/",
         {
@@ -138,11 +148,14 @@ const posRouter = new Hono()
           table_no: tableName,
         },
       );
+
+      console.log("Fetch Bill", fetchBill.data);
       if (fetchBill.data.success === "1") {
         const request_id = fetchBill.data.request_id;
 
         if (!request_id) {
           const bill_request_id = fetchBill.data.bill_request_id;
+          console.log("Bill Request ID", bill_request_id);
 
           const getBill = await axios.post(
             "http://api.petpooja.com/V1/captainorders/get_bill/",
@@ -154,6 +167,8 @@ const posRouter = new Hono()
               bill_request_id: bill_request_id,
             },
           );
+
+          console.log("Get Bill", getBill.data);
 
           if (getBill.data.success === "1") {
             const billObj = {
@@ -230,6 +245,17 @@ const posRouter = new Hono()
           }
         }
       }
+
+      return c.json(
+        {
+          message: "Error fetching data",
+          err: true,
+          data: {
+            success: false,
+          },
+        },
+        400,
+      );
     },
   )
   .get(
@@ -694,6 +720,8 @@ const posRouter = new Hono()
               err: true,
               data: {
                 success: false,
+                name: hiCode.customerName,
+                phone: hiCode.pin,
               },
             },
             403,
@@ -714,7 +742,7 @@ const posRouter = new Hono()
           },
         );
 
-        const createUserSession = await UserSession.create({
+        await UserSession.create({
           customerPhone: customerPhone,
           businessId: businessId,
           createdAt: Date.now(),
@@ -760,6 +788,8 @@ const posRouter = new Hono()
                 data: {
                   success: true,
                   hiCode: hiCode,
+                  name: customerName,
+                  phone: customerPhone,
                 },
               },
               200,

@@ -48,14 +48,14 @@ const MenuItem = ({
         "relative flex flex-col items-center justify-center z-10",
         isSelected ? "w-16 h-16" : "w-14 h-14",
       )}
-      animate={isSelected ? { y: -10 } : { y: 0 }}
+      animate={isSelected ? { y: 0 } : { y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
       {isSelected && (
         <motion.div
           className="absolute inset-0 w-12 h-12 rounded-full left-2 -top-2.5 bg-base-300"
           layoutId="outline"
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          transition={{ type: "spring", stiffness: 300, damping: 40 }}
         />
       )}
       <motion.div
@@ -100,7 +100,8 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
   const accessToken = useUserToken.getState().accessToken;
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const [callWaiterModal, setCallWaiterModal] = useState(false);
-  const { setShowCart, showCart, inputModal, setInputModal } = useCart();
+  const { setShowCart, showCart, inputModal, setInputModal, setCartPage } =
+    useCart();
   const customLink = useParams()?.businessId || "";
   const cart = useCartStore((s) => s.cart);
   const { subscribeModal, reviewPopup } = useLogin((s) => ({
@@ -119,8 +120,22 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
     if (!accessToken) {
       router.push(`/${customLink}/user/signup`);
     }
-    setInputModal(true);
-  }, [selected, accessToken, customLink, setInputModal, setDirection, router]);
+    if (outletInfo?.isPosEnabled) {
+      setCartPage("order");
+      setShowCart(!showCart);
+    } else {
+      setInputModal(true);
+    }
+  }, [
+    selected,
+    showCart,
+    accessToken,
+    customLink,
+    setInputModal,
+    setDirection,
+    outletInfo?.isPosEnabled,
+    setShowCart,
+  ]);
 
   const openCallWaiterModal = useCallback(() => {
     setCallWaiterModal(true);
@@ -149,8 +164,9 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
   ]);
 
   const showingCart = useCallback(() => {
+    setCartPage("cart");
     setShowCart(!showCart);
-  }, [showCart, setShowCart]);
+  }, [showCart, setShowCart, setCartPage]);
 
   if (subscribeModal || reviewPopup) {
     return null;
@@ -182,29 +198,13 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
             href={`/${customLink}/${accessToken ? "loyalty" : "user/signup"}`}
             isSelected={selectedBtn === "rewards"}
           />
-          {tableName ? (
-            <MenuItem
-              icon={MdAccountBalanceWallet}
-              label="Pay Bill"
-              onClick={openModal}
-              isSelected={false}
-            />
-          ) : (
-            <MenuItem
-              icon={LuScanLine}
-              label="Scan"
-              href={`/${customLink}/scan`}
-              isSelected={false}
-            />
-          )}
-          {outletInfo?.outLetType !== "OTHER" && (
-            <MenuItem
-              icon={FaConciergeBell}
-              label="Captain"
-              onClick={triggerCallWaiter}
-              isSelected={false}
-            />
-          )}
+          <MenuItem
+            icon={MdMenuBook}
+            label={outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
+            href={`/${customLink}/category`}
+            isSelected={selectedBtn === "menu" || selectedBtn === "catalogue"}
+          />
+
           <div className="relative">
             <MenuItem
               icon={BsBagHeartFill}
@@ -225,13 +225,39 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
               )}
             </AnimatePresence>
           </div>
-          <MenuItem
-            icon={MdMenuBook}
-            label={outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
-            href={`/${customLink}/category`}
-            isSelected={selectedBtn === "menu" || selectedBtn === "catalogue"}
-          />
+
+          {tableName ? (
+            <MenuItem
+              icon={MdAccountBalanceWallet}
+              label="Pay Bill"
+              onClick={openModal}
+              isSelected={false}
+            />
+          ) : (
+            <MenuItem
+              icon={LuScanLine}
+              label="Scan"
+              href={`/${customLink}/scan`}
+              isSelected={false}
+            />
+          )}
         </div>
+        {outletInfo?.outLetType !== "OTHER" && (
+          <AnimatePresence>
+            <motion.button
+              type="button"
+              onClick={triggerCallWaiter}
+              className="absolute inset-0 w-1/4 h-[3rem] flex items-center rounded-r-2xl flex-col z-10 -top-[4rem] left-0 bg-primary text-base-100 pl-4 pr-4 text-xs py-2"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              <FaConciergeBell size={20} />
+              Captain
+            </motion.button>
+          </AnimatePresence>
+        )}
       </motion.nav>
 
       {inputModal && accessToken && (

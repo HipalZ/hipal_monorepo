@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaChevronDown, FaChevronUp, FaUser, FaClock } from "react-icons/fa";
 import {
@@ -16,9 +16,15 @@ const MemoHistoryCartItems = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const { cartHistory } = useCartStore();
 
-  const toggleAccordion = (id: string) => {
-    setExpanded(expanded === id ? null : id);
-  };
+  const toggleAccordion = useCallback(
+    (id: string) => {
+      setExpanded(expanded === id ? null : id);
+    },
+    [expanded],
+  );
+  const maskPhoneNumber = useCallback((phone: string) => {
+    return `${phone.slice(0, 2)}****${phone.slice(-4)}`;
+  }, []);
 
   return (
     <>
@@ -50,7 +56,7 @@ const MemoHistoryCartItems = () => {
                 </p>
                 <p className="flex items-center mt-1 text-sm font-semibold opacity-50">
                   <MdAddIcCall className="mr-1" />{" "}
-                  {cart?.userId?.phone || "User"}
+                  {maskPhoneNumber(cart?.userId?.phone || "")}
                 </p>
               </div>
               <div className="text-right">
