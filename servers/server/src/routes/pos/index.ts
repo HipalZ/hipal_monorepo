@@ -202,11 +202,8 @@ const posRouter = new Hono()
           restID: pos.restId,
           request_id: request_id,
         };
-        const delay = (ms: number) =>
-          new Promise((resolve) => setTimeout(resolve, ms));
 
         console.log("Bill Request Config", billRequestConfig);
-        await delay(2000);
         const fetchBillDetails = await axios.post(
           "http://api.petpooja.com/V1/captainorders/check_bill/",
           billRequestConfig,
