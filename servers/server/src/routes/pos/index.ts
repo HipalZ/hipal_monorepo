@@ -534,16 +534,20 @@ const posRouter = new Hono()
         );
       }
 
+      const billConfig = {
+        app_key: pos.accessKey,
+        app_secret: pos.secretKey,
+        access_token: pos.authToken,
+        restID: pos.restId,
+        pin: hiCode?.pin,
+        tableNo: tableName,
+      };
+
+      console.log("Bill Config", billConfig);
+
       const isBillAlreadyGenerated = await axios.post(
-        "http://api.petpooja.com/V1/captainorders/request_bill",
-        {
-          app_key: pos.accessKey,
-          app_secret: pos.secretKey,
-          access_token: pos.authToken,
-          restID: pos.restId,
-          pin: hiCode?.pin,
-          table_no: tableName,
-        },
+        "http://api.petpooja.com/V1/captainorders/request_bill/",
+        billConfig,
       );
 
       if (isBillAlreadyGenerated.data.success === "1") {
