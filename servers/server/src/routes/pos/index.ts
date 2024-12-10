@@ -4,6 +4,7 @@ import {
   PetPoojaPinTemp,
   Pos,
   Table,
+  TempTableSettle,
   UniquelyYours,
   UrlModel,
   UserKot,
@@ -485,6 +486,7 @@ const posRouter = new Hono()
         businessId: z.string().min(1).max(200),
         customerName: z.string().min(1).max(200),
         customerPhone: z.string().min(1).max(200),
+        hiCode: z.string().max(200),
       }),
     ),
 
@@ -495,7 +497,33 @@ const posRouter = new Hono()
         businessId,
         customerName,
         customerPhone,
+        hiCode,
       } = await c.req.json();
+
+      if (hiCode && hiCode.length > 0) {
+        const fetchTableAlreadySettle = await TempTableSettle.findOne({
+          tableName: tableName,
+          businessId: businessId,
+        });
+
+        if (fetchTableAlreadySettle) {
+          return c.json(
+            {
+              message: `Table already settled by ${fetchTableAlreadySettle.settleBy} `,
+              err: true,
+              data: {
+                success: false,
+              },
+            },
+            403,
+          );
+        }
+      }
+
+      await TempTableSettle.deleteOne({
+        tableName: tableName,
+        businessId: businessId,
+      });
 
       const pos = await Pos.findOne({ businessId: businessId });
 
@@ -512,7 +540,7 @@ const posRouter = new Hono()
         );
       }
 
-      const hiCode = await PetPoojaPinTemp.findOne({
+      const fetchHiCode = await PetPoojaPinTemp.findOne({
         tableName: tableName,
         businessId: businessId,
       });
@@ -521,7 +549,7 @@ const posRouter = new Hono()
         businessId: businessId,
       });
 
-      if (userActiveSession && !hiCode) {
+      if (userActiveSession && !fetchHiCode) {
         return c.json(
           {
             message: "User already has an active session",
@@ -539,7 +567,7 @@ const posRouter = new Hono()
         app_secret: pos.secretKey,
         access_token: pos.authToken,
         restID: pos.restId,
-        pin: hiCode?.pin,
+        pin: fetchHiCode?.pin,
         tableNo: tableName,
       };
 
@@ -556,7 +584,7 @@ const posRouter = new Hono()
         if (request_bill_id) {
           return c.json(
             {
-              message: `Bill already generated for table ${tableName} by ${hiCode?.billGeneratedBy}`,
+              message: `Bill already generated for table ${tableName} by ${fetchHiCode?.billGeneratedBy}`,
               err: true,
               data: {
                 success: false,
@@ -567,16 +595,16 @@ const posRouter = new Hono()
         }
       }
 
-      if (hiCode) {
-        if (!hiCode.phoneNumbers.includes(customerPhone)) {
+      if (fetchHiCode) {
+        if (!fetchHiCode.phoneNumbers.includes(customerPhone)) {
           return c.json(
             {
-              message: `this table is already occupied by ${hiCode.customerName}`,
+              message: `this table is already occupied by ${fetchHiCode.customerName}`,
               err: true,
               data: {
                 success: false,
-                name: hiCode.customerName,
-                phone: hiCode.pin,
+                name: fetchHiCode.customerName,
+                phone: fetchHiCode.pin,
               },
             },
             403,
@@ -584,7 +612,7 @@ const posRouter = new Hono()
         }
       }
 
-      if (!hiCode) {
+      if (!fetchHiCode) {
         const registerUser = await axios.post(
           "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
           {
@@ -679,7 +707,7 @@ const posRouter = new Hono()
         internalCart,
         pos?.restId,
         customerName,
-        hiCode.pin,
+        fetchHiCode.pin,
         tableName,
       );
       const saveKot = await axios.post(
@@ -702,7 +730,7 @@ const posRouter = new Hono()
             err: false,
             data: {
               success: true,
-              hiCode: hiCode.hiCode,
+              hiCode: fetchHiCode.hiCode,
             },
           },
           200,

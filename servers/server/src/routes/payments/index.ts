@@ -16,6 +16,7 @@ import {
   Reviews,
   Subscriber,
   TagModel,
+  TempTableSettle,
   User,
   UserAnalytic,
   UserCouponClaim,
@@ -1556,7 +1557,10 @@ const paymentsRouter = new Hono()
 
         if (alert.alertType === "OFFLINE") {
           if (alert && !alert.isAccepted) {
-            const order = await Order.findById(alert.order_id);
+            const order = await Order.findById(alert.order_id).populate({
+              path: "userId",
+              select: "name",
+            });
             if (order?.couponId) {
               const coupon = await Couponz.findById(order.couponId).select(
                 "conditions.couponEndDate",
@@ -1684,6 +1688,19 @@ const paymentsRouter = new Hono()
                     isSettle: true,
                   },
                 },
+                {
+                  session,
+                },
+              );
+
+              await TempTableSettle.create(
+                [
+                  {
+                    businessId: order.businessId,
+                    tableName: order.tableName,
+                    settleBy: order.userId?.name,
+                  },
+                ],
                 {
                   session,
                 },
@@ -2731,6 +2748,9 @@ const paymentsRouter = new Hono()
 
       const getOrder = await Order.findOne({
         order_id: payload.payment.entity.order_id,
+      }).populate({
+        path: "userId",
+        select: "name",
       });
 
       if (event === "payment.captured") {
@@ -2779,6 +2799,18 @@ const paymentsRouter = new Hono()
                   isSettle: true,
                 },
               },
+              {
+                session,
+              },
+            );
+            await TempTableSettle.create(
+              [
+                {
+                  businessId: getOrder.businessId,
+                  tableName: getOrder.tableName,
+                  settleBy: getOrder.userId?.name,
+                },
+              ],
               {
                 session,
               },

@@ -48,6 +48,7 @@ export * from "./pos";
 export * from "./table";
 export * from "./tags";
 export * from "./tagType";
+export * from "./tempTableSettle";
 export * from "./token";
 export * from "./uniquelyYours";
 export * from "./urlModel";
