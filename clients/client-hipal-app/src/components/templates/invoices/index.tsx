@@ -165,7 +165,7 @@ const businessData = [
   },
   {
     id: "015",
-    date: "18 Nov 2024",
+    date: "10 Dec 2024",
     name: "nataka",
     bizName: "Nataka Global Kitchen & Cafe",
     status: false,
@@ -221,6 +221,18 @@ const businessData = [
     address:
       "SALARPURIA SATTVA KNOWLEDGE CITY, Silpa Gram Craft Village, Madhapur, Hyderabad, Telangana 500081",
     gst: "",
+  },
+  {
+    id: "020",
+    date: "10 Dec 2024",
+    name: "kritanagar",
+    bizName: "Kritanagar",
+    status: false,
+    serviceCost: 4000,
+    months: 12,
+    address:
+      "ground floor, tower C, 40&41 phoenix primea, consulate road, beside Big Star cafe, Financial District, Nanakramguda, Telangana 500032",
+    gst: "36AABFQ1417E1ZP",
   },
 ];
 
@@ -430,9 +442,11 @@ const MemoInovices = () => {
             <p>
               <b>Address :</b> {business?.address}
             </p>
-            <p>
-              <b>GST :</b> {business?.gst}
-            </p>
+            {business?.gst?.length > 0 ? (
+              <p>
+                <b>GST :</b> {business?.gst}
+              </p>
+            ) : null}
           </div>
         </article>
 
