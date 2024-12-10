@@ -34,6 +34,10 @@ const petPoojaPinTempModelSchema =
       type: String,
       required: false,
     },
+    billRequestId: {
+      type: String,
+      required: false,
+    },
   });
 
 const PetPoojaPinTemp: Model<PetPoojaPinTempModelType> =

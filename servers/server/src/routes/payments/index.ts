@@ -1645,6 +1645,26 @@ const paymentsRouter = new Hono()
                 { session },
               );
 
+              const activeTable = await PetPoojaPinTemp.findOne({
+                tableName: order.tableName,
+                businessId: order.businessId,
+              });
+
+              const pos = await Pos.findOne({ businessId: order.businessId });
+
+              const res = await axios.post(
+                "http://api.petpooja.com/V1/captainorders/success_payment/",
+                {
+                  app_key: pos?.accessKey,
+                  app_secret: pos?.secretKey,
+                  access_token: pos?.authToken,
+                  restID: pos?.restId,
+                  bill_request_id: activeTable?.billRequestId,
+                  amount_paid: order.total,
+                  pin: activeTable?.pin,
+                },
+              );
+
               await PetPoojaPinTemp.deleteOne(
                 {
                   tableName: order.tableName,
@@ -2733,7 +2753,7 @@ const paymentsRouter = new Hono()
               app_secret: pos?.secretKey,
               access_token: pos?.authToken,
               restID: pos?.restId,
-              bill_request_id: getOrder.posBillId,
+              bill_request_id: activeTable?.billRequestId,
               amount_paid: getOrder.total,
               pin: activeTable?.pin,
             },

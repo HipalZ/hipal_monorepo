@@ -104,16 +104,6 @@ const posRouter = new Hono()
         tableName: tableName,
       });
 
-      await PetPoojaPinTemp.findOneAndUpdate(
-        {
-          businessId: businessId,
-          tableName: tableName,
-        },
-        {
-          billGeneratedBy: generatedBy,
-        },
-      );
-
       const pos = await Pos.findOne({ businessId: businessId });
       console.log("POS", pos);
 
@@ -153,7 +143,16 @@ const posRouter = new Hono()
 
         if (!request_id) {
           const bill_request_id = fetchBill.data.bill_request_id;
-          console.log("Bill Request ID", bill_request_id);
+          await PetPoojaPinTemp.findOneAndUpdate(
+            {
+              businessId: businessId,
+              tableName: tableName,
+            },
+            {
+              billGeneratedBy: generatedBy,
+              billRequestId: bill_request_id,
+            },
+          );
 
           const getBillConfig = {
             app_key: pos.accessKey,
@@ -221,6 +220,17 @@ const posRouter = new Hono()
             restID: pos.restId,
             bill_request_id: bill_request_id,
           };
+
+          await PetPoojaPinTemp.findOneAndUpdate(
+            {
+              businessId: businessId,
+              tableName: tableName,
+            },
+            {
+              billGeneratedBy: generatedBy,
+              billRequestId: bill_request_id,
+            },
+          );
 
           console.log("Get Bill Config", getBillConfig);
 
