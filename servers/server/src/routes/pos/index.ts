@@ -497,7 +497,7 @@ const posRouter = new Hono()
         businessId,
         customerName,
         customerPhone,
-        hiCode = "",
+        hiCode,
       } = await c.req.json();
 
       if (hiCode && hiCode.length > 0) {
