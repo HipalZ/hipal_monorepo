@@ -18,7 +18,7 @@ export default function AlertToRemove({
   return (
     <Transition appear show={show} as={Fragment}>
       <Dialog as="div" className="relative z-30" onClose={onClose}>
-        <div className="fixed inset-0 flex items-center justify-center px-6 backdrop-blur-sm">
+        <div className="fixed inset-0 flex items-center justify-center px-5 backdrop-blur-sm">
           <TransitionChild
             as={Fragment}
             enter="ease-out duration-300"
