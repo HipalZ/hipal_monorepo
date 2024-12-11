@@ -488,7 +488,6 @@ const posRouter = new Hono()
         businessId: z.string().min(1).max(200),
         customerName: z.string().min(1).max(200),
         customerPhone: z.string().min(1).max(200),
-        hiCode: z.number(),
       }),
     ),
 
