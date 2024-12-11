@@ -70,7 +70,7 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
       exit={{ opacity: 0, scale: 0.9 }}
       className="flex flex-col items-center justify-center p-6 bg-white"
     >
-      {hiCodeUser.phone ? (
+      {hiCodeUser?.phone ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -118,7 +118,7 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
           </motion.div>
         )}
       </div>
-      {hiCodeUser.phone && (
+      {hiCodeUser?.phone && (
         <section
           style={{
             borderRadius: "5px 20px 5px",
