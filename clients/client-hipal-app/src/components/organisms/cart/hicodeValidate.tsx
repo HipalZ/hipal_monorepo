@@ -60,7 +60,7 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
     }
   };
   const maskPhoneNumber = useCallback((phone: string) => {
-    return `${phone.slice(0, 2)}****${phone.slice(-4)}`;
+    return `${phone?.slice(0, 2)}****${phone.slice(-4)}`;
   }, []);
 
   return (
@@ -78,12 +78,14 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
           className="mb-6 text-center"
         >
           <h3 className="mb-4 text-2xl font-bold text-gray-800 space-grotesk-700">
-            Ask {hiCodeUser.name} for the HiCode
+            Ask {hiCodeUser?.name} for the HiCode
           </h3>
 
           <div className="flex items-center justify-center text-primary">
             <FaPhone className="mr-2 text-primary" />
-            <span className="text-lg">{maskPhoneNumber(hiCodeUser.phone)}</span>
+            <span className="text-lg">
+              {maskPhoneNumber(hiCodeUser?.phone)}
+            </span>
           </div>
         </motion.div>
       ) : (
@@ -116,14 +118,16 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
           </motion.div>
         )}
       </div>
-      <section
-        style={{
-          borderRadius: "5px 20px 5px",
-        }}
-        className="p-4 text-sm text-center bg-primary text-base-100"
-      >
-        <h3>Hicode present in the {hiCodeUser.name} cart</h3>
-      </section>
+      {hiCodeUser.phone && (
+        <section
+          style={{
+            borderRadius: "5px 20px 5px",
+          }}
+          className="p-4 text-sm text-center bg-primary text-base-100"
+        >
+          <h3>Hicode present in the {hiCodeUser?.name} cart</h3>
+        </section>
+      )}
       <CommonBottomButton
         fixed
         buttons={[
