@@ -238,7 +238,7 @@ const businessData = [
     id: "021",
     date: "11 Dec 2024",
     name: "Cu2",
-    bizName: "Cu2",
+    bizName: "Cu2 Brewhouse",
     status: false,
     serviceCost: 4000,
     months: 12,
