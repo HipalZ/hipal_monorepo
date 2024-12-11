@@ -26,13 +26,36 @@ const MemoBottomPopUp = ({
 
   useEffect(() => {
     if (show) {
-      window?.history?.pushState(null, "", window?.location?.href);
-      const handlePopState = () => {
-        onClose();
+      // Store the original hash so we can restore it later
+      const originalHash = window.location.hash;
+
+      // Set a special hash to indicate popup is open
+      window.location.hash = "#popup";
+
+      const handleHashChange = () => {
+        // If the hash is no longer "#popup", close the popup
+        if (window.location.hash !== "#popup") {
+          onClose();
+        }
       };
-      window?.addEventListener("popstate", handlePopState);
+
+      window.addEventListener("hashchange", handleHashChange);
       return () => {
-        window?.removeEventListener("popstate", handlePopState);
+        window.removeEventListener("hashchange", handleHashChange);
+
+        // Restore original hash if necessary
+        if (window.location.hash === "#popup") {
+          if (originalHash) {
+            window.location.hash = originalHash;
+          } else {
+            // Remove the hash completely if no original hash
+            history.pushState(
+              "",
+              document.title,
+              window.location.pathname + window.location.search,
+            );
+          }
+        }
       };
     }
   }, [show, onClose]);

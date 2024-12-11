@@ -26,13 +26,37 @@ function MemoItemDescription({
 
   useEffect(() => {
     if (show) {
-      window?.history?.pushState(null, "", window?.location?.href);
-      const handlePopState = () => {
-        onClose();
+      // Store the original hash
+      const originalHash = window.location.hash;
+
+      // Set the hash to indicate popup is open
+      window.location.hash = "#popup";
+
+      const handleHashChange = () => {
+        // If the hash isn't "#popup" anymore, close the popup
+        if (window.location.hash !== "#popup") {
+          onClose();
+        }
       };
-      window.addEventListener("popstate", handlePopState);
+
+      window.addEventListener("hashchange", handleHashChange);
+
       return () => {
-        window.removeEventListener("popstate", handlePopState);
+        window.removeEventListener("hashchange", handleHashChange);
+
+        // Restore original hash if still "#popup"
+        if (window.location.hash === "#popup") {
+          if (originalHash) {
+            window.location.hash = originalHash;
+          } else {
+            // Remove the hash completely
+            history.pushState(
+              "",
+              document.title,
+              window.location.pathname + window.location.search,
+            );
+          }
+        }
       };
     }
   }, [show, onClose]);
