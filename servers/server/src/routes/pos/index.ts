@@ -531,7 +531,7 @@ const posRouter = new Hono()
                 success: false,
               },
             },
-            403,
+            401,
           );
         }
       }
