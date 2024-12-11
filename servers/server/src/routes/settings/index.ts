@@ -413,6 +413,22 @@ const settingsRouter = new Hono()
         };
       }
 
+      if (businessId === "67162a6261ae0908e2917d5a") {
+        merchant = {
+          businessId: "67162a6261ae0908e2917d5a",
+          razorpayMerchantId: "PIkHKR29kZjRV2",
+          razorpayKeyId: "rzp_live_0KHNclVKJW7Ufe",
+        };
+      }
+
+      if (businessId === "66f780f4d963737276bf7c0e") {
+        merchant = {
+          businessId: "66f780f4d963737276bf7c0e",
+          razorpayMerchantId: "PIkHKQ4e5dySKp",
+          razorpayKeyId: "rzp_live_4otc37Bk8tWSfr",
+        };
+      }
+
       const razorpayObject = {
         businessId: merchant?.businessId,
         razorpayKeyId: merchant?.razorpayKeyId,
