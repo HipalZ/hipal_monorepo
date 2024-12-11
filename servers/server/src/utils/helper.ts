@@ -74,6 +74,18 @@ const transformData = (data) => {
         }
       }
 
+      const returnItemType = (item) => {
+        if (item.item_attributeid === "1") {
+          return ["VEG"];
+        }
+        if (item.item_attributeid === "2") {
+          return ["NON_VEG"];
+        }
+        if (item.item_attributeid === "24") {
+          return ["EGG"];
+        }
+      };
+
       return {
         _id: item.itemid,
         name: item.itemname,
@@ -81,14 +93,7 @@ const transformData = (data) => {
         price: Number(item.price),
         visibility: true,
         availability: true,
-        dishTypes:
-          item.item_attributeid === "1"
-            ? ["VEG"]
-            : item.item_attributeid === "2"
-              ? ["NON_VEG"]
-              : item.item_attributeid === "24"
-                ? ["EGG"]
-                : [],
+        dishTypes: returnItemType(item),
         addOnIds: addOnIds,
         images: [],
         portions: portions,

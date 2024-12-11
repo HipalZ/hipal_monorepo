@@ -46,7 +46,14 @@ const transformData = (data) => {
         price: Number(item.price),
         visibility: true,
         availability: true,
-        dishTypes: ["VEG"],
+        dishTypes:
+          item.item_attributeid === "1"
+            ? ["VEG"]
+            : item.item_attributeid === "2"
+              ? ["NON_VEG"]
+              : item.item_attributeid === "24"
+                ? ["EGG"]
+                : [],
         addOnIds: addOnIds,
         images: [],
         portions: portions,
