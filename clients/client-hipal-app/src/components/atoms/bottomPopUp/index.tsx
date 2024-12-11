@@ -26,13 +26,13 @@ const MemoBottomPopUp = ({
 
   useEffect(() => {
     if (show) {
-      window.history.pushState(null, "", window.location.href);
+      window?.history?.pushState(null, "", window?.location?.href);
       const handlePopState = () => {
         onClose();
       };
-      window.addEventListener("popstate", handlePopState);
+      window?.addEventListener("popstate", handlePopState);
       return () => {
-        window.removeEventListener("popstate", handlePopState);
+        window?.removeEventListener("popstate", handlePopState);
       };
     }
   }, [show, onClose]);

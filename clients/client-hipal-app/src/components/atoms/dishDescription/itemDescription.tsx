@@ -26,7 +26,7 @@ function MemoItemDescription({
 
   useEffect(() => {
     if (show) {
-      window.history.pushState(null, "", window.location.href);
+      window?.history?.pushState(null, "", window?.location?.href);
       const handlePopState = () => {
         onClose();
       };
