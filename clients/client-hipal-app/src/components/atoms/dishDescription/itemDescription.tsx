@@ -24,18 +24,18 @@ function MemoItemDescription({
     config: { tension: 250, friction: 30 },
   });
 
-  useEffect(() => {
-    if (show) {
-      window.history.pushState(null, "", window.location.href);
-      const handlePopState = () => {
-        onClose();
-      };
-      window.addEventListener("popstate", handlePopState);
-      return () => {
-        window.removeEventListener("popstate", handlePopState);
-      };
-    }
-  }, [show, onClose]);
+  // useEffect(() => {
+  //   if (show) {
+  //     window.history.pushState(null, "", window.location.href);
+  //     const handlePopState = () => {
+  //       onClose();
+  //     };
+  //     window.addEventListener("popstate", handlePopState);
+  //     return () => {
+  //       window.removeEventListener("popstate", handlePopState);
+  //     };
+  //   }
+  // }, [show, onClose]);
 
   if (!show) return null;
 
