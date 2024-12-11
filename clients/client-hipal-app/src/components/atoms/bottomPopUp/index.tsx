@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useEffect } from "react";
 import { useTransition, animated } from "@react-spring/web";
 import { HiX } from "react-icons/hi";
 import { cn } from "@/components/utils/helpers";
@@ -23,6 +23,19 @@ const MemoBottomPopUp = ({
     leave: { transform: "translateY(100%)", opacity: 0 },
     config: { tension: 250, friction: 30 },
   });
+
+  useEffect(() => {
+    if (show) {
+      window.history.pushState(null, "", window.location.href);
+      const handlePopState = () => {
+        onClose();
+      };
+      window.addEventListener("popstate", handlePopState);
+      return () => {
+        window.removeEventListener("popstate", handlePopState);
+      };
+    }
+  }, [show, onClose]);
 
   if (!show) return null;
 

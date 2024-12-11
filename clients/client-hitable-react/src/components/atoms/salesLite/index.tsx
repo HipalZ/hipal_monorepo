@@ -1,13 +1,13 @@
+import React, { memo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import useTimings from "@/components/store/useTimings";
 import type { ISalesLite } from "@/components/types/hiClientzData";
 import { getDate, useErrorHandling } from "@/components/utils/helpers";
-import { useQuery } from "@tanstack/react-query";
-import { memo } from "react";
 import { CiGlobe } from "react-icons/ci";
+import { FaCoins, FaMoneyBillWave, FaPercent } from "react-icons/fa";
 import DateRangePickerMemo from "../dateRangePicker";
-import "./index.css";
 import { apiRpc } from "@hi/common";
 
 const SalesLite = () => {
@@ -25,6 +25,7 @@ const SalesLite = () => {
     timeStampStart: s.timeStampStart,
     timeStampEnd: s.timeStampEnd,
   }));
+
   const handleSales = async () => {
     setLoading(true);
     const res = await apiRpc.payments[":id"].salesDashboard.$get({
@@ -54,67 +55,84 @@ const SalesLite = () => {
   });
 
   return (
-    <>
-      <DateRangePickerMemo />
-      <section className="payment_layout">
-        <article className="card_payment_overview">
-          <center className="absolute -translate-x-1/2 left-1/2 top-4">
-            {getDate(timeStampStart)}
-          </center>
-          <div className="sales_payment_background_effect1" />
-          <div className="sales_payment_background_effect2" />
-          <div className="sales_payment_background_effect3" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="mt-10 h-[50%] w-[0.125rem] bg-white" />
+    <div className="p-4 ">
+      <div className="mx-auto max-w-7xl">
+        <DateRangePickerMemo />
+        <div className="mt-6 space-y-6">
+          <div className="relative overflow-hidden bg-gradient-to-br from-[#4E62FF] to-[#B494FF] rounded-xl text-white p-6 shadow-lg  w-full md:w-[92%] h-36 max-w-[30rem]">
+            <div className="absolute text-sm transform -translate-x-1/2 opacity-75 top-4 left-1/2">
+              {getDate(timeStampStart)}
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center opacity-10"></div>
+            <div className="grid grid-cols-2 gap-4 mt-8">
+              <div>
+                <h3 className="text-sm opacity-75">Sales</h3>
+                <h1 className="mt-1 text-2xl font-bold md:text-3xl lg:text-4xl">
+                  ₹ {salesData?.totalSale}
+                </h1>
+              </div>
+              <div className="text-right">
+                <h3 className="text-sm opacity-75">Total Discounts</h3>
+                <h1 className="mt-1 text-2xl font-bold md:text-3xl lg:text-4xl">
+                  ₹ {salesData?.totalDiscount}
+                </h1>
+              </div>
+            </div>
           </div>
-          <section>
-            <h3 className="absolute bottom-14 left-4 opacity-60">Sales</h3>
-            <h1 className="absolute text-3xl bottom-6 left-4">
-              ₹ {salesData?.totalSale}
-            </h1>
-          </section>
-          <section>
-            <h3 className="absolute bottom-14 right-4 opacity-60">
-              Total Discounts
-            </h3>
-            <h1 className="absolute text-3xl bottom-6 right-4">
-              ₹ {salesData?.totalDiscount}
-            </h1>
-          </section>
-        </article>
-        <section className="flex gap-4 mx-4">
-          <article className="online_card1">
-            <div className="sales_payment_background_effect4" />
-            <p className="flex">
-              <CiGlobe className="mr-2" />
-              <small>Online</small>
-            </p>
-            <h1 className="mt-6 text-2xl">₹ {salesData?.totalOnlineSale}</h1>
-          </article>
 
-          <article className="online_card2">
-            <div className="sales_payment_background_effect5" />
-            <p className="flex">
-              <CiGlobe className="mr-2" />
-              <small>On floor</small>
-            </p>
-            <h1 className="mt-6 text-2xl">₹ {salesData?.totalOfflineSale}</h1>
-          </article>
-        </section>
-      </section>
-      <section className="flex justify-between gap-4 mx-4 mt-6">
-        <article className="w-full rounded-xl border border-[#00000050] p-4">
-          <b>Coinz issued</b>
-          <h6>₹ {salesData?.coinzIssued}</h6>
-        </article>
-        <article className="w-full rounded-xl border border-[#00000050] p-4">
-          <b>Coinz used</b>
-          <h6>₹ {salesData?.coinzRedeemed}</h6>
-        </article>
-      </section>
-    </>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <SalesCard
+              icon={<CiGlobe className="text-blue-500" />}
+              title="Online"
+              amount={salesData?.totalOnlineSale}
+              bgColor="bg-blue-100"
+            />
+            <SalesCard
+              icon={<FaMoneyBillWave className="text-green-500" />}
+              title="On floor"
+              amount={salesData?.totalOfflineSale}
+              bgColor="bg-green-100"
+            />
+            <CoinzCard
+              title="Coinz issued"
+              amount={salesData?.coinzIssued}
+              icon={<FaCoins className="text-yellow-500" />}
+            />
+            <CoinzCard
+              title="Coinz used"
+              amount={salesData?.coinzRedeemed}
+              icon={<FaPercent className="text-purple-500" />}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
+
+const SalesCard = ({ icon, title, amount, bgColor }) => (
+  <div className={`rounded-xl p-6 shadow-md ${bgColor} h-full`}>
+    <div className="flex items-center space-x-2 text-gray-600">
+      {icon}
+      <small>{title}</small>
+    </div>
+    <h1 className="mt-4 text-xl font-bold text-gray-800 sm:text-2xl">
+      ₹ {amount}
+    </h1>
+  </div>
+);
+
+const CoinzCard = ({ title, amount, icon }) => (
+  <div className="h-full p-6 bg-white border border-gray-200 shadow-sm rounded-xl">
+    <div className="flex items-center justify-between">
+      <b className="text-gray-700">{title}</b>
+      {icon}
+    </div>
+    <h6 className="mt-2 text-lg font-semibold text-gray-800 sm:text-xl">
+      ₹ {amount}
+    </h6>
+  </div>
+);
 
 const SalesLiteMemo = memo(SalesLite);
 export default SalesLiteMemo;

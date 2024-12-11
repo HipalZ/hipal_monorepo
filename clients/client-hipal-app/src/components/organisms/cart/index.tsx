@@ -175,9 +175,10 @@ const Cart = () => {
       if (cart.length > 0) {
         return [
           {
-            text: "Share The Cart",
+            text: "Place Order",
             onClick: placeOrder,
             type: "button" as const,
+            highlight: true,
           },
           {
             text: "Running Orders",

@@ -1,4 +1,4 @@
-import { memo, type ReactNode } from "react";
+import { memo, useEffect, type ReactNode } from "react";
 import { useTransition, animated } from "@react-spring/web";
 import { FaArrowLeft } from "react-icons/fa";
 import { createPortal } from "react-dom";
@@ -24,6 +24,19 @@ function MemoItemDescription({
     config: { tension: 250, friction: 30 },
   });
 
+  useEffect(() => {
+    if (show) {
+      window.history.pushState(null, "", window.location.href);
+      const handlePopState = () => {
+        onClose();
+      };
+      window.addEventListener("popstate", handlePopState);
+      return () => {
+        window.removeEventListener("popstate", handlePopState);
+      };
+    }
+  }, [show, onClose]);
+
   if (!show) return null;
 
   const popupContent = transitions(
@@ -40,7 +53,7 @@ function MemoItemDescription({
             <animated.div
               style={styles}
               className={cn(
-                " h-[100dvh] overflow-auto w-full max-w-[28rem]",
+                "h-[100dvh] overflow-auto w-full max-w-[28rem]",
                 linearGradTheme ? "background-gradient" : "bg-base-100",
               )}
             >
@@ -68,5 +81,6 @@ function MemoItemDescription({
 
   return createPortal(popupContent, document.body);
 }
+
 const ItemDescriptionPopup = memo(MemoItemDescription);
 export default ItemDescriptionPopup;
