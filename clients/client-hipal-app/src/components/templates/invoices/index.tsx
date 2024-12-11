@@ -141,7 +141,7 @@ const businessData = [
   },
   {
     id: "013",
-    date: "18 Nov 2024",
+    date: "11 Dec 2024",
     name: "tugo",
     bizName: "SARAYU HOSPITALITY",
     status: false,
@@ -165,7 +165,7 @@ const businessData = [
   },
   {
     id: "015",
-    date: "10 Dec 2024",
+    date: "11 Dec 2024",
     name: "nataka",
     bizName: "Nataka Global Kitchen & Cafe",
     status: false,
@@ -233,6 +233,18 @@ const businessData = [
     address:
       "ground floor, tower C, 40&41 phoenix primea, consulate road, beside Big Star cafe, Financial District, Nanakramguda, Telangana 500032",
     gst: "36AABFQ1417E1ZP",
+  },
+  {
+    id: "021",
+    date: "11 Dec 2024",
+    name: "Cu2",
+    bizName: "Cu2",
+    status: false,
+    serviceCost: 4000,
+    months: 12,
+    address:
+      "Ground Floor, One Golden Mile, Golden Mile Rd, Kokapet, Hyderabad, Telangana 500075",
+    gst: "36AAGFF9090F1Z8",
   },
 ];
 
