@@ -588,26 +588,17 @@ const posRouter = new Hono()
 
       console.log("Bill Config", billConfig);
 
-      const isBillAlreadyGenerated = await axios.post(
-        "http://api.petpooja.com/V1/captainorders/request_bill/",
-        billConfig,
-      );
-
-      if (isBillAlreadyGenerated.data.success === "1") {
-        const request_bill_id = isBillAlreadyGenerated.data.bill_request_id;
-
-        if (request_bill_id) {
-          return c.json(
-            {
-              message: `Bill already generated for table ${tableName} by ${fetchHiCode?.billGeneratedBy}`,
-              err: true,
-              data: {
-                success: false,
-              },
+      if (fetchHiCode?.billRequestId) {
+        return c.json(
+          {
+            message: `Bill already generated for table ${tableName} by ${fetchHiCode?.billGeneratedBy}`,
+            err: true,
+            data: {
+              success: false,
             },
-            400,
-          );
-        }
+          },
+          400,
+        );
       }
 
       if (fetchHiCode) {
