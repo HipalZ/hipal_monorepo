@@ -10,6 +10,10 @@ const MemoPaymentAlert = ({ onClick }: { onClick: () => void }) => {
     setCartPage("payment");
     onClick();
   };
+  const shineVariants = {
+    initial: { x: "-100%" },
+    animate: { x: "100%" },
+  };
   const orderMore = useCallback(() => {
     onClick();
     setShowCart(false);
@@ -33,8 +37,23 @@ const MemoPaymentAlert = ({ onClick }: { onClick: () => void }) => {
         <button
           type="button"
           onClick={proceedToPayment}
-          className="w-full px-4 py-3 text-base-100 bg-primary rounded-xl"
+          className="relative w-full px-4 py-3 overflow-hidden text-base-100 bg-primary rounded-xl"
         >
+          <motion.div
+            className="absolute inset-0 pointer-events-none"
+            variants={shineVariants}
+            initial="initial"
+            animate="animate"
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              // repeatDelay: 1,
+              ease: "backInOut",
+            }}
+            style={{
+              background: "var(--shine-effect)",
+            }}
+          />
           Continue to pay
         </button>
       </motion.div>

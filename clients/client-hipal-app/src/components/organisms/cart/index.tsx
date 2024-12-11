@@ -241,13 +241,7 @@ const Cart = () => {
       ];
     }
 
-    return [
-      {
-        text: "Order more",
-        onClick: () => setShowCart(false),
-        type: "button" as const,
-      },
-    ];
+    return [];
   }, [
     tableName,
     outletInfo?.outLetType,
