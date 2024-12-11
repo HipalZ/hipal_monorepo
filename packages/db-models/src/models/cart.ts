@@ -41,11 +41,15 @@ const CartSchema = new Schema<CartType>(
       required: true,
       ref: "User",
     },
+    phone: {
+      type: String,
+      required: true,
+    },
     tableName: {
       type: String,
     },
     cart: {
-      type: [CartItemSchema],
+      type: [Object],
       required: true,
     },
     date: {
@@ -60,6 +64,11 @@ const CartSchema = new Schema<CartType>(
     },
     isArchived: {
       type: Boolean,
+      default: false,
+    },
+    isSettle: {
+      type: Boolean,
+      required: false,
       default: false,
     },
   },

@@ -2,6 +2,7 @@ import { createHmac } from "node:crypto";
 // books.ts
 import {
   BusinessSettings,
+  Cart,
   CouponClaim,
   Couponz,
   DeviceToken,
@@ -21,7 +22,6 @@ import {
   UserAnalytic,
   UserCouponClaim,
   UserCouponGrabb,
-  UserKot,
   UserReward,
   UserRewardHistory,
   UserTags,
@@ -1678,7 +1678,7 @@ const paymentsRouter = new Hono()
                   session,
                 },
               );
-              await UserKot.updateMany(
+              await Cart.updateMany(
                 {
                   tableName: order.tableName,
                   businessId: order.businessId,
@@ -2789,7 +2789,7 @@ const paymentsRouter = new Hono()
                 session,
               },
             );
-            await UserKot.updateMany(
+            await Cart.updateMany(
               {
                 tableName: getOrder.tableName,
                 businessId: getOrder.businessId,

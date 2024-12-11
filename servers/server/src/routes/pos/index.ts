@@ -1,4 +1,5 @@
 import {
+  Cart,
   MenuBanner,
   OutLetInfo,
   PetPoojaPinTemp,
@@ -7,7 +8,7 @@ import {
   TempTableSettle,
   UniquelyYours,
   UrlModel,
-  UserKot,
+  User,
   UserSession,
   Zone,
 } from "@hi/db-models";
@@ -35,9 +36,10 @@ const saveUserKot = async (
   businessId: string,
   customerName: string,
   customerPhone: string,
-  internalCart: any,
+  internalCart: unknown[],
+  userId: string,
 ) => {
-  const existingUserKot = await UserKot.findOne({
+  const existingUserKot = await Cart.findOne({
     tableName: tableName,
     businessId: businessId,
     phone: customerPhone,
@@ -50,7 +52,7 @@ const saveUserKot = async (
     mergedCart = [...existingUserKot.cart, ...internalCart];
   }
 
-  await UserKot.findOneAndUpdate(
+  await Cart.findOneAndUpdate(
     {
       tableName: tableName,
       businessId: businessId,
@@ -61,9 +63,9 @@ const saveUserKot = async (
       tableName: tableName,
       businessId: businessId,
       phone: customerPhone,
-      name: customerName,
       cart: mergedCart,
       date: Date.now(),
+      userId: userId,
     },
     {
       upsert: true,
@@ -500,6 +502,20 @@ const posRouter = new Hono()
         hiCode,
       } = await c.req.json();
 
+      const user = await User.findOne({ phone: customerPhone });
+      if (!user) {
+        return c.json(
+          {
+            message: "User not found",
+            err: true,
+            data: {
+              success: false,
+            },
+          },
+          404,
+        );
+      }
+
       if (hiCode && hiCode.length > 0) {
         const fetchTableAlreadySettle = await TempTableSettle.findOne({
           tableName: tableName,
@@ -662,6 +678,7 @@ const posRouter = new Hono()
               customerName,
               customerPhone,
               internalCart,
+              user._id,
             );
 
             return c.json(
@@ -723,6 +740,7 @@ const posRouter = new Hono()
           customerName,
           customerPhone,
           internalCart,
+          user._id,
         );
         return c.json(
           {
@@ -930,7 +948,7 @@ const posRouter = new Hono()
     async (c) => {
       const { tableName, businessId } = c.req.query();
 
-      const userKot = await UserKot.find({
+      const userKot = await Cart.find({
         tableName: tableName,
         businessId: businessId,
         isSettle: false,

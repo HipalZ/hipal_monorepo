@@ -35,6 +35,8 @@ export const cartSchema = z.object({
   message: z.string().optional(),
   isArchived: z.boolean().optional(),
   createdAt: z.date().optional(),
+  isSettle: z.boolean().optional(),
+  phone: z.string().min(1).max(50),
 });
 
 export type CartType = z.infer<typeof cartSchema>;
