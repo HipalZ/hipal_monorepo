@@ -8,7 +8,6 @@ import { RiHome4Fill, RiCouponFill } from "react-icons/ri";
 import { MdAccountBalanceWallet, MdMenuBook } from "react-icons/md";
 import { LuScanLine } from "react-icons/lu";
 import { FaConciergeBell } from "react-icons/fa";
-import { BsBagHeartFill } from "react-icons/bs";
 import { useLogin } from "@/components/store/useLogin";
 import useTableData from "@/components/store/useTableData";
 import { useUserToken } from "@hi/common/src/useUserToken";
@@ -22,6 +21,7 @@ import MemoCallTheWaiterComponent from "./callTheWaiter";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
+import CartButton from "./cartShowing";
 
 const Cart = dynamic(() => import("@/components/organisms/cart"), {
   ssr: false,
@@ -113,6 +113,10 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
   const closeModal = useCallback(() => {
     setInputModal(false);
   }, [setInputModal]);
+  const showingCart = useCallback(() => {
+    setCartPage("cart");
+    setShowCart(!showCart);
+  }, [showCart, setShowCart, setCartPage]);
 
   const openModal = useCallback(() => {
     if (selected === "menu" || selected === "catalogue") {
@@ -164,14 +168,15 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
     openCallWaiterModal,
   ]);
 
-  const showingCart = useCallback(() => {
-    setCartPage("cart");
-    setShowCart(!showCart);
-  }, [showCart, setShowCart, setCartPage]);
-
   if (subscribeModal || reviewPopup) {
     return null;
   }
+  const shineVariants = {
+    initial: { x: "-100%" },
+    animate: { x: "100%" },
+  };
+
+  console.log("selected", cart);
 
   const selectedBtn =
     outletInfo?.outLetType === "OTHER" && selected === "menu"
@@ -181,11 +186,26 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
   return (
     <>
       <motion.nav
-        className="fixed z-10 bottom-0 w-full max-w-[30rem] bg-primary shadow-lg px-2"
+        className="fixed z-50 bottom-0 w-full max-w-[30rem] bg-primary shadow-lg px-2"
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          variants={shineVariants}
+          initial="initial"
+          animate="animate"
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            // repeatDelay: 1,
+            ease: "backInOut",
+          }}
+          style={{
+            background: "var(--shine-effect)",
+          }}
+        />
         <div className="flex items-center justify-between">
           <MenuItem
             icon={RiHome4Fill}
@@ -206,27 +226,6 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
             isSelected={selectedBtn === "menu" || selectedBtn === "catalogue"}
           />
 
-          <div className="relative">
-            <MenuItem
-              icon={BsBagHeartFill}
-              label={showCart ? "Menu" : "Cart"}
-              onClick={showingCart}
-              isSelected={false}
-            />
-            <AnimatePresence>
-              {cart.length > 0 && (
-                <motion.span
-                  className="absolute z-50 flex items-center justify-center w-5 h-5 text-xs font-bold bg-red-600 rounded-full text-primary-foreground -top-3 right-1"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                >
-                  {cart.length}
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </div>
-
           {tableName ? (
             <MenuItem
               icon={MdAccountBalanceWallet}
@@ -243,17 +242,34 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
             />
           )}
         </div>
+        <CartButton />
+
         {outletInfo?.outLetType !== "OTHER" && (
           <AnimatePresence>
             <motion.button
               type="button"
               onClick={triggerCallWaiter}
-              className="absolute inset-0 w-1/4 h-[3rem] flex items-center rounded-r-2xl flex-col z-10 -top-[4rem] left-0 bg-primary text-base-100 pl-4 pr-4 text-xs py-2"
+              className="absolute inset-0 w-1/4 h-[3rem] flex items-center rounded-r-2xl flex-col z-10 -top-[4rem] left-0 bg-primary text-base-100 pl-4 pr-4 text-xs py-2 overflow-hidden"
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
+              {/* <motion.div
+                className="absolute inset-0 pointer-events-none"
+                variants={shineVariants}
+                initial="initial"
+                animate="animate"
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  // repeatDelay: 1,
+                  ease: "backInOut",
+                }}
+                style={{
+                  background: "var(--shine-effect)",
+                }}
+              /> */}
               <FaConciergeBell size={20} />
               Captain
             </motion.button>

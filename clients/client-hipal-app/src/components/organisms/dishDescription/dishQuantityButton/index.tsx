@@ -1,5 +1,4 @@
 import { memo, useCallback } from "react";
-import BottomPopUp from "@/components/atoms/bottomPopUp";
 import MemoChoosePortions from "@/components/molecules/choosePortions";
 import ExtraWithDishWithSelect from "@/components/organisms/dishDescription/extras";
 import type { DishType } from "@hi/db-models/src/validators";
@@ -9,6 +8,7 @@ import MemoAlertVariant from "@/components/atoms/alertVariant";
 import { useBottomPanel } from "@/components/store/useBottomPanel";
 import { useCart } from "@/components/store/useCart";
 import CommonBottomButton from "@/components/atoms/bottomButton";
+import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 
 function generateCartItemId(dishId, portionId, extras) {
   const sortedExtras = [...extras]
@@ -139,11 +139,11 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
   return (
     <>
       {totalQuantity > 0 ? (
-        <div className="relative z-10 flex items-center p-2 space-x-2 text-sm border rounded-full bg-base-100 border-primary text-primary">
+        <div className="relative z-10 flex items-center p-2 space-x-4 text-sm scale-110 border rounded-full bg-base-100 border-primary text-primary">
           <button type="button" onClick={handleDecreaseQuantity}>
             <HiMinusSm size={16} />
           </button>
-          <span className="w-1/3 px-2 text-xs font-bold text-center">
+          <span className="w-1/3 px-2 text-sm font-bold text-center">
             {totalQuantity}
           </span>
           <button type="button" onClick={handleIncreaseQuantity}>
@@ -161,25 +161,32 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
       )}
 
       {openBottomPanel && selectedDish._id === dishData._id && (
-        <BottomPopUp show={openBottomPanel} onClose={closeModal}>
+        <ItemDescriptionPopup
+          show={openBottomPanel}
+          onClose={closeModal}
+          heading="select Variants"
+        >
           {cartPopup === "BOTTOM_PANEL" && (
-            <div className="relative flex flex-col pb-12 mt-4 overflow-auto z-[103]">
-              <div className="flex flex-col h-[70vh] space-y-4 divide-y-2 divide-base-100 text-base-content">
+            <div className="relative flex flex-col pb-12 mt-4 overflow-auto ">
+              <div className="flex flex-col space-y-4 divide-y-2 divide-base-100 text-base-content">
                 <MemoChoosePortions dishData={selectedDish} />
                 <ExtraWithDishWithSelect dishData={selectedDish} />
                 {displayAlert && <MemoAlertVariant />}
               </div>
               <CommonBottomButton
+                fixed
                 buttons={[
                   {
                     text: "Add Item To Cart",
                     onClick: handleAddToCart,
+                    type: "button" as const,
+                    highlight: true,
                   },
                 ]}
               />
             </div>
           )}
-        </BottomPopUp>
+        </ItemDescriptionPopup>
       )}
     </>
   );

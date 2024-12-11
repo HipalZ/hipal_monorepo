@@ -3,6 +3,7 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@hi/common";
+import LoadingSpinnerCircle from "../loader";
 
 interface ButtonConfig {
   text: string;
@@ -11,6 +12,7 @@ interface ButtonConfig {
   isLoading?: boolean;
   disable?: boolean;
   hide?: boolean;
+  highlight?: boolean;
 }
 
 interface MemoBottomButtonProps {
@@ -21,6 +23,10 @@ interface MemoBottomButtonProps {
 const buttonVariants = {
   idle: { scale: 1, rotateX: 0, rotateY: 0, translateZ: 0 },
   tap: { scale: 0.75, rotateX: 0, rotateY: 0, translateZ: 0 },
+};
+const shineVariants = {
+  initial: { x: "-100%" },
+  animate: { x: "100%" },
 };
 
 const MemoBottomButton = (props: MemoBottomButtonProps) => {
@@ -68,30 +74,24 @@ const MemoBottomButton = (props: MemoBottomButtonProps) => {
               whileTap="tap"
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              {button.isLoading ? (
-                <svg
-                  className="w-5 h-5 mx-auto text-white animate-spin"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  />
-                </svg>
-              ) : (
-                button.text
+              {button.highlight && (
+                <motion.div
+                  className="absolute inset-0 pointer-events-none"
+                  variants={shineVariants}
+                  initial="initial"
+                  animate="animate"
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    // repeatDelay: 1,
+                    ease: "backInOut",
+                  }}
+                  style={{
+                    background: "var(--shine-effect)",
+                  }}
+                />
               )}
+              {button.isLoading ? <LoadingSpinnerCircle /> : button.text}
             </motion.button>
           ) : null,
         )}

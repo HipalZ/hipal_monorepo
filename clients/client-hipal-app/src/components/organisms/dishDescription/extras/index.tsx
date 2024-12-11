@@ -63,7 +63,7 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
   }
 
   return (
-    <div className="overflow-x-auto z-[103]">
+    <div className="overflow-x-auto ">
       {addOns.map((addOn) => (
         <div
           key={addOn._id || crypto.randomUUID()}
@@ -71,11 +71,11 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
         >
           <div className="flex justify-between py-3 mx-6 prose cursor-pointer">
             <div>
-              <h5 className="w-[12rem] text-sm font-medium capitalize text-base-content">
+              <h5 className="w-[12rem] text-sm font-semibold capitalize text-base-content">
                 {addOn.name}
               </h5>
               <span
-                className={`text-xs font-normal ${
+                className={`text-sm  font-semibold opacity-60 ${
                   addOn.compulsory === 0 ? "" : "!text-primary"
                 }`}
               >
@@ -99,18 +99,18 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
                         className="flex flex-row transition-all"
                         key={choiceId}
                       >
-                        <td className="min-h-12 max-h-20 !pl-3 !text-xs w-1/3 flex flex-row flex-wrap">
+                        <td className="min-h-12 max-h-20 !pl-3 !text-sm w-1/3 flex flex-row flex-wrap">
                           <span className="w-full my-auto capitalize whitespace-pre-wrap">
                             {choice.name} <br />
                             (Max: {choice.choiceMaxQuantity})
                           </span>
                         </td>
-                        <td className="!text-xs w-1/3 text-center font-semibold flex flex-row">
+                        <td className="!text-sm w-1/3 text-center font-semibold flex flex-row">
                           <span className="mx-auto my-auto">
                             {getPrice(choice.price)}
                           </span>
                         </td>
-                        <td className="!text-xs w-1/3 text-center font-semibold flex flex-row">
+                        <td className="!text-sm w-1/3 text-center font-semibold flex flex-row">
                           <span className="pr-2 my-auto ml-auto">
                             <QuantityPickerNonOutline
                               setQuantity={(q) =>

@@ -22,10 +22,6 @@ function MemoChoosePortions({ dishData }: { dishData: DishType }) {
       </div>
 
       <div className="my-2 overflow-x-auto border rounded-lg border-primary">
-        <div className="px-3 pt-3 prose">
-          <h4 className="text-xs font-semibold text-base-content">Portion</h4>
-        </div>
-
         <table className="table w-full my-0 overflow-hidden table-compact table-zebra">
           <tbody>
             {portions.map((portion, index) => (
@@ -35,12 +31,12 @@ function MemoChoosePortions({ dishData }: { dishData: DishType }) {
                 }`}
                 key={`${portion?.name?.replaceAll(" ", "") || ""}${index}`}
               >
-                <td className="!pl-3 !text-xs w-1/3 flex flex-row flex-wrap">
+                <td className="!pl-3 !text-sm w-1/3 flex flex-row flex-wrap">
                   <span className="w-full my-auto capitalize whitespace-pre-wrap">
                     {portion?.name || ""}
                   </span>
                 </td>
-                <td className="!text-xs w-1/3 text-center font-semibold flex flex-row">
+                <td className="!text-sm w-1/3 text-center font-semibold flex flex-row">
                   <span className="mx-auto">
                     {getPrice(portion?.price || 0)}
                   </span>
