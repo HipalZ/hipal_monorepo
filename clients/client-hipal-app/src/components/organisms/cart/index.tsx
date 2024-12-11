@@ -116,6 +116,7 @@ const Cart = () => {
             internalCart: sanitizedCart,
             customerName: userDetails?.name || "Guest",
             customerPhone: userDetails?.phone,
+            hiCode: hiCode || "",
           },
         });
         await handleApiResponse(
