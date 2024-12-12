@@ -27,6 +27,7 @@ import { useLogin } from "@/components/store/useLogin";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { useErrorHandling } from "@/utils/helper";
+import { toast } from "react-toastify";
 
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
@@ -108,13 +109,14 @@ const MemoCouponz = () => {
           ...(channelId && { channelId }),
         },
       });
-      if (!response.ok) {
+      if (response.status === 401) {
         return errorText(response.status);
       }
       if (response.status === 201) {
         setCurrentPage(ICouponPage.CONGRATULATIONZ);
       }
       if (response.status === 409) {
+        toast.error("Coupon already grabbed");
         setCurrentPage(ICouponPage.SEEMYCOUPONZ);
       }
     }
