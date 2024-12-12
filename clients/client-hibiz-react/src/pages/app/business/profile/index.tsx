@@ -1,7 +1,8 @@
-import Header from "@/components/molecules/header";
-import { memo, useEffect, useState } from "react";
-import { FaArrowLeft } from "react-icons/fa";
+import { memo, useCallback, useEffect, useState } from "react";
+import { FaArrowLeft, FaFacebookSquare } from "react-icons/fa";
+import { CONFIG_ID, APP_ID } from "@/configs";
 import { useNavigate } from "react-router-dom";
+import MemoizedHeader from "@/components/molecules/header";
 
 declare global {
   interface Window {
@@ -13,11 +14,12 @@ declare global {
 
 const MemoizedProfile = () => {
   const [facebookSDKLoaded, setFacebookSDKLoaded] = useState(false);
+  const [loginStep, setLoginStep] = useState<"initial" | "review" | "success">(
+    "initial",
+  );
   const navigate = useNavigate();
-
   useEffect(() => {
     const initializeFacebookSDK = () => {
-      // Avoid re-initializing if already loaded
       if (window.FB) {
         setFacebookSDKLoaded(true);
         return;
@@ -47,7 +49,7 @@ const MemoizedProfile = () => {
 
       window.fbAsyncInit = () => {
         window.FB.init({
-          appId: "1166415764661953",
+          appId: APP_ID,
           cookie: true,
           xfbml: true,
           version: "v19.0",
@@ -72,7 +74,7 @@ const MemoizedProfile = () => {
   const launchWhatsAppSignup = () => {
     if (facebookSDKLoaded && typeof window.FB !== "undefined") {
       window.fbq("trackCustom", "WhatsAppOnboardingStart", {
-        appId: "1166415764661953",
+        appId: APP_ID,
         feature: "whatsapp_embedded_signup",
       });
       window.FB.login(
@@ -81,46 +83,64 @@ const MemoizedProfile = () => {
             const code = response.authResponse.code;
             console.log(code, "code");
             console.log(response, "response");
+            setLoginStep("review");
           } else {
             console.log("User cancelled login or did not fully authorize.");
           }
         },
         {
-          config_id: "1187408585794361",
+          config_id: CONFIG_ID,
           response_type: "code",
           override_default_response_type: true,
+          scope: "business_management,whatsapp_business_management",
+          return_scopes: true,
           extras: {
             sessionInfoVersion: 2,
           },
         },
       );
     } else {
-      // No need to set timeout here, just ensure SDK is loaded
       setFacebookSDKLoaded(false);
     }
   };
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     navigate("/app/business/");
-  };
+  }, [navigate]);
 
   return (
-    <center>
-      <Header
-        leftIcon={<FaArrowLeft />}
-        isIconBusinessShow={false}
-        onBack={handleBack}
-      />
-      <button
-        type="button"
-        onClick={launchWhatsAppSignup}
-        id="connect-with-facebook"
-        data-type="add"
-        className="w-48 text-white bg-blue-500 rounded-3xl on_active_bounce"
-      >
-        Login with Facebook
-      </button>
-    </center>
+    <main>
+      <nav className="sticky top-0 flex items-center gap-4 mb-4">
+        <div className="z-50 w-full rounded-lg whatzapp_gradient_background">
+          <MemoizedHeader
+            title="WhatzApp"
+            leftIcon={<FaArrowLeft />}
+            onBack={handleBack}
+            headingColor="white"
+          />
+        </div>
+      </nav>
+      <center>
+        <section className="bg-white rounded-lg shadow-md p-8 w-[350px] mt-8">
+          <h1 className="mb-2 text-2xl font-bold">Connect with Facebook</h1>
+          <p className="mb-6 text-gray-600">
+            Login and connect with your Facebook account to get started
+          </p>
+          <div className="space-y-4">
+            {loginStep === "initial" && (
+              <button
+                type="button"
+                onClick={launchWhatsAppSignup}
+                className="flex items-center justify-center w-full px-4 py-2 font-medium text-white transition duration-300 bg-blue-600 rounded-md hover:bg-blue-700"
+              >
+                <FaFacebookSquare className="mr-2" />
+                Login with Facebook
+              </button>
+            )}
+          </div>
+        </section>
+      </center>
+    </main>
   );
 };
 

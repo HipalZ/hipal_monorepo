@@ -140,15 +140,17 @@ const MemoWhatzapp = () => {
   if (!whatzappFormEnabled) return <WhatsAppRegistration />;
   if (whatzappFormEnabled && !whatzappStatus)
     return (
-      <article>
-        <MemoizedHeader
-          title="WhatzApp"
-          leftIcon={<FaArrowLeft />}
-          onBack={handleBack}
-          headingColor="white"
-        />
+      <>
+        <main className="sticky top-0 z-50 w-full rounded-lg whatzapp_gradient_background">
+          <MemoizedHeader
+            title="WhatzApp"
+            leftIcon={<FaArrowLeft />}
+            onBack={handleBack}
+            headingColor="white"
+          />
+        </main>
         <PendingStatusStep />
-      </article>
+      </>
     );
   return (
     <main>

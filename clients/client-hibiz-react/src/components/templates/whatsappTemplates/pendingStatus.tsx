@@ -3,7 +3,7 @@ import pendingImage from "@/assets/pending.jpg";
 
 function MemoPendingStatusStep() {
   return (
-    <div className="max-w-2xl p-8 mx-auto text-center">
+    <article className="max-w-2xl p-8 mx-auto text-center bg-white">
       <img
         src={pendingImage}
         alt="Registration Pending"
@@ -28,7 +28,7 @@ function MemoPendingStatusStep() {
           info@paltribe.in
         </a>
       </p>
-    </div>
+    </article>
   );
 }
 
