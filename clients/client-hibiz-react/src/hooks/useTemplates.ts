@@ -432,9 +432,86 @@ export const useSearchUserByPhone = () => {
       },
     });
     const user = await response.json();
-    console.log("user", user);
     return user;
   };
 
   return { searchUserByPhone };
+};
+
+export const useCheckRegistration = () => {
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  const { setWhatzappFormEnabled, setWhatzappStatus } = useWhatsappTempStore(
+    (s) => ({
+      setWhatzappFormEnabled: s.setWhatzappFormEnabled,
+      setWhatzappStatus: s.setWhatzappStatus,
+    }),
+  );
+  const checkRegistration = async () => {
+    const response = await apiRpc.whatsapp.fetch_waba[":businessId"].$get({
+      param: {
+        businessId,
+      },
+    });
+    const res = await response.json();
+    console.log("res", res);
+    if (response.status === 200) {
+      setWhatzappFormEnabled(true);
+      setWhatzappStatus(res?.data?.status);
+    } else {
+      setWhatzappFormEnabled(false);
+      setWhatzappStatus(res?.data?.status);
+    }
+
+    return response.json();
+  };
+
+  return { checkRegistration };
+};
+
+export const useCreateRegistration = () => {
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  const { setPaymentSuccessFull } = useWhatsapp((s) => ({
+    setPaymentSuccessFull: s.setPaymentSuccessFull,
+  }));
+  const {
+    setStep,
+    displayName,
+    displayNumber,
+    facebookId,
+    facebookPassword,
+    resetFormData,
+  } = useWhatsappTempStore((s) => ({
+    setStep: s.setStep,
+    displayName: s.displayName,
+    displayNumber: s.displayNumber,
+    facebookId: s.facebookId,
+    facebookPassword: s.facebookPassword,
+    resetFormData: s.resetFormData,
+  }));
+
+  const wabaregistration = async () => {
+    try {
+      const response = await apiRpc.whatsapp.whatsapp_waba_registration.$post({
+        json: {
+          displayName: displayName,
+          displayNumber: displayNumber,
+          facebookId: facebookId,
+          facebookPassword: facebookPassword,
+          businessId,
+        },
+      });
+      if (response.status === 200) {
+        setStep(2);
+        setPaymentSuccessFull(false);
+        resetFormData();
+      }
+      if (response.status === 404) {
+        toast.error("Registration failed contact support");
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  return { wabaregistration };
 };

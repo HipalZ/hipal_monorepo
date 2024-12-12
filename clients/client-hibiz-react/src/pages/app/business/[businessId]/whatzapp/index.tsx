@@ -7,6 +7,11 @@ import useWhatsapp, {
   Step,
   TemplateSteps,
 } from "@/components/store/useWhatsapp";
+import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
+import WhatsAppRegistration from "@/components/templates/whatsappTemplates/mainForm";
+import PendingStatusStep from "@/components/templates/whatsappTemplates/pendingStatus";
+import { useCheckRegistration } from "@/hooks/useTemplates";
+import { useQuery } from "@tanstack/react-query";
 import { lazy, memo, useCallback } from "react";
 import { BsWhatsapp } from "react-icons/bs";
 import { FaArrowLeft } from "react-icons/fa";
@@ -35,6 +40,7 @@ const WhyNotEditPopup = lazy(
 );
 
 const MemoWhatzapp = () => {
+  const { checkRegistration } = useCheckRegistration();
   const {
     step,
     notEditPopup,
@@ -49,6 +55,11 @@ const MemoWhatzapp = () => {
     setNotEditPopup: s.setNotEditPopup,
     templateSteps: s.templateSteps,
     setTemplateSteps: s.setTemplateSteps,
+  }));
+
+  const { whatzappFormEnabled, whatzappStatus } = useWhatsappTempStore((s) => ({
+    whatzappFormEnabled: s.whatzappFormEnabled,
+    whatzappStatus: s.whatzappStatus,
   }));
 
   const businessData = useBusinessData((s) => s.businessData);
@@ -119,6 +130,26 @@ const MemoWhatzapp = () => {
       }
     }
   }, [setStep, step, templateSteps, setTemplateSteps, navigate, businessData]);
+
+  useQuery({
+    queryKey: ["fetchWaba", businessData?._id],
+    queryFn: checkRegistration,
+    enabled: !!businessData?._id,
+  });
+
+  if (!whatzappFormEnabled) return <WhatsAppRegistration />;
+  if (whatzappFormEnabled && !whatzappStatus)
+    return (
+      <article>
+        <MemoizedHeader
+          title="WhatzApp"
+          leftIcon={<FaArrowLeft />}
+          onBack={handleBack}
+          headingColor="white"
+        />
+        <PendingStatusStep />
+      </article>
+    );
   return (
     <main>
       <div className="mx-auto">

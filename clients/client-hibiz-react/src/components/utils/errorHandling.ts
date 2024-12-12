@@ -1,9 +1,6 @@
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 export const useErrorHandling = () => {
-  const navigate = useNavigate();
-
   const errorText = (status: number) => {
     let message = "";
     switch (status) {

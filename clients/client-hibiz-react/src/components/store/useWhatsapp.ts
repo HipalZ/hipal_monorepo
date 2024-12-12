@@ -263,6 +263,9 @@ interface whatsappTemplate {
 
   isOpenEditModal: boolean;
   setIsOpenEditModal: (isOpenEditModal: boolean) => void;
+
+  paymentSuccessFull: boolean;
+  setPaymentSuccessFull: (paymentSuccessFull: boolean) => void;
 }
 
 export const useWhatsapp = create(
@@ -605,6 +608,10 @@ export const useWhatsapp = create(
         isOpenEditModal: false,
         setIsOpenEditModal: (isOpenEditModal: boolean) =>
           set({ isOpenEditModal }),
+
+        paymentSuccessFull: false,
+        setPaymentSuccessFull: (paymentSuccessFull: boolean) =>
+          set({ paymentSuccessFull }),
       };
     },
     {

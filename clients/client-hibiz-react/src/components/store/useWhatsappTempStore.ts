@@ -53,6 +53,35 @@ interface ITempStore {
 
   isMobileListView: boolean;
   setIsMobileListView: (value: boolean) => void;
+
+  step: number;
+  setStep: (value: number) => void;
+
+  displayNumber: string;
+  setDisplayNumber: (value: string) => void;
+
+  displayName: string;
+  setDisplayName: (value: string) => void;
+
+  email: string;
+  setEmail: (value: string) => void;
+
+  facebookId: string;
+  setFacebookId: (value: string) => void;
+
+  facebookPassword: string;
+  setFacebookPassword: (value: string) => void;
+
+  resetFormData: () => void;
+
+  whatzappFormEnabled: boolean;
+  setWhatzappFormEnabled: (value: boolean) => void;
+
+  whatzappStatus: boolean;
+  setWhatzappStatus: (value: boolean) => void;
+
+  termsAccepted: boolean;
+  setTermsAccepted: (value: boolean) => void;
 }
 
 export const useWhatsappTempStore = create<ITempStore>((set) => ({
@@ -80,4 +109,41 @@ export const useWhatsappTempStore = create<ITempStore>((set) => ({
 
   isMobileListView: true,
   setIsMobileListView: (value: boolean) => set({ isMobileListView: value }),
+
+  step: 0,
+  setStep: (value: number) => set({ step: value }),
+
+  displayNumber: "",
+  setDisplayNumber: (value: string) => set({ displayNumber: value }),
+
+  displayName: "",
+  setDisplayName: (value: string) => set({ displayName: value }),
+
+  email: "",
+  setEmail: (value: string) => set({ email: value }),
+
+  facebookId: "",
+  setFacebookId: (value: string) => set({ facebookId: value }),
+
+  facebookPassword: "",
+  setFacebookPassword: (value: string) => set({ facebookPassword: value }),
+
+  resetFormData: () =>
+    set({
+      displayNumber: "",
+      displayName: "",
+      email: "",
+      facebookId: "",
+      facebookPassword: "",
+    }),
+
+  whatzappFormEnabled: false,
+  setWhatzappFormEnabled: (value: boolean) =>
+    set({ whatzappFormEnabled: value }),
+
+  termsAccepted: false,
+  setTermsAccepted: (value: boolean) => set({ termsAccepted: value }),
+
+  whatzappStatus: false,
+  setWhatzappStatus: (value: boolean) => set({ whatzappStatus: value }),
 }));
