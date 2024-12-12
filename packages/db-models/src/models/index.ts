@@ -60,3 +60,5 @@ export * from "./whatsAppUser";
 export * from "./whatsAppWallet";
 export * from "./whatsAppWalletHistory";
 export * from "./zone";
+export * from "./whatsAppUser";
+export * from "./whatsAppWABA";

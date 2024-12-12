@@ -11,6 +11,7 @@ import {
   WhatsAppBusinessConfig,
   WhatsAppPayment,
   WhatsAppUser,
+  WhatsAppWABA,
   WhatsAppWallet,
   WhatsAppWalletHistory,
 } from "@hi/db-models";
@@ -2129,6 +2130,61 @@ const whatsappRouter = new Hono()
         message: "Messages found",
         err: false,
         data: user,
+      });
+    },
+  )
+  .post(
+    "/whatsapp_waba_registration",
+
+    async (c) => {
+      const {
+        displayName,
+        displayNumber,
+        facebookId,
+        facebookPassword,
+        businessId,
+      } = await c.req.json();
+
+      const waba = await WhatsAppWABA.create({
+        displayName,
+        displayNumber,
+        facebookId,
+        facebookPassword,
+        businessId,
+        date: Date.now(),
+      });
+
+      return c.json({
+        message: "Waba registered successfully",
+        err: false,
+        data: waba,
+      });
+    },
+  )
+  .get(
+    "/fetch_waba/:businessId",
+
+    async (c) => {
+      const { businessId } = c.req.param();
+
+      const waba = await WhatsAppWABA.findOne({
+        businessId,
+      });
+
+      if (!waba) {
+        return c.json(
+          {
+            message: "Waba not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
+      return c.json({
+        message: "waba found",
+        err: false,
+        data: waba,
       });
     },
   );
