@@ -565,24 +565,18 @@ const posRouter = new Hono()
         businessId: businessId,
       });
 
-      if (userActiveSession) {
-        const isSamePhone =
-          userActiveSession.customerPhone === fetchHiCode?.pin;
-        const isNoHiCode = !fetchHiCode;
-
-        if (isSamePhone || isNoHiCode) {
-          return c.json(
-            {
-              message:
-                "User already has an active session. Please try again after 3 hrs.",
-              err: true,
-              data: {
-                success: false,
-              },
+      if (userActiveSession && !fetchHiCode) {
+        return c.json(
+          {
+            message:
+              "User already has an active session. Please try again after 3 hrs.",
+            err: true,
+            data: {
+              success: false,
             },
-            400,
-          );
-        }
+          },
+          400,
+        );
       }
 
       if (fetchHiCode?.billRequestId) {
