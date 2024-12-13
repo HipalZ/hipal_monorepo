@@ -516,7 +516,7 @@ const posRouter = new Hono()
         );
       }
 
-      if (hiCode > 0) {
+      if (hiCode && hiCode.toString().length > 0) {
         const fetchTableAlreadySettle = await TempTableSettle.findOne({
           tableName: tableName,
           businessId: businessId,
