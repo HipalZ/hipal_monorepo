@@ -2779,43 +2779,41 @@ const paymentsRouter = new Hono()
             },
           );
 
-          if (res.data.success === "1") {
-            await PetPoojaPinTemp.deleteOne(
+          await PetPoojaPinTemp.deleteOne(
+            {
+              tableName: getOrder.tableName,
+              businessId: getOrder.businessId,
+            },
+            {
+              session,
+            },
+          );
+          await Cart.updateMany(
+            {
+              tableName: getOrder.tableName,
+              businessId: getOrder.businessId,
+            },
+            {
+              $set: {
+                isSettle: true,
+              },
+            },
+            {
+              session,
+            },
+          );
+          await TempTableSettle.create(
+            [
               {
-                tableName: getOrder.tableName,
                 businessId: getOrder.businessId,
-              },
-              {
-                session,
-              },
-            );
-            await Cart.updateMany(
-              {
                 tableName: getOrder.tableName,
-                businessId: getOrder.businessId,
+                settleBy: getOrder.userId?.name,
               },
-              {
-                $set: {
-                  isSettle: true,
-                },
-              },
-              {
-                session,
-              },
-            );
-            await TempTableSettle.create(
-              [
-                {
-                  businessId: getOrder.businessId,
-                  tableName: getOrder.tableName,
-                  settleBy: getOrder.userId?.name,
-                },
-              ],
-              {
-                session,
-              },
-            );
-          }
+            ],
+            {
+              session,
+            },
+          );
         }
       }
 

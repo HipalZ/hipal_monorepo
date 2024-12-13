@@ -587,8 +587,6 @@ const posRouter = new Hono()
         tableNo: tableName,
       };
 
-      console.log("Bill Config", billConfig);
-
       if (fetchHiCode?.billRequestId) {
         return c.json(
           {
@@ -722,7 +720,6 @@ const posRouter = new Hono()
         "https://api.petpooja.com/V1/captainorders/save_kot_qr_order",
         petpoojaCart,
       );
-      console.log("Save Kot", saveKot.data);
 
       if (saveKot.data.success === "1") {
         await saveUserKot(
