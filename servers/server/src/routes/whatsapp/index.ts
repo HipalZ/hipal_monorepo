@@ -1803,7 +1803,7 @@ const whatsappRouter = new Hono()
             urlCode: tableNumber,
           }).select("longUrl shortUrl");
 
-          longUrl = findLongUrl?.shortUrl;
+          longUrl = findLongUrl?.longUrl;
         }
 
         if (userPhone) {
