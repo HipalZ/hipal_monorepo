@@ -525,7 +525,7 @@ const posRouter = new Hono()
         if (fetchTableAlreadySettle) {
           return c.json(
             {
-              message: `Table already settled by ${fetchTableAlreadySettle.settleBy} `,
+              message: `Table already settled by ${fetchTableAlreadySettle.settleBy} please scan the QR code again`,
               err: true,
               data: {
                 success: false,
@@ -565,32 +565,30 @@ const posRouter = new Hono()
         businessId: businessId,
       });
 
-      if (userActiveSession && !fetchHiCode) {
-        return c.json(
-          {
-            message: "User already has an active session",
-            err: true,
-            data: {
-              success: false,
-            },
-          },
-          400,
-        );
-      }
+      if (userActiveSession) {
+        const isSamePhone =
+          userActiveSession.customerPhone === fetchHiCode?.pin;
+        const isNoHiCode = !fetchHiCode;
 
-      const billConfig = {
-        app_key: pos.accessKey,
-        app_secret: pos.secretKey,
-        access_token: pos.authToken,
-        restID: pos.restId,
-        pin: fetchHiCode?.pin,
-        tableNo: tableName,
-      };
+        if (isSamePhone || isNoHiCode) {
+          return c.json(
+            {
+              message:
+                "User already has an active session. Please try again after 3 hrs.",
+              err: true,
+              data: {
+                success: false,
+              },
+            },
+            400,
+          );
+        }
+      }
 
       if (fetchHiCode?.billRequestId) {
         return c.json(
           {
-            message: `Bill already generated for table ${tableName} by ${fetchHiCode?.billGeneratedBy}`,
+            message: `Bill already generated for table ${tableName} by ${fetchHiCode?.billGeneratedBy} you can't add more items`,
             err: true,
             data: {
               success: false,
@@ -604,7 +602,7 @@ const posRouter = new Hono()
         if (!fetchHiCode.phoneNumbers.includes(customerPhone)) {
           return c.json(
             {
-              message: `this table is already occupied by ${fetchHiCode.customerName}`,
+              message: `this table is already occupied by ${fetchHiCode.customerName} please ask them to place the order`,
               err: true,
               data: {
                 success: false,
