@@ -561,7 +561,7 @@ const posRouter = new Hono()
         businessId: businessId,
       });
       const userActiveSession = await UserSession.findOne({
-        customerPhone: customerName,
+        customerPhone: customerPhone,
         businessId: businessId,
       });
 
