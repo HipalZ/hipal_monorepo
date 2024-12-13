@@ -35,7 +35,7 @@ import { nanoid } from "nanoid";
 import { schedule } from "node-cron";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
 import { z } from "zod";
-import { getMerchantConfig, getShortUrl } from "../../utils/cacheHelper";
+import { getMerchantConfig } from "../../utils/cacheHelper";
 import {
   type MerchantConfig,
   razorpayWrapper,
@@ -1799,17 +1799,11 @@ const whatsappRouter = new Hono()
         if (tableNumber) {
           tableNumber = tableNumber.slice(-5);
 
-          const getlongUrl = (await getShortUrl(tableNumber)) as string;
+          const findLongUrl = await UrlModel.findOne({
+            urlCode: tableNumber,
+          }).select("longUrl shortUrl");
 
-          if (getlongUrl) {
-            longUrl = getlongUrl;
-          } else {
-            const findLongUrl = await UrlModel.findOne({
-              urlCode: tableNumber,
-            }).select("longUrl");
-
-            longUrl = findLongUrl?.longUrl;
-          }
+          longUrl = findLongUrl?.shortUrl;
         }
 
         if (userPhone) {
@@ -1824,7 +1818,7 @@ const whatsappRouter = new Hono()
               messaging_product: "whatsapp",
               to: from,
               text: {
-                body: `Explore our menu: ${longUrl}`,
+                body: `Welcome to CoffeeCup! ☕\nWe’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${longUrl}\n🍽️ View our curated menu featuring handcrafted delights.`,
               },
             },
             headers: {
@@ -1852,9 +1846,6 @@ const whatsappRouter = new Hono()
               isOwner: false,
               seen: false,
             }).select("seen");
-
-            console.log("unseenMessages", unseenMessages);
-            console.log("user", user);
 
             const data = await Subscriber.findOneAndUpdate(
               {
