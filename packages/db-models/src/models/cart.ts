@@ -71,6 +71,10 @@ const CartSchema = new Schema<CartType>(
       required: false,
       default: false,
     },
+    name: {
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,

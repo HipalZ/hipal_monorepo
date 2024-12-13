@@ -66,6 +66,7 @@ const saveUserKot = async (
       cart: mergedCart,
       date: Date.now(),
       userId: userId,
+      name: customerName,
     },
     {
       upsert: true,
