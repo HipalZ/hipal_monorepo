@@ -192,7 +192,7 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         <motion.div
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0 pointer-events-none w-full max-w-[30rem]"
           variants={shineVariants}
           initial="initial"
           animate="animate"
