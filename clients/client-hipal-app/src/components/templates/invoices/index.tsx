@@ -132,7 +132,7 @@ const businessData = [
     date: "16 Nov 2024",
     name: "sashtra",
     bizName: "SASHTRA WELLNESS PRIVATE LIMITED",
-    status: false,
+    status: true,
     serviceCost: 4000,
     months: 12,
     address:
@@ -153,11 +153,11 @@ const businessData = [
   },
   {
     id: "014",
-    date: "18 Nov 2024",
+    date: "14 Dec 2024",
     name: "ichata",
     bizName: "ICHATA",
     status: false,
-    serviceCost: 4000,
+    serviceCost: 3500,
     months: 12,
     address:
       "H.NO. 8-8-321, ROAD NO. 14 , BANJARA HILLS Hyderabad Telangana-500096",
@@ -200,10 +200,10 @@ const businessData = [
   },
   {
     id: "018",
-    date: "03 Dec 2024",
+    date: "06 Dec 2024",
     name: "panchatantra",
     bizName: "PANCHATANTRA",
-    status: false,
+    status: true,
     serviceCost: 4000,
     months: 3,
     address:
