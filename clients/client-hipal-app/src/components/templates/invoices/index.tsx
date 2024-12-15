@@ -240,8 +240,8 @@ const businessData = [
     name: "Cu2",
     bizName: "Cu2 Brewhouse",
     status: false,
-    serviceCost: 4000,
-    months: 12,
+    serviceCost: 4500,
+    months: 6,
     address:
       "Ground Floor, One Golden Mile, Golden Mile Rd, Kokapet, Hyderabad, Telangana 500075",
     gst: "36AAGFF9090F1Z8",
