@@ -2235,8 +2235,7 @@ const paymentsRouter = new Hono()
       "query",
       z.object({
         businessId: z.string(),
-        from: z.string().optional(),
-        to: z.string().optional(),
+
         dateOfJoining: z.string().optional(),
         avgSpend: z.string().optional(),
         visitCount: z.string().optional(),
@@ -2244,89 +2243,20 @@ const paymentsRouter = new Hono()
       }),
     ),
     async (c) => {
-      const { businessId, from, to, dateOfJoining, avgSpend, visitCount } =
-        c.req.query();
-      const fromDate = Number(from);
-      const toDate = Number(to);
-      const joiningDate = Number(dateOfJoining);
-      const avgSpendValue = Number(avgSpend);
-      const visitCountValue = Number(visitCount);
-      const PAGE_SIZE = 20;
-      const pageNumber = c.req.query("pageNumber") as string;
-      const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
+      const { businessId } = c.req.query();
 
-      console.log("fromDate", fromDate);
+      const existingUserAnalytics = await UserAnalytic.find({
+        businessId,
+      }).populate("userId");
 
-      if (fromDate > toDate) {
-        return c.json({
-          err: true,
-          data: {},
-          message: "from date should be less than to date",
-        });
-      }
-
-      const sort: Record<string, number> = {};
-      if (dateOfJoining) sort.dateOfJoining = joiningDate;
-      if (avgSpend) sort.avgSpend = avgSpendValue;
-      if (visitCount) sort.visitCount = visitCountValue;
-      if (Object.keys(sort).length === 0) sort._id = -1;
-
-      console.log("sort", sort);
-
-      if (!from && !to) {
-        const existingUserAnalytics = await UserAnalytic.find({
-          businessId,
-          date: {
-            $gte: startOfToday.getTime(),
-            $lte: endOfToday.getTime(),
-          },
-        })
-          .sort(sort)
-          .skip(skip)
-          .limit(PAGE_SIZE)
-          .populate({
-            path: "userId",
-            select: "name phone",
-          });
-
-        return c.json(
-          {
-            data: existingUserAnalytics,
-            message: "existing payment",
-            err: false,
-          },
-          200,
-        );
-      }
-
-      if (from && to) {
-        const existingUserAnalytics = await UserAnalytic.find({
-          businessId,
-          date: {
-            $gte: fromDate,
-            $lte: toDate,
-          },
-        })
-          .sort(sort)
-          .skip(skip)
-          .limit(PAGE_SIZE)
-          .populate("userId");
-
-        return c.json(
-          {
-            data: existingUserAnalytics,
-            message: "existing payment",
-            err: false,
-          },
-          200,
-        );
-      }
-
-      return c.json({
-        err: true,
-        data: {},
-        message: "Invalid date range",
-      });
+      return c.json(
+        {
+          data: existingUserAnalytics,
+          message: "existing payment",
+          err: false,
+        },
+        200,
+      );
     },
   )
   .get(
