@@ -708,7 +708,6 @@ const usersRouter = new Hono()
     const { businessId } = c.req.param();
     const existingUser = await User.find({
       "customRole.businessId": businessId,
-      isDeleted: false,
     });
 
     return respond(c, "Staff fetched successfully", false, 200, existingUser);
