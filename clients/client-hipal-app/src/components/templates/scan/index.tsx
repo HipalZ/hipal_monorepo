@@ -7,7 +7,7 @@ import Image from "next/image";
 import HipalLogo from "@/assets/img/HipalZ_logo_title.png";
 import poweredBy from "@/assets/img/powered_hipalz.png";
 
-function Scan() {
+const MemoScan = () => {
   const router = useRouter();
 
   const gotoExplore = () => {
@@ -20,7 +20,6 @@ function Scan() {
         return;
       }
       const result = detectedCodes[0].rawValue;
-      console.log("QR Code detected:", result);
       router.push(result);
     },
     [router],
@@ -45,15 +44,20 @@ function Scan() {
         </div>
       </div>
 
-      <div className="px-8 mt-20 text-center">
-        <div className="w-full">
+      <div className="px-8 mt-20 text-center bg-white rounded-2xl">
+        <div className="w-full rounded-2xl !bg-white">
           <Scanner
             onScan={onDecode}
             onError={onError}
             constraints={{ facingMode: "environment" }}
+            components={{
+              zoom: true,
+              torch: true,
+            }}
             styles={{
               container: { width: "100%", margin: "0 auto" },
-              video: { borderRadius: "15px" },
+              video: { borderRadius: "30px" },
+              finderBorder: 4,
             }}
           />
         </div>
@@ -69,6 +73,7 @@ function Scan() {
       </center>
     </main>
   );
-}
+};
 
-export default memo(Scan);
+const Scan = memo(MemoScan);
+export default Scan;

@@ -70,10 +70,10 @@ export default async function Explore({
 
   return (
     <Suspense fallback={<SkeletonLoader height={200} />}>
-      <main className="relative flex flex-col w-full pb-16 overflow-hidden">
-        <MainBackground explore={data?.business} />
+      <main className="relative w-full pb-16 overflow-hidden">
+        <MainBackground data={data} />
         <div className="z-10 flex flex-col w-full -mt-10 text-4xl shadow-xl bg-base-100">
-          <HeroSection data={data} />
+          {/* <HeroSection data={data} /> */}
 
           <AllCouponz />
 

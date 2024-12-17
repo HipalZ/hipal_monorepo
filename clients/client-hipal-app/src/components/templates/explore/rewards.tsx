@@ -1,7 +1,6 @@
 "use client";
 import { useLogin } from "@/components/store/useLogin";
 import React, { memo } from "react";
-import { useParams } from "next/navigation";
 import { CiDiscount1 } from "react-icons/ci";
 import { TfiWallet } from "react-icons/tfi";
 import { useUserToken } from "@hi/common/src/useUserToken";
