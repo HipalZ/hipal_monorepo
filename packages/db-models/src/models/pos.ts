@@ -32,6 +32,10 @@ const posSchema = new mongoose.Schema<PosType>(
       required: false,
       default: false,
     },
+    businessId: {
+      type: ObjectId,
+      required: true,
+    },
   },
   {
     timestamps: true,

@@ -26,6 +26,7 @@ export const posSchema = z.object({
   accessKey: z.string().min(3).max(200),
   authToken: z.string().min(3).max(200),
   restId: z.string().min(3).max(200),
+  businessId: ObjectIdSchema,
 
   isDeleted: z.boolean().default(false).optional(),
 });
