@@ -113,9 +113,9 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
   }, [setInputModal]);
 
   const openModal = useCallback(() => {
-    if (selected === "menu" || selected === "catalogue") {
-      setDirection("category");
-    }
+    // if (selected === "menu" || selected === "catalogue") {
+    //   setDirection("category");
+    // }
     if (!accessToken) {
       router.push(`/${customLink}/user/signup`);
     }
@@ -131,7 +131,7 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
   }, []);
 
   const triggerCallWaiter = useCallback(() => {
-    setDirection("category");
+    // setDirection("category");
     if (!tableName) {
       return router.push(`/${customLink}/scan`);
     }
@@ -205,32 +205,40 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
               isSelected={false}
             />
           )}
-          <div className="relative">
-            <MenuItem
-              icon={BsBagHeartFill}
-              label={showCart ? "Menu" : "Cart"}
-              onClick={showingCart}
-              isSelected={false}
-            />
-            <AnimatePresence>
-              {cart.length > 0 && (
-                <motion.span
-                  className="absolute z-50 flex items-center justify-center w-5 h-5 text-xs font-bold bg-red-600 rounded-full text-primary-foreground -top-3 right-1"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  exit={{ scale: 0 }}
-                >
-                  {cart.length}
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </div>
-          <MenuItem
-            icon={MdMenuBook}
-            label={outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
-            href={`/${customLink}/category`}
-            isSelected={selectedBtn === "menu" || selectedBtn === "catalogue"}
-          />
+          {outletInfo?.businessId !== "66a8d54c4d18a18f4ff93a49" && (
+            <>
+              <div className="relative">
+                <MenuItem
+                  icon={BsBagHeartFill}
+                  label={showCart ? "Menu" : "Cart"}
+                  onClick={showingCart}
+                  isSelected={false}
+                />
+                <AnimatePresence>
+                  {cart.length > 0 && (
+                    <motion.span
+                      className="absolute z-50 flex items-center justify-center w-5 h-5 text-xs font-bold bg-red-600 rounded-full text-primary-foreground -top-3 right-1"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0 }}
+                    >
+                      {cart.length}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </div>
+              <MenuItem
+                icon={MdMenuBook}
+                label={
+                  outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"
+                }
+                href={`/${customLink}/category`}
+                isSelected={
+                  selectedBtn === "menu" || selectedBtn === "catalogue"
+                }
+              />
+            </>
+          )}
         </div>
       </motion.nav>
 
