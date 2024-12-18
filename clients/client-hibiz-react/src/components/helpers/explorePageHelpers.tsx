@@ -70,7 +70,7 @@ export const useImageChange = () => {
       if (file) {
         const maxSizeInBytes = 3 * 1024 * 1024; // 3MB in bytes
         if (file.size > maxSizeInBytes) {
-          toast.error("File size exceeds 1MB. Please select a smaller file.");
+          toast.error("File size exceeds 3MB. Please select a smaller file.");
           return;
         }
         const reader = new FileReader();
