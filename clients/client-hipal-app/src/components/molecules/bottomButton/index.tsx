@@ -3,17 +3,15 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { RiHome4Fill, RiCouponFill } from "react-icons/ri";
+import { motion } from "framer-motion";
+import { RiCouponFill } from "react-icons/ri";
 import { MdAccountBalanceWallet, MdMenuBook } from "react-icons/md";
 import { LuScanLine } from "react-icons/lu";
-import { FaConciergeBell } from "react-icons/fa";
 import { useLogin } from "@/components/store/useLogin";
 import useTableData from "@/components/store/useTableData";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { useCart } from "@/components/store/useCart";
-import { useCartStore } from "@/components/store/useCartStore";
 import { cn } from "@/components/utils/helpers";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import AddAmountModal from "./addAmountModal";
@@ -46,27 +44,25 @@ const MenuItem = ({
   const content = (
     <motion.div
       className={cn(
-        "relative flex flex-col items-center justify-center z-10",
-        isSelected ? "w-16 h-16" : "w-14 h-14",
+        "relative flex flex-col items-center justify-center z-10 px-2",
       )}
-      animate={isSelected ? { y: 0 } : { y: 0 }}
+      // animate={isSelected ? { y: 0 } : { y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
-      {isSelected && (
-        <motion.div
-          className="absolute inset-0 w-12 h-12 rounded-full left-2 -top-2.5 bg-base-300"
-          layoutId="outline"
-          transition={{ type: "spring", stiffness: 300, damping: 40 }}
-        />
-      )}
       <motion.div
         className={cn(
-          "relative z-10 flex items-center justify-center",
-          isSelected ? "w-12 h-12" : "w-6 h-6",
+          "relative z-10 flex items-center space-x-1 justify-center px-2",
         )}
-        animate={isSelected ? { y: -10 } : { y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        // animate={isSelected ? { y: -10 } : { y: 0 }}
+        transition={{ type: "spring", stiffness: 800, damping: 50 }}
       >
+        {isSelected && (
+          <motion.div
+            className="absolute inset-0 w-full h-[3rem] px-4 rounded-full -top-2.5 bg-base-300"
+            layoutId="outline"
+            transition={{ type: "spring", stiffness: 800, damping: 50 }}
+          />
+        )}
         <Icon
           size={isSelected ? 28 : 24}
           className={cn(
@@ -74,8 +70,10 @@ const MenuItem = ({
             isSelected ? "text-primary" : "text-base-100",
           )}
         />
+        <span className="relative z-10 mt-1 text-xs text-base-100 text-nowrap">
+          {label}
+        </span>
       </motion.div>
-      <span className="relative z-10 mt-1 text-xs text-base-100">{label}</span>
     </motion.div>
   );
 
@@ -104,7 +102,6 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
   const { setShowCart, showCart, inputModal, setInputModal, setCartPage } =
     useCart();
   const customLink = useParams()?.businessId || "";
-  const cart = useCartStore((s) => s.cart);
   const { subscribeModal, reviewPopup } = useLogin((s) => ({
     subscribeModal: s.subscribeModal,
     reviewPopup: s.reviewPopup,
@@ -176,8 +173,6 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
     animate: { x: "100%" },
   };
 
-  console.log("selected", cart);
-
   const selectedBtn =
     outletInfo?.outLetType === "OTHER" && selected === "menu"
       ? "catalogue"
@@ -186,9 +181,13 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
   return (
     <>
       <motion.nav
-        className="fixed z-50 bottom-0 w-full max-w-[30rem] bg-primary shadow-lg px-2"
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
+        className="
+          fixed z-50 bottom-4 w-[calc(100%-2rem)] 
+          left-4 max-w-[30rem] bg-primary shadow-lg
+          transform md:-translate-x-1/2 md:left-1/2
+          overflow-hidden rounded-full py-4
+        "
+        style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         <motion.div
@@ -208,22 +207,10 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
         />
         <div className="flex items-center justify-between">
           <MenuItem
-            icon={RiHome4Fill}
-            label="Home"
-            href={`/${customLink}/explore`}
-            isSelected={selectedBtn === "home"}
-          />
-          <MenuItem
             icon={RiCouponFill}
             label="Rewards"
             href={`/${customLink}/${accessToken ? "loyalty" : "user/signup"}`}
             isSelected={selectedBtn === "rewards"}
-          />
-          <MenuItem
-            icon={MdMenuBook}
-            label={outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
-            href={`/${customLink}/category`}
-            isSelected={selectedBtn === "menu" || selectedBtn === "catalogue"}
           />
 
           {tableName ? (
@@ -241,40 +228,14 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
               isSelected={false}
             />
           )}
+          <MenuItem
+            icon={MdMenuBook}
+            label={outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
+            href={`/${customLink}/category`}
+            isSelected={selectedBtn === "menu" || selectedBtn === "catalogue"}
+          />
         </div>
         <CartButton />
-
-        {outletInfo?.outLetType !== "OTHER" && (
-          <AnimatePresence>
-            <motion.button
-              type="button"
-              onClick={triggerCallWaiter}
-              className="absolute inset-0 w-1/4 h-[3rem] flex items-center rounded-r-2xl flex-col z-10 -top-[4rem] left-0 bg-primary text-base-100 pl-4 pr-4 text-xs py-2 overflow-hidden"
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            >
-              {/* <motion.div
-                className="absolute inset-0 pointer-events-none"
-                variants={shineVariants}
-                initial="initial"
-                animate="animate"
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  // repeatDelay: 1,
-                  ease: "backInOut",
-                }}
-                style={{
-                  background: "var(--shine-effect)",
-                }}
-              /> */}
-              <FaConciergeBell size={20} />
-              Captain
-            </motion.button>
-          </AnimatePresence>
-        )}
       </motion.nav>
 
       {inputModal && accessToken && (

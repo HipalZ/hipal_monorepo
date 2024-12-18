@@ -134,9 +134,7 @@ const MemoHorizontalCard = ({
           {!noAddBtn && (
             <div
               className={` flex flex-col items-center w-full mx-auto scale-75 ${
-                dishData?.images?.length > 0 || noDescription
-                  ? " -mt-4"
-                  : " -mt-4"
+                (dishData?.images?.length > 0 || noDescription) && "-mt-4"
               }`}
             >
               {dishData.availability && (
@@ -147,7 +145,10 @@ const MemoHorizontalCard = ({
                 >
                   <DishQuantityButton dishData={dishData} />
                   <span className="text-sm opacity-50 text-base-content">
-                    {dishData?.addOnIds?.length > 0 ? "customizable" : null}
+                    {(dishData?.addOnIds?.length ||
+                      dishData?.portions?.length) > 0
+                      ? "customizable"
+                      : null}
                   </span>
                 </div>
               )}

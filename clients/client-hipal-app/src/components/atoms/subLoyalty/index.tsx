@@ -73,10 +73,10 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
   }
 
   return (
-    <div className="bg-primary">
-      <section className="py-10 h-[25rem] !mt-0 bg-primary">
+    <div className="bg-base-100">
+      <section className="py-10 h-[25rem] !mt-0 bg-base-100">
         <center>
-          <h4 className="pb-4 text-2xl font-bold text-base-100">REWARDZ</h4>
+          <h4 className="pb-4 text-2xl font-bold text-primary">REWARDZ</h4>
         </center>
         <section className="relative flex items-center justify-center gap-2 px-4 mt-4 overflow-hidden">
           <center

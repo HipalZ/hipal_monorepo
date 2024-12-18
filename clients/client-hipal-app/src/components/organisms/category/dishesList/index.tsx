@@ -14,8 +14,6 @@ import type { EmblaOptionsType } from "embla-carousel";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import OtherOutletCard from "@/components/atoms/card/otherOutletCard";
-import ShimmerImage from "@/components/atoms/imageshimmer";
-import MemoPlaceholderImg from "@/components/atoms/placeholder";
 
 interface IDishesProps {
   childCategory: CategoryType[];
@@ -123,7 +121,7 @@ const DishesList: FC<IDishesProps> = (props) => {
       if (isActiveChildCategory !== "") {
         const element = document.getElementById(isActiveChildCategory);
         if (element) {
-          element.style.scrollMarginTop = "300px";
+          element.style.scrollMarginTop = "270px";
           element.scrollIntoView({ behavior: "smooth" });
         }
         setTimeout(() => {
@@ -135,7 +133,7 @@ const DishesList: FC<IDishesProps> = (props) => {
         timings?.dishIds?.length > 0 && observerActive ? "" : isActiveCategory;
       const element = document.getElementById(active);
       if (element) {
-        element.style.scrollMarginTop = "150px";
+        element.style.scrollMarginTop = "130px";
         element.scrollIntoView({ behavior: "smooth" });
       }
     };
@@ -164,7 +162,6 @@ const DishesList: FC<IDishesProps> = (props) => {
       <section className="sticky z-50 text-primary top-[3rem]">
         {!isSearchActive && (
           <>
-            <MainTypes parentCategory={parentCategory} />
             <SubTypes childCategory={subTypes} />
           </>
         )}
@@ -193,7 +190,7 @@ const DishesList: FC<IDishesProps> = (props) => {
         return (
           <section
             key={`${category._id}${index}`}
-            className="w-full pb-4 min-h-60 bg-base-100"
+            className="w-full pb-4 min-h-60 bg-[#ffffff]"
             id={category._id?.toString()}
           >
             <InView
@@ -204,7 +201,7 @@ const DishesList: FC<IDishesProps> = (props) => {
                 if (categoryId) {
                   if (inView) {
                     visibleCategoriesRef.current[categoryId] = Math.abs(
-                      entry.boundingClientRect.top - 120,
+                      entry.boundingClientRect.top - 100,
                     );
                   } else {
                     delete visibleCategoriesRef.current[categoryId];
@@ -221,36 +218,15 @@ const DishesList: FC<IDishesProps> = (props) => {
                       "border-t-2 border-primary":
                         category.dishIds?.length !== 0,
                     },
-                    "z-40 flex items-center space-x-4 justify-between h-[4rem] px-2 font-bold prose bg-base-200",
+                    "z-40 flex items-center space-x-4 justify-between h-[4rem] px-2 font-bold prose bg-[#cacaca50]",
                   )}
                 >
-                  <section className="flex items-start justify-center gap-4 truncate">
-                    {category?.coverImage ? (
-                      <figure className="rounded-full aspect-square h-[48px]">
-                        <ShimmerImage
-                          src={category.coverImage}
-                          alt={`${category.name || "Category"} image`}
-                          quality={95}
-                          width={48}
-                          height={40}
-                          className="object-cover !my-0 rounded-full aspect-square"
-                        />
-                      </figure>
-                    ) : (
-                      <figure className="aspect-square">
-                        <MemoPlaceholderImg className="w-12 h-12 rounded-full bg-base-300" />
-                      </figure>
-                    )}
-                    <h3
-                      className="!text-2xl truncate font-medium capitalize bungee-inline text-primary "
-                      title={category.name || "Unnamed Category"}
-                    >
-                      {category.name || "Unnamed Category"}
-                    </h3>
-                  </section>
-                  <h4 className="-mt-1.5 text-lg font-medium text-primary space-grotesk-700">
-                    {category.dishIds?.length || 0}
-                  </h4>
+                  <center
+                    className="!text-2xl w-full truncate font-medium capitalize space-grotesk-700 text-black"
+                    title={category.name || "Unnamed Category"}
+                  >
+                    {category.name || "Unnamed Category"}
+                  </center>
                 </div>
               )}
             </InView>

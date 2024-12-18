@@ -1,8 +1,9 @@
 import { memo, useEffect, type ReactNode } from "react";
 import { useTransition, animated } from "@react-spring/web";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaCross } from "react-icons/fa";
 import { createPortal } from "react-dom";
 import { cn } from "@hi/common";
+import { HiX } from "react-icons/hi";
 
 function MemoItemDescription({
   children,
@@ -10,12 +11,14 @@ function MemoItemDescription({
   onClose,
   heading,
   linearGradTheme,
+  bottomCross,
 }: {
   readonly children: ReactNode;
   readonly show: boolean;
   readonly onClose: () => void;
   readonly heading?: string;
   readonly linearGradTheme?: boolean;
+  readonly bottomCross?: boolean;
 }) {
   const transitions = useTransition(show, {
     from: { transform: "translateY(100%)", opacity: 0 },
@@ -59,7 +62,7 @@ function MemoItemDescription({
         }
       };
     }
-  }, [show, onClose]);
+  }, []);
 
   if (!show) return null;
 
@@ -96,6 +99,15 @@ function MemoItemDescription({
                   {heading}
                 </h1>
               </header>
+              {bottomCross && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="absolute bottom-0 p-4 rounded-full bg-[#00000050] text-white transform -translate-x-1/2 -translate-y-1/2 left-1/2"
+                >
+                  <HiX />
+                </button>
+              )}
               {children}
             </animated.div>
           </div>

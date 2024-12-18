@@ -35,7 +35,7 @@ const Orders = dynamic(() => import("./orders"), { ssr: false });
 
 const Cart = () => {
   const { cart, cartHistory } = useCartStore();
-  const { setShowCart, cartPage, setCartPage } = useCart();
+  const { setShowCart, cartPage, setCartPage, setInputModal } = useCart();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const [showPayAlert, setShowPayAlert] = useState<boolean>(false);
   const {
@@ -59,6 +59,10 @@ const Cart = () => {
     });
   }, [cart]);
 
+  const payPopCorn = useCallback(() => {
+    setInputModal(true);
+  }, [setInputModal]);
+
   const placeOrder = useCallback(async () => {
     const handleUnauthenticatedUser = () => {
       setDirection("category");
@@ -78,7 +82,7 @@ const Cart = () => {
     ) => {
       try {
         const res = await response.json();
-        if (response.status === 200) {
+        if (response.status === 200 || response.status === 201) {
           toast.success(successMessage);
           setHiCode(res?.data?.hiCode || null);
           setShowCart(false);
@@ -136,6 +140,8 @@ const Cart = () => {
             userId: userDetails?._id,
             tableName,
             cart: sanitizedCart,
+            name: userDetails?.name || "Guest",
+            phone: userDetails?.phone,
           },
         });
         await handleApiResponse(
@@ -181,36 +187,20 @@ const Cart = () => {
             type: "button" as const,
             highlight: true,
           },
-          {
-            text: "Running Orders",
-            onClick: () => setCartPage("order"),
-            type: "button" as const,
-          },
-        ];
-      } else {
-        return [
-          {
-            text: "Order more",
-            onClick: () => setShowCart(false),
-            type: "button" as const,
-          },
-          {
-            text: "Running Orders",
-            onClick: () => setCartPage("order"),
-            type: "button" as const,
-          },
         ];
       }
+      return [
+        {
+          text: "Order more",
+          onClick: () => setShowCart(false),
+          type: "button" as const,
+        },
+      ];
     }
 
     if (cartPage === "order") {
       return cartHistory && cartHistory.length > 0
         ? [
-            {
-              text: "Cart",
-              onClick: () => setCartPage("cart"),
-              type: "button" as const,
-            },
             {
               text: "Pay Bill",
               onClick: payBill,
@@ -221,11 +211,6 @@ const Cart = () => {
             {
               text: "Order more",
               onClick: () => setShowCart(false),
-              type: "button" as const,
-            },
-            {
-              text: "Cart",
-              onClick: () => setCartPage("cart"),
               type: "button" as const,
             },
           ];
@@ -242,6 +227,67 @@ const Cart = () => {
     }
 
     return [];
+  }, [
+    tableName,
+    outletInfo?.outLetType,
+    cartPage,
+    cart.length,
+    placeOrder,
+    payBill,
+    setCartPage,
+    setShowCart,
+  ]);
+
+  const getButtonForPopcorn = useMemo(() => {
+    if (!tableName || outletInfo?.outLetType === "OTHER") {
+      return [];
+    }
+    if (cartPage === "cart") {
+      if (cart.length > 0) {
+        return [
+          {
+            text: "Share Cart",
+            onClick: placeOrder,
+            type: "button" as const,
+            highlight: true,
+          },
+        ];
+      }
+      return [
+        {
+          text: "Order more",
+          onClick: () => setShowCart(false),
+          type: "button" as const,
+        },
+      ];
+    }
+    if (cartPage === "order") {
+      return cartHistory && cartHistory.length > 0
+        ? [
+            {
+              text: "Pay Bill",
+              onClick: payPopCorn,
+              type: "button" as const,
+            },
+          ]
+        : [
+            {
+              text: "Order more",
+              onClick: () => setShowCart(false),
+              type: "button" as const,
+            },
+          ];
+    }
+
+    if (cartPage === "history") {
+      return [
+        {
+          text: "Back",
+          onClick: () => setCartPage("cart"),
+          type: "button" as const,
+        },
+      ];
+    }
   }, [
     tableName,
     outletInfo?.outLetType,
@@ -295,6 +341,7 @@ const Cart = () => {
         <ItemDescriptionPopup
           show={hiCodePopup}
           onClose={() => setHiCodePopup(false)}
+          bottomCross
         >
           <HiCodeValidate placeOrder={placeOrder} />
         </ItemDescriptionPopup>
@@ -304,13 +351,21 @@ const Cart = () => {
         <ItemDescriptionPopup
           show={showPayAlert}
           onClose={() => setShowPayAlert(false)}
+          bottomCross
         >
           <PaymentAlert onClick={() => setShowPayAlert(false)} />
         </ItemDescriptionPopup>
       )}
 
       {tableName && outletInfo?.outLetType !== "OTHER" && (
-        <CommonBottomButton fixed buttons={getBottomButtons} />
+        <CommonBottomButton
+          fixed
+          buttons={
+            outletInfo?.isPosEnabled
+              ? getBottomButtons ?? []
+              : getButtonForPopcorn ?? []
+          }
+        />
       )}
     </div>
   );

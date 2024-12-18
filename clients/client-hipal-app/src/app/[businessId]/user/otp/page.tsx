@@ -47,15 +47,8 @@ function OtpPage() {
   const router = useRouter();
   const sendOtp = useLogin((s) => s.sendOtp);
   const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting);
-  const { direction, isPayment, setUserCoinZ, invoiceUrl, urlFrom } = useLogin(
-    (s) => ({
-      direction: s.direction,
-      isPayment: s.isPayment,
-      setUserCoinZ: s.setUserCoinZ,
-      invoiceUrl: s.invoiceUrl,
-      urlFrom: s.urlFrom,
-    }),
-  );
+  const { direction, isPayment, setUserCoinZ, invoiceUrl, urlFrom } =
+    useLogin();
   const [loading, setLoading] = useState<boolean>(false);
 
   const handleOtpChange = (

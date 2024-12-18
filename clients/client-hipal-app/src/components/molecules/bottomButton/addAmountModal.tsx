@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback } from "react";
 import Hipay from "@/assets/payment/hipay.png";
 import hipayBg from "@/assets/payment/hipay_background.png";
 import style from "./addAmount.module.css";
@@ -11,17 +11,17 @@ import { cn } from "@/components/utils/helpers";
 import { useLogin } from "@/components/store/useLogin";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import { getRandomBlurImg } from "@/components/utils/images";
-import { apiRpc } from "@hi/common";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useCouponz } from "@/components/store/useCouponz";
-import { useErrorHandling } from "@/utils/helper";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { useCallTheCaptain } from "@/components/hooks/useCartHook";
 
 const AddAmountModal = memo(() => {
-  const { errorText } = useErrorHandling();
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const business = useBusinessDetails((s) => s.businessDetails);
+  const router = useRouter();
+  const { mutate, isPending } = useCallTheCaptain();
   const {
     billValue,
     setBillValue,
@@ -33,26 +33,13 @@ const AddAmountModal = memo(() => {
     setSelectedTip,
     setShowInput,
     setIsTipActive,
-  } = usePaymentStore((s) => ({
-    billValue: s.billValue,
-    setBillValue: s.setBillValue,
-    setEditBillModal: s.setEditBillModal,
-    setClaimCouponz: s.setClaimCouponz,
-    setClaimedCoinz: s.setClaimedCoinz,
-    setCustomTip: s.setCustomTip,
-    setTips: s.setTips,
-    setSelectedTip: s.setSelectedTip,
-    setShowInput: s.setShowInput,
-    setIsTipActive: s.setIsTipActive,
-  }));
+  } = usePaymentStore();
 
   const { setAvailedCoupon } = useCouponz((s) => ({
     setAvailedCoupon: s.setAvailedCoupon,
   }));
   const userDetails = useLogin((s) => s.userDetails);
   const customLink = useParams()?.businessId as string;
-  const router = useRouter();
-  const [loading, setLoading] = useState<boolean>(false);
 
   const setIsPayment = useLogin((s) => s.setIsPayment);
   const name = useLogin((s) => s.userDetails?.name);
@@ -103,36 +90,19 @@ const AddAmountModal = memo(() => {
       toast.error("Please Scan the table to call staff");
       return;
     }
-    if (loading) {
-      return toast.error("Please wait for a moment");
-    }
 
-    setLoading(true);
+    const payload = {
+      businessId: businessId,
+      tableName: tableName,
+      message: "Want to settle bill",
+      alertType: "WAITER",
+      status: "WAITER",
+      name: name || "user",
+      userId: userDetails._id,
+    };
 
-    const res = await apiRpc.payments.createWaiterAlert.$post({
-      json: {
-        businessId: businessId,
-        tableName: tableName,
-        message: "Want to settle bill",
-        alertType: "WAITER",
-        status: "WAITER",
-        name: name,
-        userId: userDetails._id,
-      },
-    });
-    if (res.status === 401) {
-      setLoading(false);
-      return errorText(res.status);
-    }
-    if (res.status === 200) {
-      toast.success("Staff will be there soon. Thank you!!");
-      setLoading(false);
-    }
-    if (res.status === 404 || res.status === 400) {
-      toast.error("Please scan again");
-      setLoading(false);
-    }
-  }, [businessId, tableName]);
+    mutate(payload);
+  }, [businessId, tableName, name, userDetails._id, mutate]);
   return (
     <section className="h-[77dvh] relative overflow-y-auto overflow-x-hidden mb-[2rem]">
       <header className="bg-white h-[4.25rem] flex items-center text-primary">
@@ -188,11 +158,11 @@ const AddAmountModal = memo(() => {
         {outletInfo?.outLetType !== "OTHER" && (
           <button
             type="button"
-            disabled={loading}
+            disabled={isPending}
             onClick={callTheWaiter}
             className="text-black w-full px-8 py-3 text-sm border rounded-full border-black !text-whote"
           >
-            {loading ? (
+            {isPending ? (
               <span className="loader_spinner !border-t-black" />
             ) : (
               "Call Captain"
@@ -201,14 +171,16 @@ const AddAmountModal = memo(() => {
         )}
         <button
           type="button"
-          disabled={loading}
+          disabled={isPending}
           onClick={proceedToPayment}
           className={cn(
             "w-full px-4 py-3 rounded-full text-white",
-            loading ? "opacity-50 pointer-events-none bg-gray-400" : "bg-black",
+            isPending
+              ? "opacity-50 pointer-events-none bg-gray-400"
+              : "bg-black",
           )}
         >
-          {loading ? (
+          {isPending ? (
             <span className="loader_spinner !border-t-primary" />
           ) : (
             "Next"

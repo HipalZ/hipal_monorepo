@@ -1,11 +1,35 @@
 import { categoryApis } from "@/apis/category";
 import dynamics from "next/dynamic";
 import { defaultThemes } from "@/components/utils/helpers";
-import CategorySkeleton from "@/components/atoms/progressBar/categoryLoader";
+import MainTypes from "@/components/molecules/categoryTypes/mainTypes";
 
 // export const dynamic = "force-dynamic";
 // export const fetchCache = "force-no-store";
 export const revalidate = 300;
+
+const CategorySkeleton = dynamics(
+  () => import("@/components/atoms/progressBar/categoryLoader"),
+  {
+    ssr: false,
+    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+  },
+);
+
+const CategoryPageBtn = dynamics(
+  () => import("@/components/molecules/bottomButton/categoryPageBtn"),
+  {
+    ssr: false,
+    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+  },
+);
+
+const LiveCart = dynamics(
+  () => import("@/components/molecules/bottomButton/livecart"),
+  {
+    ssr: false,
+    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+  },
+);
 
 const CategoryHeader = dynamics(
   () => import("@/components/organisms/category/categoryHeader"),
@@ -82,7 +106,10 @@ export default async function Page({
         </section>
         <PageName />
       </div>
-      <BottomButton selected={"menu"} />
+      <MainTypes parentCategory={data?.parentCategories} />
+
+      <LiveCart />
+      <CategoryPageBtn />
     </main>
   );
 }

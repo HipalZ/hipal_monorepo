@@ -3,6 +3,7 @@ import { useTransition, animated } from "@react-spring/web";
 import { HiX } from "react-icons/hi";
 import { cn } from "@/components/utils/helpers";
 import { createPortal } from "react-dom";
+import { FaCross } from "react-icons/fa";
 
 const MemoBottomPopUp = ({
   children,
@@ -10,12 +11,14 @@ const MemoBottomPopUp = ({
   onClose,
   hide,
   linearGradTheme,
+  bottomCross,
 }: {
   children: React.ReactNode;
   show: boolean;
   onClose: () => void;
   hide?: boolean;
   linearGradTheme?: boolean;
+  bottomCross?: boolean;
 }) => {
   const transitions = useTransition(show, {
     from: { transform: "translateY(100%)", opacity: 0 },
@@ -58,7 +61,7 @@ const MemoBottomPopUp = ({
         }
       };
     }
-  }, [show, onClose]);
+  }, []);
 
   if (!show) return null;
 
@@ -92,6 +95,15 @@ const MemoBottomPopUp = ({
               </div>
             )}
             {children}
+            {bottomCross && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="absolute bottom-0 p-4 rounded-full bg-[#00000050] text-white transform -translate-x-1/2 -translate-y-1/2 left-1/2"
+              >
+                <HiX />
+              </button>
+            )}
           </animated.div>
         </animated.div>
       ),

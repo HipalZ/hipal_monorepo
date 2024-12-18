@@ -1,9 +1,13 @@
+"use client";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import { cn } from "@hi/common";
 import type { CategoryType } from "@hi/db-models/src/validators";
 import { memo, useCallback, useMemo, useState } from "react";
 import CustomModal from "./customModal";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { useCartStore } from "@/components/store/useCartStore";
+import Bell from "@/assets/cart/bell.png";
+import Image from "next/image";
 
 interface IMainTypes {
   parentCategory: CategoryType[];
@@ -11,29 +15,22 @@ interface IMainTypes {
 
 const MemoMainTypes = (props: IMainTypes) => {
   const { parentCategory } = props;
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const mainTypes = useMemo(
-    () =>
-      parentCategory?.filter((category) => category.subCategoryIds.length > 0),
-    [parentCategory],
-  );
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { cart } = useCartStore();
 
   const {
     isActiveParentCategory,
     setActiveParentCategory,
     setActiveCategory,
     setObserverActive,
-  } = useActiveClass((s) => ({
-    isActiveParentCategory: s.isActiveParentCategory,
-    isActiveCategory: s.isActiveCategory,
-    setActiveParentCategory: s.setActiveParentCategory,
-    setActiveCategory: s.setActiveCategory,
-    isActiveChildCategory: s.isActiveChildCategory,
-    setObserverActive: s.setObserverActive,
-  }));
+  } = useActiveClass();
+
+  const mainTypes = useMemo(
+    () =>
+      parentCategory?.filter((category) => category.subCategoryIds.length > 0),
+    [parentCategory],
+  );
 
   const setMainCategory = useCallback(
     (category: CategoryType) => {
@@ -55,9 +52,19 @@ const MemoMainTypes = (props: IMainTypes) => {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="fixed px-6 py-2 rounded-xl bottom-[4.5rem] transform -translate-x-1/2 left-1/2 bg-primary text-base-100"
+            className={cn(
+              "sticky flex items-center rounded-r-xl justify-between px-4 py-3 text-[#FFF] max-w-[30rem] z-50  left-0  bg-[#000000]",
+              cart.length > 0 ? "bottom-[8rem]" : "bottom-[4.75rem]",
+            )}
           >
-            {outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
+            <Image
+              src={Bell}
+              alt="bell"
+              width={24}
+              height={24}
+              className="mr-2"
+            />
+            Menu
           </button>
 
           <CustomModal show={isModalOpen} onClose={() => setIsModalOpen(false)}>

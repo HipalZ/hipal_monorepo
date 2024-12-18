@@ -7,9 +7,7 @@ import { useCouponz } from "@/components/store/useCouponz";
 import ShimmerImage from "../imageshimmer";
 
 const MemoCouponCardCongrats = () => {
-  const { selectedCoupon } = useCouponz((s) => ({
-    selectedCoupon: s.selectedCoupon,
-  }));
+  const { selectedCoupon } = useCouponz();
   return (
     <section className="absolute inset-0 flex items-center justify-center shadow-2xl">
       <center className="absolute w-[800px] z-0">

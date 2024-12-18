@@ -5,20 +5,23 @@ import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { useLogin } from "@/components/store/useLogin";
 import useTableData from "@/components/store/useTableData";
 import { apiRpc } from "@hi/common";
-import CommonBottomButton from "@/components/atoms/bottomButton";
-import { FaPhone } from "react-icons/fa";
+import ConfettiHeader from "@/components/organisms/confettiHeader";
+import CartFriend from "@/assets/cart/cartFriends.png";
+import Image from "next/image";
+import { MdPerson } from "react-icons/md";
+import CallTheCaptain from "./callTheCaptain";
 
 const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
   const {
     setHiCodePopup,
     hiCodeUser,
     setHiCode: saveInPersist,
+    tableName,
   } = useTableData();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const userDetails = useLogin((state) => state.userDetails);
 
   const [hiCode, setHiCode] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
   const handleCodeVerification = async () => {
@@ -27,9 +30,6 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
       setError(true);
       return;
     }
-
-    setLoading(true);
-    setError(false);
 
     try {
       const response = await apiRpc.pos.validate_hicode.$post({
@@ -55,10 +55,9 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
       console.error("Error validating HiCode:", error);
       toast.error("Invalid HiCode. Please try again.");
       setError(true);
-    } finally {
-      setLoading(false);
     }
   };
+
   const maskPhoneNumber = useCallback((phone: string) => {
     return `${phone?.slice(0, 2)}****${phone.slice(-4)}`;
   }, []);
@@ -68,8 +67,16 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
-      className="flex flex-col items-center justify-center p-6 bg-white"
+      className="relative flex flex-col items-center justify-center p-6 bg-white"
     >
+      <ConfettiHeader />
+      <Image
+        src={CartFriend}
+        alt="cart-friend"
+        width={300}
+        height={135}
+        className="mt-8"
+      />
       {hiCodeUser?.phone ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -77,14 +84,24 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
           transition={{ delay: 0.2 }}
           className="mb-6 text-center"
         >
-          <h3 className="mb-4 text-2xl font-bold text-gray-800 space-grotesk-700">
-            Ask {hiCodeUser?.name} for the HiCode
+          <h3 className="mt-4 text-2xl font-bold text-gray-800 space-grotesk-700">
+            Ordering with friends ?
           </h3>
-
-          <div className="flex items-center justify-center text-primary">
-            <FaPhone className="mr-2 text-primary" />
-            <span className="text-lg">
-              {maskPhoneNumber(hiCodeUser?.phone)}
+          <p className="text-sm text-gray-500">
+            Your table{" "}
+            <span className="text-lg font-semibold">{tableName}</span> is
+            already occupied !
+          </p>
+          <div className="flex items-center gap-4 pl-2 mt-4 text-left text-primary">
+            <article className="bg-[#6A35FF30] p-2 rounded-xl">
+              <MdPerson size={28} className=" text-[#6A35FF]" />
+            </article>
+            <span className="text-sm text-gray-500">
+              The table admin is{" "}
+              <span className="text-base font-semibold">
+                {hiCodeUser?.name}
+              </span>{" "}
+              with number {maskPhoneNumber(hiCodeUser?.phone)}
             </span>
           </div>
         </motion.div>
@@ -112,33 +129,20 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="absolute top-[90%] pt-4 transform -translate-x-1/2  text-primary left-1/2 w-full"
+            className="w-full pt-2 text-red-600 "
           >
-            Please enter a valid HiCode
+            Please enter a valid Code
           </motion.div>
         )}
       </div>
-      {hiCodeUser?.phone && (
-        <section
-          style={{
-            borderRadius: "5px 20px 5px",
-          }}
-          className="p-4 text-sm text-center bg-primary text-base-100"
-        >
-          <h3>Hicode present in the {hiCodeUser?.name} cart</h3>
-        </section>
-      )}
-      <CommonBottomButton
-        fixed
-        buttons={[
-          {
-            text: "Validate",
-            onClick: handleCodeVerification,
-            isLoading: loading,
-            disable: loading,
-          },
-        ]}
-      />
+      <button
+        type="button"
+        onClick={handleCodeVerification}
+        className="bg-[#008800] mb-4 w-full text-sm text-white px-4 py-3 rounded-md"
+      >
+        Continue
+      </button>
+      <CallTheCaptain />
     </motion.div>
   );
 };

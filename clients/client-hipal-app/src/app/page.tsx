@@ -10,7 +10,6 @@ import Logo from "@/assets/topsection/logo.svg";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-///
 export default function Home() {
   const router = useRouter();
   const goToAllBusiness = () => {
@@ -52,7 +51,7 @@ export default function Home() {
         style={{
           margin: "3rem 0 2rem 0",
         }}
-        className="show_mobile "
+        className="show_mobile"
       >
         <center>
           <button
