@@ -49,7 +49,7 @@ const MemoLinkItems = () => {
     dishes: s.dishes,
   }));
 
-  const { isLoading } = useDishes();
+  useDishes();
 
   const { data: categoryData } = useChildCategories(dishStep);
   const fuse = new Fuse(categoryData || dishes, {
@@ -58,17 +58,9 @@ const MemoLinkItems = () => {
   });
 
   // Original filteredData computation with added sorting to bring selected items to the top
-  let filteredData = searchTerm
+  const filteredData = searchTerm
     ? fuse.search(searchTerm).map((result) => result.item)
     : categoryData || dishes;
-  // Check if filteredData is not empty before sorting
-  if (filteredData && filteredData.length > 0) {
-    filteredData = [...filteredData].sort((a, b) => {
-      const aIsSelected = tempIds.includes(a._id?.toString() ?? "");
-      const bIsSelected = tempIds.includes(b._id?.toString() ?? "");
-      return aIsSelected === bIsSelected ? 0 : aIsSelected ? -1 : 1;
-    });
-  }
 
   const handleSave = () => {
     if (dishStep === "LINK_CATEGORY_STEP") {
