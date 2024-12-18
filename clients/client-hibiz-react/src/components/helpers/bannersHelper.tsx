@@ -62,7 +62,7 @@ export const useImageChange = () => {
       const type = event?.target?.dataset?.type;
       const file = event?.target?.files?.[0];
       if (file) {
-        const maxSizeInBytes = 5 * 1024 * 1024; // 5MB in bytes
+        const maxSizeInBytes = 3 * 1024 * 1024; // 3MB in bytes
         if (file.size > maxSizeInBytes) {
           toast.error("File size exceeds 1MB. Please select a smaller file.");
           return;
