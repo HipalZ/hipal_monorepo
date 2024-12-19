@@ -17,6 +17,7 @@
   font-style: normal;
 }
 
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -27,7 +28,22 @@
   --star-color: #eee;
   --star-background: #fc0;
   background-color: #f4f4f4;
-
+  --primary: #183D2E;
+  --secondary: #000;
+  --accent: #EFC54D;
+  --neutral: #1A202C;
+  --base-100: #f4f4f4;
+  --info: #E6E6E6;
+  --success: #2FBD4E;
+  --success-content: #fff;
+    --b1:#f4f4f4;
+    --p:var(--primary)
+    --s:var(--secondary)
+    --a:var(--accent)
+    --n:var(--neutral)
+    --b:var(--base-100)
+    --i:var(--info)
+    --suc:var(var(--success-content))
 }
 
 @media (prefers-color-scheme: dark) {
