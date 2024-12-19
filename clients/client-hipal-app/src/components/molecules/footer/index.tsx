@@ -1,8 +1,6 @@
 "use client";
 import type { IThemes } from "@/components/types/businessData";
 import { updateTheme } from "@/components/utils/themes";
-import Link from "next/link";
-import { useParams } from "next/navigation";
 import { memo, useEffect } from "react";
 import { FaTelegram } from "react-icons/fa";
 import {

@@ -99,15 +99,15 @@ const MemoCartHeader = () => {
   }
 
   return (
-    <section className="sticky top-0 z-50 pb-4 bg-base-100">
+    <section className="sticky top-0 z-50 pb-4 bg-[#ffffff]">
       <button
         type="button"
         onClick={handleBack}
-        className="top-4 left-4 py-2 rounded-full absolute z-[60] px-4 text-base-100 bg-primary"
+        className="top-4 left-4 py-2 rounded-full absolute z-[60] px-4 text-[#ffffff] bg-[#000000]"
       >
         <BiArrowBack />
       </button>
-      <center className="pt-4 text-2xl text-primary">{cartHeading()}</center>
+      <center className="pt-4 text-2xl text-[#000000]">{cartHeading()}</center>
     </section>
   );
 };

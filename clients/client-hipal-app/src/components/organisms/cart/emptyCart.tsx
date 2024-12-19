@@ -7,11 +7,11 @@ const MemoEmptyCart = () => {
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   return (
     <div className="flex flex-col items-center justify-center pt-[20vh]">
-      <div className="flex items-center justify-center w-20 h-20 rounded-full bg-base-100">
+      <div className="flex items-center justify-center w-20 h-20 rounded-full bg-[#ffffff]">
         {outletInfo?.outLetType === "OTHER" ? (
-          <MdOutlineRemoveShoppingCart className="text-4xl text-primary-100" />
+          <MdOutlineRemoveShoppingCart className="text-4xl text-[#000000]" />
         ) : (
-          <GiKnifeFork className="text-4xl text-primary-100" />
+          <GiKnifeFork className="text-4xl text-[#000000]" />
         )}
       </div>
       <div className="mt-4 text-2xl font-bold">Your cart is empty</div>

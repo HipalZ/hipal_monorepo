@@ -81,21 +81,21 @@ function MemoItemDescription({
               style={styles}
               className={cn(
                 "h-[100dvh] overflow-auto w-full max-w-[28rem]",
-                linearGradTheme ? "background-gradient" : "bg-base-100",
+                linearGradTheme ? "background-gradient" : "bg-[#ffffff]",
               )}
             >
-              <header className="sticky !z-[1000] top-0 bg-base-100 flex items-center pb-2">
+              <header className="sticky !z-[1000] top-0 bg-[#ffffff] flex items-center pb-2">
                 <button
                   type="button"
                   onClick={() => onClose()}
-                  className="px-2 mt-4 ml-4 rounded-xl bg-primary text-base-100 on_active_bounce"
+                  className="px-2 mt-4 ml-4 rounded-xl bg-[#000000] text-[#ffffff] on_active_bounce"
                 >
                   <FaArrowLeft
                     size={28}
-                    className="p-2 rounded-full cursor-pointer text-base-100"
+                    className="p-2 rounded-full cursor-pointer text-[#ffffff]"
                   />
                 </button>
-                <h1 className="mt-4 ml-4 text-2xl font-medium truncate text-base-content">
+                <h1 className="mt-4 ml-4 text-2xl font-medium truncate text-[#000000]">
                   {heading}
                 </h1>
               </header>

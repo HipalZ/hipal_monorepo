@@ -35,7 +35,7 @@ const MemoBottomButton = (props: MemoBottomButtonProps) => {
   return (
     <article
       className={cn(
-        "w-full px-4 py-2 overflow-hidden bg-white md:bg-transparent -left-1 md:max-w-[28rem] md:left-0 md:right-0 md:mx-auto",
+        "w-full px-4 py-2 overflow-hidden bg-[#ffffff] md:bg-transparent -left-1 md:max-w-[28rem] md:left-0 md:right-0 md:mx-auto",
         {
           "fixed bottom-0": fixed,
           "absolute bottom-0": !fixed,
@@ -57,7 +57,7 @@ const MemoBottomButton = (props: MemoBottomButtonProps) => {
                 button?.isLoading ? "pointer-events-none" : "",
                 {
                   "bg-[#038849] text-white": index === 1,
-                  "bg-primary text-base-100": index !== 1,
+                  "bg-[#000000] text-[#ffffff]": index !== 1,
                   "opacity-50 cursor-not-allowed": button.disable,
                 },
                 {

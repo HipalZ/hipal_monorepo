@@ -43,7 +43,7 @@ function RecommendedDishes({
     <div className="-mt-4">
       <Section title="" tag="h3">
         <div>
-          <div className="flex flex-row gap-4 mb-4 text-primary">
+          <div className="flex flex-row gap-4 mb-4 text-[#000000]">
             <ImSpoonKnife className="my-auto text-lg" />
             <h4 className="my-auto">Best Pair With</h4>
           </div>
@@ -78,7 +78,7 @@ function RecommendedDishes({
             {processedDishes?.map((dish) => (
               <SplideSlide key={dish._id?.toString()}>
                 {dish && (
-                  <div className="relative z-[100] text-primary">
+                  <div className="relative z-[100] text-[#000000]">
                     <div className="absolute bg-white left-2 top-2 rounded-xl">
                       <FoodType types={dish?.dishTypes as FOOD_TYPES[]} />
                     </div>

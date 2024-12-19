@@ -20,7 +20,6 @@ const MemoLiveCart = () => {
   const openCart = useCallback(() => {
     setCartPage("cart");
     setShowCart(true);
-    console.log("cartPage", cartPage);
   }, [cartPage, showCart, setShowCart, setCartPage]);
 
   if (cart.length === 0) return null;

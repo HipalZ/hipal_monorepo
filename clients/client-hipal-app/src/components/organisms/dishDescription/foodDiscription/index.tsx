@@ -58,7 +58,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
 
       {!isEmpty(dishData?.portions) && (
         <div className="flex flex-col mt-1 space-y-5">
-          <div className="flex flex-row gap-4 text-base text-primary">
+          <div className="flex flex-row gap-4 text-base text-[#000000]">
             <MdOutlineRiceBowl className="my-auto" />
             <h4 className="my-auto">
               {dishData?.portions?.length} Portions available
@@ -70,7 +70,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
               <div
                 key={key}
                 className={
-                  "flex flex-col min-w-[22%] max-w-full mx-auto space-y-1 text-base text-center bg-base-100 flex-grow p-2"
+                  "flex flex-col min-w-[22%] max-w-full mx-auto space-y-1 text-base text-center bg-[#ffffff] flex-grow p-2"
                 }
               >
                 <span className="text-sm font-normal text-base-content">
@@ -87,7 +87,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
 
       {!isEmpty(dishData?.addOnIds) && (
         <div className="flex flex-col pt-1 space-y-5">
-          <div className="flex flex-row gap-4 text-base text-primary">
+          <div className="flex flex-row gap-4 text-base !text-[#000000]">
             <IoFastFoodSharp className="my-auto text-xl" />
             <h4 className="my-auto">Extras available</h4>
           </div>
@@ -102,7 +102,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
                 {addOn?.choices.map((choice) => (
                   <li
                     key={choice._id}
-                    className="flex flex-row gap-2 py-2 text-sm font-normal opacity-60 min-w-fit text-base-content"
+                    className="flex flex-row gap-2 py-2 text-sm font-normal opacity-60 min-w-fit text-[#000000]"
                   >
                     <BsFillCircleFill className="inline-flex p-1 my-auto text-xs" />
                     <span className="my-auto text-sm text-start">

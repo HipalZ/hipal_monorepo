@@ -2,6 +2,7 @@ import { categoryApis } from "@/apis/category";
 import dynamics from "next/dynamic";
 import { defaultThemes } from "@/components/utils/helpers";
 import MainTypes from "@/components/molecules/categoryTypes/mainTypes";
+import MenuBannerPage from "@/components/organisms/menuBanner";
 
 // export const dynamic = "force-dynamic";
 // export const fetchCache = "force-no-store";
@@ -53,13 +54,7 @@ const DishesList = dynamics(
     loading: () => <div className="h-16 text-black"> Loading .....</div>,
   },
 );
-const BottomButton = dynamics(
-  () => import("@/components/molecules/bottomButton"),
-  {
-    ssr: false,
-    loading: () => <CategorySkeleton />,
-  },
-);
+
 const TopBackground = dynamics(
   () => import("@/components/molecules/topBackground"),
   {
@@ -84,11 +79,11 @@ export default async function Page({
   params,
 }: { params: { businessId: string } }) {
   const data = await fetchData(params.businessId);
-  console.log(data);
   return (
     <main>
       <div className="relative flex flex-col w-full pb-14">
-        <TopBackground specialBanner={data?.business?.specialBannerUrl} />
+        <MenuBannerPage timings={data?.timings} />
+        {/* <TopBackground specialBanner={data?.business?.specialBannerUrl} /> */}
         <CategoryHeader childCategory={data?.childCategories || []} />
         <div className="!mt-0 !scroll-smooth">
           <DishesList
@@ -97,7 +92,7 @@ export default async function Page({
             timings={data?.timings}
           />
         </div>
-        <section className="pt-6 bg-base-100">
+        <section className="pt-6 bg-[#ffffff]">
           <Footer
             themes={data?.settings || defaultThemes}
             socialMediaLinks={data?.business?.socialMediaLinks}
@@ -106,7 +101,10 @@ export default async function Page({
         </section>
         <PageName />
       </div>
-      <MainTypes parentCategory={data?.parentCategories} />
+      <MainTypes
+        parentCategory={data?.parentCategories || []}
+        childCategory={data?.childCategories || []}
+      />
 
       <LiveCart />
       <CategoryPageBtn />

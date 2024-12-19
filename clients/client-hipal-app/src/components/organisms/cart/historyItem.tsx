@@ -28,7 +28,7 @@ const MemoHistoryCartItems = () => {
 
   return (
     <>
-      <section className="w-full py-1 text-xs text-center bg-primary text-base-100">
+      <section className="w-full py-1 text-xs text-center bg-[#000000] text-[#ffffff]">
         Once Order get accepted the history will get delete.
       </section>
       {cartHistory && cartHistory.length > 0 ? (
@@ -43,7 +43,7 @@ const MemoHistoryCartItems = () => {
           >
             <motion.div
               onClick={() => toggleAccordion(cart._id)}
-              className="flex justify-between p-4 cursor-pointer text-base-content bg-base-200"
+              className="flex justify-between p-4 cursor-pointer text-base-content bg-[#ffffff]"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -89,7 +89,7 @@ const MemoHistoryCartItems = () => {
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="overflow-hidden bg-base-100"
+                  className="overflow-hidden bg-[#ffffff]"
                 >
                   <div className="pb-2">
                     {cart?.cart?.map((item) => (
@@ -98,15 +98,15 @@ const MemoHistoryCartItems = () => {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
-                        className="px-4 py-2 bg-base-100"
+                        className="px-4 py-2 bg-[#ffffff]"
                       >
                         <div className="flex items-start justify-between">
                           <h4 className="flex items-start flex-1 text-sm font-semibold opacity-80 text-base-content">
-                            <MdRestaurantMenu className="mr-2 text-primary" />
+                            <MdRestaurantMenu className="mr-2 text-[#000000]" />
                             {item?.dish?.name}
                           </h4>
                           <div className="text-right flex-2">
-                            <p className="text-sm font-semibold text-primary">
+                            <p className="text-sm font-semibold text-[#000000]">
                               Qty: {item?.quantity}
                             </p>
                           </div>

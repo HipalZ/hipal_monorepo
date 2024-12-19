@@ -139,7 +139,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
   return (
     <>
       {totalQuantity > 0 ? (
-        <div className="relative z-10 flex items-center -mr-2 p-2 space-x-4 text-sm border rounded-full bg-base-100 w-full min-w-[6.044rem] text-[0.969rem] border-primary text-primary">
+        <div className="relative z-10 flex items-center -mr-2 p-2 space-x-4 text-sm border rounded-full bg-[#ffffff] w-full min-w-[6.044rem] text-[0.969rem] border-[#000000] text-[#000000]">
           <button type="button" onClick={handleDecreaseQuantity}>
             <HiMinusSm size={16} />
           </button>
@@ -154,7 +154,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
         <button
           onClick={() => handleClick(dishData)}
           type="button"
-          className="relative z-10 bg-base-100 btn-sm text-primary active:bg-base-100 border border-primary min-w-[6.044rem] min-h-[2.241rem] !px-6 rounded-full font-medium text-[0.969rem] normal-case"
+          className="relative z-10 bg-[#ffffff] btn-sm text-[#000000] active:bg-[#ffffff] border border-[#000000] min-w-[6.044rem] min-h-[2.241rem] !px-6 rounded-full font-medium text-[0.969rem] normal-case"
         >
           Add
         </button>
@@ -167,8 +167,8 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
           heading="select Variants"
         >
           {cartPopup === "BOTTOM_PANEL" && (
-            <div className="relative flex flex-col pb-12 mt-4 overflow-auto h-[85dvh]">
-              <div className="flex flex-col space-y-4 divide-y-2 divide-base-100 text-base-content">
+            <div className="relative flex flex-col pb-12 mt-4 overflow-auto">
+              <div className="flex flex-col space-y-4 divide-y-2 divide-[#ffffff] text-base-content">
                 <MemoChoosePortions dishData={selectedDish} />
                 <ExtraWithDishWithSelect dishData={selectedDish} />
                 {displayAlert && <MemoAlertVariant />}

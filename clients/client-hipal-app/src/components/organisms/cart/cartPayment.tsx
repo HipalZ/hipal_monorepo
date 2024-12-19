@@ -147,8 +147,8 @@ const MemoCartPayment = () => {
 
   if (isError && error?.status === 400 && totalAttempts < 1) {
     return (
-      <section className="bg-base-100">
-        <h2 className="my-4 text-2xl font-bold text-center text-primary">
+      <section className="bg-[#ffffff]">
+        <h2 className="my-4 text-2xl font-bold text-center text-[#000000]">
           Bill Details
         </h2>
         <div className="px-4 space-y-4">{/* No data, so no BillItem */}</div>
@@ -169,8 +169,8 @@ const MemoCartPayment = () => {
 
   if (billData) {
     return (
-      <section className="bg-base-100">
-        <h2 className="my-4 text-2xl font-bold text-center text-primary">
+      <section className="bg-[#ffffff]">
+        <h2 className="my-4 text-2xl font-bold text-center text-[#000000]">
           Bill Details
         </h2>
         {isLoading || loading ? (
@@ -257,10 +257,10 @@ const MemoCartPayment = () => {
 const BillItem = ({ icon, label, value, className = "" }) => (
   <div className={`flex items-center justify-between ${className}`}>
     <div className="flex items-center">
-      <h3 className="mr-2 text-primary">{icon}</h3>
-      <h3 className="text-primary">{label}</h3>
+      <h3 className="mr-2 text-[#000000]">{icon}</h3>
+      <h3 className="text-[#000000]">{label}</h3>
     </div>
-    <h3 className="text-primary">{value}</h3>
+    <h3 className="text-[#000000]">{value}</h3>
   </div>
 );
 

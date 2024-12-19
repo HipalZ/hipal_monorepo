@@ -91,7 +91,7 @@ const MemoOrders = () => {
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="overflow-hidden bg-base-100"
+                  className="overflow-hidden bg-[#ffffff]"
                 >
                   <div className="pb-2">
                     {cart?.cart?.map((item) => (
@@ -100,15 +100,15 @@ const MemoOrders = () => {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}
-                        className="px-4 py-2 bg-base-100"
+                        className="px-4 py-2 bg-[#ffffff]"
                       >
                         <div className="flex items-start justify-between">
                           <h4 className="flex items-start flex-1 text-sm font-semibold opacity-80 text-base-content">
-                            <MdRestaurantMenu className="mr-2 text-primary" />
+                            <MdRestaurantMenu className="mr-2 text-[#000000]" />
                             {item?.dish?.name}
                           </h4>
                           <div className="text-right flex-2">
-                            <p className="text-sm font-semibold text-primary">
+                            <p className="text-sm font-semibold text-[#000000]">
                               Qty: {item?.quantity}
                             </p>
                           </div>

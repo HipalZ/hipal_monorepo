@@ -76,12 +76,12 @@ const CartItem = ({ cartItem, hide }: CartItemProp) => {
           {cartItem?.dish?.name}
         </h5>
         {cartItem?.portion && (
-          <span className="text-xs text-primary opacity-80">
+          <span className="text-xs text-[#000000] opacity-80">
             Portion: {cartItem?.portion?.name}
           </span>
         )}
         {cartItem?.extras?.length > 0 && (
-          <span className="text-xs text-primary opacity-80 ">
+          <span className="text-xs text-[#000000] opacity-80 ">
             Extras: {cartItem?.extras?.map((extra) => extra.name).join(", ")}
           </span>
         )}
@@ -91,7 +91,7 @@ const CartItem = ({ cartItem, hide }: CartItemProp) => {
             outletInfo?.outLetType !== "OTHER" ? "-ml-1" : "-ml-3",
           )}
         >
-          <span className="block text-sm font-medium text-primary">
+          <span className="block text-sm font-medium text-[#000000]">
             ₹{calculateTotalPrice().toFixed(2)}
           </span>
         </div>
@@ -110,7 +110,7 @@ const CartItem = ({ cartItem, hide }: CartItemProp) => {
         )}
         {!hide && (
           <div className="absolute transform -translate-x-1/2 translate-y-[50%] left-1/2 top-[70%] text-xs">
-            <div className="flex items-center justify-between border bg-base-100 text-primary rounded-xl border-primary">
+            <div className="flex items-center justify-between border bg-[#ffffff] text-[#000000] rounded-xl border-[#000000]">
               <button
                 type="button"
                 onClick={decreaseQuantity}

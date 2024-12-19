@@ -88,7 +88,7 @@ const MemoShareCartButtons = () => {
       <button
         onClick={generateCartLink}
         type="button"
-        className="fixed w-[92%] mx-4 py-3 rounded-full bg-primary bottom-4 text-base-100 flex items-center justify-center"
+        className="fixed w-[92%] mx-4 py-3 rounded-full bg-[#000000] bottom-4 text-[#ffffff] flex items-center justify-center"
       >
         <FiShare className="mr-2 text-xl" />
         Share
@@ -99,7 +99,7 @@ const MemoShareCartButtons = () => {
           onClose={() => setShareState({ ...shareState, showOptions: false })}
         >
           <div className="p-4">
-            <div className="mb-4 text-xl font-semibold text-center text-primary">
+            <div className="mb-4 text-xl font-semibold text-center text-[#000000]">
               Share
             </div>
             <div className="flex justify-around">
@@ -108,8 +108,8 @@ const MemoShareCartButtons = () => {
                 onClick={() => shareCart("friends")}
                 className="flex flex-col items-center space-y-2"
               >
-                <FiUsers className="text-4xl text-primary" />
-                <span className="text-sm font-medium text-primary">
+                <FiUsers className="text-4xl text-[#000000]" />
+                <span className="text-sm font-medium text-[#000000]">
                   Share with Friends
                 </span>
               </button>
@@ -118,8 +118,8 @@ const MemoShareCartButtons = () => {
                 onClick={() => shareCart("business")}
                 className="flex flex-col items-center space-y-2"
               >
-                <FiBriefcase className="text-4xl text-primary" />
-                <span className="text-sm font-medium text-primary">
+                <FiBriefcase className="text-4xl text-[#000000]" />
+                <span className="text-sm font-medium text-[#000000]">
                   Share with Business
                 </span>
               </button>

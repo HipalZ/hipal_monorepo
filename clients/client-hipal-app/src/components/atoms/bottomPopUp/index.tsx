@@ -82,7 +82,7 @@ const MemoBottomPopUp = ({
             className={cn(
               "relative w-full max-w-md shadow-md",
               !hide && "rounded-t-[1rem]",
-              linearGradTheme ? "background-gradient" : "bg-base-100",
+              linearGradTheme ? "background-gradient" : "bg-[#ffffff]",
             )}
             onClick={(e) => e.stopPropagation()}
           >

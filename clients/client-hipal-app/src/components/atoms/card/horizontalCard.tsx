@@ -69,21 +69,23 @@ const MemoHorizontalCard = ({
             {!dishData.availability && (
               <>
                 <span>
-                  <AiOutlineWarning className="ml-2 -mr-1 mt-[0.125rem] text-primary" />
+                  <AiOutlineWarning className="ml-2 -mr-1 mt-[0.125rem] text-[#000000]" />
                 </span>
-                <span className="ml-2 text-sm text-primary">Not available</span>
+                <span className="ml-2 text-sm text-[#000000]">
+                  Not available
+                </span>
               </>
             )}
           </div>
 
-          <div className="py-1 overflow-hidden text-base font-semibold leading-5 capitalize text-primary">
+          <div className="py-1 overflow-hidden text-base font-semibold leading-5 capitalize text-[#000000]">
             {dishData?.name || ""}
           </div>
 
           <button
             type="button"
             onClick={() => openModal(dishData)}
-            className="flex items-center gap-4 mt-2 space-x-1 text-primary"
+            className="flex items-center gap-4 mt-2 space-x-1 text-[#000000]"
           >
             <div className="underline !underline-offset-4 on_active_bounce !text-sm">
               Know more
@@ -144,7 +146,7 @@ const MemoHorizontalCard = ({
                   }`}
                 >
                   <DishQuantityButton dishData={dishData} />
-                  <span className="text-sm opacity-50 text-base-content">
+                  <span className="text-sm opacity-50 text-[#000000]">
                     {(dishData?.addOnIds?.length ||
                       dishData?.portions?.length) > 0
                       ? "customizable"
@@ -162,6 +164,7 @@ const MemoHorizontalCard = ({
                   {
                     text: "Go to cart",
                     onClick: () => setShowCart(!showCart),
+                    highlight: true,
                   },
                 ]}
               />

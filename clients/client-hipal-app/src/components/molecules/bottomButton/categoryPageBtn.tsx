@@ -16,13 +16,15 @@ import { MdReceiptLong } from "react-icons/md";
 import { BsHandIndexThumb } from "react-icons/bs";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
+import MemoCart from "@/components/organisms/cart";
 
 const MemoCategoryPageBtn = () => {
   const accessToken = useUserToken.getState().accessToken;
   const { businessId } = useBusinessDetails((s) => ({
     businessId: s.businessDetails?._id,
   }));
-  const { isSearchActive } = useSearch();
+  const { isSearchActive, setIsSearchActive, showHeader, setShowHeader } =
+    useSearch();
   const customLink = useParams()?.businessId as string;
   const tableName = useTableData((s) => s.tableName);
   const setDirection = useLogin((s) => s.setDirection);
@@ -55,7 +57,6 @@ const MemoCategoryPageBtn = () => {
   }, [setDirection, accessToken, customLink, showCart]);
 
   const triggerCallWaiter = useCallback(() => {
-    console.log("triggerCallWaiter");
     setDirection("category");
     if (!tableName) {
       return router.push(`/${customLink}/scan`);
@@ -73,6 +74,10 @@ const MemoCategoryPageBtn = () => {
     tableName,
     openCallWaiterModal,
   ]);
+  const openSearchModal = useCallback(() => {
+    setIsSearchActive(true);
+    setShowHeader(true);
+  }, [showHeader, isSearchActive]);
 
   return (
     <>
@@ -91,7 +96,7 @@ const MemoCategoryPageBtn = () => {
           </Link>
           <button
             type="button"
-            onClick={triggerCallWaiter}
+            onClick={openSearchModal}
             className="border border-[#B0B0B0] p-2 rounded-md"
           >
             <FiSearch size={24} />
@@ -129,6 +134,11 @@ const MemoCategoryPageBtn = () => {
         >
           <CallTheWaiterComponent onClose={closeCallWaiterModal} />
         </ItemDescriptionPopup>
+      )}
+      {showCart && (
+        <BottomPopUp show={showCart} onClose={() => setShowCart(false)} hide>
+          <MemoCart />
+        </BottomPopUp>
       )}
     </>
   );

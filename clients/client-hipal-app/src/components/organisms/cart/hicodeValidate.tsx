@@ -92,7 +92,7 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
             <span className="text-lg font-semibold">{tableName}</span> is
             already occupied !
           </p>
-          <div className="flex items-center gap-4 pl-2 mt-4 text-left text-primary">
+          <div className="flex items-center gap-4 pl-2 mt-4 text-left text-[#000000]">
             <article className="bg-[#6A35FF30] p-2 rounded-xl">
               <MdPerson size={28} className=" text-[#6A35FF]" />
             </article>
@@ -121,7 +121,7 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
           required
           maxLength={4}
           placeholder="Enter Code"
-          className={`w-1/2 px-4 py-2 space-grotesk-700 bg-base-100 text-center text-primary border border-primary rounded-md focus:outline-none transition-all duration-300 ${
+          className={`w-1/2 px-4 py-2 space-grotesk-700 bg-[#ffffff] text-center text-[#000000] border border-[#000000] rounded-md focus:outline-none transition-all duration-300 ${
             error ? "border-red-500" : "border-gray-300"
           }`}
         />
