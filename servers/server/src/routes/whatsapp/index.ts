@@ -1284,15 +1284,6 @@ const whatsappRouter = new Hono()
           },
         );
 
-        return c.json(
-          {
-            message: "fetching  template",
-            err: false,
-            data: getWhatAppTemplate.data,
-          },
-          200,
-        );
-
         const templateids = [];
 
         for (const dataPoint of getWhatAppTemplate.data.data[0].data_points) {
