@@ -315,7 +315,7 @@ const dishesRouter = new Hono()
     },
   )
   .post(
-    "/uniquelyYours",
+    "/uniquelyYours/:businessId",
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator(
@@ -324,10 +324,19 @@ const dishesRouter = new Hono()
         dishArray: z.array(uniquelyYoursSchema),
       }),
     ),
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string().min(1).max(24),
+      }),
+    ),
 
     async (c) => {
       const { dishArray } = await c.req.json();
-      const businessId = dishArray[0]?.businessId;
+      const { businessId } = c.req.param();
+
+      console.log("businessId", businessId);
+
       const removeOldDishes = await UniquelyYours.updateMany(
         { businessId },
         { isDeleted: true },
