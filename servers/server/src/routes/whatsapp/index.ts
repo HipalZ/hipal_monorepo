@@ -42,7 +42,6 @@ import {
   razorpayWrapper,
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
-import { whatsAppConfig } from "../../utils/whatAppTemplate";
 interface AxiosError {
   response?: {
     status?: number;
@@ -211,6 +210,21 @@ const whatsappRouter = new Hono()
       try {
         const { businessId } = c.req.param();
 
+        const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
+          businessId,
+        });
+
+        if (!whatsAppConfigData) {
+          return c.json(
+            {
+              message: "whatsAppConfigData not found",
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
+
         const getWhatAppTemplate = await WhatAppTemplate.find({
           businessId,
           isDeleted: false,
@@ -226,10 +240,10 @@ const whatsappRouter = new Hono()
 
         for (const templateId of templateIds) {
           const getWhatAppTemplate = await axios.get(
-            `https://graph.facebook.com/${whatsAppConfig.version}/${templateId}`,
+            `https://graph.facebook.com/${whatsAppConfigData.version}/${templateId}`,
             {
               headers: {
-                Authorization: `Bearer ${whatsAppConfig.token}`,
+                Authorization: `Bearer ${whatsAppConfigData.token}`,
               },
             },
           );
@@ -273,6 +287,20 @@ const whatsappRouter = new Hono()
           footerVariableSequence,
           businessId,
         } = requestData;
+        const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
+          businessId,
+        });
+
+        if (!whatsAppConfigData) {
+          return c.json(
+            {
+              message: "whatsAppConfigData not found",
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
 
         const templateNameAlreadyExist = await WhatAppTemplate.findOne({
           templateName: requestData.name,
@@ -290,11 +318,11 @@ const whatsappRouter = new Hono()
         }
 
         const { status, data } = await axios.post(
-          `https://graph.facebook.com/v21.0/${whatsAppConfig.whatAppAccountId}/message_templates`,
+          `https://graph.facebook.com/v21.0/${whatsAppConfigData.whatsAppAccountId}/message_templates`,
           requestData,
           {
             headers: {
-              Authorization: `Bearer ${whatsAppConfig.token}`,
+              Authorization: `Bearer ${whatsAppConfigData.token}`,
             },
           },
         );
@@ -366,19 +394,40 @@ const whatsappRouter = new Hono()
   )
 
   .get(
-    "/template/:templateid",
+    "/template/:templateid/:businessId",
 
-    zValidator("param", z.object({ templateid: z.string() })),
+    zValidator(
+      "param",
+      z.object({
+        templateid: z.string(),
+        businessId: z.string().min(3).max(26),
+      }),
+    ),
 
     async (c) => {
-      const { templateid } = c.req.param();
+      const { templateid, businessId } = c.req.param();
+
+      const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
+        businessId,
+      });
+
+      if (!whatsAppConfigData) {
+        return c.json(
+          {
+            message: "whatsAppConfigData not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
 
       try {
         const getWhatAppTemplate = await axios.get(
-          `https://graph.facebook.com/${whatsAppConfig.version}/${templateid}`,
+          `https://graph.facebook.com/${whatsAppConfigData.version}/${templateid}`,
           {
             headers: {
-              Authorization: `Bearer ${whatsAppConfig.token}`,
+              Authorization: `Bearer ${whatsAppConfigData.token}`,
             },
           },
         );
@@ -408,25 +457,46 @@ const whatsappRouter = new Hono()
     },
   )
   .put(
-    "/template/:templateid",
+    "/template/:templateid/:businessId",
 
-    zValidator("param", z.object({ templateid: z.string() })),
+    zValidator(
+      "param",
+      z.object({
+        templateid: z.string().min(3).max(30),
+        businessId: z.string().min(3).max(26),
+      }),
+    ),
     zValidator("json", validateWhatAppTemplateSchema.partial()),
 
     async (c) => {
-      const { templateid } = c.req.param();
+      const { templateid, businessId } = c.req.param();
+
+      const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
+        businessId,
+      });
+
+      if (!whatsAppConfigData) {
+        return c.json(
+          {
+            message: "whatsAppConfigData not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
 
       const requestData = await c.req.json();
 
       try {
         const updateWhatAppTemplate = await axios.post(
-          `https://graph.facebook.com/${whatsAppConfig.version}/${templateid}`,
+          `https://graph.facebook.com/${whatsAppConfigData.version}/${templateid}`,
           {
             ...requestData,
           },
           {
             headers: {
-              Authorization: `Bearer ${whatsAppConfig.token}`,
+              Authorization: `Bearer ${whatsAppConfigData.token}`,
             },
           },
         );
@@ -456,22 +526,41 @@ const whatsappRouter = new Hono()
     },
   )
   .delete(
-    "/template/:template_name/:templateid",
+    "/template/:template_name/:templateid/:businessId",
 
     zValidator(
       "param",
-      z.object({ template_name: z.string(), templateid: z.string() }),
+      z.object({
+        template_name: z.string(),
+        templateid: z.string(),
+        businessId: z.string().min(3).max(26),
+      }),
     ),
 
     async (c) => {
       try {
-        const { template_name, templateid } = c.req.param();
+        const { template_name, templateid, businessId } = c.req.param();
+
+        const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
+          businessId,
+        });
+
+        if (!whatsAppConfigData) {
+          return c.json(
+            {
+              message: "whatsAppConfigData not found",
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
 
         await axios.delete(
-          `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.whatAppAccountId}/message_templates?name=${template_name}`,
+          `https://graph.facebook.com/${whatsAppConfigData.version}/${whatsAppConfigData.whatsAppAccountId}/message_templates?name=${template_name}`,
           {
             headers: {
-              Authorization: `Bearer ${whatsAppConfig.token}`,
+              Authorization: `Bearer ${whatsAppConfigData.token}`,
             },
           },
         );
@@ -539,6 +628,21 @@ const whatsappRouter = new Hono()
           address,
         } = requestData;
 
+        const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
+          businessId,
+        });
+
+        if (!whatsAppConfigData) {
+          return c.json(
+            {
+              message: "whatsAppConfigData not found",
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
+
         const reminderDateObj = new Date(sendLaterTime);
         const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
           reminderDateObj.getMonth() + 1
@@ -587,57 +691,6 @@ const whatsappRouter = new Hono()
             })
             .limit(200)
             .sort({ _id: -1 });
-
-          // const allCustomersList = [
-          //   {
-          //     _id: "66b5e75e9bc1f065777a46cd",
-          //     userId: {
-          //       _id: "665ee8aab437be96f17c6f64",
-          //       name: "Datta",
-          //       phone: "9588413799",
-          //     },
-          //   },
-          //   {
-          //     _id: "66b5e75e9bc1f065777a46d0",
-          //     userId: {
-          //       _id: "665ee910b437be96f17c6f68",
-          //       name: "vamsi",
-          //       phone: "7702605494",
-          //     },
-          //   },
-          //   {
-          //     _id: "66b5e75e9bc1f065777a46d3",
-          //     userId: {
-          //       _id: "666007fb241426acafd47fb0",
-          //       name: "Sankalesh",
-          //       phone: "8668229890",
-          //     },
-          //   },
-          //   {
-          //     _id: "66b5e75e9bc1f065777a46d6",
-          //     userId: {
-          //       _id: "667670781570550c31c59526",
-          //       name: "Abhishek",
-          //       phone: "9160787050",
-          //     },
-          //   },
-          //   {
-          //     _id: "66b5e75e9bc1f065777a46d9",
-          //     userId: {
-          //       _id: "6690e44b80e8eae20f9ac7be",
-          //       name: "Rishabh",
-          //       phone: "9177914130",
-          //     },
-          //   },
-          //   {
-          //     _id: "66b5e75e9bc1f065777a46d9",
-          //     userId: {
-          //       _id: "6690e44b80e8eae20f9ac7be",
-          //       name: "Ravi",
-          //       phone: "7731843582",
-          //     },
-          //   },
-          // ];
 
           const customersArray = [] as {
             name: string;
@@ -692,7 +745,7 @@ const whatsappRouter = new Hono()
                 address,
                 bodyVariableSequence,
                 imageUrl,
-                whatsAppConfig,
+                whatsAppConfigData,
               );
 
               return c.json({
@@ -720,7 +773,7 @@ const whatsappRouter = new Hono()
             address,
             bodyVariableSequence,
             imageUrl,
-            whatsAppConfig,
+            whatsAppConfigData,
           );
 
           await WhatsAppWallet.findOneAndUpdate(
@@ -743,24 +796,6 @@ const whatsappRouter = new Hono()
 
         if (bulkCustomers.length > 0) {
           const newUserCount = 0;
-          // const bulkCustomersList = [
-          //   {
-          //     name: "YEYE",
-          //     phone: "9588413799",
-          //   },
-          //   {
-          //     name: "sankalesh",
-          //     phone: "8668229890",
-          //   },
-          //   {
-          //     name: "vamsi",
-          //     phone: "7702605494",
-          //   },
-          //   {
-          //     name: "abhishek",
-          //     phone: "9160787050",
-          //   },
-          // ];
 
           let reduceAmount = 0;
 
@@ -826,7 +861,7 @@ const whatsappRouter = new Hono()
                 address,
                 bodyVariableSequence,
                 imageUrl,
-                whatsAppConfig,
+                whatsAppConfigData,
               );
 
               return c.json({
@@ -854,7 +889,7 @@ const whatsappRouter = new Hono()
             address,
             bodyVariableSequence,
             imageUrl,
-            whatsAppConfig,
+            whatsAppConfigData,
           );
 
           await WhatsAppWallet.findOneAndUpdate(
@@ -951,7 +986,7 @@ const whatsappRouter = new Hono()
                 address,
                 bodyVariableSequence,
                 imageUrl,
-                whatsAppConfig,
+                whatsAppConfigData,
               );
 
               return c.json({
@@ -979,7 +1014,7 @@ const whatsappRouter = new Hono()
             address,
             bodyVariableSequence,
             imageUrl,
-            whatsAppConfig,
+            whatsAppConfigData,
           );
 
           await WhatsAppWallet.findOneAndUpdate(
@@ -1049,6 +1084,22 @@ const whatsappRouter = new Hono()
     async (c) => {
       try {
         const { businessId } = c.req.param();
+
+        const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
+          businessId,
+        });
+
+        if (!whatsAppConfigData) {
+          return c.json(
+            {
+              message: "whatsAppConfigData not found",
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
+
         const currentTimestamp = Math.floor(Date.now() / 1000); // Current timestamp in seconds
         const thirtyDaysAgoTimestamp = currentTimestamp - 20 * 24 * 60 * 60;
 
@@ -1062,10 +1113,10 @@ const whatsappRouter = new Hono()
           ?.slice(0, 10);
 
         const getWhatAppTemplate = await axios.get(
-          `https://graph.facebook.com/v21.0/${whatsAppConfig.whatAppAccountId}/template_analytics?start=${thirtyDaysAgoTimestamp}&end=${currentTimestamp}&granularity=daily&metric_types=clicked,delivered,read,sent,cost&template_ids=${allTemplates}&limit=1000`,
+          `https://graph.facebook.com/v21.0/${whatsAppConfigData.whatsAppAccountId}/template_analytics?start=${thirtyDaysAgoTimestamp}&end=${currentTimestamp}&granularity=daily&metric_types=clicked,delivered,read,sent,cost&template_ids=${allTemplates}&limit=1000`,
           {
             headers: {
-              Authorization: `Bearer ${whatsAppConfig.token}`,
+              Authorization: `Bearer ${whatsAppConfigData.token}`,
             },
           },
         );
@@ -1196,6 +1247,21 @@ const whatsappRouter = new Hono()
     async (c) => {
       try {
         const { templateId, businessId } = c.req.query();
+        const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
+          businessId,
+        });
+
+        if (!whatsAppConfigData) {
+          return c.json(
+            {
+              message: "whatsAppConfigData not found",
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
+
         const currentTimestamp = Math.floor(Date.now() / 1000); // Current timestamp in seconds
         const thirtyDaysAgoTimestamp = currentTimestamp - 20 * 24 * 60 * 60;
 
@@ -1207,15 +1273,24 @@ const whatsappRouter = new Hono()
 
         const getWhatAppTemplate = await axios.get(
           `https://graph.facebook.com/v21.0/${
-            whatsAppConfig.whatAppAccountId
+            whatsAppConfigData.whatsAppAccountId
           }/template_analytics?start=${thirtyDaysAgoTimestamp}&end=${currentTimestamp}&granularity=daily&metric_types=clicked,delivered,read,sent,cost&template_ids=${[
             templateById?.templateId,
           ]}&limit=1000`,
           {
             headers: {
-              Authorization: `Bearer ${whatsAppConfig.token}`,
+              Authorization: `Bearer ${whatsAppConfigData.token}`,
             },
           },
+        );
+
+        return c.json(
+          {
+            message: "fetching  template",
+            err: false,
+            data: getWhatAppTemplate.data,
+          },
+          200,
         );
 
         const templateids = [];
@@ -1747,168 +1822,176 @@ const whatsappRouter = new Hono()
     },
   )
 
-  .post("/wa-webhooks", async (c) => {
-    const body = await c.req.json();
+  .post(
+    "/wa-webhooks",
 
-    if (body.object) {
-      const entry = body.entry?.[0];
-      const changes = entry?.changes?.[0];
-      const value = changes?.value;
-      const messages = value?.messages?.[0];
-      const contacts = value?.contacts?.[0];
-      const statuses = value?.statuses;
+    async (c) => {
+      const body = await c.req.json();
 
-      const phon_no_id = value?.metadata?.phone_number_id;
-      const config = await WhatsAppBusinessConfig.findOne({
-        phoneId: phon_no_id,
-      }).select("businessId token ownerId");
-      if (statuses && statuses.length > 0) {
-        const firstStatus = statuses[0];
-        const extractedData = {
-          status: firstStatus.status,
-          category: firstStatus.pricing?.category,
-        };
+      if (body.object) {
+        const entry = body.entry?.[0];
+        const changes = entry?.changes?.[0];
+        const value = changes?.value;
+        const messages = value?.messages?.[0];
+        const contacts = value?.contacts?.[0];
+        const statuses = value?.statuses;
 
-        if (
-          extractedData?.status === "delivered" &&
-          extractedData?.category === "marketing"
-        ) {
-          // Fetch the current balance
-          const wallet = await WhatsAppWallet.findOne({
-            businessId: config?.businessId,
-          });
+        console.log("entry", entry);
+        console.log("changes", changes);
+        console.log("value", value);
+        console.log("messages", messages);
+        console.log("contacts", contacts);
+        console.log("statuses", statuses);
 
-          if (wallet && wallet.currentBalance >= 0.89) {
-            // Update the balance only if it won't go negative
-            await WhatsAppWallet.findOneAndUpdate(
-              { businessId: config?.businessId },
-              { $inc: { currentBalance: -0.89 } },
-            );
-          } else {
-            console.log("Insufficient balance to decrement");
-          }
-        }
-      }
-      if (messages) {
-        const from = messages?.from;
-        const userName = contacts?.profile?.name;
-        let userPhone = contacts?.wa_id;
-        let tableNumber = messages?.text?.body;
+        const phon_no_id = value?.metadata?.phone_number_id;
+        const config = await WhatsAppBusinessConfig.findOne({
+          phoneId: phon_no_id,
+        }).select("businessId token ownerId");
+        if (statuses && statuses.length > 0) {
+          const firstStatus = statuses[0];
+          const extractedData = {
+            status: firstStatus.status,
+            category: firstStatus.pricing?.category,
+          };
 
-        let longUrl = "";
+          console.log("extractedData", extractedData);
 
-        if (tableNumber) {
-          tableNumber = tableNumber.slice(-5);
-
-          const getlongUrl = (await getShortUrl(tableNumber)) as string;
-
-          if (getlongUrl) {
-            longUrl = getlongUrl;
-          } else {
-            const findLongUrl = await UrlModel.findOne({
-              urlCode: tableNumber,
-            }).select("longUrl");
-
-            longUrl = findLongUrl?.longUrl;
-          }
-        }
-
-        if (userPhone) {
-          userPhone = userPhone.toString().slice(2);
-        }
-
-        if (phon_no_id && from && longUrl) {
-          await axios({
-            method: "POST",
-            url: `https://graph.facebook.com/v21.0/${phon_no_id}/messages?access_token=${config?.token}`,
-            data: {
-              messaging_product: "whatsapp",
-              to: from,
-              text: {
-                body: `Explore our menu: ${longUrl}`,
-              },
-            },
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-        } else {
-          const user = await User.findOne({
-            phone: userPhone,
-          }).select("_id");
-
-          if (user && messages?.text?.body) {
-            await WhatsAppUser.create({
+          if (
+            extractedData?.status === "delivered" &&
+            extractedData?.category === "marketing"
+          ) {
+            // Fetch the current balance
+            const wallet = await WhatsAppWallet.findOne({
               businessId: config?.businessId,
-              date: Date.now(),
-              message: messages?.text?.body,
-              isOwner: false,
-              userId: user?._id,
-              ownerId: config?.ownerId,
             });
 
-            const unseenMessages = await WhatsAppUser.find({
-              businessId: config?.businessId,
-              userId: user?._id,
-              isOwner: false,
-              seen: false,
-            }).select("seen");
-
-            console.log("unseenMessages", unseenMessages);
-            console.log("user", user);
-
-            const data = await Subscriber.findOneAndUpdate(
-              {
-                userId: user?._id,
-                businessId: config?.businessId,
-              },
-              {
-                $set: {
-                  whatsappMsgUnseenCount: unseenMessages.length,
-                },
-              },
-              { new: true },
-            );
-
-            console.log("data", data);
+            if (wallet && wallet.currentBalance >= 0.89) {
+              // Update the balance only if it won't go negative
+              await WhatsAppWallet.findOneAndUpdate(
+                { businessId: config?.businessId },
+                { $inc: { currentBalance: -0.89 } },
+              );
+            } else {
+              console.log("Insufficient balance to decrement");
+            }
           }
         }
+        if (messages) {
+          const from = messages?.from;
+          const userName = contacts?.profile?.name;
+          let userPhone = contacts?.wa_id;
+          let tableNumber = messages?.text?.body;
 
-        if (userPhone.length === 10) {
-          await User.findOneAndUpdate(
-            {
+          let longUrl = "";
+
+          if (tableNumber) {
+            tableNumber = tableNumber.slice(-5);
+
+            const getlongUrl = (await getShortUrl(tableNumber)) as string;
+
+            if (getlongUrl) {
+              longUrl = getlongUrl;
+            } else {
+              const findLongUrl = await UrlModel.findOne({
+                urlCode: tableNumber,
+              }).select("longUrl");
+
+              longUrl = findLongUrl?.longUrl;
+            }
+          }
+
+          if (userPhone) {
+            userPhone = userPhone.toString().slice(2);
+          }
+
+          if (phon_no_id && from && longUrl) {
+            await axios({
+              method: "POST",
+              url: `https://graph.facebook.com/v21.0/${phon_no_id}/messages?access_token=${config?.token}`,
+              data: {
+                messaging_product: "whatsapp",
+                to: from,
+                text: {
+                  body: `Explore our menu: ${longUrl}`,
+                },
+              },
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+          } else {
+            const user = await User.findOne({
               phone: userPhone,
-            },
-            {
-              name: userName,
-              role: [
-                "HIPAL_CUSTOMER",
-                "OWNER",
-                "MANAGER",
-                "CAPTAIN",
-                "CO_OWNER",
-              ],
-            },
-            {
-              upsert: true,
-            },
-          );
+            }).select("_id");
+
+            if (user && messages?.text?.body) {
+              await WhatsAppUser.create({
+                businessId: config?.businessId,
+                date: Date.now(),
+                message: messages?.text?.body,
+                isOwner: false,
+                userId: user?._id,
+                ownerId: config?.ownerId,
+              });
+
+              const unseenMessages = await WhatsAppUser.find({
+                businessId: config?.businessId,
+                userId: user?._id,
+                isOwner: false,
+                seen: false,
+              }).select("seen");
+
+              const data = await Subscriber.findOneAndUpdate(
+                {
+                  userId: user?._id,
+                  businessId: config?.businessId,
+                },
+                {
+                  $set: {
+                    whatsappMsgUnseenCount: unseenMessages.length,
+                  },
+                },
+                { new: true },
+              );
+            }
+          }
+
+          if (userPhone.length === 10) {
+            await User.findOneAndUpdate(
+              {
+                phone: userPhone,
+              },
+              {
+                name: userName,
+                role: [
+                  "HIPAL_CUSTOMER",
+                  "OWNER",
+                  "MANAGER",
+                  "CAPTAIN",
+                  "CO_OWNER",
+                ],
+              },
+              {
+                upsert: true,
+              },
+            );
+          }
+
+          return c.json({
+            message: "Webhook verified",
+            err: false,
+            data: {},
+          });
         }
-
-        return c.json({
-          message: "Webhook verified",
-          err: false,
-          data: {},
-        });
       }
-    }
 
-    return c.json({
-      message: "Webhook not verified",
-      err: true,
-      data: {},
-    });
-  })
+      return c.json({
+        message: "Webhook not verified",
+        err: true,
+        data: {},
+      });
+    },
+  )
 
   .get(
     "/testing",
@@ -1935,7 +2018,7 @@ const whatsappRouter = new Hono()
 
       const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
         businessId,
-      });
+      }).select("appId token -_id");
 
       if (!whatsAppConfig) {
         return c.json({
@@ -1976,6 +2059,8 @@ const whatsappRouter = new Hono()
               version: requestData.version,
               whatsAppAccountId: requestData.whatsAppAccountId,
               whatsAppPhone: requestData.whatsAppPhone,
+              appId: requestData.appId,
+              configId: requestData.configId,
             },
           },
           {
@@ -2008,7 +2093,6 @@ const whatsappRouter = new Hono()
       const config = await WhatsAppBusinessConfig.findOne({
         businessId,
       }).select("token phoneId");
-      console.log(config);
       const response = await axios({
         method: "POST",
         url: `https://graph.facebook.com/v21.0/${config?.phoneId}/messages?access_token=${config?.token}`,
@@ -2023,8 +2107,6 @@ const whatsappRouter = new Hono()
           "Content-Type": "application/json",
         },
       });
-      console.log(response.data);
-      console.log("phone number", phoneNumber);
       const saveUserMessage = await WhatsAppUser.create({
         businessId,
         date: Date.now(),

@@ -56,7 +56,7 @@ const whatsAppBusinessConfigSchema =
       },
       ownerId: {
         type: ObjectId,
-        required: true,
+        required: false,
         ref: "User",
       },
     },
