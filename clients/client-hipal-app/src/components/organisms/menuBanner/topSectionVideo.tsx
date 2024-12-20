@@ -5,7 +5,7 @@ const MemoTopSectionVideo = () => {
   return (
     <div className="" style={{ width: "100%", overflow: "hidden" }}>
       <video
-        src="https://assets.hipalz.com/christmas.mp4"
+        src="https://assets.hipalz.com/Sequence%2002_1.mp4"
         autoPlay
         loop
         muted

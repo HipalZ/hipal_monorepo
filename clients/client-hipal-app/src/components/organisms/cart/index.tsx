@@ -293,7 +293,7 @@ const Cart = () => {
     outletInfo?.outLetType,
     cartPage,
     cart.length,
-    placeOrder,
+    payPopCorn,
     payBill,
     setCartPage,
     setShowCart,
@@ -302,12 +302,6 @@ const Cart = () => {
   return (
     <div className="h-[100dvh] overflow-y-auto pb-[5rem] text-[#000000] bg-[#ffffff] relative">
       <CartHeader />
-      {hiCode && (
-        <div className="flex items-center justify-center h-12 text-white bg-[#ffffff]">
-          <p>Code: {hiCode}</p>
-        </div>
-      )}
-
       {cartPage === "cart" &&
         (cart.length === 0 ? (
           <EmptyCart />

@@ -169,8 +169,8 @@ const MemoCartPayment = () => {
 
   if (billData) {
     return (
-      <section className="bg-[#ffffff]">
-        <h2 className="my-4 text-2xl font-bold text-center text-[#000000]">
+      <section className="bg-[#ffffff] h-[80dvh] relative">
+        <h2 className="mt-4 text-2xl font-bold text-center text-[#000000]">
           Bill Details
         </h2>
         {isLoading || loading ? (
@@ -232,7 +232,6 @@ const MemoCartPayment = () => {
           </>
         )}
         <CommonBottomButton
-          fixed
           buttons={[
             {
               text: "Continue",

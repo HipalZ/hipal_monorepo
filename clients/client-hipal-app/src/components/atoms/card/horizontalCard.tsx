@@ -15,6 +15,7 @@ import ItemDescriptionPopup from "../dishDescription/itemDescription";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import CommonBottomButton from "../bottomButton";
 import { useCart } from "@/components/store/useCart";
+import MemoReadMore from "../readMore";
 
 const MemoHorizontalCard = ({
   dishData,
@@ -81,14 +82,18 @@ const MemoHorizontalCard = ({
           <div className="py-1 overflow-hidden text-base font-semibold leading-5 capitalize text-[#000000]">
             {dishData?.name || ""}
           </div>
-
+          {dishData?.description && (
+            <div className="-ml-3 text-xs leading-3 scale-90">
+              <MemoReadMore text={dishData?.description || ""} />
+            </div>
+          )}
           <button
             type="button"
             onClick={() => openModal(dishData)}
             className="flex items-center gap-4 mt-2 space-x-1 text-[#000000]"
           >
             <div className="underline !underline-offset-4 on_active_bounce !text-sm">
-              Know more
+              Read more
             </div>
             {Number(price) > 1 && (
               <div className="text-sm font-semibold opacity-70">₹ {price}</div>
@@ -135,7 +140,7 @@ const MemoHorizontalCard = ({
           </div>
           {!noAddBtn && (
             <div
-              className={` flex flex-col items-center w-full mx-auto scale-75 ${
+              className={` flex flex-col items-center w-full mx-auto scale-[0.85] ${
                 (dishData?.images?.length > 0 || noDescription) && "-mt-4"
               }`}
             >

@@ -59,6 +59,7 @@ const CartItem = ({ cartItem, hide }: CartItemProp) => {
 
     return totalPriceForOne * cartItem.quantity;
   };
+
   return (
     <section className="flex items-center justify-between py-4 pl-6 border-b">
       <div className="flex flex-col w-[70%] space-y-1">
@@ -96,7 +97,10 @@ const CartItem = ({ cartItem, hide }: CartItemProp) => {
           </span>
         </div>
       </div>
-      <div className="relative flex items-center justify-between mb-2 -mt-2">
+
+      {/* Image and quantity controls container */}
+      <div className="flex flex-col items-center justify-between">
+        {/* Image container with reserved space */}
         {imageUrl ? (
           <ShimmerImage
             src={imageUrl}
@@ -105,28 +109,26 @@ const CartItem = ({ cartItem, hide }: CartItemProp) => {
             height={70}
             className="object-cover w-20 h-20 rounded-md"
           />
-        ) : (
-          <PlaceholderImg className="w-20 h-20 rounded-md" />
-        )}
+        ) : null}
+
+        {/* Quantity Controls */}
         {!hide && (
-          <div className="absolute transform -translate-x-1/2 translate-y-[50%] left-1/2 top-[70%] text-xs">
-            <div className="flex items-center justify-between border bg-[#ffffff] text-[#000000] rounded-xl border-[#000000]">
-              <button
-                type="button"
-                onClick={decreaseQuantity}
-                className="px-2 py-1"
-              >
-                -
-              </button>
-              <span className="mx-2">{cartItem.quantity}</span>
-              <button
-                type="button"
-                onClick={increaseQuantity}
-                className="px-2 py-1"
-              >
-                +
-              </button>
-            </div>
+          <div className="flex items-center justify-between h-[1.75rem] mt-2 text-black bg-white border border-black rounded-2xl">
+            <button
+              type="button"
+              onClick={decreaseQuantity}
+              className="px-2 py-1"
+            >
+              -
+            </button>
+            <span className="mx-2">{cartItem.quantity}</span>
+            <button
+              type="button"
+              onClick={increaseQuantity}
+              className="px-2 py-1"
+            >
+              +
+            </button>
           </div>
         )}
       </div>

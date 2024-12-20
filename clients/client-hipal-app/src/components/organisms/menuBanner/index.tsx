@@ -80,41 +80,41 @@ const MemoMenuBannerPage: FC<IDishesProps> = (props) => {
 
   return (
     <div ref={ref}>
-      <ul className=" lightrope">
+      {/* <ul className=" lightrope">
         {Array.from({ length: 40 }).map((_, index) => (
           <li key={index}></li>
         ))}
-      </ul>
+      </ul> */}
       {Object.keys(timings)?.length > 0 && timings?.dishIds?.length > 0 && (
-        <section className="relative flex items-center justify-center w-full bg-[#ffffff] overflow-hidden  -mt-4">
+        <section className="relative flex items-center justify-center w-full bg-[#ffffff] overflow-hidden">
           <section className="flex flex-col items-center justify-center w-full max-w-[30rem] pt-[1.5rem] overflow-hidden pb-[2rem] md:pb-[2rem] bg-[#ffffff] relative">
             <motion.h1
-              className="relative top-[2rem] z-20 text-[1.75rem] bungee-inline"
+              className="relative -top-[0.5rem] z-20 text-[1.75rem] bungee-inline"
               variants={headingVariants}
               initial="initial"
               animate="animate"
             >
               <p
                 style={{
-                  textShadow: "2px 2px 10px rgba(0, 0, 0, 0.9)",
+                  textShadow: "0 0 4px #ffffff",
                 }}
-                className="text-[#ffffff]"
+                className="text-[#CE2222]"
               >
                 {timings?.heading || "Specials"}
               </p>
             </motion.h1>
             <motion.div
               className="absolute -top-[5rem] w-[110%] h-[18rem] rounded-full"
-              variants={gradientVariants}
+              // variants={gradientVariants}
               initial="initial"
               animate="animate"
-              style={{
-                originY: 1,
-                background:
-                  "radial-gradient(311.78% 108.64% at 50% -8.64%, #455672 0%, #FFFFFF 100%)",
-              }}
+              // style={{
+              //   originY: 1,
+              //   background:
+              //     "radial-gradient(311.78% 108.64% at 50% -8.64%, #455672 0%, #FFFFFF 100%)",
+              // }}
             >
-              <motion.div
+              {/* <motion.div
                 className="w-full h-full rounded-full"
                 animate={{
                   background: [
@@ -123,9 +123,9 @@ const MemoMenuBannerPage: FC<IDishesProps> = (props) => {
                     "radial-gradient(311.78% 108.64% at 50% -8.64%, #455672 0%, #FFFFFF 100%)",
                   ],
                 }}
-              />
+              /> */}
             </motion.div>
-            <motion.div
+            {/* <motion.div
               className="absolute top-0 z-10 w-full h-[18rem]"
               style={{ y: imageY, opacity }}
             >
@@ -136,12 +136,11 @@ const MemoMenuBannerPage: FC<IDishesProps> = (props) => {
                 objectFit="cover"
                 className="pointer-events-none"
               />
-            </motion.div>
+            </motion.div> */}
             <motion.div
               variants={carouselVariants}
               initial="initial"
               animate="animate"
-              className="mt-[3rem]"
             >
               <EmblaCarouselPreview timings={timings} options={OPTIONS} />
             </motion.div>

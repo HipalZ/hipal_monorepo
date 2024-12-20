@@ -122,7 +122,7 @@ const MemoMainTypes = (props: IMainTypes) => {
             onClick={() => setIsModalOpen(true)}
             className={cn(
               "sticky flex items-center rounded-r-xl justify-between px-4 py-3 text-[#FFF] max-w-[30rem] z-50  left-0  bg-[#000000]",
-              cart.length > 0 ? "bottom-[8rem]" : "bottom-[5.25rem]",
+              cart.length > 0 ? "bottom-[8.5rem]" : "bottom-[5.25rem]",
             )}
           >
             <Image
@@ -174,7 +174,7 @@ const MemoMainTypes = (props: IMainTypes) => {
             onClick={() => setIsModalOpen(true)}
             className={cn(
               "sticky flex items-center rounded-r-xl justify-between px-4 py-3 text-[#FFF] max-w-[30rem] z-50  left-0  bg-[#000000]",
-              cart.length > 0 ? "bottom-[8rem]" : "bottom-[5.25rem]",
+              cart.length > 0 ? "bottom-[8.5rem]" : "bottom-[5.25rem]",
             )}
           >
             <Image

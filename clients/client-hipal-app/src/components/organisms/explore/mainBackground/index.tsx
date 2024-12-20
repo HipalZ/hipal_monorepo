@@ -9,11 +9,12 @@ import useTableData from "@/components/store/useTableData";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import Link from "next/link";
 import { useLogin } from "@/components/store/useLogin";
-import ShimmerImage from "@/components/atoms/imageshimmer";
 import Cat from "@/assets/login/cat.png";
 import Introduction from "./introduction";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import ShimmerImage from "@/components/atoms/imageshimmer";
+import Image from "next/image";
 
 const MainBackground = ({ data }: { data: IBusinessData }) => {
   const searchParams = useSearchParams();
@@ -79,7 +80,7 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
 
         {/* Login Button */}
         <div className="absolute z-30 rounded-full top-4 right-4">
-          {!accessToken ? (
+          {!accessToken && (
             <Link
               href={
                 customLink ? routePaths[PAGE_TYPES.SIGN_UP](customLink) : "#"
@@ -93,16 +94,15 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
                 Login/Sign up
               </button>
             </Link>
-          ) : (
-            <figure className="aspect-square bg-[#ffffff30] rounded-full bg-white">
-              <ShimmerImage
-                src={Cat.src}
-                alt="Avatar"
-                width={58}
-                height={58}
-                className="object-cover rounded-full aspect-square"
-              />
-            </figure>
+          )}
+          {accessToken && (
+            <Image
+              src={Cat}
+              alt="Avatar"
+              width={58}
+              height={58}
+              className="object-cover rounded-full aspect-square"
+            />
           )}
         </div>
       </article>

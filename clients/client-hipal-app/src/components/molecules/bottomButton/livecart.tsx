@@ -37,56 +37,53 @@ const MemoLiveCart = () => {
     setTableNameMissing,
   ]);
 
-  if (cart.length === 0) return null;
-
   return (
-    <section
-      className="fixed flex items-center justify-between overflow-hidden !text-sm
+    <>
+      {cart.length > 0 ? (
+        <section
+          className="fixed flex items-center justify-between overflow-hidden !text-sm
      px-4 py-3 w-full text-[#FFF] max-w-[30rem] z-50 transform
-      -translate-x-1/2 -translate-y-1/2 left-1/2 bottom-[3rem] bg-[#008800]"
-    >
-      <motion.div
-        className="absolute inset-0 pointer-events-none w-full max-w-[30rem]"
-        variants={shineVariants}
-        initial="initial"
-        animate="animate"
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          // repeatDelay: 1,
-          ease: "backInOut",
-        }}
-        style={{
-          background: "var(--shine-effect)",
-        }}
-      />
-      <button
-        onClick={openCart}
-        type="button"
-        className="flex items-center gap-2"
-      >
-        <PiShoppingCartDuotone size={24} />
-        <span className="flex items-center text-base font-semibold">
-          <BiPlus strokeWidth={1.5} />
-          {cart.length}
-        </span>
-        <span>Items</span>
-      </button>
-      <button
-        type="button"
-        onClick={openCart}
-        className="flex items-center gap-2"
-      >
-        <span>Proceed to order</span>
-        <FaArrowRightLong />
-      </button>
-
-      {showCart && tableName ? (
-        <BottomPopUp
-          bottomCross
-          show={showCart}
-          onClose={() => setShowCart(false)}
+      -translate-x-1/2 -translate-y-1/2 left-1/2 bottom-[3.5rem] bg-[#008800]"
         >
+          <motion.div
+            className="absolute inset-0 pointer-events-none w-full max-w-[30rem]"
+            variants={shineVariants}
+            initial="initial"
+            animate="animate"
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              // repeatDelay: 1,
+              ease: "backInOut",
+            }}
+            style={{
+              background: "var(--shine-effect)",
+            }}
+          />
+          <button
+            onClick={openCart}
+            type="button"
+            className="flex items-center gap-2"
+          >
+            <PiShoppingCartDuotone size={24} />
+            <span className="flex items-center text-base font-semibold">
+              <BiPlus strokeWidth={1.5} />
+              {cart.length}
+            </span>
+            <span>Items</span>
+          </button>
+          <button
+            type="button"
+            onClick={openCart}
+            className="flex items-center gap-2"
+          >
+            <span>Proceed to order</span>
+            <FaArrowRightLong />
+          </button>
+        </section>
+      ) : null}
+      {showCart && tableName ? (
+        <BottomPopUp show={showCart} onClose={() => setShowCart(false)} hide>
           <MemoCart />
         </BottomPopUp>
       ) : (
@@ -99,7 +96,7 @@ const MemoLiveCart = () => {
           <TableNameMissing />
         </ItemDescriptionPopup>
       )}
-    </section>
+    </>
   );
 };
 

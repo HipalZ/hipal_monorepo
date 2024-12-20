@@ -139,7 +139,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
   return (
     <>
       {totalQuantity > 0 ? (
-        <div className="relative z-10 flex items-center -mr-2 p-2 space-x-4 text-sm border rounded-full bg-[#ffffff] w-full min-w-[6.044rem] text-[0.969rem] border-[#000000] text-[#000000]">
+        <div className="relative z-10 flex items-center -mr-2 p-2 space-x-4 text-sm border rounded-xl bg-[#ffffff] w-full min-w-[6.044rem] text-[0.969rem] border-[#000000] text-[#000000]">
           <button type="button" onClick={handleDecreaseQuantity}>
             <HiMinusSm size={16} />
           </button>
@@ -154,7 +154,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
         <button
           onClick={() => handleClick(dishData)}
           type="button"
-          className="relative z-10 bg-[#ffffff] btn-sm text-[#000000] active:bg-[#ffffff] border border-[#000000] min-w-[6.044rem] min-h-[2.241rem] !px-6 rounded-full font-medium text-[0.969rem] normal-case"
+          className="relative z-10 bg-[#ffffff] btn-sm text-[#000000] active:bg-[#ffffff] border border-[#000000] min-w-[6.044rem] min-h-[2.241rem] !px-6 rounded-xl font-medium text-[0.969rem] normal-case"
         >
           Add
         </button>

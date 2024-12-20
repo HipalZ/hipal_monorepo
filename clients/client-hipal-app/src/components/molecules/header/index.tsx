@@ -50,7 +50,7 @@ function Header({ categories }: { categories: CategoryType[] }) {
           {hiCode && (
             <h5 className="flex items-center gap-2 text-xl font-semibold opacity-80">
               <Image src={Table} width={36} height={36} alt="Table" />
-              <span className="text-base">Table Code</span> {hiCode} 132345
+              <span className="text-base">Table Code</span> {hiCode}
             </h5>
           )}
         </h3>

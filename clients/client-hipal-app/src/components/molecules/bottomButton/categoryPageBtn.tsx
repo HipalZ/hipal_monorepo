@@ -16,7 +16,6 @@ import { MdReceiptLong } from "react-icons/md";
 import { BsHandIndexThumb } from "react-icons/bs";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
-import MemoCart from "@/components/organisms/cart";
 import { motion, AnimatePresence } from "framer-motion";
 
 const MemoCategoryPageBtn = () => {
@@ -49,12 +48,11 @@ const MemoCategoryPageBtn = () => {
   }, []);
 
   const proceedToPayment = useCallback(() => {
-    setDirection("category");
     if (!accessToken) {
       router.push(`/${customLink}/user/signup`);
     }
     setCartPage("order");
-    setShowCart(!showCart);
+    setShowCart(true);
   }, [setDirection, accessToken, customLink, showCart]);
 
   const triggerCallWaiter = useCallback(() => {
