@@ -3,6 +3,7 @@ import dynamics from "next/dynamic";
 import { defaultThemes } from "@/components/utils/helpers";
 import MainTypes from "@/components/molecules/categoryTypes/mainTypes";
 import MenuBannerPage from "@/components/organisms/menuBanner";
+import TopSectionVideo from "@/components/organisms/menuBanner/topSectionVideo";
 
 // export const dynamic = "force-dynamic";
 // export const fetchCache = "force-no-store";
@@ -82,10 +83,11 @@ export default async function Page({
   return (
     <main>
       <div className="relative flex flex-col w-full pb-14">
+        <TopSectionVideo />
         <MenuBannerPage timings={data?.timings} />
         {/* <TopBackground specialBanner={data?.business?.specialBannerUrl} /> */}
         <CategoryHeader childCategory={data?.childCategories || []} />
-        <div className="!mt-0 !scroll-smooth">
+        <div className="!mt-0 !scroll-smooth relative z-20">
           <DishesList
             parentCategory={data?.parentCategories || []}
             childCategory={data?.childCategories || []}
