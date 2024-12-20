@@ -8,6 +8,7 @@ import {
   User,
   WhatAppOrder,
   WhatAppTemplate,
+  WhatsAppAnalyticsUser,
   WhatsAppBusinessConfig,
   WhatsAppPayment,
   WhatsAppUser,
@@ -157,6 +158,7 @@ const scheduleCampaign = async (
     phoneId: string;
     token: string;
   },
+  businessId: string,
 ) => {
   for (const customer of customersArray) {
     const components = await returnBodyComponents(
@@ -197,6 +199,14 @@ const scheduleCampaign = async (
       };
     }
   }
+  await WhatsAppBusinessConfig.findOneAndUpdate(
+    {
+      businessId,
+    },
+    {
+      activeTemplateId: null,
+    },
+  );
 
   return true;
 };
@@ -329,6 +339,7 @@ const whatsappRouter = new Hono()
 
         if (status === 200) {
           if (data.status === "REJECTED") {
+            console.log("data", data);
             return c.json(
               {
                 message: "Your template has been rejected!",
@@ -628,9 +639,33 @@ const whatsappRouter = new Hono()
           address,
         } = requestData;
 
-        const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
+        const checkActiveCapaign = await WhatsAppBusinessConfig.findOne({
           businessId,
         });
+
+        if (checkActiveCapaign?.activeTemplateId) {
+          return c.json(
+            {
+              message: "CAPAIGN ALREADY ACTIVE",
+              err: true,
+              data: {},
+            },
+            403,
+          );
+        }
+
+        const whatsAppConfigData =
+          await WhatsAppBusinessConfig.findOneAndUpdate(
+            {
+              businessId,
+            },
+            {
+              activeTemplateId: templateId,
+            },
+            {
+              new: true,
+            },
+          );
 
         if (!whatsAppConfigData) {
           return c.json(
@@ -643,9 +678,24 @@ const whatsappRouter = new Hono()
           );
         }
 
-        const reminderDateObj = new Date(sendLaterTime);
-        const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
-          reminderDateObj.getMonth() + 1
+        let reminderDateObj;
+
+        if (sendLaterTime === 0) {
+          const currentDate = new Date();
+          const currentISTDate = new Date(
+            currentDate.getTime() + 330 * 60 * 1000,
+          ); // IST is UTC+5:30
+          currentISTDate.setMinutes(currentISTDate.getMinutes() + 2);
+          reminderDateObj = currentISTDate;
+        } else {
+          reminderDateObj = new Date(sendLaterTime);
+          reminderDateObj = new Date(
+            reminderDateObj.getTime() + 330 * 60 * 1000,
+          ); // Convert to IST
+        }
+
+        const cronExpression = `${reminderDateObj.getUTCMinutes()} ${reminderDateObj.getUTCHours()} ${reminderDateObj.getUTCDate()} ${
+          reminderDateObj.getUTCMonth() + 1
         } *`;
 
         const template = (await WhatAppTemplate.findOne({
@@ -736,45 +786,28 @@ const whatsappRouter = new Hono()
             reduceAmount = Math.round(totalCost);
           }
 
-          if (sendLaterTime) {
-            schedule(cronExpression, async () => {
-              const scheduleCampaignResponse = await scheduleCampaign(
-                customersArray,
-                template,
-                businessName,
-                address,
-                bodyVariableSequence,
-                imageUrl,
-                whatsAppConfigData,
-              );
+          schedule(cronExpression, async () => {
+            const scheduleCampaignResponse = await scheduleCampaign(
+              customersArray,
+              template,
+              businessName,
+              address,
+              bodyVariableSequence,
+              imageUrl,
+              whatsAppConfigData,
+              businessId,
+            );
+          });
 
-              return c.json({
-                message: "Campaign scheduled successfully",
-                err: false,
-                data: {
-                  success: true,
-                },
-              });
-            });
-
-            return c.json({
-              message: "Campaign scheduled successfully",
-              err: false,
-              data: {
-                success: true,
-              },
-            });
-          }
-
-          const scheduleCampaignResponse = await scheduleCampaign(
-            customersArray,
-            template,
-            businessName,
-            address,
-            bodyVariableSequence,
-            imageUrl,
-            whatsAppConfigData,
-          );
+          // const scheduleCampaignResponse = await scheduleCampaign(
+          //   customersArray,
+          //   template,
+          //   businessName,
+          //   address,
+          //   bodyVariableSequence,
+          //   imageUrl,
+          //   whatsAppConfigData,
+          // );
 
           await WhatsAppWallet.findOneAndUpdate(
             {
@@ -852,45 +885,31 @@ const whatsappRouter = new Hono()
             reduceAmount = Math.round(totalCost);
           }
 
-          if (sendLaterTime) {
-            schedule(cronExpression, async () => {
-              const scheduleCampaignResponse = await scheduleCampaign(
-                bulkCustomers,
-                template,
-                businessName,
-                address,
-                bodyVariableSequence,
-                imageUrl,
-                whatsAppConfigData,
-              );
+          console.log("cronExpression", cronExpression);
+          const output = schedule(cronExpression, async () => {
+            const scheduleCampaignResponse = await scheduleCampaign(
+              bulkCustomers,
+              template,
+              businessName,
+              address,
+              bodyVariableSequence,
+              imageUrl,
+              whatsAppConfigData,
+              businessId,
+            );
 
-              return c.json({
-                message: "Campaign scheduled successfully",
-                err: false,
-                data: {
-                  success: true,
-                },
-              });
-            });
+            console.log("output", output);
+          });
 
-            return c.json({
-              message: "Campaign scheduled successfully",
-              err: false,
-              data: {
-                success: true,
-              },
-            });
-          }
-
-          const scheduleCampaignResponse = await scheduleCampaign(
-            bulkCustomers,
-            template,
-            businessName,
-            address,
-            bodyVariableSequence,
-            imageUrl,
-            whatsAppConfigData,
-          );
+          // const scheduleCampaignResponse = await scheduleCampaign(
+          //   bulkCustomers,
+          //   template,
+          //   businessName,
+          //   address,
+          //   bodyVariableSequence,
+          //   imageUrl,
+          //   whatsAppConfigData,
+          // );
 
           await WhatsAppWallet.findOneAndUpdate(
             {
@@ -977,45 +996,28 @@ const whatsappRouter = new Hono()
             reduceAmount = Math.round(totalCost);
           }
 
-          if (sendLaterTime) {
-            schedule(cronExpression, async () => {
-              const scheduleCampaignResponse = await scheduleCampaign(
-                groupIdsList,
-                template,
-                businessName,
-                address,
-                bodyVariableSequence,
-                imageUrl,
-                whatsAppConfigData,
-              );
+          schedule(cronExpression, async () => {
+            const scheduleCampaignResponse = await scheduleCampaign(
+              groupIdsList,
+              template,
+              businessName,
+              address,
+              bodyVariableSequence,
+              imageUrl,
+              whatsAppConfigData,
+              businessId,
+            );
+          });
 
-              return c.json({
-                message: "Campaign scheduled successfully",
-                err: false,
-                data: {
-                  success: true,
-                },
-              });
-            });
-
-            return c.json({
-              message: "Campaign scheduled successfully",
-              err: false,
-              data: {
-                success: true,
-              },
-            });
-          }
-
-          const scheduleCampaignResponse = await scheduleCampaign(
-            groupIdsList,
-            template,
-            businessName,
-            address,
-            bodyVariableSequence,
-            imageUrl,
-            whatsAppConfigData,
-          );
+          // const scheduleCampaignResponse = await scheduleCampaign(
+          //   groupIdsList,
+          //   template,
+          //   businessName,
+          //   address,
+          //   bodyVariableSequence,
+          //   imageUrl,
+          //   whatsAppConfigData,
+          // );
 
           await WhatsAppWallet.findOneAndUpdate(
             {
@@ -1037,7 +1039,7 @@ const whatsappRouter = new Hono()
 
         return c.json(
           {
-            message: "Template created successfully",
+            message: "No customers found",
             err: false,
             data: {
               success: true,
@@ -1827,17 +1829,10 @@ const whatsappRouter = new Hono()
         const contacts = value?.contacts?.[0];
         const statuses = value?.statuses;
 
-        console.log("entry", entry);
-        console.log("changes", changes);
-        console.log("value", value);
-        console.log("messages", messages);
-        console.log("contacts", contacts);
-        console.log("statuses", statuses);
-
         const phon_no_id = value?.metadata?.phone_number_id;
         const config = await WhatsAppBusinessConfig.findOne({
           phoneId: phon_no_id,
-        }).select("businessId token ownerId");
+        }).select("businessId token ownerId activeTemplateId");
         if (statuses && statuses.length > 0) {
           const firstStatus = statuses[0];
           const extractedData = {
@@ -1846,6 +1841,19 @@ const whatsappRouter = new Hono()
           };
 
           console.log("extractedData", extractedData);
+          const userInfo = await User.findOne({
+            phone: firstStatus?.recipient_id.toString().slice(2),
+          });
+
+          console.log("user", userInfo);
+
+          await WhatsAppAnalyticsUser.create({
+            businessId: config?.businessId,
+            name: userInfo?.name,
+            phone: userInfo?.phone,
+            status: extractedData?.status,
+            templateId: config?.activeTemplateId,
+          });
 
           if (
             extractedData?.status === "delivered" &&
@@ -2258,6 +2266,71 @@ const whatsappRouter = new Hono()
         message: "waba found",
         err: false,
         data: waba,
+      });
+    },
+  )
+  .get(
+    "/wa_analytics_user/:businessId/:templateId",
+    zValidator(
+      "param",
+      z.object({ businessId: z.string(), templateId: z.string() }),
+    ),
+
+    async (c) => {
+      const { businessId, templateId } = c.req.param();
+
+      const waAnalyticsUser = await WhatsAppAnalyticsUser.find({
+        businessId,
+        templateId,
+      });
+      const out: {
+        sent: { name: string; phone: string }[];
+        read: { name: string; phone: string }[];
+        delivered: { name: string; phone: string }[];
+        clicked: { name: string; phone: string }[];
+        failed: { name: string; phone: string }[];
+        blocked: { name: string; phone: string }[];
+      } = {
+        sent: [],
+        read: [],
+        delivered: [],
+        clicked: [],
+        failed: [],
+        blocked: [],
+      };
+
+      for (const user of waAnalyticsUser) {
+        const userInfo = {
+          name: user.name,
+          phone: user.phone,
+        };
+
+        switch (user.status) {
+          case "sent":
+            out.sent.push(userInfo);
+            break;
+          case "read":
+            out.read.push(userInfo);
+            break;
+          case "delivered":
+            out.delivered.push(userInfo);
+            break;
+          case "clicked":
+            out.clicked.push(userInfo);
+            break;
+          case "failed":
+            out.failed.push(userInfo);
+            break;
+          case "blocked":
+            out.blocked.push(userInfo);
+            break;
+        }
+      }
+
+      return c.json({
+        message: "wa analytics user",
+        err: false,
+        data: out,
       });
     },
   );
