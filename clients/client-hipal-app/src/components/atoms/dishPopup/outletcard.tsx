@@ -18,6 +18,7 @@ import { useBottomPanel } from "@/components/store/useBottomPanel";
 import Head from "next/head";
 import BottomPopUp from "../bottomPopUp";
 import { useActiveClass } from "@/components/store/useActiveClass";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 function generateCartItemId(dishId, portionId, extras) {
   const sortedExtras = [...extras]
@@ -32,6 +33,7 @@ function generateCartItemId(dishId, portionId, extras) {
 function MemoOutletItemInfo() {
   const { isSelectedDish: dishData } = useActiveClass();
   const isAvailable = dishData?.availability;
+  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const customLink = useParams()?.businessId as string;
   const { showCart } = useCart();
   const handleInsideClick = (
@@ -59,10 +61,10 @@ function MemoOutletItemInfo() {
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent(
-      `Hi, I am interested in this item. Can I know more details?\n\n*Product Name:* ${dishData.name}\n*Dish ID:* ${dishData._id}\n*See the product:* ${BUSINESS_KEYID}${customLink}/${dishData._id}`,
+      `Hi, I am interested in this item. Can I know more details?\n\n*Product Name:* ${dishData?.name}\n*Dish ID:* ${dishData?._id}\n*See the product:* ${BUSINESS_KEYID}${customLink}/${dishData?._id}`,
     );
 
-    const whatsappUrl = `https://wa.me/9177914130?text=${message}`;
+    const whatsappUrl = `https://wa.me/${outletInfo?.phone}?text=${message}`;
 
     window.open(whatsappUrl, "_blank");
   };
@@ -98,18 +100,18 @@ function MemoOutletItemInfo() {
   return (
     <>
       <Head>
-        <meta property="og:title" content={dishData.name} />
-        <meta property="og:description" content={dishData.description} />
-        <meta property="og:image" content={dishData.images[0]} />
+        <meta property="og:title" content={dishData?.name} />
+        <meta property="og:description" content={dishData?.description} />
+        <meta property="og:image" content={dishData?.images?.[0]} />
         <meta property="og:image:type" content="image/jpeg" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta
           property="og:url"
-          content={`${BUSINESS_KEYID}/${customLink}/${dishData._id}`}
+          content={`${BUSINESS_KEYID}/${customLink}/${dishData?._id}`}
         />
         <meta property="og:type" content="website" />
-        <title>{dishData.name}</title>
+        <title>{dishData?.name}</title>
       </Head>
       <div
         className="relative max-h-[90dvh] overflow-auto text-primary hide-scrollbar"

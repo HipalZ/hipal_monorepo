@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
@@ -10,10 +10,12 @@ import CommonBottomButton from "@/components/atoms/bottomButton";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import MemoizedCartItem from "@/components/organisms/cart/cartItem";
 import CountdownTimer from "@/components/atoms/timer";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const CartPage = () => {
   const { businessId: customLink, cartId } = useParams();
   const router = useRouter();
+  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
 
   const fetchSettings = async () => {
     const response = await apiRpc.businesses.business_theme[":customLink"].$get(
@@ -102,7 +104,9 @@ const CartPage = () => {
               const message = encodeURIComponent(
                 `Hi, I am interested in this item. Can I know more details?\n*See the cart:* ${BUSINESS_KEYID}/${customLink}/cart/${cartId}`,
               );
-              const whatsappUrl = `https://wa.me/8668229890?text=${message}`;
+              const whatsappUrl = `https://wa.me/${
+                outletInfo?.phone || "8668229890"
+              }?text=${message}`;
               window.open(whatsappUrl, "_blank");
             },
           },

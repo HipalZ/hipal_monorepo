@@ -77,7 +77,7 @@ const MemoShareCartButtons = () => {
       const message = encodeURIComponent(
         `Hi, I am interested in this item. Can I know more details?\n*See the cart:* ${shareState.url}`,
       );
-      const whatsappUrl = `https://wa.me/8668229890?text=${message}`;
+      const whatsappUrl = `https://wa.me/${outletInfo?.phone}?text=${message}`;
       window.open(whatsappUrl, "_blank");
     }
 
