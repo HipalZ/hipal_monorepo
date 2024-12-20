@@ -14,6 +14,7 @@ const whatsAppAnalyticsUserSchema = z.object({
   templateId: z.string().min(1).max(200),
   businessId: ObjectIdSchema,
   status: z.string().min(1).max(100),
+  date: z.number().int(),
 });
 
 export type WhatsAppAnalyticsUserType = z.infer<

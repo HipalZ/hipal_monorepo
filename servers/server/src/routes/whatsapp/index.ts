@@ -43,6 +43,10 @@ import {
   razorpayWrapper,
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
+import {
+  getTemplateId,
+  setWhatsAppMessageConfig,
+} from "../../utils/whatsAppUserCache";
 interface AxiosError {
   response?: {
     status?: number;
@@ -159,6 +163,7 @@ const scheduleCampaign = async (
     token: string;
   },
   businessId: string,
+  templateId: string,
 ) => {
   for (const customer of customersArray) {
     const components = await returnBodyComponents(
@@ -188,6 +193,14 @@ const scheduleCampaign = async (
           },
         },
       );
+
+      console.log("res", res.data.messages?.[0].id);
+
+      const a = await setWhatsAppMessageConfig(
+        res.data.messages?.[0].id,
+        templateId,
+      );
+      console.log("a", a);
     } catch (error) {
       const axiosError = error as AxiosError;
       const message = axiosError.response?.data?.error?.message;
@@ -639,33 +652,9 @@ const whatsappRouter = new Hono()
           address,
         } = requestData;
 
-        const checkActiveCapaign = await WhatsAppBusinessConfig.findOne({
+        const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
           businessId,
         });
-
-        if (checkActiveCapaign?.activeTemplateId) {
-          return c.json(
-            {
-              message: "CAPAIGN ALREADY ACTIVE",
-              err: true,
-              data: {},
-            },
-            403,
-          );
-        }
-
-        const whatsAppConfigData =
-          await WhatsAppBusinessConfig.findOneAndUpdate(
-            {
-              businessId,
-            },
-            {
-              activeTemplateId: templateId,
-            },
-            {
-              new: true,
-            },
-          );
 
         if (!whatsAppConfigData) {
           return c.json(
@@ -685,7 +674,7 @@ const whatsappRouter = new Hono()
           const currentISTDate = new Date(
             currentDate.getTime() + 330 * 60 * 1000,
           ); // IST is UTC+5:30
-          currentISTDate.setMinutes(currentISTDate.getMinutes() + 2);
+          currentISTDate.setMinutes(currentISTDate.getMinutes() + 1);
           reminderDateObj = currentISTDate;
         } else {
           reminderDateObj = new Date(sendLaterTime);
@@ -796,6 +785,7 @@ const whatsappRouter = new Hono()
               imageUrl,
               whatsAppConfigData,
               businessId,
+              templateId,
             );
           });
 
@@ -896,9 +886,8 @@ const whatsappRouter = new Hono()
               imageUrl,
               whatsAppConfigData,
               businessId,
+              templateId,
             );
-
-            console.log("output", output);
           });
 
           // const scheduleCampaignResponse = await scheduleCampaign(
@@ -1006,6 +995,7 @@ const whatsappRouter = new Hono()
               imageUrl,
               whatsAppConfigData,
               businessId,
+              templateId,
             );
           });
 
@@ -1840,19 +1830,26 @@ const whatsappRouter = new Hono()
             category: firstStatus.pricing?.category,
           };
 
+          const wamid = firstStatus.id;
+          const userPhoneNumber = firstStatus?.recipient_id.toString().slice(2);
           console.log("extractedData", extractedData);
-          const userInfo = await User.findOne({
-            phone: firstStatus?.recipient_id.toString().slice(2),
-          });
+          console.log("wamid", wamid);
+          console.log("userPhoneNumber", userPhoneNumber);
 
-          console.log("user", userInfo);
+          const getTemplateIdInfo = await getTemplateId(wamid);
+          console.log("getTemplateIdInfo", getTemplateIdInfo);
+
+          const userInfo = await User.findOne({
+            phone: userPhoneNumber,
+          });
 
           await WhatsAppAnalyticsUser.create({
             businessId: config?.businessId,
             name: userInfo?.name,
             phone: userInfo?.phone,
             status: extractedData?.status,
-            templateId: config?.activeTemplateId,
+            templateId: getTemplateIdInfo,
+            date: Date.now(),
           });
 
           if (
@@ -2275,62 +2272,45 @@ const whatsappRouter = new Hono()
       "param",
       z.object({ businessId: z.string(), templateId: z.string() }),
     ),
+    zValidator(
+      "query",
+      z.object({
+        pageNumber: z.string().optional(),
+        status: z.string().optional(),
+      }),
+    ),
 
     async (c) => {
       const { businessId, templateId } = c.req.param();
+      const { pageNumber, status } = c.req.query();
+      const pageNumberInt = Number(pageNumber) || 1;
+      if (status) {
+        const waAnalyticsUser = await WhatsAppAnalyticsUser.find({
+          businessId,
+          templateId,
+          status: status,
+        })
+          .skip((pageNumberInt - 1) * 40)
+          .limit(40);
+
+        return c.json({
+          message: "wa analytics user",
+          err: false,
+          data: waAnalyticsUser,
+        });
+      }
 
       const waAnalyticsUser = await WhatsAppAnalyticsUser.find({
         businessId,
         templateId,
-      });
-      const out: {
-        sent: { name: string; phone: string }[];
-        read: { name: string; phone: string }[];
-        delivered: { name: string; phone: string }[];
-        clicked: { name: string; phone: string }[];
-        failed: { name: string; phone: string }[];
-        blocked: { name: string; phone: string }[];
-      } = {
-        sent: [],
-        read: [],
-        delivered: [],
-        clicked: [],
-        failed: [],
-        blocked: [],
-      };
-
-      for (const user of waAnalyticsUser) {
-        const userInfo = {
-          name: user.name,
-          phone: user.phone,
-        };
-
-        switch (user.status) {
-          case "sent":
-            out.sent.push(userInfo);
-            break;
-          case "read":
-            out.read.push(userInfo);
-            break;
-          case "delivered":
-            out.delivered.push(userInfo);
-            break;
-          case "clicked":
-            out.clicked.push(userInfo);
-            break;
-          case "failed":
-            out.failed.push(userInfo);
-            break;
-          case "blocked":
-            out.blocked.push(userInfo);
-            break;
-        }
-      }
+      })
+        .skip((pageNumberInt - 1) * 40)
+        .limit(40);
 
       return c.json({
         message: "wa analytics user",
         err: false,
-        data: out,
+        data: waAnalyticsUser,
       });
     },
   );

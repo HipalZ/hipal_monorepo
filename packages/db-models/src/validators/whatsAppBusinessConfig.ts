@@ -22,7 +22,6 @@ export const whatsAppBusinessConfigSchema = z.object({
   whatsAppPhone: z.string().min(10).max(10),
   menuRedirection: z.string().min(2).max(200),
   ownerId: ObjectIdSchema.optional(),
-  activeTemplateId: z.string().min(3).max(200).optional(),
 });
 
 export type WhatsAppBusinessConfigType = z.infer<

@@ -59,11 +59,6 @@ const whatsAppBusinessConfigSchema =
         required: false,
         ref: "User",
       },
-      activeTemplateId: {
-        type: String,
-        required: false,
-        default: null,
-      },
     },
     {
       timestamps: true,
