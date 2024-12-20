@@ -3,7 +3,6 @@ import { useTransition, animated } from "@react-spring/web";
 import { HiX } from "react-icons/hi";
 import { cn } from "@/components/utils/helpers";
 import { createPortal } from "react-dom";
-import { FaCross } from "react-icons/fa";
 
 const MemoBottomPopUp = ({
   children,
@@ -27,16 +26,15 @@ const MemoBottomPopUp = ({
     config: { tension: 250, friction: 30 },
   });
 
+  console.log("BottomPopUp");
+
   useEffect(() => {
     if (show) {
-      // Store the original hash so we can restore it later
       const originalHash = window.location.hash;
 
-      // Set a special hash to indicate popup is open
       window.location.hash = "#popup";
 
       const handleHashChange = () => {
-        // If the hash is no longer "#popup", close the popup
         if (window.location.hash !== "#popup") {
           onClose();
         }
@@ -46,12 +44,10 @@ const MemoBottomPopUp = ({
       return () => {
         window.removeEventListener("hashchange", handleHashChange);
 
-        // Restore original hash if necessary
         if (window.location.hash === "#popup") {
           if (originalHash) {
             window.location.hash = originalHash;
           } else {
-            // Remove the hash completely if no original hash
             history.pushState(
               "",
               document.title,

@@ -7,7 +7,7 @@ import Image from "next/image";
 import HipalLogo from "@/assets/img/HipalZ_logo_title.png";
 import poweredBy from "@/assets/img/powered_hipalz.png";
 
-const MemoScan = () => {
+const MemoScan = ({ hide }: { hide?: boolean }) => {
   const router = useRouter();
 
   const gotoExplore = () => {
@@ -30,19 +30,21 @@ const MemoScan = () => {
   }, []);
 
   return (
-    <main className="bg-[#fbfbfb] h-screen">
-      <div className="pl-5 flex justify-between pt-2.5 pr-8">
-        <div>
-          <Image src={HipalLogo} alt="HipalLogo" loading="lazy" />
+    <main className="bg-[#fbfbfb] min-h-screen">
+      {!hide && (
+        <div className="pl-5 flex justify-between pt-2.5 pr-8">
+          <div>
+            <Image src={HipalLogo} alt="HipalLogo" loading="lazy" />
+          </div>
+          <button
+            type="button"
+            onClick={gotoExplore}
+            className="text-[#393939] text-xl"
+          >
+            <p>Skip</p>
+          </button>
         </div>
-        <div
-          onKeyDown={gotoExplore}
-          onClick={gotoExplore}
-          className="text-[#393939] text-xl"
-        >
-          <p>Skip</p>
-        </div>
-      </div>
+      )}
 
       <div className="px-8 mt-20 text-center bg-white rounded-2xl">
         <div className="w-full rounded-2xl !bg-white">
@@ -65,12 +67,13 @@ const MemoScan = () => {
           Scan the QR on the table &amp; start ordering
         </p>
       </div>
-
-      <center className="fixed bottom-0 flex justify-center bg-black w-full max-w-[30rem] py-3">
-        <figure>
-          <Image src={poweredBy} alt="HiLogo" loading="lazy" />
-        </figure>
-      </center>
+      {!hide && (
+        <center className="fixed bottom-0 flex justify-center bg-black w-full max-w-[30rem] py-3">
+          <figure>
+            <Image src={poweredBy} alt="HiLogo" loading="lazy" />
+          </figure>
+        </center>
+      )}
     </main>
   );
 };

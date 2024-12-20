@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
@@ -7,7 +8,6 @@ import useTableData from "@/components/store/useTableData";
 import { apiRpc } from "@hi/common";
 import ConfettiHeader from "@/components/organisms/confettiHeader";
 import CartFriend from "@/assets/cart/cartFriends.png";
-import Image from "next/image";
 import { MdPerson } from "react-icons/md";
 import CallTheCaptain from "./callTheCaptain";
 

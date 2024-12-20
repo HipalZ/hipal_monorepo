@@ -7,20 +7,35 @@ import { PiShoppingCartDuotone } from "react-icons/pi";
 import { motion } from "framer-motion";
 import { useCart } from "@/components/store/useCart";
 import MemoCart from "@/components/organisms/cart";
+import useTableData from "@/components/store/useTableData";
+import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
+import TableNameMissing from "./tableNameMissing";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 
 const MemoLiveCart = () => {
   const cart = useCartStore((s) => s.cart);
   const { setShowCart, cartPage, setCartPage, showCart } = useCart();
+  const { tableNameMissing, setTableNameMissing, tableName } = useTableData();
   const shineVariants = {
     initial: { x: "-100%" },
     animate: { x: "100%" },
   };
 
   const openCart = useCallback(() => {
+    if (!tableNameMissing) {
+      setTableNameMissing(true);
+      return;
+    }
     setCartPage("cart");
     setShowCart(true);
-  }, [cartPage, showCart, setShowCart, setCartPage]);
+  }, [
+    cartPage,
+    showCart,
+    setShowCart,
+    setCartPage,
+    tableNameMissing,
+    setTableNameMissing,
+  ]);
 
   if (cart.length === 0) return null;
 
@@ -65,10 +80,24 @@ const MemoLiveCart = () => {
         <span>Proceed to order</span>
         <FaArrowRightLong />
       </button>
-      {showCart && (
-        <BottomPopUp show={showCart} onClose={() => setShowCart(false)}>
+
+      {showCart && tableName ? (
+        <BottomPopUp
+          bottomCross
+          show={showCart}
+          onClose={() => setShowCart(false)}
+        >
           <MemoCart />
         </BottomPopUp>
+      ) : (
+        <ItemDescriptionPopup
+          bottomCross
+          show={showCart}
+          onClose={() => setShowCart(false)}
+          heading="Table Name Missing"
+        >
+          <TableNameMissing />
+        </ItemDescriptionPopup>
       )}
     </section>
   );

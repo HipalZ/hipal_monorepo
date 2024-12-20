@@ -10,6 +10,10 @@ export interface HiCodeUser {
 type TableDataStore = {
   tableName: string;
   setTableName: (name: string) => void;
+
+  tableNameMissing: boolean;
+  setTableNameMissing: (missing: boolean) => void;
+
   hiCode: string;
   setHiCode: (hiCode: string) => void;
   hiCodePopup: boolean;
@@ -23,6 +27,8 @@ const useTableData = create(
     (set) => ({
       tableName: "",
       setTableName: (name) => set({ tableName: name }),
+      tableNameMissing: false,
+      setTableNameMissing: (missing) => set({ tableNameMissing: missing }),
       hiCode: "",
       setHiCode: (hiCode) => set({ hiCode }),
       hiCodePopup: false,

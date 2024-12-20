@@ -86,22 +86,22 @@ const MemoMenuBannerPage: FC<IDishesProps> = (props) => {
         ))}
       </ul>
       {Object.keys(timings)?.length > 0 && timings?.dishIds?.length > 0 && (
-        <section className="relative flex items-center justify-center w-full bg-[#ffffff] overflow-hidden rounded-t-3xl -mt-4">
+        <section className="relative flex items-center justify-center w-full bg-[#ffffff] overflow-hidden  -mt-4">
           <section className="flex flex-col items-center justify-center w-full max-w-[30rem] pt-[1.5rem] overflow-hidden pb-[2rem] md:pb-[2rem] bg-[#ffffff] relative">
             <motion.h1
-              className="relative top-[3rem] z-20 text-[1.75rem] bungee-inline"
+              className="relative top-[2rem] z-20 text-[1.75rem] bungee-inline"
               variants={headingVariants}
               initial="initial"
               animate="animate"
             >
-              <h3
+              <p
                 style={{
                   textShadow: "2px 2px 10px rgba(0, 0, 0, 0.9)",
                 }}
                 className="text-[#ffffff]"
               >
                 {timings?.heading || "Specials"}
-              </h3>
+              </p>
             </motion.h1>
             <motion.div
               className="absolute -top-[5rem] w-[110%] h-[18rem] rounded-full"

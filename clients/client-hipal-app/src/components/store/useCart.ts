@@ -32,6 +32,7 @@ export type ICartTypes = "cart" | "history" | "order" | "payment";
 interface IUseCart {
   showCart: boolean;
   cart: ICart;
+
   setShowCart: (data: boolean) => void;
   emptyCart: () => void;
   setCart: (data: ICart) => void;

@@ -17,6 +17,7 @@ import { BsHandIndexThumb } from "react-icons/bs";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
 import MemoCart from "@/components/organisms/cart";
+import { motion, AnimatePresence } from "framer-motion";
 
 const MemoCategoryPageBtn = () => {
   const accessToken = useUserToken.getState().accessToken;
@@ -79,67 +80,134 @@ const MemoCategoryPageBtn = () => {
     setShowHeader(true);
   }, [showHeader, isSearchActive]);
 
+  const containerVariants = {
+    hidden: { y: 100, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+    exit: {
+      y: 100,
+      opacity: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 30,
+        staggerChildren: 0.05,
+        staggerDirection: -1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1 },
+    exit: { y: 20, opacity: 0 },
+  };
+
   return (
     <>
-      {!isSearchActive && (
-        <section
-          className=" px-2  fixed z-50 bottom-0 w-full 
-           max-w-[30rem] bg-[#FCFCFC] shadow-lg
-          transform md:-translate-x-1/2 md:left-1/2
-          overflow-hidden py-4 text-black flex gap-2 justify-evenly"
-          style={{ boxShadow: "4px 4px 4px 4px #00000040" }}
-        >
-          <Link href={`/${customLink}/explore`} className="">
-            <section className="border border-[#B0B0B0] p-2 rounded-md">
-              <PiArrowBendUpLeftBold size={24} />
-            </section>
-          </Link>
-          <button
-            type="button"
-            onClick={openSearchModal}
-            className="border border-[#B0B0B0] p-2 rounded-md"
+      <AnimatePresence>
+        {!isSearchActive && (
+          <motion.section
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="px-2 fixed z-50 bottom-0 w-full 
+             max-w-[30rem] bg-[#FCFCFC] shadow-lg
+            transform md:-translate-x-1/2 md:left-1/2
+            overflow-hidden py-4 text-black flex gap-2 justify-evenly"
+            style={{ boxShadow: "4px 4px 4px 4px #00000040" }}
           >
-            <FiSearch size={24} />
-          </button>
-          <button
-            type="button"
-            onClick={triggerCallWaiter}
-            className="border border-[#B0B0B0] p-2 rounded-md gap-1 flex items-center"
-          >
-            <BsHandIndexThumb size={24} />
-            <span className="text-sm">Call Captain</span>
-          </button>
-          <button
-            type="button"
-            onClick={proceedToPayment}
-            className="border border-[#B0B0B0] p-2 rounded-md flex items-center"
-          >
-            <MdReceiptLong size={24} />
-            <span className="text-sm"> My Orders</span>
-          </button>
-        </section>
-      )}
+            <motion.div variants={itemVariants}>
+              <Link href={`/${customLink}/explore`} className="">
+                <motion.section
+                  className="border border-[#B0B0B0] p-2 rounded-md"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <PiArrowBendUpLeftBold size={24} />
+                </motion.section>
+              </Link>
+            </motion.div>
+            <motion.div variants={itemVariants}>
+              <motion.button
+                type="button"
+                onClick={openSearchModal}
+                className="border border-[#B0B0B0] p-2 rounded-md"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FiSearch size={24} />
+              </motion.button>
+            </motion.div>
+            <motion.div variants={itemVariants}>
+              <motion.button
+                type="button"
+                onClick={triggerCallWaiter}
+                className="border border-[#B0B0B0] p-2 rounded-md gap-1 flex items-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <BsHandIndexThumb size={24} />
+                <span className="text-sm">Call Captain</span>
+              </motion.button>
+            </motion.div>
+            <motion.div variants={itemVariants}>
+              <motion.button
+                type="button"
+                onClick={proceedToPayment}
+                className="border border-[#B0B0B0] p-2 rounded-md flex items-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <MdReceiptLong size={24} />
+                <span className="text-sm"> My Orders</span>
+              </motion.button>
+            </motion.div>
+          </motion.section>
+        )}
+      </AnimatePresence>
 
-      {inputModal && (
-        <BottomPopUp show={inputModal} onClose={closeModal} linearGradTheme>
-          <AddAmountModal />
-        </BottomPopUp>
-      )}
+      <AnimatePresence>
+        {inputModal && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+          >
+            <BottomPopUp show={inputModal} onClose={closeModal} linearGradTheme>
+              <AddAmountModal />
+            </BottomPopUp>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {callWaiterModal && (
-        <ItemDescriptionPopup
-          heading="Help"
-          show={callWaiterModal}
-          onClose={closeCallWaiterModal}
-        >
-          <CallTheWaiterComponent onClose={closeCallWaiterModal} />
-        </ItemDescriptionPopup>
-      )}
-      {showCart && (
-        <BottomPopUp show={showCart} onClose={() => setShowCart(false)} hide>
-          <MemoCart />
-        </BottomPopUp>
-      )}
+      <AnimatePresence>
+        {callWaiterModal && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+          >
+            <ItemDescriptionPopup
+              heading="Help"
+              show={callWaiterModal}
+              onClose={closeCallWaiterModal}
+            >
+              <CallTheWaiterComponent onClose={closeCallWaiterModal} />
+            </ItemDescriptionPopup>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };
