@@ -80,6 +80,8 @@ export default function RootLayout({
           name="facebook-domain-verification"
           content="1kbkpz82zpbnb9b7vusp4insjirtu8"
         />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
           rel="preconnect"
