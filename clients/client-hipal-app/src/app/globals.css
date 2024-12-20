@@ -2537,3 +2537,77 @@ input[type='password'] {
   .splide__arrow--next {
 	right: 0.5rem !important;
   }
+
+
+
+  .lightrope {
+	text-align: center;
+	white-space: nowrap;
+	position: absolute;
+	overflow: hidden;
+	z-index: 100;
+	margin: -50px 0 0 0;
+	padding: 0;
+	pointer-events: none;
+	width: 100%;
+  }
+  
+  .lightrope li {
+	position: relative;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	width: 12px;
+	height: 28px;
+	border-radius: 50%;
+	margin: 20px;
+	display: inline-block;
+	background: rgba(0, 247, 165, 1);
+	box-shadow: 0px 5px 24px 3px rgba(0, 247, 165, 1);
+	animation: flash-1 2s infinite;
+  }
+  
+  .lightrope li:nth-child(2n+1) {
+	background: rgba(0, 255, 255, 1);
+	box-shadow: 0px 5px 24px 3px rgba(0, 255, 255, 1);
+	animation: flash-2 0.4s infinite;
+  }
+  
+  .lightrope li:nth-child(4n+2) {
+	background: rgba(247, 0, 148, 1);
+	box-shadow: 0px 5px 24px 3px rgba(247, 0, 148, 1);
+	animation: flash-3 1.1s infinite;
+  }
+  
+  @keyframes flash-1 {
+	0%, 100% { 
+	  background: rgba(0, 247, 165, 1); 
+	  box-shadow: 0px 5px 24px 3px rgba(0, 247, 165, 1);
+	}
+	50% { 
+	  background: rgba(0, 247, 165, 0.4); 
+	  box-shadow: 0px 5px 24px 3px rgba(0, 247, 165, 0.2);
+	}
+  }
+  
+  @keyframes flash-2 {
+	0%, 100% { 
+	  background: rgba(0, 255, 255, 1); 
+	  box-shadow: 0px 5px 24px 3px rgba(0, 255, 255, 1);
+	}
+	50% { 
+	  background: rgba(0, 255, 255, 0.4); 
+	  box-shadow: 0px 5px 24px 3px rgba(0, 255, 255, 0.2);
+	}
+  }
+  
+  @keyframes flash-3 {
+	0%, 100% { 
+	  background: rgba(247, 0, 148, 1); 
+	  box-shadow: 0px 5px 24px 3px rgba(247, 0, 148, 1);
+	}
+	50% { 
+	  background: rgba(247, 0, 148, 0.4); 
+	  box-shadow: 0px 5px 24px 3px rgba(247, 0, 148, 0.2);
+	}
+  }

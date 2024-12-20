@@ -3,12 +3,9 @@ import { memo } from "react";
 
 const MemoTopSectionVideo = () => {
   return (
-    <div
-      className="sticky top-0 z-0"
-      style={{ width: "100%", overflow: "hidden" }}
-    >
+    <div className="" style={{ width: "100%", overflow: "hidden" }}>
       <video
-        src="/christmas.mp4"
+        src="https://assets.hipalz.com/christmas.mp4"
         autoPlay
         loop
         muted

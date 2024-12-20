@@ -4,7 +4,7 @@ import { type FC, memo, useRef } from "react";
 import EmblaCarouselPreview from "../category/embla/emblaCarousalPreview";
 import type { EmblaOptionsType } from "embla-carousel";
 import { useSearch } from "@/components/store/useSearch";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, animate } from "framer-motion";
 import Image from "next/image";
 
 interface IDishesProps {
@@ -27,10 +27,9 @@ const MemoMenuBannerPage: FC<IDishesProps> = (props) => {
 
   if (isSearchActive) return null;
 
-  const circleVariants = {
-    initial: { scale: 0, opacity: 0 },
+  const gradientVariants = {
+    initial: { opacity: 0 },
     animate: {
-      scale: 1,
       opacity: 1,
       transition: {
         duration: 1.5,
@@ -40,14 +39,28 @@ const MemoMenuBannerPage: FC<IDishesProps> = (props) => {
   };
 
   const headingVariants = {
-    initial: { y: -20, opacity: 0 },
+    initial: {
+      y: -20,
+      opacity: 0,
+      textShadow: "0 0 0px rgba(255, 255, 255, 0)",
+    },
     animate: {
       y: 0,
       opacity: 1,
+      textShadow: [
+        "0 0 4px rgba(255, 255, 255, 0.7)",
+        "0 0 8px rgba(255, 255, 255, 0.5)",
+        "0 0 4px rgba(255, 255, 255, 0.7)",
+      ],
       transition: {
         delay: 0.5,
         duration: 0.8,
         ease: "easeOut",
+        textShadow: {
+          duration: 2,
+          repeat: Infinity,
+          repeatType: "reverse",
+        },
       },
     },
   };
@@ -65,75 +78,70 @@ const MemoMenuBannerPage: FC<IDishesProps> = (props) => {
     },
   };
 
-  const backgroundVariants = {
-    animate: {
-      background: [
-        "linear-gradient(90deg, #781714, #781714)",
-        "linear-gradient(90deg, #781714, #D4AF37)",
-        "linear-gradient(90deg, #D4AF37, #781714)",
-      ],
-      transition: {
-        duration: 10,
-        repeat: Infinity,
-        repeatType: "reverse",
-      },
-    },
-  };
-
   return (
     <div ref={ref}>
+      <ul className=" lightrope">
+        {Array.from({ length: 40 }).map((_, index) => (
+          <li key={index}></li>
+        ))}
+      </ul>
       {Object.keys(timings)?.length > 0 && timings?.dishIds?.length > 0 && (
-        <section className="relative flex items-center justify-center w-full bg-[#ffffff] overflow-hidden rounded-t-[2rem] -mt-4">
+        <section className="relative flex items-center justify-center w-full bg-[#ffffff] overflow-hidden rounded-t-3xl -mt-4">
           <section className="flex flex-col items-center justify-center w-full max-w-[30rem] pt-[1.5rem] overflow-hidden pb-[2rem] md:pb-[2rem] bg-[#ffffff] relative">
             <motion.h1
-              className="relative top-[5rem] z-10 text-[1.75rem] bungee-inline"
+              className="relative top-[3rem] z-20 text-[1.75rem] bungee-inline"
               variants={headingVariants}
               initial="initial"
               animate="animate"
             >
               <h3
                 style={{
-                  textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
-                  color: "#FFD700",
-                  fontWeight: "bold",
+                  textShadow: "2px 2px 10px rgba(0, 0, 0, 0.9)",
                 }}
-                className="christmas-text"
+                className="text-[#ffffff]"
               >
-                {timings?.heading || "Christmas Specials"}
+                {timings?.heading || "Specials"}
               </h3>
             </motion.h1>
             <motion.div
-              className="absolute -top-[2rem] w-[110%] h-[18rem] rounded-full"
-              variants={circleVariants}
+              className="absolute -top-[5rem] w-[110%] h-[18rem] rounded-full"
+              variants={gradientVariants}
               initial="initial"
               animate="animate"
               style={{
                 originY: 1,
+                background:
+                  "radial-gradient(311.78% 108.64% at 50% -8.64%, #455672 0%, #FFFFFF 100%)",
               }}
             >
               <motion.div
                 className="w-full h-full rounded-full"
-                variants={backgroundVariants}
-                animate="animate"
+                animate={{
+                  background: [
+                    "radial-gradient(311.78% 108.64% at 50% -8.64%, #455672 0%, #FFFFFF 100%)",
+                    "radial-gradient(311.78% 108.64% at 50% -8.64%, #FFFFFF 0%, #455672 100%)",
+                    "radial-gradient(311.78% 108.64% at 50% -8.64%, #455672 0%, #FFFFFF 100%)",
+                  ],
+                }}
               />
             </motion.div>
             <motion.div
-              className="absolute top-0 z-50 w-full h-[18rem]"
+              className="absolute top-0 z-10 w-full h-[18rem]"
               style={{ y: imageY, opacity }}
             >
               <Image
                 src="/top.gif"
-                alt="Christmas Decorations"
+                alt="Top"
                 layout="fill"
                 objectFit="cover"
-                className="pointer-events-none filter saturate-125 brightness-110"
+                className="pointer-events-none"
               />
             </motion.div>
             <motion.div
               variants={carouselVariants}
               initial="initial"
               animate="animate"
-              className="mt-[5rem]"
+              className="mt-[3rem]"
             >
               <EmblaCarouselPreview timings={timings} options={OPTIONS} />
             </motion.div>
@@ -145,4 +153,4 @@ const MemoMenuBannerPage: FC<IDishesProps> = (props) => {
 };
 
 const MenuBannerPage = memo(MemoMenuBannerPage);
-export default MenuBannerPage;
+export { MenuBannerPage };

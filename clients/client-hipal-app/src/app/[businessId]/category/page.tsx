@@ -2,7 +2,7 @@ import { categoryApis } from "@/apis/category";
 import dynamics from "next/dynamic";
 import { defaultThemes } from "@/components/utils/helpers";
 import MainTypes from "@/components/molecules/categoryTypes/mainTypes";
-import MenuBannerPage from "@/components/organisms/menuBanner";
+import { MenuBannerPage } from "@/components/organisms/menuBanner";
 import TopSectionVideo from "@/components/organisms/menuBanner/topSectionVideo";
 
 // export const dynamic = "force-dynamic";
