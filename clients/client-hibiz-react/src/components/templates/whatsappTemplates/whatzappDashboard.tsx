@@ -16,7 +16,6 @@ import {
   useWhatsappTempStore,
 } from "@/components/store/useWhatsappTempStore";
 
-const InteractiveFlows = lazy(() => import("./interactiveFlows"));
 const TemplatesCarousel = lazy(() => import("./templatesCarousel"));
 const CampaignAnalytics = lazy(() => import("./campaignAnalytics"));
 
