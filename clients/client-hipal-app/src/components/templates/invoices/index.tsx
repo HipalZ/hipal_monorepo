@@ -246,6 +246,18 @@ const businessData = [
       "Ground Floor, One Golden Mile, Golden Mile Rd, Kokapet, Hyderabad, Telangana 500075",
     gst: "36AAGFF9090F1Z8",
   },
+  {
+    id: "022",
+    date: "21 Dec 2024",
+    name: "the tree stories",
+    bizName: "The Tree Stories",
+    status: false,
+    serviceCost: 3500,
+    months: 12,
+    address:
+      "Nagarjuna Sagar Ring Rd, Mohan Nagar, Vivekananda Colony, L. B. Nagar, Hyderabad, Telangana 500074",
+    gst: "",
+  },
 ];
 
 const MemoInovices = () => {
