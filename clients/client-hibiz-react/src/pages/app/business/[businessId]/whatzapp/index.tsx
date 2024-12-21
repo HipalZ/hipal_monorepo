@@ -1,21 +1,20 @@
 import Hi from "@/assets/svg/hi.svg";
-import bannerImage from "@/assets/whatzapp/whatzAppTemplates.jpg";
-import MiddlePopUp from "@/components/atom/middlePopUp";
 import MemoizedHeader from "@/components/molecules/header";
+import MiddlePopUp from "@/components/atom/middlePopUp";
 import useBusinessData from "@/components/store/useBusinessData";
 import useWhatsapp, {
   Step,
   TemplateSteps,
 } from "@/components/store/useWhatsapp";
-import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
-import WhatsAppRegistration from "@/components/templates/whatsappTemplates/mainForm";
-import PendingStatusStep from "@/components/templates/whatsappTemplates/pendingStatus";
-import { useCheckRegistration } from "@/hooks/useTemplates";
-import { useQuery } from "@tanstack/react-query";
-import { lazy, memo, useCallback } from "react";
 import { BsWhatsapp } from "react-icons/bs";
 import { FaArrowLeft } from "react-icons/fa";
+import { lazy, memo, useCallback } from "react";
+import { useCheckRegistration } from "@/hooks/useTemplates";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
+import PendingStatusStep from "@/components/templates/whatsappTemplates/pendingStatus";
+import WhatsAppRegistration from "@/components/templates/whatsappTemplates/mainForm";
 
 const WhatsappChats = lazy(
   () => import("@/components/templates/whatsappTemplates/whatsappChats"),
@@ -41,28 +40,20 @@ const WhyNotEditPopup = lazy(
 
 const MemoWhatzapp = () => {
   const { checkRegistration } = useCheckRegistration();
-  const {
-    step,
-    notEditPopup,
-    setStep,
-    setNotEditPopup,
-    templateSteps,
-    setTemplateSteps,
-  } = useWhatsapp((s) => ({
-    step: s.step,
-    setStep: s.setStep,
-    notEditPopup: s.notEditPopup,
-    setNotEditPopup: s.setNotEditPopup,
-    templateSteps: s.templateSteps,
-    setTemplateSteps: s.setTemplateSteps,
-  }));
+  const step = useWhatsapp((s) => s.step);
+  const setStep = useWhatsapp((s) => s.setStep);
+  const notEditPopup = useWhatsapp((s) => s.notEditPopup);
+  const setNotEditPopup = useWhatsapp((s) => s.setNotEditPopup);
+  const templateSteps = useWhatsapp((s) => s.templateSteps);
+  const setTemplateSteps = useWhatsapp((s) => s.setTemplateSteps);
 
-  const { whatzappFormEnabled, whatzappStatus } = useWhatsappTempStore((s) => ({
-    whatzappFormEnabled: s.whatzappFormEnabled,
-    whatzappStatus: s.whatzappStatus,
-  }));
-
+  const whatzappFormEnabled = useWhatsappTempStore(
+    (s) => s.whatzappFormEnabled,
+  );
+  const checkReg = useWhatsappTempStore((s) => s.checkReg);
+  const whatzappStatus = useWhatsappTempStore((s) => s.whatzappStatus);
   const businessData = useBusinessData((s) => s.businessData);
+
   const navigate = useNavigate();
 
   const toggleChat = useCallback(() => {
@@ -134,78 +125,66 @@ const MemoWhatzapp = () => {
   useQuery({
     queryKey: ["fetchWaba", businessData?._id],
     queryFn: checkRegistration,
-    enabled: !!businessData?._id,
+    enabled: !!businessData?._id && !checkReg,
   });
 
-  if (!whatzappFormEnabled) return <WhatsAppRegistration />;
-  if (whatzappFormEnabled && !whatzappStatus)
-    return (
-      <>
-        <main className="sticky top-0 z-50 w-full rounded-lg whatzapp_gradient_background">
-          <MemoizedHeader
-            title="WhatzApp"
-            leftIcon={<FaArrowLeft />}
-            onBack={handleBack}
-            headingColor="white"
-          />
-        </main>
-        <PendingStatusStep />
-      </>
-    );
   return (
     <main>
-      <div className="mx-auto">
-        {/* Header */}
-        <div className="sticky top-0 z-50 w-full rounded-lg whatzapp_gradient_background">
+      {!whatzappFormEnabled && <WhatsAppRegistration />}
+      {whatzappFormEnabled && !whatzappStatus && (
+        <>
           <MemoizedHeader
             title="WhatzApp"
             leftIcon={<FaArrowLeft />}
-            rightImage={Hi}
-            rightButton={<NotifyAndWallet />}
             onBack={handleBack}
             headingColor="white"
           />
-        </div>
-        {/* Banner */}
-
-        {step === Step.SETUP && (
-          <>
-            <img
-              src={bannerImage}
-              alt="bannerImage"
-              className="mt-2 rounded-lg"
+          <PendingStatusStep />
+        </>
+      )}
+      {whatzappFormEnabled && whatzappStatus && (
+        <div className="mx-auto">
+          {/* Header */}
+          <div className="sticky top-0 z-50 w-full rounded-lg whatzapp_gradient_background">
+            <MemoizedHeader
+              title="WhatzApp"
+              leftIcon={<FaArrowLeft />}
+              rightImage={Hi}
+              rightButton={<NotifyAndWallet />}
+              onBack={handleBack}
+              headingColor="white"
             />
-            <br />
-            <WhatzappDashboard />
-          </>
-        )}
-        {step === Step.WALLET_HISTORY && <WalletHistory />}
-        {step === Step.CREATE_EDIT && <CreateEditTemplate />}
-        {step === Step.TRANSACTIONS && <WhatzappPayment />}
-        {step === Step.CHATS ? (
-          <WhatsappChats />
-        ) : (
-          <section className="sticky max-w-[69rem] bottom-4 right-0 float-end z-50">
-            <button
-              type="button"
-              onClick={toggleChat}
-              className="bg-[#25D366] text-white p-4 rounded-full shadow-lg hover:bg-[#128C7E] transition-all duration-300 animate-bounce"
-              aria-label="Open WhatsApp chat"
-            >
-              <BsWhatsapp className="w-6 h-6" />
-            </button>
-          </section>
-        )}
+          </div>
+          {/* Banner */}
+          {step === Step.SETUP && <WhatzappDashboard />}
+          {step === Step.WALLET_HISTORY && <WalletHistory />}
+          {step === Step.CREATE_EDIT && <CreateEditTemplate />}
+          {step === Step.TRANSACTIONS && <WhatzappPayment />}
+          {step === Step.CHATS ? (
+            <WhatsappChats />
+          ) : (
+            <section className="sticky max-w-[69rem] bottom-4 float-end z-50">
+              <button
+                type="button"
+                onClick={toggleChat}
+                className="bg-[#25D366] text-white p-4 rounded-full shadow-lg hover:bg-[#128C7E] transition-all duration-300 animate-bounce"
+                aria-label="Open WhatsApp chat"
+              >
+                <BsWhatsapp className="w-6 h-6" />
+              </button>
+            </section>
+          )}
 
-        {notEditPopup && (
-          <MiddlePopUp
-            show={notEditPopup}
-            onClose={() => setNotEditPopup(false)}
-          >
-            <WhyNotEditPopup />
-          </MiddlePopUp>
-        )}
-      </div>
+          {notEditPopup && (
+            <MiddlePopUp
+              show={notEditPopup}
+              onClose={() => setNotEditPopup(false)}
+            >
+              <WhyNotEditPopup />
+            </MiddlePopUp>
+          )}
+        </div>
+      )}
     </main>
   );
 };

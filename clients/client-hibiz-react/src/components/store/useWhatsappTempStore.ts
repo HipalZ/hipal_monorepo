@@ -82,6 +82,9 @@ interface ITempStore {
 
   termsAccepted: boolean;
   setTermsAccepted: (value: boolean) => void;
+
+  checkReg: boolean;
+  setCheckReg: (value: boolean) => void;
 }
 
 export const useWhatsappTempStore = create<ITempStore>((set) => ({
@@ -146,4 +149,7 @@ export const useWhatsappTempStore = create<ITempStore>((set) => ({
 
   whatzappStatus: false,
   setWhatzappStatus: (value: boolean) => set({ whatzappStatus: value }),
+
+  checkReg: false,
+  setCheckReg: (value: boolean) => set({ checkReg: value }),
 }));

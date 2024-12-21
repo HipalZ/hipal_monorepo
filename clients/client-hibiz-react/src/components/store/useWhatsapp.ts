@@ -27,6 +27,7 @@ export enum HeaderInterface {
 export enum TemplateType {
   Marketing = "MARKETING",
   Utility = "UTILITY",
+  INTERACTIVE_FLOW = "INTERACTIVE_FLOW",
 }
 
 export enum ActionType {

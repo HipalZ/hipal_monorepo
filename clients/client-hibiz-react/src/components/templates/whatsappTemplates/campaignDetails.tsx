@@ -1,91 +1,122 @@
 import { memo } from "react";
-import { Bar } from "react-chartjs-2";
+import { Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
+  ArcElement,
   Tooltip,
   Legend,
-  type TooltipItem,
+  type ChartData,
+  type ChartOptions,
 } from "chart.js";
 import type { Campaign } from "./campaignAnalytics";
 
-// Register necessary Chart.js components
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 const MemoCampaignDetails: React.FC<{ campaign: Campaign }> = ({
   campaign,
 }) => {
-  // Data and options for Chart.js
-  const data = {
+  const data: ChartData<"pie"> = {
     labels: ["Sent", "Delivered", "Read", "Clicked"],
     datasets: [
       {
-        label: `Analytics for ${campaign?.templateName}`,
         data: [
           campaign?.sent,
           campaign?.delivered,
           campaign?.read,
           campaign?.clicked,
         ],
-        backgroundColor: ["#8884d8", "#82ca9d", "#ffc658", "#ff8042"],
-        borderRadius: 5,
+        backgroundColor: ["#25D366", "#FFEE8C", "#34B7F1", "#4B0082"],
+        borderColor: ["#ffffff", "#ffffff", "#ffffff", "#ffffff"],
+        borderWidth: 2,
       },
     ],
   };
 
-  const options = {
+  const options: ChartOptions<"pie"> = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
-      legend: { display: false },
+      legend: {
+        position: "bottom" as const,
+        labels: {
+          padding: 20,
+          font: {
+            size: 12,
+            weight: "500",
+          },
+          boxWidth: 15,
+        },
+      },
       tooltip: {
         callbacks: {
-          label: (tooltipItem: TooltipItem<"bar">) =>
-            `${(tooltipItem.raw as number).toLocaleString()}`,
+          label: (context) => {
+            const label = context.label || "";
+            const value = context.parsed;
+            const total = context.dataset.data.reduce(
+              (acc: number, data: number) => acc + data,
+              0,
+            );
+            const percentage = ((value / total) * 100).toFixed(1);
+            return `${label}: ${value.toLocaleString()} (${percentage}%)`;
+          },
         },
       },
     },
-    scales: {
-      x: { display: true, title: { display: true, text: "Metrics" } },
-      y: {
-        display: true,
-        title: { display: true, text: "Count" },
-        beginAtZero: true,
-      },
-    },
   };
+
   return (
-    <div className="w-full mx-auto bg-white rounded-lg shadow-md">
-      <div className="p-4 border-b">
-        <h2 className="text-xl font-semibold">
-          {campaign?.templateName} Analytics
-        </h2>
-        <p className="text-gray-600">
-          Detailed performance of the {campaign?.templateName} campaign
-        </p>
-      </div>
-      <div className="p-4">
-        <div className="grid grid-cols-2 gap-4 mb-6 md:grid-cols-4">
-          <div className="p-4 bg-[#8884d8] text-white rounded-lg shadow">
-            <h3 className="text-sm font-medium">Sent</h3>
-            <div className="text-2xl font-bold">{campaign?.sent}</div>
+    <div className="w-full mx-auto overflow-hidden bg-gray-100 shadow-lg rounded-xl">
+      <div>
+        <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
+          <div
+            className="p-4 transition-transform duration-200 transform bg-white shadow-md rounded-xl hover:scale-105"
+            style={{ borderTop: "4px solid #25D366" }}
+          >
+            <h3 className="mb-2 text-base font-semibold text-gray-700 sm:text-lg">
+              Sent
+            </h3>
+            <div className="text-2xl font-bold text-gray-900 sm:text-3xl">
+              {campaign?.sent.toLocaleString()}
+            </div>
           </div>
-          <div className="p-4 bg-[#82ca9d] text-white rounded-lg shadow">
-            <h3 className="text-sm font-medium">Delivered</h3>
-            <div className="text-2xl font-bold">{campaign?.delivered}</div>
+          <div
+            className="p-4 transition-transform duration-200 transform bg-white shadow-md rounded-xl hover:scale-105"
+            style={{ borderTop: "4px solid #FFEE8C" }}
+          >
+            <h3 className="mb-2 text-base font-semibold text-gray-700 sm:text-lg">
+              Delivered
+            </h3>
+            <div className="text-2xl font-bold text-gray-900 sm:text-3xl">
+              {campaign?.delivered.toLocaleString()}
+            </div>
           </div>
-          <div className="p-4 bg-[#ffc658] text-white rounded-lg shadow">
-            <h3 className="text-sm font-medium">Read</h3>
-            <div className="text-2xl font-bold">{campaign?.read}</div>
+          <div
+            className="p-4 transition-transform duration-200 transform bg-white shadow-md rounded-xl hover:scale-105"
+            style={{ borderTop: "4px solid #34B7F1" }}
+          >
+            <h3 className="mb-2 text-base font-semibold text-gray-700 sm:text-lg">
+              Read
+            </h3>
+            <div className="text-2xl font-bold text-gray-900 sm:text-3xl">
+              {campaign?.read.toLocaleString()}
+            </div>
           </div>
-          <div className="p-4 bg-[#ffc658] text-white rounded-lg shadow">
-            <h3 className="text-sm font-medium">Clicked</h3>
-            <div className="text-2xl font-bold">{campaign?.clicked}</div>
+          <div
+            className="p-4 transition-transform duration-200 transform bg-white shadow-md rounded-xl hover:scale-105"
+            style={{ borderTop: "4px solid #4B0082" }}
+          >
+            <h3 className="mb-2 text-base font-semibold text-gray-700 sm:text-lg">
+              Clicked
+            </h3>
+            <div className="text-2xl font-bold text-gray-900 sm:text-3xl">
+              {campaign?.clicked.toLocaleString()}
+            </div>
           </div>
         </div>
-        <div className="h-[300px] mt-6">
-          <Bar data={data} options={options} />
+        <div className="p-4 bg-white shadow-md rounded-xl">
+          <div className="h-[300px] sm:h-[400px] w-full">
+            <Pie data={data} options={options} />
+          </div>
         </div>
       </div>
     </div>

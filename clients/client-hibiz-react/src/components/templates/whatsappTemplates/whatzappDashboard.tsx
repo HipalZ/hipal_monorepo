@@ -16,6 +16,7 @@ import {
   useWhatsappTempStore,
 } from "@/components/store/useWhatsappTempStore";
 
+const InteractiveFlows = lazy(() => import("./interactiveFlows"));
 const TemplatesCarousel = lazy(() => import("./templatesCarousel"));
 const CampaignAnalytics = lazy(() => import("./campaignAnalytics"));
 
@@ -79,8 +80,8 @@ const MemoWhatzappDashboard = () => {
   });
 
   return (
-    <main className="container relative px-2 mx-auto">
-      <nav className="flex items-center justify-between mb-4">
+    <main className="container relative px-2 mx-auto my-4">
+      <nav className="flex items-center justify-between px-2 py-4 mb-2 bg-white rounded-xl">
         <ul className="flex space-x-2 overflow-auto">
           {Object.values(Tabs).map((tab) => (
             <li key={tab}>
@@ -103,7 +104,7 @@ const MemoWhatzappDashboard = () => {
           <li>
             <button
               type="button"
-              className="px-4 py-2 text-white bg-blue-500 rounded-lg shadow-lg hover:bg-blue-400 on_active_bounce"
+              className="px-4 py-2 text-white bg-blue-600 rounded-lg shadow-lg hover:bg-blue-500 on_active_bounce"
               onClick={() => handleCreateTemplate(TemplateType.Marketing)}
             >
               + Marketing Template
@@ -112,7 +113,7 @@ const MemoWhatzappDashboard = () => {
           <li>
             <button
               type="button"
-              className="px-4 py-2 text-white bg-blue-500 rounded-lg shadow-lg hover:bg-blue-400 on_active_bounce"
+              className="px-4 py-2 text-white bg-blue-600 rounded-lg shadow-lg hover:bg-blue-500 on_active_bounce"
               onClick={() => handleCreateTemplate(TemplateType.Utility)}
             >
               + Utility Template
@@ -121,11 +122,9 @@ const MemoWhatzappDashboard = () => {
         </ul>
       </nav>
       {activeTab === Tabs.TEMPLATES && (
-        <section className="mb-20">
-          <h2 className="mb-2 text-2xl font-semibold">
-            Drafts/Existing templates
-          </h2>
-          <p className="mb-6 text-gray-600">
+        <section className="p-4 mb-20 bg-white shadow-sm rounded-xl">
+          <h2 className="text-2xl font-semibold text-gray-900">Templates</h2>
+          <p className="mt-1 mb-6 text-sm text-gray-500">
             Use these templates for sending to your customers instantly
           </p>
           <div className="relative grid gap-4 transition-transform duration-300 ease-in-out md:h-full md:grid-cols-4 md:transform-none">
@@ -152,6 +151,7 @@ const MemoWhatzappDashboard = () => {
         </section>
       )}
       {activeTab === Tabs.CAMPAIGNS && <CampaignAnalytics />}
+      {/* {activeTab === Tabs.INTERACTIVE_FLOW && <InteractiveFlows />} */}
     </main>
   );
 };

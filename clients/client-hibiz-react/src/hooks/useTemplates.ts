@@ -453,22 +453,21 @@ export const useSearchUserByPhone = () => {
 
 export const useCheckRegistration = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
-  const [checkReg, setCheckReg] = useState(false);
+  const setCheckReg = useWhatsappTempStore((s) => s.setCheckReg);
+
   const { setWhatzappFormEnabled, setWhatzappStatus } = useWhatsappTempStore(
     (s) => ({
       setWhatzappFormEnabled: s.setWhatzappFormEnabled,
       setWhatzappStatus: s.setWhatzappStatus,
     }),
   );
-  if (checkReg) return {};
-  const checkRegistration = async () => {
+  const checkRegistration = useCallback(async () => {
     const response = await apiRpc.whatsapp.fetch_waba[":businessId"].$get({
       param: {
-        businessId,
+        businessId: businessId,
       },
     });
     const res = await response.json();
-    console.log("res", res);
     if (response.status === 200) {
       setWhatzappFormEnabled(true);
       setWhatzappStatus(res?.data?.status);
@@ -478,7 +477,7 @@ export const useCheckRegistration = () => {
     }
     setCheckReg(true);
     return response.json();
-  };
+  }, [businessId, setWhatzappFormEnabled, setWhatzappStatus, setCheckReg]);
 
   return { checkRegistration };
 };

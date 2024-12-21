@@ -3,6 +3,7 @@ import { FaArrowLeft, FaFacebookSquare } from "react-icons/fa";
 import { CONFIG_ID, APP_ID } from "@/configs";
 import { useNavigate } from "react-router-dom";
 import MemoizedHeader from "@/components/molecules/header";
+import axios from "axios";
 
 declare global {
   interface Window {
@@ -17,7 +18,10 @@ const MemoizedProfile = () => {
   const [loginStep, setLoginStep] = useState<"initial" | "review" | "success">(
     "initial",
   );
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
+
   useEffect(() => {
     const initializeFacebookSDK = () => {
       if (window.FB) {
@@ -71,22 +75,31 @@ const MemoizedProfile = () => {
     initializeFacebookSDK();
   }, []);
 
-  const launchWhatsAppSignup = () => {
+  const launchWhatsAppSignup = async () => {
     if (facebookSDKLoaded && typeof window.FB !== "undefined") {
+      setLoading(true);
+      setErrorMessage(null);
+
       window.fbq("trackCustom", "WhatsAppOnboardingStart", {
         appId: APP_ID,
         feature: "whatsapp_embedded_signup",
       });
+
       window.FB.login(
-        (response: any) => {
+        async (response: any) => {
           if (response.authResponse) {
-            const code = response.authResponse.code;
-            console.log(code, "code");
-            console.log(response, "response");
-            setLoginStep("review");
+            const { accessToken } = response.authResponse;
+
+            try {
+              await axios.post("/api/login", { accessToken });
+              setLoginStep("review");
+            } catch (error) {
+              setErrorMessage("Failed to authenticate with the backend.");
+            }
           } else {
-            console.log("User cancelled login or did not fully authorize.");
+            setErrorMessage("User cancelled login or did not fully authorize.");
           }
+          setLoading(false);
         },
         {
           config_id: CONFIG_ID,
@@ -100,7 +113,7 @@ const MemoizedProfile = () => {
         },
       );
     } else {
-      setFacebookSDKLoaded(false);
+      setErrorMessage("Facebook SDK not loaded.");
     }
   };
 
@@ -120,12 +133,17 @@ const MemoizedProfile = () => {
           />
         </div>
       </nav>
+
       <center>
         <section className="bg-white rounded-lg shadow-md p-8 w-[350px] mt-8">
+          {loading && <p>Loading...</p>}
           <h1 className="mb-2 text-2xl font-bold">Connect with Facebook</h1>
           <p className="mb-6 text-gray-600">
             Login and connect with your Facebook account to get started
           </p>
+
+          {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+
           <div className="space-y-4">
             {loginStep === "initial" && (
               <button
@@ -136,6 +154,12 @@ const MemoizedProfile = () => {
                 <FaFacebookSquare className="mr-2" />
                 Login with Facebook
               </button>
+            )}
+            {loginStep === "review" && (
+              <p>Reviewing your account information...</p>
+            )}
+            {loginStep === "success" && (
+              <p>You're successfully connected to WhatsApp!</p>
             )}
           </div>
         </section>

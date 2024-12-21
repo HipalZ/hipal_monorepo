@@ -1,4 +1,4 @@
-import { memo, useCallback, useState, lazy } from "react";
+import { memo, useCallback, useState, lazy, Suspense, Fragment } from "react";
 import useWhatsapp, {
   Step,
   TemplateSteps,
@@ -11,6 +11,7 @@ import {
 import { apiRpc } from "@hi/common";
 import useBusinessData from "@/components/store/useBusinessData";
 import type { WhatsAppTemplatePayload } from "@/components/types/businessData";
+import { Loader2 } from "lucide-react";
 
 const CampaignDetails = lazy(() => import("./campaignDetails"));
 export interface Campaign {
@@ -112,81 +113,127 @@ const MemoCampaignAnalytics: React.FC = () => {
   );
 
   return (
-    <div className="w-full mx-auto mb-6 bg-white rounded-lg shadow-md">
-      <div className="p-2 border-b lg:p-4">
-        <h2 className="text-xl font-semibold">Campaign Analytics</h2>
-        <p className="text-gray-600">
+    <div className="w-full mx-auto space-y-6 overflow-hidden bg-white border border-gray-100 shadow-sm rounded-xl">
+      <div className="p-4 border-b border-gray-100">
+        <h2 className="text-2xl font-semibold text-gray-900">
+          Campaign Analytics
+        </h2>
+        <p className="mt-1 text-sm text-gray-500">
           Overview of your WhatsApp campaign performance
         </p>
       </div>
-      <div className="p-2 lg:p-4 overflow-x-auto min-h-[200px] h-full max-h-[600px] overflow-y-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b">
-              <th className="p-2 text-left">Name</th>
-              <th className="p-2 text-left">Category</th>
-              <th className="p-2 text-left">Status</th>
-              <th className="p-2 text-left">Actions</th>
-              <th className="p-2 text-left">Campaign</th>
+      <section className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th
+                scope="col"
+                className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-black uppercase"
+              >
+                Name
+              </th>
+              <th
+                scope="col"
+                className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-black uppercase"
+              >
+                Category
+              </th>
+              <th
+                scope="col"
+                className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-black uppercase"
+              >
+                Status
+              </th>
+              <th
+                scope="col"
+                className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-black uppercase"
+              >
+                Actions
+              </th>
+              <th
+                scope="col"
+                className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-black uppercase"
+              >
+                Campaign
+              </th>
             </tr>
           </thead>
-          {allTemplates?.map((campaign) => (
-            <tbody key={campaign?.templateId}>
-              <tr className="border-b">
-                <td className="w-10 p-2 truncate">{campaign?.name}</td>
-                <td className="w-10 p-2">{campaign?.category}</td>
-                <td className="w-10">
-                  <span
-                    className={`px-2 py-1 lowercase rounded-lg ${
-                      campaign?.status === "APPROVED" ||
-                      campaign?.status === "PENDING"
-                        ? "text-green-500 bg-green-100"
-                        : ""
-                    }`}
-                  >
-                    {campaign?.status}
-                  </span>
-                </td>
-                <td className="w-24 p-2">
-                  <button
-                    type="button"
-                    className="w-12 p-1 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                    onClick={() => handleViewClick(campaign)}
-                    disabled={loadingTemplateId === campaign.id}
-                  >
-                    {loadingTemplateId === campaign.id ? (
-                      <span className="inline-block animate-spin">↻</span>
-                    ) : openAccordionId === campaign.id ? (
-                      "Hide"
-                    ) : (
-                      "View"
-                    )}
-                  </button>
-                </td>
-                <td className="w-12 p-2">
-                  <button
-                    type="button"
-                    className="w-24 p-1 text-sm text-white bg-green-500 rounded-md md:w-36 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-                    onClick={() => handleCampaign(campaign)}
-                  >
-                    Start Campaign
-                  </button>
-                </td>
-              </tr>
-              {openAccordionId === campaign.id && (
-                <tr>
-                  <td colSpan={5}>
-                    {selectedCampaign &&
-                      selectedCampaign.templateName === campaign.name && (
-                        <CampaignDetails campaign={selectedCampaign} />
+          <tbody className="bg-white divide-y divide-gray-200">
+            {allTemplates?.map((campaign) => (
+              <Fragment key={campaign.id}>
+                <tr className="transition-colors hover:bg-gray-50">
+                  <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                    {campaign?.name}
+                  </td>
+                  <td className="px-4 py-4 text-sm text-gray-500 whitespace-nowrap">
+                    {campaign?.category}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <span
+                      className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        campaign?.status === "APPROVED"
+                          ? "bg-green-100 text-green-800"
+                          : campaign?.status === "PENDING"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {campaign?.status.toLowerCase()}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 text-sm whitespace-nowrap">
+                    <button
+                      type="button"
+                      onClick={() => handleViewClick(campaign)}
+                      disabled={
+                        loadingTemplateId === campaign.id ||
+                        campaign?.status === "REJECTED"
+                      }
+                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:cursor-not-allowed"
+                    >
+                      {loadingTemplateId === campaign.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : openAccordionId === campaign.id ? (
+                        "Hide"
+                      ) : (
+                        "View"
                       )}
+                    </button>
+                  </td>
+                  <td className="px-4 py-4 text-sm whitespace-nowrap">
+                    <button
+                      type="button"
+                      onClick={() => handleCampaign(campaign)}
+                      disabled={campaign?.status === "REJECTED"}
+                      className="inline-flex items-center px-4 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:cursor-not-allowed"
+                    >
+                      Start Campaign
+                    </button>
                   </td>
                 </tr>
-              )}
-            </tbody>
-          ))}
+                {openAccordionId === campaign.id && (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-4">
+                      <Suspense
+                        fallback={
+                          <div className="flex items-center justify-center py-8">
+                            <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+                          </div>
+                        }
+                      >
+                        {selectedCampaign &&
+                          selectedCampaign.templateName === campaign.name && (
+                            <CampaignDetails campaign={selectedCampaign} />
+                          )}
+                      </Suspense>
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            ))}
+          </tbody>
         </table>
-      </div>
+      </section>
     </div>
   );
 };
