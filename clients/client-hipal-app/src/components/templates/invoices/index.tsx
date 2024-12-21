@@ -249,7 +249,7 @@ const businessData = [
   {
     id: "022",
     date: "21 Dec 2024",
-    name: "the tree stories",
+    name: "thetreestories",
     bizName: "The Tree Stories",
     status: false,
     serviceCost: 3500,
