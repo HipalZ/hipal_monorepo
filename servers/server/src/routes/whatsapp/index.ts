@@ -2382,6 +2382,15 @@ const whatsappRouter = new Hono()
       const { businessId, campaignId } = c.req.param();
       const { pageNumber, status } = c.req.query();
       const pageNumberInt = Number(pageNumber) || 1;
+      const obj = {
+        sent: 30,
+        delivered: 20,
+        read: 10,
+
+        clicked: 40,
+        failed: 60,
+        blocked: 70,
+      };
       if (status) {
         const waCampaignAnalyticsUser = await WhatsAppAnalyticsUser.find({
           businessId,
@@ -2391,16 +2400,6 @@ const whatsappRouter = new Hono()
         })
           .skip((pageNumberInt - 1) * 40)
           .limit(40);
-
-        const obj = {
-          sent: 30,
-          delivered: 20,
-          read: 10,
-
-          clicked: 40,
-          failed: 60,
-          blocked: 70,
-        };
 
         return c.json({
           message: "wa analytics user",
@@ -2422,7 +2421,10 @@ const whatsappRouter = new Hono()
       return c.json({
         message: "wa analytics user",
         err: false,
-        data: waAnalyticsUser,
+        data: {
+          overAllCount: obj,
+          campaignAnalttics: waAnalyticsUser,
+        },
       });
     },
   );
