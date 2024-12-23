@@ -10,6 +10,7 @@ export * from "./kitchen";
 
 export * from "./admin";
 export * from "./businessSubscriber";
+export * from "./campaign";
 export * from "./channelLink";
 export * from "./channelView";
 export * from "./couponChannel";
@@ -32,6 +33,7 @@ export * from "./payment";
 export * from "./paymentAlert";
 export * from "./petPoojaPinTempModel";
 export * from "./pos";
+export * from "./recentCampaign";
 export * from "./reviews";
 export * from "./role";
 export * from "./table";

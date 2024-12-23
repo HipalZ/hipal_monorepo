@@ -11,10 +11,11 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 const whatsAppAnalyticsUserSchema = z.object({
   name: z.string().min(1).max(100),
   phone: z.string().min(10).max(10),
-  templateId: z.string().min(1).max(200),
+  templateId: z.string().min(1).max(200).optional(),
   businessId: ObjectIdSchema,
   status: z.string().min(1).max(100),
   date: z.number().int(),
+  campaignId: ObjectIdSchema.optional(),
 });
 
 export type WhatsAppAnalyticsUserType = z.infer<

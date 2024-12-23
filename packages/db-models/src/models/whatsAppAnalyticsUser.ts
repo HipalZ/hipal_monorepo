@@ -22,7 +22,7 @@ const whatsAppAnalyticsUserSchema =
       },
       templateId: {
         type: String,
-        required: true,
+        required: false,
       },
       status: {
         type: String,
@@ -31,6 +31,10 @@ const whatsAppAnalyticsUserSchema =
       date: {
         type: Number,
         required: true,
+      },
+      campaignId: {
+        type: ObjectId,
+        required: false,
       },
     },
     {

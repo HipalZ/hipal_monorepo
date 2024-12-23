@@ -1,5 +1,8 @@
 import { LRUCache } from "lru-cache";
-
+export interface CampaignConfig {
+  templateId: string;
+  campaignId: string;
+}
 const options = {
   max: 50000,
   // for use with tracking overall storage size
@@ -19,7 +22,7 @@ export const getTemplateId = async (wamid: string) => {
 
 export const setWhatsAppMessageConfig = async (
   wamid: string,
-  templateId: string,
+  CampaignConfigData: CampaignConfig,
 ) => {
-  cache.set(wamid, templateId as string);
+  cache.set(wamid, CampaignConfigData as CampaignConfig);
 };

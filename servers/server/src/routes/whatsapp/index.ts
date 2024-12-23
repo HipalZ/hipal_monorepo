@@ -1,8 +1,10 @@
 import {
   BusinessSettings,
+  Campaign,
   CouponLink,
   Couponz,
   GroupModel,
+  RecentCampaign,
   Subscriber,
   UrlModel,
   User,
@@ -44,6 +46,7 @@ import {
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 import {
+  type CampaignConfig,
   getTemplateId,
   setWhatsAppMessageConfig,
 } from "../../utils/whatsAppUserCache";
@@ -58,6 +61,15 @@ interface AxiosError {
   };
   message: string;
 }
+
+const getCampaignName = (templateName: string): string => {
+  const now = new Date();
+  const istTime = new Date(now.getTime() + 330 * 60 * 1000); // IST is UTC+5:30
+  const formattedDate = `${istTime.getUTCDate()}-${
+    istTime.getUTCMonth() + 1
+  }_${istTime.getUTCHours()}:${istTime.getUTCMinutes()}`;
+  return `${templateName}_${formattedDate}`;
+};
 
 const bodySequence = async (
   businessName: string,
@@ -165,6 +177,19 @@ const scheduleCampaign = async (
   businessId: string,
   templateId: string,
 ) => {
+  const templateName = template.templateName;
+  const campaignName = getCampaignName(templateName);
+  const createCampaign = await Campaign.create({
+    businessId,
+    templateId,
+    campaignName: campaignName,
+
+    date: Date.now(),
+  });
+  await RecentCampaign.create({
+    businessId,
+    templateId,
+  });
   for (const customer of customersArray) {
     const components = await returnBodyComponents(
       businessName,
@@ -194,13 +219,13 @@ const scheduleCampaign = async (
         },
       );
 
-      console.log("res", res.data.messages?.[0].id);
-
-      const a = await setWhatsAppMessageConfig(
-        res.data.messages?.[0].id,
+      const a = await setWhatsAppMessageConfig(res.data.messages?.[0].id, {
         templateId,
-      );
+        campaignId: createCampaign._id.toString(),
+      });
+
       console.log("a", a);
+      console.log("res", res.data);
     } catch (error) {
       const axiosError = error as AxiosError;
       const message = axiosError.response?.data?.error?.message;
@@ -1832,11 +1857,11 @@ const whatsappRouter = new Hono()
 
           const wamid = firstStatus.id;
           const userPhoneNumber = firstStatus?.recipient_id.toString().slice(2);
-          console.log("extractedData", extractedData);
-          console.log("wamid", wamid);
-          console.log("userPhoneNumber", userPhoneNumber);
 
-          const getTemplateIdInfo = await getTemplateId(wamid);
+          const getTemplateIdInfo = (await getTemplateId(
+            wamid,
+          )) as CampaignConfig;
+
           console.log("getTemplateIdInfo", getTemplateIdInfo);
 
           const userInfo = await User.findOne({
@@ -1848,8 +1873,9 @@ const whatsappRouter = new Hono()
             name: userInfo?.name,
             phone: userInfo?.phone,
             status: extractedData?.status,
-            templateId: getTemplateIdInfo,
+            templateId: getTemplateIdInfo.templateId,
             date: Date.now(),
+            campaignId: getTemplateIdInfo.campaignId,
           });
 
           if (
@@ -2325,32 +2351,10 @@ const whatsappRouter = new Hono()
     async (c) => {
       const { businessId, templateId } = c.req.param();
 
-      const campaigns = [
-        {
-          businessId,
-          templateId,
-          campainName: "campaign_20-12-2024-12:00",
-          campainType: "marketing",
-          date: Date.now(),
-          _id: "1",
-        },
-        {
-          businessId,
-          templateId,
-          campainName: "campaign_20-12-2024-12:00",
-          campainType: "marketing",
-          date: Date.now(),
-          _id: "2",
-        },
-        {
-          businessId,
-          templateId,
-          campainName: "campaign_20-12-2024-12:00",
-          campainType: "marketing",
-          date: Date.now(),
-          _id: "3",
-        },
-      ];
+      const campaigns = await Campaign.find({
+        businessId,
+        templateId,
+      });
 
       return c.json({
         message: "campaigns",
@@ -2381,6 +2385,7 @@ const whatsappRouter = new Hono()
       if (status) {
         const waCampaignAnalyticsUser = await WhatsAppAnalyticsUser.find({
           businessId,
+          campaignId,
 
           status: status,
         })
@@ -2396,6 +2401,7 @@ const whatsappRouter = new Hono()
 
       const waAnalyticsUser = await WhatsAppAnalyticsUser.find({
         businessId,
+        campaignId,
       })
         .skip((pageNumberInt - 1) * 40)
         .limit(40);
