@@ -2392,10 +2392,23 @@ const whatsappRouter = new Hono()
           .skip((pageNumberInt - 1) * 40)
           .limit(40);
 
+        const obj = {
+          sent: 30,
+          delivered: 20,
+          read: 10,
+
+          clicked: 40,
+          failed: 60,
+          blocked: 70,
+        };
+
         return c.json({
           message: "wa analytics user",
           err: false,
-          data: waCampaignAnalyticsUser,
+          data: {
+            overAllCount: obj,
+            campaignAnalttics: waCampaignAnalyticsUser,
+          },
         });
       }
 
