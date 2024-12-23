@@ -73,6 +73,7 @@ const MemoCategoryPageBtn = () => {
     tableName,
     openCallWaiterModal,
   ]);
+
   const openSearchModal = useCallback(() => {
     setIsSearchActive(true);
     setShowHeader(true);
