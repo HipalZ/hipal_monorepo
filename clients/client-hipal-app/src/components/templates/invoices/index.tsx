@@ -251,7 +251,7 @@ const businessData = [
     date: "21 Dec 2024",
     name: "thetreestories",
     bizName: "The Tree Stories",
-    status: false,
+    status: true,
     serviceCost: 3500,
     months: 6,
     address:
