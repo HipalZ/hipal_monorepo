@@ -29,6 +29,15 @@ export interface Subscriber {
   businessId: string;
 }
 
+export interface Campaign {
+  templateName: string;
+  sent: number;
+  delivered: number;
+  read: number;
+  clicked: number;
+  cost: number;
+}
+
 interface ITempStore {
   isLoading: boolean;
   setIsLoading: (value: boolean) => void;
@@ -85,6 +94,12 @@ interface ITempStore {
 
   checkReg: boolean;
   setCheckReg: (value: boolean) => void;
+
+  openAnalytics: boolean;
+  setOpenAnalytics: (value: boolean) => void;
+
+  selectedCampaign: Campaign;
+  setSelectedCampaign: (value: Campaign) => void;
 }
 
 export const useWhatsappTempStore = create<ITempStore>((set) => ({
@@ -152,4 +167,17 @@ export const useWhatsappTempStore = create<ITempStore>((set) => ({
 
   checkReg: false,
   setCheckReg: (value: boolean) => set({ checkReg: value }),
+
+  openAnalytics: false,
+  setOpenAnalytics: (value: boolean) => set({ openAnalytics: value }),
+
+  selectedCampaign: {
+    templateName: "",
+    sent: 0,
+    delivered: 0,
+    read: 0,
+    clicked: 0,
+    cost: 0,
+  },
+  setSelectedCampaign: (value: Campaign) => set({ selectedCampaign: value }),
 }));

@@ -1,4 +1,4 @@
-import { memo, useCallback, useState, lazy, Suspense, Fragment } from "react";
+import { memo, useCallback, useState, lazy, Fragment, Suspense } from "react";
 import useWhatsapp, {
   Step,
   TemplateSteps,
@@ -11,17 +11,9 @@ import {
 import { apiRpc } from "@hi/common";
 import useBusinessData from "@/components/store/useBusinessData";
 import type { WhatsAppTemplatePayload } from "@/components/types/businessData";
-import { Loader2 } from "lucide-react";
+import { BarChart2, Loader2 } from "lucide-react";
 
 const CampaignDetails = lazy(() => import("./campaignDetails"));
-export interface Campaign {
-  templateName: string;
-  sent: number;
-  delivered: number;
-  read: number;
-  clicked: number;
-  cost: number;
-}
 
 const MemoCampaignAnalytics: React.FC = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
@@ -36,13 +28,20 @@ const MemoCampaignAnalytics: React.FC = () => {
     setStep: s.setStep,
     setSingleTemplateAnalytics: s.setSingleTemplateAnalytics,
   }));
-  const { setActiveTab, allTemplates } = useWhatsappTempStore((s) => ({
+  const {
+    setActiveTab,
+    allTemplates,
+    selectedCampaign,
+    setSelectedCampaign,
+    setOpenAnalytics,
+  } = useWhatsappTempStore((s) => ({
     setActiveTab: s.setActiveTab,
     allTemplates: s.allTemplates,
+    selectedCampaign: s.selectedCampaign,
+    setSelectedCampaign: s.setSelectedCampaign,
+    setOpenAnalytics: s.setOpenAnalytics,
   }));
-  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(
-    null,
-  );
+
   const [loadingTemplateId, setLoadingTemplateId] = useState<string | null>(
     null,
   );
@@ -74,11 +73,12 @@ const MemoCampaignAnalytics: React.FC = () => {
         setLoadingTemplateId(null);
       }
     },
-    [businessId, setSingleTemplateAnalytics],
+    [businessId, setSingleTemplateAnalytics, setSelectedCampaign],
   );
 
   const handleViewClick = useCallback(
     async (campaign: WhatsAppTemplatePayload) => {
+      setOpenAnalytics(true);
       if (openAccordionId === campaign.id) {
         setOpenAccordionId(null);
       } else {
@@ -86,7 +86,7 @@ const MemoCampaignAnalytics: React.FC = () => {
         await getTemplateAnaylyticsById(campaign.id);
       }
     },
-    [getTemplateAnaylyticsById, openAccordionId],
+    [getTemplateAnaylyticsById, openAccordionId, setOpenAnalytics],
   );
 
   const handleCampaign = useCallback(
@@ -128,33 +128,39 @@ const MemoCampaignAnalytics: React.FC = () => {
             <tr>
               <th
                 scope="col"
-                className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-black uppercase"
+                className="px-4 py-3 text-sm font-semibold tracking-wider text-left text-black uppercase"
               >
                 Name
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-black uppercase"
+                className="px-4 py-3 text-sm font-semibold tracking-wider text-left text-black uppercase"
               >
                 Category
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-black uppercase"
+                className="px-4 py-3 text-sm font-semibold tracking-wider text-left text-black uppercase"
               >
                 Status
               </th>
               <th
                 scope="col"
-                className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-black uppercase"
-              >
-                Actions
-              </th>
-              <th
-                scope="col"
-                className="px-4 py-3 text-xs font-semibold tracking-wider text-left text-black uppercase"
+                className="px-4 py-3 text-sm font-semibold tracking-wider text-left text-black uppercase"
               >
                 Campaign
+              </th>
+              {/* <th
+                scope="col"
+                className="px-4 py-3 text-sm font-semibold tracking-wider text-left text-black uppercase"
+              >
+                Success (%)
+              </th> */}
+              <th
+                scope="col"
+                className="px-4 py-3 text-sm font-semibold tracking-wider text-left text-black uppercase"
+              >
+                Actions
               </th>
             </tr>
           </thead>
@@ -162,15 +168,15 @@ const MemoCampaignAnalytics: React.FC = () => {
             {allTemplates?.map((campaign) => (
               <Fragment key={campaign.id}>
                 <tr className="transition-colors hover:bg-gray-50">
-                  <td className="px-4 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                  <td className="px-4 py-4 text-base font-medium text-gray-900 whitespace-nowrap">
                     {campaign?.name}
                   </td>
-                  <td className="px-4 py-4 text-sm text-gray-500 whitespace-nowrap">
+                  <td className="px-4 py-4 text-sm text-gray-900 whitespace-nowrap">
                     {campaign?.category}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
                     <span
-                      className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      className={`inline-flex px-2.5 py-0.5 rounded-full text-sm font-medium ${
                         campaign?.status === "APPROVED"
                           ? "bg-green-100 text-green-800"
                           : campaign?.status === "PENDING"
@@ -178,9 +184,36 @@ const MemoCampaignAnalytics: React.FC = () => {
                             : "bg-red-100 text-red-800"
                       }`}
                     >
-                      {campaign?.status.toLowerCase()}
+                      {campaign?.status}
                     </span>
                   </td>
+                  <td className="px-4 py-4 text-base whitespace-nowrap">
+                    <button
+                      type="button"
+                      onClick={() => handleCampaign(campaign)}
+                      disabled={campaign?.status === "REJECTED"}
+                      className="inline-flex items-center px-4 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:cursor-not-allowed"
+                    >
+                      Start Campaign
+                    </button>
+                  </td>
+                  {/* <td className="px-4 py-4 text-sm whitespace-nowrap">
+                    <div className="relative pt-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <span className="inline-block px-2 py-1 text-xs font-semibold text-blue-600 uppercase bg-blue-200 rounded-full">
+                            {((campaign.delivered / campaign.sent) * 100).toFixed(2)}%
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex h-2 mb-4 overflow-hidden text-xs bg-blue-200 rounded">
+                        <div
+                          style={{ width: `${(campaign.delivered / campaign.sent) * 100}%` }}
+                          className="flex flex-col justify-center text-center text-white bg-blue-600 shadow-none whitespace-nowrap"
+                        />
+                      </div>
+                    </div>
+                  </td> */}
                   <td className="px-4 py-4 text-sm whitespace-nowrap">
                     <button
                       type="button"
@@ -189,45 +222,39 @@ const MemoCampaignAnalytics: React.FC = () => {
                         loadingTemplateId === campaign.id ||
                         campaign?.status === "REJECTED"
                       }
-                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:cursor-not-allowed"
+                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:cursor-not-allowed"
                     >
                       {loadingTemplateId === campaign.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-8 h-8 animate-spin" />
                       ) : openAccordionId === campaign.id ? (
-                        "Hide"
+                        <>
+                          <BarChart2 size={18} className="mr-2" />
+                          Hide Insights
+                        </>
                       ) : (
-                        "View"
+                        <>
+                          <BarChart2 size={18} className="mr-2" />
+                          View Insights
+                        </>
                       )}
-                    </button>
-                  </td>
-                  <td className="px-4 py-4 text-sm whitespace-nowrap">
-                    <button
-                      type="button"
-                      onClick={() => handleCampaign(campaign)}
-                      disabled={campaign?.status === "REJECTED"}
-                      className="inline-flex items-center px-4 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:cursor-not-allowed"
-                    >
-                      Start Campaign
                     </button>
                   </td>
                 </tr>
                 {openAccordionId === campaign.id && (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-4">
-                      <Suspense
-                        fallback={
-                          <div className="flex items-center justify-center py-8">
-                            <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
-                          </div>
-                        }
-                      >
-                        {selectedCampaign &&
-                          selectedCampaign.templateName === campaign.name && (
-                            <CampaignDetails campaign={selectedCampaign} />
-                          )}
-                      </Suspense>
-                    </td>
-                  </tr>
+                  <td colSpan={5} className="px-6 py-4">
+                    <Suspense
+                      fallback={
+                        <div className="flex items-center justify-center py-8">
+                          <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+                        </div>
+                      }
+                    >
+                      {selectedCampaign &&
+                        selectedCampaign.templateName === campaign.name && (
+                          <CampaignDetails campaign={selectedCampaign} />
+                        )}
+                    </Suspense>
+                  </td>
                 )}
               </Fragment>
             ))}

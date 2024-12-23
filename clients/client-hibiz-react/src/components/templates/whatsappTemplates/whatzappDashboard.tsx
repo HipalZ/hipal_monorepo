@@ -1,4 +1,4 @@
-import { lazy, memo, useCallback } from "react";
+import { Fragment, lazy, memo, useCallback, useState } from "react";
 import useWhatsapp, {
   Step,
   TemplateSteps,
@@ -15,6 +15,15 @@ import {
   Tabs,
   useWhatsappTempStore,
 } from "@/components/store/useWhatsappTempStore";
+import {
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Transition,
+} from "@headlessui/react";
+import { ChevronDownIcon, Filter } from "lucide-react";
+import CampaignAdvancedAnalytics from "./campaignAdvancedAnalytics";
 
 const TemplatesCarousel = lazy(() => import("./templatesCarousel"));
 const CampaignAnalytics = lazy(() => import("./campaignAnalytics"));
@@ -33,11 +42,14 @@ const MemoWhatzappDashboard = () => {
     resetTemplateData: s.resetTemplateData,
     setShowSuccessPopup: s.setShowSuccessPopup,
   }));
-
-  const { activeTab, setActiveTab } = useWhatsappTempStore((s) => ({
-    setActiveTab: s.setActiveTab,
-    activeTab: s.activeTab,
-  }));
+  const [filter, setFilter] = useState("View By Template");
+  const { activeTab, setActiveTab, openAnalytics } = useWhatsappTempStore(
+    (s) => ({
+      setActiveTab: s.setActiveTab,
+      activeTab: s.activeTab,
+      openAnalytics: s.openAnalytics,
+    }),
+  );
 
   const businessId = useBusinessData((s) => s.businessData?._id);
 
@@ -72,6 +84,10 @@ const MemoWhatzappDashboard = () => {
     }
   }, []);
 
+  const handleFilterChange = (filterOption: string) => {
+    setFilter(filterOption);
+  };
+
   const { isPending } = useQuery({
     queryKey: ["templates", businessId, activeTab],
     queryFn: getTemplates,
@@ -79,7 +95,7 @@ const MemoWhatzappDashboard = () => {
   });
 
   return (
-    <main className="container relative px-2 mx-auto my-4">
+    <main className="container relative h-[80dvh] px-2 mx-auto my-4">
       <nav className="flex items-center justify-between px-2 py-4 mb-2 bg-white rounded-xl">
         <ul className="flex space-x-2 overflow-auto">
           {Object.values(Tabs).map((tab) => (
@@ -99,26 +115,93 @@ const MemoWhatzappDashboard = () => {
             </li>
           ))}
         </ul>
-        <ul className="hidden gap-2 md:flex">
-          <li>
-            <button
-              type="button"
-              className="px-4 py-2 text-white bg-blue-600 rounded-lg shadow-lg hover:bg-blue-500 on_active_bounce"
-              onClick={() => handleCreateTemplate(TemplateType.Marketing)}
-            >
-              + Marketing Template
-            </button>
-          </li>
-          <li>
-            <button
-              type="button"
-              className="px-4 py-2 text-white bg-blue-600 rounded-lg shadow-lg hover:bg-blue-500 on_active_bounce"
-              onClick={() => handleCreateTemplate(TemplateType.Utility)}
-            >
-              + Utility Template
-            </button>
-          </li>
-        </ul>
+        {activeTab === Tabs.TEMPLATES && (
+          <ul className="hidden gap-2 md:flex">
+            <li>
+              <button
+                type="button"
+                className="px-4 py-2 text-white bg-blue-600 rounded-lg shadow-lg hover:bg-blue-500 on_active_bounce"
+                onClick={() => handleCreateTemplate(TemplateType.Marketing)}
+              >
+                + Marketing Template
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                className="px-4 py-2 text-white bg-blue-600 rounded-lg shadow-lg hover:bg-blue-500 on_active_bounce"
+                onClick={() => handleCreateTemplate(TemplateType.Utility)}
+              >
+                + Utility Template
+              </button>
+            </li>
+          </ul>
+        )}
+        {
+          <ul className="hidden gap-2 md:flex">
+            <li>
+              <Menu as="div" className="relative inline-block text-left">
+                <div className="border border-gray-500 rounded-lg">
+                  <MenuButton className="inline-flex items-center justify-center w-full p-2 text-sm font-medium rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75">
+                    <Filter size={16} />
+                    <ChevronDownIcon
+                      className="w-5 h-5 ml-1 -mr-1"
+                      aria-hidden="true"
+                    />
+                  </MenuButton>
+                </div>
+                <Transition
+                  as={Fragment}
+                  enter="transition ease-out duration-100"
+                  enterFrom="transform opacity-0 scale-95"
+                  enterTo="transform opacity-100 scale-100"
+                  leave="transition ease-in duration-75"
+                  leaveFrom="transform opacity-100 scale-100"
+                  leaveTo="transform opacity-0 scale-95"
+                >
+                  <MenuItems className="absolute right-0 w-56 mt-2 origin-top-right bg-white divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <div className="px-1 py-1">
+                      <MenuItem>
+                        {({ active }) => (
+                          <button
+                            type="button"
+                            className={`${
+                              active
+                                ? "bg-blue-500 text-white"
+                                : "text-gray-900"
+                            } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
+                            onClick={() =>
+                              handleFilterChange("View By Template")
+                            }
+                          >
+                            View By Template
+                          </button>
+                        )}
+                      </MenuItem>
+                      <MenuItem>
+                        {({ active }) => (
+                          <button
+                            type="button"
+                            className={`${
+                              active
+                                ? "bg-blue-500 text-white"
+                                : "text-gray-900"
+                            } group flex rounded-md items-center w-full px-2 py-2 text-sm`}
+                            onClick={() =>
+                              handleFilterChange("View By Campaign")
+                            }
+                          >
+                            View By Campaign
+                          </button>
+                        )}
+                      </MenuItem>
+                    </div>
+                  </MenuItems>
+                </Transition>
+              </Menu>
+            </li>
+          </ul>
+        }
       </nav>
       {activeTab === Tabs.TEMPLATES && (
         <section className="p-4 mb-20 bg-white shadow-sm rounded-xl">
@@ -149,7 +232,11 @@ const MemoWhatzappDashboard = () => {
           </article>
         </section>
       )}
-      {activeTab === Tabs.CAMPAIGNS && <CampaignAnalytics />}
+      {activeTab === Tabs.CAMPAIGNS && !openAnalytics && <CampaignAnalytics />}
+      {activeTab === Tabs.CAMPAIGNS && openAnalytics && (
+        <CampaignAdvancedAnalytics />
+      )}
+
       {/* {activeTab === Tabs.INTERACTIVE_FLOW && <InteractiveFlows />} */}
     </main>
   );

@@ -163,7 +163,7 @@ const MemoWhatzapp = () => {
           {step === Step.CHATS ? (
             <WhatsappChats />
           ) : (
-            <section className="sticky max-w-[69rem] bottom-4 float-end z-50">
+            <section className="sticky max-w-[69rem] bottom-2 float-end right-4 z-50">
               <button
                 type="button"
                 onClick={toggleChat}
