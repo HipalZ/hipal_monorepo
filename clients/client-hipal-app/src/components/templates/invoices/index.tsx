@@ -253,10 +253,10 @@ const businessData = [
     bizName: "The Tree Stories",
     status: false,
     serviceCost: 3500,
-    months: 12,
+    months: 6,
     address:
       "Nagarjuna Sagar Ring Rd, Mohan Nagar, Vivekananda Colony, L. B. Nagar, Hyderabad, Telangana 500074",
-    gst: "",
+    gst: "36AATFT4500FIZ4",
   },
 ];
 
