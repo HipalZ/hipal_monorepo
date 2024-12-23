@@ -20,7 +20,6 @@ import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import CartButton from "./cartShowing";
-import TableNameMissing from "./tableNameMissing";
 
 const MemoCart = dynamic(() => import("@/components/organisms/cart"), {
   ssr: false,
@@ -47,14 +46,12 @@ const MenuItem = ({
       className={cn(
         "relative flex flex-col items-center justify-center z-10 px-2",
       )}
-      // animate={isSelected ? { y: 0 } : { y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
       <motion.div
         className={cn(
           "relative z-10 flex items-center space-x-1 justify-center px-2",
         )}
-        // animate={isSelected ? { y: -10 } : { y: 0 }}
         transition={{ type: "spring", stiffness: 800, damping: 50 }}
       >
         {isSelected && (
@@ -111,15 +108,8 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
   const closeModal = useCallback(() => {
     setInputModal(false);
   }, [setInputModal]);
-  const showingCart = useCallback(() => {
-    setCartPage("cart");
-    setShowCart(!showCart);
-  }, [showCart, setShowCart, setCartPage]);
 
   const openModal = useCallback(() => {
-    if (selected === "menu" || selected === "catalogue") {
-      setDirection("category");
-    }
     if (!accessToken) {
       router.push(`/${customLink}/user/signup`);
     }
@@ -140,31 +130,9 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
     setShowCart,
   ]);
 
-  const openCallWaiterModal = useCallback(() => {
-    setCallWaiterModal(true);
-  }, []);
-
   const closeCallWaiterModal = useCallback(() => {
     setCallWaiterModal(false);
   }, []);
-
-  const triggerCallWaiter = useCallback(() => {
-    setDirection("category");
-    if (!tableName) {
-      return router.push(`/${customLink}/scan`);
-    }
-    if (!accessToken) {
-      return router.push(`/${customLink}/user/signup`);
-    }
-    openCallWaiterModal();
-  }, [
-    setDirection,
-    accessToken,
-    router,
-    customLink,
-    tableName,
-    openCallWaiterModal,
-  ]);
 
   if (subscribeModal || reviewPopup) {
     return null;
@@ -240,7 +208,12 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
       </motion.nav>
 
       {inputModal && accessToken && (
-        <BottomPopUp show={inputModal} onClose={closeModal} linearGradTheme>
+        <BottomPopUp
+          height="80dvh"
+          show={inputModal}
+          onClose={closeModal}
+          linearGradTheme
+        >
           <AddAmountModal />
         </BottomPopUp>
       )}
@@ -255,11 +228,7 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
       )}
 
       {showCart && (
-        <BottomPopUp
-          bottomCross
-          show={showCart}
-          onClose={() => setShowCart(false)}
-        >
+        <BottomPopUp hide show={showCart} onClose={() => setShowCart(false)}>
           <MemoCart />
         </BottomPopUp>
       )}

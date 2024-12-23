@@ -10,9 +10,9 @@ import { cn, defaultThemes } from "@/components/utils/helpers";
 import dynamics from "next/dynamic";
 import { Suspense } from "react";
 
-// export const dynamic = "force-dynamic";
-// export const fetchCache = "force-no-store";
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+// export const revalidate = 300;
 //
 const AllCouponz = dynamics(
   () => import("@/components/templates/couponz/allCouponz"),

@@ -11,6 +11,7 @@ const MemoBottomPopUp = ({
   hide,
   linearGradTheme,
   bottomCross,
+  height,
 }: {
   children: React.ReactNode;
   show: boolean;
@@ -18,6 +19,7 @@ const MemoBottomPopUp = ({
   hide?: boolean;
   linearGradTheme?: boolean;
   bottomCross?: boolean;
+  height?: string;
 }) => {
   const transitions = useTransition(show, {
     from: { transform: "translateY(100%)", opacity: 0 },
@@ -25,8 +27,6 @@ const MemoBottomPopUp = ({
     leave: { transform: "translateY(100%)", opacity: 0 },
     config: { tension: 250, friction: 30 },
   });
-
-  console.log("BottomPopUp");
 
   useEffect(() => {
     if (show) {
@@ -70,11 +70,11 @@ const MemoBottomPopUp = ({
             backgroundColor: "rgba(0, 0, 0, 0.2)",
             backdropFilter: "blur(5px)",
           }}
-          className="fixed inset-0 z-[110] overflow-y-auto flex items-end justify-center"
+          className="fixed inset-0 z-[110] overflow-auto flex items-end justify-center"
           onClick={onClose}
         >
           <animated.div
-            style={styles}
+            style={{ ...styles, height: height || "100dvh" }}
             className={cn(
               "relative w-full max-w-md shadow-md",
               !hide && "rounded-t-[1rem]",

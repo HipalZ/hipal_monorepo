@@ -12,11 +12,11 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import Link from "next/link";
 import { FiSearch } from "react-icons/fi";
-import { MdReceiptLong } from "react-icons/md";
 import { BsHandIndexThumb } from "react-icons/bs";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
 import { motion, AnimatePresence } from "framer-motion";
+import TimeBadge from "./test";
 
 const MemoCategoryPageBtn = () => {
   const accessToken = useUserToken.getState().accessToken;
@@ -160,16 +160,7 @@ const MemoCategoryPageBtn = () => {
               </motion.button>
             </motion.div>
             <motion.div variants={itemVariants}>
-              <motion.button
-                type="button"
-                onClick={proceedToPayment}
-                className="border border-[#B0B0B0] p-2 rounded-md flex items-center"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <MdReceiptLong size={24} />
-                <span className="text-sm"> My Orders</span>
-              </motion.button>
+              <TimeBadge onClick={proceedToPayment} />
             </motion.div>
           </motion.section>
         )}

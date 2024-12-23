@@ -43,7 +43,7 @@ const MemoLiveCart = () => {
         <section
           className="fixed flex items-center justify-between overflow-hidden !text-sm
      px-4 py-3 w-full text-[#FFF] max-w-[30rem] z-50 transform
-      -translate-x-1/2 -translate-y-1/2 left-1/2 bottom-[3.5rem] bg-[#008800]"
+      -translate-x-1/2 -translate-y-1/2 left-1/2 bottom-[3rem] bg-[#008800]"
         >
           <motion.div
             className="absolute inset-0 pointer-events-none w-full max-w-[30rem]"

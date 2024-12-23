@@ -3,12 +3,12 @@
 import { memo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-
 import Burger from "@/assets/menuIntro/Burger.png";
 import Cola from "@/assets/menuIntro/cola.png";
 import Loaf from "@/assets/menuIntro/loaf.png";
 import Pizza from "@/assets/menuIntro/pizza.png";
 import Sandwhich from "@/assets/menuIntro/sandwhich.png";
+import MenuBackground from "@/assets/menuIntro/menuBackground.png";
 
 const images = [Burger, Cola, Loaf, Pizza, Sandwhich];
 
@@ -29,11 +29,12 @@ function getPositionStyles(offset: number) {
       return {
         left: 0,
         right: "auto",
+        top: "10%",
         transform: "none",
       };
     case 0:
       return {
-        left: "28%",
+        left: "25%",
         transform: "translateX(-30%)",
         right: "auto",
       };
@@ -41,6 +42,7 @@ function getPositionStyles(offset: number) {
       return {
         right: 0,
         left: "auto",
+        top: "10%",
         transform: "none",
       };
     default:
@@ -59,41 +61,46 @@ function MenuIntroduction() {
   }, []);
 
   return (
-    <div className="relative flex items-center justify-center w-full h-[15rem] overflow-hidden mt-9 bg-primary rounded-xl">
-      <AnimatePresence initial={false}>
-        {[-1, 0, 1].map((offset) => {
-          const imageIndex = wrapIndex(page + offset, images.length);
-          return (
-            <motion.div
-              key={`${imageIndex}-${offset}`}
-              custom={offset}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{
-                x: { type: "spring", stiffness: 90, damping: 30 },
-                opacity: { duration: 0.2 },
-                scale: { type: "spring", stiffness: 90, damping: 30 },
-              }}
-              className="absolute flex items-center justify-center h-full"
-              style={{
-                ...getPositionStyles(offset),
-              }}
-            >
-              <Image
-                src={images[imageIndex]}
-                alt={`Menu item ${imageIndex + 1}`}
-                width={offset === 0 ? 200 : 80}
-                height={offset === 0 ? 200 : 80}
-                className="object-contain transition-all duration-300"
-                priority={offset === 0}
-              />
-            </motion.div>
-          );
-        })}
-      </AnimatePresence>
-    </div>
+    <section className="relative ">
+      <div className="absolute w-full h-full bg-primary">
+        <Image src={MenuBackground} alt="Menu Background" layout="fill" />
+      </div>
+      <div className="relative flex items-center justify-center w-full h-[15rem] overflow-hidden mt-9 rounded-xl pb-12">
+        <AnimatePresence initial={false}>
+          {[-1, 0, 1].map((offset) => {
+            const imageIndex = wrapIndex(page + offset, images.length);
+            return (
+              <motion.div
+                key={`${imageIndex}-${offset}`}
+                custom={offset}
+                variants={variants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                  x: { type: "spring", stiffness: 90, damping: 30 },
+                  opacity: { duration: 0.2 },
+                  scale: { type: "spring", stiffness: 90, damping: 30 },
+                }}
+                className="absolute flex items-center justify-center h-full"
+                style={{
+                  ...getPositionStyles(offset),
+                }}
+              >
+                <Image
+                  src={images[imageIndex]}
+                  alt={`Menu item ${imageIndex + 1}`}
+                  width={offset === 0 ? 200 : 80}
+                  height={offset === 0 ? 200 : 80}
+                  className="object-contain transition-all duration-300"
+                  priority={offset === 0}
+                />
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      </div>
+    </section>
   );
 }
 
