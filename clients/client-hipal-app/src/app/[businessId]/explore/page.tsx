@@ -1,5 +1,6 @@
 import { businessApis } from "@/apis/explore";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import MenuIntroduction from "@/components/organisms/explore/menuIntroduction";
 import UniquelyDishes from "@/components/organisms/explore/uniquelyDishes";
 import type {
   IBannerPayload,
@@ -74,6 +75,7 @@ export default async function Explore({
         <MainBackground data={data} />
         <div className="z-10 w-full text-4xl shadow-xl bg-base-100">
           <HeroSection data={data} />
+          <MenuIntroduction />
           <SubLoyalty loyalty={data?.loyalty} />
 
           <AllCouponz />

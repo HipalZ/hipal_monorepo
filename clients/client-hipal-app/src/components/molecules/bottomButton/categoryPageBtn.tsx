@@ -119,9 +119,8 @@ const MemoCategoryPageBtn = () => {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="px-2 fixed z-50 bottom-0 w-full 
+            className="px-2 sticky z-50 bottom-0 w-full 
              max-w-[30rem] bg-[#FCFCFC] shadow-lg
-            transform md:-translate-x-1/2 md:left-1/2
             overflow-hidden py-4 text-black flex gap-2 justify-evenly"
             style={{ boxShadow: "4px 4px 4px 4px #00000040" }}
           >
