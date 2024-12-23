@@ -54,6 +54,7 @@ const BottomButton = dynamics(
   () => import("@/components/molecules/bottomButton"),
   { loading: () => <SkeletonLoader height={50} /> },
 );
+
 const PageName = dynamics(() => import("@/components/molecules/pageName"), {
   loading: () => <SkeletonLoader height={50} />,
 });
