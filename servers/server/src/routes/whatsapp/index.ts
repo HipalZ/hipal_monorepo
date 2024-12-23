@@ -2313,6 +2313,99 @@ const whatsappRouter = new Hono()
         data: waAnalyticsUser,
       });
     },
+  )
+
+  .get(
+    "/campaigns/:businessId/:templateId",
+    zValidator(
+      "param",
+      z.object({ businessId: z.string(), templateId: z.string() }),
+    ),
+
+    async (c) => {
+      const { businessId, templateId } = c.req.param();
+
+      const campaigns = [
+        {
+          businessId,
+          templateId,
+          campainName: "campaign_20-12-2024-12:00",
+          campainType: "marketing",
+          date: Date.now(),
+          _id: "1",
+        },
+        {
+          businessId,
+          templateId,
+          campainName: "campaign_20-12-2024-12:00",
+          campainType: "marketing",
+          date: Date.now(),
+          _id: "2",
+        },
+        {
+          businessId,
+          templateId,
+          campainName: "campaign_20-12-2024-12:00",
+          campainType: "marketing",
+          date: Date.now(),
+          _id: "3",
+        },
+      ];
+
+      return c.json({
+        message: "campaigns",
+        err: false,
+        data: campaigns,
+      });
+    },
+  )
+
+  .get(
+    "/campaign_analytics/:businessId/:campaignId",
+    zValidator(
+      "param",
+      z.object({ businessId: z.string(), campaignId: z.string() }),
+    ),
+    zValidator(
+      "query",
+      z.object({
+        pageNumber: z.string().optional(),
+        status: z.string().optional(),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId, campaignId } = c.req.param();
+      const { pageNumber, status } = c.req.query();
+      const pageNumberInt = Number(pageNumber) || 1;
+      if (status) {
+        const waCampaignAnalyticsUser = await WhatsAppAnalyticsUser.find({
+          businessId,
+
+          status: status,
+        })
+          .skip((pageNumberInt - 1) * 40)
+          .limit(40);
+
+        return c.json({
+          message: "wa analytics user",
+          err: false,
+          data: waCampaignAnalyticsUser,
+        });
+      }
+
+      const waAnalyticsUser = await WhatsAppAnalyticsUser.find({
+        businessId,
+      })
+        .skip((pageNumberInt - 1) * 40)
+        .limit(40);
+
+      return c.json({
+        message: "wa analytics user",
+        err: false,
+        data: waAnalyticsUser,
+      });
+    },
   );
 
 export default whatsappRouter;
