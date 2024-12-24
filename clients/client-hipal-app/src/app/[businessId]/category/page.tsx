@@ -5,9 +5,9 @@ import MainTypes from "@/components/molecules/categoryTypes/mainTypes";
 import { MenuBannerPage } from "@/components/organisms/menuBanner";
 import TopSectionVideo from "@/components/organisms/menuBanner/topSectionVideo";
 
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
-// export const revalidate = 300;
+// export const dynamic = "force-dynamic";
+// export const fetchCache = "force-no-store";
+export const revalidate = 300;
 
 const CategorySkeleton = dynamics(
   () => import("@/components/atoms/progressBar/categoryLoader"),
