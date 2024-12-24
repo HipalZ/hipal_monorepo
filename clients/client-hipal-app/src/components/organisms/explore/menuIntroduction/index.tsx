@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { BiSolidChevronRight } from "react-icons/bi";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const images = [Burger, Cola, Loaf, Pizza, Sandwhich];
 
@@ -57,6 +58,7 @@ function getPositionStyles(offset: number) {
 function MenuIntroduction() {
   const [page, setPage] = useState(0);
   const customLink = useParams()?.businessId || "";
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -68,6 +70,11 @@ function MenuIntroduction() {
     initial: { x: "-100%" },
     animate: { x: "100%" },
   };
+
+  if (outletInfo.outLetType === "OTHER") {
+    return null;
+  }
+
   return (
     <section className="relative">
       <div className="absolute w-full h-full">
@@ -128,7 +135,10 @@ function MenuIntroduction() {
           })}
         </AnimatePresence>
       </Link>
-      <section className="flex items-center justify-center w-full">
+      <Link
+        href={`/${customLink}/category`}
+        className="flex items-center justify-center w-full"
+      >
         <button
           type="button"
           className="h-12 relative overflow-hidden flex items-center px-4 mt-4 text-base font-medium text-center text-white bg-[#A40001] rounded-3xl"
@@ -151,7 +161,7 @@ function MenuIntroduction() {
           Checkout menu
           <BiSolidChevronRight strokeWidth={1} size={24} />
         </button>
-      </section>
+      </Link>
     </section>
   );
 }
