@@ -4,21 +4,33 @@ import React, { memo, useCallback } from "react";
 import { BiPlus } from "react-icons/bi";
 import { FaArrowRightLong } from "react-icons/fa6";
 import { PiShoppingCartDuotone } from "react-icons/pi";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/components/store/useCart";
 import MemoCart from "@/components/organisms/cart";
 import useTableData from "@/components/store/useTableData";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import TableNameMissing from "./tableNameMissing";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
+import { useSearch } from "@/components/store/useSearch";
 
 const MemoLiveCart = () => {
   const cart = useCartStore((s) => s.cart);
   const { setShowCart, cartPage, setCartPage, showCart } = useCart();
   const { tableNameMissing, setTableNameMissing, tableName } = useTableData();
+  const { isSearchActive } = useSearch();
+
   const shineVariants = {
     initial: { x: "-100%" },
     animate: { x: "100%" },
+  };
+
+  const cartVariants = {
+    initial: { width: "100%", borderRadius: "0px", bottom: "4.5rem" },
+    animate: {
+      width: isSearchActive ? "20rem" : "100%",
+      borderRadius: isSearchActive ? "9999px" : "0px",
+      bottom: isSearchActive ? "1.5rem" : "4.5rem",
+    },
   };
 
   const openCart = useCallback(() => {
@@ -39,49 +51,55 @@ const MemoLiveCart = () => {
 
   return (
     <>
-      {cart.length > 0 ? (
-        <section
-          className="fixed flex items-center justify-between overflow-hidden !text-sm
-     px-4 py-3 w-full text-[#FFF] max-w-[30rem] z-50 transform
-      -translate-x-1/2 -translate-y-1/2 left-1/2 bottom-[3rem] bg-[#008800]"
-        >
-          <motion.div
-            className="absolute inset-0 pointer-events-none w-full max-w-[30rem]"
-            variants={shineVariants}
+      <AnimatePresence>
+        {cart.length > 0 && (
+          <motion.section
+            className="fixed flex items-center justify-between overflow-hidden !text-sm
+              px-4 py-3 text-[#FFF] max-w-[30rem] z-50 transform
+              -translate-x-1/2 left-1/2 bg-[#008800]"
+            variants={cartVariants}
             initial="initial"
             animate="animate"
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              // repeatDelay: 1,
-              ease: "backInOut",
-            }}
-            style={{
-              background: "var(--shine-effect)",
-            }}
-          />
-          <button
-            onClick={openCart}
-            type="button"
-            className="flex items-center gap-2"
+            exit="initial"
+            transition={{ duration: 0.5, ease: [0.43, 0.13, 0.23, 0.96] }}
           >
-            <PiShoppingCartDuotone size={24} />
-            <span className="flex items-center text-base font-semibold">
-              <BiPlus strokeWidth={1.5} />
-              {cart.length}
-            </span>
-            <span>Items</span>
-          </button>
-          <button
-            type="button"
-            onClick={openCart}
-            className="flex items-center gap-2"
-          >
-            <span>Proceed to order</span>
-            <FaArrowRightLong />
-          </button>
-        </section>
-      ) : null}
+            <motion.div
+              className="absolute inset-0 pointer-events-none w-full max-w-[30rem]"
+              variants={shineVariants}
+              initial="initial"
+              animate="animate"
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "backInOut",
+              }}
+              style={{
+                background: "var(--shine-effect)",
+              }}
+            />
+            <button
+              onClick={openCart}
+              type="button"
+              className="flex items-center gap-2"
+            >
+              <PiShoppingCartDuotone size={24} />
+              <span className="flex items-center text-base font-semibold">
+                <BiPlus strokeWidth={1.5} />
+                {cart.length}
+              </span>
+              <span>Items</span>
+            </button>
+            <button
+              type="button"
+              onClick={openCart}
+              className="flex items-center gap-2"
+            >
+              <span>Proceed to order</span>
+              <FaArrowRightLong />
+            </button>
+          </motion.section>
+        )}
+      </AnimatePresence>
       {showCart && tableName ? (
         <BottomPopUp show={showCart} onClose={() => setShowCart(false)} hide>
           <MemoCart />

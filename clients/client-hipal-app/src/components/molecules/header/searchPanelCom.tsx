@@ -1,12 +1,15 @@
+"use client";
+
 import React, { memo, useCallback, useMemo } from "react";
 import { useSearch } from "@/components/store/useSearch";
-import { BiArrowBack } from "react-icons/bi";
 import HorizontalCard from "@/components/atoms/card/horizontalCard";
 import { useActiveClass } from "@/components/store/useActiveClass";
+import { FaChevronDown } from "react-icons/fa";
+import { motion, AnimatePresence } from "framer-motion";
 
 const MemoSearchPanelCom = ({ allDishes }) => {
-  const { searchText, setSearchText, setIsSearchActive } = useSearch();
-
+  const { searchText, setSearchText, setIsSearchActive, isSearchActive } =
+    useSearch();
   const { isActiveDishType } = useActiveClass();
 
   const filteredDishes = useMemo(() => {
@@ -40,33 +43,64 @@ const MemoSearchPanelCom = ({ allDishes }) => {
     setIsSearchActive(false);
   }, [setIsSearchActive]);
 
+  const containerVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        when: "beforeChildren",
+        staggerChildren: 0.1,
+      },
+    },
+    exit: { opacity: 0, y: 50, transition: { duration: 0.3 } },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  };
+
   return (
-    <>
-      <div className="flex items-center mt-4 ml-4 text-base">
-        <BiArrowBack
-          onClick={handleBack}
-          size={24}
-          className="cursor-pointer"
-        />
-        <input
-          type="search"
-          className="w-[92%] px-4 py-2 text-sm mx-4 border border-gray-300 rounded-md"
-          placeholder="Search for items..."
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-        />
-      </div>
-      <div className="mt-4 overflow-y-auto max-h-[95dvh] min-h-[95dvh]">
-        {filteredDishes.map((dish, index) => (
-          <div
-            key={`${dish._id}-${index}`}
-            className="py-2 border-b cursor-pointer"
+    <AnimatePresence>
+      {isSearchActive && (
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          <motion.div
+            className="flex items-center gap-2 mb-4 ml-2 mr-4 text-base"
+            variants={itemVariants}
           >
-            <HorizontalCard dishData={dish} />
-          </div>
-        ))}
-      </div>
-    </>
+            <input
+              type="search"
+              className="w-[100%] px-4 py-2 text-sm border border-gray-300 rounded-md"
+              placeholder="Search for items..."
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+            />
+            <FaChevronDown onClick={handleBack} className="cursor-pointer" />
+          </motion.div>
+          <motion.div
+            className="mt-4 overflow-y-auto max-h-[95dvh] min-h-[95dvh]"
+            variants={itemVariants}
+          >
+            {filteredDishes.map((dish, index) => (
+              <motion.div
+                key={`${dish._id}-${index}`}
+                className="py-2 border-b cursor-pointer"
+                variants={itemVariants}
+              >
+                <HorizontalCard dishData={dish} />
+              </motion.div>
+            ))}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

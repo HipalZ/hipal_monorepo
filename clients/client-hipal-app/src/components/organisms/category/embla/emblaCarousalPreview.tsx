@@ -10,6 +10,7 @@ import { cn } from "@hi/common";
 
 import LivePreview from "./preview";
 import type { TimingType } from "@/components/types/businessData";
+import { useDishesStore } from "@/components/store/useDishesStore";
 
 const TWEEN_FACTOR_BASE = 0.2;
 
@@ -26,6 +27,17 @@ const EmblaCarouselPreview: React.FC<PropType> = (props) => {
   const [emblaRef, emblaApi] = useEmblaCarousel(options);
   const tweenFactor = useRef(0);
   const tweenNodes = useRef<HTMLElement[]>([]);
+  const { dishes } = useDishesStore((s) => ({
+    dishes: s.dishes,
+  }));
+
+  const menuBannerDishes = useMemo(() => {
+    return timings.dishIds
+      .map((dishID) => dishes.find((dish) => dish._id === dishID))
+      .filter((dish) => dish !== undefined);
+  }, [timings, dishes]);
+
+  console.log(menuBannerDishes);
 
   const setTweenNodes = useCallback((emblaApi: EmblaCarouselType): void => {
     tweenNodes.current = emblaApi.slideNodes().map((slideNode) => {
@@ -102,9 +114,8 @@ const EmblaCarouselPreview: React.FC<PropType> = (props) => {
     <div className="embla2 !-mt-[3rem]">
       <div className="embla-_viewport" ref={emblaRef}>
         <div className="embla-_container">
-          {timings &&
-            timings.dishIds.length > 0 &&
-            timings.dishIds.map((dish) => (
+          {menuBannerDishes.length > 0 &&
+            menuBannerDishes.map((dish) => (
               <div className="embla-_slide" key={dish._id}>
                 <div className="embla-_parallax">
                   <div className={cn("embla-_parallax__layer")}>

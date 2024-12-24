@@ -1,4 +1,4 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState } from "react";
 import Hipay from "@/assets/payment/hipay.png";
 import hipayBg from "@/assets/payment/hipay_background.png";
 import style from "./addAmount.module.css";
@@ -7,7 +7,6 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import useTableData from "@/components/store/useTableData";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import { cn } from "@/components/utils/helpers";
 import { useLogin } from "@/components/store/useLogin";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import { getRandomBlurImg } from "@/components/utils/images";
@@ -21,6 +20,7 @@ const AddAmountModal = memo(() => {
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const business = useBusinessDetails((s) => s.businessDetails);
+  const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
   const { mutate, isPending } = useCallTheCaptain();
   const {
@@ -106,7 +106,7 @@ const AddAmountModal = memo(() => {
   }, [businessId, tableName, name, userDetails._id, mutate]);
   return (
     <section className=" relative overflow-y-auto overflow-x-hidden mb-[2rem]">
-      <header className="bg-white h-[4.25rem] flex items-center text-primary">
+      <header className="bg-base-100 h-[4.25rem] flex items-center text-primary">
         {business.logoUrl ? (
           <figure className="h-[5rem] p-4 w-[5rem]">
             <Image

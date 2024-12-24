@@ -2613,7 +2613,7 @@ input[type='password'] {
   }
 
 
- @keyframes spin {
+ @keyframes border-spin {
   to {
     --angle: 360deg;
   }
@@ -2635,7 +2635,7 @@ input[type='password'] {
   mask-composite: exclude;
   -webkit-mask-image: linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
-  animation: spin 3s linear infinite;
+  animation: border-spin  3s linear infinite;
   height: 2.75rem;
   margin-top: -2px;
 }
