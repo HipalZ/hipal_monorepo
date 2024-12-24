@@ -9,6 +9,7 @@ import couponzRouter from "./couponz";
 import dishesRouter from "./dishes";
 import groupRouter from "./groups";
 import hipalzRouter from "./hipalz";
+import iconRouter from "./icon";
 import menuBannerRouter from "./menu-banner";
 import paymentsRouter from "./payments";
 import posRouter from "./pos";
@@ -47,6 +48,7 @@ export const routes = app
   .route("/whatsapp", whatsappRouter)
   .route("/cart", cartRouter)
   .route("/surl", surlRouter)
-  .route("/zones_and_tables", zonesAndTablesRouter);
+  .route("/zones_and_tables", zonesAndTablesRouter)
+  .route("/icon", iconRouter);
 
 export type AppType = typeof routes;
