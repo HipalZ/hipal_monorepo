@@ -88,6 +88,7 @@ const DishesList: FC<IDishesProps> = (props) => {
       return childCategory.filter(hasVisibleDishes);
     }
   }, [childCategory, parentCategory]);
+
   const mainTypes = useMemo(
     () =>
       parentCategory?.filter((category) => category.subCategoryIds.length > 0),

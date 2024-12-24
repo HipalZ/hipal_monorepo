@@ -37,7 +37,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
     updateCartItem,
   } = useCartStore();
 
-  const { setShowCart, showCart } = useCart();
+  const { setShowCart, showCart, setCartPage } = useCart();
 
   const handleOpenModal = useCallback(() => {
     setOpenBottomPanel(true);
@@ -126,6 +126,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
         item?.dish?.portions?.length > 0 ||
         item?.dish?.addOnIds?.length > 0
       ) {
+        setCartPage("order");
         setShowCart(!showCart);
         return;
       }

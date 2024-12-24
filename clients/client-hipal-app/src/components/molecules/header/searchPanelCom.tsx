@@ -62,42 +62,42 @@ const MemoSearchPanelCom = ({ allDishes }) => {
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
   };
 
-  useEffect(() => {
-    if (isSearchActive) {
-      // Store whatever hash was originally in the URL
-      const originalHash = window.location.hash;
+  // useEffect(() => {
+  //   if (isSearchActive) {
+  //     // Store whatever hash was originally in the URL
+  //     const originalHash = window.location.hash;
 
-      // Set the hash to indicate the Search is open
-      window.location.hash = "#search";
+  //     // Set the hash to indicate the Search is open
+  //     window.location.hash = "#search";
 
-      const handleHashChange = () => {
-        // If we detect the user navigated away from #search, close the Search
-        if (window.location.hash !== "#search") {
-          setIsSearchActive(false);
-        }
-      };
+  //     const handleHashChange = () => {
+  //       // If we detect the user navigated away from #search, close the Search
+  //       if (window.location.hash !== "#search") {
+  //         setIsSearchActive(false);
+  //       }
+  //     };
 
-      window.addEventListener("hashchange", handleHashChange);
+  //     window.addEventListener("hashchange", handleHashChange);
 
-      // Cleanup: remove listener and restore old hash if still on #search
-      return () => {
-        window.removeEventListener("hashchange", handleHashChange);
+  //     // Cleanup: remove listener and restore old hash if still on #search
+  //     return () => {
+  //       window.removeEventListener("hashchange", handleHashChange);
 
-        if (window.location.hash === "#search") {
-          if (originalHash) {
-            window.location.hash = originalHash;
-          } else {
-            // Remove the hash entirely
-            history.pushState(
-              "",
-              document.title,
-              window.location.pathname + window.location.search,
-            );
-          }
-        }
-      };
-    }
-  }, [isSearchActive, setIsSearchActive]);
+  //       if (window.location.hash === "#search") {
+  //         if (originalHash) {
+  //           window.location.hash = originalHash;
+  //         } else {
+  //           // Remove the hash entirely
+  //           history.pushState(
+  //             "",
+  //             document.title,
+  //             window.location.pathname + window.location.search,
+  //           );
+  //         }
+  //       }
+  //     };
+  //   }
+  // }, [isSearchActive, setIsSearchActive]);
 
   return (
     <AnimatePresence>
@@ -131,7 +131,7 @@ const MemoSearchPanelCom = ({ allDishes }) => {
                 className="py-2 border-b cursor-pointer"
                 variants={itemVariants}
               >
-                <HorizontalCard dishData={dish} />
+                <HorizontalCard hide dishData={dish} />
               </motion.div>
             ))}
           </motion.div>
