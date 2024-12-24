@@ -51,7 +51,7 @@ export const businessApis = {
 };
 
 export async function fetchAllBusinessIds() {
-  const res = await apiRpc.businesses.get.allbusiness.$get({});
+  const res = await apiRpc.businesses.get.allbusiness.$get();
   const response = await res.json();
   return response?.data.map((business: { _id: string }) => business._id);
 }

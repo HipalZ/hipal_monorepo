@@ -16,25 +16,11 @@ const menuBannerRouter = new Hono()
       const menuBanners = await MenuBanner.find({
         businessId,
         isPublished: true,
-      })
-        .populate({
-          path: "dishIds",
-          select: "name price description images portions dishTypes businessId",
-          populate: {
-            path: "addOnIds", // populate addOnIds within dishIds
-          },
-        })
-        .lean();
+      }).lean();
 
       const allHoursDelights = await MenuBanner.findOne({
         businessId,
         heading: "All Hours Delights",
-      }).populate({
-        path: "dishIds",
-        select: "name price description images portions dishTypes businessId",
-        populate: {
-          path: "addOnIds", // populate addOnIds within dishIds
-        },
       });
 
       const now = new Date();

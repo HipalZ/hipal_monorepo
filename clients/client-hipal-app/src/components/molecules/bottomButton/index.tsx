@@ -19,7 +19,6 @@ import MemoCallTheWaiterComponent from "./callTheWaiter";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
-import CartButton from "./cartShowing";
 
 const MemoCart = dynamic(() => import("@/components/organisms/cart"), {
   ssr: false,
@@ -204,7 +203,6 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
             isSelected={selectedBtn === "menu" || selectedBtn === "catalogue"}
           />
         </div>
-        <CartButton />
       </motion.nav>
 
       {inputModal && accessToken && (

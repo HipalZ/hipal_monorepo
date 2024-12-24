@@ -173,7 +173,12 @@ const MemoCategoryPageBtn = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
           >
-            <BottomPopUp show={inputModal} onClose={closeModal} linearGradTheme>
+            <BottomPopUp
+              height="75dvh"
+              show={inputModal}
+              onClose={closeModal}
+              linearGradTheme
+            >
               <AddAmountModal />
             </BottomPopUp>
           </motion.div>
