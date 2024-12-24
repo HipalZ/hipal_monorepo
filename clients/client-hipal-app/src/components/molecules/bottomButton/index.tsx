@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { RiCouponFill } from "react-icons/ri";
+import { RiCouponFill, RiCouponLine } from "react-icons/ri";
 import { MdAccountBalanceWallet, MdMenuBook } from "react-icons/md";
 import { LuScanLine } from "react-icons/lu";
 import { useLogin } from "@/components/store/useLogin";
@@ -175,7 +175,7 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
         />
         <div className="flex items-center justify-between">
           <MenuItem
-            icon={RiCouponFill}
+            icon={RiCouponLine}
             label="Rewards"
             href={`/${customLink}/${accessToken ? "loyalty" : "user/signup"}`}
             isSelected={selectedBtn === "rewards"}

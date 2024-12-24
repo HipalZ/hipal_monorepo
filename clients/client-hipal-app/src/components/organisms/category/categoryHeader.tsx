@@ -11,7 +11,7 @@ function CategoryHeader(props: ICategoryProps) {
   const { childCategory } = props;
 
   return (
-    <div className="sticky top-0 z-50 bg-white shadow-2xl">
+    <div className="sticky top-0 z-50 bg-white">
       <Header categories={childCategory} />
     </div>
   );

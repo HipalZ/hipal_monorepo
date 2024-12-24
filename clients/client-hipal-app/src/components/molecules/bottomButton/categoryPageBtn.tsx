@@ -17,12 +17,15 @@ import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescrip
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
 import { motion, AnimatePresence } from "framer-motion";
 import TimeBadge from "./test";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import BottomButton from ".";
 
 const MemoCategoryPageBtn = () => {
   const accessToken = useUserToken.getState().accessToken;
   const { businessId } = useBusinessDetails((s) => ({
     businessId: s.businessDetails?._id,
   }));
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const { isSearchActive, setIsSearchActive, showHeader, setShowHeader } =
     useSearch();
   const customLink = useParams()?.businessId as string;
@@ -113,58 +116,62 @@ const MemoCategoryPageBtn = () => {
 
   return (
     <>
-      <AnimatePresence>
-        {!isSearchActive && (
-          <motion.section
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="px-2 sticky z-50 bottom-0 w-full 
+      {outletInfo.outLetType !== "OTHER" ? (
+        <AnimatePresence>
+          {!isSearchActive && (
+            <motion.section
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              className="px-2 sticky z-50 bottom-0 w-full 
              max-w-[30rem] bg-[#FCFCFC] shadow-lg
             overflow-hidden py-4 text-black flex gap-2 justify-evenly"
-            style={{ boxShadow: "4px 4px 4px 4px #00000040" }}
-          >
-            <motion.div variants={itemVariants}>
-              <Link href={`/${customLink}/explore`} className="">
-                <motion.section
+              style={{ boxShadow: "4px 4px 4px 4px #00000040" }}
+            >
+              <motion.div variants={itemVariants}>
+                <Link href={`/${customLink}/explore`} className="">
+                  <motion.section
+                    className="border border-[#B0B0B0] p-2 rounded-md"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <PiArrowBendUpLeftBold size={24} />
+                  </motion.section>
+                </Link>
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <motion.button
+                  type="button"
+                  onClick={openSearchModal}
                   className="border border-[#B0B0B0] p-2 rounded-md"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <PiArrowBendUpLeftBold size={24} />
-                </motion.section>
-              </Link>
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <motion.button
-                type="button"
-                onClick={openSearchModal}
-                className="border border-[#B0B0B0] p-2 rounded-md"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <FiSearch size={24} />
-              </motion.button>
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <motion.button
-                type="button"
-                onClick={triggerCallWaiter}
-                className="border border-[#B0B0B0] p-2 rounded-md gap-1 flex items-center"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <BsHandIndexThumb size={24} />
-                <span className="text-sm">Call Captain</span>
-              </motion.button>
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <TimeBadge onClick={proceedToPayment} />
-            </motion.div>
-          </motion.section>
-        )}
-      </AnimatePresence>
+                  <FiSearch size={24} />
+                </motion.button>
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <motion.button
+                  type="button"
+                  onClick={triggerCallWaiter}
+                  className="border border-[#B0B0B0] p-2 rounded-md gap-1 flex items-center"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <BsHandIndexThumb size={24} />
+                  <span className="text-sm">Call Captain</span>
+                </motion.button>
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <TimeBadge onClick={proceedToPayment} />
+              </motion.div>
+            </motion.section>
+          )}
+        </AnimatePresence>
+      ) : (
+        <BottomButton selected={"catalogue"} />
+      )}
 
       <AnimatePresence>
         {inputModal && (

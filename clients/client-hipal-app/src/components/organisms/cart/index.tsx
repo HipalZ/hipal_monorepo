@@ -262,21 +262,13 @@ const Cart = () => {
       ];
     }
     if (cartPage === "order") {
-      return cartHistory && cartHistory.length > 0
-        ? [
-            {
-              text: "Pay Bill",
-              onClick: payPopCorn,
-              type: "button" as const,
-            },
-          ]
-        : [
-            {
-              text: "Order more",
-              onClick: () => setShowCart(false),
-              type: "button" as const,
-            },
-          ];
+      return [
+        {
+          text: "Pay Bill",
+          onClick: payPopCorn,
+          type: "button" as const,
+        },
+      ];
     }
 
     if (cartPage === "history") {

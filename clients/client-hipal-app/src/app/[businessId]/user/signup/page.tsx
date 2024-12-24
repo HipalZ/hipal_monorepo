@@ -122,7 +122,7 @@ const SignUp = memo(() => {
         <button
           disabled={loader}
           type="submit"
-          className="w-full text-white bg-black rounded-full on_active_bounce btn"
+          className="w-full py-2 text-white bg-black rounded-full on_active_bounce btn"
         >
           {loader ? (
             <span className="loader_spinner text-white bg-black !border-t-base-100 " />

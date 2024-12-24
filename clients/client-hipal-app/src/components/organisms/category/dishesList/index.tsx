@@ -160,7 +160,12 @@ const DishesList: FC<IDishesProps> = (props) => {
 
   return (
     <>
-      <section className="sticky z-50 text-[#000000] top-[5rem]">
+      <section
+        className={cn(
+          "sticky z-50 text-[#000000]",
+          outletInfo?.outLetType !== "OTHER" ? "top-[5rem]" : "top-[3rem]",
+        )}
+      >
         {!isSearchActive && (
           <SubTypes childCategory={subTypes} parentCategory={mainTypes} />
         )}

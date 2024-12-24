@@ -313,7 +313,7 @@ function OtpPage() {
           <button
             disabled={loading}
             type="submit"
-            className="w-full text-white bg-black rounded-full btn"
+            className="w-full py-2 text-white bg-black rounded-full btn"
           >
             {loading ? (
               <span className="loader_spinner !border-t-base-100  text-white" />

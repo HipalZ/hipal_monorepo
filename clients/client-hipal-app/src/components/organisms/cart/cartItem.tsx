@@ -98,22 +98,19 @@ const CartItem = ({ cartItem, hide }: CartItemProp) => {
         </div>
       </div>
 
-      {/* Image and quantity controls container */}
       <div className="flex flex-col items-center justify-between">
-        {/* Image container with reserved space */}
         {imageUrl ? (
           <ShimmerImage
             src={imageUrl}
             alt={cartItem?.dish?.name}
-            width={70}
-            height={70}
-            className="object-cover w-20 h-20 rounded-md"
+            width={100}
+            height={100}
+            className="object-cover w-24 h-24 rounded-md"
           />
         ) : null}
 
-        {/* Quantity Controls */}
         {!hide && (
-          <div className="flex items-center justify-between h-[1.75rem] mt-2 text-black bg-white border border-black rounded-2xl">
+          <div className="flex items-center relative z-50 justify-between h-[1.75rem] -mt-2 text-black bg-white border border-black rounded-2xl">
             <button
               type="button"
               onClick={decreaseQuantity}
