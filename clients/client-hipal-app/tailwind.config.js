@@ -5,6 +5,7 @@ module.exports = {
     // Or if using `src` directory:
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
     "./node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}",
+    "./node_modules/shadcn-ui/dist/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
@@ -27,6 +28,19 @@ module.exports = {
         info: "#E6E6E6",
         success: "#2FBD4E",
         "success-content": "#fff",
+      },
+      animation: {
+        "border-beam": "border-beam calc(var(--duration)*1s) infinite linear",
+      },
+      keyframes: {
+        "border-beam": {
+          "0%": {
+            "offset-distance": "0%",
+          },
+          "100%": {
+            "offset-distance": "100%",
+          },
+        },
       },
     },
   },
