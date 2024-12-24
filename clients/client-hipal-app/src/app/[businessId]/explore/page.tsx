@@ -76,8 +76,8 @@ export default async function Explore({
         <MainBackground data={data} />
         <div className="z-10 w-full text-4xl shadow-xl bg-base-100">
           <HeroSection data={data} />
-          <SubLoyalty loyalty={data?.loyalty} />
           <MenuIntroduction />
+          <SubLoyalty loyalty={data?.loyalty} />
 
           <AllCouponz />
 

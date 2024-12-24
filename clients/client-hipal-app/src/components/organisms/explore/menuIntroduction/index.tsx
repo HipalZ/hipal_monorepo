@@ -1,18 +1,18 @@
 "use client";
 
 import React, { memo, useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import Burger from "@/assets/menuIntro/Burger.png";
 import Cola from "@/assets/menuIntro/cola.png";
 import Loaf from "@/assets/menuIntro/loaf.png";
 import Pizza from "@/assets/menuIntro/pizza.png";
 import Sandwhich from "@/assets/menuIntro/sandwhich.png";
-import MenuBackground from "@/assets/menuIntro/menuBackground.png";
-import Sunlight from "@/assets/Ellipse 1-min.png";
+import MenuBackground from "@/assets/menuIntro/c.png";
 import { cn } from "@/components/utils/helpers";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { BiSolidChevronRight } from "react-icons/bi";
 
 const images = [Burger, Cola, Loaf, Pizza, Sandwhich];
 
@@ -33,18 +33,21 @@ function getPositionStyles(offset: number) {
         left: 0,
         right: "auto",
         transform: "none",
+        top: "-3%",
       };
     case 0:
       return {
         left: "33%",
         transform: "translateX(-30%)",
         right: "auto",
+        top: "12%",
       };
     case 1:
       return {
         right: 0,
         left: "auto",
         transform: "none",
+        top: "-3%",
       };
     default:
       return {};
@@ -61,15 +64,30 @@ function MenuIntroduction() {
     }, 3000);
     return () => clearInterval(timer);
   }, []);
-
+  const shineVariants = {
+    initial: { x: "-100%" },
+    animate: { x: "100%" },
+  };
   return (
     <section className="relative">
-      <div className="absolute w-full h-full bg-primary">
-        <Image src={MenuBackground} alt="Menu Background" layout="fill" />
+      <div className="absolute w-full h-full">
+        <Image
+          src={MenuBackground}
+          alt="Menu Background"
+          className="object-cover"
+          width={720}
+          height={720}
+        />
       </div>
+      <div
+        style={{
+          borderRadius: "50%",
+        }}
+        className="absolute -top-2 bg-base-100  w-full max-w-[30rem] h-[1rem]"
+      />
       <Link
         href={`/${customLink}/category`}
-        className="relative flex items-center justify-center w-full h-[20rem] overflow-hidden mt-9 rounded-xl pb-12"
+        className="relative flex items-center justify-center w-full h-[22rem] overflow-hidden mt-9 rounded-xl pb-12"
       >
         <AnimatePresence initial={false}>
           {[-1, 0, 1].map((offset) => {
@@ -96,8 +114,8 @@ function MenuIntroduction() {
                   <Image
                     src={images[imageIndex]}
                     alt={`Menu item ${imageIndex + 1}`}
-                    width={offset === 0 ? 300 : 60}
-                    height={offset === 0 ? 300 : 60}
+                    width={offset === 0 ? 300 : 90}
+                    height={offset === 0 ? 300 : 90}
                     className={cn(
                       "object-contain transition-all duration-300 aspect-square ",
                       offset === 0 ? "w-[9.4rem]" : "",
@@ -105,22 +123,35 @@ function MenuIntroduction() {
                     priority={offset === 0}
                   />
                 </motion.div>
-                <section className="absolute inset-0 z-0 flex items-center justify-center opacity-20">
-                  <center className="absolute w-[600px]">
-                    <Image
-                      className="animate-spin"
-                      width={1080}
-                      height={1080}
-                      src={Sunlight}
-                      alt="Sunlight"
-                    />
-                  </center>
-                </section>
               </React.Fragment>
             );
           })}
         </AnimatePresence>
       </Link>
+      <section className="flex items-center justify-center w-full">
+        <button
+          type="button"
+          className="h-12 relative overflow-hidden flex items-center px-4 mt-4 text-base font-medium text-center text-white bg-[#A40001] rounded-3xl"
+        >
+          <motion.div
+            className="absolute inset-0 pointer-events-none w-full max-w-[30rem]"
+            variants={shineVariants}
+            initial="initial"
+            animate="animate"
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              // repeatDelay: 1,
+              ease: "backInOut",
+            }}
+            style={{
+              background: "var(--shine-effect)",
+            }}
+          />
+          Checkout menu
+          <BiSolidChevronRight strokeWidth={1} size={24} />
+        </button>
+      </section>
     </section>
   );
 }

@@ -7,6 +7,7 @@ import NonAlcohol from "@/assets/NonAlcohol.png";
 import { cn } from "@hi/common";
 import { HiX } from "react-icons/hi";
 import { RiEqualizerLine } from "react-icons/ri";
+import BottomPopUp from "../bottomPopUp";
 
 export const foodTypeIcons = {
   vegan: (
@@ -194,12 +195,12 @@ const QuickFilter = () => {
         </button>
       </section>
       {isModalOpen && (
-        <QuickFilterPopup show={isModalOpen} onClose={closeModal}>
+        <BottomPopUp height="25dvh" show={isModalOpen} onClose={closeModal}>
           <div className="pt-4 pb-8 mb-4 text-black bg-[#ffffff] rounded-xl">
             <div className="mb-4 text-xl text-center text-[#000000]">
               Filters
             </div>
-            <div className="mx-[1rem] font-medium space-y-4">
+            <div className="flex flex-wrap items-center justify-center gap-4 font-medium text-nowrap">
               <FilterOption
                 isActive={isActiveDishType.toLowerCase() === "vegan"}
                 onClick={() => handleFilter("VEGAN")}
@@ -232,7 +233,7 @@ const QuickFilter = () => {
               />
             </div>
           </div>
-        </QuickFilterPopup>
+        </BottomPopUp>
       )}
     </div>
   );
