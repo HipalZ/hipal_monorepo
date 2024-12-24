@@ -4,14 +4,15 @@ import { memo } from "react";
 const ReadMore = ({
   text,
   className,
-}: { text: string; className?: string }) => {
+  hide,
+}: { text: string; className?: string; hide?: boolean }) => {
+  const displayText = hide ? `${text.slice(0, 70)}...` : text;
+
   return (
     <p
-      className={` inline text-left opacity-80 w-full break-words ${
-        className ? className : "text-sm"
-      }`}
+      className={`text-left opacity-80 w-full line-clamp-2 text-sm ${className}`}
     >
-      {text}
+      {displayText}
     </p>
   );
 };
