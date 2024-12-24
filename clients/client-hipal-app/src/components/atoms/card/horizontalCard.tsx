@@ -83,7 +83,7 @@ const MemoHorizontalCard = ({
             {dishData?.name || ""}
           </div>
           {dishData?.description && (
-            <div className="-ml-3 text-xs leading-3 scale-90 line-clamp-2">
+            <div className="-ml-3 text-xs leading-3 scale-90 line-clamp-2 h-[2.5rem]">
               <MemoReadMore text={dishData?.description || ""} />
             </div>
           )}
