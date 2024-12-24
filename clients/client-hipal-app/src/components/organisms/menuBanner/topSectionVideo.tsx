@@ -3,7 +3,6 @@
 import { useSearch } from "@/components/store/useSearch";
 import { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
 const MemoTopSectionVideo = () => {
   const { isSearchActive } = useSearch();
 
@@ -18,7 +17,7 @@ const MemoTopSectionVideo = () => {
           style={{ width: "100%", overflow: "hidden" }}
         >
           <video
-            src="https://assets.hipalz.com/Sequence%2002_1.mp4"
+            src="https://assets.hipalz.com/1.mp4"
             autoPlay
             loop
             muted

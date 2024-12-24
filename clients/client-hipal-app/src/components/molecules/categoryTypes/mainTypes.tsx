@@ -132,7 +132,7 @@ const MemoMainTypes = (props: IMainTypes) => {
               height={24}
               className="mr-2"
             />
-            Menu
+            {outletInfo?.outLetType !== "OTHER" ? "Menu" : "Catalogue"}
           </button>
 
           <CustomModal show={isModalOpen} onClose={() => setIsModalOpen(false)}>
@@ -184,7 +184,7 @@ const MemoMainTypes = (props: IMainTypes) => {
               height={24}
               className="mr-2"
             />
-            Menu
+            {outletInfo?.outLetType !== "OTHER" ? "Menu" : "Catalogue"}
           </button>
 
           <CustomModal show={isModalOpen} onClose={() => setIsModalOpen(false)}>
