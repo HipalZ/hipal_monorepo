@@ -11,6 +11,8 @@ import Sandwhich from "@/assets/menuIntro/sandwhich.png";
 import MenuBackground from "@/assets/menuIntro/menuBackground.png";
 import Sunlight from "@/assets/Ellipse 1-min.png";
 import { cn } from "@/components/utils/helpers";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 
 const images = [Burger, Cola, Loaf, Pizza, Sandwhich];
 
@@ -51,6 +53,7 @@ function getPositionStyles(offset: number) {
 
 function MenuIntroduction() {
   const [page, setPage] = useState(0);
+  const customLink = useParams()?.businessId || "";
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -60,11 +63,14 @@ function MenuIntroduction() {
   }, []);
 
   return (
-    <section className="relative ">
+    <section className="relative">
       <div className="absolute w-full h-full bg-primary">
         <Image src={MenuBackground} alt="Menu Background" layout="fill" />
       </div>
-      <div className="relative flex items-center justify-center w-full h-[20rem] overflow-hidden mt-9 rounded-xl pb-12">
+      <Link
+        href={`/${customLink}/category`}
+        className="relative flex items-center justify-center w-full h-[20rem] overflow-hidden mt-9 rounded-xl pb-12"
+      >
         <AnimatePresence initial={false}>
           {[-1, 0, 1].map((offset) => {
             const imageIndex = wrapIndex(page + offset, images.length);
@@ -114,7 +120,7 @@ function MenuIntroduction() {
             );
           })}
         </AnimatePresence>
-      </div>
+      </Link>
     </section>
   );
 }

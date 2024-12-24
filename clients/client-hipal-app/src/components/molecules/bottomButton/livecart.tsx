@@ -105,11 +105,11 @@ const MemoLiveCart = () => {
       {isSearchActive && (
         <button
           onClick={() => setIsSearchActive(false)}
-          className="fixed bottom-0 transform z-[105] left-1/2 -translate-x-1/2 p-4 -translate-y-[30%] bg-gray-100 rounded-full
+          className="fixed bottom-0 transform z-[105] left-1/2 -translate-x-1/2 p-3 -translate-y-[30%] bg-gray-300 rounded-full
            text-black"
           type="button"
         >
-          <HiX />
+          <HiX size={24} />
         </button>
       )}
       {showCart && tableName ? (
