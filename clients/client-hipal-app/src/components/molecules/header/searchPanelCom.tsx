@@ -1,6 +1,6 @@
 "use client";
 
-import React, { memo, useCallback, useMemo } from "react";
+import React, { memo, useCallback, useEffect, useMemo } from "react";
 import { useSearch } from "@/components/store/useSearch";
 import HorizontalCard from "@/components/atoms/card/horizontalCard";
 import { useActiveClass } from "@/components/store/useActiveClass";
@@ -61,6 +61,43 @@ const MemoSearchPanelCom = ({ allDishes }) => {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
   };
+
+  useEffect(() => {
+    if (isSearchActive) {
+      // Store whatever hash was originally in the URL
+      const originalHash = window.location.hash;
+
+      // Set the hash to indicate the Search is open
+      window.location.hash = "#search";
+
+      const handleHashChange = () => {
+        // If we detect the user navigated away from #search, close the Search
+        if (window.location.hash !== "#search") {
+          setIsSearchActive(false);
+        }
+      };
+
+      window.addEventListener("hashchange", handleHashChange);
+
+      // Cleanup: remove listener and restore old hash if still on #search
+      return () => {
+        window.removeEventListener("hashchange", handleHashChange);
+
+        if (window.location.hash === "#search") {
+          if (originalHash) {
+            window.location.hash = originalHash;
+          } else {
+            // Remove the hash entirely
+            history.pushState(
+              "",
+              document.title,
+              window.location.pathname + window.location.search,
+            );
+          }
+        }
+      };
+    }
+  }, [isSearchActive, setIsSearchActive]);
 
   return (
     <AnimatePresence>

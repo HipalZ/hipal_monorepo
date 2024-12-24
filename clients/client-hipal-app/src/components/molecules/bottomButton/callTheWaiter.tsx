@@ -78,7 +78,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <>
-      <div className="flex flex-col relative max-h-[90dvh] pb-[5rem] overflow-auto bg-base-100">
+      <div className="flex flex-col relative max-h-[90dvh] pb-[5rem] overflow-auto bg-white">
         <motion.ul
           className="grid flex-grow grid-cols-2 gap-4 p-4"
           initial={{ opacity: 0, y: 20 }}
@@ -88,7 +88,9 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
           {Object.entries(messageImageMap).map(([messageText, imageSrc]) => (
             <motion.li
               key={messageText}
-              className={` relative cursor-pointer flex flex-col items-center justify-center `}
+              className={
+                " relative cursor-pointer flex flex-col items-center justify-center "
+              }
               onClick={() => handleSelectMessage(messageText)}
               whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
               whileTap={{ scale: 0.95 }}
@@ -96,8 +98,8 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
               <motion.div
                 className={`py-4 ${
                   message === messageText
-                    ? "bg-primary text-base-100 rounded-2xl"
-                    : "bg-base-100 text-base-content"
+                    ? "bg-[#000000] text-[#ffffff] rounded-2xl"
+                    : "bg-[#ffffff] text-base-content"
                 }`}
               >
                 <Image
@@ -109,7 +111,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
                   className="transition-transform duration-300 ease-in-out transform w-full aspect-[4/3]"
                 />
               </motion.div>
-              <h3 className="mt-2 text-sm font-medium text-center text-primary">
+              <h3 className="mt-2 text-sm font-medium text-center text-[#000000]">
                 {messageText}
               </h3>
             </motion.li>

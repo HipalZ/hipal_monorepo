@@ -2,8 +2,8 @@ import { categoryApis } from "@/apis/category";
 import dynamics from "next/dynamic";
 import { defaultThemes } from "@/components/utils/helpers";
 import MainTypes from "@/components/molecules/categoryTypes/mainTypes";
-import { MenuBannerPage } from "@/components/organisms/menuBanner";
 import TopSectionVideo from "@/components/organisms/menuBanner/topSectionVideo";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 
 // export const dynamic = "force-dynamic";
 // export const fetchCache = "force-no-store";
@@ -14,6 +14,19 @@ const CategorySkeleton = dynamics(
   {
     ssr: false,
     loading: () => <div className="h-16 text-black"> Loading .....</div>,
+  },
+);
+
+const MenuBannerPage = dynamics(
+  () => import("@/components/organisms/menuBanner"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-16 text-black">
+        {" "}
+        <SkeletonLoader height={200} />
+      </div>
+    ),
   },
 );
 
@@ -36,7 +49,7 @@ const LiveCart = dynamics(
 const CategoryHeader = dynamics(
   () => import("@/components/organisms/category/categoryHeader"),
   {
-    ssr: true,
+    ssr: false,
     loading: () => <div className="h-16 text-black"> Loading .....</div>,
   },
 );
@@ -51,7 +64,7 @@ const Footer = dynamics(() => import("@/components/molecules/footer"), {
 const DishesList = dynamics(
   () => import("@/components/organisms/category/dishesList"),
   {
-    ssr: true,
+    ssr: false,
     loading: () => <div className="h-16 text-black"> Loading .....</div>,
   },
 );
@@ -84,7 +97,10 @@ export default async function Page({
     <main>
       <div className="relative flex flex-col w-full pb-14">
         <TopSectionVideo />
-        <MenuBannerPage timings={data?.timings} />
+        <MenuBannerPage
+          timings={data?.timings}
+          childCategory={data?.childCategories || []}
+        />
         {/* <TopBackground specialBanner={data?.business?.specialBannerUrl} /> */}
         <CategoryHeader childCategory={data?.childCategories || []} />
         <div className="!mt-0 !scroll-smooth relative z-20">

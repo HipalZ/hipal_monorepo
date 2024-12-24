@@ -140,7 +140,7 @@ const DishesList: FC<IDishesProps> = (props) => {
     handleHashChange();
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [isActiveCategory]);
+  }, [isActiveCategory, timings]);
 
   useMemo(() => {
     const allDishes = subTypes.reduce(
@@ -216,7 +216,7 @@ const DishesList: FC<IDishesProps> = (props) => {
                 </div>
               )}
             </InView>
-            <div className="flex flex-col divide-y divide-gray-300">
+            <div className="flex flex-col divide-y divide-gray-100">
               {dishesToRender.length > 0 &&
               outletInfo?.outLetType !== "OTHER" ? (
                 dishesToRender.map((dishData: DishType, dishIndex) => (

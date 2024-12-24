@@ -11,33 +11,31 @@ import { cn } from "@hi/common";
 import LivePreview from "./preview";
 import type { TimingType } from "@/components/types/businessData";
 import { useDishesStore } from "@/components/store/useDishesStore";
+import type { CategoryType } from "@hi/db-models/src/validators";
 
 const TWEEN_FACTOR_BASE = 0.2;
 
 type PropType = {
   options?: EmblaOptionsType;
   timings: TimingType;
+  childCategory: CategoryType[];
 };
 
 const numberWithinRange = (number: number, min: number, max: number): number =>
   Math.min(Math.max(number, min), max);
 
 const EmblaCarouselPreview: React.FC<PropType> = (props) => {
-  const { options, timings } = props;
+  const { options, timings, childCategory } = props;
   const [emblaRef, emblaApi] = useEmblaCarousel(options);
   const tweenFactor = useRef(0);
   const tweenNodes = useRef<HTMLElement[]>([]);
-  const { dishes } = useDishesStore((s) => ({
-    dishes: s.dishes,
-  }));
 
   const menuBannerDishes = useMemo(() => {
-    return timings.dishIds
-      .map((dishID) => dishes.find((dish) => dish._id === dishID))
-      .filter((dish) => dish !== undefined);
-  }, [timings, dishes]);
-
-  console.log(menuBannerDishes);
+    const timingDishIds = new Set(timings?.dishIds);
+    return childCategory.flatMap((category) =>
+      category.dishIds.filter((dish) => timingDishIds.has(dish._id)),
+    );
+  }, [timings.dishIds, childCategory]);
 
   const setTweenNodes = useCallback((emblaApi: EmblaCarouselType): void => {
     tweenNodes.current = emblaApi.slideNodes().map((slideNode) => {

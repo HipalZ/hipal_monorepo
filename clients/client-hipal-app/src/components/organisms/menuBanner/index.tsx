@@ -5,16 +5,17 @@ import EmblaCarouselPreview from "../category/embla/emblaCarousalPreview";
 import type { EmblaOptionsType } from "embla-carousel";
 import { useSearch } from "@/components/store/useSearch";
 import { motion } from "framer-motion";
+import type { CategoryType } from "@hi/db-models/src/validators";
 
 interface IDishesProps {
   timings: TimingType;
+  childCategory: CategoryType[];
 }
 
 const OPTIONS: EmblaOptionsType = { dragFree: true, loop: true };
 
 const MemoMenuBannerPage: FC<IDishesProps> = (props) => {
-  const { timings } = props;
-  console.log(timings);
+  const { timings, childCategory } = props;
   const { isSearchActive } = useSearch();
   const ref = useRef(null);
 
@@ -62,7 +63,7 @@ const MemoMenuBannerPage: FC<IDishesProps> = (props) => {
 
   return (
     <div ref={ref}>
-      {Object.keys(timings)?.length > 0 && timings?.dishIds?.length > 0 && (
+      {timings?.dishIds?.length > 0 && (
         <section className="relative flex items-center justify-center w-full bg-[#ffffff] overflow-hidden">
           <section className="flex flex-col items-center justify-center w-full max-w-[30rem] pt-[1.5rem] overflow-hidden pb-[2rem] md:pb-[2rem] bg-[#ffffff] relative">
             <motion.h1
@@ -86,7 +87,11 @@ const MemoMenuBannerPage: FC<IDishesProps> = (props) => {
               initial="initial"
               animate="animate"
             >
-              <EmblaCarouselPreview timings={timings} options={OPTIONS} />
+              <EmblaCarouselPreview
+                timings={timings}
+                options={OPTIONS}
+                childCategory={childCategory}
+              />
             </motion.div>
           </section>
         </section>
@@ -96,4 +101,4 @@ const MemoMenuBannerPage: FC<IDishesProps> = (props) => {
 };
 
 const MenuBannerPage = memo(MemoMenuBannerPage);
-export { MenuBannerPage };
+export default MenuBannerPage;

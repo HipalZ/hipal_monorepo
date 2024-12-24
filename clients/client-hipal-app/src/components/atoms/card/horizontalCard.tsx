@@ -59,7 +59,7 @@ const MemoHorizontalCard = ({
   ${dishData.availability ? "mx-3" : "opacity-80 px-4"}
 `}
     >
-      <div className="flex flex-row items-center pb-1 prose min-h-[9rem]">
+      <div className="flex flex-row items-center pb-1 prose min-h-[9.5rem]">
         <div className="flex flex-col py-1 mr-auto space-y-1">
           <div className="flex space-x-2 ">
             {dishData?.dishTypes && outletInfo?.outLetType !== "OTHER" && (

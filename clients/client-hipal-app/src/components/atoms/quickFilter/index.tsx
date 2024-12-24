@@ -137,8 +137,6 @@ const QuickFilter = () => {
     },
     [setActiveDishType, isActiveDishType],
   );
-
-  console.log(isActiveDishType);
   const activeIcon = (
     <div className="flex items-center">
       {["veg", "nonveg", "non_veg", "egg"].includes(

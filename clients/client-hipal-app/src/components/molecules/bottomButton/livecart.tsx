@@ -12,12 +12,13 @@ import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescrip
 import TableNameMissing from "./tableNameMissing";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { useSearch } from "@/components/store/useSearch";
+import { HiX } from "react-icons/hi";
 
 const MemoLiveCart = () => {
   const cart = useCartStore((s) => s.cart);
   const { setShowCart, cartPage, setCartPage, showCart } = useCart();
   const { tableNameMissing, setTableNameMissing, tableName } = useTableData();
-  const { isSearchActive } = useSearch();
+  const { isSearchActive, setIsSearchActive } = useSearch();
 
   const shineVariants = {
     initial: { x: "-100%" },
@@ -29,7 +30,7 @@ const MemoLiveCart = () => {
     animate: {
       width: isSearchActive ? "20rem" : "100%",
       borderRadius: isSearchActive ? "9999px" : "0px",
-      bottom: isSearchActive ? "1.5rem" : "4.5rem",
+      bottom: isSearchActive ? "4.5rem" : "4.5rem",
     },
   };
 
@@ -100,6 +101,17 @@ const MemoLiveCart = () => {
           </motion.section>
         )}
       </AnimatePresence>
+
+      {isSearchActive && (
+        <button
+          onClick={() => setIsSearchActive(false)}
+          className="fixed bottom-0 transform z-[105] left-1/2 -translate-x-1/2 p-4 -translate-y-[30%] bg-gray-100 rounded-full
+           text-black"
+          type="button"
+        >
+          <HiX />
+        </button>
+      )}
       {showCart && tableName ? (
         <BottomPopUp show={showCart} onClose={() => setShowCart(false)} hide>
           <MemoCart />

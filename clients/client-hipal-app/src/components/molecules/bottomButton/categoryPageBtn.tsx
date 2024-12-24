@@ -174,7 +174,7 @@ const MemoCategoryPageBtn = () => {
             exit={{ opacity: 0, y: 50 }}
           >
             <BottomPopUp
-              height="75dvh"
+              height="85dvh"
               show={inputModal}
               onClose={closeModal}
               linearGradTheme
@@ -193,9 +193,9 @@ const MemoCategoryPageBtn = () => {
             exit={{ opacity: 0, scale: 0.9 }}
           >
             <ItemDescriptionPopup
-              heading="Help"
               show={callWaiterModal}
               onClose={closeCallWaiterModal}
+              heading="Select the reason"
             >
               <CallTheWaiterComponent onClose={closeCallWaiterModal} />
             </ItemDescriptionPopup>

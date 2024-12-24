@@ -45,11 +45,11 @@ const MemoOrders = () => {
           >
             <motion.div
               onClick={() => toggleAccordion(cart._id)}
-              className="flex justify-between p-4 cursor-pointer text-base-content bg-base-200"
+              className="flex justify-between p-4 bg-white cursor-pointer text-[#000000]"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="text-base-content">
+              <div className="text-[#000000]">
                 <h3 className="flex items-center text-xl font-medium">
                   <MdTableBar className="mr-2" /> {cart?.tableName}
                 </h3>
@@ -76,9 +76,9 @@ const MemoOrders = () => {
                   transition={{ duration: 0.3 }}
                 >
                   {expanded === cart._id ? (
-                    <FaChevronDown className="text-xl text-base-content" />
+                    <FaChevronDown className="text-xl text-[#000000]" />
                   ) : (
-                    <FaChevronUp className="text-xl text-base-content" />
+                    <FaChevronUp className="text-xl text-[#000000]" />
                   )}
                 </motion.div>
               </div>
@@ -103,7 +103,7 @@ const MemoOrders = () => {
                         className="px-4 py-2 bg-[#ffffff]"
                       >
                         <div className="flex items-start justify-between">
-                          <h4 className="flex items-start flex-1 text-sm font-semibold opacity-80 text-base-content">
+                          <h4 className="flex items-start flex-1 text-sm font-semibold opacity-80 text-[#000000]">
                             <MdRestaurantMenu className="mr-2 text-[#000000]" />
                             {item?.dish?.name}
                           </h4>
@@ -115,14 +115,14 @@ const MemoOrders = () => {
                         </div>
                         <div className="pl-7">
                           {item?.portion?.name && (
-                            <p className="text-xs text-base-content">
+                            <p className="text-xs text-[#000000]">
                               portion: {item.portion.name}
                             </p>
                           )}
                         </div>
                         <div className=" pl-7">
                           {item?.extras?.length > 0 && (
-                            <div className="text-sm text-base-content">
+                            <div className="text-sm text-[#000000]">
                               <p className="text-xs font-medium">Extras:</p>
                               {item.extras.map((extra) => (
                                 <p
