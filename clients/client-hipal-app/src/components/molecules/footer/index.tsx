@@ -1,8 +1,6 @@
 "use client";
 import type { IThemes } from "@/components/types/businessData";
 import { updateTheme } from "@/components/utils/themes";
-import Link from "next/link";
-import { useParams } from "next/navigation";
 import { memo, useEffect } from "react";
 import { FaTelegram } from "react-icons/fa";
 import {
@@ -31,34 +29,26 @@ const iconMapping: { [key: string]: JSX.Element } = {
 
 const Footer = (props: IFooter) => {
   const { themes, socialMediaLinks } = props;
-  const customLink = useParams()?.businessId as string;
 
   useEffect(() => {
     updateTheme(themes);
   }, [themes]);
 
   return (
-    <div className="">
-      <section className="flex justify-center px-2 mt-8 space-x-2">
-        {socialMediaLinks
-          ? socialMediaLinks.map(({ _id, icon, link }) => (
-              <a
-                key={_id}
-                href={link}
-                aria-label={icon}
-                className="btn btn-ghost !px-1 !py-0 my-auto"
-              >
-                {iconMapping[icon]}
-              </a>
-            ))
-          : null}
-      </section>
-      <section className="flex items-center justify-center h-12 text-base-content underline-offset-2">
-        <Link className="text-sm" href={`/${customLink}/terms`}>
-          View Terms and Conditions
-        </Link>
-      </section>
-    </div>
+    <section className="flex justify-center px-2 pb-12 mt-8 space-x-2">
+      {socialMediaLinks
+        ? socialMediaLinks.map(({ _id, icon, link }) => (
+            <a
+              key={_id}
+              href={link}
+              aria-label={icon}
+              className="btn btn-ghost !px-1 !py-0 my-auto"
+            >
+              {iconMapping[icon]}
+            </a>
+          ))
+        : null}
+    </section>
   );
 };
 

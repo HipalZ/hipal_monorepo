@@ -37,7 +37,7 @@ const IndividualItemPage = ({ dishData }: IndividualItemPageProps) => {
     );
 
     const res = await response.json();
-    const themes = res.data?.theme;
+    const themes = res?.data?.theme;
     updateTheme(themes);
     return res.data || {};
   };

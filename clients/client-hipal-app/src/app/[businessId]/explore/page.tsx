@@ -1,5 +1,6 @@
 import { businessApis } from "@/apis/explore";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import MenuIntroduction from "@/components/organisms/explore/menuIntroduction";
 import UniquelyDishes from "@/components/organisms/explore/uniquelyDishes";
 import type {
   IBannerPayload,
@@ -9,9 +10,9 @@ import { cn, defaultThemes } from "@/components/utils/helpers";
 import dynamics from "next/dynamic";
 import { Suspense } from "react";
 
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
-// export const revalidate = 600;
+// export const dynamic = "force-dynamic";
+// export const fetchCache = "force-no-store";
+export const revalidate = 300;
 //
 const AllCouponz = dynamics(
   () => import("@/components/templates/couponz/allCouponz"),
@@ -53,6 +54,7 @@ const BottomButton = dynamics(
   () => import("@/components/molecules/bottomButton"),
   { loading: () => <SkeletonLoader height={50} /> },
 );
+
 const PageName = dynamics(() => import("@/components/molecules/pageName"), {
   loading: () => <SkeletonLoader height={50} />,
 });
@@ -70,84 +72,88 @@ export default async function Explore({
 
   return (
     <Suspense fallback={<SkeletonLoader height={200} />}>
-      <main className="flex flex-col w-full pb-16 overflow-hidden ">
-        <MainBackground explore={data?.business} />
-        <div className="z-10 flex flex-col w-full -mt-10 text-4xl shadow-xl bg-base-100">
+      <main className="relative w-full pb-16 overflow-hidden">
+        <MainBackground data={data} />
+        <div className="z-10 w-full text-4xl shadow-xl bg-base-100">
           <HeroSection data={data} />
+          <MenuIntroduction />
+          <SubLoyalty loyalty={data?.loyalty} />
+
           <AllCouponz />
-          <div className="bg-base-200">
-            <div className="h-[40px] rounded-b-[100%] -ml-12 w-[120%] bg-base-100" />
-          </div>
+
           {data?.banners?.some(
             (banner: IBannerPayload) => banner?.isPublished,
           ) && (
-            <article className="relative bg-base-200 pb-[3rem]">
-              <h2 className="py-4 mt-4 text-2xl font-bold text-center text-primary bg-base-200">
-                In Spotlight
-              </h2>
-              <div className="absolute bottom-0 -translate-x-1/2 transform left-1/2 h-[3rem] w-[125%] bg-primary rounded-t-[100%]" />
-              <article
-                className={cn(
-                  data?.banners?.length === 1 ? "justify-center" : "",
-                  "h-[28rem] flex gap-4 bg-base-200 rounded-lg flex-nowrap w-full",
-                )}
-              >
-                <EmblaCarousel2 customCarousel={data?.banners?.length === 1}>
-                  {data?.banners?.map((banner, index) => {
-                    if (!banner?.isPublished) return null;
-                    return (
-                      <div
-                        key={index.toString()}
-                        className={cn(
-                          "embla__slide",
-                          data?.banners?.length === 1
-                            ? "justify-start embla__container"
-                            : "",
-                        )}
-                      >
-                        <div className="embla-_parallax">
-                          <div className={cn("embla-_parallax__layer")}>
-                            <BannerLayouts
-                              redirectionId={banner?.redirectionId || ""}
-                              redirectionName={banner?.redirectionName || ""}
-                              selectedLayout={banner?.layout || ""}
-                              heading={banner?.heading || ""}
-                              paragraph={banner?.paragraph || ""}
-                              callToAction={banner?.callToAction || ""}
-                              img={{ logo: banner?.bannerImage || "" }}
-                              selectedColor={{
-                                bgColor: banner?.backgroundColor || "",
-                                textColor: banner?.backgroundColor || "",
-                              }}
-                              paragraphStyle={{
-                                color: banner?.paragraphColor || "",
-                              }}
-                              buttonStyle={{
-                                color: banner?.buttonColor || "",
-                                buttonColor: banner?.buttonTextColor || "",
-                              }}
-                              redirectionType={banner?.redirectionType || ""}
-                            />
+            <section className="w-full px-4 mt-8 rounded-3xl">
+              <article className="relative bg-base-200 rounded-3xl">
+                <h2 className="py-4 mt-4 text-2xl font-bold text-center text-primary bg-base-200 rounded-t-3xl">
+                  In Spotlight
+                </h2>
+                <article
+                  className={cn(
+                    data?.banners?.length === 1 ? "justify-center" : "",
+                    "h-[26rem] flex gap-4 bg-base-200 rounded-b-3xl flex-nowrap w-full",
+                  )}
+                >
+                  <EmblaCarousel2 customCarousel={data?.banners?.length === 1}>
+                    {data?.banners?.map((banner, index) => {
+                      if (!banner?.isPublished) return null;
+                      return (
+                        <div
+                          key={index.toString()}
+                          className={cn(
+                            "embla__slide",
+                            data?.banners?.length === 1
+                              ? "justify-start embla__container"
+                              : "",
+                          )}
+                        >
+                          <div className="embla-_parallax">
+                            <div className={cn("embla-_parallax__layer")}>
+                              <BannerLayouts
+                                redirectionId={banner?.redirectionId || ""}
+                                redirectionName={banner?.redirectionName || ""}
+                                selectedLayout={banner?.layout || ""}
+                                heading={banner?.heading || ""}
+                                paragraph={banner?.paragraph || ""}
+                                callToAction={banner?.callToAction || ""}
+                                img={{ logo: banner?.bannerImage || "" }}
+                                selectedColor={{
+                                  bgColor: banner?.backgroundColor || "",
+                                  textColor: banner?.backgroundColor || "",
+                                }}
+                                paragraphStyle={{
+                                  color: banner?.paragraphColor || "",
+                                }}
+                                buttonStyle={{
+                                  color: banner?.buttonColor || "",
+                                  buttonColor: banner?.buttonTextColor || "",
+                                }}
+                                redirectionType={banner?.redirectionType || ""}
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </EmblaCarousel2>
+                      );
+                    })}
+                  </EmblaCarousel2>
+                </article>
               </article>
-            </article>
+            </section>
           )}
-          <SubLoyalty loyalty={data?.loyalty} />
+
           {data?.uniquelyDishes && data?.uniquelyDishes.length > 0 ? (
             <div className="mt-8 overflow-auto">
               <UniquelyDishes uniquelyDishes={data?.uniquelyDishes} />
             </div>
           ) : null}
+
           <Footer
             themes={data?.settings || defaultThemes}
             socialMediaLinks={data?.business?.socialMediaLinks}
             footerDescription={data?.business?.footerDescription}
           />
+
           <PageName />
         </div>
         <BottomButton selected={"home"} />

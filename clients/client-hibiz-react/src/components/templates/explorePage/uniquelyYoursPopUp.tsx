@@ -85,7 +85,7 @@ const MemoUniquelyYoursPopUp = () => {
   }, [selectedDishes, showUniquePopUp, setUniquelyDishes]);
 
   const handleUniquelyYours = async (selectedDishes: IDish[]) => {
-    apiRpc.dishes.uniquelyYours.$post({
+    apiRpc.dishes.uniquelyYours[":businessId"].$post({
       json: {
         dishArray: selectedDishes.map((dish) => {
           return {
@@ -96,6 +96,9 @@ const MemoUniquelyYoursPopUp = () => {
             businessId,
           };
         }),
+      },
+      param: {
+        businessId: businessId,
       },
     });
   };

@@ -24,6 +24,7 @@ const orderSchema = new mongoose.Schema<OrderType>(
     channelId: { type: ObjectId, ref: "couponChannel" },
     cashbackAvailable: { type: Boolean, default: true },
     date: { type: Number, required: true },
+    posBillId: { type: String, required: false },
   },
   {
     timestamps: true,

@@ -68,7 +68,6 @@ const CartPage = () => {
   }
 
   if (cartError || !cartData) {
-    console.error("Cart Error:", cartErrorMessage);
     return (
       <div className="flex flex-col items-center justify-center w-full h-screen max-w-[30rem] px-4 mx-auto text-base-content bg-base-100">
         <div className="mt-8 text-lg text-center">Time limit exceeded</div>

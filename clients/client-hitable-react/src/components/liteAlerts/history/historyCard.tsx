@@ -1,8 +1,10 @@
+import { memo } from "react";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import type { Alert } from "@/components/types/hiClientzData";
 import { cn, timestampToDateTime } from "@/components/utils/helpers";
-import { memo } from "react";
 import { PiCoinsFill } from "react-icons/pi";
+import { FaUser, FaUserTie } from "react-icons/fa";
+import { MdTableBar } from "react-icons/md";
 
 interface IOnlineProp {
   onlineAlertData: Alert[];
@@ -22,7 +24,7 @@ const HistoryCard = (props: IOnlineProp) => {
   };
 
   return (
-    <main className="pb-[5rem] lg:grid lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+    <main className="grid gap-6 p-6 pb-20 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {Array.isArray(onlineAlertData) && onlineAlertData.length > 0 ? (
         onlineAlertData.map((alert: Alert) => {
           if (alert?.alertType === "WAITER") {
@@ -32,98 +34,94 @@ const HistoryCard = (props: IOnlineProp) => {
             <section
               key={alert?._id}
               className={cn(
-                "max-h-[15rem]",
-                "mx-4 my-4 rounded-xl p-4",
-                alert?.status === "FAIL" ? "bg-red-100" : "bg-gray-300",
+                "rounded-xl p-6 shadow-lg transition-all duration-300 hover:shadow-xl",
+                alert?.status === "FAIL" ? "bg-red-50" : "bg-white",
               )}
             >
-              <section className="flex items-center justify-between mb-2">
-                <article
+              <div className="flex items-center justify-between mb-4">
+                <div
                   className={cn(
-                    "flex w-[8rem] items-center rounded-full px-2",
-                    alert?.status === "FAIL" ? "" : "bg-green-100",
-                    alert?.alertType === "OFFLINE"
-                      ? "bg-indigo-100"
-                      : "bg-green-100",
+                    "flex items-center rounded-full px-3 py-1 text-xs font-medium",
+                    alert?.status === "FAIL"
+                      ? "bg-red-100 text-red-800"
+                      : alert?.alertType === "OFFLINE"
+                        ? "bg-indigo-100 text-indigo-800"
+                        : "bg-green-100 text-green-800",
                   )}
                 >
-                  <span>
-                    <PiCoinsFill />
-                  </span>
-                  &nbsp;
-                  {alert?.status === "FAIL" ? (
-                    <h1 className="text-xs">Payment Failed</h1>
-                  ) : (
-                    <h1 className="text-xs">
-                      Received {alert?.alertType.toLowerCase()}
-                    </h1>
+                  <PiCoinsFill className="mr-1" />
+                  {alert?.status === "FAIL"
+                    ? "Payment Failed"
+                    : `Received ${alert?.alertType.toLowerCase()}`}
+                </div>
+                <span className="text-xs text-gray-500">
+                  {timestampToDateTime(alert?.date)}
+                </span>
+              </div>
+
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <p className="text-sm">
+                    Bill value:{" "}
+                    <span className="font-semibold">
+                      ₹{alert?.order_id?.billValue}
+                    </span>
+                  </p>
+                  <p className="text-sm">
+                    Discount:{" "}
+                    <span className="font-semibold">
+                      ₹{alert?.order_id?.claimedCoins}
+                    </span>
+                  </p>
+                  <p className="text-sm">
+                    Tips:{" "}
+                    <span className="font-semibold">
+                      ₹{alert?.order_id?.tips}
+                    </span>
+                  </p>
+                  {alert?.coinsApplied && (
+                    <div className="flex items-center px-3 py-1 mt-2 text-xs font-medium text-gray-800 bg-gray-100 rounded-full">
+                      <PiCoinsFill className="mr-1" />
+                      {alert?.order_id?.claimedCoins} Used
+                    </div>
                   )}
-                </article>
-                <article>
-                  <h1 className="text-xs text-gray-500">
-                    {timestampToDateTime(alert?.date)}
-                  </h1>
-                </article>
-              </section>
-              <div className="flex justify-between">
-                <section>
-                  <article className="ml-2 space-y-1">
-                    <h1 className="text-base">
-                      Bill value : ₹ {alert?.order_id?.billValue}
-                    </h1>
-                    <h1 className="text-base">
-                      Discount : ₹ {alert?.order_id?.claimedCoins}
-                    </h1>
-                    <h6 className="text-sm">
-                      Tips : ₹ {alert?.order_id?.tips}
-                    </h6>
-                  </article>
-                  {alert?.coinsApplied ? (
-                    <article className="flex items-center justify-start px-3 my-2 bg-gray-200 rounded-full w-fit">
-                      <span>
-                        <PiCoinsFill size={20} />
-                      </span>
-                      &nbsp;
-                      <h1 className="text-xs">
-                        {alert?.order_id?.claimedCoins} Used
-                      </h1>
-                    </article>
-                  ) : null}
-                </section>
-                <section className="text-right">
-                  <p>
-                    User :{" "}
+                </div>
+
+                <div className="space-y-2 text-right">
+                  <p className="flex items-center justify-end text-sm">
+                    <FaUser className="mr-1" />
                     {alert?.userId?.name?.length > 10
                       ? `${alert?.userId?.name.substring(0, 10)}...`
                       : alert?.userId?.name}
                   </p>
-                  {alert?.alertType === "ONLINE" ? null : (
-                    <p>Staff : {alert?.waiterName || "Staff"}</p>
+                  {alert?.alertType !== "ONLINE" && (
+                    <p className="flex items-center justify-end text-sm">
+                      <FaUserTie className="mr-1" />
+                      {alert?.waiterName || "Staff"}
+                    </p>
                   )}
-                  <article className="space-y-1">
-                    <h1 className="text-base text-gray-700">
-                      Table : {alert?.tableName}
-                    </h1>
-                    <h6 className="text-2xl font-semibold">
-                      ₹ {alert?.order_id?.total}
-                    </h6>
-                  </article>
-                  <button
-                    type="button"
-                    onClick={() => handleViewMore(alert)}
-                    className="px-6 py-2 mt-2 text-white bg-black rounded-full"
-                  >
-                    <h1 className="text-xs">View</h1>
-                  </button>
-                </section>
+                  <p className="flex items-center justify-end text-sm">
+                    <MdTableBar className="mr-1" />
+                    {alert?.tableName}
+                  </p>
+                  <p className="text-2xl font-bold">
+                    ₹{alert?.order_id?.total}
+                  </p>
+                </div>
               </div>
-              <br />
-              <br />
+
+              <button
+                type="button"
+                onClick={() => handleViewMore(alert)}
+                className="w-full px-4 py-2 mt-4 text-sm font-medium text-white transition-colors duration-300 bg-black rounded-full hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+              >
+                View Details
+              </button>
             </section>
           );
         })
       ) : (
-        <div className="absolute text-2xl text-center -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2">
+        <div className="flex items-center justify-center h-64 text-2xl text-gray-500 col-span-full">
           No Data Found
         </div>
       )}

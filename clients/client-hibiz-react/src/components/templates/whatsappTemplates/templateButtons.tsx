@@ -59,7 +59,7 @@ const MemoTemplateButtons = () => {
       groupIds: selectedOptions.includes(ShowOptions.ADD_GROUPS)
         ? selectedGroups
         : [],
-      ...(sendLaterTime && sendLaterTime > 0 && { time: sendLaterTime }),
+      sendLaterTime,
       ...(testNumber?.length > 0 && { customerPhone: testNumber }),
     };
     sendOptions.mutate(payload);

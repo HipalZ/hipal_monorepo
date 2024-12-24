@@ -59,6 +59,7 @@ const CartItem = ({ cartItem, hide }: CartItemProp) => {
 
     return totalPriceForOne * cartItem.quantity;
   };
+
   return (
     <section className="flex items-center justify-between py-4 pl-6 border-b">
       <div className="flex flex-col w-[70%] space-y-1">
@@ -76,12 +77,12 @@ const CartItem = ({ cartItem, hide }: CartItemProp) => {
           {cartItem?.dish?.name}
         </h5>
         {cartItem?.portion && (
-          <span className="text-xs text-primary opacity-80">
+          <span className="text-xs text-[#000000] opacity-80">
             Portion: {cartItem?.portion?.name}
           </span>
         )}
         {cartItem?.extras?.length > 0 && (
-          <span className="text-xs text-primary opacity-80 ">
+          <span className="text-xs text-[#000000] opacity-80 ">
             Extras: {cartItem?.extras?.map((extra) => extra.name).join(", ")}
           </span>
         )}
@@ -91,42 +92,40 @@ const CartItem = ({ cartItem, hide }: CartItemProp) => {
             outletInfo?.outLetType !== "OTHER" ? "-ml-1" : "-ml-3",
           )}
         >
-          <span className="block text-sm font-medium text-primary">
+          <span className="block text-sm font-medium text-[#000000]">
             ₹{calculateTotalPrice().toFixed(2)}
           </span>
         </div>
       </div>
-      <div className="relative flex items-center justify-between mb-2 -mt-2">
+
+      <div className="flex flex-col items-center justify-between">
         {imageUrl ? (
           <ShimmerImage
             src={imageUrl}
             alt={cartItem?.dish?.name}
-            width={70}
-            height={70}
-            className="object-cover w-20 h-20 rounded-md"
+            width={100}
+            height={100}
+            className="object-cover w-24 h-24 rounded-md"
           />
-        ) : (
-          <PlaceholderImg className="w-20 h-20 rounded-md" />
-        )}
+        ) : null}
+
         {!hide && (
-          <div className="absolute transform -translate-x-1/2 translate-y-[50%] left-1/2 top-[70%] text-xs">
-            <div className="flex items-center justify-between border bg-base-100 text-primary rounded-xl border-primary">
-              <button
-                type="button"
-                onClick={decreaseQuantity}
-                className="px-2 py-1"
-              >
-                -
-              </button>
-              <span className="mx-2">{cartItem.quantity}</span>
-              <button
-                type="button"
-                onClick={increaseQuantity}
-                className="px-2 py-1"
-              >
-                +
-              </button>
-            </div>
+          <div className="flex items-center relative z-50 justify-between h-[1.75rem] -mt-2 text-black bg-white border border-black rounded-2xl">
+            <button
+              type="button"
+              onClick={decreaseQuantity}
+              className="px-2 py-1"
+            >
+              -
+            </button>
+            <span className="mx-2">{cartItem.quantity}</span>
+            <button
+              type="button"
+              onClick={increaseQuantity}
+              className="px-2 py-1"
+            >
+              +
+            </button>
           </div>
         )}
       </div>

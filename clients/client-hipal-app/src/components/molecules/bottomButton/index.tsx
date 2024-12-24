@@ -3,26 +3,24 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { RiHome4Fill, RiCouponFill } from "react-icons/ri";
+import { motion } from "framer-motion";
+import { RiCouponFill, RiCouponLine } from "react-icons/ri";
 import { MdAccountBalanceWallet, MdMenuBook } from "react-icons/md";
 import { LuScanLine } from "react-icons/lu";
-import { FaConciergeBell } from "react-icons/fa";
-import { BsBagHeartFill } from "react-icons/bs";
 import { useLogin } from "@/components/store/useLogin";
 import useTableData from "@/components/store/useTableData";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { useCart } from "@/components/store/useCart";
-import { useCartStore } from "@/components/store/useCartStore";
 import { cn } from "@/components/utils/helpers";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import AddAmountModal from "./addAmountModal";
 import MemoCallTheWaiterComponent from "./callTheWaiter";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 
-const Cart = dynamic(() => import("@/components/organisms/cart"), {
+const MemoCart = dynamic(() => import("@/components/organisms/cart"), {
   ssr: false,
   loading: () => <SkeletonLoader height={200} />,
 });
@@ -45,27 +43,23 @@ const MenuItem = ({
   const content = (
     <motion.div
       className={cn(
-        "relative flex flex-col items-center justify-center z-10",
-        isSelected ? "w-16 h-16" : "w-14 h-14",
+        "relative flex flex-col items-center justify-center z-10 px-2",
       )}
-      animate={isSelected ? { y: -10 } : { y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
-      {isSelected && (
-        <motion.div
-          className="absolute inset-0 w-12 h-12 rounded-full left-2 -top-2.5 bg-base-300"
-          layoutId="outline"
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        />
-      )}
       <motion.div
         className={cn(
-          "relative z-10 flex items-center justify-center",
-          isSelected ? "w-12 h-12" : "w-6 h-6",
+          "relative z-10 flex items-center space-x-1 justify-center px-2",
         )}
-        animate={isSelected ? { y: -10 } : { y: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        transition={{ type: "spring", stiffness: 800, damping: 50 }}
       >
+        {isSelected && (
+          <motion.div
+            className="absolute inset-0 w-full h-[3rem] px-4 rounded-full -top-2.5 bg-base-300"
+            layoutId="outline"
+            transition={{ type: "spring", stiffness: 800, damping: 50 }}
+          />
+        )}
         <Icon
           size={isSelected ? 28 : 24}
           className={cn(
@@ -73,8 +67,10 @@ const MenuItem = ({
             isSelected ? "text-primary" : "text-base-100",
           )}
         />
+        <span className="relative z-10 mt-1 text-xs text-base-100 text-nowrap">
+          {label}
+        </span>
       </motion.div>
-      <span className="relative z-10 mt-1 text-xs text-base-100">{label}</span>
     </motion.div>
   );
 
@@ -100,9 +96,9 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
   const accessToken = useUserToken.getState().accessToken;
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const [callWaiterModal, setCallWaiterModal] = useState(false);
-  const { setShowCart, showCart, inputModal, setInputModal } = useCart();
+  const { setShowCart, showCart, inputModal, setInputModal, setCartPage } =
+    useCart();
   const customLink = useParams()?.businessId || "";
-  const cart = useCartStore((s) => s.cart);
   const { subscribeModal, reviewPopup } = useLogin((s) => ({
     subscribeModal: s.subscribeModal,
     reviewPopup: s.reviewPopup,
@@ -113,48 +109,37 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
   }, [setInputModal]);
 
   const openModal = useCallback(() => {
-    // if (selected === "menu" || selected === "catalogue") {
-    //   setDirection("category");
-    // }
     if (!accessToken) {
       router.push(`/${customLink}/user/signup`);
     }
-    setInputModal(true);
-  }, [selected, accessToken, customLink, setInputModal, setDirection, router]);
-
-  const openCallWaiterModal = useCallback(() => {
-    setCallWaiterModal(true);
-  }, []);
+    if (outletInfo?.isPosEnabled) {
+      setCartPage("order");
+      setShowCart(!showCart);
+    } else {
+      setInputModal(true);
+    }
+  }, [
+    selected,
+    showCart,
+    accessToken,
+    customLink,
+    setInputModal,
+    setDirection,
+    outletInfo?.isPosEnabled,
+    setShowCart,
+  ]);
 
   const closeCallWaiterModal = useCallback(() => {
     setCallWaiterModal(false);
   }, []);
 
-  const triggerCallWaiter = useCallback(() => {
-    // setDirection("category");
-    if (!tableName) {
-      return router.push(`/${customLink}/scan`);
-    }
-    if (!accessToken) {
-      return router.push(`/${customLink}/user/signup`);
-    }
-    openCallWaiterModal();
-  }, [
-    setDirection,
-    accessToken,
-    router,
-    customLink,
-    tableName,
-    openCallWaiterModal,
-  ]);
-
-  const showingCart = useCallback(() => {
-    setShowCart(!showCart);
-  }, [showCart, setShowCart]);
-
   if (subscribeModal || reviewPopup) {
     return null;
   }
+  const shineVariants = {
+    initial: { x: "-100%" },
+    animate: { x: "100%" },
+  };
 
   const selectedBtn =
     outletInfo?.outLetType === "OTHER" && selected === "menu"
@@ -164,24 +149,38 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
   return (
     <>
       <motion.nav
-        className="fixed z-10 bottom-0 w-full max-w-[30rem] bg-primary shadow-lg px-2"
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
+        className="
+          fixed z-50 bottom-4 w-[calc(100%-2rem)] 
+          left-4 max-w-[30rem] bg-primary shadow-lg
+          transform md:-translate-x-1/2 md:left-1/2
+          overflow-hidden rounded-full py-4
+        "
+        style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
+        <motion.div
+          className="absolute inset-0 pointer-events-none w-full max-w-[30rem]"
+          variants={shineVariants}
+          initial="initial"
+          animate="animate"
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            // repeatDelay: 1,
+            ease: "backInOut",
+          }}
+          style={{
+            background: "var(--shine-effect)",
+          }}
+        />
         <div className="flex items-center justify-between">
           <MenuItem
-            icon={RiHome4Fill}
-            label="Home"
-            href={`/${customLink}/explore`}
-            isSelected={selectedBtn === "home"}
-          />
-          <MenuItem
-            icon={RiCouponFill}
+            icon={RiCouponLine}
             label="Rewards"
             href={`/${customLink}/${accessToken ? "loyalty" : "user/signup"}`}
             isSelected={selectedBtn === "rewards"}
           />
+
           {tableName ? (
             <MenuItem
               icon={MdAccountBalanceWallet}
@@ -197,64 +196,38 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
               isSelected={false}
             />
           )}
-          {outletInfo?.outLetType !== "OTHER" && (
-            <MenuItem
-              icon={FaConciergeBell}
-              label="Captain"
-              onClick={triggerCallWaiter}
-              isSelected={false}
-            />
-          )}
-          {outletInfo?.businessId !== "66a8d54c4d18a18f4ff93a49" && (
-            <>
-              <div className="relative">
-                <MenuItem
-                  icon={BsBagHeartFill}
-                  label={showCart ? "Menu" : "Cart"}
-                  onClick={showingCart}
-                  isSelected={false}
-                />
-                <AnimatePresence>
-                  {cart.length > 0 && (
-                    <motion.span
-                      className="absolute z-50 flex items-center justify-center w-5 h-5 text-xs font-bold bg-red-600 rounded-full text-primary-foreground -top-3 right-1"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0 }}
-                    >
-                      {cart.length}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </div>
-              <MenuItem
-                icon={MdMenuBook}
-                label={
-                  outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"
-                }
-                href={`/${customLink}/category`}
-                isSelected={
-                  selectedBtn === "menu" || selectedBtn === "catalogue"
-                }
-              />
-            </>
-          )}
+          <MenuItem
+            icon={MdMenuBook}
+            label={outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
+            href={`/${customLink}/category`}
+            isSelected={selectedBtn === "menu" || selectedBtn === "catalogue"}
+          />
         </div>
       </motion.nav>
 
       {inputModal && accessToken && (
-        <BottomPopUp show={inputModal} onClose={closeModal} linearGradTheme>
+        <BottomPopUp
+          height="80dvh"
+          show={inputModal}
+          onClose={closeModal}
+          linearGradTheme
+        >
           <AddAmountModal />
         </BottomPopUp>
       )}
       {callWaiterModal && (
-        <BottomPopUp show={callWaiterModal} onClose={closeCallWaiterModal}>
+        <ItemDescriptionPopup
+          show={callWaiterModal}
+          onClose={closeCallWaiterModal}
+          heading="Help"
+        >
           <MemoCallTheWaiterComponent onClose={closeCallWaiterModal} />
-        </BottomPopUp>
+        </ItemDescriptionPopup>
       )}
+
       {showCart && (
-        <BottomPopUp show={showCart} onClose={showingCart} hide>
-          <Cart />
+        <BottomPopUp hide show={showCart} onClose={() => setShowCart(false)}>
+          <MemoCart />
         </BottomPopUp>
       )}
     </>

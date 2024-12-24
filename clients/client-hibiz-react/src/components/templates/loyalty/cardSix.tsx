@@ -85,8 +85,8 @@ const MemoCardSixLayout = ({
             height={64}
             src={logo || hipalLogo}
             alt="logo"
-            className="absolute top-6 left-[34%] filter invert-0 mix-blend-screen rounded-xl rounded-full"
-            style={{ filter: "invert(100%) contrast(150%) brightness(110%)" }}
+            className="absolute top-[1.8rem] left-[33.9%] rounded-full"
+            // style={{ filter: "invert(100%) contrast(150%) brightness(110%)" }}
           />
           <figcaption className="absolute w-[77%] mx-4 flex flex-col items-center justify-center text-white top-[45%] left-0">
             <h3 className="w-[100%] font-semibold pb-4">{name}</h3>

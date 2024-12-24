@@ -85,7 +85,7 @@ const MemoCardTwoLayout = ({
             src={logo || hipalLogo}
             alt="logo"
             className="absolute top-6 left-6 filter invert-0 mix-blend-screen rounded-xl"
-            style={{ filter: "invert(100%) contrast(150%) brightness(110%)" }}
+            // style={{ filter: "invert(100%) contrast(150%) brightness(110%)" }}
           />
           <figcaption className="absolute w-[35%] text-left text-white bottom-8 leading-4 left-8">
             <h3 className="w-[100%] truncate font-semibold">{name}</h3>

@@ -1,17 +1,55 @@
 import { categoryApis } from "@/apis/category";
 import dynamics from "next/dynamic";
 import { defaultThemes } from "@/components/utils/helpers";
-import CategorySkeleton from "@/components/atoms/progressBar/categoryLoader";
+import MainTypes from "@/components/molecules/categoryTypes/mainTypes";
+import TopSectionVideo from "@/components/organisms/menuBanner/topSectionVideo";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
+// export const dynamic = "force-dynamic";
+// export const fetchCache = "force-no-store";
+export const revalidate = 300;
 
-// export const revalidate = 600;
+const CategorySkeleton = dynamics(
+  () => import("@/components/atoms/progressBar/categoryLoader"),
+  {
+    ssr: false,
+    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+  },
+);
+
+const MenuBannerPage = dynamics(
+  () => import("@/components/organisms/menuBanner"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-16 text-black">
+        {" "}
+        <SkeletonLoader height={200} />
+      </div>
+    ),
+  },
+);
+
+const CategoryPageBtn = dynamics(
+  () => import("@/components/molecules/bottomButton/categoryPageBtn"),
+  {
+    ssr: false,
+    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+  },
+);
+
+const LiveCart = dynamics(
+  () => import("@/components/molecules/bottomButton/livecart"),
+  {
+    ssr: false,
+    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+  },
+);
 
 const CategoryHeader = dynamics(
   () => import("@/components/organisms/category/categoryHeader"),
   {
-    ssr: true,
+    ssr: false,
     loading: () => <div className="h-16 text-black"> Loading .....</div>,
   },
 );
@@ -26,17 +64,11 @@ const Footer = dynamics(() => import("@/components/molecules/footer"), {
 const DishesList = dynamics(
   () => import("@/components/organisms/category/dishesList"),
   {
-    ssr: true,
+    ssr: false,
     loading: () => <div className="h-16 text-black"> Loading .....</div>,
   },
 );
-const BottomButton = dynamics(
-  () => import("@/components/molecules/bottomButton"),
-  {
-    ssr: false,
-    loading: () => <CategorySkeleton />,
-  },
-);
+
 const TopBackground = dynamics(
   () => import("@/components/molecules/topBackground"),
   {
@@ -64,16 +96,21 @@ export default async function Page({
   return (
     <main>
       <div className="relative flex flex-col w-full pb-14">
-        <TopBackground specialBanner={data?.business?.specialBannerUrl} />
+        <TopSectionVideo />
+        <MenuBannerPage
+          timings={data?.timings}
+          childCategory={data?.childCategories || []}
+        />
+        {/* <TopBackground specialBanner={data?.business?.specialBannerUrl} /> */}
         <CategoryHeader childCategory={data?.childCategories || []} />
-        <div className="!mt-0 !scroll-smooth">
+        <div className="!mt-0 !scroll-smooth relative z-20">
           <DishesList
             parentCategory={data?.parentCategories || []}
             childCategory={data?.childCategories || []}
             timings={data?.timings}
           />
         </div>
-        <section className="pt-6 bg-base-100">
+        <section className="pt-6 bg-[#ffffff]">
           <Footer
             themes={data?.settings || defaultThemes}
             socialMediaLinks={data?.business?.socialMediaLinks}
@@ -82,7 +119,13 @@ export default async function Page({
         </section>
         <PageName />
       </div>
-      <BottomButton selected={"menu"} />
+      <MainTypes
+        parentCategory={data?.parentCategories || []}
+        childCategory={data?.childCategories || []}
+      />
+
+      <LiveCart />
+      <CategoryPageBtn />
     </main>
   );
 }

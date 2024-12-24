@@ -63,35 +63,35 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
   }
 
   return (
-    <div className="overflow-x-auto z-[103]">
-      {addOns.map((addOn) => (
+    <div className="overflow-x-auto ">
+      {addOns?.map((addOn) => (
         <div
           key={addOn._id || crypto.randomUUID()}
-          className="add-on-section bg-base-300/10 mb-[2rem]"
+          className="add-on-section bg-[#ffffff] mb-[2rem]"
         >
           <div className="flex justify-between py-3 mx-6 prose cursor-pointer">
             <div>
-              <h5 className="w-[12rem] text-sm font-medium capitalize text-base-content">
-                {addOn.name}
+              <h5 className="w-[12rem] text-sm font-semibold capitalize text-[#000000]">
+                {addOn?.name}
               </h5>
               <span
-                className={`text-xs font-normal ${
-                  addOn.compulsory === 0 ? "" : "!text-primary"
+                className={`text-sm  font-semibold opacity-60 ${
+                  addOn?.compulsory === 0 ? "" : "!text-[#000000]"
                 }`}
               >
-                Select up to {addOn.addOnMaxQuantity} (
-                {addOn.compulsory > 0
-                  ? `${addOn.compulsory} Required`
+                Select up to {addOn?.addOnMaxQuantity} (
+                {addOn?.compulsory > 0
+                  ? `${addOn?.compulsory} Required`
                   : "Optional"}
                 )
               </span>
             </div>
           </div>
           <div className="pb-4">
-            <div className="max-h-screen mx-6 overflow-auto transition-all duration-500 ease-in-out border opacity-100 rounded-xl border-primary">
+            <div className="max-h-screen mx-6 overflow-auto transition-all duration-500 ease-in-out border opacity-100 rounded-xl border-[#000000]">
               <table className="table w-full my-0 table-compact table-zebra">
                 <tbody>
-                  {addOn.choices.map((choice) => {
+                  {addOn?.choices.map((choice) => {
                     if (!choice.visibility || !choice.availability) return null;
                     const choiceId = choice._id || choice.uuid;
                     return (
@@ -99,22 +99,24 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
                         className="flex flex-row transition-all"
                         key={choiceId}
                       >
-                        <td className="min-h-12 max-h-20 !pl-3 !text-xs w-1/3 flex flex-row flex-wrap">
+                        <td className="min-h-12 max-h-20 !pl-3 !text-sm w-1/3 flex flex-row flex-wrap !text-[#000000]">
                           <span className="w-full my-auto capitalize whitespace-pre-wrap">
                             {choice.name} <br />
-                            (Max: {choice.choiceMaxQuantity})
+                            <span className="text-xs">
+                              (Max: {choice.choiceMaxQuantity})
+                            </span>
                           </span>
                         </td>
-                        <td className="!text-xs w-1/3 text-center font-semibold flex flex-row">
-                          <span className="mx-auto my-auto">
+                        <td className="!text-sm w-1/3 text-center font-semibold flex flex-row">
+                          <span className="mx-auto my-auto text-[#000000]">
                             {getPrice(choice.price)}
                           </span>
                         </td>
-                        <td className="!text-xs w-1/3 text-center font-semibold flex flex-row">
+                        <td className="!text-sm w-1/3 text-center font-semibold flex flex-row">
                           <span className="pr-2 my-auto ml-auto">
                             <QuantityPickerNonOutline
                               setQuantity={(q) =>
-                                handleQuantityChange(q, choiceId, addOn._id)
+                                handleQuantityChange(q, choiceId, addOn?._id)
                               }
                               minQuantity={0}
                               extra={addOn}

@@ -141,7 +141,7 @@ const MemoEmblaCarouel2 = ({ children, customCarousel }: IProps) => {
       </div>
       <div
         className={cn(
-          "py-4 mt-3 embla__button-container flex items-center",
+          "pt-4 mt-3 embla__button-container flex items-center",
           customCarousel ? "!justify-center" : "justify-between",
         )}
       >

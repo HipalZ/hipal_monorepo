@@ -5,18 +5,12 @@ import { useActiveClass } from "@/components/store/useActiveClass";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
 import { InView } from "react-intersection-observer";
-import MainTypes from "@/components/molecules/categoryTypes/mainTypes";
 import SubTypes from "@/components/molecules/categoryTypes/subTypes";
 import { useSearch } from "@/components/store/useSearch";
 import type { TimingType } from "@/components/types/businessData";
-import EmblaCarouselPreview from "../embla/emblaCarousalPreview";
-import type { EmblaOptionsType } from "embla-carousel";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import OtherOutletCard from "@/components/atoms/card/otherOutletCard";
-import Image from "next/image";
-import ShimmerImage from "@/components/atoms/imageshimmer";
-import MemoPlaceholderImg from "@/components/atoms/placeholder";
 
 interface IDishesProps {
   childCategory: CategoryType[];
@@ -66,10 +60,7 @@ const DishesList: FC<IDishesProps> = (props) => {
       return (
         category.hierarchy === "CHILD" &&
         category.dishIds &&
-        category.dishIds.length > 0 &&
-        category.dishIds.some(
-          (dish: DishType) => !dish.isDeleted && dish.visibility,
-        )
+        category.dishIds.length > 0
       );
     };
 
@@ -98,6 +89,12 @@ const DishesList: FC<IDishesProps> = (props) => {
     }
   }, [childCategory, parentCategory]);
 
+  const mainTypes = useMemo(
+    () =>
+      parentCategory?.filter((category) => category.subCategoryIds.length > 0),
+    [parentCategory],
+  );
+
   const visibleCategoriesRef = useRef<{ [key: string]: number }>({});
   const updateActiveCategory = () => {
     if (!observerActive) return;
@@ -120,14 +117,12 @@ const DishesList: FC<IDishesProps> = (props) => {
     }
   };
 
-  const OPTIONS: EmblaOptionsType = { dragFree: true, loop: true };
-
   useEffect(() => {
     const handleHashChange = () => {
       if (isActiveChildCategory !== "") {
         const element = document.getElementById(isActiveChildCategory);
         if (element) {
-          element.style.scrollMarginTop = "300px";
+          element.style.scrollMarginTop = "270px";
           element.scrollIntoView({ behavior: "smooth" });
         }
         setTimeout(() => {
@@ -139,14 +134,14 @@ const DishesList: FC<IDishesProps> = (props) => {
         timings?.dishIds?.length > 0 && observerActive ? "" : isActiveCategory;
       const element = document.getElementById(active);
       if (element) {
-        element.style.scrollMarginTop = "150px";
+        element.style.scrollMarginTop = "130px";
         element.scrollIntoView({ behavior: "smooth" });
       }
     };
     handleHashChange();
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [isActiveCategory]);
+  }, [isActiveCategory, timings]);
 
   useMemo(() => {
     const allDishes = subTypes.reduce(
@@ -165,32 +160,21 @@ const DishesList: FC<IDishesProps> = (props) => {
 
   return (
     <>
-      <section className="sticky z-50 text-primary top-[3rem]">
+      <section
+        className={cn(
+          "sticky z-50 text-[#000000]",
+          outletInfo?.outLetType !== "OTHER" ? "top-[5rem]" : "top-[3rem]",
+        )}
+      >
         {!isSearchActive && (
-          <>
-            <MainTypes parentCategory={parentCategory} />
-            <SubTypes childCategory={subTypes} />
-          </>
+          <SubTypes childCategory={subTypes} parentCategory={mainTypes} />
         )}
       </section>
-      {Object.keys(timings)?.length > 0 && timings?.dishIds?.length > 0 && (
-        <section className="relative flex items-center justify-center w-full bg-base-100">
-          <section className="flex flex-col items-center justify-center w-full max-w-[30rem] pt-[1.5rem] overflow-hidden pb-[2rem] md:pb-[2rem] bg-base-100 relative">
-            <h1 className="relative z-10 text-[1.75rem] text-primary bungee-inline">
-              <span className="opacity-80 text-primary">
-                {timings?.heading || "Specials"}
-              </span>
-            </h1>
-            <div className="absolute -top-[6rem] w-[110%] h-[15rem] rounded-full bg-base-300" />
-            <EmblaCarouselPreview timings={timings} options={OPTIONS} />
-          </section>
-        </section>
-      )}
+
       {subTypes.map((category: CategoryType, index) => {
         const visibleDishes = category.dishIds.filter(
-          (dish: DishType) => dish.visibility && !dish.isDeleted,
+          (dish: DishType) => dish.visibility,
         );
-        console.log("visibleDishes", category);
         const dishesToRender = filterDishes(visibleDishes, isActiveDishType);
 
         if (dishesToRender.length === 0) return null;
@@ -198,7 +182,7 @@ const DishesList: FC<IDishesProps> = (props) => {
         return (
           <section
             key={`${category._id}${index}`}
-            className="w-full pb-4 min-h-60 bg-base-100"
+            className="w-full pb-4 min-h-60 bg-[#ffffff]"
             id={category._id?.toString()}
           >
             <InView
@@ -209,7 +193,7 @@ const DishesList: FC<IDishesProps> = (props) => {
                 if (categoryId) {
                   if (inView) {
                     visibleCategoriesRef.current[categoryId] = Math.abs(
-                      entry.boundingClientRect.top - 120,
+                      entry.boundingClientRect.top - 100,
                     );
                   } else {
                     delete visibleCategoriesRef.current[categoryId];
@@ -223,43 +207,22 @@ const DishesList: FC<IDishesProps> = (props) => {
                   ref={ref}
                   className={cn(
                     {
-                      "border-t-2 border-primary":
+                      "border-t-2 border-[#000000]":
                         category.dishIds?.length !== 0,
                     },
-                    "z-40 flex items-center space-x-4 justify-between h-[4rem] px-2 font-bold prose bg-base-200",
+                    "z-40 flex items-center space-x-4 justify-between h-[4rem] px-2 font-bold prose bg-[#cacaca50]",
                   )}
                 >
-                  <section className="flex items-start justify-center gap-4 truncate">
-                    {category?.coverImage ? (
-                      <figure className="rounded-full aspect-square h-[48px]">
-                        <ShimmerImage
-                          src={category.coverImage}
-                          alt={`${category.name || "Category"} image`}
-                          quality={95}
-                          width={48}
-                          height={40}
-                          className="object-cover !my-0 rounded-full aspect-square"
-                        />
-                      </figure>
-                    ) : (
-                      <figure className="aspect-square">
-                        <MemoPlaceholderImg className="w-12 h-12 rounded-full bg-base-300" />
-                      </figure>
-                    )}
-                    <h3
-                      className="!text-2xl truncate font-medium capitalize bungee-inline text-primary "
-                      title={category.name || "Unnamed Category"}
-                    >
-                      {category.name || "Unnamed Category"}
-                    </h3>
-                  </section>
-                  <h4 className="-mt-1.5 text-lg font-medium text-primary space-grotesk-700">
-                    {category.dishIds?.length || 0}
-                  </h4>
+                  <center
+                    className="!text-2xl w-full truncate font-medium capitalize space-grotesk-700 text-black"
+                    title={category.name || "Unnamed Category"}
+                  >
+                    {category.name || "Unnamed Category"}
+                  </center>
                 </div>
               )}
             </InView>
-            <div className="flex flex-col divide-y divide-base-300">
+            <div className="flex flex-col divide-y divide-gray-100">
               {dishesToRender.length > 0 &&
               outletInfo?.outLetType !== "OTHER" ? (
                 dishesToRender.map((dishData: DishType, dishIndex) => (

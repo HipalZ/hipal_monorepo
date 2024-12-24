@@ -47,15 +47,8 @@ function OtpPage() {
   const router = useRouter();
   const sendOtp = useLogin((s) => s.sendOtp);
   const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting);
-  const { direction, isPayment, setUserCoinZ, invoiceUrl, urlFrom } = useLogin(
-    (s) => ({
-      direction: s.direction,
-      isPayment: s.isPayment,
-      setUserCoinZ: s.setUserCoinZ,
-      invoiceUrl: s.invoiceUrl,
-      urlFrom: s.urlFrom,
-    }),
-  );
+  const { direction, isPayment, setUserCoinZ, invoiceUrl, urlFrom } =
+    useLogin();
   const [loading, setLoading] = useState<boolean>(false);
 
   const handleOtpChange = (
@@ -320,7 +313,7 @@ function OtpPage() {
           <button
             disabled={loading}
             type="submit"
-            className="w-full text-white bg-black rounded-full btn"
+            className="w-full py-2 text-white bg-black rounded-full btn"
           >
             {loading ? (
               <span className="loader_spinner !border-t-base-100  text-white" />

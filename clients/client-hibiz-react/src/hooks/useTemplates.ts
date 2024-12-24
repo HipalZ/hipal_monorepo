@@ -1,15 +1,12 @@
-import { apiRpc } from "@hi/common";
-import { APP_ID, WHATSAPP_TOKEN } from "@/configs";
-import { useCallback, useState } from "react";
 import axios from "@/axios";
-import toast from "react-hot-toast";
 import useBusinessData from "@/components/store/useBusinessData";
+import { useMessageRecipientsStore } from "@/components/store/useMessageRecipientsStore";
+import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import useWhatsapp, {
   Step,
   TemplateSteps,
 } from "@/components/store/useWhatsapp";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMessageRecipientsStore } from "@/components/store/useMessageRecipientsStore";
+import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
 import type {
   ICouponzLinks,
   ISendOptionsPayload,
@@ -18,8 +15,10 @@ import type {
   MainResponseHandling,
   WhatsAppTemplatePayload,
 } from "@/components/types/businessData";
-import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
-import { useOwnerLogin } from "@/components/store/useOwnerLogin";
+import { apiRpc } from "@hi/common";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useState } from "react";
+import toast from "react-hot-toast";
 
 export const useCreateTemplate = () => {
   const queryClient = useQueryClient();
@@ -87,9 +86,11 @@ export const useEditTemplate = () => {
   const setIsLoading = useWhatsappTempStore((s) => s.setIsLoading);
   const editTemplate = async (payload: WhatsAppTemplatePayload) => {
     // API call to edit template
-    const res = await apiRpc.whatsapp.template[":templateid"].$put({
+    const res = await apiRpc.whatsapp.template[":templateid"][
+      ":businessId"
+    ].$put({
       json: payload,
-      param: { templateid: payload.templateId },
+      param: { templateid: payload.templateId, businessId: payload.businessId },
     });
 
     const data = await res.json();
@@ -139,6 +140,8 @@ export const useMediaUpload = () => {
     setImageUrl: s.setImageUrl,
   }));
 
+  const businessId = useBusinessData((s) => s.businessData?._id);
+
   const [isUploading, setIsUploading] = useState(false);
 
   const uploadMedia = async (): Promise<{ url: string; handle: string }> => {
@@ -149,16 +152,26 @@ export const useMediaUpload = () => {
 
       setIsUploading(true);
 
+      const res = await apiRpc.whatsapp.whatsapp_config[":businessId"].$get({
+        param: {
+          businessId,
+        },
+      });
+
+      const response = await res.json();
+      console.log("responseala ahe", response);
+
       // Step 1: Start upload session
+      // TODO: CALL API TO APPiD TOKEN
       const sessionResponse = await axios.post(
-        `https://graph.facebook.com/v21.0/${APP_ID}/uploads`,
+        `https://graph.facebook.com/v21.0/${response?.data?.appId}/uploads`,
         null,
         {
           params: {
             file_name: imageFiles.name,
             file_length: imageFiles.size,
             file_type: imageFiles.type,
-            access_token: WHATSAPP_TOKEN,
+            access_token: response?.data?.token,
           },
           headers: { "Content-Type": "application/json" },
         },
@@ -432,9 +445,87 @@ export const useSearchUserByPhone = () => {
       },
     });
     const user = await response.json();
-    console.log("user", user);
     return user;
   };
 
   return { searchUserByPhone };
+};
+
+export const useCheckRegistration = () => {
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  const setCheckReg = useWhatsappTempStore((s) => s.setCheckReg);
+
+  const { setWhatzappFormEnabled, setWhatzappStatus } = useWhatsappTempStore(
+    (s) => ({
+      setWhatzappFormEnabled: s.setWhatzappFormEnabled,
+      setWhatzappStatus: s.setWhatzappStatus,
+    }),
+  );
+  const checkRegistration = useCallback(async () => {
+    const response = await apiRpc.whatsapp.fetch_waba[":businessId"].$get({
+      param: {
+        businessId: businessId,
+      },
+    });
+    const res = await response.json();
+    if (response.status === 200) {
+      setWhatzappFormEnabled(true);
+      setWhatzappStatus(res?.data?.status);
+    } else {
+      setWhatzappFormEnabled(false);
+      setWhatzappStatus(res?.data?.status);
+    }
+    setCheckReg(true);
+    return response.json();
+  }, [businessId, setWhatzappFormEnabled, setWhatzappStatus, setCheckReg]);
+
+  return { checkRegistration };
+};
+
+export const useCreateRegistration = () => {
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  const { setPaymentSuccessFull } = useWhatsapp((s) => ({
+    setPaymentSuccessFull: s.setPaymentSuccessFull,
+  }));
+  const {
+    setStep,
+    displayName,
+    displayNumber,
+    facebookId,
+    facebookPassword,
+    resetFormData,
+  } = useWhatsappTempStore((s) => ({
+    setStep: s.setStep,
+    displayName: s.displayName,
+    displayNumber: s.displayNumber,
+    facebookId: s.facebookId,
+    facebookPassword: s.facebookPassword,
+    resetFormData: s.resetFormData,
+  }));
+
+  const wabaregistration = async () => {
+    try {
+      const response = await apiRpc.whatsapp.whatsapp_waba_registration.$post({
+        json: {
+          displayName: displayName,
+          displayNumber: displayNumber,
+          facebookId: facebookId,
+          facebookPassword: facebookPassword,
+          businessId,
+        },
+      });
+      if (response.status === 200) {
+        setStep(2);
+        setPaymentSuccessFull(false);
+        resetFormData();
+      }
+      if (response.status === 404) {
+        toast.error("Registration failed contact support");
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  return { wabaregistration };
 };

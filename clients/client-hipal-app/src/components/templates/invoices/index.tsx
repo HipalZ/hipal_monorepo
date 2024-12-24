@@ -211,7 +211,7 @@ const businessData = [
     gst: "",
   },
   {
-    id: "018",
+    id: "019",
     date: "03 Dec 2024",
     name: "raasta",
     bizName: "raasta",
@@ -240,8 +240,8 @@ const businessData = [
     name: "Cu2",
     bizName: "Cu2 Brewhouse",
     status: false,
-    serviceCost: 4500,
-    months: 6,
+    serviceCost: 4000,
+    months: 12,
     address:
       "Ground Floor, One Golden Mile, Golden Mile Rd, Kokapet, Hyderabad, Telangana 500075",
     gst: "36AAGFF9090F1Z8",
@@ -251,7 +251,7 @@ const businessData = [
     date: "21 Dec 2024",
     name: "thetreestories",
     bizName: "The Tree Stories",
-    status: false,
+    status: true,
     serviceCost: 3500,
     months: 6,
     address:

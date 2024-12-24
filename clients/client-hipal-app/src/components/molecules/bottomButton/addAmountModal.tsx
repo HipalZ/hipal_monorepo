@@ -7,21 +7,22 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import useTableData from "@/components/store/useTableData";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import { cn } from "@/components/utils/helpers";
 import { useLogin } from "@/components/store/useLogin";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import { getRandomBlurImg } from "@/components/utils/images";
-import { apiRpc } from "@hi/common";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useCouponz } from "@/components/store/useCouponz";
-import { useErrorHandling } from "@/utils/helper";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { useCallTheCaptain } from "@/components/hooks/useCartHook";
+import CommonBottomButton from "@/components/atoms/bottomButton";
 
 const AddAmountModal = memo(() => {
-  const { errorText } = useErrorHandling();
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const business = useBusinessDetails((s) => s.businessDetails);
+  const [loading, setLoading] = useState<boolean>(false);
+  const router = useRouter();
+  const { mutate, isPending } = useCallTheCaptain();
   const {
     billValue,
     setBillValue,
@@ -33,26 +34,13 @@ const AddAmountModal = memo(() => {
     setSelectedTip,
     setShowInput,
     setIsTipActive,
-  } = usePaymentStore((s) => ({
-    billValue: s.billValue,
-    setBillValue: s.setBillValue,
-    setEditBillModal: s.setEditBillModal,
-    setClaimCouponz: s.setClaimCouponz,
-    setClaimedCoinz: s.setClaimedCoinz,
-    setCustomTip: s.setCustomTip,
-    setTips: s.setTips,
-    setSelectedTip: s.setSelectedTip,
-    setShowInput: s.setShowInput,
-    setIsTipActive: s.setIsTipActive,
-  }));
+  } = usePaymentStore();
 
   const { setAvailedCoupon } = useCouponz((s) => ({
     setAvailedCoupon: s.setAvailedCoupon,
   }));
   const userDetails = useLogin((s) => s.userDetails);
   const customLink = useParams()?.businessId as string;
-  const router = useRouter();
-  const [loading, setLoading] = useState<boolean>(false);
 
   const setIsPayment = useLogin((s) => s.setIsPayment);
   const name = useLogin((s) => s.userDetails?.name);
@@ -103,39 +91,22 @@ const AddAmountModal = memo(() => {
       toast.error("Please Scan the table to call staff");
       return;
     }
-    if (loading) {
-      return toast.error("Please wait for a moment");
-    }
 
-    setLoading(true);
+    const payload = {
+      businessId: businessId,
+      tableName: tableName,
+      message: "Want to settle bill",
+      alertType: "WAITER",
+      status: "WAITER",
+      name: name || "user",
+      userId: userDetails._id,
+    };
 
-    const res = await apiRpc.payments.createWaiterAlert.$post({
-      json: {
-        businessId: businessId,
-        tableName: tableName,
-        message: "Want to settle bill",
-        alertType: "WAITER",
-        status: "WAITER",
-        name: name,
-        userId: userDetails._id,
-      },
-    });
-    if (res.status === 401) {
-      setLoading(false);
-      return errorText(res.status);
-    }
-    if (res.status === 200) {
-      toast.success("Staff will be there soon. Thank you!!");
-      setLoading(false);
-    }
-    if (res.status === 404 || res.status === 400) {
-      toast.error("Please scan again");
-      setLoading(false);
-    }
-  }, [businessId, tableName]);
+    mutate(payload);
+  }, [businessId, tableName, name, userDetails._id, mutate]);
   return (
-    <section className="h-[77dvh] relative overflow-y-auto overflow-x-hidden mb-[2rem]">
-      <header className="bg-white h-[4.25rem] flex items-center text-primary">
+    <section className=" relative overflow-y-auto overflow-x-hidden mb-[2rem]">
+      <header className="bg-base-100 h-[4.25rem] flex items-center text-primary">
         {business.logoUrl ? (
           <figure className="h-[5rem] p-4 w-[5rem]">
             <Image
@@ -158,14 +129,14 @@ const AddAmountModal = memo(() => {
           <span className="font-bold text-primary">{business.name}</span>
         </div>
       </header>
-      <section className="relative -mt-4 scale-90">
+      <section className="relative -mt-4  mb-[3rem] scale-[0.85]">
         <center>
           <Image
             width={1080}
             height={1080}
             src={hipayBg}
             alt="hipayBg"
-            className="animate-spin"
+            className="spin"
           />
           <figure className={`${style.globe_payment} mt-24`}>
             <Image width={193} height={193} src={Hipay} alt="Hipay" />
@@ -184,37 +155,27 @@ const AddAmountModal = memo(() => {
           />
         </section>
       </section>
-      <div className="flex justify-around gap-6 bottom_btn">
-        {outletInfo?.outLetType !== "OTHER" && (
-          <button
-            type="button"
-            disabled={loading}
-            onClick={callTheWaiter}
-            className="text-black w-full px-8 py-3 text-sm border rounded-full border-black !text-whote"
-          >
-            {loading ? (
-              <span className="loader_spinner !border-t-black" />
-            ) : (
-              "Call Captain"
-            )}
-          </button>
-        )}
-        <button
-          type="button"
-          disabled={loading}
-          onClick={proceedToPayment}
-          className={cn(
-            "w-full px-4 py-3 rounded-full text-white",
-            loading ? "opacity-50 pointer-events-none bg-gray-400" : "bg-black",
-          )}
-        >
-          {loading ? (
-            <span className="loader_spinner !border-t-primary" />
-          ) : (
-            "Next"
-          )}
-        </button>
-      </div>
+      <CommonBottomButton
+        fixed
+        buttons={[
+          ...(outletInfo?.outLetType !== "OTHER"
+            ? [
+                {
+                  text: "Call Captain",
+                  onClick: callTheWaiter,
+                  disable: isPending,
+                  isLoading: isPending,
+                },
+              ]
+            : []),
+          {
+            text: "Next",
+            onClick: proceedToPayment,
+            disable: isPending,
+            isLoading: isPending,
+          },
+        ]}
+      />
     </section>
   );
 });

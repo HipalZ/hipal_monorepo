@@ -97,6 +97,8 @@ export const outLetInfoSchema = z.object({
   gstPercentage: z.coerce.number().default(5).optional(),
   outLetType: z.string().min(4).max(30).optional(),
   hideDishPrice: z.boolean().optional(),
+  isPosEnabled: z.boolean().default(false).optional(),
+  restId: z.string().min(3).max(200).optional(),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;

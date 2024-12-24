@@ -72,7 +72,7 @@ export const OrderSchema = z.object({
     .string({
       message: "Table name must be a string",
     })
-    .min(3, {
+    .min(1, {
       message: "Table name must be at least 3 characters",
     })
     .max(150, {
@@ -82,6 +82,7 @@ export const OrderSchema = z.object({
   couponId: ObjectIdSchema.optional(),
   channelId: ObjectIdSchema.optional(),
   cashbackAvailable: z.boolean().optional(),
+  posBillId: z.string().optional(),
 });
 
 export type OrderType = z.infer<typeof OrderSchema>;

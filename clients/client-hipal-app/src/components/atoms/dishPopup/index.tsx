@@ -19,7 +19,7 @@ function DishPopup({ dishData }: { dishData: IDish }) {
 
   return (
     <div
-      className="relative max-h-[90dvh] overflow-auto text-primary hide-scrollbar pb-[7rem]"
+      className="relative max-h-[90dvh] overflow-auto text-[#000000] hide-scrollbar pb-[7rem]"
       onClick={(e) => handleInsideClick(e)}
     >
       {!isEmpty(dishData?.images) ? (

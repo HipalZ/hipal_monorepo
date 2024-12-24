@@ -10,7 +10,7 @@ import confetti from "canvas-confetti";
 import usePayment from "@/components/store/usePayment";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import useTableData from "@/components/store/useTableData";
+import useTableData, { resetTableData } from "@/components/store/useTableData";
 import {
   calculateFinalBill,
   calculateReward,
@@ -237,7 +237,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         setRazorPaySignature("");
         setRazorPayOrderId("");
         setRazorPayPaymentId("");
-        setTableName("");
+        resetTableData();
         setChannelId("");
         return router.push(
           `/${customLink}/review?amount=${total}&mode=online&claim=${Math.round(
@@ -492,7 +492,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       toast.success(
         "We sent notification to the staff for offline payment. Please wait for the staff to confirm the payment.",
       );
-      setTableName("");
+      resetTableData();
       router.push(
         `/${customLink}/review?amount=${total}&mode=offline&claim=${Math.round(
           finalReward,

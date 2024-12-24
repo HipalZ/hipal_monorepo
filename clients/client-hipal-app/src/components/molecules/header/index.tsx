@@ -1,72 +1,86 @@
-import { memo, useCallback, useMemo } from "react";
-import { HiSearch } from "react-icons/hi";
+import { memo, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import QuickFilter from "@/components/atoms/quickFilter";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import SearchPanelCom from "./searchPanelCom";
 import { useSearch } from "@/components/store/useSearch";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import useTableData from "@/components/store/useTableData";
+import Table from "@/assets/cart/Table.png";
+import Image from "next/image";
 
 function Header({ categories }: { categories: CategoryType[] }) {
-  const { isSearchActive, setIsSearchActive, showHeader, setShowHeader } =
-    useSearch();
+  const { isSearchActive, showHeader } = useSearch();
+  const { hiCode } = useTableData();
 
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   const allDishes: DishType[] = useMemo(() => {
-    const getDishesFromCategory = (category: CategoryType): DishType[] => {
-      let dishes: DishType[] = category.dishIds || [];
+    const result: DishType[] = [];
+
+    const collectDishes = (category: CategoryType) => {
+      if (category.dishIds && category.dishIds.length > 0) {
+        result.push(...category.dishIds);
+      }
+
       if (category.subCategoryIds && category.subCategoryIds.length > 0) {
         for (const subCategory of category.subCategoryIds) {
-          dishes = [...dishes, ...getDishesFromCategory(subCategory)];
+          collectDishes(subCategory);
         }
       }
-      return dishes;
     };
 
-    return categories.reduce((acc, category) => {
-      return [...acc, ...getDishesFromCategory(category)];
-    }, []);
+    for (const category of categories) {
+      collectDishes(category);
+    }
+
+    return result;
   }, [categories]);
 
-  const openSearchModal = useCallback(() => {
-    setIsSearchActive(true);
-    setShowHeader(true);
-  }, [showHeader, isSearchActive]);
-
   return (
-    <div
-      className={`${
-        showHeader
-          ? "sticky top-0 z-50 bg-base-100 opacity-100 translate-y-0"
-          : "opacity-0 -translate-y-full"
-      } transition-all duration-300 ease-in-out flex flex-col space-y-2 text-4xl py-2 text-primary overflow-hidden`}
+    <motion.div
+      className="sticky top-0 z-50 bg-[#ffffff] flex flex-col space-y-2 text-4xl py-2 text-black overflow-hidden"
+      initial={{ opacity: 0, y: -100 }}
+      animate={{
+        opacity: showHeader ? 1 : 0,
+        y: showHeader ? 0 : -100,
+      }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
     >
-      <div className="relative flex items-center justify-between w-full overflow-hidden">
-        <h3 className="ml-2 text-2xl">
+      <div className="relative flex flex-col items-start justify-between w-full overflow-hidden">
+        <h3 className="flex items-center justify-between w-full px-2 text-3xl">
           {outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
+          {hiCode && (
+            <h5 className="flex items-center gap-2 text-xl font-semibold opacity-80">
+              <Image src={Table} width={36} height={36} alt="Table" />
+              <span className="text-base">Table Code</span> {hiCode}
+            </h5>
+          )}
         </h3>
         {outletInfo?.outLetType !== "OTHER" && (
-          <div className="flex items-center justify-around px-2">
-            <div className="mt-1 mr-2">
-              <QuickFilter />
-            </div>
-            <button
-              type="button"
-              className="btn btn-ghost bg-base-100 !h-8 !min-h-8 aspect-square !px-1 my-auto rounded-full"
-            >
-              {!isSearchActive && (
-                <HiSearch
-                  onClick={openSearchModal}
-                  size={24}
-                  className="text-lg text-primary"
-                />
-              )}
-            </button>
-          </div>
+          <motion.div
+            className="mt-2 mr-2"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.3 }}
+          >
+            <QuickFilter />
+          </motion.div>
         )}
       </div>
-      {isSearchActive && <SearchPanelCom allDishes={allDishes} />}
-    </div>
+      <AnimatePresence>
+        {isSearchActive && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <SearchPanelCom allDishes={allDishes} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
 

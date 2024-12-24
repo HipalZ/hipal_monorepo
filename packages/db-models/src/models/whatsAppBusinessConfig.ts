@@ -24,6 +24,14 @@ const whatsAppBusinessConfigSchema =
         type: String,
         required: true,
       },
+      appId: {
+        type: String,
+        required: true,
+      },
+      configId: {
+        type: String,
+        required: true,
+      },
       version: {
         type: String,
         required: true,
@@ -48,7 +56,8 @@ const whatsAppBusinessConfigSchema =
       },
       ownerId: {
         type: ObjectId,
-        required: true,
+
+        required: false,
         ref: "User",
       },
     },

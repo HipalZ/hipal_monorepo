@@ -8,7 +8,7 @@ import { useCallback } from "react";
 
 export const useUserCoinz = (loyaltyId: string) => {
   const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
-  const { userDetails } = useLogin((s) => ({ userDetails: s.userDetails }));
+  const { userDetails } = useLogin();
   const setUserLoginCoinz = useLogin((s) => s.setUserCoinZ);
   const setUserCoinz = usePaymentStore((s) => s.setUserCoinz);
 

@@ -1,15 +1,11 @@
 /** @type {import('tailwindcss').Config} */
-const withMT = require("@material-tailwind/react/utils/withMT");
-const { color } = require("framer-motion");
 
 module.exports = {
   content: [
-    "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
-    "./components/**/*.{js,ts,jsx,tsx,mdx}",
-
     // Or if using `src` directory:
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
+    "./node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}",
+    "./node_modules/shadcn-ui/dist/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
@@ -33,33 +29,21 @@ module.exports = {
         success: "#2FBD4E",
         "success-content": "#fff",
       },
-    },
-  },
-  daisyui: {
-    themes: [
-      {
-        light: {
-          primary: "#183D2E",
-          secondary: "#000",
-          accent: "#EFC54D",
-          neutral: "#1A202C",
-          "base-100": "#FEFBEF",
-          info: "#E6E6E6",
-          success: "#2FBD4E",
-          "success-content": "#fff",
-        },
-        dark: {
-          primary: "#183D2E",
-          secondary: "#000",
-          accent: "#EFC54D",
-          neutral: "#1A202C",
-          "base-100": "#FEFBEF",
-          info: "#E6E6E6",
-          success: "#2FBD4E",
-          "success-content": "#fff",
+      animation: {
+        "border-beam": "border-beam calc(var(--duration)*1s) infinite linear",
+      },
+      keyframes: {
+        "border-beam": {
+          "0%": {
+            "offset-distance": "0%",
+          },
+          "100%": {
+            "offset-distance": "100%",
+          },
         },
       },
-    ],
+    },
   },
-  plugins: [require("@tailwindcss/typography"), require("daisyui")],
+  darkMode: "class",
+  plugins: [require("@tailwindcss/typography")],
 };

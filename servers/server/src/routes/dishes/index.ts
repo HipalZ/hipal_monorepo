@@ -1,5 +1,13 @@
 // books.ts
-import { AddOn, Business, Category, Dish, UniquelyYours } from "@hi/db-models";
+import {
+  AddOn,
+  Business,
+  Category,
+  Dish,
+  Pos,
+  Table,
+  UniquelyYours,
+} from "@hi/db-models";
 import {
   dishSchema,
   uniquelyYoursSchema,
@@ -7,6 +15,7 @@ import {
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
+import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
@@ -32,6 +41,48 @@ const dishesRouter = new Hono()
     async (c) => {
       const { businessId, UniquelyYours, menu } = c.req.query();
       if (UniquelyYours) {
+        const isHasPos = await Pos.findOne({
+          businessId,
+        });
+
+        if (isHasPos) {
+          const table = await Table.findOne({
+            businessId,
+          }).select("name");
+
+          const posDishes = await axios.post(
+            "https://onlineapipp.petpooja.com/thirdparty_fetch_dinein_menu",
+            {
+              "app-key": isHasPos.accessKey,
+              "app-secret": isHasPos.secretKey,
+              "access-token": isHasPos.authToken,
+              restID: isHasPos.restId,
+              tableNo: table.name,
+            },
+          );
+
+          if (posDishes.data.success === "1") {
+            const posDishesData = posDishes.data.items.map((item: any) => {
+              return {
+                _id: item.itemid,
+                name: item.itemname,
+                dishTypes: ["VEG"],
+                images: [item.item_image_url],
+              };
+            });
+
+            return respond(
+              c,
+              "Dishes fetched successfully",
+              false,
+              200,
+              posDishesData,
+            );
+          }
+
+          return respond(c, "unable to fetch dishes", false, 400, {});
+        }
+
         const existingDishes = await Dish.find({
           businessId,
           "categoryIds.0": { $exists: true },
@@ -264,7 +315,7 @@ const dishesRouter = new Hono()
     },
   )
   .post(
-    "/uniquelyYours",
+    "/uniquelyYours/:businessId",
     authTokenValidator,
     requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator(
@@ -273,10 +324,19 @@ const dishesRouter = new Hono()
         dishArray: z.array(uniquelyYoursSchema),
       }),
     ),
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string().min(1).max(24),
+      }),
+    ),
 
     async (c) => {
       const { dishArray } = await c.req.json();
-      const businessId = dishArray[0]?.businessId;
+      const { businessId } = c.req.param();
+
+      console.log("businessId", businessId);
+
       const removeOldDishes = await UniquelyYours.updateMany(
         { businessId },
         { isDeleted: true },

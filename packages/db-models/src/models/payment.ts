@@ -89,7 +89,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: String,
       required: false,
     },
-    comment: {
+    posBillId: {
       type: String,
     },
 

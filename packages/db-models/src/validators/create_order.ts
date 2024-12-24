@@ -47,7 +47,7 @@ export const razorpayOrderSchema = z.object({
     .string({
       message: "Table name must be a string",
     })
-    .min(3, {
+    .min(1, {
       message: "Table name must be at least 3 characters",
     })
     .max(100, {
@@ -61,6 +61,7 @@ export const razorpayOrderSchema = z.object({
   couponId: ObjectIdSchema.optional(),
   channelId: ObjectIdSchema.optional(),
   cashbackAvailable: z.boolean().optional(),
+  posBillId: z.string().optional(),
 });
 
 export type RazorpayOrderType = z.infer<typeof razorpayOrderSchema>;

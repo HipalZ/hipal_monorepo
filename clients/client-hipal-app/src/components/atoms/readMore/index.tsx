@@ -7,7 +7,7 @@ const ReadMore = ({
 }: { text: string; className?: string }) => {
   return (
     <p
-      className={` inline text-center opacity-80 w-full break-words ${
+      className={` inline text-left opacity-80 w-full break-words ${
         className ? className : "text-sm"
       }`}
     >

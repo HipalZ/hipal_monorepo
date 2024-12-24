@@ -6,9 +6,11 @@ import Sunrays from "@/assets/img/sunrays_white.png";
 import { useReview } from "@/components/store/useReview";
 import { useLogin } from "@/components/store/useLogin";
 import { useParams, useRouter } from "next/navigation";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 
 const MemoGReview = () => {
   const customLink = useParams()?.businessId as string;
+  const placeUrl = useBusinessDetails((s) => s.businessDetails?.placeUrl);
   const router = useRouter();
   const { showGoogleReview, setShowGoogleReview } = useReview((s) => ({
     showGoogleReview: s.showGoogleReview,
@@ -26,7 +28,7 @@ const MemoGReview = () => {
 
   return (
     <>
-      {googleReviewCount === 0 && showGoogleReview && (
+      {placeUrl?.length > 0 && googleReviewCount === 0 && showGoogleReview && (
         <BottomPopUp
           show={showGoogleReview}
           onClose={() => setShowGoogleReview(false)}
@@ -50,6 +52,7 @@ const MemoGReview = () => {
             </article>
             <center
               onClick={skipGreview}
+              onKeyDown={skipGreview}
               className="z-20 text-sm text-black underline on_active_bounce underline-offset-2"
             >
               Skip

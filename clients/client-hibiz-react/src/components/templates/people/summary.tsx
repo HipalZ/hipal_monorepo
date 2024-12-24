@@ -222,13 +222,11 @@ const MemoSummary = () => {
                 >
                   <section className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#6F649B] rounded-full" />
-                    <h3>
-                      {key === "service"
-                        ? "Staff and Behaviour"
-                        : key === "foodTaste"
-                          ? "Service"
-                          : key}
-                    </h3>
+                    {key === "service"
+                      ? "Staff and Behaviour"
+                      : key === "foodTaste"
+                        ? "Service"
+                        : key}
                   </section>
                   <section className="flex items-center gap-4">
                     <section className="flex items-center gap-1">

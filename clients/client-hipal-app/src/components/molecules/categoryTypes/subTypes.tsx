@@ -9,6 +9,7 @@ import { Splide, SplideSlide } from "@splidejs/react-splide";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 interface ISubTypes {
+  parentCategory: CategoryType[];
   childCategory: CategoryType[];
 }
 
@@ -44,7 +45,7 @@ const filterDishesByType = (
 };
 
 const MemoSubTypes = (props: ISubTypes) => {
-  const { childCategory } = props;
+  const { childCategory, parentCategory } = props;
   const {
     isActiveCategory,
     isActiveDishType,
@@ -103,7 +104,7 @@ const MemoSubTypes = (props: ISubTypes) => {
   return (
     <>
       {outletInfo?.outLetType === "OTHER" ? (
-        <section className="overflow-x-auto shadow-lg no-scrollbar bg-base-100 text-primary">
+        <section className="overflow-x-auto no-scrollbar -mt-4 bg-[#ffffff] text-[#000000]">
           {subTypes.length > 0 && (
             <Splide
               ref={splideRef}
@@ -161,8 +162,8 @@ const MemoSubTypes = (props: ISubTypes) => {
           )}
         </section>
       ) : (
-        <section className="overflow-x-auto border-b shadow-lg border-b-primary no-scrollbar bg-base-100 text-primary">
-          {subTypes.length > 0 && (
+        <section className="overflow-x-auto border-b pt-3  border-b-[#000000] no-scrollbar bg-[#ffffff] text-[#000000]">
+          {subTypes.length > 0 && parentCategory?.length > 0 && (
             <Splide
               ref={splideRef}
               options={{
@@ -180,15 +181,15 @@ const MemoSubTypes = (props: ISubTypes) => {
                   <button
                     type="button"
                     id={item._id?.toString() + index.toString()}
-                    className="relative h-[4rem] px-2 py-3 snap-center"
+                    className="relative h-[2.75rem] px-2 pb-3 snap-center"
                     onClick={() => setActiveCategories(item)}
                   >
                     <article
                       className={cn(
                         isActiveCategory === item._id?.toString()
-                          ? "bg-primary text-base-100"
-                          : "text-primary",
-                        "flex border border-primary rounded-full items-center justify-center pl-1 pr-2 !py-1 transition-all duration-200 ease-in-out",
+                          ? "bg-[#000000] text-[#ffffff]"
+                          : "text-[#000000]",
+                        "flex border border-[#000000] rounded-full items-center justify-center pl-1 pr-2 !py-1 transition-all duration-200 ease-in-out",
                         "h-[2rem]",
                       )}
                     >

@@ -9,6 +9,7 @@ import couponzRouter from "./couponz";
 import dishesRouter from "./dishes";
 import groupRouter from "./groups";
 import hipalzRouter from "./hipalz";
+import iconRouter from "./icon";
 import menuBannerRouter from "./menu-banner";
 import paymentsRouter from "./payments";
 import posRouter from "./pos";
@@ -19,6 +20,7 @@ import surlRouter from "./surl";
 import tagRouter from "./tags";
 import usersRouter from "./users";
 import whatsappRouter from "./whatsapp";
+import zonesAndTablesRouter from "./zonesAndTables";
 
 //////
 const app = new Hono();
@@ -45,6 +47,8 @@ export const routes = app
   .route("/menu-banner", menuBannerRouter)
   .route("/whatsapp", whatsappRouter)
   .route("/cart", cartRouter)
-  .route("/surl", surlRouter);
+  .route("/surl", surlRouter)
+  .route("/zones_and_tables", zonesAndTablesRouter)
+  .route("/icon", iconRouter);
 
 export type AppType = typeof routes;

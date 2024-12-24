@@ -15,6 +15,7 @@ import ItemDescriptionPopup from "../dishDescription/itemDescription";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import CommonBottomButton from "../bottomButton";
 import { useCart } from "@/components/store/useCart";
+import MemoReadMore from "../readMore";
 
 const MemoHorizontalCard = ({
   dishData,
@@ -58,7 +59,7 @@ const MemoHorizontalCard = ({
   ${dishData.availability ? "mx-3" : "opacity-80 px-4"}
 `}
     >
-      <div className="flex flex-row items-center pb-1 prose min-h-[9rem]">
+      <div className="flex flex-row items-center py-4 prose">
         <div className="flex flex-col py-1 mr-auto space-y-1">
           <div className="flex space-x-2 ">
             {dishData?.dishTypes && outletInfo?.outLetType !== "OTHER" && (
@@ -69,24 +70,30 @@ const MemoHorizontalCard = ({
             {!dishData.availability && (
               <>
                 <span>
-                  <AiOutlineWarning className="ml-2 -mr-1 mt-[0.125rem] text-primary" />
+                  <AiOutlineWarning className="ml-2 -mr-1 mt-[0.125rem] text-[#000000]" />
                 </span>
-                <span className="ml-2 text-sm text-primary">Not available</span>
+                <span className="ml-2 text-sm text-[#000000]">
+                  Not available
+                </span>
               </>
             )}
           </div>
 
-          <div className="py-1 overflow-hidden text-base font-semibold leading-5 capitalize text-primary">
+          <div className="py-1 overflow-hidden text-base font-semibold leading-5 capitalize text-[#000000]">
             {dishData?.name || ""}
           </div>
-
+          {dishData?.description && (
+            <div className="-ml-3 text-xs leading-3 scale-90 line-clamp-2">
+              <MemoReadMore text={dishData?.description || ""} />
+            </div>
+          )}
           <button
             type="button"
             onClick={() => openModal(dishData)}
-            className="flex items-center gap-4 mt-2 space-x-1 text-primary"
+            className="flex items-center gap-4 mt-2 space-x-1 text-[#000000]"
           >
             <div className="underline !underline-offset-4 on_active_bounce !text-sm">
-              Know more
+              Read more
             </div>
             {Number(price) > 1 && (
               <div className="text-sm font-semibold opacity-70">₹ {price}</div>
@@ -133,10 +140,8 @@ const MemoHorizontalCard = ({
           </div>
           {!noAddBtn && (
             <div
-              className={` flex flex-col items-center w-full mx-auto scale-75 ${
-                dishData?.images?.length > 0 || noDescription
-                  ? " -mt-4"
-                  : " -mt-4"
+              className={` flex flex-col items-center w-full mx-auto scale-[0.85] ${
+                (dishData?.images?.length > 0 || noDescription) && "-mt-4"
               }`}
             >
               {dishData.availability && (
@@ -146,8 +151,11 @@ const MemoHorizontalCard = ({
                   }`}
                 >
                   <DishQuantityButton dishData={dishData} />
-                  <span className="text-sm opacity-50 text-base-content">
-                    {dishData?.addOnIds?.length > 0 ? "customizable" : null}
+                  <span className="text-sm opacity-50 text-[#000000]">
+                    {(dishData?.addOnIds?.length ||
+                      dishData?.portions?.length) > 0
+                      ? "customizable"
+                      : null}
                   </span>
                 </div>
               )}
@@ -161,6 +169,7 @@ const MemoHorizontalCard = ({
                   {
                     text: "Go to cart",
                     onClick: () => setShowCart(!showCart),
+                    highlight: true,
                   },
                 ]}
               />

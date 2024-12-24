@@ -14,12 +14,14 @@ export const whatsAppBusinessConfigSchema = z.object({
   token: z.string().min(3).max(400),
   phoneId: z.string().min(3).max(200),
   whatsAppAccountId: z.string().min(3).max(200),
+  appId: z.string().min(3).max(200),
+  configId: z.string().min(3).max(200).optional(),
   version: z.string().min(3).max(200),
   templateLimit: z.number().int().min(0).max(1000),
   planId: ObjectIdSchema.optional(),
   whatsAppPhone: z.string().min(10).max(10),
   menuRedirection: z.string().min(2).max(200),
-  ownerId: ObjectIdSchema,
+  ownerId: ObjectIdSchema.optional(),
 });
 
 export type WhatsAppBusinessConfigType = z.infer<

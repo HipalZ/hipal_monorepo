@@ -2,10 +2,12 @@ import { memo, useCallback, useState } from "react";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import QuickFilterPopup from "../quickFilterPopup";
 import Image from "next/image";
-import Mixed from "@/assets/svg/Mixed.svg";
 import Alcohol from "@/assets/alcohol.png";
 import NonAlcohol from "@/assets/NonAlcohol.png";
-import { FaCaretDown } from "react-icons/fa";
+import { cn } from "@hi/common";
+import { HiX } from "react-icons/hi";
+import { RiEqualizerLine } from "react-icons/ri";
+import BottomPopUp from "../bottomPopUp";
 
 export const foodTypeIcons = {
   vegan: (
@@ -42,8 +44,8 @@ export const foodTypeIcons = {
     </div>
   ),
   all: (
-    <div className="flex items-center">
-      <FaCaretDown size={20} />
+    <div className="flex items-center gap-1">
+      <RiEqualizerLine size={20} />
       Filter
     </div>
   ),
@@ -63,33 +65,51 @@ const FilterOption = ({
   color?: string;
   label: string;
   isNone?: boolean;
-}) => (
-  <div
-    className={`${
-      isActive ? "bg-primary text-base-100" : ""
-    } flex justify-start items-center px-2 rounded-full py-1 border border-primary `}
-    onClick={onClick}
-  >
-    {icon ? (
-      <div className="flex items-center justify-center w-4 h-4">{icon}</div>
-    ) : (
+}) => {
+  const newColor = `${color}15`;
+  return (
+    <button
+      type="button"
+      style={{
+        backgroundColor: isActive ? newColor : "#ffffff",
+        borderColor: isActive ? color : "",
+        color: isActive ? color : "#000000",
+      }}
+      className={cn(
+        "flex justify-start items-center px-2 rounded-md py-1 border",
+      )}
+      onClick={onClick}
+    >
+      {icon ? (
+        <div className="flex items-center justify-center w-4 h-4">{icon}</div>
+      ) : (
+        <div
+          className="w-4 h-4 p-[0.125rem] border-2"
+          style={{ borderColor: color }}
+        >
+          {!isNone ? (
+            <div
+              className="w-[0.5rem] h-[0.5rem] rounded-full"
+              style={{ backgroundColor: color }}
+            />
+          ) : (
+            <></>
+          )}
+        </div>
+      )}
       <div
-        className="w-4 h-4 p-[0.125rem] border-2"
-        style={{ borderColor: color }}
+        style={{
+          color: isActive ? color : undefined,
+          borderColor: isActive ? color : "black",
+        }}
+        className="ml-1 text-[0.75rem] flex items-center justify-center"
       >
-        {!isNone ? (
-          <div
-            className="w-[0.5rem] h-[0.5rem] rounded-full"
-            style={{ backgroundColor: color }}
-          />
-        ) : (
-          <></>
-        )}
+        {label}
+        {isActive && <HiX />}
       </div>
-    )}
-    <div className="ml-1 text-[0.75rem]">{label}</div>
-  </div>
-);
+    </button>
+  );
+};
 
 const QuickFilter = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -118,18 +138,36 @@ const QuickFilter = () => {
     },
     [setActiveDishType, isActiveDishType],
   );
-
-  const activeIcon = foodTypeIcons[
-    isActiveDishType?.replace(/[^a-zA-Z ]/, "").toLowerCase()
-  ] || (
+  const activeIcon = (
     <div className="flex items-center">
-      <FaCaretDown size={20} /> Filter
+      {["veg", "nonveg", "non_veg", "egg"].includes(
+        isActiveDishType?.replace(/[^a-zA-Z ]/g, "").toLowerCase(),
+      ) ? (
+        <div className="flex items-center">
+          <RiEqualizerLine size={20} />
+          <span className="ml-1">Filter</span>
+        </div>
+      ) : (
+        <>
+          {foodTypeIcons[
+            isActiveDishType
+              ?.replace(/[^a-zA-Z ]/g, "")
+              .toLowerCase() as keyof typeof foodTypeIcons
+          ] || <RiEqualizerLine size={20} />}
+          <span className="ml-1">
+            {isActiveDishType.charAt(0) + isActiveDishType.slice(1)}
+          </span>
+        </>
+      )}
+      {isActiveDishType !== "all" && (
+        <HiX onClick={() => handleFilter("all")} className="ml-1" />
+      )}
     </div>
   );
 
   return (
     <div>
-      <section className="flex space-x-2 text-xs justify-evenly text-nowrap">
+      <section className="flex px-2 space-x-2 text-sm justify-evenly text-nowrap">
         <FilterOption
           isActive={isActiveDishType.toLowerCase() === "veg"}
           onClick={() => handleFilter("VEG")}
@@ -142,30 +180,34 @@ const QuickFilter = () => {
           color="#FF6363"
           label="Non Veg"
         />
-        <div
+        <FilterOption
+          isActive={isActiveDishType.toLowerCase() === "egg"}
+          onClick={() => handleFilter("EGG")}
+          color="#D2C903"
+          label="Egg"
+        />
+        <button
+          type="button"
           onClick={openModal}
-          className="px-2 py-1 ml-2 text-xs font-semibold border rounded-full text-primary border-primary"
+          className="px-2 py-1 ml-2 text-xs font-semibold text-black border border-gray-200 rounded-md"
         >
           {activeIcon}
-        </div>
+        </button>
       </section>
       {isModalOpen && (
-        <QuickFilterPopup show={isModalOpen} onClose={closeModal}>
-          <div className="pt-4 pb-8 mb-4 text-base-content bg-base-100 rounded-xl">
-            <div className="mb-4 text-xl text-center text-primary">Filters</div>
-            <div className="mx-[1rem] font-medium space-y-4">
+        <BottomPopUp height="25dvh" show={isModalOpen} onClose={closeModal}>
+          <div className="pt-4 pb-8 mb-4 text-black bg-[#ffffff] rounded-xl">
+            <div className="mb-4 text-xl text-center text-[#000000]">
+              Filters
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-4 font-medium text-nowrap">
               <FilterOption
                 isActive={isActiveDishType.toLowerCase() === "vegan"}
                 onClick={() => handleFilter("VEGAN")}
                 color="#02614b"
                 label="Vegan"
               />
-              <FilterOption
-                isActive={isActiveDishType.toLowerCase() === "egg"}
-                onClick={() => handleFilter("EGG")}
-                color="#D2C903"
-                label="Egg"
-              />
+
               <FilterOption
                 isActive={isActiveDishType.toLowerCase() === "alcohol"}
                 onClick={() => handleFilter("ALCOHOL")}
@@ -191,7 +233,7 @@ const QuickFilter = () => {
               />
             </div>
           </div>
-        </QuickFilterPopup>
+        </BottomPopUp>
       )}
     </div>
   );

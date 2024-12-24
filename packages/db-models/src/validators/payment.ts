@@ -115,6 +115,17 @@ export const PaymentSchema = z.object({
   earnCoins: z.coerce.number({}).optional(),
   couponId: ObjectIdSchema.optional(),
   channelId: ObjectIdSchema.optional(),
+  posBillId: z
+    .string({
+      message: "Pos bill id must be a string",
+    })
+    .min(3, {
+      message: "Pos bill id must be at least 3 characters",
+    })
+    .max(200, {
+      message: "Pos bill id must be at most 200 characters",
+    })
+    .optional(),
 });
 
 export type PaymentType = z.infer<typeof PaymentSchema>;

@@ -27,6 +27,7 @@ export enum HeaderInterface {
 export enum TemplateType {
   Marketing = "MARKETING",
   Utility = "UTILITY",
+  INTERACTIVE_FLOW = "INTERACTIVE_FLOW",
 }
 
 export enum ActionType {
@@ -263,6 +264,9 @@ interface whatsappTemplate {
 
   isOpenEditModal: boolean;
   setIsOpenEditModal: (isOpenEditModal: boolean) => void;
+
+  paymentSuccessFull: boolean;
+  setPaymentSuccessFull: (paymentSuccessFull: boolean) => void;
 }
 
 export const useWhatsapp = create(
@@ -605,6 +609,10 @@ export const useWhatsapp = create(
         isOpenEditModal: false,
         setIsOpenEditModal: (isOpenEditModal: boolean) =>
           set({ isOpenEditModal }),
+
+        paymentSuccessFull: false,
+        setPaymentSuccessFull: (paymentSuccessFull: boolean) =>
+          set({ paymentSuccessFull }),
       };
     },
     {

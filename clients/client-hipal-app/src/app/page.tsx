@@ -10,7 +10,6 @@ import Logo from "@/assets/topsection/logo.svg";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-///
 export default function Home() {
   const router = useRouter();
   const goToAllBusiness = () => {
@@ -19,7 +18,11 @@ export default function Home() {
 
   return (
     <section className="bg-black">
-      <center onClick={goToAllBusiness} className="mb-4">
+      <center
+        onKeyDown={goToAllBusiness}
+        onClick={goToAllBusiness}
+        className="mb-4"
+      >
         <Image
           className="nav_bar_logo_mobile show_mobile"
           width={30}
@@ -48,7 +51,7 @@ export default function Home() {
         style={{
           margin: "3rem 0 2rem 0",
         }}
-        className="show_mobile "
+        className="show_mobile"
       >
         <center>
           <button

@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useEffect } from "react";
 import { useTransition, animated } from "@react-spring/web";
 import { HiX } from "react-icons/hi";
 import { cn } from "@/components/utils/helpers";
@@ -10,12 +10,16 @@ const MemoBottomPopUp = ({
   onClose,
   hide,
   linearGradTheme,
+  bottomCross,
+  height,
 }: {
   children: React.ReactNode;
   show: boolean;
   onClose: () => void;
   hide?: boolean;
   linearGradTheme?: boolean;
+  bottomCross?: boolean;
+  height?: string;
 }) => {
   const transitions = useTransition(show, {
     from: { transform: "translateY(100%)", opacity: 0 },
@@ -23,6 +27,37 @@ const MemoBottomPopUp = ({
     leave: { transform: "translateY(100%)", opacity: 0 },
     config: { tension: 250, friction: 30 },
   });
+
+  useEffect(() => {
+    if (show) {
+      const originalHash = window.location.hash;
+
+      window.location.hash = "#popup";
+
+      const handleHashChange = () => {
+        if (window.location.hash !== "#popup") {
+          onClose();
+        }
+      };
+
+      window.addEventListener("hashchange", handleHashChange);
+      return () => {
+        window.removeEventListener("hashchange", handleHashChange);
+
+        if (window.location.hash === "#popup") {
+          if (originalHash) {
+            window.location.hash = originalHash;
+          } else {
+            history.pushState(
+              "",
+              document.title,
+              window.location.pathname + window.location.search,
+            );
+          }
+        }
+      };
+    }
+  }, []);
 
   if (!show) return null;
 
@@ -35,15 +70,15 @@ const MemoBottomPopUp = ({
             backgroundColor: "rgba(0, 0, 0, 0.2)",
             backdropFilter: "blur(5px)",
           }}
-          className="fixed inset-0 z-[110] overflow-y-auto flex items-end justify-center"
+          className="fixed inset-0 z-[110] overflow-auto flex items-end justify-center"
           onClick={onClose}
         >
           <animated.div
-            style={styles}
+            style={{ ...styles, height: height || "100dvh" }}
             className={cn(
               "relative w-full max-w-md shadow-md",
               !hide && "rounded-t-[1rem]",
-              linearGradTheme ? "background-gradient" : "bg-base-100",
+              linearGradTheme ? "background-gradient" : "bg-[#ffffff]",
             )}
             onClick={(e) => e.stopPropagation()}
           >
@@ -56,6 +91,15 @@ const MemoBottomPopUp = ({
               </div>
             )}
             {children}
+            {bottomCross && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="absolute bottom-0 p-4 rounded-full bg-[#00000050] text-white transform -translate-x-1/2 -translate-y-1/2 left-1/2"
+              >
+                <HiX />
+              </button>
+            )}
           </animated.div>
         </animated.div>
       ),

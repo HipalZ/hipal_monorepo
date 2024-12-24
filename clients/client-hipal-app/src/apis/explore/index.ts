@@ -1,12 +1,9 @@
 import type { ILoyaltySetting } from "@/components/store/useLoyaltyData";
 import type { IBanner, IUniquelyDishes } from "@/components/types/businessData";
-import { getTimeIn12HrFormat } from "@/components/utils/helpers";
 import { apiRpc } from "@hi/common";
-import { set } from "lodash-es";
 import { fetchCommonData } from "../commonApis";
 
 async function fetchBusinessData(customLink: string) {
-  // common function has business and settings data
   const { data, bizId } = await fetchCommonData(customLink);
 
   const outletInfoData = await apiRpc.businesses.outletInfo[":businessId"].$get(
@@ -46,16 +43,6 @@ async function fetchBusinessData(customLink: string) {
   data["uniquelyDishes"] = uniquelyDishes?.data as unknown as IUniquelyDishes[];
   data["loyalty"] = loyalty?.data as unknown as ILoyaltySetting;
 
-  set(
-    data,
-    "settings.explore.openFrom",
-    getTimeIn12HrFormat(data?.["settings"]?.explore?.openFrom || ""),
-  );
-  set(
-    data,
-    "settings.explore.openTill",
-    getTimeIn12HrFormat(data?.["settings"]?.explore?.openTill || ""),
-  );
   return data;
 }
 
@@ -64,7 +51,7 @@ export const businessApis = {
 };
 
 export async function fetchAllBusinessIds() {
-  const res = await apiRpc.businesses.get.allbusiness.$get({});
+  const res = await apiRpc.businesses.get.allbusiness.$get();
   const response = await res.json();
   return response?.data.map((business: { _id: string }) => business._id);
 }

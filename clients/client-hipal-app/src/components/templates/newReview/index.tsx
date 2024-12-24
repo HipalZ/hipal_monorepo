@@ -60,6 +60,7 @@ const MemoReviewPage = () => {
   const customLink = useParams()?.businessId as string;
   const { errorText } = useErrorHandling();
   const router = useRouter();
+  const placeUrl = useBusinessDetails((s) => s.businessDetails?.placeUrl);
   const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
   const searchParams = useSearchParams();
   const orderId = searchParams?.get("orderId");
@@ -92,7 +93,7 @@ const MemoReviewPage = () => {
   }));
 
   const result = async () => {
-    const rating = await calculateRating(selectedEmoji);
+    const rating = calculateRating(selectedEmoji);
     const payload: Payload = {
       businessId: businessId,
       userId: userDetails?._id,
@@ -129,17 +130,16 @@ const MemoReviewPage = () => {
     }
     const response = await res.json();
     if (res.status === 200) {
-      toast.success(response.message || "Review submitted successfully");
-      return router.push(`/${customLink}/explore`);
+      toast.success("Thank you for your review");
+      if (googleReviewCount === 0 && placeUrl?.length > 0) {
+        setShowGoogleReview(true);
+      } else {
+        setShowGoogleReview(false);
+        router.push(`/${customLink}/explore`);
+      }
     }
     if (res.status === 400) {
       toast.error(response.message || "Review not submitted");
-    }
-    if (googleReviewCount === 0) {
-      setShowGoogleReview(true);
-    } else {
-      setShowGoogleReview(false);
-      router.push(`/${customLink}/explore`);
     }
   };
 

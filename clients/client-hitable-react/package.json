@@ -71,6 +71,7 @@
     "typescript": "^5.2.2",
     "vite": "4.5.0",
     "vite-plugin-pwa": "^0.20.0",
-    "dotenv-cli": "^7.3.0"
+    "dotenv-cli": "^7.3.0",
+    "daisyui": "^4.12.22"
   }
 }

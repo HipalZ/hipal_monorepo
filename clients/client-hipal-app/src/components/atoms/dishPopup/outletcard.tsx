@@ -55,9 +55,7 @@ function MemoOutletItemInfo() {
     resetSelections,
   } = useCartStore();
 
-  const { displayAlert } = useBottomPanel((s) => ({
-    displayAlert: s.displayAlert,
-  }));
+  const { displayAlert } = useBottomPanel();
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent(

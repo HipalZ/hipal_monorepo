@@ -2,7 +2,7 @@ import { memo } from "react";
 
 function MemoLoadingSpinner() {
   return (
-    <output className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 opacity-75 backdrop-blur-md">
+    <output className="fixed inset-0 z-50 flex items-center justify-center bg-transparent opacity-75 backdrop-blur-md">
       <div className="flex flex-col text-center bg-transparent">
         <svg
           aria-hidden="true"

@@ -2,6 +2,7 @@ import { createHmac } from "node:crypto";
 // books.ts
 import {
   BusinessSettings,
+  Cart,
   CouponClaim,
   Couponz,
   DeviceToken,
@@ -11,9 +12,12 @@ import {
   OutLetInfo,
   Payment,
   PaymentAlert,
+  PetPoojaPinTemp,
+  Pos,
   Reviews,
   Subscriber,
   TagModel,
+  TempTableSettle,
   User,
   UserAnalytic,
   UserCouponClaim,
@@ -439,6 +443,7 @@ const paymentsRouter = new Hono()
           couponId,
           channelId,
           cashbackAvailable,
+          posBillId,
         } = requestData;
         const { merchantId } = c.req.param();
         const uniqueOrderId = nanoid(15);
@@ -486,6 +491,7 @@ const paymentsRouter = new Hono()
               channelId,
               cashbackAvailable,
               date: Date.now(),
+              posBillId,
             },
           ],
           { session },
@@ -567,6 +573,7 @@ const paymentsRouter = new Hono()
           couponId,
           channelId,
           cashbackAvailable,
+          posBillId,
         } = requestData;
         const uniqueOrderId = nanoid(15);
 
@@ -603,6 +610,7 @@ const paymentsRouter = new Hono()
               channelId,
               cashbackAvailable,
               date: Date.now(),
+              posBillId,
             },
           ],
           { session },
@@ -1139,6 +1147,7 @@ const paymentsRouter = new Hono()
                 channelId: getOrder?.channelId,
                 earnCoins: getCashBack,
                 date: Date.now(),
+                posBillId: getOrder?.posBillId,
               },
             ],
             { session },
@@ -1543,7 +1552,10 @@ const paymentsRouter = new Hono()
 
         if (alert.alertType === "OFFLINE") {
           if (alert && !alert.isAccepted) {
-            const order = await Order.findById(alert.order_id);
+            const order = await Order.findById(alert.order_id).populate({
+              path: "userId",
+              select: "name",
+            });
             if (order?.couponId) {
               const coupon = await Couponz.findById(order.couponId).select(
                 "conditions.couponEndDate",
@@ -1623,12 +1635,70 @@ const paymentsRouter = new Hono()
                     razorpayPaymentId: nanoid(15),
                     couponId: order?.couponId,
                     channelId: order?.channelId,
+                    posBillId: order?.posBillId,
 
                     waiterName,
                     date: Date.now(),
                   },
                 ],
                 { session },
+              );
+
+              const activeTable = await PetPoojaPinTemp.findOne({
+                tableName: order.tableName,
+                businessId: order.businessId,
+              });
+
+              const pos = await Pos.findOne({ businessId: order.businessId });
+
+              const res = await axios.post(
+                "http://api.petpooja.com/V1/captainorders/success_payment/",
+                {
+                  app_key: pos?.accessKey,
+                  app_secret: pos?.secretKey,
+                  access_token: pos?.authToken,
+                  restID: pos?.restId,
+                  bill_request_id: activeTable?.billRequestId,
+                  amount_paid: order.total,
+                  pin: activeTable?.pin,
+                },
+              );
+
+              await PetPoojaPinTemp.deleteOne(
+                {
+                  tableName: order.tableName,
+                  businessId: order.businessId,
+                },
+                {
+                  session,
+                },
+              );
+              await Cart.updateMany(
+                {
+                  tableName: order.tableName,
+                  businessId: order.businessId,
+                },
+                {
+                  $set: {
+                    isSettle: true,
+                  },
+                },
+                {
+                  session,
+                },
+              );
+
+              await TempTableSettle.create(
+                [
+                  {
+                    businessId: order.businessId,
+                    tableName: order.tableName,
+                    settleBy: order.userId?.name,
+                  },
+                ],
+                {
+                  session,
+                },
               );
             }
           }
@@ -2160,8 +2230,7 @@ const paymentsRouter = new Hono()
       "query",
       z.object({
         businessId: z.string(),
-        from: z.string().optional(),
-        to: z.string().optional(),
+
         dateOfJoining: z.string().optional(),
         avgSpend: z.string().optional(),
         visitCount: z.string().optional(),
@@ -2169,89 +2238,20 @@ const paymentsRouter = new Hono()
       }),
     ),
     async (c) => {
-      const { businessId, from, to, dateOfJoining, avgSpend, visitCount } =
-        c.req.query();
-      const fromDate = Number(from);
-      const toDate = Number(to);
-      const joiningDate = Number(dateOfJoining);
-      const avgSpendValue = Number(avgSpend);
-      const visitCountValue = Number(visitCount);
-      const PAGE_SIZE = 20;
-      const pageNumber = c.req.query("pageNumber") as string;
-      const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
+      const { businessId } = c.req.query();
 
-      console.log("fromDate", fromDate);
+      const existingUserAnalytics = await UserAnalytic.find({
+        businessId,
+      }).populate("userId");
 
-      if (fromDate > toDate) {
-        return c.json({
-          err: true,
-          data: {},
-          message: "from date should be less than to date",
-        });
-      }
-
-      const sort: Record<string, number> = {};
-      if (dateOfJoining) sort.dateOfJoining = joiningDate;
-      if (avgSpend) sort.avgSpend = avgSpendValue;
-      if (visitCount) sort.visitCount = visitCountValue;
-      if (Object.keys(sort).length === 0) sort._id = -1;
-
-      console.log("sort", sort);
-
-      if (!from && !to) {
-        const existingUserAnalytics = await UserAnalytic.find({
-          businessId,
-          date: {
-            $gte: startOfToday.getTime(),
-            $lte: endOfToday.getTime(),
-          },
-        })
-          .sort(sort)
-          .skip(skip)
-          .limit(PAGE_SIZE)
-          .populate({
-            path: "userId",
-            select: "name phone",
-          });
-
-        return c.json(
-          {
-            data: existingUserAnalytics,
-            message: "existing payment",
-            err: false,
-          },
-          200,
-        );
-      }
-
-      if (from && to) {
-        const existingUserAnalytics = await UserAnalytic.find({
-          businessId,
-          date: {
-            $gte: fromDate,
-            $lte: toDate,
-          },
-        })
-          .sort(sort)
-          .skip(skip)
-          .limit(PAGE_SIZE)
-          .populate("userId");
-
-        return c.json(
-          {
-            data: existingUserAnalytics,
-            message: "existing payment",
-            err: false,
-          },
-          200,
-        );
-      }
-
-      return c.json({
-        err: true,
-        data: {},
-        message: "Invalid date range",
-      });
+      return c.json(
+        {
+          data: existingUserAnalytics,
+          message: "existing payment",
+          err: false,
+        },
+        200,
+      );
     },
   )
   .get(
@@ -2613,6 +2613,137 @@ const paymentsRouter = new Hono()
         message: "User found",
       });
     },
-  );
+  )
+
+  .post("/razorpay-webhook/3/:merchantId", async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session: ClientSession) => {
+      const { merchantId } = c.req.param();
+      const merchantConfig = (await getMerchantConfig(
+        merchantId,
+      )) as MerchantConfig;
+
+      let RAZORPAY_WEBHOOK_SECRET = "";
+      const body = await c.req.json();
+      if (!merchantConfig) {
+        const merchant = await BusinessSettings.findOne({
+          razorpayMerchantId: merchantId,
+        }).select("razorpayWebhookSecret");
+        RAZORPAY_WEBHOOK_SECRET = merchant?.razorpayWebhookSecret || "";
+      } else {
+        RAZORPAY_WEBHOOK_SECRET = merchantConfig.razorpayWebhookSecret;
+      }
+
+      if (!RAZORPAY_WEBHOOK_SECRET) {
+        console.log("razorpay_webhook_secret missing");
+      }
+
+      const headersResult = RazorpayWebhookHeadersSchema.safeParse(
+        c.req.header(),
+      );
+      if (!headersResult.success) {
+        console.log("Invalid headers");
+        return respond(c, "Invalid headers", true, 200, {});
+      }
+
+      const {
+        "x-razorpay-signature": razorpaySignature,
+        "x-razorpay-event-id": razorpayEventId,
+      } = headersResult.data as RazorpayWebhookHeaders;
+
+      const isSignatureValid = validateWebhookSignature(
+        JSON.stringify(body),
+        razorpaySignature,
+        RAZORPAY_WEBHOOK_SECRET,
+      );
+      if (!isSignatureValid) {
+        console.log("Invalid signature");
+        return respond(c, "Invalid signature", true, 200, {});
+      }
+
+      const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
+
+      if (!bodyResult.success) {
+        console.log("Invalid body", bodyResult);
+
+        return respond(c, "Invalid body", true, 200, {});
+      }
+      //@ts-ignore
+      const { event, payload } = bodyResult.data;
+
+      const getOrder = await Order.findOne({
+        order_id: payload.payment.entity.order_id,
+      }).populate({
+        path: "userId",
+        select: "name",
+      });
+
+      if (event === "payment.captured") {
+        const paymentAlreadyExist = await Payment.findOne({
+          razorpayEventId: razorpayEventId,
+        });
+
+        if (!paymentAlreadyExist && getOrder) {
+          const activeTable = await PetPoojaPinTemp.findOne({
+            tableName: getOrder.tableName,
+            businessId: getOrder.businessId,
+          });
+
+          const pos = await Pos.findOne({ businessId: getOrder.businessId });
+
+          const res = await axios.post(
+            "http://api.petpooja.com/V1/captainorders/success_payment/",
+            {
+              app_key: pos?.accessKey,
+              app_secret: pos?.secretKey,
+              access_token: pos?.authToken,
+              restID: pos?.restId,
+              bill_request_id: activeTable?.billRequestId,
+              amount_paid: getOrder.total,
+              pin: activeTable?.pin,
+            },
+          );
+
+          await PetPoojaPinTemp.deleteOne(
+            {
+              tableName: getOrder.tableName,
+              businessId: getOrder.businessId,
+            },
+            {
+              session,
+            },
+          );
+          await Cart.updateMany(
+            {
+              tableName: getOrder.tableName,
+              businessId: getOrder.businessId,
+            },
+            {
+              $set: {
+                isSettle: true,
+              },
+            },
+            {
+              session,
+            },
+          );
+          await TempTableSettle.create(
+            [
+              {
+                businessId: getOrder.businessId,
+                tableName: getOrder.tableName,
+                settleBy: getOrder.userId?.name,
+              },
+            ],
+            {
+              session,
+            },
+          );
+        }
+      }
+
+      return respond(c, "2 Webhook received successfully", false, 200, {});
+    });
+  });
 
 export default paymentsRouter;

@@ -18,6 +18,7 @@ const sendingOptions = [
 
 const MemoSendTemplate = () => {
   const {
+    sendLaterTime,
     setSendLaterTime,
     sendOptions,
     setSendOptions,
@@ -25,9 +26,8 @@ const MemoSendTemplate = () => {
     setScheduledDate,
     scheduledTime,
     setScheduledTime,
-    testNumber,
-    setTestNumber,
   } = useMessageRecipientsStore((s) => ({
+    sendLaterTime: s.sendLaterTime,
     setSendLaterTime: s.setSendLaterTime,
     sendOptions: s.sendOptions,
     setSendOptions: s.setSendOptions,
@@ -35,22 +35,18 @@ const MemoSendTemplate = () => {
     setScheduledDate: s.setScheduledDate,
     scheduledTime: s.scheduledTime,
     setScheduledTime: s.setScheduledTime,
-    testNumber: s.testNumber,
-    setTestNumber: s.setTestNumber,
   }));
 
   // handle send button click
   const handleSend = useCallback(() => {
-    switch (sendOptions) {
-      case "sendLater": {
-        const dateTimeString = `${scheduledDate}T${scheduledTime}:00`;
-        const timestamp = new Date(dateTimeString).getTime();
-        setSendLaterTime(timestamp);
-        toast.success("Message scheduled successfully");
-        break;
-      }
-    }
-  }, [sendOptions, scheduledDate, scheduledTime, setSendLaterTime]);
+    const dateTimeString = `${scheduledDate}T${scheduledTime}:00`;
+    const timestamp = new Date(dateTimeString).getTime();
+    setSendLaterTime(timestamp);
+    toast.success("Message scheduled successfully");
+  }, [scheduledDate, scheduledTime, setSendLaterTime]);
+
+  console.log("sendLater", sendLaterTime);
+
   return (
     <div className="space-y-4 bg-gray-100 lg:mx-auto">
       <h2 className="text-2xl font-bold text-gray-800">
@@ -71,7 +67,9 @@ const MemoSendTemplate = () => {
                       <input
                         type="radio"
                         checked={sendOptions === value}
-                        onChange={() => setSendOptions(value)}
+                        onChange={() => {
+                          setSendOptions(value);
+                        }}
                         className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
                       />
                       <Icon className="w-5 h-5 text-gray-600" />
@@ -101,25 +99,6 @@ const MemoSendTemplate = () => {
                             : "opacity-50 pointer-events-none"
                         }`}
                       >
-                        {value === "sendTest" && (
-                          <div className="flex justify-between w-full gap-2 p-2 rounded-lg bg-gray-50">
-                            <input
-                              type="tel"
-                              value={testNumber}
-                              maxLength={10}
-                              onChange={(e) => setTestNumber(e.target.value)}
-                              placeholder="Enter test phone number"
-                              className="w-64 h-10 px-3 py-2 text-gray-700 border border-gray-300 rounded-md md:w-full focus:outline-none focus:ring-2 focus:ring-green-500"
-                            />
-                            <button
-                              type="button"
-                              onClick={handleSend}
-                              className="h-10 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
-                            >
-                              Send
-                            </button>
-                          </div>
-                        )}
                         {value === "sendNow" && (
                           <div className="max-w-[25rem] p-4 text-center rounded-lg bg-gray-50">
                             <p className="mb-4">
