@@ -56,10 +56,10 @@ const MemoOrders = () => {
                 <p className="flex items-center mt-1 text-sm font-semibold opacity-50">
                   <FaUser className="mr-1" /> {cart?.name || "User"}
                 </p>
-                <p className="flex items-center mt-1 text-sm font-semibold opacity-50">
+                {/* <p className="flex items-center mt-1 text-sm font-semibold opacity-50">
                   <BiMoney className="mr-1" />
                   Total: ₹{calculateCartTotal(cart).toFixed(2)}
-                </p>
+                </p> */}
               </div>
               <div className="text-right">
                 <div className="flex flex-col items-end mb-2 text-sm font-semibold opacity-80">
