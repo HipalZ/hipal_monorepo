@@ -71,98 +71,98 @@ function MenuIntroduction() {
     animate: { x: "100%" },
   };
 
-  if (outletInfo.outLetType === "OTHER") {
-    return null;
-  }
-
   return (
-    <section className="relative">
-      <div className="absolute w-full h-full">
-        <Image
-          src={MenuBackground}
-          alt="Menu Background"
-          className="object-cover"
-          width={720}
-          height={720}
-        />
-      </div>
-      <div
-        style={{
-          borderRadius: "50%",
-        }}
-        className="absolute -top-2 bg-base-100  w-full max-w-[30rem] h-[1rem]"
-      />
-      <Link
-        href={`/${customLink}/category`}
-        className="relative flex items-center justify-center w-full h-[22rem] overflow-hidden mt-9 rounded-xl pb-12"
-      >
-        <AnimatePresence initial={false}>
-          {[-1, 0, 1].map((offset) => {
-            const imageIndex = wrapIndex(page + offset, images.length);
-            return (
-              <React.Fragment key={offset}>
-                <motion.div
-                  key={`${imageIndex}-${offset}`}
-                  custom={offset}
-                  variants={variants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{
-                    x: { type: "spring", stiffness: 90, damping: 30 },
-                    opacity: { duration: 0.2 },
-                    scale: { type: "spring", stiffness: 90, damping: 30 },
-                  }}
-                  className="absolute z-10 flex items-center justify-center h-full mt-12"
-                  style={{
-                    ...getPositionStyles(offset),
-                  }}
-                >
-                  <Image
-                    src={images[imageIndex]}
-                    alt={`Menu item ${imageIndex + 1}`}
-                    width={offset === 0 ? 300 : 90}
-                    height={offset === 0 ? 300 : 90}
-                    className={cn(
-                      "object-contain transition-all duration-300 aspect-square ",
-                      offset === 0 ? "w-[9.4rem]" : "",
-                    )}
-                    priority={offset === 0}
-                  />
-                </motion.div>
-              </React.Fragment>
-            );
-          })}
-        </AnimatePresence>
-      </Link>
-      <Link
-        href={`/${customLink}/category`}
-        className="flex items-center justify-center w-full"
-      >
-        <button
-          type="button"
-          className="h-12 relative overflow-hidden flex items-center px-4 mt-4 text-base font-medium text-center text-white bg-[#A40001] rounded-3xl"
-        >
-          <motion.div
-            className="absolute inset-0 pointer-events-none w-full max-w-[30rem]"
-            variants={shineVariants}
-            initial="initial"
-            animate="animate"
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              // repeatDelay: 1,
-              ease: "backInOut",
-            }}
+    <>
+      {outletInfo?.outLetType === "MENU" ? (
+        <section className="relative">
+          <div className="absolute w-full h-full">
+            <Image
+              src={MenuBackground}
+              alt="Menu Background"
+              className="object-cover"
+              width={720}
+              height={720}
+            />
+          </div>
+          <div
             style={{
-              background: "var(--shine-effect)",
+              borderRadius: "50%",
             }}
+            className="absolute -top-2 bg-base-100  w-full max-w-[30rem] h-[1rem]"
           />
-          Checkout menu
-          <BiSolidChevronRight strokeWidth={1} size={24} />
-        </button>
-      </Link>
-    </section>
+          <Link
+            href={`/${customLink}/category`}
+            className="relative flex items-center justify-center w-full h-[22rem] overflow-hidden mt-9 rounded-xl pb-12"
+          >
+            <AnimatePresence initial={false}>
+              {[-1, 0, 1].map((offset) => {
+                const imageIndex = wrapIndex(page + offset, images.length);
+                return (
+                  <React.Fragment key={offset}>
+                    <motion.div
+                      key={`${imageIndex}-${offset}`}
+                      custom={offset}
+                      variants={variants}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                      transition={{
+                        x: { type: "spring", stiffness: 90, damping: 30 },
+                        opacity: { duration: 0.2 },
+                        scale: { type: "spring", stiffness: 90, damping: 30 },
+                      }}
+                      className="absolute z-10 flex items-center justify-center h-full mt-12"
+                      style={{
+                        ...getPositionStyles(offset),
+                      }}
+                    >
+                      <Image
+                        src={images[imageIndex]}
+                        alt={`Menu item ${imageIndex + 1}`}
+                        width={offset === 0 ? 300 : 90}
+                        height={offset === 0 ? 300 : 90}
+                        className={cn(
+                          "object-contain transition-all duration-300 aspect-square ",
+                          offset === 0 ? "w-[9.4rem]" : "",
+                        )}
+                        priority={offset === 0}
+                      />
+                    </motion.div>
+                  </React.Fragment>
+                );
+              })}
+            </AnimatePresence>
+          </Link>
+          <Link
+            href={`/${customLink}/category`}
+            className="flex items-center justify-center w-full"
+          >
+            <button
+              type="button"
+              className="h-12 relative overflow-hidden flex items-center px-4 mt-4 text-base font-medium text-center text-white bg-[#A40001] rounded-3xl"
+            >
+              <motion.div
+                className="absolute inset-0 pointer-events-none w-full max-w-[30rem]"
+                variants={shineVariants}
+                initial="initial"
+                animate="animate"
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  // repeatDelay: 1,
+                  ease: "backInOut",
+                }}
+                style={{
+                  background: "var(--shine-effect)",
+                }}
+              />
+              Checkout menu
+              <BiSolidChevronRight strokeWidth={1} size={24} />
+            </button>
+          </Link>
+        </section>
+      ) : null}
+    </>
   );
 }
 
