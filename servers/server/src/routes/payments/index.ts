@@ -238,6 +238,12 @@ const addCoins = async (
 
   session: ClientSession,
 ) => {
+  console.log("coins", coins);
+  console.log("userId", userId);
+  console.log("order_id", order_id);
+  console.log("tableName", tableName);
+  console.log("businessId", businessId);
+  console.log("loyaltyId", loyaltyId);
   const existingUser = await UserReward.findOne({ userId, loyaltyId }).select(
     "rewards",
   );
@@ -1591,7 +1597,7 @@ const paymentsRouter = new Hono()
                 order.tableName || "",
                 existingLoyalty?.loyaltyId.toString() || "",
                 order._id.toString(),
-                order.userId.toString(),
+                order.userId._id.toString(),
 
                 session,
               );
@@ -1608,9 +1614,11 @@ const paymentsRouter = new Hono()
                 cashBack = 0;
               }
 
+              console.log("order", order);
+
               const finalCashBack = await addCoins(
                 cashBack,
-                order.userId.toString(),
+                order.userId._id.toString(),
                 order._id.toString(),
                 order.tableName || "",
                 order.businessId.toString(),
@@ -1629,7 +1637,7 @@ const paymentsRouter = new Hono()
                     mode: "offline",
                     status: "SUCCESS",
                     paymentMode: "offline",
-                    userId: order?.userId,
+                    userId: order?.userId._id,
                     claimedCoins: order?.claimedCoins,
                     billValue: order?.billValue,
                     tips: order?.tips,
@@ -1649,62 +1657,62 @@ const paymentsRouter = new Hono()
                 { session },
               );
 
-              const activeTable = await PetPoojaPinTemp.findOne({
-                tableName: order.tableName,
-                businessId: order.businessId,
-              });
+              // const activeTable = await PetPoojaPinTemp.findOne({
+              //   tableName: order.tableName,
+              //   businessId: order.businessId,
+              // });
 
-              const pos = await Pos.findOne({ businessId: order.businessId });
+              // const pos = await Pos.findOne({ businessId: order.businessId });
 
-              const res = await axios.post(
-                "http://api.petpooja.com/V1/captainorders/success_payment/",
-                {
-                  app_key: pos?.accessKey,
-                  app_secret: pos?.secretKey,
-                  access_token: pos?.authToken,
-                  restID: pos?.restId,
-                  bill_request_id: activeTable?.billRequestId,
-                  amount_paid: order.total,
-                  pin: activeTable?.pin,
-                },
-              );
+              // const res = await axios.post(
+              //   "http://api.petpooja.com/V1/captainorders/success_payment/",
+              //   {
+              //     app_key: pos?.accessKey,
+              //     app_secret: pos?.secretKey,
+              //     access_token: pos?.authToken,
+              //     restID: pos?.restId,
+              //     bill_request_id: activeTable?.billRequestId,
+              //     amount_paid: order.total,
+              //     pin: activeTable?.pin,
+              //   },
+              // );
 
-              await PetPoojaPinTemp.deleteOne(
-                {
-                  tableName: order.tableName,
-                  businessId: order.businessId,
-                },
-                {
-                  session,
-                },
-              );
-              await Cart.updateMany(
-                {
-                  tableName: order.tableName,
-                  businessId: order.businessId,
-                },
-                {
-                  $set: {
-                    isSettle: true,
-                  },
-                },
-                {
-                  session,
-                },
-              );
+              // await PetPoojaPinTemp.deleteOne(
+              //   {
+              //     tableName: order.tableName,
+              //     businessId: order.businessId,
+              //   },
+              //   {
+              //     session,
+              //   },
+              // );
+              // await Cart.updateMany(
+              //   {
+              //     tableName: order.tableName,
+              //     businessId: order.businessId,
+              //   },
+              //   {
+              //     $set: {
+              //       isSettle: true,
+              //     },
+              //   },
+              //   {
+              //     session,
+              //   },
+              // );
 
-              await TempTableSettle.create(
-                [
-                  {
-                    businessId: order.businessId,
-                    tableName: order.tableName,
-                    settleBy: order.userId?.name,
-                  },
-                ],
-                {
-                  session,
-                },
-              );
+              // await TempTableSettle.create(
+              //   [
+              //     {
+              //       businessId: order.businessId,
+              //       tableName: order.tableName,
+              //       settleBy: order.userId?.name,
+              //     },
+              //   ],
+              //   {
+              //     session,
+              //   },
+              // );
             }
           }
 
