@@ -71,7 +71,7 @@ const MemoWhatsappChats = () => {
   });
 
   return (
-    <main className="relative flex h-[90dvh] bg-gray-100">
+    <main className="relative flex h-[80dvh] bg-gray-100 shadow-lg rounded-lg">
       {/* Sidebar */}
       <div
         className={`md:flex md:w-[380px] ${
@@ -100,7 +100,7 @@ const MemoWhatsappChats = () => {
           <>
             <ChatHistory isPending={isPending} />
             {/* Input Area */}
-            <footer className="flex items-center gap-2 p-4 bg-gray-50">
+            <footer className="flex items-center gap-2 p-4 rounded-lg bg-gray-50">
               <input
                 type="text"
                 value={message}

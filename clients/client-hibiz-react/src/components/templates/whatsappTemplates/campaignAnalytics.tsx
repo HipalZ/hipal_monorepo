@@ -1,4 +1,4 @@
-import { memo, useCallback, useState, lazy, Fragment, Suspense } from "react";
+import { memo, useCallback, useState, Fragment } from "react";
 import useWhatsapp, {
   Step,
   TemplateSteps,
@@ -13,8 +13,6 @@ import useBusinessData from "@/components/store/useBusinessData";
 import type { WhatsAppTemplatePayload } from "@/components/types/businessData";
 import { BarChart2, Loader2 } from "lucide-react";
 
-const CampaignDetails = lazy(() => import("./campaignDetails"));
-
 const MemoCampaignAnalytics: React.FC = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
   const {
@@ -28,19 +26,13 @@ const MemoCampaignAnalytics: React.FC = () => {
     setStep: s.setStep,
     setSingleTemplateAnalytics: s.setSingleTemplateAnalytics,
   }));
-  const {
-    setActiveTab,
-    allTemplates,
-    selectedCampaign,
-    setSelectedCampaign,
-    setOpenAnalytics,
-  } = useWhatsappTempStore((s) => ({
-    setActiveTab: s.setActiveTab,
-    allTemplates: s.allTemplates,
-    selectedCampaign: s.selectedCampaign,
-    setSelectedCampaign: s.setSelectedCampaign,
-    setOpenAnalytics: s.setOpenAnalytics,
-  }));
+  const { setActiveTab, allTemplates, setSelectedTemplate, setOpenAnalytics } =
+    useWhatsappTempStore((s) => ({
+      setActiveTab: s.setActiveTab,
+      allTemplates: s.allTemplates,
+      setSelectedTemplate: s.setSelectedTemplate,
+      setOpenAnalytics: s.setOpenAnalytics,
+    }));
 
   const [loadingTemplateId, setLoadingTemplateId] = useState<string | null>(
     null,
@@ -61,7 +53,7 @@ const MemoCampaignAnalytics: React.FC = () => {
         const response = await res.json();
         if (res.status === 200 || res.status === 201) {
           setSingleTemplateAnalytics(response?.data);
-          setSelectedCampaign(response?.data);
+          setSelectedTemplate(response?.data);
           setOpenAccordionId(templateId);
         } else {
           toast.error("Failed to fetch analytics data");
@@ -73,20 +65,24 @@ const MemoCampaignAnalytics: React.FC = () => {
         setLoadingTemplateId(null);
       }
     },
-    [businessId, setSingleTemplateAnalytics, setSelectedCampaign],
+    [businessId, setSingleTemplateAnalytics, setSelectedTemplate],
   );
 
   const handleViewClick = useCallback(
     async (campaign: WhatsAppTemplatePayload) => {
       setOpenAnalytics(true);
-      if (openAccordionId === campaign.id) {
-        setOpenAccordionId(null);
-      } else {
-        setOpenAccordionId(campaign.id);
-        await getTemplateAnaylyticsById(campaign.id);
-      }
+      const filteredCampaign = allTemplates?.find(
+        (template) => template.name === campaign.name,
+      );
+      setSelectedTemplate(filteredCampaign);
+      await getTemplateAnaylyticsById(campaign.id);
     },
-    [getTemplateAnaylyticsById, openAccordionId, setOpenAnalytics],
+    [
+      getTemplateAnaylyticsById,
+      setOpenAnalytics,
+      allTemplates,
+      setSelectedTemplate,
+    ],
   );
 
   const handleCampaign = useCallback(
@@ -95,13 +91,6 @@ const MemoCampaignAnalytics: React.FC = () => {
         (template) => template.name === campaign.name,
       );
       if (filteredCampaign) {
-        if (filteredCampaign.status === "REJECTED") {
-          toast.error(
-            "This template is rejected. You cannot start a campaign.",
-          );
-          return;
-        }
-        console.log("filteredCampaign", filteredCampaign);
         setTemplateData(filteredCampaign);
         setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
         setStep(Step.CREATE_EDIT);
@@ -113,7 +102,7 @@ const MemoCampaignAnalytics: React.FC = () => {
   );
 
   return (
-    <div className="w-full mx-auto space-y-6 overflow-hidden bg-white border border-gray-100 shadow-sm rounded-xl">
+    <div className="w-full mx-auto overflow-hidden bg-white border border-gray-100 shadow-sm rounded-xl">
       <div className="p-4 border-b border-gray-100">
         <h2 className="text-2xl font-semibold text-gray-900">
           Campaign Analytics
@@ -150,12 +139,6 @@ const MemoCampaignAnalytics: React.FC = () => {
               >
                 Campaign
               </th>
-              {/* <th
-                scope="col"
-                className="px-4 py-3 text-sm font-semibold tracking-wider text-left text-black uppercase"
-              >
-                Success (%)
-              </th> */}
               <th
                 scope="col"
                 className="px-4 py-3 text-sm font-semibold tracking-wider text-left text-black uppercase"
@@ -197,23 +180,6 @@ const MemoCampaignAnalytics: React.FC = () => {
                       Start Campaign
                     </button>
                   </td>
-                  {/* <td className="px-4 py-4 text-sm whitespace-nowrap">
-                    <div className="relative pt-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <span className="inline-block px-2 py-1 text-xs font-semibold text-blue-600 uppercase bg-blue-200 rounded-full">
-                            {((campaign.delivered / campaign.sent) * 100).toFixed(2)}%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex h-2 mb-4 overflow-hidden text-xs bg-blue-200 rounded">
-                        <div
-                          style={{ width: `${(campaign.delivered / campaign.sent) * 100}%` }}
-                          className="flex flex-col justify-center text-center text-white bg-blue-600 shadow-none whitespace-nowrap"
-                        />
-                      </div>
-                    </div>
-                  </td> */}
                   <td className="px-4 py-4 text-sm whitespace-nowrap">
                     <button
                       type="button"
@@ -240,22 +206,6 @@ const MemoCampaignAnalytics: React.FC = () => {
                     </button>
                   </td>
                 </tr>
-                {openAccordionId === campaign.id && (
-                  <td colSpan={5} className="px-6 py-4">
-                    <Suspense
-                      fallback={
-                        <div className="flex items-center justify-center py-8">
-                          <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
-                        </div>
-                      }
-                    >
-                      {selectedCampaign &&
-                        selectedCampaign.templateName === campaign.name && (
-                          <CampaignDetails campaign={selectedCampaign} />
-                        )}
-                    </Suspense>
-                  </td>
-                )}
               </Fragment>
             ))}
           </tbody>

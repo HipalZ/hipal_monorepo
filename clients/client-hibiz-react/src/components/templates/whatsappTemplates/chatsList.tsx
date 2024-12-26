@@ -44,8 +44,8 @@ const MemoChatsList = () => {
   }, [searchNumber, users]);
 
   return (
-    <aside className="md:flex flex-col w-full md:w-[380px] bg-gray-50 border-r">
-      <header className="flex items-center justify-between px-4 pt-3 bg-gray-50">
+    <aside className="md:flex flex-col w-full md:w-[380px] bg-gray-50 border-r rounded-lg">
+      <header className="flex items-center justify-between px-4 pt-3 rounded-l-lg bg-gray-50">
         <h1 className="text-xl font-semibold">Chats</h1>
       </header>
       <div className="p-3 shadow-md">

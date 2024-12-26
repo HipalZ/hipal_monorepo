@@ -7,6 +7,7 @@ import type {
 export enum Tabs {
   TEMPLATES = "templates",
   CAMPAIGNS = "campaigns",
+  CHATS = "chats",
 }
 
 export interface Message {
@@ -29,13 +30,54 @@ export interface Subscriber {
   businessId: string;
 }
 
-export interface Campaign {
+export interface TemplateAnalytics {
+  id: string;
+  blocked: number;
+  failed: number;
+  templateId: string;
   templateName: string;
   sent: number;
   delivered: number;
   read: number;
   clicked: number;
   cost: number;
+}
+
+export interface Campaign {
+  campaignName: string;
+  _id: string;
+  businessId: string;
+  name: string;
+  phone: string;
+  templateId: string;
+  status: string;
+  date: number;
+  campaignId: string;
+}
+
+export interface CampaignAnalytics {
+  _id: string;
+  businessId: string;
+  name: string;
+  phone: string;
+  templateId: string;
+  status: string;
+  date: number;
+  campaignId: string;
+}
+
+export interface OverAllCount {
+  sent: number;
+  delivered: number;
+  read: number;
+  clicked: number;
+  failed: number;
+  blocked: number;
+}
+
+export interface CampaignsData {
+  overAllCount: OverAllCount;
+  campaignAnalytics: CampaignAnalytics[];
 }
 
 interface ITempStore {
@@ -83,9 +125,6 @@ interface ITempStore {
 
   resetFormData: () => void;
 
-  whatzappFormEnabled: boolean;
-  setWhatzappFormEnabled: (value: boolean) => void;
-
   whatzappStatus: boolean;
   setWhatzappStatus: (value: boolean) => void;
 
@@ -98,8 +137,33 @@ interface ITempStore {
   openAnalytics: boolean;
   setOpenAnalytics: (value: boolean) => void;
 
+  selectedTemplate: TemplateAnalytics;
+  setSelectedTemplate: (value: TemplateAnalytics) => void;
+
   selectedCampaign: Campaign;
   setSelectedCampaign: (value: Campaign) => void;
+
+  campaignsData: CampaignsData;
+  setCampaignsData: (value: CampaignsData) => void;
+
+  allCampaignsList: Campaign[];
+  setAllCampaignsList: (value: Campaign[]) => void;
+
+  pageNumber: number;
+  setPageNumber: (value: number) => void;
+
+  status: string;
+  setStatus: (value: string) => void;
+
+  openExport: boolean;
+  setOpenExport: (value: boolean) => void;
+
+  selectedPhones: string[];
+  setSelectedPhones: (value: string[]) => void;
+
+  addPhone: (phone: string) => void;
+  removePhone: (phone: string) => void;
+  clearSelectedPhones: () => void;
 }
 
 export const useWhatsappTempStore = create<ITempStore>((set) => ({
@@ -155,10 +219,6 @@ export const useWhatsappTempStore = create<ITempStore>((set) => ({
       facebookPassword: "",
     }),
 
-  whatzappFormEnabled: false,
-  setWhatzappFormEnabled: (value: boolean) =>
-    set({ whatzappFormEnabled: value }),
-
   termsAccepted: false,
   setTermsAccepted: (value: boolean) => set({ termsAccepted: value }),
 
@@ -171,13 +231,74 @@ export const useWhatsappTempStore = create<ITempStore>((set) => ({
   openAnalytics: false,
   setOpenAnalytics: (value: boolean) => set({ openAnalytics: value }),
 
-  selectedCampaign: {
+  selectedTemplate: {
+    templateId: "",
+    id: "",
     templateName: "",
-    sent: 0,
     delivered: 0,
     read: 0,
     clicked: 0,
     cost: 0,
+    blocked: 0,
+    failed: 0,
+    sent: 0,
+  },
+  setSelectedTemplate: (value: TemplateAnalytics) =>
+    set({ selectedTemplate: value }),
+
+  selectedCampaign: {
+    campaignName: "",
+    _id: "",
+    businessId: "",
+    name: "",
+    phone: "",
+    templateId: "",
+    status: "",
+    date: 0,
+    campaignId: "",
   },
   setSelectedCampaign: (value: Campaign) => set({ selectedCampaign: value }),
+
+  campaignsData: {
+    overAllCount: {
+      sent: 0,
+      delivered: 0,
+      read: 0,
+      clicked: 0,
+      failed: 0,
+      blocked: 0,
+    },
+    campaignAnalytics: [],
+  },
+
+  setCampaignsData: (value: CampaignsData) => set({ campaignsData: value }),
+
+  allCampaignsList: [],
+  setAllCampaignsList: (value: Campaign[]) => set({ allCampaignsList: value }),
+
+  pageNumber: 1,
+  setPageNumber: (value: number) => set({ pageNumber: value }),
+
+  status: "",
+  setStatus: (value: string) => set({ status: value }),
+
+  openExport: false,
+  setOpenExport: (value: boolean) => set({ openExport: value }),
+
+  selectedPhones: [],
+  setSelectedPhones: (value: string[]) => set({ selectedPhones: value }),
+
+  addPhone: (phone) =>
+    set((state) => ({
+      selectedPhones: state.selectedPhones.includes(phone)
+        ? state.selectedPhones
+        : [...state.selectedPhones, phone],
+    })),
+
+  removePhone: (phone) =>
+    set((state) => ({
+      selectedPhones: state.selectedPhones.filter((p) => p !== phone),
+    })),
+
+  clearSelectedPhones: () => set({ selectedPhones: [] }),
 }));

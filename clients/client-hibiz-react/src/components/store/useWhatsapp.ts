@@ -267,6 +267,9 @@ interface whatsappTemplate {
 
   paymentSuccessFull: boolean;
   setPaymentSuccessFull: (paymentSuccessFull: boolean) => void;
+
+  whatzappFormEnabled: boolean;
+  setWhatzappFormEnabled: (value: boolean) => void;
 }
 
 export const useWhatsapp = create(
@@ -613,6 +616,10 @@ export const useWhatsapp = create(
         paymentSuccessFull: false,
         setPaymentSuccessFull: (paymentSuccessFull: boolean) =>
           set({ paymentSuccessFull }),
+
+        whatzappFormEnabled: false,
+        setWhatzappFormEnabled: (value: boolean) =>
+          set({ whatzappFormEnabled: value }),
       };
     },
     {

@@ -11,6 +11,7 @@ import { differenceInMonths, differenceInYears, format } from "date-fns";
 import toast from "react-hot-toast";
 import { twMerge } from "tailwind-merge";
 import { DishSteps } from "../store/useMenuStorage";
+import { AlertCircle, DownloadCloud, FileText } from "lucide-react";
 
 export async function storeImageAfterSave(
   image: File,
@@ -421,7 +422,7 @@ export const calculateFutureDate = (remainder, duration: string) => {
 
 export const formatDate = (timestamp: number) => {
   const date = new Date(timestamp);
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString("en-IN", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -539,4 +540,75 @@ export const getReviewAttributes = (review: ReviewsType) => {
   if (review?.hygiene === 1) attributes.push("Hygiene");
   if (review?.service === 1) attributes.push("Service");
   return attributes;
+};
+
+export const FILTER_OPTIONS = [
+  {
+    id: "all",
+    label: "All Data",
+    status: "all",
+    count: 100,
+    description: "Export complete campaign data including all statuses",
+    icon: FileText,
+    color: "bg-blue-50 text-blue-700 border-blue-200",
+  },
+  {
+    id: "sent",
+    label: "Sent Messages",
+    status: "sent",
+    description: "Messages successfully sent to customers",
+    icon: DownloadCloud,
+    color: "bg-green-50 text-green-700 border-green-200",
+  },
+  {
+    id: "delivered",
+    label: "Delivered",
+    status: "delivered",
+    description: "Messages delivered to customers",
+    icon: DownloadCloud,
+    color: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  },
+  {
+    id: "read",
+    label: "Read Messages",
+    status: "read",
+    description: "Messages that have been read by customers",
+    icon: DownloadCloud,
+    color: "bg-indigo-50 text-indigo-700 border-indigo-200",
+  },
+  {
+    id: "failed",
+    label: "Failed Deliveries",
+    status: "failed",
+    description: "Messages that failed to deliver",
+    icon: AlertCircle,
+    color: "bg-red-50 text-red-700 border-red-200",
+  },
+  {
+    id: "blocked",
+    label: "Blocked Numbers",
+    status: "blocked",
+    description: "Numbers that blocked message delivery",
+    icon: AlertCircle,
+    color: "bg-purple-50 text-purple-700 border-purple-200",
+  },
+];
+
+export const getStatusStyle = (status: string) => {
+  switch (status) {
+    case "sent":
+      return "bg-[#25D366] text-white border-[#25D366]";
+    case "delivered":
+      return "bg-[#FFD700] text-black border-[#FFD700]";
+    case "read":
+      return "bg-[#34B7F1] text-white border-[#34B7F1]";
+    case "clicked":
+      return "bg-[#000000] text-white border-[#000000]";
+    case "failed":
+      return "bg-[#4B0082] text-white border-[#4B0082]";
+    case "blocked":
+      return "bg-[#FF0000] text-white border-[#FF0000]";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200";
+  }
 };
