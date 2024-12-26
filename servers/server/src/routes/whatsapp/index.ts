@@ -1825,6 +1825,8 @@ const whatsappRouter = new Hono()
         const bName = await Business.findById(config?.businessId).select(
           "name",
         );
+
+        console.log("config", config);
         if (statuses && statuses.length > 0) {
           const firstStatus = statuses[0];
           const extractedData = {
@@ -1918,12 +1920,16 @@ const whatsappRouter = new Hono()
               urlCode: tableNumber,
             }).select("longUrl shortUrl");
 
+            console.log("findLongUrl", findLongUrl);
+
             longUrl = findLongUrl?.longUrl;
           }
 
           if (userPhone) {
             userPhone = userPhone.toString().slice(2);
           }
+
+          console.log("phon_no_id", phon_no_id);
 
           if (phon_no_id && from && longUrl) {
             await axios({
