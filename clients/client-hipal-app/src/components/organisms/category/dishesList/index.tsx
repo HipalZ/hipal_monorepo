@@ -182,7 +182,7 @@ const DishesList: FC<IDishesProps> = (props) => {
         return (
           <section
             key={`${category._id}${index}`}
-            className="w-full pb-4 min-h-60 bg-[#ffffff]"
+            className="w-full pb-4 min-h-60 bg-[#ffffff] overflow-hidden"
             id={category._id?.toString()}
           >
             <InView

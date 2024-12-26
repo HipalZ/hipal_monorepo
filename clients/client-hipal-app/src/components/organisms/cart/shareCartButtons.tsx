@@ -39,6 +39,8 @@ const MemoShareCartButtons = () => {
           businessId: outletInfo?.businessId,
           userId: userDetails?._id,
           cart: sanitizedCart,
+          name: userDetails?.name || "user",
+          phone: userDetails?.phone || "",
         },
       });
       const res = await response.json();
@@ -97,6 +99,7 @@ const MemoShareCartButtons = () => {
         <BottomPopUp
           show={shareState.showOptions}
           onClose={() => setShareState({ ...shareState, showOptions: false })}
+          height="40dvh"
         >
           <div className="p-4">
             <div className="mb-4 text-xl font-semibold text-center text-[#000000]">

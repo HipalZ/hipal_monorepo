@@ -135,27 +135,6 @@ function MemoOutletItemInfo() {
           <IndividualItemDescription />
         </section>
 
-        {openBottomPanel && selectedDish._id === dishData._id && (
-          <BottomPopUp show={openBottomPanel} onClose={closeModal}>
-            {cartPopup === "BOTTOM_PANEL" && (
-              <div className="relative flex flex-col pb-12 mt-4 overflow-auto z-[103]">
-                <div className="flex flex-col h-[70vh] space-y-4 divide-y-2 divide-base-200 text-base-content">
-                  <MemoChoosePortions dishData={selectedDish} />
-                  <ExtraWithDishWithSelect dishData={selectedDish} />
-                  {displayAlert && <MemoAlertVariant />}
-                </div>
-                <button
-                  className="absolute on_active_bounce z-[103] bottom-4 rounded-full text-base-100 bg-primary w-[92%] mx-4 py-1.5"
-                  type="button"
-                  onClick={handleAddToCart}
-                >
-                  Add Item To Cart
-                </button>
-              </div>
-            )}
-          </BottomPopUp>
-        )}
-
         <CommonBottomButton
           fixed
           buttons={[

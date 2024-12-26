@@ -3,6 +3,7 @@ import {
   GroupModel,
   Payment,
   Subscriber,
+  User,
   UserReward,
 } from "@hi/db-models";
 import { groupSchema } from "@hi/db-models/src/validators";
@@ -1713,6 +1714,55 @@ const groupRouter = new Hono()
         message: "User groups found",
         err: false,
         data: groups,
+      });
+    },
+  )
+
+  .post(
+    "/add_wa_users",
+
+    zValidator(
+      "json",
+      z.object({
+        usersArray: z.array(
+          z.object({
+            phone: z.string({ message: "phone is required" }),
+          }),
+        ),
+        campaignName: z.string({ message: "campaignName is required" }),
+        businessId: z.string({ message: "businessId is required" }),
+      }),
+    ),
+
+    async (c) => {
+      const { usersArray = [], campaignName, businessId } = await c.req.json();
+
+      const createGroup = await GroupModel.create({
+        name: campaignName,
+        businessId: businessId,
+        userIds: [],
+        filter: [],
+        groupColor: "#008000",
+        groupType: "MANUAL",
+      });
+
+      for (const user of usersArray) {
+        const userByPhone = await User.findOne({ phone: user.phone });
+        if (userByPhone) {
+          await GroupModel.findOneAndUpdate(
+            {
+              _id: createGroup._id,
+            },
+            { $addToSet: { userIds: userByPhone._id } },
+            { new: true },
+          );
+        }
+      }
+
+      return c.json({
+        message: "Users added successfully",
+        err: false,
+        data: createGroup,
       });
     },
   );

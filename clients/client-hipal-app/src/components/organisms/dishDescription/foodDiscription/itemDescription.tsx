@@ -23,13 +23,13 @@ function MemoIndividualItemDescription() {
   }, [dishData?.recommendationIds, dishes]);
 
   return (
-    <div className="no-scrollbar pb-[5rem]">
+    <div className="no-scrollbar pb-[5rem] text-[#000000]">
       {dishData?.tags && dishData?.tags?.length > 0 && (
         <section className="flex items-center gap-2 mt-2">
           {dishData?.tags.map((ele, index) => (
-            <div key={ele} className="text-sm font-semibold text-primary">
+            <div key={ele} className="text-sm font-semibold text-[#000000]">
               {ele}
-              {index < dishData.tags.length - 1 && ","}
+              {index < dishData?.tags.length - 1 && ","}
             </div>
           ))}
         </section>
@@ -48,32 +48,32 @@ function MemoIndividualItemDescription() {
       </div>
 
       {dishData?.description && (
-        <div className="mt-2 text-xs leading-3 text-base-content">
+        <div className="mt-2 text-xs leading-3 text-[#000000]">
           <ReadMore text={dishData?.description || ""} />
         </div>
       )}
 
       {!isEmpty(dishData?.portions) && (
         <div className="flex flex-col mt-1 space-y-5">
-          <div className="flex flex-row gap-4 text-base text-primary">
+          <div className="flex flex-row gap-4 text-base text-[#000000]">
             <MdMenuBook className="my-auto" />
             <h4 className="my-auto">
               {dishData?.portions?.length} Variants available
             </h4>
           </div>
 
-          <div className="flex flex-row flex-wrap w-full gap-px divide-base-content bg-base-content/10">
+          <div className="flex flex-row flex-wrap w-full gap-px divide-base-content bg-[#ffffff]">
             {dishData?.portions?.map((portion, key) => (
               <div
                 key={key}
                 className={
-                  "flex flex-col min-w-[22%] max-w-full mx-auto space-y-1 text-base text-center bg-base-100 flex-grow p-2"
+                  "flex flex-col min-w-[22%] max-w-full mx-auto space-y-1 text-base text-center bg-[#ffffff] flex-grow p-2"
                 }
               >
-                <span className="text-sm font-normal text-base-content">
+                <span className="text-sm font-normal text-[#000000]">
                   {portion?.name}
                 </span>
-                <span className="text-xs font-thin text-base-content">
+                <span className="text-xs font-thin text-[#000000]">
                   ₹ {getPrice(portion?.price)}
                 </span>
               </div>
@@ -102,7 +102,7 @@ function MemoIndividualItemDescription() {
                 <div className="px-2 mt-2 text-sm font-medium">
                   {recommendation?.name}
                 </div>
-                <div className="px-2 text-sm text-base-content">
+                <div className="px-2 text-sm text-[#000000]">
                   ₹{" "}
                   {Number(getPrice(recommendation?.price || 0)).toLocaleString(
                     "en-IN",

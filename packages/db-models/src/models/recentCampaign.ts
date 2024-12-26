@@ -10,6 +10,11 @@ const recentCampaignSchema = new mongoose.Schema<RecentCampaignType>(
       ref: "Business",
     },
 
+    campaignId: {
+      type: String,
+      required: true,
+    },
+
     templateId: {
       type: String,
       required: true,
