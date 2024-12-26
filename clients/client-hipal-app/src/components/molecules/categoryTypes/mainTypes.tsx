@@ -112,7 +112,8 @@ const MemoMainTypes = (props: IMainTypes) => {
     ],
   );
 
-  if (isSearchActive) return null;
+  if (isSearchActive || outletInfo?.outLetType === "OTHER") return null;
+
   return (
     <>
       {mainTypes.length > 0 && outletInfo?.outLetType !== "OTHER" ? (
@@ -209,8 +210,8 @@ const MemoMainTypes = (props: IMainTypes) => {
                             "px-4 w-full flex justify-between items-center",
                           )}
                         >
-                          <h3>{item.name}</h3>
-                          <h4>{item.dishIds?.length}</h4>
+                          <h3>{item?.name}</h3>
+                          <h4>{item?.dishIds?.length}</h4>
                         </button>
                       ))}
                   </div>

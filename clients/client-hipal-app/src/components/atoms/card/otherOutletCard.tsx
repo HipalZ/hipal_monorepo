@@ -53,10 +53,10 @@ const MemoOtherOutletCard = ({
           )}
           <button
             type="button"
-            className="absolute p-2 rounded-full bg-base-300 -top-2 -right-2"
+            className="absolute p-2 bg-white rounded-full -top-2 -right-2"
             onClick={openModal}
           >
-            <AiOutlineExpand className="mt-1 mr-1 text-lg text-primary" />
+            <AiOutlineExpand className="mt-1 mr-1 text-lg text-[#000000]" />
           </button>
           {dishData.availability && (
             <div className="absolute right-0 scale-75 bottom-2">
@@ -67,20 +67,20 @@ const MemoOtherOutletCard = ({
         {dishData.tags && dishData.tags.length > 0 && (
           <section className="mt-2">
             {/* {dishData.tags.map((ele) => ( */}
-            <div className="text-sm font-semibold text-primary">
+            <div className="text-sm font-semibold text-[#000000]">
               {dishData?.tags?.[0]}
             </div>
             {/* ))} */}
           </section>
         )}
         {Number(price) > 1 && (
-          <div className="mt-1 ml-1 font-medium text-primary opacity-80">
+          <div className="mt-1 ml-1 font-medium text-[#000000] opacity-80">
             ₹ {Number(price)?.toLocaleString("en-IN")}
           </div>
         )}
         <div
           className={cn(
-            "mt-1 ml-1 text-sm font-medium capitalize text-primary",
+            "mt-1 ml-1 text-sm font-medium capitalize text-[#000000]",
           )}
         >
           {dishData?.name || ""}

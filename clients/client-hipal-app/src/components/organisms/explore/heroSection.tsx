@@ -14,7 +14,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
         style={{
           justifyContent: "flex-end",
         }}
-        className="pt-12 text-sm text-center text-primary"
+        className="pt-4 text-sm text-center text-primary"
       >
         <ReadMore text={data?.business?.description || ""} />
       </center>

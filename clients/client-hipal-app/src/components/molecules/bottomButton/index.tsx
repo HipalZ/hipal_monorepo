@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { RiCouponFill, RiCouponLine } from "react-icons/ri";
+import { RiCouponLine } from "react-icons/ri";
 import { MdAccountBalanceWallet, MdMenuBook } from "react-icons/md";
 import { LuScanLine } from "react-icons/lu";
 import { useLogin } from "@/components/store/useLogin";
@@ -15,10 +15,9 @@ import { useCart } from "@/components/store/useCart";
 import { cn } from "@/components/utils/helpers";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import AddAmountModal from "./addAmountModal";
-import MemoCallTheWaiterComponent from "./callTheWaiter";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
-import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
+import { PiArrowBendUpLeftBold } from "react-icons/pi";
 
 const MemoCart = dynamic(() => import("@/components/organisms/cart"), {
   ssr: false,
@@ -35,7 +34,7 @@ const MenuItem = ({
   onClick,
 }: {
   icon: any;
-  label: string;
+  label?: string;
   href?: string;
   isSelected: boolean;
   onClick?: () => void;
@@ -89,13 +88,15 @@ const MenuItem = ({
   );
 };
 
-export default function BottomButton({ selected }: { selected?: ButtonType }) {
+export default function BottomButton({
+  selected,
+  showBack,
+}: { selected?: ButtonType; showBack?: boolean }) {
   const router = useRouter();
   const tableName = useTableData((s) => s.tableName);
   const setDirection = useLogin((s) => s.setDirection);
   const accessToken = useUserToken.getState().accessToken;
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
-  const [callWaiterModal, setCallWaiterModal] = useState(false);
   const { setShowCart, showCart, inputModal, setInputModal, setCartPage } =
     useCart();
   const customLink = useParams()?.businessId || "";
@@ -128,10 +129,6 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
     outletInfo?.isPosEnabled,
     setShowCart,
   ]);
-
-  const closeCallWaiterModal = useCallback(() => {
-    setCallWaiterModal(false);
-  }, []);
 
   if (subscribeModal || reviewPopup) {
     return null;
@@ -166,7 +163,6 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
           transition={{
             duration: 2,
             repeat: Infinity,
-            // repeatDelay: 1,
             ease: "backInOut",
           }}
           style={{
@@ -174,6 +170,14 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
           }}
         />
         <div className="flex items-center justify-between">
+          {showBack && (
+            <MenuItem
+              icon={PiArrowBendUpLeftBold}
+              href={`/${customLink}/explore`}
+              isSelected={false}
+              label="Back"
+            />
+          )}
           <MenuItem
             icon={RiCouponLine}
             label="Rewards"
@@ -196,12 +200,15 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
               isSelected={false}
             />
           )}
-          <MenuItem
-            icon={MdMenuBook}
-            label={outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
-            href={`/${customLink}/category`}
-            isSelected={selectedBtn === "menu" || selectedBtn === "catalogue"}
-          />
+
+          {!showBack && (
+            <MenuItem
+              icon={MdMenuBook}
+              label={outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
+              href={`/${customLink}/category`}
+              isSelected={selectedBtn === "menu" || selectedBtn === "catalogue"}
+            />
+          )}
         </div>
       </motion.nav>
 
@@ -214,15 +221,6 @@ export default function BottomButton({ selected }: { selected?: ButtonType }) {
         >
           <AddAmountModal />
         </BottomPopUp>
-      )}
-      {callWaiterModal && (
-        <ItemDescriptionPopup
-          show={callWaiterModal}
-          onClose={closeCallWaiterModal}
-          heading="Help"
-        >
-          <MemoCallTheWaiterComponent onClose={closeCallWaiterModal} />
-        </ItemDescriptionPopup>
       )}
 
       {showCart && (
