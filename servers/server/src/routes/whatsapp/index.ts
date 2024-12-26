@@ -1,4 +1,5 @@
 import {
+  Business,
   BusinessSettings,
   Campaign,
   CouponLink,
@@ -45,11 +46,7 @@ import {
   razorpayWrapper,
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
-import {
-  type CampaignConfig,
-  getTemplateId,
-  setWhatsAppMessageConfig,
-} from "../../utils/whatsAppUserCache";
+import { setWhatsAppMessageConfig } from "../../utils/whatsAppUserCache";
 interface AxiosError {
   response?: {
     status?: number;
@@ -1845,6 +1842,8 @@ const whatsappRouter = new Hono()
       const config = await WhatsAppBusinessConfig.findOne({
         phoneId: phon_no_id,
       }).select("businessId token ownerId");
+
+      const bName = await Business.findById(config?.businessId).select("name");
       if (statuses && statuses.length > 0) {
         const firstStatus = statuses[0];
         const extractedData = {
@@ -1902,7 +1901,7 @@ const whatsappRouter = new Hono()
               messaging_product: "whatsapp",
               to: from,
               text: {
-                body: `Welcome to CoffeeCup! ☕\nWe’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${longUrl}\n🍽️ View our curated menu featuring handcrafted delights.`,
+                body: `Welcome to ${bName}! ☕\nWe’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${longUrl}\n🍽️ View our curated menu featuring handcrafted delights.`,
               },
             },
             headers: {
@@ -1983,7 +1982,6 @@ const whatsappRouter = new Hono()
       data: {},
     });
   })
-
 
   .get(
     "/testing",
