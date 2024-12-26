@@ -39,7 +39,7 @@ import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
 import { z } from "zod";
-import { getMerchantConfig, getShortUrl } from "../../utils/cacheHelper";
+import { getMerchantConfig } from "../../utils/cacheHelper";
 import {
   type MerchantConfig,
   razorpayWrapper,
@@ -1822,6 +1822,9 @@ const whatsappRouter = new Hono()
         const config = await WhatsAppBusinessConfig.findOne({
           phoneId: phon_no_id,
         }).select("businessId token ownerId activeTemplateId");
+        const bName = await Business.findById(config?.businessId).select(
+          "name",
+        );
         if (statuses && statuses.length > 0) {
           const firstStatus = statuses[0];
           const extractedData = {
@@ -1911,17 +1914,11 @@ const whatsappRouter = new Hono()
               });
             }
 
-            const getlongUrl = (await getShortUrl(tableNumber)) as string;
+            const findLongUrl = await UrlModel.findOne({
+              urlCode: tableNumber,
+            }).select("longUrl shortUrl");
 
-            if (getlongUrl) {
-              longUrl = getlongUrl;
-            } else {
-              const findLongUrl = await UrlModel.findOne({
-                urlCode: tableNumber,
-              }).select("longUrl");
-
-              longUrl = findLongUrl?.longUrl;
-            }
+            longUrl = findLongUrl?.longUrl;
           }
 
           if (userPhone) {
@@ -1936,7 +1933,7 @@ const whatsappRouter = new Hono()
                 messaging_product: "whatsapp",
                 to: from,
                 text: {
-                  body: `Explore our menu: ${longUrl}`,
+                  body: `Welcome to ${bName?.name}! ☕\nWe’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${longUrl}\n🍽️ View our curated menu featuring handcrafted delights.`,
                 },
               },
               headers: {
