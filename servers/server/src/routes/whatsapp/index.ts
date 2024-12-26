@@ -718,7 +718,7 @@ const whatsappRouter = new Hono()
           reminderDateObj.getUTCMonth() + 1
         } *`;
 
-        console.log("cronExpression", cronExpression);
+        // console.log("cronExpression", cronExpression);
 
         const template = (await WhatAppTemplate.findOne({
           businessId,
@@ -808,7 +808,7 @@ const whatsappRouter = new Hono()
             reduceAmount = Math.round(totalCost);
           }
 
-          const scheduleCampaignResponse = await scheduleCampaign(
+          const scheduleCampaignResponse = scheduleCampaign(
             customersArray,
             template,
             businessName,
@@ -898,7 +898,7 @@ const whatsappRouter = new Hono()
             reduceAmount = Math.round(totalCost);
           }
 
-          const scheduleCampaignResponse = await scheduleCampaign(
+          const scheduleCampaignResponse = scheduleCampaign(
             bulkCustomers,
             template,
             businessName,
@@ -995,7 +995,7 @@ const whatsappRouter = new Hono()
             reduceAmount = Math.round(totalCost);
           }
 
-          const scheduleCampaignResponse = await scheduleCampaign(
+          const scheduleCampaignResponse = scheduleCampaign(
             groupIdsList,
             template,
             businessName,
