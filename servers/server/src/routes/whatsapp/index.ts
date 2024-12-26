@@ -174,6 +174,7 @@ const scheduleCampaign = async (
   businessId: string,
   templateId: string,
 ) => {
+  console.log("aloy schedular madhe ahe");
   const templateName = template.templateName;
   const campaignName = getCampaignName(templateName);
   const createCampaign = await Campaign.create({
@@ -183,6 +184,8 @@ const scheduleCampaign = async (
 
     date: Date.now(),
   });
+  console.log("aloy schedular madhe ahe", createCampaign);
+
   await RecentCampaign.create({
     businessId,
     templateId,
@@ -709,6 +712,8 @@ const whatsappRouter = new Hono()
           reminderDateObj.getUTCMonth() + 1
         } *`;
 
+        console.log("cronExpression", cronExpression);
+
         const template = (await WhatAppTemplate.findOne({
           businessId,
           templateId,
@@ -870,6 +875,7 @@ const whatsappRouter = new Hono()
           if (template.category === "MARKETING") {
             const totalCost = bulkCustomers.length * 0.89;
             if (businessWallet.currentBalance < totalCost) {
+              console.log("insufficient balance");
               return c.json(
                 {
                   message: "Insufficient balance",
@@ -884,6 +890,7 @@ const whatsappRouter = new Hono()
           if (template.category === "UTILITY") {
             const totalCost = bulkCustomers.length * 0.2;
             if (businessWallet.currentBalance < totalCost) {
+              console.log("insufficient balance");
               return c.json(
                 {
                   message: "Insufficient balance",
