@@ -186,10 +186,18 @@ const scheduleCampaign = async (
 
     date: Date.now(),
   });
-  await RecentCampaign.create({
-    businessId,
-    templateId,
-  });
+  await RecentCampaign.findOneAndUpdate(
+    {
+      businessId,
+    },
+    {
+      campaignId: createCampaign._id.toString(),
+      templateId,
+    },
+    {
+      upsert: true,
+    },
+  );
   for (const customer of customersArray) {
     const components = await returnBodyComponents(
       businessName,
@@ -223,9 +231,6 @@ const scheduleCampaign = async (
         templateId,
         campaignId: createCampaign._id.toString(),
       });
-
-      console.log("a", a);
-      console.log("res", res.data);
     } catch (error) {
       const axiosError = error as AxiosError;
       const message = axiosError.response?.data?.error?.message;
@@ -1862,8 +1867,6 @@ const whatsappRouter = new Hono()
             wamid,
           )) as CampaignConfig;
 
-          console.log("getTemplateIdInfo", getTemplateIdInfo);
-
           const userInfo = await User.findOne({
             phone: userPhoneNumber,
           });
@@ -1908,6 +1911,36 @@ const whatsappRouter = new Hono()
 
           if (tableNumber) {
             tableNumber = tableNumber.slice(-5);
+
+            const userText = tableNumber;
+            if (userText.tolowerCase() === "stop") {
+              const RecentCampaignData = await RecentCampaign.findOne({
+                businessId: config?.businessId,
+              });
+              await WhatsAppAnalyticsUser.create({
+                businessId: config?.businessId,
+                name: userName,
+                phone: userPhone.toString().slice(2),
+                status: "blocked",
+                templateId: RecentCampaignData?.templateId,
+                date: Date.now(),
+                campaignId: RecentCampaignData?.campaignId,
+              });
+            }
+            if (userText.tolowerCase() === "resume") {
+              const RecentCampaignData = await RecentCampaign.findOne({
+                businessId: config?.businessId,
+              });
+              await WhatsAppAnalyticsUser.create({
+                businessId: config?.businessId,
+                name: userName,
+                phone: userPhone.toString().slice(2),
+                status: "resume",
+                templateId: RecentCampaignData?.templateId,
+                date: Date.now(),
+                campaignId: RecentCampaignData?.campaignId,
+              });
+            }
 
             const getlongUrl = (await getShortUrl(tableNumber)) as string;
 

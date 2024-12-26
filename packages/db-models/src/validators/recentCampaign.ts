@@ -11,6 +11,7 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 
 const recentCampaignSchema = z.object({
   businessId: ObjectIdSchema,
+  campaignId: z.string().min(1).max(70),
   templateId: z.string().min(1).max(70),
 });
 
