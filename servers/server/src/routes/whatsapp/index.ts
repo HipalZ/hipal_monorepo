@@ -1901,7 +1901,7 @@ const whatsappRouter = new Hono()
               messaging_product: "whatsapp",
               to: from,
               text: {
-                body: `Welcome to ${bName}! ☕\nWe’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${longUrl}\n🍽️ View our curated menu featuring handcrafted delights.`,
+                body: `Welcome to ${bName.name}! ☕\nWe’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${longUrl}\n🍽️ View our curated menu featuring handcrafted delights.`,
               },
             },
             headers: {
