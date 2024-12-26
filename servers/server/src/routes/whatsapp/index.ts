@@ -36,7 +36,6 @@ import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
-import { schedule } from "node-cron";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
 import { z } from "zod";
 import { getMerchantConfig, getShortUrl } from "../../utils/cacheHelper";
@@ -177,6 +176,7 @@ const scheduleCampaign = async (
   businessId: string,
   templateId: string,
 ) => {
+  console.log("ala re");
   const templateName = template.templateName;
   const campaignName = getCampaignName(templateName);
   const createCampaign = await Campaign.create({
@@ -805,29 +805,17 @@ const whatsappRouter = new Hono()
             reduceAmount = Math.round(totalCost);
           }
 
-          schedule(cronExpression, async () => {
-            const scheduleCampaignResponse = await scheduleCampaign(
-              customersArray,
-              template,
-              businessName,
-              address,
-              bodyVariableSequence,
-              imageUrl,
-              whatsAppConfigData,
-              businessId,
-              templateId,
-            );
-          });
-
-          // const scheduleCampaignResponse = await scheduleCampaign(
-          //   customersArray,
-          //   template,
-          //   businessName,
-          //   address,
-          //   bodyVariableSequence,
-          //   imageUrl,
-          //   whatsAppConfigData,
-          // );
+          const scheduleCampaignResponse = await scheduleCampaign(
+            customersArray,
+            template,
+            businessName,
+            address,
+            bodyVariableSequence,
+            imageUrl,
+            whatsAppConfigData,
+            businessId,
+            templateId,
+          );
 
           await WhatsAppWallet.findOneAndUpdate(
             {
@@ -905,30 +893,17 @@ const whatsappRouter = new Hono()
             reduceAmount = Math.round(totalCost);
           }
 
-          console.log("cronExpression", cronExpression);
-          const output = schedule(cronExpression, async () => {
-            const scheduleCampaignResponse = await scheduleCampaign(
-              bulkCustomers,
-              template,
-              businessName,
-              address,
-              bodyVariableSequence,
-              imageUrl,
-              whatsAppConfigData,
-              businessId,
-              templateId,
-            );
-          });
-
-          // const scheduleCampaignResponse = await scheduleCampaign(
-          //   bulkCustomers,
-          //   template,
-          //   businessName,
-          //   address,
-          //   bodyVariableSequence,
-          //   imageUrl,
-          //   whatsAppConfigData,
-          // );
+          const scheduleCampaignResponse = await scheduleCampaign(
+            bulkCustomers,
+            template,
+            businessName,
+            address,
+            bodyVariableSequence,
+            imageUrl,
+            whatsAppConfigData,
+            businessId,
+            templateId,
+          );
 
           await WhatsAppWallet.findOneAndUpdate(
             {
@@ -1015,29 +990,17 @@ const whatsappRouter = new Hono()
             reduceAmount = Math.round(totalCost);
           }
 
-          schedule(cronExpression, async () => {
-            const scheduleCampaignResponse = await scheduleCampaign(
-              groupIdsList,
-              template,
-              businessName,
-              address,
-              bodyVariableSequence,
-              imageUrl,
-              whatsAppConfigData,
-              businessId,
-              templateId,
-            );
-          });
-
-          // const scheduleCampaignResponse = await scheduleCampaign(
-          //   groupIdsList,
-          //   template,
-          //   businessName,
-          //   address,
-          //   bodyVariableSequence,
-          //   imageUrl,
-          //   whatsAppConfigData,
-          // );
+          const scheduleCampaignResponse = await scheduleCampaign(
+            groupIdsList,
+            template,
+            businessName,
+            address,
+            bodyVariableSequence,
+            imageUrl,
+            whatsAppConfigData,
+            businessId,
+            templateId,
+          );
 
           await WhatsAppWallet.findOneAndUpdate(
             {
@@ -1326,6 +1289,7 @@ const whatsappRouter = new Hono()
           }
 
           const newObj = {
+            tamplateId: templateById?.templateId,
             templateName: templateById?.templateName,
             sent: anaLyticsObject.sent,
             read: anaLyticsObject.read,
@@ -2406,33 +2370,45 @@ const whatsappRouter = new Hono()
     zValidator(
       "query",
       z.object({
-        pageNumber: z.string().optional(),
         status: z.string().optional(),
       }),
     ),
 
     async (c) => {
       const { businessId, campaignId } = c.req.param();
-      const { pageNumber, status } = c.req.query();
-      const pageNumberInt = Number(pageNumber) || 1;
-      const obj = {
-        sent: 30,
-        delivered: 20,
-        read: 10,
+      const { status } = c.req.query();
 
-        clicked: 40,
-        failed: 60,
-        blocked: 70,
-      };
+      const waAnalyticsUser = await WhatsAppAnalyticsUser.find({
+        businessId,
+        campaignId,
+      });
+
+      const obj = waAnalyticsUser.reduce(
+        (acc, user) => {
+          acc.sent += user.status === "sent" ? 1 : 0;
+          acc.delivered += user.status === "delivered" ? 1 : 0;
+          acc.read += user.status === "read" ? 1 : 0;
+          acc.clicked += user.status === "clicked" ? 1 : 0;
+          acc.failed += user.status === "failed" ? 1 : 0;
+          acc.blocked += user.status === "blocked" ? 1 : 0;
+          return acc;
+        },
+        {
+          sent: 0,
+          delivered: 0,
+          read: 0,
+          clicked: 0,
+          failed: 0,
+          blocked: 0,
+        },
+      );
       if (status) {
         const waCampaignAnalyticsUser = await WhatsAppAnalyticsUser.find({
           businessId,
           campaignId,
 
           status: status,
-        })
-          .skip((pageNumberInt - 1) * 40)
-          .limit(40);
+        });
 
         return c.json({
           message: "wa analytics user",
@@ -2444,19 +2420,12 @@ const whatsappRouter = new Hono()
         });
       }
 
-      const waAnalyticsUser = await WhatsAppAnalyticsUser.find({
-        businessId,
-        campaignId,
-      })
-        .skip((pageNumberInt - 1) * 40)
-        .limit(40);
-
       return c.json({
         message: "wa analytics user",
         err: false,
         data: {
           overAllCount: obj,
-          campaignAnalttics: waAnalyticsUser,
+          campaignAnalytics: waAnalyticsUser,
         },
       });
     },
