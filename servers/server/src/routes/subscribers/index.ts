@@ -386,6 +386,39 @@ const subsCriberRouter = new Hono()
         200,
       );
     },
+  )
+
+  .get(
+    "/fetch_all_subscribers/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string({ message: "businessId is required" }),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+      const subscribers = await Subscriber.find({
+        isDeleted: false,
+        businessId,
+      })
+
+        .select("userId")
+        .populate({
+          path: "userId",
+          select: "phone name",
+        });
+
+      return c.json(
+        {
+          message: "Subscribers fetched successfully",
+          err: false,
+          data: subscribers,
+        },
+        200,
+      );
+    },
   );
 
 export default subsCriberRouter;
