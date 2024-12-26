@@ -60,7 +60,7 @@ const MemoizedWhatsAppLoader: React.FC = () => {
         <img
           src={HiLogo}
           alt="HiLogo"
-          className="absolute w-3/4 transform scale-75 -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2 h-3/4"
+          className="absolute w-3/4 transform scale-90 -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2 h-3/4"
         />
       </div>
     </div>

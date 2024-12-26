@@ -63,7 +63,7 @@ const MemoCampaignAdvancedAnalytics = () => {
   return (
     <main className="container p-4 mx-auto space-y-4 duration-500 bg-white rounded-lg animate-in fade-in-50">
       <article className="bg-white rounded-xl">
-        <h1 className="flex items-center justify-between gap-2 mb-4 text-2xl truncate w-96">
+        <h1 className="flex items-center justify-between w-full gap-2 mb-4 text-2xl truncate lg:w-96">
           {selectedTemplate?.templateName || "Template"}
         </h1>
         <p className="mb-2 text-base text-gray-500">

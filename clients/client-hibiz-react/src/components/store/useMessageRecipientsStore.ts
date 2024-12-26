@@ -1,7 +1,6 @@
 import { toast } from "react-hot-toast";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import useWhatsapp from "./useWhatsapp";
 
 interface Group {
   _id: string;
@@ -70,9 +69,6 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>()(
         });
       },
       handleGroupToggle: (groupId) => {
-        const walletBalance = useWhatsapp.getState().walletBalance;
-        const templateType = useWhatsapp.getState().templateType;
-        const typeAmount = templateType === "MARKETING" ? 0.9 : 0.2;
         set((state) => {
           const isSelected = state.selectedGroups.includes(groupId);
           const newSelection = isSelected
@@ -84,17 +80,10 @@ export const useMessageRecipientsStore = create<MessageRecipientsState>()(
             return state;
           }
 
-          const count = newSelection.reduce((sum, id) => {
+          newSelection.reduce((sum, id) => {
             const group = state.groups.find((g) => g._id === id);
             return sum + (group?.userIds?.length || 0);
           }, 0);
-          if (count > 0 && walletBalance < count * typeAmount) {
-            toast(
-              `You need at least ${
-                count * typeAmount
-              } credits to send to ${count} customers`,
-            );
-          }
 
           return {
             selectedGroups: newSelection,
