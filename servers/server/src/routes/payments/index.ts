@@ -1290,6 +1290,7 @@ const paymentsRouter = new Hono()
                   $set: {
                     avgSpend: countAvgSpend,
                     tableName: getOrder?.tableName,
+                    dateOfJoining: Date.now(),
                   },
                 },
                 { session },
