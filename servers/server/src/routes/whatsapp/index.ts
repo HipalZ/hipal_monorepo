@@ -1887,7 +1887,7 @@ const whatsappRouter = new Hono()
             tableNumber = tableNumber.slice(-5);
 
             const userText = tableNumber;
-            if (userText.tolowerCase() === "stop") {
+            if (userText === "stop" || userText === "STOP") {
               const RecentCampaignData = await RecentCampaign.findOne({
                 businessId: config?.businessId,
               });
@@ -1901,7 +1901,7 @@ const whatsappRouter = new Hono()
                 campaignId: RecentCampaignData?.campaignId,
               });
             }
-            if (userText.tolowerCase() === "resume") {
+            if (userText === "resume" || userText === "RESUME") {
               const RecentCampaignData = await RecentCampaign.findOne({
                 businessId: config?.businessId,
               });
