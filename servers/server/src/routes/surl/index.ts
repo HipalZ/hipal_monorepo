@@ -1,9 +1,9 @@
-import { UrlModel, WhatsAppBusinessConfig } from "@hi/db-models";
+import { UrlModel } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { getShortUrl, setShortUrl } from "../../utils/cacheHelper";
+import { setShortUrl } from "../../utils/cacheHelper";
 //
 const surlRouter = new Hono()
   .get(
@@ -17,27 +17,27 @@ const surlRouter = new Hono()
     async (c) => {
       const { urlCode } = c.req.param();
 
-      const Bid = await UrlModel.findOne({
-        urlCode,
-      }).select("businessId");
+      // const Bid = await UrlModel.findOne({
+      //   urlCode,
+      // }).select("businessId");
 
-      const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
-        businessId: Bid?.businessId,
-      });
+      // const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
+      //   businessId: Bid?.businessId,
+      // });
 
-      const menuRedirection = whatsAppBusinessConfig?.menuRedirection;
+      // const menuRedirection = whatsAppBusinessConfig?.menuRedirection;
 
-      if (menuRedirection && menuRedirection === "WA") {
-        const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, I'm interested in your menu. Could you share more details? I am sitting at T-${urlCode}`;
+      // if (menuRedirection && menuRedirection === "WA") {
+      //   const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, I'm interested in your menu. Could you share more details? I am sitting at T-${urlCode}`;
 
-        return c.redirect(redirectUrl);
-      }
+      //   return c.redirect(redirectUrl);
+      // }
 
-      const getUrlFromCache = (await getShortUrl(urlCode)) as string;
+      // const getUrlFromCache = (await getShortUrl(urlCode)) as string;
 
-      if (getUrlFromCache) {
-        return c.redirect(getUrlFromCache);
-      }
+      // if (getUrlFromCache) {
+      //   return c.redirect(getUrlFromCache);
+      // }
 
       const result = await UrlModel.findOne({ urlCode });
       if (!result) {
@@ -51,7 +51,7 @@ const surlRouter = new Hono()
         );
       }
 
-      setShortUrl(urlCode, result.longUrl);
+      // setShortUrl(urlCode, result.longUrl);
 
       // Redirect to the original URL
       return c.redirect(result.longUrl);
