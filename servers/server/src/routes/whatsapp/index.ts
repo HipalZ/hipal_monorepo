@@ -905,19 +905,33 @@ const whatsappRouter = new Hono()
           }
 
           console.log("cronExpression", cronExpression);
-          const output = schedule(cronExpression, async () => {
-            const scheduleCampaignResponse = await scheduleCampaign(
-              bulkCustomers,
-              template,
-              businessName,
-              address,
-              bodyVariableSequence,
-              imageUrl,
-              whatsAppConfigData,
-              businessId,
-              templateId,
-            );
-          });
+          try {
+            const output = schedule(cronExpression, async () => {
+              try {
+                const scheduleCampaignResponse = await scheduleCampaign(
+                  bulkCustomers,
+                  template,
+                  businessName,
+                  address,
+                  bodyVariableSequence,
+                  imageUrl,
+                  whatsAppConfigData,
+                  businessId,
+                  templateId,
+                );
+                console.log(
+                  "Campaign scheduled successfully:",
+                  scheduleCampaignResponse,
+                );
+              } catch (error) {
+                console.error("Error scheduling campaign:", error);
+              }
+            });
+
+            console.log("Task scheduled successfully");
+          } catch (error) {
+            console.error("Error scheduling task:", error);
+          }
 
           // const scheduleCampaignResponse = await scheduleCampaign(
           //   bulkCustomers,
