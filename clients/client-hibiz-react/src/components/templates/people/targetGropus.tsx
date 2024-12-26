@@ -89,7 +89,7 @@ const MemoTargetGroups = () => {
                   backgroundColor: hexToRgba(group?.groupColor),
                 }}
                 key={group._id}
-                className="relative w-full gap-4 p-4 text-left rounded-2xl h-[7rem]"
+                className="overflow-hidden relative w-full gap-4 p-4 text-left rounded-2xl h-[7rem]"
               >
                 <div
                   style={{
@@ -104,7 +104,7 @@ const MemoTargetGroups = () => {
                   )}
                 </div>
                 <h3 className="absolute leading-5 top-10 w-[80%]">
-                  {group?.name}
+                  {group?.name?.split("_").join(" ")}
                 </h3>
               </button>
             ))}

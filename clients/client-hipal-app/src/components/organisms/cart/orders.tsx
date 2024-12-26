@@ -96,7 +96,7 @@ const MemoOrders = () => {
                   <div className="pb-2">
                     {cart?.cart?.map((item) => (
                       <motion.div
-                        key={item._id}
+                        key={item?._id?.toString()}
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 20 }}

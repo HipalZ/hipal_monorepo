@@ -7,10 +7,9 @@ import MenuImage from "@/assets/services/menu.png";
 import StaffImage from "@/assets/services/staff.png";
 import Themes from "@/assets/services/themes.png";
 import Settings from "@/assets/services/setting.png";
-import Review from "@/assets/services/review.png";
 import Services from "@/assets/services/services.png";
 import Analytics from "@/assets/services/analytics.png";
-import useBusinessData from "../store/useBusinessData";
+import Review from "@/assets/services/review.png";
 
 export interface ILiteVersionCardButton {
   image: string;

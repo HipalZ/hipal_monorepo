@@ -453,15 +453,15 @@ export const useSearchUserByPhone = () => {
 
 export const useCheckRegistration = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
+  const setWhatzappFormEnabled = useWhatsapp((s) => s.setWhatzappFormEnabled);
+  const checkReg = useWhatsappTempStore((s) => s.checkReg);
   const setCheckReg = useWhatsappTempStore((s) => s.setCheckReg);
 
-  const { setWhatzappFormEnabled, setWhatzappStatus } = useWhatsappTempStore(
-    (s) => ({
-      setWhatzappFormEnabled: s.setWhatzappFormEnabled,
-      setWhatzappStatus: s.setWhatzappStatus,
-    }),
-  );
+  const { setWhatzappStatus } = useWhatsappTempStore((s) => ({
+    setWhatzappStatus: s.setWhatzappStatus,
+  }));
   const checkRegistration = useCallback(async () => {
+    if (checkReg) return {};
     const response = await apiRpc.whatsapp.fetch_waba[":businessId"].$get({
       param: {
         businessId: businessId,
@@ -477,7 +477,13 @@ export const useCheckRegistration = () => {
     }
     setCheckReg(true);
     return response.json();
-  }, [businessId, setWhatzappFormEnabled, setWhatzappStatus, setCheckReg]);
+  }, [
+    businessId,
+    setWhatzappFormEnabled,
+    setWhatzappStatus,
+    setCheckReg,
+    checkReg,
+  ]);
 
   return { checkRegistration };
 };
@@ -528,4 +534,90 @@ export const useCreateRegistration = () => {
   };
 
   return { wabaregistration };
+};
+
+export const useAllCampaignsWithTemplates = () => {
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  const selectedTemplate = useWhatsappTempStore((s) => s.selectedTemplate);
+  const setAllCampaignsList = useWhatsappTempStore(
+    (s) => s.setAllCampaignsList,
+  );
+  const allCampaignsWithTemplates = async () => {
+    try {
+      const response = await apiRpc.whatsapp.campaigns[":businessId"][
+        ":templateId"
+      ].$get({
+        param: {
+          businessId,
+          templateId: selectedTemplate?.templateId || selectedTemplate?.id,
+        },
+      });
+
+      const res = await response.json();
+      setAllCampaignsList(res?.data);
+      return res;
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  return { allCampaignsWithTemplates };
+};
+
+export const useCampaignAnalytics = () => {
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  const setCampaignsData = useWhatsappTempStore((s) => s.setCampaignsData);
+  const fetchCampaignAnalytics = async (
+    campaignId: string,
+    pageNumber: number,
+    status: string,
+  ) => {
+    try {
+      const response = await apiRpc.whatsapp.campaign_analytics[":businessId"][
+        ":campaignId"
+      ].$get({
+        param: {
+          businessId,
+          campaignId: campaignId,
+        },
+        query: {
+          pageNumber: pageNumber?.toString(),
+          status: status,
+        },
+      });
+      const res = await response.json();
+      setCampaignsData(res?.data);
+      return res?.data;
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  return { fetchCampaignAnalytics };
+};
+
+export const useAddGroup = () => {
+  const setSelectedPhones = useWhatsappTempStore((s) => s.setSelectedPhones);
+  const addGroupMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const response = await apiRpc.groups.add_wa_users.$post({
+        json: payload,
+      });
+      const res = await response.json();
+      if (!response.ok) {
+        throw new Error(res.message || "Failed to create group.");
+      }
+      return res;
+    },
+    onSuccess: () => {
+      toast.success("Group successfully created!");
+      setSelectedPhones([]);
+    },
+    onError: (error: any) => {
+      console.error("Error creating group:", error);
+      toast.error("Error creating group. Please try again.");
+    },
+  });
+
+  return { addGroupMutation };
 };
