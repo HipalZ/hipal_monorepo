@@ -170,7 +170,7 @@ const MemoCategoryPageBtn = () => {
           )}
         </AnimatePresence>
       ) : (
-        <BottomButton selected={"catalogue"} />
+        <BottomButton selected={"catalogue"} showBack />
       )}
 
       <AnimatePresence>

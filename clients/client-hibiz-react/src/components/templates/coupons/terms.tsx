@@ -12,8 +12,6 @@ const MemoTerms = () => {
     requiredFields,
     setRequiredFields,
     setSelectedPage,
-    selectedGroupIds,
-    selectedUserIds,
     couponPrice,
     customDays,
     couponStartDate,
@@ -27,8 +25,6 @@ const MemoTerms = () => {
     requiredFields: s.requiredFields,
     setRequiredFields: s.setRequiredFields,
     setSelectedPage: s.setSelectedPage,
-    selectedGroupIds: s.selectedGroupIds,
-    selectedUserIds: s.selectedUserIds,
     couponPrice: s.couponPrice,
     customDays: s.customDays,
     couponStartDate: s.couponStartDate,
@@ -93,6 +89,14 @@ const MemoTerms = () => {
     setSelectedPage("SHARE");
   }, []);
 
+  const savingREquiredFields = useCallback(() => {
+    if (requiredFields.includes("dob")) {
+      setRequiredFields([]);
+    } else {
+      setRequiredFields(["dob"]);
+    }
+  }, [requiredFields]);
+
   useEffect(() => {
     setTermsAndConditions(generatedTerms);
   }, []);
@@ -106,7 +110,7 @@ const MemoTerms = () => {
               type="checkbox"
               id="dob"
               checked={requiredFields.includes("dob")}
-              onChange={() => setRequiredFields(["dob"])}
+              onChange={savingREquiredFields}
               className="text-black rounded"
             />
             <label htmlFor="dob" className="font-semibold text-gray-700">
