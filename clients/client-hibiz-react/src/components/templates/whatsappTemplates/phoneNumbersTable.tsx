@@ -1,5 +1,5 @@
 import { memo, useCallback } from "react";
-import { ChevronLeft, ChevronRight, Filter } from "lucide-react";
+import { ChevronLeft, ChevronRight, CloudDownload, Filter } from "lucide-react";
 import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
 import { useAddGroup } from "@/hooks/useTemplates";
 import { CgClose } from "react-icons/cg";
@@ -15,6 +15,7 @@ const MemoPhoneNumbersTable = () => {
     setStatus,
     status,
     openExport,
+    setOpenExport,
     selectedCampaign,
     pageNumber,
     setPageNumber,
@@ -27,6 +28,7 @@ const MemoPhoneNumbersTable = () => {
     status: s.status,
     setStatus: s.setStatus,
     openExport: s.openExport,
+    setOpenExport: s.setOpenExport,
     selectedCampaign: s.selectedCampaign,
     pageNumber: s.pageNumber,
     setPageNumber: s.setPageNumber,
@@ -86,7 +88,7 @@ const MemoPhoneNumbersTable = () => {
 
     const payload = {
       usersArray: selectedPhones.map((phone) => ({ phone })),
-      campaignName: selectedCampaign?.campaignName || "Campaign",
+      campaignName: selectedCampaign?.campaignName + status || "Campaign",
       businessId: selectedCampaign?.businessId,
     };
 
@@ -164,6 +166,15 @@ const MemoPhoneNumbersTable = () => {
               </div>
             </MenuItems>
           </Menu>
+          <button
+            type="button"
+            onClick={() => setOpenExport(true)}
+            disabled={currentData.length === 0}
+            className="px-4 py-2 text-sm text-white bg-purple-500 rounded-md disabled:cursor-not-allowed"
+          >
+            <CloudDownload className="inline-block w-4 h-4 mr-2" />
+            Export
+          </button>
         </div>
       </div>
       <div className="overflow-x-auto">
