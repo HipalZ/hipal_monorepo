@@ -36,7 +36,6 @@ function FooterComponent() {
           </p>
           <button
             type="button"
-            onClick={onBoardBusiness}
             className="mt-4 bg-[#ffffff50] py-1 px-2 rounded-full text-sm"
           >
             <Link className="text-xs" href={`/${customLink}/terms`}>
