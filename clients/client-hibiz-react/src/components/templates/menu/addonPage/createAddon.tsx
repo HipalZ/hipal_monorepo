@@ -134,7 +134,7 @@ const MemoCreateAddon = () => {
               id="name"
               placeholder="Enter Addon Name"
               value={addOnName}
-              maxLength={21}
+              maxLength={50}
               onChange={(e) => setAddOnName(e.target.value)}
               className="w-full p-2 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
             />

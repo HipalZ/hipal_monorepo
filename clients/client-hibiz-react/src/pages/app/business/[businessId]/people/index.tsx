@@ -31,7 +31,7 @@ const HiPeople = () => {
       text: "Tagz",
       onClick: () => setSelectedPage("TAGZ"),
     },
-    { icon: Hi, text: "Actions", onClick: () => setSelectedPage("ACTIONS") },
+    // { icon: Hi, text: "Actions", onClick: () => setSelectedPage("ACTIONS") },
   ];
 
   const handleBack = () => {
