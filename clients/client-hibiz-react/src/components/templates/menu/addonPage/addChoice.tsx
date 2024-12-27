@@ -122,7 +122,7 @@ const MemoCreateChoice = () => {
               id="name"
               placeholder="Enter choice Name"
               value={choiceName}
-              maxLength={21}
+              maxLength={50}
               onChange={(e) => setChoiceName(e.target.value)}
               className="w-full p-2 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
             />
