@@ -44,7 +44,9 @@ const MemoUniversalNav: React.FC<SidebarProps> = ({
           key={item.text}
           onClick={() => changeNav(item.text)}
         >
-          <span>{item.text}</span>
+          <span className="capitalize">
+            {item.text.split("_").join(" ").toLowerCase()}
+          </span>
         </button>
       ))}
     </section>

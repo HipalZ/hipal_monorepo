@@ -168,8 +168,8 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
           heading="select Variants"
         >
           {cartPopup === "BOTTOM_PANEL" && (
-            <div className="relative flex flex-col pb-12 mt-4 overflow-auto">
-              <div className="flex flex-col space-y-4 divide-y-2 divide-[#ffffff] text-[#000000]">
+            <div className="relative pb-12 max-h-[90dvh] mt-4 overflow-auto">
+              <div className="flex flex-col divide-y-2 divide-[#ffffff] text-[#000000]">
                 <MemoChoosePortions dishData={selectedDish} />
                 <ExtraWithDishWithSelect dishData={selectedDish} />
                 {displayAlert && <MemoAlertVariant />}

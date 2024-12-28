@@ -101,8 +101,6 @@ export default async function Page({
           timings={data?.timings}
           childCategory={data?.childCategories || []}
         />
-        {/* <TopBackground specialBanner={data?.business?.specialBannerUrl} /> */}
-        <CategoryHeader childCategory={data?.childCategories || []} />
         <div className="!mt-0 !scroll-smooth relative z-20">
           <DishesList
             parentCategory={data?.parentCategories || []}

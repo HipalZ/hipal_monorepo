@@ -634,6 +634,43 @@ const businessesRouter = new Hono()
       );
     },
   )
+
+  .get(
+    "/:businessId/allLoyaltyUsers",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+    zValidator(
+      "query",
+      z.object({
+        loyaltyId: z.string(),
+        pageNumber: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.param();
+      const { loyaltyId, pageNumber } = c.req.query();
+      const limit = 4;
+      const page = pageNumber ? Number.parseInt(pageNumber) : 1;
+      const skip = (page - 1) * limit;
+
+      const loyaltyUsers = await UserReward.find({
+        loyaltyId: loyaltyId,
+        businessId: businessId,
+      })
+        .skip(skip)
+        .limit(pageNumber ? limit : 0);
+
+      if (!loyaltyUsers.length) {
+        return respond(c, "No loyalty users found", true, 404, {});
+      }
+      return respond(c, "Loyalty users found", false, 200, loyaltyUsers);
+    },
+  )
+
   .get(
     "/themes/:businessId",
     zValidator(

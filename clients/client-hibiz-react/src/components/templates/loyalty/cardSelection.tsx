@@ -71,10 +71,6 @@ const MemoCardSelection = () => {
   const businessId = useParams()?.businessId;
   const navigate = useNavigate();
 
-  const goBack = useCallback(() => {
-    navigate(`/app/business/${businessId}`);
-  }, [setSelectedPage, navigate, businessId]);
-
   const LoyaltyToggleArray = [
     {
       heading: "Signup bonus",
@@ -294,13 +290,6 @@ const MemoCardSelection = () => {
 
   return (
     <center>
-      <article className="sticky top-0 z-50 bg-white md:bg-transparent lg:bg-transparent">
-        <MemoizedHeader
-          title="Loyalty CardZ"
-          onBack={goBack}
-          leftIcon={<FaArrowLeft />}
-        />
-      </article>
       <section className="bg-white md:bg-transparent lg:mt-[2rem] lg:bg-transparent h-[18rem] items-center lg:justify-center flex flex-col lg:flex-row gap-4 lg:gap-[4rem] lg:mx-[6rem]">
         <article className="w-[23.5rem] lg:h-[18rem] bg-white rounded-2xl md:scale-125 lg:scale-125 md:mt-[3rem]">
           <Suspense
