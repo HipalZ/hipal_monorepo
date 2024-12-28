@@ -1825,11 +1825,6 @@ const whatsappRouter = new Hono()
         const bName = await Business.findById(config?.businessId).select(
           "name",
         );
-        <<<<<<< HEAD
-
-        console.log("config", config)
-        =======
->>>>>>> test
         if (statuses && statuses.length > 0) {
           const firstStatus = statuses[0];
           const extractedData = {
