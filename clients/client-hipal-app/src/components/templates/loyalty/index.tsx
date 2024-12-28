@@ -217,10 +217,10 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
         <Link href={`/${customLink}/loyalty/${data?.loyalty?.loyaltyId}`}>
           <article className="flex items-center justify-between p-4 bg-[#eeeeee] rounded-t-2xl">
             <div>
-              <h1 className="text-lg font-semibold text-primary">
+              <h1 className="text-lg font-semibold text-[#000000]">
                 My History and usage
               </h1>
-              <p className="text-sm opacity-75 text-primary">
+              <p className="text-sm opacity-75 text-[#000000]">
                 Check your coinz history
               </p>
             </div>
@@ -235,10 +235,10 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
         <Link href={`/${customLink}/terms`}>
           <article className="flex items-center justify-between p-4 bg-[#eeeeee] rounded-b-2xl">
             <div>
-              <h1 className="text-lg font-semibold text-primary">
+              <h1 className="text-lg font-semibold text-[#000000]">
                 Terms & Conditions
               </h1>
-              <p className="text-sm opacity-75 text-primary">
+              <p className="text-sm opacity-75 text-[#000000]">
                 Read the policies of rewardz at{" "}
                 {businessDetails?.branchName || businessDetails?.name}
               </p>

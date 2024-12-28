@@ -11,6 +11,7 @@ import type { TimingType } from "@/components/types/businessData";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import OtherOutletCard from "@/components/atoms/card/otherOutletCard";
+import Header from "@/components/molecules/header";
 
 interface IDishesProps {
   childCategory: CategoryType[];
@@ -118,24 +119,30 @@ const DishesList: FC<IDishesProps> = (props) => {
   };
 
   useEffect(() => {
+    console.log("subTypes", isActiveCategory);
     const handleHashChange = () => {
       if (isActiveChildCategory !== "") {
         const element = document.getElementById(isActiveChildCategory);
         if (element) {
-          element.style.scrollMarginTop = "270px";
-          element.scrollIntoView({ behavior: "smooth" });
+          element.style.scrollMarginTop = "300px";
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
         }
         setTimeout(() => {
           setObserverActive(true);
         }, 3000);
         setActiveChildCategory("");
       }
-      const active =
-        timings?.dishIds?.length > 0 && observerActive ? "" : isActiveCategory;
+      let active = observerActive ? "" : isActiveCategory;
       const element = document.getElementById(active);
       if (element) {
-        element.style.scrollMarginTop = "130px";
-        element.scrollIntoView({ behavior: "smooth" });
+        element.style.scrollMarginTop = "300px";
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
       }
     };
     handleHashChange();
@@ -160,12 +167,8 @@ const DishesList: FC<IDishesProps> = (props) => {
 
   return (
     <>
-      <section
-        className={cn(
-          "sticky z-50 text-[#000000]",
-          outletInfo?.outLetType !== "OTHER" ? "top-[5rem]" : "top-[3rem]",
-        )}
-      >
+      <section className={cn("sticky z-50 text-[#000000] bg-white top-0")}>
+        <Header categories={childCategory} />
         {!isSearchActive && (
           <SubTypes childCategory={subTypes} parentCategory={mainTypes} />
         )}
@@ -182,18 +185,18 @@ const DishesList: FC<IDishesProps> = (props) => {
         return (
           <section
             key={`${category._id}${index}`}
-            className="w-full pb-4 min-h-60 bg-[#ffffff] overflow-hidden"
+            className={cn("w-full pb-4 bg-[#ffffff] overflow-hidden")}
             id={category._id?.toString()}
           >
             <InView
-              rootMargin="-120px 0px 0px 0px"
-              threshold={[0, 1]}
+              rootMargin="-150px 0px 0px 0px"
+              threshold={0.75}
               onChange={(inView, entry) => {
                 const categoryId = category._id?.toString();
                 if (categoryId) {
                   if (inView) {
                     visibleCategoriesRef.current[categoryId] = Math.abs(
-                      entry.boundingClientRect.top - 100,
+                      entry.boundingClientRect.top - 300,
                     );
                   } else {
                     delete visibleCategoriesRef.current[categoryId];

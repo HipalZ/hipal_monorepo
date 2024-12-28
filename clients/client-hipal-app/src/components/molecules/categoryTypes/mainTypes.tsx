@@ -81,7 +81,7 @@ const MemoMainTypes = (props: IMainTypes) => {
       setActiveCategory(category.subCategoryIds[0]?.toString() ?? "");
       setTimeout(() => {
         setObserverActive(true);
-      }, 1000);
+      }, 3000);
       setIsModalOpen(false);
     },
     [setActiveParentCategory, setActiveCategory, setObserverActive],

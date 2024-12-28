@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type LoyaltyPages = "GET_STARTED" | "CARD_SELECTION";
+export type LoyaltyPages = "GET_STARTED" | "CARD_SELECTION" | "LOYALTY_USER";
 
 export type LoyaltyCardModalPages =
   | "SIGNUP_BONUS"
@@ -21,7 +21,6 @@ export type SelectedCardType =
   | "CARD_SIX";
 
 interface LoyaltyStore {
-
   loyaltyID: string;
   setLoyaltyID: (id: string) => void;
 
@@ -56,13 +55,12 @@ interface LoyaltyStore {
   setMaxRedemption: (redemption: number) => void;
 
   cardColor: string;
-  setCardColor: (color: string) => void
+  setCardColor: (color: string) => void;
 
   resetFields: () => void;
 }
 
 export const useLoyalty = create<LoyaltyStore>((set) => ({
-
   loyaltyID: "",
   setLoyaltyID: (id: string) => set(() => ({ loyaltyID: id })),
 

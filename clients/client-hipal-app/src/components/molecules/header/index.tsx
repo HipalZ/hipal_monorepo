@@ -39,7 +39,7 @@ function Header({ categories }: { categories: CategoryType[] }) {
 
   return (
     <motion.div
-      className="sticky top-0 z-50 bg-[#ffffff] flex flex-col space-y-2 text-4xl py-2 text-black overflow-hidden"
+      className="sticky top-0 z-0 bg-[] flex flex-col space-y-2 text-4xl py-2 text-black overflow-hidden"
       initial={{ opacity: 0, y: -100 }}
       animate={{
         opacity: showHeader ? 1 : 0,

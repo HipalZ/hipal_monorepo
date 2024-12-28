@@ -72,13 +72,13 @@ const MemoSubTypes = (props: ISubTypes) => {
 
       const element = document.getElementById(category._id?.toString() || "");
       if (element) {
-        element.style.scrollMarginTop = "110px";
+        element.style.scrollMarginTop = "200px";
         element.scrollIntoView({ behavior: "smooth" });
       }
 
       setTimeout(() => {
         setObserverActive(true);
-      }, 1000);
+      }, 3000);
     },
     [
       setActiveCategory,
@@ -162,7 +162,7 @@ const MemoSubTypes = (props: ISubTypes) => {
           )}
         </section>
       ) : (
-        <section className="overflow-x-auto border-b pt-3  border-b-[#000000] no-scrollbar bg-[#ffffff] text-[#000000]">
+        <section className="overflow-x-auto border-b pt-3 -mt-2 border-b-[#000000] no-scrollbar bg-[#ffffff] text-[#000000]">
           {subTypes.length > 0 && parentCategory?.length > 0 && (
             <Splide
               ref={splideRef}

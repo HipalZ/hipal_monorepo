@@ -1,11 +1,17 @@
+import { useCallback } from "react";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useLoyalty } from "@/components/store/useLoyalty";
 import CardSelection from "@/components/templates/loyalty/cardSelection";
 import GetStarted from "@/components/templates/loyalty/getStarted";
-import { apiRpc } from "@hi/common";
+import { apiRpc, cn } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import type { LoyaltyType } from "@hi/db-models/src/validators";
+import UniversalNav from "@/components/templates/menu/sideNavbaar/universelSidenav";
+import MemoizedHeader from "@/components/molecules/header";
+import { FaArrowLeft } from "react-icons/fa";
+
+const navItems = [{ text: "CARD_SELECTION" }, { text: "LOYALTY_USER" }];
 
 const Loyalty = () => {
   const {
@@ -35,6 +41,7 @@ const Loyalty = () => {
   }));
 
   const businessId = useParams()?.businessId;
+  const navigate = useNavigate();
 
   const getLoyaltyData = async () => {
     const response = await apiRpc.businesses[":businessId"].loyalty.$get({
@@ -54,8 +61,7 @@ const Loyalty = () => {
       setSelectedCardLayout(loyaltyData?.cardLayout ?? "LAYOUT_THREE");
       setCardColor(loyaltyData?.cardColor ?? "#C4E4B4");
       setSelectedPage("CARD_SELECTION");
-    }
-    else{
+    } else {
       setSelectedPage("GET_STARTED");
     }
 
@@ -68,6 +74,25 @@ const Loyalty = () => {
     enabled: !!businessId,
   });
 
+  const changeLayout = useCallback(
+    (text: string) => {
+      setSelectedPage(text as "CARD_SELECTION" | "LOYALTY_USER");
+    },
+    [selectedPage],
+  );
+
+  const goBack = useCallback(() => {
+    if (selectedPage === "GET_STARTED") {
+      return navigate(`/app/business/${businessId}`);
+    }
+    if (selectedPage === "CARD_SELECTION") {
+      return navigate(`/app/business/${businessId}`);
+    }
+    if (selectedPage === "LOYALTY_USER") {
+      return setSelectedPage("CARD_SELECTION");
+    }
+  }, [setSelectedPage, navigate, businessId, selectedPage]);
+
   if (isLoading) {
     return <LoadingSpinner />;
   }
@@ -75,7 +100,40 @@ const Loyalty = () => {
   return (
     <section>
       {selectedPage === "GET_STARTED" && <GetStarted />}
-      <main>{selectedPage === "CARD_SELECTION" && <CardSelection />}</main>
+      <main>
+        <article className="sticky top-0 z-50 bg-white md:bg-transparent lg:bg-transparent">
+          <MemoizedHeader
+            title="Loyalty CardZ"
+            onBack={goBack}
+            leftIcon={<FaArrowLeft />}
+          />
+          <nav className="w-full px-4 space-x-4 overflow-hidden text-sm mobile-only">
+            {navItems.map((item) => (
+              <button
+                className={cn(
+                  "pb-3 bg-white ",
+                  selectedPage?.toLowerCase() === item.text.toLowerCase()
+                    ? "border-b-2 border-[#8162e6] transition-all text-[#8162e6] font-semibold"
+                    : "",
+                )}
+                key={item.text}
+                type="button"
+                onClick={() => changeLayout(item.text)}
+              >
+                {item.text.split("_").join(" ")}
+              </button>
+            ))}
+          </nav>
+        </article>
+
+        <UniversalNav
+          items={navItems}
+          selectedNavItem={selectedPage}
+          changeNav={changeLayout}
+        />
+        {selectedPage === "CARD_SELECTION" && <CardSelection />}
+        {selectedPage === "LOYALTY_USER" && <section>hello</section>}
+      </main>
     </section>
   );
 };
