@@ -49,7 +49,7 @@ const MemoizedWhatsAppLoader: React.FC = () => {
           <title>Loader</title>
           <circle
             ref={circleRef} // Use ref to directly manipulate the circle
-            stroke="#25D366"
+            stroke="#316FF6"
             fill="transparent"
             strokeWidth={4}
             r={50 - 4 * 2} // normalizedRadius

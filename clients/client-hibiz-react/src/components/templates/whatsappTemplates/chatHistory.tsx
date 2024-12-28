@@ -1,13 +1,16 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { RxAvatar } from "react-icons/rx";
 import whatzAppDoodle from "@/assets/whatzapp/whatsappdoodle.jpg";
 import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
-import { useDeleteChats } from "@/hooks/useTemplates";
+import { useDeleteChats, useFetchUserChats } from "@/hooks/useTemplates";
 import { BiArrowBack, BiCheck, BiTrash } from "react-icons/bi";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
+import { useQuery } from "@tanstack/react-query";
 
 const MemoChatHistory = ({ isPending }: { isPending: boolean }) => {
   const ownerId = useOwnerLogin((s) => s.user?._id);
+  const { fetchUserChats } = useFetchUserChats();
+
   const { selectedUser, userChat, isMobileListView, setIsMobileListView } =
     useWhatsappTempStore((s) => ({
       selectedUser: s.selectedUser,
@@ -17,11 +20,14 @@ const MemoChatHistory = ({ isPending }: { isPending: boolean }) => {
     }));
   const { mutate: deleteChats } = useDeleteChats();
 
-  const handleDeleteUserChat = (userId: string) => {
-    deleteChats({ userId, ownerId });
-  };
+  const handleDeleteUserChat = useCallback(
+    (userId: string) => {
+      deleteChats({ userId, ownerId });
+    },
+    [deleteChats, ownerId],
+  );
 
-  const formatMessageDate = (date: number) => {
+  const formatMessageDate = useCallback((date: number) => {
     const messageDate = new Date(date);
     const today = new Date();
     const yesterday = new Date(today);
@@ -40,11 +46,18 @@ const MemoChatHistory = ({ isPending }: { isPending: boolean }) => {
       month: "short",
       day: "numeric",
     });
-  };
+  }, []);
 
-  const toggleMobileView = () => {
+  const toggleMobileView = useCallback(() => {
     setIsMobileListView(!isMobileListView);
-  };
+  }, [isMobileListView, setIsMobileListView]);
+
+  const { isLoading: isChatsLoading } = useQuery({
+    queryKey: ["fetchUserChats", selectedUser?._id],
+    queryFn: fetchUserChats,
+    enabled: !!selectedUser,
+    refetchInterval: 1000,
+  });
 
   return (
     <section
@@ -84,36 +97,38 @@ const MemoChatHistory = ({ isPending }: { isPending: boolean }) => {
       </nav>
 
       <div className="p-4 space-y-4">
-        {userChat?.map((chat, index) => (
-          <article
-            key={chat?._id}
-            className={`flex ${
-              chat?.isOwner ? "justify-end" : "justify-start"
-            }`}
-          >
-            <div
-              className={`max-w-[70%] rounded-lg p-3 ${
-                chat?.isOwner
-                  ? "bg-green-500 text-white"
-                  : "bg-white text-gray-900"
-              }`}
-            >
-              <p>
-                {isPending && index === userChat.length - 1
-                  ? "Sending ..."
-                  : chat?.message}
-              </p>
-              <div
-                className={`text-xs mt-1 flex items-center gap-1 ${
-                  chat?.isOwner ? "text-green-100" : "text-gray-500"
+        {userChat
+          ? userChat?.map((chat, index) => (
+              <article
+                key={chat?._id}
+                className={`flex ${
+                  chat?.isOwner ? "justify-end" : "justify-start"
                 }`}
               >
-                <time>{formatMessageDate(chat?.date)}</time>
-                {chat?.isOwner && <BiCheck className="inline w-4 h-4" />}
-              </div>
-            </div>
-          </article>
-        ))}
+                <div
+                  className={`max-w-[70%] rounded-lg p-3 ${
+                    chat?.isOwner
+                      ? "bg-green-500 text-white"
+                      : "bg-white text-gray-900"
+                  }`}
+                >
+                  <p>
+                    {isPending && index === userChat.length - 1
+                      ? "Sending ..."
+                      : chat?.message}
+                  </p>
+                  <div
+                    className={`text-xs mt-1 flex items-center gap-1 ${
+                      chat?.isOwner ? "text-green-100" : "text-gray-500"
+                    }`}
+                  >
+                    <time>{formatMessageDate(chat?.date)}</time>
+                    {chat?.isOwner && <BiCheck className="inline w-4 h-4" />}
+                  </div>
+                </div>
+              </article>
+            ))
+          : isChatsLoading && <p>Loading...</p>}
       </div>
     </section>
   );

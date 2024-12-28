@@ -6,8 +6,8 @@ import LoadingSpinner from "@/components/atom/loadingSpinner";
 import MemoizedHeader from "@/components/molecules/header";
 import { useNavigate } from "react-router-dom";
 import useBusinessData from "@/components/store/useBusinessData";
-import PendingStatusStep from "./pendingStatus";
 
+const PendingStatusStep = lazy(() => import("./pendingStatus"));
 const IntroductionStep = lazy(() => import("./introductionStep"));
 const PhoneDisplay = lazy(() => import("./phoneDisplay"));
 const PhoneAndDisplayStep = lazy(() => import("./phoneAndDisplay"));
@@ -22,10 +22,13 @@ function MemoWhatsAppRegistration() {
     isLoading: s.isLoading,
   }));
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    handleCreateOrder();
-  };
+  const handleSubmit = useCallback(
+    (e: FormEvent) => {
+      e.preventDefault();
+      handleCreateOrder();
+    },
+    [handleCreateOrder],
+  );
 
   const handleBack = useCallback(() => {
     if (step > 0) {

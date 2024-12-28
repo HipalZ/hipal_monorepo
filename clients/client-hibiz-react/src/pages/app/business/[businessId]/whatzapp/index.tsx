@@ -14,11 +14,13 @@ import {
   Tabs,
   useWhatsappTempStore,
 } from "@/components/store/useWhatsappTempStore";
-import PendingStatusStep from "@/components/templates/whatsappTemplates/pendingStatus";
 import WhatsAppRegistration from "@/components/templates/whatsappTemplates/mainForm";
 import { FaArrowLeft } from "react-icons/fa";
 import WhatsAppLoader from "@/components/templates/whatsappTemplates/whatsappLoader";
 
+const PendingStatusStep = lazy(
+  () => import("@/components/templates/whatsappTemplates/pendingStatus"),
+);
 const WhatzappPayment = lazy(
   () => import("@/components/templates/whatsappTemplates/whatzappPayment"),
 );
@@ -57,6 +59,8 @@ const MemoWhatzapp = () => {
   const navigate = useNavigate();
 
   const handleBack = useCallback(() => {
+    console.log("templateSteps", templateSteps);
+    console.log("step", step);
     if (templateSteps !== TemplateSteps.NONE) {
       switch (templateSteps) {
         case TemplateSteps.MODIFY:

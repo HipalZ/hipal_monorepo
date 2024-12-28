@@ -157,7 +157,9 @@ const MemoContent = () => {
 
       <div className="mb-4">
         <div className="flex items-center justify-between mb-4">
-          <label className="font-bold">Dynamic Variables</label>
+          <label htmlFor="dynamicVariables" className="font-bold">
+            Dynamic Variables
+          </label>
           <button
             type="button"
             onClick={handleAddVariable}
@@ -166,7 +168,10 @@ const MemoContent = () => {
             <BiPlus className="mr-1" /> Add Variable
           </button>
         </div>
-        <div className="relative space-y-3 transition-all bg-white rounded-lg group">
+        <div
+          id="dynamicVariables"
+          className="relative space-y-3 transition-all bg-white rounded-lg group"
+        >
           {bodyVariables
             ? bodyVariables?.map((_, index) => (
                 <div key={index?.toString()} className="flex flex-col gap-3">

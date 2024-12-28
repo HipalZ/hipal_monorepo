@@ -1,6 +1,7 @@
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
+import { memo } from "react";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -10,7 +11,7 @@ const options = {
     legend: {
       position: "bottom" as const,
       labels: {
-        generateLabels: function (chart) {
+        generateLabels: (chart) => {
           const data = chart.data;
           if (data.labels && data.datasets.length) {
             const dataset = data.datasets[0];
@@ -32,7 +33,7 @@ const options = {
     },
     tooltip: {
       callbacks: {
-        label: function (context: any) {
+        label: (context: any) => {
           const label = context.label || "";
           const value = context.parsed || 0;
           const total = context.dataset.data.reduce(
@@ -47,7 +48,7 @@ const options = {
   },
 };
 
-export function DetailedAnalyticsPieChart() {
+const MemoDetailedAnalytics = () => {
   const campaignsData = useWhatsappTempStore((s) => s.campaignsData);
   const rawData = [
     campaignsData?.overAllCount?.sent || 0,
@@ -86,4 +87,7 @@ export function DetailedAnalyticsPieChart() {
       )}
     </div>
   );
-}
+};
+
+const DetailedAnalyticsPieChart = memo(MemoDetailedAnalytics);
+export default DetailedAnalyticsPieChart;

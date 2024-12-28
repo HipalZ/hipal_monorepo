@@ -1,12 +1,12 @@
+import { BASE_URL } from "@/configs";
 import { create } from "zustand";
-import useBusinessData from "./useBusinessData";
+import { createJSONStorage, persist } from "zustand/middleware";
 import type {
   ICouponzLinks,
   IWhatsappHeaderType,
   WhatsAppTemplatePayload,
 } from "../types/businessData";
-import { createJSONStorage, persist } from "zustand/middleware";
-import { BASE_URL } from "@/configs";
+import useBusinessData from "./useBusinessData";
 
 export enum Step {
   SETUP = "setup",
@@ -33,6 +33,8 @@ export enum TemplateType {
 export enum ActionType {
   VisitWebsite = "Visit Website",
   CallUs = "Call Us",
+  MarketingOptOut = "Marketing Opt Out",
+  Custom = "Custom",
 }
 
 export enum whastappSteps {
@@ -175,6 +177,12 @@ interface whatsappTemplate {
   phoneNumber: string;
   setPhoneNumber: (phoneNumber: string) => void;
 
+  secondButtonText: string;
+  setSecondButtonText: (secondButtonText: string) => void;
+
+  buttonFooterText: string;
+  setButtonFooterText: (buttonFooterText: string) => void;
+
   templateId: string;
   setTemplateId: (templateId: string) => void;
 
@@ -223,8 +231,11 @@ interface whatsappTemplate {
 
   setImageFiles: (imageFiles: File | null) => void;
 
-  isButtonEnabled: boolean;
-  setIsButtonEnabled: (isButtonEnabled: boolean) => void;
+  firstButtonEnable: boolean;
+  setFirstButtonEnable: (firstButtonEnable: boolean) => void;
+
+  secondButtonEnable: boolean;
+  setSecondButtonEnable: (secondButtonEnable: boolean) => void;
 
   showSuccessPopup: boolean;
   setShowSuccessPopup: (showSuccessPopup: boolean) => void;
@@ -396,6 +407,16 @@ export const useWhatsapp = create(
         phoneNumber: "",
         setPhoneNumber: (phoneNumber: string) => set({ phoneNumber }),
 
+        secondButtonText: "Stop Promotions",
+        setSecondButtonText: (secondButtonText: string) =>
+          set({ secondButtonText }),
+
+        buttonFooterText: "Not Interested? Tap to stop promotions",
+        setButtonFooterText: (buttonFooterText: string) =>
+          set({
+            buttonFooterText,
+          }),
+
         templateId: "",
         setTemplateId: (templateId: string) => set({ templateId }),
 
@@ -443,7 +464,8 @@ export const useWhatsapp = create(
             templateId: data.id,
             templateStatus: data?.status,
             bodyVariableSequence: variables,
-            isButtonEnabled: buttonsComponent?.buttons[0]?.text?.length > 0,
+            firstButtonEnable: buttonsComponent?.buttons[0]?.text?.length > 0,
+            secondButtonEnable: buttonsComponent?.buttons[1]?.text?.length > 0,
             displayBodyVariableSequence: variables.map(
               (variable: string) =>
                 get().variableOptions.find(
@@ -530,8 +552,12 @@ export const useWhatsapp = create(
         imageFiles: null,
         setImageFiles: (imageFile) => set({ imageFiles: imageFile }),
 
-        isButtonEnabled: false,
-        setIsButtonEnabled: (isButtonEnabled) => set({ isButtonEnabled }),
+        firstButtonEnable: false,
+        setFirstButtonEnable: (firstButtonEnable) => set({ firstButtonEnable }),
+
+        secondButtonEnable: false,
+        setSecondButtonEnable: (secondButtonEnable) =>
+          set({ secondButtonEnable }),
 
         showSuccessPopup: false,
         setShowSuccessPopup: (showSuccessPopup: boolean) =>

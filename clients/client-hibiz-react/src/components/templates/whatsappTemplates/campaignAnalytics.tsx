@@ -1,72 +1,39 @@
-import { memo, useCallback, useState, Fragment } from "react";
+import { memo, useCallback, Fragment } from "react";
 import useWhatsapp, {
   Step,
   TemplateSteps,
 } from "@/components/store/useWhatsapp";
-import toast from "react-hot-toast";
 import {
   Tabs,
   useWhatsappTempStore,
 } from "@/components/store/useWhatsappTempStore";
-import { apiRpc } from "@hi/common";
-import useBusinessData from "@/components/store/useBusinessData";
 import type { WhatsAppTemplatePayload } from "@/components/types/businessData";
 import { BarChart2, Loader2 } from "lucide-react";
+import { useTempAnalyticsById } from "@/hooks/useTemplates";
 
 const MemoCampaignAnalytics: React.FC = () => {
-  const businessId = useBusinessData((s) => s.businessData?._id);
-  const {
-    setTemplateData,
-    setTemplateSteps,
-    setStep,
-    setSingleTemplateAnalytics,
-  } = useWhatsapp((s) => ({
+  const { setTemplateData, setTemplateSteps, setStep } = useWhatsapp((s) => ({
     setTemplateData: s.setTemplateData,
     setTemplateSteps: s.setTemplateSteps,
     setStep: s.setStep,
-    setSingleTemplateAnalytics: s.setSingleTemplateAnalytics,
   }));
-  const { setActiveTab, allTemplates, setSelectedTemplate, setOpenAnalytics } =
-    useWhatsappTempStore((s) => ({
-      setActiveTab: s.setActiveTab,
-      allTemplates: s.allTemplates,
-      setSelectedTemplate: s.setSelectedTemplate,
-      setOpenAnalytics: s.setOpenAnalytics,
-    }));
+  const {
+    openAccordionId,
+    setActiveTab,
+    allTemplates,
+    setSelectedTemplate,
+    setOpenAnalytics,
+    loadingTemplateId,
+  } = useWhatsappTempStore((s) => ({
+    openAccordionId: s.openAccordionId,
+    setActiveTab: s.setActiveTab,
+    allTemplates: s.allTemplates,
+    setSelectedTemplate: s.setSelectedTemplate,
+    setOpenAnalytics: s.setOpenAnalytics,
+    loadingTemplateId: s.loadingTemplateId,
+  }));
 
-  const [loadingTemplateId, setLoadingTemplateId] = useState<string | null>(
-    null,
-  );
-  const [openAccordionId, setOpenAccordionId] = useState<string | null>(null);
-
-  const getTemplateAnaylyticsById = useCallback(
-    async (templateId: string) => {
-      setLoadingTemplateId(templateId);
-      try {
-        const res = await apiRpc.whatsapp.analytics.by_template_id.$get({
-          query: {
-            templateId,
-            businessId,
-          },
-        });
-
-        const response = await res.json();
-        if (res.status === 200 || res.status === 201) {
-          setSingleTemplateAnalytics(response?.data);
-          setSelectedTemplate(response?.data);
-          setOpenAccordionId(templateId);
-        } else {
-          toast.error("Failed to fetch analytics data");
-        }
-      } catch (error) {
-        console.error("Error fetching analytics:", error);
-        toast.error("An error occurred while fetching analytics data");
-      } finally {
-        setLoadingTemplateId(null);
-      }
-    },
-    [businessId, setSingleTemplateAnalytics, setSelectedTemplate],
-  );
+  const { getTemplateAnaylyticsById } = useTempAnalyticsById();
 
   const handleViewClick = useCallback(
     async (campaign: WhatsAppTemplatePayload) => {

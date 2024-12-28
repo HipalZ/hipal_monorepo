@@ -8,10 +8,10 @@ import axios from "@/axios";
 import { DishTypeEnum, type ReviewsType } from "@hi/db-models/src/validators";
 import { type ClassValue, clsx } from "clsx";
 import { differenceInMonths, differenceInYears, format } from "date-fns";
+import { AlertCircle, DownloadCloud, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import { twMerge } from "tailwind-merge";
 import { DishSteps } from "../store/useMenuStorage";
-import { AlertCircle, DownloadCloud, FileText } from "lucide-react";
 
 export async function storeImageAfterSave(
   image: File,
@@ -611,4 +611,14 @@ export const getStatusStyle = (status: string) => {
     default:
       return "bg-gray-100 text-gray-800 border-gray-200";
   }
+};
+
+export const getSuccessRateClass = (successRate: number) => {
+  if (successRate > 75) {
+    return "text-green-500";
+  }
+  if (successRate >= 50) {
+    return "text-blue-500";
+  }
+  return "text-red-500";
 };

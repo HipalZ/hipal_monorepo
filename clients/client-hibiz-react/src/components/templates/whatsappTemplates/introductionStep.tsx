@@ -10,48 +10,48 @@ import {
 } from "lucide-react";
 import { memo } from "react";
 
+const benefits = [
+  {
+    icon: MessageSquare,
+    title: "WABA Integration",
+    description:
+      "Complete whatzApp Business API setup and integration with Hipal",
+  },
+  {
+    icon: Zap,
+    title: "Campaign Management",
+    description: "Expert guidance on running effective marketing campaigns",
+  },
+  {
+    icon: BarChart,
+    title: "Growth Strategy",
+    description: "Personalized consultation to scale your business reach",
+  },
+  {
+    icon: Shield,
+    title: "Meta Blue Tick Verification",
+    description:
+      "Consultation to get your Meta Business Account verified and establish credibility",
+  },
+  {
+    icon: Users,
+    title: "Customer Connection",
+    description: "Enhanced tools to build stronger customer relationships",
+  },
+];
+
+const services = [
+  "WABA (whatzApp Business API) Account Activation",
+  "Meta Business Account Verification Consulting",
+  "Complete Integration with Hipal Ecosystem",
+  "Campaign Management & Strategy",
+  "Business Growth Consultation",
+  "Enhanced Customer Connection Tools",
+];
 function MemoizedIntroductionStep() {
   const { setStep } = useWhatsappTempStore((s) => ({
     setStep: s.setStep,
   }));
-  const benefits = [
-    {
-      icon: MessageSquare,
-      title: "WABA Integration",
-      description:
-        "Complete whatzApp Business API setup and integration with Hipal",
-    },
-    {
-      icon: Zap,
-      title: "Campaign Management",
-      description: "Expert guidance on running effective marketing campaigns",
-    },
-    {
-      icon: BarChart,
-      title: "Growth Strategy",
-      description: "Personalized consultation to scale your business reach",
-    },
-    {
-      icon: Shield,
-      title: "Meta Blue Tick Verification",
-      description:
-        "Consultation to get your Meta Business Account verified and establish credibility",
-    },
-    {
-      icon: Users,
-      title: "Customer Connection",
-      description: "Enhanced tools to build stronger customer relationships",
-    },
-  ];
-
-  const services = [
-    "WABA (whatzApp Business API) Account Activation",
-    "Meta Business Account Verification Consulting",
-    "Complete Integration with Hipal Ecosystem",
-    "Campaign Management & Strategy",
-    "Business Growth Consultation",
-    "Enhanced Customer Connection Tools",
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white">

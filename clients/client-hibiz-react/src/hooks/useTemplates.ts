@@ -621,3 +621,46 @@ export const useAddGroup = () => {
 
   return { addGroupMutation };
 };
+
+export const useTempAnalyticsById = () => {
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  const { setLoadingTemplateId, setSelectedTemplate, setOpenAccordionId } =
+    useWhatsappTempStore((s) => ({
+      setLoadingTemplateId: s.setLoadingTemplateId,
+      setSelectedTemplate: s.setSelectedTemplate,
+      setOpenAccordionId: s.setOpenAccordionId,
+    }));
+  const { setSingleTemplateAnalytics } = useWhatsapp((s) => ({
+    setSingleTemplateAnalytics: s.setSingleTemplateAnalytics,
+  }));
+  const getTemplateAnaylyticsById = useCallback(
+    async (templateId: string) => {
+      setLoadingTemplateId(templateId);
+      try {
+        const res = await apiRpc.whatsapp.analytics.by_template_id.$get({
+          query: {
+            templateId,
+            businessId,
+          },
+        });
+
+        const response = await res.json();
+        if (res.status === 200 || res.status === 201) {
+          setSingleTemplateAnalytics(response?.data);
+          setSelectedTemplate(response?.data);
+          setOpenAccordionId(templateId);
+        } else {
+          toast.error("Failed to fetch analytics data");
+        }
+      } catch (error) {
+        console.error("Error fetching analytics:", error);
+        toast.error("An error occurred while fetching analytics data");
+      } finally {
+        setLoadingTemplateId(null);
+      }
+    },
+    [businessId, setSingleTemplateAnalytics, setSelectedTemplate],
+  );
+
+  return { getTemplateAnaylyticsById };
+};

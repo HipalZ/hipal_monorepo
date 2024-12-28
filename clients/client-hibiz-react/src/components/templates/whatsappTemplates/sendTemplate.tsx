@@ -18,7 +18,6 @@ const sendingOptions = [
 
 const MemoSendTemplate = () => {
   const {
-    sendLaterTime,
     setSendLaterTime,
     sendOptions,
     setSendOptions,
@@ -27,7 +26,6 @@ const MemoSendTemplate = () => {
     scheduledTime,
     setScheduledTime,
   } = useMessageRecipientsStore((s) => ({
-    sendLaterTime: s.sendLaterTime,
     setSendLaterTime: s.setSendLaterTime,
     sendOptions: s.sendOptions,
     setSendOptions: s.setSendOptions,
@@ -44,8 +42,6 @@ const MemoSendTemplate = () => {
     setSendLaterTime(timestamp);
     toast.success("Message scheduled successfully");
   }, [scheduledDate, scheduledTime, setSendLaterTime]);
-
-  console.log("sendLater", sendLaterTime);
 
   return (
     <div className="space-y-4 bg-gray-100 lg:mx-auto">

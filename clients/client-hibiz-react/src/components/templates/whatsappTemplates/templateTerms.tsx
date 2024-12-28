@@ -39,6 +39,7 @@ const MemoTemplateTerms = () => {
     confirmCreate,
     setConfirmCreate,
     imagePreview,
+    secondButtonText,
   } = useWhatsapp((s) => ({
     templateId: s.templateId,
     templateName: s.templateName,
@@ -56,6 +57,7 @@ const MemoTemplateTerms = () => {
     confirmCreate: s.confirmCreate,
     setConfirmCreate: s.setConfirmCreate,
     imagePreview: s.imagePreview,
+    secondButtonText: s.secondButtonText,
   }));
 
   const { setIsLoading } = useWhatsappTempStore((s) => ({
@@ -87,7 +89,7 @@ const MemoTemplateTerms = () => {
     const payload: WhatsAppTemplatePayload = {
       businessId: businessId,
       name: templateName,
-      language: "en_US",
+      language: "en_GB",
       ...(templateId?.length > 0 && { templateId: templateId }),
       category: templateType,
       components: [
@@ -124,6 +126,13 @@ const MemoTemplateTerms = () => {
                         text: buttonText,
                         phone_number: `+91${phoneNumber}`,
                       },
+                  actionType === ActionType.MarketingOptOut
+                    ? {
+                        type: "QUICK_REPLY",
+                        text: "Stop sending messages",
+                        footerText: "Stop sending messages",
+                      }
+                    : { type: "QUICK_REPLY", text: secondButtonText },
                 ],
               },
             ]
@@ -164,6 +173,7 @@ const MemoTemplateTerms = () => {
     editTemplate,
     setIsLoading,
     imagePreview,
+    secondButtonText,
   ]);
 
   const [isAccepted, setIsAccepted] = useState(false);
