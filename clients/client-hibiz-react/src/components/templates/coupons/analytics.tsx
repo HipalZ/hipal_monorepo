@@ -1,10 +1,10 @@
 import { memo } from "react";
 import CouponListAnalytics from "./couponListAnalytics";
-import { getAnalyticsDashBoard } from "@/hooks/useCoupon";
+import { useAnalyticsDashBoard } from "@/hooks/useCoupon";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const MemoCouponAnalytics = () => {
-  const { analytics, isLoading } = getAnalyticsDashBoard();
+  const { analytics, isLoading } = useAnalyticsDashBoard();
 
   const isEmptyAnalytics = analytics && Object.keys(analytics).length === 0;
 

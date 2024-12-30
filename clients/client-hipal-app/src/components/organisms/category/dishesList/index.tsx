@@ -26,8 +26,9 @@ const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
     non_veg: ["NON_VEG", "ALCOHOL", "NON_ALCOHOL"],
     veg: ["VEG", "ALCOHOL", "NON_ALCOHOL"],
     vegan: ["VEGAN", "ALCOHOL", "NON_ALCOHOL"],
-    alcoholic: ["ALCOHOL"],
-    nonalcoholic: ["NON_ALCOHOL"],
+    alcohol: ["ALCOHOL"],
+    nonalcohol: ["NON_ALCOHOL"],
+    non_alcohol: ["NON_ALCOHOL"],
   };
 
   if (isActiveDishType.toLowerCase() === "all") {
@@ -119,7 +120,6 @@ const DishesList: FC<IDishesProps> = (props) => {
   };
 
   useEffect(() => {
-    console.log("subTypes", isActiveCategory);
     const handleHashChange = () => {
       if (isActiveChildCategory !== "") {
         const element = document.getElementById(isActiveChildCategory);

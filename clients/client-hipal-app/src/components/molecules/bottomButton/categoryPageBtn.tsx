@@ -116,7 +116,7 @@ const MemoCategoryPageBtn = () => {
 
   return (
     <>
-      {outletInfo.outLetType !== "OTHER" ? (
+      {outletInfo?.outLetType !== "OTHER" ? (
         <AnimatePresence>
           {!isSearchActive && (
             <motion.section

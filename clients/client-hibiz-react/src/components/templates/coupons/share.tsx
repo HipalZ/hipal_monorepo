@@ -88,7 +88,7 @@ const MemoShare = () => {
   const { saveCoupon, isPending: isSaving } = useSaveCoupon();
   const { editCoupon, isPending: isUpdating } = useEditCoupon();
   const businessData = useBusinessData((s) => s.businessData);
-  const [loading, setIsLoading] = useState(false);
+  const [loading, setIsLoading] = useState<boolean>(false);
 
   const openModal = useCallback(
     (type: eligibilityModal) => {
