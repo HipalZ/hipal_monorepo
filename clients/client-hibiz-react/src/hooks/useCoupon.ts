@@ -206,7 +206,7 @@ export const useSingleUserInfo = (userPhone: string) => {
   return { userInfo: data, isLoading, error };
 };
 
-export const getAnalyticsDashBoard = () => {
+export const useAnalyticsDashBoard = () => {
   const businessData = useBusinessData((state) => state.businessData);
   const businessId = businessData?._id;
 
