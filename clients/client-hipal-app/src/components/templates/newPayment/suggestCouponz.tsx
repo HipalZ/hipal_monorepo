@@ -30,7 +30,7 @@ const MemoSuggestCouponz = () => {
   return (
     <>
       {availedCoupon && Object.keys(availedCoupon).length > 0 && bestCoupon && (
-        <article className="fixed bottom-16 py-1 w-full inter px-6 flex items-center bg-[#6A31DF] rounded-t-2xl border-t-1">
+        <article className="fixed max-w-[30rem] bottom-16 py-1 w-full inter px-6 flex items-center bg-[#6A31DF] rounded-t-2xl border-t-1">
           {bestCoupon && (
             <p className="inter text-left text-xs font-semibold text-[#fff]">
               {additionalAmount > 0 ? (
