@@ -81,12 +81,11 @@ const MemoCampaignAccordion = () => {
 
   const sent = campaignsData?.overAllCount?.sent || 0;
   const delivered = campaignsData?.overAllCount?.delivered || 0;
-  const failed = campaignsData?.overAllCount?.failed || 0;
   const successRate = useMemo(() => {
     return sent > 0
-      ? Number.parseFloat(((delivered / sent - failed) * 100).toFixed(2))
+      ? Number.parseFloat(((delivered / sent) * 100).toFixed(2))
       : 0;
-  }, [sent, delivered, failed]);
+  }, [sent, delivered]);
 
   return (
     <div className="space-y-4">
