@@ -137,6 +137,43 @@ const MemoApplyCouponz = () => {
           );
         }
       }
+
+      console.log("coupon", coupon?.conditions?.availability?.startTime);
+      // if (
+      //   coupon?.conditions?.availability?.startTime > 0 &&
+      //   coupon?.conditions?.availability?.endTime > 0
+      // ) {
+      //   const currentTime = new Date();
+      //   const currentHours = currentTime.getHours();
+      //   const currentMinutes = currentTime.getMinutes();
+      //   const [startHours, startMinutes] =
+      //     coupon.conditions.availability.startTime.split(".");
+      //   const [endHours, endMinutes] =
+      //     coupon.conditions.availability.endTime.split(".");
+      //   console.log(
+      //     "currentHours",
+      //     currentHours,
+      //     "currentMinutes",
+      //     currentMinutes,
+      //     "startHours",
+      //     startHours,
+      //     "startMinutes",
+      //     startMinutes,
+      //     "endHours",
+      //     endHours,
+      //     "endMinutes",
+      //     endMinutes,
+      //   );
+      //   const isWithinTimeRange =
+      //     (currentHours > startHours ||
+      //       (currentHours === startHours && currentMinutes >= startMinutes)) &&
+      //     (currentHours < endHours ||
+      //       (currentHours === endHours && currentMinutes <= endMinutes));
+      //   console.log("isWithinTimeRange", isWithinTimeRange);
+      //   if (!isWithinTimeRange) {
+      //     return toast.info("Coupon is not applicable at this time");
+      //   }
+      // }
       // Check if bill value is less than coupon value
       if (coupon?.conditions?.availability?.customDays?.length > 0) {
         const day = new Date().toLocaleString("en-US", { weekday: "long" });
