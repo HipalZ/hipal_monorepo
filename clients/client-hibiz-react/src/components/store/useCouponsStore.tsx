@@ -1,4 +1,4 @@
-import type { selectedUsersDetails } from "@/hooks/useCoupon";
+import type { SelectedUsersDetails } from "@/hooks/useCoupon";
 import { create } from "zustand";
 
 export type CouponFlow =
@@ -180,10 +180,10 @@ interface ICoupon {
   isActive: boolean;
   setIsActive: (value: boolean) => void;
 
-  selectedUsers: selectedUsersDetails[];
-  addUser: (user: selectedUsersDetails) => void;
+  selectedUsers: SelectedUsersDetails[];
+  addUser: (user: SelectedUsersDetails) => void;
   removeUser: (userId: string) => void;
-  setSelectedUsers: (users: selectedUsersDetails[]) => void;
+  setSelectedUsers: (users: SelectedUsersDetails[]) => void;
 
   resetCouponState: () => void;
 
@@ -368,10 +368,10 @@ const useCouponsStore = create<ICoupon>((set) => ({
 
   selectedUsers: [],
 
-  setSelectedUsers: (users: selectedUsersDetails[]) =>
+  setSelectedUsers: (users: SelectedUsersDetails[]) =>
     set(() => ({ selectedUsers: users })),
 
-  addUser: (user: selectedUsersDetails) =>
+  addUser: (user: SelectedUsersDetails) =>
     set((state) => ({
       selectedUsers: [...state.selectedUsers, user],
     })),

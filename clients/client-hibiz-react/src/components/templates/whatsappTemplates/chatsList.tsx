@@ -1,8 +1,9 @@
-import { memo, useState, useMemo } from "react";
+import { memo, useState, useMemo, useCallback } from "react";
 import { RxAvatar } from "react-icons/rx";
-import { useSearchUserByPhone } from "@/hooks/useTemplates";
+import { useFetchAllUsers, useSearchUserByPhone } from "@/hooks/useTemplates";
 import { BiSearch } from "react-icons/bi";
 import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
+import { useQuery } from "@tanstack/react-query";
 
 const MemoChatsList = () => {
   const { users, setSelectedUser, selectedUser, setIsMobileListView } =
@@ -12,28 +13,35 @@ const MemoChatsList = () => {
       selectedUser: s.selectedUser,
       setIsMobileListView: s.setIsMobileListView,
     }));
+  const { fetchAllUserMessages } = useFetchAllUsers();
   const { searchUserByPhone } = useSearchUserByPhone();
   const [searchNumber, setSearchNumber] = useState("");
 
-  const handleUserClick = (user) => {
-    setSelectedUser(user.userId);
-    setIsMobileListView(false);
-  };
+  const handleUserClick = useCallback(
+    (user) => {
+      setSelectedUser(user.userId);
+      setIsMobileListView(false);
+    },
+    [setSelectedUser, setIsMobileListView],
+  );
 
-  const handleSearchChange = (e) => {
-    const value = e.target.value.replace(/\D/g, ""); // Remove non-digit characters
-    setSearchNumber(value);
+  const handleSearchChange = useCallback(
+    (e) => {
+      const value = e.target.value.replace(/\D/g, ""); // Remove non-digit characters
+      setSearchNumber(value);
 
-    // If a 10-digit number is entered, call the API to fetch the user
-    if (value.length === 10) {
-      searchUserByPhone(value).then((user) => {
-        if (user?.data) {
-          // Directly show the filtered user based on the fetched user
-          setSearchNumber(value); // Optional: reset search input to the correct phone number
-        }
-      });
-    }
-  };
+      // If a 10-digit number is entered, call the API to fetch the user
+      if (value.length === 10) {
+        searchUserByPhone(value).then((user) => {
+          if (user?.data) {
+            // Directly show the filtered user based on the fetched user
+            setSearchNumber(value); // Optional: reset search input to the correct phone number
+          }
+        });
+      }
+    },
+    [searchUserByPhone],
+  );
 
   // Use useMemo to filter users based on searchNumber
   const filteredUsers = useMemo(() => {
@@ -42,6 +50,12 @@ const MemoChatsList = () => {
     }
     return users; // Return all users if searchNumber is empty or less than 10
   }, [searchNumber, users]);
+
+  const { isLoading: isUserMessages } = useQuery({
+    queryKey: ["fetchSubscribers"],
+    queryFn: fetchAllUserMessages,
+    refetchInterval: 1000,
+  });
 
   return (
     <aside className="md:flex flex-col w-full md:w-[380px] bg-gray-50 border-r rounded-lg">
@@ -64,28 +78,29 @@ const MemoChatsList = () => {
 
       {/* Chat List */}
       <nav className="flex-1 overflow-y-auto">
-        {filteredUsers.map((user) => (
-          <article
-            key={user.userId._id}
-            onClick={() => handleUserClick(user)}
-            onKeyDown={() => handleUserClick(user)}
-            className={`flex items-center gap-3 p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-100 ${
-              selectedUser?._id === user.userId._id ? "bg-green-200" : ""
-            }`}
-          >
-            <div className="flex-shrink-0 overflow-hidden rounded-full">
-              <RxAvatar size={48} />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-medium truncate">{user?.userId?.name}</h3>
-            </div>
-            {user?.whatsappMsgUnseenCount > 0 && (
-              <span className="text-sm text-green-500">
-                {user?.whatsappMsgUnseenCount}
-              </span>
-            )}
-          </article>
-        ))}
+        {filteredUsers
+          ? filteredUsers.map((user) => (
+              <article
+                key={user.userId._id}
+                onClick={() => handleUserClick(user)}
+                className={`flex items-center gap-3 p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-100 ${
+                  selectedUser?._id === user.userId._id ? "bg-green-200" : ""
+                }`}
+              >
+                <div className="flex-shrink-0 overflow-hidden rounded-full">
+                  <RxAvatar size={48} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-medium truncate">{user?.userId?.name}</h3>
+                </div>
+                {user?.whatsappMsgUnseenCount > 0 && (
+                  <span className="text-sm text-green-500">
+                    {user?.whatsappMsgUnseenCount}
+                  </span>
+                )}
+              </article>
+            ))
+          : isUserMessages && <p>Loading...</p>}
       </nav>
     </aside>
   );

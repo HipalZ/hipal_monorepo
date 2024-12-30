@@ -8,7 +8,7 @@ import { cn } from "@hi/common";
 import { hexToRgba } from "@/components/utils/helper";
 import BottomButton from "@/components/atom/bottomButton";
 import {
-  type selectedUsersDetails,
+  type SelectedUsersDetails,
   useSingleUserInfo,
 } from "@/hooks/useCoupon";
 import Background from "@/components/atom/feildBackground";
@@ -39,7 +39,7 @@ const UserGroupList = ({ type }: { type: "people" | "group" }) => {
   const [tempSelectedGroupIds, setTempSelectedGroupIds] =
     useState<string[]>(selectedGroupIds);
   const [tempSelectedUsers, setTempSelectedUsers] =
-    useState<selectedUsersDetails[]>(selectedUsers);
+    useState<SelectedUsersDetails[]>(selectedUsers);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
 
@@ -66,7 +66,7 @@ const UserGroupList = ({ type }: { type: "people" | "group" }) => {
   }, [groupData, searchTerm]);
 
   const handleUserClick = useCallback(
-    (userDetails: selectedUsersDetails) => {
+    (userDetails: SelectedUsersDetails) => {
       setTempSelectedGroupIds([]);
 
       setTempSelectedUserIds((prevSelectedUserIds) => {

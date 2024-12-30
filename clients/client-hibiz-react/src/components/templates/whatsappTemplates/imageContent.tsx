@@ -50,7 +50,10 @@ const MemoImageContent = () => {
 
   return (
     <>
-      <label className="block mb-1 text-base font-bold text-black">
+      <label
+        htmlFor="headerImage"
+        className="block mb-1 text-base font-bold text-black"
+      >
         Choose Image or Gif
       </label>
       <div

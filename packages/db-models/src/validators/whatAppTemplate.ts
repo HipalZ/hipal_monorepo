@@ -132,9 +132,22 @@ export const buttonUrlTypeSchema = z
   })
   .optional();
 
+export const buttonQuickReplyTypeSchema = z
+  .object({
+    type: z.string().min(3).max(100).default("QUICK_REPLY"),
+    text: z.string().min(3).max(800),
+  })
+  .optional();
+
 export const buttonSchema = z.object({
   type: z.string().min(3).max(100).default("BUTTONS"),
-  buttons: z.array(z.union([buttonPhoneTypeSchema, buttonUrlTypeSchema])),
+  buttons: z.array(
+    z.union([
+      buttonPhoneTypeSchema,
+      buttonUrlTypeSchema,
+      buttonQuickReplyTypeSchema,
+    ]),
+  ),
 });
 
 export const validateWhatAppTemplateSchema = z.object({

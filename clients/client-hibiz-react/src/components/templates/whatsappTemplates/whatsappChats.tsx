@@ -1,14 +1,9 @@
 "use client";
-import { lazy, memo } from "react";
+import { lazy, memo, useCallback } from "react";
 import { BiSend } from "react-icons/bi";
 import whatzAppDoodle from "@/assets/whatzapp/whatsappdoodle.jpg";
-import { useQuery } from "@tanstack/react-query";
 import useBusinessData from "@/components/store/useBusinessData";
-import {
-  useFetchAllUsers,
-  useFetchUserChats,
-  useSendWhatsappMessage,
-} from "@/hooks/useTemplates";
+import { useSendWhatsappMessage } from "@/hooks/useTemplates";
 import toast from "react-hot-toast";
 import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
@@ -27,8 +22,6 @@ const MemoWhatsappChats = () => {
       isMobileListView: s.isMobileListView,
     }));
   const { mutate: sendMessageToWhatsApp, isPending } = useSendWhatsappMessage();
-  const { fetchAllUserMessages } = useFetchAllUsers();
-  const { fetchUserChats } = useFetchUserChats();
 
   const sendMessage = () => {
     if (!selectedUser) {
@@ -48,27 +41,20 @@ const MemoWhatsappChats = () => {
     setMessage("");
   };
 
-  const handleMessageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMessage(e.target.value);
-  };
+  const handleMessageChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setMessage(e.target.value);
+    },
+    [setMessage],
+  );
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== "Enter" || message.trim()?.length === 0) return null;
-    sendMessage();
-  };
-
-  useQuery({
-    queryKey: ["fetchSubscribers"],
-    queryFn: fetchAllUserMessages,
-    refetchInterval: 1000,
-  });
-
-  useQuery({
-    queryKey: ["fetchUserChats", selectedUser?._id],
-    queryFn: fetchUserChats,
-    enabled: !!selectedUser,
-    refetchInterval: 1000,
-  });
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key !== "Enter" || message.trim()?.length === 0) return null;
+      sendMessage();
+    },
+    [message, sendMessage],
+  );
 
   return (
     <main className="relative flex h-[80dvh] bg-gray-100 shadow-lg rounded-lg">

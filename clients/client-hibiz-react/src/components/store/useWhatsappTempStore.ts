@@ -164,6 +164,13 @@ interface ITempStore {
   addPhone: (phone: string) => void;
   removePhone: (phone: string) => void;
   clearSelectedPhones: () => void;
+  addMultiplePhones: (phones: string[]) => void;
+
+  loadingTemplateId: string | null;
+  setLoadingTemplateId: (value: string | null) => void;
+
+  openAccordionId: string | null;
+  setOpenAccordionId: (value: string | null) => void;
 }
 
 export const useWhatsappTempStore = create<ITempStore>((set) => ({
@@ -301,4 +308,16 @@ export const useWhatsappTempStore = create<ITempStore>((set) => ({
     })),
 
   clearSelectedPhones: () => set({ selectedPhones: [] }),
+
+  addMultiplePhones: (phones) =>
+    set((state) => ({
+      selectedPhones: Array.from(new Set([...state.selectedPhones, ...phones])),
+    })),
+
+  loadingTemplateId: null,
+  setLoadingTemplateId: (value: string | null) =>
+    set({ loadingTemplateId: value }),
+
+  openAccordionId: null,
+  setOpenAccordionId: (value: string | null) => set({ openAccordionId: value }),
 }));

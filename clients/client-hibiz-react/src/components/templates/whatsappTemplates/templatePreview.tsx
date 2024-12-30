@@ -6,6 +6,7 @@ import useWhatsapp, { HeaderInterface } from "@/components/store/useWhatsapp";
 import whatzAppDoodle from "@/assets/whatzapp/whatsappdoodle.jpg";
 import Hi from "@/assets/svg/hi.svg";
 import { FaBatteryFull, FaSignal, FaWifi } from "react-icons/fa";
+import { MdOutlineReply } from "react-icons/md";
 
 const MemoTemplatePreview = () => {
   const {
@@ -16,6 +17,9 @@ const MemoTemplatePreview = () => {
     footerText,
     displayBodyVariableSequence,
     buttonText,
+    secondButtonText,
+    firstButtonEnable,
+    secondButtonEnable,
   } = useWhatsapp((s) => ({
     headerType: s.headerType,
     headerText: s.headerText,
@@ -24,6 +28,9 @@ const MemoTemplatePreview = () => {
     footerText: s.footerText,
     displayBodyVariableSequence: s.displayBodyVariableSequence,
     buttonText: s.buttonText,
+    secondButtonText: s.secondButtonText,
+    firstButtonEnable: s.firstButtonEnable,
+    secondButtonEnable: s.secondButtonEnable,
   }));
 
   const renderBodyText = () => {
@@ -113,14 +120,26 @@ const MemoTemplatePreview = () => {
               <p className="text-xs text-gray-500">{footerText}</p>
             )}
           </div>
-          <div className="border-t border-gray-100">
-            <button
-              type="button"
-              className="flex items-center justify-center w-full py-3 text-[#34B7F1] text-sm font-medium"
-            >
-              <FiExternalLink className="mr-2" /> {buttonText}
-            </button>
-          </div>
+          {firstButtonEnable && (
+            <div className="border-t border-gray-100">
+              <button
+                type="button"
+                className="flex items-center justify-center w-full py-3 text-[#34B7F1] text-sm font-medium"
+              >
+                <FiExternalLink className="mr-2" /> {buttonText}
+              </button>
+            </div>
+          )}
+          {secondButtonEnable && (
+            <div className="border-t border-gray-100">
+              <button
+                type="button"
+                className="flex items-center justify-center w-full py-3 text-[#34B7F1] text-sm font-medium"
+              >
+                <MdOutlineReply className="mr-2" /> {secondButtonText}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

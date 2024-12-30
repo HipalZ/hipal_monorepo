@@ -221,19 +221,19 @@ const couponzRouter = new Hono()
       const requestData = await c.req.json();
       const { availability, eligibleUser } = conditions;
 
-      const noExpiryWhenValues = [
-        "allthetime",
-        "birthday",
-        "birthdayweek",
-        "birthdaymonth",
-      ];
+      // const noExpiryWhenValues = [
+      //   "allthetime",
+      //   "birthday",
+      //   "birthdayweek",
+      //   "birthdaymonth",
+      // ];
 
-      if (noExpiryWhenValues.includes(availability.when)) {
-        conditions.couponStartDate = 0;
-        conditions.couponEndDate = 0;
-        availability.startTime = 0;
-        availability.endTime = 24;
-      }
+      // if (noExpiryWhenValues.includes(availability.when)) {
+      //   conditions.couponStartDate = 0;
+      //   conditions.couponEndDate = 0;
+      //   availability.startTime = 0;
+      //   availability.endTime = 24;
+      // }
 
       // Clear requiredFields if eligibleUser has userIds or groupIds
       if (

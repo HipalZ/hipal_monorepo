@@ -80,6 +80,9 @@ const MemoTemplateButtons = () => {
     if (templateSteps === TemplateSteps.CREATE_EDIT) {
       setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
     } else if (templateSteps === TemplateSteps.SHOW_OPTIONS) {
+      if (selectedOptions.length === 0) {
+        return toast.error("Please select atleast one option");
+      }
       if (
         templateId?.length === 0 ||
         (selectedOptions.includes(ShowOptions.BULK_UPLOAD_CUSTOMERS) &&
@@ -132,7 +135,7 @@ const MemoTemplateButtons = () => {
             },
           ]}
         />
-      ) : templateSteps === TemplateSteps.CREATE_EDIT ? (
+      ) : (
         <BottomButton
           fixed
           buttons={[
@@ -140,17 +143,6 @@ const MemoTemplateButtons = () => {
               text: "Create Template",
               type: "submit",
               disable: !templateName || !bodyText,
-            },
-          ]}
-        />
-      ) : (
-        <BottomButton
-          fixed
-          buttons={[
-            {
-              text: "Save to Next",
-              onClick: handleNext,
-              type: "button",
             },
           ]}
         />

@@ -1,5 +1,4 @@
-import { lazy, memo, useState } from "react";
-import { DetailedAnalyticsPieChart } from "./detailedAnalytics";
+import { lazy, memo, useCallback, useMemo, useState } from "react";
 import {
   type Campaign,
   useWhatsappTempStore,
@@ -14,7 +13,9 @@ import {
   XCircle,
 } from "lucide-react";
 import { useCampaignAnalytics } from "@/hooks/useTemplates";
+import { cn, getSuccessRateClass } from "@/components/utils/helper";
 
+const DetailedAnalyticsPieChart = lazy(() => import("./detailedAnalytics"));
 const PhoneNumbersTable = lazy(() => import("./phoneNumbersTable"));
 
 const MemoCampaignAccordion = () => {
@@ -26,15 +27,18 @@ const MemoCampaignAccordion = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const { fetchCampaignAnalytics } = useCampaignAnalytics();
 
-  const toggleAccordion = async (index: number, campaign: Campaign) => {
-    setSelectedCampaign(campaign);
-    await fetchCampaignAnalytics(campaign?._id, 1, "");
-    if (activeIndex === index) {
-      setActiveIndex(null);
-    } else {
-      setActiveIndex(index);
-    }
-  };
+  const toggleAccordion = useCallback(
+    async (index: number, campaign: Campaign) => {
+      setSelectedCampaign(campaign);
+      await fetchCampaignAnalytics(campaign?._id, 1, "");
+      if (activeIndex === index) {
+        setActiveIndex(null);
+      } else {
+        setActiveIndex(index);
+      }
+    },
+    [activeIndex, fetchCampaignAnalytics, setSelectedCampaign],
+  );
 
   const statsConfig = [
     {
@@ -77,8 +81,12 @@ const MemoCampaignAccordion = () => {
 
   const sent = campaignsData?.overAllCount?.sent || 0;
   const delivered = campaignsData?.overAllCount?.delivered || 0;
-  const successRate =
-    sent > 0 ? Number.parseFloat(((delivered / sent) * 100).toFixed(2)) : 0;
+  const failed = campaignsData?.overAllCount?.failed || 0;
+  const successRate = useMemo(() => {
+    return sent > 0
+      ? Number.parseFloat(((delivered / sent - failed) * 100).toFixed(2))
+      : 0;
+  }, [sent, delivered, failed]);
 
   return (
     <div className="space-y-4">
@@ -129,13 +137,10 @@ const MemoCampaignAccordion = () => {
                 </div>
                 <div className="mt-4 space-y-2 text-center">
                   <p
-                    className={`text-2xl font-semibold ${
-                      successRate > 75
-                        ? "text-green-500"
-                        : successRate >= 50
-                          ? "text-blue-500"
-                          : "text-red-500"
-                    }`}
+                    className={cn(
+                      "text-2xl font-semibold",
+                      getSuccessRateClass(successRate),
+                    )}
                   >
                     Success Rate: {successRate}%
                   </p>

@@ -1,13 +1,12 @@
-import { memo, useCallback } from "react";
-import { ChevronLeft, ChevronRight, CloudDownload, Filter } from "lucide-react";
+import { lazy, memo, useCallback, useMemo } from "react";
+import { CloudDownload, Filter } from "lucide-react";
 import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
-import { useAddGroup } from "@/hooks/useTemplates";
 import { CgClose } from "react-icons/cg";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
-import ExportOptions from "./exportOptions";
 import { FILTER_OPTIONS, getStatusStyle } from "@/components/utils/helper";
-import toast from "react-hot-toast";
 
+const PhoneBottomButtons = lazy(() => import("./phoneBottomButtons"));
+const ExportOptions = lazy(() => import("./exportOptions"));
 const ITEMS_PER_PAGE = 40;
 
 const MemoPhoneNumbersTable = () => {
@@ -16,7 +15,6 @@ const MemoPhoneNumbersTable = () => {
     status,
     openExport,
     setOpenExport,
-    selectedCampaign,
     pageNumber,
     setPageNumber,
     campaignsData,
@@ -24,12 +22,12 @@ const MemoPhoneNumbersTable = () => {
     addPhone,
     removePhone,
     clearSelectedPhones,
+    addMultiplePhones,
   } = useWhatsappTempStore((s) => ({
     status: s.status,
     setStatus: s.setStatus,
     openExport: s.openExport,
     setOpenExport: s.setOpenExport,
-    selectedCampaign: s.selectedCampaign,
     pageNumber: s.pageNumber,
     setPageNumber: s.setPageNumber,
     campaignsData: s.campaignsData,
@@ -37,27 +35,25 @@ const MemoPhoneNumbersTable = () => {
     addPhone: s.addPhone,
     removePhone: s.removePhone,
     clearSelectedPhones: s.clearSelectedPhones,
+    addMultiplePhones: s.addMultiplePhones,
   }));
-
-  const startIndex = (pageNumber - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-
-  const filteredData = campaignsData.campaignAnalytics.filter(
-    (item) => !status || item.status === status,
+  const isAllSelected = useMemo(
+    () =>
+      campaignsData?.campaignAnalytics?.length > 0 &&
+      campaignsData.campaignAnalytics.every((item) =>
+        selectedPhones.includes(item.phone),
+      ),
+    [campaignsData.campaignAnalytics, selectedPhones],
   );
-  const currentData = filteredData.slice(startIndex, endIndex);
+  const currentData = useMemo(() => {
+    const startIndex = (pageNumber - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
 
-  const { addGroupMutation } = useAddGroup();
-
-  const handleNextData = useCallback(async () => {
-    const newPageNumber = pageNumber + 1;
-    setPageNumber(newPageNumber);
-  }, [pageNumber, setPageNumber]);
-
-  const handlePreviousData = useCallback(async () => {
-    const newPageNumber = pageNumber - 1;
-    setPageNumber(newPageNumber);
-  }, [pageNumber, setPageNumber]);
+    const filteredData = campaignsData.campaignAnalytics.filter(
+      (item) => !status || item.status === status,
+    );
+    return filteredData.slice(startIndex, endIndex);
+  }, [pageNumber, status, campaignsData.campaignAnalytics]);
 
   const clearFilter = useCallback(async () => {
     setStatus("");
@@ -72,36 +68,32 @@ const MemoPhoneNumbersTable = () => {
     [setStatus, setPageNumber],
   );
 
-  const handleCheckboxChange = (phone: string) => {
-    if (selectedPhones.includes(phone)) {
-      removePhone(phone);
-    } else {
-      addPhone(phone);
-    }
-  };
+  const handleCheckboxChange = useCallback(
+    (phone: string) => {
+      if (selectedPhones.includes(phone)) {
+        removePhone(phone);
+      } else {
+        addPhone(phone);
+      }
+    },
+    [selectedPhones, removePhone, addPhone],
+  );
 
-  const handleAddGroup = () => {
-    if (selectedPhones.length === 0) {
-      toast.error("Please select at least one phone number.");
-      return;
-    }
-
-    const payload = {
-      usersArray: selectedPhones.map((phone) => ({ phone })),
-      campaignName: selectedCampaign?.campaignName + status || "Campaign",
-      businessId: selectedCampaign?.businessId,
-    };
-
-    addGroupMutation.mutate(payload, {
-      onSuccess: () => {
-        toast.success("Group added successfully.");
+  const handleSelectAll = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.checked) {
+        // Select all phone numbers across all filters
+        const allPhones = campaignsData.campaignAnalytics.map(
+          (item) => item.phone,
+        );
+        addMultiplePhones(allPhones);
+      } else {
+        // Deselect all
         clearSelectedPhones();
-      },
-      onError: () => {
-        toast.error("Failed to add group.");
-      },
-    });
-  };
+      }
+    },
+    [campaignsData.campaignAnalytics, addMultiplePhones, clearSelectedPhones],
+  );
 
   return (
     <section
@@ -109,7 +101,9 @@ const MemoPhoneNumbersTable = () => {
       aria-label="Phone Numbers"
     >
       <div className="flex items-center justify-between px-4 py-2 border-b">
-        <h2 className="text-xl font-semibold text-gray-900">Customer Data</h2>
+        <h2 className="text-xl font-semibold text-gray-900">
+          Total {campaignsData?.campaignAnalytics?.length} contacts
+        </h2>
         <div className="flex items-center gap-4">
           {status && (
             <span
@@ -205,6 +199,12 @@ const MemoPhoneNumbersTable = () => {
                     scope="col"
                     className="px-6 py-3 text-base font-medium tracking-wider text-left text-black"
                   >
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      onChange={handleSelectAll}
+                      className="inline-block w-4 h-4 mr-1 text-blue-600 rounded-sm form-checkbox"
+                    />{" "}
                     SELECT (ALL)
                   </th>
                 </tr>
@@ -251,39 +251,7 @@ const MemoPhoneNumbersTable = () => {
           )}
         </div>
       </div>
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200">
-        <div className="flex items-center">
-          <span className="font-medium">
-            Showing {currentData.length} contacts
-          </span>
-        </div>
-        <div className="flex justify-between flex-1 sm:justify-end">
-          <button
-            type="button"
-            onClick={handlePreviousData}
-            disabled={pageNumber === 1}
-            className="relative inline-flex items-center text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft />
-          </button>
-          <button
-            type="button"
-            onClick={handleNextData}
-            disabled={currentData.length === 0}
-            className="relative inline-flex items-center ml-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <ChevronRight />
-          </button>
-          <button
-            type="button"
-            disabled={currentData.length === 0}
-            onClick={handleAddGroup}
-            className="relative inline-flex items-center px-4 py-2 ml-3 text-sm font-medium text-white bg-purple-500 border border-gray-300 rounded-md hover:bg-purple-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Add Group
-          </button>
-        </div>
-      </div>
+      <PhoneBottomButtons currentData={currentData} />
       {openExport && <ExportOptions />}
     </section>
   );
