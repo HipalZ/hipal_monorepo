@@ -27,7 +27,7 @@ import { respond } from "../../utils/response";
 
 const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"];
 const weekends = ["saturday", "sunday"];
-// Helper function to determine day eligibility
+// Helper function to determine day eligibilityy
 function switchDayEligibility(
   availability: CouponzAvailabilityType,
   currentDay: string,
@@ -131,6 +131,7 @@ const couponzRouter = new Hono()
       const coupons = await Couponz.find({
         isDeleted: false,
         businessId,
+        isDeleted: false,
       })
         .sort({ _id: -1 })
         .lean();
@@ -302,14 +303,14 @@ const couponzRouter = new Hono()
       }
 
       // Generate short URL
-      const longUrl = `https://api.test.hipalz.com/coupon-analytics/social/${createdCoupon[0].businessId}/${createdCoupon[0]._id}/${channelId._id}`;
+      const longUrl = `https://api.hipalz.com/coupon-analytics/social/${createdCoupon[0].businessId}/${createdCoupon[0]._id}/${channelId._id}`;
       const uniqueOrderId = nanoid(10);
       let createShortUrl = await UrlModel.findOne({ longUrl });
 
       if (!createShortUrl) {
         createShortUrl = await UrlModel.create({
           longUrl: longUrl,
-          shortUrl: `https://api.test.hipalz.com/hipalz/${uniqueOrderId}`,
+          shortUrl: `https://api.hipalz.com/hipalz/${uniqueOrderId}`,
           urlCode: uniqueOrderId,
         });
 
@@ -381,6 +382,7 @@ const couponzRouter = new Hono()
             endTime: createdCoupon[0].conditions.availability.endTime,
             customDays: createdCoupon[0].conditions.availability.customDays,
           },
+          eligibleUser: createdCoupon[0].conditions.eligibleUser,
           tc: createdCoupon[0].conditions.tc,
           links: [
             {
@@ -470,6 +472,13 @@ const couponzRouter = new Hono()
       const grabbedCouponIds = fetchAllGrabbedCoupons.map((coupon) =>
         coupon.couponId.toString(),
       );
+
+      const fetchAllExpireGrabbedCoupons =
+        (await UserCouponGrabb.find({
+          userId,
+          businessId,
+          isDeleted: true,
+        }).select("couponId")) || [];
 
       // Fetch all active coupons
       const coupons = await Couponz.find({
@@ -564,11 +573,18 @@ const couponzRouter = new Hono()
       }
 
       const uniqueCoupons = Array.from(uniqueCouponsMap.values());
+      const expireGrabbedCouponIds = fetchAllExpireGrabbedCoupons.map(
+        (coupon) => coupon.couponId.toString(),
+      );
+
+      const filterCouponz = uniqueCoupons.filter(
+        (coupon) => !expireGrabbedCouponIds.includes(coupon._id.toString()),
+      );
 
       return c.json({
         message: "Eligible coupons found",
         err: false,
-        data: uniqueCoupons,
+        data: filterCouponz,
       });
     },
   )
@@ -596,6 +612,7 @@ const couponzRouter = new Hono()
       const currentTime = getCurrentTimeDecimal();
 
       let fetchAllGrabbedCoupons: UserCouponGrabbType[] = [];
+      let fetchAllExpireGrabbedCoupons: UserCouponGrabbType[] = [];
 
       if (userId) {
         fetchAllGrabbedCoupons =
@@ -604,28 +621,20 @@ const couponzRouter = new Hono()
             businessId,
             isDeleted: false,
           }).select("couponId")) || [];
+
+        fetchAllExpireGrabbedCoupons =
+          (await UserCouponGrabb.find({
+            userId,
+            businessId,
+            isDeleted: true,
+          }).select("couponId")) || [];
       }
 
-      // Fetch all active coupons
       const coupons = await Couponz.find({
-        $or: [
-          {
-            "conditions.couponStartDate": 0,
-            "conditions.couponEndDate": 0,
-            businessId: businessId,
-            promote: true,
-            isDeleted: false,
-            isPublish: true,
-          },
-          {
-            "conditions.couponStartDate": { $lte: currentDate },
-            "conditions.couponEndDate": { $gte: currentDate },
-            businessId: businessId,
-            promote: true,
-            isDeleted: false,
-            isPublish: true,
-          },
-        ],
+        businessId,
+        promote: true,
+        isDeleted: false,
+        isPublish: true,
       });
 
       const promotCoupons = coupons.filter((coupon) => {
@@ -648,14 +657,22 @@ const couponzRouter = new Hono()
         coupon?.couponId?.toString(),
       );
 
+      const expireGrabbedCouponIds = fetchAllExpireGrabbedCoupons?.map(
+        (coupon) => coupon.couponId.toString(),
+      );
+
       const filteredAssignCouponz = promotCoupons?.filter(
         (coupon) => !grabbedCouponIds?.includes(coupon._id.toString()),
+      );
+
+      const filteredGrabbedCoupons = filteredAssignCouponz.filter(
+        (coupon) => !expireGrabbedCouponIds?.includes(coupon._id.toString()),
       );
 
       return c.json({
         message: "Eligible coupons found",
         err: false,
-        data: filteredAssignCouponz,
+        data: filteredGrabbedCoupons,
       });
     },
   )
