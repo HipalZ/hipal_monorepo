@@ -8,7 +8,7 @@ import {
   useWhatsappTempStore,
 } from "@/components/store/useWhatsappTempStore";
 import type { WhatsAppTemplatePayload } from "@/components/types/businessData";
-import { BarChart2, Loader2 } from "lucide-react";
+import { BarChart2 } from "lucide-react";
 import { useTempAnalyticsById } from "@/hooks/useTemplates";
 
 const MemoCampaignAnalytics: React.FC = () => {
@@ -18,14 +18,12 @@ const MemoCampaignAnalytics: React.FC = () => {
     setStep: s.setStep,
   }));
   const {
-    openAccordionId,
     setActiveTab,
     allTemplates,
     setSelectedTemplate,
     setOpenAnalytics,
     loadingTemplateId,
   } = useWhatsappTempStore((s) => ({
-    openAccordionId: s.openAccordionId,
     setActiveTab: s.setActiveTab,
     allTemplates: s.allTemplates,
     setSelectedTemplate: s.setSelectedTemplate,
@@ -157,19 +155,8 @@ const MemoCampaignAnalytics: React.FC = () => {
                       }
                       className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:cursor-not-allowed"
                     >
-                      {loadingTemplateId === campaign.id ? (
-                        <Loader2 className="w-8 h-8 animate-spin" />
-                      ) : openAccordionId === campaign.id ? (
-                        <>
-                          <BarChart2 size={18} className="mr-2" />
-                          Hide Insights
-                        </>
-                      ) : (
-                        <>
-                          <BarChart2 size={18} className="mr-2" />
-                          View Insights
-                        </>
-                      )}
+                      <BarChart2 size={18} className="mr-2" />
+                      View Insights
                     </button>
                   </td>
                 </tr>
