@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
 
-export interface selectedUsersDetails {
+export interface SelectedUsersDetails {
   _id: string;
   name: string;
   phone: string;
@@ -194,7 +194,7 @@ export const useSingleUserInfo = (userPhone: string) => {
         phone: userPhone,
       },
     });
-    return (await res.json()).data?.userId as selectedUsersDetails;
+    return (await res.json()).data?.userId as SelectedUsersDetails;
   }, [userPhone, businessId]);
 
   const { data, isLoading, error } = useQuery({
