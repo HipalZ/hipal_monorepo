@@ -73,7 +73,7 @@ const MemoTimeBadge = ({
             exit={{ y: -10, opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            {isMyOrders ? "My order" : "Pay bill"}
+            {isMyOrders ? "Pay bill" : "Pay bill"}
           </motion.span>
         </AnimatePresence>
       </button>

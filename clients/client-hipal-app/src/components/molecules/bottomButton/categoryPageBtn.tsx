@@ -34,8 +34,7 @@ const MemoCategoryPageBtn = () => {
   const setIsPayment = useLogin((s) => s.setIsPayment);
   const router = useRouter();
   const [callWaiterModal, setCallWaiterModal] = useState(false);
-  const { setShowCart, showCart, setCartPage, inputModal, setInputModal } =
-    useCart();
+  const { showCart, inputModal, setInputModal } = useCart();
 
   const closeModal = useCallback(() => {
     setInputModal(false);
@@ -54,8 +53,8 @@ const MemoCategoryPageBtn = () => {
     if (!accessToken) {
       router.push(`/${customLink}/user/signup`);
     }
-    setCartPage("order");
-    setShowCart(true);
+    // setCartPage("order");
+    setInputModal(true);
   }, [setDirection, accessToken, customLink, showCart]);
 
   const triggerCallWaiter = useCallback(() => {

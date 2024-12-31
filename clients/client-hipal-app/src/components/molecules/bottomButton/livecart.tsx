@@ -95,7 +95,7 @@ const MemoLiveCart = () => {
               onClick={openCart}
               className="flex items-center gap-2"
             >
-              <span>Proceed to order</span>
+              <span>Continue</span>
               <FaArrowRightLong />
             </button>
           </motion.section>
