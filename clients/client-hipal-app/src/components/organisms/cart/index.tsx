@@ -254,7 +254,13 @@ const Cart = () => {
                 highlight: true,
               },
             ]
-          : [];
+          : [
+              {
+                text: "Order more",
+                onClick: () => setShowCart(false),
+                type: "button" as const,
+              },
+            ];
       }
       return [
         {
