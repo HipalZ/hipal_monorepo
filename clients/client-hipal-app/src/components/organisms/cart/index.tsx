@@ -243,19 +243,9 @@ const Cart = () => {
       return [];
     }
     if (cartPage === "cart") {
-      if (cart.length > 0) {
-        return [
-          {
-            text: "Share Cart",
-            onClick: placeOrder,
-            type: "button" as const,
-            highlight: true,
-          },
-        ];
-      }
       return [
         {
-          text: "Order more",
+          text: "Add more",
           onClick: () => setShowCart(false),
           type: "button" as const,
         },
