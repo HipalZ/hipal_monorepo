@@ -330,7 +330,7 @@ export const useWhatsapp = create(
           });
         },
 
-        footerText: `Powered by ${businessName}`,
+        footerText: "Powered by Hipalz",
         setFooterText: (footerText: string) => set({ footerText }),
 
         headerVariables: [],
