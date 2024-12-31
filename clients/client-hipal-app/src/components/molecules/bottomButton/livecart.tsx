@@ -13,12 +13,14 @@ import TableNameMissing from "./tableNameMissing";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { useSearch } from "@/components/store/useSearch";
 import { HiX } from "react-icons/hi";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const MemoLiveCart = () => {
   const cart = useCartStore((s) => s.cart);
   const { setShowCart, cartPage, setCartPage, showCart } = useCart();
   const { tableNameMissing, setTableNameMissing, tableName } = useTableData();
   const { isSearchActive, setIsSearchActive } = useSearch();
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   const shineVariants = {
     initial: { x: "-100%" },
@@ -95,7 +97,9 @@ const MemoLiveCart = () => {
               onClick={openCart}
               className="flex items-center gap-2"
             >
-              <span>Continue</span>
+              <span>
+                {outletInfo?.shareCart ? "Proceed to order" : "Continue"}
+              </span>
               <FaArrowRightLong />
             </button>
           </motion.section>

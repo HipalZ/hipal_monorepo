@@ -164,6 +164,7 @@ interface IOutlet {
   fixOpenTime: string;
   outLetType: string;
   isPosEnabled: boolean;
+  shareCart?: boolean;
 }
 
 export interface TimingType {
