@@ -35,6 +35,7 @@ const Orders = dynamic(() => import("./orders"), { ssr: false });
 
 const Cart = () => {
   const { cart, cartHistory } = useCartStore();
+  const outLetInfo = _useAllBusiness((state) => state.data.outletInfo);
   const { setShowCart, cartPage, setCartPage, setInputModal } = useCart();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const [showPayAlert, setShowPayAlert] = useState<boolean>(false);
@@ -244,14 +245,22 @@ const Cart = () => {
     }
     if (cartPage === "cart") {
       if (cart.length > 0) {
-        return [
-          {
-            text: "Share Cart",
-            onClick: placeOrder,
-            type: "button" as const,
-            highlight: true,
-          },
-        ];
+        return outLetInfo?.shareCart
+          ? [
+              {
+                text: "Share Cart",
+                onClick: placeOrder,
+                type: "button" as const,
+                highlight: true,
+              },
+            ]
+          : [
+              {
+                text: "Order more",
+                onClick: () => setShowCart(false),
+                type: "button" as const,
+              },
+            ];
       }
       return [
         {

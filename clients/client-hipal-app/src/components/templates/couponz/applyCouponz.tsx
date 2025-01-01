@@ -118,7 +118,73 @@ const MemoApplyCouponz = () => {
 
   const applyCoupon = useCallback(
     async (coupon) => {
+      console.log("coupon", coupon);
+      if (
+        coupon?.conditions?.couponStartDate &&
+        coupon?.conditions?.couponEndDate
+      ) {
+        const currentTime = new Date().getTime();
+        const startTime = new Date(coupon.conditions.couponStartDate).getTime();
+        const endTime = new Date(coupon.conditions.couponEndDate).getTime();
+
+        if (currentTime < startTime || currentTime > endTime) {
+          return toast.info(
+            `Coupon will be active from ${new Date(
+              coupon.conditions.couponStartDate,
+            ).toLocaleString()} to ${new Date(
+              coupon.conditions.couponEndDate,
+            ).toLocaleString()}`,
+          );
+        }
+      }
+
+      console.log("coupon", coupon?.conditions?.availability?.startTime);
+      // if (
+      //   coupon?.conditions?.availability?.startTime > 0 &&
+      //   coupon?.conditions?.availability?.endTime > 0
+      // ) {
+      //   const currentTime = new Date();
+      //   const currentHours = currentTime.getHours();
+      //   const currentMinutes = currentTime.getMinutes();
+      //   const [startHours, startMinutes] =
+      //     coupon.conditions.availability.startTime.split(".");
+      //   const [endHours, endMinutes] =
+      //     coupon.conditions.availability.endTime.split(".");
+      //   console.log(
+      //     "currentHours",
+      //     currentHours,
+      //     "currentMinutes",
+      //     currentMinutes,
+      //     "startHours",
+      //     startHours,
+      //     "startMinutes",
+      //     startMinutes,
+      //     "endHours",
+      //     endHours,
+      //     "endMinutes",
+      //     endMinutes,
+      //   );
+      //   const isWithinTimeRange =
+      //     (currentHours > startHours ||
+      //       (currentHours === startHours && currentMinutes >= startMinutes)) &&
+      //     (currentHours < endHours ||
+      //       (currentHours === endHours && currentMinutes <= endMinutes));
+      //   console.log("isWithinTimeRange", isWithinTimeRange);
+      //   if (!isWithinTimeRange) {
+      //     return toast.info("Coupon is not applicable at this time");
+      //   }
+      // }
       // Check if bill value is less than coupon value
+      if (coupon?.conditions?.availability?.customDays?.length > 0) {
+        const day = new Date().toLocaleString("en-US", { weekday: "long" });
+        if (
+          !coupon?.conditions?.availability?.customDays.includes(
+            day?.toLowerCase(),
+          )
+        ) {
+          return toast.info("Coupon is not available today");
+        }
+      }
       if (coupon?.conditions?.billValue > billValue)
         return toast.info("Bill value is less than coupon value");
 
@@ -319,6 +385,14 @@ const MemoApplyCouponz = () => {
                 <article className="flex items-center justify-between">
                   <h1 className="p-1 mt-1 text-sm font-bold leading-none">
                     {coupon?.name}
+                    <p className="mt-1 text-[#858585] text-xs font-semibold">
+                      Available:{" "}
+                      {coupon?.conditions?.availability?.customDays?.length > 0
+                        ? coupon?.conditions?.availability?.customDays
+                            ?.map((day) => day.slice(0, 3))
+                            .join(", ")
+                        : "All Time"}
+                    </p>
                   </h1>
                   {availedCoupon?._id === coupon?._id ? (
                     <button
@@ -332,7 +406,9 @@ const MemoApplyCouponz = () => {
                     <button
                       type="button"
                       onClick={() => applyCoupon(coupon)}
-                      className="on_active_bounce text-[#9268EC] text-sm mt-1 font-bold"
+                      className={cn(
+                        "on_active_bounce text-[#9268EC] text-sm mt-1 font-bold",
+                      )}
                     >
                       APPLY
                     </button>
@@ -395,6 +471,14 @@ const MemoApplyCouponz = () => {
                 <article className="flex items-center justify-between">
                   <h1 className="text-[#858585] p-1 mt-1 text-sm font-bold leading-none">
                     {coupon?.name}
+                    {coupon?.conditions?.availability?.customDays?.length >
+                      0 && (
+                      <p className="text-[#858585] text-xs font-semibold">
+                        {coupon?.conditions?.availability?.customDays
+                          ?.map((day) => day.slice(0, 3))
+                          .join(", ")}
+                      </p>
+                    )}
                   </h1>
                   <button
                     type="button"
