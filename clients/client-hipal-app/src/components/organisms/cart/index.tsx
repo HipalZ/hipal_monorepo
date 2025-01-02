@@ -11,6 +11,8 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import PaymentAlert from "./paymentAlert";
 import CartPayment from "./cartPayment";
+import { useCallTheCaptain } from "@/components/hooks/useCartHook";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 
 const CartItem = dynamic(() => import("./cartItem"), { ssr: false });
 const CommonBottomButton = dynamic(
@@ -35,7 +37,9 @@ const Orders = dynamic(() => import("./orders"), { ssr: false });
 
 const Cart = () => {
   const { cart, cartHistory } = useCartStore();
+  const { mutate, isPending } = useCallTheCaptain();
   const outLetInfo = _useAllBusiness((state) => state.data.outletInfo);
+  const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
   const { setShowCart, cartPage, setCartPage, setInputModal } = useCart();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const [showPayAlert, setShowPayAlert] = useState<boolean>(false);
@@ -47,6 +51,7 @@ const Cart = () => {
     hiCodePopup,
     setHiCodeUser,
   } = useTableData();
+
   const accessToken = useUserToken.getState().accessToken;
   const userDetails = useLogin((state) => state.userDetails);
   const router = useRouter();
@@ -63,6 +68,27 @@ const Cart = () => {
   const payPopCorn = useCallback(() => {
     setInputModal(true);
   }, [setInputModal]);
+
+  const triggerCallWaiter = useCallback(() => {
+    setDirection("category");
+    if (!tableName) {
+      return router.push(`/${customLink}/scan`);
+    }
+    if (!accessToken) {
+      return router.push(`/${customLink}/user/signup`);
+    }
+    const payload = {
+      businessId: businessId,
+      tableName: tableName,
+      message: "I need help",
+      alertType: "WAITER",
+      status: "WAITER",
+      name: userDetails?.name || "user",
+      userId: userDetails._id,
+    };
+
+    mutate(payload);
+  }, [setDirection, accessToken, router, customLink, tableName]);
 
   const placeOrder = useCallback(async () => {
     const handleUnauthenticatedUser = () => {
@@ -259,6 +285,13 @@ const Cart = () => {
                 text: "Order more",
                 onClick: () => setShowCart(false),
                 type: "button" as const,
+                isLoading: isPending,
+              },
+              {
+                text: "Need Help?",
+                onClick: triggerCallWaiter,
+                type: "button" as const,
+                isLoading: isPending,
               },
             ];
       }
@@ -267,6 +300,13 @@ const Cart = () => {
           text: "Order more",
           onClick: () => setShowCart(false),
           type: "button" as const,
+          isLoading: isPending,
+        },
+        {
+          text: "Need Help?",
+          onClick: triggerCallWaiter,
+          type: "button" as const,
+          isLoading: isPending,
         },
       ];
     }

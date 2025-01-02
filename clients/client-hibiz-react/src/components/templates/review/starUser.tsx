@@ -239,13 +239,13 @@ const StarUser = memo(() => {
           </section>
         </PopUp>
       )}
-      <BottomButton
+      {/* <BottomButton
         fixed
         buttons={[
           { text: "Assign Coupon", onClick: () => setOpen(true) },
           { text: "WatsApp", onClick: sendMessage },
         ]}
-      />
+      /> */}
     </section>
   );
 });

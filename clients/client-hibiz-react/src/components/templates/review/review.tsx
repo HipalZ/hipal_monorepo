@@ -275,8 +275,10 @@ const MemoReview = () => {
         <section className="grid grid-cols-1 gap-4 pb-[5rem] mx-4 mt-4 lg:mx-0 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
           {filteredReviews.map((review) => (
             <article
-              key={review._id}
-              className="flex items-center p-2.5 bg-white rounded-xl justify-evenly"
+              key={review?._id}
+              className="flex items-center p-2.5 bg-white rounded-xl justify-evenly cursor-pointer"
+              onClick={() => saveReview(review)}
+              onKeyDown={() => saveReview(review)}
             >
               {review.seen ? (
                 <TbMailOpenedFilled className="w-12 h-6" />
@@ -302,7 +304,6 @@ const MemoReview = () => {
                 </h3>
                 <button
                   type="button"
-                  onClick={() => saveReview(review)}
                   className="flex items-center px-2 py-1 text-[0.625rem] text-white bg-black text-nowrap rounded-3xl"
                 >
                   Check out
