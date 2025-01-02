@@ -481,45 +481,17 @@ const couponzRouter = new Hono()
 
       // Fetch all active coupons
       const coupons = await Couponz.find({
-        $or: [
-          {
-            "conditions.couponStartDate": 0,
-            "conditions.couponEndDate": 0,
-            businessId: businessId,
-            isDeleted: false,
-            _id: { $in: grabbedCouponIds },
-            isPublish: true,
-          },
-          {
-            "conditions.couponStartDate": { $lte: currentDate },
-            "conditions.couponEndDate": { $gte: currentDate },
-            businessId: businessId,
-            isDeleted: false,
-            _id: { $in: grabbedCouponIds },
-            isPublish: true,
-          },
-        ],
+        businessId: businessId,
+        isDeleted: false,
+        _id: { $in: grabbedCouponIds },
+        isPublish: true,
       });
 
       const eligibles = await Couponz.find({
-        $or: [
-          {
-            "conditions.couponStartDate": 0,
-            "conditions.couponEndDate": 0,
-            businessId: businessId,
-            isDeleted: false,
-            "conditions.eligibleUser.allUsers": true,
-            isPublish: true,
-          },
-          {
-            "conditions.couponStartDate": { $lte: currentDate },
-            "conditions.couponEndDate": { $gte: currentDate },
-            businessId: businessId,
-            isDeleted: false,
-            "conditions.eligibleUser.allUsers": true,
-            isPublish: true,
-          },
-        ],
+        businessId: businessId,
+        isDeleted: false,
+        "conditions.eligibleUser.allUsers": true,
+        isPublish: true,
       });
 
       const eligibleCoupons = eligibles.filter((coupon) => {
