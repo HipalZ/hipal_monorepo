@@ -103,7 +103,7 @@ const AddAmountModal = memo(() => {
     };
 
     mutate(payload);
-  }, [businessId, tableName, name, userDetails._id, mutate]);
+  }, [businessId, tableName, name, userDetails._id]);
   return (
     <section className=" relative overflow-y-auto overflow-x-hidden mb-[2rem]">
       <header className="bg-base-100 h-[4.25rem] flex items-center text-primary">

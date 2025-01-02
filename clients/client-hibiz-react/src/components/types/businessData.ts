@@ -137,6 +137,8 @@ export interface IOutletInfo {
   placeUrl: string;
   gstPercentage: number;
   serviceChargePercentage: number;
+  isPosEnabled: boolean;
+  shareCart: boolean;
 }
 
 export interface Order {

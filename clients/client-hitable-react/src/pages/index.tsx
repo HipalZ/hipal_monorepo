@@ -13,6 +13,7 @@ import { memo, useState } from "react";
 import toast from "react-hot-toast";
 import { useErrorHandling } from "@/components/utils/helpers";
 import { FiDownload } from "react-icons/fi";
+
 //test//
 const LoginMemo = () => {
   const { errorText } = useErrorHandling();
@@ -21,7 +22,6 @@ const LoginMemo = () => {
   const [password, setPassword] = useState<string>("");
 
   const { setLoading } = useLiteStore();
-  //
 
   // store
   const { setCaptainData, phoneNumber, setPhoneNumber } = useHiClientZ((s) => ({
@@ -37,8 +37,6 @@ const LoginMemo = () => {
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
   };
-
-  //apis
 
   const handleLogin = async () => {
     setLoading(true);
@@ -203,7 +201,7 @@ const LoginMemo = () => {
         <button
           type="button"
           onClick={handleLogin}
-          className="on_active_bounce fixed bottom-6 z-50 w-full max-w-[25rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem] text-white"
+          className="on_active_bounce fixed bottom-6 z-50 w-[92%] md:w-full max-w-[25rem] rounded-full bg-black py-[0.75rem] text-[18px] leading-[1.15rem] text-white"
         >
           Get Started
         </button>

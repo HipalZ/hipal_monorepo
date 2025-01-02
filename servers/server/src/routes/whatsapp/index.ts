@@ -1260,6 +1260,10 @@ const whatsappRouter = new Hono()
           isDeleted: false,
           templateId: templateId,
         }).select("templateId templateName");
+        const failedCount = await WhatsAppAnalyticsUser.find({
+          templateId: templateId,
+          status: "failed",
+        }).count();
 
         const getWhatAppTemplate = await axios.get(
           `https://graph.facebook.com/v21.0/${
@@ -1301,6 +1305,7 @@ const whatsappRouter = new Hono()
             delivered: anaLyticsObject.delivered,
             clicked: calculateTotalclicked,
             cost: calculateTotalcost,
+            failed: failedCount,
           };
 
           templateids.push(newObj);

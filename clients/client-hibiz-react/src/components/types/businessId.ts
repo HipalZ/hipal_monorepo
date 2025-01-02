@@ -88,17 +88,17 @@ export const getButtons = (outletType: string): ILiteVersionCardButton[] => [
     navigateTo: "whatzapp",
   },
   {
+    image: Review,
+    text: "Reviews",
+    description: "Manage your reviews",
+    navigateTo: "reviews",
+  },
+  {
     image: Analytics,
     text: "Analytics",
     description: "Get insights of your business",
     navigateTo: "analytics",
   },
-  // {
-  //   image: Review,
-  //   text: "Reviews",
-  //   description: "Manage your reviews",
-  //   navigateTo: "reviews",
-  // },
 ];
 
 export interface Dish {

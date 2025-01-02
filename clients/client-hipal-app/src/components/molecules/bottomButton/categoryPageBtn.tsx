@@ -33,8 +33,13 @@ const MemoCategoryPageBtn = () => {
   const setDirection = useLogin((s) => s.setDirection);
   const setIsPayment = useLogin((s) => s.setIsPayment);
   const router = useRouter();
-  const [callWaiterModal, setCallWaiterModal] = useState(false);
-  const { showCart, inputModal, setInputModal } = useCart();
+  const {
+    showCart,
+    inputModal,
+    setInputModal,
+    callWaiterModal,
+    setCallWaiterModal,
+  } = useCart();
 
   const closeModal = useCallback(() => {
     setInputModal(false);

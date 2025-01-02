@@ -40,6 +40,8 @@ interface IUseCart {
   setShowHistory: (data: boolean) => void;
   inputModal: boolean;
   setInputModal: (data: boolean) => void;
+  callWaiterModal: boolean;
+  setCallWaiterModal: (data: boolean) => void;
 
   cartPage: ICartTypes;
   setCartPage: (data: ICartTypes) => void;
@@ -65,6 +67,9 @@ export const useCart = create<IUseCart>()(
 
       showHistory: false,
       setShowHistory: (d: boolean) => set(() => ({ showHistory: d })),
+
+      callWaiterModal: false,
+      setCallWaiterModal: (d: boolean) => set(() => ({ callWaiterModal: d })),
 
       emptyCart: () => set({ cart: {} }),
       setCart: (d: ICart) => set(() => ({ cart: d })),
