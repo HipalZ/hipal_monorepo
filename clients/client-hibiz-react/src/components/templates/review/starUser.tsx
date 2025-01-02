@@ -55,7 +55,9 @@ const StarUser = memo(() => {
   return (
     <section className="flex flex-col items-center space-y-4 justify-center px-6 pb-[5rem] mt-6 w-full max-w-[30rem] mx-auto">
       <img src={logo} alt="logo" className="w-12 h-12 rounded-xl" />
-      <h3 className="mt-4 text-xl font-semibold">{review?.userId?.name}</h3>
+      <h3 className="mt-4 text-xl font-semibold">
+        {review?.userId?.name} ( {review?.userId?.phone})
+      </h3>
       <h3 className="mt-2 text-base font-semibold opacity-80">
         {formattedDate}
       </h3>
