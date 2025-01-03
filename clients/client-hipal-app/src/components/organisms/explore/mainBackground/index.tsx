@@ -46,6 +46,12 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
     }
   }, [data]);
 
+  const isVideo = (url: string) => {
+    const videoExtensions = ["mp4", "webm", "ogg", "mov", "avi", "flv", "wmv"];
+    const extension = url.split(".").pop()?.toLowerCase();
+    return extension ? videoExtensions.includes(extension) : false;
+  };
+
   return (
     <section className="p-2 bg-base-100">
       <article className="relative w-full max-w-[26rem] mx-auto overflow-hidden aspect-square rounded-[2.5rem]">
@@ -57,13 +63,24 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
           className="absolute inset-0 z-10"
         />
         <div className="absolute top-0 z-0 w-full bg-gradient">
-          <ShimmerImage
-            src={data.business?.specialBannerUrl || img.src}
-            alt="Explore page wallpaper"
-            width={500}
-            height={500}
-            className="object-cover object-center w-full h-full"
-          />
+          {isVideo(data.business?.specialBannerUrl || "") ? (
+            <video
+              src={data.business?.specialBannerUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="object-cover object-center w-full h-full"
+            />
+          ) : (
+            <ShimmerImage
+              src={data.business?.specialBannerUrl || img.src}
+              alt="Explore page wallpaper"
+              width={500}
+              height={500}
+              className="object-cover object-center w-full h-full"
+            />
+          )}
         </div>
         {/* Logo */}
         <div className="absolute z-20 aspect-square top-4 left-4">
@@ -109,6 +126,5 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
     </section>
   );
 };
-
 const MemoMainBackground = memo(MainBackground);
 export default MemoMainBackground;
