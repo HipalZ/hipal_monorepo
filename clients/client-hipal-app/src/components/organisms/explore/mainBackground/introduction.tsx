@@ -16,6 +16,7 @@ import { MdOutlineCall } from "react-icons/md";
 import SubScribeModal from "../../subscribe";
 import ReviewModal from "../googleReviews/reviewModal";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
   const accessToken = useUserToken.getState().accessToken;
@@ -33,7 +34,7 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
   } = useLogin();
   const { setCartEmpty } = useCartStore();
   const customLink = useParams()?.businessId as string;
-
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const business = data.business as BusinessDetails;
   const [isLoader, setIsLoader] = useState<boolean>(false);
   const { location, phone } = data.outletInfo;
@@ -104,7 +105,7 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
       {" "}
       <section className="absolute z-20 bottom-6 left-6 w-[75%] text-white">
         <span className="text-xs px-3 py-2 rounded-full bg-[#ffffff30]">
-          ⭐ 4.7
+            ⭐ {outletInfo?.avgRating}
         </span>
         <h3 className="mt-2 text-3xl capitalize space-grotesk-700">
           {data?.business?.name}

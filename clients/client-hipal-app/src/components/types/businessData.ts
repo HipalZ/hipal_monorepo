@@ -132,6 +132,7 @@ interface IOutlet {
   businessId: string;
   __v: number;
   address: string;
+  avgRating: number;
   amenities: string[];
   customTiming: {
     day: string;

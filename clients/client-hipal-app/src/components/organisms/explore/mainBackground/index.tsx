@@ -87,8 +87,8 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
           <ShimmerImage
             src={data.business?.logoUrl || img.src}
             alt="Logo"
-            width={58}
-            height={58}
+            width={64}
+            height={64}
             className="object-cover rounded-full aspect-square"
           />
         </div>
