@@ -81,7 +81,7 @@ const iconRouter = new Hono()
 
       for (const business of businesses) {
         const userRewards = await UserReward.find({
-          businessId: business._id,
+          loyaltyId: business._id,
         }).count();
 
         const totalSessions = await Subscriber.find({
