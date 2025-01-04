@@ -125,7 +125,7 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
           </div>
         </AlertToRemove>
       ) : (
-        <BottomPopUp show={isModalOpen} onClose={closeModal}>
+        <BottomPopUp height="40dvh" show={isModalOpen} onClose={closeModal}>
           <div className="h-[15rem] p-6 bg-white text-black overflow-hidden rounded-t-2xl">
             <h1 className="text-xl font-semibold">
               Available Coins :{" "}
