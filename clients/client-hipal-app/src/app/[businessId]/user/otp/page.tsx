@@ -283,9 +283,8 @@ function OtpPage() {
                 max={1}
                 min={0}
                 ref={inputRefs[index]}
-                className={`border border-black text-black rounded-lg py-2 px-2 text-center text-base-content w-[3rem] h-12 mr-2 focus:outline-none ${
-                  error && "border-red-500"
-                }`}
+                className={`border border-black text-black rounded-lg py-2 px-2 text-center text-base-content w-[3rem] h-12 mr-2 focus:outline-none ${error && "border-red-500"
+                  }`}
                 required
               />
             ))}

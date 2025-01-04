@@ -110,6 +110,7 @@ export default function BottomButton({
   }, [setInputModal]);
 
   const openModal = useCallback(() => {
+    setDirection("explore");
     if (!accessToken) {
       router.push(`/${customLink}/user/signup`);
     }

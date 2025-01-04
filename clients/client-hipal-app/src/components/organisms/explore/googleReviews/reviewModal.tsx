@@ -5,12 +5,8 @@ import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 import confetti from "canvas-confetti";
 import SunlightReview from "@/assets/img/reviewEllipse.png";
 import ReviewCoinz from "@/assets/img/googleReviewStars.png";
-import { useLogin } from "@/components/store/useLogin";
 
 const MemoReviewModal = ({ closeModal }: { closeModal: () => void }) => {
-  const { googleReviewCount } = useLogin((s) => ({
-    googleReviewCount: s.googleReviewCount,
-  }));
   const [timer, setTimer] = useState(15);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isTimerStarted, setIsTimerStarted] = useState(false);
