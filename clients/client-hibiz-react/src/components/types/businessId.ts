@@ -99,6 +99,12 @@ export const getButtons = (outletType: string): ILiteVersionCardButton[] => [
     description: "Get insights of your business",
     navigateTo: "analytics",
   },
+  {
+    image: Services,
+    text: "POS",
+    description: "Manage your POS",
+    navigateTo: "pos",
+  },
 ];
 
 export interface Dish {
