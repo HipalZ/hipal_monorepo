@@ -102,6 +102,33 @@ const surlRouter = new Hono()
         200,
       );
     },
+  )
+  .get(
+    "/get_table_data/:orderId",
+    zValidator(
+      "param",
+      z.object({
+        orderId: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { orderId } = c.req.param();
+
+      const obj = {
+        orderId: orderId,
+        tableName: "A-10",
+        total: 500,
+      };
+
+      return c.json(
+        {
+          message: "Table data",
+          err: false,
+          data: obj,
+        },
+        200,
+      );
+    },
   );
 
 export default surlRouter;
