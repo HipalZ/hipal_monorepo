@@ -10,6 +10,7 @@ import Settings from "@/assets/services/setting.png";
 import Services from "@/assets/services/services.png";
 import Analytics from "@/assets/services/analytics.png";
 import Review from "@/assets/services/review.png";
+import POS from "@/assets/services/POS.png";
 
 export interface ILiteVersionCardButton {
   image: string;
@@ -100,7 +101,7 @@ export const getButtons = (outletType: string): ILiteVersionCardButton[] => [
     navigateTo: "analytics",
   },
   {
-    image: Services,
+    image: POS,
     text: "POS",
     description: "Manage your POS",
     navigateTo: "pos",

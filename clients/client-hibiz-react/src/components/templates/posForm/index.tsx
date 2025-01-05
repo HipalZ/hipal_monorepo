@@ -59,7 +59,7 @@ const MemoPosForm = () => {
     return (
         <form
             onSubmit={handleForm}
-            className="h-[85dvh] md:h-[70dvh] lg:h-[90dvh] 2xl:h-[75dvh] 2xl:w-full w-full overflow-y-auto bg-white p-4 lg:p-6 rounded-xl shadow-lg max-w-lg mx-auto"
+            className="h-[85dvh] md:h-[70dvh] lg:h-[90dvh] 2xl:h-[75dvh] overflow-y-auto bg-white p-4 rounded-xl shadow-lg mx-auto"
         >
             <header className="text-center mb-8">
                 <h1 className="text-2xl font-bold text-gray-900 capitalize mb-2">
