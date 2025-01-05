@@ -150,6 +150,12 @@ const MemoCouponz = () => {
     );
   }, [selectedCoupon]);
 
+  const redirectBack = useCallback(() => {
+    router.push(`/${customLink}/explore`);
+    setDirection("")
+    setUrlFrom("");
+  }, [setDirection, setUrlFrom, router, customLink]);
+
   if (selectedCoupon && Object.keys(selectedCoupon).length === 0)
     return <LoadingSpinnerCircle />;
 
@@ -161,14 +167,13 @@ const MemoCouponz = () => {
         "h-[100vh] overflow-y-auto pb-[10rem] relative",
       )}
     >
-      <Link href={`/${customLink}/explore`}>
-        <button
-          type="button"
-          className="top-4 left-4 py-2 rounded-full absolute z-[60] px-4 text-black bg-[#ffffff70]"
-        >
-          <BiArrowBack />
-        </button>
-      </Link>
+      <button
+        type="button"
+        onClick={redirectBack}
+        className="top-4 left-4 py-2 rounded-full absolute z-[60] px-4 text-black bg-[#ffffff70]"
+      >
+        <BiArrowBack />
+      </button>
       <picture className="absolute right-0 -top-14">
         <Image src={baloonsRight} alt="baloonsRight" width={155} height={300} />
       </picture>

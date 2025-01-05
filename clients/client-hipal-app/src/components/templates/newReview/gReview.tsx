@@ -1,3 +1,4 @@
+"use client"
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import GoogleReviewCard from "@/components/atoms/googleReviewCard";
 import Image from "next/image";
@@ -7,6 +8,7 @@ import { useReview } from "@/components/store/useReview";
 import { useLogin } from "@/components/store/useLogin";
 import { useParams, useRouter } from "next/navigation";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import { flushSync } from "react-dom";
 
 const MemoGReview = () => {
   const customLink = useParams()?.businessId as string;
@@ -22,9 +24,9 @@ const MemoGReview = () => {
   }));
 
   const skipGreview = useCallback(() => {
-    setShowGoogleReview(false);
+    flushSync(() => setShowGoogleReview(false));
     router.push(`/${customLink}/explore`);
-  }, [setShowGoogleReview, customLink, router]);
+  }, [router, customLink, setShowGoogleReview]);
 
   return (
     <>

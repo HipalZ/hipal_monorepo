@@ -55,6 +55,7 @@ const MemoCategoryPageBtn = () => {
   }, []);
 
   const proceedToPayment = useCallback(() => {
+    setDirection("category");
     if (!accessToken) {
       router.push(`/${customLink}/user/signup`);
     }

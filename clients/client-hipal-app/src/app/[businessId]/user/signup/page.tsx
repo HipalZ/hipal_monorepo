@@ -18,6 +18,10 @@ const SignUp = memo(() => {
   const { setUserDetails, userDetails } = useLogin();
 
   const businessData = useBusinessDetails((s) => s.businessDetails);
+  const { setUrlFrom, setDirection } = useLogin((s) => ({
+    setUrlFrom: s.setUrlFrom,
+    setDirection: s.setDirection,
+  }));
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
   const [loader, setLoader] = useState<boolean>(false);
@@ -58,7 +62,9 @@ const SignUp = memo(() => {
 
   const goBack = useCallback(() => {
     router.push(`/${customLink}/explore`);
-  }, [router, customLink]);
+    setDirection("")
+    setUrlFrom("");
+  }, [router, customLink, setDirection, setUrlFrom]);
 
   useEffect(() => {
     if (userDetails.phone) {

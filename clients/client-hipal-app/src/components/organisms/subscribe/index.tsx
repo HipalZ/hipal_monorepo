@@ -29,6 +29,7 @@ const MemoSubScribeModal = ({
   const { errorText } = useErrorHandling();
   const businessData = useBusinessDetails((s) => s.businessDetails);
   const userDetails = useLogin((s) => s.userDetails);
+  const setDirection = useLogin((state) => state.setDirection);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const loyaltyInfo = useLoyaltyData((s) => s.loyaltySetting);
   const customLink = useParams()?.businessId as string;
@@ -67,6 +68,7 @@ const MemoSubScribeModal = ({
     }
     const response = (await res.json()).data;
     if (res.status === 400 || res.status === 403 || res.status === 404) {
+      setDirection("explore")
       return router.push(`/${customLink}/user/signup`);
     }
     if (res.status === 409) {

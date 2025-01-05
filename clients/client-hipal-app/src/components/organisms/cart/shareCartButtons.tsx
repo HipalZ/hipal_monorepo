@@ -15,6 +15,7 @@ const MemoShareCartButtons = () => {
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const accessToken = useUserToken.getState().accessToken;
   const userDetails = useLogin((state) => state.userDetails);
+  const setDirection = useLogin((state) => state.setDirection);
   const router = useRouter();
   const customLink = useParams()?.businessId as string;
 
@@ -28,6 +29,7 @@ const MemoShareCartButtons = () => {
   }, [cart]);
 
   const generateCartLink = async () => {
+    setDirection("category")
     if (!accessToken) {
       router.push(`/${customLink}/user/signup`);
       return;

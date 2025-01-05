@@ -35,14 +35,12 @@ const MemoGoogleReviewCard = () => {
     userDetails,
     setReviewPopup,
     googleReviewCount,
-    setGoogleReviewCount,
     isLogin,
     setDirection,
   } = useLogin((s) => ({
     userDetails: s.userDetails,
     setReviewPopup: s.setReviewPopup,
     googleReviewCount: s.googleReviewCount,
-    setGoogleReviewCount: s.setGoogleReviewCount,
     isLogin: s.isLogin,
     setDirection: s.setDirection,
   }));
@@ -86,11 +84,10 @@ const MemoGoogleReviewCard = () => {
         return;
       }
 
-      const response = await res.json();
+      await res.json();
       if (res.status === 200) {
         setReviewPopup(true);
       }
-      setGoogleReviewCount(response?.data?.googleReviewCount);
 
       if (!newWindow) {
         toast.error(

@@ -951,3 +951,8 @@ export interface IWhatsAppMessage {
   userId: string;
   ownerId: string;
 }
+
+export interface IListPos {
+  _id: string;
+  name: string;
+}

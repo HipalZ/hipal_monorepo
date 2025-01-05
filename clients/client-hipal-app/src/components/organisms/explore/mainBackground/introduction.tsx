@@ -81,6 +81,11 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
     return router.push(`/${customLink}/explore`);
   }, [accessToken, subscribeModal]);
 
+  const redirectUrl = useCallback(() => {
+    const url = businessDetails?.placeUrl || "";
+    window.open(url, "_blank");
+  }, [businessDetails?.placeUrl]);
+
   useEffect(() => {
     if (!accessToken) {
       setAccessToken("");
@@ -96,60 +101,57 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
     }
   }, [customLink, userDetails._id]);
 
-  if (isLoader) {
-    return <LoadingSpinnerCircle />;
-  }
-
   return (
     <>
-      {" "}
-      <section className="absolute z-20 bottom-6 left-6 w-[75%] text-white">
-        <span className="text-xs px-3 py-2 rounded-full bg-[#ffffff30]">
-            ⭐ {outletInfo?.avgRating}
-        </span>
-        <h3 className="mt-2 text-3xl capitalize space-grotesk-700">
-          {data?.business?.name}
-        </h3>
-        <p className={cn("text-sm line-clamp-2 capitalize mb-4")}>
-          {Array.isArray(data?.business?.tags)
-            ? data?.business?.tags.join(" | ")
-            : data?.business?.tags}
-        </p>
-        <h4 className="mb-1 text-xs font-semibold line-clamp-2">
-          {data?.business?.address}
-        </h4>
-      </section>
-      <section className="absolute z-20 flex flex-col space-y-5 bottom-4 right-4 ">
-        <button
-          onClick={goToLocation}
-          className="p-3 rounded-full bg-primary text-base-100"
-          type="button"
-        >
-          <GrLocation size="20" />
-        </button>
-        <button
-          onClick={callTheOwner}
-          className="p-3 text-black bg-white rounded-full"
-          type="button"
-        >
-          <MdOutlineCall size="20" />
-        </button>
-      </section>
-      {subscribeModal && (
-        <BottomPopUp show={subscribeModal} onClose={closeSubscribeModal} hide>
-          <SubScribeModal
-            closeSubscribeModal={closeSubscribeModal}
-            setIsLoader={setIsLoader}
-            business={business}
-            setSubscribeModal={setSubscribeModal}
-          />
-        </BottomPopUp>
-      )}
-      {reviewPopup && (
-        <BottomPopUp show={reviewPopup} onClose={toggleReviewPopup}>
-          <ReviewModal closeModal={toggleReviewPopup} />
-        </BottomPopUp>
-      )}
+      {isLoader ? <LoadingSpinnerCircle /> : <>
+        <section className="absolute z-20 bottom-6 left-6 w-[75%] text-white">
+          <span onClick={redirectUrl} className="text-xs px-3 py-2 rounded-full bg-[#ffffff30]">
+            ⭐ {outletInfo?.avgRating || 4.7}
+          </span>
+          <h3 className="mt-2 text-3xl capitalize space-grotesk-700">
+            {data?.business?.name}
+          </h3>
+          <p className={cn("text-sm line-clamp-2 capitalize mb-4")}>
+            {Array.isArray(data?.business?.tags)
+              ? data?.business?.tags.join(" | ")
+              : data?.business?.tags}
+          </p>
+          <h4 className="mb-1 text-xs font-semibold line-clamp-2">
+            {data?.business?.address}
+          </h4>
+        </section>
+        <section className="absolute z-20 flex flex-col space-y-5 bottom-4 right-4 ">
+          <button
+            onClick={goToLocation}
+            className="p-3 rounded-full bg-primary text-base-100"
+            type="button"
+          >
+            <GrLocation size="20" />
+          </button>
+          <button
+            onClick={callTheOwner}
+            className="p-3 text-black bg-white rounded-full"
+            type="button"
+          >
+            <MdOutlineCall size="20" />
+          </button>
+        </section>
+        {subscribeModal && (
+          <BottomPopUp show={subscribeModal} onClose={closeSubscribeModal} hide>
+            <SubScribeModal
+              closeSubscribeModal={closeSubscribeModal}
+              setIsLoader={setIsLoader}
+              business={business}
+              setSubscribeModal={setSubscribeModal}
+            />
+          </BottomPopUp>
+        )}
+        {reviewPopup && (
+          <BottomPopUp show={reviewPopup} onClose={toggleReviewPopup}>
+            <ReviewModal closeModal={toggleReviewPopup} />
+          </BottomPopUp>
+        )}
+      </>}
     </>
   );
 };
