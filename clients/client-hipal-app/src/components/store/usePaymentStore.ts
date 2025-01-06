@@ -47,6 +47,15 @@ interface IUsePaymentStore {
 
   editBillModal: boolean;
   setEditBillModal: (open: boolean) => void;
+
+  checkLogin: boolean;
+  setCheckLogin: (login: boolean) => void;
+
+  openBlastModal: boolean;
+  setOpenBlastModal: (open: boolean) => void;
+
+  coinz: number;
+  setCoinz: (coinz: number) => void;
 }
 
 export const usePaymentStore = create<IUsePaymentStore>((set) => ({
@@ -109,4 +118,13 @@ export const usePaymentStore = create<IUsePaymentStore>((set) => ({
 
   editBillModal: false,
   setEditBillModal: (open: boolean) => set(() => ({ editBillModal: open })),
+
+  checkLogin: false,
+  setCheckLogin: (login: boolean) => set(() => ({ checkLogin: login })),
+
+  openBlastModal: false,
+  setOpenBlastModal: (open: boolean) => set(() => ({ openBlastModal: open })),
+
+  coinz: 0,
+  setCoinz: (coinz: number) => set(() => ({ coinz: coinz })),
 }));

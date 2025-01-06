@@ -19,12 +19,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import TimeBadge from "./test";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import BottomButton from ".";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 
 const MemoCategoryPageBtn = () => {
   const accessToken = useUserToken.getState().accessToken;
   const { businessId } = useBusinessDetails((s) => ({
     businessId: s.businessDetails?._id,
   }));
+  const { isLoading } = usePaymentStore();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const { isSearchActive, setIsSearchActive, showHeader, setShowHeader } =
     useSearch();
@@ -60,8 +62,12 @@ const MemoCategoryPageBtn = () => {
       router.push(`/${customLink}/user/signup`);
     }
     // setCartPage("order");
-    setInputModal(true);
-  }, [setDirection, accessToken, customLink, showCart]);
+    if (outletInfo?.isPosEnabled) {
+      router.push(`/${customLink}/posPayment`);
+    } else {
+      setInputModal(true);
+    }
+  }, [setDirection, accessToken, customLink, showCart, setInputModal, outletInfo?.isPosEnabled]);
 
   const triggerCallWaiter = useCallback(() => {
     setDirection("category");

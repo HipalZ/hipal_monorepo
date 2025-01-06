@@ -114,7 +114,6 @@ const MemoCartPayment = () => {
       setTips(0);
       setAvailedCoupon({});
       setCartPage("order");
-      setShowCart(false);
       router.push(`/${customLink}/payment`);
     }
   }, [
