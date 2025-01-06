@@ -44,6 +44,7 @@ export * from "./tagType";
 export * from "./tempTableSettle";
 export * from "./theme";
 export * from "./uniquelyYours";
+export * from "./upiMode";
 export * from "./urlModel";
 export * from "./user";
 export * from "./userAnalytics";

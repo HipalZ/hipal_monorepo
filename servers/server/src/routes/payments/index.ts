@@ -1,6 +1,7 @@
 import { createHmac } from "node:crypto";
 // books.ts
 import {
+  BusinessPosConfig,
   BusinessSettings,
   Cart,
   CouponClaim,
@@ -13,9 +14,9 @@ import {
   Payment,
   PaymentAlert,
   PetPoojaPinTemp,
-  Pos,
   Reviews,
   Subscriber,
+  Table,
   TagModel,
   TempTableSettle,
   User,
@@ -1269,6 +1270,23 @@ const paymentsRouter = new Hono()
               session,
             );
 
+            const userGrabbed = await UserCouponGrabb.findOne({
+              userId: getOrder.userId,
+              businessId: getOrder.businessId,
+              isDeleted: false,
+            }).count();
+
+            const userById = await User.findById(getOrder.userId);
+
+            const userTags = await UserTags.find({
+              userId: getOrder.userId,
+              businessId: getOrder.businessId,
+            });
+            let tagIds = [];
+            for (const tag of userTags) {
+              tagIds.push(tag.tagId);
+            }
+
             const userAnalytics = await UserAnalytic.findOne({
               userId: getOrder?.userId,
             }).select("totalSpend visitCount");
@@ -1289,6 +1307,10 @@ const paymentsRouter = new Hono()
                   $set: {
                     avgSpend: countAvgSpend,
                     tableName: getOrder?.tableName,
+                    couponCount: userGrabbed,
+                    currentCoins: coinsCalculated.finalReward,
+                    tagIds: tagIds,
+                    dob: userById?.dob,
                   },
                 },
                 { session },
@@ -1306,6 +1328,10 @@ const paymentsRouter = new Hono()
                     coinzIssued: coinsCalculated.finalReward,
                     coinzUsed: claimCoins,
                     tableName: getOrder?.tableName,
+                    couponCount: userGrabbed,
+                    currentCoins: coinsCalculated.finalReward,
+                    tagIds: tagIds,
+                    dob: userById?.dob,
                   },
                 ],
                 { session },
@@ -2696,18 +2722,33 @@ const paymentsRouter = new Hono()
             businessId: getOrder.businessId,
           });
 
-          const pos = await Pos.findOne({ businessId: getOrder.businessId });
+          const pos = await BusinessPosConfig.findOne({
+            businessId: getOrder.businessId,
+          }).populate("posId");
 
           const res = await axios.post(
             "http://api.petpooja.com/V1/captainorders/success_payment/",
             {
-              app_key: pos?.accessKey,
-              app_secret: pos?.secretKey,
-              access_token: pos?.authToken,
-              restID: pos?.restId,
+              app_key: pos?.posId.accessKey,
+              app_secret: pos?.posId.secretKey,
+              access_token: pos?.posId.authToken,
+              restID: pos?.posId.restId,
               bill_request_id: activeTable?.billRequestId,
               amount_paid: getOrder.total,
               pin: activeTable?.pin,
+            },
+          );
+          await TempTableSettle.create(
+            [
+              {
+                businessId: getOrder.businessId,
+                tableName: getOrder.tableName,
+                settleBy: getOrder.userId?.name,
+                hiCode: activeTable?.hiCode,
+              },
+            ],
+            {
+              session,
             },
           );
 
@@ -2734,14 +2775,19 @@ const paymentsRouter = new Hono()
               session,
             },
           );
-          await TempTableSettle.create(
-            [
-              {
-                businessId: getOrder.businessId,
-                tableName: getOrder.tableName,
-                settleBy: getOrder.userId?.name,
+
+          await Table.findOneAndUpdate(
+            {
+              businessId: getOrder.businessId,
+              name: getOrder.tableName,
+            },
+            {
+              $set: {
+                status: "EMPTY",
+                currentTableAmount: 0,
+                userIds: [],
               },
-            ],
+            },
             {
               session,
             },

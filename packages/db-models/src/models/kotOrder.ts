@@ -55,10 +55,39 @@ const KotOrderSchema = new Schema<KotOrderType>(
     date: {
       type: Number,
     },
-    // createdAt: {
-    //   type: Date,
-    //   expires: 60 * 60 * 24 * 30,
-    // },
+
+    rejected: {
+      type: Boolean,
+      default: false,
+    },
+    accepted: {
+      type: Boolean,
+      default: false,
+    },
+    edited: {
+      type: Boolean,
+      default: false,
+    },
+    reasonOfRejection: {
+      type: String,
+    },
+    acceptedBy: {
+      type: ObjectId,
+      ref: "User",
+    },
+    editedBy: {
+      type: ObjectId,
+      ref: "User",
+    },
+    rejectedBy: {
+      type: ObjectId,
+      ref: "User",
+    },
+
+    settled: {
+      type: Boolean,
+      default: false,
+    },
 
     name: {
       type: String,

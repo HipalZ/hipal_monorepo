@@ -145,7 +145,9 @@ const posRouter = new Hono()
         tableName: tableName,
       });
 
-      const pos = await Pos.findOne({ businessId: businessId });
+      const pos = await BusinessPosConfig.findOne({
+        businessId: businessId,
+      }).populate("posId");
       console.log("POS", pos);
 
       if (!pos) {
@@ -162,10 +164,10 @@ const posRouter = new Hono()
       }
 
       const billConfig = {
-        app_key: pos.accessKey,
-        app_secret: pos.secretKey,
-        access_token: pos.authToken,
-        restID: pos.restId,
+        app_key: pos.posId.accessKey,
+        app_secret: pos.posId.secretKey,
+        access_token: pos.posId.authToken,
+        restID: pos.posId.restId,
         pin: getPin?.pin,
         tableNo: tableName,
       };
@@ -192,14 +194,15 @@ const posRouter = new Hono()
             {
               billGeneratedBy: generatedBy,
               billRequestId: bill_request_id,
+              billInvoiceId: fetchBill.data.invoice_id,
             },
           );
 
           const getBillConfig = {
-            app_key: pos.accessKey,
-            app_secret: pos.secretKey,
-            access_token: pos.authToken,
-            restID: pos.restId,
+            app_key: pos.posId.accessKey,
+            app_secret: pos.posId.secretKey,
+            access_token: pos.posId.authToken,
+            restID: pos.posId.restId,
             bill_request_id: bill_request_id,
           };
 
@@ -222,7 +225,7 @@ const posRouter = new Hono()
               tableName: getBill.data.order_data.table_no,
 
               subTotal: getBill.data.order_data.core_price,
-              billRequestId: bill_request_id,
+              billRequestId: getBill.data.invoice_id,
             };
             return c.json(
               {
@@ -236,10 +239,10 @@ const posRouter = new Hono()
         }
 
         const billRequestConfig = {
-          app_key: pos.accessKey,
-          app_secret: pos.secretKey,
-          access_token: pos.authToken,
-          restID: pos.restId,
+          app_key: pos.posId.accessKey,
+          app_secret: pos.posId.secretKey,
+          access_token: pos.posId.authToken,
+          restID: pos.posId.restId,
           request_id: request_id,
         };
 
@@ -255,10 +258,10 @@ const posRouter = new Hono()
           const bill_request_id = fetchBillDetails.data.bill_request_id;
 
           const getBillConfig = {
-            app_key: pos.accessKey,
-            app_secret: pos.secretKey,
-            access_token: pos.authToken,
-            restID: pos.restId,
+            app_key: pos.posId.accessKey,
+            app_secret: pos.posId.secretKey,
+            access_token: pos.posId.authToken,
+            restID: pos.posId.restId,
             bill_request_id: bill_request_id,
           };
 
@@ -270,6 +273,7 @@ const posRouter = new Hono()
             {
               billGeneratedBy: generatedBy,
               billRequestId: bill_request_id,
+              billInvoiceId: fetchBillDetails.data.invoice_id,
             },
           );
 
@@ -292,7 +296,7 @@ const posRouter = new Hono()
               customerPhone: getBill.data.order_data.customer_phone,
               customerName: getBill.data.order_data.customer_name,
               tableName: getBill.data.order_data.table_no,
-              billRequestId: bill_request_id,
+              billRequestId: getBill.data.invoice_id,
 
               subTotal: getBill.data.order_data.core_price,
             };
@@ -1074,9 +1078,10 @@ const posRouter = new Hono()
               $set: {
                 status: "ACTIVE",
                 currentTableAmount: 100,
+                date: Date.now(),
               },
               $addToSet: {
-                totalUserIds: user._id,
+                userIds: user._id,
               },
             },
             {

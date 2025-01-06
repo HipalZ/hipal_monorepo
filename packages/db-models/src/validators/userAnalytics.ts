@@ -41,6 +41,10 @@ export const UserAnalyticsAttrs = z.object({
     .optional(),
 
   tableName: z.string().optional(),
+  currentCoins: z.number().optional(),
+  couponCount: z.number().optional(),
+  tagIds: z.array(ObjectIdSchema).optional(),
+  dob: z.number().optional(),
 });
 
 export type UserAnalytics = z.infer<typeof UserAnalyticsAttrs>;

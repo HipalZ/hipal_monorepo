@@ -35,9 +35,9 @@ export const tableSchema = z.object({
   rank: z.string().min(1).max(30).optional(),
   status: z.enum(TableStatusEnum).default("EMPTY"),
   totalItemCount: z.number().default(0).optional(),
-  totalUserIds: z.array(ObjectIdSchema).default([]).optional(),
+  userIds: z.array(ObjectIdSchema).default([]).optional(),
   currentTableAmount: z.number().default(0).optional(),
-
+  date: z.number().optional(),
   isDeleted: z.boolean().default(false).optional(),
 });
 

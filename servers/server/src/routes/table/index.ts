@@ -18,6 +18,7 @@ const tableRouter = new Hono()
       const tables = await Table.find({
         businessId,
         active: "1",
+        status: "ACTIVE",
       });
 
       return c.json(
@@ -95,6 +96,10 @@ const tableRouter = new Hono()
 
       const order = await KotOrder.find({
         businessId,
+        settled: false,
+        edited: false,
+        rejected: false,
+        accepted: false,
       });
 
       return c.json(
@@ -102,6 +107,32 @@ const tableRouter = new Hono()
           message: "Orders fetched successfully",
           err: false,
           data: order,
+        },
+        200,
+      );
+    },
+  )
+  .put(
+    "/update_guest",
+    zValidator(
+      "json",
+      z.object({
+        tableId: z.string().min(1).max(500),
+        guestCount: z.number().positive(),
+      }),
+    ),
+    async (c) => {
+      const { guestCount, tableId } = await c.req.json();
+
+      const table = await Table.findByIdAndUpdate(tableId, {
+        capacity: guestCount,
+      });
+
+      return c.json(
+        {
+          message: "Table updated successfully",
+          err: false,
+          data: table,
         },
         200,
       );

@@ -65,11 +65,15 @@ const tableSchema = new mongoose.Schema<TableType>(
       required: false,
       default: 0,
     },
-    totalUserIds: {
+    userIds: {
       type: [ObjectId],
       required: false,
       default: [],
       ref: "User",
+    },
+    date: {
+      type: Number,
+      required: false,
     },
   },
   {
