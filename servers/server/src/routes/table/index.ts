@@ -5,7 +5,7 @@ import { z } from "zod";
 //
 const tableRouter = new Hono()
   .get(
-    "/:businessId",
+    "/all/:businessId",
     zValidator(
       "param",
       z.object({
@@ -25,6 +25,29 @@ const tableRouter = new Hono()
           message: "Tables fetched successfully",
           err: false,
           data: tables,
+        },
+        200,
+      );
+    },
+  )
+  .get(
+    "/:tableId",
+    zValidator(
+      "param",
+      z.object({
+        tableId: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { tableId } = c.req.param();
+
+      const table = await Table.findById(tableId);
+
+      return c.json(
+        {
+          message: "Tables fetched successfully",
+          err: false,
+          data: table,
         },
         200,
       );
