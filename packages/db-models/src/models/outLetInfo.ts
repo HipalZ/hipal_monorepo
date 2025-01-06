@@ -168,6 +168,11 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: String,
     required: false,
   },
+  posBusinessConfigId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: false,
+    ref: "businessposconfig",
+  },
 });
 
 const OutLetInfo: Model<OutLetInfoType> = mongoose.model<OutLetInfoType>(

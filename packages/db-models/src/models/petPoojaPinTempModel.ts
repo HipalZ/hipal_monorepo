@@ -12,6 +12,7 @@ const petPoojaPinTempModelSchema =
     hiCode: {
       type: Number,
       required: true,
+      default: 0,
     },
     pin: {
       type: String,
@@ -35,6 +36,10 @@ const petPoojaPinTempModelSchema =
       required: false,
     },
     billRequestId: {
+      type: String,
+      required: false,
+    },
+    billInvoiceId: {
       type: String,
       required: false,
     },

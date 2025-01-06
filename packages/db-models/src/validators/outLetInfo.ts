@@ -99,6 +99,7 @@ export const outLetInfoSchema = z.object({
   hideDishPrice: z.boolean().optional(),
   isPosEnabled: z.boolean().default(false).optional(),
   restId: z.string().min(3).max(200).optional(),
+  posBusinessConfigId: ObjectIdSchema.optional(),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;

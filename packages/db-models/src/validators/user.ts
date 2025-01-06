@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { string, z } from "zod";
+import { z } from "zod";
 
 const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
   z
@@ -11,8 +11,8 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 );
 
 export const subPermissions = z.object({
-  title: z.string().optional(),
-  permissions: z.array(string()),
+  title: z.string(),
+  isHaveAccess: z.boolean().default(false),
 });
 
 export const CustomRole = z.object({

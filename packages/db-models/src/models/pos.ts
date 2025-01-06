@@ -34,7 +34,7 @@ const posSchema = new mongoose.Schema<PosType>(
     },
     businessId: {
       type: ObjectId,
-      required: true,
+      required: false,
     },
   },
   {

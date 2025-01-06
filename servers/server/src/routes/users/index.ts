@@ -499,7 +499,25 @@ const usersRouter = new Hono()
 
     async (c) => {
       const requestData = await c.req.json();
-      const { name, phone, permissions, businessId, role } = requestData;
+      const { name, phone, businessId, role } = requestData;
+      const permissions = [
+        {
+          title: "managebooking",
+          isHaveAccess: false,
+        },
+        {
+          title: "tableandordering",
+          isHaveAccess: false,
+        },
+        {
+          title: "review",
+          isHaveAccess: false,
+        },
+        {
+          title: "payment",
+          isHaveAccess: false,
+        },
+      ];
       const newCustomRole = {
         businessId: businessId,
         permissions: permissions,

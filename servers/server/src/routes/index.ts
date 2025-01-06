@@ -17,6 +17,7 @@ import googleReview from "./reviews";
 import settingsRouter from "./settings";
 import subsCriberRouter from "./subscribers";
 import surlRouter from "./surl";
+import tableRouter from "./table";
 import tagRouter from "./tags";
 import usersRouter from "./users";
 import whatsappRouter from "./whatsapp";
@@ -49,6 +50,7 @@ export const routes = app
   .route("/cart", cartRouter)
   .route("/surl", surlRouter)
   .route("/zones_and_tables", zonesAndTablesRouter)
-  .route("/icon", iconRouter);
+  .route("/icon", iconRouter)
+  .route("/table", tableRouter);
 
 export type AppType = typeof routes;

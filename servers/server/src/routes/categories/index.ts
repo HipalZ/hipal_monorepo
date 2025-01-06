@@ -1,5 +1,11 @@
 // books.ts
-import { Business, Category, Dish, Pos, Table } from "@hi/db-models";
+import {
+  Business,
+  BusinessPosConfig,
+  Category,
+  Dish,
+  Table,
+} from "@hi/db-models";
 
 import {
   categorySchema,
@@ -337,7 +343,7 @@ const categoriesRouter = new Hono()
             "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence",
           );
 
-        const isHasPos = await Pos.findOne({
+        const isHasPos = await BusinessPosConfig.findOne({
           businessId,
         });
 
@@ -365,7 +371,7 @@ const categoriesRouter = new Hono()
           populate: { path: "addOnIds" },
         });
 
-        const isHasPos = await Pos.findOne({
+        const isHasPos = await BusinessPosConfig.findOne({
           businessId,
         });
 

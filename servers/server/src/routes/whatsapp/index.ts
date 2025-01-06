@@ -208,6 +208,8 @@ const scheduleCampaign = async (
       customer,
     );
 
+    console.log("components", components);
+
     try {
       const res = await axios.post(
         `https://graph.facebook.com/${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
@@ -234,6 +236,7 @@ const scheduleCampaign = async (
       });
     } catch (error) {
       const axiosError = error as AxiosError;
+      console.log("error", axiosError.response?.data);
       const message = axiosError.response?.data?.error?.message;
 
       return {

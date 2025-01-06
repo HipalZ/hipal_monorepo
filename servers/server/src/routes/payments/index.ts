@@ -238,12 +238,6 @@ const addCoins = async (
 
   session: ClientSession,
 ) => {
-  console.log("coins", coins);
-  console.log("userId", userId);
-  console.log("order_id", order_id);
-  console.log("tableName", tableName);
-  console.log("businessId", businessId);
-  console.log("loyaltyId", loyaltyId);
   const existingUser = await UserReward.findOne({ userId, loyaltyId }).select(
     "rewards",
   );

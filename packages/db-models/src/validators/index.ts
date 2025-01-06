@@ -28,6 +28,7 @@ export * from "./staffValidator";
 
 export * from "./admin";
 export * from "./analytic";
+export * from "./businessPosConfig";
 export * from "./businessSubscriber";
 export * from "./campaign";
 export * from "./channelLink";
@@ -42,6 +43,7 @@ export * from "./googleAuthUsers";
 export * from "./googleReviews";
 export * from "./group";
 export * from "./groupAnalytics";
+export * from "./kotOrder";
 export * from "./menuBanner";
 export * from "./note";
 export * from "./petPoojaPinTempModel";
