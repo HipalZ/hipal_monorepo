@@ -878,6 +878,15 @@ const posRouter = new Hono()
           internalCart,
           user._id,
         );
+
+        await saveKotOrder(
+          tableName,
+          businessId,
+          customerName,
+          customerPhone,
+          internalCart,
+          user._id,
+        );
         return c.json(
           {
             message: "Data fetched successfully",
