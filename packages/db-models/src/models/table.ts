@@ -30,6 +30,10 @@ const tableSchema = new mongoose.Schema<TableType>(
       required: false,
       default: true,
     },
+    hiCode: {
+      type: String,
+      required: false,
+    },
 
     isDeleted: {
       type: Boolean,

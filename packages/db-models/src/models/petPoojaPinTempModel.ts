@@ -43,6 +43,18 @@ const petPoojaPinTempModelSchema =
       type: String,
       required: false,
     },
+    tax: {
+      type: Number,
+      required: false,
+    },
+    serviceCharge: {
+      type: Number,
+      required: false,
+    },
+    settleType: {
+      type: String,
+      required: false,
+    },
   });
 
 const PetPoojaPinTemp: Model<PetPoojaPinTempModelType> =

@@ -1,4 +1,4 @@
-import { UrlModel, WhatsAppBusinessConfig } from "@hi/db-models";
+import { QrBill, UrlModel, WhatsAppBusinessConfig } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { nanoid } from "nanoid";
@@ -114,20 +114,26 @@ const surlRouter = new Hono()
     async (c) => {
       const { orderId } = c.req.param();
 
-      const obj = {
-        orderId: orderId,
-        tableName: "A-10",
-        total: 500,
-      };
+      const billInfo = await QrBill.findOne({
+        requestBillId: orderId,
+      });
 
-      return c.json(
-        {
-          message: "Table data",
-          err: false,
-          data: obj,
-        },
-        200,
-      );
+      if (!billInfo) {
+        return c.json(
+          {
+            message: "Bill not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
+
+      return c.json({
+        message: "Bill found",
+        err: false,
+        data: billInfo,
+      });
     },
   );
 

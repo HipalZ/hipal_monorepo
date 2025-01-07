@@ -8,6 +8,7 @@ import {
   Couponz,
   DeviceToken,
   GroupAnalytic,
+  KotOrder,
   LoyaltySettings,
   Order,
   OutLetInfo,
@@ -2775,6 +2776,20 @@ const paymentsRouter = new Hono()
               session,
             },
           );
+          await KotOrder.updateMany(
+            {
+              tableName: getOrder.tableName,
+              businessId: getOrder.businessId,
+            },
+            {
+              $set: {
+                settled: true,
+              },
+            },
+            {
+              session,
+            },
+          );
 
           await Table.findOneAndUpdate(
             {
@@ -2786,6 +2801,8 @@ const paymentsRouter = new Hono()
                 status: "EMPTY",
                 currentTableAmount: 0,
                 userIds: [],
+                totalItemCount: 0,
+                capacity: 0,
               },
             },
             {
