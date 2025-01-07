@@ -13,7 +13,7 @@ import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 
 // revalidation works only for server components
 
-const SignUp = memo(() => {
+const MemoSignUp = () => {
   const [phone, setPhone] = useState("");
   const { setUserDetails, userDetails } = useLogin();
 
@@ -145,6 +145,7 @@ const SignUp = memo(() => {
       </form>
     </main>
   );
-});
+}
 
+const SignUp = memo(MemoSignUp);
 export default SignUp;

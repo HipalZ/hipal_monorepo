@@ -119,7 +119,7 @@ const Cart = () => {
           setHiCodeUser(res?.data as HiCodeUser);
           setHiCodePopup(true);
         } else {
-          toast.error(errorMessage || "Order failed");
+          toast.error(res?.message || errorMessage || "Order failed");
         }
       } catch (error) {
         console.error("Error processing response:", error);
@@ -153,11 +153,10 @@ const Cart = () => {
         await handleApiResponse(
           response,
           "Order placed successfully",
-          "Order failed",
+          "Failed to place order",
         );
       } catch (error) {
         console.error("Error placing POS order:", error);
-        toast.error("An error occurred while placing the POS order");
       }
     } else {
       try {
@@ -228,19 +227,19 @@ const Cart = () => {
     if (cartPage === "order") {
       return cartHistory && cartHistory.length > 0
         ? [
-            {
-              text: "Pay Bill",
-              onClick: payBill,
-              type: "button" as const,
-            },
-          ]
+          {
+            text: "Pay Bill",
+            onClick: payBill,
+            type: "button" as const,
+          },
+        ]
         : [
-            {
-              text: "Order more",
-              onClick: () => setShowCart(false),
-              type: "button" as const,
-            },
-          ];
+          {
+            text: "Order more",
+            onClick: () => setShowCart(false),
+            type: "button" as const,
+          },
+        ];
     }
 
     if (cartPage === "history") {
@@ -273,27 +272,27 @@ const Cart = () => {
       if (cart.length > 0) {
         return outLetInfo?.shareCart
           ? [
-              {
-                text: "Share Cart",
-                onClick: placeOrder,
-                type: "button" as const,
-                highlight: true,
-              },
-            ]
+            {
+              text: "Share Cart",
+              onClick: placeOrder,
+              type: "button" as const,
+              highlight: true,
+            },
+          ]
           : [
-              {
-                text: "Order more",
-                onClick: () => setShowCart(false),
-                type: "button" as const,
-                isLoading: isPending,
-              },
-              {
-                text: "Need Help?",
-                onClick: triggerCallWaiter,
-                type: "button" as const,
-                isLoading: isPending,
-              },
-            ];
+            {
+              text: "Order more",
+              onClick: () => setShowCart(false),
+              type: "button" as const,
+              isLoading: isPending,
+            },
+            {
+              text: "Need Help?",
+              onClick: triggerCallWaiter,
+              type: "button" as const,
+              isLoading: isPending,
+            },
+          ];
       }
       return [
         {

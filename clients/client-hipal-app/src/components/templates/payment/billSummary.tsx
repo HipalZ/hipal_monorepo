@@ -134,9 +134,8 @@ const BillSummary = (props: IBillSummary) => {
                   type="button"
                   key={index?.toString()}
                   onClick={() => handleTipSelect(tip)}
-                  className={`px-4 py-1 rounded-lg text-xs ${
-                    selectedTip === tip ? "bg-black text-white" : "bg-gray-200"
-                  }`}
+                  className={`px-4 py-1 rounded-lg text-xs ${selectedTip === tip ? "bg-black text-white" : "bg-gray-200"
+                    }`}
                 >
                   {tip}
                 </button>

@@ -239,6 +239,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
         setRazorPayPaymentId("");
         resetTableData();
         setChannelId("");
+        setIsLoading(false);
         return router.push(
           `/${customLink}/review?amount=${total}&mode=online&claim=${Math.round(
             finalReward,
@@ -487,7 +488,6 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
           coinsObtained,
           loyaltySetting?.rewardLimit,
         ).finalReward;
-        console.log("finalReward", finalReward);
       }
       toast.success(
         "We sent notification to the staff for offline payment. Please wait for the staff to confirm the payment.",
@@ -829,11 +829,10 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   <article
                     onClick={() => handleMode("MODE")}
                     onKeyDown={() => handleMode("MODE")}
-                    className={`${
-                      billValue > 0 && !!tableName
-                        ? ""
-                        : "opacity-20 pointer-events-none"
-                    } bg-black text-white px-3 py-2 rounded-lg inter text-sm on_active_bounce`}
+                    className={`${billValue > 0 && !!tableName
+                      ? ""
+                      : "opacity-20 pointer-events-none"
+                      } bg-black text-white px-3 py-2 rounded-lg inter text-sm on_active_bounce`}
                   >
                     <span>Pay Now</span>
                   </article>

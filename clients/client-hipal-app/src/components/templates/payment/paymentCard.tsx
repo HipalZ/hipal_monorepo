@@ -30,7 +30,7 @@ const MemoPaymentCard = (props: IPaymentCard) => {
   }, []);
 
   return (
-    <center className="relative h-full mx-4 text-xl text-black bg-white rounded-xl">
+    <center className="relative mx-4 text-xl text-black bg-white rounded-xl">
       <div id="star-container" className="absolute inset-0 overflow-hidden" />
       <h4 className="pt-2 text-sm font-semibold">You Pay</h4>
       {offer > 0 ? (

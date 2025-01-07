@@ -7,6 +7,7 @@ import useCouponTemp from "../store/useCouponTemp";
 import { toast } from "react-toastify";
 import { useSearchParams } from "next/navigation";
 import { useCallback } from "react";
+import { flushSync } from "react-dom";
 
 export const useMerchantDetails = () => {
   const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
@@ -42,10 +43,12 @@ export const useMerchantDetails = () => {
     });
     const response = await res.json();
     if (res.status === 200) {
-      setMerchantDetails({
-        businessId: businessId || "",
-        razorpayMerchantId: response?.data?.razorpayMerchantId,
-        razorpayKeyId: response?.data?.razorpayKeyId,
+      flushSync(() => {
+        setMerchantDetails({
+          businessId: businessId || "",
+          razorpayMerchantId: response?.data?.razorpayMerchantId,
+          razorpayKeyId: response?.data?.razorpayKeyId,
+        });
       });
       // by default setting to zero instead of previous stale data
       setClaimedCoinz(0);

@@ -1,6 +1,5 @@
 import { businessApis } from "@/apis/explore";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
-import MenuIntroduction from "@/components/organisms/explore/menuIntroduction";
 import UniquelyDishes from "@/components/organisms/explore/uniquelyDishes";
 import type {
   IBannerPayload,

@@ -12,6 +12,8 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
+import ScanPage from "../posPayment/paymentScanner";
 
 const CashbackMessage = dynamic(() => import("./cashbackMessage"), {
   loading: () => <SkeletonLoader height={200} />,
@@ -47,6 +49,8 @@ const MemoCoinzRewardSection = () => {
     applyCouponz: s.applyCouponz,
     setApplyCouponz: s.setApplyCouponz,
   }));
+  const orderId = useSearchParams().get("orderId") as string;
+  const searchParams = usePathname()
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const { availedCoupon, userCouponz } = useCouponz((s) => ({
     availedCoupon: s.availedCoupon,
@@ -103,10 +107,9 @@ const MemoCoinzRewardSection = () => {
     const count = validCoupons?.length ?? 0;
     return count;
   }, [billValue, userCouponz]);
-
   return (
     <section className="text-primary poppins-regular">
-      {!outletInfo.isPosEnabled && (
+      {!outletInfo?.isPosEnabled && (
         <center className="flex items-center justify-center my-2 text-primary">
           <button
             type="button"
@@ -212,7 +215,7 @@ const MemoCoinzRewardSection = () => {
           </section>
         </>
       ) : null}
-      {editBillModal && (
+      {(editBillModal && !outletInfo?.isPosEnabled) ? (
         <BottomPopUp
           show={editBillModal}
           onClose={closeBillModal}
@@ -220,7 +223,17 @@ const MemoCoinzRewardSection = () => {
         >
           <AddAmountModal />
         </BottomPopUp>
-      )}
+      ) :
+        orderId || searchParams?.includes('/payment') ? null : (
+          <BottomPopUp
+            show={editBillModal}
+            onClose={closeBillModal}
+            linearGradTheme
+          >
+            <ScanPage />
+          </BottomPopUp>
+        )
+      }
     </section>
   );
 };
