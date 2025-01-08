@@ -274,7 +274,7 @@ const BillPopUpMemo = () => {
               />
             </div>
           ) : null}
-          {selectedNavItem === "online" || selectedNavItem === "history" ? (
+          {viewData?.alertType === "ONLINE" || selectedNavItem === "history" ? (
             <div className="flex justify-center mb-5">
               <button
                 type="button"

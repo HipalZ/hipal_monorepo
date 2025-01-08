@@ -1,4 +1,4 @@
-import callwaiter from "@/assets/img/callwaiter.png";
+import { memo } from "react";
 import { handleRemoveAlert } from "@/components/hooks/commonApi";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useLiteStore } from "@/components/store/useLiteStore";
@@ -9,21 +9,21 @@ import {
   useErrorHandling,
 } from "@/components/utils/helpers";
 import { apiRpc } from "@hi/common";
-import { FiCopy } from "react-icons/fi";
-import { memo, useCallback, useState } from "react";
-import { CiGlobe } from "react-icons/ci";
 import { IoCloseCircleSharp } from "react-icons/io5";
 import { PiCoinsFill } from "react-icons/pi";
-import { MdOutlineCall } from "react-icons/md";
+import { MdOutlineTableBar } from "react-icons/md";
+import { motion, AnimatePresence } from "framer-motion";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import Offline from "./offline";
 
 interface IOfflineProp {
   offlineAlertData: Alert[];
 }
 
-const OfflineAlertCard = (props: IOfflineProp) => {
+const OfflineAlertCard = ({ offlineAlertData }: IOfflineProp) => {
   const { errorText } = useErrorHandling();
-  const [numberTick, setNumberTick] = useState(false);
-  const { offlineAlertData } = props;
   const {
     removeOfflineAlert,
     setViewData,
@@ -63,164 +63,132 @@ const OfflineAlertCard = (props: IOfflineProp) => {
     }
   };
 
-  const copyText = useCallback((id: string, value?: string) => {
-    let text: string;
-    if (value) {
-      text = value;
-    } else {
-      text = document.querySelector(id)?.textContent || "";
-    }
-
-    const sanitizedText = text.replace(/[₹]/g, "");
-    navigator.clipboard
-      .writeText(sanitizedText)
-      .then(() => {
-        setNumberTick(true);
-        setTimeout(() => {
-          setNumberTick(false);
-        }, 3000);
-      })
-      .catch((err) => {
-        console.error("Failed to copy text: ", err);
-      });
-  }, []);
-
   return (
-    <main className="pb-[5rem] lg:grid lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-      {Array.from(offlineAlertData) && offlineAlertData?.length > 0 ? (
-        offlineAlertData.map((alert: Alert) => {
-          return (
-            <section key={alert?._id}>
-              {alert?.alertType === "WAITER" ? (
-                <div className="mx-4 my-4 min-h-[9rem] rounded-xl bg-white p-3">
-                  <section className="relative flex justify-between mb-2">
-                    <article className="flex w-[8rem] items-center rounded-full bg-[#ffe9cf] px-2">
-                      <img src={callwaiter} alt="call" loading="lazy" />
-                      &nbsp;&nbsp;
-                      <h1 className="text-xs">Call the staff</h1>
-                    </article>
-                    <article>
-                      <h1 className="text-xs text-gray-500">
-                        {timestampToDateTime(alert?.date)}
-                      </h1>
-                    </article>
-                    <IoCloseCircleSharp
-                      onClick={() => removeAlert(alert?._id)}
-                      size={24}
-                      className="absolute inline text-red-400 -right-6 -top-6"
-                    />
-                  </section>
-                  <div className="flex justify-between">
-                    <section className="ml-2 space-y-1">
-                      <h1 className="text-base">
-                        User: {alert?.userId?.name || "Customer"}
-                      </h1>
-                      <article className="flex items-center space-x-4">
-                        <h1>Phone: {alert?.userId?.phone || "NA"}</h1>
-                        <span
-                          className={cn(
-                            "rounded-2xl",
-                            numberTick
-                              ? "bg-green-500/20 text-green-500"
-                              : "bg-[#f3eeff] text-[#7f46ff]",
-                          )}
-                          onClick={() =>
-                            copyText("#phone", alert?.userId?.phone)
-                          }
-                          style={{ cursor: "pointer" }}
-                        >
-                          <FiCopy size={16} />
-                        </span>
-                        <a
-                          href={`tel:+91${alert?.userId?.phone}`}
-                          className="flex items-center rounded-full text-[#6f2eff]"
-                        >
-                          <MdOutlineCall size={16} />
-                        </a>
-                      </article>
-                      <p>{alert?.message}</p>
-                    </section>
-                    <section className="text-right">
-                      <h1>Table: {alert?.tableName}</h1>
-                    </section>
+    <motion.main
+      className="p-4 pb-[5rem] gap-4 grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <AnimatePresence>
+        {Array.isArray(offlineAlertData) && offlineAlertData.length > 0 ? (
+          offlineAlertData.map((alert: Alert) => (
+            <motion.div
+              key={alert?._id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              layout
+            >
+              <Card
+                className={cn(
+                  "relative overflow-hidden",
+                  alert?.alertType === "WAITER"
+                    ? "border-orange-200"
+                    : "border-blue-200",
+                )}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <Badge
+                      variant={
+                        alert?.alertType === "WAITER"
+                          ? "warning"
+                          : alert?.status === "FAIL"
+                            ? "destructive"
+                            : "default"
+                      }
+                      className="text-xs font-medium"
+                    >
+                      {alert?.alertType === "WAITER"
+                        ? "Call the staff"
+                        : alert?.alertType.toLowerCase()}
+                    </Badge>
+                    <span className="text-sm font-semibold text-muted-foreground">
+                      {timestampToDateTime(alert?.date)}
+                    </span>
                   </div>
-                </div>
-              ) : (
-                <div className="p-3 mx-4 my-4 bg-white rounded-xl">
-                  <section className="flex items-center justify-between mb-2">
-                    <article className="flex w-[8.5rem] items-center rounded-full bg-[#ffe9cf] px-2">
-                      <span>
-                        <CiGlobe />
-                      </span>
-                      &nbsp;
-                      <h1 className="text-xs">Confirm On floor</h1>
-                    </article>
-                    <article>
-                      <h1 className="text-xs text-gray-500">
-                        {timestampToDateTime(alert?.date)}
-                      </h1>
-                    </article>
-                  </section>
-                  <div className="flex justify-between">
-                    <section>
-                      <article className="ml-2 space-y-1">
-                        <h1 className="text-base">
-                          Bill value : ₹ {alert?.order_id?.billValue}
-                        </h1>
-                        <h1 className="text-base">
-                          Discount : ₹ {alert?.order_id?.claimedCoins}
-                        </h1>
-                        <h6 className="text-xs">
-                          Tips : ₹ {alert?.order_id?.tips}
-                        </h6>
-                      </article>
-                      {alert?.coinsApplied ? (
-                        <article className="flex items-center justify-start px-3 my-2 bg-gray-200 rounded-full py- w-fit">
-                          <span>
-                            <PiCoinsFill size={20} />
-                          </span>
-                          &nbsp;
-                          <h1 className="text-xs">
-                            {alert?.order_id?.claimedCoins} Used
-                          </h1>
-                        </article>
-                      ) : null}
-                    </section>
-                    <section className="text-right">
-                      <p>
-                        User :{" "}
-                        {alert?.userId?.name?.length > 10
-                          ? `${alert.userId.name.substring(0, 10)}...`
-                          : alert?.userId?.name}
-                      </p>
-                      <article className="space-y-1">
-                        <h1 className="text-base text-gray-700">
-                          Table: {alert?.order_id?.tableName}
-                        </h1>
-                        <h6 className="text-2xl font-semibold">
+                  {alert?.alertType === "WAITER" ? (
+                    <Offline alert={alert} />
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="text-2xl font-bold ">
+                          {alert?.order_id?.discount > 0 ||
+                            alert?.order_id?.claimedCoins > 0 ? (
+                            <span className="mr-2 text-sm line-through text-muted-foreground">
+                              ₹ {alert?.order_id?.billValue}
+                            </span>
+                          ) : null}
                           ₹ {alert?.order_id?.total}
-                        </h6>
-                      </article>
-                      <button
-                        type="button"
-                        onClick={() => handleViewMore(alert)}
-                        className="px-6 py-1 mt-6 text-white bg-black rounded-full"
-                      >
-                        <h1 className="text-xs">View</h1>
-                      </button>
-                    </section>
-                  </div>
-                </div>
-              )}
-            </section>
-          );
-        })
-      ) : (
-        <div className="absolute text-2xl text-center -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2">
-          No Data Found
-        </div>
-      )}
-    </main>
+                        </h3>
+                        <div className="flex items-center space-x-2 text-right">
+                          <MdOutlineTableBar size={28} />
+                          <h4 className="text-lg font-semibold">
+                            {alert?.tableName}
+                          </h4>
+                        </div>
+                      </div>
+                      <span className="font-semibold">
+                        {alert?.userId?.name?.length > 10
+                          ? `${alert?.userId?.name?.substring(0, 10)}...`
+                          : alert?.userId?.name || "customer"}
+                      </span>
+                      {alert?.coinsApplied && (
+                        <Badge
+                          variant="secondary"
+                          className="flex items-center space-x-1"
+                        >
+                          <PiCoinsFill className="w-4 h-4" />
+                          <span>{alert?.order_id?.claimedCoins} Used</span>
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+                <CardFooter
+                  className={cn(
+                    "flex items-center justify-between p-4",
+                    alert?.alertType === "WAITER"
+                      ? "bg-orange-50"
+                      : "bg-blue-50",
+                  )}
+                >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive bg-destructive/10"
+                    onClick={() => removeAlert(alert?._id)}
+                  >
+                    <IoCloseCircleSharp className="w-4 h-4 mr-2" />
+                    Remove
+                  </Button>
+                  {alert?.alertType !== "WAITER" && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => handleViewMore(alert)}
+                    >
+                      View Details
+                    </Button>
+                  )}
+                </CardFooter>
+              </Card>
+            </motion.div>
+          ))
+        ) : (
+          <motion.div
+            className="text-2xl font-semibold text-center col-span-full text-muted-foreground"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            No Data Found
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.main>
   );
 };
 

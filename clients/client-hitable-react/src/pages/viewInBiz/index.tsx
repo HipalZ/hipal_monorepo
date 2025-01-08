@@ -6,6 +6,7 @@ import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import HiAnimation from "@/components/atoms/hiClientzAnimation";
 import { usePushTokenApi } from "@/utils/apiService";
+import useBusinessData from "@/components/store/useBusinessData";
 
 const ViewInBizMemo = () => {
   const { savePushToken } = usePushTokenApi();
@@ -13,6 +14,7 @@ const ViewInBizMemo = () => {
     selectedBiz: s.selectedBiz,
     captainData: s.captainData,
   }));
+  const outletInfo = useBusinessData((s) => s?.outletInfo);
   const businessId = selectedBiz?.businessId?._id;
   const navigate = useNavigate();
   const [showMainComponent, setShowMainComponent] = useState(false);
@@ -27,7 +29,11 @@ const ViewInBizMemo = () => {
 
   const navigateToBiz = async () => {
     await savePushToken();
-    navigate(`/${businessId}/navigate`);
+    if (!outletInfo?.isPosEnabled) {
+      navigate(`/${businessId}/navigate`);
+    } else {
+      navigate(`/${businessId}/alerts`);
+    }
   };
 
   return (

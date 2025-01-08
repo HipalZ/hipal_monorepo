@@ -8,12 +8,12 @@ import { useFetchAlerts } from "./utils/apiService";
 import type { Alert, Cart } from "./components/types/hiClientzData";
 import SpinnerMemo from "./components/atoms/loadingSpinner";
 import toast from "react-hot-toast";
-import { LuBellRing } from "react-icons/lu";
 import { NativeSettings, AndroidSettings } from "capacitor-native-settings";
 import { usePushNotifications } from "./hooks/usePushNotifications";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import { useErrorHandling } from "./components/utils/helpers";
+import useBusinessData from "./components/store/useBusinessData";
 
 function App() {
   const navigate = useNavigate();
@@ -22,6 +22,7 @@ function App() {
   const pathName = useLocation().pathname;
   const businessIdMatch = pathName.match(/^\/([^/]+)\/alerts$/);
   const businessId = businessIdMatch ? businessIdMatch[1] : null;
+  const outletInfo = useBusinessData(s => s.outletInfo);
   const [isOnline, setIsOnline] = useState(true);
   const [isSlow, setIsSlow] = useState(false);
   const { errorText } = useErrorHandling();
@@ -98,6 +99,23 @@ function App() {
 
   const getAllCarts = async () => {
     if (!businessId) return;
+
+    if (outletInfo?.isPosEnabled) {
+      const response = await apiRpc.table.orders[":businessId"].$get({
+        param: {
+          businessId: businessId,
+        },
+      });
+      if (response.status === 401) {
+        errorText();
+      }
+      const res = await response.json();
+      setRefetchCart(refetchCart);
+      const carts = res.data as Cart[];
+      setCartData(carts);
+      setCartCount(carts?.length || 0);
+      return res.data;
+    }
 
     const response = await apiRpc.cart.$get({
       query: {
@@ -229,7 +247,7 @@ function App() {
           You Turned off alerts, Turn on to get Alerts
         </center>
       )}
-      {!notificationStatus && platform === "android" && (
+      {/* {!notificationStatus && platform === "android" && (
         <div className="fixed z-20 top-0 left-1/2 -translate-x-1/2 w-full max-w-[30rem] flex items-center justify-between h-12 px-2 text-center text-black bg-[#6f2eff] border space-grotesk-700">
           <h1 className="flex items-center gap-2 text-white">
             <LuBellRing />
@@ -243,7 +261,7 @@ function App() {
             Enable
           </button>
         </div>
-      )}
+      )} */}
       {loading ? <SpinnerMemo /> : null}
       <MainRouter />
     </main>

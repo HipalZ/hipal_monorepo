@@ -3,11 +3,10 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import { CiGlobe } from "react-icons/ci";
-import { RiMoneyRupeeCircleLine } from "react-icons/ri";
-import { GiTakeMyMoney } from "react-icons/gi";
 import { MdOutlineHistory } from "react-icons/md";
 import type { IconType } from "react-icons";
-import { NavItemTypes } from "../types/hiClientzData";
+import type { NavItemTypes } from "../types/hiClientzData";
+import { MdOutlineTableBar } from "react-icons/md";
 import { HiOutlineShoppingCart } from "react-icons/hi";
 
 export function timestampToDateTime(timestamp: number): string {
@@ -89,9 +88,8 @@ export const useErrorHandling = () => {
 };
 
 export const navItems: Array<{ type: NavItemTypes; icon: IconType }> = [
-  { type: "online", icon: CiGlobe },
-  { type: "on floor", icon: GiTakeMyMoney },
+  { type: "Tables", icon: MdOutlineTableBar },
   { type: "cart", icon: HiOutlineShoppingCart },
+  { type: "payments", icon: CiGlobe },
   { type: "history", icon: MdOutlineHistory },
-  { type: "sales", icon: RiMoneyRupeeCircleLine },
 ];

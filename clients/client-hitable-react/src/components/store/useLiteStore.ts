@@ -79,12 +79,18 @@ interface ILiteStore {
   cartData: Cart[];
   setCartData: (data: Cart[]) => void;
   removeCart: (id: string) => void;
+
+  showSearchBox: boolean;
+  setShowSearchBox: (value: boolean) => void;
+
+  isAscending: boolean;
+  setIsAscending: (value: boolean) => void;
 }
 
 export const useLiteStore = create<ILiteStore>((set) => ({
   clickViewMore: false,
   setClickViewMore: (value) => set({ clickViewMore: value }),
-  selectedNavItem: "online",
+  selectedNavItem: "payments",
   setSelectedNavItem: (value) => set({ selectedNavItem: value }),
   clickedConfirm: false,
   setClickedConfirm: (value) => set({ clickedConfirm: value }),
@@ -144,4 +150,10 @@ export const useLiteStore = create<ILiteStore>((set) => ({
 
   cartCount: 0,
   setCartCount: (value) => set({ cartCount: value }),
+
+  showSearchBox: false,
+  setShowSearchBox: (value) => set({ showSearchBox: value }),
+
+  isAscending: false,
+  setIsAscending: (value) => set({ isAscending: value }),
 }));

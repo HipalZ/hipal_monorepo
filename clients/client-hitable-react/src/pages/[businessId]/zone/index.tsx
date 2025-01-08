@@ -114,7 +114,7 @@ const Zones: FC = () => {
     },
     onSuccess: (data) => {
       if (selectedTable) {
-        setSelectedTable({ ...selectedTable, hiCode: data.hiCode });
+        setSelectedTable({ ...selectedTable, hiCode: data?.hiCode });
         setIsModalOpen(true);
       }
     },

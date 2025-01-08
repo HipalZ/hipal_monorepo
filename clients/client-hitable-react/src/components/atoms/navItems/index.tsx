@@ -30,11 +30,8 @@ const MemoNavItems = () => {
 
   const handleCount = useCallback(
     (type: string) => {
-      if (type === "online" && onlineCount > 0) {
-        return onlineCount;
-      }
-      if (type === "on floor" && offlineCount > 0) {
-        return offlineCount;
+      if (type === "payments" && onlineCount > 0) {
+        return onlineCount + offlineCount;
       }
       if (type === "cart" && cartCount > 0) {
         return cartCount;
@@ -52,13 +49,13 @@ const MemoNavItems = () => {
             key={type}
             onClick={() => handleNavItemClick(type)}
             className={`
-              flex items-center justify-center px-4 py-2 rounded-full
+              flex w-full max-w-[24rem] items-center justify-center px-4 py-2 rounded-full
               ${
                 selectedNavItem === type
                   ? "bg-purple-100 text-purple-600"
                   : "text-gray-500 hover:bg-gray-200"
               }
-              relative group
+              relative
             `}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

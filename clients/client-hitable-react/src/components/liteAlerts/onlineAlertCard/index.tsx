@@ -9,32 +9,29 @@ import {
 } from "@/components/utils/helpers";
 import { apiRpc } from "@hi/common";
 import { memo } from "react";
-import { CiGlobe } from "react-icons/ci";
 import { IoCloseCircleSharp } from "react-icons/io5";
-import { PiCoinsFill } from "react-icons/pi";
+import { motion, AnimatePresence } from "framer-motion";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { MdOutlineTableBar } from "react-icons/md";
 
 interface IOnlineProp {
   onlineAlertData: Alert[];
 }
 
-const OnlineAlertCard = (props: IOnlineProp) => {
+const OnlineAlertCard = ({ onlineAlertData }: IOnlineProp) => {
   const { errorText } = useErrorHandling();
-  const { onlineAlertData } = props;
   const { removeOnlineAlert, setViewData, removeOnlineCount } = useLiteStore(
     (s) => ({
       removeOnlineAlert: s.removeOnlineAlert,
-      setViewData: s.setViewData,
       removeOnlineCount: s.removeOnlineCount,
+      setViewData: s.setViewData,
     }),
   );
-  const captainData = useHiClientZ((s) => s.captainData);
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
+  const captainData = useHiClientZ((s) => s.captainData);
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
-
-  const handleViewMore = (alert: Alert) => {
-    setViewData(alert);
-    setClickViewMore(!clickViewMore);
-  };
 
   const removeAlert = async (id: string) => {
     try {
@@ -45,109 +42,115 @@ const OnlineAlertCard = (props: IOnlineProp) => {
       if (res.status === 200) {
         removeOnlineAlert(id);
         removeOnlineCount();
-      } else {
-        console.error("Failed to remove alert");
       }
     } catch (error) {
       console.error("Error removing alert:", error);
     }
   };
+  const handleViewMore = (alert: Alert) => {
+    setViewData(alert);
+    setClickViewMore(!clickViewMore);
+  };
 
   return (
-    <main className="pb-[5rem] lg:grid lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-      {Array.isArray(onlineAlertData) && onlineAlertData.length > 0 ? (
-        onlineAlertData.map((alert: Alert) => {
-          return (
-            <section
+    <motion.main
+      className=" pb-[5rem] m-4 gap-4  md:mx-4 grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
+      <AnimatePresence>
+        {Array.isArray(onlineAlertData) && onlineAlertData.length > 0 ? (
+          onlineAlertData.map((alert) => (
+            <motion.div
               key={alert?._id}
-              className={cn(
-                "relative mx-4 my-4 h-full rounded-xl bg-white p-4",
-                alert?.status === "FAIL" ? "bg-red-100" : "bg-green-100",
-              )}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              layout
             >
-              <section className="flex items-center justify-between mb-2">
-                <article
-                  className={cn("flex w-[8rem] items-center rounded-full px-2")}
-                >
-                  <span>
-                    <CiGlobe />
-                  </span>
-                  &nbsp;
-                  <h1 className="text-xs font-semibold">
-                    {alert?.status === "FAIL"
-                      ? `Failed ${alert?.alertType.toLowerCase()}`
-                      : `Received ${alert?.alertType.toLowerCase()}`}
-                  </h1>
-                </article>
-                <article>
-                  <h1 className="text-xs text-gray-500">
-                    {timestampToDateTime(alert?.date)}
-                  </h1>
-                </article>
-                <IoCloseCircleSharp
-                  onClick={() => removeAlert(alert?._id)}
-                  size={28}
-                  className="absolute inline text-red-400 -right-2 -top-2"
-                />
-              </section>
-              <div className="flex justify-between">
-                <section>
-                  <article className="ml-2 space-y-1">
-                    <h1 className="text-base">
-                      Bill value : ₹ {alert?.order_id?.billValue}
-                    </h1>
-                    <h1 className="text-base">
-                      Discount : ₹ {alert?.order_id?.claimedCoins}
-                    </h1>
-                    <h6 className="text-sm">
-                      Tips : ₹ {alert?.order_id?.tips}
-                    </h6>
-                  </article>
-                  {alert?.coinsApplied ? (
-                    <article className="flex items-center justify-start px-3 my-2 bg-gray-200 rounded-full w-fit">
-                      <span>
-                        <PiCoinsFill size={20} />
-                      </span>
-                      &nbsp;
-                      <h1 className="text-xs">
-                        {alert?.order_id?.claimedCoins} Used
-                      </h1>
-                    </article>
-                  ) : null}
-                </section>
-                <section className="text-right">
-                  <p>
-                    User :{" "}
-                    {alert?.userId?.name?.length > 10
-                      ? `${alert?.userId?.name.substring(0, 10)}...`
-                      : alert?.userId?.name || "customer"}
-                  </p>
-                  <article className="space-y-1">
-                    <h1 className="text-base text-gray-700">
-                      Table : {alert?.tableName}
-                    </h1>
-                    <h6 className="text-2xl font-semibold">
+              <Card
+                className={cn(
+                  "relative overflow-hidden",
+                  alert?.status === "FAIL"
+                    ? "border-red-200"
+                    : "border-green-200",
+                )}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <Badge
+                      variant={
+                        alert?.status === "FAIL" ? "destructive" : "default"
+                      }
+                      className="text-xs font-medium"
+                    >
+                      {alert?.alertType.toLowerCase()}
+                    </Badge>
+                    <span className="text-sm font-semibold text-muted-foreground">
+                      {timestampToDateTime(alert?.date)}
+                    </span>
+                  </div>
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="text-2xl font-bold ">
+                      {alert?.order_id?.discount > 0 ||
+                        alert?.order_id?.claimedCoins > 0 ? (
+                        <span className="mr-2 text-sm line-through text-muted-foreground">
+                          ₹ {alert?.order_id?.billValue}
+                        </span>
+                      ) : null}
                       ₹ {alert?.order_id?.total}
-                    </h6>
-                  </article>
-                  <button
-                    type="button"
-                    onClick={() => handleViewMore(alert)}
-                    className="px-6 py-2 mt-2 text-white bg-black rounded-full"
+                    </h3>
+                    <div className="flex items-center space-x-2 text-right">
+                      <MdOutlineTableBar size={28} />
+                      <h4 className="text-lg font-semibold">
+                        {alert?.tableName}
+                      </h4>
+                    </div>
+                  </div>
+                  <span className="font-semibold text-foreground opacity-60">
+                    {alert?.userId?.name || "customer"}
+                  </span>
+                </CardContent>
+                <CardFooter
+                  className={cn(
+                    "flex items-center justify-between p-4",
+                    alert?.status === "FAIL" ? "bg-red-50" : "bg-green-50",
+                  )}
+                >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive bg-destructive/10"
+                    onClick={() => removeAlert(alert?._id)}
                   >
-                    <h1 className="text-xs">More</h1>
-                  </button>
-                </section>
-              </div>
-            </section>
-          );
-        })
-      ) : (
-        <div className="absolute text-2xl text-center -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2">
-          No Data Found
-        </div>
-      )}
-    </main>
+                    <IoCloseCircleSharp className="w-4 h-4 mr-2" />
+                    Remove
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => handleViewMore(alert)}
+                  >
+                    View Details
+                  </Button>
+                </CardFooter>
+              </Card>
+            </motion.div>
+          ))
+        ) : (
+          <motion.div
+            className="text-2xl font-semibold text-center col-span-full text-muted-foreground"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            No Data Found
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.main>
   );
 };
 

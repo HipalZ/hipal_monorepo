@@ -58,7 +58,7 @@ const MemoCartItems = () => {
               <div className="flex flex-col items-end mb-2 text-sm font-semibold opacity-80">
                 <p className="flex items-center">
                   <FaClock className="mr-1" />
-                  {new Date(cart?.date).toLocaleDateString()}
+                  {new Date(cart?.date).toLocaleDateString("en-In")}
                 </p>
                 <p className="flex items-center mt-1 opacity-50">
                   {new Date(cart?.date).toLocaleTimeString()}
