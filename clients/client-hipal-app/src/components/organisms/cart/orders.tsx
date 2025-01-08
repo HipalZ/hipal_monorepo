@@ -7,7 +7,7 @@ import { useCart } from "@/components/store/useCart"
 import Image from "next/image";
 import glassTable from "@/assets/cart/glassTable.png";
 import MemoFoodType from "@/components/atoms/foodType";
-import Happy from "@/assets/cart/happy.png";
+import Happy from "@/assets/cart/Happy.png";
 import { RiNewspaperLine, RiQrScan2Line } from "react-icons/ri";
 import { BiRightArrow } from "react-icons/bi";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
