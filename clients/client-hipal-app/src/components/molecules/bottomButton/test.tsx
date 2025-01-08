@@ -42,17 +42,6 @@ const MemoTimeBadge = ({
         <AnimatePresence mode="wait">
           {isMyOrders ? (
             <motion.div
-              key="payBillIcon"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="absolute left-2"
-            >
-              <LiaMoneyBillWaveSolid size={24} />
-            </motion.div>
-          ) : (
-            <motion.div
               key="myOrdersIcon"
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -61,6 +50,17 @@ const MemoTimeBadge = ({
               className="absolute left-2"
             >
               <RiFileList3Line size={24} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="payBillIcon"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute left-2"
+            >
+              <LiaMoneyBillWaveSolid size={24} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -73,7 +73,7 @@ const MemoTimeBadge = ({
             exit={{ y: -10, opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            {isMyOrders ? "Pay bill" : "Pay bill"}
+            {isMyOrders ? "My Orders" : "Pay Bill"}
           </motion.span>
         </AnimatePresence>
       </button>

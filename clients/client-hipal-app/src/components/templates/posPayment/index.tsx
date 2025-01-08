@@ -7,7 +7,7 @@ import { type ChangeEvent, memo } from "react";
 import { useCallback, useEffect } from "react";
 import { useHandleMode, usePayments } from "@/components/hooks/usePayments";
 import { useMerchantDetails } from "@/components/hooks/useMerchantSecret";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useQuery } from "@tanstack/react-query";
 import { useUserCoinz } from "@/components/hooks/useUserCoinz";
@@ -22,6 +22,7 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import useTableData from "@/components/store/useTableData";
+import { toast } from "react-toastify";
 
 const SignUpBonus = dynamic(() => import("@/components/organisms/explore/signupbonus"), {
     ssr: false,
@@ -112,7 +113,6 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
     const {
         handleCreateOrder
     } = usePayments();
-    const router = useRouter();
     const customLink = useParams()?.businessId as string;
     const {
         billValue,
@@ -144,9 +144,8 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
         applyCouponz: s.applyCouponz,
     }));
 
-    const { setEditBillModal, editBillModal } = usePaymentStore((s) => ({
+    const { setEditBillModal } = usePaymentStore((s) => ({
         setEditBillModal: s.setEditBillModal,
-        editBillModal: s.editBillModal,
     }));
     useMerchantDetails();
     useUserCoinz(data?.loyalty?.loyaltyId || "");
@@ -252,6 +251,9 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
                 }
             })
             const res = await response.json()
+            if (response?.status === 404) {
+                toast.error(response?.data?.message || "Something went wrong")
+            }
             setTableName(res.data.tableName)
             setBillValue(res.data.total)
             return res.data
@@ -263,7 +265,7 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
     useQuery({
         queryKey: ["getBusinessDetails", orderId],
         queryFn: handleGetOrderId,
-        enabled: !!orderId,
+        enabled: orderId !== "null",
     })
 
     return (
@@ -389,15 +391,6 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
                     />
                 </>
             )}
-            <BottomPopUp
-                onClose={() => setCheckLogin(false)}
-                show={checkLogin}
-            >
-                <CombinedLogin />
-            </BottomPopUp>
-            {openBlastModal ?
-                <SignUpBonus coinZ={coinz} goNext={goNext} />
-                : null}
         </main>
     );
 };

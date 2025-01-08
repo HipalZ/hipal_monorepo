@@ -20,6 +20,8 @@ import { toast } from "react-toastify";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useCouponz } from "@/components/store/useCouponz";
 import { useCart } from "@/components/store/useCart";
+import ScanPage from "@/components/templates/posPayment/paymentScanner";
+import BottomPopUp from "@/components/atoms/bottomPopUp";
 
 interface IBillData {
   customerName: string;
@@ -53,6 +55,8 @@ const MemoCartPayment = () => {
     setShowInput,
     setIsTipActive,
     setBillValue,
+    showScan,
+    setShowScan,
   } = usePaymentStore();
   const { setAvailedCoupon } = useCouponz((s) => ({
     setAvailedCoupon: s.setAvailedCoupon,
@@ -135,11 +139,22 @@ const MemoCartPayment = () => {
   ]);
 
   const totalAttempts = failureCount;
+  const openScanAndPay = useCallback(() => {
+    setShowScan(true);
+  }, [setShowScan]);
 
   if (!billData && totalAttempts >= 1) {
     return (
-      <div className="mt-4 text-center text-red-500">
-        Maximum retry attempts reached. Please try again later.
+      <div className="mx-4">
+        <p className="mt-4 text-center text-red-500">
+          Maximum retry attempts reached. Please try again later.
+        </p>
+        <button type="button" onClick={openScanAndPay} className="bg-black text-white p-2 rounded-md w-full mt-4">
+          Scan to Pay
+        </button>
+        {showScan && <BottomPopUp show={showScan} onClose={() => setShowScan(false)}>
+          <ScanPage />
+        </BottomPopUp>}
       </div>
     );
   }
@@ -168,7 +183,7 @@ const MemoCartPayment = () => {
 
   if (billData) {
     return (
-      <section className="bg-[#ffffff] h-[80dvh] relative">
+      <section className="bg-[#ffffff] h-[85dvh] relative">
         <h2 className="mt-4 text-2xl font-bold text-center text-[#000000]">
           Bill Details
         </h2>

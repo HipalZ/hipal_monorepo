@@ -1,6 +1,6 @@
 "use client";;
 import Image from "next/image";
-import { useState, useRef, useEffect, type FormEvent, useCallback } from "react";
+import { useState, useRef, useEffect, type FormEvent, useCallback, memo } from "react";
 import { toast } from "react-toastify";
 import Welcome from "@/assets/login/waveHand.png";
 import WelcomeOTP from "@/assets/login/otp.png";
@@ -16,10 +16,10 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { useErrorHandling } from "@/utils/helper";
 import { cn, triggerConfettiBlast } from "@/components/utils/helpers";
-import { useHandleMode } from "@/components/hooks/usePayments";
+import { useCart } from "@/components/store/useCart";
+import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 
-const CombinedLogin = () => {
-    const { handleMode } = useHandleMode()
+const MemoCombinedLogin = () => {
     const searchParams = useSearchParams();
     const [phone, setPhone] = useState("");
     const { errorText } = useErrorHandling();
@@ -29,20 +29,19 @@ const CombinedLogin = () => {
     const [loading, setLoading] = useState(false);
     const inputRefs = Array.from({ length: 4 }, () => useRef<HTMLInputElement>(null));
     const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting);
-    const { setUserDetails, userDetails, setUserCoinZ, setIsLogin, sendOtp } =
+    const { setUserDetails, userDetails, setUserCoinZ, setIsLogin, sendOtp, direction, isPayment, invoiceUrl, urlFrom } =
         useLogin();
+    const { setShowCart } = useCart();
     const [customerName, setCustomerName] = useState(userDetails?.name);
     const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
     const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
-    const setCheckLogin = usePaymentStore((s) => s.setCheckLogin)
-    const { openBlastModal, setOpenBlastModal,
+    const { openBlastModal, setOpenBlastModal, setCheckLogin,
         setCoinz } = usePaymentStore()
     const businessData = useBusinessDetails((s) => s.businessDetails);
     const customLink = useParams()?.businessId as string;
     const orderId = searchParams?.get("orderId");
     const setAccessToken = useUserToken.getState().setAccessToken;
     const setRefreshToken = useUserToken.getState().setRefreshToken;
-
     useEffect(() => {
         if (userDetails.phone) setPhone(userDetails.phone);
     }, [userDetails.phone]);
@@ -53,7 +52,8 @@ const CombinedLogin = () => {
         } else {
             setCheckLogin(false);
         }
-    }, [showOtpScreen, setCheckLogin]);
+        setShowCart(false);
+    }, [showOtpScreen, setCheckLogin, setShowCart]);
 
     const handlePhoneSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -99,6 +99,25 @@ const CombinedLogin = () => {
             inputRefs[index - 1]?.current?.focus();
         }
     };
+
+    const goNext = useCallback(() => {
+        let newUrl = `/${customLink}/explore?pay=${isPayment}`;
+
+        if (direction === "loyalty") {
+            newUrl = routePaths[PAGE_TYPES.LOYALTY](`/${customLink}`);
+        } else if (direction === "category") {
+            newUrl = `/${customLink}/category?pay=${isPayment}`;
+        } else if (direction === "explore") {
+            newUrl = `/${customLink}/explore?pay=${isPayment}`;
+        } else if (direction === "invoice") {
+            newUrl = invoiceUrl;
+        } else if (direction === "couponz") {
+            newUrl = urlFrom;
+        } else if (direction === "explore-googleReview") {
+            newUrl = `/${customLink}/explore`;
+        }
+        window.location.href = newUrl;
+    }, [direction, customLink, isPayment, urlFrom, invoiceUrl]);
 
     const verifyOtp = async () => {
         const fullOtp = otp.join("");
@@ -159,7 +178,8 @@ const CombinedLogin = () => {
                 return
             }
             // to set the auth token in the store
-            window.location.href = `/${customLink}/posPayment?orderId=${orderId}`
+            // window.location.href = `/${customLink}/posPayment?orderId=${orderId}`
+            goNext();
         }
     };
     useEffect(() => {
@@ -321,4 +341,5 @@ const CombinedLogin = () => {
     );
 };
 
+const CombinedLogin = memo(MemoCombinedLogin)
 export default CombinedLogin;

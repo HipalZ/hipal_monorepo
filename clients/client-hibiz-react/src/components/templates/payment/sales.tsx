@@ -141,9 +141,8 @@ const MemoPaymentSales = () => {
                     {({ focus }) => (
                       <button
                         type="button"
-                        className={`${
-                          focus ? "bg-gray-100 text-gray-900" : "text-black"
-                        } group flex rounded-md items-center w-full px-2 py-2 text-base font-semibold`}
+                        className={`${focus ? "bg-gray-100 text-gray-900" : "text-black"
+                          } group flex rounded-md items-center w-full px-2 py-2 text-base font-semibold`}
                         onClick={() => handleMode("all")}
                       >
                         All
@@ -154,9 +153,8 @@ const MemoPaymentSales = () => {
                     {({ focus }) => (
                       <button
                         type="button"
-                        className={`${
-                          focus ? "bg-gray-100 text-gray-900" : "text-black"
-                        } group flex rounded-md items-center w-full px-2 py-2 text-base font-semibold`}
+                        className={`${focus ? "bg-gray-100 text-gray-900" : "text-black"
+                          } group flex rounded-md items-center w-full px-2 py-2 text-base font-semibold`}
                         onClick={() => handleMode("offline")}
                       >
                         Offline
@@ -167,9 +165,8 @@ const MemoPaymentSales = () => {
                     {({ focus }) => (
                       <button
                         type="button"
-                        className={`${
-                          focus ? "bg-gray-100 text-gray-900" : "text-black"
-                        } group flex rounded-md items-center w-full px-2 py-2 text-base font-semibold`}
+                        className={`${focus ? "bg-gray-100 text-gray-900" : "text-black"
+                          } group flex rounded-md items-center w-full px-2 py-2 text-base font-semibold`}
                         onClick={() => handleMode("online")}
                       >
                         Online
@@ -188,6 +185,7 @@ const MemoPaymentSales = () => {
                     key={data?._id}
                     className="payment_card_ui w-[100%]"
                     onClick={() => openModel(data)}
+                    onKeyDown={() => openModel(data)}
                   >
                     <section className="flex justify-between">
                       <section>
@@ -205,9 +203,9 @@ const MemoPaymentSales = () => {
                       </section>
                     </section>
                     <section className="py-4">
-                      <b>{data?.userId?.name}</b>{" "}
+                      <b>{data?.userId?.name || "Customer"}</b>{" "}
                       <span className="opacity-50">
-                        {hideMiddleNumbers(data?.userId?.phone)}
+                        {hideMiddleNumbers(data?.userId?.phone || "")}
                       </span>
                       <br />
                       <small>Bill value : {data?.order_id?.billValue}</small>

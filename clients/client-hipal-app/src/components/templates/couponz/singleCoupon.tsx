@@ -28,12 +28,14 @@ import useCouponTemp from "@/components/store/useCouponTemp";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { useErrorHandling } from "@/utils/helper";
 import { toast } from "react-toastify";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
   const { errorText } = useErrorHandling();
   const { couponId, channelId } = useParams();
   const router = useRouter();
+  const { setCheckLogin } = usePaymentStore()
   const { displayTermsAndConditions, openTc, setIsLoading } = useCouponTemp(
     (s) => ({
       displayTermsAndConditions: s.displayTermsAndConditions,
@@ -67,7 +69,8 @@ const MemoCouponz = () => {
     if (!isLogin && !!channelId && !!couponId) {
       setDirection("couponz");
       setUrlFrom(`/${customLink}/couponz/${couponId}/${channelId}`);
-      return router.push(`/${customLink}/user/signup/`);
+      setCheckLogin(true);
+      return;
     }
     setIsLoading(true);
     const requiredFields = selectedCoupon?.conditions?.requiredFields || [];

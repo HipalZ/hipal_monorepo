@@ -13,8 +13,17 @@ import PaymentAlert from "./paymentAlert";
 import CartPayment from "./cartPayment";
 import { useCallTheCaptain } from "@/components/hooks/useCartHook";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { motion } from "framer-motion"
+import { cn } from "@/components/utils/helpers";
+import glassTable from "@/assets/cart/glassTable.png";
+import Image from "next/image";
+import { BiRightArrow } from "react-icons/bi";
+import { FaArrowLeft } from "react-icons/fa";
+import { MdOutlineShoppingCart } from "react-icons/md";
+import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
 
-const CartItem = dynamic(() => import("./cartItem"), { ssr: false });
+const CartItem = dynamic(() => import("./cartItem"), { ssr: false, loading: () => <LoadingSpinner /> });
 const CommonBottomButton = dynamic(
   () => import("@/components/atoms/bottomButton"),
   { ssr: false },
@@ -33,14 +42,14 @@ const ItemDescriptionPopup = dynamic(
 const HiCodeValidate = dynamic(() => import("./hicodeValidate"), {
   ssr: false,
 });
-const Orders = dynamic(() => import("./orders"), { ssr: false });
+const Orders = dynamic(() => import("./orders"), { ssr: false, loading: () => <LoadingSpinner /> });
 
 const Cart = () => {
   const { cart, cartHistory } = useCartStore();
   const { mutate, isPending } = useCallTheCaptain();
   const outLetInfo = _useAllBusiness((state) => state.data.outletInfo);
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
-  const { setShowCart, cartPage, setCartPage, setInputModal } = useCart();
+  const { setShowCart, cartPage, setCartPage, setInputModal, setOrderPlaced, orderPlaced } = useCart();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const [showPayAlert, setShowPayAlert] = useState<boolean>(false);
   const {
@@ -51,7 +60,7 @@ const Cart = () => {
     hiCodePopup,
     setHiCodeUser,
   } = useTableData();
-
+  const { setCheckLogin } = usePaymentStore()
   const accessToken = useUserToken.getState().accessToken;
   const userDetails = useLogin((state) => state.userDetails);
   const router = useRouter();
@@ -75,7 +84,8 @@ const Cart = () => {
       return router.push(`/${customLink}/scan`);
     }
     if (!accessToken) {
-      return router.push(`/${customLink}/user/signup`);
+      setCheckLogin(true);
+      return;
     }
     const payload = {
       businessId: businessId,
@@ -90,10 +100,19 @@ const Cart = () => {
     mutate(payload);
   }, [setDirection, accessToken, router, customLink, tableName]);
 
+  const triggerModal = useCallback(() => {
+    setOrderPlaced(true);
+    setTimeout(() => {
+      setOrderPlaced(false);
+    }, 5000);
+  }, [
+    setOrderPlaced
+  ]);
+
   const placeOrder = useCallback(async () => {
     const handleUnauthenticatedUser = () => {
       setDirection("category");
-      router.push(`/${customLink}/user/signup`);
+      setCheckLogin(true);
     };
 
     const handleMissingTableName = () => {
@@ -111,11 +130,12 @@ const Cart = () => {
         const res = await response.json();
         if (response.status === 200 || response.status === 201) {
           toast.success(successMessage);
+          triggerModal();
           setHiCode(res?.data?.hiCode || null);
-          setShowCart(false);
+          // setShowCart(false);
           useCartStore.setState({ cart: [] });
           return true;
-        } else if (response.status === 403) {
+        } if (response.status === 403) {
           setHiCodeUser(res?.data as HiCodeUser);
           setHiCodePopup(true);
         } else {
@@ -339,18 +359,68 @@ const Cart = () => {
     setShowCart,
   ]);
 
+  const handleBack = useCallback(() => {
+    if (cartPage === "cart") {
+      setShowCart(false);
+    } else {
+      setCartPage("cart");
+    }
+  }, [cartPage, setShowCart, setCartPage]);
+
   return (
-    <div className="h-[100dvh] overflow-y-auto pb-[5rem] text-[#000000] bg-[#ffffff] relative">
-      <CartHeader />
+    <div className={cn("overflow-y-auto h-[100dvh] pb-[5rem] text-[#000000] bg-[#ffffff] relative")}>
+      {((cartPage === "cart" && cart?.length > 0) || cartPage === "order") ? null : <CartHeader />
+      }
       {cartPage === "cart" &&
         (cart.length === 0 ? (
           <EmptyCart />
         ) : (
-          <div className="w-full px-4">
-            {cart.map((cartItem) => (
-              <CartItem key={cartItem.id} cartItem={cartItem} />
-            ))}
-          </div>
+          <section className="relative h-full">
+            <div className="sticky top-0 flex items-center justify-between px-4 py-3 border-b border-gray-200">
+              <h2 className="text-3xl font-medium">Live cart</h2>
+              {hiCode && (
+                <div className="text-sm text-gray-500 inline-flex items-center gap-2">
+                  <Image src={glassTable} alt="Table" />
+                  <span>Table code {hiCode}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col h-full overflow-y-auto">
+              <div className="divide-y divide-gray-100 flex-1">
+                {cart.map((cartItem) => (
+                  <CartItem key={cartItem.id} cartItem={cartItem} />
+                ))}
+              </div>
+              <div className="sticky bottom-0 left-0 right-0 p-2 bg-white border-t border-gray-200">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="mb-2 w-full p-3 mt-auto text-center text-sm text-rose-600 bg-rose-50"
+                >
+                  Orders once placed, cannot be cancelled!
+                </motion.div>
+                <div className="flex justify-between gap-4">
+                  <button onClick={handleBack} type="button" className="px-4 py-2 border border-black rounded-lg text-center">
+                    <FaArrowLeft />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={placeOrder}
+                    className="flex items-center justify-between w-full px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700"
+                  >
+                    <div className="flex items-center gap-2">
+                      <MdOutlineShoppingCart size={24} />
+                      <span className="font-semibold text-base">{cart.length}</span> items
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">Place order</span>
+                      <BiRightArrow />
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
         ))}
 
       {cartPage === "history" && (
@@ -359,9 +429,7 @@ const Cart = () => {
         </div>
       )}
       {cartPage === "order" && (
-        <div className="w-full px-4">
-          <Orders />
-        </div>
+        <Orders />
       )}
 
       {cartPage === "payment" && <CartPayment />}
@@ -385,13 +453,12 @@ const Cart = () => {
         <ItemDescriptionPopup
           show={showPayAlert}
           onClose={() => setShowPayAlert(false)}
-          bottomCross
         >
           <PaymentAlert onClick={() => setShowPayAlert(false)} />
         </ItemDescriptionPopup>
       )}
 
-      {tableName && outletInfo?.outLetType !== "OTHER" && (
+      {tableName && outletInfo?.outLetType !== "OTHER" && cartPage !== "cart" && cart?.length === 0 && (
         <CommonBottomButton
           fixed
           buttons={
@@ -401,6 +468,7 @@ const Cart = () => {
           }
         />
       )}
+
     </div>
   );
 };

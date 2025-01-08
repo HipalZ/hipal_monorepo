@@ -4,7 +4,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useLogin } from "@/components/store/useLogin";
 import AddAmountModal from "./addAmountModal";
 import CallTheWaiterComponent from "./callTheWaiter";
-import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useTableData from "@/components/store/useTableData";
 import { useCart } from "@/components/store/useCart";
 import { useSearch } from "@/components/store/useSearch";
@@ -13,20 +12,20 @@ import BottomPopUp from "@/components/atoms/bottomPopUp";
 import Link from "next/link";
 import { FiSearch } from "react-icons/fi";
 import { BsHandIndexThumb } from "react-icons/bs";
-import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
 import { motion, AnimatePresence } from "framer-motion";
 import TimeBadge from "./test";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import BottomButton from ".";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { useCartStore } from "@/components/store/useCartStore";
+import CommonBottomButton from "@/components/atoms/bottomButton";
+import OrderPlaced from "@/components/organisms/cart/orderPlaced";
+import { GiCampCookingPot } from "react-icons/gi";
 
 const MemoCategoryPageBtn = () => {
   const accessToken = useUserToken.getState().accessToken;
-  const { businessId } = useBusinessDetails((s) => ({
-    businessId: s.businessDetails?._id,
-  }));
-  const { isLoading } = usePaymentStore();
+
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const { isSearchActive, setIsSearchActive, showHeader, setShowHeader } =
     useSearch();
@@ -35,39 +34,61 @@ const MemoCategoryPageBtn = () => {
   const setDirection = useLogin((s) => s.setDirection);
   const setIsPayment = useLogin((s) => s.setIsPayment);
   const router = useRouter();
+  const { setCheckLogin } = usePaymentStore();
   const {
     showCart,
+    setShowCart,
     inputModal,
     setInputModal,
     callWaiterModal,
     setCallWaiterModal,
+    setCartPage,
+    orderPlaced,
+    setOrderPlaced,
   } = useCart();
+  const [tempInstruction, setTempInstruction] = useState("");
+  const {
+    setOpenInstructionModal,
+    openInstructionModal,
+    setInstruction,
+    addInstructionToDish,
+  } = useCartStore();
 
   const closeModal = useCallback(() => {
     setInputModal(false);
     setIsPayment(false);
-  }, [setIsPayment]);
+  }, [setIsPayment, setInputModal]);
 
   const openCallWaiterModal = useCallback(() => {
     setCallWaiterModal(true);
-  }, []);
+  }, [setCallWaiterModal]);
 
   const closeCallWaiterModal = useCallback(() => {
     setCallWaiterModal(false);
-  }, []);
+  }, [setCallWaiterModal]);
 
   const proceedToPayment = useCallback(() => {
     setDirection("category");
     if (!accessToken) {
-      router.push(`/${customLink}/user/signup`);
+      setCheckLogin(true);
+      return;
     }
-    // setCartPage("order");
     if (outletInfo?.isPosEnabled) {
-      router.push(`/${customLink}/posPayment`);
-    } else {
-      setInputModal(true);
+      setShowCart(!showCart);
+      setCartPage("order");
+      return;
     }
-  }, [setDirection, accessToken, customLink, showCart, setInputModal, outletInfo?.isPosEnabled]);
+    setInputModal(true);
+  }, [
+    setDirection,
+    accessToken,
+    showCart,
+    setInputModal,
+    outletInfo?.isPosEnabled,
+    setCheckLogin,
+    setShowCart,
+    setCartPage,
+  ]);
 
   const triggerCallWaiter = useCallback(() => {
     setDirection("category");
@@ -75,23 +96,24 @@ const MemoCategoryPageBtn = () => {
       return router.push(`/${customLink}/scan`);
     }
     if (!accessToken) {
-      return router.push(`/${customLink}/user/signup`);
+      setCheckLogin(true);
+      return;
     }
     openCallWaiterModal();
   }, [
     setDirection,
     accessToken,
-    businessId,
     router,
     customLink,
     tableName,
     openCallWaiterModal,
+    setCheckLogin,
   ]);
 
   const openSearchModal = useCallback(() => {
     setIsSearchActive(true);
     setShowHeader(true);
-  }, [showHeader, isSearchActive]);
+  }, [setIsSearchActive, setShowHeader]);
 
   const containerVariants = {
     hidden: { y: 100, opacity: 0 },
@@ -124,6 +146,24 @@ const MemoCategoryPageBtn = () => {
     visible: { y: 0, opacity: 1 },
     exit: { y: 20, opacity: 0 },
   };
+
+  const handleInstructionText = useCallback(
+    (e) => {
+      setTempInstruction(e.target.value);
+    },
+    []
+  );
+
+  const handleSaveInstruction = useCallback(() => {
+    addInstructionToDish(tempInstruction);
+    setInstruction(tempInstruction);
+    setOpenInstructionModal(false);
+  }, [
+    addInstructionToDish,
+    setOpenInstructionModal,
+    tempInstruction,
+    setInstruction,
+  ]);
 
   return (
     <>
@@ -203,6 +243,61 @@ const MemoCategoryPageBtn = () => {
         )}
       </AnimatePresence>
 
+      {openInstructionModal && (
+        <BottomPopUp
+          height="40dvh"
+          show={openInstructionModal}
+          onClose={() => setOpenInstructionModal(false)}
+        >
+          <article className="text-black m-4 overflow-y-auto">
+            <h1 className="text-lg font-semibold inline-flex gap-1 items-center text-orange-500 mb-2">
+              <GiCampCookingPot size={20} /> <span className="text-black font-semibold">Cooking Instructions</span>
+            </h1>
+            <p className="text-sm text-black mb-4">
+              Add any special cooking instructions, like less spicy, extra cheese, or no onions.
+            </p>
+            <article className="relative">
+              <textarea
+                placeholder="Enter your cooking instructions here..."
+                value={tempInstruction}
+                onChange={handleInstructionText}
+                maxLength={100}
+                className="w-full p-2 border border-gray-300 rounded-lg text-sm resize-none"
+                rows={3}
+              />
+              <p className="absolute right-4 bottom-4 text-xs mt-1">
+                {tempInstruction.length || 0}/100
+              </p>
+            </article>
+            <CommonBottomButton
+              buttons={[
+                {
+                  text: "Save Instruction",
+                  onClick: handleSaveInstruction,
+                  type: "button",
+                  highlight: true,
+                },
+              ]}
+            />
+          </article>
+        </BottomPopUp>
+      )}
+      <AnimatePresence>
+        {orderPlaced && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+          >
+            <BottomPopUp
+              show={orderPlaced}
+              onClose={() => setOrderPlaced(false)}
+            >
+              <OrderPlaced />
+            </BottomPopUp>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {callWaiterModal && (
           <motion.div
@@ -210,13 +305,14 @@ const MemoCategoryPageBtn = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
           >
-            <ItemDescriptionPopup
+            <BottomPopUp
               show={callWaiterModal}
               onClose={closeCallWaiterModal}
-              heading="Select the reason"
+              bottomCross
+              hide
             >
               <CallTheWaiterComponent onClose={closeCallWaiterModal} />
-            </ItemDescriptionPopup>
+            </BottomPopUp>
           </motion.div>
         )}
       </AnimatePresence>

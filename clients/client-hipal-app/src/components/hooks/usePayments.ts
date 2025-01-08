@@ -107,7 +107,7 @@ export const usePayments = () => {
         setRazorPayPaymentId("");
         resetTableData();
         setChannelId("");
-        setIsLoading(false);
+        // setIsLoading(false);
         return router.push(
           `/${customLink}/review?amount=${total}&mode=online&claim=${Math.round(
             finalReward,

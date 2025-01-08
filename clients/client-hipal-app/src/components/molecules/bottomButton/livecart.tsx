@@ -73,7 +73,7 @@ const MemoLiveCart = () => {
               animate="animate"
               transition={{
                 duration: 2,
-                repeat: Infinity,
+                repeat: Number.POSITIVE_INFINITY,
                 ease: "backInOut",
               }}
               style={{

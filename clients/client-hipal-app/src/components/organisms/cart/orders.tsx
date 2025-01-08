@@ -1,156 +1,199 @@
-import { memo, useCallback, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { FaChevronDown, FaChevronUp, FaUser, FaClock } from "react-icons/fa";
-import { MdRestaurantMenu, MdLocalOffer, MdTableBar } from "react-icons/md";
-import {
-  type ICartHistory,
-  useCartStore,
-} from "@/components/store/useCartStore";
-import { BiMoney } from "react-icons/bi";
+"use client";;
+import { memo, useCallback, useState } from "react"
+import { motion, LayoutGroup } from "framer-motion";
+import { FaArrowLeft } from "react-icons/fa";
+import { useCartStore } from "@/components/store/useCartStore";
+import { useCart } from "@/components/store/useCart"
+import Image from "next/image";
+import glassTable from "@/assets/cart/glassTable.png";
+import MemoFoodType from "@/components/atoms/foodType";
+import Happy from "@/assets/cart/happy.png";
+import { RiNewspaperLine, RiQrScan2Line } from "react-icons/ri";
+import { BiRightArrow } from "react-icons/bi";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
+import order from "@/assets/call/order.png";
+import CommonBottomButton from "@/components/atoms/bottomButton";
 
 const MemoOrders = () => {
-  const [expanded, setExpanded] = useState<string | null>(null);
-  const { cartHistory } = useCartStore();
+  const [expanded, setExpanded] = useState<string | null>(null)
+  const { cartHistory } = useCartStore()
+  const { setShowScan } = usePaymentStore()
+  const { setCartPage, setShowCart } = useCart()
 
   const toggleAccordion = useCallback(
     (id: string) => {
-      setExpanded(expanded === id ? null : id);
+      setExpanded(expanded === id ? null : id)
     },
-    [expanded],
-  );
+    [expanded]
+  )
 
   const calculateCartTotal = useCallback((cart) => {
-    if (!cart?.cart) return 0;
+    if (!cart?.cart) return 0
     return cart.cart.reduce((total, item) => {
-      const portionPrice = item?.portion?.price ?? item?.dish?.price ?? 0;
+      const portionPrice = item?.portion?.price ?? item?.dish?.price ?? 0
       const extrasPrice =
         item?.extras?.reduce((extraTotal, extra) => {
-          return extraTotal + extra.price * extra.quantity;
-        }, 0) ?? 0;
-      const itemTotalPrice = (portionPrice + extrasPrice) * item?.quantity;
-      return total + itemTotalPrice;
-    }, 0);
-  }, []);
-  return (
-    <div>
-      {cartHistory && cartHistory.length > 0 ? (
-        cartHistory.map((cart: ICartHistory) => (
-          <motion.div
-            key={cart._id}
-            layout
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="self-start mt-4 overflow-hidden rounded-lg shadow-lg"
-          >
-            <motion.div
-              onClick={() => toggleAccordion(cart._id)}
-              className="flex justify-between p-4 bg-white cursor-pointer text-[#000000]"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="text-[#000000]">
-                <h3 className="flex items-center text-xl font-medium">
-                  <MdTableBar className="mr-2" /> {cart?.tableName}
-                </h3>
-                <p className="flex items-center mt-1 text-sm font-semibold opacity-50">
-                  <FaUser className="mr-1" /> {cart?.name || "User"}
-                </p>
-                <p className="flex items-center mt-1 text-sm font-semibold opacity-50">
-                  <BiMoney className="mr-1" />
-                  Total: ₹{calculateCartTotal(cart).toFixed(2)}
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="flex flex-col items-end mb-2 text-sm font-semibold opacity-80">
-                  <p className="flex items-center">
-                    <FaClock className="mr-1" />
-                    {new Date(cart?.date).toLocaleDateString("en-GB")}
-                  </p>
-                  <p className="flex items-center mt-1 opacity-50">
-                    {new Date(cart?.date).toLocaleTimeString()}
-                  </p>
-                </div>
-                <motion.div
-                  animate={{ rotate: 180 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {expanded === cart._id ? (
-                    <FaChevronDown className="text-xl text-[#000000]" />
-                  ) : (
-                    <FaChevronUp className="text-xl text-[#000000]" />
-                  )}
-                </motion.div>
-              </div>
-            </motion.div>
+          return extraTotal + extra.price * extra.quantity
+        }, 0) ?? 0
+      const itemTotalPrice = (portionPrice + extrasPrice) * item?.quantity
+      return total + itemTotalPrice
+    }, 0)
+  }, [])
 
-            <AnimatePresence>
-              {expanded === cart._id && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="overflow-hidden bg-[#ffffff]"
-                >
-                  <div className="pb-2">
-                    {cart?.cart?.map((item) => (
-                      <motion.div
-                        key={item?._id?.toString()}
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 20 }}
-                        className="px-4 py-2 bg-[#ffffff]"
-                      >
-                        <div className="flex items-start justify-between">
-                          <h4 className="flex items-start flex-1 text-sm font-semibold opacity-80 text-[#000000]">
-                            <MdRestaurantMenu className="mr-2 text-[#000000]" />
-                            {item?.dish?.name}
-                          </h4>
-                          <div className="text-right flex-2">
-                            <p className="text-sm font-semibold text-[#000000]">
-                              Qty: {item?.quantity}
+  const handleBack = useCallback(() => {
+    setShowCart(false)
+  }, [setShowCart])
+
+  const openScanAndPay = useCallback(() => {
+    setShowScan(true);
+  }, [setShowScan]);
+
+  if (cartHistory && cartHistory?.length === 0) return <>
+    <center className="h-full flex items-center justify-center">
+      <figure>
+        <Image src={order} alt="order" />
+        <h1 className="text-xl font-semibold">No orders yet</h1>
+      </figure>
+    </center>
+    <CommonBottomButton buttons={
+      [
+        { text: "Back To Order More", onClick: handleBack },
+      ]
+    } />
+  </>
+
+  return (
+    <div className="montserrat-400 flex flex-col h-screen bg-white">
+      {/* Header */}
+      <header className="sticky top-0 flex-none bg-white border-b border-black">
+        <div className="flex items-center justify-between p-4">
+          <h1 className="text-2xl font-medium">Final cart</h1>
+          <div className="flex items-center gap-2 text-gray-600">
+            {cartHistory[0]?.tableName && (
+              <div className="text-sm text-gray-500 inline-flex items-center gap-1">
+                <Image src={glassTable} alt="Table" />
+                <span className="text-base">Table code {cartHistory[0]?.tableName}</span>
+              </div>
+            )}
+          </div>
+          <article onKeyDown={openScanAndPay} onClick={openScanAndPay} className="relative inline-block">
+            <RiQrScan2Line size={36} />
+            <span className="absolute -top-1 -right-1 block w-3 h-3 bg-green-600 rounded-full animate-ping" />
+            <span className="absolute -top-1 -right-1 block w-3 h-3 bg-green-600 rounded-full" />
+          </article>
+        </div>
+      </header>
+      {/* Scrollable Content */}
+      <main className="flex-1 overflow-auto">
+        <LayoutGroup>
+          <motion.div layout className="divide-y">
+            {cartHistory.map((cart) => (
+              <div key={cart._id}>
+                {cart.cart.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-start gap-3 p-4 border-b"
+                  >
+                    <div className="flex-shrink-0 w-5 h-5 my-1">
+                      <div className="flex-shrink-0">
+                        <MemoFoodType types={item?.dish?.dishTypes} />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between w-full items-start gap-4">
+                        <div className="flex-1">
+                          <h3 className="font-medium text-[#525252]">{item.dish.name}</h3>
+                          {item?.portion?.name && (
+                            <p className="text-sm text-[#B0B0B0] -ml-4">
+                              {item?.portion?.name}
                             </p>
+                          )}
+                          {item?.extras?.length > 0 && (
+                            <p className="text-sm text-[#B0B0B0] -ml-4">
+                              {item.extras.map(e => e.name).join(", ")}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm text-[#B0B0B0]">Qty {item.quantity}</div>
+                          <div className="font-medium">
+                            ₹{(item.dish.price * item.quantity).toFixed(2)}
                           </div>
                         </div>
-                        <div className="pl-7">
-                          {item?.portion?.name && (
-                            <p className="text-xs text-[#000000]">
-                              portion: {item.portion.name}
-                            </p>
-                          )}
-                        </div>
-                        <div className=" pl-7">
-                          {item?.extras?.length > 0 && (
-                            <div className="text-sm text-[#000000]">
-                              <p className="text-xs font-medium">Extras:</p>
-                              {item.extras.map((extra) => (
-                                <p
-                                  key={extra.id}
-                                  className="flex items-center text-xs"
-                                >
-                                  <MdLocalOffer className="mr-1 text-green-500" />
-                                  {extra.name}: {extra.quantity} x ₹
-                                  {extra.price}
-                                </p>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        ))
-      ) : (
-        <center className="mt-12 text-xl">No Order found</center>
-      )}
-    </div>
-  );
-};
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ))}
 
-const Orders = memo(MemoOrders);
-export default Orders;
+            {/* Order Groups */}
+            <div className="pt-4">
+              {cartHistory.map((cart, index) => (
+                <motion.div
+                  key={cart._id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.2 }}
+                  className="flex items-center justify-between p-4 border border-[#D9D9D9] mx-4 rounded-lg"
+                >
+                  <section className="flex items-center gap-3">
+                    <figure className="flex items-center justify-center w-12 h-12 rounded-full bg-orange-100">
+                      <Image src={Happy} alt="happy" />
+                    </figure>
+                    <h1 className="text-base font-medium">Orders by <strong>{cart.name}</strong></h1>
+                  </section>
+                  <button
+                    type="button"
+                    onClick={() => toggleAccordion(cart._id)}
+                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900"
+                  >
+                    <p className="text-base font-semibold text-black">{cart.cart.length} Dishes</p>
+                    <span className="float-right">View</span>
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </LayoutGroup>
+
+        {/* Extra space for bottom bar */}
+        <div className="h-20" />
+      </main>
+
+      {/* Bottom Bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white">
+        {/* Footer Note */}
+        <div className="px-4 py-3 text-center text-sm text-red-500 bg-red-50">
+          Note ! some items added later will added on final bill
+        </div>
+        <div className="flex items-stretch h-16 p-2 gap-2">
+          <button
+            onClick={handleBack}
+            type="button"
+            className="flex items-center justify-center px-4 border border-gray-300 rounded-lg hover:bg-gray-50"
+          >
+            <FaArrowLeft className="w-4 h-4 text-gray-600" />
+          </button>
+          <div className="flex-1 flex items-stretch bg-[#008800] rounded-lg">
+            <button
+              onClick={() => setCartPage("payment")}
+              type="button"
+              className="px-6 flex items-center justify-center text-white font-medium hover:bg-green-800"
+            >
+              <RiNewspaperLine /> Generate Final bill
+              <BiRightArrow className="w-3 h-3 ml-2" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const Orders = memo(MemoOrders)
+export default Orders
+

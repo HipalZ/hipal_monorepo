@@ -6,9 +6,11 @@ import { Scanner, type IDetectedBarcode } from "@yudiel/react-qr-scanner";
 import Image from "next/image";
 import HipalLogo from "@/assets/img/HipalZ_logo_title.png";
 import poweredBy from "@/assets/img/powered_hipalz.png";
+import { useCart } from "@/components/store/useCart";
 
 const MemoScan = ({ hide }: { hide?: boolean }) => {
   const router = useRouter();
+  const { setShowCart } = useCart();
 
   const gotoExplore = () => {
     router.back();
@@ -21,8 +23,9 @@ const MemoScan = ({ hide }: { hide?: boolean }) => {
       }
       const result = detectedCodes[0].rawValue;
       router.push(result);
+      setShowCart(false);
     },
-    [router],
+    [router, setShowCart],
   );
 
   const onError = useCallback((error: unknown) => {

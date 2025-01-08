@@ -15,9 +15,8 @@ function generateCartItemId(dishId, portionId, extras) {
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((e) => `${e.id}:${e.quantity}`)
     .join("|");
-  return `${dishId}_${portionId || "no_portion"}_${
-    sortedExtras || "no_extras"
-  }`;
+  return `${dishId}_${portionId || "no_portion"}_${sortedExtras || "no_extras"
+    }`;
 }
 
 const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
@@ -55,7 +54,6 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
   const handleClick = useCallback(
     (addDish: DishType) => {
       setSelectedDish(addDish);
-      console.log(addDish?.portions?.length, addDish?.addOnIds?.length);
       if (addDish?.portions?.length > 0 || addDish?.addOnIds?.length > 0) {
         setCartPopup("BOTTOM_PANEL");
         handleOpenModal();

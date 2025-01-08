@@ -1,4 +1,5 @@
 import type { DishType } from "@hi/db-models/src/validators";
+import { toast } from "react-toastify";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -10,6 +11,7 @@ export interface ICartItem {
   portion: { _id: number; name: string; price: number } | null;
   extras: Array<{ id: string; name: string; quantity: number; price: number }>;
   quantity: number;
+  instruction?: string;
 }
 
 export interface ICartHistory {
@@ -86,6 +88,18 @@ interface ICartStore {
   setCartEmpty: () => void;
 
   dishes: DishType;
+
+  instructionId: string;
+  setInstructionId: (open: string) => void;
+
+  instruction: string;
+  setInstruction: (instruction: string) => void;
+
+  openInstructionModal: boolean;
+  setOpenInstructionModal: (open: boolean) => void;
+
+  addInstructionToDish: (instruction: string) => void;
+  removeInstructionFromDish: (id: string) => void;
 }
 
 export const useCartStore = create(
@@ -158,9 +172,8 @@ export const useCartStore = create(
             const updatedCart = [...state.cart];
             updatedCart[existingItemIndex].quantity += newItem.quantity;
             return { cart: updatedCart };
-          } else {
-            return { cart: [...state.cart, newItem] };
           }
+          return { cart: [...state.cart, newItem] };
         });
       },
 
@@ -179,6 +192,58 @@ export const useCartStore = create(
         set((state) => ({
           cart: state.cart.filter((i) => i.id !== id),
         }));
+      },
+
+      instruction: "",
+      setInstruction: (instruction) => {
+        set({ instruction });
+      },
+
+      instructionId: "",
+      setInstructionId: (id) => {
+        set({ instructionId: id });
+      },
+
+      openInstructionModal: false,
+      setOpenInstructionModal: (open) => {
+        set({ openInstructionModal: open });
+      },
+
+      addInstructionToDish: (instruction: string) => {
+        set((state) => {
+          const dishIndex = state.cart.findIndex(
+            (item) => String(item.id) === state.instructionId,
+          );
+          if (dishIndex !== -1) {
+            const updatedCart = [...state.cart];
+            updatedCart[dishIndex].dish = {
+              ...updatedCart[dishIndex].dish,
+              instruction,
+            };
+            toast.success("Instruction added successfully!");
+            return { cart: updatedCart };
+          }
+
+          return state;
+        });
+      },
+
+      removeInstructionFromDish: (id: string) => {
+        set((state) => {
+          const dishIndex = state.cart.findIndex(
+            (item) => String(item.id) === id,
+          );
+          if (dishIndex !== -1) {
+            const updatedCart = [...state.cart];
+            const { instruction, ...restDish } = updatedCart[dishIndex].dish;
+            updatedCart[dishIndex].dish = restDish;
+            set({ instruction: "" });
+            toast.success("Instruction removed successfully!");
+            return { cart: updatedCart };
+          }
+
+          return state;
+        });
       },
 
       dishes: {} as DishType,

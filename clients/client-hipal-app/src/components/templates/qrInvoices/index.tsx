@@ -10,6 +10,7 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { BsDownload } from "react-icons/bs";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 
 const QrInvoices = ({ data }) => {
   const businessData = [
@@ -50,7 +51,7 @@ const QrInvoices = ({ data }) => {
       serviceCost: 1,
     },
   ];
-
+  const { setCheckLogin } = usePaymentStore()
   const router = useRouter();
   const params = useParams();
   const pathname = usePathname();
@@ -99,7 +100,8 @@ const QrInvoices = ({ data }) => {
       setInvoiceUrl("");
     }
     if (!accessToken) {
-      router.push(`/${customLink}/user/signup`);
+      setCheckLogin(true);
+      return;
     }
   }, [direction, accessToken, invoiceUrl]);
 

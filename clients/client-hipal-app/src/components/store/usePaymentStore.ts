@@ -56,6 +56,9 @@ interface IUsePaymentStore {
 
   coinz: number;
   setCoinz: (coinz: number) => void;
+
+  showScan: boolean;
+  setShowScan: (show: boolean) => void;
 }
 
 export const usePaymentStore = create<IUsePaymentStore>((set) => ({
@@ -127,4 +130,7 @@ export const usePaymentStore = create<IUsePaymentStore>((set) => ({
 
   coinz: 0,
   setCoinz: (coinz: number) => set(() => ({ coinz: coinz })),
+
+  showScan: false,
+  setShowScan: (show: boolean) => set(() => ({ showScan: show })),
 }));

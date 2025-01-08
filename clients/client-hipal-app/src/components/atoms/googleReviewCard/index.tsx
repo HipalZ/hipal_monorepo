@@ -10,6 +10,7 @@ import { useReview } from "@/components/store/useReview";
 import { toast } from "react-toastify";
 import LoadingSpinnerCircle from "../loader";
 import { useErrorHandling } from "@/utils/helper";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 
 const ExplorePageReviewCard = dynamic(() => import("./explorePage"), {
   ssr: false,
@@ -28,6 +29,7 @@ const MemoGoogleReviewCard = () => {
   const { setShowGoogleReview } = useReview((s) => ({
     setShowGoogleReview: s.setShowGoogleReview,
   }));
+  const { setCheckLogin } = usePaymentStore()
   const { loyaltySetting } = useLoyaltyData();
   const businessDetails = useBusinessDetails((s) => s.businessDetails);
 
@@ -52,7 +54,8 @@ const MemoGoogleReviewCard = () => {
     if (!isLogin) {
       setDirection("explore-googleReview");
       setReviewPopup(false);
-      return router.push(`/${customLink}/user/signup`);
+      setCheckLogin(true);
+      return;
     }
     if (googleReviewCount && googleReviewCount > 1) {
       setReviewPopup(false);

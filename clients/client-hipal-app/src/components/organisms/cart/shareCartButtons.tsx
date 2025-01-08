@@ -2,6 +2,7 @@ import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { useCartStore } from "@/components/store/useCartStore";
 import { useLogin } from "@/components/store/useLogin";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { BUSINESS_KEYID } from "@/configs";
 import { apiRpc } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
@@ -18,7 +19,7 @@ const MemoShareCartButtons = () => {
   const setDirection = useLogin((state) => state.setDirection);
   const router = useRouter();
   const customLink = useParams()?.businessId as string;
-
+  const { setCheckLogin } = usePaymentStore()
   const [shareState, setShareState] = useState({ showOptions: false, url: "" });
 
   const sanitizedCart = useMemo(() => {
@@ -31,7 +32,7 @@ const MemoShareCartButtons = () => {
   const generateCartLink = async () => {
     setDirection("category")
     if (!accessToken) {
-      router.push(`/${customLink}/user/signup`);
+      setCheckLogin(true);
       return;
     }
 

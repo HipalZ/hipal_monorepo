@@ -12,8 +12,8 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
-import { useParams, usePathname, useSearchParams } from "next/navigation";
-import ScanPage from "../posPayment/paymentScanner";
+import MemoCart from "@/components/organisms/cart";
+import { useCart } from "@/components/store/useCart";
 
 const CashbackMessage = dynamic(() => import("./cashbackMessage"), {
   loading: () => <SkeletonLoader height={200} />,
@@ -49,8 +49,8 @@ const MemoCoinzRewardSection = () => {
     applyCouponz: s.applyCouponz,
     setApplyCouponz: s.setApplyCouponz,
   }));
-  const orderId = useSearchParams().get("orderId") as string;
-  const searchParams = usePathname()
+  const { setShowCart, showCart } =
+    useCart();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const { availedCoupon, userCouponz } = useCouponz((s) => ({
     availedCoupon: s.availedCoupon,
@@ -215,25 +215,21 @@ const MemoCoinzRewardSection = () => {
           </section>
         </>
       ) : null}
-      {(editBillModal && !outletInfo?.isPosEnabled) ? (
+      {(editBillModal && !outletInfo?.isPosEnabled) && (
         <BottomPopUp
           show={editBillModal}
           onClose={closeBillModal}
           linearGradTheme
+          height="80dvh"
         >
           <AddAmountModal />
         </BottomPopUp>
-      ) :
-        orderId || searchParams?.includes('/payment') ? null : (
-          <BottomPopUp
-            show={editBillModal}
-            onClose={closeBillModal}
-            linearGradTheme
-          >
-            <ScanPage />
-          </BottomPopUp>
-        )
-      }
+      )}
+      {showCart && (
+        <BottomPopUp hide show={showCart} onClose={() => setShowCart(false)}>
+          <MemoCart />
+        </BottomPopUp>
+      )}
     </section>
   );
 };

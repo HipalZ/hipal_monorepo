@@ -1,34 +1,34 @@
-"use client";
-
-import { memo, useEffect } from "react";
+"use client";;
+import { memo, useCallback, useEffect } from "react";
 import img from "@/assets/img/cut.png";
 import type { IBusinessData } from "@/components/types/businessData";
-import { useParams, usePathname, useSearchParams } from "next/navigation";
-import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
+import { usePathname, useSearchParams } from "next/navigation";
 import useTableData from "@/components/store/useTableData";
 import { useUserToken } from "@hi/common/src/useUserToken";
-import Link from "next/link";
-import { useLogin } from "@/components/store/useLogin";
 import Cat from "@/assets/login/cat.png";
 import Introduction from "./introduction";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import Image from "next/image";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 
 const MainBackground = ({ data }: { data: IBusinessData }) => {
   const searchParams = useSearchParams();
   const pathName = usePathname();
-  const params = useParams();
-  const customLink = params?.businessId as string;
   const tableName = searchParams?.get("tableName");
   const { setTableName } = useTableData();
-  const setDirection = useLogin((s) => s.setDirection);
   const setBusinessData = _useAllBusiness((s) => s.setData);
   const { setBusinessDetails } = useBusinessDetails();
+  const { setCheckLogin } = usePaymentStore();
+
 
   // Move accessToken check to client side
   const accessToken = useUserToken.getState().accessToken;
+
+  const handleLogin = useCallback(() => {
+    setCheckLogin(true);
+  }, [setCheckLogin]);
 
   useEffect(() => {
     if (tableName !== null) {
@@ -42,7 +42,7 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
   useEffect(() => {
     setBusinessData(data);
     if (data?.business) {
-      setBusinessDetails(data.business);
+      setBusinessDetails(data?.business);
     }
   }, [data]);
 
@@ -98,19 +98,13 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
         {/* Login Button */}
         <div className="absolute z-30 rounded-full top-4 right-4">
           {!accessToken && (
-            <Link
-              href={
-                customLink ? routePaths[PAGE_TYPES.SIGN_UP](customLink) : "#"
-              }
+            <button
+              onClick={handleLogin}
+              type="button"
+              className="px-4 py-2 text-white transition-colors bg-black bg-opacity-50 rounded-full"
             >
-              <button
-                onClick={() => setDirection("explore")}
-                type="button"
-                className="px-4 py-2 text-white transition-colors bg-black bg-opacity-50 rounded-full"
-              >
-                Login/Sign up
-              </button>
-            </Link>
+              Login/Sign up
+            </button>
           )}
           {accessToken && (
             <Image

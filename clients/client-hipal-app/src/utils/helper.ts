@@ -1,10 +1,8 @@
-import { useParams, useRouter } from "next/navigation";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { toast } from "react-toastify";
 
 export const useErrorHandling = () => {
-  const router = useRouter();
-  const customLink = useParams()?.businessId as string;
-
+  const { setCheckLogin } = usePaymentStore();
   const errorText = (status: number) => {
     let message = "";
     switch (status) {
@@ -13,7 +11,7 @@ export const useErrorHandling = () => {
           "Oops! Something went wrong with your request. Please check your input and try again.";
         break;
       case 401:
-        router.push(`/${customLink}/user/signup`);
+        setCheckLogin(true);
         message = "Session Expired: Please log in again to continue.";
         break;
       case 403:

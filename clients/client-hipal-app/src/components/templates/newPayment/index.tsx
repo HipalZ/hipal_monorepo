@@ -30,6 +30,7 @@ import { useCouponz } from "@/components/store/useCouponz";
 import { useMerchantDetails } from "@/components/hooks/useMerchantSecret";
 import { useUserCoinz } from "@/components/hooks/useUserCoinz";
 import { useErrorHandling } from "@/utils/helper";
+import { useCart } from "@/components/store/useCart";
 
 const ApplyCouponz = dynamic(() => import("../couponz/applyCouponz"), {
   ssr: false,
@@ -120,13 +121,14 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     setEditBillModal: s.setEditBillModal,
   }));
 
+  const { setShowCart } = useCart();
   useMerchantDetails();
   useUserCoinz(data?.loyalty?.loyaltyId || "");
-
   useEffect(() => {
     if (billValue === 0) {
       setEditBillModal(true);
     }
+    setShowCart(false);
     setSelectedMode("INVOICE");
     setLoyaltySetting(data?.loyalty);
   }, [data]);
@@ -153,29 +155,8 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     merchantDetails,
     showError,
     setShowError,
-  } = usePaymentStore((s) => ({
-    billValue: s.billValue,
-    claimedCoinz: s.claimedCoinz,
-    setClaimedCoinz: s.setClaimedCoinz,
-    claimCouponz: s.claimCouponz,
-    tips: s.tips,
-    customTip: s.customTip,
-    setCustomTip: s.setCustomTip,
-    setTips: s.setTips,
-    userCoinz: s.userCoinz,
-    isLoading: s.isLoading,
-    setIsLoading: s.setIsLoading,
-    selectedMode: s.selectedMode,
-    setSelectedMode: s.setSelectedMode,
-    setSelectedTip: s.setSelectedTip,
-    setIsTipActive: s.setIsTipActive,
-    showInput: s.showInput,
-    setShowInput: s.setShowInput,
-    setIsModalOpen: s.setIsModalOpen,
-    merchantDetails: s.merchantDetails,
-    showError: s.showError,
-    setShowError: s.setShowError,
-  }));
+    setShowScan,
+  } = usePaymentStore();
 
   const { businessDetails } = useBusinessDetails();
   const { tableName, setTableName } = useTableData();
@@ -647,6 +628,10 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
 
   const handleMode = useCallback(
     (mode: PageStates) => {
+      if (billValue === 0) {
+        setShowScan(true)
+        return
+      }
       if (showInput) {
         return toast.error("Please save the tip amount");
       }
@@ -829,11 +814,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   <article
                     onClick={() => handleMode("MODE")}
                     onKeyDown={() => handleMode("MODE")}
-                    className={`${billValue > 0 && !!tableName
-                      ? ""
-                      : "opacity-20 pointer-events-none"
-                      } bg-black text-white px-3 py-2 rounded-lg inter text-sm on_active_bounce`}
-                  >
+                    className="bg-black text-white px-3 py-2 rounded-lg inter text-sm on_active_bounce">
                     <span>Pay Now</span>
                   </article>
                 </section>

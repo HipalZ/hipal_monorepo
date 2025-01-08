@@ -1,80 +1,95 @@
-import { memo, useCallback } from "react";
-import { motion } from "framer-motion";
-import { FaExclamationTriangle } from "react-icons/fa";
-import CommonBottomButton from "@/components/atoms/bottomButton";
-import { useCart } from "@/components/store/useCart";
+"use client"
+
+import { memo, useCallback } from "react"
+import { motion } from "framer-motion"
+import { FaExclamationTriangle, FaShoppingBag, FaCreditCard } from "react-icons/fa"
+import { useCart } from "@/components/store/useCart"
 
 const MemoPaymentAlert = ({ onClick }: { onClick: () => void }) => {
-  const { setCartPage, setShowCart } = useCart();
+  const { setCartPage, setShowCart } = useCart()
+
   const proceedToPayment = () => {
-    setCartPage("payment");
-    onClick();
-  };
-  const shineVariants = {
-    initial: { x: "-100%" },
-    animate: { x: "100%" },
-  };
+    setCartPage("payment")
+    onClick()
+  }
+
   const orderMore = useCallback(() => {
-    onClick();
-    setShowCart(false);
-  }, [setShowCart]);
+    onClick()
+    setShowCart(false)
+  }, [setShowCart, onClick])
+
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-md p-4 mx-4 mt-[15dvh] text-red-700 bg-red-100 border-l-4 border-red-500 rounded shadow-md"
-      >
-        <div className="flex items-center mb-2">
-          <FaExclamationTriangle className="mr-2 text-red-500" />
-          <h2 className="text-lg font-semibold">Warning: Order Finalization</h2>
-        </div>
-        <p className="mb-4">
-          You and your friends won't be able to place any further orders if you
-          proceed to payment.
-        </p>
-        <button
-          type="button"
-          onClick={proceedToPayment}
-          className="relative w-full px-4 py-3 overflow-hidden text-base-100 bg-primary rounded-xl"
+      <div className="bg-red-500 m-6 p-6 text-white text-center">
+        <FaExclamationTriangle className="w-12 h-12 mx-auto mb-4 text-white" />
+        <h2 className="text-2xl font-bold mb-2">Warning: Order Finalization</h2>
+        <p className="text-white/90">Please review before proceeding</p>
+      </div>
+      <div className="flex flex-col justify-center mt-10">
+        {/* Warning Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="w-full max-w-md rounded-3xl overflow-hidden bg-white"
         >
-          <motion.div
-            className="absolute inset-0 pointer-events-none"
-            variants={shineVariants}
-            initial="initial"
-            animate="animate"
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              // repeatDelay: 1,
-              ease: "backInOut",
-            }}
-            style={{
-              background: "var(--shine-effect)",
-            }}
-          />
-          Continue to pay
-        </button>
-      </motion.div>
-      <CommonBottomButton
-        fixed
-        buttons={[
-          {
-            text: "Order more",
-            onClick: orderMore,
-            type: "button",
-          },
-          // {
-          //   text: "Continue",
-          //   onClick: proceedToPayment,
-          //   type: "button",
-          // },
-        ]}
-      />
-    </>
-  );
-};
+          {/* Warning Points */}
+          <div className="p-6 space-y-4">
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={{
+                visible: { transition: { staggerChildren: 0.1 } }
+              }}
+            >
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, x: -20 },
+                  visible: { opacity: 1, x: 0 }
+                }}
+                className="flex items-center gap-3 p-4 bg-red-50 rounded-lg"
+              >
+                <FaShoppingBag className="w-6 h-6 text-red-500" />
+                <p className="text-red-700">No more items can be added to this order</p>
+              </motion.div>
 
-const PaymentAlert = memo(MemoPaymentAlert);
-export default PaymentAlert;
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, x: -20 },
+                  visible: { opacity: 1, x: 0 }
+                }}
+                className="flex items-center gap-3 p-4 bg-red-50 rounded-lg mt-3"
+              >
+                <FaCreditCard className="w-6 h-6 text-red-500" />
+                <p className="text-red-700">Your friends won't be able to place new orders</p>
+              </motion.div>
+            </motion.div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3 pt-4">
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={proceedToPayment}
+                className="w-full py-4 bg-black text-white rounded-xl font-medium hover:bg-red-600 transition-colors"
+              >
+                Continue to Payment
+              </motion.button>
+
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={orderMore}
+                className="w-full py-4 border-2 border-red-500 text-red-500 rounded-xl font-medium hover:bg-red-50 transition-colors"
+              >
+                Go Back & Order More
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </>
+  )
+}
+
+const PaymentAlert = memo(MemoPaymentAlert)
+export default PaymentAlert
+

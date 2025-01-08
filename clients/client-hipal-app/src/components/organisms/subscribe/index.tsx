@@ -14,6 +14,7 @@ import confetti from "canvas-confetti";
 import SignUpBonus from "../explore/signupbonus";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import { useErrorHandling } from "@/utils/helper";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 
 const MemoSubScribeModal = ({
   setIsLoader,
@@ -33,6 +34,7 @@ const MemoSubScribeModal = ({
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const loyaltyInfo = useLoyaltyData((s) => s.loyaltySetting);
   const customLink = useParams()?.businessId as string;
+  const { setCheckLogin } = usePaymentStore()
   const [coinZ, setCoinz] = useState(0);
   const router = useRouter();
 
@@ -69,7 +71,8 @@ const MemoSubScribeModal = ({
     const response = (await res.json()).data;
     if (res.status === 400 || res.status === 403 || res.status === 404) {
       setDirection("explore")
-      return router.push(`/${customLink}/user/signup`);
+      setCheckLogin(true);
+      return
     }
     if (res.status === 409) {
       setSubscribeModal(false);

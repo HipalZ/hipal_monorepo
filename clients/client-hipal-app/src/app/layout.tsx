@@ -4,6 +4,9 @@ import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import Loading from "./loading";
 import "./globals.css";
+const DynamicScanPage = dynamic(() => import("@/components/atoms/dynamicScanPage"), {
+  ssr: false,
+});
 
 const DynamicToast = dynamic(
   () => import("@/components/atoms/toastContainer"),
@@ -11,11 +14,17 @@ const DynamicToast = dynamic(
 );
 const DynamicQueryComponent = dynamic(
   () => import("@/components/atoms/queryComponent"),
+  { ssr: false },
 );
 
 const GoogleAnalytics = dynamic(
   () => import("@/components/atoms/dynamicGoogleAnalytics"),
+  { ssr: false },
 );
+
+const DynamicCombinedLogin = dynamic(() => import("@/components/atoms/dynamicCombinedLogin"), {
+  ssr: false,
+});
 
 export const metadata: Metadata = {
   title: "Hipal App",
@@ -96,6 +105,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap"
           rel="stylesheet"
         />
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
           rel="stylesheet"
@@ -115,6 +125,8 @@ export default function RootLayout({
           <DynamicQueryComponent>
             <div id="root">{children}</div>
           </DynamicQueryComponent>
+          <DynamicCombinedLogin />
+          <DynamicScanPage />
         </Suspense>
       </body>
     </html>
