@@ -207,7 +207,7 @@ const kotRouter = new Hono()
             petpoojaCart,
           );
 
-          await Table.findOneAndUpdate(
+          const t = await Table.findOneAndUpdate(
             {
               businessId: kot.businessId,
               name: kot.tableName,
@@ -215,17 +215,11 @@ const kotRouter = new Hono()
             {
               $inc: {
                 totalItemCount: kot.cart.length,
+                currentTableAmount: totalBill,
               },
               $set: {
                 status: "ACTIVE",
-                $inc: {
-                  currentTableAmount: totalBill,
-                },
-
                 date: Date.now(),
-              },
-              $addToSet: {
-                userIds: kot.userId,
               },
             },
             {
@@ -233,6 +227,8 @@ const kotRouter = new Hono()
               upsert: true, // Create the document if it doesn't exist
             },
           );
+
+          console.log("t", t);
 
           return c.json(
             {

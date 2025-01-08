@@ -1136,7 +1136,7 @@ const posRouter = new Hono()
             user._id,
           );
           const totalBill = calculateCartBill(internalCart);
-          await Table.findOneAndUpdate(
+          const g = await Table.findOneAndUpdate(
             {
               businessId: businessId,
               name: tableName,
@@ -1144,10 +1144,10 @@ const posRouter = new Hono()
             {
               $inc: {
                 totalItemCount: internalCart.length,
+                currentTableAmount: totalBill,
               },
               $set: {
                 status: "ACTIVE",
-                currentTableAmount: totalBill,
                 date: Date.now(),
               },
             },
@@ -1156,6 +1156,8 @@ const posRouter = new Hono()
               upsert: true, // Create the document if it doesn't exist
             },
           );
+
+          console.log("g", g);
 
           return c.json(
             {

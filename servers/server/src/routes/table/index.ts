@@ -148,7 +148,6 @@ const tableRouter = new Hono()
           new: true,
         },
       );
-      console.log("table", table);
 
       return c.json(
         {
