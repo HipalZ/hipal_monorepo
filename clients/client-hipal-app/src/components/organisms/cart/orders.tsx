@@ -27,19 +27,6 @@ const MemoOrders = () => {
     [expanded]
   )
 
-  const calculateCartTotal = useCallback((cart) => {
-    if (!cart?.cart) return 0
-    return cart.cart.reduce((total, item) => {
-      const portionPrice = item?.portion?.price ?? item?.dish?.price ?? 0
-      const extrasPrice =
-        item?.extras?.reduce((extraTotal, extra) => {
-          return extraTotal + extra.price * extra.quantity
-        }, 0) ?? 0
-      const itemTotalPrice = (portionPrice + extrasPrice) * item?.quantity
-      return total + itemTotalPrice
-    }, 0)
-  }, [])
-
   const handleBack = useCallback(() => {
     setShowCart(false)
   }, [setShowCart])
@@ -47,6 +34,11 @@ const MemoOrders = () => {
   const openScanAndPay = useCallback(() => {
     setShowScan(true);
   }, [setShowScan]);
+
+  const handleConfirmBillPage = useCallback(() => {
+    setCartPage("payment")
+  }, [setCartPage]);
+
 
   if (cartHistory && cartHistory?.length === 0) return <>
     <center className="h-full flex items-center justify-center">
@@ -180,7 +172,7 @@ const MemoOrders = () => {
           </button>
           <div className="flex-1 flex items-stretch bg-[#008800] rounded-lg">
             <button
-              onClick={() => setCartPage("payment")}
+              onClick={handleConfirmBillPage}
               type="button"
               className="px-6 flex items-center justify-center text-white font-medium hover:bg-green-800"
             >

@@ -44,8 +44,6 @@ const MemoLiveCart = () => {
     setCartPage("cart");
     setShowCart(true);
   }, [
-    cartPage,
-    showCart,
     setShowCart,
     setCartPage,
     tableNameMissing,

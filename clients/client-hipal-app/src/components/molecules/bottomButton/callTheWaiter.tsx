@@ -14,9 +14,7 @@ import RoomService from "@/assets/call/RoomService.png";
 import ReceptionBell from "@/assets/call/ReceptionBell.png";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import CommonBottomButton from "@/components/atoms/bottomButton";
 import ConfettiHeader from "@/components/organisms/confettiHeader";
-import CallTheCaptain from "@/components/organisms/cart/callTheCaptain";
 import { cn } from "@/components/utils/helpers";
 
 const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
@@ -81,7 +79,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
   return (
     <>
       <div className="flex flex-col h-screen relative pb-[6rem] overflow-auto bg-white">
-        <ConfettiHeader />
+        <ConfettiHeader direction="top" />
         <center className="mt-20">
           <Image src={ReceptionBell} alt="ReceptionBell" height={143} width={143} />
           <h1 className="text-black my-2 text-2xl font-semibold">Calling Captain?</h1>

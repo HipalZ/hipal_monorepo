@@ -20,14 +20,6 @@ const MemoOrderPlaced = () => {
         return () => clearInterval(interval)
     }, [])
 
-    useEffect(() => {
-        const timeout = setTimeout(() => {
-            setOrderPlaced(false);
-        }, 5000);
-
-        return () => clearTimeout(timeout);
-    }, [setOrderPlaced]);
-
     const slideVariants = {
         enter: (direction: number) => ({
             x: direction > 0 ? "100%" : "-100%",

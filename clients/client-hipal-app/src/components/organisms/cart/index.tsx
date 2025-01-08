@@ -22,6 +22,8 @@ import { BiRightArrow } from "react-icons/bi";
 import { FaArrowLeft } from "react-icons/fa";
 import { MdOutlineShoppingCart } from "react-icons/md";
 import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
+import ConfirmPayment from "./confirmPayment";
+import BottomPopUp from "@/components/atoms/bottomPopUp";
 
 const CartItem = dynamic(() => import("./cartItem"), { ssr: false, loading: () => <LoadingSpinner /> });
 const CommonBottomButton = dynamic(
@@ -49,7 +51,7 @@ const Cart = () => {
   const { mutate, isPending } = useCallTheCaptain();
   const outLetInfo = _useAllBusiness((state) => state.data.outletInfo);
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
-  const { setShowCart, cartPage, setCartPage, setInputModal, setOrderPlaced, orderPlaced } = useCart();
+  const { setShowCart, cartPage, setCartPage, setInputModal, setOrderPlaced } = useCart();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const [showPayAlert, setShowPayAlert] = useState<boolean>(false);
   const {
@@ -272,6 +274,16 @@ const Cart = () => {
       ];
     }
 
+    if (cartPage === "confirmPayment") {
+      return [
+        {
+          text: "Pay Bill",
+          onClick: payBill,
+          type: "button" as const,
+        },
+      ];
+    }
+
     return [];
   }, [
     tableName,
@@ -433,6 +445,11 @@ const Cart = () => {
       )}
 
       {cartPage === "payment" && <CartPayment />}
+
+      {cartPage === "confirmPayment" && <BottomPopUp bottomCross show={true} onClose={() => setCartPage("cart")}>
+        <ConfirmPayment />
+      </BottomPopUp>
+      }
 
       {outletInfo?.outLetType !== "OTHER" && <CartWarning />}
 

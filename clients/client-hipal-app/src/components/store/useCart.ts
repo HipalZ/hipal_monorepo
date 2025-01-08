@@ -27,7 +27,12 @@ export interface ICart {
   [key: string]: ICartDish;
 }
 
-export type ICartTypes = "cart" | "history" | "order" | "payment";
+export type ICartTypes =
+  | "cart"
+  | "history"
+  | "order"
+  | "payment"
+  | "confirmPayment";
 
 interface IUseCart {
   showCart: boolean;
