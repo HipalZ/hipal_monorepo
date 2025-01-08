@@ -139,9 +139,16 @@ const tableRouter = new Hono()
     async (c) => {
       const { guestCount, tableId } = await c.req.json();
 
-      const table = await Table.findByIdAndUpdate(tableId, {
-        capacity: guestCount,
-      });
+      const table = await Table.findByIdAndUpdate(
+        tableId,
+        {
+          $inc: { capacity: guestCount },
+        },
+        {
+          new: true,
+        },
+      );
+      console.log("table", table);
 
       return c.json(
         {
