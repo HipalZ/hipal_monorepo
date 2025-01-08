@@ -15,6 +15,10 @@ const tempTebleSettleSchema = new mongoose.Schema<TempTebleSettleType>(
       type: String,
       required: false,
     },
+    createdAt: {
+      type: Date,
+      expires: 60 * 3,
+    },
   },
   {
     timestamps: true,

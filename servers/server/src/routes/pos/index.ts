@@ -11,7 +11,6 @@ import {
   UniquelyYours,
   UrlModel,
   User,
-  UserSession,
   WhatsAppBusinessConfig,
   Zone,
 } from "@hi/db-models";
@@ -22,7 +21,7 @@ import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
-import { convertToPetpoojaCart } from "../../utils/helper";
+import { calculateCartBill, convertToPetpoojaCart } from "../../utils/helper";
 
 interface AxiosError {
   response?: {
@@ -172,14 +171,10 @@ const posRouter = new Hono()
         tableNo: tableName,
       };
 
-      console.log("Bill Config", billConfig);
-
       const fetchBill = await axios.post(
         "http://api.petpooja.com/V1/captainorders/request_bill/",
         billConfig,
       );
-
-      console.log("Fetch Bill", fetchBill.data);
 
       if (fetchBill.data.success === "1") {
         const request_id = fetchBill.data.request_id;
@@ -194,7 +189,9 @@ const posRouter = new Hono()
             {
               billGeneratedBy: generatedBy,
               billRequestId: bill_request_id,
-              billInvoiceId: fetchBill.data.invoice_id,
+              billInvoiceId: fetchBill.data.order_data.invoice_id,
+              tax: fetchBill.data.order_data.tax,
+              serviceCharge: fetchBill.data.order_data.service_charge,
             },
           );
 
@@ -205,8 +202,6 @@ const posRouter = new Hono()
             restID: pos.posId.restId,
             bill_request_id: bill_request_id,
           };
-
-          console.log("Get Bill Config", getBillConfig);
 
           const getBill = await axios.post(
             "http://api.petpooja.com/V1/captainorders/get_bill/",
@@ -246,13 +241,10 @@ const posRouter = new Hono()
           request_id: request_id,
         };
 
-        console.log("Bill Request Config", billRequestConfig);
         const fetchBillDetails = await axios.post(
           "http://api.petpooja.com/V1/captainorders/check_bill/",
           billRequestConfig,
         );
-
-        console.log("Fetch Bill Details", fetchBillDetails.data);
 
         if (fetchBillDetails.data.success === "1") {
           const bill_request_id = fetchBillDetails.data.bill_request_id;
@@ -273,18 +265,16 @@ const posRouter = new Hono()
             {
               billGeneratedBy: generatedBy,
               billRequestId: bill_request_id,
-              billInvoiceId: fetchBillDetails.data.invoice_id,
+              billInvoiceId: fetchBillDetails.data.order_data.invoice_id,
+              tax: fetchBillDetails.data.order_data.tax,
+              serviceCharge: fetchBillDetails.data.order_data.service_charge,
             },
           );
-
-          console.log("Get Bill Config", getBillConfig);
 
           const getBill = await axios.post(
             "http://api.petpooja.com/V1/captainorders/get_bill/",
             getBillConfig,
           );
-
-          console.log("Get Bill", getBill.data);
 
           if (getBill.data.success === "1") {
             const billObj = {
@@ -680,27 +670,36 @@ const posRouter = new Hono()
             404,
           );
         }
-        // check if table is already settled
-        if (hiCode && hiCode.toString().length > 0) {
-          const fetchTableAlreadySettle = await TempTableSettle.findOne({
-            tableName: tableName,
+        await Table.findOneAndUpdate(
+          {
             businessId: businessId,
-            hiCode: hiCode.toString(),
-          });
+            name: tableName,
+          },
+          {
+            $addToSet: {
+              userIds: user?._id,
+            },
+          },
+        );
 
-          if (fetchTableAlreadySettle) {
-            return c.json(
-              {
-                message: `Table already settled by ${fetchTableAlreadySettle.settleBy} please scan the QR code again`,
-                err: true,
-                data: {
-                  success: false,
-                },
+        const fetchTableAlreadySettle = await TempTableSettle.findOne({
+          tableName: tableName,
+          businessId: businessId,
+        });
+
+        if (fetchTableAlreadySettle) {
+          return c.json(
+            {
+              message: `Table already settled by ${fetchTableAlreadySettle.settleBy} please wait upto 3 minutes and scan the QR code again`,
+              err: true,
+              data: {
+                success: false,
               },
-              401,
-            );
-          }
+            },
+            401,
+          );
         }
+
         //TODO
         // find posconfig for a place order
         const pos = await BusinessPosConfig.findOne({
@@ -724,24 +723,7 @@ const posRouter = new Hono()
           tableName: tableName,
           businessId: businessId,
         });
-        const userActiveSession = await UserSession.findOne({
-          customerPhone: customerPhone,
-          businessId: businessId,
-        });
-        // check if user has an active session",
-        if (userActiveSession && !fetchHiCode) {
-          return c.json(
-            {
-              message:
-                "User already has an active session. Please try again after 3 hrs.",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            401,
-          );
-        }
+
         // check if bill already generated for a table
         if (fetchHiCode?.billRequestId) {
           return c.json(
@@ -759,7 +741,8 @@ const posRouter = new Hono()
         if (fetchHiCode) {
           if (
             !fetchHiCode.phoneNumbers.includes(customerPhone) &&
-            fetchHiCode.hiCode.toString().length > 0
+            fetchHiCode?.hiCode &&
+            fetchHiCode.hiCode.length > 0
           ) {
             return c.json(
               {
@@ -777,6 +760,7 @@ const posRouter = new Hono()
         }
 
         if (!fetchHiCode) {
+          const tenDigitCode = generateTenDigitCode();
           const registerUser = await axios.post(
             "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
             {
@@ -784,76 +768,144 @@ const posRouter = new Hono()
               app_secret: pos?.posId.secretKey,
               access_token: pos?.posId.authToken,
               restID: pos?.posId.restId,
-              phone: customerPhone,
+              phone: tenDigitCode,
               name: customerName,
             },
           );
-
-          await UserSession.create({
-            customerPhone: customerPhone,
-            businessId: businessId,
-            createdAt: Date.now(),
-          });
-
-          if (registerUser.data.success === "1") {
-            const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
-
-            const petPoojaPinTemp = new PetPoojaPinTemp({
-              businessId: businessId,
-              hiCode: hiCode,
-              pin: customerPhone,
-              tableName: tableName,
-              customerName: customerName,
-              phoneNumbers: [customerPhone],
-            });
-            await petPoojaPinTemp.save();
-            const petpoojaCart = convertToPetpoojaCart(
-              internalCart,
-              pos?.posId.restId,
-              customerName,
-              customerPhone,
-              tableName,
-            );
-
-            if (pos.orderVerificationType === "USER") {
-              const saveKot = await axios.post(
-                "https://api.petpooja.com/V1/captainorders/save_kot_qr_order",
-                petpoojaCart,
-              );
-            }
-
-            await saveUserKot(
-              tableName,
-              businessId,
-              customerName,
-              customerPhone,
-              internalCart,
-              user._id,
-            );
-
-            await saveKotOrder(
-              tableName,
-              businessId,
-              customerName,
-              customerPhone,
-              internalCart,
-              user._id,
-            );
-
+          if (registerUser.data.success === "0") {
             return c.json(
               {
-                message: "Data fetched successfully",
-                err: false,
+                message: "Error saving data",
+                err: true,
                 data: {
-                  success: true,
-                  hiCode: hiCode,
-                  name: customerName,
-                  phone: customerPhone,
+                  success: false,
                 },
               },
-              200,
+              400,
             );
           }
+          const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+          await Table.findOneAndUpdate(
+            {
+              businessId: businessId,
+              name: tableName,
+            },
+            {
+              hiCode: hiCode.toString(),
+              status: "ACTIVE",
+            },
+          );
+
+          const petPoojaPinTemp = new PetPoojaPinTemp({
+            businessId: businessId,
+            hiCode: hiCode,
+            pin: tenDigitCode,
+            tableName: tableName,
+            customerName: customerName,
+            phoneNumbers: [customerPhone],
+            performedBy: "user",
+          });
+          await petPoojaPinTemp.save();
+          const petpoojaCart = convertToPetpoojaCart(
+            internalCart,
+            pos?.posId.restId,
+            customerName,
+            customerPhone,
+            tableName,
+          );
+
+          if (pos.orderVerificationType === "USER") {
+            const saveKot = await axios.post(
+              "https://api.petpooja.com/V1/captainorders/save_kot_qr_order",
+              petpoojaCart,
+            );
+          }
+          await saveKotOrder(
+            tableName,
+            businessId,
+            customerName,
+            customerPhone,
+            internalCart,
+            user._id,
+          );
+
+          return c.json(
+            {
+              message: "Data fetched successfully",
+              err: false,
+              data: {
+                success: true,
+                hiCode: hiCode,
+                name: customerName,
+                phone: customerPhone,
+              },
+            },
+            200,
+          );
+        }
+
+        if (
+          fetchHiCode?.performedBy === "captain" &&
+          fetchHiCode?.hiCode?.length === 0
+        ) {
+          const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
+          await Table.findOneAndUpdate(
+            {
+              businessId: businessId,
+              name: tableName,
+            },
+            {
+              hiCode: hiCode.toString(),
+            },
+          );
+
+          await PetPoojaPinTemp.findOneAndUpdate(
+            {
+              businessId: businessId,
+              tableName: tableName,
+            },
+            {
+              hiCode: hiCode,
+              performedBy: "user",
+            },
+          );
+          const petpoojaCart = convertToPetpoojaCart(
+            internalCart,
+            pos?.posId.restId,
+            customerName,
+            customerPhone,
+            tableName,
+          );
+
+          if (pos.orderVerificationType === "USER") {
+            const saveKot = await axios.post(
+              "https://api.petpooja.com/V1/captainorders/save_kot_qr_order",
+              petpoojaCart,
+            );
+          }
+          await saveKotOrder(
+            tableName,
+            businessId,
+            customerName,
+            customerPhone,
+            internalCart,
+            user._id,
+          );
+
+          return c.json(
+            {
+              message: "Data fetched successfully",
+              err: false,
+              data: {
+                success: true,
+                hiCode: hiCode,
+                name: customerName,
+                phone: customerPhone,
+              },
+            },
+            200,
+          );
         }
 
         const petpoojaCart = convertToPetpoojaCart(
@@ -869,16 +921,6 @@ const posRouter = new Hono()
             petpoojaCart,
           );
         }
-
-        await saveUserKot(
-          tableName,
-          businessId,
-          customerName,
-          customerPhone,
-          internalCart,
-          user._id,
-        );
-
         await saveKotOrder(
           tableName,
           businessId,
@@ -1019,29 +1061,57 @@ const posRouter = new Hono()
           );
         }
 
-        // Example usage
+        const fetchHiCode = await PetPoojaPinTemp.findOne({
+          tableName: tableName,
+          businessId: businessId,
+        });
+
+        if (fetchHiCode?.billRequestId) {
+          return c.json(
+            {
+              message: `Bill already generated for table ${tableName} by ${fetchHiCode?.billGeneratedBy} you can't add more items`,
+              err: true,
+              data: {
+                success: false,
+              },
+            },
+            400,
+          );
+        }
+
         const tenDigitCode = generateTenDigitCode();
-
-        const registerUser = await axios.post(
-          "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
-          {
-            app_key: pos?.posId.accessKey,
-            app_secret: pos?.posId.secretKey,
-            access_token: pos?.posId.authToken,
-            restID: pos?.posId.restId,
-            phone: tenDigitCode,
-            name: customerName,
-          },
-        );
-
-        if (registerUser.data.success === "1") {
+        if (!fetchHiCode) {
+          const registerUser = await axios.post(
+            "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
+            {
+              app_key: pos?.posId.accessKey,
+              app_secret: pos?.posId.secretKey,
+              access_token: pos?.posId.authToken,
+              restID: pos?.posId.restId,
+              phone: tenDigitCode,
+              name: customerName,
+            },
+          );
+          if (registerUser.data.success === "0") {
+            return c.json(
+              {
+                message: "Error saving data",
+                err: true,
+                data: {
+                  success: false,
+                },
+              },
+              400,
+            );
+          }
           const petPoojaPinTemp = new PetPoojaPinTemp({
             businessId: businessId,
-            hiCode: 0,
+            hiCode: "",
             pin: tenDigitCode,
             tableName: tableName,
             customerName: customerName,
             phoneNumbers: [customerPhone],
+            performedBy: "captain",
           });
           await petPoojaPinTemp.save();
           const petpoojaCart = convertToPetpoojaCart(
@@ -1057,15 +1127,6 @@ const posRouter = new Hono()
             petpoojaCart,
           );
 
-          await saveUserKot(
-            tableName,
-            businessId,
-            customerName,
-            customerPhone,
-            internalCart,
-            user._id,
-          );
-
           await saveKotOrder(
             tableName,
             businessId,
@@ -1074,7 +1135,7 @@ const posRouter = new Hono()
             internalCart,
             user._id,
           );
-
+          const totalBill = calculateCartBill(internalCart);
           await Table.findOneAndUpdate(
             {
               businessId: businessId,
@@ -1086,11 +1147,8 @@ const posRouter = new Hono()
               },
               $set: {
                 status: "ACTIVE",
-                currentTableAmount: 100,
+                currentTableAmount: totalBill,
                 date: Date.now(),
-              },
-              $addToSet: {
-                userIds: user._id,
               },
             },
             {
@@ -1105,24 +1163,66 @@ const posRouter = new Hono()
               err: false,
               data: {
                 success: true,
-                hiCode: 0,
-                name: customerName,
-                phone: customerPhone,
+                hiCode: "",
               },
             },
             200,
           );
         }
 
-        return c.json(
+        const petpoojaCart = convertToPetpoojaCart(
+          internalCart,
+          pos?.posId.restId,
+          customerName,
+          fetchHiCode.pin,
+          tableName,
+        );
+
+        const saveKot = await axios.post(
+          "https://api.petpooja.com/V1/captainorders/save_kot_qr_order",
+          petpoojaCart,
+        );
+
+        await saveKotOrder(
+          tableName,
+          businessId,
+          customerName,
+          customerPhone,
+          internalCart,
+          user._id,
+        );
+        const totalBill = calculateCartBill(internalCart);
+        await Table.findOneAndUpdate(
           {
-            message: "Error saving data",
-            err: true,
-            data: {
-              success: false,
+            businessId: businessId,
+            name: tableName,
+          },
+          {
+            $inc: {
+              totalItemCount: internalCart.length,
+            },
+            $set: {
+              status: "ACTIVE",
+              currentTableAmount: totalBill,
+              date: Date.now(),
             },
           },
-          400,
+          {
+            new: true, // Return the updated document
+            upsert: true, // Create the document if it doesn't exist
+          },
+        );
+
+        return c.json(
+          {
+            message: "Data fetched successfully",
+            err: false,
+            data: {
+              success: true,
+              hiCode: fetchHiCode.hiCode,
+            },
+          },
+          200,
         );
       });
     },
@@ -1247,10 +1347,10 @@ const posRouter = new Hono()
     async (c) => {
       const { tableName, businessId } = c.req.query();
 
-      const userKot = await Cart.find({
+      const userKot = await KotOrder.find({
         tableName: tableName,
         businessId: businessId,
-        isSettle: false,
+        settled: false,
       });
 
       return c.json(

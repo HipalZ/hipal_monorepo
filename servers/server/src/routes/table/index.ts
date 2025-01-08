@@ -161,12 +161,20 @@ const tableRouter = new Hono()
         tableId: z.string().min(1).max(500),
         captainId: z.string().min(1).max(500),
         reasonForForceSettle: z.string().min(1).max(500),
+        settleAmount: z.coerce.number().optional(),
+        billRequestId: z.string().min(1).max(500),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { tableId, captainId, reasonForForceSettle } = await c.req.json();
+        const {
+          tableId,
+          captainId,
+          reasonForForceSettle,
+          settleAmount = 0,
+          billRequestId,
+        } = await c.req.json();
         const captain = await User.findById(captainId);
 
         const table = await Table.findById(tableId);
@@ -185,7 +193,7 @@ const tableRouter = new Hono()
         const saveOrder = await Order.create(
           [
             {
-              total: 0,
+              total: settleAmount,
               currency: "INR",
               receipt: uniqueOrderId,
               userId: captainId,
@@ -215,29 +223,26 @@ const tableRouter = new Hono()
             400,
           );
         }
-        const findTable = await PetPoojaPinTemp.findOne({
-          businessId: table?.businessId,
-          tableName: table?.name,
-        });
 
         const getBillConfig = {
           app_key: pos.posId.accessKey,
           app_secret: pos.posId.secretKey,
           access_token: pos.posId.authToken,
           restID: pos.posId.restId,
-          bill_request_id: findTable?.billRequestId,
+          bill_request_id: billRequestId,
         };
 
         const getBill = await axios.post(
           "http://api.petpooja.com/V1/captainorders/get_bill/",
           getBillConfig,
         );
+
         await Payment.create(
           [
             {
               businessId: table?.businessId,
               order_id: saveOrder[0]._id,
-              total: 0,
+              total: saveOrder[0].total,
               mode: "offline",
               status: "SUCCESS",
               paymentMode: "offline",
@@ -252,7 +257,9 @@ const tableRouter = new Hono()
               razorpayPaymentId: nanoid(15),
               settleType: "FORCE_SETTLE",
               comment: reasonForForceSettle,
-              posBillId: getBill.data.invoice_id,
+              posBillId: getBill.data.order_data.invoice_id,
+              tax: getBill.data.order_data.tax,
+              serviceCharge: getBill.data.order_data.service_charge,
 
               waiterName: captain?.name,
               date: Date.now(),
@@ -277,7 +284,7 @@ const tableRouter = new Hono()
           [
             {
               businessId: table?.businessId,
-              hiCode: table?.hiCode,
+              createdAt: Date.now(),
               tableName: table?.name,
               settleBy: captain?.name,
             },
@@ -413,7 +420,9 @@ const tableRouter = new Hono()
               settleType: "NORMAL_SETTLE",
               comment: "NORMAL SETTLE",
 
-              posBillId: getBill.data.invoice_id,
+              posBillId: getBill.data.order_data.invoice_id,
+              tax: getBill.data.order_data.tax,
+              serviceCharge: getBill.data.order_data.service_charge,
               waiterName: captain?.name,
               date: Date.now(),
             },
@@ -437,9 +446,10 @@ const tableRouter = new Hono()
           [
             {
               businessId: table?.businessId,
-              hiCode: table?.hiCode,
+
               tableName: table?.name,
               settleBy: captain?.name,
+              createdAt: Date.now(),
             },
           ],
           { session },

@@ -10,9 +10,9 @@ const petPoojaPinTempModelSchema =
       ref: "Business",
     },
     hiCode: {
-      type: Number,
-      required: true,
-      default: 0,
+      type: String,
+      required: false,
+      default: "",
     },
     pin: {
       type: String,
@@ -52,6 +52,10 @@ const petPoojaPinTempModelSchema =
       required: false,
     },
     settleType: {
+      type: String,
+      required: false,
+    },
+    performedBy: {
       type: String,
       required: false,
     },

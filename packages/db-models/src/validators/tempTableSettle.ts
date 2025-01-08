@@ -13,6 +13,7 @@ const tempTableSettleSchema = z.object({
   tableName: z.string().min(1).max(100),
   hiCode: z.string().min(1).max(100),
   settleBy: z.string().min(1).max(100).optional(),
+  createdAt: z.date().optional(),
 });
 
 export type TempTebleSettleType = z.infer<typeof tempTableSettleSchema>;

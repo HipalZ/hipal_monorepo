@@ -14077,4 +14077,35 @@ function generateUniqueID() {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
 }
 
-export { convertToPetpoojaCart, petPoojaCateAndDish, transformData };
+function calculateCartBill(cart: unknown) {
+  let totalBill = 0;
+
+  cart.forEach((item: unknown) => {
+    // Base dish price
+    let dishPrice = item.dish.price * item.quantity;
+
+    // Portion price if applicable
+    let portionPrice = item.portion ? item.portion.price * item.quantity : 0;
+
+    // Extras price
+    let extrasPrice = item.extras.reduce(
+      (sum, extra) => sum + extra.price * extra.quantity,
+      0,
+    );
+
+    // Calculate total for the item
+    let itemTotal = dishPrice + portionPrice + extrasPrice;
+
+    // Add to total bill
+    totalBill += itemTotal;
+  });
+
+  return totalBill;
+}
+
+export {
+  calculateCartBill,
+  convertToPetpoojaCart,
+  petPoojaCateAndDish,
+  transformData,
+};

@@ -10,7 +10,7 @@ import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { Hono } from "hono";
 import { z } from "zod";
-import { convertToPetpoojaCart } from "../../utils/helper";
+import { calculateCartBill, convertToPetpoojaCart } from "../../utils/helper";
 const generateTenDigitCode = (): string => {
   const min = 1000000000; // Minimum 10-digit number
   const max = 9999999999; // Maximum 10-digit number
@@ -134,6 +134,21 @@ const kotRouter = new Hono()
       return runInTransaction(async (session: ClientSession) => {
         const { orderId, orderAction, performBy, reasonOfRejection } =
           await c.req.json();
+
+        const orderAlreadyAccepted = await KotOrder.findOne({
+          _id: orderId,
+          accepted: true,
+        });
+        if (orderAlreadyAccepted) {
+          return c.json(
+            {
+              message: "Order already accepted",
+              err: true,
+              data: {},
+            },
+            400,
+          );
+        }
         const kot = await KotOrder.findOne({
           _id: orderId,
           accepted: false,
@@ -173,40 +188,17 @@ const kotRouter = new Hono()
           kot.acceptedBy = performBy;
           await kot.save();
 
-          const tenDigitCode = generateTenDigitCode();
           const tempTable = await PetPoojaPinTemp.findOne({
             tableName: kot.tableName,
             businessId: kot.businessId,
           });
-
-          if (!tempTable) {
-            const registerUser = await axios.post(
-              "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
-              {
-                app_key: pos?.posId.accessKey,
-                app_secret: pos?.posId.secretKey,
-                access_token: pos?.posId.authToken,
-                restID: pos?.posId.restId,
-                phone: tenDigitCode,
-                name: kot.name,
-              },
-            );
-          }
-
-          const petPoojaPinTemp = new PetPoojaPinTemp({
-            businessId: kot.businessId,
-            hiCode: tempTable?.hiCode,
-            pin: tenDigitCode,
-            tableName: kot.tableName,
-            customerName: kot.name,
-            phoneNumbers: [kot.phone],
-          });
-          await petPoojaPinTemp.save();
+          const totalBill = calculateCartBill(kot.cart);
+          console.log("totalBill", totalBill);
           const petpoojaCart = convertToPetpoojaCart(
             kot.cart,
             pos?.posId.restId,
             kot.name,
-            tenDigitCode,
+            tempTable?.pin,
             kot.tableName,
           );
 
@@ -226,7 +218,10 @@ const kotRouter = new Hono()
               },
               $set: {
                 status: "ACTIVE",
-                currentTableAmount: 100,
+                $inc: {
+                  currentTableAmount: totalBill,
+                },
+
                 date: Date.now(),
               },
               $addToSet: {
@@ -291,6 +286,7 @@ const kotRouter = new Hono()
               err: false,
               data: {
                 success: true,
+                cart: kot.cart,
               },
             },
             200,
