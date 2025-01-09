@@ -94,7 +94,9 @@ const saveKotOrder = async (
   internalCart: unknown[],
   userId: string,
   accepted: boolean,
+  tableId: string,
 ) => {
+  console.log("tableId", tableId);
   const saveKot = await KotOrder.create({
     tableName: tableName,
     businessId: businessId,
@@ -104,6 +106,7 @@ const saveKotOrder = async (
     userId: userId,
     name: customerName,
     accepted: accepted,
+    tableId: tableId,
   });
 
   if (!saveKot) {
@@ -668,7 +671,7 @@ const posRouter = new Hono()
             404,
           );
         }
-        await Table.findOneAndUpdate(
+        const tableInfo = await Table.findOneAndUpdate(
           {
             businessId: businessId,
             name: tableName,
@@ -784,7 +787,7 @@ const posRouter = new Hono()
           }
           const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
 
-          await Table.findOneAndUpdate(
+          const updateTable = await Table.findOneAndUpdate(
             {
               businessId: businessId,
               name: tableName,
@@ -831,6 +834,7 @@ const posRouter = new Hono()
             internalCart,
             user._id,
             false,
+            tableInfo._id.toString(),
           );
 
           return c.json(
@@ -853,7 +857,7 @@ const posRouter = new Hono()
           fetchHiCode?.hiCode?.length === 0
         ) {
           const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
-          await Table.findOneAndUpdate(
+          const updateTable = await Table.findOneAndUpdate(
             {
               businessId: businessId,
               name: tableName,
@@ -901,6 +905,7 @@ const posRouter = new Hono()
             internalCart,
             user._id,
             false,
+            tableInfo._id.toString(),
           );
 
           return c.json(
@@ -943,6 +948,7 @@ const posRouter = new Hono()
           internalCart,
           user._id,
           false,
+          tableInfo._id.toString(),
         );
         return c.json(
           {
@@ -1043,6 +1049,10 @@ const posRouter = new Hono()
           customerName,
           customerPhone,
         } = await c.req.json();
+        const tableInfo = await Table.findOne({
+          businessId: businessId,
+          name: tableName,
+        });
 
         const user = await User.findOne({ phone: customerPhone });
         if (!user) {
@@ -1156,6 +1166,7 @@ const posRouter = new Hono()
             internalCart,
             user._id,
             true,
+            tableInfo._id.toString(),
           );
           const totalBill = calculateCartBill(internalCart);
           const g = await Table.findOneAndUpdate(
@@ -1175,7 +1186,6 @@ const posRouter = new Hono()
             },
             {
               new: true, // Return the updated document
-              upsert: true, // Create the document if it doesn't exist
             },
           );
 
@@ -1216,6 +1226,7 @@ const posRouter = new Hono()
           internalCart,
           user._id,
           true,
+          tableInfo._id.toString(),
         );
         const totalBill = calculateCartBill(internalCart);
         await Table.findOneAndUpdate(
@@ -1235,7 +1246,6 @@ const posRouter = new Hono()
           },
           {
             new: true, // Return the updated document
-            upsert: true, // Create the document if it doesn't exist
           },
         );
 

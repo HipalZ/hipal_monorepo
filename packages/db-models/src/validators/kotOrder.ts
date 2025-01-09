@@ -40,6 +40,7 @@ export const kotSchema = z.object({
   acceptedBy: ObjectIdSchema.optional(),
   editedBy: ObjectIdSchema.optional(),
   rejectedBy: ObjectIdSchema.optional(),
+  tableId: ObjectIdSchema,
 
   phone: z.string().min(1).max(50),
   name: z.string().min(1).max(50),

@@ -25,6 +25,7 @@ const saveKotOrder = async (
   customerPhone: string,
   internalCart: unknown[],
   userId: string,
+  tableId: string,
 ) => {
   const saveKot = await KotOrder.create({
     tableName: tableName,
@@ -34,6 +35,7 @@ const saveKotOrder = async (
     date: Date.now(),
     userId: userId,
     name: customerName,
+    tableId: tableId,
   });
 
   if (!saveKot) {
@@ -338,6 +340,79 @@ const kotRouter = new Hono()
           data: kot,
         },
         200,
+      );
+    },
+  )
+  .get(
+    "/order/:businessId",
+    zValidator(
+      "query",
+      z.object({
+        edited: z.string().min(1).max(500).optional(),
+        rejected: z.string().min(1).max(500).optional(),
+      }),
+    ),
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.param();
+      const { edited, rejected } = c.req.query();
+
+      if (edited === "true") {
+        const kot = await KotOrder.find({
+          businessId: businessId,
+          edited: true,
+          accepted: false,
+          rejected: false,
+          settled: false,
+        }).populate({
+          path: "editedBy",
+          select: "name phone",
+        });
+
+        return c.json(
+          {
+            message: "Data fetched successfully",
+            err: false,
+            data: kot,
+          },
+          200,
+        );
+      }
+
+      if (rejected === "true") {
+        const kot = await KotOrder.find({
+          businessId: businessId,
+          rejected: true,
+          accepted: false,
+          edited: false,
+          settled: false,
+        }).populate({
+          path: "rejectedBy",
+          select: "name phone",
+        });
+
+        return c.json(
+          {
+            message: "Data fetched successfully",
+            err: false,
+            data: kot,
+          },
+          200,
+        );
+      }
+
+      return c.json(
+        {
+          message: "query not found",
+          err: false,
+          data: {},
+        },
+        400,
       );
     },
   );

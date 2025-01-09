@@ -48,6 +48,11 @@ const KotOrderSchema = new Schema<KotOrderType>(
     tableName: {
       type: String,
     },
+    tableId: {
+      type: ObjectId,
+      ref: "table",
+      required: true,
+    },
     cart: {
       type: [Object],
       required: true,
