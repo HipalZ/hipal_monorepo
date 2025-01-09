@@ -86,8 +86,6 @@ const tableRouter = new Hono()
         active: "1",
       });
 
-      console.log("tables", tables);
-
       return c.json(
         {
           message: "Tables fetched successfully",

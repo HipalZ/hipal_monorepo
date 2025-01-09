@@ -93,6 +93,7 @@ const saveKotOrder = async (
   customerPhone: string,
   internalCart: unknown[],
   userId: string,
+  accepted: boolean,
 ) => {
   const saveKot = await KotOrder.create({
     tableName: tableName,
@@ -102,6 +103,7 @@ const saveKotOrder = async (
     date: Date.now(),
     userId: userId,
     name: customerName,
+    accepted: accepted,
   });
 
   if (!saveKot) {
@@ -189,9 +191,6 @@ const posRouter = new Hono()
             {
               billGeneratedBy: generatedBy,
               billRequestId: bill_request_id,
-              billInvoiceId: fetchBill.data.order_data.invoice_id,
-              tax: fetchBill.data.order_data.tax,
-              serviceCharge: fetchBill.data.order_data.service_charge,
             },
           );
 
@@ -832,6 +831,7 @@ const posRouter = new Hono()
             customerPhone,
             internalCart,
             user._id,
+            false,
           );
 
           return c.json(
@@ -871,6 +871,8 @@ const posRouter = new Hono()
             },
             {
               hiCode: hiCode.toString(),
+              $addToSet: { phoneNumbers: customerPhone },
+
               performedBy: "user",
             },
           );
@@ -899,6 +901,7 @@ const posRouter = new Hono()
             customerPhone,
             internalCart,
             user._id,
+            false,
           );
 
           return c.json(
@@ -940,6 +943,7 @@ const posRouter = new Hono()
           customerPhone,
           internalCart,
           user._id,
+          false,
         );
         return c.json(
           {
@@ -1078,6 +1082,8 @@ const posRouter = new Hono()
           businessId: businessId,
         });
 
+        console.log("fetchHiCode", fetchHiCode);
+
         if (fetchHiCode?.billRequestId) {
           return c.json(
             {
@@ -1122,7 +1128,7 @@ const posRouter = new Hono()
             pin: tenDigitCode,
             tableName: tableName,
             customerName: customerName,
-            phoneNumbers: [customerPhone],
+
             performedBy: "captain",
           });
           await petPoojaPinTemp.save();
@@ -1150,6 +1156,7 @@ const posRouter = new Hono()
             customerPhone,
             internalCart,
             user._id,
+            true,
           );
           const totalBill = calculateCartBill(internalCart);
           const g = await Table.findOneAndUpdate(
@@ -1172,8 +1179,6 @@ const posRouter = new Hono()
               upsert: true, // Create the document if it doesn't exist
             },
           );
-
-          console.log("g", g);
 
           return c.json(
             {
@@ -1211,6 +1216,7 @@ const posRouter = new Hono()
           customerPhone,
           internalCart,
           user._id,
+          true,
         );
         const totalBill = calculateCartBill(internalCart);
         await Table.findOneAndUpdate(

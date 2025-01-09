@@ -55,7 +55,9 @@ const kotRouter = new Hono()
     async (c) => {
       const { tableId } = c.req.param();
 
-      const tableName = await Table.findById(tableId);
+      const tableName = await Table.findOne({
+        _id: tableId,
+      });
 
       if (!tableName) {
         return c.json(
@@ -72,6 +74,7 @@ const kotRouter = new Hono()
         tableName: tableName.name,
         businessId: tableName.businessId,
         settled: false,
+        accepted: true,
       });
 
       return c.json(
