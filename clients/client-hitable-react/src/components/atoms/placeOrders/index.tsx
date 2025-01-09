@@ -30,7 +30,7 @@ const MemoPlaceOrders = () => {
 
     if (!data || data.length === 0) {
         return (
-            <div className="flex items-center justify-center h-64">
+            <div className="flex items-center justify-center min-h-[80dvh]">
                 <p className="text-lg text-gray-500">No orders found for this table.</p>
             </div>
         )
