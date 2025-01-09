@@ -219,7 +219,7 @@ const posRouter = new Hono()
               tableName: getBill.data.order_data.table_no,
 
               subTotal: getBill.data.order_data.core_price,
-              billRequestId: getBill.data.invoice_id,
+              billRequestId: bill_request_id,
             };
             return c.json(
               {
@@ -271,7 +271,7 @@ const posRouter = new Hono()
               customerPhone: getBill.data.order_data.customer_phone,
               customerName: getBill.data.order_data.customer_name,
               tableName: getBill.data.order_data.table_no,
-              billRequestId: getBill.data.invoice_id,
+              billRequestId: bill_request_id,
 
               subTotal: getBill.data.order_data.core_price,
             };
