@@ -62,3 +62,50 @@ export const useCreateOrder = () => {
   });
   return { createOrder: mutateAsync, isPending };
 };
+
+export interface IUpdateOrderAction {
+  orderAction: "ACCEPT" | "REJECT" | "EDIT";
+  orderId: string;
+  performBy: string;
+  reasonOfRejection?: string;
+}
+
+export const useUpdateOrderAction = () => {
+  const queryClient = useQueryClient();
+
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (payload: IUpdateOrderAction) => {
+      const requestBody: IUpdateOrderAction = {
+        orderAction: payload.orderAction,
+        orderId: payload.orderId,
+        performBy: payload.performBy,
+      };
+
+      if (payload.orderAction === "REJECT") {
+        requestBody.reasonOfRejection = payload.reasonOfRejection;
+      }
+
+      const response = await apiRpc.kot.$put({
+        json: requestBody,
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        queryClient.invalidateQueries({ queryKey: ["carts"] });
+      }
+
+      return response.json();
+    },
+    onSuccess: (data: any) => {
+      if (data.err) {
+        toast.error(data.message);
+        return;
+      }
+      toast.success(data.message);
+    },
+    onError: (error: any) => {
+      toast.error(`Error updating order action: ${error.message}`);
+    },
+  });
+
+  return { updateOrderAction: mutateAsync, isPending };
+};

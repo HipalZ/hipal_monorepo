@@ -78,6 +78,11 @@ interface ICartStore {
 
   removeSelectedChoice: (choiceId: string) => void;
 
+  currentOrder: Partial<ICartHistory> | null;
+  setCurrentOrder: (order: Partial<ICartHistory> | null) => void;
+
+  editExistingOrder: (order: ICartHistory) => void;
+
   resetSelections: () => void;
 
   cartHistory: ICartHistory[];
@@ -94,7 +99,7 @@ interface ICartStore {
 
 export const useCartStore = create(
   persist<ICartStore>(
-    (set) => ({
+    (set, get) => ({
       openBottomPanel: false,
       setOpenBottomPanel: (open) => {
         set({ openBottomPanel: open });
@@ -108,6 +113,11 @@ export const useCartStore = create(
       selectedDish: {} as DishType,
       setSelectedDish: (dish) => {
         set({ selectedDish: dish });
+      },
+
+      currentOrder: null,
+      setCurrentOrder: (order) => {
+        set({ currentOrder: order });
       },
 
       selectedPortion: null,
@@ -183,6 +193,18 @@ export const useCartStore = create(
         set((state) => ({
           cart: state.cart.filter((i) => i.id !== id),
         }));
+      },
+
+      editExistingOrder: (order) => {
+        const { cart, ...rest } = order;
+
+        get().setCartEmpty();
+
+        for (const item of cart) {
+          get().addToCart(item);
+        }
+
+        set({ currentOrder: rest });
       },
 
       dishes: {} as DishType,

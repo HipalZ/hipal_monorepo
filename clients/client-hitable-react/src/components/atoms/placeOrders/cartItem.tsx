@@ -9,9 +9,11 @@ import { useOrderStore } from "@/components/store/useOrderData"
 import { useCreateOrder } from "@/components/hooks/useCartApi"
 import { useParams } from "react-router-dom"
 import { useHiClientZ } from "@/components/store/useHiClientzData"
+import { useCart } from "@/components/store/useCart"
 
 const MemoizedCartItem = () => {
     const { cart, updateCartItem, removeFromCart } = useCartStore()
+    const { setIsCartEdit, isCartEdit } = useCart();
     const captainData = useHiClientZ(s => s.captainData)
     const { businessId } = useParams()
     const { setModalType } = useOrderStore()
@@ -50,6 +52,9 @@ const MemoizedCartItem = () => {
             internalCart: sanitizedCart,
             customerName: captainData.name || ""
         }
+        if (isCartEdit) {
+            setIsCartEdit(false)
+        }
         createOrder(order)
     }
 
@@ -74,7 +79,7 @@ const MemoizedCartItem = () => {
                                         <div className="flex gap-2 mb-2">
                                             <FoodType types={cartItem.dish.dishTypes} />
                                             <h5 className="font-semibold text-gray-800">
-                                                {cartItem.dish.name} sankalesh ahsok hatak
+                                                {cartItem.dish.name}
                                             </h5>
                                         </div>
                                         <div className="mt-2 mb-1 text-xs text-gray-500">

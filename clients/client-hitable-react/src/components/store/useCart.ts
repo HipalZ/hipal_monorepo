@@ -32,6 +32,7 @@ interface IUseCart {
   setShowCart: (data: boolean) => void;
   emptyCart: () => void;
   setCart: (data: ICart) => void;
+
   showHistory: boolean;
   setShowHistory: (data: boolean) => void;
   inputModal: boolean;
@@ -49,6 +50,9 @@ interface IUseCart {
   increaseQuantity: (dishId: string) => void;
   decreaseQuantity: (dishId: string) => void;
   removeDish: (dishId: string) => void;
+
+  isCartEdit: boolean;
+  setIsCartEdit: (data: boolean) => void;
 }
 
 export const useCart = create<IUseCart>()(
@@ -76,6 +80,9 @@ export const useCart = create<IUseCart>()(
       cartItem: {},
       setCartItem: (d: object) => set(() => ({ cartItem: d })),
       emptyCartItem: () => set(() => ({ cartItem: {} })),
+
+      isCartEdit: false,
+      setIsCartEdit: (d: boolean) => set(() => ({ isCartEdit: d })),
 
       increaseQuantity: (dishId: string) =>
         set((state) => {

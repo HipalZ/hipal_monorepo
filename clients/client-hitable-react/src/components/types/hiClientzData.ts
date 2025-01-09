@@ -138,8 +138,14 @@ export interface User {
 
 export interface Cart {
   _id: string;
+  accepted?: boolean;
+  edited?: boolean;
+  name?: string;
+  phone?: string;
+  rejected?: boolean;
+  settled?: boolean;
   businessId: string;
-  userId: User | null;
+  userId: User | string | null;
   tableName: string;
   cart: CartItem[];
   date: number;
@@ -147,7 +153,7 @@ export interface Cart {
   updatedAt: string;
   __v: number;
 }
-
+export type businessType = "FOOD" | "OTHER" | "";
 export interface IBusinessData {
   tags?: string[];
   description: string;
@@ -334,7 +340,6 @@ export interface IExtraItem {
   price: number;
 }
 
-
 export interface IExtras {
   _id: string;
   addOnType?: string;
@@ -345,7 +350,6 @@ export interface IExtras {
   compulsory: number;
   items: IExtraItem[];
 }
-
 
 export interface IDish {
   businessId: string;

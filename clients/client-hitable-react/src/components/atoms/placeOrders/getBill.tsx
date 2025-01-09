@@ -1,13 +1,15 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { apiRpc } from "@hi/common";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useOrderStore } from "@/components/store/useOrderData";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
-import { Phone, Table, DollarSign } from "lucide-react";
+import { Phone, Table } from "lucide-react";
 import SpinnerMemo from "@/components/atoms/loadingSpinner";
 import { MdTableBar } from "react-icons/md";
+import CommonBottomButton from "../bottomButton";
+import QRCode from "react-qr-code";
 
 export interface IBillData {
     [key: string]: string | number;
@@ -26,6 +28,9 @@ const MemoGetBill = () => {
     const queryClient = useQueryClient();
     const selectedTable = useOrderStore((s) => s.selectedTable);
     const userData = useHiClientZ((s) => s.captainData);
+    const [qrBillId, setQrBillId] = useState<string | null>(null);
+    const [expireIn, setExpireIn] = useState<number>(0);
+    const [showqr, setShowqr] = useState<boolean>(false);
 
     const getTableBill = async () => {
         const response = await apiRpc.pos.get_bill.$get({
@@ -63,6 +68,31 @@ const MemoGetBill = () => {
         }
     });
 
+    const toggleQr = () => {
+        setShowqr(!showqr);
+    }
+
+    const { isPending, mutate } = useMutation({
+        mutationFn: async () => {
+            const response = await apiRpc.table.hi_settle.$post({
+                json: {
+                    tableId: selectedTable?._id || "",
+                    captainId: userData?._id,
+                    billRequestId: data?.billRequestId ?? "",
+                }
+            })
+            if (response.status === 200) {
+                const result = await response.json();
+                setQrBillId(result?.data?.qrBillId);
+                setExpireIn(result?.data?.expireIn);
+                setShowqr(true);
+            }
+            return response.json()
+        }
+    }
+
+    )
+
     if (isLoading) {
         return <SpinnerMemo />;
     }
@@ -76,58 +106,107 @@ const MemoGetBill = () => {
     }
 
     return (
-        <div className="max-w-md py-[5rem] md:py-[8rem] mx-auto my-8 bg-white p-6">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-800">Bill Summary</h2>
-                <Table className="w-6 h-6 text-gray-600" />
-            </div>
+        <>
 
-            <div className="mb-4 space-y-2">
-                <div className="flex items-center gap-2">
-                    <Phone className="w-5 h-5 text-gray-600" />
-                    <p className="text-sm text-gray-700">
-                        {data?.customerName} ({data?.customerPhone})
-                    </p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <MdTableBar className="w-5 h-5 text-gray-600" />
-                    <p className="text-sm text-gray-700">Table: {data?.tableName}</p>
-                </div>
-            </div>
+            {!showqr && (
 
-            <Separator className="my-4" />
-            <div className="mb-4 space-y-3">
-                {Object.keys(data).map((key) => {
-                    const value = data[key];
+                <div className="max-w-md py-[5rem] md:py-[8rem] mx-auto my-8 p-4 bg-white ">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-bold text-gray-800">Bill Summary</h2>
+                        <Table className="w-6 h-6 text-gray-600" />
+                    </div>
 
-                    if (
-                        (typeof value === "number" && value === 0) ||
-                        key === "customerName" ||
-                        key === "customerPhone" ||
-                        key === "tableName" ||
-                        key === "total"
-                    ) {
-                        return null;
-                    }
-
-                    return (
-                        <div key={key} className="flex justify-between text-sm">
-                            <p className="text-gray-700 capitalize">
-                                {key?.replace(/([A-Z])/g, " $1")}
-                            </p>
-                            <p className="font-medium text-gray-900">
-                                ₹{Number(value)?.toFixed(2)}
+                    <div className="mb-4 space-y-2">
+                        <div className="flex items-center gap-2">
+                            <Phone className="w-5 h-5 text-gray-600" />
+                            <p className="text-sm text-gray-700">
+                                {data?.customerName} ({data?.customerPhone})
                             </p>
                         </div>
-                    );
-                })}
-            </div>
-            <Separator className="my-4" />
-            <div className="flex justify-between text-lg font-bold">
-                <p>Total</p>
-                <p>₹{data?.total.toFixed(2)}</p>
-            </div>
-        </div>
+                        <div className="flex items-center gap-2">
+                            <MdTableBar className="w-5 h-5 text-gray-600" />
+                            <p className="text-sm text-gray-700">Table: {data?.tableName}</p>
+                        </div>
+                    </div>
+
+                    <Separator className="my-4" />
+                    <div className="mb-4 space-y-3">
+                        {Object.keys(data).map((key) => {
+                            const value = data[key];
+
+                            if (
+                                (typeof value === "number" && value === 0) ||
+                                key === "customerName" ||
+                                key === "customerPhone" ||
+                                key === "tableName" ||
+                                key === "total" ||
+                                key === "billRequestId" ||
+                                key === "billing_user_name"
+                            ) {
+                                return null;
+                            }
+
+                            return (
+                                <div key={key} className="flex justify-between text-sm">
+                                    <p className="text-gray-700 capitalize">
+                                        {key?.replace(/([A-Z])/g, " $1")}
+                                    </p>
+                                    <p className="font-medium text-gray-900">
+                                        ₹{Number(value)?.toFixed(2)}
+                                    </p>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <Separator className="my-4" />
+                    <div className="flex justify-between text-lg font-bold">
+                        <p>Total</p>
+                        <p>₹{data?.total.toFixed(2)}</p>
+                    </div>
+                </div>
+            )}
+            {showqr && (
+                <div className="flex flex-col items-center py-[5rem] md:py-[8rem]  justify-center mt-8 text-center">
+                    <QRCode value={`https://payment.example.com/${qrBillId}`} />
+                    <p className="mt-2 text-sm text-gray-500">
+                        QR Bill ID: <span className="font-semibold">{qrBillId}</span>
+                    </p>
+                </div>
+            )}
+            <CommonBottomButton
+                offset="6rem"
+                buttons={
+
+                    !showqr ?
+                        [
+                            {
+                                text: "Normal Settle",
+                                onClick: () => { },
+
+                            },
+                            {
+                                text: "Hi Settle",
+                                onClick: () => { mutate() },
+                                disable: isPending,
+                                isLoading: isPending
+                            }] :
+                        [
+                            {
+                                text: "Refresh",
+                                onClick: () => { mutate() },
+                                disable: isPending,
+                                isLoading: isPending
+                            }, {
+
+                                text: "See Bill",
+                                onClick: () => { toggleQr() },
+                                disable: isPending,
+                                isLoading: isPending
+
+                            }
+                        ]}
+            />
+        </>
     );
 };
 
