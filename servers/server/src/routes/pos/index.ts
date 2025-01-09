@@ -256,20 +256,6 @@ const posRouter = new Hono()
             bill_request_id: bill_request_id,
           };
 
-          await PetPoojaPinTemp.findOneAndUpdate(
-            {
-              businessId: businessId,
-              tableName: tableName,
-            },
-            {
-              billGeneratedBy: generatedBy,
-              billRequestId: bill_request_id,
-              billInvoiceId: fetchBillDetails.data.order_data.invoice_id,
-              tax: fetchBillDetails.data.order_data.tax,
-              serviceCharge: fetchBillDetails.data.order_data.service_charge,
-            },
-          );
-
           const getBill = await axios.post(
             "http://api.petpooja.com/V1/captainorders/get_bill/",
             getBillConfig,
@@ -289,6 +275,19 @@ const posRouter = new Hono()
 
               subTotal: getBill.data.order_data.core_price,
             };
+            await PetPoojaPinTemp.findOneAndUpdate(
+              {
+                businessId: businessId,
+                tableName: tableName,
+              },
+              {
+                billGeneratedBy: generatedBy,
+                billRequestId: bill_request_id,
+                billInvoiceId: getBill.data.order_data.invoice_id,
+                tax: getBill.data.order_data.tax,
+                serviceCharge: getBill.data.order_data.service_charge,
+              },
+            );
             return c.json(
               {
                 message: "Data fetched successfully",
