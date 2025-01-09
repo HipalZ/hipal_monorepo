@@ -635,7 +635,7 @@ const posRouter = new Hono()
     zValidator(
       "json",
       z.object({
-        tableName: z.string().min(1).max(200),
+        tableName: z.string().max(200),
         internalCart: z.array(z.object({})),
         businessId: z.string().min(1).max(200),
         customerName: z.string().min(1).max(200),

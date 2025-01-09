@@ -196,7 +196,7 @@ const kotRouter = new Hono()
             businessId: kot.businessId,
           });
           const totalBill = calculateCartBill(kot.cart);
-          console.log("totalBill", totalBill);
+
           const petpoojaCart = convertToPetpoojaCart(
             kot.cart,
             pos?.posId.restId,
@@ -296,6 +296,49 @@ const kotRouter = new Hono()
           );
         }
       });
+    },
+  )
+  .get(
+    "/kot_order/:tableId",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { tableId } = c.req.param();
+
+      const tableName = await Table.findOne({
+        _id: tableId,
+      });
+
+      if (!tableName) {
+        return c.json(
+          {
+            message: "Table not found",
+            err: true,
+            data: null,
+          },
+          404,
+        );
+      }
+
+      const kot = await KotOrder.find({
+        tableName: tableName.name,
+        businessId: tableName.businessId,
+        settled: false,
+        accepted: true,
+      });
+
+      return c.json(
+        {
+          message: "Kot fetched successfully",
+          err: false,
+          data: kot,
+        },
+        200,
+      );
     },
   );
 
