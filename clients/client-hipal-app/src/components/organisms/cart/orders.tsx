@@ -1,15 +1,13 @@
-"use client";
-
-import { memo, useCallback, useState } from "react";
-import { motion, LayoutGroup } from "framer-motion";
+"use client";;
+import { memo, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { FaArrowLeft } from "react-icons/fa";
 import { RiNewspaperLine, RiQrScan2Line } from "react-icons/ri";
-import { BiRightArrow } from "react-icons/bi";
+import { BiRightArrow, BiChevronDown, BiChevronUp } from "react-icons/bi";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { useCartStore } from "@/components/store/useCartStore";
 import { useCart } from "@/components/store/useCart";
-import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useLogin } from "@/components/store/useLogin";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useTableData from "@/components/store/useTableData";
@@ -20,28 +18,29 @@ import CommonBottomButton from "@/components/atoms/bottomButton";
 import MemoFoodType from "@/components/atoms/foodType";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { apiRpc } from "@hi/common";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 
 const MemoOrders = () => {
-  // State and Store Hooks
-  const [expanded, setExpanded] = useState<string | null>(null);
   const { cartHistory, setCartHistory } = useCartStore();
   const { setShowCart, cartPage, setCartPage } = useCart();
+  const [expanded, setExpanded] = useState<string[]>(
+    cartHistory.map((cart) => cart._id)
+  );
   const { setShowScan } = usePaymentStore();
   const userDetails = useLogin((state) => state.userDetails);
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const tableName = useTableData((state) => state.tableName);
-
-  // Callbacks
-  const toggleAccordion = useCallback(
-    (id: string) => setExpanded(expanded === id ? null : id),
-    [expanded],
-  );
-
   const handleBack = useCallback(() => setShowCart(false), [setShowCart]);
-
   const openScanAndPay = useCallback(() => setShowScan(true), [setShowScan]);
 
+  // Toggle Accordion
+  const toggleAccordion = useCallback((id: string) => {
+    setExpanded((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  }, []);
   const handleConfirmBillPage = useCallback(() => setCartPage("payment"), [setCartPage]);
+
 
   // Fetch Orders from POS
   const getOrderFromPos = async () => {
@@ -110,72 +109,61 @@ const MemoOrders = () => {
 
       {/* Scrollable Content */}
       <main className="flex-1 overflow-auto">
-        <LayoutGroup>
-          <motion.div layout className="divide-y">
-            {cartHistory.map((cart) => (
-              <div key={cart._id}>
-                {cart.cart.map((item, index) => (
+        <AnimatePresence>
+          {cartHistory.map((order) => (
+            <motion.div
+              key={order._id}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="p-4 border-b"
+            >
+              {/* User Header */}
+              <div
+                className="flex items-center justify-between p-2 border border-[#D9D9D9] rounded-lg cursor-pointer"
+                onClick={() => toggleAccordion(order._id)}
+                onKeyDown={() => toggleAccordion(order._id)}
+              >
+                <section className="flex items-center gap-3">
+                  <figure className="flex items-center justify-center w-12 h-12 rounded-full bg-orange-100">
+                    <Image src={Happy} alt="User" />
+                  </figure>
+                  <h1 className="text-sm font-medium">
+                    Orders by <strong>{order.name}</strong>
+                  </h1>
+                </section>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-black">{order.cart.length} Dishes</p>
+                  {expanded.includes(order._id) ? <BiChevronUp size={20} /> : <BiChevronDown size={20} />}
+                </div>
+              </div>
+
+              {/* Dishes */}
+              {expanded.includes(order._id) &&
+                order.cart.map((item) => (
                   <motion.div
                     key={item.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
                     className="flex items-start gap-3 p-4 border-b"
                   >
-                    <div className="flex-shrink-0 w-5 h-5 my-1">
-                      <MemoFoodType types={item?.dish?.dishTypes} />
+                    <MemoFoodType types={item.dish.dishTypes} />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-[#525252]">{item.dish.name}</h3>
+                      {item.portion && <p className="text-sm text-[#B0B0B0]">{item.portion.name}</p>}
+                      {item.extras.length > 0 && (
+                        <p className="text-sm text-[#B0B0B0]">{item.extras.map((e) => e.name).join(", ")}</p>
+                      )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between w-full items-start gap-4">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-[#525252]">{item.dish.name}</h3>
-                          {item?.portion?.name && (
-                            <p className="text-sm text-[#B0B0B0] -ml-4">{item?.portion?.name}</p>
-                          )}
-                          {item?.extras?.length > 0 && (
-                            <p className="text-sm text-[#B0B0B0] -ml-4">{item.extras.map(e => e.name).join(", ")}</p>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm text-[#B0B0B0]">Qty {item.quantity}</div>
-                          <div className="font-medium">₹{(item.dish.price * item.quantity).toFixed(2)}</div>
-                        </div>
-                      </div>
+                    <div className="text-right">
+                      <p className="text-sm text-[#B0B0B0]">Qty: {item.quantity}</p>
+                      <p className="font-medium">₹{(item.dish.price * item.quantity).toFixed(2)}</p>
                     </div>
                   </motion.div>
                 ))}
-              </div>
-            ))}
-            {/* Order Groups */}
-            <div className="pt-4">
-              {cartHistory.map((cart, index) => (
-                <motion.div
-                  key={cart._id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.2 }}
-                  className="flex items-center justify-between p-2 my-2 border border-[#D9D9D9] mx-4 rounded-lg"
-                >
-                  <section className="flex items-center gap-3">
-                    <figure className="flex items-center justify-center w-12 h-12 rounded-full bg-orange-100">
-                      <Image src={Happy} alt="happy" />
-                    </figure>
-                    <h1 className="text-sm font-medium w-[200px]">Orders by <strong>{cart.name}</strong></h1>
-                  </section>
-                  <button
-                    type="button"
-                    onClick={() => toggleAccordion(cart._id)}
-                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900"
-                  >
-                    <p className="text-sm font-semibold text-black">{cart.cart.length} Dishes</p>
-                    {/* <span className="float-right">View</span> */}
-                  </button>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </LayoutGroup>
-        <div className="h-20" />
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </main>
 
       {/* Bottom Bar */}
@@ -208,6 +196,5 @@ const MemoOrders = () => {
   );
 };
 
-const Orders = memo(MemoOrders)
+const Orders = memo(MemoOrders);
 export default Orders
-
