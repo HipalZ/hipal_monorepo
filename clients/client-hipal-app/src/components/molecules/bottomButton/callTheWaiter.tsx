@@ -82,8 +82,8 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
         <ConfettiHeader direction="top" />
         <center className="mt-20">
           <Image src={ReceptionBell} alt="ReceptionBell" height={143} width={143} />
-          <h1 className="text-black my-2 text-2xl font-semibold">Calling Captain?</h1>
-          <p className="text-gray-500 text-sm mt-2">What should we tell the captain to help you with </p>
+          <h1 className="my-2 text-2xl font-semibold text-black">Calling Captain?</h1>
+          <p className="mt-2 text-sm text-gray-500">What should we tell the captain to help you with </p>
         </center>
         <br />
         <motion.ul

@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useCallback, Suspense, lazy } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -7,8 +5,7 @@ import { MdRestaurantMenu, MdReceipt } from 'react-icons/md';
 import { motion } from 'framer-motion';
 import { apiRpc } from '@hi/common';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { orderModal, useOrderStore } from '@/components/store/useOrderData';
+import { type orderModal, useOrderStore } from '@/components/store/useOrderData';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import SpinnerMemo from '@/components/atoms/loadingSpinner';
 
@@ -66,15 +63,13 @@ const TablePos = () => {
         return res?.data;
     };
 
-    const { isLoading, data } = useQuery({
+    useQuery({
         queryKey: ['fetchIndividualTable', tableId],
         queryFn: fetchIndividualTable,
         enabled: !!tableId,
     });
 
-    if (isLoading) {
-        return <SpinnerMemo />;
-    }
+
 
     return (
         <div className="relative w-full max-w-[30rem] mx-auto min-h-[100dvh] bg-gray-50">
@@ -108,15 +103,6 @@ const TablePos = () => {
                     <Suspense fallback={<SpinnerMemo />}>
                         <PlaceOrders />
                     </Suspense>
-                )}
-                {activeTab === 'bill' && (
-                    <Card className="m-4">
-                        <CardContent className="p-4">
-                            <h2 className="mb-4 text-xl font-semibold">Bill Summary</h2>
-                            {/* Add bill details here */}
-                            <p>Bill details to be implemented...</p>
-                        </CardContent>
-                    </Card>
                 )}
             </ScrollArea>
 
@@ -152,7 +138,7 @@ const TablePos = () => {
                         onClose={closeOrderModalHandler}
                     >
                         <OrdersHeader width='48rem' />
-                        <ScrollArea className="lg:h-[100dvh] h-[100dvh] pt-[5rem] md:[8rem]">
+                        <ScrollArea className="lg:h-[100dvh] min-h-[100dvh]">
                             {modalType === 'guest' && (
                                 <motion.div
                                     initial={{ opacity: 0, x: -20 }}

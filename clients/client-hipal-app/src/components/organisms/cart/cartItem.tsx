@@ -10,6 +10,7 @@ import { TbMessage2Plus } from "react-icons/tb";
 import { BiSolidDish } from "react-icons/bi"
 import { GiBubblingBowl } from "react-icons/gi"
 import { FaTimes } from "react-icons/fa"
+
 interface CartItemProp {
   hide?: boolean
   cartItem: {
@@ -65,7 +66,7 @@ const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="relative flex items-start justify-between py-3 px-4 border-b border-gray-100 last:border-none"
+      className="relative flex items-start justify-between px-4 py-3 border-b border-gray-100 last:border-none"
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-start gap-2 mb-1">
@@ -80,7 +81,7 @@ const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
                 Best seller
               </span>
             </div>
-            <section className="-ml-6 mt-2">
+            <section className="mt-2 -ml-6">
               <article className="flex items-start justify-between gap-4">
                 <h5 className="text-sm w-[75%] leading-5 text-gray-900">
                   {cartItem?.dish?.name}
@@ -127,7 +128,7 @@ const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
           </div>
         </div>
         <div className="flex items-center justify-between mt-2">
-          <div className="flex gap-4 items-center">
+          <div className="flex items-center gap-4">
             <span className="block text-[#525252] text-sm font-semibold">
               ₹{calculateTotalPrice().toFixed(2)}
             </span>
@@ -137,7 +138,7 @@ const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
                 <button
                   type="button"
                   onClick={() => removeInstructionFromDish(cartItem?.id)}
-                  className="text-xs inline-flex gap-1 text-red-600 hover:text-red-700"
+                  className="inline-flex gap-1 text-xs text-red-600 hover:text-red-700"
                 >
                   <FaTimes size={16} />
                 </button>
@@ -146,7 +147,7 @@ const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
               <button
                 type="button"
                 onClick={() => handleInstruction(cartItem?.id)}
-                className="text-xs inline-flex gap-1 underline underline-offset-2 text-purple-600 hover:text-purple-700"
+                className="inline-flex gap-1 text-xs text-purple-600 underline underline-offset-2 hover:text-purple-700"
               >
                 <TbMessage2Plus size={16} /> <span>Add instruction</span>
               </button>

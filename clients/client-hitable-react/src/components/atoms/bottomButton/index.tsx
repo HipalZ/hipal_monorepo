@@ -28,6 +28,7 @@ interface MemoBottomButtonProps {
   backgroundColor?: string;
   offset?: string;
   maxWidth?: string;
+  shadow?: boolean;
 }
 
 const buttonVariants = {
@@ -45,18 +46,19 @@ const MemoBottomButton = (props: MemoBottomButtonProps) => {
     backgroundColor = "#ffffff",
     offset = "0",
     maxWidth,
+    shadow
   } = props;
 
   return (
     <article
-      className={cn("px-4 py-2 overflow-hidden md:bg-transparent z-10 shadow-[0_-2px_15px_rgba(0,0,0,0.1)]", {
+      className={cn("px-4 py-2 overflow-hidden md:bg-transparent z-10", {
         fixed: fixed,
         absolute: !fixed,
         "left-0": position === "left",
         "right-0": position === "right",
         "mx-auto": position === "mid",
         "w-full": position === "mid",
-      })}
+      }, shadow ? 'shadow-[0_-2px_15px_rgba(0,0,0,0.1)]' : '')}
       style={{
         backgroundColor: backgroundColor,
         [align]: offset,

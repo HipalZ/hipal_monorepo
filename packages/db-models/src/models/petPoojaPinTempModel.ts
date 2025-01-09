@@ -61,6 +61,11 @@ const petPoojaPinTempModelSchema =
     },
   });
 
+petPoojaPinTempModelSchema.index(
+  { businessId: 1, tableName: 1 },
+  { unique: true },
+);
+
 const PetPoojaPinTemp: Model<PetPoojaPinTempModelType> =
   mongoose.model<PetPoojaPinTempModelType>(
     "petpoojapintemp",

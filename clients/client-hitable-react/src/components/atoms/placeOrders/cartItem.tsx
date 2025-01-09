@@ -13,7 +13,7 @@ import { useHiClientZ } from "@/components/store/useHiClientzData"
 const MemoizedCartItem = () => {
     const { cart, updateCartItem, removeFromCart } = useCartStore()
     const captainData = useHiClientZ(s => s.captainData)
-    const { businessId, tableId } = useParams()
+    const { businessId } = useParams()
     const { setModalType } = useOrderStore()
     const { createOrder, isPending } = useCreateOrder()
     const selectedTable = useOrderStore(s => s.selectedTable)
@@ -57,7 +57,7 @@ const MemoizedCartItem = () => {
         <section className="min-h-screen lg:py-24 bg-gray-50">
             <AnimatePresence>
                 {cart.length > 0 ? (
-                    <div className="mx-4  py-[5.5rem] md:py-[6rem] grid md:grid-cols-[2fr_auto] gap-4">
+                    <div className="mx-4  py-[5.5rem] md:py-[2rem] grid md:grid-cols-2 gap-4">
                         {cart.map((cartItem) => (
                             <motion.div
                                 key={cartItem.id}
@@ -71,10 +71,10 @@ const MemoizedCartItem = () => {
                                 >
                                     {/* Left Section */}
                                     <div className="space-y-2">
-                                        <div className="grid grid-cols-[auto_1fr] items-center gap-2 mb-2">
+                                        <div className="flex gap-2 mb-2">
                                             <FoodType types={cartItem.dish.dishTypes} />
-                                            <h5 className="text-base font-semibold text-gray-800 truncate">
-                                                {cartItem.dish.name}
+                                            <h5 className="font-semibold text-gray-800">
+                                                {cartItem.dish.name} sankalesh ahsok hatak
                                             </h5>
                                         </div>
                                         <div className="mt-2 mb-1 text-xs text-gray-500">

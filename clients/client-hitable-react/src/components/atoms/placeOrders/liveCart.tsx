@@ -19,6 +19,7 @@ const MemoLiveCart = () => {
             maxWidth="48rem"
             position="mid"
             fixed
+            shadow
             buttons={[
                 {
                     text: '',

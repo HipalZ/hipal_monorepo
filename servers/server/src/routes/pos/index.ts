@@ -813,6 +813,10 @@ const posRouter = new Hono()
             customerName,
             customerPhone,
             tableName,
+            pos.posId.accessKey,
+            pos.posId.secretKey,
+
+            pos.posId.authToken,
           );
 
           if (pos.orderVerificationType === "USER") {
@@ -856,7 +860,7 @@ const posRouter = new Hono()
               name: tableName,
             },
             {
-              hiCode: hiCode.toString(),
+              hiCode: hiCode,
             },
           );
 
@@ -866,7 +870,7 @@ const posRouter = new Hono()
               tableName: tableName,
             },
             {
-              hiCode: hiCode,
+              hiCode: hiCode.toString(),
               performedBy: "user",
             },
           );
@@ -876,6 +880,10 @@ const posRouter = new Hono()
             customerName,
             customerPhone,
             tableName,
+            pos.posId.accessKey,
+            pos.posId.secretKey,
+
+            pos.posId.authToken,
           );
 
           if (pos.orderVerificationType === "USER") {
@@ -914,6 +922,10 @@ const posRouter = new Hono()
           customerName,
           fetchHiCode?.pin,
           tableName,
+          pos.posId.accessKey,
+          pos.posId.secretKey,
+
+          pos.posId.authToken,
         );
         if (pos.orderVerificationType === "USER") {
           const saveKot = await axios.post(
@@ -1120,6 +1132,10 @@ const posRouter = new Hono()
             customerName,
             tenDigitCode,
             tableName,
+            pos.posId.accessKey,
+            pos.posId.secretKey,
+
+            pos.posId.authToken,
           );
 
           const saveKot = await axios.post(
@@ -1165,7 +1181,6 @@ const posRouter = new Hono()
               err: false,
               data: {
                 success: true,
-                hiCode: "",
               },
             },
             200,
@@ -1178,6 +1193,10 @@ const posRouter = new Hono()
           customerName,
           fetchHiCode.pin,
           tableName,
+          pos.posId.accessKey,
+          pos.posId.secretKey,
+
+          pos.posId.authToken,
         );
 
         const saveKot = await axios.post(
@@ -1202,10 +1221,10 @@ const posRouter = new Hono()
           {
             $inc: {
               totalItemCount: internalCart.length,
+              currentTableAmount: totalBill,
             },
             $set: {
               status: "ACTIVE",
-              currentTableAmount: totalBill,
               date: Date.now(),
             },
           },

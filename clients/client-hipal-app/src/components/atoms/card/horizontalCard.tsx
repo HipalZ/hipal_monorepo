@@ -112,14 +112,13 @@ const MemoHorizontalCard = ({
                 onClick={() => openModal(dishData)}
               >
                 <ShimmerImage
-                  src={dishData.images[0]}
+                  src={dishData?.images[0]}
                   alt="dish"
                   quality={95}
                   width={96}
                   height={96}
-                  className={`object-cover on_active_bounce overflow-hidden rounded-2xl m-0 ${
-                    dishData.availability ? "" : "grayscale"
-                  }`}
+                  className={`object-cover on_active_bounce overflow-hidden rounded-2xl m-0 ${dishData.availability ? "" : "grayscale"
+                    }`}
                 />
                 {!dishData.availability && (
                   <>
@@ -144,15 +143,13 @@ const MemoHorizontalCard = ({
           </div>
           {!noAddBtn && (
             <div
-              className={` flex flex-col items-center w-full mx-auto scale-[0.85] ${
-                (dishData?.images?.length > 0 || noDescription) && "-mt-4"
-              }`}
+              className={` flex flex-col items-center w-full mx-auto scale-[0.85] ${(dishData?.images?.length > 0 || noDescription) && "-mt-4"
+                }`}
             >
               {dishData.availability && (
                 <div
-                  className={`flex flex-col items-center w-full ${
-                    dishData?.images?.length > 0 ? "" : "ml-2"
-                  }`}
+                  className={`flex flex-col items-center w-full ${dishData?.images?.length > 0 ? "" : "ml-2"
+                    }`}
                 >
                   <DishQuantityButton dishData={dishData} />
                   <span className="text-sm opacity-50 text-[#000000]">

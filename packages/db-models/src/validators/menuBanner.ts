@@ -34,7 +34,7 @@ export const menuBannerSchema = z.object({
       message: "Heading should be at most 100 characters",
     }),
   dishIds: z
-    .array(ObjectIdSchema)
+    .array(z.string().min(4).max(30))
 
     .max(15, {
       message: "Dish Ids should be at most 10",
