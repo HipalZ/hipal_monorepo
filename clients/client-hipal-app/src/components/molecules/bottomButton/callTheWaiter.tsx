@@ -7,7 +7,7 @@ import { apiRpc } from "@hi/common";
 import React, { memo, useCallback, useState } from "react";
 import { toast } from "react-toastify";
 import { useErrorHandling } from "@/utils/helper";
-import Bill from "@/assets/call/Bill.png";
+import Bill from "@/assets/call/BillImage.png";
 import Breakfast from "@/assets/call/Breakfast.png";
 import Towel from "@/assets/call/Towel.png";
 import RoomService from "@/assets/call/RoomService.png";
