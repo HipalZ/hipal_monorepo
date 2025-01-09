@@ -120,6 +120,29 @@ const transformData = (data) => {
   return transformedCategories;
 };
 
+const getCurrentISTTime = (): string => {
+  const date = new Date();
+  const options = {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  };
+
+  // Format the date to IST
+  const istDate = new Intl.DateTimeFormat("en-GB", options).format(date);
+
+  // Reformat the date to match the desired output format
+  const [day, month, year, time] = istDate
+    .match(/(\d{2})\/(\d{2})\/(\d{4}), (\d{2}:\d{2}:\d{2})/)!
+    .slice(1);
+  return `${year}-${month}-${day} ${time}`;
+};
+
 const petPoojaCateAndDish = {
   success: "1",
   message: "Menu items are successfully listed.",
@@ -13981,17 +14004,23 @@ function convertToPetpoojaCart(
   customerName,
   customerPhone,
   tableName,
+  app_key,
+  app_secret,
+  access_token,
 ) {
   try {
-    // Initialize KOT structure
+    const currentISTTime = getCurrentISTTime();
+
+    console.log("currentISTTime", currentISTTime);
+
     const kot = {
-      app_key: "6jh08fc457wp2qkv1dntbrma3yeouxig",
-      app_secret: "26669606e665e4a014ca1d426ff2d643551ed21a",
-      access_token: "9aeec28f3aab55dd23033194beb39972d7ff6890",
-      restID: restID || "e3ozujir",
+      app_key: app_key,
+      app_secret: app_secret,
+      access_token: access_token,
+      restID: restID,
       kotinfo: {
         Restaurant: {
-          restID: restID || "e3ozujir",
+          restID: restID,
         },
         Customer: {
           name: customerName || "datta", // Placeholder for customer name
@@ -14001,9 +14030,9 @@ function convertToPetpoojaCart(
         Kot: {
           uniqueID: generateUniqueID(), // Generate a unique ID for the order
           order_type: "D", // Default to dine-in
-          table_no: tableName || "A7", // Default table number
+          table_no: tableName, // Default table number
           no_of_persons: "",
-          created_on: "2019-11-11 18:53:50",
+          created_on: currentISTTime,
           callback_url: "",
         },
         KotItem: [],
@@ -14035,7 +14064,7 @@ function convertToPetpoojaCart(
             cartItem.dish.name +
             (cartItem.portion ? ` (${cartItem.portion.name})` : ""),
           quantity: cartItem.quantity,
-          specialnotes: "",
+          specialnotes: cartItem.dish.instruction || "",
           id: itemId, // Use portion ID or dish ID
           AddonItem: "",
           fixed_per: "0",

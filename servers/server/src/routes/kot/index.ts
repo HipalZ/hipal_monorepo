@@ -200,6 +200,10 @@ const kotRouter = new Hono()
             kot.name,
             tempTable?.pin,
             kot.tableName,
+            pos.posId.accessKey,
+            pos.posId.secretKey,
+
+            pos.posId.authToken,
           );
 
           const saveKot = await axios.post(
