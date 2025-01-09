@@ -83,6 +83,7 @@ const tableRouter = new Hono()
       const tables = await Table.find({
         businessId,
         status: "EMPTY",
+        active: "1",
       });
 
       console.log("tables", tables);
@@ -181,6 +182,7 @@ const tableRouter = new Hono()
           settleAmount = 0,
           billRequestId,
         } = await c.req.json();
+
         const captain = await User.findById(captainId);
 
         const table = await Table.findById(tableId);

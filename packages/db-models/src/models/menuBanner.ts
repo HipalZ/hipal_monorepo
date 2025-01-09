@@ -30,8 +30,8 @@ const menuBannerSchema = new mongoose.Schema<MenuBannerType>(
       required: true,
     },
     dishIds: {
-      type: [ObjectId],
-      ref: "Dish",
+      type: [String],
+
       required: true,
     },
     isDeleted: {

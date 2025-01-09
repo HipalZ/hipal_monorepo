@@ -856,7 +856,7 @@ const posRouter = new Hono()
               name: tableName,
             },
             {
-              hiCode: hiCode.toString(),
+              hiCode: hiCode,
             },
           );
 
@@ -1202,10 +1202,10 @@ const posRouter = new Hono()
           {
             $inc: {
               totalItemCount: internalCart.length,
+              currentTableAmount: totalBill,
             },
             $set: {
               status: "ACTIVE",
-              currentTableAmount: totalBill,
               date: Date.now(),
             },
           },
