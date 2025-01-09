@@ -475,7 +475,7 @@ const Cart = () => {
         </ItemDescriptionPopup>
       )}
 
-      {tableName && outletInfo?.outLetType !== "OTHER" && cartPage !== "cart" && cart?.length === 0 && (
+      {tableName && outletInfo?.outLetType !== "OTHER" && cartPage !== "cart" || cartPage !== "order" && (
         <CommonBottomButton
           fixed
           buttons={

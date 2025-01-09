@@ -191,16 +191,17 @@ const MemoOrders = () => {
           >
             <FaArrowLeft className="w-4 h-4 text-gray-600" />
           </button>
-          <div className="flex-1 flex items-stretch bg-[#008800] rounded-lg">
-            <button
-              onClick={handleConfirmBillPage}
-              type="button"
-              className="px-6 flex items-center justify-center text-white font-medium hover:bg-green-800"
-            >
-              <RiNewspaperLine /> Generate Final Bill
-              <BiRightArrow className="w-3 h-3 ml-2" />
-            </button>
-          </div>
+          <button
+            onClick={handleConfirmBillPage}
+            type="button"
+            className="px-6 w-full inline-flex items-center justify-between bg-[#008800] rounded-lg text-white font-medium hover:bg-green-800"
+          >
+            <span className="inline-flex items-center gap-2">
+              <RiNewspaperLine size={20} />
+              Generate Final Bill
+            </span>
+            <BiRightArrow className="w-4 h-4 ml-2" />
+          </button>
         </div>
       </div>
     </div>
