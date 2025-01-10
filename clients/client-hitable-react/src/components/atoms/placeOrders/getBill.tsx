@@ -75,7 +75,7 @@ const MemoGetBill = () => {
         queryKey: ["getTableBill", businessId, selectedTable?.name, userData?.name],
         queryFn: getTableBill,
         enabled: !!businessId && !!selectedTable && !!userData,
-        staleTime: 1000 * 60 * 30,
+        staleTime: 1000 * 60,
         initialData: () => {
             return queryClient.getQueryData([
                 "getTableBill",

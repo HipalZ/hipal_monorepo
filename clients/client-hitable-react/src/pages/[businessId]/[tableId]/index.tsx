@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { type orderModal, useOrderStore } from '@/components/store/useOrderData';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import SpinnerMemo from '@/components/atoms/loadingSpinner';
+import CustomerInformation from '@/components/atoms/placeOrders/customerInformation';
 
 // Lazy loaded components
 const PlaceOrders = lazy(() => import('@/components/atoms/placeOrders'));
@@ -19,6 +20,7 @@ const AddTableCount = lazy(() => import('@/components/atoms/placeOrders/addTable
 const Category = lazy(() => import('@/components/atoms/placeOrders/category'));
 const CartItem = lazy(() => import('@/components/atoms/placeOrders/cartItem'));
 const Bill = lazy(() => import('@/components/atoms/placeOrders/bill'));
+// cosnt CustomerInformation = lazy(() => import('@/components/atoms/placeOrders/customerInformation'));
 
 const TablePos = () => {
     const { tableId, businessId } = useParams();
@@ -68,8 +70,6 @@ const TablePos = () => {
         queryFn: fetchIndividualTable,
         enabled: !!tableId,
     });
-
-
 
     return (
         <div className="relative w-full max-w-[30rem] mx-auto min-h-[100dvh] bg-gray-50">
@@ -196,6 +196,19 @@ const TablePos = () => {
                                     </Suspense>
                                 </motion.div>
                             )}
+                            {
+                                modalType === "customer" && (
+                                    <motion.div
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 20 }}
+                                    >
+                                        <Suspense fallback={<SpinnerMemo />}>
+                                            <CustomerInformation />
+                                        </Suspense>
+                                    </motion.div>
+                                )
+                            }
                         </ScrollArea>
                     </BottomPopUp>
                 </Suspense>

@@ -383,3 +383,31 @@ export interface IDish {
   _id: string;
   dishId: string;
 }
+
+export interface ITag {
+  _id: string;
+  name: string;
+}
+
+export interface IUserId {
+  _id: string;
+  name: string;
+  phone: string;
+  dob: number;
+}
+
+export interface ICustomerInformation {
+  _id: string;
+  userId: IUserId;
+  businessId: string;
+  visitCount: number;
+  totalSpend: number;
+  avgSpend: number;
+  dateOfJoining: number;
+  coinzIssued: number;
+  coinzUsed: number;
+  currentCoins: number;
+  couponCount: number;
+  tableName: string;
+  tagIds: ITag[];
+}
