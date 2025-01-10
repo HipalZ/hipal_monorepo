@@ -14,6 +14,7 @@ import {
   Payment,
   PaymentAlert,
   PetPoojaPinTemp,
+  QrBill,
   Reviews,
   Subscriber,
   Table,
@@ -1756,6 +1757,19 @@ const paymentsRouter = new Hono()
                     session,
                   },
                 );
+                await QrBill.findOneAndUpdate(
+                  {
+                    requestBillId: tempTable?.billRequestId,
+                  },
+                  {
+                    $set: {
+                      isPaid: true,
+                    },
+                  },
+                  {
+                    session,
+                  },
+                );
                 await PetPoojaPinTemp.deleteOne(
                   {
                     tableName: order.tableName,
@@ -2779,6 +2793,19 @@ const paymentsRouter = new Hono()
                 settleBy: getOrder.userId?.name,
               },
             ],
+            {
+              session,
+            },
+          );
+          await QrBill.findOneAndUpdate(
+            {
+              requestBillId: activeTable?.billRequestId,
+            },
+            {
+              $set: {
+                isPaid: true,
+              },
+            },
             {
               session,
             },

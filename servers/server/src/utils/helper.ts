@@ -14132,9 +14132,38 @@ function calculateCartBill(cart: unknown) {
   return totalBill;
 }
 
+function transformItemsToSimpleArray(itemsData) {
+  return itemsData.map((item) => {
+    // Extract basic dish details
+    const dishDetails = {
+      name: item.name || "",
+      price: item.price || 0,
+      quantity: item.quantity || 1,
+    };
+
+    // Extract extras (addons) if available and transform them into a list of objects
+    let extras = [];
+    if (item.addons) {
+      try {
+        const extrasList = JSON.parse(item.addons);
+        extras = extrasList.map((addon) => ({
+          name: addon.name || "",
+          price: addon.price || 0,
+          quantity: addon.quantity || 1,
+        }));
+      } catch (e) {
+        extras = [];
+      }
+    }
+
+    return { dish: dishDetails, extras: extras };
+  });
+}
+
 export {
   calculateCartBill,
   convertToPetpoojaCart,
   petPoojaCateAndDish,
   transformData,
+  transformItemsToSimpleArray,
 };

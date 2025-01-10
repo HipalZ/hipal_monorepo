@@ -21,7 +21,11 @@ import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
-import { calculateCartBill, convertToPetpoojaCart } from "../../utils/helper";
+import {
+  calculateCartBill,
+  convertToPetpoojaCart,
+  transformItemsToSimpleArray,
+} from "../../utils/helper";
 
 interface AxiosError {
   response?: {
@@ -181,6 +185,8 @@ const posRouter = new Hono()
         billConfig,
       );
 
+      console.log("fetchBill", fetchBill.data);
+
       if (fetchBill.data.success === "1") {
         const request_id = fetchBill.data.request_id;
 
@@ -210,6 +216,15 @@ const posRouter = new Hono()
             getBillConfig,
           );
 
+          console.log("getBill", getBill.data);
+
+          const simpleArray =
+            transformItemsToSimpleArray(
+              getBill.data.items_data?.slice(0, -2) || [],
+            ) || [];
+
+          console.log("simpleArray", simpleArray);
+
           if (getBill.data.success === "1") {
             const billObj = {
               billing_user_name: getBill.data.order_data.billing_user_name,
@@ -223,6 +238,7 @@ const posRouter = new Hono()
 
               subTotal: getBill.data.order_data.core_price,
               billRequestId: bill_request_id,
+              items: simpleArray,
             };
             return c.json(
               {
@@ -264,6 +280,12 @@ const posRouter = new Hono()
             getBillConfig,
           );
 
+          const simpleArray =
+            transformItemsToSimpleArray(
+              getBill.data.items_data?.slice(0, -2) || [],
+            ) || [];
+          console.log("simpleArray", simpleArray);
+
           if (getBill.data.success === "1") {
             const billObj = {
               billing_user_name: getBill.data.order_data.billing_user_name,
@@ -275,7 +297,7 @@ const posRouter = new Hono()
               customerName: getBill.data.order_data.customer_name,
               tableName: getBill.data.order_data.table_no,
               billRequestId: bill_request_id,
-
+              items: simpleArray,
               subTotal: getBill.data.order_data.core_price,
             };
             await PetPoojaPinTemp.findOneAndUpdate(
@@ -794,7 +816,6 @@ const posRouter = new Hono()
             },
             {
               hiCode: hiCode.toString(),
-              status: "ACTIVE",
             },
           );
 
@@ -1387,6 +1408,7 @@ const posRouter = new Hono()
         tableName: tableName,
         businessId: businessId,
         settled: false,
+        rejected: false,
       });
 
       return c.json(

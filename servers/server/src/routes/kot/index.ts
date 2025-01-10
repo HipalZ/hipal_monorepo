@@ -233,7 +233,6 @@ const kotRouter = new Hono()
             },
             {
               new: true, // Return the updated document
-              upsert: true, // Create the document if it doesn't exist
             },
           );
 
