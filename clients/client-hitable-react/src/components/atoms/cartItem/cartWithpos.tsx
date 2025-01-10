@@ -13,11 +13,15 @@ import { Textarea } from "@/components/ui/textarea";
 import CommonBottomButton from "../bottomButton";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useCart } from "@/components/store/useCart";
-import { useCartStore } from "@/components/store/useCartStore";
+import { type ICartHistory, useCartStore } from "@/components/store/useCartStore";
+import { useNavigate } from "react-router-dom";
+import { useOrderStore } from "@/components/store/useOrderData";
 
 const MemoCompactCartWithPos = () => {
+    const navigate = useNavigate();
     const { cartData, removeCart } = useLiteStore();
     const { setIsCartEdit } = useCart();
+    const { setModalType, setOpenOrderModal } = useOrderStore()
     const editExistingOrder = useCartStore((state) => state.editExistingOrder);
     const { updateOrderAction, isPending } = useUpdateOrderAction();
     const captainData = useHiClientZ(s => s.captainData)
@@ -59,17 +63,20 @@ const MemoCompactCartWithPos = () => {
         });
     }
 
-    const editTheOrder = async (cart) => {
+    const editTheOrder = async (cart: ICartHistory) => {
         console.log("Edit the order", cart);
         if (!cart._id) return;
+        removeCart(cart._id);
+        await updateOrderAction({
+            orderId: cart._id,
+            orderAction: "EDIT",
+            performBy: captainData?._id || "Captain",
+        });
         setIsCartEdit(true);
         editExistingOrder(cart);
-        // removeCart(cart._id);
-        // await updateOrderAction({
-        //     orderId: cart._id,
-        //     orderAction: "EDIT",
-        //     performBy: captainData?._id || "Captain",
-        // });
+        setModalType("addItem")
+        setOpenOrderModal(true)
+        navigate(`/${cart.businessId}/${cart.tableId}`)
     }
 
     return (

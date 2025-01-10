@@ -2,7 +2,7 @@ import type { DishType } from "@hi/db-models/src/validators";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-export type REPEAT = "BOTTOM_PANEL" | "ADD_PREVIOUS" | "ADD_NEW" | "";
+export type REPEAT = "BOTTOM_PANEL" | "ADD_PREVIOUS" | "ADD_NEW" | "" | "EDIT";
 
 export interface ICartItem {
   id: string;
@@ -17,6 +17,7 @@ export interface ICartHistory {
   cart: ICartItem[];
   date: number;
   tableName: string;
+  tableId: string;
   userId:
     | {
         _id: string;
