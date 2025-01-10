@@ -33,6 +33,7 @@ import { useErrorHandling } from "@/utils/helper";
 import { useCart } from "@/components/store/useCart";
 import BillPage from "@/components/organisms/cart/billPage";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
+import { useGetBill } from "@/components/hooks/usePayments";
 
 const ApplyCouponz = dynamic(() => import("../couponz/applyCouponz"), {
   ssr: false,
@@ -106,6 +107,7 @@ const PaymentCard = dynamic(
 
 const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   const customLink = useParams()?.businessId as string;
+  const { billData } = useGetBill()
   const { errorText } = useErrorHandling();
   const businessId = data?.business?.businessId;
   const { setLoyaltySetting } = useLoyaltyData();
@@ -708,7 +710,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
           <ApplyCouponz />
         ) : (
           <>
-            {showBillPage ? <BottomPopUp show={showBillPage} onClose={() => setShowBillPage(false)}>
+            {showBillPage ? <BottomPopUp bottomCross hide show={showBillPage} onClose={() => setShowBillPage(false)}>
               <BillPage billData={billData} />
             </BottomPopUp>
               : <div>

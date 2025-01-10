@@ -1,10 +1,8 @@
 "use client"
 
-import { usePaymentStore } from "@/components/store/usePaymentStore"
 import { motion } from "framer-motion"
 import { CoinsIcon as Coin, Receipt, User } from 'lucide-react'
-import { memo, useCallback } from "react"
-import { HiX } from "react-icons/hi"
+import { memo } from "react"
 
 interface Extra {
     name: string
@@ -45,11 +43,6 @@ const MemoBillPage = ({ billData }: { billData: BillData }) => {
             }
         }
     }
-    const { setShowBillPage } = usePaymentStore();
-
-    const onClose = useCallback(() => {
-        setShowBillPage(false)
-    }, [setShowBillPage])
 
     return (
         <main className="bg-gray-50 py-8 px-4">
@@ -118,10 +111,10 @@ const MemoBillPage = ({ billData }: { billData: BillData }) => {
                             >
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <h3 className="font-medium">{item.dish.name}</h3>
+                                        <h3 className="font-medium text-gray-500">{item.dish.name}</h3>
                                         <p className="text-sm text-gray-500">Quantity: {item.dish.quantity}</p>
                                     </div>
-                                    <p className="font-medium">₹{item.dish.price * item.dish.quantity}</p>
+                                    <p className="font-medium text-gray-500">₹{item.dish.price * item.dish.quantity}</p>
                                 </div>
 
                                 {item.extras.length > 0 && (
@@ -173,13 +166,6 @@ const MemoBillPage = ({ billData }: { billData: BillData }) => {
                     </div>
                 </motion.footer>
             </motion.div>
-            <button
-                type="button"
-                onClick={onClose}
-                className="absolute bottom-0 p-3 rounded-full bg-[#00000080] text-white transform -translate-x-1/2 -translate-y-1/2 left-1/2"
-            >
-                <HiX />
-            </button>
         </main>
     )
 }

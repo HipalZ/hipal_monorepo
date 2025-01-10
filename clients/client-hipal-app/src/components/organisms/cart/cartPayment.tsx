@@ -127,12 +127,6 @@ const MemoCartPayment = () => {
   // Handle different UI states based on billData, errors, and loading
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white px-6">
-      {/* Loading state */}
-      {isLoading && (
-        <div className="flex items-center justify-center h-64">
-          <LoadingSpinnerCircle />
-        </div>
-      )}
 
       {/* Error state */}
       {isError && error?.status === 400 && failureCount < 1 && (
