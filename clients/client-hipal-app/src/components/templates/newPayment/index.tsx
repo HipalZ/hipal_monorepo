@@ -34,6 +34,7 @@ import { useCart } from "@/components/store/useCart";
 import BillPage from "@/components/organisms/cart/billPage";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { useGetBill } from "@/components/hooks/usePayments";
+import NewPaymentComponent from "../payment/newSelectPayment";
 
 const ApplyCouponz = dynamic(() => import("../couponz/applyCouponz"), {
   ssr: false,
@@ -131,7 +132,6 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
       setEditBillModal(true);
     }
     setShowCart(false);
-    setSelectedMode("INVOICE");
     setLoyaltySetting(data?.loyalty);
   }, [data]);
 
@@ -828,7 +828,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                     </section>
                   </>
                 ) : (
-                  <PaymentComponent
+                  <NewPaymentComponent
                     handleCreateOrder={handleCreateOrder}
                     total={calculateFinalBill(
                       billValue,

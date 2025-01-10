@@ -95,7 +95,7 @@ export const usePaymentStore = create<IUsePaymentStore>((set) => ({
   showError: false,
   setShowError: (error: boolean) => set(() => ({ showError: error })),
 
-  selectedMode: "INVOICE",
+  selectedMode: "MODE",
   setSelectedMode: (mode: PageStates) => set(() => ({ selectedMode: mode })),
 
   selectedTip: "",

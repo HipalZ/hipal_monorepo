@@ -7,7 +7,6 @@ import QRcodeImg from "@/assets/payment/mobileqr.png"
 import HandPay from "@/assets/payment/handcash.png"
 import online from "@/assets/payment/mobilepay.png"
 import background from "@/assets/payment/background-rainbow.png"
-import Grid from "@/assets/payment/grid.png"
 import type { PageStates } from "."
 import { usePaymentStore } from "@/components/store/usePaymentStore"
 import { _useAllBusiness } from "@/components/store/useAllBusiness";

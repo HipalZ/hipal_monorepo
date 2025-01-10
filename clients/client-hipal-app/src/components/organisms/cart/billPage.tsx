@@ -44,6 +44,8 @@ const MemoBillPage = ({ billData }: { billData: BillData }) => {
         }
     }
 
+    if (!billData) return <>No Data</>
+
     return (
         <main className="bg-gray-50 py-8 px-4">
             <motion.div
@@ -56,18 +58,18 @@ const MemoBillPage = ({ billData }: { billData: BillData }) => {
                     <div className="flex justify-between items-start mb-4">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-800">Bill Details</h1>
-                            <p className="text-gray-500 text-sm">Bill ID: {billData.billRequestId}</p>
+                            <p className="text-gray-500 text-sm">Bill ID: {billData?.billRequestId || "Id"}</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-lg font-semibold">Table {billData.tableName}</p>
-                            <p className="text-gray-500 text-sm">Biller: {billData.billing_user_name}</p>
+                            <p className="text-lg font-semibold">Table {billData?.tableName || "table"}</p>
+                            <p className="text-gray-500 text-sm">Biller: {billData?.billing_user_name || "User"}</p>
                         </div>
                     </div>
 
                     <div className="flex gap-4 text-sm text-gray-600">
                         <div className="flex items-center gap-1">
                             <User size={16} />
-                            <span>{billData.customerName}</span>
+                            <span>{billData?.customerName || "Customer"}</span>
                         </div>
                     </div>
                 </header>
@@ -111,18 +113,18 @@ const MemoBillPage = ({ billData }: { billData: BillData }) => {
                             >
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <h3 className="font-medium text-gray-500">{item.dish.name}</h3>
-                                        <p className="text-sm text-gray-500">Quantity: {item.dish.quantity}</p>
+                                        <h3 className="font-medium text-gray-500">{item?.dish?.name}</h3>
+                                        <p className="text-sm text-gray-500">Quantity: {item?.dish?.quantity}</p>
                                     </div>
-                                    <p className="font-medium text-gray-500">₹{item.dish.price * item.dish.quantity}</p>
+                                    <p className="font-medium text-gray-500">₹{item?.dish?.price * item?.dish?.quantity}</p>
                                 </div>
 
-                                {item.extras.length > 0 && (
+                                {item?.extras?.length > 0 && (
                                     <div className="mt-2 pl-4 border-l-2 border-gray-100">
-                                        {item.extras.map((extra, idx) => (
+                                        {item?.extras.map((extra, idx) => (
                                             <div key={idx?.toString()} className="flex justify-between text-sm text-gray-600">
-                                                <span>+ {extra.name}</span>
-                                                <span>₹{extra.price * extra.quantity}</span>
+                                                <span>+ {extra?.name}</span>
+                                                <span>₹{extra?.price * extra?.quantity}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -142,26 +144,26 @@ const MemoBillPage = ({ billData }: { billData: BillData }) => {
                     <div className="space-y-2">
                         <div className="flex justify-between text-gray-600">
                             <span>Subtotal</span>
-                            <span>₹{billData.subTotal}</span>
+                            <span>₹{billData?.subTotal}</span>
                         </div>
                         <div className="flex justify-between text-gray-600">
                             <span>Service Charge</span>
-                            <span>₹{billData.serviceCharge}</span>
+                            <span>₹{billData?.serviceCharge}</span>
                         </div>
                         <div className="flex justify-between text-gray-600">
                             <span>Tax</span>
-                            <span>₹{billData.tax}</span>
+                            <span>₹{billData?.tax}</span>
                         </div>
-                        {billData.discount > 0 && (
+                        {billData?.discount > 0 && (
                             <div className="flex justify-between text-green-600">
                                 <span>Discount</span>
-                                <span>-₹{billData.discount}</span>
+                                <span>-₹{billData?.discount}</span>
                             </div>
                         )}
                         <div className="h-px bg-gray-200 my-2" />
                         <div className="flex justify-between text-lg font-bold">
                             <span>Total</span>
-                            <span>₹{billData.total}</span>
+                            <span>₹{billData?.total}</span>
                         </div>
                     </div>
                 </motion.footer>

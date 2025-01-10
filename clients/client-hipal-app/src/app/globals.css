@@ -2062,6 +2062,10 @@ input[type='password'] {
 	font-weight: 400;
 	font-style: normal;
   }
+  .poppins{
+	font-family: "Poppins", sans-serif;
+	font-style: normal;
+  }
 
   @media (max-width: 375px) {
 	.custom-size {

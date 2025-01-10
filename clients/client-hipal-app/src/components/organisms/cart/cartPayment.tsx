@@ -1,17 +1,12 @@
-"use client";
-
+"use client";;
 import { memo, useCallback, useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
-import useTableData from "@/components/store/useTableData";
-import { _useAllBusiness } from "@/components/store/useAllBusiness";
-import { useLogin } from "@/components/store/useLogin";
 import { useCart } from "@/components/store/useCart";
 import { useCouponz } from "@/components/store/useCouponz";
 import { useGetBill } from "@/components/hooks/usePayments";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import CommonBottomButton from "@/components/atoms/bottomButton";
-import LoadingSpinnerCircle from "@/components/atoms/loader";
 import BillPrint from "@/assets/cart/BillPrint.png";
 import KotMachine from "@/assets/cart/KotMachine.png";
 import BillImage from "@/assets/call/BillImage.png";
@@ -125,6 +120,9 @@ const MemoCartPayment = () => {
   }
 
   // Handle different UI states based on billData, errors, and loading
+
+  console.log("billData", billData);
+  console.log("isError", isError);
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white px-6">
 
@@ -148,7 +146,7 @@ const MemoCartPayment = () => {
       )}
 
       {/* No bill data - display transition images */}
-      {!billData && !isError && (
+      {!billData && (
         <center className="mt-24">
           <section className="relative bg-[#8DC1F120] w-[250px] aspect-square rounded-full overflow-hidden">
             <TransitionImages images={images} />
@@ -159,8 +157,8 @@ const MemoCartPayment = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <h2 className="text-xl font-semibold text-[#525252]">Getting your final bill!</h2>
-            <p className="text-sm text-[#52525280]">Hold on while we get your final bill ready.</p>
+            <h2 className="text-2xl font-semibold text-[#525252]">Getting your final bill!</h2>
+            <p className="text-base mt-2 text-[#52525280]">Hold on while we get your final bill ready.</p>
           </motion.div>
           <div className="poppins-regular my-8 mx-6">
             <button
