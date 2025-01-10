@@ -577,7 +577,7 @@ const tableRouter = new Hono()
             message: "fetched qr bill",
             err: false,
             data: {
-              qrBillId: qrBill._id,
+              qrBillId: qrBill.requestBillId,
               expireIn: qrBill.expireIn,
             },
           },
