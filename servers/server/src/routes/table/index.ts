@@ -34,6 +34,9 @@ const tableRouter = new Hono()
         businessId,
         active: "1",
         status: "ACTIVE",
+      }).populate({
+        path: "userIds",
+        select: "name phone",
       });
 
       return c.json(
