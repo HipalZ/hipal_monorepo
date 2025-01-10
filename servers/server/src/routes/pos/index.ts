@@ -319,7 +319,7 @@ const posRouter = new Hono()
           billRequestConfig,
         );
 
-        console.log("fetchBillDetails", fetchBillDetails.data);
+        console.log("calll ho rahi pata nhi kaha pe", fetchBillDetails.data);
 
         if (fetchBillDetails.data.success === "1") {
           const bill_request_id = fetchBillDetails.data.bill_request_id;
