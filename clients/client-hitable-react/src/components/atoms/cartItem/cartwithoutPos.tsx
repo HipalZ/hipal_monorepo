@@ -10,7 +10,7 @@ import {
 import { useLiteStore } from '@/components/store/useLiteStore';
 import { useDeleteCart } from '@/components/hooks/useCartApi';
 
-const MemoCartwithPos = () => {
+const MemoCartwithoutPos = () => {
     const { cartData, removeCart, setCartCount } = useLiteStore();
     const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -141,5 +141,5 @@ const MemoCartwithPos = () => {
     )
 }
 
-const CartwithPos = memo(MemoCartwithPos)
-export default CartwithPos
+const CartwithoutPos = memo(MemoCartwithoutPos)
+export default CartwithoutPos

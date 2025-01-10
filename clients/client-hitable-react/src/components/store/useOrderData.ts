@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { TableData } from "./useZonesAndTable";
-import type { CategoryType } from "@hi/db-models/src/validators";
+import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 
 export type orderPages = "online" | "offline" | "history" | "";
 
@@ -38,6 +38,15 @@ interface OrderState {
   setAllCategories: (categories: CategoryType[]) => void;
 
   setFirstCat: (categories: CategoryType[]) => void;
+
+  allDishes: DishType[];
+  setAllDishes: (dishes: DishType[]) => void;
+
+  searchActive: boolean;
+  setSearchActive: (active: boolean) => void;
+
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
 }
 
 export const useOrderStore = create<OrderState>((set, get) => ({
@@ -68,4 +77,13 @@ export const useOrderStore = create<OrderState>((set, get) => ({
       set({ selectedCategory: categories[0] });
     }
   },
+
+  allDishes: [],
+  setAllDishes: (dishes) => set({ allDishes: dishes }),
+
+  searchActive: false,
+  setSearchActive: (active) => set({ searchActive: active }),
+
+  searchTerm: "",
+  setSearchTerm: (term) => set({ searchTerm: term }),
 }));

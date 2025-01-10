@@ -17,7 +17,7 @@ import { type ICartHistory, useCartStore } from "@/components/store/useCartStore
 import { useNavigate } from "react-router-dom";
 import { useOrderStore } from "@/components/store/useOrderData";
 
-const MemoCompactCartWithPos = () => {
+const MemoCartWithPos = () => {
     const navigate = useNavigate();
     const { cartData, removeCart } = useLiteStore();
     const { setIsCartEdit } = useCart();
@@ -97,7 +97,7 @@ const MemoCompactCartWithPos = () => {
                                         <MdTableBar className="mr-2" /> {cart?.tableName}
                                     </h3>
                                     <p className="flex items-center text-sm text-gray-500">
-                                        <FaUser className="mr-1" /> {cart?.userId?.name || "User"}
+                                        <FaUser className="mr-1" /> {cart?.userId?.name || cart?.name || "User"}
                                     </p>
                                 </div>
                                 <div className="flex flex-col items-end">
@@ -105,7 +105,7 @@ const MemoCompactCartWithPos = () => {
                                         {new Date(cart?.date).toLocaleString()}
                                     </p>
                                     <p className="flex items-center text-sm text-gray-500">
-                                        <MdAddIcCall className="mr-1" /> {cart?.userId?.phone || "N/A"}
+                                        <MdAddIcCall className="mr-1" /> {cart?.userId?.phone || cart?.phone || "N/A"}
                                     </p>
                                 </div>
                             </div>
@@ -204,5 +204,5 @@ const MemoCompactCartWithPos = () => {
     );
 };
 
-const CompactCartWithPos = memo(MemoCompactCartWithPos);
-export default CompactCartWithPos;
+const CartWithPos = memo(MemoCartWithPos);
+export default CartWithPos;
