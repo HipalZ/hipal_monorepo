@@ -17,7 +17,6 @@ const MemoShareCartButtons = () => {
   const accessToken = useUserToken.getState().accessToken;
   const userDetails = useLogin((state) => state.userDetails);
   const setDirection = useLogin((state) => state.setDirection);
-  const router = useRouter();
   const customLink = useParams()?.businessId as string;
   const { setCheckLogin } = usePaymentStore()
   const [shareState, setShareState] = useState({ showOptions: false, url: "" });

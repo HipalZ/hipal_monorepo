@@ -34,6 +34,9 @@ const tableRouter = new Hono()
         businessId,
         active: "1",
         status: "ACTIVE",
+      }).populate({
+        path: "userIds",
+        select: "name phone",
       });
 
       return c.json(
@@ -516,6 +519,8 @@ const tableRouter = new Hono()
           },
         },
       );
+
+      const customLink = await Business.findById(table?.businessId);
       const captain = await User.findById(captainId);
       const pos = await BusinessPosConfig.findOne({
         businessId: table?.businessId,
@@ -579,6 +584,7 @@ const tableRouter = new Hono()
             data: {
               qrBillId: qrBill.requestBillId,
               expireIn: qrBill.expireIn,
+              path: `http://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${qrBill.requestBillId}`,
             },
           },
           200,
@@ -603,8 +609,9 @@ const tableRouter = new Hono()
           message: "Table settled successfully",
           err: false,
           data: {
-            qrBillId: createQrBill._id,
+            qrBillId: createQrBill.requestBillId,
             expireIn: createQrBill.expireIn,
+            path: `http://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${createQrBill.requestBillId}`,
           },
         },
         200,

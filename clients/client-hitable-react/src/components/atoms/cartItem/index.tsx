@@ -15,7 +15,6 @@ const MemoCartItems = () => {
           <CompactCartWithPos />
           : <CartwithPos />
       }
-
     </div>
   );
 };

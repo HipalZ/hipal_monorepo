@@ -83,7 +83,7 @@ const MemoGetBill = () => {
             })
             if (response.status === 200) {
                 const result = await response.json();
-                setQrBillId(result?.data?.qrBillId);
+                setQrBillId(result?.data?.path);
                 setExpireIn(result?.data?.expireIn);
                 setShowqr(true);
             }
@@ -167,7 +167,7 @@ const MemoGetBill = () => {
             )}
             {showqr && (
                 <div className="flex flex-col items-center py-[5rem] md:py-[8rem]  justify-center mt-8 text-center">
-                    <QRCode value={`https://payment.example.com/${qrBillId}`} />
+                    <QRCode value={qrBillId} />
                     <p className="mt-2 text-sm text-gray-500">
                         QR Bill ID: <span className="font-semibold">{qrBillId}</span>
                     </p>

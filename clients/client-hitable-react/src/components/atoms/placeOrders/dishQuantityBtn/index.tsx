@@ -10,6 +10,8 @@ import AddOnsWithDish from "./extra";
 import { motion, AnimatePresence } from "framer-motion"
 import { Minus, Plus } from 'lucide-react'
 import { Button } from "@/components/ui/button"
+import CartItem from "../cartItem";
+import OrdersHeader from "../header";
 
 function generateCartItemId(dishId, portionId, extras) {
     const sortedExtras = [...extras]
@@ -37,15 +39,10 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
         updateCartItem,
     } = useCartStore();
 
-    const { setShowCart, showCart, setCartPage } = useCart();
 
     const handleOpenModal = useCallback(() => {
         setOpenBottomPanel(true);
     }, [setOpenBottomPanel]);
-
-    const { displayAlert } = useBottomPanel((s) => ({
-        displayAlert: s.displayAlert,
-    }));
 
     const closeModal = useCallback(() => {
         setOpenBottomPanel(false);
@@ -120,13 +117,14 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
     const handleDecreaseQuantity = useCallback(() => {
         if (cartItemsForDish.length > 0) {
             const item = cartItemsForDish[0];
+            console.log(item.dish);
             setSelectedDish(item.dish);
             if (
                 item?.dish?.portions?.length > 0 ||
                 item?.dish?.addOnIds?.length > 0
             ) {
-                setCartPage("order");
-                setShowCart(!showCart);
+                setCartPopup("EDIT");
+                handleOpenModal();
                 return;
             }
             if (item.quantity > 1) {
@@ -200,7 +198,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
                     show={openBottomPanel}
                     onClose={closeModal}
                     hide
-                    width="w-[30rem]"
+                    width={cartPopup === "EDIT" ? "w-[48rem]" : "w-[30rem]"}
                 >
                     {cartPopup === "BOTTOM_PANEL" && (
                         <div className="relative pb-12 max-h-[90dvh] mt-4 overflow-auto">
@@ -231,6 +229,29 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
                             />
                         </div>
                     )}
+                    {
+                        cartPopup === "EDIT" && (
+                            <div className="relative pb-12 max-h-[90dvh] mt-4 overflow-auto">
+                                <OrdersHeader width='48rem' />
+                                <CartItem hide dishId={selectedDish?._id || ""} />
+                                <CommonBottomButton
+                                    fixed
+                                    maxWidth="48rem"
+                                    position="mid"
+                                    shadow
+                                    buttons={[
+
+                                        {
+                                            text: "Close",
+                                            onClick: closeModal,
+                                            type: "button" as const,
+                                            className: 'px-4 w-full rounded'
+                                        },
+                                    ]}
+                                />
+                            </div>
+                        )
+                    }
                 </BottomPopUp>
             )}
         </>
