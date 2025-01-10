@@ -254,7 +254,9 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
             if (response?.status === 404) {
                 toast.error(response?.data?.message || "Something went wrong")
             }
-            setTableName(res.data.tableName)
+            if (res?.data?.tableName && res?.data?.tableName !== null) {
+                setTableName(res?.data?.tableName)
+            }
             setBillValue(res.data.total)
             return res.data
         } catch (e) {

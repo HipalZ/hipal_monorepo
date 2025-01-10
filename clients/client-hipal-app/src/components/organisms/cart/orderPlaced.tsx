@@ -1,36 +1,18 @@
 "use client"
 
 import Image from 'next/image'
-import React, { memo, useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { memo } from 'react'
+import { motion } from 'framer-motion'
 import SpringConfetti from '@/assets/cart/SpringConfetti.png'
 import StockPot from '@/assets/cart/StockPot.png'
 import OnlineFoodOrder from "@/assets/cart/OnlineFoodOrder.png"
-import ConfettiHeader from '../confettiHeader'
-import { useCart } from '@/components/store/useCart'
+import dynamic from 'next/dynamic'
+
+const TransitionImages = dynamic(() => import('./transitionImages'), { ssr: false })
+const ConfettiHeader = dynamic(() => import('../confettiHeader'), { ssr: false })
 
 const MemoOrderPlaced = () => {
-    const [currentImage, setCurrentImage] = useState<'pot' | 'order'>('pot')
-    const { setOrderPlaced } = useCart();
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentImage(prev => prev === 'pot' ? 'order' : 'pot')
-        }, 1500)
-
-        return () => clearInterval(interval)
-    }, [])
-
-    const slideVariants = {
-        enter: (direction: number) => ({
-            x: direction > 0 ? "100%" : "-100%",
-        }),
-        center: {
-            x: 0
-        },
-        exit: (direction: number) => ({
-            x: direction < 0 ? "100%" : "-100%",
-        })
-    }
+    const images = [StockPot, OnlineFoodOrder, StockPot];
 
     return (
         <center>
@@ -43,51 +25,7 @@ const MemoOrderPlaced = () => {
             </motion.div>
 
             <div className='relative bg-[#00880020] w-[250px] mt-24 aspect-square rounded-full overflow-hidden'>
-                <AnimatePresence custom={currentImage === 'pot' ? -1 : 1}>
-                    {currentImage === 'pot' ? (
-                        <motion.div
-                            key="pot"
-                            custom={-1}
-                            variants={slideVariants}
-                            initial="enter"
-                            animate="center"
-                            exit="exit"
-                            className="absolute inset-0 flex items-center justify-center"
-                            transition={{
-                                type: "spring",
-                                stiffness: 300,
-                                damping: 30
-                            }}
-                        >
-                            <Image
-                                src={StockPot}
-                                alt="stock pot"
-                                className="object-contain"
-                            />
-                        </motion.div>
-                    ) : (
-                        <motion.div
-                            key="order"
-                            custom={1}
-                            variants={slideVariants}
-                            initial="enter"
-                            animate="center"
-                            exit="exit"
-                            className="absolute inset-0 flex items-center justify-center"
-                            transition={{
-                                type: "spring",
-                                stiffness: 300,
-                                damping: 30
-                            }}
-                        >
-                            <Image
-                                src={OnlineFoodOrder}
-                                alt="online food order"
-                                className="object-contain"
-                            />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                <TransitionImages images={images} />
             </div>
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -113,7 +51,7 @@ const MemoOrderPlaced = () => {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.7 }}
                 >
-                    Congratulation your order is been prepared
+                    Congratulations your order is been prepared
                 </motion.p>
             </motion.div>
 
