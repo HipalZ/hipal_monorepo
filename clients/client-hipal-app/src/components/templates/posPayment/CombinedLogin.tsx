@@ -9,7 +9,7 @@ import { apiRpc } from "@hi/common";
 import { BiArrowBack, BiEditAlt } from "react-icons/bi";
 import { useLogin } from "@/components/store/useLogin";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, usePathname } from "next/navigation";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
@@ -21,6 +21,7 @@ import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 
 const MemoCombinedLogin = () => {
     const searchParams = useSearchParams();
+    const pathName = usePathname()
     const [phone, setPhone] = useState("");
     const { errorText } = useErrorHandling();
     const [otp, setOtp] = useState(["", "", "", ""]);
@@ -29,7 +30,7 @@ const MemoCombinedLogin = () => {
     const [loading, setLoading] = useState(false);
     const inputRefs = Array.from({ length: 4 }, () => useRef<HTMLInputElement>(null));
     const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting);
-    const { setUserDetails, userDetails, setUserCoinZ, setIsLogin, sendOtp, direction, isPayment, invoiceUrl, urlFrom } =
+    const { setUserDetails, userDetails, setUserCoinZ, setIsLogin, sendOtp, direction, setDirection, isPayment, invoiceUrl, urlFrom } =
         useLogin();
     const { setShowCart } = useCart();
     const [customerName, setCustomerName] = useState(userDetails?.name);
@@ -78,6 +79,17 @@ const MemoCombinedLogin = () => {
             toast.error(response?.message || "Failed to send OTP");
         }
         setLoading(false);
+        if (pathName?.includes("explore")) {
+            setDirection("explore")
+        } if (pathName?.includes("loyalty")) {
+            setDirection("loyalty")
+        } if (pathName?.includes("category")) {
+            setDirection("category")
+        } if (pathName?.includes("invoice")) {
+            setDirection("invoice")
+        } if (pathName?.includes("couponz")) {
+            setDirection("couponz")
+        }
     };
 
     const handleOtpChange = (index: number, value: string) => {
@@ -120,6 +132,7 @@ const MemoCombinedLogin = () => {
     }, [direction, customLink, isPayment, urlFrom, invoiceUrl]);
 
     const verifyOtp = async () => {
+        console.log("direction", direction)
         const fullOtp = otp.join("");
         if (fullOtp.length !== 4) {
             setError("Please enter the complete OTP.");

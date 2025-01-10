@@ -83,5 +83,6 @@ export const useMerchantDetails = () => {
     queryKey: ["getMerchantKeySecret", businessId],
     queryFn: getMerchantKeySecret,
     enabled: !!businessId,
+    staleTime: 1000 * 60 * 5,
   });
 };

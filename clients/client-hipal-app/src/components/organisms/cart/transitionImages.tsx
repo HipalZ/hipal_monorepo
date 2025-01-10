@@ -34,7 +34,7 @@ const MemoTransitionImages = ({ images }: { images: any[] }) => {
                         initial="enter"
                         animate="center"
                         exit="exit"
-                        className="absolute flex items-center justify-center"
+                        className="absolute inset-0 flex items-center justify-center"
                         transition={{
                             type: "spring",
                             stiffness: 300,

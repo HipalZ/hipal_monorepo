@@ -70,9 +70,9 @@ const MemoCartPayment = () => {
   }, []);
 
   // Retry function
-  const handleRetry = () => {
+  const handleRetry = useCallback(() => {
     refetch();
-  };
+  }, [refetch]);
 
   // Scan and pay button handler
   const openScanAndPay = useCallback(() => {
@@ -106,19 +106,21 @@ const MemoCartPayment = () => {
     setAvailedCoupon,
   ]);
 
-  if (billValue && billValue > 0) {
-    setEditBillModal(false);
-    setClaimCouponz(0);
-    setClaimedCoinz(0);
-    setSelectedTip("");
-    setCustomTip("");
-    setShowInput(false);
-    setIsTipActive(false);
-    setTips(0);
-    setAvailedCoupon({});
-    setCartPage("order");
-    router.push(`/${customLink}/payment`);
-  }
+  useEffect(() => {
+    if (billValue && billValue > 0) {
+      setEditBillModal(false);
+      setClaimCouponz(0);
+      setClaimedCoinz(0);
+      setSelectedTip("");
+      setCustomTip("");
+      setShowInput(false);
+      setIsTipActive(false);
+      setTips(0);
+      setAvailedCoupon({});
+      setCartPage("order");
+      router.push(`/${customLink}/payment`);
+    }
+  }, [billValue])
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white px-6">
@@ -143,7 +145,7 @@ const MemoCartPayment = () => {
       )}
 
       {/* No bill data - display transition images */}
-      {!billData && (
+      {!billData && !isError && (
         <center className="mt-24">
           <section className="relative bg-[#8DC1F120] w-[250px] aspect-square rounded-full overflow-hidden">
             <TransitionImages images={images} />

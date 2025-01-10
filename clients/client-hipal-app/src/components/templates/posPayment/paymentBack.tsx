@@ -2,6 +2,7 @@ import { useMerchantDetails } from '@/components/hooks/useMerchantSecret';
 import { useUserCoinz } from '@/components/hooks/useUserCoinz';
 import { _useAllBusiness } from '@/components/store/useAllBusiness';
 import useBusinessDetails from '@/components/store/useBusinessDetails';
+import { useCart } from '@/components/store/useCart';
 import useLoyaltyData from '@/components/store/useLoyaltyData';
 import { usePaymentStore } from '@/components/store/usePaymentStore';
 import type { IBusinessData } from '@/components/types/businessData';
@@ -14,6 +15,7 @@ import { BiArrowBack } from 'react-icons/bi'
 const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
     useMerchantDetails();
     useUserCoinz(data?.loyalty?.loyaltyId || "");
+    const { setShowCart } = useCart();
     const setBusinessData = _useAllBusiness((s) => s.setData);
     const { setBusinessDetails } = useBusinessDetails();
     const router = useRouter();
@@ -27,7 +29,8 @@ const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
         if (data?.loyalty) {
             setLoyaltySetting(data?.loyalty)
         };
-    }, [data, setBusinessData, setBusinessDetails, setLoyaltySetting]);
+        setShowCart(false);
+    }, [data, setBusinessData, setShowCart, setBusinessDetails, setLoyaltySetting]);
 
     const {
         selectedMode,

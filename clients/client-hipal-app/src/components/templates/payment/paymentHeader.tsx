@@ -3,50 +3,51 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
 import React, { memo } from "react";
-import { BiArrowBack } from "react-icons/bi";
+import Sunrays from "@/assets/img/sunrays_white.png";
 
-interface Props {
-  handleBack: () => void;
-}
-
-const MemoPaymentHeader = ({ handleBack }: Props) => {
+const MemoPaymentHeader = () => {
   const { businessDetails } = useBusinessDetails();
 
   return (
-    <section className="z-20 w-full bg-base-100 text-primary">
-      <header className="bg-white h-[4.25rem] flex items-center gap-16">
-        {businessDetails?.logoUrl ? (
-          <figure className="h-[5rem] p-4 aspect-square flex space-x-4">
-            <button
-              type="button"
-              onClick={handleBack}
-              className="scale-75 py-0 h-10 rounded-full px-4 z-[60] text-black bg-[#ffffff70] border border-1 border-[#CACACA]"
-            >
-              <BiArrowBack />
-            </button>
-            <Image
-              src={businessDetails?.logoUrl}
-              height={80}
-              width={80}
-              quality={95}
-              objectFit="cover"
-              alt="logo-businessDetails"
-              className="object-center border rounded-full shadow-sm aspect-square"
-              placeholder="blur"
-              blurDataURL={getRandomBlurImg(100, 100)}
-            />
-          </figure>
-        ) : (
-          <MemoPlaceholderImg />
-        )}
-        <div>
-          Paying: <br />
-          <span className="font-bold text-primary">
-            {businessDetails?.branchName || businessDetails?.name}
-          </span>
-        </div>
-      </header>
-    </section>
+    <center className="pt-2">
+      <p className="mb-2 text-sm font-semibold">Paying:</p>
+      <section className="absolute inset-0 flex items-center justify-center">
+        <center className="absolute w-[300px] -top-20">
+          <Image
+            className="opacity-15"
+            width={1080}
+            height={1080}
+            src={Sunrays}
+            alt="SunlightReview"
+          />
+        </center>
+      </section>
+      <picture className="relative">
+        {businessDetails?.logoUrl ? <Image
+          src={businessDetails?.logoUrl}
+          height={50}
+          width={50}
+          quality={95}
+          objectFit="cover"
+          alt="logo-businessDetails"
+          className="object-center bg-white border rounded-full shadow-sm aspect-square"
+          placeholder="blur"
+          blurDataURL={getRandomBlurImg(100, 100)}
+        /> : <MemoPlaceholderImg />}
+      </picture>
+      <div
+        className="relative"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 1) 50%)",
+          paddingTop: "50px",
+        }}
+      >
+        <p className="relative z-20 -mt-10 text-base font-semibold">
+          {businessDetails?.name}
+        </p>
+      </div>
+    </center>
   );
 };
 

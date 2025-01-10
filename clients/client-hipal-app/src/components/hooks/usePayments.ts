@@ -5,7 +5,7 @@ import {
   type PageStates,
 } from "../utils/helpers";
 import { toast } from "react-toastify";
-import { ChangeEvent, useCallback } from "react";
+import { type ChangeEvent, useCallback } from "react";
 import { useCouponz } from "../store/useCouponz";
 import { useErrorHandling } from "@/utils/helper";
 import { useLogin } from "../store/useLogin";
