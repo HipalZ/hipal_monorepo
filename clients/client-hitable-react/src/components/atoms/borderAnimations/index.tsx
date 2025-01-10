@@ -37,7 +37,7 @@ export function ShineBorder({
                 } as React.CSSProperties
             }
             className={cn(
-                " place-items-center rounded-[--border-radius] dark:bg-black dark:text-white",
+                " place-items-center rounded-[--border-radius] dark:text-white",
                 className,
             )}
         >

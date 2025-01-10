@@ -33,11 +33,6 @@ body {
   -webkit-touch-callout: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  .dark\:bg-black {
-    background-color: white;
-  }
-}
 .hide-scrollbar {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
