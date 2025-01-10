@@ -3,7 +3,7 @@ import Link from "next/link";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { BsHandIndexThumb } from "react-icons/bs";
 import { FiSearch } from "react-icons/fi";
-import { GiCampCookingPot } from "react-icons/gi";
+import { GiCookingPot } from "react-icons/gi";
 import { memo, useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
@@ -245,30 +245,40 @@ const MemoCategoryPageBtn = () => {
 
       {openInstructionModal && (
         <BottomPopUp
-          height="40dvh"
+          height="50dvh"
           show={openInstructionModal}
           onClose={() => setOpenInstructionModal(false)}
         >
-          <article className="text-black m-4 overflow-y-auto">
-            <h1 className="text-lg font-semibold inline-flex gap-1 items-center text-orange-500 mb-2">
-              <GiCampCookingPot size={20} /> <span className="text-black font-semibold">Cooking Instructions</span>
-            </h1>
-            <p className="text-sm text-black mb-4">
+          <div className="p-6 pb-8 overflow-y-auto">
+            {/* Header */}
+            <header className="flex items-center gap-2 mb-4">
+              <GiCookingPot className="w-8 h-8 text-orange-500" />
+              <h2 className="text-2xl text-black font-semibold">Cooking Instructions</h2>
+            </header>
+
+            {/* Description */}
+            <p className="text-gray-600 mb-6">
               Add any special cooking instructions, like less spicy, extra cheese, or no onions.
             </p>
-            <article className="relative">
+
+            {/* Textarea Container */}
+            <div className="relative mb-8">
               <textarea
-                placeholder="Enter your cooking instructions here..."
                 value={tempInstruction}
                 onChange={handleInstructionText}
                 maxLength={100}
-                className="w-full p-2 border border-gray-300 rounded-lg text-sm resize-none"
-                rows={3}
+                placeholder="Enter your cooking instructions here..."
+                className="w-full min-h-[120px] p-4 text-base text-black bg-white rounded-lg border border-gray-200 
+                     focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500
+                     placeholder:text-gray-400 resize-none"
+                aria-label="Cooking instructions"
               />
-              <p className="absolute right-4 bottom-4 text-xs mt-1">
-                {tempInstruction.length || 0}/100
-              </p>
-            </article>
+              <span className="absolute right-3 bottom-3 text-sm text-gray-400">
+                {tempInstruction.length || 0}/{100}
+              </span>
+            </div>
+
+            {/* Save Button */}
             <CommonBottomButton
               buttons={[
                 {
@@ -279,7 +289,7 @@ const MemoCategoryPageBtn = () => {
                 },
               ]}
             />
-          </article>
+          </div>
         </BottomPopUp>
       )}
       <AnimatePresence>

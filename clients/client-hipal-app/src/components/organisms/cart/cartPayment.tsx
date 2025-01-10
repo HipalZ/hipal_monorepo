@@ -1,49 +1,40 @@
-import React, { memo, useCallback, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { _useAllBusiness } from "@/components/store/useAllBusiness";
-import { useLogin } from "@/components/store/useLogin";
+"use client";
+
+import { memo, useCallback, useState, useRef, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
 import useTableData from "@/components/store/useTableData";
-import { apiRpc } from "@hi/common";
-import LoadingSpinnerCircle from "@/components/atoms/loader";
-import {
-  FaUser,
-  FaPhone,
-  FaTable,
-  FaReceipt,
-  FaPercent,
-  FaTags,
-  FaMoneyBillWave,
-} from "react-icons/fa";
-import CommonBottomButton from "@/components/atoms/bottomButton";
-import { toast } from "react-toastify";
-import { usePaymentStore } from "@/components/store/usePaymentStore";
-import { useCouponz } from "@/components/store/useCouponz";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { useLogin } from "@/components/store/useLogin";
 import { useCart } from "@/components/store/useCart";
-import ScanPage from "@/components/templates/posPayment/paymentScanner";
-import BottomPopUp from "@/components/atoms/bottomPopUp";
+import { useCouponz } from "@/components/store/useCouponz";
+import { useGetBill } from "@/components/hooks/usePayments";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
+import CommonBottomButton from "@/components/atoms/bottomButton";
+import LoadingSpinnerCircle from "@/components/atoms/loader";
+import BillPrint from "@/assets/cart/BillPrint.png";
+import KotMachine from "@/assets/cart/KotMachine.png";
+import BillImage from "@/assets/call/BillImage.png";
+import TransitionImages from "./transitionImages";
+import { cn } from "@/components/utils/helpers";
+import { HiX } from "react-icons/hi";
 
-interface IBillData {
-  customerName: string;
-  customerPhone: string;
-  tableName: string;
-  billRequestId: string;
-  subTotal: number;
-  serviceCharge: number;
-  discount: number;
-  tax: number;
-  total: number;
-}
+const images = [BillPrint, KotMachine, BillImage];
 
 const MemoCartPayment = () => {
-  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
-  const userDetails = useLogin((state) => state.userDetails);
-  const { tableName } = useTableData();
-  const { setShowCart, setCartPage } = useCart();
+  // Store hooks
+  const { setCartPage } = useCart();
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
-  const [loading, setLoading] = useState<boolean>(false);
 
+  // Local state
+  const [loading, setLoading] = useState(false);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
+  const [displayTimer, setDisplayTimer] = useState(10);
+  const timerRef = useRef(10);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Payment store hooks
   const {
     billValue,
     setEditBillModal,
@@ -54,82 +45,63 @@ const MemoCartPayment = () => {
     setSelectedTip,
     setShowInput,
     setIsTipActive,
-    setBillValue,
-    showScan,
     setShowScan,
   } = usePaymentStore();
+
+  // Coupon store hooks
   const { setAvailedCoupon } = useCouponz((s) => ({
     setAvailedCoupon: s.setAvailedCoupon,
   }));
 
-  const getBill = async () => {
-    const response = await apiRpc.pos.get_bill.$get({
-      query: {
-        businessId: outletInfo?.businessId || "",
-        tableName,
-        generatedBy: userDetails?.name || "",
-      },
-    });
+  // Bill query
+  const { isLoading, billData, refetch, failureCount, isError, error } = useGetBill();
 
-    if (response.status === 400) {
-      return Promise.reject({
-        status: 400,
-        message: "Server timeout occurred",
-      });
-    }
+  // Countdown timer for button
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
+      if (timerRef.current > 0) {
+        timerRef.current -= 1;
+        setDisplayTimer(timerRef.current);
+      } else {
+        setIsButtonDisabled(false);
+        if (intervalRef.current) clearInterval(intervalRef.current);
+      }
+    }, 1000);
 
-    const res = await response.json();
-    const payment = res?.data as IBillData;
-    setBillValue(payment.total);
-    return payment;
-  };
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
 
-  const {
-    isLoading,
-    data: billData,
-    refetch,
-    failureCount,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ["getBill", outletInfo?.businessId, tableName],
-    queryFn: getBill,
-    staleTime: 1000 * 30,
-  });
-
+  // Retry function
   const handleRetry = () => {
     refetch();
   };
 
-  const proceedToPayment = useCallback(() => {
-    if (billValue === 0) {
-      toast.error("Please enter amount");
-      return;
-    }
+  // Scan and pay button handler
+  const openScanAndPay = useCallback(() => {
+    setShowScan(true);
+  }, [setShowScan]);
+
+  // Proceed to payment function
+  const goBack = useCallback(() => {
     setLoading(true);
-    if (billValue > 0) {
-      setEditBillModal(false);
-      setClaimCouponz(0);
-      setClaimedCoinz(0);
-      setSelectedTip("");
-      setCustomTip("");
-      setShowInput(false);
-      setIsTipActive(false);
-      setTips(0);
-      setAvailedCoupon({});
-      setCartPage("order");
-      router.push(`/${customLink}/payment`);
-    }
+    setEditBillModal(false);
+    setClaimCouponz(0);
+    setClaimedCoinz(0);
+    setSelectedTip("");
+    setCustomTip("");
+    setShowInput(false);
+    setIsTipActive(false);
+    setTips(0);
+    setAvailedCoupon({});
+    setCartPage("order");
   }, [
-    billValue,
-    customLink,
-    router,
     setEditBillModal,
     setClaimCouponz,
     setClaimedCoinz,
     setCustomTip,
     setCartPage,
-    setShowCart,
     setTips,
     setSelectedTip,
     setShowInput,
@@ -138,144 +110,98 @@ const MemoCartPayment = () => {
     setAvailedCoupon,
   ]);
 
-  const totalAttempts = failureCount;
-  const openScanAndPay = useCallback(() => {
-    setShowScan(true);
-  }, [setShowScan]);
-
-  if (!billData && totalAttempts >= 1) {
-    return (
-      <div className="mx-4">
-        <p className="mt-4 text-center text-red-500">
-          Maximum retry attempts reached. Please try again later.
-        </p>
-        <button type="button" onClick={openScanAndPay} className="bg-black text-white p-2 rounded-md w-full mt-4">
-          Scan to Pay
-        </button>
-        {showScan && <BottomPopUp show={showScan} onClose={() => setShowScan(false)}>
-          <ScanPage />
-        </BottomPopUp>}
-      </div>
-    );
+  if (billValue && billValue > 0) {
+    setEditBillModal(false);
+    setClaimCouponz(0);
+    setClaimedCoinz(0);
+    setSelectedTip("");
+    setCustomTip("");
+    setShowInput(false);
+    setIsTipActive(false);
+    setTips(0);
+    setAvailedCoupon({});
+    setCartPage("order");
+    router.push(`/${customLink}/payment`);
   }
 
-  if (isError && error?.status === 400 && totalAttempts < 1) {
-    return (
-      <section className="bg-[#ffffff]">
-        <h2 className="my-4 text-2xl font-bold text-center text-[#000000]">
-          Bill Details
-        </h2>
-        <div className="px-4 space-y-4">{/* No data, so no BillItem */}</div>
-        <CommonBottomButton
-          buttons={[
-            {
-              text: "Retry",
-              onClick: handleRetry,
-              type: "button",
-              disable: loading,
-              isLoading: loading,
-            },
-          ]}
-        />
-      </section>
-    );
-  }
-
-  if (billData) {
-    return (
-      <section className="bg-[#ffffff] h-[85dvh] relative">
-        <h2 className="mt-4 text-2xl font-bold text-center text-[#000000]">
-          Bill Details
-        </h2>
-        {isLoading || loading ? (
-          <LoadingSpinnerCircle />
-        ) : (
-          <>
-            <div className="p-4 mb-6 space-y-3">
-              <BillItem
-                icon={<FaUser className="text-gray-600" />}
-                label="Customer"
-                value={billData?.customerName || "Guest"}
-              />
-              <BillItem
-                icon={<FaPhone className="text-gray-600" />}
-                label="Phone"
-                value={billData?.customerPhone || "N/A"}
-              />
-              <BillItem
-                icon={<FaTable className="text-gray-600" />}
-                label="Table"
-                value={billData?.tableName || "N/A"}
-              />
-              <BillItem
-                icon={<FaReceipt className="text-gray-600" />}
-                label="Bill ID"
-                value={billData?.billRequestId || "N/A"}
-              />
-            </div>
-            <hr className="my-4 border-gray-300" />
-            <div className="px-4 space-y-2">
-              <BillItem
-                icon={<FaMoneyBillWave />}
-                label="Subtotal"
-                value={`₹${billData?.subTotal.toFixed(2)}`}
-              />
-              <BillItem
-                icon={<FaPercent />}
-                label="Service Charge"
-                value={`₹${billData?.serviceCharge.toFixed(2)}`}
-              />
-              <BillItem
-                icon={<FaTags />}
-                label="Discount"
-                value={`₹${billData?.discount.toFixed(2)}`}
-              />
-              <BillItem
-                icon={<FaPercent />}
-                label="Tax"
-                value={`₹${billData?.tax.toFixed(2)}`}
-              />
-            </div>
-            <hr className="my-4 border-gray-300" />
-            <BillItem
-              icon={<FaMoneyBillWave className="text-green-600" />}
-              label="Total"
-              value={`₹${billData?.total.toFixed(2)}`}
-              className="px-4 text-lg !font-bold"
-            />
-          </>
-        )}
-        <CommonBottomButton
-          buttons={[
-            {
-              text: "Continue",
-              onClick: proceedToPayment,
-              type: "button",
-              disable: loading,
-              isLoading: loading,
-            },
-          ]}
-        />
-      </section>
-    );
-  }
-
+  // Handle different UI states based on billData, errors, and loading
   return (
-    <div className="flex items-center justify-center h-64">
-      <LoadingSpinnerCircle />
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white px-6">
+      {/* Loading state */}
+      {isLoading && (
+        <div className="flex items-center justify-center h-64">
+          <LoadingSpinnerCircle />
+        </div>
+      )}
+
+      {/* Error state */}
+      {isError && error?.status === 400 && failureCount < 1 && (
+        <section className="bg-white text-center">
+          <h2 className="my-4 text-2xl font-bold">Bill Details</h2>
+          <div className="px-4 space-y-4">{/* No data, so no BillItem */}</div>
+          <CommonBottomButton
+            buttons={[
+              {
+                text: "Retry",
+                onClick: handleRetry,
+                type: "button",
+                disable: loading,
+                isLoading: loading,
+              },
+            ]}
+          />
+        </section>
+      )}
+
+      {/* No bill data - display transition images */}
+      {!billData && !isError && (
+        <center className="mt-24">
+          <section className="relative bg-[#8DC1F120] w-[250px] aspect-square rounded-full overflow-hidden">
+            <TransitionImages images={images} />
+          </section>
+          <motion.div
+            className="poppins-regular w-full max-w-md text-center my-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <h2 className="text-xl font-semibold text-[#525252]">Getting your final bill!</h2>
+            <p className="text-sm text-[#52525280]">Hold on while we get your final bill ready.</p>
+          </motion.div>
+          <div className="poppins-regular my-8 mx-6">
+            <button
+              type="button"
+              onClick={openScanAndPay}
+              className={cn("bg-[#008800] text-white border w-full text-base p-4 rounded-xl", {
+                "opacity-50 cursor-not-allowed": isButtonDisabled,
+              })}
+              disabled={isButtonDisabled}
+            >
+              {isButtonDisabled ? `Scan and pay in ${displayTimer}s` : "Scan and pay"}
+            </button>
+          </div>
+        </center>
+      )}
+      <button
+        type="button"
+        onClick={goBack}
+        className="absolute bottom-0 p-3 rounded-full bg-[#00000080] text-white transform -translate-x-1/2 -translate-y-1/2 left-1/2"
+      >
+        <HiX />
+      </button>
     </div>
   );
 };
 
-const BillItem = ({ icon, label, value, className = "" }) => (
-  <div className={`flex items-center justify-between ${className}`}>
-    <div className="flex items-center">
-      <h3 className="mr-2 text-[#000000]">{icon}</h3>
-      <h3 className="text-[#000000]">{label}</h3>
-    </div>
-    <h3 className="text-[#000000]">{value}</h3>
-  </div>
-);
-
 const CartPayment = memo(MemoCartPayment);
 export default CartPayment;
+
+export const BillItem = ({ icon, label, value, className = "" }) => (
+  <div className={`poppins-regular flex items-center justify-between ${className}`}>
+    <div className="flex items-center">
+      <h3 className="mr-2 text-black text-sm">{icon}</h3>
+      <h3 className="text-black text-sm">{label}</h3>
+    </div>
+    <h3 className="text-black text-sm">{value}</h3>
+  </div>
+);

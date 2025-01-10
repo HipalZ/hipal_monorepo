@@ -24,6 +24,8 @@ import { MdOutlineShoppingCart } from "react-icons/md";
 import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
 import ConfirmPayment from "./confirmPayment";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
+import SwipeToPlaceOrder from "./swipeToPlaceOrder";
+import { PiArrowBendUpLeftBold } from "react-icons/pi";
 
 const CartItem = dynamic(() => import("./cartItem"), { ssr: false, loading: () => <LoadingSpinner /> });
 const CommonBottomButton = dynamic(
@@ -106,12 +108,18 @@ const Cart = () => {
     setOrderPlaced(true);
     setTimeout(() => {
       setOrderPlaced(false);
+      setShowCart(false);
     }, 5000);
   }, [
-    setOrderPlaced
+    setOrderPlaced,
+    setShowCart,
   ]);
 
   const placeOrder = useCallback(async () => {
+    if (!accessToken) {
+      setCheckLogin(true);
+      return
+    }
     const handleUnauthenticatedUser = () => {
       setDirection("category");
       setCheckLogin(true);
@@ -380,22 +388,27 @@ const Cart = () => {
   }, [cartPage, setShowCart, setCartPage]);
 
   return (
-    <div className={cn("overflow-y-auto h-[100dvh] pb-[5rem] text-[#000000] bg-[#ffffff] relative")}>
-      {((cartPage === "cart" && cart?.length > 0) || cartPage === "order") ? null : <CartHeader />
-      }
+    <div className={cn("overflow-y-auto h-[100dvh] text-[#000000] bg-[#ffffff] relative")}>
+      {cartPage === "history" && <CartHeader />}
       {cartPage === "cart" &&
         (cart.length === 0 ? (
           <EmptyCart />
         ) : (
-          <section className="relative h-full">
-            <div className="sticky top-0 flex items-center justify-between px-4 py-3 border-b border-gray-200">
-              <h2 className="text-3xl font-medium">Live cart</h2>
+          <section className="relative h-[calc(90dvh+5px)]">
+            <div className="bg-white z-[500] sticky top-0 flex items-center justify-between px-4 py-3 border-b border-gray-200">
+              <h2 className="text-2xl font-medium">Live cart</h2>
               {hiCode && (
-                <div className="text-sm text-gray-500 inline-flex items-center gap-2">
+                <div className="!text-sm text-black inline-flex items-center gap-2">
                   <Image src={glassTable} alt="Table" />
-                  <span>Table code {hiCode}</span>
+                  <span>code {hiCode}</span>
                 </div>
               )}
+              <article className="flex items-center text-black">
+                <MdOutlineShoppingCart size={24} />
+                <span className="text-sm">
+                  {cart.length} items
+                </span>
+              </article>
             </div>
             <div className="flex flex-col h-full overflow-y-auto">
               <div className="divide-y divide-gray-100 flex-1">
@@ -403,32 +416,20 @@ const Cart = () => {
                   <CartItem key={cartItem.id} cartItem={cartItem} />
                 ))}
               </div>
-              <div className="sticky bottom-0 left-0 right-0 p-2 bg-white border-t border-gray-200">
+              <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200">
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="mb-2 w-full p-3 mt-auto text-center text-sm text-rose-600 bg-rose-50"
+                  className="w-full p-2 mb-2 mt-auto text-center text-sm text-rose-600 bg-rose-50"
                 >
                   Orders once placed, cannot be cancelled!
                 </motion.div>
-                <div className="flex justify-between gap-4">
-                  <button onClick={handleBack} type="button" className="px-4 py-2 border border-black rounded-lg text-center">
-                    <FaArrowLeft />
+                {/* Cart Info */}
+                <div className="flex justify-between items-center gap-3 px-2">
+                  <button onClick={handleBack} type="button" className="h-12 px-4 py-1 border border-black rounded-lg text-center">
+                    <PiArrowBendUpLeftBold size={24} />
                   </button>
-                  <button
-                    type="button"
-                    onClick={placeOrder}
-                    className="flex items-center justify-between w-full px-6 py-3 text-white bg-green-600 rounded-lg hover:bg-green-700"
-                  >
-                    <div className="flex items-center gap-2">
-                      <MdOutlineShoppingCart size={24} />
-                      <span className="font-semibold text-base">{cart.length}</span> items
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-base">Place order</span>
-                      <BiRightArrow />
-                    </div>
-                  </button>
+                  <SwipeToPlaceOrder placeOrder={placeOrder} />
                 </div>
               </div>
             </div>
@@ -446,9 +447,8 @@ const Cart = () => {
 
       {cartPage === "payment" && <CartPayment />}
 
-      {cartPage === "confirmPayment" && <BottomPopUp bottomCross show={true} onClose={() => setCartPage("cart")}>
+      {cartPage === "confirmPayment" &&
         <ConfirmPayment />
-      </BottomPopUp>
       }
 
       {outletInfo?.outLetType !== "OTHER" && <CartWarning />}

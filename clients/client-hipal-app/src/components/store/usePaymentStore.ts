@@ -59,6 +59,9 @@ interface IUsePaymentStore {
 
   showScan: boolean;
   setShowScan: (show: boolean) => void;
+
+  showBillPage: boolean;
+  setShowBillPage: (show: boolean) => void;
 }
 
 export const usePaymentStore = create<IUsePaymentStore>((set) => ({
@@ -133,4 +136,7 @@ export const usePaymentStore = create<IUsePaymentStore>((set) => ({
 
   showScan: false,
   setShowScan: (show: boolean) => set(() => ({ showScan: show })),
+
+  showBillPage: false,
+  setShowBillPage: (show: boolean) => set(() => ({ showBillPage: show })),
 }));

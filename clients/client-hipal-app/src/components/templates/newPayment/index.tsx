@@ -31,6 +31,8 @@ import { useMerchantDetails } from "@/components/hooks/useMerchantSecret";
 import { useUserCoinz } from "@/components/hooks/useUserCoinz";
 import { useErrorHandling } from "@/utils/helper";
 import { useCart } from "@/components/store/useCart";
+import BillPage from "@/components/organisms/cart/billPage";
+import BottomPopUp from "@/components/atoms/bottomPopUp";
 
 const ApplyCouponz = dynamic(() => import("../couponz/applyCouponz"), {
   ssr: false,
@@ -117,9 +119,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     applyCouponz: s.applyCouponz,
   }));
 
-  const { setEditBillModal } = usePaymentStore((s) => ({
-    setEditBillModal: s.setEditBillModal,
-  }));
+  const { setEditBillModal, showBillPage, setShowBillPage } = usePaymentStore();
 
   const { setShowCart } = useCart();
   useMerchantDetails();
@@ -699,144 +699,151 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
 
   return (
     <main className="relative h-screen bg-black">
-      {isLoading ? (
-        <MemoPayLoader selectedMode={selectedMode} />
-      ) : showError ? (
-        <ErrorPayment />
-      ) : applyCouponz ? (
-        <ApplyCouponz />
-      ) : (
-        <div>
-          <section>
-            <article onClick={handleBack} onKeyDown={handleBack}>
-              <button
-                type="button"
-                className={cn(
-                  selectedMode === "INVOICE"
-                    ? "bg-[#ffffff70]"
-                    : "border border-black mt-4",
-                  "absolute top-2 left-4 py-2 rounded-full z-[60] px-4 text-black",
-                )}
-              >
-                <BiArrowBack />
-              </button>
-            </article>
-            {selectedMode === "INVOICE" ? (
-              <center className="pt-2">
-                <p className="mb-2 text-sm font-semibold">Paying:</p>
-                <section className="absolute inset-0 flex items-center justify-center">
-                  <center className="absolute w-[300px] -top-20">
-                    <Image
-                      className="opacity-15"
-                      width={1080}
-                      height={1080}
-                      src={Sunrays}
-                      alt="SunlightReview"
-                    />
-                  </center>
-                </section>
-                <picture className="relative">
-                  <Image
-                    src={businessDetails?.logoUrl}
-                    height={50}
-                    width={50}
-                    quality={95}
-                    objectFit="cover"
-                    alt="logo-businessDetails"
-                    className="object-center bg-white border rounded-full shadow-sm aspect-square"
-                    placeholder="blur"
-                    blurDataURL={getRandomBlurImg(100, 100)}
-                  />
-                </picture>
-                <div
-                  className="relative"
-                  style={{
-                    background:
-                      "linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 1) 50%)",
-                    paddingTop: "50px",
-                  }}
-                >
-                  <p className="relative z-20 -mt-10 text-base font-semibold">
-                    {businessDetails?.name}
-                  </p>
-                </div>
-              </center>
-            ) : null}
-          </section>
-          {selectedMode === "INVOICE" ? (
-            <>
-              <PaymentCard
-                offer={claimedCoinz || claimCouponz}
-                logo={data?.business?.logoUrl}
-              />
-              <CoinzRewardSection />
-              <section className="absolute z-30 w-full mt-10 bg-white rounded-2xl">
-                <center className="my-2 text-xl text-black poppins-regular">
-                  Rewardz
-                </center>
-                <CouponzBlink />
-                <RefferalCouponz />
-                <BillSummary
-                  clearTheTip={clearTheTip}
-                  handleTipSelect={handleTipSelect}
-                  handleCustomTip={handleCustomTip}
-                  handleSaveTip={handleSaveTip}
-                />
-                <SuggestCouponz />
-                <section
-                  style={{
-                    boxShadow: "0px 0px 2px 0px #0000001F",
-                  }}
-                  className="fixed bottom-0 w-full max-w-[30rem] h-16 bg-white flex items-center justify-between px-4 !font-bold text-black"
-                >
-                  {!!tableName ? (
-                    <h1 className="text-sm text-left inter">
-                      Total Bill Amount: ₹{" "}
-                      {calculateFinalBill(
-                        billValue,
-                        claimedCoinz,
-                        claimCouponz,
-                        tips,
+      <>
+        {isLoading ? (
+          <MemoPayLoader selectedMode={selectedMode} />
+        ) : showError ? (
+          <ErrorPayment />
+        ) : applyCouponz ? (
+          <ApplyCouponz />
+        ) : (
+          <>
+            {showBillPage ? <BottomPopUp show={showBillPage} onClose={() => setShowBillPage(false)}>
+              <BillPage billData={billData} />
+            </BottomPopUp>
+              : <div>
+                <section>
+                  <article onClick={handleBack} onKeyDown={handleBack}>
+                    <button
+                      type="button"
+                      className={cn(
+                        selectedMode === "INVOICE"
+                          ? "bg-[#ffffff70]"
+                          : "border border-black mt-4",
+                        "absolute top-2 left-4 py-2 rounded-full z-[60] px-4 text-black",
                       )}
-                      <span className="text-xs">
-                        {claimedCoinz > 0 ? (
-                          <p className="text-[#4CAF50]">
-                            {claimedCoinz} Saved, using coinz
-                          </p>
-                        ) : null}
-                      </span>
-                    </h1>
-                  ) : (
-                    <h1 className="w-2/3 text-xs text-red-500">
-                      Please scan the table to proceed with payment.
-                    </h1>
-                  )}
-                  <article
-                    onClick={() => handleMode("MODE")}
-                    onKeyDown={() => handleMode("MODE")}
-                    className="bg-black text-white px-3 py-2 rounded-lg inter text-sm on_active_bounce">
-                    <span>Pay Now</span>
+                    >
+                      <BiArrowBack />
+                    </button>
                   </article>
+                  {selectedMode === "INVOICE" ? (
+                    <center className="pt-2">
+                      <p className="mb-2 text-sm font-semibold">Paying:</p>
+                      <section className="absolute inset-0 flex items-center justify-center">
+                        <center className="absolute w-[300px] -top-20">
+                          <Image
+                            className="opacity-15"
+                            width={1080}
+                            height={1080}
+                            src={Sunrays}
+                            alt="SunlightReview"
+                          />
+                        </center>
+                      </section>
+                      <picture className="relative">
+                        <Image
+                          src={businessDetails?.logoUrl}
+                          height={50}
+                          width={50}
+                          quality={95}
+                          objectFit="cover"
+                          alt="logo-businessDetails"
+                          className="object-center bg-white border rounded-full shadow-sm aspect-square"
+                          placeholder="blur"
+                          blurDataURL={getRandomBlurImg(100, 100)}
+                        />
+                      </picture>
+                      <div
+                        className="relative"
+                        style={{
+                          background:
+                            "linear-gradient(to bottom, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 1) 50%)",
+                          paddingTop: "50px",
+                        }}
+                      >
+                        <p className="relative z-20 -mt-10 text-base font-semibold">
+                          {businessDetails?.name}
+                        </p>
+                      </div>
+                    </center>
+                  ) : null}
                 </section>
-              </section>
-            </>
-          ) : (
-            <PaymentComponent
-              handleCreateOrder={handleCreateOrder}
-              total={calculateFinalBill(
-                billValue,
-                claimedCoinz,
-                claimCouponz,
-                tips,
-              )}
-            />
-          )}
-          <AvailableCoinz
-            handleApplyCoinz={handleApplyCoinz}
-            setClaimAmount={data?.loyalty?.setClaimedPercentage}
-          />
-        </div>
-      )}
+                {selectedMode === "INVOICE" ? (
+                  <>
+                    <PaymentCard
+                      offer={claimedCoinz || claimCouponz}
+                      logo={data?.business?.logoUrl}
+                    />
+                    <CoinzRewardSection />
+                    <section className="absolute z-30 w-full mt-10 bg-white rounded-2xl">
+                      <center className="my-2 text-xl text-black poppins-regular">
+                        Rewardz
+                      </center>
+                      <CouponzBlink />
+                      <RefferalCouponz />
+                      <BillSummary
+                        clearTheTip={clearTheTip}
+                        handleTipSelect={handleTipSelect}
+                        handleCustomTip={handleCustomTip}
+                        handleSaveTip={handleSaveTip}
+                      />
+                      <SuggestCouponz />
+                      <section
+                        style={{
+                          boxShadow: "0px 0px 2px 0px #0000001F",
+                        }}
+                        className="fixed bottom-0 w-full max-w-[30rem] h-16 bg-white flex items-center justify-between px-4 !font-bold text-black"
+                      >
+                        {!!tableName ? (
+                          <h1 className="text-sm text-left inter">
+                            Total Bill Amount: ₹{" "}
+                            {calculateFinalBill(
+                              billValue,
+                              claimedCoinz,
+                              claimCouponz,
+                              tips,
+                            )}
+                            <span className="text-xs">
+                              {claimedCoinz > 0 ? (
+                                <p className="text-[#4CAF50]">
+                                  {claimedCoinz} Saved, using coinz
+                                </p>
+                              ) : null}
+                            </span>
+                          </h1>
+                        ) : (
+                          <h1 className="w-2/3 text-xs text-red-500">
+                            Please scan the table to proceed with payment.
+                          </h1>
+                        )}
+                        <article
+                          onClick={() => handleMode("MODE")}
+                          onKeyDown={() => handleMode("MODE")}
+                          className="bg-black text-white px-3 py-2 rounded-lg inter text-sm on_active_bounce">
+                          <span>Pay Now</span>
+                        </article>
+                      </section>
+                    </section>
+                  </>
+                ) : (
+                  <PaymentComponent
+                    handleCreateOrder={handleCreateOrder}
+                    total={calculateFinalBill(
+                      billValue,
+                      claimedCoinz,
+                      claimCouponz,
+                      tips,
+                    )}
+                  />
+                )}
+                <AvailableCoinz
+                  handleApplyCoinz={handleApplyCoinz}
+                  setClaimAmount={data?.loyalty?.setClaimedPercentage}
+                />
+              </div>}
+          </>
+        )}
+      </>
     </main>
   );
 };

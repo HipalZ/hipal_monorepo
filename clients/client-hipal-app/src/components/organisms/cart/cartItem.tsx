@@ -132,18 +132,7 @@ const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
             <span className="block text-[#525252] text-sm font-semibold">
               ₹{calculateTotalPrice().toFixed(2)}
             </span>
-            {cartItem?.dish?.instruction && cartItem?.dish?.instruction?.length > 0 ? (
-              <div className="flex items-center gap-2">
-                <h1 className="text-base text-black">{cartItem?.dish?.instruction}</h1>
-                <button
-                  type="button"
-                  onClick={() => removeInstructionFromDish(cartItem?.id)}
-                  className="inline-flex gap-1 text-xs text-red-600 hover:text-red-700"
-                >
-                  <FaTimes size={16} />
-                </button>
-              </div>
-            ) : (
+            {!cartItem?.dish?.instruction?.length && (
               <button
                 type="button"
                 onClick={() => handleInstruction(cartItem?.id)}
@@ -154,6 +143,17 @@ const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
             )}
           </div>
         </div>
+        {cartItem?.dish?.instruction && cartItem?.dish?.instruction?.length > 0 && (
+          <div className="mt-2 flex items-center gap-2">
+            <h1 className="text-base text-black">{cartItem?.dish?.instruction}</h1>
+            <button
+              type="button"
+              onClick={() => removeInstructionFromDish(cartItem?.id)}
+              className="inline-flex gap-1 text-xs text-red-600 hover:text-red-700"
+            >
+              <FaTimes size={16} />
+            </button>
+          </div>)}
       </div>
     </motion.div >
   )

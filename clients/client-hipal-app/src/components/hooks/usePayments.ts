@@ -15,6 +15,9 @@ import useBusinessDetails from "../store/useBusinessDetails";
 import useLoyaltyData from "../store/useLoyaltyData";
 import usePayment from "../store/usePayment";
 import useTableData, { resetTableData } from "../store/useTableData";
+import { useQuery } from "@tanstack/react-query";
+import { _useAllBusiness } from "../store/useAllBusiness";
+import type { IBillData } from "../types/businessData";
 
 export const usePayments = () => {
   const { businessDetails } = useBusinessDetails();
@@ -529,4 +532,47 @@ export const useHandleMode = () => {
   return {
     handleMode,
   };
+};
+
+export const useGetBill = () => {
+  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
+  const tableName = useTableData((state) => state.tableName);
+  const userDetails = useLogin((state) => state.userDetails);
+  const setBillValue = usePaymentStore((state) => state.setBillValue);
+
+  const getBill = async () => {
+    const response = await apiRpc.pos.get_bill.$get({
+      query: {
+        businessId: outletInfo?.businessId || "",
+        tableName,
+        generatedBy: userDetails?.name || "",
+      },
+    });
+
+    if (response.status === 400) {
+      return Promise.reject({
+        status: 400,
+        message: "Server timeout occurred",
+      });
+    }
+
+    const res = await response.json();
+    const payment = res?.data as IBillData;
+    setBillValue(payment.total);
+    return payment;
+  };
+  const {
+    isLoading,
+    data: billData,
+    refetch,
+    failureCount,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["getBill", outletInfo?.businessId, tableName],
+    queryFn: getBill,
+    staleTime: 1000 * 30,
+  });
+
+  return { isLoading, billData, refetch, failureCount, isError, error };
 };

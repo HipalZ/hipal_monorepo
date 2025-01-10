@@ -567,3 +567,15 @@ export interface IMerchantDetails {
   razorpayMerchantId: string;
   razorpayKeyId: string;
 }
+
+export interface IBillData {
+  customerName: string;
+  customerPhone: string;
+  tableName: string;
+  billRequestId: string;
+  subTotal: number;
+  serviceCharge: number;
+  discount: number;
+  tax: number;
+  total: number;
+}
