@@ -5,7 +5,7 @@ import {
   type PageStates,
 } from "../utils/helpers";
 import { toast } from "react-toastify";
-import { useCallback } from "react";
+import { ChangeEvent, useCallback } from "react";
 import { useCouponz } from "../store/useCouponz";
 import { useErrorHandling } from "@/utils/helper";
 import { useLogin } from "../store/useLogin";
@@ -538,8 +538,10 @@ export const useGetBill = () => {
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const tableName = useTableData((state) => state.tableName);
   const userDetails = useLogin((state) => state.userDetails);
+  const setEditBillModal = usePaymentStore((state) => state.setEditBillModal);
   const setBillValue = usePaymentStore((state) => state.setBillValue);
-
+  const setBillData = usePaymentStore((state) => state.setBillData);
+  const selectedMode = usePaymentStore((state) => state.selectedMode);
   const getBill = async () => {
     const response = await apiRpc.pos.get_bill.$get({
       query: {
@@ -558,7 +560,11 @@ export const useGetBill = () => {
 
     const res = await response.json();
     const payment = res?.data as IBillData;
+    setBillData(payment);
     setBillValue(payment.total);
+    if (payment?.total === 0) {
+      setEditBillModal(true);
+    }
     return payment;
   };
   const {
@@ -572,7 +578,82 @@ export const useGetBill = () => {
     queryKey: ["getBill", outletInfo?.businessId, tableName],
     queryFn: getBill,
     staleTime: 1000 * 30,
+    enabled: selectedMode !== "MODE",
   });
 
   return { isLoading, billData, refetch, failureCount, isError, error };
+};
+
+export const useDisplayValue = () => {
+  function getDisplayValue(
+    billValue: number,
+    claimedCoinz: number,
+    claimCouponz: number,
+  ): number {
+    if (claimedCoinz > 0) {
+      return claimedCoinz;
+    }
+    if (claimCouponz > billValue) {
+      return billValue;
+    }
+    return claimCouponz;
+  }
+
+  return {
+    getDisplayValue,
+  };
+};
+
+export const useBillSummary = () => {
+  const {
+    isTipActive,
+    setIsTipActive,
+    setTips,
+    setSelectedTip,
+    setCustomTip,
+    setShowInput,
+  } = usePaymentStore();
+  const clearTheTip = useCallback(() => {
+    setTips(0);
+    setSelectedTip("");
+    setCustomTip("");
+    setShowInput(false);
+    setIsTipActive(false);
+  }, [setTips, setSelectedTip, setCustomTip, setShowInput, setIsTipActive]);
+  const handleTipSelect = useCallback(
+    (tip: string) => {
+      if (tip === "Other") {
+        setSelectedTip(tip);
+        setShowInput(true);
+        setCustomTip("");
+        setTips(0);
+      } else {
+        setSelectedTip(tip);
+        setShowInput(false);
+        setCustomTip("");
+        setTips(Number(tip));
+      }
+    },
+    [setSelectedTip, setShowInput, setCustomTip, setTips],
+  );
+
+  const handleCustomTip = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value.replace(/[^0-9.]/g, "");
+      setCustomTip(value);
+      setTips(Number(value));
+    },
+    [setCustomTip, setTips],
+  );
+
+  const handleSaveTip = useCallback(() => {
+    setShowInput(false);
+  }, [setShowInput]);
+
+  return {
+    clearTheTip,
+    handleTipSelect,
+    handleCustomTip,
+    handleSaveTip,
+  };
 };

@@ -1,5 +1,8 @@
+import { useMerchantDetails } from '@/components/hooks/useMerchantSecret';
+import { useUserCoinz } from '@/components/hooks/useUserCoinz';
 import { _useAllBusiness } from '@/components/store/useAllBusiness';
 import useBusinessDetails from '@/components/store/useBusinessDetails';
+import useLoyaltyData from '@/components/store/useLoyaltyData';
 import { usePaymentStore } from '@/components/store/usePaymentStore';
 import type { IBusinessData } from '@/components/types/businessData';
 import { cn } from '@/components/utils/helpers';
@@ -8,18 +11,23 @@ import { useParams, useRouter } from 'next/navigation';
 import React, { memo, useCallback, useEffect } from 'react'
 import { BiArrowBack } from 'react-icons/bi'
 
-const MemoPaymentHeader = ({ data }: { data: IBusinessData }) => {
+const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
+    useMerchantDetails();
+    useUserCoinz(data?.loyalty?.loyaltyId || "");
     const setBusinessData = _useAllBusiness((s) => s.setData);
     const { setBusinessDetails } = useBusinessDetails();
     const router = useRouter();
     const customLink = useParams()?.businessId as string;
-
+    const { setLoyaltySetting } = useLoyaltyData();
     useEffect(() => {
         setBusinessData(data);
         if (data?.business) {
             setBusinessDetails(data?.business);
         }
-    }, [data, setBusinessData, setBusinessDetails]);
+        if (data?.loyalty) {
+            setLoyaltySetting(data?.loyalty)
+        };
+    }, [data, setBusinessData, setBusinessDetails, setLoyaltySetting]);
 
     const {
         selectedMode,
@@ -60,5 +68,5 @@ const MemoPaymentHeader = ({ data }: { data: IBusinessData }) => {
     )
 }
 
-const PaymentHeader = memo(MemoPaymentHeader)
-export default PaymentHeader
+const PaymentBack = memo(MemoPaymentBack)
+export default PaymentBack

@@ -1,41 +1,60 @@
 import AlertToRemove from "@/components/atoms/alertToRemove";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
-import BottomButton from "@/components/molecules/bottomButton";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import { useCouponz } from "@/components/store/useCouponz";
+import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { DialogTitle } from "@headlessui/react";
+import confetti from "canvas-confetti";
 import { type ChangeEvent, memo, useCallback, useState } from "react";
 import { GoAlert } from "react-icons/go";
 import { IoCheckmark } from "react-icons/io5";
 import { RxCross2 } from "react-icons/rx";
 import { toast } from "react-toastify";
 
-interface IAvailableCoinz {
-  handleApplyCoinz: (value: number) => void;
-  setClaimAmount: number;
-}
-
-const AvailableCoinz = (props: IAvailableCoinz) => {
-  const { handleApplyCoinz, setClaimAmount } = props;
+const AvailableCoinz = () => {
   const {
     billValue,
     userCoinz,
     claimedCoinz,
     claimCouponz,
     setClaimCouponz,
+    setClaimedCoinz,
     isModalOpen,
     setIsModalOpen,
-  } = usePaymentStore((s) => ({
-    billValue: s.billValue,
-    claimedCoinz: s.claimedCoinz,
-    claimCouponz: s.claimCouponz,
-    setClaimCouponz: s.setClaimCouponz,
-    userCoinz: s.userCoinz,
-    isModalOpen: s.isModalOpen,
-    setIsModalOpen: s.setIsModalOpen,
-  }));
+  } = usePaymentStore();
+
+  const { loyaltySetting } = useLoyaltyData();
+
+  const handleApplyCoinz = useCallback(
+    (finalValue: number) => {
+      setClaimedCoinz(finalValue);
+      handleCoins(finalValue);
+    },
+    [setClaimedCoinz],
+  );
+
+  const handleCoins = useCallback(async (claimedCoinz: number) => {
+    // if has claim coinz then celebrate
+    setIsModalOpen(false);
+    if (claimedCoinz !== null && claimedCoinz > 0) {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+      });
+      let audio: HTMLAudioElement;
+      audio = new Audio("/sounds/Money.mp3");
+      audio.play();
+      return () => {
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+      };
+    }
+  }, [setIsModalOpen]);
 
   const { setAvailedCoupon } = useCouponz((s) => ({
     setAvailedCoupon: s.setAvailedCoupon,
@@ -52,7 +71,7 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
     userCoinz: number,
   ) => {
     const userEnteredValue = Number(event.target.value.replace(/[^0-9.]/g, ""));
-    const canClaimCoinz = Math.round(billValue * (setClaimAmount / 100) || 0);
+    const canClaimCoinz = Math.round(billValue * (loyaltySetting?.setClaimedPercentage / 100) || 0);
     const coinsToSet = canClaimCoinz < userCoinz ? canClaimCoinz : userCoinz;
     if (userEnteredValue > coinsToSet) {
       setTempClaimedCoinz(coinsToSet);
@@ -68,7 +87,7 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
     } else {
       handleApplyCoinz(tempClaimedCoinz);
     }
-  }, [setShowAlert, tempClaimedCoinz]);
+  }, [setShowAlert, tempClaimedCoinz, handleApplyCoinz, claimCouponz]);
 
   const replaceLoyalty = useCallback(() => {
     setClaimCouponz(0);
@@ -86,7 +105,7 @@ const AvailableCoinz = (props: IAvailableCoinz) => {
 
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
-  }, [isModalOpen]);
+  }, [setIsModalOpen]);
 
   return (
     <>

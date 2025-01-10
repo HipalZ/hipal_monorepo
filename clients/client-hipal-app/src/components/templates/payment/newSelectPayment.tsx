@@ -1,49 +1,48 @@
 'use client'
-import { memo, useCallback } from "react"
-import { toast } from "react-toastify"
-import BillPayment from "@/assets/payment/BillPayment.png"
-import PayToCaptain from "@/assets/payment/PayToCaptain.png"
-import HandPayCash from "@/assets/payment/HandCashPay.png";
-import MobileQrCode from "@/assets/payment/MobileQRCode.png";
-import SmartWatch from "@/assets/payment/SmartWatch.png"
-import type { PageStates } from "."
-import { usePaymentStore } from "@/components/store/usePaymentStore"
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
-import TransitionImages from "@/components/organisms/cart/transitionImages"
-import { motion } from "framer-motion"
-import Image from "next/image";
+import { calculateFinalBill } from "@/components/utils/helpers"
 import { FaCaretRight } from "react-icons/fa"
+import { memo, useCallback } from "react"
+import { motion } from "framer-motion"
+import { toast } from "react-toastify"
+import { usePayments } from "@/components/hooks/usePayments"
+import { usePaymentStore } from "@/components/store/usePaymentStore"
+import BillPayment from "@/assets/payment/BillPayment.png"
+import HandPayCash from "@/assets/payment/HandCashPay.png";
+import Image from "next/image";
+import MobileQrCode from "@/assets/payment/MobileQRCode.png";
+import PayToCaptain from "@/assets/payment/PayToCaptain.png"
+import SmartWatch from "@/assets/payment/SmartWatch.png"
+import TransitionImages from "@/components/organisms/cart/transitionImages"
+import type { PageStates } from "."
 
-interface PaymentComponentProps {
-    handleCreateOrder: (amount: number, mode: string) => void
-    total: number
-}
-
-const MemoNewPaymentComponent: React.FC<PaymentComponentProps> = ({
-    total,
-    handleCreateOrder,
-}) => {
+const MemoNewPaymentComponent = () => {
+    const { handleCreateOrder } = usePayments()
     const images = [MobileQrCode, HandPayCash, SmartWatch]
     const {
         isLoading,
         billValue,
-        selectedMode,
+        claimedCoinz,
+        claimCouponz,
+        tips,
         setSelectedMode,
         merchantDetails,
-    } = usePaymentStore((s) => ({
-        isLoading: s.isLoading,
-        billValue: s.billValue,
-        selectedMode: s.selectedMode,
-        setSelectedMode: s.setSelectedMode,
-        merchantDetails: s.merchantDetails,
-    }))
+    } = usePaymentStore()
+
+    const total =
+        calculateFinalBill(
+            billValue,
+            claimedCoinz,
+            claimCouponz,
+            tips,
+        )
 
     const createOrder = useCallback(
         (amount: number, mode: PageStates) => {
             setSelectedMode(mode)
             handleCreateOrder(amount, mode)
         },
-        [selectedMode, handleCreateOrder]
+        [handleCreateOrder, setSelectedMode]
     )
 
     const handleOnlineMode = useCallback(
@@ -67,7 +66,7 @@ const MemoNewPaymentComponent: React.FC<PaymentComponentProps> = ({
     )
 
     return (
-        <main className="h-screen pt-4 bg-gray-50">
+        <main className="min-h-screen pt-4 bg-gray-50">
             <section className="relative flex justify-center text-center h-[250px] items-center mt-8 rounded-full overflow-hidden">
                 <TransitionImages images={images} />
             </section>
@@ -111,7 +110,7 @@ const MemoNewPaymentComponent: React.FC<PaymentComponentProps> = ({
                                     ))}
                                 </div>
                             </section>
-                            <div className="inter absolute -bottom-6 h-12 w-full bg-black/20 flex items-center justify-end pr-10">
+                            <div className="inter absolute -bottom-6 h-10 w-full bg-black/20 flex items-center justify-end pr-4">
                                 Rewardz after captain confirmation
                             </div>
                         </article>
@@ -148,7 +147,7 @@ const MemoNewPaymentComponent: React.FC<PaymentComponentProps> = ({
                                     ))}
                                 </div>
                             </section>
-                            <div className="inter absolute -bottom-4 h-10 w-full bg-[#33004E] flex items-center justify-end pr-10">
+                            <div className="inter absolute -bottom-4 h-10 w-full bg-[#33004E] flex items-center justify-end pr-4">
                                 Instant coinz back
                             </div>
                         </article>

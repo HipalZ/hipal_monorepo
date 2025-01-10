@@ -20,7 +20,6 @@ const MemoConfirmPayment = () => {
 
     const placeOrder = useCallback(() => {
         setCartPage("payment")
-        // router.push(`/${customLink}/payment`)
     }, [setCartPage]);
 
     const goBack = useCallback(() => {

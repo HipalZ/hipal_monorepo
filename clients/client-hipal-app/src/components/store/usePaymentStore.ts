@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { PageStates } from "../utils/helpers";
-import type { IMerchantDetails } from "../types/businessData";
+import type { IBillData, IMerchantDetails } from "../types/businessData";
 
 interface IUsePaymentStore {
   claimedCoinz: number;
@@ -62,6 +62,9 @@ interface IUsePaymentStore {
 
   showBillPage: boolean;
   setShowBillPage: (show: boolean) => void;
+
+  billData: IBillData;
+  setBillData: (data: IBillData) => void;
 }
 
 export const usePaymentStore = create<IUsePaymentStore>((set) => ({
@@ -95,7 +98,7 @@ export const usePaymentStore = create<IUsePaymentStore>((set) => ({
   showError: false,
   setShowError: (error: boolean) => set(() => ({ showError: error })),
 
-  selectedMode: "MODE",
+  selectedMode: "INVOICE",
   setSelectedMode: (mode: PageStates) => set(() => ({ selectedMode: mode })),
 
   selectedTip: "",
@@ -139,4 +142,19 @@ export const usePaymentStore = create<IUsePaymentStore>((set) => ({
 
   showBillPage: false,
   setShowBillPage: (show: boolean) => set(() => ({ showBillPage: show })),
+
+  billData: {
+    billing_user_name: "",
+    serviceCharge: 0,
+    discount: 0,
+    tax: 0,
+    total: 0,
+    customerPhone: "",
+    customerName: "",
+    tableName: "",
+    subTotal: 0,
+    billRequestId: "",
+    items: [],
+  },
+  setBillData: (data: IBillData) => set(() => ({ billData: data })),
 }));

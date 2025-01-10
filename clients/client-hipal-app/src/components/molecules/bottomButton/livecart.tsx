@@ -39,7 +39,6 @@ const MemoLiveCart = () => {
   const openCart = useCallback(() => {
     if (!tableNameMissing) {
       setTableNameMissing(true);
-      return;
     }
     setCartPage("cart");
     setShowCart(true);

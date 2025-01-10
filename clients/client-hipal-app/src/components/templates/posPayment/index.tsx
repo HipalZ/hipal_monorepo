@@ -1,38 +1,26 @@
 "use client";
 import { apiRpc } from "@hi/common";
 import { BottomBarSkeleton, HeaderSkeleton, RewardSkeleton, CardSkeleton } from "@/components/atoms/paymentPageLoader";
-import { calculateFinalBill } from "@/components/utils/helpers";
 import { getRandomBlurImg } from "@/components/utils/images";
-import { type ChangeEvent, memo } from "react";
-import { useCallback, useEffect } from "react";
-import { useHandleMode, usePayments } from "@/components/hooks/usePayments";
-import { useMerchantDetails } from "@/components/hooks/useMerchantSecret";
-import { useParams, useSearchParams } from "next/navigation";
+import { memo } from "react";
+import { toast } from "react-toastify";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useQuery } from "@tanstack/react-query";
-import { useUserCoinz } from "@/components/hooks/useUserCoinz";
-import { useUserToken } from "@hi/common/src/useUserToken";
-import BottomPopUp from "@/components/atoms/bottomPopUp";
-import confetti from "canvas-confetti";
+import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Sunrays from "@/assets/img/sunrays_white.png";
 import type { IBusinessData } from "@/components/types/businessData";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useCouponTemp from "@/components/store/useCouponTemp";
-import useLoyaltyData from "@/components/store/useLoyaltyData";
 import useTableData from "@/components/store/useTableData";
-import { toast } from "react-toastify";
 
-const SignUpBonus = dynamic(() => import("@/components/organisms/explore/signupbonus"), {
+const TotalBillButton = dynamic(() => import("@/components/templates/newPayment/totalBillButton"), {
     ssr: false,
-    loading: () => <RewardSkeleton />,
+    loading: () => <BottomBarSkeleton />,
 });
-const PaymentHeader = dynamic(() => import("./paymentHeader"), {
-    ssr: false,
-    loading: () => <HeaderSkeleton />,
-});
-const CombinedLogin = dynamic(() => import("./CombinedLogin"), {
+
+const PaymentBack = dynamic(() => import("./paymentBack"), {
     ssr: false,
     loading: () => <HeaderSkeleton />,
 });
@@ -50,33 +38,33 @@ const CoinzRewardSection = dynamic(
     },
 );
 
-const SuggestCouponz = dynamic(() => import("../newPayment/suggestCouponz"), {
+const SuggestCouponz = dynamic(() => import("@/components/templates/newPayment/suggestCouponz"), {
     ssr: false,
     loading: () => <CardSkeleton />,
 });
 
-const RefferalCouponz = dynamic(() => import("../newPayment/refferalCouponz"), {
+const RefferalCouponz = dynamic(() => import("@/components/templates/newPayment/refferalCouponz"), {
     ssr: false,
     loading: () => <CardSkeleton />,
 });
 
-const ErrorPayment = dynamic(() => import("../payment/errorPay"), {
+const ErrorPayment = dynamic(() => import("@/components/templates/payment/errorPay"), {
     ssr: false,
     loading: () => <RewardSkeleton />,
 });
 
-const MemoPayLoader = dynamic(() => import("../payment/payLoader"), {
+const MemoPayLoader = dynamic(() => import("@/components/templates/payment/payLoader"), {
     ssr: false,
     loading: () => <RewardSkeleton />,
 });
 
-const CouponzBlink = dynamic(() => import("../newPayment/couponzBlink"), {
+const CouponzBlink = dynamic(() => import("@/components/templates/newPayment/couponzBlink"), {
     ssr: false,
     loading: () => <RewardSkeleton />,
 });
 
-const PaymentComponent = dynamic(
-    () => import("@/components/templates/payment/selectPayment"),
+const NewPaymentComponent = dynamic(
+    () => import("@/components/templates/payment/newSelectPayment"),
     {
         ssr: false,
         loading: () => <BottomBarSkeleton />,
@@ -109,139 +97,17 @@ const PaymentCard = dynamic(
 
 const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
     const orderId = useSearchParams().get("orderId") as string;
-    const accessToken = useUserToken((s) => s.accessToken);
     const {
-        handleCreateOrder
-    } = usePayments();
-    const customLink = useParams()?.businessId as string;
-    const {
-        billValue,
         setBillValue,
-        claimedCoinz,
-        setClaimedCoinz,
-        claimCouponz,
-        setTips,
-        tips,
-        setCustomTip,
         isLoading,
         selectedMode,
-        setSelectedMode,
-        setSelectedTip,
-        setIsTipActive,
-        setShowInput,
-        setIsModalOpen,
         showError,
-        checkLogin,
-        setCheckLogin,
-        openBlastModal, setOpenBlastModal,
-        coinz,
     } = usePaymentStore();
     const { setTableName } = useTableData()
     const { businessDetails } = useBusinessDetails();
-    const { handleMode } = useHandleMode()
-    const { setLoyaltySetting } = useLoyaltyData();
     const { applyCouponz } = useCouponTemp((s) => ({
         applyCouponz: s.applyCouponz,
     }));
-
-    const { setEditBillModal } = usePaymentStore((s) => ({
-        setEditBillModal: s.setEditBillModal,
-    }));
-    useMerchantDetails();
-    useUserCoinz(data?.loyalty?.loyaltyId || "");
-
-    useEffect(() => {
-        if (billValue === 0) {
-            setEditBillModal(true);
-        }
-        setSelectedMode("INVOICE");
-        setLoyaltySetting(data?.loyalty);
-    }, [data]);
-
-    const clearTheTip = useCallback(() => {
-        setTips(0);
-        setSelectedTip("");
-        setCustomTip("");
-        setShowInput(false);
-        setIsTipActive(false);
-    }, [setTips, setSelectedTip, setCustomTip, setShowInput, setIsTipActive]);
-
-    const handleTipSelect = useCallback(
-        (tip: string) => {
-            if (tip === "Other") {
-                setSelectedTip(tip);
-                setShowInput(true);
-                setCustomTip("");
-                setTips(0);
-            } else {
-                setSelectedTip(tip);
-                setShowInput(false);
-                setCustomTip("");
-                setTips(Number(tip));
-            }
-        },
-        [setSelectedTip, setShowInput, setCustomTip, setTips],
-    );
-
-    const handleCustomTip = useCallback(
-        (event: ChangeEvent<HTMLInputElement>) => {
-            const value = event.target.value.replace(/[^0-9.]/g, "");
-            setCustomTip(value);
-            setTips(Number(value));
-        },
-        [setCustomTip, setTips],
-    );
-
-    const handleSaveTip = useCallback(() => {
-        setShowInput(false);
-    }, [setShowInput]);
-
-    const handleApplyCoinz = useCallback(
-        (finalValue: number) => {
-            setClaimedCoinz(finalValue);
-            handleCoins(finalValue);
-        },
-        [setClaimedCoinz],
-    );
-
-    const handleCoins = useCallback(async (claimedCoinz: number) => {
-        // if has claim coinz then celebrate
-        setIsModalOpen(false);
-        if (claimedCoinz !== null && claimedCoinz > 0) {
-            confetti({
-                particleCount: 100,
-                spread: 70,
-                origin: { y: 0.6 },
-            });
-            let audio: HTMLAudioElement;
-            audio = new Audio("/sounds/Money.mp3");
-            audio.play();
-            return () => {
-                if (audio) {
-                    audio.pause();
-                    audio.currentTime = 0;
-                }
-            };
-        }
-    }, [setIsModalOpen]);
-
-    const handleEligibility = useCallback(() => {
-        if (billValue === 0) {
-            setEditBillModal(true);
-        }
-        if (!accessToken) {
-            setCheckLogin(true);
-        } else {
-            handleMode("MODE");
-        }
-
-    }, [accessToken, setCheckLogin, handleMode, customLink, billValue, setEditBillModal]);
-
-    const goNext = useCallback(() => {
-        setOpenBlastModal(false);
-        setCheckLogin(true);
-        window.location.href = `/${customLink}/posPayment?orderId=${orderId}`
-    }, [setOpenBlastModal, setCheckLogin, customLink, orderId]);
 
     const handleGetOrderId = async () => {
         try {
@@ -254,7 +120,7 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
             if (response?.status === 404) {
                 toast.error(response?.data?.message || "Something went wrong")
             }
-            if (res?.data?.tableName && res?.data?.tableName !== null) {
+            if (res?.data?.tableName && res?.data?.tableName?.length > 0) {
                 setTableName(res?.data?.tableName)
             }
             setBillValue(res.data.total)
@@ -267,8 +133,11 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
     useQuery({
         queryKey: ["getBusinessDetails", orderId],
         queryFn: handleGetOrderId,
-        enabled: orderId !== "null",
+        enabled: orderId !== null,
+        staleTime: 1000 * 60 * 5,
     })
+
+    console.log("render pos payment")
 
     return (
         <main className="relative h-screen bg-black">
@@ -281,7 +150,7 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
             ) : (
                 <>
                     <section>
-                        <PaymentHeader data={data} />
+                        <PaymentBack data={data} />
                         {selectedMode === "INVOICE" ? (
                             <center className="pt-2">
                                 <p className="mb-2 text-sm font-semibold">Paying:</p>
@@ -326,71 +195,21 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
                     </section>
                     {selectedMode === "INVOICE" ? (
                         <>
-                            <PaymentCard
-                                offer={claimedCoinz || claimCouponz}
-                                logo={data?.business?.logoUrl}
-                            />
+                            <PaymentCard />
                             <CoinzRewardSection />
                             <section className="absolute z-30 w-full mt-10 bg-white rounded-2xl">
-                                <center className="my-2 text-xl text-black poppins-regular">
-                                    Rewardz
-                                </center>
                                 <CouponzBlink />
+
                                 <RefferalCouponz />
-                                <BillSummary
-                                    clearTheTip={clearTheTip}
-                                    handleTipSelect={handleTipSelect}
-                                    handleCustomTip={handleCustomTip}
-                                    handleSaveTip={handleSaveTip}
-                                />
+                                <BillSummary />
                                 <SuggestCouponz />
-                                <section
-                                    style={{
-                                        boxShadow: "0px 0px 2px 0px #0000001F",
-                                    }}
-                                    className="fixed bottom-0 w-full max-w-[30rem] h-16 bg-white flex items-center justify-between px-4 !font-bold text-black"
-                                >
-                                    <h1 className="text-sm text-left inter">
-                                        Total Bill Amount: ₹{" "}
-                                        {calculateFinalBill(
-                                            billValue,
-                                            claimedCoinz,
-                                            claimCouponz,
-                                            tips,
-                                        )}
-                                        <span className="text-xs">
-                                            {claimedCoinz > 0 ? (
-                                                <p className="text-[#4CAF50]">
-                                                    {claimedCoinz} Saved, using coinz
-                                                </p>
-                                            ) : null}
-                                        </span>
-                                    </h1>
-                                    <article
-                                        onClick={handleEligibility}
-                                        onKeyDown={handleEligibility}
-                                        className="bg-black text-white px-3 py-2 rounded-lg inter text-sm on_active_bounce"
-                                    >
-                                        <span>Pay Now</span>
-                                    </article>
-                                </section>
+                                <TotalBillButton />
                             </section>
                         </>
                     ) : (
-                        <PaymentComponent
-                            handleCreateOrder={handleCreateOrder}
-                            total={calculateFinalBill(
-                                billValue,
-                                claimedCoinz,
-                                claimCouponz,
-                                tips,
-                            )}
-                        />
+                        <NewPaymentComponent />
                     )}
-                    <AvailableCoinz
-                        handleApplyCoinz={handleApplyCoinz}
-                        setClaimAmount={data?.loyalty?.setClaimedPercentage}
-                    />
+                    <AvailableCoinz />
                 </>
             )}
         </main>

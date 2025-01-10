@@ -1,14 +1,13 @@
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { memo, useCallback, useEffect, useMemo } from "react";
 
-interface IPaymentCard {
-  offer: number;
-  logo: string | undefined;
-}
-
-const MemoPaymentCard = (props: IPaymentCard) => {
-  const { offer } = props;
+const MemoPaymentCard = () => {
+  const {
+    claimCouponz, claimedCoinz
+  } = usePaymentStore();
+  const offer = claimedCoinz || claimCouponz
   const { billValue, setShowBillPage } = usePaymentStore();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 

@@ -41,6 +41,7 @@ const MemoCartPayment = () => {
     setShowInput,
     setIsTipActive,
     setShowScan,
+    billData,
   } = usePaymentStore();
 
   // Coupon store hooks
@@ -49,7 +50,7 @@ const MemoCartPayment = () => {
   }));
 
   // Bill query
-  const { isLoading, billData, refetch, failureCount, isError, error } = useGetBill();
+  const { isLoading, billData: data, refetch, failureCount, isError, error } = useGetBill();
 
   // Countdown timer for button
   useEffect(() => {
@@ -119,10 +120,6 @@ const MemoCartPayment = () => {
     router.push(`/${customLink}/payment`);
   }
 
-  // Handle different UI states based on billData, errors, and loading
-
-  console.log("billData", billData);
-  console.log("isError", isError);
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white px-6">
 
