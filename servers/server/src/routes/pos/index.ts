@@ -152,11 +152,68 @@ const posRouter = new Hono()
         businessId: businessId,
         tableName: tableName,
       });
-
       const pos = await BusinessPosConfig.findOne({
         businessId: businessId,
       }).populate("posId");
-      console.log("POS", pos);
+
+      if (getPin && getPin.billRequestId) {
+        console.log("getPin", getPin);
+        const getBillConfig = {
+          app_key: pos.posId.accessKey,
+          app_secret: pos.posId.secretKey,
+          access_token: pos.posId.authToken,
+          restID: pos.posId.restId,
+          bill_request_id: getPin.billRequestId,
+        };
+
+        const getBill = await axios.post(
+          "http://api.petpooja.com/V1/captainorders/get_bill/",
+          getBillConfig,
+        );
+
+        const simpleArray =
+          transformItemsToSimpleArray(
+            getBill.data.items_data?.slice(0, -2) || [],
+          ) || [];
+        console.log("simpleArray", simpleArray);
+
+        if (getBill.data.success === "1") {
+          const billObj = {
+            billing_user_name: getBill.data.order_data.billing_user_name,
+            serviceCharge: getBill.data.order_data.service_charge,
+            discount: getBill.data.order_data.discount,
+            tax: getBill.data.order_data.tax,
+            total: getBill.data.order_data.total,
+            customerPhone: getBill.data.order_data.customer_phone,
+            customerName: getBill.data.order_data.customer_name,
+            tableName: getBill.data.order_data.table_no,
+            billRequestId: getPin.billRequestId,
+            items: simpleArray,
+            subTotal: getBill.data.order_data.core_price,
+          };
+          await PetPoojaPinTemp.findOneAndUpdate(
+            {
+              businessId: businessId,
+              tableName: tableName,
+            },
+            {
+              billGeneratedBy: generatedBy,
+              billRequestId: getPin.billRequestId,
+              billInvoiceId: getBill.data.order_data.invoice_id,
+              tax: getBill.data.order_data.tax,
+              serviceCharge: getBill.data.order_data.service_charge,
+            },
+          );
+          return c.json(
+            {
+              message: "Data fetched successfully",
+              err: false,
+              data: billObj,
+            },
+            200,
+          );
+        }
+      }
 
       if (!pos) {
         return c.json(
@@ -184,8 +241,6 @@ const posRouter = new Hono()
         "http://api.petpooja.com/V1/captainorders/request_bill/",
         billConfig,
       );
-
-      console.log("fetchBill", fetchBill.data);
 
       if (fetchBill.data.success === "1") {
         const request_id = fetchBill.data.request_id;
@@ -263,6 +318,8 @@ const posRouter = new Hono()
           "http://api.petpooja.com/V1/captainorders/check_bill/",
           billRequestConfig,
         );
+
+        console.log("fetchBillDetails", fetchBillDetails.data);
 
         if (fetchBillDetails.data.success === "1") {
           const bill_request_id = fetchBillDetails.data.bill_request_id;
