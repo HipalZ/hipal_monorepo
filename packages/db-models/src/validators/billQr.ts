@@ -19,6 +19,9 @@ const qrBillOrderSchema = z.object({
   requestBillId: z.string().min(3).max(100),
   expireIn: z.number().default(300000),
   isPaid: z.boolean().default(false),
+  status: z
+    .enum(["PENDING", "SUCCESS", "FAILED", "EXPIRED"])
+    .default("PENDING"),
 
   date: z.number(),
   createdAt: z.date().optional(),

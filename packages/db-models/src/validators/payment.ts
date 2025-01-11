@@ -129,6 +129,7 @@ export const PaymentSchema = z.object({
   settleType: z.enum(["NORMAL_SETTLE", "HI_SETTLE", "FORCE_SETTLE"]).optional(),
   serviceCharge: z.coerce.number({}).optional(),
   tax: z.coerce.number({}).optional(),
+  posBillRequestId: z.string().optional(),
 });
 
 export type PaymentType = z.infer<typeof PaymentSchema>;

@@ -139,6 +139,10 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       required: false,
       default: 0,
     },
+    posBillRequestId: {
+      type: String,
+      required: false,
+    },
   },
 
   { timestamps: true },

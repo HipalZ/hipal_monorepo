@@ -237,8 +237,6 @@ const kotRouter = new Hono()
             },
           );
 
-          console.log("t", t);
-
           return c.json(
             {
               message: "Data fetched successfully",

@@ -20,6 +20,7 @@ import {
   Table,
   TagModel,
   TempTableSettle,
+  UpiMode,
   User,
   UserAnalytic,
   UserCouponClaim,
@@ -584,6 +585,11 @@ const paymentsRouter = new Hono()
         } = requestData;
         const uniqueOrderId = nanoid(15);
 
+        const findTempTable = await PetPoojaPinTemp.findOne({
+          tableName,
+          businessId,
+        });
+
         const orderAlreadyExist = await PaymentAlert.findOne({
           businessId,
           tableName,
@@ -644,6 +650,7 @@ const paymentsRouter = new Hono()
               message: `Paid ${total}`,
               date: Date.now(),
               posDiscount: posDiscount,
+              posBillRequestId: findTempTable?.billRequestId,
             },
           ],
           { session },
@@ -1036,6 +1043,10 @@ const paymentsRouter = new Hono()
       const getOrder = await Order.findOne({
         order_id: payload.payment.entity.order_id,
       });
+      const tempTable = await PetPoojaPinTemp.findOne({
+        businessId: getOrder?.businessId,
+        tableName: getOrder?.tableName,
+      });
 
       if (event === "payment.failed") {
         const claimCoins =
@@ -1064,6 +1075,14 @@ const paymentsRouter = new Hono()
                 couponId: payload.payment.entity.notes.couponId,
               },
             ],
+            { session },
+          );
+
+          await QrBill.findOneAndUpdate(
+            {
+              requestBillId: tempTable?.billRequestId,
+            },
+            { status: "FAILED" },
             { session },
           );
         }
@@ -1133,11 +1152,6 @@ const paymentsRouter = new Hono()
             getCashBack = cashBackCoins;
           }
 
-          const tempTable = await PetPoojaPinTemp.findOne({
-            businessId: getOrder?.businessId,
-            tableName: getOrder?.tableName,
-          });
-
           const createPayment = await Payment.create(
             [
               {
@@ -1159,9 +1173,10 @@ const paymentsRouter = new Hono()
                 channelId: getOrder?.channelId,
                 earnCoins: getCashBack,
                 date: Date.now(),
-                posBillId: tempTable?.billInvoiceId || "",
                 tax: tempTable?.tax || 0,
-                serviceCgarge: tempTable?.serviceCharge || 0,
+                serviceCharge: tempTable?.serviceCharge || 0,
+                posBillRequestId: tempTable?.billRequestId || "",
+                posBillId: tempTable?.billInvoiceId || "",
               },
             ],
             { session },
@@ -1184,6 +1199,14 @@ const paymentsRouter = new Hono()
                 date: Date.now(),
               },
             ],
+            { session },
+          );
+
+          await QrBill.findOneAndUpdate(
+            {
+              requestBillId: tempTable?.billRequestId,
+            },
+            { status: "SUCCESS" },
             { session },
           );
         }
@@ -1560,9 +1583,10 @@ const paymentsRouter = new Hono()
     async (c) => {
       const { alertId } = c.req.param();
       const requestData = await c.req.json();
-      const { comment, waiterName } = requestData;
+      const { comment, waiterName, paymentModeId } = requestData;
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
+        const paymentMode = await UpiMode.findById(paymentModeId);
         const alert = await PaymentAlert.findOne(
           { _id: alertId, isAccepted: false },
           null,
@@ -1642,8 +1666,6 @@ const paymentsRouter = new Hono()
                 cashBack = 0;
               }
 
-              console.log("order", order);
-
               const finalCashBack = await addCoins(
                 cashBack,
                 order.userId._id.toString(),
@@ -1658,7 +1680,6 @@ const paymentsRouter = new Hono()
 
               const isHavePos = await BusinessPosConfig.findOne({
                 businessId: order.businessId,
-                tableName: order.tableName,
               }).populate("posId");
 
               const tempTable = await PetPoojaPinTemp.findOne({
@@ -1672,9 +1693,9 @@ const paymentsRouter = new Hono()
                     businessId: alert.businessId,
                     order_id: order?._id,
                     total: order?.total,
-                    mode: "offline",
+                    mode: paymentMode?.name || "offline",
                     status: "SUCCESS",
-                    paymentMode: "offline",
+                    paymentMode: paymentMode?.name || "offline",
                     userId: order?.userId._id,
                     claimedCoins: order?.claimedCoins,
                     billValue: order?.billValue,
@@ -1689,6 +1710,7 @@ const paymentsRouter = new Hono()
                     posBillId: tempTable?.billInvoiceId || "",
                     tax: tempTable?.tax || 0,
                     serviceCgarge: tempTable?.serviceCharge || 0,
+                    posBillRequestId: tempTable?.billRequestId || "",
 
                     waiterName,
                     date: Date.now(),
@@ -1730,7 +1752,7 @@ const paymentsRouter = new Hono()
                   },
                   {
                     $set: {
-                      isSettle: true,
+                      settled: true,
                     },
                   },
                   {
@@ -1763,7 +1785,7 @@ const paymentsRouter = new Hono()
                   },
                   {
                     $set: {
-                      isPaid: true,
+                      status: "SUCCESS",
                     },
                   },
                   {
@@ -2417,8 +2439,6 @@ const paymentsRouter = new Hono()
         loyaltyId: businessId,
       }).select("rewards");
 
-      console.log("userReward", userReward);
-
       const existingPayments = await Payment.find({
         userId,
         businessId,
@@ -2773,92 +2793,96 @@ const paymentsRouter = new Hono()
             businessId: getOrder.businessId,
           }).populate("posId");
 
-          const res = await axios.post(
-            "http://api.petpooja.com/V1/captainorders/success_payment/",
-            {
-              app_key: pos?.posId.accessKey,
-              app_secret: pos?.posId.secretKey,
-              access_token: pos?.posId.authToken,
-              restID: pos?.posId.restId,
-              bill_request_id: activeTable?.billRequestId,
-              amount_paid: getOrder.total,
-              pin: activeTable?.pin,
-            },
-          );
-          await TempTableSettle.create(
-            [
+          if (pos) {
+            const res = await axios.post(
+              "http://api.petpooja.com/V1/captainorders/success_payment/",
+              {
+                app_key: pos?.posId.accessKey,
+                app_secret: pos?.posId.secretKey,
+                access_token: pos?.posId.authToken,
+                restID: pos?.posId.restId,
+                bill_request_id: activeTable?.billRequestId,
+                amount_paid: getOrder.total,
+                pin: activeTable?.pin,
+              },
+            );
+            await TempTableSettle.create(
+              [
+                {
+                  businessId: getOrder.businessId,
+                  tableName: getOrder.tableName,
+                  settleBy: getOrder.userId?.name,
+                },
+              ],
+              {
+                session,
+              },
+            );
+            await QrBill.findOneAndUpdate(
+              {
+                requestBillId: activeTable?.billRequestId,
+              },
+              {
+                $set: {
+                  isPaid: true,
+                },
+              },
+              {
+                session,
+              },
+            );
+
+            await PetPoojaPinTemp.deleteOne(
+              {
+                tableName: getOrder.tableName,
+                businessId: getOrder.businessId,
+              },
+              {
+                session,
+              },
+            );
+
+            await KotOrder.updateMany(
+              {
+                tableName: getOrder.tableName,
+                businessId: getOrder.businessId,
+              },
+              {
+                $set: {
+                  settled: true,
+                },
+              },
+              {
+                session,
+              },
+            );
+
+            await Table.findOneAndUpdate(
               {
                 businessId: getOrder.businessId,
-                tableName: getOrder.tableName,
-                settleBy: getOrder.userId?.name,
+                name: getOrder.tableName,
               },
-            ],
-            {
-              session,
-            },
-          );
-          await QrBill.findOneAndUpdate(
-            {
-              requestBillId: activeTable?.billRequestId,
-            },
-            {
-              $set: {
-                isPaid: true,
+              {
+                $set: {
+                  status: "EMPTY",
+                  currentTableAmount: 0,
+                  userIds: [],
+                  totalItemCount: 0,
+                  capacity: 0,
+                  hiCode: "",
+                },
               },
-            },
-            {
-              session,
-            },
-          );
-
-          await PetPoojaPinTemp.deleteOne(
-            {
-              tableName: getOrder.tableName,
-              businessId: getOrder.businessId,
-            },
-            {
-              session,
-            },
-          );
-
-          await KotOrder.updateMany(
-            {
-              tableName: getOrder.tableName,
-              businessId: getOrder.businessId,
-            },
-            {
-              $set: {
-                settled: true,
+              {
+                session,
               },
-            },
-            {
-              session,
-            },
-          );
-
-          await Table.findOneAndUpdate(
-            {
-              businessId: getOrder.businessId,
-              name: getOrder.tableName,
-            },
-            {
-              $set: {
-                status: "EMPTY",
-                currentTableAmount: 0,
-                userIds: [],
-                totalItemCount: 0,
-                capacity: 0,
-                hiCode: "",
-              },
-            },
-            {
-              session,
-            },
-          );
+            );
+          }
         }
+
+        return respond(c, "3 Webhook received successfully", false, 200, {});
       }
 
-      return respond(c, "2 Webhook received successfully", false, 200, {});
+      return respond(c, "3 Webhook received successfully", false, 200, {});
     });
   });
 

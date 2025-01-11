@@ -156,8 +156,20 @@ const posRouter = new Hono()
         businessId: businessId,
       }).populate("posId");
 
-      if (getPin && getPin.billRequestId) {
-        console.log("getPin", getPin);
+      if (!pos) {
+        return c.json(
+          {
+            message: "POS not found",
+            err: true,
+            data: {
+              success: false,
+            },
+          },
+          404,
+        );
+      }
+
+      if (getPin?.billRequestId) {
         const getBillConfig = {
           app_key: pos.posId.accessKey,
           app_secret: pos.posId.secretKey,
@@ -215,19 +227,6 @@ const posRouter = new Hono()
         }
       }
 
-      if (!pos) {
-        return c.json(
-          {
-            message: "POS not found",
-            err: true,
-            data: {
-              success: false,
-            },
-          },
-          404,
-        );
-      }
-
       const billConfig = {
         app_key: pos.posId.accessKey,
         app_secret: pos.posId.secretKey,
@@ -247,16 +246,6 @@ const posRouter = new Hono()
 
         if (!request_id) {
           const bill_request_id = fetchBill.data.bill_request_id;
-          await PetPoojaPinTemp.findOneAndUpdate(
-            {
-              businessId: businessId,
-              tableName: tableName,
-            },
-            {
-              billGeneratedBy: generatedBy,
-              billRequestId: bill_request_id,
-            },
-          );
 
           const getBillConfig = {
             app_key: pos.posId.accessKey,
@@ -271,16 +260,25 @@ const posRouter = new Hono()
             getBillConfig,
           );
 
-          console.log("getBill", getBill.data);
-
           const simpleArray =
             transformItemsToSimpleArray(
               getBill.data.items_data?.slice(0, -2) || [],
             ) || [];
 
-          console.log("simpleArray", simpleArray);
-
           if (getBill.data.success === "1") {
+            await PetPoojaPinTemp.findOneAndUpdate(
+              {
+                businessId: businessId,
+                tableName: tableName,
+              },
+              {
+                billGeneratedBy: generatedBy,
+                billRequestId: bill_request_id,
+                tax: getBill?.data?.order_data?.tax || 0,
+                serviceCharge: getBill?.data?.order_data?.service_charge || 0,
+                billInvoiceId: getBill.data?.order_data?.invoice_id,
+              },
+            );
             const billObj = {
               billing_user_name: getBill.data.order_data.billing_user_name,
               serviceCharge: getBill.data.order_data.service_charge,
@@ -319,8 +317,6 @@ const posRouter = new Hono()
           billRequestConfig,
         );
 
-        console.log("calll ho rahi pata nhi kaha pe", fetchBillDetails.data);
-
         if (fetchBillDetails.data.success === "1") {
           const bill_request_id = fetchBillDetails.data.bill_request_id;
 
@@ -341,7 +337,6 @@ const posRouter = new Hono()
             transformItemsToSimpleArray(
               getBill.data.items_data?.slice(0, -2) || [],
             ) || [];
-          console.log("simpleArray", simpleArray);
 
           if (getBill.data.success === "1") {
             const billObj = {
@@ -365,9 +360,9 @@ const posRouter = new Hono()
               {
                 billGeneratedBy: generatedBy,
                 billRequestId: bill_request_id,
-                billInvoiceId: getBill.data.order_data.invoice_id,
-                tax: getBill.data.order_data.tax,
-                serviceCharge: getBill.data.order_data.service_charge,
+                billInvoiceId: getBill.data?.order_data?.invoice_id,
+                tax: getBill?.data?.order_data?.tax || 0,
+                serviceCharge: getBill?.data?.order_data?.service_charge,
               },
             );
             return c.json(
@@ -1466,6 +1461,7 @@ const posRouter = new Hono()
         businessId: businessId,
         settled: false,
         rejected: false,
+        edited: false,
       });
 
       return c.json(

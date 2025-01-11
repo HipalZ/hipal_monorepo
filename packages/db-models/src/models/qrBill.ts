@@ -47,6 +47,11 @@ const qrBillOrderSchema = new mongoose.Schema<QrBillOrderType>(
       type: Date,
       expires: 60 * 5,
     },
+    status: {
+      type: String,
+      enum: ["PENDING", "SUCCESS", "FAILED", "EXPIRED"],
+      default: "PENDING",
+    },
   },
   {
     timestamps: true,

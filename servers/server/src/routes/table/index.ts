@@ -4,10 +4,12 @@ import {
   KotOrder,
   Order,
   Payment,
+  PaymentAlert,
   PetPoojaPinTemp,
   QrBill,
   Table,
   TempTableSettle,
+  UpiMode,
   User,
 } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
@@ -170,7 +172,7 @@ const tableRouter = new Hono()
         captainId: z.string().min(1).max(500),
         reasonForForceSettle: z.string().min(1).max(500),
         settleAmount: z.coerce.number().optional(),
-        billRequestId: z.string().min(1).max(500),
+        billRequestId: z.string().min(1).max(500).optional(),
       }),
     ),
     async (c) => {
@@ -183,6 +185,17 @@ const tableRouter = new Hono()
           settleAmount = 0,
           billRequestId,
         } = await c.req.json();
+
+        if (!billRequestId) {
+          return c.json(
+            {
+              message: "You must generate the bill for this table first.",
+              err: true,
+              data: {},
+            },
+            400,
+          );
+        }
 
         const captain = await User.findById(captainId);
 
@@ -246,6 +259,16 @@ const tableRouter = new Hono()
           getBillConfig,
         );
 
+        if (getBill.data.success === "0") {
+          return c.json(
+            {
+              message: getBill.data.message,
+              err: true,
+            },
+            400,
+          );
+        }
+
         await Payment.create(
           [
             {
@@ -269,6 +292,7 @@ const tableRouter = new Hono()
               posBillId: getBill.data.order_data.invoice_id,
               tax: getBill.data.order_data.tax,
               serviceCharge: getBill.data.order_data.service_charge,
+              posBillRequestId: billRequestId,
 
               waiterName: captain?.name,
               date: Date.now(),
@@ -327,12 +351,15 @@ const tableRouter = new Hono()
         tableId: z.string().min(1).max(500),
         captainId: z.string().min(1).max(500),
         billRequestId: z.string().min(1).max(500),
+        paymentModeId: z.string().min(1).max(500),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { tableId, captainId, billRequestId } = await c.req.json();
+        const { tableId, captainId, billRequestId, paymentModeId } =
+          await c.req.json();
+        const paymentMode = await UpiMode.findById(paymentModeId);
 
         const table = await Table.findById(tableId);
         const captain = await User.findById(captainId);
@@ -359,8 +386,6 @@ const tableRouter = new Hono()
           "http://api.petpooja.com/V1/captainorders/get_bill/",
           getBillConfig,
         );
-
-        console.log("getBill", getBill.data);
 
         if (getBill.data.success === "0") {
           return c.json(
@@ -414,9 +439,9 @@ const tableRouter = new Hono()
               businessId: table?.businessId,
               order_id: saveOrder[0]._id,
               total: saveOrder[0].total,
-              mode: "offline",
+              mode: paymentMode?.name || "offline",
               status: "SUCCESS",
-              paymentMode: "offline",
+              paymentMode: paymentMode?.name || "offline",
               userId: saveOrder[0].userId,
               claimedCoins: 0,
               billValue: saveOrder[0].billValue,
@@ -432,6 +457,7 @@ const tableRouter = new Hono()
               posBillId: getBill.data.order_data.invoice_id,
               tax: getBill.data.order_data.tax,
               serviceCharge: getBill.data.order_data.service_charge,
+              posBillRequestId: billRequestId,
               waiterName: captain?.name,
               date: Date.now(),
             },
@@ -546,8 +572,6 @@ const tableRouter = new Hono()
         getBillConfig,
       );
 
-      console.log("getBill", getBill.data);
-
       if (getBill.data.success === "0") {
         return c.json(
           {
@@ -628,7 +652,7 @@ const tableRouter = new Hono()
     ),
     async (c) => {
       const { billRequestId } = c.req.param();
-      const isSettle = await QrBill.findOne({
+      const paymentStatus = await QrBill.findOne({
         requestBillId: billRequestId,
       });
 
@@ -637,7 +661,7 @@ const tableRouter = new Hono()
           message: "listing qr bill",
           err: false,
           data: {
-            isSettle: isSettle?.isPaid,
+            status: paymentStatus?.status,
           },
         },
         200,
@@ -745,6 +769,33 @@ const tableRouter = new Hono()
         {
           message: "Ebill sent successfully",
           err: false,
+        },
+        200,
+      );
+    },
+  )
+
+  .get(
+    "/table_offline_alert/:billRequestId",
+    zValidator(
+      "param",
+      z.object({
+        billRequestId: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { billRequestId } = c.req.param();
+      const findOfflineAlert = await PaymentAlert.findOne({
+        alertType: "OFFLINE",
+        posBillRequestId: billRequestId,
+        isAccepted: false,
+        isRejected: false,
+      });
+      return c.json(
+        {
+          message: "Offline alert fetched successfully",
+          err: false,
+          data: findOfflineAlert || {},
         },
         200,
       );

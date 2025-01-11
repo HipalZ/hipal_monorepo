@@ -30,6 +30,7 @@ const paymentAlertSchema = new mongoose.Schema<PaymentAlertType>(
     waiterName: { type: String, default: null },
     coinsApplied: { type: Boolean, default: false },
     date: { type: Number },
+    posBillRequestId: { type: String, default: null },
   },
   {
     timestamps: true,

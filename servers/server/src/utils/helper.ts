@@ -162,8 +162,6 @@ function convertToPetpoojaCart(
   try {
     const currentISTTime = getCurrentISTTime();
 
-    console.log("currentISTTime", currentISTTime);
-
     const kot = {
       app_key: app_key,
       app_secret: app_secret,
