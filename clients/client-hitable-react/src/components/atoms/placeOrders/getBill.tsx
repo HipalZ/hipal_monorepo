@@ -5,50 +5,31 @@ import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useOrderStore } from "@/components/store/useOrderData";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
-import { Phone, Table, ChevronDown, ChevronUp } from 'lucide-react';
+import { Phone, ChevronDown, ChevronUp } from 'lucide-react';
 import SpinnerMemo from "@/components/atoms/loadingSpinner";
 import { MdTableBar } from "react-icons/md";
 import CommonBottomButton from "../bottomButton";
-import QRCode from "react-qr-code";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useScreenSize } from "@/hooks/useScreenSize";
-
-export interface IBillData {
-    billing_user_name: string;
-    serviceCharge: number;
-    discount: number;
-    tax: number;
-    total: number;
-    customerPhone: string;
-    customerName: string;
-    tableName: string;
-    subTotal: number;
-    billRequestId: string;
-    items: Array<{
-        dish: {
-            name: string;
-            price: number;
-            quantity: number;
-        };
-        extras: Array<{
-            name: string;
-            price: number;
-            quantity: number;
-        }>;
-    }>;
-}
+import ForceSettle from "./forceSettle";
+import BottomPopUp from "../universalPopup";
+import type { IBillData } from "@/components/types/hiClientzData";
+import QrCodePreview from "./qrCode";
+import Normalsettle from "./normalsettle";
 
 const MemoGetBill = () => {
     const { businessId } = useParams();
     const queryClient = useQueryClient();
     const selectedTable = useOrderStore((s) => s.selectedTable);
     const screenSize = useScreenSize()
-    const userData = useHiClientZ((s) => s.captainData);
+    const { captainData: userData } = useHiClientZ();
     const [qrBillId, setQrBillId] = useState<string | null>(null);
     const [showqr, setShowqr] = useState<boolean>(false);
     const [isExpanded, setIsExpanded] = useState<boolean>(false);
+    const [forceSettle, setForceSettle] = useState<boolean>(false);
+    const [normalSettle, setNormalSettle] = useState<boolean>(false);
 
     const getTableBill = async () => {
         const response = await apiRpc.pos.get_bill.$get({
@@ -90,6 +71,14 @@ const MemoGetBill = () => {
         setShowqr(!showqr);
     }
 
+    const closeForceSettle = () => {
+        setForceSettle(false);
+    }
+
+    const closeNormalSettle = () => {
+        setNormalSettle(false);
+    }
+
     const { isPending, mutate } = useMutation({
         mutationFn: async () => {
             const response = await apiRpc.table.hi_settle.$post({
@@ -120,6 +109,7 @@ const MemoGetBill = () => {
         );
     }
 
+
     return (
         <>
             {!showqr && (
@@ -127,7 +117,9 @@ const MemoGetBill = () => {
                     <CardHeader>
                         <CardTitle className="flex items-center justify-between">
                             <span>Bill Summary</span>
-                            <Table className="w-6 h-6 text-gray-600" />
+                            <Button variant="outline" onClick={() => setForceSettle(true)}>
+                                Force Settle
+                            </Button>
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -201,7 +193,6 @@ const MemoGetBill = () => {
                                 );
                             })}
                         </div>
-                        <Separator className="my-4" />
                         <div className="flex justify-between text-lg font-bold">
                             <p>Total</p>
                             <p>₹{data?.total.toFixed(2)}</p>
@@ -209,27 +200,42 @@ const MemoGetBill = () => {
                     </CardContent>
                 </Card>
             )}
-            {showqr && (
-                <Card className="max-w-md mx-auto py-[5rem] md:py-[8rem] mb-8">
-                    <CardContent className="flex flex-col items-center justify-center p-6">
-                        <QRCode value={qrBillId || ""} />
-                        <p className="mt-4 text-sm text-gray-500">
-                            QR Bill ID: <span className="font-semibold">{qrBillId}</span>
-                        </p>
-                    </CardContent>
-                </Card>
-            )}
+
+            {
+                forceSettle && (
+                    <BottomPopUp width="w--[30rem]" hide bottomCross show={forceSettle} onClose={() => setForceSettle(false)}>
+                        <ForceSettle closeForceSettle={closeForceSettle} data={data} />
+                    </BottomPopUp>
+                )
+            }
+
+            {
+                showqr && (
+                    <BottomPopUp width="w-[30rem]" hide bottomCross show={showqr} onClose={() => setShowqr(false)}>
+                        <QrCodePreview data={data} qrBillId={qrBillId} />
+                    </BottomPopUp>
+                )
+            }
+            {
+                normalSettle && (
+                    <BottomPopUp height="h-[70dvh]" width="w-[30rem]" show={normalSettle} onClose={() => setNormalSettle(false)}>
+                        <Normalsettle closeNormalSettle={closeNormalSettle} data={data} />
+                    </BottomPopUp>
+                )
+            }
+
             <CommonBottomButton
-                offset={screenSize === "sm" ? "8rem" : "7rem"}
-                maxWidth={screenSize === "sm" ? "30rem" : "48rem"}
+                offset={screenSize === "xs" ? "4.5rem"
+                    : screenSize === "md" ? "5rem" : "0"}
+                maxWidth={screenSize === "xs" ? "30rem" : "48rem"}
+                backgroundColor={screenSize === "xs" ? "" : "white"}
                 buttons={
                     !showqr ?
                         [
                             {
                                 text: "Normal Settle",
-                                onClick: () => { },
+                                onClick: () => { setNormalSettle(true) },
                                 className: "rounded-md"
-
                             },
                             {
                                 text: "Hi Settle",

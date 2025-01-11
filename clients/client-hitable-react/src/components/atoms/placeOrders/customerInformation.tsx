@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User, Coins, Tag, Ticket } from "lucide-react";
+import type { ICustomerInformation, ITag } from "@/components/types/hiClientzData";
 
 const MemoCustomerInformation = () => {
     const selectedTable = useOrderStore((s) => s.selectedTable);
@@ -17,8 +18,7 @@ const MemoCustomerInformation = () => {
             },
         });
         const res = await response.json();
-        // Return the data array or an empty array if not found
-        return res?.data ?? [];
+        return res?.data as ICustomerInformation[] ?? [];
     }, [selectedTable]);
 
     const { isLoading, data } = useQuery({
@@ -42,7 +42,7 @@ const MemoCustomerInformation = () => {
 
     if (!data?.length) {
         return (
-            <Card className="w-full max-w-md mx-auto mt-8">
+            <Card className="w-full max-w-md mx-auto mt-[20dvh]">
                 <CardHeader>
                     <CardTitle>Customer Information</CardTitle>
                 </CardHeader>
@@ -53,8 +53,7 @@ const MemoCustomerInformation = () => {
         );
     }
 
-    // Helper function to group tags by name with counts
-    const getTagCounts = (tags: any[]) => {
+    const getTagCounts = (tags: ITag[]) => {
         const tagMap: Record<string, number> = {};
         for (const tag of tags) {
             const name = tag.name;
@@ -67,8 +66,7 @@ const MemoCustomerInformation = () => {
         <section className="w-full mx-auto mt-16 md:mt-[8rem] space-y-6 p-4">
             <h2 className="text-2xl font-bold text-gray-800">Customer Information</h2>
 
-            {data.map((customerInfo: any, index: number) => {
-                // Build a map of tag names => counts
+            {data?.map((customerInfo: ICustomerInformation, index: number) => {
                 const tagMap = getTagCounts(customerInfo?.tagIds ?? []);
 
                 return (
@@ -105,8 +103,8 @@ const MemoCustomerInformation = () => {
                                     Tags:
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
-                                    {Object.keys(tagMap).length > 0 ? (
-                                        Object.entries(tagMap).map(([tagName, count]) => (
+                                    {Object?.keys(tagMap).length > 0 ? (
+                                        Object?.entries(tagMap)?.map(([tagName, count]) => (
                                             <Badge key={tagName} variant="outline" className="text-xs">
                                                 {/* #TagName x Count */}
                                                 #{tagName} {count > 1 && `x ${count}`}

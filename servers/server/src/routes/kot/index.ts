@@ -105,7 +105,7 @@ const kotRouter = new Hono()
       })
         .populate({
           path: "userId",
-          select: "name phone",
+          select: "name phone dob",
         })
         .populate({
           path: "tagIds",

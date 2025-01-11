@@ -9,6 +9,7 @@ import { type orderModal, useOrderStore } from '@/components/store/useOrderData'
 import { ScrollArea } from '@/components/ui/scroll-area';
 import SpinnerMemo from '@/components/atoms/loadingSpinner';
 import CustomerInformation from '@/components/atoms/placeOrders/customerInformation';
+import ForceSettle from '@/components/atoms/placeOrders/forceSettle';
 
 // Lazy loaded components
 const PlaceOrders = lazy(() => import('@/components/atoms/placeOrders'));
@@ -133,7 +134,11 @@ const TablePos = () => {
                     <BottomPopUp
                         height="h-[100dvh]"
                         hide
-                        bottomCross={modalType !== 'addItem' && modalType !== 'liveCart'}
+                        bottomCross={
+                            modalType !== 'addItem'
+                            && modalType !== 'liveCart'
+
+                        }
                         show={openOrderModal}
                         onClose={closeOrderModalHandler}
                     >
@@ -206,6 +211,17 @@ const TablePos = () => {
                                         <Suspense fallback={<SpinnerMemo />}>
                                             <CustomerInformation />
                                         </Suspense>
+                                    </motion.div>
+                                )
+                            }
+                            {
+                                modalType === "free" && (
+                                    <motion.div
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 20 }}
+                                    >
+                                        <ForceSettle />
                                     </motion.div>
                                 )
                             }

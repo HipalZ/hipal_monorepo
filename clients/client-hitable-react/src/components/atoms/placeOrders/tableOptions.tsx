@@ -5,14 +5,14 @@ import { Users, CheckSquare, UserCheck } from "lucide-react"
 import { type orderModal, useOrderStore } from "@/components/store/useOrderData"
 
 const MemoTableOptions = () => {
-    const { setModalType, modalType } = useOrderStore()
+    const { setModalType } = useOrderStore()
 
     const toggleModalType = useCallback((type: orderModal) => {
         setModalType(type)
     }, [setModalType])
 
     return (
-        <CardContent className="space-y-4 pt-[7rem]">
+        <CardContent className="space-y-4 pt-[7rem] md:pt-[8.5rem]">
             <Button
                 size="lg"
                 variant="outline"

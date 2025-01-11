@@ -411,3 +411,28 @@ export interface ICustomerInformation {
   tableName: string;
   tagIds: ITag[];
 }
+
+export interface IBillData {
+  billing_user_name: string;
+  serviceCharge: number;
+  discount: number;
+  tax: number;
+  total: number;
+  customerPhone: string;
+  customerName: string;
+  tableName: string;
+  subTotal: number;
+  billRequestId: string;
+  items: Array<{
+    dish: {
+      name: string;
+      price: number;
+      quantity: number;
+    };
+    extras: Array<{
+      name: string;
+      price: number;
+      quantity: number;
+    }>;
+  }>;
+}
