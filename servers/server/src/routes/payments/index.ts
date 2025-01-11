@@ -1078,10 +1078,8 @@ const paymentsRouter = new Hono()
             { session },
           );
 
-          await QrBill.findOneAndUpdate(
-            {
-              requestBillId: tempTable?.billRequestId,
-            },
+          QrBill.findOneAndUpdate(
+            { requestBillId: tempTable?.billRequestId },
             { status: "FAILED" },
             { session },
           );
@@ -1199,14 +1197,6 @@ const paymentsRouter = new Hono()
                 date: Date.now(),
               },
             ],
-            { session },
-          );
-
-          await QrBill.findOneAndUpdate(
-            {
-              requestBillId: tempTable?.billRequestId,
-            },
-            { status: "SUCCESS" },
             { session },
           );
         }

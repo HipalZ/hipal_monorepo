@@ -187,7 +187,6 @@ const posRouter = new Hono()
           transformItemsToSimpleArray(
             getBill.data.items_data?.slice(0, -2) || [],
           ) || [];
-        console.log("simpleArray", simpleArray);
 
         if (getBill.data.success === "1") {
           const billObj = {
@@ -925,77 +924,6 @@ const posRouter = new Hono()
           );
         }
 
-        if (
-          fetchHiCode?.performedBy === "captain" &&
-          fetchHiCode?.hiCode?.length === 0
-        ) {
-          const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
-          const updateTable = await Table.findOneAndUpdate(
-            {
-              businessId: businessId,
-              name: tableName,
-            },
-            {
-              hiCode: hiCode,
-            },
-          );
-
-          await PetPoojaPinTemp.findOneAndUpdate(
-            {
-              businessId: businessId,
-              tableName: tableName,
-            },
-            {
-              hiCode: hiCode.toString(),
-              $addToSet: { phoneNumbers: customerPhone },
-
-              performedBy: "user",
-            },
-          );
-          const petpoojaCart = convertToPetpoojaCart(
-            internalCart,
-            pos?.posId.restId,
-            customerName,
-            customerPhone,
-            tableName,
-            pos.posId.accessKey,
-            pos.posId.secretKey,
-
-            pos.posId.authToken,
-          );
-
-          if (pos.orderVerificationType === "USER") {
-            const saveKot = await axios.post(
-              "https://api.petpooja.com/V1/captainorders/save_kot_qr_order",
-              petpoojaCart,
-            );
-          }
-          await saveKotOrder(
-            tableName,
-            businessId,
-            customerName,
-            customerPhone,
-            internalCart,
-            user._id,
-            false,
-            tableInfo._id.toString(),
-          );
-
-          return c.json(
-            {
-              message: "Data fetched successfully",
-              err: false,
-              data: {
-                success: true,
-                hiCode: hiCode,
-                name: customerName,
-                phone: customerPhone,
-              },
-            },
-            200,
-          );
-        }
-
         const petpoojaCart = convertToPetpoojaCart(
           internalCart,
           pos?.posId.restId,
@@ -1164,8 +1092,6 @@ const posRouter = new Hono()
           businessId: businessId,
         });
 
-        console.log("fetchHiCode", fetchHiCode);
-
         if (fetchHiCode?.billRequestId) {
           return c.json(
             {
@@ -1204,9 +1130,10 @@ const posRouter = new Hono()
               400,
             );
           }
+          const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
           const petPoojaPinTemp = new PetPoojaPinTemp({
             businessId: businessId,
-            hiCode: "",
+            hiCode: hiCode,
             pin: tenDigitCode,
             tableName: tableName,
             customerName: customerName,
@@ -1254,6 +1181,7 @@ const posRouter = new Hono()
               },
               $set: {
                 status: "ACTIVE",
+                hiCode: hiCode,
                 date: Date.now(),
               },
             },
@@ -1469,6 +1397,67 @@ const posRouter = new Hono()
           message: "Data fetched successfully",
           err: false,
           data: userKot,
+        },
+        200,
+      );
+    },
+  )
+
+  .post(
+    "/table_user_auth/:userId",
+
+    zValidator(
+      "json",
+      z.object({
+        userId: z.string().min(1).max(200),
+        businessId: z.string().min(1).max(200),
+        tableName: z.string().min(1).max(200),
+      }),
+    ),
+
+    async (c) => {
+      const { userId, businessId, tableName } = await c.req.json();
+
+      const user = await User.findById(userId);
+
+      if (!user) {
+        return c.json(
+          {
+            message: "User not found",
+            err: true,
+            data: {
+              success: false,
+            },
+          },
+          404,
+        );
+      }
+
+      const tableInfo = await PetPoojaPinTemp.findOne({
+        tableName: tableName,
+        businessId: businessId,
+      });
+
+      if (!tableInfo?.phoneNumbers.includes(user.phone)) {
+        return c.json(
+          {
+            message: `this table is already occupied by ${tableInfo?.customerName} please ask them to place the order`,
+            err: true,
+            data: {
+              success: false,
+            },
+          },
+          403,
+        );
+      }
+
+      return c.json(
+        {
+          message: "User authorized",
+          err: false,
+          data: {
+            success: true,
+          },
         },
         200,
       );
