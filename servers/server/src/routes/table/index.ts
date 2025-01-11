@@ -200,6 +200,19 @@ const tableRouter = new Hono()
         const captain = await User.findById(captainId);
 
         const table = await Table.findById(tableId);
+        const pos = await BusinessPosConfig.findOne({
+          businessId: table?.businessId,
+        }).populate("posId");
+
+        if (!pos) {
+          return c.json(
+            {
+              message: "Pos not found",
+              err: true,
+            },
+            400,
+          );
+        }
 
         await KotOrder.updateMany(
           {
@@ -211,6 +224,22 @@ const tableRouter = new Hono()
           { session },
         );
         const uniqueOrderId = nanoid(15);
+        const activeTable = await PetPoojaPinTemp.findOne({
+          businessId: table?.businessId,
+          tableName: table?.name,
+        });
+        const res = await axios.post(
+          "http://api.petpooja.com/V1/captainorders/success_payment/",
+          {
+            app_key: pos?.posId.accessKey,
+            app_secret: pos?.posId.secretKey,
+            access_token: pos?.posId.authToken,
+            restID: pos?.posId.restId,
+            bill_request_id: activeTable?.billRequestId,
+            amount_paid: settleAmount,
+            pin: activeTable?.pin,
+          },
+        );
 
         const saveOrder = await Order.create(
           [
@@ -231,20 +260,6 @@ const tableRouter = new Hono()
           ],
           { session },
         );
-
-        const pos = await BusinessPosConfig.findOne({
-          businessId: table?.businessId,
-        }).populate("posId");
-
-        if (!pos) {
-          return c.json(
-            {
-              message: "Pos not found",
-              err: true,
-            },
-            400,
-          );
-        }
 
         const getBillConfig = {
           app_key: pos.posId.accessKey,
