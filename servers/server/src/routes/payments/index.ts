@@ -2824,7 +2824,7 @@ const paymentsRouter = new Hono()
               },
               {
                 $set: {
-                  isPaid: true,
+                  status: "SUCCESS",
                 },
               },
               {
