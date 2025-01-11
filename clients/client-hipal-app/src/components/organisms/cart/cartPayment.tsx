@@ -1,31 +1,23 @@
 "use client";;
 import { memo, useCallback, useState, useRef, useEffect } from "react";
-import { motion } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
 import { useCart } from "@/components/store/useCart";
 import { useCouponz } from "@/components/store/useCouponz";
 import { useGetBill } from "@/components/hooks/usePayments";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import CommonBottomButton from "@/components/atoms/bottomButton";
-import BillPrint from "@/assets/cart/BillPrint.png";
-import KotMachine from "@/assets/cart/KotMachine.png";
-import BillImage from "@/assets/call/BillImage.png";
-import TransitionImages from "./transitionImages";
-import { cn } from "@/components/utils/helpers";
 import { HiX } from "react-icons/hi";
+import FinalBillLoader from "./finalBillLoader";
 
-const images = [BillPrint, KotMachine, BillImage];
+
 
 const MemoCartPayment = () => {
   // Store hooks
   const { setCartPage } = useCart();
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
-
   // Local state
   const [loading, setLoading] = useState(false);
-  const [isButtonDisabled, setIsButtonDisabled] = useState(true);
-  const [displayTimer, setDisplayTimer] = useState(10);
   const timerRef = useRef(10);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -40,8 +32,9 @@ const MemoCartPayment = () => {
     setSelectedTip,
     setShowInput,
     setIsTipActive,
-    setShowScan,
+    setIsButtonDisabled,
     billData,
+    setDisplayTimer
   } = usePaymentStore();
 
   // Coupon store hooks
@@ -74,10 +67,7 @@ const MemoCartPayment = () => {
     refetch();
   }, [refetch]);
 
-  // Scan and pay button handler
-  const openScanAndPay = useCallback(() => {
-    setShowScan(true);
-  }, [setShowScan]);
+
 
   // Proceed to payment function
   const goBack = useCallback(() => {
@@ -117,66 +107,33 @@ const MemoCartPayment = () => {
       setIsTipActive(false);
       setTips(0);
       setAvailedCoupon({});
-      setCartPage("order");
-      router.push(`/${customLink}/payment`);
+      setCartPage("payment");
+      setTimeout(() => {
+        router.push(`/${customLink}/payment`);
+      }, 10000);
     }
   }, [billValue])
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white px-6">
-
-      {/* Error state */}
+    <div className="flex flex-col items-center justify-center min-h-screen px-6">
+      <FinalBillLoader />
       {isError && error?.status === 400 && failureCount < 1 && (
-        <section className="bg-white text-center">
-          <h2 className="my-4 text-2xl font-bold">Bill Details</h2>
-          <div className="px-4 space-y-4">{/* No data, so no BillItem */}</div>
-          <CommonBottomButton
-            buttons={[
-              {
-                text: "Retry",
-                onClick: handleRetry,
-                type: "button",
-                disable: loading,
-                isLoading: loading,
-              },
-            ]}
-          />
-        </section>
-      )}
-
-      {/* No bill data - display transition images */}
-      {!billData && !isError && (
-        <center className="mt-24">
-          <section className="relative bg-[#8DC1F120] w-[250px] aspect-square rounded-full overflow-hidden">
-            <TransitionImages images={images} />
-          </section>
-          <motion.div
-            className="poppins-regular w-full max-w-md text-center my-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <h2 className="text-2xl font-semibold text-[#525252]">Getting your final bill!</h2>
-            <p className="text-base mt-2 text-[#52525280]">Hold on while we get your final bill ready.</p>
-          </motion.div>
-          <div className="poppins-regular my-8 mx-6">
-            <button
-              type="button"
-              onClick={openScanAndPay}
-              className={cn("bg-[#008800] text-white border w-full text-base p-4 rounded-xl", {
-                "opacity-50 cursor-not-allowed": isButtonDisabled,
-              })}
-              disabled={isButtonDisabled}
-            >
-              {isButtonDisabled ? `Scan and pay in ${displayTimer}s` : "Scan and pay"}
-            </button>
-          </div>
-        </center>
+        <CommonBottomButton
+          buttons={[
+            {
+              text: "Retry",
+              onClick: handleRetry,
+              type: "button",
+              disable: loading,
+              isLoading: loading,
+            },
+          ]}
+        />
       )}
       <button
         type="button"
         onClick={goBack}
-        className="absolute bottom-0 p-3 rounded-full bg-[#00000080] text-white transform -translate-x-1/2 -translate-y-1/2 left-1/2"
+        className="absolute bottom-4 p-3 rounded-full bg-[#00000080] text-white transform -translate-x-1/2 -translate-y-1/2 left-1/2"
       >
         <HiX />
       </button>

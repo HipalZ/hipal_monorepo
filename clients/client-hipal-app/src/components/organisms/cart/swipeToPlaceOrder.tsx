@@ -1,11 +1,10 @@
 "use client";
 import { memo, useState } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion"
-import { GiFoodTruck, GiHamburger } from "react-icons/gi";
+import { GiHamburger } from "react-icons/gi";
 import { PiCookingPotBold } from "react-icons/pi"
 import { useCart } from "@/components/store/useCart";
 import { FaHandHoldingUsd } from "react-icons/fa";
-import { FaSackDollar } from "react-icons/fa6";
 import { AiFillDollarCircle } from "react-icons/ai";
 import { cn } from "@/components/utils/helpers";
 import { HiOutlineShoppingBag } from "react-icons/hi";
@@ -69,7 +68,7 @@ const MemoSwipeToPlaceOrder = ({ placeOrder }: { placeOrder: () => void }) => {
                         whileTap={{ scale: 0.95 }}
                         style={{ opacity: truckOpacity }}
                     >
-                        {cartPage === "confirmPayment" ? <FaHandHoldingUsd className="w-6 h-6 text-white" /> : <GiFoodTruck className="w-6 h-6 text-white" />}
+                        {cartPage === "confirmPayment" ? <FaHandHoldingUsd className="w-6 h-6 text-white" /> : <GiHamburger className="w-6 h-6 text-white" />}
                     </motion.div>
                 </motion.div>
 
@@ -77,7 +76,7 @@ const MemoSwipeToPlaceOrder = ({ placeOrder }: { placeOrder: () => void }) => {
                 {showText && (
                     <div className="absolute top-0 left-0 flex items-center justify-center w-full h-full pointer-events-none">
                         <span
-                            className={`poppins-regular text-base text-gray-600 transition-opacity ${truckOpacity}`}
+                            className={`poppins-regular text-base text-[#008800] transition-opacity ${truckOpacity}`}
                         >
                             {cartPage === "confirmPayment" ? "Slide To Confirm" : "Slide to Place Order"}
                         </span>

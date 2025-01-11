@@ -30,26 +30,26 @@ const MemoConfirmPayment = () => {
         <>
             <div className="flex flex-col items-center px-6 py-8 bg-white">
                 <div className="w-full max-w-md space-y-3 text-center my-4 poppins-regular">
-                    <h1 className="text-2xl font-bold text-[#525252]">
+                    <h1 className="text-2xl font-bold text-black">
                         Before we get you bill!
                     </h1>
-                    <p className="text-lg text-[#52525280]">
+                    <p className="text-lg text-[#CACACA]">
                         Table: {tableName}
                     </p>
                 </div>
-                <div className="relative bg-[#8DC1F120] w-[250px] mt-8 aspect-square rounded-full overflow-hidden">
+                <div className="relative bg-[#8DC1F120] w-[250px] my-8 aspect-square rounded-full overflow-hidden">
                     <TransitionImages images={images} />
                 </div>
                 <motion.div
-                    className="poppins-regular w-full max-w-md space-y-2 text-center my-6"
+                    className="poppins-regular w-full max-w-md space-y-2 text-center mt-4"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
                 >
-                    <h2 className="text-xl font-semibold text-[#525252]">
+                    <h2 className="text-xl font-semibold text-black">
                         No further items can be placed!
                     </h2>
-                    <p className="text-sm text-[#52525280]">
+                    <p className="text-base text-black">
                         After the bill is generated for this table.
                     </p>
                 </motion.div>
@@ -59,7 +59,7 @@ const MemoConfirmPayment = () => {
                     <button
                         type="button"
                         onClick={goBack}
-                        className={cn("bg-gray-50 text-[#B0B0B0] border", "w-full text-base p-4 rounded-xl")}
+                        className={cn("bg-gray-50 border-black text-black border w-full text-base p-3 rounded-xl")}
                     >
                         Go Back and Check Again
                     </button>

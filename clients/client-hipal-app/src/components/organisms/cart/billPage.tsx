@@ -3,7 +3,7 @@
 import { motion } from "framer-motion"
 import { CoinsIcon as Coin, Receipt, User } from 'lucide-react'
 import { memo } from "react"
-
+import { Coins, Gift } from 'lucide-react'
 interface Extra {
     name: string
     price: number
@@ -47,26 +47,26 @@ const MemoBillPage = ({ billData }: { billData: BillData }) => {
     if (!billData) return <>No Data</>
 
     return (
-        <main className="bg-gray-50 py-8 px-4">
+        <main>
             <motion.div
-                className="max-w-2xl mx-auto bg-white rounded-2xl shadow-sm"
+                className="max-w-2xl mx-auto rounded-2xl"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
             >
                 {/* Header Section */}
-                <header className="p-4 border-b">
+                <header className="p-4 rounded-t-lg">
                     <div className="flex justify-between items-start mb-4">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-800">Bill Details</h1>
-                            <p className="text-gray-500 text-sm">Bill ID: {billData?.billRequestId || "Id"}</p>
+                            <p className="text-black text-sm">Bill ID: {billData?.billRequestId || "Id"}</p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right text-[#008800]">
                             <p className="text-lg font-semibold">Table {billData?.tableName || "table"}</p>
-                            <p className="text-gray-500 text-sm">Biller: {billData?.billing_user_name || "User"}</p>
+                            <p className="text-sm text-black">Biller: {billData?.billing_user_name || "User"}</p>
                         </div>
                     </div>
 
-                    <div className="flex gap-4 text-sm text-gray-600">
+                    <div className="flex gap-4 text-sm text-black">
                         <div className="flex items-center gap-1">
                             <User size={16} />
                             <span>{billData?.customerName || "Customer"}</span>
@@ -74,32 +74,80 @@ const MemoBillPage = ({ billData }: { billData: BillData }) => {
                     </div>
                 </header>
 
-                {/* Coin Promotion */}
                 <motion.div
-                    className="p-3 bg-amber-50 m-6 rounded-xl"
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.2 }}
+                    className="w-full max-w-md mx-auto p-4"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                 >
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-amber-100 rounded-full">
-                            <Coin className="w-6 h-6 text-amber-600" />
+                    <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-6 border border-amber-200">
+                        {/* Coin Value Proposition */}
+                        <div className="flex items-center gap-4 mb-6">
+                            <motion.div
+                                className="relative"
+                                initial={{ rotate: -10 }}
+                                animate={{ rotate: 10 }}
+                                transition={{
+                                    repeat: Number.POSITIVE_INFINITY,
+                                    repeatType: "reverse",
+                                    duration: 1.5
+                                }}
+                            >
+                                <div className="w-12 h-12 bg-amber-400 rounded-full flex items-center justify-center">
+                                    <span className="text-2xl font-bold text-white">₹1</span>
+                                </div>
+                                <motion.div
+                                    className="absolute -right-1 -bottom-1 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center"
+                                    initial={{ scale: 0.8 }}
+                                    animate={{ scale: 1.1 }}
+                                    transition={{
+                                        repeat: Number.POSITIVE_INFINITY,
+                                        repeatType: "reverse",
+                                        duration: 1.5
+                                    }}
+                                >
+                                    <Coins className="w-4 h-4 text-white" />
+                                </motion.div>
+                            </motion.div>
+
+                            <div className="flex-1">
+                                <h3 className="text-lg font-bold text-amber-900">
+                                    1 Rupee = 1 Coin
+                                </h3>
+                                <p className="text-amber-700 text-sm">
+                                    Earn coins equal to your bill amount!
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 className="font-semibold text-amber-900">Earn Coins on this Bill!</h3>
-                            <p className="text-sm text-amber-700">Get 1 coin for every rupee spent. Redeem coins on your next visit!</p>
+
+                        {/* Process Steps */}
+                        <div className="space-y-4">
+                            <motion.div
+                                className="flex items-center gap-3"
+                                initial={{ x: -20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ delay: 0.4 }}
+                            >
+                                <div className="w-8 h-8 bg-amber-200 rounded-full flex items-center justify-center">
+                                    <Gift className="w-5 h-5 text-amber-700" />
+                                </div>
+                                <p className="text-sm text-amber-900">
+                                    <span className="font-semibold">Redeem</span>
+                                    <span className="text-amber-700"> for amazing rewards!</span>
+                                </p>
+                            </motion.div>
                         </div>
+
                     </div>
                 </motion.div>
 
                 {/* Items List */}
                 <motion.section
-                    className="p-4"
+                    className="mx-4 p-4 border-t border-x border-gray-600 rounded-t-2xl"
                     variants={container}
                     initial="hidden"
                     animate="show"
                 >
-                    <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                    <h2 className="text-black text-lg font-semibold mb-4 flex items-center gap-2">
                         <Receipt className="w-5 h-5" />
                         Order Details
                     </h2>
@@ -113,16 +161,16 @@ const MemoBillPage = ({ billData }: { billData: BillData }) => {
                             >
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <h3 className="font-medium text-gray-500">{item?.dish?.name}</h3>
-                                        <p className="text-sm text-gray-500">Quantity: {item?.dish?.quantity}</p>
+                                        <h3 className="font-medium text-black">{item?.dish?.name}</h3>
+                                        <p className="text-sm text-black">Quantity: {item?.dish?.quantity}</p>
                                     </div>
-                                    <p className="font-medium text-gray-500">₹{item?.dish?.price * item?.dish?.quantity}</p>
+                                    <p className="font-medium text-black">₹{item?.dish?.price * item?.dish?.quantity}</p>
                                 </div>
 
                                 {item?.extras?.length > 0 && (
                                     <div className="mt-2 pl-4 border-l-2 border-gray-100">
                                         {item?.extras.map((extra, idx) => (
-                                            <div key={idx?.toString()} className="flex justify-between text-sm text-gray-600">
+                                            <div key={idx?.toString()} className="flex justify-between text-sm text-black">
                                                 <span>+ {extra?.name}</span>
                                                 <span>₹{extra?.price * extra?.quantity}</span>
                                             </div>
@@ -136,21 +184,21 @@ const MemoBillPage = ({ billData }: { billData: BillData }) => {
 
                 {/* Bill Summary */}
                 <motion.footer
-                    className="p-4 bg-white border-t rounded-b-2xl"
+                    className="mx-4 p-4 bg-white border border-gray-600 rounded-b-2xl"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.4 }}
                 >
                     <div className="space-y-2">
-                        <div className="flex justify-between text-gray-600">
+                        <div className="flex justify-between text-black">
                             <span>Subtotal</span>
                             <span>₹{billData?.subTotal}</span>
                         </div>
-                        <div className="flex justify-between text-gray-600">
+                        <div className="flex justify-between text-black">
                             <span>Service Charge</span>
                             <span>₹{billData?.serviceCharge}</span>
                         </div>
-                        <div className="flex justify-between text-gray-600">
+                        <div className="flex justify-between text-black">
                             <span>Tax</span>
                             <span>₹{billData?.tax}</span>
                         </div>
@@ -161,9 +209,9 @@ const MemoBillPage = ({ billData }: { billData: BillData }) => {
                             </div>
                         )}
                         <div className="h-px bg-gray-200 my-2" />
-                        <div className="flex justify-between text-lg font-bold">
-                            <span>Total</span>
-                            <span>₹{billData?.total}</span>
+                        <div className="text-black flex justify-between text-lg">
+                            <span className="font-bold">Total</span>
+                            <span className="font-bold">₹{billData?.total}</span>
                         </div>
                     </div>
                 </motion.footer>

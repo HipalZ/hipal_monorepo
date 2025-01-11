@@ -38,7 +38,7 @@ const ShareCartButtons = dynamic(() => import("./shareCartButtons"), {
   ssr: false,
 });
 const EmptyCart = dynamic(() => import("./emptyCart"), { ssr: false });
-const HistoryCartItems = dynamic(() => import("./historyItem"), { ssr: false });
+// const HistoryCartItems = dynamic(() => import("./historyItem"), { ssr: false });
 const ItemDescriptionPopup = dynamic(
   () => import("@/components/atoms/dishDescription/itemDescription"),
   { ssr: false },
@@ -436,11 +436,11 @@ const Cart = () => {
           </section>
         ))}
 
-      {cartPage === "history" && (
+      {/* {cartPage === "history" && (
         <div className="w-full px-4">
           <HistoryCartItems />
         </div>
-      )}
+      )} */}
       {cartPage === "order" && (
         <Orders />
       )}

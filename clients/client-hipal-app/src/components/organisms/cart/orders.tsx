@@ -85,9 +85,9 @@ const MemoOrders = () => {
 
   // Main Component
   return (
-    <div className="flex flex-col h-screen bg-white">
+    <div className="flex flex-col h-screen bg-gray-50">
       {/* Header */}
-      <header className="poppins-regular sticky top-0 flex-none bg-white border-b border-black">
+      <header className="poppins-regular sticky top-0 flex-none bg-white border-b">
         <div className="flex items-center justify-between p-4">
           <h1 className="text-2xl font-medium">Final Cart</h1>
           <div className="flex items-center gap-2 text-gray-600">
@@ -119,14 +119,14 @@ const MemoOrders = () => {
             >
               {/* User Header */}
               <div
-                className="poppins-regular flex items-center justify-between h-16 p-2 border border-black rounded-t-lg cursor-pointer"
+                className="poppins-regular shadow-md flex items-center justify-between h-16 p-2 bg-white border rounded-t-lg cursor-pointer"
                 onClick={() => toggleAccordion(order._id)}
                 onKeyDown={() => toggleAccordion(order._id)}
               >
                 <section className="flex items-center gap-3">
                   <FaUser size={24} />
-                  <h1 className="text-base font-medium w-[12rem]">
-                    Orders by <strong>{order.name}</strong>
+                  <h1 className="text-base font-normal w-[12rem]">
+                    Orders by <strong className="text-black font-semibold">{order.name}</strong>
                   </h1>
                 </section>
                 <div className="flex items-center gap-2">
@@ -136,7 +136,7 @@ const MemoOrders = () => {
               </div>
 
               {/* Dishes */}
-              <div className="border-b border-black border-x rounded-b-lg">
+              <div className="border-b shadow-sm bg-white border-x rounded-b-lg">
                 {expanded.includes(order._id) &&
                   order.cart.map((item) => (
                     <motion.div
@@ -147,14 +147,14 @@ const MemoOrders = () => {
                     >
                       <MemoFoodType types={item.dish.dishTypes} />
                       <div className="flex-1">
-                        <h3 className="poppins-regular font-medium text-[#525252]">{item.dish.name}</h3>
-                        {item.portion && <p className="text-sm italic text-[#B0B0B0]">{item.portion.name}</p>}
+                        <h3 className="poppins-regular font-medium text-black">{item.dish.name}</h3>
+                        {item.portion && <p className="text-sm italic text-black">{item.portion.name}</p>}
                         {item.extras.length > 0 && (
-                          <p className="text-sm !italic text-[#B0B0B0]">{item.extras.map((e) => e.name).join(", ")}</p>
+                          <p className="text-sm !italic text-black">{item.extras.map((e) => e.name).join(", ")}</p>
                         )}
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-[#B0B0B0]">Qty: {item.quantity}</p>
+                        <p className="text-sm text-black">Qty: {item.quantity}</p>
                         <p className="font-medium">₹{(item.dish.price * item.quantity).toFixed(2)}</p>
                       </div>
                     </motion.div>

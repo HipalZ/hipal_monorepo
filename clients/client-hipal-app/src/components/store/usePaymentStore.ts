@@ -65,6 +65,12 @@ interface IUsePaymentStore {
 
   billData: IBillData;
   setBillData: (data: IBillData) => void;
+
+  isButtonDisabled: boolean;
+  setIsButtonDisabled: (disabled: boolean) => void;
+
+  displayTimer: number;
+  setDisplayTimer: (timer: number) => void;
 }
 
 export const usePaymentStore = create<IUsePaymentStore>((set) => ({
@@ -157,4 +163,11 @@ export const usePaymentStore = create<IUsePaymentStore>((set) => ({
     items: [],
   },
   setBillData: (data: IBillData) => set(() => ({ billData: data })),
+
+  isButtonDisabled: true,
+  setIsButtonDisabled: (disabled: boolean) =>
+    set(() => ({ isButtonDisabled: disabled })),
+
+  displayTimer: 10,
+  setDisplayTimer: (timer: number) => set(() => ({ displayTimer: timer })),
 }));

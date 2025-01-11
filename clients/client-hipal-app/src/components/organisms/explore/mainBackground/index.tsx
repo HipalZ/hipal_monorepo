@@ -12,6 +12,8 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import Image from "next/image";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { useCartStore } from "@/components/store/useCartStore";
+import { useCart } from "@/components/store/useCart";
 
 const MainBackground = ({ data }: { data: IBusinessData }) => {
   const searchParams = useSearchParams();
@@ -21,7 +23,6 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
   const setBusinessData = _useAllBusiness((s) => s.setData);
   const { setBusinessDetails } = useBusinessDetails();
   const { setCheckLogin } = usePaymentStore();
-
 
   // Move accessToken check to client side
   const accessToken = useUserToken.getState().accessToken;
