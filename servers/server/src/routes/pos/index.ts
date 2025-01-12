@@ -169,63 +169,6 @@ const posRouter = new Hono()
         );
       }
 
-      if (getPin?.billRequestId) {
-        const getBillConfig = {
-          app_key: pos.posId.accessKey,
-          app_secret: pos.posId.secretKey,
-          access_token: pos.posId.authToken,
-          restID: pos.posId.restId,
-          bill_request_id: getPin.billRequestId,
-        };
-
-        const getBill = await axios.post(
-          "http://api.petpooja.com/V1/captainorders/get_bill/",
-          getBillConfig,
-        );
-
-        const simpleArray =
-          transformItemsToSimpleArray(
-            getBill.data.items_data?.slice(0, -2) || [],
-          ) || [];
-
-        if (getBill.data.success === "1") {
-          const billObj = {
-            billing_user_name: getBill.data.order_data.billing_user_name,
-            serviceCharge: getBill.data.order_data.service_charge,
-            discount: getBill.data.order_data.discount,
-            tax: getBill.data.order_data.tax,
-            total: getBill.data.order_data.total,
-            customerPhone: getBill.data.order_data.customer_phone,
-            customerName: getBill.data.order_data.customer_name,
-            tableName: getBill.data.order_data.table_no,
-            billRequestId: getPin.billRequestId,
-            items: simpleArray,
-            subTotal: getBill.data.order_data.core_price,
-          };
-          await PetPoojaPinTemp.findOneAndUpdate(
-            {
-              businessId: businessId,
-              tableName: tableName,
-            },
-            {
-              billGeneratedBy: generatedBy,
-              billRequestId: getPin.billRequestId,
-              billInvoiceId: getBill.data.order_data.invoice_id,
-              tax: getBill.data.order_data.tax,
-              serviceCharge: getBill.data.order_data.service_charge,
-            },
-          );
-          return c.json(
-            {
-              message: "Data fetched successfully",
-              err: false,
-              data: billObj,
-            },
-            200,
-          );
-        }
-      }
-
       const billConfig = {
         app_key: pos.posId.accessKey,
         app_secret: pos.posId.secretKey,
