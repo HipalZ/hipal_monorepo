@@ -22,10 +22,10 @@ const MemoScan = ({ hide }: { hide?: boolean }) => {
         return;
       }
       const result = detectedCodes[0].rawValue;
-      router.push(result);
+      window.location.href = result;
       setShowCart(false);
     },
-    [router, setShowCart],
+    [setShowCart],
   );
 
   const onError = useCallback((error: unknown) => {
