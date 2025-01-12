@@ -43,7 +43,7 @@ const MemoSwipeToPlaceOrder = ({ placeOrder }: { placeOrder: () => void }) => {
 
     return (
         <div className="relative w-full max-w-md mx-auto">
-            <div className="relative w-full bg-white rounded-full h-[58px] shadow-sm border-2 border-[#008800] overflow-hidden">
+            <div className="relative w-full bg-white rounded-full h-[3.5rem] shadow-sm border-2 border-[#008800] overflow-hidden">
                 {/* Progress bar */}
                 <motion.div
                     className="absolute top-0 left-0 h-full bg-green-50"
@@ -60,11 +60,11 @@ const MemoSwipeToPlaceOrder = ({ placeOrder }: { placeOrder: () => void }) => {
                         x.set(info.point.x)
                     }}
                     onDragEnd={handleDragEnd}
-                    className="absolute top-0 left-0 flex items-center justify-center w-14 h-14 cursor-grab active:cursor-grabbing"
+                    className="absolute -top-[2px] left-0 flex items-center justify-center w-14 h-14 cursor-grab active:cursor-grabbing"
                     style={{ x }}
                 >
                     <motion.div
-                        className="flex items-center justify-center w-11 h-11 bg-[#008800] rounded-full shadow-lg"
+                        className="flex items-center justify-center w-10 h-10 bg-[#008800] rounded-full shadow-lg"
                         whileTap={{ scale: 0.95 }}
                         style={{ opacity: truckOpacity }}
                     >

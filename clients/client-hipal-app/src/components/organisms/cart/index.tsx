@@ -394,7 +394,7 @@ const Cart = () => {
         (cart.length === 0 ? (
           <EmptyCart />
         ) : (
-          <section className="relative h-[calc(90dvh+5px)]">
+          <section className="relative h-[calc(91dvh+5px)]">
             <div className="bg-white z-[500] sticky top-0 flex items-center justify-between px-4 py-3 border-b border-gray-200">
               <h2 className="text-2xl font-medium">Live cart</h2>
               {hiCode && (
@@ -426,7 +426,7 @@ const Cart = () => {
                 </motion.div>
                 {/* Cart Info */}
                 <div className="flex justify-between items-center gap-3 px-2">
-                  <button onClick={handleBack} type="button" className="h-12 px-4 py-1 border border-black rounded-lg text-center">
+                  <button onClick={handleBack} type="button" className="h-12 px-4 py-1 border border-[#CACACA] rounded-lg text-center">
                     <PiArrowBendUpLeftBold size={24} />
                   </button>
                   <SwipeToPlaceOrder placeOrder={placeOrder} />

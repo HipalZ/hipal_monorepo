@@ -3,7 +3,7 @@ import Confetti from "@/assets/cart/Confetti.png";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-const MemoConfettiHeader = ({ direction }: { direction: string }) => {
+const MemoConfettiHeader = ({ direction }: { direction?: string }) => {
   const confettiTopStyles = [
     "absolute w-3 h-3 top-[1rem] left-[7.5rem] bg-[#DE6F91] rounded-full",
     "absolute w-4 h-4 top-0 left-[12rem] bg-[#C497DC] rounded-full",

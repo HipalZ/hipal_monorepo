@@ -22,13 +22,15 @@ import CommonBottomButton from "@/components/atoms/bottomButton";
 import OrderPlaced from "@/components/organisms/cart/orderPlaced";
 import TimeBadge from "./test";
 import useTableData from "@/components/store/useTableData";
+import { useAuthTableUser } from "../../hooks/usePayments";
 
 const MemoCategoryPageBtn = () => {
   const accessToken = useUserToken.getState().accessToken;
 
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
-  const { isSearchActive, setIsSearchActive, showHeader, setShowHeader } =
+  const { isSearchActive, setIsSearchActive, setShowHeader } =
     useSearch();
+    const {authTableUser} = useAuthTableUser()
   const customLink = useParams()?.businessId as string;
   const tableName = useTableData((s) => s.tableName);
   const setDirection = useLogin((s) => s.setDirection);
@@ -67,6 +69,18 @@ const MemoCategoryPageBtn = () => {
     setCallWaiterModal(false);
   }, [setCallWaiterModal]);
 
+  const promptHiCode = useCallback(() => {
+    setDirection("category");
+    if (!accessToken) {
+      setCheckLogin(true);
+      return;
+    }
+    if (outletInfo?.isPosEnabled) {
+      authTableUser()
+      return;
+    }
+  }, [])
+
   const proceedToPayment = useCallback(() => {
     setDirection("category");
     if (!accessToken) {
@@ -74,9 +88,9 @@ const MemoCategoryPageBtn = () => {
       return;
     }
     if (outletInfo?.isPosEnabled) {
-      setShowCart(!showCart);
-      setCartPage("order");
-      return;
+      // setShowCart(!showCart);
+      // setCartPage("order");
+      // return;
     }
     setInputModal(true);
   }, [
@@ -215,7 +229,7 @@ const MemoCategoryPageBtn = () => {
                 </motion.button>
               </motion.div>
               <motion.div variants={itemVariants}>
-                <TimeBadge onClick={proceedToPayment} />
+                <TimeBadge onClick={promptHiCode} />
               </motion.div>
             </motion.section>
           )}

@@ -121,9 +121,8 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
           required
           maxLength={4}
           placeholder="Enter Code"
-          className={`w-1/2 px-4 py-2 space-grotesk-700 bg-[#ffffff] text-center text-[#000000] border border-[#000000] rounded-md focus:outline-none transition-all duration-300 ${
-            error ? "border-red-500" : "border-gray-300"
-          }`}
+          className={`w-1/2 px-4 py-2 space-grotesk-700 bg-[#ffffff] text-center text-[#000000] border border-[#000000] rounded-md focus:outline-none transition-all duration-300 ${error ? "border-red-500" : "border-gray-300"
+            }`}
         />
         {error && (
           <motion.div

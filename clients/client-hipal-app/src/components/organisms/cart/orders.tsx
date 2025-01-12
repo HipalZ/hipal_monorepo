@@ -107,7 +107,7 @@ const MemoOrders = () => {
       </header>
 
       {/* Scrollable Content */}
-      <main className="flex-1 mb-[3rem] overflow-auto">
+      <main className="flex-1 pb-[5rem] overflow-auto">
         <AnimatePresence>
           {cartHistory.map((order) => (
             <motion.div
@@ -115,11 +115,11 @@ const MemoOrders = () => {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="p-4"
+              className="p-2"
             >
               {/* User Header */}
               <div
-                className="poppins-regular shadow-md flex items-center justify-between h-16 p-2 bg-white border rounded-t-lg cursor-pointer"
+                className="poppins-regular flex items-center justify-between h-16 p-2 bg-white border rounded-t-lg cursor-pointer"
                 onClick={() => toggleAccordion(order._id)}
                 onKeyDown={() => toggleAccordion(order._id)}
               >

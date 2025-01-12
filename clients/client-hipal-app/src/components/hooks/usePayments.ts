@@ -18,6 +18,7 @@ import useTableData, { resetTableData } from "../store/useTableData";
 import { useQuery } from "@tanstack/react-query";
 import { _useAllBusiness } from "../store/useAllBusiness";
 import type { IBillData } from "../types/businessData";
+import { useCart } from "@/components/store/useCart";
 
 export const usePayments = () => {
   const { businessDetails } = useBusinessDetails();
@@ -657,3 +658,36 @@ export const useBillSummary = () => {
     handleSaveTip,
   };
 };
+
+export const useAuthTableUser = ()=>{
+  const tableName = useTableData((s)=>s.tableName)
+  const businessId = useBusinessDetails((s)=>s.businessDetails?.businessId)
+  const setHiCodePopup = useTableData((s)=>s.setHiCodePopup)
+  const userId = useLogin((s)=>s.userDetails?._id)
+  const setHiCode = useLogin((s)=>s.setHiCode)
+  const {setShowCart, showCart, setCartPage} = useCart()
+  const authTableUser = useCallback(async()=>{
+    const response = await apiRpc.pos.table_user_auth[":userId"].$post({
+      json:{
+        businessId,
+        tableName,
+        userId
+      },
+      param:{
+        userId
+      }
+    })
+    const res = await response.json()
+    if(response.status===200){
+      setHiCode(res.data.hiCode)
+      setShowCart(!showCart)
+      setCartPage("order");
+      setHiCodePopup(true)
+    }if(response.status===403){
+      return toast.error(res.message)
+    }
+    return res;
+  },[])
+
+  return {authTableUser}
+}
