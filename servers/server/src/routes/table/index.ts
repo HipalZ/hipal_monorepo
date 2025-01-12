@@ -213,6 +213,27 @@ const tableRouter = new Hono()
             400,
           );
         }
+        const getBillConfig = {
+          app_key: pos.posId.accessKey,
+          app_secret: pos.posId.secretKey,
+          access_token: pos.posId.authToken,
+          restID: pos.posId.restId,
+          bill_request_id: billRequestId,
+        };
+        const getBill = await axios.post(
+          "http://api.petpooja.com/V1/captainorders/get_bill/",
+          getBillConfig,
+        );
+
+        if (getBill.data.success === "0") {
+          return c.json(
+            {
+              message: getBill.data.message,
+              err: true,
+            },
+            400,
+          );
+        }
 
         await KotOrder.updateMany(
           {
@@ -260,29 +281,6 @@ const tableRouter = new Hono()
           ],
           { session },
         );
-
-        const getBillConfig = {
-          app_key: pos.posId.accessKey,
-          app_secret: pos.posId.secretKey,
-          access_token: pos.posId.authToken,
-          restID: pos.posId.restId,
-          bill_request_id: billRequestId,
-        };
-
-        const getBill = await axios.post(
-          "http://api.petpooja.com/V1/captainorders/get_bill/",
-          getBillConfig,
-        );
-
-        if (getBill.data.success === "0") {
-          return c.json(
-            {
-              message: getBill.data.message,
-              err: true,
-            },
-            400,
-          );
-        }
 
         await Payment.create(
           [
