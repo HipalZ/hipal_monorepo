@@ -146,7 +146,7 @@ const tableRouter = new Hono()
       const table = await Table.findByIdAndUpdate(
         tableId,
         {
-          $inc: { capacity: guestCount },
+          capacity: guestCount,
         },
         {
           new: true,
