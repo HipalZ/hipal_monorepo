@@ -78,24 +78,31 @@ const TablePos = () => {
 
             {/* Tabs */}
             <section className="sticky z-10 top-[4.25rem] py-2 bg-white shadow-sm">
-                <div className="flex">
-                    <Button
-                        variant={activeTab === 'orders' ? 'default' : 'ghost'}
-                        className="flex-1 border border-black rounded-none"
-                        onClick={() => setActiveTab('orders')}
-                    >
-                        <MdRestaurantMenu className="w-5 h-5 mr-2" />
-                        Orders
-                    </Button>
-                    <Button
-                        variant={activeTab === 'bill' ? 'default' : 'ghost'}
-                        className="flex-1 border border-black rounded-none"
-                        onClick={() => openOrderModalHandler('bill')}
-                    >
-                        <MdReceipt className="w-5 h-5 mr-2" />
-                        Bill
-                    </Button>
-                </div>
+
+                {
+                    selectedTable?.status !== "EMPTY" && (
+
+                        <div className="flex">
+                            <Button
+                                variant={activeTab === 'orders' ? 'default' : 'ghost'}
+                                className="flex-1 border border-black rounded-none"
+                                onClick={() => setActiveTab('orders')}
+                            >
+                                <MdRestaurantMenu className="w-5 h-5 mr-2" />
+                                Orders
+                            </Button>
+                            <Button
+                                variant={activeTab === 'bill' ? 'default' : 'ghost'}
+                                className="flex-1 border border-black rounded-none"
+                                onClick={() => openOrderModalHandler('bill')}
+                            >
+                                <MdReceipt className="w-5 h-5 mr-2" />
+                                Bill
+                            </Button>
+                        </div>
+                    )
+                }
+
             </section>
 
             {/* Content Area */}

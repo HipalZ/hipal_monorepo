@@ -30,6 +30,7 @@ export interface TableData {
   tableItemCount: number;
   userIds: string[];
   zoneId: string;
+  hiCode?: string;
   _id: string;
 }
 

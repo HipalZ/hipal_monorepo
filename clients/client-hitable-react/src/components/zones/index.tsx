@@ -125,7 +125,7 @@ const MemoZones: FC = () => {
         <h1 className="mb-6 text-2xl font-bold text-gray-900 lg:text-3xl">Zones & Tables</h1>
 
         <div className="space-y-8 pb-[7rem]">
-          {zones.map((zone) => (
+          {zones?.map((zone) => (
             <div key={zone._id} className="overflow-hidden bg-white rounded-lg">
               <h2 className="px-4 py-3 text-xl font-semibold text-black">
                 {zone?.name}
@@ -135,7 +135,7 @@ const MemoZones: FC = () => {
                   {tablesByZone[zone?.zoneId] &&
                     tablesByZone[zone?.zoneId].length > 0 ? (
                     <motion.div
-                      className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+                      className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
@@ -153,22 +153,22 @@ const MemoZones: FC = () => {
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center space-x-2">
                                   <MdTableBar className="text-lg text-blue-600" />
-                                  <h4 className="text-sm font-semibold text-gray-900">{table?.name}</h4>
+                                  <h4 className="text-base font-semibold text-gray-900">{table?.name}</h4>
                                 </div>
-                                <Badge className={`${getStatusColor(table?.status)} px-1.5 py-0.5 text-xs`}>
+                                <Badge className={`${getStatusColor(table?.status)} px-1.5 py-0.5 text-xs absolute -top-2 -right-1`}>
                                   {table?.status}
                                 </Badge>
                               </div>
                               <Separator className="my-2" />
-                              <div className="flex items-center justify-between mt-2 text-xs">
+                              <div className="flex items-center justify-between mt-2">
                                 <div className="flex items-center space-x-1">
                                   <MdPerson className="text-gray-600" />
                                   <span className="font-medium text-gray-700">
                                     {table?.userIds?.length || 0}
                                   </span>
                                 </div>
-                                <div className="flex items-center space-x-1">
-                                  <IndianRupee size={12} className="text-gray-600" />
+                                <div className="flex items-center space-x-1 text-base">
+                                  <IndianRupee size={16} className="text-gray-600" />
                                   <span className="font-semibold text-gray-900">
                                     {table?.currentTableAmount?.toFixed(2)}
                                   </span>

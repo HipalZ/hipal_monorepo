@@ -71,19 +71,20 @@ const MemoForceSettle = ({ closeForceSettle }: { closeForceSettle: () => void })
                     Do you want to free this table, remove table code, users & orders?
                 </p>
                 <CommonBottomButton
-                    offset="8rem"
-                    maxWidth="31.5rem"
+                    fixed
+                    maxWidth="30rem"
                     buttons={[
                         {
                             text: "Settle this table",
                             onClick: closeForceSettle,
                             className: "rounded-md",
                             highlight: true,
+                            isBackButton: true,
                         },
                         {
                             text: "Force Settle",
                             onClick: handleForceSettle,
-                            className: "rounded-md bg-red-600 hover:bg-red-700 text-white",
+                            className: "rounded-md",
                         },
                     ]}
                 />
