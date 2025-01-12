@@ -3,7 +3,6 @@ import { AlertTriangle, Coins, UserCircle, X } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import BottomPopUp from "../universalPopup";
 import CommonBottomButton from "../bottomButton";
@@ -13,11 +12,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import toast from "react-hot-toast";
+import type { IBillData } from "@/components/types/hiClientzData";
+import { Input } from "@/components/ui/input";
 
-const MemoForceSettle = ({ closeForceSettle }: { closeForceSettle: () => void }) => {
+const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => void; data: IBillData }) => {
     const [forceSettle, setForceSettle] = useState<boolean>(false);
     const [selectedReason, setSelectedReason] = useState<string | null>(null);
     const [customReason, setCustomReason] = useState<string>("");
+    const [settleAmount, setSettleAmount] = useState<number | "">(0); // Settle amount input state
 
     const predefinedReasons = [
         "Trial",
@@ -33,30 +35,53 @@ const MemoForceSettle = ({ closeForceSettle }: { closeForceSettle: () => void })
         setForceSettle(true);
     };
 
-
-
     const { mutateAsync, isPending } = useMutation({
         mutationKey: ["forceSettle", selectedTable?._id, customReason, captainData?._id],
-        mutationFn: async (payload) => {
+        mutationFn: async (payload: any) => {
             const response = await apiRpc.table.force_settle.$post({
                 json: {
                     tableId: payload.tableId || "",
                     reasonForForceSettle: payload?.reason || "",
                     captainId: payload.captainId || "",
                     billRequestId: payload.billId || "",
-                    settleAmount: payload.settleAmount || 0
+                    settleAmount: payload.settleAmount || 0,
                 },
             });
             const res = await response.json();
             return res;
-        }
-    })
+        },
+    });
 
-    const handleConfirmForceSettle = () => {
-        if (customReason?.trim() === "" || selectedReason?.trim() === "") {
+    const handleConfirmForceSettle = async () => {
+        if (!selectedReason && customReason.trim() === "") {
             return toast.error("Please enter a reason");
         }
-    }
+
+        if (settleAmount === "" || settleAmount <= 0) {
+            return toast.error("Please enter a valid settle amount");
+        }
+
+        try {
+            const payload = {
+                tableId: selectedTable?._id,
+                reason: selectedReason || customReason,
+                captainId: captainData?._id,
+                billId: data?.billRequestId,
+                settleAmount,
+            };
+
+            const response = await mutateAsync(payload);
+
+            if (response?.err) {
+                toast.error(response?.message || "Force settle failed");
+            } else {
+                toast.success("Table force settled successfully");
+                setForceSettle(false);
+            }
+        } catch (error) {
+            toast.error("An error occurred. Please try again.");
+        }
+    };
 
     return (
         <Card className="w-full mx-auto mt-[7rem] md:mt-[8.5rem] shadow-none border-none">
@@ -71,19 +96,20 @@ const MemoForceSettle = ({ closeForceSettle }: { closeForceSettle: () => void })
                     Do you want to free this table, remove table code, users & orders?
                 </p>
                 <CommonBottomButton
-                    offset="8rem"
-                    maxWidth="31.5rem"
+                    fixed
+                    maxWidth="30rem"
                     buttons={[
                         {
                             text: "Settle this table",
                             onClick: closeForceSettle,
                             className: "rounded-md",
                             highlight: true,
+                            isBackButton: true,
                         },
                         {
                             text: "Force Settle",
                             onClick: handleForceSettle,
-                            className: "rounded-md bg-red-600 hover:bg-red-700 text-white",
+                            className: "rounded-md",
                         },
                     ]}
                 />
@@ -100,8 +126,8 @@ const MemoForceSettle = ({ closeForceSettle }: { closeForceSettle: () => void })
                         </div>
 
                         <h3 className="flex justify-between text-lg font-semibold text-gray-800">
-                            <span>Table:  - {selectedTable?.name}</span>
-                            Code : -{selectedTable?.hiCode}
+                            <span>Table: {selectedTable?.name}</span>
+                            Code: {selectedTable?.hiCode}
                         </h3>
                         <Card>
                             <CardContent className="p-4">
@@ -118,6 +144,19 @@ const MemoForceSettle = ({ closeForceSettle }: { closeForceSettle: () => void })
                             </CardContent>
                         </Card>
 
+                        {/* Settle Amount Input */}
+                        <div className="mt-4">
+                            <label className="block mb-2 text-sm font-medium text-gray-700">Settle Amount (₹)</label>
+                            <Input
+                                type="number"
+                                className="w-full px-3 py-2 text-sm border rounded-md"
+                                placeholder="Enter amount received..."
+                                value={settleAmount}
+                                onChange={(e) => setSettleAmount(Number(e.target.value))}
+                            />
+                        </div>
+
+                        {/* Reason Selection */}
                         <div>
                             <h5 className="mb-3 text-sm font-medium text-gray-700">Choose a reason:</h5>
                             <motion.div className="flex flex-wrap gap-2">
@@ -134,8 +173,8 @@ const MemoForceSettle = ({ closeForceSettle }: { closeForceSettle: () => void })
                                                 variant={selectedReason === reason ? "secondary" : "outline"}
                                                 className="px-3 py-1 text-sm transition-colors cursor-pointer"
                                                 onClick={() => {
-                                                    setSelectedReason(reason)
-                                                    setCustomReason(reason)
+                                                    setSelectedReason(reason);
+                                                    setCustomReason(reason);
                                                 }}
                                             >
                                                 {reason}
@@ -146,10 +185,8 @@ const MemoForceSettle = ({ closeForceSettle }: { closeForceSettle: () => void })
                             </motion.div>
                         </div>
 
-                        <Separator />
-
+                        {/* Custom Reason Input */}
                         <div className="relative">
-                            <h5 className="mb-2 text-sm font-medium text-gray-700">Or enter a custom reason:</h5>
                             <Textarea
                                 placeholder="Enter custom reason..."
                                 value={customReason}
@@ -178,7 +215,7 @@ const MemoForceSettle = ({ closeForceSettle }: { closeForceSettle: () => void })
                             text: "Confirm Force Settle",
                             onClick: handleConfirmForceSettle,
                             className: "rounded-md bg-red-600 hover:bg-red-700 text-white",
-                            disable: !selectedReason && !customReason && isPending,
+                            disable: (!selectedReason && customReason.trim() === "") || settleAmount <= 0 || isPending,
                         },
                     ]}
                 />
@@ -189,4 +226,3 @@ const MemoForceSettle = ({ closeForceSettle }: { closeForceSettle: () => void })
 
 const ForceSettle = memo(MemoForceSettle);
 export default ForceSettle;
-

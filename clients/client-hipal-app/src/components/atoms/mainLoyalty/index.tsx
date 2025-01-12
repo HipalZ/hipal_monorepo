@@ -23,6 +23,7 @@ const MainLoyalty = ({
   hiCode,
   loyaltySetting,
 }: ILoyaltyCard) => {
+  const { setCheckLogin } = useLogin();
   const accessToken = useUserToken.getState().accessToken;
   const customLink = useParams()?.businessId as string;
   const setDirection = useLogin((s) => s.setDirection);
@@ -32,7 +33,7 @@ const MainLoyalty = ({
   const goToLoyalty = (str: string) => {
     if (!accessToken) {
       setDirection(str);
-      router.push(routePaths[PAGE_TYPES.SIGN_UP](customLink));
+      setCheckLogin(true);
     } else {
       setDirection("");
       router.push(routePaths[PAGE_TYPES.LOYALTY](customLink));

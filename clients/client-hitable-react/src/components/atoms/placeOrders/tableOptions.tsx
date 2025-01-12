@@ -1,11 +1,12 @@
 import { memo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { CardContent } from "@/components/ui/card"
-import { Users, CheckSquare, UserCheck } from "lucide-react"
+import { Users, UserCheck } from "lucide-react"
 import { type orderModal, useOrderStore } from "@/components/store/useOrderData"
+import { Badge } from "@/components/ui/badge"
 
 const MemoTableOptions = () => {
-    const { setModalType } = useOrderStore()
+    const { setModalType, selectedTable } = useOrderStore()
 
     const toggleModalType = useCallback((type: orderModal) => {
         setModalType(type)
@@ -13,6 +14,14 @@ const MemoTableOptions = () => {
 
     return (
         <CardContent className="space-y-4 pt-[7rem] md:pt-[8.5rem]">
+            {
+                selectedTable?.hiCode && (
+                    <Badge variant="secondary" className="flex justify-between w-full">
+                        <div className="text-2xl font-bold">Table code :-</div>
+                        <div className="text-2xl font-bold">{selectedTable?.hiCode}</div>
+                    </Badge>
+                )
+            }
             <Button
                 size="lg"
                 variant="outline"
@@ -22,17 +31,6 @@ const MemoTableOptions = () => {
                 <Users className="w-5 h-5 mr-2" />
                 Add Guest Count
             </Button>
-
-            <Button
-                size="lg"
-                variant="outline"
-                className="w-full"
-                onClick={() => toggleModalType('free')}
-            >
-                <CheckSquare className="w-5 h-5 mr-2" />
-                Free the Table
-            </Button>
-
             <Button
                 size="lg"
                 variant="outline"

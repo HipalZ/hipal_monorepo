@@ -203,7 +203,7 @@ const MemoGetBill = () => {
 
             {
                 forceSettle && (
-                    <BottomPopUp width="w--[30rem]" hide bottomCross show={forceSettle} onClose={() => setForceSettle(false)}>
+                    <BottomPopUp width="w-[30rem]" hide show={forceSettle} onClose={() => setForceSettle(false)}>
                         <ForceSettle closeForceSettle={closeForceSettle} data={data} />
                     </BottomPopUp>
                 )
@@ -211,8 +211,8 @@ const MemoGetBill = () => {
 
             {
                 showqr && (
-                    <BottomPopUp width="w-[30rem]" hide bottomCross show={showqr} onClose={() => setShowqr(false)}>
-                        <QrCodePreview data={data} qrBillId={qrBillId} />
+                    <BottomPopUp width="w-[30rem]" hide show={showqr} onClose={() => setShowqr(false)}>
+                        <QrCodePreview data={data} qrBillId={qrBillId} toggleQr={toggleQr} />
                     </BottomPopUp>
                 )
             }
@@ -230,36 +230,21 @@ const MemoGetBill = () => {
                 maxWidth={screenSize === "xs" ? "30rem" : "48rem"}
                 backgroundColor={screenSize === "xs" ? "" : "white"}
                 buttons={
-                    !showqr ?
-                        [
-                            {
-                                text: "Normal Settle",
-                                onClick: () => { setNormalSettle(true) },
-                                className: "rounded-md"
-                            },
-                            {
-                                text: "Hi Settle",
-                                onClick: () => { mutate() },
-                                disable: isPending,
-                                isLoading: isPending,
-                                highlight: true,
-                                className: "rounded-md"
-                            }
-                        ] :
-                        [
-                            {
-                                text: "Refresh",
-                                onClick: () => { mutate() },
-                                disable: isPending,
-                                isLoading: isPending
-                            },
-                            {
-                                text: "See Bill",
-                                onClick: () => { toggleQr() },
-                                disable: isPending,
-                                isLoading: isPending
-                            }
-                        ]
+                    [
+                        {
+                            text: "Normal Settle",
+                            onClick: () => { setNormalSettle(true) },
+                            className: "rounded-md"
+                        },
+                        {
+                            text: "Hi Settle",
+                            onClick: () => { mutate() },
+                            disable: isPending,
+                            isLoading: isPending,
+                            highlight: true,
+                            className: "rounded-md"
+                        }
+                    ]
                 }
             />
         </>

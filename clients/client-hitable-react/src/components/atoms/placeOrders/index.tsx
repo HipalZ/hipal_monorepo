@@ -9,7 +9,6 @@ import EnhancedOrderCard from "./orderCard"
 
 const MemoPlaceOrders = () => {
     const { tableId } = useParams()
-    console.log(tableId)
 
     const getTableOrders = useCallback(async () => {
         const response = await apiRpc.kot.table_kot[":tableId"].$get({

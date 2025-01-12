@@ -1,4 +1,4 @@
-"use client";;
+"use client";
 import Image from "next/image";
 import { useState, useRef, useEffect, type FormEvent, useCallback, memo } from "react";
 import { toast } from "react-toastify";
@@ -9,7 +9,7 @@ import { apiRpc } from "@hi/common";
 import { BiArrowBack, BiEditAlt } from "react-icons/bi";
 import { useLogin } from "@/components/store/useLogin";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import { useParams, useSearchParams, usePathname } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
@@ -20,8 +20,8 @@ import { useCart } from "@/components/store/useCart";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 
 const MemoCombinedLogin = () => {
-    const searchParams = useSearchParams();
     const pathName = usePathname()
+    console.log('pathName', pathName)
     const [phone, setPhone] = useState("");
     const { errorText } = useErrorHandling();
     const [otp, setOtp] = useState(["", "", "", ""]);
@@ -30,7 +30,7 @@ const MemoCombinedLogin = () => {
     const [loading, setLoading] = useState(false);
     const inputRefs = Array.from({ length: 4 }, () => useRef<HTMLInputElement>(null));
     const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting);
-    const { setUserDetails, userDetails, setUserCoinZ, setIsLogin, sendOtp, direction, setDirection, isPayment, invoiceUrl, urlFrom } =
+    const { setUserDetails, userDetails, setUserCoinZ, setIsLogin, sendOtp, direction, setDirection, isPayment, invoiceUrl, urlFrom, setUrlFrom } =
         useLogin();
     const { setShowCart } = useCart();
     const [customerName, setCustomerName] = useState(userDetails?.name);
@@ -40,7 +40,6 @@ const MemoCombinedLogin = () => {
         setCoinz } = usePaymentStore()
     const businessData = useBusinessDetails((s) => s.businessDetails);
     const customLink = useParams()?.businessId as string;
-    const orderId = searchParams?.get("orderId");
     const setAccessToken = useUserToken.getState().setAccessToken;
     const setRefreshToken = useUserToken.getState().setRefreshToken;
     useEffect(() => {
@@ -87,7 +86,14 @@ const MemoCombinedLogin = () => {
             setDirection("category")
         } if (pathName?.includes("invoice")) {
             setDirection("invoice")
-        } if (pathName?.includes("couponz")) {
+        } if (pathName?.includes("payment")) {
+            setDirection("payment")
+        }
+        if (pathName?.includes("posPayment")) {
+            setDirection("posPayment")
+            setUrlFrom(pathName)
+        }
+        if (pathName?.includes("couponz")) {
             setDirection("couponz")
         }
     };
@@ -123,7 +129,13 @@ const MemoCombinedLogin = () => {
             newUrl = `/${customLink}/explore?pay=${isPayment}`;
         } else if (direction === "invoice") {
             newUrl = invoiceUrl;
-        } else if (direction === "couponz") {
+        } else if (direction === "posPayment") {
+            newUrl = urlFrom
+        }
+        else if (direction === "payment") {
+            newUrl = `/${customLink}/payment?pay=${isPayment}`;
+        }
+        else if (direction === "couponz") {
             newUrl = urlFrom;
         } else if (direction === "explore-googleReview") {
             newUrl = `/${customLink}/explore`;

@@ -1,9 +1,8 @@
 import { useHandleMode } from '@/components/hooks/usePayments';
-import { useLogin } from '@/components/store/useLogin';
 import { usePaymentStore } from '@/components/store/usePaymentStore';
 import { calculateFinalBill } from '@/components/utils/helpers';
 import { useUserToken } from '@hi/common/src/useUserToken';
-import React, { memo, useCallback } from 'react'
+import { memo, useCallback } from 'react';
 
 const MemoTotalBillButton = () => {
     const { claimedCoinz, claimCouponz, tips, setEditBillModal, billValue, setCheckLogin } = usePaymentStore();

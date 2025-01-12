@@ -28,7 +28,7 @@ import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescrip
 
 const MemoCategoryPageBtn = () => {
   const accessToken = useUserToken.getState().accessToken;
-
+  const { userDetails } = useLogin()
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const { isSearchActive, setIsSearchActive, setShowHeader } =
     useSearch();
@@ -71,7 +71,7 @@ const MemoCategoryPageBtn = () => {
 
   const promptHiCode = useCallback(() => {
     setDirection("category");
-    if (!accessToken) {
+    if (!accessToken && !userDetails?._id) {
       setCheckLogin(true);
       return;
     }
@@ -79,7 +79,7 @@ const MemoCategoryPageBtn = () => {
       authTableUser()
       return;
     }
-  }, [setDirection, accessToken, setCheckLogin, outletInfo?.isPosEnabled, authTableUser]);
+  }, [setDirection, accessToken, setCheckLogin, outletInfo?.isPosEnabled, authTableUser, userDetails?._id]);
 
   const triggerCallWaiter = useCallback(() => {
     setDirection("category");

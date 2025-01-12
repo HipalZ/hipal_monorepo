@@ -45,6 +45,7 @@ export const useCreateOrder = () => {
         setModalType("addItem");
         useCartStore.setState({ cart: [] });
         queryClient.invalidateQueries({ queryKey: ["getTableOrders"] });
+        queryClient.invalidateQueries({ queryKey: ["fetchIndividualTable"] });
         return true;
       }
       return res.json();

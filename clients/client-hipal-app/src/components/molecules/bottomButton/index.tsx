@@ -117,23 +117,27 @@ export default function BottomButton({
     }
     if (outletInfo?.isPosEnabled) {
       setCartPage("order");
-      setShowCart(!showCart);
+      setShowCart(true);
     } else {
       setInputModal(true);
     }
   }, [
-    selected,
-    showCart,
     accessToken,
-    customLink,
     setInputModal,
     setDirection,
     outletInfo?.isPosEnabled,
     setShowCart,
     setCartPage,
-    customLink,
     setCheckLogin
   ]);
+
+  const handleRedirection = useCallback(() => {
+    if (!accessToken) {
+      setCheckLogin(true);
+    } else {
+      setDirection("loyalty")
+    }
+  }, [accessToken, setDirection, setCheckLogin]);
 
   if (subscribeModal || reviewPopup) {
     return null;
@@ -186,8 +190,8 @@ export default function BottomButton({
           <MenuItem
             icon={RiCouponLine}
             label="Rewards"
-            href={`/${customLink}/${accessToken ? "loyalty" : "user/signup"}`}
             isSelected={selectedBtn === "rewards"}
+            onClick={handleRedirection}
           />
 
           {tableName ? (
