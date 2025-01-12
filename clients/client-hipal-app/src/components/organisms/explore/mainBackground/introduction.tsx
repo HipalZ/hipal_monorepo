@@ -10,9 +10,7 @@ import type {
 import { apiRpc, cn } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { useParams, useRouter } from "next/navigation";
-import React, { memo, useCallback, useEffect, useState } from "react";
-import { GrLocation } from "react-icons/gr";
-import { MdOutlineCall } from "react-icons/md";
+import { memo, useCallback, useEffect, useState } from "react";
 import SubScribeModal from "../../subscribe";
 import ReviewModal from "../googleReviews/reviewModal";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
@@ -37,16 +35,6 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const business = data.business as BusinessDetails;
   const [isLoader, setIsLoader] = useState<boolean>(false);
-  const { location, phone } = data.outletInfo;
-  const goToLocation = useCallback(() => {
-    if (typeof window === "undefined") return;
-    window.open(location, "_blank");
-  }, [location]);
-
-  const callTheOwner = useCallback(() => {
-    if (typeof window === "undefined") return;
-    window.open(`tel:${phone}`);
-  }, [phone]);
 
   const isSubscribe = async (userDetails: IUserData) => {
     const { business } = data;
@@ -119,22 +107,6 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
           <h4 className="mb-1 text-xs font-semibold line-clamp-2">
             {data?.business?.address}
           </h4>
-        </section>
-        <section className="absolute z-20 flex flex-col space-y-5 bottom-4 right-4 ">
-          <button
-            onClick={goToLocation}
-            className="p-3 rounded-full bg-primary text-base-100"
-            type="button"
-          >
-            <GrLocation size="20" />
-          </button>
-          <button
-            onClick={callTheOwner}
-            className="p-3 text-black bg-white rounded-full"
-            type="button"
-          >
-            <MdOutlineCall size="20" />
-          </button>
         </section>
         {subscribeModal && (
           <BottomPopUp show={subscribeModal} onClose={closeSubscribeModal} hide>

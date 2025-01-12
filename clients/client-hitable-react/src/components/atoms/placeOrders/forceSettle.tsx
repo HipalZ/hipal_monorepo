@@ -14,8 +14,11 @@ import { apiRpc } from "@hi/common";
 import toast from "react-hot-toast";
 import type { IBillData } from "@/components/types/hiClientzData";
 import { Input } from "@/components/ui/input";
+import { useNavigate, useParams } from "react-router-dom";
 
 const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => void; data: IBillData }) => {
+    const { businessId } = useParams();
+    const navigate = useNavigate();
     const [forceSettle, setForceSettle] = useState<boolean>(false);
     const [selectedReason, setSelectedReason] = useState<string | null>(null);
     const [customReason, setCustomReason] = useState<string>("");
@@ -28,7 +31,7 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
         "Customer Led Problem",
     ];
 
-    const selectedTable = useOrderStore((s) => s.selectedTable);
+    const { selectedTable, setOpenOrderModal } = useOrderStore();
     const captainData = useHiClientZ((s) => s.captainData);
 
     const handleForceSettle = () => {
@@ -77,6 +80,8 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
             } else {
                 toast.success("Table force settled successfully");
                 setForceSettle(false);
+                setOpenOrderModal(false);
+                navigate(`/${businessId}/alerts`);
             }
         } catch (error) {
             toast.error("An error occurred. Please try again.");
@@ -213,7 +218,7 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
                         },
                         {
                             text: "Confirm Force Settle",
-                            onClick: handleConfirmForceSettle,
+                            onClick: () => { handleConfirmForceSettle(); },
                             className: "rounded-md bg-red-600 hover:bg-red-700 text-white",
                             disable: (!selectedReason && customReason.trim() === "") || settleAmount <= 0 || isPending,
                         },

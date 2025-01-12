@@ -1,16 +1,19 @@
 import { memo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { CreditCard, Scan, Loader2 } from "lucide-react"; // Added Loader icon
+import { CreditCard, Scan, Loader2 } from "lucide-react";
 import QRCode from "react-qr-code";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useOrderStore } from "@/components/store/useOrderData";
-import type { IBillData } from "@/components/types/hiClientzData";
+import type { Alert, IBillData } from "@/components/types/hiClientzData";
 import CommonBottomButton from "../bottomButton";
 import { useQuery } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import { useNavigate, useParams } from "react-router-dom";
+import { Button } from "@/components/ui/button"; // ShadCN Button
+import BottomPopUp from "../universalPopup";
+import Normalsettle from "./normalsettle";
+
 
 const MemoQrCode = ({ data, qrBillId, toggleQr }: { data: IBillData; qrBillId: string; toggleQr: () => void }) => {
     const { businessId } = useParams();
@@ -18,6 +21,7 @@ const MemoQrCode = ({ data, qrBillId, toggleQr }: { data: IBillData; qrBillId: s
     const selectedTable = useOrderStore((s) => s.selectedTable);
     const selectedBiz = useHiClientZ((s) => s.selectedBiz);
     const [showStatus, setShowStatus] = useState<boolean>(false);
+    const [normalSettle, setNormalSettle] = useState<boolean>(false);
     const setOpenOrderModal = useOrderStore((s) => s.setOpenOrderModal);
 
     // API call to fetch bill status
@@ -29,13 +33,31 @@ const MemoQrCode = ({ data, qrBillId, toggleQr }: { data: IBillData; qrBillId: s
         return json.data;
     };
 
-    // React Query with refetch interval
+    // API call to fetch alert data
+    const tableAlert = async () => {
+        const response = await apiRpc.table.table_offline_alert[":billRequestId"].$get({
+            param: { billRequestId: data?.billRequestId || "" },
+        });
+        const json = await response.json();
+        return json.data;
+    };
+    const { data: alertData, isFetching: isAlertFetching } = useQuery({
+        queryKey: ["tableAlert", data?.billRequestId],
+        queryFn: tableAlert,
+        enabled: !!data?.billRequestId && showStatus,
+        refetchInterval: 5000,
+    });
+
+    // React Query with refetch interval for bill status
     const { data: billStatus, isFetching } = useQuery({
         queryKey: ["webhook", data?.billRequestId],
         queryFn: webhook,
         enabled: !!data?.billRequestId && showStatus,
         refetchInterval: 5000,
     });
+
+    // React Query with refetch interval for alert data
+
 
     // Handle redirection on success or reset QR on failure
     useEffect(() => {
@@ -57,11 +79,42 @@ const MemoQrCode = ({ data, qrBillId, toggleQr }: { data: IBillData; qrBillId: s
         setShowStatus(!showStatus);
     };
 
+    // Handle Accept Action
+    const handleAccept = () => {
+        setNormalSettle(true);
+    };
+
+    // Handle Reject Action
+    const handleReject = () => {
+        console.log("Reject");
+        setShowStatus(false);
+    };
+
+    const closeNormalSettle = () => {
+        setNormalSettle(false);
+    }
+
     const renderContent = () => {
-        if (isFetching) {
+        if (isFetching || isAlertFetching) {
             return (
                 <div className="flex items-center justify-center h-48">
                     <Loader2 className="w-12 h-12 text-gray-500 animate-spin" />
+                </div>
+            );
+        }
+
+        if (alertData && Object.keys(alertData).length && showStatus) {
+            return (
+                <div className="flex flex-col items-center justify-center space-y-4">
+                    <p className="text-lg text-gray-600">{(alertData as Alert).message}</p>
+                    <div className="flex space-x-4">
+                        <Button variant="destructive" onClick={handleReject}>
+                            Reject
+                        </Button>
+                        <Button variant="default" onClick={handleAccept}>
+                            Accept
+                        </Button>
+                    </div>
                 </div>
             );
         }
@@ -134,8 +187,6 @@ const MemoQrCode = ({ data, qrBillId, toggleQr }: { data: IBillData; qrBillId: s
                     {selectedBiz?.businessId?.name}
                 </h3>
 
-                <Separator className="w-full my-4" />
-
                 {/* Hi Settle Heading */}
                 <div className="mb-6 text-center">
                     <h3 className="text-xl font-semibold text-gray-700">Hi Settle</h3>
@@ -162,9 +213,18 @@ const MemoQrCode = ({ data, qrBillId, toggleQr }: { data: IBillData; qrBillId: s
                 </div>
             </CardContent>
 
+            {
+                normalSettle && (
+                    <BottomPopUp height="h-[70dvh]" width="w-[30rem]" show={normalSettle} onClose={() => setNormalSettle(false)}>
+                        <Normalsettle closeNormalSettle={closeNormalSettle} data={data} alertData={alertData} />
+                    </BottomPopUp>
+                )
+            }
+
             {/* Bottom Buttons */}
             <CommonBottomButton
                 fixed
+                maxWidth="30rem"
                 buttons={[
                     {
                         text: "Close",
