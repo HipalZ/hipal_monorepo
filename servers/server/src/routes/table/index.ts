@@ -426,14 +426,14 @@ const tableRouter = new Hono()
         const saveOrder = await Order.create(
           [
             {
-              total: getBill.data.order_data.total,
+              total: getBill.data.order_data.total || 0,
               currency: "INR",
               receipt: uniqueOrderId,
               userId: captainId,
               claimedCoins: 0,
               tableName: table?.name,
               tips: 0,
-              billValue: getBill.data.order_data.core_price,
+              billValue: getBill.data.order_data.core_price || 0,
               businessId: table?.businessId,
               order_id: uniqueOrderId,
 

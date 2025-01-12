@@ -11,7 +11,6 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 const tempTableSettleSchema = z.object({
   businessId: ObjectIdSchema,
   tableName: z.string().min(1).max(100),
-  hiCode: z.string().min(1).max(100),
   settleBy: z.string().min(1).max(100).optional(),
   createdAt: z.date().optional(),
 });
