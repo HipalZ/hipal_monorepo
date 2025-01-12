@@ -53,7 +53,7 @@ const Cart = () => {
   const { mutate, isPending } = useCallTheCaptain();
   const outLetInfo = _useAllBusiness((state) => state.data.outletInfo);
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
-  const { setShowCart, cartPage, setCartPage, setInputModal, setOrderPlaced } = useCart();
+  const { setShowCart, cartPage, setCartPage, setInputModal, setOrderPlaced, setHiCodePopupBeforeBill, hiCodePopupBeforeBill } = useCart();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const [showPayAlert, setShowPayAlert] = useState<boolean>(false);
   const {
@@ -140,9 +140,9 @@ const Cart = () => {
         const res = await response.json();
         if (response.status === 200 || response.status === 201) {
           toast.success(successMessage);
+          setShowCart(true);
           triggerModal();
           setHiCode(res?.data?.hiCode || null);
-          // setShowCart(false);
           useCartStore.setState({ cart: [] });
           return true;
         } if (response.status === 403) {

@@ -23,6 +23,8 @@ import OrderPlaced from "@/components/organisms/cart/orderPlaced";
 import TimeBadge from "./test";
 import useTableData from "@/components/store/useTableData";
 import { useAuthTableUser } from "../../hooks/usePayments";
+import HiCodeValidate from "@/components/organisms/cart/hicodeValidate";
+import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 
 const MemoCategoryPageBtn = () => {
   const accessToken = useUserToken.getState().accessToken;
@@ -30,7 +32,7 @@ const MemoCategoryPageBtn = () => {
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const { isSearchActive, setIsSearchActive, setShowHeader } =
     useSearch();
-    const {authTableUser} = useAuthTableUser()
+  const { authTableUser } = useAuthTableUser()
   const customLink = useParams()?.businessId as string;
   const tableName = useTableData((s) => s.tableName);
   const setDirection = useLogin((s) => s.setDirection);
@@ -38,15 +40,13 @@ const MemoCategoryPageBtn = () => {
   const router = useRouter();
   const { setCheckLogin } = usePaymentStore();
   const {
-    showCart,
-    setShowCart,
     inputModal,
     setInputModal,
     callWaiterModal,
     setCallWaiterModal,
-    setCartPage,
     orderPlaced,
     setOrderPlaced,
+    hiCodePopupBeforeBill, setHiCodePopupBeforeBill,
   } = useCart();
   const [tempInstruction, setTempInstruction] = useState("");
   const {
@@ -79,30 +79,7 @@ const MemoCategoryPageBtn = () => {
       authTableUser()
       return;
     }
-  }, [])
-
-  const proceedToPayment = useCallback(() => {
-    setDirection("category");
-    if (!accessToken) {
-      setCheckLogin(true);
-      return;
-    }
-    if (outletInfo?.isPosEnabled) {
-      // setShowCart(!showCart);
-      // setCartPage("order");
-      // return;
-    }
-    setInputModal(true);
-  }, [
-    setDirection,
-    accessToken,
-    showCart,
-    setInputModal,
-    outletInfo?.isPosEnabled,
-    setCheckLogin,
-    setShowCart,
-    setCartPage,
-  ]);
+  }, [setDirection, accessToken, setCheckLogin, outletInfo?.isPosEnabled, authTableUser]);
 
   const triggerCallWaiter = useCallback(() => {
     setDirection("category");
@@ -237,7 +214,13 @@ const MemoCategoryPageBtn = () => {
       ) : (
         <BottomButton selected={"catalogue"} showBack />
       )}
-
+      {
+        hiCodePopupBeforeBill && (
+          <ItemDescriptionPopup show={hiCodePopupBeforeBill} onClose={() => setHiCodePopupBeforeBill(false)}>
+            <HiCodeValidate placeOrder={() => { }} isOpenMyOrders={true} />
+          </ItemDescriptionPopup>
+        )
+      }
       <AnimatePresence>
         {inputModal && (
           <motion.div

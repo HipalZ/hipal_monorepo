@@ -12,7 +12,6 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import Image from "next/image";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import { useCartStore } from "@/components/store/useCartStore";
 import { useCart } from "@/components/store/useCart";
 
 const MainBackground = ({ data }: { data: IBusinessData }) => {
@@ -23,6 +22,7 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
   const setBusinessData = _useAllBusiness((s) => s.setData);
   const { setBusinessDetails } = useBusinessDetails();
   const { setCheckLogin } = usePaymentStore();
+  const { resetCartStoreKeys } = useCart();
 
   // Move accessToken check to client side
   const accessToken = useUserToken.getState().accessToken;
@@ -34,6 +34,8 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
   useEffect(() => {
     if (tableName !== null) {
       setTableName(tableName || "");
+      // cart store unexpected popups error handling
+      resetCartStoreKeys();
     }
     if (pathName.includes("/packaging")) {
       setTableName("");

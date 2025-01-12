@@ -20,6 +20,9 @@ type TableDataStore = {
   setHiCodePopup: (hiCodePopup: boolean) => void;
   hiCodeUser: HiCodeUser;
   setHiCodeUser: (user: HiCodeUser) => void;
+
+  hiCodePromptTimer: number;
+  setHiCodePromptTimer: (time: number) => void;
 };
 
 const useTableData = create(
@@ -35,6 +38,9 @@ const useTableData = create(
       setHiCodePopup: (hiCodePopup) => set({ hiCodePopup }),
       hiCodeUser: { name: "", phone: "", success: false },
       setHiCodeUser: (user) => set({ hiCodeUser: user }),
+
+      hiCodePromptTimer: 0,
+      setHiCodePromptTimer: (time) => set({ hiCodePromptTimer: time }),
     }),
     {
       name: "table-store",

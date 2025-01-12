@@ -19,6 +19,7 @@ import { useQuery } from "@tanstack/react-query";
 import { _useAllBusiness } from "../store/useAllBusiness";
 import type { IBillData } from "../types/businessData";
 import { useCart } from "@/components/store/useCart";
+import { differenceInMinutes } from "date-fns";
 
 export const usePayments = () => {
   const { businessDetails } = useBusinessDetails();
@@ -659,35 +660,39 @@ export const useBillSummary = () => {
   };
 };
 
-export const useAuthTableUser = ()=>{
-  const tableName = useTableData((s)=>s.tableName)
-  const businessId = useBusinessDetails((s)=>s.businessDetails?.businessId)
-  const setHiCodePopup = useTableData((s)=>s.setHiCodePopup)
-  const userId = useLogin((s)=>s.userDetails?._id)
-  const setHiCode = useLogin((s)=>s.setHiCode)
-  const {setShowCart, showCart, setCartPage} = useCart()
-  const authTableUser = useCallback(async()=>{
+export const useAuthTableUser = () => {
+  const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
+  const userId = useLogin((s) => s.userDetails?._id);
+  const { tableName } = useTableData();
+  const { setShowCart, setCartPage, setHiCodePopupBeforeBill } = useCart();
+  const authTableUser = useCallback(async () => {
     const response = await apiRpc.pos.table_user_auth[":userId"].$post({
-      json:{
+      json: {
         businessId,
         tableName,
-        userId
+        userId,
       },
-      param:{
-        userId
-      }
-    })
-    const res = await response.json()
-    if(response.status===200){
-      setHiCode(res.data.hiCode)
-      setShowCart(!showCart)
+      param: {
+        userId,
+      },
+    });
+    const res = await response.json();
+    if (response.status === 200) {
       setCartPage("order");
-      setHiCodePopup(true)
-    }if(response.status===403){
-      return toast.error(res.message)
+      setShowCart(true);
+    }
+    if (response.status === 403) {
+      setHiCodePopupBeforeBill(true);
     }
     return res;
-  },[])
+  }, [
+    businessId,
+    tableName,
+    userId,
+    setHiCodePopupBeforeBill,
+    setCartPage,
+    setShowCart,
+  ]);
 
-  return {authTableUser}
-}
+  return { authTableUser };
+};

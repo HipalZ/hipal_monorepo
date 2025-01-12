@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { CoinsIcon as Coin, Receipt, User } from 'lucide-react'
 import { memo } from "react"
 import { Coins, Gift } from 'lucide-react'
+import useLoyaltyData from "@/components/store/useLoyaltyData"
 interface Extra {
     name: string
     price: number
@@ -34,6 +35,7 @@ interface BillData {
 }
 
 const MemoBillPage = ({ billData }: { billData: BillData }) => {
+    const { loyaltySetting } = useLoyaltyData();
     const container = {
         hidden: { opacity: 0 },
         show: {
@@ -74,7 +76,7 @@ const MemoBillPage = ({ billData }: { billData: BillData }) => {
                     </div>
                 </header>
 
-                <motion.div
+                {loyaltySetting?.loyaltyId && <motion.div
                     className="w-full max-w-md mx-auto p-4"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -138,7 +140,7 @@ const MemoBillPage = ({ billData }: { billData: BillData }) => {
                         </div>
 
                     </div>
-                </motion.div>
+                </motion.div>}
 
                 {/* Items List */}
                 <motion.section

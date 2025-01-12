@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
@@ -10,23 +10,61 @@ import ConfettiHeader from "@/components/organisms/confettiHeader";
 import CartFriend from "@/assets/cart/cartFriends.png";
 import { MdPerson } from "react-icons/md";
 import CallTheCaptain from "./callTheCaptain";
+import { useCart } from "@/components/store/useCart";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
-const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
-  const {
-    setHiCodePopup,
-    hiCodeUser,
-    setHiCode: saveInPersist,
-    tableName,
-  } = useTableData();
+interface IValidate {
+  placeOrder?: () => void;
+  isOpenMyOrders?: boolean;
+}
+
+const MemoHiCodeValidate = (props: IValidate) => {
+  const accessToken = useUserToken.getState().accessToken;
+  const { placeOrder, isOpenMyOrders } = props;
+  const { setShowCart, setCartPage, setHiCodePopupBeforeBill } = useCart();
+  const { setHiCodePopup, hiCodeUser, setHiCode: saveInPersist, tableName } = useTableData();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const userDetails = useLogin((state) => state.userDetails);
-
-  const [hiCode, setHiCode] = useState("");
+  const setDirection = useLogin((state) => state.setDirection);
+  const { setCheckLogin } = usePaymentStore();
+  const placeholders = ['C', 'O', 'D', 'E'];
+  // State to manage each digit of the HiCode
+  const [hiCodeDigits, setHiCodeDigits] = useState(["", "", "", ""]);
   const [error, setError] = useState(false);
 
+  // Handle input change for each box
+  const handleChange = (value: string, index: number) => {
+    if (!/^\d?$/.test(value)) return; // Allow only digits
+    const newDigits = [...hiCodeDigits];
+    newDigits[index] = value;
+    setHiCodeDigits(newDigits);
+
+    // Auto focus to next box if a digit is entered
+    if (value && index < 3) {
+      const nextInput = document.getElementById(`digit-${index + 1}`);
+      nextInput?.focus();
+    }
+  };
+
+  // Handle backspace to delete and move focus backward
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === "Backspace" && !hiCodeDigits[index] && index > 0) {
+      const prevInput = document.getElementById(`digit-${index - 1}`);
+      prevInput?.focus();
+    }
+  };
+
+  // Handle the HiCode verification
   const handleCodeVerification = async () => {
-    if (!hiCode.trim()) {
-      toast.error("Please enter a HiCode.");
+    const hiCode = hiCodeDigits.join("");
+
+    if (!accessToken) {
+      setCheckLogin(true);
+      return;
+    }
+    if (!hiCode.trim() || hiCode.length !== 4) {
+      toast.error("Please enter a valid 4-digit HiCode.");
       setError(true);
       return;
     }
@@ -34,7 +72,7 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
     try {
       const response = await apiRpc.pos.validate_hicode.$post({
         json: {
-          hiCode: hiCode,
+          hiCode,
           businessId: outletInfo?.businessId,
           customerPhone: userDetails?.phone || "",
         },
@@ -46,8 +84,16 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
       }
       if (!result.err) {
         saveInPersist(result?.data?.hiCode);
+        if (isOpenMyOrders && outletInfo?.isPosEnabled) {
+          setDirection("category");
+          setCartPage("order");
+          setShowCart(true);
+          setHiCodePopupBeforeBill(false);
+          console.log('triggered here')
+          return;
+        }
         setHiCodePopup(false);
-        placeOrder();
+        placeOrder?.();
       } else {
         throw new Error("Invalid HiCode");
       }
@@ -69,14 +115,8 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
       exit={{ opacity: 0, scale: 0.9 }}
       className="relative flex flex-col items-center justify-center p-6 bg-white"
     >
-      <ConfettiHeader />
-      <Image
-        src={CartFriend}
-        alt="cart-friend"
-        width={300}
-        height={135}
-        className="mt-8"
-      />
+      <ConfettiHeader direction="top" />
+      <Image src={CartFriend} alt="cart-friend" width={300} height={135} className="mt-8" />
       {hiCodeUser?.phone ? (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
@@ -85,55 +125,43 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
           className="mb-6 text-center"
         >
           <h3 className="mt-4 text-2xl font-bold text-gray-800 space-grotesk-700">
-            Ordering with friends ?
+            Ordering with friends?
           </h3>
           <p className="text-sm text-gray-500">
-            Your table{" "}
-            <span className="text-lg font-semibold">{tableName}</span> is
-            already occupied !
+            Your table <span className="text-lg font-semibold">{tableName}</span> is already occupied!
           </p>
           <div className="flex items-center gap-4 pl-2 mt-4 text-left text-[#000000]">
             <article className="bg-[#6A35FF30] p-2 rounded-xl">
-              <MdPerson size={28} className=" text-[#6A35FF]" />
+              <MdPerson size={28} className="text-[#6A35FF]" />
             </article>
             <span className="text-sm text-gray-500">
-              The table admin is{" "}
-              <span className="text-base font-semibold">
-                {hiCodeUser?.name}
-              </span>{" "}
-              with number {maskPhoneNumber(hiCodeUser?.phone)}
+              The table admin is <span className="text-base font-semibold">{hiCodeUser?.name}</span> with number {maskPhoneNumber(hiCodeUser?.phone)}
             </span>
           </div>
         </motion.div>
       ) : (
-        <h3 className="mb-4 text-2xl font-bold text-gray-800 space-grotesk-700">
-          Enter 4 Digit HiCode
-        </h3>
+        <h3 className="mb-4 text-2xl font-bold text-gray-800 space-grotesk-700">Enter 4 Digit HiCode</h3>
       )}
-      <div className="relative w-full mb-4 text-center">
-        <input
-          type="text"
-          value={hiCode}
-          onChange={(e) => {
-            setHiCode(e.target.value);
-            setError(false);
-          }}
-          required
-          maxLength={4}
-          placeholder="Enter Code"
-          className={`w-1/2 px-4 py-2 space-grotesk-700 bg-[#ffffff] text-center text-[#000000] border border-[#000000] rounded-md focus:outline-none transition-all duration-300 ${error ? "border-red-500" : "border-gray-300"
-            }`}
-        />
-        {error && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="w-full pt-2 text-red-600 "
-          >
-            Please enter a valid Code
-          </motion.div>
-        )}
+      <div className="flex justify-center gap-4 mb-4">
+        {hiCodeDigits.map((digit, index) => (
+          <input
+            key={index?.toString()}
+            id={`digit-${index}`}
+            type="text"
+            value={digit}
+            placeholder={placeholders[index]}
+            onChange={(e) => handleChange(e.target.value, index)}
+            onKeyDown={(e) => handleKeyDown(e, index)}
+            maxLength={1}
+            className="text-black w-12 h-12 text-center text-xl border border-gray-300 rounded-md focus:outline-none"
+          />
+        ))}
       </div>
+      {error && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full pt-2 text-red-600">
+          Please enter a valid 4-digit code
+        </motion.div>
+      )}
       <button
         type="button"
         onClick={handleCodeVerification}
@@ -146,4 +174,5 @@ const HiCodeValidate = ({ placeOrder }: { placeOrder: () => void }) => {
   );
 };
 
+const HiCodeValidate = memo(MemoHiCodeValidate);
 export default HiCodeValidate;

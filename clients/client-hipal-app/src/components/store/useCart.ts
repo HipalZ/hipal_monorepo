@@ -60,6 +60,11 @@ interface IUseCart {
   increaseQuantity: (dishId: string) => void;
   decreaseQuantity: (dishId: string) => void;
   removeDish: (dishId: string) => void;
+
+  hiCodePopupBeforeBill: boolean;
+  setHiCodePopupBeforeBill: (data: boolean) => void;
+
+  resetCartStoreKeys: () => void;
 }
 
 export const useCart = create<IUseCart>()(
@@ -119,6 +124,24 @@ export const useCart = create<IUseCart>()(
           }
           return { cart: newCart };
         }),
+
+      hiCodePopupBeforeBill: false,
+      setHiCodePopupBeforeBill: (d: boolean) =>
+        set(() => ({ hiCodePopupBeforeBill: d })),
+
+      resetCartStoreKeys: () => {
+        set(() => ({
+          showCart: false,
+          cart: {},
+          inputModal: false,
+          orderPlaced: false,
+          showHistory: false,
+          callWaiterModal: false,
+          cartPage: "cart",
+          cartItem: {},
+          hiCodePopupBeforeBill: false,
+        }));
+      },
     }),
     {
       name: "cartStore",
