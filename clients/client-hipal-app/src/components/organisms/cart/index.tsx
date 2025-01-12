@@ -139,7 +139,9 @@ const Cart = () => {
       try {
         const res = await response.json();
         if (response.status === 200 || response.status === 201) {
-          toast.success(successMessage);
+          if (successMessage?.length > 0) {
+            toast.success(successMessage);
+          }
           setShowCart(true);
           triggerModal();
           setHiCode(res?.data?.hiCode || null);
@@ -182,7 +184,7 @@ const Cart = () => {
         });
         await handleApiResponse(
           response,
-          "Order placed successfully",
+          "",
           "Failed to place order",
         );
       } catch (error) {

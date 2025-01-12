@@ -82,6 +82,7 @@ const MemoCartPayment = () => {
     setTips(0);
     setAvailedCoupon({});
     setCartPage("order");
+    setDisplayTimer(10);
   }, [
     setEditBillModal,
     setClaimCouponz,
@@ -94,6 +95,7 @@ const MemoCartPayment = () => {
     setIsTipActive,
     setTips,
     setAvailedCoupon,
+    setDisplayTimer,
   ]);
 
   useEffect(() => {

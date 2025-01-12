@@ -21,7 +21,14 @@ const MemoScan = ({ hide }: { hide?: boolean }) => {
       if (!detectedCodes || detectedCodes.length === 0) {
         return;
       }
-      const result = detectedCodes[0].rawValue;
+      let result = detectedCodes[0].rawValue;
+      console.log("QR Scanner Result:", result);
+
+      // Ensure the URL is absolute
+      if (!result.startsWith("http://") && !result.startsWith("https://")) {
+        result = `https://${result}`;
+      }
+
       window.location.href = result;
       setShowCart(false);
     },
