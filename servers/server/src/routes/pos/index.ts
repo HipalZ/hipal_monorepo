@@ -1381,7 +1381,7 @@ const posRouter = new Hono()
         businessId: businessId,
       });
 
-      if (!tableInfo?.phoneNumbers.includes(user.phone)) {
+      if (tableInfo && !tableInfo?.phoneNumbers.includes(user.phone)) {
         return c.json(
           {
             message: `this table is already occupied by ${tableInfo?.customerName} please ask them to place the order`,
