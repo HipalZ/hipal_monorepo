@@ -13,6 +13,7 @@ import ShimmerImage from "@/components/atoms/imageshimmer";
 import Image from "next/image";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useCart } from "@/components/store/useCart";
+import { useLogin } from "@/components/store/useLogin";
 
 const MainBackground = ({ data }: { data: IBusinessData }) => {
   const searchParams = useSearchParams();
@@ -23,6 +24,7 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
   const { setBusinessDetails } = useBusinessDetails();
   const { setCheckLogin } = usePaymentStore();
   const { resetCartStoreKeys } = useCart();
+  const { userDetails } = useLogin();
 
   // Move accessToken check to client side
   const accessToken = useUserToken.getState().accessToken;
@@ -110,13 +112,9 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
             </button>
           )}
           {accessToken && (
-            <Image
-              src={Cat}
-              alt="Avatar"
-              width={58}
-              height={58}
-              className="object-cover rounded-full aspect-square"
-            />
+            <h1 className="bg-primary text-base-100 font-semibold px-4 py-2.5 rounded-full">
+              {userDetails?.name?.split("")[0]}
+            </h1>
           )}
         </div>
       </article>
