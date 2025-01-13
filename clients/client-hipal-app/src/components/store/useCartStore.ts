@@ -50,7 +50,7 @@ interface ICartStore {
   cartPopup: REPEAT;
   setCartPopup: (popup: REPEAT) => void;
 
-  selectedDish: DishType;
+  selectedDish: DishType | null;
   setSelectedDish: (dish: DishType) => void;
 
   selectedPortion: { _id: number; name: string; price: number } | null;
@@ -115,7 +115,7 @@ export const useCartStore = create(
         set({ cartPopup: popup });
       },
 
-      selectedDish: {} as DishType,
+      selectedDish: {} as DishType | null,
       setSelectedDish: (dish) => {
         set({ selectedDish: dish });
       },

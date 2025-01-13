@@ -1,65 +1,77 @@
-"use client"
-
-import { memo, useCallback } from "react"
-import { useCartStore } from "@/components/store/useCartStore"
-import FoodType from "@/components/atoms/foodType"
-import type { DishType } from "@hi/db-models/src/validators"
-import { _useAllBusiness } from "@/components/store/useAllBusiness"
-import { motion } from "framer-motion"
+import { memo, useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { useCartStore } from "@/components/store/useCartStore";
+import FoodType from "@/components/atoms/foodType";
 import { TbMessage2Plus } from "react-icons/tb";
-import { BiSolidDish } from "react-icons/bi"
-import { GiBubblingBowl } from "react-icons/gi"
-import { FaTimes } from "react-icons/fa"
+import { BiSolidDish } from "react-icons/bi";
+import { GiBubblingBowl } from "react-icons/gi";
+import { FaTimes } from "react-icons/fa";
+import type { DishType } from "@hi/db-models/src/validators";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 interface CartItemProp {
-  hide?: boolean
+  hide?: boolean;
   cartItem: {
-    id: string
-    dish: DishType
-    instruction: string
-    portion: { _id: number; name: string; price: number } | null
+    id: string;
+    dish: DishType;
+    instruction: string;
+    portion: { _id: number; name: string; price: number } | null;
     extras: Array<{
-      id: string
-      name: string
-      quantity: number
-      price: number
-    }>
-    quantity: number
-  }
+      id: string;
+      name: string;
+      quantity: number;
+      price: number;
+    }>;
+    quantity: number;
+  };
 }
 
 const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
-  const { updateCartItem, removeFromCart, setInstructionId, setOpenInstructionModal, removeInstructionFromDish } = useCartStore()
-  const outletInfo = _useAllBusiness((s) => s.data.outletInfo)
-  const increaseQuantity = () => {
-    updateCartItem({ ...cartItem, quantity: cartItem.quantity + 1 })
+  const {
+    selectedDish,
+    updateCartItem,
+    removeFromCart,
+    setInstructionId,
+    setOpenInstructionModal,
+    removeInstructionFromDish,
+  } = useCartStore();
+
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
+
+  // 🛠️ Filter Logic: Check if the current cart item matches the selected dish
+  if (selectedDish && cartItem.dish._id !== selectedDish._id) {
+    return null;
   }
 
-  const decreaseQuantity = useCallback(() => {
-    if (cartItem.quantity > 1) {
-      updateCartItem({ ...cartItem, quantity: cartItem.quantity - 1 })
-    } else {
-      removeFromCart(cartItem.id)
-    }
-  }, [cartItem, updateCartItem, removeFromCart])
+  const increaseQuantity = () => {
+    updateCartItem({ ...cartItem, quantity: cartItem.quantity + 1 });
+  };
 
-  const calculateTotalPrice = useCallback(() => {
-    const basePrice = cartItem.dish.price
+  const decreaseQuantity = () => {
+    if (cartItem.quantity > 1) {
+      updateCartItem({ ...cartItem, quantity: cartItem.quantity - 1 });
+    } else {
+      removeFromCart(cartItem.id);
+    }
+  };
+
+  const calculateTotalPrice = () => {
+    const basePrice = cartItem.dish.price;
     const extrasPrice = cartItem?.extras.reduce(
       (total, extra) => total + extra.price * extra.quantity,
       0
-    )
+    );
     const totalPriceForOne = cartItem.portion
       ? cartItem?.portion?.price + extrasPrice
-      : basePrice + extrasPrice
+      : basePrice + extrasPrice;
 
-    return totalPriceForOne * cartItem.quantity
-  }, [cartItem])
+    return totalPriceForOne * cartItem.quantity;
+  };
 
-  const handleInstruction = useCallback((id: string) => {
-    setInstructionId(id)
-    setOpenInstructionModal(true)
-  }, [setInstructionId, setOpenInstructionModal])
+  const handleInstruction = (id: string) => {
+    setInstructionId(id);
+    setOpenInstructionModal(true);
+  };
 
   return (
     <motion.div
@@ -144,7 +156,7 @@ const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
           </div>
         </div>
         {cartItem?.dish?.instruction && cartItem?.dish?.instruction?.length > 0 && (
-          <div className="mt-2 flex items-center gap-2">
+          <div className="flex items-center gap-2 mt-2">
             <h1 className="text-base text-black">{cartItem?.dish?.instruction}</h1>
             <button
               type="button"
@@ -153,12 +165,12 @@ const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
             >
               <FaTimes size={16} />
             </button>
-          </div>)}
+          </div>
+        )}
       </div>
-    </motion.div >
-  )
-}
+    </motion.div>
+  );
+};
 
-const CartItem = memo(MemoizedCartItem)
-export default CartItem
-
+const CartItem = memo(MemoizedCartItem);
+export default CartItem;

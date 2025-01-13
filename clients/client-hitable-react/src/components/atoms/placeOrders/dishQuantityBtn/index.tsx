@@ -117,7 +117,6 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
     const handleDecreaseQuantity = useCallback(() => {
         if (cartItemsForDish.length > 0) {
             const item = cartItemsForDish[0];
-            console.log(item.dish);
             setSelectedDish(item.dish);
             if (
                 item?.dish?.portions?.length > 0 ||

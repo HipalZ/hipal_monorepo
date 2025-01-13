@@ -124,8 +124,8 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
         item?.dish?.portions?.length > 0 ||
         item?.dish?.addOnIds?.length > 0
       ) {
-        setCartPage("order");
-        setShowCart(!showCart);
+        setCartPage("cart");
+        setShowCart(true);
         return;
       }
       if (item.quantity > 1) {

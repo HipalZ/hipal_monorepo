@@ -16,8 +16,9 @@ import { HiX } from "react-icons/hi";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const MemoLiveCart = () => {
-  const cart = useCartStore((s) => s.cart);
-  const { setShowCart, cartPage, setCartPage, showCart } = useCart();
+  const { cart, setSelectedDish } = useCartStore();
+  const { setShowCart, setCartPage, showCart } = useCart();
+
   const { tableNameMissing, setTableNameMissing, tableName } = useTableData();
   const { isSearchActive, setIsSearchActive } = useSearch();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
@@ -40,6 +41,7 @@ const MemoLiveCart = () => {
     if (!tableNameMissing) {
       setTableNameMissing(true);
     }
+    setSelectedDish(null);
     setCartPage("cart");
     setShowCart(true);
   }, [

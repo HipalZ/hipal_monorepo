@@ -408,12 +408,12 @@ const Cart = () => {
               <article className="flex items-center text-black">
                 <MdOutlineShoppingCart size={24} />
                 <span className="text-sm">
-                  {cart.length} items
+                  {cart?.length} items
                 </span>
               </article>
             </div>
             <div className="flex flex-col h-full overflow-y-auto">
-              <div className="divide-y divide-gray-100 flex-1">
+              <div className="flex-1 divide-y divide-gray-100">
                 {cart.map((cartItem) => (
                   <CartItem key={cartItem.id} cartItem={cartItem} />
                 ))}
@@ -422,12 +422,12 @@ const Cart = () => {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="w-full p-2 mb-2 mt-auto text-center text-sm text-rose-600 bg-rose-50"
+                  className="w-full p-2 mt-auto mb-2 text-sm text-center text-rose-600 bg-rose-50"
                 >
                   Orders once placed, cannot be cancelled!
                 </motion.div>
                 {/* Cart Info */}
-                <div className="flex justify-between items-center gap-3 px-2">
+                <div className="flex items-center justify-between gap-3 px-2">
                   <button onClick={handleBack} type="button" className="h-12 px-4 py-1 border border-[#CACACA] rounded-lg text-center">
                     <PiArrowBendUpLeftBold size={24} />
                   </button>
