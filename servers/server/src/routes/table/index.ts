@@ -345,6 +345,15 @@ const tableRouter = new Hono()
           },
           { session },
         );
+        await PaymentAlert.updateOne(
+          {
+            tableName: table?.name,
+            isAccepted: false,
+            alertType: "OFFLINE",
+          },
+          { isAccepted: true, isRejected: true },
+          { session },
+        );
 
         return c.json(
           {
@@ -520,6 +529,15 @@ const tableRouter = new Hono()
             businessId: table?.businessId,
             tableName: table?.name,
           },
+          { session },
+        );
+        await PaymentAlert.updateOne(
+          {
+            tableName: table?.name,
+            isAccepted: false,
+            alertType: "OFFLINE",
+          },
+          { isAccepted: true, isRejected: true },
           { session },
         );
 
@@ -803,7 +821,7 @@ const tableRouter = new Hono()
         posBillRequestId: billRequestId,
         isAccepted: false,
         isRejected: false,
-      });
+      }).populate("userId order_id");
       return c.json(
         {
           message: "Offline alert fetched successfully",

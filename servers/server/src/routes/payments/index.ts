@@ -1713,7 +1713,7 @@ const paymentsRouter = new Hono()
                 const res = await axios.post(
                   "http://api.petpooja.com/V1/captainorders/success_payment/",
                   {
-                    app_key: isHavePos?.posId?.appKey,
+                    app_key: isHavePos?.posId?.accessKey,
                     app_secret: isHavePos?.posId?.secretKey,
                     access_token: isHavePos?.posId?.authToken,
                     restID: isHavePos?.posId?.restId,
@@ -1722,6 +1722,7 @@ const paymentsRouter = new Hono()
                     pin: tempTable?.pin,
                   },
                 );
+
                 await TempTableSettle.create(
                   [
                     {
