@@ -132,7 +132,7 @@ const BillPopUpMemo = () => {
       {isLoading ? (
         <LoadingSpinner />
       ) : (
-        <section style={{ maxHeight: "90%", overflowY: "auto" }}>
+        <section className='hide-scrollbar' style={{ maxHeight: "90%", overflowY: "auto" }}>
           <div className="flex justify-between mx-6 mt-10">
             <h1 className="text-gray-500">
               {timestampToDateTime(viewData?.date)}

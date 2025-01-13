@@ -1,20 +1,14 @@
 import { memo } from "react";
 import { FaSearch } from "react-icons/fa";
 import {
-  type FilterType,
   useZonesAndTablesStore,
 } from "../store/useZonesAndTable";
-import { useLiteStore } from "../store/useLiteStore";
 
 const MemoTableSearch = () => {
-  const { setActiveFilter, activeFilter, setSearchQuery, searchQuery } =
+  const { setSearchQuery, searchQuery } =
     useZonesAndTablesStore();
 
-  const filters = [
-    { label: "All Tables", value: "all" as FilterType },
-    { label: "Active Tables", value: "active" as FilterType },
-    { label: "Inactive Tables", value: "inactive" as FilterType },
-  ];
+
   return (
     <div className="relative flex-1 px-4 mt-6 space-y-6 sm:px-6">
       <div>
@@ -40,27 +34,6 @@ const MemoTableSearch = () => {
         </div>
       </div>
 
-      <div>
-        <span className="block text-sm font-medium text-gray-700">
-          Filter Tables
-        </span>
-        <div className="flex items-center mt-2 space-x-2">
-          {filters.map((filter) => (
-            <button
-              key={filter.value}
-              type="button"
-              onClick={() => setActiveFilter(filter.value)}
-              className={`px-3 py-2 rounded-md text-sm font-medium ${
-                activeFilter === filter.value
-                  ? "bg-indigo-600 text-white"
-                  : "bg-gray-200 text-gray-700"
-              }`}
-            >
-              {filter.label}
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
   );
 };

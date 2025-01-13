@@ -16,6 +16,8 @@ import { useZonesAndTablesStore } from "@/components/store/useZonesAndTable";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import { useScreenSize } from "@/hooks/useScreenSize";
 import EmptyTableList from "@/components/tables";
+import { useFilters } from "@/components/store/useFilters";
+import CallCaptanMainComp from "@/components/liteAlerts/callWaiter";
 
 // Button variants for smooth color transitions
 
@@ -23,6 +25,7 @@ const AlertsMemo = () => {
   const { selectedNavItem } = useLiteStore();
   const { setIsFilterOpen, isFilterOpen } = useZonesAndTablesStore();
   const [openTable, setOpenTable] = useState<boolean>(false);
+  const { payFilter } = useFilters();
   const screenSize = useScreenSize();
 
   const toggleEmptyTableModal = useCallback(() => {
@@ -35,8 +38,18 @@ const AlertsMemo = () => {
       <section>
         {selectedNavItem === "payments" && (
           <>
-            <OnlineAlerts />
-            <OfflineAlerts />
+            {payFilter === "ALL" && (
+              <>
+                <OnlineAlerts />
+                <OfflineAlerts />
+                <CallCaptanMainComp />
+              </>
+            )}
+            {payFilter === "ONLINE" && <OnlineAlerts />}
+            {(payFilter === "OFFLINE") && <OfflineAlerts />}
+            {
+              payFilter === "CALL_CAPTAIN" && <CallCaptanMainComp />
+            }
           </>
         )}
         {selectedNavItem === "Tables" && <Zones />}
@@ -49,8 +62,6 @@ const AlertsMemo = () => {
             onClose={() => setIsFilterOpen(false)}
             show={isFilterOpen}
             height="80dvh"
-            bottomCross
-            hide
           >
             <ZoneFilters />
           </BottomPopUp>

@@ -4,7 +4,7 @@ import { useLiteStore } from "@/components/store/useLiteStore";
 import { useSearch } from "@/components/store/useSearch";
 
 const OnlineAlerts = () => {
-  const { onlineAlertData, isAscending } = useLiteStore((s) => ({
+  const { onlineAlertData } = useLiteStore((s) => ({
     onlineAlertData: s.onlineAlertData,
     isAscending: s.isAscending,
   }));

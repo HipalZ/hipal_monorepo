@@ -13,6 +13,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button"; // ShadCN Button
 import BottomPopUp from "../universalPopup";
 import Normalsettle from "./normalsettle";
+import toast from "react-hot-toast";
+import { useErrorHandling } from "@/components/utils/helpers";
+import { useLiteStore } from "@/components/store/useLiteStore";
 
 
 const MemoQrCode = ({ data, qrBillId, toggleQr }: { data: IBillData; qrBillId: string; toggleQr: () => void }) => {
@@ -20,9 +23,18 @@ const MemoQrCode = ({ data, qrBillId, toggleQr }: { data: IBillData; qrBillId: s
     const navigate = useNavigate();
     const selectedTable = useOrderStore((s) => s.selectedTable);
     const selectedBiz = useHiClientZ((s) => s.selectedBiz);
+    const captainData = useHiClientZ((s) => s.captainData);
     const [showStatus, setShowStatus] = useState<boolean>(false);
     const [normalSettle, setNormalSettle] = useState<boolean>(false);
+    const { errorText } = useErrorHandling();
     const setOpenOrderModal = useOrderStore((s) => s.setOpenOrderModal);
+    const clickViewMore = useLiteStore((s) => s.clickViewMore);
+    const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
+    const { removeOfflineAlert } = useLiteStore(
+        (s) => ({
+            removeOfflineAlert: s.removeOfflineAlert,
+        }),
+    );
 
     // API call to fetch bill status
     const webhook = async () => {
@@ -56,10 +68,6 @@ const MemoQrCode = ({ data, qrBillId, toggleQr }: { data: IBillData; qrBillId: s
         refetchInterval: 5000,
     });
 
-    // React Query with refetch interval for alert data
-
-
-    // Handle redirection on success or reset QR on failure
     useEffect(() => {
         if (billStatus?.status === "SUCCESS") {
             setTimeout(() => {
@@ -74,20 +82,29 @@ const MemoQrCode = ({ data, qrBillId, toggleQr }: { data: IBillData; qrBillId: s
         }
     }, [billStatus, navigate, businessId]);
 
-    // Toggle showStatus state
+
+    const handleCloseAlert = async (id: string) => {
+        const res = await apiRpc.payments[":pid"].rejectOrder[":alertId"].$put({
+            json: {
+                waiterName: captainData?.name,
+            },
+            param: { alertId: id },
+        });
+        if (res.status === 401) {
+            return errorText();
+        }
+        toast.success("reject successfully");
+        setShowStatus(false);
+        setClickViewMore(!clickViewMore);
+        removeOfflineAlert(id);
+    };
+
     const toggleFn = () => {
         setShowStatus(!showStatus);
     };
 
-    // Handle Accept Action
     const handleAccept = () => {
         setNormalSettle(true);
-    };
-
-    // Handle Reject Action
-    const handleReject = () => {
-        console.log("Reject");
-        setShowStatus(false);
     };
 
     const closeNormalSettle = () => {
@@ -108,7 +125,7 @@ const MemoQrCode = ({ data, qrBillId, toggleQr }: { data: IBillData; qrBillId: s
                 <div className="flex flex-col items-center justify-center space-y-4">
                     <p className="text-lg text-gray-600">{(alertData as Alert).message}</p>
                     <div className="flex space-x-4">
-                        <Button variant="destructive" onClick={handleReject}>
+                        <Button variant="destructive" onClick={() => handleCloseAlert((alertData as Alert)._id)}>
                             Reject
                         </Button>
                         <Button variant="default" onClick={handleAccept}>

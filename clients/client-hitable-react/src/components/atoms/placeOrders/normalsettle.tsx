@@ -198,7 +198,7 @@ const MemoNormalsettle = ({ closeNormalSettle, data: billData, alertData }: { da
                         },
                         {
                             text: "Confirm",
-                            onClick: handleConfirm,
+                            onClick: () => { handleConfirm(); },
                             className: `w-full rounded-md ${!selectedMode ? 'opacity-50 cursor-not-allowed' : ''}`,
                             disable: !selectedMode,
                             isLoading: isSettling || isAlertLoading,

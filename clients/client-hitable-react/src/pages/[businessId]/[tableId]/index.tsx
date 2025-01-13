@@ -10,8 +10,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import SpinnerMemo from '@/components/atoms/loadingSpinner';
 import CustomerInformation from '@/components/atoms/placeOrders/customerInformation';
 import ForceSettle from '@/components/atoms/placeOrders/forceSettle';
-import BillPopUp from '@/components/atoms/billPopUp';
-
 // Lazy loaded components
 const PlaceOrders = lazy(() => import('@/components/atoms/placeOrders'));
 const BottomPopUp = lazy(() => import('@/components/atoms/universalPopup'));

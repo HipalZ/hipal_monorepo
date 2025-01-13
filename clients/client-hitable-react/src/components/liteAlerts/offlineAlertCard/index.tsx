@@ -10,13 +10,11 @@ import {
 } from "@/components/utils/helpers";
 import { apiRpc } from "@hi/common";
 import { IoCloseCircleSharp } from "react-icons/io5";
-import { PiCoinsFill } from "react-icons/pi";
-import { MdOutlineTableBar } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import Offline from "./offline";
+import OfflineCards from "./offlineCards";
 
 interface IOfflineProp {
   offlineAlertData: Alert[];
@@ -72,111 +70,82 @@ const OfflineAlertCard = ({ offlineAlertData }: IOfflineProp) => {
     >
       <AnimatePresence>
         {Array.isArray(offlineAlertData) && offlineAlertData.length > 0 ? (
-          offlineAlertData.map((alert: Alert) => (
-            <motion.div
-              key={alert?._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              layout
-            >
-              <Card
-                className={cn(
-                  "relative overflow-hidden",
-                  alert?.alertType === "WAITER"
-                    ? "border-orange-200"
-                    : "border-blue-200",
-                )}
+          offlineAlertData.map((alert: Alert) => {
+            if (alert?.alertType === "WAITER") {
+              return null;
+            }
+            return (
+              <motion.div
+                key={alert?._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3 }}
+                layout
               >
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <Badge
-                      variant={
-                        alert?.alertType === "WAITER"
-                          ? "warning"
-                          : alert?.status === "FAIL"
-                            ? "destructive"
-                            : "default"
-                      }
-                      className="text-xs font-medium"
-                    >
-                      {alert?.alertType === "WAITER"
-                        ? "Call the staff"
-                        : alert?.alertType.toLowerCase()}
-                    </Badge>
-                    <span className="text-sm font-semibold text-muted-foreground">
-                      {timestampToDateTime(alert?.date)}
-                    </span>
-                  </div>
-                  {alert?.alertType === "WAITER" ? (
-                    <Offline alert={alert} />
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="text-2xl font-bold ">
-                          {alert?.order_id?.discount > 0 ||
-                            alert?.order_id?.claimedCoins > 0 ? (
-                            <span className="mr-2 text-sm line-through text-muted-foreground">
-                              ₹ {alert?.order_id?.billValue}
-                            </span>
-                          ) : null}
-                          ₹ {alert?.order_id?.total}
-                        </h3>
-                        <div className="flex items-center space-x-2 text-right">
-                          <MdOutlineTableBar size={28} />
-                          <h4 className="text-lg font-semibold">
-                            {alert?.tableName}
-                          </h4>
-                        </div>
-                      </div>
-                      <span className="font-semibold">
-                        {alert?.userId?.name?.length > 10
-                          ? `${alert?.userId?.name?.substring(0, 10)}...`
-                          : alert?.userId?.name || "customer"}
-                      </span>
-                      {alert?.coinsApplied && (
-                        <Badge
-                          variant="secondary"
-                          className="flex items-center space-x-1"
-                        >
-                          <PiCoinsFill className="w-4 h-4" />
-                          <span>{alert?.order_id?.claimedCoins} Used</span>
-                        </Badge>
-                      )}
-                    </div>
-                  )}
-                </CardContent>
-                <CardFooter
+                <Card
                   className={cn(
-                    "flex items-center justify-between p-4",
+                    "relative overflow-hidden",
                     alert?.alertType === "WAITER"
-                      ? "bg-orange-50"
-                      : "bg-blue-50",
+                      ? "border-orange-200"
+                      : "border-blue-200"
                   )}
                 >
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive bg-destructive/10"
-                    onClick={() => removeAlert(alert?._id)}
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <Badge
+                        variant={
+                          alert?.alertType === "WAITER"
+                            ? "warning"
+                            : alert?.status === "FAIL"
+                              ? "destructive"
+                              : "default"
+                        }
+                        className="text-xs font-medium"
+                      >
+                        {alert?.alertType === "WAITER"
+                          ? "Call the staff"
+                          : alert?.alertType.toLowerCase()}
+                      </Badge>
+                      <span className="text-sm font-semibold text-muted-foreground">
+                        {timestampToDateTime(alert?.date)}
+                      </span>
+                    </div>
+                    {alert?.alertType !== "WAITER" && (
+                      <OfflineCards alert={alert} />
+                    )}
+                  </CardContent>
+                  <CardFooter
+                    className={cn(
+                      "flex items-center justify-between p-4",
+                      alert?.alertType === "WAITER"
+                        ? "bg-orange-50"
+                        : "bg-blue-50"
+                    )}
                   >
-                    <IoCloseCircleSharp className="w-4 h-4 mr-2" />
-                    Remove
-                  </Button>
-                  {alert?.alertType !== "WAITER" && (
                     <Button
-                      variant="default"
+                      variant="ghost"
                       size="sm"
-                      onClick={() => handleViewMore(alert)}
+                      className="text-destructive hover:text-destructive bg-destructive/10"
+                      onClick={() => removeAlert(alert?._id)}
                     >
-                      View Details
+                      <IoCloseCircleSharp className="w-4 h-4 mr-2" />
+                      Remove
                     </Button>
-                  )}
-                </CardFooter>
-              </Card>
-            </motion.div>
-          ))
+                    {alert?.alertType !== "WAITER" && (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleViewMore(alert)}
+                      >
+                        View Details
+                      </Button>
+                    )}
+                  </CardFooter>
+                </Card>
+              </motion.div>
+            );
+          })
         ) : (
           <motion.div
             className="text-2xl font-semibold text-center col-span-full text-muted-foreground"

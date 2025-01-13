@@ -5,7 +5,7 @@ import { memo, useCallback, useState } from "react";
 import { FiCopy } from "react-icons/fi";
 import { MdOutlineCall, MdOutlineTableBar } from "react-icons/md";
 
-const MemoOffline = ({ alert }: { alert: Alert }) => {
+const MemoOfflineCard = ({ alert }: { alert: Alert }) => {
   const [numberTick, setNumberTick] = useState(false);
 
   const copyText = useCallback((id: string, value?: string) => {
@@ -75,5 +75,5 @@ const MemoOffline = ({ alert }: { alert: Alert }) => {
   );
 };
 
-const Offline = memo(MemoOffline);
-export default Offline;
+const CallCaptainCard = memo(MemoOfflineCard);
+export default CallCaptainCard;
