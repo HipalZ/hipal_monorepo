@@ -9,7 +9,6 @@ import { type orderModal, useOrderStore } from '@/components/store/useOrderData'
 import { ScrollArea } from '@/components/ui/scroll-area';
 import SpinnerMemo from '@/components/atoms/loadingSpinner';
 import CustomerInformation from '@/components/atoms/placeOrders/customerInformation';
-import ForceSettle from '@/components/atoms/placeOrders/forceSettle';
 // Lazy loaded components
 const PlaceOrders = lazy(() => import('@/components/atoms/placeOrders'));
 const BottomPopUp = lazy(() => import('@/components/atoms/universalPopup'));
@@ -20,7 +19,6 @@ const AddTableCount = lazy(() => import('@/components/atoms/placeOrders/addTable
 const Category = lazy(() => import('@/components/atoms/placeOrders/category'));
 const CartItem = lazy(() => import('@/components/atoms/placeOrders/cartItem'));
 const Bill = lazy(() => import('@/components/atoms/placeOrders/bill'));
-// cosnt CustomerInformation = lazy(() => import('@/components/atoms/placeOrders/customerInformation'));
 
 const TablePos = () => {
     const { tableId, businessId } = useParams();
@@ -221,17 +219,7 @@ const TablePos = () => {
                                     </motion.div>
                                 )
                             }
-                            {
-                                modalType === "free" && (
-                                    <motion.div
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: 20 }}
-                                    >
-                                        <ForceSettle />
-                                    </motion.div>
-                                )
-                            }
+
                         </ScrollArea>
                     </BottomPopUp>
                 </Suspense>

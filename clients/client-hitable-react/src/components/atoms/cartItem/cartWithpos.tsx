@@ -1,7 +1,7 @@
 import { memo, useState } from "react";
 import { motion } from "framer-motion";
 import { FaUser } from "react-icons/fa";
-import { MdTableBar, MdAddIcCall, MdLocalOffer } from "react-icons/md";
+import { MdTableBar, MdAddIcCall, MdLocalOffer, MdInfo } from "react-icons/md";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -29,6 +29,7 @@ const MemoCartWithPos = () => {
     const [selectedCartId, setSelectedCartId] = useState<string | null>(null);
     const [reason, setReason] = useState<string>("");
     const predefinedReasons = ["Out of stock", "Incorrect order", "Other", "Customer cancelled"];
+
 
     const openPopup = (cartId: string) => {
         setSelectedCartId(cartId);
@@ -64,7 +65,6 @@ const MemoCartWithPos = () => {
     }
 
     const editTheOrder = async (cart: ICartHistory) => {
-        console.log("Edit the order", cart);
         if (!cart._id) return;
         removeCart(cart._id);
         await updateOrderAction({
@@ -81,9 +81,9 @@ const MemoCartWithPos = () => {
 
     return (
         <div className="space-y-4">
-            {cartData?.map((cart) => (
+            {cartData?.map((cart, index) => (
                 <motion.div
-                    key={cart._id}
+                    key={`${cart._id} + ${index}`}
                     layout
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -131,9 +131,19 @@ const MemoCartWithPos = () => {
                                                     <p className="text-sm font-medium text-gray-700">Extras:</p>
                                                     {item.extras.map((extra) => (
                                                         <p key={extra.id} className="ml-2 text-sm italic text-gray-600">
-                                                            • {extra.name}: {extra.quantity}
+                                                            • {extra?.name}: {extra?.quantity}
                                                         </p>
                                                     ))}
+                                                </div>
+                                            )}
+                                            {item?.dish?.instruction && (
+                                                <div className="p-2 mt-3 rounded-md bg-[#f7f7f7]">
+                                                    <p className="flex items-start text-sm">
+                                                        <MdInfo className="mr-1 mt-0.5 text-[#000000] flex-shrink-0" />
+                                                        <span className="font-medium">
+                                                            Special Instructions: <span className="font-normal">{item?.dish?.instruction}</span>
+                                                        </span>
+                                                    </p>
                                                 </div>
                                             )}
                                         </div>

@@ -12,19 +12,20 @@ export interface ICartItem {
   quantity: number;
 }
 
+type UserIdType =
+  | {
+      _id: string;
+      name: string;
+      phone: string;
+    }
+  | string;
 export interface ICartHistory {
   businessId: string;
   cart: ICartItem[];
   date: number;
   tableName: string;
   tableId: string;
-  userId:
-    | {
-        _id: string;
-        name: string;
-        phone: string;
-      }
-    | string;
+  userId: UserIdType;
   _id: string;
   name?: string;
   phone?: string;
@@ -52,6 +53,15 @@ interface ICartStore {
 
   cartPopup: REPEAT;
   setCartPopup: (popup: REPEAT) => void;
+
+  instructionText: string;
+  setInstructionText: (instruction: string) => void;
+
+  showInstructionPopup: boolean;
+  setShowInstructionPopup: (show: boolean) => void;
+
+  addInstruction: string;
+  setAddInstruction: (instruction: string) => void;
 
   selectedDish: DishType;
   setSelectedDish: (dish: DishType) => void;
@@ -95,6 +105,10 @@ interface ICartStore {
   removeFromCart: (id: string) => void;
   setCartEmpty: () => void;
 
+  addInstructionToCartItem: (cartItemId: string, instruction: string) => void;
+
+  removeInstructionFromCartItem: (cartItemId: string) => void;
+
   dishes: DishType;
 }
 
@@ -104,6 +118,21 @@ export const useCartStore = create(
       openBottomPanel: false,
       setOpenBottomPanel: (open) => {
         set({ openBottomPanel: open });
+      },
+
+      addInstruction: "",
+      setAddInstruction: (instruction) => {
+        set({ addInstruction: instruction });
+      },
+
+      instructionText: "",
+      setInstructionText: (instruction) => {
+        set({ instructionText: instruction });
+      },
+
+      showInstructionPopup: false,
+      setShowInstructionPopup: (show) => {
+        set({ showInstructionPopup: show });
       },
 
       cartPopup: "",
@@ -193,6 +222,38 @@ export const useCartStore = create(
       removeFromCart: (id) => {
         set((state) => ({
           cart: state.cart.filter((i) => i.id !== id),
+        }));
+      },
+
+      addInstructionToCartItem: (cartItemId, instruction) => {
+        set((state) => ({
+          cart: state.cart.map((item) =>
+            item.id === cartItemId
+              ? {
+                  ...item,
+                  dish: {
+                    ...item.dish,
+                    instruction,
+                  },
+                }
+              : item,
+          ),
+        }));
+      },
+
+      removeInstructionFromCartItem: (cartItemId) => {
+        set((state) => ({
+          cart: state.cart.map((item) =>
+            item.id === cartItemId
+              ? {
+                  ...item,
+                  dish: {
+                    ...item.dish,
+                    instruction: "",
+                  },
+                }
+              : item,
+          ),
         }));
       },
 

@@ -16,7 +16,7 @@ import type { IBillData } from "@/components/types/hiClientzData";
 import { Input } from "@/components/ui/input";
 import { useNavigate, useParams } from "react-router-dom";
 
-const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => void; data: IBillData }) => {
+const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => void; data?: IBillData }) => {
     const { businessId } = useParams();
     const navigate = useNavigate();
     const [forceSettle, setForceSettle] = useState<boolean>(false);

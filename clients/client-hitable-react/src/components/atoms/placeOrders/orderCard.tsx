@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { MdPerson, MdRestaurantMenu } from "react-icons/md"
+import { MdInfo, MdPerson, MdRestaurantMenu } from "react-icons/md"
 import type { OrderData } from "@/components/types/hiClientzData"
 
 interface CompactOrderCardProps {
@@ -67,6 +67,19 @@ const EnhancedOrderCard: React.FC<CompactOrderCardProps> = ({ order }) => {
                                                 </span>
                                             </div>
                                         ))}
+                                    </div>
+                                )}
+
+                                {item?.dish?.instruction && (
+                                    <div className="col-span-12 mt-2">
+                                        <div className="p-2 rounded-md bg-[#f7f7f7]">
+                                            <p className="flex items-start text-xs">
+                                                <MdInfo className="mr-1 mt-0.5 text-[#000000] flex-shrink-0" />
+                                                <span className="font-medium">
+                                                    <span className="font-normal">{item?.dish?.instruction}</span>
+                                                </span>
+                                            </p>
+                                        </div>
                                     </div>
                                 )}
                             </motion.div>

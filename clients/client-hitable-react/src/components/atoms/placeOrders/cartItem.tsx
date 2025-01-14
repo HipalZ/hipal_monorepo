@@ -1,6 +1,6 @@
-import { memo, useCallback, useMemo } from "react"
+import { memo, useCallback, useMemo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Minus, Plus, Trash2 } from 'lucide-react'
+import { Edit, Minus, Plus, Trash2, X } from 'lucide-react'
 import { type ICartItem, useCartStore } from "@/components/store/useCartStore"
 import { cn } from "@/components/utils/helpers"
 import FoodType from "../dishType"
@@ -10,15 +10,31 @@ import { useCreateOrder } from "@/components/hooks/useCartApi"
 import { useParams } from "react-router-dom"
 import { useHiClientZ } from "@/components/store/useHiClientzData"
 import { useCart } from "@/components/store/useCart"
+import { Input } from "@/components/ui/input"
+import BottomPopUp from "../universalPopup"
+import { Button } from "@/components/ui/button"
+import toast from "react-hot-toast"
 
 const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string }) => {
-    const { cart, updateCartItem, removeFromCart } = useCartStore();
+    const {
+        cart,
+        updateCartItem,
+        removeFromCart,
+        addInstruction,
+        setAddInstruction,
+        showInstructionPopup,
+        setShowInstructionPopup,
+        instructionText,
+        addInstructionToCartItem,
+        removeInstructionFromCartItem,
+        setInstructionText } = useCartStore();
     const { setIsCartEdit, isCartEdit } = useCart();
     const captainData = useHiClientZ(s => s.captainData);
     const { businessId } = useParams();
     const { setModalType } = useOrderStore();
     const { createOrder, isPending } = useCreateOrder();
     const selectedTable = useOrderStore(s => s.selectedTable);
+    const [selectedCartItem, setSelectedCartItem] = useState<ICartItem | null>(null);
 
     // Filter the cart items based on dishId (if provided)
     const filteredCart = useMemo(() => {
@@ -77,6 +93,24 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
         createOrder(order);
     };
 
+    const handleAddInstruction = (cartItem: ICartItem) => {
+        setSelectedCartItem(cartItem);
+        setInstructionText(cartItem.dish.instruction || "");
+        setShowInstructionPopup(true);
+    };
+
+    const handleSaveInstruction = () => {
+        if (instructionText?.trim() === "") return toast.error("Instruction can't be empty");
+        if (selectedCartItem) {
+            addInstructionToCartItem(selectedCartItem.id, instructionText);
+            setShowInstructionPopup(false);
+        }
+    };
+
+    const handleRemoveInstruction = (cartItem: ICartItem) => {
+        removeInstructionFromCartItem(cartItem.id);
+    };
+
     return (
         <section className="h-screen lg:py-24 bg-gray-50">
             <AnimatePresence>
@@ -120,6 +154,27 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
                                         <h3 className="mt-1 text-sm font-bold text-green-600">
                                             ₹{calculateTotalPrice(cartItem).toFixed(2)}
                                         </h3>
+                                        {cartItem?.dish?.instruction && (
+                                            <div className="relative p-2 bg-gray-100 rounded-md">
+                                                <Button
+                                                    variant="ghost"
+                                                    onClick={() => handleRemoveInstruction(cartItem)}
+                                                    className="absolute w-2 text-red-500 transform -translate-x-1/2 -translate-y-1/2 left-4 top-1/2"
+                                                >
+                                                    <X size={16} />
+                                                </Button>
+                                                <p className="flex items-center pl-6 text-sm text-gray-800">
+                                                    {cartItem?.dish?.instruction}
+                                                </p>
+                                            </div>
+                                        )}
+                                        <motion.button
+                                            whileTap={{ scale: 0.9 }}
+                                            onClick={() => handleAddInstruction(cartItem)}
+                                            className="flex items-center justify-center !mt-4 text-xs text-blue-600 bg-blue-100 p-2 gap-1 rounded-full"
+                                        >
+                                            <Edit size={14} /> add instruction
+                                        </motion.button>
                                     </div>
 
                                     {/* Right Section */}
@@ -152,6 +207,7 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
                                         </motion.button>
                                     </div>
                                 </div>
+
                             </motion.div>
                         ))}
                     </div>
@@ -168,6 +224,32 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <BottomPopUp width="w-[30rem]" height="h-[50dvh]" show={showInstructionPopup} onClose={() => setShowInstructionPopup(false)}>
+                <div className="p-4">
+                    <h3 className="mb-4 font-semibold text-gray-800">Add Instruction</h3>
+                    <Input
+                        label="Special Instruction"
+                        placeholder="Add your instruction..."
+                        value={instructionText}
+                        maxLength={100}
+                        minLength={2}
+                        onChange={(e) => setInstructionText(e.target.value)}
+                    />
+                </div>
+                <CommonBottomButton
+                    buttons={[
+                        {
+                            text: "Save",
+                            onClick: handleSaveInstruction,
+                            className: "rounded-md w-full shadow-md",
+                            highlight: instructionText.length > 0,
+                            disable: instructionText.length === 0,
+                            isLoading: isPending,
+                        },
+                    ]}
+                />
+            </BottomPopUp>
 
             {!hide && (
                 <CommonBottomButton
