@@ -1,4 +1,4 @@
-import { memo, useState, useEffect } from "react";
+import { memo, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useCartStore } from "@/components/store/useCartStore";
 import FoodType from "@/components/atoms/foodType";
@@ -14,7 +14,6 @@ interface CartItemProp {
   cartItem: {
     id: string;
     dish: DishType;
-    instruction: string;
     portion: { _id: number; name: string; price: number } | null;
     extras: Array<{
       id: string;
@@ -25,6 +24,8 @@ interface CartItemProp {
     quantity: number;
   };
 }
+
+const tags = ["Best Seller", "Special", "Recommended", "New", "Popular"]
 
 const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
   const {
@@ -55,7 +56,7 @@ const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
     }
   };
 
-  const calculateTotalPrice = () => {
+  const calculateTotalPrice = useCallback(() => {
     const basePrice = cartItem.dish.price;
     const extrasPrice = cartItem?.extras.reduce(
       (total, extra) => total + extra.price * extra.quantity,
@@ -66,19 +67,19 @@ const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
       : basePrice + extrasPrice;
 
     return totalPriceForOne * cartItem.quantity;
-  };
+  }, [cartItem]);
 
-  const handleInstruction = (id: string) => {
+  const handleInstruction = useCallback((id: string) => {
     setInstructionId(id);
     setOpenInstructionModal(true);
-  };
+  }, [setInstructionId, setOpenInstructionModal]);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      className="relative flex items-start justify-between px-4 py-3 border-b border-gray-100 last:border-none"
+      className="relative flex items-start justify-between px-4 py-3 border-b border-gray-100"
     >
       <div className="flex-1 min-w-0">
         <div className="flex items-start gap-2 mb-1">
@@ -90,7 +91,7 @@ const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center px-2 py-[3px] rounded-lg text-xs font-medium bg-[#DE9615] text-white">
-                Best seller
+                {tags[Math.random() * tags.length | 0]}
               </span>
             </div>
             <section className="mt-2 -ml-6">

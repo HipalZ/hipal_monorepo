@@ -1,5 +1,4 @@
 import { useBillSummary, useGetBill } from '@/components/hooks/usePayments'
-import { BillItem } from '@/components/organisms/cart/cartPayment'
 import useCouponTemp from '@/components/store/useCouponTemp'
 import { usePaymentStore } from '@/components/store/usePaymentStore'
 import { calculateFinalBill } from '@/components/utils/helpers'
@@ -204,3 +203,13 @@ const PosBillBreakdown = () => {
 }
 
 export default PosBillBreakdown
+
+export const BillItem = ({ icon, label, value, className = "" }) => (
+    <div className={`poppins-regular flex items-center justify-between ${className}`}>
+        <div className="flex items-center">
+            <h3 className="mr-2 text-black text-sm">{icon}</h3>
+            <h3 className="text-black text-sm">{label}</h3>
+        </div>
+        <h3 className="text-black text-sm">{value}</h3>
+    </div>
+);

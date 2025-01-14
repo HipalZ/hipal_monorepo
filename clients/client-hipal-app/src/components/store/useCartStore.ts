@@ -220,7 +220,7 @@ export const useCartStore = create(
               ...updatedCart[dishIndex].dish,
               instruction,
             };
-            toast.success("Instruction added successfully!");
+            toast.success("Cooking Instruction noted!");
             return { cart: updatedCart };
           }
 
@@ -238,7 +238,7 @@ export const useCartStore = create(
             const { instruction, ...restDish } = updatedCart[dishIndex].dish;
             updatedCart[dishIndex].dish = restDish;
             set({ instruction: "" });
-            toast.success("Instruction removed successfully!");
+            toast.success("Cooking Instruction noted removed!");
             return { cart: updatedCart };
           }
 

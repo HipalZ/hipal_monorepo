@@ -8,10 +8,19 @@ import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import type { IBusinessData } from "@/components/types/businessData";
-import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import useTableData from "@/components/store/useTableData";
-import PaymentHeader from "../payment/paymentHeader";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import LoadingSpinnerCircle from "@/components/atoms/loader";
+
+const PaymentHeader = dynamic(() => import("../payment/paymentHeader"), {
+    ssr: false,
+    loading: () => <SkeletonLoader height={50} />,
+});
+const BillPage = dynamic(() => import("@/components/organisms/cart/billPage"), {
+    ssr: false,
+    loading: () => <LoadingSpinnerCircle />,
+});
 
 const TotalBillButton = dynamic(() => import("@/components/templates/newPayment/totalBillButton"), {
     ssr: false,
@@ -62,7 +71,7 @@ const CouponzBlink = dynamic(() => import("@/components/templates/newPayment/cou
 });
 
 const NewPaymentComponent = dynamic(
-    () => import("@/components/templates/payment/newSelectPayment"),
+    () => import("@/components/templates/payment/paymentModes"),
     {
         ssr: false,
         loading: () => <BottomBarSkeleton />,
@@ -100,7 +109,9 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
         isLoading,
         selectedMode,
         showError,
+        showBillPage,
     } = usePaymentStore();
+
     const { setTableName } = useTableData()
     const { applyCouponz } = useCouponTemp((s) => ({
         applyCouponz: s.applyCouponz,
@@ -134,8 +145,6 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
         staleTime: 1000 * 60 * 5,
     })
 
-    console.log("render pos payment")
-
     return (
         <main className="relative h-screen bg-black">
             {isLoading ? (
@@ -146,28 +155,32 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
                 <ApplyCouponz />
             ) : (
                 <>
-                    <section>
-                        <PaymentBack data={data} />
-                        {selectedMode === "INVOICE" ? (
-                            <PaymentHeader />
-                        ) : null}
-                    </section>
-                    {selectedMode === "INVOICE" ? (
-                        <>
-                            <PaymentCard />
-                            <CoinzRewardSection />
-                            <section className="absolute z-30 w-full mt-10 bg-white rounded-2xl">
-                                <CouponzBlink />
-                                <RefferalCouponz />
-                                <BillSummary />
-                                <SuggestCouponz />
-                                <TotalBillButton />
+                    {showBillPage ? <BillPage /> :
+                        <div>
+                            <section>
+                                <PaymentBack data={data} />
+                                {selectedMode === "INVOICE" ? (
+                                    <PaymentHeader />
+                                ) : null}
                             </section>
-                        </>
-                    ) : (
-                        <NewPaymentComponent />
-                    )}
-                    <AvailableCoinz />
+                            {selectedMode === "INVOICE" ? (
+                                <>
+                                    <PaymentCard />
+                                    <CoinzRewardSection />
+                                    <section className="absolute z-30 w-full mt-10 bg-white rounded-2xl">
+                                        {/* <CouponzBlink /> */}
+                                        <RefferalCouponz />
+                                        <BillSummary />
+                                        <SuggestCouponz />
+                                        <TotalBillButton />
+                                    </section>
+                                </>
+                            ) : (
+                                <NewPaymentComponent />
+                            )}
+                            <AvailableCoinz />
+                        </div>
+                    }
                 </>
             )}
         </main>

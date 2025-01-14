@@ -568,14 +568,31 @@ export interface IMerchantDetails {
   razorpayKeyId: string;
 }
 
-export interface IBillData {
-  customerName: string;
-  customerPhone: string;
-  tableName: string;
-  billRequestId: string;
-  subTotal: number;
+interface Extra {
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface DishItem {
+  dish: {
+    name: string;
+    price: number;
+    quantity: number;
+  };
+  extras: Extra[];
+}
+
+export interface BillData {
+  billing_user_name: string;
   serviceCharge: number;
   discount: number;
   tax: number;
   total: number;
+  customerPhone: string;
+  customerName: string;
+  tableName: string;
+  subTotal: number;
+  billRequestId: string;
+  items: DishItem[];
 }

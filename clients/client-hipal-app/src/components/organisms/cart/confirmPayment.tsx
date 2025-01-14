@@ -37,7 +37,7 @@ const MemoConfirmPayment = () => {
                         Table: {tableName}
                     </p>
                 </div>
-                <div className="relative bg-[#8DC1F120] w-[250px] my-8 aspect-square rounded-full overflow-hidden">
+                <div className="relative bg-[#8DC1F120] w-[250px] mb-8 aspect-square rounded-full overflow-hidden">
                     <TransitionImages images={images} />
                 </div>
                 <motion.div
@@ -49,21 +49,19 @@ const MemoConfirmPayment = () => {
                     <h2 className="text-xl font-semibold text-black">
                         No further items can be placed!
                     </h2>
-                    <p className="text-base text-black">
+                    <p className="text-sm text-black">
                         After the bill is generated for this table.
                     </p>
                 </motion.div>
             </div>
-            <div className="mt-36 w-full max-w-md px-4 sticky bottom-2">
-                <div className="poppins-regular my-8">
-                    <button
-                        type="button"
-                        onClick={goBack}
-                        className={cn("bg-gray-50 border-black text-black border w-full text-base p-3 rounded-xl")}
-                    >
-                        Go Back and Check Again
-                    </button>
-                </div>
+            <div className="mt-36 poppins-regular space-y-4 w-full max-w-md px-4 sticky bottom-2">
+                <button
+                    type="button"
+                    onClick={goBack}
+                    className={cn("bg-gray-50 border-black/50 text-black/50 border w-full text-base p-3 rounded-xl")}
+                >
+                    Go Back and Check Again
+                </button>
                 <SwipeToPlaceOrder placeOrder={placeOrder} />
             </div>
         </>

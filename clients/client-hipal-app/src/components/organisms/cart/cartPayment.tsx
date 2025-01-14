@@ -1,15 +1,13 @@
 "use client";;
-import { memo, useCallback, useState, useRef, useEffect } from "react";
+import dynamic from "next/dynamic";
+import { memo, useCallback, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useCart } from "@/components/store/useCart";
 import { useCouponz } from "@/components/store/useCouponz";
-import { useGetBill } from "@/components/hooks/usePayments";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import CommonBottomButton from "@/components/atoms/bottomButton";
 import { HiX } from "react-icons/hi";
-import FinalBillLoader from "./finalBillLoader";
 
-
+const FinalBillLoader = dynamic(() => import("./finalBillLoader"));
 
 const MemoCartPayment = () => {
   // Store hooks
@@ -17,7 +15,6 @@ const MemoCartPayment = () => {
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
   // Local state
-  const [loading, setLoading] = useState(false);
   const timerRef = useRef(10);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -33,7 +30,6 @@ const MemoCartPayment = () => {
     setShowInput,
     setIsTipActive,
     setIsButtonDisabled,
-    billData,
     setDisplayTimer
   } = usePaymentStore();
 
@@ -41,9 +37,6 @@ const MemoCartPayment = () => {
   const { setAvailedCoupon } = useCouponz((s) => ({
     setAvailedCoupon: s.setAvailedCoupon,
   }));
-
-  // Bill query
-  const { isLoading, billData: data, refetch, failureCount, isError, error } = useGetBill();
 
   // Countdown timer for button
   useEffect(() => {
@@ -62,16 +55,13 @@ const MemoCartPayment = () => {
     };
   }, []);
 
-  // Retry function
-  const handleRetry = useCallback(() => {
-    refetch();
-  }, [refetch]);
-
-
+  // // Retry function
+  // const handleRetry = useCallback(() => {
+  //   refetch();
+  // }, [refetch]);
 
   // Proceed to payment function
   const goBack = useCallback(() => {
-    setLoading(true);
     setEditBillModal(false);
     setClaimCouponz(0);
     setClaimedCoinz(0);
@@ -112,14 +102,15 @@ const MemoCartPayment = () => {
       setCartPage("payment");
       setTimeout(() => {
         router.push(`/${customLink}/payment`);
-      }, 10000);
+        setDisplayTimer(10);
+      }, 10);
     }
   }, [billValue])
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen px-6">
       <FinalBillLoader />
-      {isError && error?.status === 400 && failureCount < 1 && (
+      {/* {isError && error?.status === 400 && failureCount < 1 && (
         <CommonBottomButton
           buttons={[
             {
@@ -131,7 +122,7 @@ const MemoCartPayment = () => {
             },
           ]}
         />
-      )}
+      )} */}
       <button
         type="button"
         onClick={goBack}
@@ -145,13 +136,3 @@ const MemoCartPayment = () => {
 
 const CartPayment = memo(MemoCartPayment);
 export default CartPayment;
-
-export const BillItem = ({ icon, label, value, className = "" }) => (
-  <div className={`poppins-regular flex items-center justify-between ${className}`}>
-    <div className="flex items-center">
-      <h3 className="mr-2 text-black text-sm">{icon}</h3>
-      <h3 className="text-black text-sm">{label}</h3>
-    </div>
-    <h3 className="text-black text-sm">{value}</h3>
-  </div>
-);

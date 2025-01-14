@@ -18,12 +18,9 @@ import { motion } from "framer-motion"
 import { cn } from "@/components/utils/helpers";
 import glassTable from "@/assets/cart/glassTable.png";
 import Image from "next/image";
-import { BiRightArrow } from "react-icons/bi";
-import { FaArrowLeft } from "react-icons/fa";
 import { MdOutlineShoppingCart } from "react-icons/md";
 import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
 import ConfirmPayment from "./confirmPayment";
-import BottomPopUp from "@/components/atoms/bottomPopUp";
 import SwipeToPlaceOrder from "./swipeToPlaceOrder";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
 
@@ -393,50 +390,47 @@ const Cart = () => {
     <div className={cn("overflow-y-auto h-[100dvh] text-[#000000] bg-[#ffffff] relative")}>
       {cartPage === "history" && <CartHeader />}
       {cartPage === "cart" &&
-        (cart.length === 0 ? (
-          <EmptyCart />
-        ) : (
-          <section className="relative h-[calc(91dvh+5px)]">
-            <div className="bg-white z-[500] sticky top-0 flex items-center justify-between px-4 py-3 border-b border-gray-200">
-              <h2 className="text-2xl font-medium">Live cart</h2>
-              {hiCode && (
-                <div className="!text-sm text-black inline-flex items-center gap-2">
-                  <Image src={glassTable} alt="Table" />
-                  <span>code {hiCode}</span>
-                </div>
-              )}
-              <article className="flex items-center text-black">
-                <MdOutlineShoppingCart size={24} />
-                <span className="text-sm">
-                  {cart?.length} items
-                </span>
-              </article>
-            </div>
-            <div className="flex flex-col h-full overflow-y-auto">
-              <div className="flex-1 divide-y divide-gray-100">
-                {cart.map((cartItem) => (
-                  <CartItem key={cartItem.id} cartItem={cartItem} />
-                ))}
+        <section className="relative h-[calc(91dvh+5px)]">
+          <div className="bg-white z-[500] sticky top-0 flex items-center justify-between px-4 py-3 border-b border-gray-200">
+            <h2 className="text-2xl font-medium">Live cart</h2>
+            {hiCode && (
+              <div className="!text-sm text-black inline-flex items-center gap-2">
+                <Image src={glassTable} alt="Table" />
+                <span>code {hiCode}</span>
               </div>
-              <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="w-full p-2 mt-auto mb-2 text-sm text-center text-rose-600 bg-rose-50"
-                >
-                  Orders once placed, cannot be cancelled!
-                </motion.div>
-                {/* Cart Info */}
-                <div className="flex items-center justify-between gap-3 px-2">
-                  <button onClick={handleBack} type="button" className="h-12 px-4 py-1 border border-[#CACACA] rounded-lg text-center">
-                    <PiArrowBendUpLeftBold size={24} />
-                  </button>
-                  <SwipeToPlaceOrder placeOrder={placeOrder} />
-                </div>
+            )}
+            <article className="flex items-center text-black">
+              <MdOutlineShoppingCart size={24} />
+              <span className="text-sm">
+                {cart?.length} items
+              </span>
+            </article>
+          </div>
+          <div className="flex flex-col h-full overflow-y-auto">
+            <div className="flex-1 divide-y divide-gray-100">
+              {cart?.Length > 0 ? cart?.map((cartItem) => (
+                <CartItem key={cartItem.id} cartItem={cartItem} />
+              )) : <EmptyCart />}
+            </div>
+            <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="w-full p-2 mt-auto mb-2 text-sm text-center text-rose-600 bg-rose-50"
+              >
+                Orders once placed, cannot be cancelled!
+              </motion.div>
+              {/* Cart Info */}
+              <div className="flex items-center justify-between gap-3 px-2">
+                <button onClick={handleBack} type="button" className="h-12 px-4 py-1 border border-[#CACACA] rounded-lg text-center">
+                  <PiArrowBendUpLeftBold size={24} />
+                </button>
+                <SwipeToPlaceOrder placeOrder={placeOrder} />
               </div>
             </div>
-          </section>
-        ))}
+          </div>
+        </section>
+      }
 
       {/* {cartPage === "history" && (
         <div className="w-full px-4">

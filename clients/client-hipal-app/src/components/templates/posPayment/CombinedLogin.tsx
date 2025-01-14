@@ -21,7 +21,6 @@ import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 
 const MemoCombinedLogin = () => {
     const pathName = usePathname()
-    console.log('pathName', pathName)
     const [phone, setPhone] = useState("");
     const { errorText } = useErrorHandling();
     const [otp, setOtp] = useState(["", "", "", ""]);
@@ -144,7 +143,6 @@ const MemoCombinedLogin = () => {
     }, [direction, customLink, isPayment, urlFrom, invoiceUrl]);
 
     const verifyOtp = async () => {
-        console.log("direction", direction)
         const fullOtp = otp.join("");
         if (fullOtp.length !== 4) {
             setError("Please enter the complete OTP.");

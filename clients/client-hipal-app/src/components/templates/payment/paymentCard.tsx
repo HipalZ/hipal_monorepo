@@ -1,5 +1,4 @@
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
-import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { memo, useCallback, useEffect, useMemo } from "react";
 
@@ -30,7 +29,7 @@ const MemoPaymentCard = () => {
 
   const handleRedirection = useCallback(() => {
     setShowBillPage(true);
-  }, [setShowBillPage])
+  }, [setShowBillPage]);
 
   return (
     <>

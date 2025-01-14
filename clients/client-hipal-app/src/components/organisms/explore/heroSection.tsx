@@ -55,7 +55,10 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
             <GrLocation size="24" />
           </button>
         </section>
-        <ReadMore text={data?.business?.description || ""} />
+        <center className="text-2xl text-center text-primary">
+          About us
+        </center>
+        <ReadMore text={data?.business?.description || ""} className="text-center" />
       </center>
     </div>
   );

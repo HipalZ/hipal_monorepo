@@ -140,7 +140,9 @@ const MemoCategoryPageBtn = () => {
 
   const handleInstructionText = useCallback(
     (e) => {
-      setTempInstruction(e.target.value);
+      const value = e.target.value;
+      const sanitizedValue = value.replace(/\s+/g, ' ')
+      setTempInstruction(sanitizedValue);
     },
     []
   );
@@ -149,12 +151,18 @@ const MemoCategoryPageBtn = () => {
     addInstructionToDish(tempInstruction);
     setInstruction(tempInstruction);
     setOpenInstructionModal(false);
+    setTempInstruction("");
   }, [
     addInstructionToDish,
     setOpenInstructionModal,
     tempInstruction,
     setInstruction,
   ]);
+
+  const handleCloseInstructionModal = useCallback(() => {
+    setOpenInstructionModal(false)
+    setTempInstruction("");
+  }, [setOpenInstructionModal]);
 
   return (
     <>
@@ -244,9 +252,9 @@ const MemoCategoryPageBtn = () => {
         <BottomPopUp
           height="50dvh"
           show={openInstructionModal}
-          onClose={() => setOpenInstructionModal(false)}
+          onClose={handleCloseInstructionModal}
         >
-          <div className="p-6 pb-8 overflow-y-auto">
+          <div className="p-3 pb-8 overflow-y-auto">
             {/* Header */}
             <header className="flex items-center gap-2 mb-4">
               <GiCookingPot className="w-8 h-8 text-orange-500" />
@@ -265,7 +273,7 @@ const MemoCategoryPageBtn = () => {
                 onChange={handleInstructionText}
                 maxLength={100}
                 placeholder="Enter your cooking instructions here..."
-                className="w-full min-h-[120px] p-4 text-base text-black bg-white rounded-lg border border-gray-200 
+                className="w-full min-h-[120px] p-2 text-base text-black bg-white rounded-lg border border-gray-200 
                      focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500
                      placeholder:text-gray-400 resize-none"
                 aria-label="Cooking instructions"
@@ -283,6 +291,7 @@ const MemoCategoryPageBtn = () => {
                   onClick: handleSaveInstruction,
                   type: "button",
                   highlight: true,
+                  disable: tempInstruction?.length === 0,
                 },
               ]}
             />

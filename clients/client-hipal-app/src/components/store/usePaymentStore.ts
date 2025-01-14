@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { PageStates } from "../utils/helpers";
-import type { IBillData, IMerchantDetails } from "../types/businessData";
+import type { BillData, IMerchantDetails } from "../types/businessData";
 
 interface IUsePaymentStore {
   claimedCoinz: number;
@@ -63,8 +63,8 @@ interface IUsePaymentStore {
   showBillPage: boolean;
   setShowBillPage: (show: boolean) => void;
 
-  billData: IBillData;
-  setBillData: (data: IBillData) => void;
+  billData: BillData;
+  setBillData: (data: BillData) => void;
 
   isButtonDisabled: boolean;
   setIsButtonDisabled: (disabled: boolean) => void;
@@ -162,7 +162,7 @@ export const usePaymentStore = create<IUsePaymentStore>((set) => ({
     billRequestId: "",
     items: [],
   },
-  setBillData: (data: IBillData) => set(() => ({ billData: data })),
+  setBillData: (data: BillData) => set(() => ({ billData: data })),
 
   isButtonDisabled: true,
   setIsButtonDisabled: (disabled: boolean) =>

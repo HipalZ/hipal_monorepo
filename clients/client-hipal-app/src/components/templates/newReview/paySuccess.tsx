@@ -17,6 +17,7 @@ import Sunrays from "@/assets/img/sunrays_white.png";
 import { useReview } from "@/components/store/useReview";
 import { useErrorHandling } from "@/utils/helper";
 import { toast } from "react-toastify";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 
 const CouponzBlink = dynamic(() => import("../newPayment/couponzBlink"), {
   ssr: false,
@@ -33,7 +34,7 @@ const MemoPayOnlineSuccess = () => {
     userDetails: s.userDetails,
     setUserCoinZ: s.setUserCoinZ,
   }));
-
+  const { setIsLoading } = usePaymentStore()
   const setUserReward = useUserReward((s) => s.setUserReward);
   const [animate, setAnimate] = useState(false);
   const businessDetails = useBusinessDetails((s) => s.businessDetails);
@@ -43,6 +44,8 @@ const MemoPayOnlineSuccess = () => {
   const mode = searchParams.get("mode");
   const claim = searchParams.get("claim");
   const getUserReward = async () => {
+    // making the payment loader off
+    setIsLoading(true);
     if (
       userDetails.phone === "NaN" ||
       Number(userDetails.phone) === 0 ||
@@ -176,9 +179,9 @@ const MemoPayOnlineSuccess = () => {
       <br />
       {/* coinz earned */}
 
-      <section className="relative mb-[5rem]">
+      {/* <section className="relative mb-[5rem]">
         <CouponzBlink />
-      </section>
+      </section> */}
       <section
         style={{
           boxShadow: "0px 0px 2px 0px #0000001F",

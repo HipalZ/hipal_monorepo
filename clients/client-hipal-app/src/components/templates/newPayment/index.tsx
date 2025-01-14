@@ -7,18 +7,16 @@ import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { BottomBarSkeleton } from "@/components/atoms/paymentPageLoader";
 import useCouponTemp from "@/components/store/useCouponTemp";
+import LoadingSpinnerCircle from "@/components/atoms/loader";
 
 const BillPage = dynamic(() => import("@/components/organisms/cart/billPage"), {
   ssr: false,
-  loading: () => <SkeletonLoader height={200} />,
+  loading: () => <LoadingSpinnerCircle />,
 });
 
-const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
-  ssr: false,
-  loading: () => <SkeletonLoader height={200} />,
-});
+
 const NewPaymentComponent = dynamic(
-  () => import("@/components/templates/payment/newSelectPayment"),
+  () => import("@/components/templates/payment/paymentModes"),
   {
     ssr: false,
     loading: () => <BottomBarSkeleton />,
@@ -107,7 +105,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     applyCouponz: s.applyCouponz,
   }));
 
-  const { setEditBillModal, showBillPage, setShowBillPage, billData } = usePaymentStore();
+  const { setEditBillModal, showBillPage, billData } = usePaymentStore();
 
   useEffect(() => {
     if (billValue === 0) {
@@ -135,9 +133,8 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
           <ApplyCouponz />
         ) : (
           <>
-            {showBillPage ? <BottomPopUp bottomCross hide show={showBillPage} onClose={() => setShowBillPage(false)}>
-              <BillPage billData={billData} />
-            </BottomPopUp>
+            {showBillPage ?
+              <BillPage />
               : <div>
                 <section>
                   <PaymentBack data={data} />
@@ -150,7 +147,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                     <PaymentCard />
                     <CoinzRewardSection />
                     <section className="absolute z-30 w-full mt-10 bg-white rounded-2xl">
-                      <CouponzBlink />
+                      {/* <CouponzBlink /> */}
                       <RefferalCouponz />
                       <BillSummary />
                       <SuggestCouponz />

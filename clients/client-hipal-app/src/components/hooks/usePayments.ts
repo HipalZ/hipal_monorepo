@@ -9,7 +9,7 @@ import { type ChangeEvent, useCallback } from "react";
 import { useCouponz } from "../store/useCouponz";
 import { useErrorHandling } from "@/utils/helper";
 import { useLogin } from "../store/useLogin";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { usePaymentStore } from "../store/usePaymentStore";
 import useBusinessDetails from "../store/useBusinessDetails";
 import useLoyaltyData from "../store/useLoyaltyData";
@@ -17,7 +17,7 @@ import usePayment from "../store/usePayment";
 import useTableData, { resetTableData } from "../store/useTableData";
 import { useQuery } from "@tanstack/react-query";
 import { _useAllBusiness } from "../store/useAllBusiness";
-import type { IBillData } from "../types/businessData";
+import type { BillData } from "../types/businessData";
 import { useCart } from "@/components/store/useCart";
 import { differenceInMinutes } from "date-fns";
 
@@ -537,6 +537,7 @@ export const useHandleMode = () => {
 };
 
 export const useGetBill = () => {
+  const pathName = usePathname();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const tableName = useTableData((state) => state.tableName);
   const userDetails = useLogin((state) => state.userDetails);
@@ -561,7 +562,7 @@ export const useGetBill = () => {
     }
 
     const res = await response.json();
-    const payment = res?.data as IBillData;
+    const payment = res?.data as BillData;
     setBillData(payment);
     setBillValue(payment.total);
     if (payment?.total === 0) {
@@ -580,7 +581,7 @@ export const useGetBill = () => {
     queryKey: ["getBill", outletInfo?.businessId, tableName],
     queryFn: getBill,
     staleTime: 1000 * 30,
-    enabled: selectedMode !== "MODE",
+    enabled: selectedMode !== "MODE" && !pathName?.includes("posPayment"),
   });
 
   return { isLoading, billData, refetch, failureCount, isError, error };
