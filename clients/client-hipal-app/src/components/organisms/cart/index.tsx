@@ -408,7 +408,7 @@ const Cart = () => {
           </div>
           <div className="flex flex-col h-full overflow-y-auto">
             <div className="flex-1 divide-y divide-gray-100">
-              {cart?.Length > 0 ? cart?.map((cartItem) => (
+              {cart?.length > 0 ? cart?.map((cartItem) => (
                 <CartItem key={cartItem.id} cartItem={cartItem} />
               )) : <EmptyCart />}
             </div>
