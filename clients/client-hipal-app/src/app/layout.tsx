@@ -26,6 +26,10 @@ const DynamicCombinedLogin = dynamic(() => import("@/components/atoms/dynamicCom
   ssr: false,
 });
 
+const DynamicSessionOut = dynamic(() => import("@/components/atoms/sessionTimedOut"), {
+  ssr: false
+})
+
 export const metadata: Metadata = {
   title: "Hipal App",
   description: "Menu Application for Businesses",
@@ -127,6 +131,7 @@ export default function RootLayout({
           </DynamicQueryComponent>
           <DynamicCombinedLogin />
           <DynamicScanPage />
+          <DynamicSessionOut />
         </Suspense>
       </body>
     </html>

@@ -134,7 +134,7 @@ const MemoBillPage = () => {
                         </h2>
 
                         <div className="space-y-4">
-                            {billData.items.map((item, index) => (
+                            {billData?.items?.map((item, index) => (
                                 <motion.article
                                     key={index?.toString()}
                                     variants={item}
@@ -171,10 +171,10 @@ const MemoBillPage = () => {
                         transition={{ delay: 0.4 }}
                     >
                         <div className="space-y-2">
-                            <div className="flex justify-between text-black">
+                            {billData?.subTotal ? <div className="flex justify-between text-black">
                                 <span>Subtotal</span>
                                 <span>₹{billData?.subTotal}</span>
-                            </div>
+                            </div> : null}
                             <div className="flex justify-between text-black">
                                 <span>Service Charge</span>
                                 <span>₹{billData?.serviceCharge}</span>

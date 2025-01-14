@@ -25,6 +25,7 @@ import useTableData from "@/components/store/useTableData";
 import { useAuthTableUser } from "../../hooks/usePayments";
 import HiCodeValidate from "@/components/organisms/cart/hicodeValidate";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
+import { cn } from "@/components/utils/helpers";
 
 const MemoCategoryPageBtn = () => {
   const accessToken = useUserToken.getState().accessToken;
@@ -174,11 +175,10 @@ const MemoCategoryPageBtn = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="px-2 sticky z-50 bottom-0 w-full 
-             max-w-[30rem] bg-[#FCFCFC] shadow-lg
-            overflow-hidden py-4 text-black flex gap-2 justify-evenly"
-              style={{ boxShadow: "4px 4px 4px 4px #00000040" }}
+              className="px-2 sticky z-50 bottom-0 w-full max-w-[30rem] bg-[#FCFCFC] shadow-lg overflow-hidden py-4 text-black flex gap-2 justify-evenly"
+              style={{ boxShadow: "4px 4px 4px #00000040" }}
             >
+              {/* Explore Button */}
               <motion.div variants={itemVariants}>
                 <Link href={`/${customLink}/explore`} className="">
                   <motion.section
@@ -190,6 +190,8 @@ const MemoCategoryPageBtn = () => {
                   </motion.section>
                 </Link>
               </motion.div>
+
+              {/* Search Button */}
               <motion.div variants={itemVariants}>
                 <motion.button
                   type="button"
@@ -201,11 +203,22 @@ const MemoCategoryPageBtn = () => {
                   <FiSearch size={24} />
                 </motion.button>
               </motion.div>
-              <motion.div variants={itemVariants}>
+
+              {/* Call Captain Button */}
+              <motion.div
+                variants={itemVariants}
+                className={cn(
+                  tableName?.length === 0 ? "flex-1 w-full" : "gap-1 flex items-center",
+                  "border border-[#B0B0B0] p-2 rounded-md"
+                )}
+              >
                 <motion.button
                   type="button"
                   onClick={triggerCallWaiter}
-                  className="border border-[#B0B0B0] p-2 rounded-md gap-1 flex items-center"
+                  className={cn(
+                    tableName?.length === 0 ? "w-full flex justify-center items-center" : "flex items-center",
+                    "text-sm gap-1"
+                  )}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -213,10 +226,15 @@ const MemoCategoryPageBtn = () => {
                   <span className="text-sm">Call Captain</span>
                 </motion.button>
               </motion.div>
-              <motion.div variants={itemVariants}>
-                <TimeBadge onClick={promptHiCode} />
-              </motion.div>
+
+              {/* TimeBadge */}
+              {tableName?.length > 0 && (
+                <motion.div variants={itemVariants}>
+                  <TimeBadge onClick={promptHiCode} />
+                </motion.div>
+              )}
             </motion.section>
+
           )}
         </AnimatePresence>
       ) : (

@@ -23,6 +23,12 @@ type TableDataStore = {
 
   hiCodePromptTimer: number;
   setHiCodePromptTimer: (time: number) => void;
+
+  tableNameTimeStamp: number | null;
+  setTableNameTimeStamp: (timeStamp: number | null) => void;
+
+  isVisible: boolean;
+  setIsVisible: (visible: boolean) => void;
 };
 
 const useTableData = create(
@@ -41,6 +47,13 @@ const useTableData = create(
 
       hiCodePromptTimer: 0,
       setHiCodePromptTimer: (time) => set({ hiCodePromptTimer: time }),
+
+      tableNameTimeStamp: null,
+      setTableNameTimeStamp: (timeStamp) =>
+        set({ tableNameTimeStamp: timeStamp }),
+
+      isVisible: false,
+      setIsVisible: (visible: boolean) => set(() => ({ isVisible: visible })),
     }),
     {
       name: "table-store",
@@ -56,5 +69,7 @@ export const resetTableData = () => {
     hiCode: "",
     hiCodePopup: false,
     hiCodeUser: { name: "", phone: "", success: false },
+    hiCodePromptTimer: 0,
+    tableNameTimeStamp: null,
   });
 };

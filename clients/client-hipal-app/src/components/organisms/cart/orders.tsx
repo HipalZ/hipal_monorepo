@@ -25,7 +25,7 @@ const MemoOrders = () => {
   const { cartHistory, setCartHistory } = useCartStore();
   const { setShowCart, cartPage, setCartPage } = useCart();
   const [expanded, setExpanded] = useState<string[]>(
-    cartHistory.map((cart) => cart._id)
+    cartHistory?.map((cart) => cart._id)
   );
   const { setShowScan } = usePaymentStore();
   const userDetails = useLogin((state) => state.userDetails);

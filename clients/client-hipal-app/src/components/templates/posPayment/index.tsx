@@ -110,6 +110,7 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
         selectedMode,
         showError,
         showBillPage,
+        setBillData
     } = usePaymentStore();
 
     const { setTableName } = useTableData()
@@ -132,6 +133,7 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
                 setTableName(res?.data?.tableName)
             }
             setBillValue(res.data.total)
+            setBillData(res.data)
             return res.data
         } catch (e) {
             console.error(e)

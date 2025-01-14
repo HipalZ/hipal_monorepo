@@ -103,7 +103,7 @@ const MemoCartPayment = () => {
       setTimeout(() => {
         router.push(`/${customLink}/payment`);
         setDisplayTimer(10);
-      }, 10);
+      }, 1000);
     }
   }, [billValue])
 

@@ -14,13 +14,14 @@ import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useUserToken } from "@hi/common/src/useUserToken";
-import { useErrorHandling } from "@/utils/helper";
+import { useErrorHandling, useGoNext } from "@/utils/helper";
 import { cn, triggerConfettiBlast } from "@/components/utils/helpers";
 import { useCart } from "@/components/store/useCart";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 
 const MemoCombinedLogin = () => {
     const pathName = usePathname()
+    const { goNext } = useGoNext();
     const [phone, setPhone] = useState("");
     const { errorText } = useErrorHandling();
     const [otp, setOtp] = useState(["", "", "", ""]);
@@ -116,31 +117,6 @@ const MemoCombinedLogin = () => {
             inputRefs[index - 1]?.current?.focus();
         }
     };
-
-    const goNext = useCallback(() => {
-        let newUrl = `/${customLink}/explore?pay=${isPayment}`;
-
-        if (direction === "loyalty") {
-            newUrl = routePaths[PAGE_TYPES.LOYALTY](`/${customLink}`);
-        } else if (direction === "category") {
-            newUrl = `/${customLink}/category?pay=${isPayment}`;
-        } else if (direction === "explore") {
-            newUrl = `/${customLink}/explore?pay=${isPayment}`;
-        } else if (direction === "invoice") {
-            newUrl = invoiceUrl;
-        } else if (direction === "posPayment") {
-            newUrl = urlFrom
-        }
-        else if (direction === "payment") {
-            newUrl = `/${customLink}/payment?pay=${isPayment}`;
-        }
-        else if (direction === "couponz") {
-            newUrl = urlFrom;
-        } else if (direction === "explore-googleReview") {
-            newUrl = `/${customLink}/explore`;
-        }
-        window.location.href = newUrl;
-    }, [direction, customLink, isPayment, urlFrom, invoiceUrl]);
 
     const verifyOtp = async () => {
         const fullOtp = otp.join("");

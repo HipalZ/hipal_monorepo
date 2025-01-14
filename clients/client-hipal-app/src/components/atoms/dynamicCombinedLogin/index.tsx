@@ -5,21 +5,19 @@ import BottomPopUp from '../bottomPopUp'
 import CombinedLogin from '@/components/templates/posPayment/CombinedLogin'
 import dynamic from 'next/dynamic'
 import React, { memo, useCallback } from 'react'
+import { useGoNext } from '@/utils/helper'
 
 const SignUpBonus = dynamic(() => import('@/components/organisms/explore/signupbonus'))
 
 const MemoDynamicCombinedLogin = () => {
-    const params = useParams();
-    const customLink = params?.businessId || "";
+    const { goNext } = useGoNext();
     const { setCheckLogin, checkLogin, openBlastModal, coinz, setOpenBlastModal } = usePaymentStore();
 
-    const goNext = useCallback(() => {
+    const handleNext = useCallback(() => {
         setOpenBlastModal(false);
         setCheckLogin(true);
-        setTimeout(() => {
-            window.location.href = `/${customLink}/explore`;
-        }, 2000);
-    }, [setOpenBlastModal, setCheckLogin, customLink]);
+        goNext();
+    }, [setOpenBlastModal, setCheckLogin, goNext]);
 
     return (
         <>
@@ -31,7 +29,7 @@ const MemoDynamicCombinedLogin = () => {
                 <CombinedLogin />
             </BottomPopUp>
             {openBlastModal ?
-                <SignUpBonus coinZ={coinz} goNext={goNext} />
+                <SignUpBonus coinZ={coinz} goNext={handleNext} />
                 : null}
         </>
     )

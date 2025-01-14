@@ -5,12 +5,10 @@ import type { IBusinessData } from "@/components/types/businessData";
 import { usePathname, useSearchParams } from "next/navigation";
 import useTableData from "@/components/store/useTableData";
 import { useUserToken } from "@hi/common/src/useUserToken";
-import Cat from "@/assets/login/cat.png";
 import Introduction from "./introduction";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import ShimmerImage from "@/components/atoms/imageshimmer";
-import Image from "next/image";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useCart } from "@/components/store/useCart";
 import { useLogin } from "@/components/store/useLogin";
@@ -19,7 +17,7 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
   const searchParams = useSearchParams();
   const pathName = usePathname();
   const tableName = searchParams?.get("tableName");
-  const { setTableName } = useTableData();
+  const { setTableName, setTableNameTimeStamp } = useTableData();
   const setBusinessData = _useAllBusiness((s) => s.setData);
   const { setBusinessDetails } = useBusinessDetails();
   const { setCheckLogin } = usePaymentStore();
@@ -38,6 +36,8 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
       setTableName(tableName || "");
       // cart store unexpected popups error handling
       resetCartStoreKeys();
+      const timeStamp = Date.now();
+      setTableNameTimeStamp(timeStamp);
     }
     if (pathName.includes("/packaging")) {
       setTableName("");
