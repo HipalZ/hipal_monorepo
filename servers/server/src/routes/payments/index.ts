@@ -2018,6 +2018,7 @@ const paymentsRouter = new Hono()
             totalServiceCharge,
             totalClaimedCoins,
             totalEarnCoins,
+            totalDiscount: totalClaimedCoins,
           },
           message: "existing payment",
         });
@@ -2077,6 +2078,7 @@ const paymentsRouter = new Hono()
             totalServiceCharge,
             totalClaimedCoins,
             totalEarnCoins,
+            totalDiscount: totalClaimedCoins,
           },
           message: "existing payment",
         });
