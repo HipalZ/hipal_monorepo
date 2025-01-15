@@ -784,29 +784,27 @@ const tableRouter = new Hono()
         tableId,
       } = await c.req.json();
       const business = await Business.findById(businessId);
-      const token =
-        "EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD";
-      const phoneId = "365941956611521";
 
-      const table = await Table.findById(tableId);
-
-      for (let i = 0; i < userIds.length; i++) {
+      for (let i = 0; i < userIds?.length; i++) {
         const user = await User.findById(userIds[i]);
-        const res = await axios({
+        const options = {
           method: "POST",
-          url: `https://graph.facebook.com/v21.0/${phoneId}/messages?access_token=${token}`,
-          data: {
-            messaging_product: "whatsapp",
-            to: user?.phone,
-            text: {
-              body: `e-bill link for https://hipal-test.hipalz.com/${business?.customLink}/eBill?tableId=${tableId}`,
-            },
-          },
+          url: "https://control.msg91.com/api/v5/flow/",
           headers: {
-            "Content-Type": "application/json",
+            accept: "application/json",
+            "content-type": "application/json",
+            authkey: "387796AmyGlDBq63b2d75aP1",
           },
-        });
-        console.log("res", res.data);
+          data: {
+            template_id: "647836a0d6fc0547fb4d8e73",
+            sender: "HiPalc",
+            short_url: "1",
+            mobiles: user?.phone,
+            businessname: business?.name,
+            bill: `https://hipal-test.hipalz.com/${business?.customLink}/eBill?tableId=${tableId}`,
+          },
+        };
+        await axios(options);
       }
 
       return c.json(
@@ -840,6 +838,33 @@ const tableRouter = new Hono()
           message: "Offline alert fetched successfully",
           err: false,
           data: findOfflineAlert || {},
+        },
+        200,
+      );
+    },
+  )
+  .post(
+    "/kot_users",
+    zValidator(
+      "json",
+      z.object({
+        userIds: z.array(z.string().min(1).max(500)),
+      }),
+    ),
+    async (c) => {
+      const { userIds = [] } = await c.req.json();
+      const users = await User.find({
+        _id: { $in: userIds },
+      }).populate({
+        path: "userId",
+        select: "name phone",
+      });
+
+      return c.json(
+        {
+          message: "Users fetched successfully",
+          err: false,
+          data: users,
         },
         200,
       );
