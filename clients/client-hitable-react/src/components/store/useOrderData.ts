@@ -13,6 +13,8 @@ export type orderModal =
   | "customer"
   | "user"
   | "liveCart"
+  | "ebill"
+  | "alerts"
   | "addItem";
 
 interface OrderState {

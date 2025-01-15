@@ -179,11 +179,13 @@ export interface Alert {
 
 export interface ISalesLite {
   totalSale: number;
+  modeObj: Record<string, number>;
+  totalTips: number;
+  totalTax: number;
+  totalServiceCharge: number;
+  totalClaimedCoins: number;
+  totalEarnCoins: number;
   totalDiscount: number;
-  totalOnlineSale: number;
-  totalOfflineSale: number;
-  coinzIssued: number;
-  coinzRedeemed: number;
 }
 export interface OrderDetails {
   _id: string;

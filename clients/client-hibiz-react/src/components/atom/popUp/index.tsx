@@ -32,7 +32,7 @@ function MemoizedPopUp({
         <Dialog
           open={show}
           as="div"
-          className="fixed inset-0 z-50 overflow-y-auto"
+          className="fixed inset-0 z-50"
           onClose={stopClosing}
         >
           <div className="fixed inset-0 flex px-0 lg:px-6 items-end justify-center bg-black lg:items-center bg-opacity-50 backdrop-blur-sm lg:pt-[2rem]">
