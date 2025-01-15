@@ -22,6 +22,7 @@ import ConfirmPayment from "./confirmPayment";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
 import { FaArrowLeft } from "react-icons/fa";
 import { usePlaceOrder } from "@/components/hooks/usePayments";
+import EmptyCart from "./emptyCart";
 
 const PaymentAlert = dynamic(() => import("./paymentAlert"), { ssr: false });
 const CartPayment = dynamic(() => import("./cartPayment"), { ssr: false });
@@ -36,7 +37,6 @@ const CartWarning = dynamic(() => import("./cartWarning"), { ssr: false });
 const ShareCartButtons = dynamic(() => import("./shareCartButtons"), {
   ssr: false,
 });
-const EmptyCart = dynamic(() => import("./emptyCart"), { ssr: false });
 // const HistoryCartItems = dynamic(() => import("./historyItem"), { ssr: false });
 const ItemDescriptionPopup = dynamic(
   () => import("@/components/atoms/dishDescription/itemDescription"),
