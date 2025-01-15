@@ -1974,6 +1974,14 @@ const paymentsRouter = new Hono()
           (acc, payment: PaymentType) => acc + (payment.total ?? 0),
           0,
         );
+        let forceSettletotal = 0;
+        for (const payment of existingPayments || []) {
+          if (payment.settleType) {
+            if (payment.settleType === "FORCE_SETTLE") {
+              forceSettletotal += payment.total;
+            }
+          }
+        }
 
         const totalTips = existingPayments.reduce(
           (acc, payment: PaymentType) => acc + (payment.tips ?? 0),
@@ -2015,10 +2023,11 @@ const paymentsRouter = new Hono()
             modeObj,
             totalTips,
             totalTax: Math.round(totalTax),
-            totalServiceCharge,
+            totalServiceCharge: Math.round(totalServiceCharge),
             totalClaimedCoins,
             totalEarnCoins,
             totalDiscount: totalClaimedCoins,
+            forceSettle: forceSettletotal,
           },
           message: "existing payment",
         });
@@ -2037,6 +2046,16 @@ const paymentsRouter = new Hono()
           (acc, payment: PaymentType) => acc + (payment.total ?? 0),
           0,
         );
+
+        let forceSettletotal = 0;
+        for (const payment of existingPayments || []) {
+          if (payment.settleType) {
+            if (payment.settleType === "FORCE_SETTLE") {
+              forceSettletotal += payment.total;
+            }
+          }
+        }
+
         const modeObj: { [key: string]: number } = {};
         const totalTips = existingPayments.reduce(
           (acc, payment: PaymentType) => acc + (payment.tips ?? 0),
@@ -2075,10 +2094,11 @@ const paymentsRouter = new Hono()
             modeObj,
             totalTips,
             totalTax: Math.round(totalTax),
-            totalServiceCharge,
+            totalServiceCharge: Math.round(totalServiceCharge),
             totalClaimedCoins,
             totalEarnCoins,
             totalDiscount: totalClaimedCoins,
+            forceSettle: forceSettletotal,
           },
           message: "existing payment",
         });
