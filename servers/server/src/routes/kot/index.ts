@@ -198,7 +198,6 @@ const kotRouter = new Hono()
             businessId: kot.businessId,
           });
           const totalBill = calculateCartBill(kot.cart);
-          console.log("totalBill", totalBill);
 
           const petpoojaCart = convertToPetpoojaCart(
             kot.cart,

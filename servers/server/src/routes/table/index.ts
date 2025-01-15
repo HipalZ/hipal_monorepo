@@ -196,6 +196,20 @@ const tableRouter = new Hono()
             400,
           );
         }
+        const billAlreadySettled = await Payment.findOne({
+          posBillRequestId: billRequestId,
+        });
+
+        if (billAlreadySettled) {
+          return c.json(
+            {
+              message: "Bill already settled",
+              err: true,
+              data: {},
+            },
+            409,
+          );
+        }
 
         const captain = await User.findById(captainId);
 
@@ -383,6 +397,21 @@ const tableRouter = new Hono()
           await c.req.json();
         const paymentMode = await UpiMode.findById(paymentModeId);
 
+        const billAlreadySettled = await Payment.findOne({
+          posBillRequestId: billRequestId,
+        });
+
+        if (billAlreadySettled) {
+          return c.json(
+            {
+              message: "Bill already settled",
+              err: true,
+              data: {},
+            },
+            409,
+          );
+        }
+
         const table = await Table.findById(tableId);
         const captain = await User.findById(captainId);
         const pos = await BusinessPosConfig.findOne({
@@ -565,6 +594,21 @@ const tableRouter = new Hono()
       const { tableId, captainId, billRequestId } = await c.req.json();
 
       const table = await Table.findById(tableId);
+
+      const alreadySetlle = await QrBill.findOne({
+        requestBillId: billRequestId,
+      });
+
+      if (alreadySetlle) {
+        return c.json(
+          {
+            message: "Bill already settled",
+            err: true,
+            data: {},
+          },
+          409,
+        );
+      }
       const updateTempTableStatus = await PetPoojaPinTemp.findOneAndUpdate(
         {
           businessId: table?.businessId,
@@ -617,6 +661,8 @@ const tableRouter = new Hono()
         requestBillId: billRequestId,
       });
 
+      console.log("qrBill", qrBill);
+
       if (qrBill) {
         await QrBill.findOneAndUpdate(
           {
@@ -626,7 +672,6 @@ const tableRouter = new Hono()
             $set: {
               captainId: captainId,
               date: Date.now(),
-              createdAt: Date.now(),
             },
           },
         );
@@ -639,7 +684,7 @@ const tableRouter = new Hono()
             data: {
               qrBillId: qrBill.requestBillId,
               expireIn: qrBill.expireIn,
-              path: `http://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${qrBill.requestBillId}`,
+              path: `https://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${qrBill.requestBillId}`,
             },
           },
           200,
@@ -656,7 +701,6 @@ const tableRouter = new Hono()
         tax: getBill.data.order_data.tax,
         total: getBill.data.order_data.total,
         expireIn: 300000,
-        createdAt: Date.now(),
       });
 
       return c.json(
@@ -666,7 +710,7 @@ const tableRouter = new Hono()
           data: {
             qrBillId: createQrBill.requestBillId,
             expireIn: createQrBill.expireIn,
-            path: `http://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${createQrBill.requestBillId}`,
+            path: `https://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${createQrBill.requestBillId}`,
           },
         },
         200,
@@ -714,7 +758,7 @@ const tableRouter = new Hono()
       const {
         userIds = [],
         businessId,
-        billRequestId,
+
         tableId,
       } = await c.req.json();
       const business = await Business.findById(businessId);
@@ -723,59 +767,6 @@ const tableRouter = new Hono()
       const phoneId = "365941956611521";
 
       const table = await Table.findById(tableId);
-
-      const pos = await BusinessPosConfig.findOne({
-        businessId: businessId,
-      }).populate("posId");
-      if (!pos) {
-        return c.json(
-          {
-            message: "Pos not found",
-            err: true,
-          },
-          400,
-        );
-      }
-      const getBillConfig = {
-        app_key: pos.posId.accessKey,
-        app_secret: pos.posId.secretKey,
-        access_token: pos.posId.authToken,
-        restID: pos.posId.restId,
-        bill_request_id: billRequestId,
-      };
-      const getBill = await axios.post(
-        "http://api.petpooja.com/V1/captainorders/get_bill/",
-        getBillConfig,
-      );
-
-      if (getBill.data.success === "0") {
-        return c.json(
-          {
-            message: getBill.data.message,
-            err: true,
-          },
-          400,
-        );
-      }
-
-      const qrBill = await QrBill.findOne({
-        requestBillId: billRequestId,
-      });
-
-      if (!qrBill) {
-        const createQrBill = await QrBill.create({
-          businessId: businessId,
-
-          date: Date.now(),
-          requestBillId: billRequestId,
-          serviceCharge: getBill.data.order_data.service_charge,
-          tableName: table?.name,
-          tax: getBill.data.order_data.tax,
-          total: getBill.data.order_data.total,
-          expireIn: 300000,
-          createdAt: Date.now(),
-        });
-      }
 
       for (let i = 0; i < userIds.length; i++) {
         const user = await User.findById(userIds[i]);
@@ -786,7 +777,7 @@ const tableRouter = new Hono()
             messaging_product: "whatsapp",
             to: user?.phone,
             text: {
-              body: `e-bill link for http://localhost:3000/${business?.customLink}/e-bill?orderId=${billRequestId}`,
+              body: `e-bill link for https://hipal-test.hipalz.com/${business?.customLink}/e-bill?tableId=${tableId}`,
             },
           },
           headers: {

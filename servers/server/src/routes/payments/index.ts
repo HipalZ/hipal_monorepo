@@ -1175,6 +1175,7 @@ const paymentsRouter = new Hono()
                 serviceCharge: tempTable?.serviceCharge || 0,
                 posBillRequestId: tempTable?.billRequestId || "",
                 posBillId: tempTable?.billInvoiceId || "",
+                settleType: tempTable?.settleType || "PAYMENT_GATEWAY",
               },
             ],
             { session },
@@ -1955,94 +1956,122 @@ const paymentsRouter = new Hono()
       }
 
       if (!from && !to) {
-        const existingPayments = await Payment.find({
+        const existingPayments: PaymentType[] = await Payment.find({
           businessId,
           date: {
             $gte: startOfToday.getTime(),
             $lte: endOfToday.getTime(),
           },
-        }).select("total claimedCoins paymentMode earnCoins");
+        }).select(
+          "total claimedCoins paymentMode earnCoins mode tips tax serviceCharge",
+        );
         const totalSale = existingPayments.reduce(
           (acc, payment: PaymentType) => acc + (payment.total ?? 0),
           0,
         );
-        const totalCoins = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0),
+
+        const totalTips = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment.tips ?? 0),
+          0,
+        );
+        const totalTax = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment.tax ?? 0),
           0,
         );
 
-        const totalCoinsIssued = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment?.earnCoins ?? 0),
+        const totalServiceCharge = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment.serviceCharge ?? 0),
           0,
         );
 
-        const totalOnlineSale = existingPayments.reduce(
-          (acc, payment: PaymentType) =>
-            acc + (payment.paymentMode === "online" ? payment.total ?? 0 : 0),
+        const totalClaimedCoins = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment.claimedCoins ?? 0),
           0,
         );
 
-        const totalOfflineSale = existingPayments.reduce(
-          (acc, payment: PaymentType) =>
-            acc + (payment.paymentMode === "offline" ? payment.total ?? 0 : 0),
+        const totalEarnCoins = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment.earnCoins ?? 0),
           0,
         );
+
+        const modeObj: { [key: string]: number } = {};
+
+        for (const payment of existingPayments) {
+          if (!modeObj[payment.mode]) {
+            modeObj[payment.mode] = 0;
+          }
+          modeObj[payment.mode] += payment.total ?? 0;
+        }
 
         return c.json({
           err: false,
           data: {
             totalSale,
-            totalDiscount: totalCoins,
-            totalOnlineSale,
-            totalOfflineSale,
-            coinzIssued: totalCoinsIssued,
-            coinzRedeemed: totalCoins,
+            modeObj,
+            totalTips,
+            totalTax: Math.round(totalTax),
+            totalServiceCharge,
+            totalClaimedCoins,
+            totalEarnCoins,
           },
           message: "existing payment",
         });
       }
       if (from && to) {
-        const existingPayments = await Payment.find({
+        const existingPayments: PaymentType[] = await Payment.find({
           businessId,
           date: {
             $gte: fromDate,
             $lte: toDate,
           },
-        }).select("total claimedCoins paymentMode earnCoins");
+        }).select(
+          "total claimedCoins paymentMode earnCoins mode tips tax serviceCharge",
+        );
         const totalSale = existingPayments.reduce(
           (acc, payment: PaymentType) => acc + (payment.total ?? 0),
           0,
         );
-        const totalCoins = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0),
+        const modeObj: { [key: string]: number } = {};
+        const totalTips = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment.tips ?? 0),
           0,
         );
-        const totalCoinsIssued = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment?.earnCoins ?? 0),
-          0,
-        );
-
-        const totalOnlineSale = existingPayments.reduce(
-          (acc, payment: PaymentType) =>
-            acc + (payment.paymentMode === "online" ? payment.total ?? 0 : 0),
+        const totalTax = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment.tax ?? 0),
           0,
         );
 
-        const totalOfflineSale = existingPayments.reduce(
-          (acc, payment: PaymentType) =>
-            acc + (payment.paymentMode === "offline" ? payment.total ?? 0 : 0),
+        const totalServiceCharge = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment.serviceCharge ?? 0),
           0,
         );
+
+        const totalClaimedCoins = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment.claimedCoins ?? 0),
+          0,
+        );
+
+        const totalEarnCoins = existingPayments.reduce(
+          (acc, payment: PaymentType) => acc + (payment.earnCoins ?? 0),
+          0,
+        );
+        for (const payment of existingPayments) {
+          if (!modeObj[payment.mode]) {
+            modeObj[payment.mode] = 0;
+          }
+          modeObj[payment.mode] += payment.total ?? 0;
+        }
 
         return c.json({
           err: false,
           data: {
             totalSale,
-            totalDiscount: totalCoins,
-            totalOnlineSale,
-            totalOfflineSale,
-            coinzIssued: totalCoinsIssued,
-            coinzRedeemed: totalCoins,
+            modeObj,
+            totalTips,
+            totalTax: Math.round(totalTax),
+            totalServiceCharge,
+            totalClaimedCoins,
+            totalEarnCoins,
           },
           message: "existing payment",
         });
@@ -2780,6 +2809,8 @@ const paymentsRouter = new Hono()
             businessId: getOrder.businessId,
           });
 
+          console.log("activeTable", activeTable);
+
           const pos = await BusinessPosConfig.findOne({
             businessId: getOrder.businessId,
           }).populate("posId");
@@ -2809,7 +2840,7 @@ const paymentsRouter = new Hono()
                 session,
               },
             );
-            await QrBill.findOneAndUpdate(
+            const g = await QrBill.findOneAndUpdate(
               {
                 requestBillId: activeTable?.billRequestId,
               },
@@ -2822,6 +2853,8 @@ const paymentsRouter = new Hono()
                 session,
               },
             );
+
+            console.log("golubaba", g);
 
             await PetPoojaPinTemp.deleteOne(
               {

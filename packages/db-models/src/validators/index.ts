@@ -49,6 +49,7 @@ export * from "./menuBanner";
 export * from "./note";
 export * from "./petPoojaPinTempModel";
 export * from "./pos";
+export * from "./posBill";
 export * from "./recentCampaign";
 export * from "./table";
 export * from "./tags";

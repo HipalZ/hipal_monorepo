@@ -126,7 +126,9 @@ export const PaymentSchema = z.object({
       message: "Pos bill id must be at most 200 characters",
     })
     .optional(),
-  settleType: z.enum(["NORMAL_SETTLE", "HI_SETTLE", "FORCE_SETTLE"]).optional(),
+  settleType: z
+    .enum(["NORMAL_SETTLE", "HI_SETTLE", "FORCE_SETTLE", "PAYMENT_GATEWAY"])
+    .optional(),
   serviceCharge: z.coerce.number({}).optional(),
   tax: z.coerce.number({}).optional(),
   posBillRequestId: z.string().optional(),

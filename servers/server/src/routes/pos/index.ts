@@ -6,6 +6,7 @@ import {
   OutLetInfo,
   PetPoojaPinTemp,
   Pos,
+  PosBill,
   Table,
   TempTableSettle,
   UniquelyYours,
@@ -203,11 +204,25 @@ const posRouter = new Hono()
           );
 
           const simpleArray =
-            transformItemsToSimpleArray(
-              getBill.data.items_data?.slice(0, -2) || [],
-            ) || [];
+            transformItemsToSimpleArray(getBill.data.items_data || []) || [];
 
           if (getBill.data.success === "1") {
+            const bill = await PosBill.findOneAndUpdate(
+              {
+                businessId: businessId,
+                billRequestId: bill_request_id,
+              },
+              {
+                items: simpleArray,
+                billInfo: getBill.data.order_data,
+                createdAt: Date.now(),
+              },
+              {
+                upsert: true,
+                new: true,
+              },
+            );
+
             await PetPoojaPinTemp.findOneAndUpdate(
               {
                 businessId: businessId,
@@ -276,11 +291,25 @@ const posRouter = new Hono()
           );
 
           const simpleArray =
-            transformItemsToSimpleArray(
-              getBill.data.items_data?.slice(0, -2) || [],
-            ) || [];
+            transformItemsToSimpleArray(getBill.data.items_data || []) || [];
 
           if (getBill.data.success === "1") {
+            const bill = await PosBill.findOneAndUpdate(
+              {
+                businessId: businessId,
+                billRequestId: bill_request_id,
+              },
+              {
+                items: simpleArray,
+                billInfo: getBill.data.order_data,
+                createdAt: Date.now(),
+              },
+              {
+                upsert: true,
+                new: true,
+              },
+            );
+
             const billObj = {
               billing_user_name: getBill.data.order_data.billing_user_name,
               serviceCharge: getBill.data.order_data.service_charge,

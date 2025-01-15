@@ -122,7 +122,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
 
     settleType: {
       type: String,
-      enum: ["NORMAL_SETTLE", "HI_SETTLE", "FORCE_SETTLE"],
+      enum: ["NORMAL_SETTLE", "HI_SETTLE", "FORCE_SETTLE", "PAYMENT_GATEWAY"],
       required: false,
     },
     comment: {
