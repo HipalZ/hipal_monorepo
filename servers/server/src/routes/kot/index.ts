@@ -2,6 +2,7 @@ import {
   BusinessPosConfig,
   KotOrder,
   PetPoojaPinTemp,
+  PosBill,
   Table,
   UserAnalytic,
 } from "@hi/db-models";
@@ -410,6 +411,33 @@ const kotRouter = new Hono()
           data: {},
         },
         400,
+      );
+    },
+  )
+
+  .get(
+    "/get_pos_bill/:billRequestId",
+
+    zValidator(
+      "param",
+      z.object({
+        billRequestId: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { billRequestId } = c.req.param();
+
+      const posBill = await PosBill.findOne({
+        billRequestId: billRequestId,
+      });
+
+      return c.json(
+        {
+          message: "Data fetched successfully",
+          err: false,
+          data: posBill?.items || [],
+        },
+        200,
       );
     },
   );
