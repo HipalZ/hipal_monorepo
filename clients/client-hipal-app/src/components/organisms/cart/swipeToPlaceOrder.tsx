@@ -8,8 +8,9 @@ import { FaHandHoldingUsd } from "react-icons/fa";
 import { AiFillDollarCircle } from "react-icons/ai";
 import { cn } from "@/components/utils/helpers";
 import { HiOutlineShoppingBag } from "react-icons/hi";
+import { toast } from "react-toastify";
 
-const MemoSwipeToPlaceOrder = ({ placeOrder }: { placeOrder: () => void }) => {
+const MemoSwipeToPlaceOrder = ({ placeOrder, disabled }: { placeOrder: () => void, disabled?: boolean }) => {
     const { cartPage } = useCart();
     const [isComplete, setIsComplete] = useState(false);
     const [showBowlDrop, setShowBowlDrop] = useState(false);
@@ -39,7 +40,11 @@ const MemoSwipeToPlaceOrder = ({ placeOrder }: { placeOrder: () => void }) => {
             setTimeout(() => {
                 setShowBowlDrop(true);
             }, 300);
-            placeOrder?.();
+            if (disabled) {
+                toast.error("Add items to cart to place order");
+            } else {
+                placeOrder?.();
+            }
             // Reset slider after a delay
             setTimeout(resetSlider, 2000);
         } else {

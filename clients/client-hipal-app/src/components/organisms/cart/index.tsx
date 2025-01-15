@@ -24,7 +24,7 @@ import { BottomBarSkeleton } from "@/components/atoms/paymentPageLoader";
 
 const PaymentAlert = dynamic(() => import("./paymentAlert"), { ssr: false });
 const CartPayment = dynamic(() => import("./cartPayment"), { ssr: false });
-const SwipeToPlaceOrder = dynamic(() => import("./swipeToPlaceOrder"), { ssr: false, loading: () => <BottomBarSkeleton /> },);
+const SwipeToPlaceOrder = dynamic(() => import("./swipeToPlaceOrder"));
 const CartItem = dynamic(() => import("./cartItem"), { ssr: false, loading: () => <LoadingSpinner /> });
 const CommonBottomButton = dynamic(
   () => import("@/components/atoms/bottomButton"),
@@ -427,7 +427,7 @@ const Cart = () => {
                   <button onClick={handleBack} type="button" className="h-12 px-4 py-1 border border-[#CACACA] rounded-lg text-center">
                     <PiArrowBendUpLeftBold size={24} />
                   </button>
-                  <SwipeToPlaceOrder placeOrder={placeOrder} />
+                  <SwipeToPlaceOrder placeOrder={placeOrder} disabled={cart?.length === 0} />
                 </div>
                 : <CommonBottomButton
                   fixed
