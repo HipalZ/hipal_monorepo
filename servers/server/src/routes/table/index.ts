@@ -773,7 +773,6 @@ const tableRouter = new Hono()
       z.object({
         userIds: z.array(z.string().min(1).max(500)),
         businessId: z.string().min(1).max(500),
-        billRequestId: z.string().min(1).max(500),
         tableId: z.string().min(1).max(500),
       }),
     ),
@@ -800,7 +799,7 @@ const tableRouter = new Hono()
             messaging_product: "whatsapp",
             to: user?.phone,
             text: {
-              body: `e-bill link for https://hipal-test.hipalz.com/${business?.customLink}/e-bill?tableId=${tableId}`,
+              body: `e-bill link for https://hipal-test.hipalz.com/${business?.customLink}/eBill?tableId=${tableId}`,
             },
           },
           headers: {
