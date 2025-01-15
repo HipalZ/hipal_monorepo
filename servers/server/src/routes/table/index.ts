@@ -771,7 +771,7 @@ const tableRouter = new Hono()
     zValidator(
       "json",
       z.object({
-        phoneNumbers: z.array(z.string().min(1).max(500)),
+        userIds: z.array(z.string().min(1).max(500)),
         businessId: z.string().min(1).max(500),
         tableId: z.string().min(1).max(500),
       }),
@@ -796,10 +796,10 @@ const tableRouter = new Hono()
             authkey: "387796AmyGlDBq63b2d75aP1",
           },
           data: {
-            template_id: "647836a0d6fc0547fb4d8e73",
+            template_id: "6787e7e6d6fc0533d778a013",
             sender: "HiPalc",
             short_url: "1",
-            mobiles: user?.phone,
+            mobiles: "919588413799",
             businessname: business?.name,
             bill: `https://hipal-test.hipalz.com/${business?.customLink}/eBill?tableId=${tableId}`,
           },
