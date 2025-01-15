@@ -22,6 +22,9 @@ const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
     const router = useRouter();
     const customLink = useParams()?.businessId as string;
     const { setLoyaltySetting } = useLoyaltyData();
+    const { billValue, setEditBillModal } = usePaymentStore();
+    const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
+
     useEffect(() => {
         setBusinessData(data);
         if (data?.business) {
@@ -31,7 +34,10 @@ const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
             setLoyaltySetting(data?.loyalty)
         };
         setShowCart(false);
-    }, [data, setBusinessData, setShowCart, setBusinessDetails, setLoyaltySetting]);
+        if (billValue === 0 && outletInfo?.isPosEnabled) {
+            setEditBillModal(true);
+        }
+    }, [data, setBusinessData, setShowCart, setBusinessDetails, setLoyaltySetting, billValue, outletInfo, setEditBillModal]);
 
     const {
         selectedMode,

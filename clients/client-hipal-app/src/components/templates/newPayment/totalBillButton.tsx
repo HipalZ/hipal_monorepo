@@ -1,4 +1,5 @@
 import { useHandleMode } from '@/components/hooks/usePayments';
+import { useLogin } from '@/components/store/useLogin';
 import { usePaymentStore } from '@/components/store/usePaymentStore';
 import { calculateFinalBill } from '@/components/utils/helpers';
 import { useUserToken } from '@hi/common/src/useUserToken';
@@ -8,18 +9,20 @@ const MemoTotalBillButton = () => {
     const { claimedCoinz, claimCouponz, tips, setEditBillModal, billValue, setCheckLogin } = usePaymentStore();
     const { handleMode } = useHandleMode()
     const accessToken = useUserToken.getState().accessToken;
-
+    const { setUrlFrom } = useLogin()
+    const completeUrl = window.location.href;
     const handleEligibility = useCallback(() => {
         if (billValue === 0) {
             setEditBillModal(true);
         }
         if (!accessToken) {
             setCheckLogin(true);
+            setUrlFrom(completeUrl)
         } else {
             handleMode("MODE");
         }
 
-    }, [accessToken, setCheckLogin, handleMode, billValue, setEditBillModal]);
+    }, [accessToken, setCheckLogin, handleMode, billValue, setEditBillModal, setUrlFrom, completeUrl]);
 
     return (
         <section

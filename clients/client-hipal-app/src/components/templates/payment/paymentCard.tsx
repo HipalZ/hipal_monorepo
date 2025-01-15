@@ -31,10 +31,6 @@ const MemoPaymentCard = () => {
     setShowBillPage(true);
   }, [setShowBillPage]);
 
-  console.log('billValue', billValue)
-  console.log('finalBillValue', finalBillValue)
-
-
   return (
     <>
       {!outletInfo?.isPosEnabled ? <center className="relative mx-4 text-xl text-black bg-white rounded-xl">

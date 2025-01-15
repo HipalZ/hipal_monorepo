@@ -21,7 +21,6 @@ import { useCart } from "@/components/store/useCart";
 const MemoCombinedLogin = () => {
     const pathName = usePathname()
     const { goNext } = useGoNext();
-    const [phone, setPhone] = useState("");
     const { errorText } = useErrorHandling();
     const [otp, setOtp] = useState(["", "", "", ""]);
     const [error, setError] = useState("");
@@ -29,8 +28,9 @@ const MemoCombinedLogin = () => {
     const [loading, setLoading] = useState(false);
     const inputRefs = Array.from({ length: 4 }, () => useRef<HTMLInputElement>(null));
     const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting);
-    const { setUserDetails, userDetails, setUserCoinZ, setIsLogin, sendOtp, direction, setDirection, isPayment, invoiceUrl, urlFrom, setUrlFrom } =
+    const { setUserDetails, userDetails, setUserCoinZ, setIsLogin, sendOtp } =
         useLogin();
+    const [phone, setPhone] = useState(userDetails?.phone || "");
     const { setShowCart } = useCart();
     const [customerName, setCustomerName] = useState(userDetails?.name);
     const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
@@ -41,9 +41,6 @@ const MemoCombinedLogin = () => {
     const customLink = useParams()?.businessId as string;
     const setAccessToken = useUserToken.getState().setAccessToken;
     const setRefreshToken = useUserToken.getState().setRefreshToken;
-    useEffect(() => {
-        if (userDetails.phone) setPhone(userDetails.phone);
-    }, [userDetails.phone]);
 
     const handleBack = useCallback(() => {
         if (showOtpScreen) {
@@ -90,7 +87,6 @@ const MemoCombinedLogin = () => {
         }
         if (pathName?.includes("posPayment")) {
             setDirection("posPayment")
-            setUrlFrom(pathName)
         }
         if (pathName?.includes("couponz")) {
             setDirection("couponz")

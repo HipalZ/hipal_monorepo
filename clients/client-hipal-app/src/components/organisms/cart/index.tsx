@@ -109,6 +109,7 @@ const Cart = () => {
     setTimeout(() => {
       setOrderPlaced(false);
       setShowCart(false);
+      useCartStore.setState({ cart: [] });
     }, 5000);
   }, [
     setOrderPlaced,
@@ -145,7 +146,6 @@ const Cart = () => {
           setShowCart(true);
           triggerModal();
           setHiCode(res?.data?.hiCode || null);
-          useCartStore.setState({ cart: [] });
           return true;
         } if (response.status === 403) {
           setHiCodeUser(res?.data as HiCodeUser);

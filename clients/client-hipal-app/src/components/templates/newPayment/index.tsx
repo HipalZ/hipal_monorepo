@@ -105,22 +105,13 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
     applyCouponz: s.applyCouponz,
   }));
 
-  const { setEditBillModal, showBillPage, billData } = usePaymentStore();
-
-  useEffect(() => {
-    if (billValue === 0) {
-      setEditBillModal(true);
-    }
-  }, [data]);
+  const { showBillPage } = usePaymentStore();
 
   const {
-    billValue,
     isLoading,
     selectedMode,
     showError,
   } = usePaymentStore();
-
-  console.log('PaymentWithCouponz render');
 
   return (
     <main className="relative h-screen bg-black">

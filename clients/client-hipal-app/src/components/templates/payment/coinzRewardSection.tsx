@@ -14,6 +14,8 @@ import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import MemoCart from "@/components/organisms/cart";
 import { useCart } from "@/components/store/useCart";
+import { usePathname, useRouter } from "next/navigation";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 const CashbackMessage = dynamic(() => import("./cashbackMessage"), {
   loading: () => <SkeletonLoader height={200} />,
@@ -45,6 +47,7 @@ const AddAmountModal = dynamic(
 );
 
 const MemoCoinzRewardSection = () => {
+  const completeUrl = window.location.href;
   const { applyCouponz, setApplyCouponz } = useCouponTemp((s) => ({
     applyCouponz: s.applyCouponz,
     setApplyCouponz: s.setApplyCouponz,
@@ -56,9 +59,9 @@ const MemoCoinzRewardSection = () => {
     availedCoupon: s.availedCoupon,
     userCouponz: s.userCouponz,
   }));
-  const { userCoinZ } = useLogin((s) => ({
-    userCoinZ: s.userCoinZ,
-  }));
+  const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
+  const { userCoinZ, setUrlFrom, userDetails } = useLogin();
+  const accessToken = useUserToken.getState().accessToken
   const { loyaltySetting } = useLoyaltyData((s) => ({
     loyaltySetting: s.loyaltySetting,
   }));
@@ -81,8 +84,13 @@ const MemoCoinzRewardSection = () => {
   }));
 
   const openModal = useCallback(() => {
+    if (!accessToken) {
+      setCheckLogin(true)
+      setUrlFrom(completeUrl)
+      return
+    }
     setIsModalOpen(true);
-  }, [isModalOpen]);
+  }, [completeUrl, setCheckLogin, setUrlFrom, accessToken, setIsModalOpen]);
 
   const openBillModal = useCallback(() => {
     setEditBillModal(true);
@@ -154,12 +162,12 @@ const MemoCoinzRewardSection = () => {
               <article className="z-20 scaled-card-container-rotate">
                 <CardSection />
               </article>
-              <article className="bg-[#FFFFFFD9] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
+              {accessToken && userDetails?._id && <article className="bg-[#FFFFFFD9] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
                 <h1 className="mb-1 text-base">Coinz : {userCoinZ}</h1>
                 {claimedCoinz > 0 && (
                   <h1 className="text-sm">Coinz Applied: {claimedCoinz}</h1>
                 )}
-              </article>
+              </article>}
             </article>
             <article
               style={{
