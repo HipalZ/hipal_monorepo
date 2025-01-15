@@ -28,7 +28,7 @@ const MemoBillPage = () => {
 
     return (
         <BottomPopUp bottomCross hide show={showBillPage} onClose={() => setShowBillPage(false)}>
-            <main className="bg-white">
+            <main className="bg-white pb-20">
                 <motion.div
                     className="max-w-2xl mx-auto rounded-2xl"
                     initial={{ opacity: 0, y: 20 }}

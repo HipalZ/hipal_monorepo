@@ -116,7 +116,9 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
               Login/Sign up
             </button>
           )}
-          <Avatar />
+          <div className="mt-2">
+            <Avatar />
+          </div>
         </div>
       </article>
     </section>

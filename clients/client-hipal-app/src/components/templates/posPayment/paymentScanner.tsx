@@ -15,7 +15,7 @@ export default function ScanPage() {
     const [scannedData, setScannedData] = useState<string | null>(null)
 
     // This would come from your route/props in real implementation
-    const scanType: ScanType = 'order' // or 'payment'
+    const scanType: ScanType = 'payment' // or 'payment'
 
     const handleDecode = useCallback(
         (detectedCodes: IDetectedBarcode[]) => {
