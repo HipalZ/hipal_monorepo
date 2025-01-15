@@ -38,7 +38,7 @@ const MemoDynamicScanPage = () => {
     }, [tableNameTimeStamp, setIsVisible]);
     return (
         <>
-            {showScan && <BottomPopUp show={showScan} onClose={() => setShowScan(false)}>
+            {showScan && <BottomPopUp hide show={showScan} onClose={() => setShowScan(false)}>
                 <ScanPage />
             </BottomPopUp>}
         </>

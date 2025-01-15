@@ -73,7 +73,7 @@ const MemoScan = ({ hide }: { hide?: boolean }) => {
             }}
           />
         </div>
-        <p className="mt-6 text-sm font-normal opacity-90">
+        <p className="mt-6 text-sm font-normal opacity-90 text-black dark:text-white">
           Scan the QR on the table &amp; start ordering
         </p>
       </div>

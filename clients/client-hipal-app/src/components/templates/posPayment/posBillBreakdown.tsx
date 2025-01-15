@@ -55,22 +55,22 @@ const PosBillBreakdown = () => {
                         <BillItem
                             icon={<FaMoneyBillWave />}
                             label="Subtotal"
-                            value={`₹${billData?.subTotal.toFixed(2)}`}
+                            value={`₹${billData?.subTotal.toFixed(2) || 0}`}
                         />
                         <BillItem
                             icon={<FaPercent />}
                             label="Service Charge"
-                            value={`₹${billData?.serviceCharge.toFixed(2)}`}
+                            value={`₹${billData?.serviceCharge.toFixed(2) || 0}`}
                         />
                         <BillItem
                             icon={<FaTags />}
                             label="Discount"
-                            value={`₹${billData?.discount.toFixed(2)}`}
+                            value={`₹${billData?.discount.toFixed(2) || 0}`}
                         />
                         <BillItem
                             icon={<FaPercent />}
                             label="Tax"
-                            value={`₹${billData?.tax.toFixed(2)}`}
+                            value={`₹${billData?.tax.toFixed(2) || 0}`}
                         />
                     </div>
                     <hr
@@ -88,7 +88,7 @@ const PosBillBreakdown = () => {
                     <BillItem
                         icon={<FaMoneyBillWave className="text-green-600" />}
                         label="Total"
-                        value={`₹${billData?.total.toFixed(2)}`}
+                        value={`₹${billData?.total.toFixed(2) || 0}`}
                         className="px-4 text-lg !font-bold"
                     />
                 </>
@@ -210,6 +210,6 @@ export const BillItem = ({ icon, label, value, className = "" }) => (
             <h3 className="mr-2 text-black text-sm">{icon}</h3>
             <h3 className="text-black text-sm">{label}</h3>
         </div>
-        <h3 className="text-black text-sm">{value}</h3>
+        <h3 className="text-black text-sm">{value || 0}</h3>
     </div>
 );

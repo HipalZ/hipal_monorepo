@@ -80,7 +80,8 @@ const MemoCategoryPageBtn = () => {
       authTableUser()
       return;
     }
-  }, [setDirection, accessToken, setCheckLogin, outletInfo?.isPosEnabled, authTableUser, userDetails?._id]);
+    setInputModal(true);
+  }, [setDirection, accessToken, setCheckLogin, outletInfo?.isPosEnabled, authTableUser, userDetails?._id, setInputModal]);
 
   const triggerCallWaiter = useCallback(() => {
     setDirection("category");
@@ -338,6 +339,7 @@ const MemoCategoryPageBtn = () => {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
+            className="h-full"
           >
             <BottomPopUp
               show={callWaiterModal}

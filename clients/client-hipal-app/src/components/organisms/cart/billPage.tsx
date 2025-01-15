@@ -145,7 +145,7 @@ const MemoBillPage = () => {
                                             <h3 className="font-medium text-black">{item?.dish?.name}</h3>
                                             <p className="text-sm text-black">Quantity: {item?.dish?.quantity}</p>
                                         </div>
-                                        <p className="font-medium text-black">₹{item?.dish?.price * item?.dish?.quantity}</p>
+                                        <p className="font-medium text-black">₹{item?.dish?.price * item?.dish?.quantity || 0}</p>
                                     </div>
 
                                     {item?.extras?.length > 0 && (

@@ -31,6 +31,10 @@ const MemoPaymentCard = () => {
     setShowBillPage(true);
   }, [setShowBillPage]);
 
+  console.log('billValue', billValue)
+  console.log('finalBillValue', finalBillValue)
+
+
   return (
     <>
       {!outletInfo?.isPosEnabled ? <center className="relative mx-4 text-xl text-black bg-white rounded-xl">
@@ -66,9 +70,9 @@ const MemoPaymentCard = () => {
               {billValue}
             </h4>
           </center>
-          <article className="absolute text-center left-1/2 bottom-2 -translate-x-1/2 w-28 py-1 px-4 bg-[#6732F9] rounded-full">
+          {billValue > 0 ? <article className="absolute text-center left-1/2 bottom-2 -translate-x-1/2 w-28 py-1 px-4 bg-[#6732F9] rounded-full">
             <button onClick={handleRedirection} type="button" className="text-base montserrat-400">View Bill</button>
-          </article>
+          </article> : null}
           <br />
         </section>
       }
