@@ -119,7 +119,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
           ))}
         </motion.ul>
         <br />
-        <div className="mx-4">
+        <div className="mx-4 pb-10">
           <button
             type="button"
             onClick={callTheWaiter}

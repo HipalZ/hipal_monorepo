@@ -3,7 +3,7 @@ import { usePaymentStore } from "@/components/store/usePaymentStore"
 import useTableData from "@/components/store/useTableData"
 import { cn } from "@/components/utils/helpers"
 import { motion, AnimatePresence } from "framer-motion"
-import { QrCode, Clock, X, AlertCircle } from 'lucide-react'
+import { QrCode, X, AlertCircle } from 'lucide-react';
 import { memo, useCallback } from "react"
 
 export const MemoSessionTimeoutBanner = () => {

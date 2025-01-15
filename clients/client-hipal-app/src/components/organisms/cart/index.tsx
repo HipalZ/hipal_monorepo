@@ -20,7 +20,8 @@ import { MdOutlineShoppingCart } from "react-icons/md";
 import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
 import ConfirmPayment from "./confirmPayment";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
-import { BottomBarSkeleton } from "@/components/atoms/paymentPageLoader";
+import { FaArrowLeft } from "react-icons/fa";
+import { usePlaceOrder } from "@/components/hooks/usePayments";
 
 const PaymentAlert = dynamic(() => import("./paymentAlert"), { ssr: false });
 const CartPayment = dynamic(() => import("./cartPayment"), { ssr: false });
@@ -68,6 +69,7 @@ const Cart = () => {
   const router = useRouter();
   const setDirection = useLogin((s) => s.setDirection);
   const customLink = useParams()?.businessId as string;
+  // const { placeOrder } = usePlaceOrder();
 
   const sanitizedCart = useMemo(() => {
     return cart.map(({ dish, ...item }) => {
@@ -393,7 +395,19 @@ const Cart = () => {
       {cartPage === "cart" &&
         <section className="relative h-[calc(91dvh+5px)]">
           <div className="bg-white z-[500] sticky top-0 flex items-center justify-between px-4 py-3 border-b border-gray-200">
-            <h2 className="text-2xl font-medium">Live cart</h2>
+            <article className="flex items-center gap-2">
+              {outletInfo?.shareCart ? <button
+                type="button"
+                onClick={() => setShowCart(false)}
+                className="px-2 rounded-xl bg-[#000000] text-[#ffffff] on_active_bounce"
+              >
+                <FaArrowLeft
+                  size={28}
+                  className="p-2 rounded-full cursor-pointer text-[#ffffff]"
+                />
+              </button> : null}
+              <h2 className="text-2xl font-medium">Live cart</h2>
+            </article>
             {hiCode && (
               <div className="!text-sm text-black inline-flex items-center gap-2">
                 <Image src={glassTable} alt="Table" />

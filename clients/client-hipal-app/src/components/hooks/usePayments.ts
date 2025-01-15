@@ -5,7 +5,7 @@ import {
   type PageStates,
 } from "../utils/helpers";
 import { toast } from "react-toastify";
-import { type ChangeEvent, useCallback } from "react";
+import { type ChangeEvent, useCallback, useMemo } from "react";
 import { useCouponz } from "../store/useCouponz";
 import { useErrorHandling } from "@/utils/helper";
 import { useLogin } from "../store/useLogin";
@@ -14,12 +14,16 @@ import { usePaymentStore } from "../store/usePaymentStore";
 import useBusinessDetails from "../store/useBusinessDetails";
 import useLoyaltyData from "../store/useLoyaltyData";
 import usePayment from "../store/usePayment";
-import useTableData, { resetTableData } from "../store/useTableData";
+import useTableData, {
+  type HiCodeUser,
+  resetTableData,
+} from "../store/useTableData";
 import { useQuery } from "@tanstack/react-query";
 import { _useAllBusiness } from "../store/useAllBusiness";
 import type { BillData } from "../types/businessData";
 import { useCart } from "@/components/store/useCart";
-import { differenceInMinutes } from "date-fns";
+import { useUserToken } from "@hi/common/src/useUserToken";
+import { useCartStore } from "../store/useCartStore";
 
 export const usePayments = () => {
   const { businessDetails } = useBusinessDetails();
@@ -696,4 +700,147 @@ export const useAuthTableUser = () => {
   ]);
 
   return { authTableUser };
+};
+
+export const usePlaceOrder = () => {
+  const accessToken = useUserToken.getState().accessToken;
+  const { setCheckLogin } = usePaymentStore();
+  const router = useRouter();
+  const setDirection = useLogin((s) => s.setDirection);
+  const customLink = useParams()?.businessId as string;
+  const { setShowCart, setOrderPlaced } = useCart();
+  const {
+    tableName,
+    setHiCode,
+    hiCode,
+    setHiCodePopup,
+    hiCodePopup,
+    setHiCodeUser,
+  } = useTableData();
+  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
+  const userDetails = useLogin((state) => state.userDetails);
+  const { cart } = useCartStore();
+  const sanitizedCart = useMemo(() => {
+    return cart.map(({ dish, ...item }) => {
+      const { recommendationIds, addOnIds, ...sanitizedDish } = dish;
+      return { ...item, dish: sanitizedDish };
+    });
+  }, [cart]);
+  const triggerModal = useCallback(() => {
+    setOrderPlaced(true);
+    setTimeout(() => {
+      setOrderPlaced(false);
+      setShowCart(false);
+    }, 5000);
+  }, [setOrderPlaced, setShowCart]);
+  const placeOrder = useCallback(async () => {
+    if (!accessToken) {
+      setCheckLogin(true);
+      return;
+    }
+    const handleUnauthenticatedUser = () => {
+      setDirection("category");
+      setCheckLogin(true);
+    };
+
+    const handleMissingTableName = () => {
+      setDirection("category");
+      toast.error("Please scan QR");
+      router.push(`/${customLink}/scan`);
+    };
+
+    const handleApiResponse = async (
+      response,
+      successMessage,
+      errorMessage,
+    ) => {
+      try {
+        const res = await response.json();
+        if (response.status === 200 || response.status === 201) {
+          if (successMessage?.length > 0) {
+            toast.success(successMessage);
+          }
+          setShowCart(true);
+          triggerModal();
+          setHiCode(res?.data?.hiCode || null);
+          useCartStore.setState({ cart: [] });
+          return true;
+        }
+        if (response.status === 403) {
+          setHiCodeUser(res?.data as HiCodeUser);
+          setHiCodePopup(true);
+        } else {
+          toast.error(res?.message || errorMessage || "Order failed");
+        }
+      } catch (error) {
+        console.error("Error processing response:", error);
+        toast.error("An error occurred while processing the response");
+      }
+      return false;
+    };
+
+    if (!accessToken) {
+      handleUnauthenticatedUser();
+      return;
+    }
+
+    if (!tableName && outletInfo?.outLetType !== "OTHER") {
+      handleMissingTableName();
+      return;
+    }
+
+    if (outletInfo?.isPosEnabled) {
+      try {
+        const response = await apiRpc.pos.save_kot.$post({
+          json: {
+            tableName,
+            businessId: outletInfo?.businessId,
+            internalCart: sanitizedCart,
+            customerName: userDetails?.name || "Guest",
+            customerPhone: userDetails?.phone,
+            hiCode: hiCode || "",
+          },
+        });
+        await handleApiResponse(response, "", "Failed to place order");
+      } catch (error) {
+        console.error("Error placing POS order:", error);
+      }
+    } else {
+      try {
+        const response = await apiRpc.cart.create.$post({
+          json: {
+            businessId: outletInfo?.businessId,
+            userId: userDetails?._id,
+            tableName,
+            cart: sanitizedCart,
+            name: userDetails?.name || "Guest",
+            phone: userDetails?.phone,
+          },
+        });
+        await handleApiResponse(
+          response,
+          "Cart shared successfully",
+          "Failed to share cart",
+        );
+      } catch (error) {
+        console.error("Error placing non-POS order:", error);
+        toast.error("An error occurred while placing the non-POS order");
+      }
+    }
+  }, [
+    accessToken,
+    setDirection,
+    router,
+    customLink,
+    tableName,
+    outletInfo,
+    sanitizedCart,
+    userDetails,
+    setHiCode,
+    setShowCart,
+    setHiCodeUser,
+    setHiCodePopup,
+  ]);
+
+  return { placeOrder };
 };

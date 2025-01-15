@@ -32,6 +32,7 @@ const MemoCallTheCaptain = () => {
     <button
       type="button"
       onClick={callTheWaiter}
+      disabled={isPending}
       className="bg-[#FFFFFF] text-gray-500 w-full border border-[#cacaca] text-sm px-4 py-3 rounded-md"
     >
       Need help from Captain

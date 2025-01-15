@@ -8,6 +8,7 @@ import { GiBubblingBowl } from "react-icons/gi";
 import { FaTimes } from "react-icons/fa";
 import type { DishType } from "@hi/db-models/src/validators";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { cn } from "@/components/utils/helpers";
 
 interface CartItemProp {
   hide?: boolean;
@@ -94,7 +95,7 @@ const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
                 {tags[Math.random() * tags.length | 0]}
               </span>
             </div>
-            <section className="mt-2 -ml-6">
+            <section className={cn(outletInfo?.outLetType !== "OTHER" ? '-ml-6' : '', "mt-2")}>
               <article className="flex items-start justify-between gap-4">
                 <h5 className="text-sm w-[75%] leading-5 text-gray-900">
                   {cartItem?.dish?.name}

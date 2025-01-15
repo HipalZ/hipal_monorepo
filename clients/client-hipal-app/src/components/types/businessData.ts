@@ -195,6 +195,7 @@ export interface IBusinessData {
   cart?: ICart[];
   coupon?: Coupon;
   timings: TimingType;
+  kot: KotOrder;
 }
 
 export interface ICategories extends ICategory {
@@ -595,4 +596,30 @@ export interface BillData {
   subTotal: number;
   billRequestId: string;
   items: DishItem[];
+}
+
+interface CartItem {
+  id: string;
+  portion: string | null;
+  extras: string[];
+  quantity: number;
+  dish: Dish;
+}
+
+export interface KotOrder {
+  _id: string;
+  businessId: string;
+  userId: string;
+  phone: string;
+  tableName: string;
+  tableId: string;
+  cart: CartItem[];
+  date: number;
+  rejected: boolean;
+  accepted: boolean;
+  edited: boolean;
+  settled: boolean;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
 }

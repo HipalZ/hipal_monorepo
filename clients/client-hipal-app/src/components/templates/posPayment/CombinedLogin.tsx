@@ -17,7 +17,6 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { useErrorHandling, useGoNext } from "@/utils/helper";
 import { cn, triggerConfettiBlast } from "@/components/utils/helpers";
 import { useCart } from "@/components/store/useCart";
-import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 
 const MemoCombinedLogin = () => {
     const pathName = usePathname()
