@@ -300,7 +300,7 @@ const tableRouter = new Hono()
           { session },
         );
 
-        await Payment.create(
+        const createPayment = await Payment.create(
           [
             {
               businessId: table?.businessId,
@@ -370,6 +370,25 @@ const tableRouter = new Hono()
             alertType: "OFFLINE",
           },
           { isAccepted: true, isRejected: true },
+          { session },
+        );
+        await PaymentAlert.create(
+          [
+            {
+              businessId: saveOrder[0]?.businessId,
+              alertType: "FORCE_SETTLE",
+              payment_id: createPayment[0]._id,
+              coinsApplied: 0,
+              status: "SUCCESS",
+              order_id: saveOrder[0]?._id,
+              message: `Paid ${saveOrder[0]?.total}`,
+              tableName: saveOrder[0]?.tableName,
+              isAccepted: false,
+              userId: saveOrder[0]?.userId,
+              posDiscount: 0,
+              date: Date.now(),
+            },
+          ],
           { session },
         );
 
@@ -577,7 +596,7 @@ const tableRouter = new Hono()
           [
             {
               businessId: saveOrder[0]?.businessId,
-              alertType: "OFFLINE",
+              alertType: "NORMAL_SETTLE",
               payment_id: createPayment[0]._id,
               coinsApplied: 0,
               status: "SUCCESS",
