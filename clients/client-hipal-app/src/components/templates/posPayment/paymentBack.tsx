@@ -8,13 +8,14 @@ import { usePaymentStore } from '@/components/store/usePaymentStore';
 import type { IBusinessData } from '@/components/types/businessData';
 import { cn } from '@/components/utils/helpers';
 import { PAGE_TYPES, routePaths } from '@/components/utils/routes';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import React, { memo, useCallback, useEffect } from 'react'
 import { BiArrowBack } from 'react-icons/bi'
 
 const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
     useMerchantDetails();
     useUserCoinz(data?.loyalty?.loyaltyId || "");
+    const pathName = usePathname();
     const { setShowCart } = useCart();
     const setBusinessData = _useAllBusiness((s) => s.setData);
     const { setBusinessDetails } = useBusinessDetails();
@@ -55,19 +56,23 @@ const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
     }, [selectedMode, customLink, router, setSelectedMode]);
 
     return (
-        <article onClick={handleBack} onKeyDown={handleBack}>
-            <button
-                type="button"
-                className={cn(
-                    selectedMode === "INVOICE"
-                        ? "bg-[#ffffff70]"
-                        : "border border-black mt-4",
-                    "absolute top-2 left-4 py-2 rounded-full z-[60] px-4 text-black",
-                )}
-            >
-                <BiArrowBack />
-            </button>
-        </article>
+        <>
+            {!(selectedMode === "INVOICE" && pathName?.includes("posPayment")) && (
+                <button
+                    onClick={handleBack}
+                    onKeyDown={handleBack}
+                    type="button"
+                    className={cn(
+                        selectedMode === "INVOICE"
+                            ? "bg-[#ffffff70]"
+                            : "border border-black mt-4",
+                        "absolute top-2 left-4 py-2 rounded-full z-[60] px-4 text-black"
+                    )}
+                >
+                    <BiArrowBack />
+                </button>
+            )}
+        </>
     )
 }
 

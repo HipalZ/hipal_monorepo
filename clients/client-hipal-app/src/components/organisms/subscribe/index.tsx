@@ -5,16 +5,20 @@ import type { BusinessDetails } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import React, { memo, useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import Hifi from "@/assets/login/subscribe.png";
-import cat from "@/assets/login/cat.png";
 import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 import confetti from "canvas-confetti";
 import SignUpBonus from "../explore/signupbonus";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import { useErrorHandling } from "@/utils/helper";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { BottomBarSkeleton } from "@/components/atoms/paymentPageLoader";
+import dynamic from "next/dynamic";
+const Avatar = dynamic(() => import("@/components/atoms/avatar"), {
+  loading: () => <BottomBarSkeleton />,
+});
 
 const MemoSubScribeModal = ({
   setIsLoader,
@@ -136,7 +140,7 @@ const MemoSubScribeModal = ({
           </div>
         )}
         <section className="flex items-center justify-center mt-2 text-2xl text-black">
-          <Image width={48} height={48} src={cat} alt="cat" />
+          <Avatar />
           Hi
         </section>
         <section className="flex items-center justify-center text-black capitalize">

@@ -5,7 +5,7 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 import type { IBusinessData } from "@/components/types/businessData";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
-import { BottomBarSkeleton } from "@/components/atoms/paymentPageLoader";
+import { BottomBarSkeleton, CardSkeleton, HeaderSkeleton, RewardSkeleton } from "@/components/atoms/paymentPageLoader";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 
@@ -25,7 +25,7 @@ const NewPaymentComponent = dynamic(
 
 const PaymentBack = dynamic(() => import("../posPayment/paymentBack"), {
   ssr: false,
-  loading: () => <SkeletonLoader height={50} />,
+  loading: () => <HeaderSkeleton />,
 });
 
 const PaymentHeader = dynamic(() => import("../payment/paymentHeader"), {
@@ -40,47 +40,47 @@ const TotalBillButton = dynamic(() => import("@/components/templates/newPayment/
 
 const ApplyCouponz = dynamic(() => import("../couponz/applyCouponz"), {
   ssr: false,
-  loading: () => <SkeletonLoader height={200} />,
+  loading: () => <RewardSkeleton />,
 });
 
 const CoinzRewardSection = dynamic(
   () => import("@/components/templates/payment/coinzRewardSection"),
   {
     ssr: false,
-    loading: () => <SkeletonLoader height={50} />,
+    loading: () => <RewardSkeleton />,
   },
 );
 
 const SuggestCouponz = dynamic(() => import("./suggestCouponz"), {
   ssr: false,
-  loading: () => <SkeletonLoader height={200} />,
+  loading: () => <CardSkeleton />,
 });
 
 const RefferalCouponz = dynamic(() => import("./refferalCouponz"), {
   ssr: false,
-  loading: () => <SkeletonLoader height={200} />,
+  loading: () => <CardSkeleton />,
 });
 
 const ErrorPayment = dynamic(() => import("../payment/errorPay"), {
   ssr: false,
-  loading: () => <SkeletonLoader height={200} />,
+  loading: () => <RewardSkeleton />,
 });
 
 const MemoPayLoader = dynamic(() => import("../payment/payLoader"), {
   ssr: false,
-  loading: () => <SkeletonLoader height={200} />,
+  loading: () => <RewardSkeleton />,
 });
 
 const CouponzBlink = dynamic(() => import("./couponzBlink"), {
   ssr: false,
-  loading: () => <SkeletonLoader height={200} />,
+  loading: () => <RewardSkeleton />,
 });
 
 const AvailableCoinz = dynamic(
   () => import("@/components/templates/payment/availableCoinz"),
   {
     ssr: false,
-    loading: () => <SkeletonLoader height={250} />,
+    loading: () => <RewardSkeleton />,
   },
 );
 
@@ -88,7 +88,7 @@ const BillSummary = dynamic(
   () => import("@/components/templates/payment/billSummary"),
   {
     ssr: false,
-    loading: () => <SkeletonLoader height={200} />,
+    loading: () => <CardSkeleton />,
   },
 );
 
@@ -96,7 +96,7 @@ const PaymentCard = dynamic(
   () => import("@/components/templates/payment/paymentCard"),
   {
     ssr: false,
-    loading: () => <SkeletonLoader height={200} />,
+    loading: () => <CardSkeleton />,
   },
 );
 

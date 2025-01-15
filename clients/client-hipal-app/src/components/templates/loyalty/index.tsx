@@ -16,11 +16,14 @@ import Link from "next/link";
 import { apiRpc } from "@hi/common";
 import { RiArrowLeftLine } from "react-icons/ri";
 import CardSection from "@/components/atoms/cardSection";
-import Avtaar from "@/assets/login/cat.png";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import dynamic from "next/dynamic";
 import { useErrorHandling } from "@/utils/helper";
 import { toast } from "react-toastify";
+import { BottomBarSkeleton } from "@/components/atoms/paymentPageLoader";
+const Avatar = dynamic(() => import("@/components/atoms/avatar"), {
+  loading: () => <BottomBarSkeleton />,
+});
 
 const CouponzBlink = dynamic(() => import("../newPayment/couponzBlink"), {
   ssr: false,
@@ -172,13 +175,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
       {/* intro of user */}
 
       <center>
-        <Image
-          src={Avtaar}
-          alt="avatar"
-          width={64}
-          height={64}
-          className="rounded-full"
-        />
+        <Avatar />
         <h3 className="text-xl">Hi {userName || "Guest"}</h3>
       </center>
 

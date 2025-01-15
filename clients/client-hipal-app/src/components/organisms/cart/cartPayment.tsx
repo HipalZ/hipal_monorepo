@@ -6,8 +6,9 @@ import { useCart } from "@/components/store/useCart";
 import { useCouponz } from "@/components/store/useCouponz";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { HiX } from "react-icons/hi";
+import { CardSkeleton } from "@/components/atoms/paymentPageLoader";
 
-const FinalBillLoader = dynamic(() => import("./finalBillLoader"));
+const FinalBillLoader = dynamic(() => import("./finalBillLoader"), { ssr: false, loading: () => <CardSkeleton /> });
 
 const MemoCartPayment = () => {
   // Store hooks

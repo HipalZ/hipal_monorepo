@@ -9,7 +9,6 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { apiRpc } from "@hi/common";
 import CardSection from "@/components/atoms/cardSection";
-import Avtaar from "@/assets/login/cat.png";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import dynamic from "next/dynamic";
 import CurvedText from "@/components/atoms/curvedText";
@@ -18,10 +17,16 @@ import { useReview } from "@/components/store/useReview";
 import { useErrorHandling } from "@/utils/helper";
 import { toast } from "react-toastify";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { CardSkeleton } from "@/components/atoms/paymentPageLoader";
+import LoadingSpinnerCircle from "@/components/atoms/loader";
+const Avatar = dynamic(() => import("@/components/atoms/avatar"), {
+  ssr: false,
+  loading: () => <CardSkeleton />,
+});
 
 const CouponzBlink = dynamic(() => import("../newPayment/couponzBlink"), {
   ssr: false,
-  loading: () => <SkeletonLoader height={200} />,
+  loading: () => <LoadingSpinnerCircle />,
 });
 
 const MemoPayOnlineSuccess = () => {
@@ -143,13 +148,7 @@ const MemoPayOnlineSuccess = () => {
       }}
     >
       <center className="relative space-grotesk-700">
-        <Image
-          src={Avtaar}
-          alt="avatar"
-          width={64}
-          height={64}
-          className="rounded-full"
-        />
+        <Avatar />
         {animate ? null : (
           <Image
             className="absolute opacity-25 mt-36 animate-spin"
