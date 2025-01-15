@@ -771,7 +771,7 @@ const tableRouter = new Hono()
     zValidator(
       "json",
       z.object({
-        userIds: z.array(z.string().min(1).max(500)),
+        phoneNumbers: z.array(z.string().min(1).max(500)),
         businessId: z.string().min(1).max(500),
         tableId: z.string().min(1).max(500),
       }),
@@ -804,7 +804,8 @@ const tableRouter = new Hono()
             bill: `https://hipal-test.hipalz.com/${business?.customLink}/eBill?tableId=${tableId}`,
           },
         };
-        await axios(options);
+        const res = await axios(options);
+        console.log("res", res.data);
       }
 
       return c.json(
