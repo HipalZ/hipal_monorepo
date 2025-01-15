@@ -724,6 +724,7 @@ const tableRouter = new Hono()
         tax: getBill.data.order_data.tax,
         total: getBill.data.order_data.total,
         expireIn: 300000,
+        subTotal: getBill.data.order_data.core_price || 0,
       });
 
       return c.json(
@@ -799,7 +800,7 @@ const tableRouter = new Hono()
             template_id: "6787e7e6d6fc0533d778a013",
             sender: "HiPalc",
             short_url: "1",
-            mobiles: "919588413799",
+            mobiles: user?.phone,
             businessname: business?.name,
             bill: `https://hipal-test.hipalz.com/${business?.customLink}/eBill?tableId=${tableId}`,
           },
@@ -856,10 +857,7 @@ const tableRouter = new Hono()
       const { userIds = [] } = await c.req.json();
       const users = await User.find({
         _id: { $in: userIds },
-      }).populate({
-        path: "userId",
-        select: "name phone",
-      });
+      }).select("name phone");
 
       return c.json(
         {

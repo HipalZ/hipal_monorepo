@@ -43,6 +43,10 @@ const qrBillOrderSchema = new mongoose.Schema<QrBillOrderType>(
       type: Number,
       required: true,
     },
+    subTotal: {
+      type: Number,
+      required: false,
+    },
 
     status: {
       type: String,
