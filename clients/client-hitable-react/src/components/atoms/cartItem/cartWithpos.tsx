@@ -80,7 +80,7 @@ const MemoCartWithPos = () => {
     }
 
     return (
-        <div className="space-y-4">
+        <>
             {cartData?.map((cart, index) => (
                 <motion.div
                     key={`${cart._id} + ${index}`}
@@ -111,8 +111,8 @@ const MemoCartWithPos = () => {
                             </div>
                             <Separator className="my-2" />
                             <div className="space-y-4">
-                                {cart?.cart?.map((item) => (
-                                    <div key={item._id} className="flex items-start justify-between">
+                                {cart?.cart?.map((item, index) => (
+                                    <div key={`${item._id}+${index}`} className="flex items-start justify-between">
                                         <div className="flex-grow">
                                             <div className="flex items-start justify-between">
                                                 <h4 className="text-base font-semibold">{item?.dish?.name}</h4>
@@ -194,6 +194,7 @@ const MemoCartWithPos = () => {
                     </div>
                     <CommonBottomButton
                         position="mid"
+                        maxWidth="48rem"
                         fixed
                         buttons={[
                             {
@@ -210,7 +211,7 @@ const MemoCartWithPos = () => {
                     />
                 </BottomPopup>
             )}
-        </div>
+        </>
     );
 };
 

@@ -3,10 +3,9 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import { CiGlobe } from "react-icons/ci";
-import { MdOutlineHistory } from "react-icons/md";
+import { MdOutlineHistory, MdOutlineTableBar } from "react-icons/md";
 import type { IconType } from "react-icons";
 import type { NavItemTypes } from "../types/hiClientzData";
-import { MdOutlineTableBar } from "react-icons/md";
 import { HiOutlineShoppingCart } from "react-icons/hi";
 
 export function timestampToDateTime(timestamp: number): string {
@@ -87,9 +86,22 @@ export const useErrorHandling = () => {
   return { errorText };
 };
 
-export const navItems: Array<{ type: NavItemTypes; icon: IconType }> = [
-  { type: "Tables", icon: MdOutlineTableBar },
-  { type: "cart", icon: HiOutlineShoppingCart },
-  { type: "payments", icon: CiGlobe },
-  { type: "history", icon: MdOutlineHistory },
-];
+export function createNavItems(isPos: boolean): Array<{
+  type: NavItemTypes;
+  icon: IconType;
+}> {
+  const navItems = [
+    { type: "cart" as NavItemTypes, icon: HiOutlineShoppingCart },
+    { type: "payments" as NavItemTypes, icon: CiGlobe },
+    { type: "history" as NavItemTypes, icon: MdOutlineHistory },
+  ];
+
+  if (isPos) {
+    navItems.unshift({
+      type: "Tables" as NavItemTypes,
+      icon: MdOutlineTableBar,
+    });
+  }
+
+  return navItems;
+}

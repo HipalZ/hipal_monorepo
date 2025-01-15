@@ -47,6 +47,12 @@ interface OrderState {
 
   searchTerm: string;
   setSearchTerm: (term: string) => void;
+
+  orderError: string;
+  setOrderError: (error: string) => void;
+
+  showOrderError: boolean;
+  setShowOrderError: (show: boolean) => void;
 }
 
 export const useOrderStore = create<OrderState>((set, get) => ({
@@ -86,4 +92,10 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   searchTerm: "",
   setSearchTerm: (term) => set({ searchTerm: term }),
+
+  orderError: "",
+  setOrderError: (error) => set({ orderError: error }),
+
+  showOrderError: false,
+  setShowOrderError: (show) => set({ showOrderError: show }),
 }));

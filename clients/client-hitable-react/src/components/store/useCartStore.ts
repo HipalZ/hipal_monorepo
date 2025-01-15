@@ -60,9 +60,6 @@ interface ICartStore {
   showInstructionPopup: boolean;
   setShowInstructionPopup: (show: boolean) => void;
 
-  addInstruction: string;
-  setAddInstruction: (instruction: string) => void;
-
   selectedDish: DishType;
   setSelectedDish: (dish: DishType) => void;
 
@@ -118,11 +115,6 @@ export const useCartStore = create(
       openBottomPanel: false,
       setOpenBottomPanel: (open) => {
         set({ openBottomPanel: open });
-      },
-
-      addInstruction: "",
-      setAddInstruction: (instruction) => {
-        set({ addInstruction: instruction });
       },
 
       instructionText: "",

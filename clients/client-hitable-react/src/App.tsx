@@ -20,7 +20,7 @@ function App() {
   const { fetchAlerts } = useFetchAlerts();
   const accessToken = useUserToken((s) => s.accessToken);
   const pathName = useLocation().pathname;
-  const businessIdMatch = pathName.match(/^\/([^/]+)\/alerts$/);
+  const businessIdMatch = pathName.match(/^\/([^/]+)\/alerts/);
   const businessId = businessIdMatch ? businessIdMatch[1] : null;
   const outletInfo = useBusinessData(s => s.outletInfo);
   const [isOnline, setIsOnline] = useState(true);

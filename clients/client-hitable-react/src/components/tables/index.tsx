@@ -7,13 +7,14 @@ import { Input } from "@/components/ui/input"
 import SpinnerMemo from '../atoms/loadingSpinner';
 import type { TableData } from '../store/useZonesAndTable';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useCart } from '../store/useCart';
 
 const MemoTableIconList = () => {
     const navigate = useNavigate();
     const { businessId } = useParams();
     const outletInfo = useBusinessData(s => s.outletInfo);
     const [searchTerm, setSearchTerm] = useState('');
-
+    const { setIsPlacingNewOrder } = useCart()
 
     const getAllTables = async (): Promise<TableData[]> => {
         const response = await apiRpc.table.empty_table[':businessId'].$get({
@@ -39,7 +40,8 @@ const MemoTableIconList = () => {
     );
 
     const goToTable = (table: TableData) => {
-        navigate(`/${businessId}/${table._id}`);
+        setIsPlacingNewOrder(true)
+        navigate(`/${businessId}/alerts/${table._id}`);
     }
 
 

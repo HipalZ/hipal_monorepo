@@ -94,37 +94,34 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
                                         const choiceId = choice._id || choice.uuid;
                                         return (
                                             <tr className="flex p-2 transition-all" key={choiceId}>
-                                                <td className="min-h-12 max-h-20 !text-sm w-[65%] flex flex-wrap !text-[#000000]">
-                                                    <span className="w-full my-auto capitalize whitespace-pre-wrap">
-                                                        {choice.name} <br />
-                                                        <span className="text-xs">
-                                                            (Max: {choice.choiceMaxQuantity})
-                                                        </span>
+                                                <td className="min-h-12 max-h-20 !text-sm w-[80%] flex flex-wrap !text-[#000000]">
+                                                    <span className="w-full my-auto font-semibold capitalize whitespace-pre-wrap">
+                                                        {choice.name}
+                                                    </span>
+                                                    <span className=" text-[#000000] w-full font-semibold opacity-60">
+                                                        ₹ {choice.price}
+                                                    </span>
+                                                    <span className="text-xs ">
+                                                        (Max: {choice.choiceMaxQuantity})
                                                     </span>
                                                 </td>
-                                                <td className="!text-sm w-[10%] text-center font-semibold flex flex-row">
-                                                    <span className="mx-auto my-auto text-[#000000]">
-                                                        {choice.price}
-                                                    </span>
-                                                </td>
-                                                <td className="!text-sm w-[20%] text-center font-semibold flex flex-row">
-                                                    <span className="pr-2 my-auto ml-auto">
-                                                        <QuantityPickerNonOutline
-                                                            setQuantity={(q) =>
-                                                                handleQuantityChange(q, choiceId, addOn?._id)
-                                                            }
-                                                            minQuantity={0}
-                                                            extra={addOn}
-                                                            maxQuantity={
-                                                                Math.min(
-                                                                    addOn?.maxQuantity,
-                                                                    choice.choiceMaxQuantity,
-                                                                ) || 10
-                                                            }
-                                                            quantity={selectedCounts.get(choiceId) || 0}
-                                                            displayAlertPopUp={displayAlertPopUp}
-                                                        />
-                                                    </span>
+
+                                                <td className="!text-sm  text-center font-semibold flex flex-row">
+                                                    <QuantityPickerNonOutline
+                                                        setQuantity={(q) =>
+                                                            handleQuantityChange(q, choiceId, addOn?._id)
+                                                        }
+                                                        minQuantity={0}
+                                                        extra={addOn}
+                                                        maxQuantity={
+                                                            Math.min(
+                                                                addOn?.maxQuantity,
+                                                                choice.choiceMaxQuantity,
+                                                            ) || 10
+                                                        }
+                                                        quantity={selectedCounts.get(choiceId) || 0}
+                                                        displayAlertPopUp={displayAlertPopUp}
+                                                    />
                                                 </td>
                                             </tr>
                                         );

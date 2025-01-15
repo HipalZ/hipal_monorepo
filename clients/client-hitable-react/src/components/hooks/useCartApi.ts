@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useCartStore } from "../store/useCartStore";
 import { useOrderStore } from "../store/useOrderData";
+import { useCart } from "../store/useCart";
 
 export const useDeleteCart = () => {
   const { mutateAsync, isPending } = useMutation({
@@ -33,8 +34,9 @@ export const useDeleteCart = () => {
 export const useCreateOrder = () => {
   const queryClient = useQueryClient();
 
-  const { setOpenOrderModal, setModalType } = useOrderStore();
-
+  const { setOpenOrderModal, setModalType, setOrderError, setShowOrderError } =
+    useOrderStore();
+  const { setIsPlacingNewOrder } = useCart();
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (order: any) => {
       const res = await apiRpc.pos.captain.save_kot.$post({
@@ -42,6 +44,7 @@ export const useCreateOrder = () => {
       });
       if (res.status === 200 || res.status === 201) {
         setOpenOrderModal(false);
+        setIsPlacingNewOrder(false);
         setModalType("addItem");
         useCartStore.setState({ cart: [] });
         queryClient.invalidateQueries({ queryKey: ["getTableOrders"] });
@@ -52,7 +55,8 @@ export const useCreateOrder = () => {
     },
     onSuccess: (data: any) => {
       if (data.err) {
-        toast.error(data.message);
+        setOrderError(data.message);
+        setShowOrderError(true);
         return;
       }
       toast.success(data.message);

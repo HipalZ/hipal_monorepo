@@ -9,6 +9,8 @@ import { type orderModal, useOrderStore } from '@/components/store/useOrderData'
 import { ScrollArea } from '@/components/ui/scroll-area';
 import SpinnerMemo from '@/components/atoms/loadingSpinner';
 import CustomerInformation from '@/components/atoms/placeOrders/customerInformation';
+import { useCart } from '@/components/store/useCart';
+import type { TableData } from '@/components/store/useZonesAndTable';
 // Lazy loaded components
 const PlaceOrders = lazy(() => import('@/components/atoms/placeOrders'));
 const BottomPopUp = lazy(() => import('@/components/atoms/universalPopup'));
@@ -23,6 +25,7 @@ const Bill = lazy(() => import('@/components/atoms/placeOrders/bill'));
 const TablePos = () => {
     const { tableId, businessId } = useParams();
     const navigate = useNavigate();
+    const { isPlacingNewOrder } = useCart()
     const {
         setSelectedTable,
         setModalType,
@@ -59,7 +62,17 @@ const TablePos = () => {
             param: { tableId },
         });
         const res = await response.json();
-        setSelectedTable(res?.data);
+        const tableData = res?.data as TableData;
+
+        if (tableData?.status === "EMPTY" && isPlacingNewOrder) {
+            openOrderModalHandler('addItem');
+        }
+        if (tableData?.status === "EMPTY" && !isPlacingNewOrder) {
+            setOpenOrderModal(false);
+            setModalType('');
+            return navigate(`/${businessId}/alerts`);
+        }
+        setSelectedTable(tableData);
         return res?.data;
     };
 
@@ -67,6 +80,7 @@ const TablePos = () => {
         queryKey: ['fetchIndividualTable', tableId],
         queryFn: fetchIndividualTable,
         enabled: !!tableId,
+        refetchInterval: 30000,
     });
 
     return (

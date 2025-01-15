@@ -11,16 +11,17 @@ import {
 } from "@/components/store/useZonesAndTable";
 import { apiRpc } from "@hi/common";
 import { MdTableBar, MdPerson } from "react-icons/md";
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
+import { useCart } from "../store/useCart";
 const MemoZones: FC = () => {
   const params = useParams();
   const businessId = params.businessId as string;
   const navigate = useNavigate();
+  const { setIsPlacingNewOrder } = useCart();
 
   const {
     zones,
@@ -116,8 +117,10 @@ const MemoZones: FC = () => {
   };
 
   const goToTable = (table: TableData) => {
-    navigate(`/${businessId}/${table._id}`);
+    setIsPlacingNewOrder(true)
+    navigate(`/${businessId}/alerts/${table._id}`);
   }
+
 
   return (
     <ScrollArea className="h-screen bg-gray-100">
@@ -135,7 +138,7 @@ const MemoZones: FC = () => {
                   {tablesByZone[zone?.zoneId] &&
                     tablesByZone[zone?.zoneId].length > 0 ? (
                     <motion.div
-                      className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
+                      className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}

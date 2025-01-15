@@ -39,7 +39,7 @@ const EnhancedOrderCard: React.FC<CompactOrderCardProps> = ({ order }) => {
                                     <MdRestaurantMenu className="mr-2 text-gray-500" />
                                     <span>{item?.dish?.name}</span>
                                     {item?.portion && (
-                                        <span className="ml-1 text-xs text-gray-500">({item.portion.name})</span>
+                                        <span className="ml-1 text-xs text-gray-500">({item?.portion?.name})</span>
                                     )}
                                 </div>
 
@@ -51,7 +51,7 @@ const EnhancedOrderCard: React.FC<CompactOrderCardProps> = ({ order }) => {
                                 {/* Dish & Portion Price */}
                                 <div className="col-span-2 text-right">
                                     ₹{(
-                                        item.dish.price * item.quantity +
+                                        item?.dish?.price * item?.quantity +
                                         (item.portion ? item.portion.price * item.quantity : 0)
                                     ).toFixed(2)}
                                 </div>

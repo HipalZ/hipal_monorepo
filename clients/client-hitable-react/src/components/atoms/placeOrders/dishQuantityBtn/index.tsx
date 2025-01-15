@@ -2,8 +2,6 @@ import { memo, useCallback } from "react";
 import type { DishType } from "@hi/db-models/src/validators";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import { useCartStore } from "@/components/store/useCartStore";
-import { useCart } from "@/components/store/useCart";
-import { useBottomPanel } from "@/components/store/useBottomPanel";
 import BottomPopUp from "../../universalPopup";
 import ChoosePortions from "./portion";
 import AddOnsWithDish from "./extra";
@@ -71,6 +69,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
     );
 
     const handleAddToCart = useCallback(() => {
+        const filteredChoices = selectedChoices?.filter(choice => choice?.quantity > 0);
         const item = {
             id: generateCartItemId(
                 selectedDish._id,
@@ -82,7 +81,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
             ),
             dish: selectedDish,
             portion: selectedPortion,
-            extras: selectedChoices,
+            extras: filteredChoices,
             quantity: 1,
         };
         addToCart(item);
@@ -209,7 +208,6 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
                             <CommonBottomButton
                                 fixed
                                 maxWidth="30rem"
-
                                 buttons={[
                                     {
                                         text: "close",
@@ -222,7 +220,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
                                         text: "Add Item To Cart",
                                         onClick: handleAddToCart,
                                         type: "button" as const,
-                                        className: 'px-4 rounded'
+                                        className: 'px-4 rounded',
                                     },
                                 ]}
                             />

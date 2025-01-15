@@ -6,15 +6,21 @@ import { apiRpc } from "@hi/common"
 import SpinnerMemo from "../loadingSpinner"
 import type { OrderData } from "@/components/types/hiClientzData"
 import EnhancedOrderCard from "./orderCard"
+import { useCart } from "@/components/store/useCart"
 
 const MemoPlaceOrders = () => {
     const { tableId } = useParams()
+    const { setIsPlacingNewOrder } = useCart();
 
     const getTableOrders = useCallback(async () => {
         const response = await apiRpc.kot.table_kot[":tableId"].$get({
             param: { tableId },
         })
+
         const res = await response.json()
+        if (res?.data?.length > 0) {
+            setIsPlacingNewOrder(false);
+        }
         return res.data
     }, [tableId])
 

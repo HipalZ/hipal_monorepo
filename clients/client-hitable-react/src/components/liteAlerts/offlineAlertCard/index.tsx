@@ -92,7 +92,7 @@ const OfflineAlertCard = ({ offlineAlertData }: IOfflineProp) => {
                   )}
                 >
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-4 -mt-4 -ml-4">
                       <Badge
                         variant={
                           alert?.alertType === "WAITER"
@@ -101,11 +101,11 @@ const OfflineAlertCard = ({ offlineAlertData }: IOfflineProp) => {
                               ? "destructive"
                               : "default"
                         }
-                        className="text-xs font-medium"
+                        className="text-base font-medium capitalize rounded-none md:text-lg"
                       >
                         {alert?.alertType === "WAITER"
                           ? "Call the staff"
-                          : alert?.alertType.toLowerCase()}
+                          : alert?.alertType?.toLowerCase()}
                       </Badge>
                       <span className="text-sm font-semibold text-muted-foreground">
                         {timestampToDateTime(alert?.date)}
@@ -134,9 +134,10 @@ const OfflineAlertCard = ({ offlineAlertData }: IOfflineProp) => {
                     </Button>
                     {alert?.alertType !== "WAITER" && (
                       <Button
-                        variant="default"
+                        variant="outline"
                         size="sm"
                         onClick={() => handleViewMore(alert)}
+                        className="font-semibold"
                       >
                         View Details
                       </Button>

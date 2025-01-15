@@ -52,6 +52,7 @@ const OnlineAlertCard = ({ onlineAlertData }: IOnlineProp) => {
     setClickViewMore(!clickViewMore);
   };
 
+
   return (
     <motion.main
       className=" pb-[5rem] m-4 gap-4  md:mx-4 grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
@@ -79,14 +80,14 @@ const OnlineAlertCard = ({ onlineAlertData }: IOnlineProp) => {
                 )}
               >
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-4 -mt-4 -ml-4">
                     <Badge
                       variant={
-                        alert?.status === "FAIL" ? "destructive" : "default"
+                        alert?.status === "FAIL" ? "default" : "destructive"
                       }
-                      className="text-xs font-medium"
+                      className="text-base font-medium capitalize rounded-none md:text-lg"
                     >
-                      {alert?.alertType.toLowerCase()}
+                      {alert?.alertType?.split("_").join(" ").toLowerCase()}
                     </Badge>
                     <span className="text-sm font-semibold text-muted-foreground">
                       {timestampToDateTime(alert?.date)}
@@ -129,9 +130,10 @@ const OnlineAlertCard = ({ onlineAlertData }: IOnlineProp) => {
                     Remove
                   </Button>
                   <Button
-                    variant="default"
+                    variant="outline"
                     size="sm"
                     onClick={() => handleViewMore(alert)}
+                    className="font-semibold"
                   >
                     View Details
                   </Button>

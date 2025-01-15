@@ -62,8 +62,6 @@ const MemoCallCaptain = ({ offlineAlertData }: IOfflineProp) => {
         }
     };
 
-    console.log("offlineAlertData", offlineAlertData);
-
     return (
         <motion.main
             className="p-4 pb-[5rem] gap-4 grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"

@@ -53,6 +53,9 @@ interface IUseCart {
 
   isCartEdit: boolean;
   setIsCartEdit: (data: boolean) => void;
+
+  isPlacingNewOrder: boolean;
+  setIsPlacingNewOrder: (data: boolean) => void;
 }
 
 export const useCart = create<IUseCart>()(
@@ -83,6 +86,10 @@ export const useCart = create<IUseCart>()(
 
       isCartEdit: false,
       setIsCartEdit: (d: boolean) => set(() => ({ isCartEdit: d })),
+
+      isPlacingNewOrder: false,
+      setIsPlacingNewOrder: (d: boolean) =>
+        set(() => ({ isPlacingNewOrder: d })),
 
       increaseQuantity: (dishId: string) =>
         set((state) => {

@@ -34,8 +34,8 @@ const MemoOrdersHeader: React.FC<OrdersHeaderProps> = ({ width = "30rem" }) => {
                 </section>
 
                 <section className="flex items-center space-x-4">
-                    <SlidersHorizontal onClick={() => openOrderModalHandler("options")} className="w-6 h-6 text-[#8E24AA]" />
                     <Bell className="w-6 h-6 text-red-500" />
+                    <SlidersHorizontal onClick={() => openOrderModalHandler("options")} className="w-6 h-6 text-[#8E24AA]" />
                 </section>
             </header>
         </div>

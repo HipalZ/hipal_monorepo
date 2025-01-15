@@ -15,7 +15,7 @@ function MemoChoosePortions({ dishData }: { dishData: DishType }) {
     }
 
     return (
-        <div className="mx-6">
+        <div className="mx-4">
             <div className="prose">
                 <h3 className="text-[#000000] !text-xl">Choose a portion</h3>
             </div>
@@ -25,28 +25,29 @@ function MemoChoosePortions({ dishData }: { dishData: DishType }) {
                     <tbody>
                         {portions.map((portion, index) => (
                             <tr
-                                className={`flex flex-row my-2 ${selectedPortion?._id === portion._id ? "bg-gray-200" : ""
+                                className={`flex flex-row my-3 ${selectedPortion?._id === portion._id ? "" : ""
                                     }`}
                                 key={`${portion?.name?.replaceAll(" ", "") || ""}${index}`}
+                                onClick={() => setSelectedPortion(portion)}
                             >
-                                <td className="!pl-3 !text-sm w-1/3 flex flex-row flex-wrap">
+                                <td className="!text-xs w-[2rem] text-center flex flex-row">
+                                    <input
+                                        type="radio"
+                                        name="portion"
+                                        className="p-1 ml-auto mr-2 text-2xl text-black radio"
+                                        checked={selectedPortion?._id === portion._id}
+
+                                    />
+                                </td>
+                                <td className="!text-sm w-[90%] flex flex-row flex-wrap">
                                     <span className="w-full my-auto capitalize whitespace-pre-wrap">
                                         {portion?.name || ""}
                                     </span>
                                 </td>
-                                <td className="!text-sm w-1/3 text-center font-semibold flex flex-row">
+                                <td className="!text-sm w-[20%] text-center font-semibold flex flex-row">
                                     <span className="mx-auto">
-                                        {portion?.price || 0}
+                                        ₹ {portion?.price || 0}
                                     </span>
-                                </td>
-                                <td className="!text-xs w-1/3 text-center flex flex-row">
-                                    <input
-                                        type="radio"
-                                        name="portion"
-                                        className="p-1 ml-auto mr-2 text-2xl text-black "
-                                        // checked={selectedPortion?._id === portion._id}
-                                        onChange={() => setSelectedPortion(portion)}
-                                    />
                                 </td>
                             </tr>
                         ))}
