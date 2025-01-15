@@ -3,9 +3,11 @@ import { usePaymentStore } from "@/components/store/usePaymentStore"
 import useTableData from "@/components/store/useTableData"
 import { motion, AnimatePresence } from "framer-motion"
 import { QrCode, X, AlertCircle } from 'lucide-react';
+import { usePathname } from "next/navigation";
 import { memo, useCallback } from "react"
 
 export const MemoSessionTimeoutBanner = () => {
+    const pathName = usePathname()
     const { tableName, tableNameTimeStamp, isVisible, setIsVisible } = useTableData();
     const { setShowScan } = usePaymentStore()
     const openScanner = useCallback(() => {
@@ -13,7 +15,7 @@ export const MemoSessionTimeoutBanner = () => {
     }, [setShowScan])
     return (
         <AnimatePresence >
-            {tableName?.length === 0 && tableNameTimeStamp === null && isVisible && (
+            {tableName?.length === 0 && tableNameTimeStamp === null && isVisible && !pathName?.includes("review") && (
                 <div className="fixed w-full top-0 bg-gradient-to-b from-white/95 to-white/90 backdrop-blur-md shadow-lg z-50">
                     {/* Animated Warning Line */}
                     <motion.div
