@@ -16,7 +16,7 @@ const PaymentModal = (props: PaymentModalProps) => {
   };
 
   return (
-    <section className="relative">
+    <>
       <button
         type="button"
         className="absolute top-0 text-[#334C38] left-1/2 px-4 py-1 rounded-full transform -translate-x-1/2 -translate-y-1/2 bg-[#EDFBE7]"
@@ -94,7 +94,7 @@ const PaymentModal = (props: PaymentModalProps) => {
           </>
         ) : null}
       </section>
-    </section>
+    </>
   );
 };
 const MemoizedPaymentModal = memo(PaymentModal);

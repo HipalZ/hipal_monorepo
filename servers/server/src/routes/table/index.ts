@@ -858,7 +858,6 @@ const tableRouter = new Hono()
       const users = await User.find({
         _id: { $in: userIds },
       }).select("name phone");
-
       return c.json(
         {
           message: "Users fetched successfully",

@@ -32,17 +32,17 @@ const Payments = () => {
   };
 
   return (
-    <main>
-      <article className="linear_gradient_background">
+    <main className="relative">
+      <section className={cn("sticky top-0 z-50 w-full bg-[#f4f4f4]")}>
         <MemoizedHeader
           title="Payments"
           leftIcon={<FaArrowLeft />}
           rightImage={Hi}
           onBack={handleBack}
         />
-      </article>
+      </section>
 
-      <nav className="sticky top-0 z-50 flex justify-between w-full px-4 space-x-4 text-sm bg-white mobile-only">
+      <nav className="sticky top-[4rem] z-50 flex justify-between w-full px-4 space-x-4 text-sm bg-white mobile-only">
         {sidebarItems.map((item) => (
           <button
             className={cn(

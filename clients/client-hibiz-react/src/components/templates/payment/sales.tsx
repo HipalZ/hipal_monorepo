@@ -249,8 +249,10 @@ const MemoPaymentSales = () => {
       )}
       <Pagination />
       {open && (
-        <PopUp onClose={closeModel} show={true}>
-          <PaymentModal salesData={salesData} />
+        <PopUp height="h-[80dvh]" onClose={closeModel} show={true}>
+          <section className="h-[100dvh] overflow-y-auto pb-[7rem]">
+            <PaymentModal salesData={salesData} />
+          </section>
         </PopUp>
       )}
     </main>

@@ -1,7 +1,7 @@
 import { memo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { CardContent } from "@/components/ui/card"
-import { Users, UserCheck } from "lucide-react"
+import { Users, UserCheck, ReceiptText } from "lucide-react"
 import { type orderModal, useOrderStore } from "@/components/store/useOrderData"
 import { Badge } from "@/components/ui/badge"
 
@@ -39,6 +39,15 @@ const MemoTableOptions = () => {
             >
                 <UserCheck className="w-5 h-5 mr-2" />
                 Know Your Customers
+            </Button>
+            <Button
+                size="lg"
+                variant="outline"
+                className="w-full"
+                onClick={() => toggleModalType('ebill')}
+            >
+                <ReceiptText className="w-5 h-5 mr-2" />
+                Send Ebill
             </Button>
         </CardContent>
     )

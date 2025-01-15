@@ -11,6 +11,7 @@ import SpinnerMemo from '@/components/atoms/loadingSpinner';
 import CustomerInformation from '@/components/atoms/placeOrders/customerInformation';
 import { useCart } from '@/components/store/useCart';
 import type { TableData } from '@/components/store/useZonesAndTable';
+
 // Lazy loaded components
 const PlaceOrders = lazy(() => import('@/components/atoms/placeOrders'));
 const BottomPopUp = lazy(() => import('@/components/atoms/universalPopup'));
@@ -21,6 +22,8 @@ const AddTableCount = lazy(() => import('@/components/atoms/placeOrders/addTable
 const Category = lazy(() => import('@/components/atoms/placeOrders/category'));
 const CartItem = lazy(() => import('@/components/atoms/placeOrders/cartItem'));
 const Bill = lazy(() => import('@/components/atoms/placeOrders/bill'));
+const AlertCount = lazy(() => import('@/components/atoms/placeOrders/alertCount'));
+const Ebill = lazy(() => import('@/components/atoms/placeOrders/ebill'));
 
 const TablePos = () => {
     const { tableId, businessId } = useParams();
@@ -229,6 +232,32 @@ const TablePos = () => {
                                     >
                                         <Suspense fallback={<SpinnerMemo />}>
                                             <CustomerInformation />
+                                        </Suspense>
+                                    </motion.div>
+                                )
+                            }
+                            {
+                                modalType === "alerts" && (
+                                    <motion.div
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 20 }}
+                                    >
+                                        <Suspense fallback={<SpinnerMemo />}>
+                                            <AlertCount />
+                                        </Suspense>
+                                    </motion.div>
+                                )
+                            }
+                            {
+                                modalType === "ebill" && (
+                                    <motion.div
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        exit={{ opacity: 0, x: 20 }}
+                                    >
+                                        <Suspense fallback={<SpinnerMemo />}>
+                                            <Ebill />
                                         </Suspense>
                                     </motion.div>
                                 )

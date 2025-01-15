@@ -84,7 +84,6 @@ const MemoCustomerInformation = () => {
                         </CardHeader>
 
                         <CardContent className="mt-4 space-y-4">
-                            {/* Coins & Coupons */}
                             <div className="flex justify-between text-sm">
                                 <div className="flex items-center gap-2 text-yellow-600">
                                     <Coins className="w-4 h-4" />
@@ -95,8 +94,6 @@ const MemoCustomerInformation = () => {
                                     <span>Coupons: {customerInfo?.couponCount}</span>
                                 </div>
                             </div>
-
-                            {/* Tags */}
                             <div>
                                 <h4 className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
                                     <Tag className="w-4 h-4" />
@@ -106,7 +103,6 @@ const MemoCustomerInformation = () => {
                                     {Object?.keys(tagMap).length > 0 ? (
                                         Object?.entries(tagMap)?.map(([tagName, count]) => (
                                             <Badge key={tagName} variant="outline" className="text-xs">
-                                                {/* #TagName x Count */}
                                                 #{tagName} {count > 1 && `x ${count}`}
                                             </Badge>
                                         ))
