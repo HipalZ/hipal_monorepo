@@ -1,4 +1,4 @@
-"use client";;
+"use client";
 import { memo, useCallback, useEffect } from "react";
 import img from "@/assets/img/cut.png";
 import type { IBusinessData } from "@/components/types/businessData";
@@ -12,6 +12,11 @@ import ShimmerImage from "@/components/atoms/imageshimmer";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useCart } from "@/components/store/useCart";
 import { useLogin } from "@/components/store/useLogin";
+import { BottomBarSkeleton } from "@/components/atoms/paymentPageLoader";
+import dynamic from "next/dynamic";
+const Avatar = dynamic(() => import("@/components/atoms/avatar"), {
+  loading: () => <BottomBarSkeleton />,
+});
 
 const MainBackground = ({ data }: { data: IBusinessData }) => {
   const searchParams = useSearchParams();
@@ -111,11 +116,7 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
               Login/Sign up
             </button>
           )}
-          {accessToken && (
-            <h1 className="bg-primary text-base-100 font-semibold px-4 py-2.5 rounded-full">
-              {userDetails?.name?.split("")[0]}
-            </h1>
-          )}
+          <Avatar />
         </div>
       </article>
     </section>

@@ -9,8 +9,6 @@ import { apiRpc } from "@hi/common";
 import { useLogin } from "@/components/store/useLogin";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import PaymentAlert from "./paymentAlert";
-import CartPayment from "./cartPayment";
 import { useCallTheCaptain } from "@/components/hooks/useCartHook";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
@@ -21,9 +19,12 @@ import Image from "next/image";
 import { MdOutlineShoppingCart } from "react-icons/md";
 import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
 import ConfirmPayment from "./confirmPayment";
-import SwipeToPlaceOrder from "./swipeToPlaceOrder";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
+import { BottomBarSkeleton } from "@/components/atoms/paymentPageLoader";
 
+const PaymentAlert = dynamic(() => import("./paymentAlert"), { ssr: false });
+const CartPayment = dynamic(() => import("./cartPayment"), { ssr: false });
+const SwipeToPlaceOrder = dynamic(() => import("./swipeToPlaceOrder"), { ssr: false, loading: () => <BottomBarSkeleton /> },);
 const CartItem = dynamic(() => import("./cartItem"), { ssr: false, loading: () => <LoadingSpinner /> });
 const CommonBottomButton = dynamic(
   () => import("@/components/atoms/bottomButton"),
@@ -320,7 +321,7 @@ const Cart = () => {
           ]
           : [
             {
-              text: "Order more",
+              text: "Back to Order",
               onClick: () => setShowCart(false),
               type: "button" as const,
               isLoading: isPending,
@@ -413,20 +414,29 @@ const Cart = () => {
               )) : <EmptyCart />}
             </div>
             <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-              <motion.div
+              {!outletInfo?.isPosEnabled ? null : <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="w-full p-2 mt-auto mb-2 text-sm text-center text-rose-600 bg-rose-50"
               >
                 Orders once placed, cannot be cancelled!
-              </motion.div>
+              </motion.div>}
               {/* Cart Info */}
-              <div className="flex items-center justify-between gap-3 px-2">
-                <button onClick={handleBack} type="button" className="h-12 px-4 py-1 border border-[#CACACA] rounded-lg text-center">
-                  <PiArrowBendUpLeftBold size={24} />
-                </button>
-                <SwipeToPlaceOrder placeOrder={placeOrder} />
-              </div>
+              {outletInfo?.isPosEnabled ?
+                <div className="flex items-center justify-between gap-3 px-2">
+                  <button onClick={handleBack} type="button" className="h-12 px-4 py-1 border border-[#CACACA] rounded-lg text-center">
+                    <PiArrowBendUpLeftBold size={24} />
+                  </button>
+                  <SwipeToPlaceOrder placeOrder={placeOrder} />
+                </div>
+                : <CommonBottomButton
+                  fixed
+                  buttons={
+                    outletInfo?.isPosEnabled
+                      ? getBottomButtons ?? []
+                      : getButtonForPopcorn ?? []
+                  }
+                />}
             </div>
           </div>
         </section>

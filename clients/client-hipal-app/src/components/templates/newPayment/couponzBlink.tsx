@@ -43,7 +43,7 @@ const MemoCouponzBlink = () => {
 
   return (
     <section className={"relative flex flex-col items-center justify-center pt-5 space-y-10"}>
-      <center className="text-black !font-semibold text-2xl poppins-regular">
+      <center className="text-primary !font-semibold text-2xl poppins-regular">
         {isReviewPage ? `Don't miss other couponz` : "Couponz"}
       </center>
       <EmblaCarousel2 customCarousel={true}>

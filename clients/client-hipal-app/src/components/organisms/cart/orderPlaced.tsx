@@ -7,13 +7,14 @@ import SpringConfetti from '@/assets/cart/SpringConfetti.png'
 import StockPot from '@/assets/cart/StockPot.png'
 import OnlineFoodOrder from "@/assets/cart/OnlineFoodOrder.png"
 import dynamic from 'next/dynamic'
+import { _useAllBusiness } from '@/components/store/useAllBusiness'
 
 const TransitionImages = dynamic(() => import('./transitionImages'), { ssr: false })
 const ConfettiHeader = dynamic(() => import('../confettiHeader'), { ssr: false })
 
 const MemoOrderPlaced = () => {
     const images = [StockPot, OnlineFoodOrder, StockPot];
-
+    const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
     return (
         <center>
             <motion.div
@@ -43,7 +44,7 @@ const MemoOrderPlaced = () => {
                         damping: 17,
                     }}
                 >
-                    Yay your order is placed
+                    {outletInfo?.isPosEnabled ? "Yay your order is placed" : 'Your cart is shared to staff'}
                 </motion.h1>
                 <motion.p
                     className='text-[#52525280] text-sm'
@@ -51,7 +52,8 @@ const MemoOrderPlaced = () => {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.7 }}
                 >
-                    Congratulations your order is been prepared
+                    {outletInfo?.isPosEnabled ? "Congratulations your order is been prepared" : 'Your cart is shared to staff'}
+
                 </motion.p>
             </motion.div>
 
