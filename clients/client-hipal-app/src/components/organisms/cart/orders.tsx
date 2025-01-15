@@ -50,6 +50,9 @@ const MemoOrders = () => {
     });
     const res = await response.json();
     setCartHistory(res.data);
+    if (res?.data?.length > 0) {
+      setExpanded(res?.data.map((order) => order._id));
+    }
     return res;
   };
 
@@ -122,7 +125,7 @@ const MemoOrders = () => {
               {/* Order Header */}
               <motion.div
                 className={cn(
-                  "flex items-center justify-between p-4 bg-white rounded-xl",
+                  "flex items-center justify-between p-2 bg-white rounded-xl",
                   "border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200",
                   "cursor-pointer select-none",
                   expanded.includes(order._id) && "rounded-b-none border-b-0"

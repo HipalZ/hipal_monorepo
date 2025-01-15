@@ -221,6 +221,9 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
                                         onClick: handleAddToCart,
                                         type: "button" as const,
                                         className: 'px-4 rounded',
+                                        disable: selectedDish?.price === 0 &&
+                                            selectedDish.portions?.length > 0 &&
+                                            selectedPortion === null,
                                     },
                                 ]}
                             />

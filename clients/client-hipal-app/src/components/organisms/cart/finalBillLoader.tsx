@@ -22,7 +22,7 @@ const MemoFinalBillLoader = () => {
     } = usePaymentStore()
     // Bill query
     useGetBill();
-    const images = [BillPrint, KotMachine, BillImage]
+    const images = [BillPrint, BillImage, KotMachine]
 
     const openScanAndPay = useCallback(() => {
         setShowScan(true)
