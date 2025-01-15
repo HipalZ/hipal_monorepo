@@ -14,7 +14,7 @@ const paymentAlertSchema = new mongoose.Schema<PaymentAlertType>(
     },
     alertType: {
       type: String,
-      enum: ["ONLINE", "OFFLINE", "WAITER"],
+      enum: ["ONLINE", "OFFLINE", "WAITER", "FORCE_SETTLE", "NORMAL_SETTLE"],
       required: true,
     },
     order_id: { type: ObjectId, required: false, ref: "Order" },

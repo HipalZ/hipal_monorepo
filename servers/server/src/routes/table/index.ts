@@ -173,6 +173,7 @@ const tableRouter = new Hono()
         reasonForForceSettle: z.string().min(1).max(500),
         settleAmount: z.coerce.number().optional(),
         billRequestId: z.string().min(1).max(500).optional(),
+        paymentModeId: z.string().min(1).max(500),
       }),
     ),
     async (c) => {
@@ -184,6 +185,7 @@ const tableRouter = new Hono()
           reasonForForceSettle,
           settleAmount = 0,
           billRequestId,
+          paymentModeId,
         } = await c.req.json();
 
         if (!billRequestId) {
@@ -196,6 +198,8 @@ const tableRouter = new Hono()
             400,
           );
         }
+
+        const paymentMode = await UpiMode.findById(paymentModeId);
         const billAlreadySettled = await Payment.findOne({
           posBillRequestId: billRequestId,
         });
@@ -302,9 +306,9 @@ const tableRouter = new Hono()
               businessId: table?.businessId,
               order_id: saveOrder[0]._id,
               total: saveOrder[0].total,
-              mode: "offline",
+              mode: paymentMode?.name || "offline",
               status: "SUCCESS",
-              paymentMode: "offline",
+              paymentMode: paymentMode?.name || "offline",
               userId: saveOrder[0].userId,
               claimedCoins: 0,
               billValue: saveOrder[0].billValue,
@@ -484,7 +488,7 @@ const tableRouter = new Hono()
           tableName: table?.name,
         });
 
-        await Payment.create(
+        const createPayment = await Payment.create(
           [
             {
               businessId: table?.businessId,
@@ -567,6 +571,25 @@ const tableRouter = new Hono()
             alertType: "OFFLINE",
           },
           { isAccepted: true, isRejected: true },
+          { session },
+        );
+        await PaymentAlert.create(
+          [
+            {
+              businessId: saveOrder[0]?.businessId,
+              alertType: "OFFLINE",
+              payment_id: createPayment[0]._id,
+              coinsApplied: 0,
+              status: "SUCCESS",
+              order_id: saveOrder[0]?._id,
+              message: `Paid ${saveOrder[0]?.total}`,
+              tableName: saveOrder[0]?.tableName,
+              isAccepted: false,
+              userId: saveOrder[0]?.userId,
+              posDiscount: 0,
+              date: Date.now(),
+            },
+          ],
           { session },
         );
 

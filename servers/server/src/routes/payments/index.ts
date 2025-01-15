@@ -1467,7 +1467,7 @@ const paymentsRouter = new Hono()
 
       const existingPaymentAlerts = await PaymentAlert.find({
         businessId,
-        alertType,
+        alertType: { $in: ["ONLINE", "FORCE_SETTLE", "NORMAL_SETTLE"] },
         isAccepted: false,
       })
         .sort({ _id: -1 })
@@ -1591,7 +1591,12 @@ const paymentsRouter = new Hono()
           businessId: alert.businessId,
         }).select("loyaltyId");
 
-        if (alert.alertType === "ONLINE" || alert.alertType === "WAITER") {
+        if (
+          alert.alertType === "ONLINE" ||
+          alert.alertType === "WAITER" ||
+          alert.alertType === "FORCE_SETTLE" ||
+          alert.alertType === "NORMAL_SETTLE"
+        ) {
           const updateAlert = await PaymentAlert.findByIdAndUpdate(
             alertId,
             { isAccepted: true, comment, waiterName },
