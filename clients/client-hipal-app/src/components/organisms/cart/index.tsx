@@ -396,7 +396,7 @@ const Cart = () => {
         <section className="relative h-[calc(91dvh+5px)]">
           <div className="bg-white z-[500] sticky top-0 flex items-center justify-between px-4 py-3 border-b border-gray-200">
             <article className="flex items-center gap-2">
-              {outletInfo?.shareCart ? <button
+              {outletInfo?.outLetType === "OTHER" || outletInfo?.shareCart ? <button
                 type="button"
                 onClick={() => setShowCart(false)}
                 className="px-2 rounded-xl bg-[#000000] text-[#ffffff] on_active_bounce"

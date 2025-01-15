@@ -153,7 +153,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={handleDecreaseQuantity}
-                className="flex items-center justify-center w-8 h-full transition-colors bg-gray-100 hover:bg-gray-200"
+                className="flex items-center justify-center w-8 h-full transition-colors bg-gray-100 text-black hover:bg-gray-200"
               >
                 <Minus className="w-4 h-4" />
               </motion.button>
@@ -162,14 +162,14 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
-                className="font-medium"
+                className="font-medium text-black"
               >
                 {totalQuantity}
               </motion.span>
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={handleIncreaseQuantity}
-                className="flex items-center justify-center w-8 h-full transition-colors bg-gray-100 hover:bg-gray-200"
+                className="flex items-center justify-center w-8 h-full transition-colors bg-gray-100 hover:bg-gray-200 text-black"
               >
                 <Plus className="w-4 h-4" />
               </motion.button>

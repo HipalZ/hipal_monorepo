@@ -1,7 +1,7 @@
 'use client';
 
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
-import { calculateFinalBill } from "@/components/utils/helpers";
+import { calculateFinalBill, cn } from "@/components/utils/helpers";
 import { FaCaretRight } from "react-icons/fa";
 import { memo, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -123,7 +123,7 @@ const MemoPaymentModes = () => {
                                         ))}
                                     </div>
                                 </section>
-                                <div className="inter absolute bottom-0 h-10 w-full bg-black/20 flex items-center justify-end pr-4">
+                                <div className={cn(`text-[${method?.bgColor}]`, "inter absolute bottom-0 h-10 w-full bg-black/20 flex items-center justify-end pr-4")}>
                                     {method.footerText}
                                 </div>
                             </article>
