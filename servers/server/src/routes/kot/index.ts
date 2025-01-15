@@ -78,6 +78,9 @@ const kotRouter = new Hono()
         businessId: tableName.businessId,
         settled: false,
         accepted: true,
+      }).populate({
+        path: "businessId",
+        select: "name",
       });
 
       return c.json(
