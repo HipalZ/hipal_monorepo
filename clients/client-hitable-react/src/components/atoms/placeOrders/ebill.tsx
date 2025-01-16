@@ -36,8 +36,8 @@ const MemoEbill = () => {
     const handleUserSelect = (userId: string) => {
         setSelectedUsers((prev) =>
             prev.includes(userId)
-                ? prev.filter((id) => id !== userId) // Deselect if already selected
-                : [...prev, userId] // Select if not already selected
+                ? prev.filter((id) => id !== userId)
+                : [...prev, userId]
         );
     };
 

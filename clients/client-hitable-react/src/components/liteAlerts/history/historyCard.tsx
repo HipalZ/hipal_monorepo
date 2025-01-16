@@ -52,7 +52,7 @@ const HistoryCard = (props: IOnlineProp) => {
                   <PiCoinsFill className="mr-1" />
                   {alert?.status === "FAIL"
                     ? "Payment Failed"
-                    : `Received ${alert?.alertType.toLowerCase()}`}
+                    : `${alert?.alertType.toLowerCase()}`}
                 </div>
                 <span className="text-xs text-gray-500">
                   {timestampToDateTime(alert?.date)}
