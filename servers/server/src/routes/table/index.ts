@@ -792,9 +792,10 @@ const tableRouter = new Hono()
     zValidator(
       "json",
       z.object({
-        phoneNumbers: z.array(z.string().min(1).max(500)),
+        phoneNumbers: z.array(z.string().min(1).max(500)).optional(),
         businessId: z.string().min(1).max(500),
         tableId: z.string().min(1).max(500),
+        userIds: z.array(z.string().min(1).max(500)).optional(),
       }),
     ),
     async (c) => {
@@ -824,7 +825,7 @@ const tableRouter = new Hono()
       for (let i = 0; i < phoneNumbers?.length; i++) {
         const options = {
           method: "POST",
-          url: "https://control.msg91.com/api/v5/flow",
+          url: "https://control.msg91.com/api/v5/flow/",
           headers: {
             accept: "application/json",
             "content-type": "application/json",
