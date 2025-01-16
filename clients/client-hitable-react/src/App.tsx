@@ -33,13 +33,10 @@ function App() {
     setOfflineCount,
     setOnlineAlertData,
     setOfflineAlertData,
-    setRefetchOnlineAlerts,
-    setRefetchOfflineAlerts,
     loading,
     triggerSound,
     notificationStatus,
     setNotificationStatus,
-    setRefetchCart,
     setCartData,
     setCartCount,
   } = useLiteStore();
@@ -81,9 +78,28 @@ function App() {
     if (!businessId) return;
     const data: Alert[] = await fetchAlerts(businessId, "ONLINE");
     setOnlineAlertData(data);
-    setRefetchOnlineAlerts(refetchOnlineAlerts);
     setOnlineCount(data.length);
     if (data && data?.length > onlineCount && platform === "web") {
+      const sound = new Howl({
+        src: ["/sounds/order.mp3"],
+        autoplay: triggerSound,
+        loop: true,
+      });
+      sound.play();
+      setTimeout(() => {
+        sound.pause();
+      }, 3000);
+    }
+    return data;
+  };
+
+
+  const handleOfflineAlerts = async () => {
+    if (!businessId) return;
+    const data: Alert[] = await fetchAlerts(businessId, "ALL");
+    setOfflineAlertData(data);
+    setOfflineCount(data.length);
+    if (data && data.length > offlineCount && platform === "web") {
       const sound = new Howl({
         src: ["/sounds/order.mp3"],
         autoplay: triggerSound,
@@ -110,7 +126,6 @@ function App() {
         errorText();
       }
       const res = await response.json();
-      setRefetchCart(refetchCart);
       const carts = res.data as Cart[];
       setCartData(carts);
       setCartCount(carts?.length || 0);
@@ -126,32 +141,12 @@ function App() {
       errorText();
     }
     const res = await response.json();
-    setRefetchCart(refetchCart);
     const carts = res.data as Cart[];
     setCartData(carts);
     setCartCount(carts?.length || 0);
     return res.data;
   };
 
-  const handleOfflineAlerts = async () => {
-    if (!businessId) return;
-    const data: Alert[] = await fetchAlerts(businessId, "ALL");
-    setOfflineAlertData(data);
-    setRefetchOfflineAlerts(refetchOfflineAlerts);
-    setOfflineCount(data.length);
-    if (data && data.length > offlineCount && platform === "web") {
-      const sound = new Howl({
-        src: ["/sounds/order.mp3"],
-        autoplay: triggerSound,
-        loop: true,
-      });
-      sound.play();
-      setTimeout(() => {
-        sound.pause();
-      }, 3000);
-    }
-    return data;
-  };
 
   useEffect(() => {
     const checkOnlineStatus = () => {
@@ -195,21 +190,21 @@ function App() {
   }, []);
 
   // UseQuery with adaptive polling based on pingTime and connection speed
-  const { refetch: refetchOnlineAlerts } = useQuery({
+  useQuery({
     queryKey: ["onlineAlerts", businessId, selectedBiz],
     queryFn: handleOnlineAlerts,
     enabled: !!businessId && !!selectedBiz,
     refetchInterval: isSlow ? 31000 : 17000,
   });
 
-  const { refetch: refetchOfflineAlerts } = useQuery({
+  useQuery({
     queryKey: ["offlineAlerts", businessId, selectedBiz],
     queryFn: handleOfflineAlerts,
     enabled: !!businessId && !!selectedBiz,
     refetchInterval: isSlow ? 23000 : 19000,
   });
 
-  const { refetch: refetchCart } = useQuery({
+  useQuery({
     queryKey: ["carts", businessId],
     queryFn: getAllCarts,
     enabled: !!businessId,

@@ -254,12 +254,12 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
                             />
                         </div>
                         <CommonBottomButton
+                            maxWidth="30rem"
                             buttons={[
                                 {
                                     text: "Save",
                                     onClick: handleSaveInstruction,
                                     className: "rounded-md w-full shadow-md",
-                                    highlight: instructionText.length > 0,
                                     disable: instructionText.length === 0,
                                     isLoading: isPending,
                                 },
@@ -288,8 +288,7 @@ const MemoizedCartItem = ({ hide, dishId }: { hide?: boolean; dishId?: string })
                         {
                             text: "Place Order",
                             onClick: placeOrder,
-                            className: "rounded-md shadow-md",
-                            highlight: filteredCart.length > 0,
+                            className: "rounded-full",
                             disable: filteredCart.length === 0 || isPending,
                             isLoading: isPending,
                             swipe: true,

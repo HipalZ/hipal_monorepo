@@ -76,7 +76,7 @@ const MemoCartWithPos = () => {
         editExistingOrder(cart);
         setModalType("addItem")
         setOpenOrderModal(true)
-        navigate(`/${cart.businessId}/${cart.tableId}`)
+        navigate(`/${cart.businessId}/alerts/${cart.tableId}`)
     }
 
     return (

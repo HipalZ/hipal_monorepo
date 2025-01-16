@@ -70,11 +70,11 @@ const TablePos = () => {
         if (tableData?.status === "EMPTY" && isPlacingNewOrder) {
             openOrderModalHandler('addItem');
         }
-        if (tableData?.status === "EMPTY" && !isPlacingNewOrder) {
-            setOpenOrderModal(false);
-            setModalType('');
-            return navigate(`/${businessId}/alerts`);
-        }
+        // if (tableData?.status === "EMPTY" && !isPlacingNewOrder) {
+        //     setOpenOrderModal(false);
+        //     setModalType('');
+        //     return navigate(`/${businessId}/alerts`);
+        // }
         setSelectedTable(tableData);
         return res?.data;
     };
@@ -83,7 +83,7 @@ const TablePos = () => {
         queryKey: ['fetchIndividualTable', tableId],
         queryFn: fetchIndividualTable,
         enabled: !!tableId,
-        refetchInterval: 30000,
+        // refetchInterval: 30000,
     });
 
     return (

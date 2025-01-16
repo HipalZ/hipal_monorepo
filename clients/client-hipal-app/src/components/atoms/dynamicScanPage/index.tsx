@@ -14,7 +14,7 @@ const MemoDynamicScanPage = () => {
     useEffect(() => {
         const checkTableNameExpiry = () => {
             const currentTime = new Date().getTime();
-            const threeHoursInMillis = 10 * 60 * 1000;
+            const threeHoursInMillis = 3 * 60 * 60 * 1000;
 
             if (tableNameTimeStamp && currentTime - tableNameTimeStamp > threeHoursInMillis) {
                 resetTableData()

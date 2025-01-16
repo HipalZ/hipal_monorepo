@@ -31,7 +31,7 @@ const MemoCombinedLogin = () => {
     const { setUserDetails, userDetails, setUserCoinZ, setIsLogin, sendOtp, setDirection } =
         useLogin();
     const [phone, setPhone] = useState(userDetails?.phone || "");
-    const { setShowCart } = useCart();
+    const { setShowCart, setInputModal } = useCart();
     const [customerName, setCustomerName] = useState(userDetails?.name);
     const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
     const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
@@ -46,10 +46,11 @@ const MemoCombinedLogin = () => {
         if (showOtpScreen) {
             setShowOtpScreen(false);
         } else {
+            setInputModal(false);
             setCheckLogin(false);
         }
         setShowCart(false);
-    }, [showOtpScreen, setCheckLogin, setShowCart]);
+    }, [showOtpScreen, setShowCart, setInputModal, setCheckLogin]);
 
     const handlePhoneSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
