@@ -791,22 +791,21 @@ const tableRouter = new Hono()
     zValidator(
       "json",
       z.object({
-        userIds: z.array(z.string().min(1).max(500)),
+        phoneNumbers: z.array(z.string().min(1).max(500)),
         businessId: z.string().min(1).max(500),
         tableId: z.string().min(1).max(500),
       }),
     ),
     async (c) => {
       const {
-        userIds = [],
+        phoneNumbers = [],
         businessId,
 
         tableId,
       } = await c.req.json();
       const business = await Business.findById(businessId);
 
-      for (let i = 0; i < userIds?.length; i++) {
-        const user = await User.findById(userIds[i]);
+      for (let i = 0; i < phoneNumbers?.length; i++) {
         const options = {
           method: "POST",
           url: "https://control.msg91.com/api/v5/flow/",
@@ -819,13 +818,13 @@ const tableRouter = new Hono()
             template_id: "6787e7e6d6fc0533d778a013",
             sender: "HiPalc",
             short_url: "1",
-            mobiles: user?.phone,
-            businessname: business?.name,
+            mobiles: phoneNumbers[i],
+            businessname: "coffeecup",
             bill: `https://hipal-test.hipalz.com/${business?.customLink}/eBill?tableId=${tableId}`,
           },
         };
         const res = await axios(options);
-        console.log("res", res.data);
+        console.log("billres", res.data);
       }
 
       return c.json(

@@ -1467,7 +1467,9 @@ const paymentsRouter = new Hono()
 
       const existingPaymentAlerts = await PaymentAlert.find({
         businessId,
-        alertType: { $in: ["ONLINE", "FORCE_SETTLE", "NORMAL_SETTLE"] },
+        alertType: {
+          $in: ["ONLINE", "FORCE_SETTLE", "NORMAL_SETTLE", "OFFLINE"],
+        },
         isAccepted: false,
       })
         .sort({ _id: -1 })
@@ -1538,7 +1540,7 @@ const paymentsRouter = new Hono()
 
       const existingPaymentAlerts = await PaymentAlert.find({
         businessId,
-        alertType: ["OFFLINE", "WAITER"],
+        alertType: ["WAITER"],
         isAccepted: false,
       })
         .sort({ _id: -1 })
@@ -1984,21 +1986,21 @@ const paymentsRouter = new Hono()
         }
 
         const totalTips = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.tips ?? 0),
+          (acc, payment: PaymentType) => acc + (payment.tips || 0),
           0,
         );
         const totalTax = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.tax ?? 0),
+          (acc, payment: PaymentType) => acc + (payment.tax || 0),
           0,
         );
 
         const totalServiceCharge = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.serviceCharge ?? 0),
+          (acc, payment: PaymentType) => acc + (payment.serviceCharge || 0),
           0,
         );
 
         const totalClaimedCoins = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.claimedCoins ?? 0),
+          (acc, payment: PaymentType) => acc + (payment.claimedCoins || 0),
           0,
         );
 
