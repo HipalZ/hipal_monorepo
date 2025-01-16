@@ -1970,7 +1970,7 @@ const paymentsRouter = new Hono()
             $lte: endOfToday.getTime(),
           },
         }).select(
-          "total claimedCoins paymentMode earnCoins mode tips tax serviceCharge",
+          "total claimedCoins paymentMode earnCoins mode tips tax serviceCharge settleType",
         );
         const totalSale = existingPayments.reduce(
           (acc, payment: PaymentType) => acc + (payment.total ?? 0),
@@ -1984,6 +1984,8 @@ const paymentsRouter = new Hono()
             }
           }
         }
+
+        console.log();
 
         const totalTips = existingPayments.reduce(
           (acc, payment: PaymentType) => acc + (payment.tips || 0),
@@ -2042,7 +2044,7 @@ const paymentsRouter = new Hono()
             $lte: toDate,
           },
         }).select(
-          "total claimedCoins paymentMode earnCoins mode tips tax serviceCharge",
+          "total claimedCoins paymentMode earnCoins mode tips tax serviceCharge settleType",
         );
         const totalSale = existingPayments.reduce(
           (acc, payment: PaymentType) => acc + (payment.total ?? 0),
