@@ -28,7 +28,7 @@ const MemoCombinedLogin = () => {
     const [loading, setLoading] = useState(false);
     const inputRefs = Array.from({ length: 4 }, () => useRef<HTMLInputElement>(null));
     const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting);
-    const { setUserDetails, userDetails, setUserCoinZ, setIsLogin, sendOtp } =
+    const { setUserDetails, userDetails, setUserCoinZ, setIsLogin, sendOtp, setDirection } =
         useLogin();
     const [phone, setPhone] = useState(userDetails?.phone || "");
     const { setShowCart } = useCart();
