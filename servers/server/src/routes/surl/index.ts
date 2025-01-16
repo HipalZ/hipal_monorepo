@@ -1,4 +1,9 @@
-import { QrBill, UrlModel, WhatsAppBusinessConfig } from "@hi/db-models";
+import {
+  BillUrlModel,
+  QrBill,
+  UrlModel,
+  WhatsAppBusinessConfig,
+} from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { nanoid } from "nanoid";
@@ -52,6 +57,38 @@ const surlRouter = new Hono()
       }
 
       setShortUrl(urlCode, result.longUrl);
+
+      // Redirect to the original URL
+      return c.redirect(result.longUrl);
+    },
+  )
+
+  .get(
+    "/bill_short_url/bill",
+    zValidator(
+      "query",
+      z.object({
+        urlCode: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { urlCode } = c.req.query();
+
+      console.log("aara", urlCode);
+
+      const result = await BillUrlModel.findOne({ urlCode });
+
+      console.log("result", result);
+      if (!result) {
+        return c.json(
+          {
+            message: "URL not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
 
       // Redirect to the original URL
       return c.redirect(result.longUrl);

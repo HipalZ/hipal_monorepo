@@ -1,4 +1,5 @@
 import {
+  BillUrlModel,
   Business,
   BusinessPosConfig,
   KotOrder,
@@ -805,10 +806,25 @@ const tableRouter = new Hono()
       } = await c.req.json();
       const business = await Business.findById(businessId);
 
+      const longUrl = `https://hipal-test.hipalz.com/${business?.customLink}/ebill?tableId=${tableId}`;
+
+      const uniqueOrderId = nanoid(5);
+      let findLongUrl = await BillUrlModel.findOne({ longUrl });
+
+      if (!findLongUrl) {
+        const createShortUrl = await BillUrlModel.create({
+          longUrl: longUrl,
+          shortUrl: `https://api.test.hipalz.com/surl/bill_short_url/bill?urlCode=${uniqueOrderId}`,
+          urlCode: uniqueOrderId,
+        });
+
+        findLongUrl = createShortUrl;
+      }
+
       for (let i = 0; i < phoneNumbers?.length; i++) {
         const options = {
           method: "POST",
-          url: "https://control.msg91.com/api/v5/flow/",
+          url: "https://control.msg91.com/api/v5/flow",
           headers: {
             accept: "application/json",
             "content-type": "application/json",
@@ -819,8 +835,8 @@ const tableRouter = new Hono()
             sender: "HiPalc",
             short_url: "1",
             mobiles: phoneNumbers[i],
-            businessname: "coffeecup",
-            bill: `https://hipal-test.hipalz.com/${business?.customLink}/eBill?tableId=${tableId}`,
+            businessname: business?.name,
+            bill: findLongUrl.shortUrl,
           },
         };
         const res = await axios(options);

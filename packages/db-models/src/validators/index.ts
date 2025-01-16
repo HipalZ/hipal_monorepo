@@ -29,6 +29,7 @@ export * from "./staffValidator";
 export * from "./admin";
 export * from "./analytic";
 export * from "./billQr";
+export * from "./billShortUrl";
 export * from "./businessPosConfig";
 export * from "./businessSubscriber";
 export * from "./campaign";
