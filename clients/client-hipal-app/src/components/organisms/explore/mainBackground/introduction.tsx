@@ -15,6 +15,7 @@ import SubScribeModal from "../../subscribe";
 import ReviewModal from "../googleReviews/reviewModal";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { useCart } from "@/components/store/useCart";
 
 const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
   const accessToken = useUserToken.getState().accessToken;
@@ -30,6 +31,7 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
     setReviewPopup,
     setGoogleReviewCount,
   } = useLogin();
+  const { cart, emptyCart } = useCart()
   const { setCartEmpty } = useCartStore();
   const customLink = useParams()?.businessId as string;
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
@@ -78,7 +80,8 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
     if (!accessToken) {
       setAccessToken("");
     }
-    if (businessDetails?.businessId !== data?.business?.businessId) {
+    if (cart?.[0]?.dish?.businessId !== data?.business?.businessId) {
+      emptyCart();
       setCartEmpty();
     }
   }, [businessDetails?.businessId, data?.business?.businessId]);
