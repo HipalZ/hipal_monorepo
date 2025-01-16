@@ -94,17 +94,6 @@ const MemoPayOnlineSuccess = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // useEffect(() => {
-  //   const audio = new Audio("/sounds/Money.mp3") as HTMLAudioElement;
-  //   audio.play();
-  //   return () => {
-  //     if (audio) {
-  //       audio.pause();
-  //       audio.currentTime = 0;
-  //     }
-  //   };
-  // }, []);
-
   const textContent = useMemo(() => {
     switch (mode) {
       case "online":
