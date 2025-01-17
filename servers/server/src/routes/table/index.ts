@@ -216,6 +216,15 @@ const tableRouter = new Hono()
         }
 
         const paymentMode = await UpiMode.findById(paymentModeId);
+        if (paymentMode?.name === "split") {
+          if (splitModes.length === 0) {
+            return c.json({
+              message: "Please select at least one split mode",
+              err: true,
+              data: {},
+            });
+          }
+        }
         const billAlreadySettled = await Payment.findOne({
           posBillRequestId: billRequestId,
         });
@@ -451,6 +460,15 @@ const tableRouter = new Hono()
           splitModes = [],
         } = await c.req.json();
         const paymentMode = await UpiMode.findById(paymentModeId);
+        if (paymentMode?.name === "split") {
+          if (splitModes.length === 0) {
+            return c.json({
+              message: "Please select at least one split mode",
+              err: true,
+              data: {},
+            });
+          }
+        }
 
         const billAlreadySettled = await Payment.findOne({
           posBillRequestId: billRequestId,

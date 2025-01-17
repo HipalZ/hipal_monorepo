@@ -1596,6 +1596,15 @@ const paymentsRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const paymentMode = await UpiMode.findById(paymentModeId);
+        if (paymentMode?.name === "split") {
+          if (splitModes.length === 0) {
+            return c.json({
+              message: "Please select at least one split mode",
+              err: true,
+              data: {},
+            });
+          }
+        }
         const alert = await PaymentAlert.findOne(
           { _id: alertId, isAccepted: false },
           null,
