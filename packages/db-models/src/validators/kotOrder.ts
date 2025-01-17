@@ -41,6 +41,8 @@ export const kotSchema = z.object({
   editedBy: ObjectIdSchema.optional(),
   rejectedBy: ObjectIdSchema.optional(),
   tableId: ObjectIdSchema,
+  switched: z.boolean().default(false).optional(),
+  switchedBy: ObjectIdSchema.optional(),
 
   phone: z.string().min(1).max(50),
   name: z.string().min(1).max(50),

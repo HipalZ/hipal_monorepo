@@ -143,6 +143,23 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: String,
       required: false,
     },
+    splitModes: [
+      {
+        name: {
+          type: String,
+          required: true,
+        },
+        amount: {
+          type: Number,
+          required: true,
+        },
+        _id: {
+          type: ObjectId,
+          required: true,
+          ref: "upimode",
+        },
+      },
+    ],
   },
 
   { timestamps: true },

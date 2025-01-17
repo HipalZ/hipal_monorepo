@@ -52,6 +52,7 @@ export * from "./petPoojaPinTempModel";
 export * from "./pos";
 export * from "./posBill";
 export * from "./recentCampaign";
+export * from "./switchtable";
 export * from "./table";
 export * from "./tags";
 export * from "./tagType";

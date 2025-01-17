@@ -29,10 +29,7 @@ import {
   UserRewardHistory,
   UserTags,
 } from "@hi/db-models";
-import type {
-  PaymentType,
-  RazorpayWebhookHeaders,
-} from "@hi/db-models/src/validators";
+import type { RazorpayWebhookHeaders } from "@hi/db-models/src/validators";
 import {
   RazorpayWebhookBodySchema,
   RazorpayWebhookHeadersSchema,
@@ -127,7 +124,21 @@ const calculateDiscount = async (
   return discount;
 };
 
-//filter groups
+interface SplitMode {
+  name: string;
+  amount: number;
+}
+
+interface AggregatedData {
+  totalSale: number;
+  forceSettle: number;
+  totalTips: number;
+  totalTax: number;
+  totalServiceCharge: number;
+  totalClaimedCoins: number;
+  totalEarnCoins: number;
+  modeObj: { [key: string]: number };
+}
 
 const calculateReward = async (
   exist: number,
@@ -1576,7 +1587,12 @@ const paymentsRouter = new Hono()
     async (c) => {
       const { alertId } = c.req.param();
       const requestData = await c.req.json();
-      const { comment, waiterName, paymentModeId } = requestData;
+      const {
+        comment,
+        waiterName,
+        paymentModeId,
+        splitModes = [],
+      } = requestData;
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const paymentMode = await UpiMode.findById(paymentModeId);
@@ -1709,7 +1725,7 @@ const paymentsRouter = new Hono()
                     tax: tempTable?.tax || 0,
                     serviceCgarge: tempTable?.serviceCharge || 0,
                     posBillRequestId: tempTable?.billRequestId || "",
-
+                    splitModes: splitModes,
                     waiterName,
                     date: Date.now(),
                   },
@@ -1947,13 +1963,12 @@ const paymentsRouter = new Hono()
       ClientRoles.HIPAL_CUSTOMER,
       ClientRoles.CAPTAIN,
     ]),
-
     zValidator("query", paramsSchema),
-
     async (c) => {
       const { businessId, from, to } = c.req.query();
       const fromDate = Number(from);
       const toDate = Number(to);
+
       if (fromDate > toDate) {
         return c.json({
           err: true,
@@ -1962,155 +1977,82 @@ const paymentsRouter = new Hono()
         });
       }
 
-      if (!from && !to) {
-        const existingPayments: PaymentType[] = await Payment.find({
-          businessId,
-          date: {
-            $gte: startOfToday.getTime(),
-            $lte: endOfToday.getTime(),
-          },
-        }).select(
-          "total claimedCoins paymentMode earnCoins mode tips tax serviceCharge settleType",
-        );
-        const totalSale = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.total ?? 0),
-          0,
-        );
-        let forceSettletotal = 0;
-        for (const payment of existingPayments || []) {
-          if (payment.settleType) {
-            if (payment.settleType === "FORCE_SETTLE") {
-              forceSettletotal += payment.total;
+      const query = {
+        businessId,
+        date: {
+          $gte: from ? fromDate : startOfToday.getTime(),
+          $lte: to ? toDate : endOfToday.getTime(),
+        },
+      };
+
+      const existingPayments = await Payment.find(query).select(
+        "total claimedCoins paymentMode earnCoins mode tips tax serviceCharge settleType splitModes",
+      );
+
+      const aggregatedData: AggregatedData = {
+        totalSale: 0,
+        forceSettle: 0,
+        totalTips: 0,
+        totalTax: 0,
+        totalServiceCharge: 0,
+        totalClaimedCoins: 0,
+        totalEarnCoins: 0,
+        modeObj: {},
+      };
+
+      for (const payment of existingPayments) {
+        const {
+          total = 0,
+          tips = 0,
+          tax = 0,
+          serviceCharge = 0,
+          claimedCoins = 0,
+          earnCoins = 0,
+          mode,
+          settleType,
+          splitModes,
+        } = payment;
+
+        aggregatedData.totalSale += total;
+        aggregatedData.totalTips += tips;
+        aggregatedData.totalTax += tax;
+        aggregatedData.totalServiceCharge += serviceCharge;
+        aggregatedData.totalClaimedCoins += claimedCoins;
+        aggregatedData.totalEarnCoins += earnCoins;
+
+        if (settleType === "FORCE_SETTLE") {
+          aggregatedData.forceSettle += total;
+        }
+
+        if (!aggregatedData.modeObj[mode]) {
+          aggregatedData.modeObj[mode] = 0;
+        }
+        aggregatedData.modeObj[mode] += total;
+
+        if (mode === "split" && Array.isArray(splitModes)) {
+          for (const { name, amount = 0 } of splitModes) {
+            if (!aggregatedData.modeObj[name]) {
+              aggregatedData.modeObj[name] = 0;
             }
+            aggregatedData.modeObj[name] += amount;
           }
         }
-
-        console.log();
-
-        const totalTips = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.tips || 0),
-          0,
-        );
-        const totalTax = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.tax || 0),
-          0,
-        );
-
-        const totalServiceCharge = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.serviceCharge || 0),
-          0,
-        );
-
-        const totalClaimedCoins = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.claimedCoins || 0),
-          0,
-        );
-
-        const totalEarnCoins = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.earnCoins ?? 0),
-          0,
-        );
-
-        const modeObj: { [key: string]: number } = {};
-
-        for (const payment of existingPayments) {
-          if (!modeObj[payment.mode]) {
-            modeObj[payment.mode] = 0;
-          }
-          modeObj[payment.mode] += payment.total ?? 0;
-        }
-
-        return c.json({
-          err: false,
-          data: {
-            totalSale,
-            modeObj,
-            totalTips,
-            totalTax: Math.round(totalTax),
-            totalServiceCharge: Math.round(totalServiceCharge),
-            totalClaimedCoins,
-            totalEarnCoins,
-            totalDiscount: totalClaimedCoins,
-            forceSettle: forceSettletotal,
-          },
-          message: "existing payment",
-        });
       }
-      if (from && to) {
-        const existingPayments: PaymentType[] = await Payment.find({
-          businessId,
-          date: {
-            $gte: fromDate,
-            $lte: toDate,
-          },
-        }).select(
-          "total claimedCoins paymentMode earnCoins mode tips tax serviceCharge settleType",
-        );
-        const totalSale = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.total ?? 0),
-          0,
-        );
 
-        let forceSettletotal = 0;
-        for (const payment of existingPayments || []) {
-          if (payment.settleType) {
-            if (payment.settleType === "FORCE_SETTLE") {
-              forceSettletotal += payment.total;
-            }
-          }
-        }
-
-        const modeObj: { [key: string]: number } = {};
-        const totalTips = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.tips ?? 0),
-          0,
-        );
-        const totalTax = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.tax ?? 0),
-          0,
-        );
-
-        const totalServiceCharge = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.serviceCharge ?? 0),
-          0,
-        );
-
-        const totalClaimedCoins = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.claimedCoins ?? 0),
-          0,
-        );
-
-        const totalEarnCoins = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.earnCoins ?? 0),
-          0,
-        );
-        for (const payment of existingPayments) {
-          if (!modeObj[payment.mode]) {
-            modeObj[payment.mode] = 0;
-          }
-          modeObj[payment.mode] += payment.total ?? 0;
-        }
-
-        return c.json({
-          err: false,
-          data: {
-            totalSale,
-            modeObj,
-            totalTips,
-            totalTax: Math.round(totalTax),
-            totalServiceCharge: Math.round(totalServiceCharge),
-            totalClaimedCoins,
-            totalEarnCoins,
-            totalDiscount: totalClaimedCoins,
-            forceSettle: forceSettletotal,
-          },
-          message: "existing payment",
-        });
-      }
       return c.json({
-        err: true,
-        data: {},
-        message: "Invalid date range",
+        err: false,
+        data: {
+          totalSale: aggregatedData.totalSale,
+          modeObj: aggregatedData.modeObj,
+          totalTips: aggregatedData.totalTips,
+          totalTax: Math.round(aggregatedData.totalTax),
+          totalServiceCharge: Math.round(aggregatedData.totalServiceCharge),
+          totalClaimedCoins: aggregatedData.totalClaimedCoins,
+          totalEarnCoins: aggregatedData.totalEarnCoins,
+          totalDiscount: aggregatedData.totalClaimedCoins,
+          forceSettle: aggregatedData.forceSettle,
+        },
+        message: "existing payment",
       });
     },
   )

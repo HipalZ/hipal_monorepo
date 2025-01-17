@@ -13,6 +13,10 @@ import {
   UpiMode,
   User,
 } from "@hi/db-models";
+import {
+  type SwitchTableType,
+  switchTableschema,
+} from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
@@ -175,6 +179,16 @@ const tableRouter = new Hono()
         settleAmount: z.coerce.number().optional(),
         billRequestId: z.string().min(1).max(500).optional(),
         paymentModeId: z.string().min(1).max(500),
+        splitModes: z
+          .array(
+            z.object({
+              name: z.string().max(100),
+              amount: z.coerce.number().positive(),
+              _id: z.string().max(100),
+            }),
+          )
+          .default([])
+          .optional(),
       }),
     ),
     async (c) => {
@@ -187,6 +201,7 @@ const tableRouter = new Hono()
           settleAmount = 0,
           billRequestId,
           paymentModeId,
+          splitModes = [],
         } = await c.req.json();
 
         if (!billRequestId) {
@@ -325,6 +340,7 @@ const tableRouter = new Hono()
               tax: getBill.data.order_data.tax,
               serviceCharge: getBill.data.order_data.service_charge,
               posBillRequestId: billRequestId,
+              splitModes: splitModes,
 
               waiterName: captain?.name,
               date: Date.now(),
@@ -412,13 +428,28 @@ const tableRouter = new Hono()
         captainId: z.string().min(1).max(500),
         billRequestId: z.string().min(1).max(500),
         paymentModeId: z.string().min(1).max(500),
+        splitModes: z
+          .array(
+            z.object({
+              name: z.string().max(100),
+              amount: z.coerce.number().positive(),
+              _id: z.string().max(100),
+            }),
+          )
+          .default([])
+          .optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { tableId, captainId, billRequestId, paymentModeId } =
-          await c.req.json();
+        const {
+          tableId,
+          captainId,
+          billRequestId,
+          paymentModeId,
+          splitModes = [],
+        } = await c.req.json();
         const paymentMode = await UpiMode.findById(paymentModeId);
 
         const billAlreadySettled = await Payment.findOne({
@@ -534,6 +565,7 @@ const tableRouter = new Hono()
               serviceCharge: getBill.data.order_data.service_charge,
               posBillRequestId: billRequestId,
               waiterName: captain?.name,
+              splitModes: splitModes,
               date: Date.now(),
             },
           ],
@@ -902,6 +934,67 @@ const tableRouter = new Hono()
         200,
       );
     },
-  );
+  )
+
+  .post("/switch_table", zValidator("json", switchTableschema), async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session: ClientSession) => {
+      const {
+        businessId,
+        switchBy,
+        switchType,
+        fromTableId,
+        toTableId,
+        kotIds,
+      } = (await c.req.json()) as SwitchTableType;
+
+      if (switchType === "TABLE") {
+        const fromTable = await Table.findById(fromTableId);
+        const toTable = await Table.findById(toTableId);
+
+        if (!fromTable || !toTable) {
+          return c.json(
+            {
+              message: "Table not found",
+              err: true,
+              data: {},
+            },
+            400,
+          );
+        }
+
+        if (toTable.status === "ACTIVE") {
+          return c.json(
+            {
+              message: "Table already active",
+              err: true,
+              data: {},
+            },
+            400,
+          );
+        }
+
+        await KotOrder.updateMany(
+          {
+            tableName: fromTable.name,
+            settled: false,
+            accepted: true,
+            businessId,
+          },
+          { $set: { tableName: toTable.name, tableId: toTable._id } },
+          { session },
+        );
+      }
+
+      return c.json(
+        {
+          message: "Table switched successfully",
+          err: false,
+          data: {},
+        },
+        200,
+      );
+    });
+  });
 
 export default tableRouter;

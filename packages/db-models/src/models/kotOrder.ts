@@ -98,6 +98,14 @@ const KotOrderSchema = new Schema<KotOrderType>(
       type: String,
       required: true,
     },
+    switched: {
+      type: Boolean,
+      default: false,
+    },
+    switchedBy: {
+      type: ObjectId,
+      ref: "User",
+    },
   },
   {
     timestamps: true,
