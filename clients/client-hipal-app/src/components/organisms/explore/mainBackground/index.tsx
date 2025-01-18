@@ -1,5 +1,5 @@
-"use client";
-import { memo, useCallback, useEffect } from "react";
+"use client";;
+import { memo, useCallback, useEffect, useMemo } from "react";
 import img from "@/assets/img/cut.png";
 import type { IBusinessData } from "@/components/types/businessData";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -11,7 +11,6 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useCart } from "@/components/store/useCart";
-import { useLogin } from "@/components/store/useLogin";
 import { BottomBarSkeleton } from "@/components/atoms/paymentPageLoader";
 import dynamic from "next/dynamic";
 const Avatar = dynamic(() => import("@/components/atoms/avatar"), {
@@ -27,7 +26,6 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
   const { setBusinessDetails } = useBusinessDetails();
   const { setCheckLogin } = usePaymentStore();
   const { resetCartStoreKeys } = useCart();
-  const { userDetails } = useLogin();
 
   // Move accessToken check to client side
   const accessToken = useUserToken.getState().accessToken;
@@ -56,20 +54,28 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
     }
   }, [data]);
 
-  const isVideo = (url: string) => {
-    const videoExtensions = ["mp4", "webm", "ogg", "mov", "avi", "flv", "wmv"];
-    const extension = url.split(".").pop()?.toLowerCase();
-    return extension ? videoExtensions.includes(extension) : false;
-  };
+  // Check if URL is a video
+  const isVideo = useCallback(
+    (url: string) => {
+      const videoExtensions = ["mp4", "webm", "ogg", "mov", "avi", "flv", "wmv"];
+      return videoExtensions.includes(url.split(".").pop()?.toLowerCase() || "");
+    },
+    []
+  );
+
+  // Memoize background styles
+  const backgroundStyle = useMemo(
+    () => ({
+      background: "linear-gradient(180deg, rgba(0, 0, 0, 0) 52.05%, rgba(0, 0, 0, 0.82) 90.7%)",
+    }),
+    []
+  );
 
   return (
     <section className="p-2 bg-base-100">
       <article className="relative w-full max-w-[26rem] mx-auto overflow-hidden aspect-square rounded-[2.5rem]">
         <section
-          style={{
-            background:
-              "linear-gradient(180deg, rgba(0, 0, 0, 0) 52.05%, rgba(0, 0, 0, 0.82) 90.7%)",
-          }}
+          style={backgroundStyle}
           className="absolute inset-0 z-10"
         />
         <div className="absolute top-0 z-0 w-full bg-gradient">

@@ -4,43 +4,35 @@ import useLoyaltyData from "@/components/store/useLoyaltyData";
 import type { BusinessDetails } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
-import { memo, useCallback, useState } from "react";
+import { memo, useState } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import Hifi from "@/assets/login/subscribe.png";
 import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 import confetti from "canvas-confetti";
-import SignUpBonus from "../explore/signupbonus";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import { useErrorHandling } from "@/utils/helper";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { BottomBarSkeleton } from "@/components/atoms/paymentPageLoader";
 import dynamic from "next/dynamic";
+
 const Avatar = dynamic(() => import("@/components/atoms/avatar"), {
   loading: () => <BottomBarSkeleton />,
 });
 
 const MemoSubScribeModal = ({
-  setIsLoader,
   business,
   closeSubscribeModal,
-  setSubscribeModal,
 }: {
-  setIsLoader: (value: boolean) => void;
   business: BusinessDetails;
   closeSubscribeModal: () => void;
-  setSubscribeModal: (value: boolean) => void;
 }) => {
   const { errorText } = useErrorHandling();
   const businessData = useBusinessDetails((s) => s.businessDetails);
-  const userDetails = useLogin((s) => s.userDetails);
+  const { userDetails, setSubscribeModal } = useLogin();
   const setDirection = useLogin((state) => state.setDirection);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const loyaltyInfo = useLoyaltyData((s) => s.loyaltySetting);
-  const customLink = useParams()?.businessId as string;
-  const { setCheckLogin } = usePaymentStore()
+  const { setCheckLogin, setOpenBlastModal } = usePaymentStore()
   const [coinZ, setCoinz] = useState(0);
-  const router = useRouter();
 
   function randomInRange(min: number, max: number) {
     return Math.random() * (max - min) + min;
@@ -83,7 +75,7 @@ const MemoSubScribeModal = ({
     }
     if (res.status === 201 || res.status === 200) {
       if (response?.reward > 0 && response?.count === 1) {
-        setIsModalOpen(true);
+        setOpenBlastModal(true);
         setCoinz(response.reward);
         triggerConfettiBlast();
         setTimeout(triggerConfettiBlast, 1000);
@@ -93,10 +85,7 @@ const MemoSubScribeModal = ({
       setSubscribeModal(false);
     }
   };
-  const goNext = useCallback(() => {
-    setIsModalOpen(false);
-    setSubscribeModal(false);
-  }, [isModalOpen]);
+
   return (
     <section className="h-[100dvh] bg-[#748FFC] relative z-[50]">
       <section className="flex items-center justify-between">
@@ -160,8 +149,6 @@ const MemoSubScribeModal = ({
           Terms of Service and Privacy Policy.
         </small>
       </center>
-
-      {isModalOpen && <SignUpBonus coinZ={coinZ} goNext={goNext} />}
     </section>
   );
 };

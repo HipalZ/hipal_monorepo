@@ -10,11 +10,12 @@ import type {
 import { apiRpc, cn } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { useParams, useRouter } from "next/navigation";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect } from "react";
 import SubScribeModal from "../../subscribe";
 import ReviewModal from "../googleReviews/reviewModal";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { useQuery } from "@tanstack/react-query";
 import { useCart } from "@/components/store/useCart";
 
 const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
@@ -36,7 +37,6 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
   const customLink = useParams()?.businessId as string;
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const business = data.business as BusinessDetails;
-  const [isLoader, setIsLoader] = useState<boolean>(false);
 
   const isSubscribe = async (userDetails: IUserData) => {
     const { business } = data;
@@ -59,6 +59,7 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
       setUserCoinZ(res?.rewards);
       setGoogleReviewCount(res?.googleReviewCount);
     }
+    return response;
   };
 
   const toggleReviewPopup = useCallback(() => {
@@ -86,11 +87,11 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
     }
   }, [businessDetails?.businessId, data?.business?.businessId]);
 
-  useEffect(() => {
-    if (userDetails?._id) {
-      isSubscribe(userDetails);
-    }
-  }, [customLink, userDetails._id]);
+  const { isPending: isLoader, } = useQuery({
+    queryKey: ["isSubscribe", customLink, userDetails],
+    queryFn: () => isSubscribe(userDetails),
+    enabled: !!userDetails._id && !!customLink,
+  })
 
   return (
     <>
@@ -115,9 +116,7 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
           <BottomPopUp show={subscribeModal} onClose={closeSubscribeModal} hide>
             <SubScribeModal
               closeSubscribeModal={closeSubscribeModal}
-              setIsLoader={setIsLoader}
               business={business}
-              setSubscribeModal={setSubscribeModal}
             />
           </BottomPopUp>
         )}

@@ -166,14 +166,12 @@ const MemoCombinedLogin = () => {
             if (response.user?.reward > 0 && response.user?.count === 1) {
                 setCoinz(response.user.reward);
                 setOpenBlastModal(true);
-                console.log("openBlastModal set to true");
                 triggerConfettiBlast();
                 setTimeout(triggerConfettiBlast, 1000);
                 setTimeout(triggerConfettiBlast, 2000);
                 return
             }
             // to set the auth token in the store
-            // window.location.href = `/${customLink}/posPayment?orderId=${orderId}`
             goNext();
         }
     };

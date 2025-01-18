@@ -1,15 +1,14 @@
-"use client";
+"use client";;
 import { useLogin } from "@/components/store/useLogin";
 import useUserReward from "@/components/store/useUserReward";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { apiRpc } from "@hi/common";
 import CardSection from "@/components/atoms/cardSection";
-import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import dynamic from "next/dynamic";
 import CurvedText from "@/components/atoms/curvedText";
 import Sunrays from "@/assets/img/sunrays_white.png";
@@ -19,6 +18,7 @@ import { toast } from "react-toastify";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { CardSkeleton } from "@/components/atoms/paymentPageLoader";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
+import { useCart } from "@/components/store/useCart";
 const Avatar = dynamic(() => import("@/components/atoms/avatar"), {
   ssr: false,
   loading: () => <CardSkeleton />,
@@ -31,17 +31,18 @@ const CouponzBlink = dynamic(() => import("../newPayment/couponzBlink"), {
 
 const MemoPayOnlineSuccess = () => {
   const userName = useLogin((s) => s.userDetails.name);
+  const animate = useRef(false);
   const { errorText } = useErrorHandling();
   const { setIsPaymentDone } = useReview((s) => ({
     setIsPaymentDone: s.setIsPaymentDone,
   }));
+  const { setInputModal } = useCart()
   const { userDetails, setUserCoinZ } = useLogin((s) => ({
     userDetails: s.userDetails,
     setUserCoinZ: s.setUserCoinZ,
   }));
   const { setIsLoading } = usePaymentStore()
   const setUserReward = useUserReward((s) => s.setUserReward);
-  const [animate, setAnimate] = useState(false);
   const businessDetails = useBusinessDetails((s) => s.businessDetails);
   const loyaltySetting = useLoyaltyData((s) => s.loyaltySetting);
   const searchParams = useSearchParams();
@@ -50,7 +51,7 @@ const MemoPayOnlineSuccess = () => {
   const claim = searchParams.get("claim");
   const getUserReward = async () => {
     // making the payment loader off
-    setIsLoading(true);
+    setIsLoading(false);
     if (
       userDetails.phone === "NaN" ||
       Number(userDetails.phone) === 0 ||
@@ -78,6 +79,7 @@ const MemoPayOnlineSuccess = () => {
     if (userReward.status === 401) {
       errorText(userReward.status);
     }
+    setInputModal(false);
     return response;
   };
 
@@ -86,9 +88,10 @@ const MemoPayOnlineSuccess = () => {
   }, [setIsPaymentDone]);
 
   useEffect(() => {
-    setAnimate(true);
+    animate.current = true;
+
     const timer = setTimeout(() => {
-      setAnimate(false);
+      animate.current = false;
     }, 1000);
 
     return () => clearTimeout(timer);
