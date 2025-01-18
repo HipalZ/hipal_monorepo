@@ -14,6 +14,8 @@ export const acceptOrderSchema = z.object({
     )
     .default([])
     .optional(),
+
+  split: z.boolean().default(false).optional(),
 });
 
 export type AcceptOrderType = z.infer<typeof acceptOrderSchema>;

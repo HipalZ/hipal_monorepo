@@ -189,6 +189,7 @@ const tableRouter = new Hono()
           )
           .default([])
           .optional(),
+        split: z.boolean().default(false).optional(),
       }),
     ),
     async (c) => {
@@ -202,6 +203,7 @@ const tableRouter = new Hono()
           billRequestId,
           paymentModeId,
           splitModes = [],
+          split,
         } = await c.req.json();
 
         if (!billRequestId) {
@@ -216,7 +218,7 @@ const tableRouter = new Hono()
         }
 
         const paymentMode = await UpiMode.findById(paymentModeId);
-        if (paymentMode?.name === "split") {
+        if (split === true) {
           if (splitModes.length === 0) {
             return c.json({
               message: "Please select at least one split mode",
@@ -331,9 +333,9 @@ const tableRouter = new Hono()
               businessId: table?.businessId,
               order_id: saveOrder[0]._id,
               total: saveOrder[0].total,
-              mode: paymentMode?.name || "offline",
+              mode: split ? "split" : paymentMode?.name || "offline",
               status: "SUCCESS",
-              paymentMode: paymentMode?.name || "offline",
+              paymentMode: split ? "split" : paymentMode?.name || "offline",
               userId: saveOrder[0].userId,
               claimedCoins: 0,
               billValue: saveOrder[0].billValue,
@@ -447,6 +449,7 @@ const tableRouter = new Hono()
           )
           .default([])
           .optional(),
+        split: z.boolean().default(false).optional(),
       }),
     ),
     async (c) => {
@@ -458,9 +461,10 @@ const tableRouter = new Hono()
           billRequestId,
           paymentModeId,
           splitModes = [],
+          split,
         } = await c.req.json();
         const paymentMode = await UpiMode.findById(paymentModeId);
-        if (paymentMode?.name === "split") {
+        if (split === true) {
           if (splitModes.length === 0) {
             return c.json({
               message: "Please select at least one split mode",
@@ -563,9 +567,9 @@ const tableRouter = new Hono()
               businessId: table?.businessId,
               order_id: saveOrder[0]._id,
               total: saveOrder[0].total,
-              mode: paymentMode?.name || "offline",
+              mode: split ? "split" : paymentMode?.name || "offline",
               status: "SUCCESS",
-              paymentMode: paymentMode?.name || "offline",
+              paymentMode: split ? "split" : paymentMode?.name || "offline",
               userId: saveOrder[0].userId,
               claimedCoins: 0,
               billValue: saveOrder[0].billValue,
@@ -887,7 +891,7 @@ const tableRouter = new Hono()
             short_url: "1",
             mobiles: phoneNumbers[i],
             businessname: business?.name,
-            bill: findLongUrl.shortUrl,
+            bill: "https://hipal-test.hipalz.com/test/ebill",
           },
         };
         const res = await axios(options);

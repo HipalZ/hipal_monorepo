@@ -1592,11 +1592,12 @@ const paymentsRouter = new Hono()
         waiterName,
         paymentModeId,
         splitModes = [],
+        split,
       } = requestData;
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const paymentMode = await UpiMode.findById(paymentModeId);
-        if (paymentMode?.name === "split") {
+        if (split === true) {
           if (splitModes.length === 0) {
             return c.json({
               message: "Please select at least one split mode",
@@ -1716,9 +1717,11 @@ const paymentsRouter = new Hono()
                     businessId: alert.businessId,
                     order_id: order?._id,
                     total: order?.total,
-                    mode: paymentMode?.name || "offline",
+                    mode: split ? "split" : paymentMode?.name || "offline",
                     status: "SUCCESS",
-                    paymentMode: paymentMode?.name || "offline",
+                    paymentMode: split
+                      ? "split"
+                      : paymentMode?.name || "offline",
                     userId: order?.userId._id,
                     claimedCoins: order?.claimedCoins,
                     billValue: order?.billValue,
