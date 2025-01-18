@@ -969,24 +969,23 @@ const tableRouter = new Hono()
         fromTableId,
         toTableId,
         kotIds,
-        itemIds,
+        itemIds = [],
       } = (await c.req.json()) as SwitchTableType;
+      const fromTable = await Table.findById(fromTableId);
+      const toTable = await Table.findById(toTableId);
+
+      if (!fromTable || !toTable) {
+        return c.json(
+          {
+            message: "Table not found",
+            err: true,
+            data: {},
+          },
+          400,
+        );
+      }
 
       if (transferType === "TABLE") {
-        const fromTable = await Table.findById(fromTableId);
-        const toTable = await Table.findById(toTableId);
-
-        if (!fromTable || !toTable) {
-          return c.json(
-            {
-              message: "Table not found",
-              err: true,
-              data: {},
-            },
-            400,
-          );
-        }
-
         if (toTable.status === "ACTIVE") {
           return c.json(
             {
@@ -1005,19 +1004,106 @@ const tableRouter = new Hono()
             accepted: true,
             businessId,
           },
-          { $set: { tableName: toTable.name, tableId: toTable._id } },
+          {
+            $set: {
+              tableName: toTable.name,
+              tableId: toTable._id,
+              transferd: true,
+              transferedBy: transferBy,
+            },
+          },
           { session },
+        );
+        await PetPoojaPinTemp.updateOne(
+          {
+            tableName: fromTable.name,
+            businessId,
+          },
+          {
+            $set: {
+              tableName: toTable.name,
+              transferTableFrom: fromTable._id,
+              transferTableTo: toTable._id,
+              isTransfer: true,
+              transferBy,
+            },
+          },
+          { session },
+        );
+
+        await Table.findByIdAndUpdate(
+          fromTableId,
+          {
+            status: "EMPTY",
+            capacity: 0,
+            hiCode: "",
+            currentTableAmount: 0,
+            totalItemCount: 0,
+            userIds: [],
+          },
+          { session },
+        );
+
+        return c.json(
+          {
+            message: "Table transfer successfully",
+            err: false,
+            data: {},
+          },
+          200,
         );
       }
 
-      return c.json(
-        {
-          message: "Table switched successfully",
-          err: false,
-          data: {},
-        },
-        200,
-      );
+      if (transferType === "ITEM") {
+        const kotOrders = await KotOrder.find({
+          cart: { $elemMatch: { _id: { $in: itemIds } } },
+        });
+
+        let updatedKotOrders = [];
+        for (const kotOrder of kotOrders) {
+          const removedItems = [];
+          for (const item of kotOrder.cart) {
+            if (itemIds.includes(item._id.toString())) {
+              // Assuming `transferBy` contains the user ID
+              removedItems.push(item);
+            }
+          }
+
+          // Filter out items to be removed from the cart
+          kotOrder.cart = kotOrder.cart.filter(
+            (item) => !itemIds.includes(item._id.toString()),
+          );
+
+          // Save the updated `kotOrder` with modified cart
+          await kotOrder.save();
+
+          updatedKotOrders.push({ ...kotOrder.toObject(), removedItems });
+
+          // Prepare the new `KotOrder` without `_id` to avoid duplicate key errors
+          const { _id, ...newKotOrderData } = kotOrder.toObject();
+
+          // Create a new `KotOrder` with the removed items
+          const newKotOrder = await KotOrder.create({
+            ...newKotOrderData,
+            cart: removedItems,
+            tableName: toTable.name,
+            tableId: toTable._id,
+            transferd: true,
+            transferedBy: transferBy,
+            businessId,
+            date: Date.now(),
+          });
+        }
+
+        return c.json(
+          {
+            message: "Table transfer successfully",
+            err: false,
+            data: updatedKotOrders,
+          },
+          200,
+        );
+      }
     });
   })
 
@@ -1032,13 +1118,22 @@ const tableRouter = new Hono()
     ),
     async (c) => {
       const { tableName, businessId } = c.req.param();
+      const tableData = await Table.findOne({
+        businessId,
+        name: tableName,
+      });
 
-      const tableSession = await PetPoojaPinTemp.findOne({
+      let tableSession = await PetPoojaPinTemp.findOne({
         businessId,
         tableName,
-      }).select(
-        "pin hiCode tableName transferTableFrom transferTableTo isTransfer transferBy",
-      );
+      }).select("transferTableFrom transferTableTo isTransfer transferBy");
+
+      if (!tableSession) {
+        tableSession = await PetPoojaPinTemp.findOne({
+          transferTableFrom: tableData?._id,
+          businessId,
+        }).select("transferTableFrom transferTableTo isTransfer transferBy");
+      }
 
       return c.json(
         {

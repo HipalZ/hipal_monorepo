@@ -26,9 +26,6 @@ const KotItemSchema = new Schema<KotOrderItemType>({
     type: Number,
     required: true,
   },
-  itemId: {
-    type: String,
-  },
 });
 
 // Main Cart Schema
@@ -101,11 +98,11 @@ const KotOrderSchema = new Schema<KotOrderType>(
       type: String,
       required: true,
     },
-    switched: {
+    transferd: {
       type: Boolean,
       default: false,
     },
-    switchedBy: {
+    transferedBy: {
       type: ObjectId,
       ref: "User",
     },

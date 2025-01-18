@@ -1596,17 +1596,6 @@ const paymentsRouter = new Hono()
       } = requestData;
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const paymentMode = await UpiMode.findById(settleModes[0]._id);
-        if (
-          (split === true && settleModes.length === 1) ||
-          (split === false && settleModes.length === 0)
-        ) {
-          return c.json({
-            message: "Please select at least one split mode",
-            err: true,
-            data: {},
-          });
-        }
         const alert = await PaymentAlert.findOne(
           { _id: alertId, isAccepted: false },
           null,
@@ -1644,6 +1633,18 @@ const paymentsRouter = new Hono()
               path: "userId",
               select: "name",
             });
+
+            const paymentMode = await UpiMode.findById(settleModes[0]._id);
+            if (
+              (split === true && settleModes.length === 1) ||
+              (split === false && settleModes.length === 0)
+            ) {
+              return c.json({
+                message: "Please select at least one split mode",
+                err: true,
+                data: {},
+              });
+            }
             if (order?.couponId) {
               const coupon = await Couponz.findById(order.couponId).select(
                 "conditions.couponEndDate",
@@ -2049,6 +2050,7 @@ const paymentsRouter = new Hono()
             }
             aggregatedData.modeObj[name] += amount;
           }
+          delete aggregatedData.modeObj["split"];
         }
       }
 

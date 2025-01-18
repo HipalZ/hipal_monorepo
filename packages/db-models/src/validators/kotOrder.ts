@@ -23,7 +23,6 @@ const KotOrderSchema = z.object({
     })
     .default([]),
   quantity: z.number().positive(),
-  itemId: z.string().min(1).max(200).optional(),
 });
 
 // Define the main cart schema
@@ -42,8 +41,8 @@ export const kotSchema = z.object({
   editedBy: ObjectIdSchema.optional(),
   rejectedBy: ObjectIdSchema.optional(),
   tableId: ObjectIdSchema,
-  switched: z.boolean().default(false).optional(),
-  switchedBy: ObjectIdSchema.optional(),
+  transferd: z.boolean().default(false).optional(),
+  transferedBy: ObjectIdSchema.optional(),
 
   phone: z.string().min(1).max(50),
   name: z.string().min(1).max(50),

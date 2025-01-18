@@ -2,8 +2,8 @@ import { z } from "zod";
 
 export const switchTableschema = z
   .object({
-    fromTableId: z.string().max(200).optional(),
-    toTableId: z.string().max(200).optional(),
+    fromTableId: z.string().max(200),
+    toTableId: z.string().max(200),
     businessId: z.string().min(1).max(200),
     transferType: z.enum(["TABLE", "ITEM", "KOT"]),
     transferBy: z.string().min(1).max(200),
