@@ -17,6 +17,12 @@ export type orderModal =
   | "alerts"
   | "addItem";
 
+interface ISettleMode {
+  _id: string;
+  name: string;
+  amount: number;
+}
+
 interface OrderState {
   currentPage: orderPages;
   setCurrentPage: (page: orderPages) => void;
@@ -55,11 +61,47 @@ interface OrderState {
 
   showOrderError: boolean;
   setShowOrderError: (show: boolean) => void;
+
+  isSplit: boolean;
+  setIsSplit: (split: boolean) => void;
+
+  // Replace single-object "splitSelection" with an array
+  settleModes: ISettleMode[];
+  setSettleModes: (modes: ISettleMode[]) => void;
+  addSettleMode: (mode: ISettleMode) => void;
+  updateSettleMode: (mode: ISettleMode) => void;
+  removeSettleMode: (modeId: string) => void;
 }
 
 export const useOrderStore = create<OrderState>((set, get) => ({
   currentPage: "",
   setCurrentPage: (page) => set({ currentPage: page }),
+
+  isSplit: false,
+  setIsSplit: (split) => set({ isSplit: split }),
+
+  settleModes: [],
+  setSettleModes: (modes) => set({ settleModes: modes }),
+
+  addSettleMode: (mode) => {
+    const existing = get().settleModes.find((m) => m._id === mode._id);
+    if (!existing) {
+      set({ settleModes: [...get().settleModes, mode] });
+    }
+  },
+
+  updateSettleMode: (newMode) => {
+    const updated = get().settleModes.map((m) =>
+      m._id === newMode._id ? { ...m, amount: newMode.amount } : m,
+    );
+    set({ settleModes: updated });
+  },
+
+  removeSettleMode: (modeId) => {
+    set({
+      settleModes: get().settleModes.filter((m) => m._id !== modeId),
+    });
+  },
 
   paymentSteps: 0,
   setPaymentSteps: (steps) => set({ paymentSteps: steps }),

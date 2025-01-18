@@ -10,8 +10,6 @@ const MemoPaymentFilter = () => {
 
     const filters = [
         { value: "ALL", label: "All Payments" },
-        { value: "ONLINE", label: "Online Payments" },
-        { value: "OFFLINE", label: "Offline Payments" },
         { value: "CALL_CAPTAIN", label: "Call Captain" },
     ]
 

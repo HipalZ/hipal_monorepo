@@ -1,5 +1,5 @@
-import { memo, useState } from "react";
-import { AlertTriangle, Banknote, Coins, CreditCard, Smartphone, UserCircle, X } from 'lucide-react';
+import { memo, useCallback, useState } from "react";
+import { AlertTriangle, Coins, UserCircle, X } from 'lucide-react';
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,8 +15,7 @@ import toast from "react-hot-toast";
 import type { IBillData } from "@/components/types/hiClientzData";
 import { Input } from "@/components/ui/input";
 import { useNavigate, useParams } from "react-router-dom";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import MultipleModes from "./multipleModes";
 
 interface IMode {
     _id: string;
@@ -24,16 +23,7 @@ interface IMode {
     active: boolean;
 }
 
-const ModeIcon = ({ name }: { name: string }) => {
-    switch (name.toLowerCase()) {
-        case 'cash':
-            return <Banknote className="w-6 h-6" />;
-        case 'upi':
-            return <Smartphone className="w-6 h-6" />;
-        default:
-            return <CreditCard className="w-6 h-6" />;
-    }
-};
+
 
 const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => void; data?: IBillData }) => {
     const { businessId } = useParams();
@@ -43,7 +33,6 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
     const [customReason, setCustomReason] = useState<string>("");
     const [settleAmount, setSettleAmount] = useState<number | "">(0);
     const [showPaymentMode, setShowPaymentMode] = useState<boolean>(false);
-    const [selectedMode, setSelectedMode] = useState<string | null>(null);
 
     const predefinedReasons = [
         "Trial",
@@ -52,8 +41,14 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
         "Customer Led Problem",
     ];
 
-    const { selectedTable, setOpenOrderModal } = useOrderStore();
+    const {
+        selectedTable,
+        settleModes,
+        setOpenOrderModal
+    } = useOrderStore();
     const captainData = useHiClientZ((s) => s.captainData);
+
+    console.log("selectedTable", settleModes);
 
     const handleForceSettle = () => {
         setForceSettle(true);
@@ -69,7 +64,7 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
                     captainId: payload.captainId || "",
                     billRequestId: payload.billId || "",
                     settleAmount: payload.settleAmount || 0,
-                    paymentModeId: selectedMode || "",
+                    settleModes: settleModes,
                 },
             });
             const res = await response.json();
@@ -77,13 +72,13 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
         },
     });
 
-    const showModeOfPayments = () => {
+    const showModeOfPayments = useCallback(() => {
         setShowPaymentMode(true);
-    }
+    }, [])
 
-    const closeModeOfPayments = () => {
+    const closeModeOfPayments = useCallback(() => {
         setShowPaymentMode(false);
-    }
+    }, [])
 
     const getAllModes = async () => {
         const response = await apiRpc.upi_mode.all[':businessId'].$get({
@@ -170,46 +165,16 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
 
             <BottomPopUp width="w-[30rem]" hide show={forceSettle} onClose={() => setForceSettle(false)}>
                 {
-                    showPaymentMode ? <section className="w-full max-w-[30rem]">
-                        <h2 className="pt-4 mb-6 text-2xl font-bold text-center">Select Payment Mode</h2>
-                        <RadioGroup value={selectedMode || ""} onValueChange={setSelectedMode}>
-                            <div className="flex flex-col px-4 gap-4 h-[60vh] overflow-auto hide-scrollbar pb-[7rem]">
-                                {paymentMode?.map((mode) => (
-                                    <motion.div
-                                        key={mode._id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        <Card className={`cursor-pointer transition-all ${selectedMode === mode._id ? 'border-primary' : ''}`}>
-                                            <CardContent className="p-4">
-                                                <RadioGroupItem
-                                                    value={mode._id}
-                                                    id={mode._id}
-                                                    className="sr-only peer"
-                                                    disabled={!mode.active}
-                                                />
-                                                <Label
-                                                    htmlFor={mode._id}
-                                                    className={`flex items-center space-x-4 cursor-pointer ${!mode.active ? 'cursor-not-allowed' : ''}`}
-                                                >
-                                                    <div className="flex-shrink-0">
-                                                        <ModeIcon name={mode.name} />
-                                                    </div>
-                                                    <div>
-                                                        <p className="font-medium capitalize">{mode.name}</p>
-                                                        {!mode.active && (
-                                                            <p className="text-sm text-muted-foreground">Currently unavailable</p>
-                                                        )}
-                                                    </div>
-                                                </Label>
-                                            </CardContent>
-                                        </Card>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </RadioGroup>
-                    </section> :
+                    showPaymentMode ?
+                        <div className="pt-[2rem]">
+                            <h3 className="flex items-center justify-between px-4 py-2 text-lg font-semibold text-gray-800">
+                                <span>Payment Modes</span>
+                                <span>₹{settleAmount}</span>
+                            </h3>
+
+                            <MultipleModes paymentModes={paymentMode || []} billData={{ total: Number(settleAmount) || 0 }} />
+                        </div>
+                        :
                         <ScrollArea className="h-[80vh] py-6">
                             <div className="px-4 space-y-6">
                                 <div className="flex items-center justify-between">
@@ -312,7 +277,8 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
                                     text: "Confirm",
                                     onClick: () => { handleConfirmForceSettle(); },
                                     className: "rounded-md w-full",
-                                    disable: !selectedMode,
+                                    disable: settleModes?.length === 0,
+                                    isLoading: isPending || isLoading,
                                 },
                             ]}
                         />

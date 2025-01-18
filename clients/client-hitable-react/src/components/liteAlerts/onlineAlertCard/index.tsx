@@ -83,7 +83,7 @@ const OnlineAlertCard = ({ onlineAlertData }: IOnlineProp) => {
                   <div className="flex items-center justify-between mb-4 -mt-4 -ml-4">
                     <Badge
                       variant={
-                        alert?.status === "FAIL" ? "default" : "destructive"
+                        alert?.status === "FAIL" ? "destructive" : "default"
                       }
                       className="text-base font-medium capitalize rounded-none md:text-lg"
                     >

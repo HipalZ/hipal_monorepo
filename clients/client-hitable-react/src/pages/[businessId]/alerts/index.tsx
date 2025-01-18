@@ -41,12 +41,10 @@ const AlertsMemo = () => {
             {payFilter === "ALL" && (
               <>
                 <OnlineAlerts />
-                <OfflineAlerts />
                 <CallCaptanMainComp />
               </>
             )}
             {payFilter === "ONLINE" && <OnlineAlerts />}
-            {(payFilter === "OFFLINE") && <OfflineAlerts />}
             {
               payFilter === "CALL_CAPTAIN" && <CallCaptanMainComp />
             }
