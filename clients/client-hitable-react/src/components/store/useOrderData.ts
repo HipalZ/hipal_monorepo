@@ -1,8 +1,10 @@
 import { create } from "zustand";
 import type { TableData } from "./useZonesAndTable";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
+import { OrderData } from "../types/hiClientzData";
 
 export type orderPages = "online" | "offline" | "history" | "";
+export type TransferTable = "item" | "table" | "";
 
 export type orderModal =
   | ""
@@ -26,6 +28,15 @@ interface ISettleMode {
 interface OrderState {
   currentPage: orderPages;
   setCurrentPage: (page: orderPages) => void;
+
+  transferTable: TransferTable;
+  setTransferTable: (table: TransferTable) => void;
+
+  orderDataStore: OrderData[];
+  setOrderDataStore: (orders: OrderData[]) => void;
+
+  transferModal: boolean;
+  setTransferModal: (open: boolean) => void;
 
   paymentSteps: number;
   setPaymentSteps: (steps: number) => void;
@@ -76,6 +87,15 @@ interface OrderState {
 export const useOrderStore = create<OrderState>((set, get) => ({
   currentPage: "",
   setCurrentPage: (page) => set({ currentPage: page }),
+
+  orderDataStore: [],
+  setOrderDataStore: (orders) => set({ orderDataStore: orders }),
+
+  transferTable: "",
+  setTransferTable: (table) => set({ transferTable: table }),
+
+  transferModal: false,
+  setTransferModal: (open) => set({ transferModal: open }),
 
   isSplit: false,
   setIsSplit: (split) => set({ isSplit: split }),

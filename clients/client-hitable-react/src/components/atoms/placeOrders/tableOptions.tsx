@@ -1,19 +1,30 @@
 import { memo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { CardContent } from "@/components/ui/card"
-import { Users, UserCheck, ReceiptText } from "lucide-react"
-import { type orderModal, useOrderStore } from "@/components/store/useOrderData"
+import { Users, UserCheck, ReceiptText, CookingPot } from "lucide-react"
+import { type orderModal, type TransferTable, useOrderStore } from "@/components/store/useOrderData"
 import { Badge } from "@/components/ui/badge"
+import { MdTableBar } from "react-icons/md"
+
 
 const MemoTableOptions = () => {
-    const { setModalType, selectedTable } = useOrderStore()
+    const { setModalType, selectedTable, setTransferTable, transferTable, transferModal, setTransferModal } = useOrderStore()
+
 
     const toggleModalType = useCallback((type: orderModal) => {
         setModalType(type)
     }, [setModalType])
 
+    const handleTransferTable = useCallback((type: TransferTable) => {
+        console.log(type)
+        setTransferTable(type)
+        setTransferModal(true)
+    }, [setTransferTable, setTransferModal, transferModal, transferTable])
+    console.log(transferTable, transferModal)
+
     return (
-        <CardContent className="space-y-4 pt-[7rem] md:pt-[8.5rem]">
+        <CardContent className="space-y-4 pt-[5rem] md:pt-[8.5rem]">
+            <h3 className="text-xl font-semibold opacity-80">Table Options</h3>
             {
                 selectedTable?.hiCode && (
                     <Badge variant="secondary" className="flex justify-between w-full">
@@ -22,6 +33,7 @@ const MemoTableOptions = () => {
                     </Badge>
                 )
             }
+
             <Button
                 size="lg"
                 variant="outline"
@@ -48,6 +60,24 @@ const MemoTableOptions = () => {
             >
                 <ReceiptText className="w-5 h-5 mr-2" />
                 Send Ebill
+            </Button>
+            <Button
+                size="lg"
+                variant="outline"
+                className="w-full"
+                onClick={() => handleTransferTable('item')}
+            >
+                <CookingPot className="w-5 h-5 mr-2" />
+                Transfer Item
+            </Button>
+            <Button
+                size="lg"
+                variant="outline"
+                className="w-full"
+                onClick={() => handleTransferTable('table')}
+            >
+                <MdTableBar className="w-5 h-5 mr-2" />
+                Transfer Table
             </Button>
         </CardContent>
     )

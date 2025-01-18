@@ -1,13 +1,37 @@
-import type { IExistingPayments } from "@/components/types/businessData";
-import { timestampToDateTime } from "@/components/utils/helper";
 import { memo } from "react";
 import { MdOutlineCall } from "react-icons/md";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import type { IExistingPayments } from "@/components/types/businessData";
+import { timestampToDateTime } from "@/components/utils/helper";
+import { apiRpc } from "@hi/common";
+import { useQuery } from "@tanstack/react-query";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 
+export interface Extra {
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+export interface DishItem {
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+export interface BillItem {
+  dish: DishItem;
+  extras: Extra[];
+}
 interface PaymentModalProps {
   salesData: IExistingPayments | undefined;
 }
-const PaymentModal = (props: PaymentModalProps) => {
-  const { salesData } = props;
+
+const PaymentModal = ({ salesData }: PaymentModalProps) => {
   const hideMiddleNumbers = (phone: string) => {
     if (phone?.length <= 4) return phone;
     const firstPart = phone?.slice(0, 3);
@@ -15,87 +39,157 @@ const PaymentModal = (props: PaymentModalProps) => {
     return `${firstPart}****${lastPart}`;
   };
 
+  const InfoRow = ({ label, value }: { label: string; value: string | number | undefined }) => (
+    <div className="flex items-center justify-between py-2">
+      <span className="text-sm text-gray-600">{label}</span>
+      <span className="font-medium">{value}</span>
+    </div>
+  );
+
+  const getBillItems = async (): Promise<BillItem> => {
+    const response = await apiRpc.kot.get_pos_bill[":billRequestId"].$get({
+      param: {
+        billRequestId: salesData?.posBillRequestId,
+      },
+    });
+
+    const res = await response.json();
+    return res.data || [];
+  };
+
+  const { isLoading, data: itemsData } = useQuery<BillItem>({
+    queryKey: ["getBillItems", salesData?.posBillRequestId],
+    queryFn: getBillItems,
+    enabled: !!salesData?.posBillRequestId,
+  });
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
+  const calculateTotal = (items: BillItem) => {
+    return items.reduce((total, item) => {
+      const dishTotal = item.dish.price * item.dish.quantity;
+      const extrasTotal = item.extras.reduce((sum, extra) => sum + extra.price * extra.quantity, 0);
+      return total + dishTotal + extrasTotal;
+    }, 0);
+  };
+
   return (
-    <>
-      <button
-        type="button"
-        className="absolute top-0 text-[#334C38] left-1/2 px-4 py-1 rounded-full transform -translate-x-1/2 -translate-y-1/2 bg-[#EDFBE7]"
-      >
-        {salesData?.mode}
-      </button>
-      <section style={{ maxHeight: "90%", overflowY: "auto" }}>
-        <div className="flex justify-between mx-6 mt-6">
-          <h1 className="text-base text-gray-500">
-            {timestampToDateTime(salesData?.date || 0)}
-          </h1>
-          <p>order id : {salesData?._id.slice(-5)}</p>
-        </div>
-        &nbsp;
-        <div className="grid grid-cols-2 mx-6 mb-2">
-          <h1>Paid Amount</h1>
-          <p>: ₹ {salesData?.order_id?.total}</p>
-        </div>
-        <div className="grid grid-cols-2 mx-6 mb-2">
-          <h1>Bil value entered</h1>
-          <p>: ₹ {salesData?.order_id?.billValue}</p>
-        </div>
-        <div className="grid grid-cols-2 mx-6 mb-2">
-          <h1>Including tips</h1>
-          <p>: ₹ {salesData?.order_id?.tips}</p>
-        </div>
-        <div className="grid grid-cols-2 mx-6 mb-2">
-          <h1>Discount</h1>
-          <p>: {salesData?.order_id?.claimedCoins} Coin used</p>
-        </div>
-        <hr className="m-6 h-[0.1rem] bg-[#CACACA] text-black" />
-        <div className="grid grid-cols-2 mx-6 mb-2">
-          <h1>User</h1>
-          <p>: {salesData?.userId?.name}</p>
-        </div>
-        <div className="grid grid-cols-2 mx-6 mb-2">
-          <h1>Table</h1>
-          <p>: {salesData?.order_id?.tableName}</p>
-        </div>
-        <div className="grid grid-cols-2 mx-6 mb-2">
-          <h1>Number</h1>
-          <div className="flex">
-            <span>
-              :{" "}
-              {salesData?.userId?.phone
-                ? hideMiddleNumbers(salesData?.userId?.phone)
-                : ""}
-            </span>
-            &nbsp;&nbsp;
-            <a
-              href={`tel:+91${salesData?.userId?.phone}`}
-              className="flex items-center rounded-full bg-[#f3eeff] px-2 py-1 text-[#6f2eff]"
-            >
-              <MdOutlineCall size={16} />
-              <span className="text-sm">Call</span>
-            </a>
-          </div>
-        </div>
-        <h1 className="mx-6 font-semibold">Used reason</h1>
-        <div className="flex flex-col p-4 m-6 bg-gray-300 rounded-2xl">
-          <h1 id="discount-reason">
-            User {salesData?.userId?.name} has paid ₹{" "}
-            {salesData?.order_id?.total} discount applied ₹{" "}
-            {salesData?.order_id?.claimedCoins} transaction id {salesData?._id}
-          </h1>
-          <br />
-        </div>
-        {salesData?.comment && salesData?.comment?.length > 0 ? (
-          <>
-            <h1 className="mx-6 font-semibold">Added Comment</h1>
-            <div className="flex flex-col p-4 m-6 bg-gray-300 rounded-2xl">
-              <p>{salesData?.comment}</p>
-              <br />
+    <Card className="relative w-full max-w-md mx-auto">
+      <CardHeader className="relative pb-2">
+        <Badge className="absolute transform -translate-x-1/2 top-2 left-1/2" variant="outline">
+          {salesData?.mode}
+        </Badge>
+        <CardTitle className="mt-4 text-lg font-semibold text-center">Payment Details</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ScrollArea className="h-[70vh]">
+          <div className="space-y-4">
+            {/* Sales Data Information */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">
+                {timestampToDateTime(salesData?.date || 0)}
+              </span>
+              <span className="text-sm font-medium">Order ID: {salesData?._id.slice(-5)}</span>
             </div>
-          </>
-        ) : null}
-      </section>
-    </>
+
+            <div className="space-y-2">
+              <InfoRow label="Paid Amount" value={`₹ ${salesData?.order_id?.total}`} />
+              <InfoRow label="Bill Value Entered" value={`₹ ${salesData?.order_id?.billValue}`} />
+              <InfoRow label="Including Tips" value={`₹ ${salesData?.order_id?.tips}`} />
+              <InfoRow label="Discount" value={`${salesData?.order_id?.claimedCoins} Coins used`} />
+              <InfoRow label="Payment Mode" value={salesData?.mode} />
+              <InfoRow label="Mode of Settle" value={salesData?.settleType} />
+            </div>
+
+            <Separator />
+
+            {/* User and Table Information */}
+            <div className="space-y-2">
+              <InfoRow label="User" value={salesData?.userId?.name} />
+              <InfoRow label="Table" value={salesData?.order_id?.tableName} />
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm text-gray-600">Number</span>
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium">
+                    {salesData?.userId?.phone ? hideMiddleNumbers(salesData?.userId?.phone) : ""}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center space-x-1"
+                    asChild
+                  >
+                    <a href={`tel:+91${salesData?.userId?.phone}`}>
+                      <MdOutlineCall size={16} />
+                      <span className="text-sm">Call</span>
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Items List */}
+            <div className="space-y-2">
+              <h2 className="font-semibold">Bill Items</h2>
+              <Card>
+                <CardContent className="p-4 space-y-4">
+                  {itemsData?.map((item, index) => (
+                    <div key={index} className="space-y-2">
+                      <div className="flex justify-between">
+                        <div>
+                          <p className="font-medium">{item.dish.name}</p>
+                          <p className="text-sm text-gray-500">
+                            Qty: {item.dish.quantity} × ₹{item.dish.price.toFixed(2)}
+                          </p>
+                        </div>
+                        <p className="font-medium">
+                          ₹{(item.dish.price * item.dish.quantity).toFixed(2)}
+                        </p>
+                      </div>
+                      {item.extras.length > 0 && (
+                        <div className="pl-4 space-y-1">
+                          {item.extras.map((extra, extraIndex) => (
+                            <div key={extraIndex} className="flex justify-between text-sm">
+                              <span>{extra.name}</span>
+                              <span>
+                                {extra.quantity} × ₹{extra.price.toFixed(2)} = ₹
+                                {(extra.quantity * extra.price).toFixed(2)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  <Separator />
+                  <div className="flex justify-between font-semibold">
+                    <span>Total</span>
+                    <span>₹{calculateTotal(itemsData || []).toFixed(2)}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Optional Sections */}
+            {salesData?.comment && (
+              <div className="space-y-2">
+                <h2 className="font-semibold">Added Comment</h2>
+                <Card>
+                  <CardContent className="p-4">
+                    <p className="text-sm">{salesData?.comment}</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
   );
 };
+
 const MemoizedPaymentModal = memo(PaymentModal);
 export default MemoizedPaymentModal;
+

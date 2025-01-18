@@ -17,7 +17,7 @@ import type {
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import Pagination from "@/components/atom/pagination";
 import usePaginationStore from "@/components/store/usePaginationStore";
-import NoData from "@/assets/nodata.jpg"; // Import the NoData image
+import NoData from "@/assets/nodata.jpg";
 
 const MemoPaymentSales = () => {
   const [open, setOpen] = useState(false);
@@ -189,9 +189,9 @@ const MemoPaymentSales = () => {
                   >
                     <section className="flex justify-between">
                       <section>
-                        <figure className="flex items-center space-x-4">
+                        <figure className="flex items-center space-x-2">
                           <img src={Online} alt="online" />
-                          <figcaption className="text-[0.825rem] opacity-50">
+                          <figcaption className="font-semibold opacity-50">
                             <h6>order id : {data?._id?.slice(-6)}</h6>
                           </figcaption>
                         </figure>
@@ -203,12 +203,21 @@ const MemoPaymentSales = () => {
                       </section>
                     </section>
                     <section className="py-4">
-                      <b>{data?.userId?.name || "Customer"}</b>{" "}
-                      <span className="opacity-50">
-                        {hideMiddleNumbers(data?.userId?.phone || "")}
-                      </span>
-                      <br />
-                      <small>Bill value : {data?.order_id?.billValue}</small>
+                      <section className='flex items-center justify-between'>
+
+                        <b>{data?.userId?.name || "Customer"}</b>{" "}
+                        <h3 className="opacity-50">
+                          {hideMiddleNumbers(data?.userId?.phone || "")}
+                        </h3>
+                      </section>
+                      <b className="flex items-center justify-between">
+                        <h3>
+                          ₹ {data?.order_id?.billValue}
+                        </h3>
+                        <h3 className="text-sm">
+                          {data?.settleType}
+                        </h3>
+                      </b>
                     </section>
                     <section className="flex gap-4">
                       <button

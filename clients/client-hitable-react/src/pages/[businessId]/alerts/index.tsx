@@ -4,7 +4,6 @@ import HeaderAlerts from "@/components/liteAlerts/headerAlerts";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import SalesLite from "@/components/atoms/salesLite";
 import OnlineAlerts from "@/components/liteAlerts/onlineAlerts";
-import OfflineAlerts from "@/components/liteAlerts/offlineAlerts";
 import History from "@/components/liteAlerts/history";
 import BillPopUpMemo from "@/components/atoms/billPopUp";
 import CartItems from "@/components/atoms/cartItem";

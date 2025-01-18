@@ -186,6 +186,7 @@ export interface ISalesLite {
   totalClaimedCoins: number;
   totalEarnCoins: number;
   totalDiscount: number;
+  forceSettle: number;
 }
 export interface OrderDetails {
   _id: string;
@@ -229,6 +230,7 @@ export interface IExistingPayments {
   claimedCoins: number;
   createdAt: string;
   updatedAt: string;
+  posBillRequestId?: string;
   __v: number;
 }
 export interface HistoryData {

@@ -104,7 +104,7 @@ const Overview = () => {
           <CardTitle>Sales by Payment Mode</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-between md:flex-row">
-          <div className="grid grid-cols-2 gap-4 mb-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 md:mb-0">
+          <div className="grid grid-cols-2 gap-2 mb-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 md:mb-0">
             {Object.entries(salesData?.modeObj).map(([mode, amount]) => (
               <InfoCard
                 key={mode}
@@ -121,7 +121,7 @@ const Overview = () => {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-4">
         <InfoCard
           title="Service Charge"
           value={salesData?.totalServiceCharge}
@@ -147,6 +147,12 @@ const Overview = () => {
           gradient="from-indigo-300 to-indigo-600"
         />
         <InfoCard
+          title="Coins Claimed"
+          value={salesData?.totalClaimedCoins}
+          icon={<Coins className="w-4 h-4" />}
+          gradient="from-zinc-300 to-zinc-600"
+        />
+        <InfoCard
           title="Forced Settle"
           value={salesData?.forceSettle}
           icon={<Coins className="w-4 h-4" />}
@@ -165,7 +171,7 @@ const InfoCard = ({ title, value, icon, gradient }: { title: string; value: numb
           {icon}
           <span className="text-sm font-semibold capitalize">{title}</span>
         </div>
-        <span className="text-2xl font-bold">₹ {value?.toLocaleString("en-IN")}</span>
+        <span className="text-2xl font-bold text-nowrap">₹ {value?.toLocaleString("en-IN")}</span>
       </div>
     </CardContent>
   </Card>

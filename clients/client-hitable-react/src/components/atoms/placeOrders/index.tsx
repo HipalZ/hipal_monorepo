@@ -7,10 +7,12 @@ import SpinnerMemo from "../loadingSpinner"
 import type { OrderData } from "@/components/types/hiClientzData"
 import EnhancedOrderCard from "./orderCard"
 import { useCart } from "@/components/store/useCart"
+import { useOrderStore } from "@/components/store/useOrderData"
 
 const MemoPlaceOrders = () => {
     const { tableId } = useParams()
     const { setIsPlacingNewOrder } = useCart();
+    const { setOrderDataStore } = useOrderStore()
 
     const getTableOrders = useCallback(async () => {
         const response = await apiRpc.kot.table_kot[":tableId"].$get({
@@ -18,6 +20,8 @@ const MemoPlaceOrders = () => {
         })
 
         const res = await response.json()
+        console.log(res.data)
+        setOrderDataStore(res.data)
         if (res?.data?.length > 0) {
             setIsPlacingNewOrder(false);
         }
@@ -45,7 +49,7 @@ const MemoPlaceOrders = () => {
     return (
         <ScrollArea className="min-h-[calc(100vh-8rem)] py-[5rem]">
             <div className="px-4 space-y-4">
-                {data?.map((order: OrderData) => (
+                {data.length > 0 && data?.map((order: OrderData) => (
                     <EnhancedOrderCard key={order._id} order={order} />
                 ))}
             </div>

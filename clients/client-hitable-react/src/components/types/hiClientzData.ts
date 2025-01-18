@@ -296,6 +296,8 @@ export interface OrderData {
   acceptedBy: string;
   accepted: boolean;
   createdAt: string;
+  transferd: boolean;
+  transferedBy: IUserId;
   date: number;
   rejected: boolean;
   settled: boolean;

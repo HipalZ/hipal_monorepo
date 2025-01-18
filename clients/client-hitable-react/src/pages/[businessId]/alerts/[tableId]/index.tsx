@@ -11,6 +11,8 @@ import SpinnerMemo from '@/components/atoms/loadingSpinner';
 import CustomerInformation from '@/components/atoms/placeOrders/customerInformation';
 import { useCart } from '@/components/store/useCart';
 import type { TableData } from '@/components/store/useZonesAndTable';
+import TransferItem from '@/components/atoms/placeOrders/transferItem';
+import EmptyTableList from '@/components/tables';
 
 // Lazy loaded components
 const PlaceOrders = lazy(() => import('@/components/atoms/placeOrders'));
@@ -37,7 +39,17 @@ const TablePos = () => {
         modalType,
         setOpenOrderModal,
         setPaymentSteps,
+        transferTable,
+        transferModal,
+        setTransferModal,
+        setTransferTable,
     } = useOrderStore();
+
+
+    const closeTransferModal = () => {
+        setTransferModal(false)
+        setTransferTable('')
+    }
 
     const [activeTab, setActiveTab] = useState('orders');
 
@@ -265,6 +277,22 @@ const TablePos = () => {
 
                         </ScrollArea>
                     </BottomPopUp>
+                    {
+                        transferModal && (
+                            <BottomPopUp hide show={transferModal} onClose={closeTransferModal}>
+                                {
+                                    transferTable === 'item' && (
+                                        <TransferItem />
+                                    )
+                                }
+                                {
+                                    transferTable === 'table' && (
+                                        <EmptyTableList transfer />
+                                    )
+                                }
+                            </BottomPopUp>
+                        )
+                    }
                 </Suspense>
             )}
         </div>
