@@ -26,6 +26,9 @@ const KotItemSchema = new Schema<KotOrderItemType>({
     type: Number,
     required: true,
   },
+  itemId: {
+    type: String,
+  },
 });
 
 // Main Cart Schema
@@ -54,7 +57,7 @@ const KotOrderSchema = new Schema<KotOrderType>(
       required: true,
     },
     cart: {
-      type: [Object],
+      type: [KotItemSchema],
       required: true,
     },
     date: {

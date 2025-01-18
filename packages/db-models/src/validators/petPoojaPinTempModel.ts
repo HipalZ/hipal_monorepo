@@ -22,6 +22,11 @@ export const petPoojaPinTempModelSchema = z.object({
   serviceCharge: z.coerce.number().optional(),
   settleType: z.string().min(1).max(50).optional(),
   performedBy: z.string().min(1).max(50).optional(),
+  customerIds: z.array(ObjectIdSchema).optional(),
+  isTransfer: z.boolean().default(false).optional(),
+  transferTableTo: ObjectIdSchema.optional(),
+  transferTableFrom: ObjectIdSchema.optional(),
+  transferBy: ObjectIdSchema.optional(),
 });
 
 export type PetPoojaPinTempModelType = z.infer<

@@ -23,6 +23,7 @@ const KotOrderSchema = z.object({
     })
     .default([]),
   quantity: z.number().positive(),
+  itemId: z.string().min(1).max(200).optional(),
 });
 
 // Define the main cart schema

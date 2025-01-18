@@ -849,6 +849,7 @@ const posRouter = new Hono()
             tableName: tableName,
             customerName: customerName,
             phoneNumbers: [customerPhone],
+            customerIds: [user._id],
             performedBy: "user",
           });
           await petPoojaPinTemp.save();
@@ -952,6 +953,8 @@ const posRouter = new Hono()
     async (c) => {
       const { hiCode, customerPhone, businessId } = await c.req.json();
 
+      const user = await User.findOne({ phone: customerPhone });
+
       const hiCodeData = await PetPoojaPinTemp.findOne({
         hiCode: hiCode,
         businessId: businessId,
@@ -977,7 +980,7 @@ const posRouter = new Hono()
           tableName: hiCodeData.tableName,
         },
         {
-          $addToSet: { phoneNumbers: customerPhone },
+          $addToSet: { phoneNumbers: customerPhone, customerIds: user?._id },
         },
         {
           new: true,

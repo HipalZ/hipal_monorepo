@@ -178,8 +178,8 @@ const tableRouter = new Hono()
         reasonForForceSettle: z.string().min(1).max(500),
         settleAmount: z.coerce.number().optional(),
         billRequestId: z.string().min(1).max(500).optional(),
-        paymentModeId: z.string().min(1).max(500),
-        splitModes: z
+
+        settleModes: z
           .array(
             z.object({
               name: z.string().max(100),
@@ -201,9 +201,9 @@ const tableRouter = new Hono()
           reasonForForceSettle,
           settleAmount = 0,
           billRequestId,
-          paymentModeId,
-          splitModes = [],
-          split,
+          settleModes,
+
+          split = false,
         } = await c.req.json();
 
         if (!billRequestId) {
@@ -217,15 +217,16 @@ const tableRouter = new Hono()
           );
         }
 
-        const paymentMode = await UpiMode.findById(paymentModeId);
-        if (split === true) {
-          if (splitModes.length === 0) {
-            return c.json({
-              message: "Please select at least one split mode",
-              err: true,
-              data: {},
-            });
-          }
+        const paymentMode = await UpiMode.findById(settleModes[0]?._id);
+        if (
+          (split === true && settleModes.length === 1) ||
+          (split === false && settleModes.length === 0)
+        ) {
+          return c.json({
+            message: "Please select at least one split mode",
+            err: true,
+            data: {},
+          });
         }
         const billAlreadySettled = await Payment.findOne({
           posBillRequestId: billRequestId,
@@ -351,7 +352,7 @@ const tableRouter = new Hono()
               tax: getBill.data.order_data.tax,
               serviceCharge: getBill.data.order_data.service_charge,
               posBillRequestId: billRequestId,
-              splitModes: splitModes,
+              splitModes: settleModes,
 
               waiterName: captain?.name,
               date: Date.now(),
@@ -439,7 +440,7 @@ const tableRouter = new Hono()
         captainId: z.string().min(1).max(500),
         billRequestId: z.string().min(1).max(500),
         paymentModeId: z.string().min(1).max(500),
-        splitModes: z
+        settleModes: z
           .array(
             z.object({
               name: z.string().max(100),
@@ -459,19 +460,20 @@ const tableRouter = new Hono()
           tableId,
           captainId,
           billRequestId,
-          paymentModeId,
-          splitModes = [],
+
+          settleModes = [],
           split,
         } = await c.req.json();
-        const paymentMode = await UpiMode.findById(paymentModeId);
-        if (split === true) {
-          if (splitModes.length === 0) {
-            return c.json({
-              message: "Please select at least one split mode",
-              err: true,
-              data: {},
-            });
-          }
+        const paymentMode = await UpiMode.findById(settleModes[0]?._id);
+        if (
+          (split === true && settleModes.length === 1) ||
+          (split === false && settleModes.length === 0)
+        ) {
+          return c.json({
+            message: "Please select at least one split mode",
+            err: true,
+            data: {},
+          });
         }
 
         const billAlreadySettled = await Payment.findOne({
@@ -587,7 +589,7 @@ const tableRouter = new Hono()
               serviceCharge: getBill.data.order_data.service_charge,
               posBillRequestId: billRequestId,
               waiterName: captain?.name,
-              splitModes: splitModes,
+              splitModes: settleModes,
               date: Date.now(),
             },
           ],
@@ -958,19 +960,20 @@ const tableRouter = new Hono()
     },
   )
 
-  .post("/switch_table", zValidator("json", switchTableschema), async (c) => {
+  .post("/transfer_table", zValidator("json", switchTableschema), async (c) => {
     //@ts-ignore
     return runInTransaction(async (session: ClientSession) => {
       const {
         businessId,
-        switchBy,
-        switchType,
+        transferBy,
+        transferType,
         fromTableId,
         toTableId,
         kotIds,
+        itemIds,
       } = (await c.req.json()) as SwitchTableType;
 
-      if (switchType === "TABLE") {
+      if (transferType === "TABLE") {
         const fromTable = await Table.findById(fromTableId);
         const toTable = await Table.findById(toTableId);
 
@@ -1017,6 +1020,36 @@ const tableRouter = new Hono()
         200,
       );
     });
-  });
+  })
+
+  .get(
+    "/get_table_session/:tableName/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        tableName: z.string().min(1).max(500),
+        businessId: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { tableName, businessId } = c.req.param();
+
+      const tableSession = await PetPoojaPinTemp.findOne({
+        businessId,
+        tableName,
+      }).select(
+        "pin hiCode tableName transferTableFrom transferTableTo isTransfer transferBy",
+      );
+
+      return c.json(
+        {
+          message: "Table session fetched successfully",
+          err: false,
+          data: tableSession || {},
+        },
+        200,
+      );
+    },
+  );
 
 export default tableRouter;

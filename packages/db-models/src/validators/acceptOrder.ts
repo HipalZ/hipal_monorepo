@@ -3,8 +3,7 @@ import { z } from "zod";
 export const acceptOrderSchema = z.object({
   comment: z.string().max(1000).optional(),
   waiterName: z.string().max(100).optional(),
-  paymentModeId: z.string().max(100).optional(),
-  splitModes: z
+  settleModes: z
     .array(
       z.object({
         name: z.string().max(100),
@@ -12,7 +11,6 @@ export const acceptOrderSchema = z.object({
         _id: z.string().max(100),
       }),
     )
-    .default([])
     .optional(),
 
   split: z.boolean().default(false).optional(),

@@ -1590,21 +1590,22 @@ const paymentsRouter = new Hono()
       const {
         comment,
         waiterName,
-        paymentModeId,
-        splitModes = [],
-        split,
+
+        settleModes = [],
+        split = false,
       } = requestData;
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const paymentMode = await UpiMode.findById(paymentModeId);
-        if (split === true) {
-          if (splitModes.length === 0) {
-            return c.json({
-              message: "Please select at least one split mode",
-              err: true,
-              data: {},
-            });
-          }
+        const paymentMode = await UpiMode.findById(settleModes[0]._id);
+        if (
+          (split === true && settleModes.length === 1) ||
+          (split === false && settleModes.length === 0)
+        ) {
+          return c.json({
+            message: "Please select at least one split mode",
+            err: true,
+            data: {},
+          });
         }
         const alert = await PaymentAlert.findOne(
           { _id: alertId, isAccepted: false },
@@ -1737,7 +1738,7 @@ const paymentsRouter = new Hono()
                     tax: tempTable?.tax || 0,
                     serviceCgarge: tempTable?.serviceCharge || 0,
                     posBillRequestId: tempTable?.billRequestId || "",
-                    splitModes: splitModes,
+                    splitModes: settleModes,
                     waiterName,
                     date: Date.now(),
                   },

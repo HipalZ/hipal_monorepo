@@ -26,6 +26,11 @@ const petPoojaPinTempModelSchema =
       type: String,
       required: true,
     },
+    customerIds: {
+      type: [ObjectId],
+      required: false,
+      ref: "User",
+    },
     phoneNumbers: {
       type: [String],
       required: true,
@@ -58,6 +63,26 @@ const petPoojaPinTempModelSchema =
     performedBy: {
       type: String,
       required: false,
+    },
+    isTransfer: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    transferTableTo: {
+      type: ObjectId,
+      required: false,
+      ref: "table",
+    },
+    transferTableFrom: {
+      type: ObjectId,
+      required: false,
+      ref: "table",
+    },
+    transferBy: {
+      type: ObjectId,
+      required: false,
+      ref: "User",
     },
   });
 

@@ -5,13 +5,14 @@ export const switchTableschema = z
     fromTableId: z.string().max(200).optional(),
     toTableId: z.string().max(200).optional(),
     businessId: z.string().min(1).max(200),
-    switchType: z.enum(["TABLE", "KOT"]),
-    switchBy: z.string().min(1).max(200),
+    transferType: z.enum(["TABLE", "ITEM", "KOT"]),
+    transferBy: z.string().min(1).max(200),
     kotIds: z.array(z.string().max(500)).optional(),
+    itemIds: z.array(z.string().max(500)).optional(),
   })
   .refine(
     (data) => {
-      if (data.switchType === "KOT") {
+      if (data.transferType === "KOT") {
         return data.kotIds && data.kotIds.length > 0;
       }
       return true;
@@ -23,7 +24,7 @@ export const switchTableschema = z
   )
   .refine(
     (data) => {
-      if (data.switchType === "TABLE") {
+      if (data.transferType === "TABLE") {
         return data.fromTableId && data.toTableId;
       }
       return true;
@@ -32,6 +33,17 @@ export const switchTableschema = z
       message:
         "Please provide fromTableId and toTableId when switchType is TABLE",
       path: ["fromTableId", "toTableId"], // Path to the fields that need to be validated
+    },
+  )
+  .refine(
+    (data) => {
+      if (data.transferType === "ITEM") {
+        return data.itemIds && data.itemIds.length > 0;
+      }
+      return true;
+    },
+    {
+      message: "Please provide itemIds when switchType is ITEM", // Error message
     },
   );
 
