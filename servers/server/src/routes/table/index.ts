@@ -439,7 +439,6 @@ const tableRouter = new Hono()
         tableId: z.string().min(1).max(500),
         captainId: z.string().min(1).max(500),
         billRequestId: z.string().min(1).max(500),
-        paymentModeId: z.string().min(1).max(500),
         settleModes: z
           .array(
             z.object({
