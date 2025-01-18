@@ -693,8 +693,8 @@ const tableRouter = new Hono()
 
       const table = await Table.findById(tableId);
 
-      const alreadySetlle = await QrBill.findOne({
-        requestBillId: billRequestId,
+      const alreadySetlle = await Payment.findOne({
+        posBillRequestId: billRequestId,
       });
 
       if (alreadySetlle) {
@@ -1014,7 +1014,8 @@ const tableRouter = new Hono()
           },
           { session },
         );
-        await PetPoojaPinTemp.updateOne(
+
+        await PetPoojaPinTemp.findOneAndUpdate(
           {
             tableName: fromTable.name,
             businessId,
@@ -1040,6 +1041,18 @@ const tableRouter = new Hono()
             currentTableAmount: 0,
             totalItemCount: 0,
             userIds: [],
+          },
+          { session },
+        );
+        await Table.findByIdAndUpdate(
+          toTableId,
+          {
+            status: fromTable.status,
+            capacity: fromTable?.capacity,
+            hiCode: fromTable?.hiCode,
+            currentTableAmount: fromTable?.currentTableAmount,
+            totalItemCount: fromTable?.totalItemCount,
+            userIds: fromTable?.userIds,
           },
           { session },
         );
@@ -1074,32 +1087,58 @@ const tableRouter = new Hono()
             (item) => !itemIds.includes(item._id.toString()),
           );
 
-          // Save the updated `kotOrder` with modified cart
-          await kotOrder.save();
-
-          updatedKotOrders.push({ ...kotOrder.toObject(), removedItems });
+          if (kotOrder.cart.length === 0) {
+            // Delete the KotOrder if the cart is empty
+            await KotOrder.deleteOne({ _id: kotOrder._id });
+          } else {
+            // Save the updated `kotOrder` with modified cart
+            await kotOrder.save();
+            updatedKotOrders.push({ ...kotOrder.toObject(), removedItems });
+          }
 
           // Prepare the new `KotOrder` without `_id` to avoid duplicate key errors
           const { _id, ...newKotOrderData } = kotOrder.toObject();
 
           // Create a new `KotOrder` with the removed items
-          const newKotOrder = await KotOrder.create({
-            ...newKotOrderData,
-            cart: removedItems,
-            tableName: toTable.name,
-            tableId: toTable._id,
-            transferd: true,
-            transferedBy: transferBy,
-            businessId,
-            date: Date.now(),
-          });
+          const newKotOrder = await KotOrder.create(
+            [
+              {
+                ...newKotOrderData,
+                cart: removedItems,
+                tableName: toTable.name,
+                tableId: toTable._id,
+                transferd: true,
+                transferedBy: transferBy,
+                businessId,
+                date: Date.now(),
+              },
+            ],
+            { session },
+          );
+
+          await PetPoojaPinTemp.updateOne(
+            {
+              tableName: fromTable.name,
+              businessId,
+            },
+            {
+              $set: {
+                tableName: toTable.name,
+                transferTableFrom: fromTable._id,
+                transferTableTo: toTable._id,
+                isTransfer: true,
+                transferBy,
+              },
+            },
+            { session },
+          );
         }
 
         return c.json(
           {
-            message: "Table transfer successfully",
+            message: "items transfer successfully",
             err: false,
-            data: updatedKotOrders,
+            data: {},
           },
           200,
         );

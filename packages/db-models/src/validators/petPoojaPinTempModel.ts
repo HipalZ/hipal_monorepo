@@ -24,8 +24,8 @@ export const petPoojaPinTempModelSchema = z.object({
   performedBy: z.string().min(1).max(50).optional(),
   customerIds: z.array(ObjectIdSchema).optional(),
   isTransfer: z.boolean().default(false).optional(),
-  transferTableTo: ObjectIdSchema.optional(),
-  transferTableFrom: ObjectIdSchema.optional(),
+  transferTableTo: z.string().min(1).max(50).optional(),
+  transferTableFrom: z.string().min(1).max(50).optional(),
   transferBy: ObjectIdSchema.optional(),
 });
 

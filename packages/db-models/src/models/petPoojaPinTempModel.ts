@@ -70,14 +70,14 @@ const petPoojaPinTempModelSchema =
       default: false,
     },
     transferTableTo: {
-      type: ObjectId,
+      type: String,
       required: false,
-      ref: "table",
+      default: "",
     },
     transferTableFrom: {
-      type: ObjectId,
+      type: String,
       required: false,
-      ref: "table",
+      default: "",
     },
     transferBy: {
       type: ObjectId,
