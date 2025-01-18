@@ -81,7 +81,7 @@ const MemoCartWithPos = () => {
 
     return (
         <>
-            {cartData?.map((cart, index) => (
+            {cartData && cartData?.length > 0 ? cartData?.map((cart, index) => (
                 <motion.div
                     key={`${cart._id} + ${index}`}
                     layout
@@ -167,7 +167,7 @@ const MemoCartWithPos = () => {
                         }
                     </Card>
                 </motion.div>
-            ))}
+            )) : <center>No Cart Found</center>}
 
             {isPopupOpen && (
                 <BottomPopup height="h-[50dvh]" show={isPopupOpen} onClose={closePopup}>

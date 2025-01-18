@@ -3,6 +3,9 @@ import { HiX } from "react-icons/hi";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/components/utils/helpers";
+import { useLiteStore } from "@/components/store/useLiteStore";
+import { CiGlobe } from "react-icons/ci";
+import { GiTakeMyMoney } from "react-icons/gi";
 
 const MemoBottomPopUp = ({
   children,
@@ -13,6 +16,7 @@ const MemoBottomPopUp = ({
   bottomCross,
   height,
   width,
+  status,
 }: {
   children: React.ReactNode;
   show: boolean;
@@ -22,7 +26,10 @@ const MemoBottomPopUp = ({
   bottomCross?: boolean;
   height?: string;
   width?: string;
+  status?: string;
 }) => {
+
+  const { viewData } = useLiteStore();
   useEffect(() => {
     if (show) {
       const originalHash = window.location.hash;
@@ -88,6 +95,14 @@ const MemoBottomPopUp = ({
                 />
               </div>
             )}
+            <article className={cn("absolute z-50 flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 on_active_bounce left-1/2", status?.length > 0 ? '' : '-top-8')}>
+              {status && status.length > 0 ?
+                <article className={cn("flex items-center p-2 rounded-full bg-green-100")}>
+                  <span>{viewData?.alertType === "ONLINE" ? <CiGlobe size={24} /> : <GiTakeMyMoney size={24} />}</span>&nbsp;
+                  <h1 className="text-base">{status}</h1>
+                </article>
+                : null}
+            </article>
             {children}
             {bottomCross && (
               <button

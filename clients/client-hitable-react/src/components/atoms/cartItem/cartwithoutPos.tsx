@@ -27,7 +27,7 @@ const MemoCartwithoutPos = () => {
     };
     return (
         <>
-            {cartData.map((cart) => (
+            {cartData && cartData?.length > 0 ? cartData.map((cart) => (
                 <motion.div
                     key={cart._id}
                     layout
@@ -136,7 +136,7 @@ const MemoCartwithoutPos = () => {
                         )}
                     </AnimatePresence>
                 </motion.div>
-            ))}
+            )) : <center>No Cart Found</center>}
         </>
     )
 }

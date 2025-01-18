@@ -77,38 +77,35 @@ const DateRangePicker: React.FC = () => {
         <div className="flex flex-wrap items-center justify-start space-x-2">
           <button
             type="button"
-            className={`rounded-full border px-3 py-1 text-xs ${
-              selectedRange === "today" ? "bg-[#000000] text-white" : "bg-white"
-            }`}
+            className={`rounded-full border px-3 py-1 text-xs ${selectedRange === "today" ? "bg-[#000000] text-white" : "bg-white"
+              }`}
             onClick={handleTodayClick}
           >
             Today
           </button>
           <button
             type="button"
-            className={`rounded-full border px-3 py-1 text-xs ${
-              selectedRange === "yesterday"
+            className={`rounded-full border px-3 py-1 text-xs ${selectedRange === "yesterday"
                 ? "bg-[#000000] text-white"
                 : "bg-white"
-            }`}
+              }`}
             onClick={handleYesterdayClick}
           >
             Yesterday
           </button>
           <button
             type="button"
-            className={`rounded-full border px-3 py-1 text-xs ${
-              selectedRange === "daybeforeyesterday"
+            className={`rounded-full border px-3 py-1 text-xs ${selectedRange === "daybeforeyesterday"
                 ? "bg-[#000000] text-white"
                 : "bg-white"
-            }`}
+              }`}
             onClick={handleDayBeforeYesterdayClick}
           >
             {dayBeforeYesterday}
           </button>
         </div>
       </div>
-      <div className="mx-6 date-picker-container">
+      {/* <div className="mx-6 date-picker-container">
         {isCustomDate && (
           <PopUp show={isCustomDate} onClose={() => setIsCustomDate(false)}>
             <div className="flex justify-center p-2 date-picker-container item-center">
@@ -130,7 +127,7 @@ const DateRangePicker: React.FC = () => {
             </div>
           </PopUp>
         )}
-      </div>
+      </div> */}
     </div>
   );
 };
