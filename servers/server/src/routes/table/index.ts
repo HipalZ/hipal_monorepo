@@ -24,6 +24,7 @@ import { Hono } from "hono";
 import type { ClientSession } from "mongodb";
 import { nanoid } from "nanoid";
 import { z } from "zod";
+import { calculateCartBill } from "../../utils/helper";
 //
 const tableRouter = new Hono()
   .get(
@@ -281,6 +282,21 @@ const tableRouter = new Hono()
           );
         }
 
+        await PetPoojaPinTemp.findOneAndUpdate(
+          {
+            businessId: table?.businessId,
+            transferTableFrom: table?._id.toString(),
+          },
+          {
+            $set: {
+              transferTableFrom: "",
+            },
+          },
+          {
+            session,
+          },
+        );
+
         await KotOrder.updateMany(
           {
             tableName: table?.name,
@@ -369,6 +385,7 @@ const tableRouter = new Hono()
             currentTableAmount: 0,
             totalItemCount: 0,
             userIds: [],
+            isTransfer: false,
           },
           { session },
         );
@@ -526,6 +543,21 @@ const tableRouter = new Hono()
           );
         }
 
+        await PetPoojaPinTemp.findOneAndUpdate(
+          {
+            businessId: table?.businessId,
+            transferTableFrom: table?._id.toString(),
+          },
+          {
+            $set: {
+              transferTableFrom: "",
+            },
+          },
+          {
+            session,
+          },
+        );
+
         await KotOrder.updateMany(
           {
             tableName: table?.name,
@@ -603,6 +635,7 @@ const tableRouter = new Hono()
             currentTableAmount: 0,
             totalItemCount: 0,
             userIds: [],
+            isTransfer: false,
           },
           { session },
         );
@@ -984,8 +1017,34 @@ const tableRouter = new Hono()
           400,
         );
       }
+      if (fromTable.status === "EMPTY" || fromTable.totalItemCount === 0) {
+        return c.json(
+          {
+            message: "transfer not possible from empty table",
+            err: true,
+            data: {},
+          },
+          400,
+        );
+      }
 
       if (transferType === "TABLE") {
+        const alreadyTransfer = await Table.findOne({
+          businessId,
+          name: toTable.name,
+          isTransfer: true,
+        });
+
+        if (alreadyTransfer) {
+          return c.json(
+            {
+              message: "Table already transfered",
+              err: true,
+              data: {},
+            },
+            400,
+          );
+        }
         if (toTable.status === "ACTIVE") {
           return c.json(
             {
@@ -1053,6 +1112,7 @@ const tableRouter = new Hono()
             currentTableAmount: fromTable?.currentTableAmount,
             totalItemCount: fromTable?.totalItemCount,
             userIds: fromTable?.userIds,
+            isTransfer: true,
           },
           { session },
         );
@@ -1072,7 +1132,6 @@ const tableRouter = new Hono()
           cart: { $elemMatch: { _id: { $in: itemIds } } },
         });
 
-        let updatedKotOrders = [];
         for (const kotOrder of kotOrders) {
           const removedItems = [];
           for (const item of kotOrder.cart) {
@@ -1080,6 +1139,17 @@ const tableRouter = new Hono()
               // Assuming `transferBy` contains the user ID
               removedItems.push(item);
             }
+          }
+
+          if (removedItems.length === 0) {
+            return c.json(
+              {
+                message: "No items found to transfer",
+                err: true,
+                data: {},
+              },
+              400,
+            );
           }
 
           // Filter out items to be removed from the cart
@@ -1093,11 +1163,14 @@ const tableRouter = new Hono()
           } else {
             // Save the updated `kotOrder` with modified cart
             await kotOrder.save();
-            updatedKotOrders.push({ ...kotOrder.toObject(), removedItems });
           }
 
           // Prepare the new `KotOrder` without `_id` to avoid duplicate key errors
           const { _id, ...newKotOrderData } = kotOrder.toObject();
+
+          console.log("removedItems", removedItems);
+
+          const totalBill = calculateCartBill(removedItems);
 
           // Create a new `KotOrder` with the removed items
           const newKotOrder = await KotOrder.create(
@@ -1123,11 +1196,32 @@ const tableRouter = new Hono()
             },
             {
               $set: {
-                tableName: toTable.name,
                 transferTableFrom: fromTable._id,
                 transferTableTo: toTable._id,
                 isTransfer: true,
                 transferBy,
+              },
+            },
+            { session },
+          );
+
+          await Table.findByIdAndUpdate(
+            fromTableId,
+            {
+              $inc: {
+                currentTableAmount: -totalBill,
+                totalItemCount: -removedItems.length,
+              },
+            },
+            { session },
+          );
+
+          await Table.findByIdAndUpdate(
+            toTableId,
+            {
+              $inc: {
+                currentTableAmount: totalBill,
+                totalItemCount: removedItems.length,
               },
             },
             { session },
@@ -1167,18 +1261,27 @@ const tableRouter = new Hono()
         tableName,
       }).select("transferTableFrom transferTableTo isTransfer transferBy");
 
-      if (!tableSession) {
+      if (!tableSession || tableSession.transferTableFrom === "") {
         tableSession = await PetPoojaPinTemp.findOne({
-          transferTableFrom: tableData?._id,
+          transferTableFrom: tableData?._id.toString(),
           businessId,
         }).select("transferTableFrom transferTableTo isTransfer transferBy");
+
+        if (!tableSession) {
+          tableSession = await PetPoojaPinTemp.findOne({
+            transferTableTo: tableData?._id.toString(),
+            businessId,
+          }).select("transferTableFrom transferTableTo isTransfer transferBy");
+        }
       }
 
       return c.json(
         {
           message: "Table session fetched successfully",
           err: false,
-          data: tableSession || {},
+          data: tableSession || {
+            isTransfer: false,
+          },
         },
         200,
       );

@@ -79,6 +79,11 @@ const tableSchema = new mongoose.Schema<TableType>(
       type: Number,
       required: false,
     },
+    isTransfer: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   {
     timestamps: true,

@@ -1761,6 +1761,26 @@ const paymentsRouter = new Hono()
                   },
                 );
 
+                const tableData = await Table.findOne({
+                  businessId: order.businessId,
+                  name: order.tableName,
+                });
+
+                await PetPoojaPinTemp.findOneAndUpdate(
+                  {
+                    businessId: order.businessId,
+                    transferTableFrom: tableData?._id.toString(),
+                  },
+                  {
+                    $set: {
+                      transferTableFrom: "",
+                    },
+                  },
+                  {
+                    session,
+                  },
+                );
+
                 await TempTableSettle.create(
                   [
                     {
@@ -1802,6 +1822,7 @@ const paymentsRouter = new Hono()
                       totalItemCount: 0,
                       capacity: 0,
                       hiCode: "",
+                      isTransfered: false,
                     },
                   },
                   {
@@ -2797,7 +2818,25 @@ const paymentsRouter = new Hono()
             businessId: getOrder.businessId,
           });
 
-          console.log("activeTable", activeTable);
+          const table = await Table.findOne({
+            businessId: getOrder.businessId,
+            name: getOrder.tableName,
+          });
+
+          await PetPoojaPinTemp.findOneAndUpdate(
+            {
+              businessId: getOrder.businessId,
+              transferTableFrom: table?._id.toString(),
+            },
+            {
+              $set: {
+                transferTableFrom: "",
+              },
+            },
+            {
+              session,
+            },
+          );
 
           const pos = await BusinessPosConfig.findOne({
             businessId: getOrder.businessId,

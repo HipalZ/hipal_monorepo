@@ -40,6 +40,7 @@ export const tableSchema = z.object({
   currentTableAmount: z.number().default(0).optional(),
   date: z.number().optional(),
   isDeleted: z.boolean().default(false).optional(),
+  isTransfer: z.boolean().default(false).optional(),
 });
 
 export type TableType = z.infer<typeof tableSchema>;
