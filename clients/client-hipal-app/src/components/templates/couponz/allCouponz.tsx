@@ -93,9 +93,9 @@ const MemoAllCouponz = () => {
   };
 
   useQuery({
-    queryKey: ["getAllCouponz", businessDetails?.businessId],
+    queryKey: ["getAllCouponz", businessDetails?.businessId, userDetails?._id],
     queryFn: getAllCouponz,
-    enabled: !!businessDetails?.businessId,
+    enabled: !!businessDetails?.businessId && !!userDetails?._id,
   });
 
   if (!!couponz && couponz.length === 0) return null;

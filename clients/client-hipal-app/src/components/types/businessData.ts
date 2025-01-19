@@ -623,3 +623,11 @@ export interface KotOrder {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface ICheckTableSession {
+  data: {
+    isTransfer: boolean;
+  };
+  err: boolean;
+  message: string;
+}

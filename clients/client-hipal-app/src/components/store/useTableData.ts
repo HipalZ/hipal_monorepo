@@ -29,6 +29,9 @@ type TableDataStore = {
 
   isVisible: boolean;
   setIsVisible: (visible: boolean) => void;
+
+  isTransfer: boolean;
+  setIsTransfer: (transfer: boolean) => void;
 };
 
 const useTableData = create(
@@ -54,6 +57,10 @@ const useTableData = create(
 
       isVisible: false,
       setIsVisible: (visible: boolean) => set(() => ({ isVisible: visible })),
+
+      isTransfer: false,
+      setIsTransfer: (transfer: boolean) =>
+        set(() => ({ isTransfer: transfer })),
     }),
     {
       name: "table-store",
@@ -71,5 +78,6 @@ export const resetTableData = () => {
     hiCodeUser: { name: "", phone: "", success: false },
     hiCodePromptTimer: 0,
     tableNameTimeStamp: null,
+    isTransfer: false,
   });
 };

@@ -178,7 +178,7 @@ export const useCartStore = create(
       },
 
       cartHistory: [],
-      setCartHistory: (history: ICartHistory[]) => {
+      setCartHistory: (history) => {
         set({ cartHistory: history });
       },
 

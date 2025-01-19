@@ -1,29 +1,28 @@
-import { memo, useCallback, useMemo, useState } from "react";
-import dynamic from "next/dynamic";
-import useTableData, { type HiCodeUser } from "@/components/store/useTableData";
-import { useCartStore } from "@/components/store/useCartStore";
-import { useUserToken } from "@hi/common/src/useUserToken";
-import { useCart } from "@/components/store/useCart";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { apiRpc } from "@hi/common";
-import { useLogin } from "@/components/store/useLogin";
-import { useParams, useRouter } from "next/navigation";
+import { cn } from "@/components/utils/helpers";
+import { FaArrowLeft } from "react-icons/fa";
+import { MdOutlineShoppingCart } from "react-icons/md";
+import { memo, useCallback, useMemo, useState } from "react";
+import { motion } from "framer-motion"
+import { PiArrowBendUpLeftBold } from "react-icons/pi";
 import { toast } from "react-toastify";
 import { useCallTheCaptain } from "@/components/hooks/useCartHook";
-import useBusinessDetails from "@/components/store/useBusinessDetails";
+import { useCart } from "@/components/store/useCart";
+import { useCartStore } from "@/components/store/useCartStore";
+import { useLogin } from "@/components/store/useLogin";
+import { useParams, useRouter } from "next/navigation";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import { motion } from "framer-motion"
-import { cn } from "@/components/utils/helpers";
+import { useUserToken } from "@hi/common/src/useUserToken";
+import dynamic from "next/dynamic";
 import glassTable from "@/assets/cart/glassTable.png";
 import Image from "next/image";
-import { MdOutlineShoppingCart } from "react-icons/md";
 import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
-import ConfirmPayment from "./confirmPayment";
-import { PiArrowBendUpLeftBold } from "react-icons/pi";
-import { FaArrowLeft } from "react-icons/fa";
-import { usePlaceOrder } from "@/components/hooks/usePayments";
-import EmptyCart from "./emptyCart";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
+import useTableData, { resetTableData, type HiCodeUser } from "@/components/store/useTableData";
 
+const ConfirmPayment = dynamic(() => import("./confirmPayment"), { ssr: false });
+const EmptyCart = dynamic(() => import("./emptyCart"), { ssr: false });
 const PaymentAlert = dynamic(() => import("./paymentAlert"), { ssr: false });
 const CartPayment = dynamic(() => import("./cartPayment"), { ssr: false });
 const SwipeToPlaceOrder = dynamic(() => import("./swipeToPlaceOrder"));
@@ -147,7 +146,10 @@ const Cart = () => {
           triggerModal();
           setHiCode(res?.data?.hiCode || null);
           return true;
-        } if (response.status === 403) {
+        } if (response.status === 401) {
+          resetTableData();
+        }
+        if (response.status === 403) {
           setHiCodeUser(res?.data as HiCodeUser);
           setHiCodePopup(true);
         } else {
@@ -225,6 +227,9 @@ const Cart = () => {
     setShowCart,
     setHiCodeUser,
     setHiCodePopup,
+    triggerModal,
+    setCheckLogin,
+    hiCode
   ]);
 
   const payBill = useCallback(() => {

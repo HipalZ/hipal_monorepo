@@ -20,6 +20,7 @@ import { apiRpc } from "@hi/common";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { User, ChevronUp, ChevronDown } from 'lucide-react'
 import { cn } from "@/components/utils/helpers";
+import OrdersHeader from "./headerOrders";
 
 const MemoOrders = () => {
   const { cartHistory, setCartHistory } = useCartStore();
@@ -61,7 +62,7 @@ const MemoOrders = () => {
     queryKey: ["pos", userDetails?._id, outletInfo?.businessId, tableName],
     queryFn: getOrderFromPos,
     enabled: cartPage === "order",
-    staleTime: 1000 * 30,
+    staleTime: 1000 * 10,
   });
 
   // Loading Spinner
@@ -92,24 +93,7 @@ const MemoOrders = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-100">
       {/* Header */}
-      <header className="poppins-regular sticky top-0 flex-none bg-white border-b">
-        <div className="flex items-center justify-between p-4">
-          <h1 className="text-2xl font-medium">Final Cart</h1>
-          <div className="flex items-center gap-2 text-gray-600">
-            {cartHistory[0]?.tableName && (
-              <div className="text-sm text-gray-500 inline-flex items-center gap-1">
-                <Image src={glassTable} alt="Table" className="pb-1" />
-                <span className="text-base">Table {cartHistory[0]?.tableName}</span>
-              </div>
-            )}
-          </div>
-          <article onKeyDown={openScanAndPay} onClick={openScanAndPay} className="relative inline-block">
-            <RiQrScan2Line size={36} />
-            <span className="absolute -top-1 -right-1 block w-3 h-3 bg-green-600 rounded-full animate-ping" />
-            <span className="absolute -top-1 -right-1 block w-3 h-3 bg-green-600 rounded-full" />
-          </article>
-        </div>
-      </header>
+      <OrdersHeader />
 
       {/* Scrollable Content */}
       <main className="flex-1 pb-20 overflow-auto bg-gray-50/50">

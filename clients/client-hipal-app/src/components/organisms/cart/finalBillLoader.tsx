@@ -96,7 +96,7 @@ const MemoFinalBillLoader = () => {
                     </span>
                 </button>
                 {!isButtonDisabled ?
-                    <CallTheCaptain />
+                    <CallTheCaptain messageToSend='Please Settle My Table' />
                     :
                     null}
             </motion.div>
