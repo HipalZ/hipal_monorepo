@@ -42,12 +42,13 @@ function App() {
   } = useLiteStore();
   const { initializePushNotifications, initializedRef } =
     usePushNotifications();
-  const { selectedBiz, platform, pushToken, notification } = useHiClientZ(
+  const { selectedBiz, platform, pushToken, notification, captainData } = useHiClientZ(
     (s) => ({
       selectedBiz: s.selectedBiz,
       platform: s.platform,
       pushToken: s.pushToken,
       notification: s.notification,
+      captainData: s.captainData,
     }),
   );
 
@@ -64,10 +65,15 @@ function App() {
   };
 
   useEffect(() => {
-    if (accessToken && pushToken && selectedBiz?.businessId?.name) {
+    const isValidBusiness = captainData?.customRole?.some(
+      (role) => role.businessId?._id === selectedBiz?.businessId?._id
+    );
+
+    if (accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness) {
+      console.log('isValidBusiness', isValidBusiness);
       navigate(`/${selectedBiz?.businessId?._id}/alerts`);
     }
-  }, []);
+  }, [accessToken, pushToken, selectedBiz, captainData, navigate]);
 
   useEffect(() => {
     initializedRef.current = false;
