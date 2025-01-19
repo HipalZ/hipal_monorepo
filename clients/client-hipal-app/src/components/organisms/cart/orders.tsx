@@ -45,7 +45,7 @@ const MemoOrders = () => {
   // Fetch Orders from POS
   const getOrderFromPos = async () => {
     const response = await apiRpc.pos.fetch_kot_by_table.$get({
-      query: { businessId: outletInfo?.businessId || "", tableName },
+      query: { businessId: outletInfo?.businessId || "", tableName, userId: userDetails?._id },
     });
     const res = await response.json();
     setCartHistory(res.data);
