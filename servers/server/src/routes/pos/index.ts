@@ -40,7 +40,7 @@ interface AxiosError {
   message: string;
 }
 
-const generateTenDigitCode = (): string => {
+export const generateTenDigitCode = (): string => {
   const min = 1000000000; // Minimum 10-digit number
   const max = 9999999999; // Maximum 10-digit number
   const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;

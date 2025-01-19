@@ -25,6 +25,7 @@ import type { ClientSession } from "mongodb";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { calculateCartBill } from "../../utils/helper";
+import { generateTenDigitCode } from "../pos";
 //
 const tableRouter = new Hono()
   .get(
@@ -1200,7 +1201,7 @@ const tableRouter = new Hono()
             { session },
           );
 
-          await PetPoojaPinTemp.updateOne(
+          const old = await PetPoojaPinTemp.findOneAndUpdate(
             {
               tableName: fromTable.name,
               businessId,
@@ -1216,6 +1217,47 @@ const tableRouter = new Hono()
             },
             { session },
           );
+
+          const fromTempTable = await PetPoojaPinTemp.findOneAndUpdate({
+            tableName: fromTable.name,
+            businessId,
+          });
+          let hiCode = "";
+          if (!fromTempTable) {
+            hiCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+            const pos = await BusinessPosConfig.findOne({
+              businessId,
+            }).populate("posId");
+            const tenDigitCode = generateTenDigitCode();
+            const registerUser = await axios.post(
+              "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
+              {
+                app_key: pos?.posId.accessKey,
+                app_secret: pos?.posId.secretKey,
+                access_token: pos?.posId.authToken,
+                restID: pos?.posId.restId,
+                phone: tenDigitCode,
+                name: old.customerName || "Guest",
+              },
+            );
+            await PetPoojaPinTemp.create(
+              [
+                {
+                  businessId,
+                  tableName: fromTable.name,
+                  transferTableFrom: fromTable._id,
+                  transferTableTo: toTable._id,
+                  isTransfer: true,
+                  transferBy,
+                  transferType: "ITEM",
+                  hiCode: hiCode,
+                  pin: tenDigitCode,
+                },
+              ],
+              { session },
+            );
+          }
 
           await Table.findByIdAndUpdate(
             fromTableId,
@@ -1235,6 +1277,9 @@ const tableRouter = new Hono()
                 currentTableAmount: totalBill,
                 totalItemCount: removedItems.length,
               },
+              hiCode: fromTempTable?.hiCode || hiCode,
+              status: "ACTIVE",
+              isTransfer: true,
             },
             { session },
           );
@@ -1271,19 +1316,28 @@ const tableRouter = new Hono()
       let tableSession = await PetPoojaPinTemp.findOne({
         businessId,
         tableName,
-      }).select("transferTableFrom transferTableTo isTransfer transferBy");
+        transferType: "TABLE",
+      }).select(
+        "transferTableFrom transferTableTo isTransfer transferBy transferType",
+      );
 
       if (!tableSession || tableSession.transferTableFrom === "") {
         tableSession = await PetPoojaPinTemp.findOne({
           transferTableFrom: tableData?._id.toString(),
           businessId,
-        }).select("transferTableFrom transferTableTo isTransfer transferBy");
+          transferType: "TABLE",
+        }).select(
+          "transferTableFrom transferTableTo isTransfer transferBy transferType",
+        );
 
         if (!tableSession) {
           tableSession = await PetPoojaPinTemp.findOne({
             transferTableTo: tableData?._id.toString(),
             businessId,
-          }).select("transferTableFrom transferTableTo isTransfer transferBy");
+            transferType: "TABLE",
+          }).select(
+            "transferTableFrom transferTableTo isTransfer transferBy transferType",
+          );
         }
       }
 
