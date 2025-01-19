@@ -710,6 +710,7 @@ const posRouter = new Hono()
           phoneNumbers: customerPhone,
           isTransfer: true,
           transferTableTo: { $exists: true },
+          transferType: "TABLE",
         });
 
         const sessionTable = await Table.findOne({

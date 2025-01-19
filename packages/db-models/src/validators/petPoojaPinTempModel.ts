@@ -27,6 +27,7 @@ export const petPoojaPinTempModelSchema = z.object({
   transferTableTo: z.string().min(1).max(50).optional(),
   transferTableFrom: z.string().min(1).max(50).optional(),
   transferBy: ObjectIdSchema.optional(),
+  transferType: z.enum(["TABLE", "ITEM"]).optional(),
 });
 
 export type PetPoojaPinTempModelType = z.infer<

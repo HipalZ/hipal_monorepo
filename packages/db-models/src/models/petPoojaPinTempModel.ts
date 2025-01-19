@@ -84,6 +84,12 @@ const petPoojaPinTempModelSchema =
       required: false,
       ref: "User",
     },
+    transferType: {
+      type: String,
+      enum: ["TABLE", "ITEM"],
+      required: false,
+      default: "TABLE",
+    },
   });
 
 petPoojaPinTempModelSchema.index(
