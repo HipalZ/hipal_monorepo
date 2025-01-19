@@ -1330,7 +1330,6 @@ const tableRouter = new Hono()
       let tableSession = await PetPoojaPinTemp.findOne({
         businessId,
         tableName,
-        transferType: "TABLE",
       }).select(
         "transferTableFrom transferTableTo isTransfer transferBy transferType",
       );
@@ -1339,7 +1338,6 @@ const tableRouter = new Hono()
         tableSession = await PetPoojaPinTemp.findOne({
           transferTableFrom: tableData?._id.toString(),
           businessId,
-          transferType: "TABLE",
         }).select(
           "transferTableFrom transferTableTo isTransfer transferBy transferType",
         );
@@ -1348,7 +1346,6 @@ const tableRouter = new Hono()
           tableSession = await PetPoojaPinTemp.findOne({
             transferTableTo: tableData?._id.toString(),
             businessId,
-            transferType: "TABLE",
           }).select(
             "transferTableFrom transferTableTo isTransfer transferBy transferType",
           );
