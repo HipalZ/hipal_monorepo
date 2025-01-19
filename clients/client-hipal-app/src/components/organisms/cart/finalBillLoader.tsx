@@ -95,10 +95,7 @@ const MemoFinalBillLoader = () => {
                         {isButtonDisabled ? "Please wait..." : "Scan and pay"}
                     </span>
                 </button>
-                {!isButtonDisabled ?
-                    <CallTheCaptain messageToSend='Please Settle My Table' />
-                    :
-                    null}
+                {!isButtonDisabled ? <CallTheCaptain messageToSend='Please Settle My Table' /> : null}
             </motion.div>
         </div>
     )

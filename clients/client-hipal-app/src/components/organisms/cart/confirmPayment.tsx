@@ -1,18 +1,19 @@
 "use client";
 
-import dynamic from "next/dynamic"
+import { apiRpc } from "@hi/common";
+import { cn } from "@/components/utils/helpers"
 import { memo, useCallback } from "react";
 import { motion } from "framer-motion";
-import useTableData from "@/components/store/useTableData"
-import BillPrint from "@/assets/cart/BillPrint.png"
-import KotMachine from "@/assets/cart/KotMachine.png";
-import BillImage from "@/assets/call/BillImage.png";
-import { cn } from "@/components/utils/helpers"
 import { useCart } from "@/components/store/useCart"
 import { useQuery } from "@tanstack/react-query";
-import { apiRpc } from "@hi/common";
+import BillImage from "@/assets/call/BillImage.png";
+import BillPrint from "@/assets/cart/BillPrint.png"
+import dynamic from "next/dynamic"
+import KotMachine from "@/assets/cart/KotMachine.png";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
+import useTableData from "@/components/store/useTableData"
 
+const ScannerButton = dynamic(() => import("./scannerButton"));
 const TransitionImages = dynamic(() => import("./transitionImages"));
 const CallTheCaptain = dynamic(() => import("./callTheCaptain"));
 const SwipeToPlaceOrder = dynamic(() => import("./swipeToPlaceOrder"))
@@ -52,13 +53,14 @@ const MemoConfirmPayment = () => {
 
     return (
         <>
-            <article className="flex flex-col items-center px-6 py-8 bg-white">
+            <article className="flex flex-col items-center p-6 bg-white">
                 <div className="w-full max-w-md space-y-3 text-center my-4 poppins-regular">
-                    <h1 className="text-2xl font-bold text-black">
+                    <h1 className="text-2xl font-bold text-black inline-flex items-center">
                         {isTransfer ? "Table Transfer Notice" : "Before we get you bill!"}
                     </h1>
-                    <p className="text-lg text-[#CACACA]">
-                        Table: {tableName}
+                    <p className={cn(isTransfer ? "justify-around" : "justify-center", "text-lg flex items-center")}>
+                        <span>Table: {tableName}</span>
+                        <span>{isTransfer ? <ScannerButton /> : null}</span>
                     </p>
                 </div>
                 <div className="relative bg-[#8DC1F120] w-[250px] mb-8 aspect-square rounded-full overflow-hidden">
@@ -89,7 +91,7 @@ const MemoConfirmPayment = () => {
                     {isTransfer ? "Go Back" : "Go Back and Check Again"}
                 </button>
                 {!isTransfer && <SwipeToPlaceOrder placeOrder={placeOrder} />}
-                {isTransfer && <CallTheCaptain messageToSend="Please Settle My Table" />}
+                {isTransfer && <CallTheCaptain messageToSend="Please Settle My Table" messageDisplay="Ask Captain To Get Bill" className="text-green-700 border-green-700" />}
             </article>
         </>
     )

@@ -8,6 +8,10 @@ const DynamicScanPage = dynamic(() => import("@/components/atoms/dynamicScanPage
   ssr: false,
 });
 
+const DynamicInternetConnection = dynamic(() => import("@/components/atoms/internetConnection"), {
+  ssr: false,
+});
+
 const DynamicToast = dynamic(
   () => import("@/components/atoms/toastContainer"),
   { ssr: false },
@@ -124,6 +128,7 @@ export default function RootLayout({
       <body className={`${ubuntu.className}`}>
         <Suspense fallback={<Loading />}>
           <section className="relative !z-[9999]">
+            <DynamicInternetConnection />
             <DynamicToast />
           </section>
           <DynamicQueryComponent>
