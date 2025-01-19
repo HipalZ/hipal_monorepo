@@ -1280,6 +1280,7 @@ const tableRouter = new Hono()
               hiCode: fromTempTable?.hiCode || hiCode,
               status: "ACTIVE",
               isTransfer: true,
+              transferType: "ITEM",
             },
             { session },
           );
