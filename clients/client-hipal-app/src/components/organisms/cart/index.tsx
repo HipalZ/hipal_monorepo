@@ -151,8 +151,8 @@ const Cart = () => {
           resetTableData();
         } if (response.status === 409) {
           toast.error(res?.message)
-          setTableName(res?.data?.tableName)
-          setHiCode(res?.data?.hiCode)
+          setTableName(res?.data?.data?.tableName)
+          setHiCode(res?.data?.data?.hiCode)
         }
         if (response.status === 403) {
           setHiCodeUser(res?.data as HiCodeUser);

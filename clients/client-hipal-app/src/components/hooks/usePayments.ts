@@ -712,6 +712,7 @@ export const usePlaceOrder = () => {
   const { setShowCart, setOrderPlaced } = useCart();
   const {
     tableName,
+    setTableName,
     setHiCode,
     hiCode,
     setHiCodePopup,
@@ -766,6 +767,11 @@ export const usePlaceOrder = () => {
           setHiCode(res?.data?.hiCode || null);
           useCartStore.setState({ cart: [] });
           return true;
+        }
+        if (response.status === 409) {
+          toast.error(res?.message);
+          setTableName(res?.data?.data?.tableName);
+          setHiCode(res?.data?.data?.hiCode);
         }
         if (response.status === 403) {
           setHiCodeUser(res?.data as HiCodeUser);
