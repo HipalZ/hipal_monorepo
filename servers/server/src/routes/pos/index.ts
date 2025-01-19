@@ -705,7 +705,6 @@ const posRouter = new Hono()
         } = await c.req.json();
 
         const userTableSession = await PetPoojaPinTemp.findOne({
-          hiCode: hiCode,
           businessId: businessId,
           phoneNumbers: customerPhone,
           isTransfer: true,
