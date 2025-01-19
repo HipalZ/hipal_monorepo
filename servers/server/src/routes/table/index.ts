@@ -1037,7 +1037,13 @@ const tableRouter = new Hono()
           isTransfer: true,
         });
 
-        if (alreadyTransfer) {
+        const alreadyTransfer2 = await Table.findOne({
+          businessId,
+          name: fromTable.name,
+          isTransfer: true,
+        });
+
+        if (alreadyTransfer || alreadyTransfer2) {
           return c.json(
             {
               message: "Table already transfered",
