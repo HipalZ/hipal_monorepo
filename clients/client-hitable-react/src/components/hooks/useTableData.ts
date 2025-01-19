@@ -1,14 +1,21 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import useBusinessData from "../store/useBusinessData";
 import type { TableData } from "../store/useZonesAndTable";
-import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useOrderStore } from "../store/useOrderData";
 import { useHiClientZ } from "../store/useHiClientzData";
 import toast from "react-hot-toast";
-import type { ITransferPayload } from "../types/tableTransfer";
+
+export interface ITransferPayload {
+  businessId: string;
+  transferBy: string;
+  transferType: "TABLE" | "ITEM";
+  fromTableId: string;
+  toTableId: string;
+  itemIds?: string[];
+}
 
 export const useTableData = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -55,6 +62,9 @@ export const useTableTransfer = (businessId: string) => {
     setTransferModal,
     setTransferTable,
     setOpenOrderModal,
+    selectedItems,
+    setSelectedItems,
+    transferTable,
   } = useOrderStore();
   const captainData = useHiClientZ((s) => s.captainData);
 
@@ -80,17 +90,32 @@ export const useTableTransfer = (businessId: string) => {
     setTransferModal(false);
     setTransferTable("");
     setToTable(null);
+    setSelectedItems([]);
     setIsConfirming(false);
   };
 
   const confirmTransfer = async () => {
-    if (selectedTable && toTable) {
+    if (!toTable) {
+      return toast.error("Please select a table to transfer");
+    }
+    if (transferTable === "TABLE" && toTable && selectedTable) {
       const payload: ITransferPayload = {
         businessId: businessId,
         transferBy: captainData._id || "",
-        transferType: "TABLE",
+        transferType: transferTable?.toUpperCase() as "TABLE",
+        fromTableId: selectedTable?._id,
+        toTableId: toTable?._id,
+      };
+      await mutateAsync(payload);
+    }
+    if (transferTable === "ITEM" && toTable && selectedTable) {
+      const payload: ITransferPayload = {
+        businessId: businessId,
+        transferBy: captainData._id || "",
+        transferType: transferTable?.toUpperCase() as "ITEM",
         fromTableId: selectedTable._id,
-        toTableId: toTable._id,
+        toTableId: toTable?._id || "",
+        itemIds: selectedItems,
       };
       await mutateAsync(payload);
     }

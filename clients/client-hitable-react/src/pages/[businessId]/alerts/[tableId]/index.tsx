@@ -281,12 +281,12 @@ const TablePos = () => {
                         transferModal && (
                             <BottomPopUp hide show={transferModal} onClose={closeTransferModal}>
                                 {
-                                    transferTable === 'item' && (
+                                    transferTable === 'ITEM' && (
                                         <TransferItem />
                                     )
                                 }
                                 {
-                                    transferTable === 'table' && (
+                                    transferTable === 'TABLE' && (
                                         <EmptyTableList transfer />
                                     )
                                 }
