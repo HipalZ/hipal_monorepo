@@ -1219,7 +1219,7 @@ const tableRouter = new Hono()
           );
 
           const fromTempTable = await PetPoojaPinTemp.findOneAndUpdate({
-            tableName: fromTable.name,
+            tableName: toTable.name,
             businessId,
           });
           let hiCode = "";
