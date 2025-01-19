@@ -73,7 +73,7 @@ function App() {
       console.log('isValidBusiness', isValidBusiness);
       navigate(`/${selectedBiz?.businessId?._id}/alerts`);
     }
-  }, [accessToken, pushToken, selectedBiz, captainData, navigate]);
+  }, []);
 
   useEffect(() => {
     initializedRef.current = false;
