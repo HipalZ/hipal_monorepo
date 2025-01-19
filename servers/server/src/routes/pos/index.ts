@@ -1436,6 +1436,7 @@ const posRouter = new Hono()
       const sessionTableInfo = await PetPoojaPinTemp.findOne({
         transferTableFrom: TableInfo?._id.toString(),
         businessId: businessId,
+        phoneNumbers: user.phone,
         isTransfer: true,
       });
 
