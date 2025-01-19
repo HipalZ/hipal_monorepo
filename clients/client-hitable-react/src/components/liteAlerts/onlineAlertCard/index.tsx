@@ -29,7 +29,6 @@ const OnlineAlertCard = ({ onlineAlertData }: IOnlineProp) => {
       setViewData: s.setViewData,
     }),
   );
-  const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const captainData = useHiClientZ((s) => s.captainData);
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
 
@@ -49,7 +48,7 @@ const OnlineAlertCard = ({ onlineAlertData }: IOnlineProp) => {
   };
   const handleViewMore = (alert: Alert) => {
     setViewData(alert);
-    setClickViewMore(!clickViewMore);
+    setClickViewMore(true);
   };
 
 
@@ -120,15 +119,20 @@ const OnlineAlertCard = ({ onlineAlertData }: IOnlineProp) => {
                     alert?.status === "FAIL" ? "bg-red-50" : "bg-green-50",
                   )}
                 >
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive bg-destructive/10"
-                    onClick={() => removeAlert(alert?._id)}
-                  >
-                    <IoCloseCircleSharp className="w-4 h-4 mr-2" />
-                    Remove
-                  </Button>
+                  {
+                    alert.alertType !== "OFFLINE" && (
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive bg-destructive/10"
+                        onClick={() => removeAlert(alert?._id)}
+                      >
+                        <IoCloseCircleSharp className="w-4 h-4 mr-2" />
+                        Remove
+                      </Button>
+                    )
+                  }
                   <Button
                     variant="outline"
                     size="sm"

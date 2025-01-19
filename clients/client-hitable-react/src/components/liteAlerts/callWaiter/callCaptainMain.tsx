@@ -42,7 +42,7 @@ const MemoCallCaptain = ({ offlineAlertData }: IOfflineProp) => {
 
     const handleViewMore = (alert: Alert) => {
         setViewData(alert);
-        setClickViewMore(!clickViewMore);
+        setClickViewMore(true);
     };
 
     const removeAlert = async (id: string) => {

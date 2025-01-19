@@ -11,6 +11,7 @@ import { FiCopy } from "react-icons/fi";
 import { MdOutlineCall } from "react-icons/md";
 import LoadingSpinner from "../loadingSpinner";
 import toast from "react-hot-toast";
+import NormalSettle from "../placeOrders/normalsettle";
 const BottomPopUp = lazy(() => import("../universalPopup"));
 
 const BillPopUpMemo = () => {
@@ -22,6 +23,9 @@ const BillPopUpMemo = () => {
       removeOfflineAlert: s.removeOfflineAlert,
     }),
   );
+
+
+
   const [textTick, setTextTick] = useState(false);
   const [numberTick, setNumberTick] = useState(false);
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
@@ -29,6 +33,7 @@ const BillPopUpMemo = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [comment, setComment] = useState("");
   const captainData = useHiClientZ((s) => s.captainData);
+  const [normalSettle, setNormalSettle] = useState<boolean>(false);
 
   const copyText = useCallback((id: string, value?: string) => {
     let text: string;
@@ -70,13 +75,13 @@ const BillPopUpMemo = () => {
       return errorText();
     }
     toast.success("order reject successfully");
-    setClickViewMore(!clickViewMore);
+    setClickViewMore(false);
     removeOfflineAlert(id);
   };
 
   const handleCloseOnline = useCallback(() => {
-    setClickViewMore(!clickViewMore);
-  }, [setClickViewMore, clickViewMore]);
+    setClickViewMore(false);
+  }, [setClickViewMore]);
 
   const handleConfirmAlert = async (id: string, comment: string) => {
     setIsLoading(true);
@@ -85,6 +90,8 @@ const BillPopUpMemo = () => {
       json: {
         comment: comment,
         waiterName: captainData?.name,
+        settleModes: [],
+        split: false,
       },
     });
     if (res.status === 401) {
@@ -119,13 +126,25 @@ const BillPopUpMemo = () => {
     [],
   );
 
+  const handleAccept = () => {
+    setNormalSettle(true);
+  };
+
+  const closeNormalSettle = () => {
+    setNormalSettle(false);
+  }
+
+  if (isLoading) {
+    return <LoadingSpinner />
+  }
+
 
   return (
     <BottomPopUp height="h-[85dvh]" status={viewData?.alertType} show={clickViewMore} onClose={handleCloseOnline}>
-      <>
-        {isLoading ? (
-          <LoadingSpinner />
-        ) : (
+      {
+        normalSettle ? (
+          <NormalSettle closeNormalSettle={closeNormalSettle} data={{ total: Number(viewData?.order_id?.total) }} alertData={viewData} />
+        ) :
           <section className='hide-scrollbar' style={{ maxHeight: "90%", overflowY: "auto" }}>
             <div className="flex justify-between mx-6 mt-10">
               <h1 className="text-gray-500">
@@ -260,10 +279,10 @@ const BillPopUpMemo = () => {
                 </span>
               </div>
             </div>
-            {selectedNavItem === "on floor" ? (
+            {viewData?.alertType === "OFFLINE" ? (
               <label className="mx-6">Add Comment (optional)</label>
             ) : null}
-            {selectedNavItem === "on floor" ? (
+            {viewData?.alertType === "OFFLINE" ? (
               <div className="mx-6 mt-4 mb-20">
                 <textarea
                   onChange={handleAddComment}
@@ -301,7 +320,7 @@ const BillPopUpMemo = () => {
                   </button>
                   <button
                     type="button"
-                    onClick={() => handleConfirm(viewData?._id, comment)}
+                    onClick={handleAccept}
                     className={
                       "btn btn-black btn-md my-auto mr-4 min-h-[3rem] w-[100%] max-w-[10rem] rounded-full bg-black !py-1 text-[1rem] capitalize text-white shadow-lg"
                     }
@@ -312,8 +331,7 @@ const BillPopUpMemo = () => {
               </div>
             )}
           </section>
-        )}
-      </>
+      }
     </BottomPopUp>
   );
 };

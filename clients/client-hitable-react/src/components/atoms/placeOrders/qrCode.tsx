@@ -95,7 +95,7 @@ const MemoQrCode = ({ data, qrBillId, toggleQr }: { data: IBillData; qrBillId: s
         }
         toast.success("reject successfully");
         setShowStatus(false);
-        setClickViewMore(!clickViewMore);
+        setClickViewMore(false);
         removeOfflineAlert(id);
     };
 

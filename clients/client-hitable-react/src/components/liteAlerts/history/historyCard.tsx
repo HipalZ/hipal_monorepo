@@ -15,12 +15,11 @@ const HistoryCard = (props: IOnlineProp) => {
   const { setViewData } = useLiteStore((s) => ({
     setViewData: s.setViewData,
   }));
-  const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
 
   const handleViewMore = (alert: Alert) => {
     setViewData(alert);
-    setClickViewMore(!clickViewMore);
+    setClickViewMore(true);
   };
 
   return (

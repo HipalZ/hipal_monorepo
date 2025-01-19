@@ -54,13 +54,14 @@ const MemoZones: FC = () => {
     queryKey: ["zones", businessId],
     queryFn: () => fetchZones(businessId || ""),
     enabled: !!businessId,
-    // staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60
   });
 
   const { isLoading: tablesLoading } = useQuery({
     queryKey: ["tables", businessId],
     queryFn: () => fetchTables(businessId || ""),
     enabled: !!businessId,
+    refetchInterval: 1000 * 30,
     // staleTime: 1000 * 15,
   });
 

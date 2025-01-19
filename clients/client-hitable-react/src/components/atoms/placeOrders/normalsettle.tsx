@@ -11,6 +11,7 @@ import { useOrderStore } from "@/components/store/useOrderData";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import MultipleModes from "./multipleModes";
 import SingleMode from "./singleMode";
+import { useLiteStore } from "@/components/store/useLiteStore";
 
 export interface IMode {
     _id: string;
@@ -34,12 +35,13 @@ const MemoNormalSettle = ({
     data: billData,
     alertData,
 }: {
-    data: IBillData;
+    data?: IBillData;
     closeNormalSettle: () => void;
     alertData?: Alert;
 }) => {
     const { businessId } = useParams();
     const navigate = useNavigate();
+    const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
 
     const {
         selectedTable,
@@ -119,6 +121,7 @@ const MemoNormalSettle = ({
                     comment,
                     waiterName: captainData?.name,
                     settleModes,
+                    split: settleModes.length > 1,
                 },
             });
             if (res.status === 401) {
@@ -135,6 +138,7 @@ const MemoNormalSettle = ({
             setIsSplit(false);
             closeNormalSettle();
             setOpenOrderModal(false);
+            setClickViewMore(false);
             navigate(`/${businessId}/alerts`);
         },
         onError: (error: any) => {
@@ -239,7 +243,7 @@ const MemoNormalSettle = ({
                         },
                         {
                             text: "Confirm",
-                            onClick: () => handleConfirm(),
+                            onClick: async () => await handleConfirm(),
                             className: "w-full rounded-md",
                             disable: settleModes.length === 0,
                             isLoading: isSettling || isAlertLoading,

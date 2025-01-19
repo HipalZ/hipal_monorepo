@@ -48,8 +48,6 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
     } = useOrderStore();
     const captainData = useHiClientZ((s) => s.captainData);
 
-    console.log("selectedTable", settleModes);
-
     const handleForceSettle = () => {
         setForceSettle(true);
     };

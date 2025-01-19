@@ -85,7 +85,7 @@ const Overview = () => {
             <CardTitle>Today's Sales</CardTitle>
           </CardHeader>
           <CardContent>
-            <h2 className="text-4xl font-bold">₹ {salesData?.totalSale.toLocaleString("en-IN")}</h2>
+            <h2 className="text-4xl font-bold">₹ {salesData?.totalSale?.toLocaleString("en-IN")}</h2>
           </CardContent>
         </Card>
 
@@ -94,7 +94,7 @@ const Overview = () => {
             <CardTitle>Total Discount</CardTitle>
           </CardHeader>
           <CardContent>
-            <h2 className="text-4xl font-bold">₹ {salesData?.totalTips.toLocaleString("en-IN")}</h2>
+            <h2 className="text-4xl font-bold">₹ {salesData?.totalDiscount?.toLocaleString("en-IN")}</h2>
           </CardContent>
         </Card>
       </div>
