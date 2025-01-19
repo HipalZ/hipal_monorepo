@@ -704,6 +704,31 @@ const posRouter = new Hono()
           hiCode,
         } = await c.req.json();
 
+        const findUserActiveSession = await PetPoojaPinTemp.findOne({
+          businessId: businessId,
+          phoneNumbers: customerPhone,
+        });
+        if (
+          findUserActiveSession &&
+          findUserActiveSession.tableName !== tableName &&
+          findUserActiveSession.isTransfer === false
+        ) {
+          return c.json(
+            {
+              message: `User already active on table ${findUserActiveSession.tableName}`,
+              err: true,
+              data: {
+                success: false,
+                data: {
+                  tableName: findUserActiveSession.tableName,
+                  hiCode: findUserActiveSession.hiCode,
+                },
+              },
+            },
+            409,
+          );
+        }
+
         const userTableSession = await PetPoojaPinTemp.findOne({
           businessId: businessId,
           phoneNumbers: customerPhone,
@@ -716,8 +741,6 @@ const posRouter = new Hono()
           businessId: businessId,
           _id: userTableSession?.transferTableTo?.toString(),
         });
-
-        console.log("sessionTable", sessionTable);
 
         const user = await User.findOne({ phone: customerPhone });
         if (!user) {
