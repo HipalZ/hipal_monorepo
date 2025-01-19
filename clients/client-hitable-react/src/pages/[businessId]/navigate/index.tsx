@@ -27,13 +27,13 @@ const Navigate: React.FC = () => {
             bgColor="bg-green-100"
             textColor="text-green-700"
           />
-          <Card
+          {/* <Card
             title="Zones and Tables"
             icon={<FaMapMarkerAlt className="text-3xl" />}
             onClick={navigateToZone}
             bgColor="bg-blue-100"
             textColor="text-blue-700"
-          />
+          /> */}
         </div>
       </div>
     </>

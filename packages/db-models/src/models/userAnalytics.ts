@@ -42,6 +42,23 @@ const userAnalyticsSchema = new mongoose.Schema<UserAnalytics>({
     type: String,
     required: false,
   },
+  couponCount: {
+    type: Number,
+    required: false,
+  },
+  currentCoins: {
+    type: Number,
+    required: false,
+  },
+  tagIds: {
+    type: [ObjectId],
+    required: false,
+    ref: "Tag",
+  },
+  dob: {
+    type: Number,
+    required: false,
+  },
 });
 
 const UserAnalytic: Model<UserAnalytics> = mongoose.model<UserAnalytics>(

@@ -1,23 +1,24 @@
-import { memo, useState } from "react";
-import { CiGlobe } from "react-icons/ci";
-import { useQuery } from "@tanstack/react-query";
-import useTimings from "@/components/store/useTimings";
-import type { ISalesLite } from "@/components/types/businessData";
-import { timestampToDateTime } from "@/components/utils/helper";
-import { apiRpc } from "@hi/common";
-import useBusinessData from "@/components/store/useBusinessData";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
-import NoData from "@/assets/nodata.jpg"; // Import the NoData image
+'use client'
+
+import { memo } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Globe, CreditCard, DollarSign, Percent, Tag, Coins } from 'lucide-react'
+import useTimings from "@/components/store/useTimings"
+import { apiRpc } from "@hi/common"
+import useBusinessData from "@/components/store/useBusinessData"
+import type { ISalesLite } from "@/components/types/businessData"
+import { PieChart } from "./piechart"
 
 const Overview = () => {
-  const business = useBusinessData((s) => s.businessData);
-  const [salesData, setSalesData] = useState<ISalesLite>();
+  const business = useBusinessData((s) => s.businessData)
   const { timeStampStart, timeStampEnd } = useTimings((s) => ({
     timeStampStart: s.timeStampStart,
     timeStampEnd: s.timeStampEnd,
-  }));
+  }))
 
-  const handleHistoryData = async () => {
+  const handleHistoryData = async (): Promise<ISalesLite> => {
     try {
       const response = await apiRpc.payments[":id"].salesDashboard.$get({
         query: {
@@ -26,116 +27,173 @@ const Overview = () => {
           to: timeStampEnd.toString(),
         },
         param: { id: business?._id || "" },
-      });
-      const data = (await response.json()).data as ISalesLite;
+      })
+      const data = (await response.json()).data as ISalesLite
 
       if (response.status === 200) {
-        setSalesData(data);
-        return data;
+        return data
       }
-      return {};
+      throw new Error("Failed to fetch sales data")
     } catch (err) {
-      console.log(err);
-      return {};
+      console.error(err)
+      throw err
     }
-  };
+  }
 
-  const { isLoading } = useQuery({
-    queryKey: ["onlineAlerts", business?._id, timeStampStart, timeStampEnd],
+  const { data: salesData, isLoading, error } = useQuery<ISalesLite, Error>({
+    queryKey: ["salesData", business?._id, timeStampStart, timeStampEnd],
     queryFn: handleHistoryData,
     enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
-  });
+  })
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return <OverviewSkeleton />
   }
 
-  if (!salesData || !salesData.totalSale) {
+  if (error || !salesData) {
     return (
-      <div className="flex flex-col items-center justify-center h-[70dvh]">
-        <img src={NoData} alt="No Sales Found" className="w-1/2 h-auto" />
-        <h3 className="text-[#6F649B] mt-4">No Sales Found</h3>
-      </div>
-    );
+      <Card className="w-full h-[70vh] flex items-center justify-center">
+        <CardContent>
+          <p className="text-center text-muted-foreground">No sales data found</p>
+        </CardContent>
+      </Card>
+    )
   }
+
+  const pieChartData = Object.entries(salesData.modeObj).map(([mode, amount]) => ({
+    name: mode,
+    value: amount,
+  }))
 
   return (
-    <>
-      <section className="payment_layout">
-        <article className="card_payment_overview lg:ml-4">
-          <div className="sales_payment_background_effect1" />
-          <div className="sales_payment_background_effect2" />
-          <div className="sales_payment_background_effect3" />
-          <center className="mt-4">
-            {timestampToDateTime(timeStampStart)}
-          </center>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-[0.125rem] bg-white h-[50%] mt-10" />
+    <div className="mx-4 mt-4 space-y-6 md:mt-6 pb-[7rem]">
+      {/* <Card className="shadow-lg bg-gradient-to-br from-secondary/80 to-secondary text-secondary-foreground">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-center space-x-2 text-center">
+            <Calendar className="w-6 h-6" />
+            <span>Selected Period</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="text-center">
+          <p className="text-xl font-semibold">{timestampToDateTime(timeStampStart)} - {timestampToDateTime(timeStampEnd)}</p>
+        </CardContent>
+      </Card> */}
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="shadow-lg bg-gradient-to-br from-secondary/50 to-secondary text-secondary-foreground">
+          <CardHeader>
+            <CardTitle>Today's Sales</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <h2 className="text-4xl font-bold">₹ {salesData?.totalSale?.toLocaleString("en-IN")}</h2>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-lg bg-gradient-to-br from-destructive/50 to-destructive text-destructive-foreground">
+          <CardHeader>
+            <CardTitle>Total Discount</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <h2 className="text-4xl font-bold">₹ {salesData?.totalDiscount?.toLocaleString("en-IN")}</h2>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle>Sales by Payment Mode</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-between md:flex-row">
+          <div className="grid grid-cols-2 gap-2 mb-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 md:mb-0">
+            {Object.entries(salesData?.modeObj).map(([mode, amount]) => (
+              <InfoCard
+                key={mode}
+                title={mode}
+                value={amount}
+                icon={mode === "offline" ? <CreditCard className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
+                gradient={mode === "offline" ? "from-blue-300 to-blue-600" : "from-green-400 to-green-600"}
+              />
+            ))}
           </div>
-          <section>
-            <h3 className="absolute left-4 bottom-14 opacity-60">
-              Today’s Sales
-            </h3>
-            <h1 className="absolute text-3xl left-4 bottom-6">
-              ₹ {salesData?.totalSale?.toLocaleString("en-IN") || 0}
-            </h1>
-          </section>
-          <section>
-            <h3 className="absolute right-4 bottom-14 opacity-60">
-              Total Discounts
-            </h3>
-            <h1 className="absolute text-3xl right-4 bottom-6">
-              ₹ {salesData?.totalDiscount?.toLocaleString("en-IN") || 0}
-            </h1>
-          </section>
-        </article>
-        <section className="flex gap-4 mx-4">
-          <article className="online_card1">
-            <div className="sales_payment_background_effect4" />
-            <p className="flex">
-              <CiGlobe className="mr-2" />
-              <small>Online</small>
-            </p>
-            <h1 className="mt-6 text-2xl">
-              ₹ {salesData?.totalOnlineSale?.toLocaleString("en-IN") || 0}
-            </h1>
-          </article>
+          <div className="w-full h-64 md:w-[40%]">
+            <PieChart data={pieChartData} />
+          </div>
+        </CardContent>
+      </Card>
 
-          <article className="online_card2">
-            <div className="sales_payment_background_effect5" />
-            <p className="flex">
-              <CiGlobe className="mr-2" />
-              <small>On floor</small>
-            </p>
-            <h1 className="mt-6 text-2xl">
-              ₹ {salesData?.totalOfflineSale?.toLocaleString("en-IN") || 0}
-            </h1>
-          </article>
-        </section>
-      </section>
-      <section className="flex justify-between gap-4 mx-4 mt-6">
-        <article className="w-full p-4 border border-[#00000050] rounded-xl">
-          <b>
-            {" "}
-            OverAll <br />
-            Coinz issued
-          </b>
-          <h6>₹ {salesData?.coinzIssued?.toLocaleString("en-IN") || 0}</h6>
-        </article>
-        <article className="w-full p-4 border border-[#00000050] rounded-xl">
-          <b>
-            {" "}
-            OverAll
-            <br />
-            Coinz used
-          </b>
-          <h6>₹ {salesData?.coinzRedeemed?.toLocaleString("en-IN") || 0}</h6>
-        </article>
-      </section>
-    </>
-  );
-};
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-4">
+        <InfoCard
+          title="Service Charge"
+          value={salesData?.totalServiceCharge}
+          icon={<DollarSign className="w-4 h-4" />}
+          gradient="from-yellow-300 to-yellow-600"
+        />
+        <InfoCard
+          title="Total Tax"
+          value={salesData?.totalTax}
+          icon={<Percent className="w-4 h-4" />}
+          gradient="from-purple-300 to-purple-600"
+        />
+        <InfoCard
+          title="Total Tips"
+          value={salesData?.totalTips}
+          icon={<Tag className="w-4 h-4" />}
+          gradient="from-pink-300 to-pink-600"
+        />
+        <InfoCard
+          title="Coins Earned"
+          value={salesData?.totalEarnCoins}
+          icon={<Coins className="w-4 h-4" />}
+          gradient="from-indigo-300 to-indigo-600"
+        />
+        <InfoCard
+          title="Coins Claimed"
+          value={salesData?.totalClaimedCoins}
+          icon={<Coins className="w-4 h-4" />}
+          gradient="from-zinc-300 to-zinc-600"
+        />
+        <InfoCard
+          title="Forced Settle"
+          value={salesData?.forceSettle}
+          icon={<Coins className="w-4 h-4" />}
+          gradient="from-red-300 to-red-600"
+        />
+      </div>
+    </div>
+  )
+}
 
-const MemoizedOverview = memo(Overview);
+const InfoCard = ({ title, value, icon, gradient }: { title: string; value: number; icon: React.ReactNode; gradient: string }) => (
+  <Card className={`bg-gradient-to-br ${gradient} text-white shadow-lg`}>
+    <CardContent className="pt-6">
+      <div className="flex flex-col items-center justify-between">
+        <div className="flex items-center mb-2 space-x-2">
+          {icon}
+          <span className="text-sm font-semibold capitalize">{title}</span>
+        </div>
+        <span className="text-2xl font-bold text-nowrap">₹ {value?.toLocaleString("en-IN")}</span>
+      </div>
+    </CardContent>
+  </Card>
+)
 
-export default MemoizedOverview;
+const OverviewSkeleton = () => (
+  <div className="space-y-6">
+    <Skeleton className="w-full h-40" />
+    <div className="grid grid-cols-2 gap-6">
+      <Skeleton className="w-full h-40" />
+      <Skeleton className="w-full h-40" />
+    </div>
+    <Skeleton className="w-full h-96" />
+    <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-4">
+      {[...Array(4)].map((_, i) => (
+        <Skeleton key={i} className="w-full h-32" />
+      ))}
+    </div>
+  </div>
+)
+
+const MemoizedOverview = memo(Overview)
+
+export default MemoizedOverview
+

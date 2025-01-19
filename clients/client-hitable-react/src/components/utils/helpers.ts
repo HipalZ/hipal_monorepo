@@ -3,11 +3,9 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import { CiGlobe } from "react-icons/ci";
-import { RiMoneyRupeeCircleLine } from "react-icons/ri";
-import { GiTakeMyMoney } from "react-icons/gi";
-import { MdOutlineHistory } from "react-icons/md";
+import { MdOutlineHistory, MdOutlineTableBar } from "react-icons/md";
 import type { IconType } from "react-icons";
-import { NavItemTypes } from "../types/hiClientzData";
+import type { NavItemTypes } from "../types/hiClientzData";
 import { HiOutlineShoppingCart } from "react-icons/hi";
 
 export function timestampToDateTime(timestamp: number): string {
@@ -88,10 +86,22 @@ export const useErrorHandling = () => {
   return { errorText };
 };
 
-export const navItems: Array<{ type: NavItemTypes; icon: IconType }> = [
-  { type: "online", icon: CiGlobe },
-  { type: "on floor", icon: GiTakeMyMoney },
-  { type: "cart", icon: HiOutlineShoppingCart },
-  { type: "history", icon: MdOutlineHistory },
-  { type: "sales", icon: RiMoneyRupeeCircleLine },
-];
+export function createNavItems(isPos: boolean): Array<{
+  type: NavItemTypes;
+  icon: IconType;
+}> {
+  const navItems = [
+    { type: "cart" as NavItemTypes, icon: HiOutlineShoppingCart },
+    { type: "payments" as NavItemTypes, icon: CiGlobe },
+    { type: "history" as NavItemTypes, icon: MdOutlineHistory },
+  ];
+
+  if (isPos) {
+    navItems.unshift({
+      type: "Tables" as NavItemTypes,
+      icon: MdOutlineTableBar,
+    });
+  }
+
+  return navItems;
+}

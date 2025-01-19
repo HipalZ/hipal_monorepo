@@ -16,6 +16,7 @@ import { useActiveClass } from "@/components/store/useActiveClass";
 import CommonBottomButton from "../bottomButton";
 import { useCart } from "@/components/store/useCart";
 import MemoReadMore from "../readMore";
+import useTableData from "@/components/store/useTableData";
 
 const MemoHorizontalCard = ({
   dishData,
@@ -29,14 +30,16 @@ const MemoHorizontalCard = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { isSelectedDish, setSelectedDish } = useActiveClass();
   const { cart } = useCartStore();
-  const { showCart, setShowCart } = useCart();
+  const { setCartPage, setShowCart } = useCart();
+  const { tableNameMissing, setTableNameMissing } = useTableData();
+
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const openModal = useCallback(
     (dishData: DishType) => {
       setSelectedDish(dishData);
       setIsModalOpen(true);
     },
-    [isModalOpen],
+    [setSelectedDish],
   );
 
   const price = useMemo(
@@ -47,7 +50,22 @@ const MemoHorizontalCard = ({
   const closeModal = useCallback(() => {
     setSelectedDish({} as DishType);
     setIsModalOpen(false);
-  }, [isModalOpen]);
+  }, [setSelectedDish]);
+
+  const openCart = useCallback(() => {
+    if (!tableNameMissing) {
+      setTableNameMissing(true);
+    }
+    setSelectedDish(null);
+    setCartPage("cart");
+    setShowCart(true);
+  }, [
+    setShowCart,
+    setCartPage,
+    tableNameMissing,
+    setTableNameMissing,
+    setSelectedDish,
+  ]);
 
   const isDishInCart = cart.some((item) => item.dish._id === dishData._id);
   const recommendations = isDishInCart ? dishData.recommendationIds : [];
@@ -112,14 +130,13 @@ const MemoHorizontalCard = ({
                 onClick={() => openModal(dishData)}
               >
                 <ShimmerImage
-                  src={dishData.images[0]}
+                  src={dishData?.images[0]}
                   alt="dish"
                   quality={95}
                   width={96}
                   height={96}
-                  className={`object-cover on_active_bounce overflow-hidden rounded-2xl m-0 ${
-                    dishData.availability ? "" : "grayscale"
-                  }`}
+                  className={`object-cover on_active_bounce overflow-hidden rounded-2xl m-0 ${dishData.availability ? "" : "grayscale"
+                    }`}
                 />
                 {!dishData.availability && (
                   <>
@@ -144,15 +161,13 @@ const MemoHorizontalCard = ({
           </div>
           {!noAddBtn && (
             <div
-              className={` flex flex-col items-center w-full mx-auto scale-[0.85] ${
-                (dishData?.images?.length > 0 || noDescription) && "-mt-4"
-              }`}
+              className={` flex flex-col items-center w-full mx-auto scale-[0.85] ${(dishData?.images?.length > 0 || noDescription) && "-mt-4"
+                }`}
             >
               {dishData.availability && (
                 <div
-                  className={`flex flex-col items-center w-full ${
-                    dishData?.images?.length > 0 ? "" : "ml-2"
-                  }`}
+                  className={`flex flex-col items-center w-full ${dishData?.images?.length > 0 ? "" : "ml-2"
+                    }`}
                 >
                   <DishQuantityButton dishData={dishData} />
                   <span className="text-sm opacity-50 text-[#000000]">
@@ -172,7 +187,7 @@ const MemoHorizontalCard = ({
                 buttons={[
                   {
                     text: "Go to cart",
-                    onClick: () => setShowCart(!showCart),
+                    onClick: openCart,
                     highlight: true,
                   },
                 ]}

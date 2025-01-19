@@ -1,0 +1,27 @@
+import mongoose from "mongoose";
+import { z } from "zod";
+const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
+  z
+    .string()
+    .refine((val) => mongoose.Schema.Types.ObjectId, {
+      message: "Invalid ObjectId",
+    })
+    .transform((val) => new mongoose.Types.ObjectId(val)),
+);
+export const OrderModeEnum = ["WITH_ORDER", "WITHOUT_ORDER"] as const;
+export const OrderVerificationTypeEnum = ["USER", "CAPTAIN"] as const;
+
+export const businessPosConfigSchema = z.object({
+  businessId: ObjectIdSchema,
+  posId: ObjectIdSchema,
+  orderMode: z.enum(OrderModeEnum),
+  petPoojaId: z.string().min(4).max(50),
+  restName: z.string().min(4).max(50),
+
+  orderVerificationType: z.enum(OrderVerificationTypeEnum).optional(),
+  userId: z.string(),
+
+  date: z.number().optional(),
+});
+
+export type BusinessPosConfigType = z.infer<typeof businessPosConfigSchema>;

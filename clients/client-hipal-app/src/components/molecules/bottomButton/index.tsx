@@ -1,23 +1,24 @@
 "use client";
 
-import { useCallback } from "react";
-import Link from "next/link";
-import { useRouter, useParams } from "next/navigation";
-import { motion } from "framer-motion";
-import { RiCouponLine } from "react-icons/ri";
-import { MdAccountBalanceWallet, MdMenuBook } from "react-icons/md";
-import { LuScanLine } from "react-icons/lu";
-import { useLogin } from "@/components/store/useLogin";
-import useTableData from "@/components/store/useTableData";
-import { useUserToken } from "@hi/common/src/useUserToken";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
-import { useCart } from "@/components/store/useCart";
 import { cn } from "@/components/utils/helpers";
-import BottomPopUp from "@/components/atoms/bottomPopUp";
-import AddAmountModal from "./addAmountModal";
-import dynamic from "next/dynamic";
-import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import { LuScanLine } from "react-icons/lu";
+import { MdAccountBalanceWallet, MdMenuBook } from "react-icons/md";
+import { motion } from "framer-motion";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
+import { RiCouponLine } from "react-icons/ri";
+import { useCallback } from "react";
+import { useCart } from "@/components/store/useCart";
+import { useLogin } from "@/components/store/useLogin";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { useParams } from "next/navigation";
+import { useUserToken } from "@hi/common/src/useUserToken";
+import AddAmountModal from "./addAmountModal";
+import BottomPopUp from "@/components/atoms/bottomPopUp";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import useTableData from "@/components/store/useTableData";
 
 const MemoCart = dynamic(() => import("@/components/organisms/cart"), {
   ssr: false,
@@ -92,13 +93,13 @@ export default function BottomButton({
   selected,
   showBack,
 }: { selected?: ButtonType; showBack?: boolean }) {
-  const router = useRouter();
   const tableName = useTableData((s) => s.tableName);
   const setDirection = useLogin((s) => s.setDirection);
   const accessToken = useUserToken.getState().accessToken;
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const { setShowCart, showCart, inputModal, setInputModal, setCartPage } =
     useCart();
+  const { setCheckLogin } = usePaymentStore()
   const customLink = useParams()?.businessId || "";
   const { subscribeModal, reviewPopup } = useLogin((s) => ({
     subscribeModal: s.subscribeModal,
@@ -110,25 +111,33 @@ export default function BottomButton({
   }, [setInputModal]);
 
   const openModal = useCallback(() => {
+    setDirection("explore");
     if (!accessToken) {
-      router.push(`/${customLink}/user/signup`);
+      setCheckLogin(true);
     }
     if (outletInfo?.isPosEnabled) {
       setCartPage("order");
-      setShowCart(!showCart);
+      setShowCart(true);
     } else {
       setInputModal(true);
     }
   }, [
-    selected,
-    showCart,
     accessToken,
-    customLink,
     setInputModal,
     setDirection,
     outletInfo?.isPosEnabled,
     setShowCart,
+    setCartPage,
+    setCheckLogin
   ]);
+
+  const handleRedirection = useCallback(() => {
+    if (!accessToken) {
+      setCheckLogin(true);
+    } else {
+      setDirection("loyalty")
+    }
+  }, [accessToken, setDirection, setCheckLogin]);
 
   if (subscribeModal || reviewPopup) {
     return null;
@@ -162,7 +171,7 @@ export default function BottomButton({
           animate="animate"
           transition={{
             duration: 2,
-            repeat: Infinity,
+            repeat: Number.POSITIVE_INFINITY,
             ease: "backInOut",
           }}
           style={{
@@ -181,8 +190,8 @@ export default function BottomButton({
           <MenuItem
             icon={RiCouponLine}
             label="Rewards"
-            href={`/${customLink}/${accessToken ? "loyalty" : "user/signup"}`}
             isSelected={selectedBtn === "rewards"}
+            onClick={handleRedirection}
           />
 
           {tableName ? (

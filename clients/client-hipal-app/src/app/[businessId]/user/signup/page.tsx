@@ -13,11 +13,15 @@ import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
 
 // revalidation works only for server components
 
-const SignUp = memo(() => {
+const MemoSignUp = () => {
   const [phone, setPhone] = useState("");
   const { setUserDetails, userDetails } = useLogin();
 
   const businessData = useBusinessDetails((s) => s.businessDetails);
+  const { setUrlFrom, setDirection } = useLogin((s) => ({
+    setUrlFrom: s.setUrlFrom,
+    setDirection: s.setDirection,
+  }));
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
   const [loader, setLoader] = useState<boolean>(false);
@@ -58,7 +62,9 @@ const SignUp = memo(() => {
 
   const goBack = useCallback(() => {
     router.push(`/${customLink}/explore`);
-  }, [router, customLink]);
+    setDirection("")
+    setUrlFrom("");
+  }, [router, customLink, setDirection, setUrlFrom]);
 
   useEffect(() => {
     if (userDetails.phone) {
@@ -139,6 +145,7 @@ const SignUp = memo(() => {
       </form>
     </main>
   );
-});
+}
 
+const SignUp = memo(MemoSignUp);
 export default SignUp;

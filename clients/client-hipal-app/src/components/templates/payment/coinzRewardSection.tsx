@@ -12,6 +12,10 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import MemoCart from "@/components/organisms/cart";
+import { useCart } from "@/components/store/useCart";
+import { usePathname, useRouter } from "next/navigation";
+import { useUserToken } from "@hi/common/src/useUserToken";
 
 const CashbackMessage = dynamic(() => import("./cashbackMessage"), {
   loading: () => <SkeletonLoader height={200} />,
@@ -43,18 +47,21 @@ const AddAmountModal = dynamic(
 );
 
 const MemoCoinzRewardSection = () => {
+  const completeUrl = window.location.href;
   const { applyCouponz, setApplyCouponz } = useCouponTemp((s) => ({
     applyCouponz: s.applyCouponz,
     setApplyCouponz: s.setApplyCouponz,
   }));
+  const { setShowCart, showCart } =
+    useCart();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const { availedCoupon, userCouponz } = useCouponz((s) => ({
     availedCoupon: s.availedCoupon,
     userCouponz: s.userCouponz,
   }));
-  const { userCoinZ } = useLogin((s) => ({
-    userCoinZ: s.userCoinZ,
-  }));
+  const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
+  const { userCoinZ, setUrlFrom, userDetails } = useLogin();
+  const accessToken = useUserToken.getState().accessToken
   const { loyaltySetting } = useLoyaltyData((s) => ({
     loyaltySetting: s.loyaltySetting,
   }));
@@ -62,7 +69,6 @@ const MemoCoinzRewardSection = () => {
     billValue,
     claimedCoinz,
     claimCouponz,
-    isModalOpen,
     setIsModalOpen,
     editBillModal,
     setEditBillModal,
@@ -70,29 +76,32 @@ const MemoCoinzRewardSection = () => {
     billValue: s.billValue,
     claimedCoinz: s.claimedCoinz,
     claimCouponz: s.claimCouponz,
-    isModalOpen: s.isModalOpen,
     setIsModalOpen: s.setIsModalOpen,
     editBillModal: s.editBillModal,
     setEditBillModal: s.setEditBillModal,
   }));
 
   const openModal = useCallback(() => {
+    if (!accessToken) {
+      setCheckLogin(true)
+      setUrlFrom(completeUrl)
+      return
+    }
     setIsModalOpen(true);
-  }, [isModalOpen]);
+  }, [completeUrl, setCheckLogin, setUrlFrom, accessToken, setIsModalOpen]);
 
-  const openBillModal = useCallback(() => {
-    setEditBillModal(true);
-  }, [editBillModal]);
-
-  const closeBillModal = useCallback(() => {
-    setEditBillModal(false);
-  }, [editBillModal]);
+  const toggleBillModal = useCallback(() => {
+    setEditBillModal(!editBillModal);
+  }, [setEditBillModal, editBillModal]);
 
   const openCouponz = useCallback(() => {
-    setTimeout(() => {
-      setApplyCouponz(true);
-    }, 200);
-  }, [applyCouponz]);
+    if (!accessToken) {
+      setCheckLogin(true)
+      setUrlFrom(completeUrl)
+      return
+    }
+    setApplyCouponz(true);
+  }, [setApplyCouponz, accessToken, completeUrl, setCheckLogin, setUrlFrom]);
 
   const validCouponCount = useMemo(() => {
     const validCoupons = userCouponz?.filter((coupon) => {
@@ -103,14 +112,13 @@ const MemoCoinzRewardSection = () => {
     const count = validCoupons?.length ?? 0;
     return count;
   }, [billValue, userCouponz]);
-
   return (
     <section className="text-primary poppins-regular">
-      {!outletInfo.isPosEnabled && (
+      {!outletInfo?.isPosEnabled && (
         <center className="flex items-center justify-center my-2 text-primary">
           <button
             type="button"
-            onClick={openBillModal}
+            onClick={toggleBillModal}
             className="on_active_bounce px-3 py-0.5 text-sm rounded-full shadow-lg bg-[#1F1F1F]"
           >
             <RiEdit2Fill className="inline-block text-white stroke-white" />
@@ -151,12 +159,12 @@ const MemoCoinzRewardSection = () => {
               <article className="z-20 scaled-card-container-rotate">
                 <CardSection />
               </article>
-              <article className="bg-[#FFFFFFD9] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
+              {accessToken && userDetails?._id && <article className="bg-[#FFFFFFD9] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
                 <h1 className="mb-1 text-base">Coinz : {userCoinZ}</h1>
                 {claimedCoinz > 0 && (
                   <h1 className="text-sm">Coinz Applied: {claimedCoinz}</h1>
                 )}
-              </article>
+              </article>}
             </article>
             <article
               style={{
@@ -212,13 +220,19 @@ const MemoCoinzRewardSection = () => {
           </section>
         </>
       ) : null}
-      {editBillModal && (
+      {(editBillModal && !outletInfo?.isPosEnabled) && (
         <BottomPopUp
           show={editBillModal}
-          onClose={closeBillModal}
+          onClose={toggleBillModal}
           linearGradTheme
+          height="80dvh"
         >
           <AddAmountModal />
+        </BottomPopUp>
+      )}
+      {showCart && (
+        <BottomPopUp hide show={showCart} onClose={() => setShowCart(false)}>
+          <MemoCart />
         </BottomPopUp>
       )}
     </section>

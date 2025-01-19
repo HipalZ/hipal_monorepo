@@ -46,8 +46,7 @@ const getBaseUrl = () => {
 const baseUrl = getBaseUrl();
 const accessToken = useUserToken.getState().accessToken;
 const refreshToken = useUserToken.getState().refreshToken;
-console.log("accessTokenfrontend", accessToken);
-console.log("refreshTokenfrontend", refreshToken);
+
 
 console.log("baseUrl", baseUrl);
 

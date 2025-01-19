@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { memo } from "react";
-import Mixed from "@/assets/svg/Mixed.svg";
 import Alcohol from "@/assets/alcohol.png";
 import NonAlcohol from "@/assets/NonAlcohol.png";
 

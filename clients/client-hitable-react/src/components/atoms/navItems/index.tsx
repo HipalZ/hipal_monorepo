@@ -1,10 +1,9 @@
-"use client";
-
 import { useLiteStore } from "@/components/store/useLiteStore";
 import type { NavItemTypes } from "@/components/types/hiClientzData";
-import { navItems } from "@/components/utils/helpers";
+import { createNavItems } from "@/components/utils/helpers";
 import { memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import useBusinessData from "@/components/store/useBusinessData";
 
 const MemoNavItems = () => {
   const {
@@ -21,6 +20,8 @@ const MemoNavItems = () => {
     setSelectedNavItem: s.setSelectedNavItem,
   }));
 
+  const outletInfo = useBusinessData(s => s.outletInfo)
+
   const handleNavItemClick = useCallback(
     (type: NavItemTypes) => {
       setSelectedNavItem(type);
@@ -30,11 +31,8 @@ const MemoNavItems = () => {
 
   const handleCount = useCallback(
     (type: string) => {
-      if (type === "online" && onlineCount > 0) {
-        return onlineCount;
-      }
-      if (type === "on floor" && offlineCount > 0) {
-        return offlineCount;
+      if (type === "payments" && onlineCount > 0) {
+        return onlineCount + offlineCount;
       }
       if (type === "cart" && cartCount > 0) {
         return cartCount;
@@ -44,6 +42,8 @@ const MemoNavItems = () => {
     [offlineCount, onlineCount, cartCount],
   );
 
+  const navItems = createNavItems(outletInfo?.isPosEnabled);
+
   return (
     <>
       {navItems.map(({ type, icon: Icon }) => {
@@ -52,13 +52,12 @@ const MemoNavItems = () => {
             key={type}
             onClick={() => handleNavItemClick(type)}
             className={`
-              flex items-center justify-center px-4 py-2 rounded-full
-              ${
-                selectedNavItem === type
-                  ? "bg-purple-100 text-purple-600"
-                  : "text-gray-500 hover:bg-gray-200"
+              flex w-full max-w-[24rem] items-center justify-center px-4 py-2 rounded-full
+              ${selectedNavItem === type
+                ? "bg-purple-100 text-purple-600"
+                : "text-gray-500 hover:bg-gray-200"
               }
-              relative group
+              relative
             `}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -67,10 +66,9 @@ const MemoNavItems = () => {
             <Icon
               size={24}
               className={`
-                ${
-                  selectedNavItem === type
-                    ? "text-purple-600"
-                    : "text-gray-500 group-hover:text-gray-700"
+                ${selectedNavItem === type
+                  ? "text-purple-600"
+                  : "text-gray-500 group-hover:text-gray-700"
                 }
                 transition-colors duration-300
               `}

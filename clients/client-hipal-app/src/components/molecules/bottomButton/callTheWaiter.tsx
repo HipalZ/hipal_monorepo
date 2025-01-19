@@ -7,28 +7,29 @@ import { apiRpc } from "@hi/common";
 import React, { memo, useCallback, useState } from "react";
 import { toast } from "react-toastify";
 import { useErrorHandling } from "@/utils/helper";
-import Bill from "@/assets/call/bill.png";
-import WaterBottle from "@/assets/call/waterBottle.png";
-import Tissue from "@/assets/call/tissue.png";
-import Order from "@/assets/call/order.png";
-import Other from "@/assets/call/other.png";
+import Bill from "@/assets/call/BillImage.png";
+import Breakfast from "@/assets/call/Breakfast.png";
+import Towel from "@/assets/call/Towel.png";
+import RoomService from "@/assets/call/RoomService.png";
+import ReceptionBell from "@/assets/call/ReceptionBell.png";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import CommonBottomButton from "@/components/atoms/bottomButton";
+import ConfettiHeader from "@/components/organisms/confettiHeader";
+import { cn } from "@/components/utils/helpers";
+import { HiX } from "react-icons/hi";
 
 const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
   const { errorText } = useErrorHandling();
   const [message, setMessage] = useState("");
   const { tableName } = useTableData();
   const name = useLogin((s) => s.userDetails?.name);
-  const userDetailes = useLogin((s) => s.userDetails);
+  const userDetails = useLogin((s) => s.userDetails);
 
   const messageImageMap = {
-    "Get Me Water Bottles": WaterBottle,
-    "Get Me Tissue Paper": Tissue,
-    "Please Settle My Table": Bill,
-    "Please Take My Order": Order,
-    Other: Other,
+    "Other Service": RoomService,
+    "Remind for my order": Breakfast,
+    "Get tissues": Towel,
+    "Get my bill": Bill,
   };
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -54,7 +55,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
         alertType: "WAITER",
         status: "WAITER",
         name: name,
-        userId: userDetailes._id,
+        userId: userDetails._id,
       },
     });
     if (!res.ok) {
@@ -70,65 +71,62 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
     tableName,
     message,
     name,
-    userDetailes._id,
+    userDetails._id,
     loading,
     errorText,
     onClose,
   ]);
 
   return (
-    <>
-      <div className="flex flex-col relative max-h-[90dvh] pb-[5rem] overflow-auto bg-white">
-        <motion.ul
-          className="grid flex-grow grid-cols-2 gap-4 p-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {Object.entries(messageImageMap).map(([messageText, imageSrc]) => (
-            <motion.li
-              key={messageText}
-              className={
-                " relative cursor-pointer flex flex-col items-center justify-center "
-              }
-              onClick={() => handleSelectMessage(messageText)}
-              whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
-              whileTap={{ scale: 0.95 }}
+    <div className="relative h-screen overflow-auto bg-white hide-scrollbar">
+      <ConfettiHeader direction="top" />
+      <center className="mt-20">
+        <Image src={ReceptionBell} alt="ReceptionBell" height={143} width={143} />
+        <h1 className="my-2 text-2xl font-semibold text-black">Calling Captain?</h1>
+        <p className="mt-2 text-sm text-gray-500">What should we tell the captain to help you with </p>
+      </center>
+      <motion.ul
+        className="grid flex-grow grid-cols-2 gap-5 p-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        {Object.entries(messageImageMap).map(([messageText, imageSrc]) => (
+          <motion.li
+            key={messageText}
+            className={cn(message === messageText ? "border-[#008800] border-2" : "border-[#CACACA] border", "overflow-hidden rounded-2xl pb-4 h-[11rem] relative cursor-pointer flex flex-col items-center justify-center")}
+            onClick={() => handleSelectMessage(messageText)}
+            whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <motion.div
+              className="py-4 bg-[#ffffff] text-base-content"
             >
-              <motion.div
-                className={`py-4 ${
-                  message === messageText
-                    ? "bg-[#000000] text-[#ffffff] rounded-2xl"
-                    : "bg-[#ffffff] text-base-content"
-                }`}
-              >
-                <Image
-                  src={imageSrc}
-                  alt={messageText}
-                  width={200}
-                  height={150}
-                  objectFit="cover"
-                  className="transition-transform duration-300 ease-in-out transform w-full aspect-[4/3]"
-                />
-              </motion.div>
-              <h3 className="mt-2 text-sm font-medium text-center text-[#000000]">
-                {messageText}
-              </h3>
-            </motion.li>
-          ))}
-        </motion.ul>
+              <Image
+                src={imageSrc}
+                alt={messageText}
+                height={120}
+                width={120}
+                objectFit="cover"
+                className="transition-transform duration-300 ease-in-out transform"
+              />
+            </motion.div>
+            <h3 className="text-sm font-medium text-center text-[#000000]">
+              {messageText}
+            </h3>
+          </motion.li>
+        ))}
+      </motion.ul>
+      <div className="mx-4 pb-20">
+        <button
+          type="button"
+          onClick={callTheWaiter}
+          className={cn(message?.length > 0 ? "bg-[#008800] text-white" : "bg-[#FFFFFF] text-gray-500", "w-full border border-[#cacaca] text-base p-3 rounded-xl")}
+        >
+          {message?.length > 0 ? 'Continue' : 'Select the option and call'}
+        </button>
       </div>
-      <CommonBottomButton
-        fixed
-        buttons={[
-          {
-            type: "button",
-            text: "Call captain",
-            onClick: callTheWaiter,
-          },
-        ]}
-      />
-    </>
+    </div>
   );
 };
 

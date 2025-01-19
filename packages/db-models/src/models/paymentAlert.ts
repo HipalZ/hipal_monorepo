@@ -14,7 +14,7 @@ const paymentAlertSchema = new mongoose.Schema<PaymentAlertType>(
     },
     alertType: {
       type: String,
-      enum: ["ONLINE", "OFFLINE", "WAITER"],
+      enum: ["ONLINE", "OFFLINE", "WAITER", "FORCE_SETTLE", "NORMAL_SETTLE"],
       required: true,
     },
     order_id: { type: ObjectId, required: false, ref: "Order" },
@@ -30,6 +30,7 @@ const paymentAlertSchema = new mongoose.Schema<PaymentAlertType>(
     waiterName: { type: String, default: null },
     coinsApplied: { type: Boolean, default: false },
     date: { type: Number },
+    posBillRequestId: { type: String, default: null },
   },
   {
     timestamps: true,

@@ -1,5 +1,6 @@
 "use client";
 import { memo, useCallback } from "react";
+import { flushSync } from "react-dom";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
@@ -11,6 +12,8 @@ import dynamic from "next/dynamic";
 import { calculateRating, cn } from "@/components/utils/helpers";
 import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
 import { useErrorHandling } from "@/utils/helper";
+import BottomPopUp from "@/components/atoms/bottomPopUp";
+import ReviewModal from "@/components/organisms/explore/googleReviews/reviewModal";
 
 const Staffs = dynamic(() => import("./staffs"), {
   ssr: false,
@@ -64,9 +67,11 @@ const MemoReviewPage = () => {
   const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
   const searchParams = useSearchParams();
   const orderId = searchParams?.get("orderId");
-  const { userDetails, googleReviewCount } = useLogin((s) => ({
+  const { userDetails, googleReviewCount, reviewPopup, setReviewPopup } = useLogin((s) => ({
     userDetails: s.userDetails,
     googleReviewCount: s.googleReviewCount,
+    reviewPopup: s.reviewPopup,
+    setReviewPopup: s.setReviewPopup,
   }));
   const {
     description,
@@ -134,8 +139,8 @@ const MemoReviewPage = () => {
       if (googleReviewCount === 0 && placeUrl?.length > 0) {
         setShowGoogleReview(true);
       } else {
-        setShowGoogleReview(false);
         router.push(`/${customLink}/explore`);
+        setShowGoogleReview(false);
       }
     }
     if (res.status === 400) {
@@ -156,12 +161,17 @@ const MemoReviewPage = () => {
 
   const skipUserReview = useCallback(() => {
     if (googleReviewCount === 0) {
-      setShowGoogleReview(true);
+      setShowGoogleReview(true)
     } else {
-      setShowGoogleReview(false);
       router.push(`/${customLink}/explore`);
+      flushSync(() => setShowGoogleReview(false));
     }
   }, [googleReviewCount, setShowGoogleReview, router, customLink]);
+
+  const toggleReviewPopup = useCallback(() => {
+    flushSync(() => setReviewPopup(!reviewPopup));
+    router.push(`/${customLink}/explore`);
+  }, [reviewPopup, setReviewPopup, router, customLink]);
 
   useQuery({
     queryKey: ["getStaff", businessId],
@@ -207,6 +217,11 @@ const MemoReviewPage = () => {
         <Ripples />
         <GReview />
       </section>
+      {reviewPopup && (
+        <BottomPopUp show={reviewPopup} onClose={toggleReviewPopup}>
+          <ReviewModal closeModal={toggleReviewPopup} />
+        </BottomPopUp>
+      )}
     </>
   );
 };

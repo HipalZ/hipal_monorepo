@@ -1,47 +1,25 @@
-import React, { memo, useCallback, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { _useAllBusiness } from "@/components/store/useAllBusiness";
-import { useLogin } from "@/components/store/useLogin";
+"use client";;
+import dynamic from "next/dynamic";
+import { memo, useCallback, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import useTableData from "@/components/store/useTableData";
-import { apiRpc } from "@hi/common";
-import LoadingSpinnerCircle from "@/components/atoms/loader";
-import {
-  FaUser,
-  FaPhone,
-  FaTable,
-  FaReceipt,
-  FaPercent,
-  FaTags,
-  FaMoneyBillWave,
-} from "react-icons/fa";
-import CommonBottomButton from "@/components/atoms/bottomButton";
-import { toast } from "react-toastify";
-import { usePaymentStore } from "@/components/store/usePaymentStore";
-import { useCouponz } from "@/components/store/useCouponz";
 import { useCart } from "@/components/store/useCart";
+import { useCouponz } from "@/components/store/useCouponz";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { HiX } from "react-icons/hi";
+import { CardSkeleton } from "@/components/atoms/paymentPageLoader";
 
-interface IBillData {
-  customerName: string;
-  customerPhone: string;
-  tableName: string;
-  billRequestId: string;
-  subTotal: number;
-  serviceCharge: number;
-  discount: number;
-  tax: number;
-  total: number;
-}
+const FinalBillLoader = dynamic(() => import("./finalBillLoader"), { ssr: false, loading: () => <CardSkeleton /> });
 
 const MemoCartPayment = () => {
-  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
-  const userDetails = useLogin((state) => state.userDetails);
-  const { tableName } = useTableData();
-  const { setShowCart, setCartPage } = useCart();
+  // Store hooks
+  const { setCartPage } = useCart();
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
-  const [loading, setLoading] = useState<boolean>(false);
+  // Local state
+  const timerRef = useRef(10);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Payment store hooks
   const {
     billValue,
     setEditBillModal,
@@ -52,58 +30,67 @@ const MemoCartPayment = () => {
     setSelectedTip,
     setShowInput,
     setIsTipActive,
-    setBillValue,
+    setIsButtonDisabled,
+    setDisplayTimer
   } = usePaymentStore();
+
+  // Coupon store hooks
   const { setAvailedCoupon } = useCouponz((s) => ({
     setAvailedCoupon: s.setAvailedCoupon,
   }));
 
-  const getBill = async () => {
-    const response = await apiRpc.pos.get_bill.$get({
-      query: {
-        businessId: outletInfo?.businessId || "",
-        tableName,
-        generatedBy: userDetails?.name || "",
-      },
-    });
+  // Countdown timer for button
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
+      if (timerRef.current > 0) {
+        timerRef.current -= 1;
+        setDisplayTimer(timerRef.current);
+      } else {
+        setIsButtonDisabled(false);
+        if (intervalRef.current) clearInterval(intervalRef.current);
+      }
+    }, 1000);
 
-    if (response.status === 400) {
-      return Promise.reject({
-        status: 400,
-        message: "Server timeout occurred",
-      });
-    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
 
-    const res = await response.json();
-    const payment = res?.data as IBillData;
-    setBillValue(payment.total);
-    return payment;
-  };
+  // // Retry function
+  // const handleRetry = useCallback(() => {
+  //   refetch();
+  // }, [refetch]);
 
-  const {
-    isLoading,
-    data: billData,
-    refetch,
-    failureCount,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ["getBill", outletInfo?.businessId, tableName],
-    queryFn: getBill,
-    staleTime: 1000 * 30,
-  });
+  // Proceed to payment function
+  const goBack = useCallback(() => {
+    setEditBillModal(false);
+    setClaimCouponz(0);
+    setClaimedCoinz(0);
+    setSelectedTip("");
+    setCustomTip("");
+    setShowInput(false);
+    setIsTipActive(false);
+    setTips(0);
+    setAvailedCoupon({});
+    setCartPage("order");
+    setDisplayTimer(10);
+  }, [
+    setEditBillModal,
+    setClaimCouponz,
+    setClaimedCoinz,
+    setCustomTip,
+    setCartPage,
+    setTips,
+    setSelectedTip,
+    setShowInput,
+    setIsTipActive,
+    setTips,
+    setAvailedCoupon,
+    setDisplayTimer,
+  ]);
 
-  const handleRetry = () => {
-    refetch();
-  };
-
-  const proceedToPayment = useCallback(() => {
-    if (billValue === 0) {
-      toast.error("Please enter amount");
-      return;
-    }
-    setLoading(true);
-    if (billValue > 0) {
+  useEffect(() => {
+    if (billValue && billValue > 0) {
       setEditBillModal(false);
       setClaimCouponz(0);
       setClaimedCoinz(0);
@@ -113,45 +100,18 @@ const MemoCartPayment = () => {
       setIsTipActive(false);
       setTips(0);
       setAvailedCoupon({});
-      setCartPage("order");
-      setShowCart(false);
-      router.push(`/${customLink}/payment`);
+      setCartPage("payment");
+      setTimeout(() => {
+        router.push(`/${customLink}/payment`);
+        setDisplayTimer(10);
+      }, 1000);
     }
-  }, [
-    billValue,
-    customLink,
-    router,
-    setEditBillModal,
-    setClaimCouponz,
-    setClaimedCoinz,
-    setCustomTip,
-    setCartPage,
-    setShowCart,
-    setTips,
-    setSelectedTip,
-    setShowInput,
-    setIsTipActive,
-    setTips,
-    setAvailedCoupon,
-  ]);
+  }, [billValue])
 
-  const totalAttempts = failureCount;
-
-  if (!billData && totalAttempts >= 1) {
-    return (
-      <div className="mt-4 text-center text-red-500">
-        Maximum retry attempts reached. Please try again later.
-      </div>
-    );
-  }
-
-  if (isError && error?.status === 400 && totalAttempts < 1) {
-    return (
-      <section className="bg-[#ffffff]">
-        <h2 className="my-4 text-2xl font-bold text-center text-[#000000]">
-          Bill Details
-        </h2>
-        <div className="px-4 space-y-4">{/* No data, so no BillItem */}</div>
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen px-6">
+      <FinalBillLoader />
+      {/* {isError && error?.status === 400 && failureCount < 1 && (
         <CommonBottomButton
           buttons={[
             {
@@ -163,105 +123,17 @@ const MemoCartPayment = () => {
             },
           ]}
         />
-      </section>
-    );
-  }
-
-  if (billData) {
-    return (
-      <section className="bg-[#ffffff] h-[80dvh] relative">
-        <h2 className="mt-4 text-2xl font-bold text-center text-[#000000]">
-          Bill Details
-        </h2>
-        {isLoading || loading ? (
-          <LoadingSpinnerCircle />
-        ) : (
-          <>
-            <div className="p-4 mb-6 space-y-3">
-              <BillItem
-                icon={<FaUser className="text-gray-600" />}
-                label="Customer"
-                value={billData?.customerName || "Guest"}
-              />
-              <BillItem
-                icon={<FaPhone className="text-gray-600" />}
-                label="Phone"
-                value={billData?.customerPhone || "N/A"}
-              />
-              <BillItem
-                icon={<FaTable className="text-gray-600" />}
-                label="Table"
-                value={billData?.tableName || "N/A"}
-              />
-              <BillItem
-                icon={<FaReceipt className="text-gray-600" />}
-                label="Bill ID"
-                value={billData?.billRequestId || "N/A"}
-              />
-            </div>
-            <hr className="my-4 border-gray-300" />
-            <div className="px-4 space-y-2">
-              <BillItem
-                icon={<FaMoneyBillWave />}
-                label="Subtotal"
-                value={`₹${billData?.subTotal.toFixed(2)}`}
-              />
-              <BillItem
-                icon={<FaPercent />}
-                label="Service Charge"
-                value={`₹${billData?.serviceCharge.toFixed(2)}`}
-              />
-              <BillItem
-                icon={<FaTags />}
-                label="Discount"
-                value={`₹${billData?.discount.toFixed(2)}`}
-              />
-              <BillItem
-                icon={<FaPercent />}
-                label="Tax"
-                value={`₹${billData?.tax.toFixed(2)}`}
-              />
-            </div>
-            <hr className="my-4 border-gray-300" />
-            <BillItem
-              icon={<FaMoneyBillWave className="text-green-600" />}
-              label="Total"
-              value={`₹${billData?.total.toFixed(2)}`}
-              className="px-4 text-lg !font-bold"
-            />
-          </>
-        )}
-        <CommonBottomButton
-          buttons={[
-            {
-              text: "Continue",
-              onClick: proceedToPayment,
-              type: "button",
-              disable: loading,
-              isLoading: loading,
-            },
-          ]}
-        />
-      </section>
-    );
-  }
-
-  return (
-    <div className="flex items-center justify-center h-64">
-      <LoadingSpinnerCircle />
+      )} */}
+      <button
+        type="button"
+        onClick={goBack}
+        className="absolute bottom-4 p-3 rounded-full bg-[#00000080] text-white transform -translate-x-1/2 -translate-y-1/2 left-1/2"
+      >
+        <HiX />
+      </button>
     </div>
   );
 };
-
-const BillItem = ({ icon, label, value, className = "" }) => (
-  <div className={`flex items-center justify-between ${className}`}>
-    <div className="flex items-center">
-      <h3 className="mr-2 text-[#000000]">{icon}</h3>
-      <h3 className="text-[#000000]">{label}</h3>
-    </div>
-    <h3 className="text-[#000000]">{value}</h3>
-  </div>
-);
 
 const CartPayment = memo(MemoCartPayment);
 export default CartPayment;

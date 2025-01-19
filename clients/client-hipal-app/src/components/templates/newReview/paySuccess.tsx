@@ -1,41 +1,48 @@
-"use client";
+"use client";;
 import { useLogin } from "@/components/store/useLogin";
 import useUserReward from "@/components/store/useUserReward";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { apiRpc } from "@hi/common";
 import CardSection from "@/components/atoms/cardSection";
-import Avtaar from "@/assets/login/cat.png";
-import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import dynamic from "next/dynamic";
 import CurvedText from "@/components/atoms/curvedText";
 import Sunrays from "@/assets/img/sunrays_white.png";
 import { useReview } from "@/components/store/useReview";
 import { useErrorHandling } from "@/utils/helper";
 import { toast } from "react-toastify";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { CardSkeleton } from "@/components/atoms/paymentPageLoader";
+import LoadingSpinnerCircle from "@/components/atoms/loader";
+import { useCart } from "@/components/store/useCart";
+const Avatar = dynamic(() => import("@/components/atoms/avatar"), {
+  ssr: false,
+  loading: () => <CardSkeleton />,
+});
 
 const CouponzBlink = dynamic(() => import("../newPayment/couponzBlink"), {
   ssr: false,
-  loading: () => <SkeletonLoader height={200} />,
+  loading: () => <LoadingSpinnerCircle />,
 });
 
 const MemoPayOnlineSuccess = () => {
   const userName = useLogin((s) => s.userDetails.name);
+  const animate = useRef(false);
   const { errorText } = useErrorHandling();
   const { setIsPaymentDone } = useReview((s) => ({
     setIsPaymentDone: s.setIsPaymentDone,
   }));
+  const { setInputModal } = useCart()
   const { userDetails, setUserCoinZ } = useLogin((s) => ({
     userDetails: s.userDetails,
     setUserCoinZ: s.setUserCoinZ,
   }));
-
+  const { setIsLoading } = usePaymentStore()
   const setUserReward = useUserReward((s) => s.setUserReward);
-  const [animate, setAnimate] = useState(false);
   const businessDetails = useBusinessDetails((s) => s.businessDetails);
   const loyaltySetting = useLoyaltyData((s) => s.loyaltySetting);
   const searchParams = useSearchParams();
@@ -43,6 +50,8 @@ const MemoPayOnlineSuccess = () => {
   const mode = searchParams.get("mode");
   const claim = searchParams.get("claim");
   const getUserReward = async () => {
+    // making the payment loader off
+    setIsLoading(false);
     if (
       userDetails.phone === "NaN" ||
       Number(userDetails.phone) === 0 ||
@@ -70,6 +79,7 @@ const MemoPayOnlineSuccess = () => {
     if (userReward.status === 401) {
       errorText(userReward.status);
     }
+    setInputModal(false);
     return response;
   };
 
@@ -78,24 +88,14 @@ const MemoPayOnlineSuccess = () => {
   }, [setIsPaymentDone]);
 
   useEffect(() => {
-    setAnimate(true);
+    animate.current = true;
+
     const timer = setTimeout(() => {
-      setAnimate(false);
+      animate.current = false;
     }, 1000);
 
     return () => clearTimeout(timer);
   }, []);
-
-  // useEffect(() => {
-  //   const audio = new Audio("/sounds/Money.mp3") as HTMLAudioElement;
-  //   audio.play();
-  //   return () => {
-  //     if (audio) {
-  //       audio.pause();
-  //       audio.currentTime = 0;
-  //     }
-  //   };
-  // }, []);
 
   const textContent = useMemo(() => {
     switch (mode) {
@@ -140,13 +140,7 @@ const MemoPayOnlineSuccess = () => {
       }}
     >
       <center className="relative space-grotesk-700">
-        <Image
-          src={Avtaar}
-          alt="avatar"
-          width={64}
-          height={64}
-          className="rounded-full"
-        />
+        <Avatar />
         {animate ? null : (
           <Image
             className="absolute opacity-25 mt-36 animate-spin"
@@ -176,9 +170,9 @@ const MemoPayOnlineSuccess = () => {
       <br />
       {/* coinz earned */}
 
-      <section className="relative mb-[5rem]">
+      {/* <section className="relative mb-[5rem]">
         <CouponzBlink />
-      </section>
+      </section> */}
       <section
         style={{
           boxShadow: "0px 0px 2px 0px #0000001F",

@@ -792,6 +792,41 @@ const reviewRouter = new Hono()
         return respond(c, " successfully", false, 200, {});
       });
     },
-  );
+  ).post(
+    "/googleRatings",
+    zValidator(
+      "json",
+      z.object({
+        placeId: z
+          .string({
+            message: "placeId is required",
+          })
+          .min(1)
+          .max(100),
+        businessId: z.string().min(1).max(100),
+      }),
+    ),
+
+    async (c) => {
+      const { placeId, businessId } = await c.req.json();
+
+      const GOOGLE_API_KEY =
+        process.env.GOOGLE_API_KEY || "AIzaSyCwLRn4hzSvhztHSz8fBLWawijGtKCXcuY";
+
+      const response = await axios.get(
+        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=rating&key=${GOOGLE_API_KEY}`,
+      );
+
+      const avgRating = response.data.result.rating;
+      await OutLetInfo.findOneAndUpdate(
+        { businessId },
+        {
+          avgRating,
+        }
+      );
+
+      return respond(c, "rating fetched successfully", false, 200, {});
+   },
+  )
 
 export default reviewRouter;

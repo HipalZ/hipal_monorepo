@@ -117,11 +117,12 @@ function OtpPage() {
 
   const verifyOtp = async () => {
     const fullOtp = otp.join("");
+    const checkCondition = userDetails.name === "" && customerName === "" && userDetails?.name?.length > 2 && customerName?.length > 2
     if (fullOtp.length !== 4) {
       setError("Please enter the complete OTP.");
       return;
     }
-    if (userDetails.name === "" && customerName === "") {
+    if (checkCondition) {
       setError("Please enter your name.");
       return;
     }
@@ -283,9 +284,8 @@ function OtpPage() {
                 max={1}
                 min={0}
                 ref={inputRefs[index]}
-                className={`border border-black text-black rounded-lg py-2 px-2 text-center text-base-content w-[3rem] h-12 mr-2 focus:outline-none ${
-                  error && "border-red-500"
-                }`}
+                className={`border border-black text-black rounded-lg py-2 px-2 text-center text-base-content w-[3rem] h-12 mr-2 focus:outline-none ${error && "border-red-500"
+                  }`}
                 required
               />
             ))}

@@ -1,23 +1,26 @@
 import { createHmac } from "node:crypto";
 // books.ts
 import {
+  BusinessPosConfig,
   BusinessSettings,
-  Cart,
   CouponClaim,
   Couponz,
   DeviceToken,
   GroupAnalytic,
+  KotOrder,
   LoyaltySettings,
   Order,
   OutLetInfo,
   Payment,
   PaymentAlert,
   PetPoojaPinTemp,
-  Pos,
+  QrBill,
   Reviews,
   Subscriber,
+  Table,
   TagModel,
   TempTableSettle,
+  UpiMode,
   User,
   UserAnalytic,
   UserCouponClaim,
@@ -26,10 +29,7 @@ import {
   UserRewardHistory,
   UserTags,
 } from "@hi/db-models";
-import type {
-  PaymentType,
-  RazorpayWebhookHeaders,
-} from "@hi/db-models/src/validators";
+import type { RazorpayWebhookHeaders } from "@hi/db-models/src/validators";
 import {
   RazorpayWebhookBodySchema,
   RazorpayWebhookHeadersSchema,
@@ -124,7 +124,21 @@ const calculateDiscount = async (
   return discount;
 };
 
-//filter groups
+interface SplitMode {
+  name: string;
+  amount: number;
+}
+
+interface AggregatedData {
+  totalSale: number;
+  forceSettle: number;
+  totalTips: number;
+  totalTax: number;
+  totalServiceCharge: number;
+  totalClaimedCoins: number;
+  totalEarnCoins: number;
+  modeObj: { [key: string]: number };
+}
 
 const calculateReward = async (
   exist: number,
@@ -238,12 +252,6 @@ const addCoins = async (
 
   session: ClientSession,
 ) => {
-  console.log("coins", coins);
-  console.log("userId", userId);
-  console.log("order_id", order_id);
-  console.log("tableName", tableName);
-  console.log("businessId", businessId);
-  console.log("loyaltyId", loyaltyId);
   const existingUser = await UserReward.findOne({ userId, loyaltyId }).select(
     "rewards",
   );
@@ -583,6 +591,11 @@ const paymentsRouter = new Hono()
         } = requestData;
         const uniqueOrderId = nanoid(15);
 
+        const findTempTable = await PetPoojaPinTemp.findOne({
+          tableName,
+          businessId,
+        });
+
         const orderAlreadyExist = await PaymentAlert.findOne({
           businessId,
           tableName,
@@ -643,6 +656,7 @@ const paymentsRouter = new Hono()
               message: `Paid ${total}`,
               date: Date.now(),
               posDiscount: posDiscount,
+              posBillRequestId: findTempTable?.billRequestId,
             },
           ],
           { session },
@@ -1035,6 +1049,10 @@ const paymentsRouter = new Hono()
       const getOrder = await Order.findOne({
         order_id: payload.payment.entity.order_id,
       });
+      const tempTable = await PetPoojaPinTemp.findOne({
+        businessId: getOrder?.businessId,
+        tableName: getOrder?.tableName,
+      });
 
       if (event === "payment.failed") {
         const claimCoins =
@@ -1063,6 +1081,12 @@ const paymentsRouter = new Hono()
                 couponId: payload.payment.entity.notes.couponId,
               },
             ],
+            { session },
+          );
+
+          QrBill.findOneAndUpdate(
+            { requestBillId: tempTable?.billRequestId },
+            { status: "FAILED" },
             { session },
           );
         }
@@ -1153,7 +1177,11 @@ const paymentsRouter = new Hono()
                 channelId: getOrder?.channelId,
                 earnCoins: getCashBack,
                 date: Date.now(),
-                posBillId: getOrder?.posBillId,
+                tax: tempTable?.tax || 0,
+                serviceCharge: tempTable?.serviceCharge || 0,
+                posBillRequestId: tempTable?.billRequestId || "",
+                posBillId: tempTable?.billInvoiceId || "",
+                settleType: tempTable?.settleType || "PAYMENT_GATEWAY",
               },
             ],
             { session },
@@ -1270,6 +1298,23 @@ const paymentsRouter = new Hono()
               session,
             );
 
+            const userGrabbed = await UserCouponGrabb.findOne({
+              userId: getOrder.userId,
+              businessId: getOrder.businessId,
+              isDeleted: false,
+            }).count();
+
+            const userById = await User.findById(getOrder.userId);
+
+            const userTags = await UserTags.find({
+              userId: getOrder.userId,
+              businessId: getOrder.businessId,
+            });
+            let tagIds = [];
+            for (const tag of userTags) {
+              tagIds.push(tag.tagId);
+            }
+
             const userAnalytics = await UserAnalytic.findOne({
               userId: getOrder?.userId,
             }).select("totalSpend visitCount");
@@ -1290,7 +1335,10 @@ const paymentsRouter = new Hono()
                   $set: {
                     avgSpend: countAvgSpend,
                     tableName: getOrder?.tableName,
-                    dateOfJoining: Date.now(),
+                    couponCount: userGrabbed,
+                    currentCoins: coinsCalculated.finalReward,
+                    tagIds: tagIds,
+                    dob: userById?.dob,
                   },
                 },
                 { session },
@@ -1308,6 +1356,10 @@ const paymentsRouter = new Hono()
                     coinzIssued: coinsCalculated.finalReward,
                     coinzUsed: claimCoins,
                     tableName: getOrder?.tableName,
+                    couponCount: userGrabbed,
+                    currentCoins: coinsCalculated.finalReward,
+                    tagIds: tagIds,
+                    dob: userById?.dob,
                   },
                 ],
                 { session },
@@ -1421,7 +1473,9 @@ const paymentsRouter = new Hono()
 
       const existingPaymentAlerts = await PaymentAlert.find({
         businessId,
-        alertType,
+        alertType: {
+          $in: ["ONLINE", "FORCE_SETTLE", "NORMAL_SETTLE", "OFFLINE"],
+        },
         isAccepted: false,
       })
         .sort({ _id: -1 })
@@ -1492,7 +1546,7 @@ const paymentsRouter = new Hono()
 
       const existingPaymentAlerts = await PaymentAlert.find({
         businessId,
-        alertType: ["OFFLINE", "WAITER"],
+        alertType: ["WAITER"],
         isAccepted: false,
       })
         .sort({ _id: -1 })
@@ -1528,7 +1582,13 @@ const paymentsRouter = new Hono()
     async (c) => {
       const { alertId } = c.req.param();
       const requestData = await c.req.json();
-      const { comment, waiterName } = requestData;
+      const {
+        comment,
+        waiterName,
+
+        settleModes = [],
+        split = false,
+      } = requestData;
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const alert = await PaymentAlert.findOne(
@@ -1544,7 +1604,12 @@ const paymentsRouter = new Hono()
           businessId: alert.businessId,
         }).select("loyaltyId");
 
-        if (alert.alertType === "ONLINE" || alert.alertType === "WAITER") {
+        if (
+          alert.alertType === "ONLINE" ||
+          alert.alertType === "WAITER" ||
+          alert.alertType === "FORCE_SETTLE" ||
+          alert.alertType === "NORMAL_SETTLE"
+        ) {
           const updateAlert = await PaymentAlert.findByIdAndUpdate(
             alertId,
             { isAccepted: true, comment, waiterName },
@@ -1563,6 +1628,18 @@ const paymentsRouter = new Hono()
               path: "userId",
               select: "name",
             });
+
+            const paymentMode = await UpiMode.findById(settleModes[0]._id);
+            if (
+              (split === true && settleModes.length === 1) ||
+              (split === false && settleModes.length === 0)
+            ) {
+              return c.json({
+                message: "Please select at least one split mode",
+                err: true,
+                data: {},
+              });
+            }
             if (order?.couponId) {
               const coupon = await Couponz.findById(order.couponId).select(
                 "conditions.couponEndDate",
@@ -1610,8 +1687,6 @@ const paymentsRouter = new Hono()
                 cashBack = 0;
               }
 
-              console.log("order", order);
-
               const finalCashBack = await addCoins(
                 cashBack,
                 order.userId._id.toString(),
@@ -1624,15 +1699,30 @@ const paymentsRouter = new Hono()
                 session,
               );
 
+              const isHavePos = await BusinessPosConfig.findOne({
+                businessId: order.businessId,
+              }).populate("posId");
+
+              const tempTable = await PetPoojaPinTemp.findOne({
+                businessId: order.businessId,
+                tableName: order.tableName,
+              });
+
               await Payment.create(
                 [
                   {
                     businessId: alert.businessId,
                     order_id: order?._id,
                     total: order?.total,
-                    mode: "offline",
+                    mode:
+                      settleModes.length > 1
+                        ? "split"
+                        : paymentMode?.name || "offline",
                     status: "SUCCESS",
-                    paymentMode: "offline",
+                    paymentMode:
+                      settleModes.length > 1
+                        ? "split"
+                        : paymentMode?.name || "offline",
                     userId: order?.userId._id,
                     claimedCoins: order?.claimedCoins,
                     billValue: order?.billValue,
@@ -1644,8 +1734,11 @@ const paymentsRouter = new Hono()
                     razorpayPaymentId: nanoid(15),
                     couponId: order?.couponId,
                     channelId: order?.channelId,
-                    posBillId: order?.posBillId,
-
+                    posBillId: tempTable?.billInvoiceId || "",
+                    tax: tempTable?.tax || 0,
+                    serviceCgarge: tempTable?.serviceCharge || 0,
+                    posBillRequestId: tempTable?.billRequestId || "",
+                    splitModes: settleModes,
                     waiterName,
                     date: Date.now(),
                   },
@@ -1653,62 +1746,112 @@ const paymentsRouter = new Hono()
                 { session },
               );
 
-              // const activeTable = await PetPoojaPinTemp.findOne({
-              //   tableName: order.tableName,
-              //   businessId: order.businessId,
-              // });
+              if (isHavePos) {
+                const res = await axios.post(
+                  "http://api.petpooja.com/V1/captainorders/success_payment/",
+                  {
+                    app_key: isHavePos?.posId?.accessKey,
+                    app_secret: isHavePos?.posId?.secretKey,
+                    access_token: isHavePos?.posId?.authToken,
+                    restID: isHavePos?.posId?.restId,
+                    bill_request_id: tempTable?.billRequestId,
+                    amount_paid: order.total,
+                    pin: tempTable?.pin,
+                  },
+                );
 
-              // const pos = await Pos.findOne({ businessId: order.businessId });
+                const tableData = await Table.findOne({
+                  businessId: order.businessId,
+                  name: order.tableName,
+                });
 
-              // const res = await axios.post(
-              //   "http://api.petpooja.com/V1/captainorders/success_payment/",
-              //   {
-              //     app_key: pos?.accessKey,
-              //     app_secret: pos?.secretKey,
-              //     access_token: pos?.authToken,
-              //     restID: pos?.restId,
-              //     bill_request_id: activeTable?.billRequestId,
-              //     amount_paid: order.total,
-              //     pin: activeTable?.pin,
-              //   },
-              // );
+                await PetPoojaPinTemp.findOneAndUpdate(
+                  {
+                    businessId: order.businessId,
+                    transferTableFrom: tableData?._id.toString(),
+                  },
+                  {
+                    $set: {
+                      transferTableFrom: "",
+                    },
+                  },
+                  {
+                    session,
+                  },
+                );
 
-              // await PetPoojaPinTemp.deleteOne(
-              //   {
-              //     tableName: order.tableName,
-              //     businessId: order.businessId,
-              //   },
-              //   {
-              //     session,
-              //   },
-              // );
-              // await Cart.updateMany(
-              //   {
-              //     tableName: order.tableName,
-              //     businessId: order.businessId,
-              //   },
-              //   {
-              //     $set: {
-              //       isSettle: true,
-              //     },
-              //   },
-              //   {
-              //     session,
-              //   },
-              // );
+                await TempTableSettle.create(
+                  [
+                    {
+                      businessId: order.businessId,
+                      tableName: order.tableName,
+                      settleBy: order.userId?.name,
+                      hiCode: tempTable?.hiCode,
+                    },
+                  ],
+                  {
+                    session,
+                  },
+                );
 
-              // await TempTableSettle.create(
-              //   [
-              //     {
-              //       businessId: order.businessId,
-              //       tableName: order.tableName,
-              //       settleBy: order.userId?.name,
-              //     },
-              //   ],
-              //   {
-              //     session,
-              //   },
-              // );
+                await KotOrder.updateMany(
+                  {
+                    tableName: order.tableName,
+                    businessId: order.businessId,
+                  },
+                  {
+                    $set: {
+                      settled: true,
+                    },
+                  },
+                  {
+                    session,
+                  },
+                );
+
+                await Table.findOneAndUpdate(
+                  {
+                    businessId: order.businessId,
+                    name: order.tableName,
+                  },
+                  {
+                    $set: {
+                      status: "EMPTY",
+                      currentTableAmount: 0,
+                      userIds: [],
+                      totalItemCount: 0,
+                      capacity: 0,
+                      hiCode: "",
+                      isTransfered: false,
+                    },
+                  },
+                  {
+                    session,
+                  },
+                );
+                await QrBill.findOneAndUpdate(
+                  {
+                    requestBillId: tempTable?.billRequestId,
+                  },
+                  {
+                    $set: {
+                      status: "SUCCESS",
+                    },
+                  },
+                  {
+                    session,
+                  },
+                );
+                await PetPoojaPinTemp.deleteOne(
+                  {
+                    tableName: order.tableName,
+                    businessId: order.businessId,
+                  },
+                  {
+                    session,
+                  },
+                );
+              }
             }
           }
 
@@ -1855,13 +1998,12 @@ const paymentsRouter = new Hono()
       ClientRoles.HIPAL_CUSTOMER,
       ClientRoles.CAPTAIN,
     ]),
-
     zValidator("query", paramsSchema),
-
     async (c) => {
       const { businessId, from, to } = c.req.query();
       const fromDate = Number(from);
       const toDate = Number(to);
+
       if (fromDate > toDate) {
         return c.json({
           err: true,
@@ -1870,103 +2012,83 @@ const paymentsRouter = new Hono()
         });
       }
 
-      if (!from && !to) {
-        const existingPayments = await Payment.find({
-          businessId,
-          date: {
-            $gte: startOfToday.getTime(),
-            $lte: endOfToday.getTime(),
-          },
-        }).select("total claimedCoins paymentMode earnCoins");
-        const totalSale = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.total ?? 0),
-          0,
-        );
-        const totalCoins = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0),
-          0,
-        );
+      const query = {
+        businessId,
+        date: {
+          $gte: from ? fromDate : startOfToday.getTime(),
+          $lte: to ? toDate : endOfToday.getTime(),
+        },
+      };
 
-        const totalCoinsIssued = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment?.earnCoins ?? 0),
-          0,
-        );
+      const existingPayments = await Payment.find(query).select(
+        "total claimedCoins paymentMode earnCoins mode tips tax serviceCharge settleType splitModes",
+      );
 
-        const totalOnlineSale = existingPayments.reduce(
-          (acc, payment: PaymentType) =>
-            acc + (payment.paymentMode === "online" ? payment.total ?? 0 : 0),
-          0,
-        );
+      const aggregatedData: AggregatedData = {
+        totalSale: 0,
+        forceSettle: 0,
+        totalTips: 0,
+        totalTax: 0,
+        totalServiceCharge: 0,
+        totalClaimedCoins: 0,
+        totalEarnCoins: 0,
+        modeObj: {},
+      };
 
-        const totalOfflineSale = existingPayments.reduce(
-          (acc, payment: PaymentType) =>
-            acc + (payment.paymentMode === "offline" ? payment.total ?? 0 : 0),
-          0,
-        );
+      for (const payment of existingPayments) {
+        const {
+          total = 0,
+          tips = 0,
+          tax = 0,
+          serviceCharge = 0,
+          claimedCoins = 0,
+          earnCoins = 0,
+          mode,
+          settleType,
+          splitModes,
+        } = payment;
 
-        return c.json({
-          err: false,
-          data: {
-            totalSale,
-            totalDiscount: totalCoins,
-            totalOnlineSale,
-            totalOfflineSale,
-            coinzIssued: totalCoinsIssued,
-            coinzRedeemed: totalCoins,
-          },
-          message: "existing payment",
-        });
+        aggregatedData.totalSale += total;
+        aggregatedData.totalTips += tips;
+        aggregatedData.totalTax += tax;
+        aggregatedData.totalServiceCharge += serviceCharge;
+        aggregatedData.totalClaimedCoins += claimedCoins;
+        aggregatedData.totalEarnCoins += earnCoins;
+
+        if (settleType === "FORCE_SETTLE") {
+          aggregatedData.forceSettle += total;
+        }
+
+        if (!aggregatedData.modeObj[mode]) {
+          aggregatedData.modeObj[mode] = 0;
+        }
+        aggregatedData.modeObj[mode] += total;
+
+        if (mode === "split" && Array.isArray(splitModes)) {
+          for (const { name, amount = 0 } of splitModes) {
+            if (!aggregatedData.modeObj[name]) {
+              aggregatedData.modeObj[name] = 0;
+            }
+            aggregatedData.modeObj[name] += amount;
+          }
+          delete aggregatedData.modeObj["split"];
+        }
       }
-      if (from && to) {
-        const existingPayments = await Payment.find({
-          businessId,
-          date: {
-            $gte: fromDate,
-            $lte: toDate,
-          },
-        }).select("total claimedCoins paymentMode earnCoins");
-        const totalSale = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment.total ?? 0),
-          0,
-        );
-        const totalCoins = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment?.claimedCoins ?? 0),
-          0,
-        );
-        const totalCoinsIssued = existingPayments.reduce(
-          (acc, payment: PaymentType) => acc + (payment?.earnCoins ?? 0),
-          0,
-        );
 
-        const totalOnlineSale = existingPayments.reduce(
-          (acc, payment: PaymentType) =>
-            acc + (payment.paymentMode === "online" ? payment.total ?? 0 : 0),
-          0,
-        );
-
-        const totalOfflineSale = existingPayments.reduce(
-          (acc, payment: PaymentType) =>
-            acc + (payment.paymentMode === "offline" ? payment.total ?? 0 : 0),
-          0,
-        );
-
-        return c.json({
-          err: false,
-          data: {
-            totalSale,
-            totalDiscount: totalCoins,
-            totalOnlineSale,
-            totalOfflineSale,
-            coinzIssued: totalCoinsIssued,
-            coinzRedeemed: totalCoins,
-          },
-          message: "existing payment",
-        });
-      }
       return c.json({
-        err: true,
-        data: {},
-        message: "Invalid date range",
+        err: false,
+        data: {
+          totalSale: aggregatedData.totalSale,
+          modeObj: aggregatedData.modeObj,
+          totalTips: aggregatedData.totalTips,
+          totalTax: Math.round(aggregatedData.totalTax),
+          totalServiceCharge: Math.round(aggregatedData.totalServiceCharge),
+          totalClaimedCoins: aggregatedData.totalClaimedCoins,
+          totalEarnCoins: aggregatedData.totalEarnCoins,
+          totalDiscount: aggregatedData.totalClaimedCoins,
+          forceSettle: aggregatedData.forceSettle,
+        },
+        message: "existing payment",
       });
     },
   )
@@ -2346,8 +2468,6 @@ const paymentsRouter = new Hono()
         loyaltyId: businessId,
       }).select("rewards");
 
-      console.log("userReward", userReward);
-
       const existingPayments = await Payment.find({
         userId,
         businessId,
@@ -2698,60 +2818,123 @@ const paymentsRouter = new Hono()
             businessId: getOrder.businessId,
           });
 
-          const pos = await Pos.findOne({ businessId: getOrder.businessId });
+          const table = await Table.findOne({
+            businessId: getOrder.businessId,
+            name: getOrder.tableName,
+          });
 
-          const res = await axios.post(
-            "http://api.petpooja.com/V1/captainorders/success_payment/",
+          await PetPoojaPinTemp.findOneAndUpdate(
             {
-              app_key: pos?.accessKey,
-              app_secret: pos?.secretKey,
-              access_token: pos?.authToken,
-              restID: pos?.restId,
-              bill_request_id: activeTable?.billRequestId,
-              amount_paid: getOrder.total,
-              pin: activeTable?.pin,
-            },
-          );
-
-          await PetPoojaPinTemp.deleteOne(
-            {
-              tableName: getOrder.tableName,
               businessId: getOrder.businessId,
-            },
-            {
-              session,
-            },
-          );
-          await Cart.updateMany(
-            {
-              tableName: getOrder.tableName,
-              businessId: getOrder.businessId,
+              transferTableFrom: table?._id.toString(),
             },
             {
               $set: {
-                isSettle: true,
+                transferTableFrom: "",
               },
             },
             {
               session,
             },
           );
-          await TempTableSettle.create(
-            [
+
+          const pos = await BusinessPosConfig.findOne({
+            businessId: getOrder.businessId,
+          }).populate("posId");
+
+          if (pos) {
+            const res = await axios.post(
+              "http://api.petpooja.com/V1/captainorders/success_payment/",
+              {
+                app_key: pos?.posId.accessKey,
+                app_secret: pos?.posId.secretKey,
+                access_token: pos?.posId.authToken,
+                restID: pos?.posId.restId,
+                bill_request_id: activeTable?.billRequestId,
+                amount_paid: getOrder.total,
+                pin: activeTable?.pin,
+              },
+            );
+            await TempTableSettle.create(
+              [
+                {
+                  businessId: getOrder.businessId,
+                  tableName: getOrder.tableName,
+                  settleBy: getOrder.userId?.name,
+                  hiCode: activeTable?.hiCode,
+                },
+              ],
+              {
+                session,
+              },
+            );
+            const g = await QrBill.findOneAndUpdate(
+              {
+                requestBillId: activeTable?.billRequestId,
+              },
+              {
+                $set: {
+                  status: "SUCCESS",
+                },
+              },
+              {
+                session,
+              },
+            );
+
+            console.log("golubaba", g);
+
+            await PetPoojaPinTemp.deleteOne(
+              {
+                tableName: getOrder.tableName,
+                businessId: getOrder.businessId,
+              },
+              {
+                session,
+              },
+            );
+
+            await KotOrder.updateMany(
+              {
+                tableName: getOrder.tableName,
+                businessId: getOrder.businessId,
+              },
+              {
+                $set: {
+                  settled: true,
+                },
+              },
+              {
+                session,
+              },
+            );
+
+            await Table.findOneAndUpdate(
               {
                 businessId: getOrder.businessId,
-                tableName: getOrder.tableName,
-                settleBy: getOrder.userId?.name,
+                name: getOrder.tableName,
               },
-            ],
-            {
-              session,
-            },
-          );
+              {
+                $set: {
+                  status: "EMPTY",
+                  currentTableAmount: 0,
+                  userIds: [],
+                  totalItemCount: 0,
+                  capacity: 0,
+                  hiCode: "",
+                },
+              },
+              {
+                session,
+              },
+            );
+          }
         }
+
+        return respond(c, "3 Webhook received successfully", false, 200, {});
       }
 
-      return respond(c, "2 Webhook received successfully", false, 200, {});
+      return respond(c, "3 Webhook received successfully", false, 200, {});
     });
   });
 

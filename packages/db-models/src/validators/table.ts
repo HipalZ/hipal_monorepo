@@ -10,6 +10,8 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
     })
     .transform((val) => new mongoose.Types.ObjectId(val)),
 );
+
+export const TableStatusEnum = ["ACTIVE", "EMPTY", "BILL"] as const;
 export const tableSchema = z.object({
   name: z
     .string({
@@ -28,11 +30,17 @@ export const tableSchema = z.object({
   displayForCaptains: z.boolean().default(true).optional(),
 
   tableId: z.string().min(3).max(100).optional(),
+  hiCode: z.string().min(3).max(100).optional(),
 
   active: z.string().min(1).max(30).optional(),
   rank: z.string().min(1).max(30).optional(),
-
+  status: z.enum(TableStatusEnum).default("EMPTY"),
+  totalItemCount: z.number().default(0).optional(),
+  userIds: z.array(ObjectIdSchema).default([]).optional(),
+  currentTableAmount: z.number().default(0).optional(),
+  date: z.number().optional(),
   isDeleted: z.boolean().default(false).optional(),
+  isTransfer: z.boolean().default(false).optional(),
 });
 
 export type TableType = z.infer<typeof tableSchema>;

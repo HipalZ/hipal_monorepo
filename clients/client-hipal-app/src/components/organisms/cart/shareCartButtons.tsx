@@ -2,10 +2,11 @@ import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { useCartStore } from "@/components/store/useCartStore";
 import { useLogin } from "@/components/store/useLogin";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { BUSINESS_KEYID } from "@/configs";
 import { apiRpc } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { memo, useMemo, useState } from "react";
 import { FiBriefcase, FiShare, FiUsers } from "react-icons/fi";
 import { toast } from "react-toastify";
@@ -15,9 +16,9 @@ const MemoShareCartButtons = () => {
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const accessToken = useUserToken.getState().accessToken;
   const userDetails = useLogin((state) => state.userDetails);
-  const router = useRouter();
+  const setDirection = useLogin((state) => state.setDirection);
   const customLink = useParams()?.businessId as string;
-
+  const { setCheckLogin } = usePaymentStore()
   const [shareState, setShareState] = useState({ showOptions: false, url: "" });
 
   const sanitizedCart = useMemo(() => {
@@ -28,8 +29,9 @@ const MemoShareCartButtons = () => {
   }, [cart]);
 
   const generateCartLink = async () => {
+    setDirection("category")
     if (!accessToken) {
-      router.push(`/${customLink}/user/signup`);
+      setCheckLogin(true);
       return;
     }
 

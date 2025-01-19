@@ -95,7 +95,7 @@ const MemoBottomPopUp = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="absolute bottom-0 p-4 rounded-full bg-[#00000050] text-white transform -translate-x-1/2 -translate-y-1/2 left-1/2"
+                className="absolute bottom-0 p-3 rounded-full bg-[#00000080] text-white transform -translate-x-1/2 -translate-y-1/2 left-1/2"
               >
                 <HiX />
               </button>

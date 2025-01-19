@@ -6,9 +6,11 @@ import { Scanner, type IDetectedBarcode } from "@yudiel/react-qr-scanner";
 import Image from "next/image";
 import HipalLogo from "@/assets/img/HipalZ_logo_title.png";
 import poweredBy from "@/assets/img/powered_hipalz.png";
+import { useCart } from "@/components/store/useCart";
 
 const MemoScan = ({ hide }: { hide?: boolean }) => {
   const router = useRouter();
+  const { setShowCart } = useCart();
 
   const gotoExplore = () => {
     router.back();
@@ -19,10 +21,18 @@ const MemoScan = ({ hide }: { hide?: boolean }) => {
       if (!detectedCodes || detectedCodes.length === 0) {
         return;
       }
-      const result = detectedCodes[0].rawValue;
-      router.push(result);
+      let result = detectedCodes[0].rawValue;
+      console.log("QR Scanner Result:", result);
+
+      // Ensure the URL is absolute
+      if (!result.startsWith("http://") && !result.startsWith("https://")) {
+        result = `https://${result}`;
+      }
+
+      window.location.href = result;
+      setShowCart(false);
     },
-    [router],
+    [setShowCart],
   );
 
   const onError = useCallback((error: unknown) => {
@@ -63,7 +73,7 @@ const MemoScan = ({ hide }: { hide?: boolean }) => {
             }}
           />
         </div>
-        <p className="mt-6 text-sm font-normal opacity-90">
+        <p className="mt-6 text-sm font-normal opacity-90 text-black dark:text-white">
           Scan the QR on the table &amp; start ordering
         </p>
       </div>

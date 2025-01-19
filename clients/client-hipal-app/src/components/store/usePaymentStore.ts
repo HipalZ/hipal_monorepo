@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { PageStates } from "../utils/helpers";
-import type { IMerchantDetails } from "../types/businessData";
+import type { BillData, IMerchantDetails } from "../types/businessData";
 
 interface IUsePaymentStore {
   claimedCoinz: number;
@@ -47,6 +47,30 @@ interface IUsePaymentStore {
 
   editBillModal: boolean;
   setEditBillModal: (open: boolean) => void;
+
+  checkLogin: boolean;
+  setCheckLogin: (login: boolean) => void;
+
+  openBlastModal: boolean;
+  setOpenBlastModal: (open: boolean) => void;
+
+  coinz: number;
+  setCoinz: (coinz: number) => void;
+
+  showScan: boolean;
+  setShowScan: (show: boolean) => void;
+
+  showBillPage: boolean;
+  setShowBillPage: (show: boolean) => void;
+
+  billData: BillData;
+  setBillData: (data: BillData) => void;
+
+  isButtonDisabled: boolean;
+  setIsButtonDisabled: (disabled: boolean) => void;
+
+  displayTimer: number;
+  setDisplayTimer: (timer: number) => void;
 }
 
 export const usePaymentStore = create<IUsePaymentStore>((set) => ({
@@ -109,4 +133,41 @@ export const usePaymentStore = create<IUsePaymentStore>((set) => ({
 
   editBillModal: false,
   setEditBillModal: (open: boolean) => set(() => ({ editBillModal: open })),
+
+  checkLogin: false,
+  setCheckLogin: (login: boolean) => set(() => ({ checkLogin: login })),
+
+  openBlastModal: false,
+  setOpenBlastModal: (open: boolean) => set(() => ({ openBlastModal: open })),
+
+  coinz: 0,
+  setCoinz: (coinz: number) => set(() => ({ coinz: coinz })),
+
+  showScan: false,
+  setShowScan: (show: boolean) => set(() => ({ showScan: show })),
+
+  showBillPage: false,
+  setShowBillPage: (show: boolean) => set(() => ({ showBillPage: show })),
+
+  billData: {
+    billing_user_name: "",
+    serviceCharge: 0,
+    discount: 0,
+    tax: 0,
+    total: 0,
+    customerPhone: "",
+    customerName: "",
+    tableName: "",
+    subTotal: 0,
+    billRequestId: "",
+    items: [],
+  },
+  setBillData: (data: BillData) => set(() => ({ billData: data })),
+
+  isButtonDisabled: true,
+  setIsButtonDisabled: (disabled: boolean) =>
+    set(() => ({ isButtonDisabled: disabled })),
+
+  displayTimer: 10,
+  setDisplayTimer: (timer: number) => set(() => ({ displayTimer: timer })),
 }));

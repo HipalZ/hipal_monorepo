@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLiteStore } from "./components/store/useLiteStore";
 import MainRouter from "./routes";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -8,21 +8,22 @@ import { useFetchAlerts } from "./utils/apiService";
 import type { Alert, Cart } from "./components/types/hiClientzData";
 import SpinnerMemo from "./components/atoms/loadingSpinner";
 import toast from "react-hot-toast";
-import { LuBellRing } from "react-icons/lu";
 import { NativeSettings, AndroidSettings } from "capacitor-native-settings";
 import { usePushNotifications } from "./hooks/usePushNotifications";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import { useErrorHandling } from "./components/utils/helpers";
+import useBusinessData from "./components/store/useBusinessData";
 
 function App() {
   const navigate = useNavigate();
   const { fetchAlerts } = useFetchAlerts();
   const accessToken = useUserToken((s) => s.accessToken);
   const pathName = useLocation().pathname;
-  const businessIdMatch = pathName.match(/^\/([^/]+)\/alerts$/);
+  const businessIdMatch = pathName.match(/^\/([^/]+)\/alerts/);
   const businessId = businessIdMatch ? businessIdMatch[1] : null;
-  const [isOnline, setIsOnline] = useState(true);
+  const outletInfo = useBusinessData(s => s.outletInfo);
+  const isOnlineRef = useRef(navigator.onLine);
   const [isSlow, setIsSlow] = useState(false);
   const { errorText } = useErrorHandling();
   const {
@@ -32,24 +33,22 @@ function App() {
     setOfflineCount,
     setOnlineAlertData,
     setOfflineAlertData,
-    setRefetchOnlineAlerts,
-    setRefetchOfflineAlerts,
     loading,
     triggerSound,
     notificationStatus,
     setNotificationStatus,
-    setRefetchCart,
     setCartData,
     setCartCount,
   } = useLiteStore();
   const { initializePushNotifications, initializedRef } =
     usePushNotifications();
-  const { selectedBiz, platform, pushToken, notification } = useHiClientZ(
+  const { selectedBiz, platform, pushToken, notification, captainData } = useHiClientZ(
     (s) => ({
       selectedBiz: s.selectedBiz,
       platform: s.platform,
       pushToken: s.pushToken,
       notification: s.notification,
+      captainData: s.captainData,
     }),
   );
 
@@ -66,7 +65,12 @@ function App() {
   };
 
   useEffect(() => {
-    if (accessToken && pushToken && selectedBiz?.businessId?.name) {
+    const isValidBusiness = captainData?.customRole?.some(
+      (role) => role.businessId?._id === selectedBiz?.businessId?._id
+    );
+
+    if (accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness) {
+      console.log('isValidBusiness', isValidBusiness);
       navigate(`/${selectedBiz?.businessId?._id}/alerts`);
     }
   }, []);
@@ -80,9 +84,28 @@ function App() {
     if (!businessId) return;
     const data: Alert[] = await fetchAlerts(businessId, "ONLINE");
     setOnlineAlertData(data);
-    setRefetchOnlineAlerts(refetchOnlineAlerts);
     setOnlineCount(data.length);
     if (data && data?.length > onlineCount && platform === "web") {
+      const sound = new Howl({
+        src: ["/sounds/order.mp3"],
+        autoplay: triggerSound,
+        loop: true,
+      });
+      sound.play();
+      setTimeout(() => {
+        sound.pause();
+      }, 3000);
+    }
+    return data;
+  };
+
+
+  const handleOfflineAlerts = async () => {
+    if (!businessId) return;
+    const data: Alert[] = await fetchAlerts(businessId, "ALL");
+    setOfflineAlertData(data);
+    setOfflineCount(data.length);
+    if (data && data.length > offlineCount && platform === "web") {
       const sound = new Howl({
         src: ["/sounds/order.mp3"],
         autoplay: triggerSound,
@@ -99,6 +122,22 @@ function App() {
   const getAllCarts = async () => {
     if (!businessId) return;
 
+    if (outletInfo?.isPosEnabled) {
+      const response = await apiRpc.table.orders[":businessId"].$get({
+        param: {
+          businessId: businessId,
+        },
+      });
+      if (response.status === 401) {
+        errorText();
+      }
+      const res = await response.json();
+      const carts = res.data as Cart[];
+      setCartData(carts);
+      setCartCount(carts?.length || 0);
+      return res.data;
+    }
+
     const response = await apiRpc.cart.$get({
       query: {
         businessId: businessId,
@@ -108,36 +147,16 @@ function App() {
       errorText();
     }
     const res = await response.json();
-    setRefetchCart(refetchCart);
     const carts = res.data as Cart[];
     setCartData(carts);
     setCartCount(carts?.length || 0);
     return res.data;
   };
 
-  const handleOfflineAlerts = async () => {
-    if (!businessId) return;
-    const data: Alert[] = await fetchAlerts(businessId, "ALL");
-    setOfflineAlertData(data);
-    setRefetchOfflineAlerts(refetchOfflineAlerts);
-    setOfflineCount(data.length);
-    if (data && data.length > offlineCount && platform === "web") {
-      const sound = new Howl({
-        src: ["/sounds/order.mp3"],
-        autoplay: triggerSound,
-        loop: true,
-      });
-      sound.play();
-      setTimeout(() => {
-        sound.pause();
-      }, 3000);
-    }
-    return data;
-  };
 
   useEffect(() => {
     const checkOnlineStatus = () => {
-      setIsOnline(navigator.onLine);
+      isOnlineRef.current = navigator.onLine;
     };
 
     const handleConnectionChange = () => {
@@ -177,21 +196,21 @@ function App() {
   }, []);
 
   // UseQuery with adaptive polling based on pingTime and connection speed
-  const { refetch: refetchOnlineAlerts } = useQuery({
+  useQuery({
     queryKey: ["onlineAlerts", businessId, selectedBiz],
     queryFn: handleOnlineAlerts,
     enabled: !!businessId && !!selectedBiz,
     refetchInterval: isSlow ? 31000 : 17000,
   });
 
-  const { refetch: refetchOfflineAlerts } = useQuery({
+  useQuery({
     queryKey: ["offlineAlerts", businessId, selectedBiz],
     queryFn: handleOfflineAlerts,
     enabled: !!businessId && !!selectedBiz,
     refetchInterval: isSlow ? 23000 : 19000,
   });
 
-  const { refetch: refetchCart } = useQuery({
+  useQuery({
     queryKey: ["carts", businessId],
     queryFn: getAllCarts,
     enabled: !!businessId,
@@ -200,27 +219,13 @@ function App() {
 
   return (
     <main className="relative">
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossOrigin="anonymous"
-      />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Bungee+Inline&display=swap"
-        rel="stylesheet"
-      />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap"
-        rel="stylesheet"
-      />
-      {!isOnline && (
-        <div className="fixed top-0 z-20 w-full text-center text-white bg-red-500 space-grotesk-700">
+      {!isOnlineRef.current && (
+        <div className="sticky top-0 z-20 w-full text-center text-white bg-red-500 space-grotesk-700">
           Please check your internet connection
         </div>
       )}
-      {isOnline && isSlow && (
-        <div className="space-grotesk-700 fixed top-0 z-20 w-full bg-[#ef9b0f] text-center text-white">
+      {isOnlineRef.current && isSlow && (
+        <div className="sticky top-0 space-grotesk-700 z-20 w-full bg-[#ef9b0f] text-center text-white">
           ⚠ Your connection is too slow
         </div>
       )}
@@ -229,7 +234,7 @@ function App() {
           You Turned off alerts, Turn on to get Alerts
         </center>
       )}
-      {!notificationStatus && platform === "android" && (
+      {/* {!notificationStatus && platform === "android" && (
         <div className="fixed z-20 top-0 left-1/2 -translate-x-1/2 w-full max-w-[30rem] flex items-center justify-between h-12 px-2 text-center text-black bg-[#6f2eff] border space-grotesk-700">
           <h1 className="flex items-center gap-2 text-white">
             <LuBellRing />
@@ -243,7 +248,7 @@ function App() {
             Enable
           </button>
         </div>
-      )}
+      )} */}
       {loading ? <SpinnerMemo /> : null}
       <MainRouter />
     </main>

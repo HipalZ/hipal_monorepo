@@ -28,12 +28,14 @@ import useCouponTemp from "@/components/store/useCouponTemp";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { useErrorHandling } from "@/utils/helper";
 import { toast } from "react-toastify";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
   const { errorText } = useErrorHandling();
   const { couponId, channelId } = useParams();
   const router = useRouter();
+  const { setCheckLogin } = usePaymentStore()
   const { displayTermsAndConditions, openTc, setIsLoading } = useCouponTemp(
     (s) => ({
       displayTermsAndConditions: s.displayTermsAndConditions,
@@ -67,7 +69,8 @@ const MemoCouponz = () => {
     if (!isLogin && !!channelId && !!couponId) {
       setDirection("couponz");
       setUrlFrom(`/${customLink}/couponz/${couponId}/${channelId}`);
-      return router.push(`/${customLink}/user/signup/`);
+      setCheckLogin(true);
+      return;
     }
     setIsLoading(true);
     const requiredFields = selectedCoupon?.conditions?.requiredFields || [];
@@ -150,6 +153,12 @@ const MemoCouponz = () => {
     );
   }, [selectedCoupon]);
 
+  const redirectBack = useCallback(() => {
+    router.push(`/${customLink}/explore`);
+    setDirection("")
+    setUrlFrom("");
+  }, [setDirection, setUrlFrom, router, customLink]);
+
   if (selectedCoupon && Object.keys(selectedCoupon).length === 0)
     return <LoadingSpinnerCircle />;
 
@@ -161,14 +170,13 @@ const MemoCouponz = () => {
         "h-[100vh] overflow-y-auto pb-[10rem] relative",
       )}
     >
-      <Link href={`/${customLink}/explore`}>
-        <button
-          type="button"
-          className="top-4 left-4 py-2 rounded-full absolute z-[60] px-4 text-black bg-[#ffffff70]"
-        >
-          <BiArrowBack />
-        </button>
-      </Link>
+      <button
+        type="button"
+        onClick={redirectBack}
+        className="top-4 left-4 py-2 rounded-full absolute z-[60] px-4 text-black bg-[#ffffff70]"
+      >
+        <BiArrowBack />
+      </button>
       <picture className="absolute right-0 -top-14">
         <Image src={baloonsRight} alt="baloonsRight" width={155} height={300} />
       </picture>

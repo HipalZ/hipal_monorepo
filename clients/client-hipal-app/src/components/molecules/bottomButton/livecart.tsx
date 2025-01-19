@@ -16,8 +16,9 @@ import { HiX } from "react-icons/hi";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const MemoLiveCart = () => {
-  const cart = useCartStore((s) => s.cart);
-  const { setShowCart, cartPage, setCartPage, showCart } = useCart();
+  const { cart, setSelectedDish } = useCartStore();
+  const { setShowCart, setCartPage, showCart } = useCart();
+
   const { tableNameMissing, setTableNameMissing, tableName } = useTableData();
   const { isSearchActive, setIsSearchActive } = useSearch();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
@@ -39,13 +40,11 @@ const MemoLiveCart = () => {
   const openCart = useCallback(() => {
     if (!tableNameMissing) {
       setTableNameMissing(true);
-      return;
     }
+    setSelectedDish(null);
     setCartPage("cart");
     setShowCart(true);
   }, [
-    cartPage,
-    showCart,
     setShowCart,
     setCartPage,
     tableNameMissing,
@@ -57,6 +56,7 @@ const MemoLiveCart = () => {
       <AnimatePresence>
         {cart.length > 0 && (
           <motion.section
+            onClick={openCart}
             className="fixed flex items-center justify-between overflow-hidden !text-sm
               px-4 py-3 text-[#FFF] max-w-[30rem] z-50 transform
               -translate-x-1/2 left-1/2 bg-[#008800]"
@@ -73,7 +73,7 @@ const MemoLiveCart = () => {
               animate="animate"
               transition={{
                 duration: 2,
-                repeat: Infinity,
+                repeat: Number.POSITIVE_INFINITY,
                 ease: "backInOut",
               }}
               style={{
@@ -81,7 +81,6 @@ const MemoLiveCart = () => {
               }}
             />
             <button
-              onClick={openCart}
               type="button"
               className="flex items-center gap-2"
             >
@@ -94,7 +93,6 @@ const MemoLiveCart = () => {
             </button>
             <button
               type="button"
-              onClick={openCart}
               className="flex items-center gap-2"
             >
               <span>

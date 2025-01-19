@@ -10,6 +10,7 @@ import dishesRouter from "./dishes";
 import groupRouter from "./groups";
 import hipalzRouter from "./hipalz";
 import iconRouter from "./icon";
+import kotRouter from "./kot";
 import menuBannerRouter from "./menu-banner";
 import paymentsRouter from "./payments";
 import posRouter from "./pos";
@@ -17,7 +18,9 @@ import googleReview from "./reviews";
 import settingsRouter from "./settings";
 import subsCriberRouter from "./subscribers";
 import surlRouter from "./surl";
+import tableRouter from "./table";
 import tagRouter from "./tags";
+import upiModeRouter from "./upimode";
 import usersRouter from "./users";
 import whatsappRouter from "./whatsapp";
 import zonesAndTablesRouter from "./zonesAndTables";
@@ -49,6 +52,9 @@ export const routes = app
   .route("/cart", cartRouter)
   .route("/surl", surlRouter)
   .route("/zones_and_tables", zonesAndTablesRouter)
-  .route("/icon", iconRouter);
+  .route("/icon", iconRouter)
+  .route("/table", tableRouter)
+  .route("/kot", kotRouter)
+  .route("/upi_mode", upiModeRouter);
 
 export type AppType = typeof routes;

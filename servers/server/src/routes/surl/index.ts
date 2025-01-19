@@ -1,4 +1,9 @@
-import { UrlModel, WhatsAppBusinessConfig } from "@hi/db-models";
+import {
+  BillUrlModel,
+  QrBill,
+  UrlModel,
+  WhatsAppBusinessConfig,
+} from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { nanoid } from "nanoid";
@@ -57,6 +62,38 @@ const surlRouter = new Hono()
       return c.redirect(result.longUrl);
     },
   )
+
+  .get(
+    "/bill_short_url/bill",
+    zValidator(
+      "query",
+      z.object({
+        urlCode: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { urlCode } = c.req.query();
+
+      console.log("aara", urlCode);
+
+      const result = await BillUrlModel.findOne({ urlCode });
+
+      console.log("result", result);
+      if (!result) {
+        return c.json(
+          {
+            message: "URL not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
+
+      // Redirect to the original URL
+      return c.redirect(result.longUrl);
+    },
+  )
   .post(
     "/create_short_url",
     zValidator(
@@ -101,6 +138,39 @@ const surlRouter = new Hono()
         },
         200,
       );
+    },
+  )
+  .get(
+    "/get_table_data/:orderId",
+    zValidator(
+      "param",
+      z.object({
+        orderId: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { orderId } = c.req.param();
+
+      const billInfo = await QrBill.findOne({
+        requestBillId: orderId,
+      });
+
+      if (!billInfo) {
+        return c.json(
+          {
+            message: "Bill not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
+
+      return c.json({
+        message: "Bill found",
+        err: false,
+        data: billInfo,
+      });
     },
   );
 

@@ -8,6 +8,8 @@ import { memo } from "react";
 import { FiDownload } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import smartPhone from "@/assets//img/smartphone.png";
+import { apiRpc } from "@hi/common";
+import useBusinessData from "@/components/store/useBusinessData";
 
 const BusinessesMemo = memo(() => {
   // store
@@ -19,9 +21,24 @@ const BusinessesMemo = memo(() => {
 
   const setTriggerSound = useLiteStore((s) => s.setTriggerSound);
 
+  const getBusinessInfo = async (id: string) => {
+    const res = await apiRpc.businesses.outletInfo[":businessId"].$get({
+      param: {
+        businessId: id,
+      },
+    });
+    const response = (await res.json()).data;
+    console.log(response);
+    if (res.status === 200 || res.status === 201) {
+      useBusinessData.getState().setOutletInfo(response);
+    }
+  };
+
   const exploreBusiness = (biz: CustomRole) => {
+    console.log(biz);
     setSelectedBiz(biz);
     setTriggerSound(true);
+    getBusinessInfo(biz?.businessId?._id);
     navigate("/viewInBiz");
   };
 

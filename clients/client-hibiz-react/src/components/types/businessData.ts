@@ -179,11 +179,14 @@ export interface Alert {
 
 export interface ISalesLite {
   totalSale: number;
+  modeObj: Record<string, number>;
+  totalTips: number;
+  totalTax: number;
+  totalServiceCharge: number;
+  totalClaimedCoins: number;
+  totalEarnCoins: number;
   totalDiscount: number;
-  totalOnlineSale: number;
-  totalOfflineSale: number;
-  coinzIssued: number;
-  coinzRedeemed: number;
+  forceSettle: number;
 }
 export interface OrderDetails {
   _id: string;
@@ -227,6 +230,7 @@ export interface IExistingPayments {
   claimedCoins: number;
   createdAt: string;
   updatedAt: string;
+  posBillRequestId?: string;
   __v: number;
 }
 export interface HistoryData {
@@ -950,4 +954,9 @@ export interface IWhatsAppMessage {
   message: string;
   userId: string;
   ownerId: string;
+}
+
+export interface IListPos {
+  _id: string;
+  name: string;
 }

@@ -15,12 +15,11 @@ const HistoryCard = (props: IOnlineProp) => {
   const { setViewData } = useLiteStore((s) => ({
     setViewData: s.setViewData,
   }));
-  const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
 
   const handleViewMore = (alert: Alert) => {
     setViewData(alert);
-    setClickViewMore(!clickViewMore);
+    setClickViewMore(true);
   };
 
   return (
@@ -52,7 +51,7 @@ const HistoryCard = (props: IOnlineProp) => {
                   <PiCoinsFill className="mr-1" />
                   {alert?.status === "FAIL"
                     ? "Payment Failed"
-                    : `Received ${alert?.alertType.toLowerCase()}`}
+                    : `${alert?.alertType.toLowerCase()}`}
                 </div>
                 <span className="text-xs text-gray-500">
                   {timestampToDateTime(alert?.date)}

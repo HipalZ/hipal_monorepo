@@ -40,5 +40,6 @@ export const useUserCoinz = (loyaltyId: string) => {
     queryKey: ["getUserReward", userDetails?._id, loyaltyId],
     queryFn: handleUserCoinz,
     enabled: !!userDetails?._id && !!loyaltyId,
+    staleTime: 1000 * 60 * 60,
   });
 };

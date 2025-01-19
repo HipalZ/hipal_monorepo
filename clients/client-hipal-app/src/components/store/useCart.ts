@@ -27,7 +27,12 @@ export interface ICart {
   [key: string]: ICartDish;
 }
 
-export type ICartTypes = "cart" | "history" | "order" | "payment";
+export type ICartTypes =
+  | "cart"
+  | "history"
+  | "order"
+  | "payment"
+  | "confirmPayment";
 
 interface IUseCart {
   showCart: boolean;
@@ -40,6 +45,8 @@ interface IUseCart {
   setShowHistory: (data: boolean) => void;
   inputModal: boolean;
   setInputModal: (data: boolean) => void;
+  orderPlaced: boolean;
+  setOrderPlaced: (data: boolean) => void;
   callWaiterModal: boolean;
   setCallWaiterModal: (data: boolean) => void;
 
@@ -53,6 +60,11 @@ interface IUseCart {
   increaseQuantity: (dishId: string) => void;
   decreaseQuantity: (dishId: string) => void;
   removeDish: (dishId: string) => void;
+
+  hiCodePopupBeforeBill: boolean;
+  setHiCodePopupBeforeBill: (data: boolean) => void;
+
+  resetCartStoreKeys: () => void;
 }
 
 export const useCart = create<IUseCart>()(
@@ -64,6 +76,9 @@ export const useCart = create<IUseCart>()(
 
       inputModal: false,
       setInputModal: (d: boolean) => set(() => ({ inputModal: d })),
+
+      orderPlaced: false,
+      setOrderPlaced: (d: boolean) => set(() => ({ orderPlaced: d })),
 
       showHistory: false,
       setShowHistory: (d: boolean) => set(() => ({ showHistory: d })),
@@ -109,6 +124,24 @@ export const useCart = create<IUseCart>()(
           }
           return { cart: newCart };
         }),
+
+      hiCodePopupBeforeBill: false,
+      setHiCodePopupBeforeBill: (d: boolean) =>
+        set(() => ({ hiCodePopupBeforeBill: d })),
+
+      resetCartStoreKeys: () => {
+        set(() => ({
+          showCart: false,
+          cart: {},
+          inputModal: false,
+          orderPlaced: false,
+          showHistory: false,
+          callWaiterModal: false,
+          cartPage: "cart",
+          cartItem: {},
+          hiCodePopupBeforeBill: false,
+        }));
+      },
     }),
     {
       name: "cartStore",

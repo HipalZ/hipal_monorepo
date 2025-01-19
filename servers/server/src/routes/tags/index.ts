@@ -1,4 +1,11 @@
-import { Note, TagModel, TagTypeModel, User, UserTags } from "@hi/db-models";
+import {
+  Note,
+  TagModel,
+  TagTypeModel,
+  User,
+  UserAnalytic,
+  UserTags,
+} from "@hi/db-models";
 import { TagSchema, noteSchema } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
@@ -260,6 +267,23 @@ const tagRouter = new Hono()
           await axios(options);
         });
       }
+
+      await UserAnalytic.findOneAndUpdate(
+        {
+          userId,
+          businessId: requestData.businessId,
+        },
+
+        {
+          $addToSet: {
+            tagIds: tagIds,
+          },
+        },
+
+        {
+          upsert: true,
+        },
+      );
 
       return c.json(
         {

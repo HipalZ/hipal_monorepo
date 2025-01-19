@@ -10,12 +10,13 @@ import type {
 import { apiRpc, cn } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { useParams, useRouter } from "next/navigation";
-import React, { memo, useCallback, useEffect, useState } from "react";
-import { GrLocation } from "react-icons/gr";
-import { MdOutlineCall } from "react-icons/md";
+import { memo, useCallback, useEffect, useState } from "react";
 import SubScribeModal from "../../subscribe";
 import ReviewModal from "../googleReviews/reviewModal";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { useQuery } from "@tanstack/react-query";
+import { useCart } from "@/components/store/useCart";
 
 const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
   const accessToken = useUserToken.getState().accessToken;
@@ -31,21 +32,11 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
     setReviewPopup,
     setGoogleReviewCount,
   } = useLogin();
+  const { cart, emptyCart } = useCart()
   const { setCartEmpty } = useCartStore();
   const customLink = useParams()?.businessId as string;
-
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const business = data.business as BusinessDetails;
-  const [isLoader, setIsLoader] = useState<boolean>(false);
-  const { location, phone } = data.outletInfo;
-  const goToLocation = useCallback(() => {
-    if (typeof window === "undefined") return;
-    window.open(location, "_blank");
-  }, [location]);
-
-  const callTheOwner = useCallback(() => {
-    if (typeof window === "undefined") return;
-    window.open(`tel:${phone}`);
-  }, [phone]);
 
   const isSubscribe = async (userDetails: IUserData) => {
     const { business } = data;
@@ -68,6 +59,7 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
       setUserCoinZ(res?.rewards);
       setGoogleReviewCount(res?.googleReviewCount);
     }
+    return res?.data;
   };
 
   const toggleReviewPopup = useCallback(() => {
@@ -80,31 +72,33 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
     return router.push(`/${customLink}/explore`);
   }, [accessToken, subscribeModal]);
 
+  const redirectUrl = useCallback(() => {
+    const url = businessDetails?.placeUrl || "";
+    window.open(url, "_blank");
+  }, [businessDetails?.placeUrl]);
+
   useEffect(() => {
     if (!accessToken) {
       setAccessToken("");
     }
-    if (businessDetails?.businessId !== data?.business?.businessId) {
+    if (cart?.[0]?.dish?.businessId !== data?.business?.businessId) {
+      emptyCart();
       setCartEmpty();
     }
   }, [businessDetails?.businessId, data?.business?.businessId]);
 
-  useEffect(() => {
-    if (userDetails?._id) {
-      isSubscribe(userDetails);
-    }
-  }, [customLink, userDetails._id]);
+  const { isPending: isLoader } = useQuery({
+    queryKey: ["isSubscribe", customLink, userDetails],
+    queryFn: () => isSubscribe(userDetails),
+    enabled: !!userDetails?._id && !!customLink,
+  })
 
-  if (isLoader) {
-    return <LoadingSpinnerCircle />;
-  }
 
   return (
     <>
-      {" "}
       <section className="absolute z-20 bottom-6 left-6 w-[75%] text-white">
-        <span className="text-xs px-3 py-2 rounded-full bg-[#ffffff30]">
-          ⭐ 4.7
+        <span onClick={redirectUrl} className="text-xs px-3 py-2 rounded-full bg-[#ffffff30]">
+          ⭐ {outletInfo?.avgRating || 4.7}
         </span>
         <h3 className="mt-2 text-3xl capitalize space-grotesk-700">
           {data?.business?.name}
@@ -118,29 +112,11 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
           {data?.business?.address}
         </h4>
       </section>
-      <section className="absolute z-20 flex flex-col space-y-5 bottom-4 right-4 ">
-        <button
-          onClick={goToLocation}
-          className="p-3 rounded-full bg-primary text-base-100"
-          type="button"
-        >
-          <GrLocation size="20" />
-        </button>
-        <button
-          onClick={callTheOwner}
-          className="p-3 text-black bg-white rounded-full"
-          type="button"
-        >
-          <MdOutlineCall size="20" />
-        </button>
-      </section>
       {subscribeModal && (
         <BottomPopUp show={subscribeModal} onClose={closeSubscribeModal} hide>
           <SubScribeModal
             closeSubscribeModal={closeSubscribeModal}
-            setIsLoader={setIsLoader}
             business={business}
-            setSubscribeModal={setSubscribeModal}
           />
         </BottomPopUp>
       )}

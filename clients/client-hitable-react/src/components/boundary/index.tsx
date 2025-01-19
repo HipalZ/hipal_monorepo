@@ -1,4 +1,3 @@
-"use client";
 import { type ReactNode, Suspense, useEffect, useRef } from "react";
 
 import { ErrorBoundary } from "react-error-boundary";

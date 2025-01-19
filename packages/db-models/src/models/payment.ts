@@ -119,6 +119,47 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       required: false,
       ref: "CouponChannel",
     },
+
+    settleType: {
+      type: String,
+      enum: ["NORMAL_SETTLE", "HI_SETTLE", "FORCE_SETTLE", "PAYMENT_GATEWAY"],
+      required: false,
+    },
+    comment: {
+      type: String,
+      required: false,
+    },
+    tax: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    serviceCharge: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    posBillRequestId: {
+      type: String,
+      required: false,
+    },
+    splitModes: [
+      {
+        name: {
+          type: String,
+          required: true,
+        },
+        amount: {
+          type: Number,
+          required: true,
+        },
+        _id: {
+          type: ObjectId,
+          required: true,
+          ref: "upimode",
+        },
+      },
+    ],
   },
 
   { timestamps: true },

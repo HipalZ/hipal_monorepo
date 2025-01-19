@@ -25,9 +25,7 @@ const MemoStorySize = () => {
   }));
 
   const logo = useBusinessData((s) => s.businessData?.logo);
-  console.log("logo", links);
   const qrLink = links && links.length > 0 ? links[0].link : "";
-  console.log("qrLink", qrLink);
 
   return (
     <div className="relative w-[236px] mx-auto -mt-8 h-[420px] overflow-hidden scale-[0.9]">
@@ -45,9 +43,8 @@ const MemoStorySize = () => {
       <div
         className="absolute inset-0 w-[236px] h-[420px]"
         style={{
-          backgroundImage: `linear-gradient(180deg, rgba(146, 103, 236, 0) 47%, ${bgColor} 77.68%), url(${
-            couponImage || birthdayPlaceholder
-          })`,
+          backgroundImage: `linear-gradient(180deg, rgba(146, 103, 236, 0) 47%, ${bgColor} 77.68%), url(${couponImage || birthdayPlaceholder
+            })`,
           backgroundPosition: "top",
           backgroundSize: "cover",
           backgroundRepeat: "no-repeat",

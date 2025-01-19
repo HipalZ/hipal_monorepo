@@ -1,66 +1,87 @@
 "use client";
+import Link from "next/link";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { BsHandIndexThumb } from "react-icons/bs";
+import { FiSearch } from "react-icons/fi";
+import { GiCookingPot } from "react-icons/gi";
 import { memo, useCallback, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useLogin } from "@/components/store/useLogin";
-import AddAmountModal from "./addAmountModal";
-import CallTheWaiterComponent from "./callTheWaiter";
-import useBusinessDetails from "@/components/store/useBusinessDetails";
-import useTableData from "@/components/store/useTableData";
+import { motion, AnimatePresence } from "framer-motion";
+import { PiArrowBendUpLeftBold } from "react-icons/pi";
 import { useCart } from "@/components/store/useCart";
+import { useCartStore } from "@/components/store/useCartStore";
+import { useLogin } from "@/components/store/useLogin";
+import { useParams, useRouter } from "next/navigation";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useSearch } from "@/components/store/useSearch";
 import { useUserToken } from "@hi/common/src/useUserToken";
-import BottomPopUp from "@/components/atoms/bottomPopUp";
-import Link from "next/link";
-import { FiSearch } from "react-icons/fi";
-import { BsHandIndexThumb } from "react-icons/bs";
-import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
-import { PiArrowBendUpLeftBold } from "react-icons/pi";
-import { motion, AnimatePresence } from "framer-motion";
-import TimeBadge from "./test";
-import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import AddAmountModal from "./addAmountModal";
 import BottomButton from ".";
+import BottomPopUp from "@/components/atoms/bottomPopUp";
+import CallTheWaiterComponent from "./callTheWaiter";
+import CommonBottomButton from "@/components/atoms/bottomButton";
+import OrderPlaced from "@/components/organisms/cart/orderPlaced";
+import TimeBadge from "./test";
+import useTableData from "@/components/store/useTableData";
+import { useAuthTableUser } from "../../hooks/usePayments";
+import HiCodeValidate from "@/components/organisms/cart/hicodeValidate";
+import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
+import { cn } from "@/components/utils/helpers";
 
 const MemoCategoryPageBtn = () => {
   const accessToken = useUserToken.getState().accessToken;
-  const { businessId } = useBusinessDetails((s) => ({
-    businessId: s.businessDetails?._id,
-  }));
+  const { userDetails } = useLogin()
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
-  const { isSearchActive, setIsSearchActive, showHeader, setShowHeader } =
+  const { isSearchActive, setIsSearchActive, setShowHeader } =
     useSearch();
+  const { authTableUser } = useAuthTableUser()
   const customLink = useParams()?.businessId as string;
   const tableName = useTableData((s) => s.tableName);
   const setDirection = useLogin((s) => s.setDirection);
   const setIsPayment = useLogin((s) => s.setIsPayment);
   const router = useRouter();
+  const { setCheckLogin } = usePaymentStore();
   const {
-    showCart,
     inputModal,
     setInputModal,
     callWaiterModal,
     setCallWaiterModal,
+    orderPlaced,
+    setOrderPlaced,
+    hiCodePopupBeforeBill, setHiCodePopupBeforeBill,
   } = useCart();
+  const [tempInstruction, setTempInstruction] = useState("");
+  const {
+    setOpenInstructionModal,
+    openInstructionModal,
+    setInstruction,
+    addInstructionToDish,
+  } = useCartStore();
 
   const closeModal = useCallback(() => {
     setInputModal(false);
     setIsPayment(false);
-  }, [setIsPayment]);
+  }, [setIsPayment, setInputModal]);
 
   const openCallWaiterModal = useCallback(() => {
     setCallWaiterModal(true);
-  }, []);
+  }, [setCallWaiterModal]);
 
   const closeCallWaiterModal = useCallback(() => {
     setCallWaiterModal(false);
-  }, []);
+  }, [setCallWaiterModal]);
 
-  const proceedToPayment = useCallback(() => {
-    if (!accessToken) {
-      router.push(`/${customLink}/user/signup`);
+  const promptHiCode = useCallback(() => {
+    setDirection("category");
+    if (!accessToken && !userDetails?._id) {
+      setCheckLogin(true);
+      return;
     }
-    // setCartPage("order");
+    if (outletInfo?.isPosEnabled) {
+      authTableUser()
+      return;
+    }
     setInputModal(true);
-  }, [setDirection, accessToken, customLink, showCart]);
+  }, [setDirection, accessToken, setCheckLogin, outletInfo?.isPosEnabled, authTableUser, userDetails?._id, setInputModal]);
 
   const triggerCallWaiter = useCallback(() => {
     setDirection("category");
@@ -68,23 +89,24 @@ const MemoCategoryPageBtn = () => {
       return router.push(`/${customLink}/scan`);
     }
     if (!accessToken) {
-      return router.push(`/${customLink}/user/signup`);
+      setCheckLogin(true);
+      return;
     }
     openCallWaiterModal();
   }, [
     setDirection,
     accessToken,
-    businessId,
     router,
     customLink,
     tableName,
     openCallWaiterModal,
+    setCheckLogin,
   ]);
 
   const openSearchModal = useCallback(() => {
     setIsSearchActive(true);
     setShowHeader(true);
-  }, [showHeader, isSearchActive]);
+  }, [setIsSearchActive, setShowHeader]);
 
   const containerVariants = {
     hidden: { y: 100, opacity: 0 },
@@ -118,6 +140,32 @@ const MemoCategoryPageBtn = () => {
     exit: { y: 20, opacity: 0 },
   };
 
+  const handleInstructionText = useCallback(
+    (e) => {
+      const value = e.target.value;
+      const sanitizedValue = value.replace(/\s+/g, ' ')
+      setTempInstruction(sanitizedValue);
+    },
+    []
+  );
+
+  const handleSaveInstruction = useCallback(() => {
+    addInstructionToDish(tempInstruction);
+    setInstruction(tempInstruction);
+    setOpenInstructionModal(false);
+    setTempInstruction("");
+  }, [
+    addInstructionToDish,
+    setOpenInstructionModal,
+    tempInstruction,
+    setInstruction,
+  ]);
+
+  const handleCloseInstructionModal = useCallback(() => {
+    setOpenInstructionModal(false)
+    setTempInstruction("");
+  }, [setOpenInstructionModal]);
+
   return (
     <>
       {outletInfo?.outLetType !== "OTHER" ? (
@@ -128,11 +176,10 @@ const MemoCategoryPageBtn = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="px-2 sticky z-50 bottom-0 w-full 
-             max-w-[30rem] bg-[#FCFCFC] shadow-lg
-            overflow-hidden py-4 text-black flex gap-2 justify-evenly"
-              style={{ boxShadow: "4px 4px 4px 4px #00000040" }}
+              className="px-2 sticky z-50 bottom-0 w-full max-w-[30rem] bg-[#FCFCFC] shadow-lg overflow-hidden py-4 text-black flex gap-2 justify-evenly"
+              style={{ boxShadow: "4px 4px 4px #00000040" }}
             >
+              {/* Explore Button */}
               <motion.div variants={itemVariants}>
                 <Link href={`/${customLink}/explore`} className="">
                   <motion.section
@@ -144,6 +191,8 @@ const MemoCategoryPageBtn = () => {
                   </motion.section>
                 </Link>
               </motion.div>
+
+              {/* Search Button */}
               <motion.div variants={itemVariants}>
                 <motion.button
                   type="button"
@@ -155,11 +204,22 @@ const MemoCategoryPageBtn = () => {
                   <FiSearch size={24} />
                 </motion.button>
               </motion.div>
-              <motion.div variants={itemVariants}>
+
+              {/* Call Captain Button */}
+              <motion.div
+                variants={itemVariants}
+                className={cn(
+                  tableName?.length === 0 ? "flex-1 w-full" : "gap-1 flex items-center",
+                  "border border-[#B0B0B0] p-2 rounded-md"
+                )}
+              >
                 <motion.button
                   type="button"
                   onClick={triggerCallWaiter}
-                  className="border border-[#B0B0B0] p-2 rounded-md gap-1 flex items-center"
+                  className={cn(
+                    tableName?.length === 0 ? "w-full flex justify-center items-center" : "flex items-center",
+                    "text-sm gap-1"
+                  )}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
@@ -167,16 +227,27 @@ const MemoCategoryPageBtn = () => {
                   <span className="text-sm">Call Captain</span>
                 </motion.button>
               </motion.div>
-              <motion.div variants={itemVariants}>
-                <TimeBadge onClick={proceedToPayment} />
-              </motion.div>
+
+              {/* TimeBadge */}
+              {tableName?.length > 0 && (
+                <motion.div variants={itemVariants}>
+                  <TimeBadge onClick={promptHiCode} />
+                </motion.div>
+              )}
             </motion.section>
+
           )}
         </AnimatePresence>
       ) : (
         <BottomButton selected={"catalogue"} showBack />
       )}
-
+      {
+        hiCodePopupBeforeBill && (
+          <ItemDescriptionPopup show={hiCodePopupBeforeBill} onClose={() => setHiCodePopupBeforeBill(false)}>
+            <HiCodeValidate placeOrder={() => { }} isOpenMyOrders={true} />
+          </ItemDescriptionPopup>
+        )
+      }
       <AnimatePresence>
         {inputModal && (
           <motion.div
@@ -196,6 +267,72 @@ const MemoCategoryPageBtn = () => {
         )}
       </AnimatePresence>
 
+      {openInstructionModal && (
+        <BottomPopUp
+          height="50dvh"
+          show={openInstructionModal}
+          onClose={handleCloseInstructionModal}
+        >
+          <div className="p-3 pb-8 overflow-y-auto">
+            {/* Header */}
+            <header className="flex items-center gap-2 mb-4">
+              <GiCookingPot className="w-8 h-8 text-orange-500" />
+              <h2 className="text-2xl text-black font-semibold">Cooking Instructions</h2>
+            </header>
+
+            {/* Description */}
+            <p className="text-gray-600 mb-6">
+              Add any special cooking instructions, like less spicy, extra cheese, or no onions.
+            </p>
+
+            {/* Textarea Container */}
+            <div className="relative mb-8">
+              <textarea
+                value={tempInstruction}
+                onChange={handleInstructionText}
+                maxLength={100}
+                placeholder="Enter your cooking instructions here..."
+                className="w-full min-h-[120px] p-2 text-base text-black bg-white rounded-lg border border-gray-200 
+                     focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500
+                     placeholder:text-gray-400 resize-none"
+                aria-label="Cooking instructions"
+              />
+              <span className="absolute right-3 bottom-3 text-sm text-gray-400">
+                {tempInstruction.length || 0}/{100}
+              </span>
+            </div>
+
+            {/* Save Button */}
+            <CommonBottomButton
+              buttons={[
+                {
+                  text: "Save Instruction",
+                  onClick: handleSaveInstruction,
+                  type: "button",
+                  highlight: true,
+                  disable: tempInstruction?.length === 0,
+                },
+              ]}
+            />
+          </div>
+        </BottomPopUp>
+      )}
+      <AnimatePresence>
+        {orderPlaced && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+          >
+            <BottomPopUp
+              show={orderPlaced}
+              onClose={() => setOrderPlaced(false)}
+            >
+              <OrderPlaced />
+            </BottomPopUp>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {callWaiterModal && (
           <motion.div
@@ -203,13 +340,15 @@ const MemoCategoryPageBtn = () => {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
           >
-            <ItemDescriptionPopup
+            <BottomPopUp
               show={callWaiterModal}
               onClose={closeCallWaiterModal}
-              heading="Select the reason"
+              bottomCross
+              hide
+              height="100dvh"
             >
               <CallTheWaiterComponent onClose={closeCallWaiterModal} />
-            </ItemDescriptionPopup>
+            </BottomPopUp>
           </motion.div>
         )}
       </AnimatePresence>

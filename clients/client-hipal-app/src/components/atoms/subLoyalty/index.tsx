@@ -18,6 +18,7 @@ import { useParams } from "next/navigation";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import GoogleReviewCard from "../googleReviewCard";
 import ShimmerImage from "../imageshimmer";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
 
 interface ILoyaltyCard {
   loyalty: ILoyaltySetting;
@@ -38,6 +39,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
   const customLink = useParams()?.businessId as string;
   const accessToken = useUserToken.getState().accessToken;
   const placeUrl = useBusinessDetails((s) => s.businessDetails?.placeUrl);
+  const { setCheckLogin } = usePaymentStore();
   const openModal = useCallback(() => {
     setTimeout(() => setIsModalOpen(true), 5000);
   }, [isModalOpen]);
@@ -57,6 +59,10 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
     },
     [srcColor],
   );
+
+  const handleLogin = () => {
+    setCheckLogin(true);
+  }
 
   useEffect(() => {
     if (loyalty?.loyaltyId) {
@@ -131,14 +137,13 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
               </Link>
             )}
             {!accessToken && (
-              <Link href={`/${customLink}/user/signup`}>
-                <button
-                  type="button"
-                  className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white"
-                >
-                  Claim Now
-                </button>
-              </Link>
+              <button
+                onClick={handleLogin}
+                type="button"
+                className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white"
+              >
+                Claim Now
+              </button>
             )}
           </center>
           {loyaltySetting?.signUpBonus && loyaltySetting?.signUpBonus > 0 ? (
@@ -162,14 +167,13 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
                 <Image src={Wallet} alt="Wallet" />
               </figure>
               {!accessToken && (
-                <Link href={`/${customLink}/user/signup`}>
-                  <button
-                    type="button"
-                    className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white"
-                  >
-                    Get Now
-                  </button>
-                </Link>
+                <button
+                  onClick={handleLogin}
+                  type="button"
+                  className="absolute bottom-2 mx-4 left-0 z-10 py-1 px-4 rounded-full w-[80%] text-sm bg-[#00000050] text-white"
+                >
+                  Get Now
+                </button>
               )}
             </center>
           ) : null}

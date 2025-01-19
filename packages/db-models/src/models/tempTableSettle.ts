@@ -15,6 +15,12 @@ const tempTebleSettleSchema = new mongoose.Schema<TempTebleSettleType>(
       type: String,
       required: false,
     },
+
+    hiCode: {
+      type: String,
+      required: false,
+      default: "",
+    },
   },
   {
     timestamps: true,

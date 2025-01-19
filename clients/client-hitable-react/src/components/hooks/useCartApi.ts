@@ -1,6 +1,9 @@
 import { apiRpc } from "@hi/common";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { useCartStore } from "../store/useCartStore";
+import { useOrderStore } from "../store/useOrderData";
+import { useCart } from "../store/useCart";
 
 export const useDeleteCart = () => {
   const { mutateAsync, isPending } = useMutation({
@@ -26,4 +29,88 @@ export const useDeleteCart = () => {
     },
   });
   return { deleteCart: mutateAsync, isPending };
+};
+
+export const useCreateOrder = () => {
+  const queryClient = useQueryClient();
+
+  const { setOpenOrderModal, setModalType, setOrderError, setShowOrderError } =
+    useOrderStore();
+  const { setIsPlacingNewOrder } = useCart();
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: async (order: any) => {
+      const res = await apiRpc.pos.captain.save_kot.$post({
+        json: order,
+      });
+      if (res.status === 200 || res.status === 201) {
+        setOpenOrderModal(false);
+        setIsPlacingNewOrder(false);
+        setModalType("addItem");
+        useCartStore.setState({ cart: [] });
+        queryClient.invalidateQueries({ queryKey: ["getTableOrders"] });
+        queryClient.invalidateQueries({ queryKey: ["fetchIndividualTable"] });
+        return true;
+      }
+      return res.json();
+    },
+    onSuccess: (data: any) => {
+      if (data.err) {
+        setOrderError(data.message);
+        setShowOrderError(true);
+        return;
+      }
+      toast.success(data.message);
+    },
+    onError: (error: any) => {
+      toast.error(`Error creating order: ${error.message}`);
+    },
+  });
+  return { createOrder: mutateAsync, isPending };
+};
+
+export interface IUpdateOrderAction {
+  orderAction: "ACCEPT" | "REJECT" | "EDIT";
+  orderId: string;
+  performBy: string;
+  reasonOfRejection?: string;
+}
+
+export const useUpdateOrderAction = () => {
+  const queryClient = useQueryClient();
+
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (payload: IUpdateOrderAction) => {
+      const requestBody: IUpdateOrderAction = {
+        orderAction: payload.orderAction,
+        orderId: payload.orderId,
+        performBy: payload.performBy,
+      };
+
+      if (payload.orderAction === "REJECT") {
+        requestBody.reasonOfRejection = payload.reasonOfRejection;
+      }
+
+      const response = await apiRpc.kot.$put({
+        json: requestBody,
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        queryClient.invalidateQueries({ queryKey: ["carts"] });
+      }
+
+      return response.json();
+    },
+    onSuccess: (data: any) => {
+      if (data.err) {
+        toast.error(data.message);
+        return;
+      }
+      toast.success(data.message);
+    },
+    onError: (error: any) => {
+      toast.error(`Error updating order action: ${error.message}`);
+    },
+  });
+
+  return { updateOrderAction: mutateAsync, isPending };
 };

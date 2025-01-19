@@ -30,6 +30,10 @@ const tableSchema = new mongoose.Schema<TableType>(
       required: false,
       default: true,
     },
+    hiCode: {
+      type: String,
+      required: false,
+    },
 
     isDeleted: {
       type: Boolean,
@@ -44,10 +48,41 @@ const tableSchema = new mongoose.Schema<TableType>(
       type: String,
       required: false,
     },
+    currentTableAmount: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
 
     rank: {
       type: String,
       required: false,
+    },
+
+    status: {
+      type: String,
+      enum: ["ACTIVE", "EMPTY", "BILL"],
+      default: "EMPTY",
+    },
+    totalItemCount: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    userIds: {
+      type: [ObjectId],
+      required: false,
+      default: [],
+      ref: "User",
+    },
+    date: {
+      type: Number,
+      required: false,
+    },
+    isTransfer: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   {
@@ -56,6 +91,7 @@ const tableSchema = new mongoose.Schema<TableType>(
 );
 
 tableSchema.index({ businessId: 1, name: 1, tableId: 1 }, { unique: true });
+tableSchema.index({ businessId: 1, name: 1 }, { unique: true });
 
 const Table: Model<TableType> = mongoose.model<TableType>("table", tableSchema);
 

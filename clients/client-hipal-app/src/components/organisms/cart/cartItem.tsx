@@ -1,13 +1,15 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
+import { motion } from "framer-motion";
 import { useCartStore } from "@/components/store/useCartStore";
 import FoodType from "@/components/atoms/foodType";
-import dynamic from "next/dynamic";
+import { TbMessage2Plus } from "react-icons/tb";
+import { BiSolidDish } from "react-icons/bi";
+import { GiBubblingBowl } from "react-icons/gi";
+import { FaTimes } from "react-icons/fa";
 import type { DishType } from "@hi/db-models/src/validators";
-import ShimmerImage from "@/components/atoms/imageshimmer";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { cn } from "@/components/utils/helpers";
-
-const PlaceholderImg = dynamic(() => import("@/components/atoms/placeholder"));
+import EmptyCart from "./emptyCart";
 
 interface CartItemProp {
   hide?: boolean;
@@ -25,18 +27,28 @@ interface CartItemProp {
   };
 }
 
-const CartItem = ({ cartItem, hide }: CartItemProp) => {
-  const { updateCartItem, removeFromCart } = useCartStore();
-  const imageUrl =
-    cartItem?.dish?.images?.[0] ||
-    cartItem?.dish?.images?.[1] ||
-    cartItem?.dish?.images?.[2];
+const tags = ["Best Seller", "Special", "Recommended", "New", "Popular"]
+
+const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
+  const {
+    selectedDish,
+    updateCartItem,
+    removeFromCart,
+    setInstructionId,
+    setOpenInstructionModal,
+    removeInstructionFromDish,
+  } = useCartStore();
+
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
+
+  // 🛠️ Filter Logic: Check if the current cart item matches the selected dish
+  if (selectedDish && cartItem.dish._id !== selectedDish._id) {
+    return null;
+  }
 
   const increaseQuantity = () => {
     updateCartItem({ ...cartItem, quantity: cartItem.quantity + 1 });
   };
-
-  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   const decreaseQuantity = () => {
     if (cartItem.quantity > 1) {
@@ -46,92 +58,126 @@ const CartItem = ({ cartItem, hide }: CartItemProp) => {
     }
   };
 
-  const calculateTotalPrice = () => {
+  const calculateTotalPrice = useCallback(() => {
     const basePrice = cartItem.dish.price;
     const extrasPrice = cartItem?.extras.reduce(
       (total, extra) => total + extra.price * extra.quantity,
-      0,
+      0
     );
-
     const totalPriceForOne = cartItem.portion
       ? cartItem?.portion?.price + extrasPrice
       : basePrice + extrasPrice;
 
     return totalPriceForOne * cartItem.quantity;
-  };
+  }, [cartItem]);
+
+  const handleInstruction = useCallback((id: string) => {
+    setInstructionId(id);
+    setOpenInstructionModal(true);
+  }, [setInstructionId, setOpenInstructionModal]);
 
   return (
-    <section className="flex items-center justify-between py-4 pl-6 border-b">
-      <div className="flex flex-col w-[70%] space-y-1">
-        <h5
-          className={cn(
-            "flex items-start gap-3 text-base font-medium leading-6",
-            outletInfo?.outLetType !== "OTHER" ? "-ml-7" : "-ml-3",
-          )}
-        >
-          {outletInfo?.outLetType !== "OTHER" && (
-            <div className="-mr-2 scale-75">
-              <FoodType types={cartItem?.dish?.dishTypes} />
+    <>
+      {
+        Object.keys(cartItem).length > 0 ?
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="relative flex items-start justify-between px-4 py-3 border-b border-gray-100"
+          >
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start gap-2 mb-1">
+                {outletInfo?.outLetType !== "OTHER" && (
+                  <div className="flex-shrink-0">
+                    <FoodType types={cartItem?.dish?.dishTypes} />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center px-2 py-[3px] rounded-lg text-xs font-medium bg-[#DE9615] text-white">
+                      {tags[Math.random() * tags.length | 0]}
+                    </span>
+                  </div>
+                  <section className={cn(outletInfo?.outLetType !== "OTHER" ? '-ml-6' : '', "mt-2")}>
+                    <article className="flex items-start justify-between gap-4">
+                      <h5 className="text-sm w-[75%] leading-5 text-gray-900">
+                        {cartItem?.dish?.name}
+                      </h5>
+                      {!hide && (
+                        <div className="flex items-center w-24 max-w-48 h-[30px] bg-[#FC506A10] border border-[#FC506A] rounded-xl overflow-hidden">
+                          <motion.button
+                            whileTap={{ scale: 0.9 }}
+                            type="button"
+                            onClick={decreaseQuantity}
+                            className="w-8 h-full flex items-center justify-center text-[#FC506A] hover:bg-rose-50"
+                          >
+                            -
+                          </motion.button>
+                          <span className="w-8 flex items-center justify-center text-sm font-medium text-[#FC506A]">
+                            {cartItem.quantity}
+                          </span>
+                          <motion.button
+                            whileTap={{ scale: 0.9 }}
+                            type="button"
+                            onClick={increaseQuantity}
+                            className="w-8 h-full flex items-center justify-center text-[#FC506A] hover:bg-rose-50"
+                          >
+                            +
+                          </motion.button>
+                        </div>
+                      )}
+                    </article>
+                    {(cartItem?.portion || cartItem?.extras?.length > 0) && (
+                      <div>
+                        {cartItem?.portion && (
+                          <p className="inline-flex items-center gap-2 text-xs text-gray-500">
+                            <BiSolidDish size={16} /> <span>{cartItem?.portion?.name}</span>
+                          </p>
+                        )}
+                        {cartItem?.extras?.length > 0 && (
+                          <p className="inline-flex items-center gap-2 text-xs text-gray-500">
+                            <GiBubblingBowl size={16} /> <span>{cartItem?.extras?.map((extra) => extra.name).join(", ")}</span>
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </section>
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center gap-4">
+                  <span className="block text-[#525252] text-sm font-semibold">
+                    ₹{calculateTotalPrice().toFixed(2)}
+                  </span>
+                  {!cartItem?.dish?.instruction?.length && (
+                    <button
+                      type="button"
+                      onClick={() => handleInstruction(cartItem?.id)}
+                      className="inline-flex gap-1 text-xs text-purple-600 underline underline-offset-2 hover:text-purple-700"
+                    >
+                      <TbMessage2Plus size={16} /> <span>Add instruction</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+              {cartItem?.dish?.instruction && cartItem?.dish?.instruction?.length > 0 && (
+                <div className="flex items-center gap-2 mt-2">
+                  <h1 className="text-base text-black">{cartItem?.dish?.instruction}</h1>
+                  <button
+                    type="button"
+                    onClick={() => removeInstructionFromDish(cartItem?.id)}
+                    className="inline-flex gap-1 text-xs text-red-600 hover:text-red-700"
+                  >
+                    <FaTimes size={16} />
+                  </button>
+                </div>
+              )}
             </div>
-          )}
-          {cartItem?.dish?.name}
-        </h5>
-        {cartItem?.portion && (
-          <span className="text-xs text-[#000000] opacity-80">
-            Portion: {cartItem?.portion?.name}
-          </span>
-        )}
-        {cartItem?.extras?.length > 0 && (
-          <span className="text-xs text-[#000000] opacity-80 ">
-            Extras: {cartItem?.extras?.map((extra) => extra.name).join(", ")}
-          </span>
-        )}
-        <div
-          className={cn(
-            "text-left",
-            outletInfo?.outLetType !== "OTHER" ? "-ml-1" : "-ml-3",
-          )}
-        >
-          <span className="block text-sm font-medium text-[#000000]">
-            ₹{calculateTotalPrice().toFixed(2)}
-          </span>
-        </div>
-      </div>
-
-      <div className="flex flex-col items-center justify-between">
-        {imageUrl ? (
-          <ShimmerImage
-            src={imageUrl}
-            alt={cartItem?.dish?.name}
-            width={100}
-            height={100}
-            className="object-cover w-24 h-24 rounded-md"
-          />
-        ) : null}
-
-        {!hide && (
-          <div className="flex items-center relative z-50 justify-between h-[1.75rem] -mt-2 text-black bg-white border border-black rounded-2xl">
-            <button
-              type="button"
-              onClick={decreaseQuantity}
-              className="px-2 py-1"
-            >
-              -
-            </button>
-            <span className="mx-2">{cartItem.quantity}</span>
-            <button
-              type="button"
-              onClick={increaseQuantity}
-              className="px-2 py-1"
-            >
-              +
-            </button>
-          </div>
-        )}
-      </div>
-    </section>
+          </motion.div> : <EmptyCart />}
+    </>
   );
 };
 
-const MemoizedCartItem = memo(CartItem);
-export default MemoizedCartItem;
+const CartItem = memo(MemoizedCartItem);
+export default CartItem;

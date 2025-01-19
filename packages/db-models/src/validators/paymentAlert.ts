@@ -13,7 +13,13 @@ export const PaymentAlertSchema = z.object({
   businessId: ObjectIdSchema,
   comment: z.string().min(4).max(300).optional(),
   message: z.string().min(4).max(300).optional(),
-  alertType: z.enum(["ONLINE", "OFFLINE", "WAITER"]),
+  alertType: z.enum([
+    "ONLINE",
+    "OFFLINE",
+    "WAITER",
+    "FORCE_SETTLE",
+    "NORMAL_SETTLE",
+  ]),
   status: z.enum(["SUCCESS", "FAIL", "WAITER"]),
   order_id: ObjectIdSchema,
   errorReason: z.string().optional(),
@@ -44,6 +50,7 @@ export const PaymentAlertSchema = z.object({
     .optional(),
   isRejected: z.boolean().default(false).optional(),
   date: z.number(),
+  posBillRequestId: z.string().optional(),
   userId: ObjectIdSchema,
 });
 

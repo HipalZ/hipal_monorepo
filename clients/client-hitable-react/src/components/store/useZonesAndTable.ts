@@ -13,32 +13,38 @@ export interface Zone {
   updatedAt: string;
 }
 
-export interface Table {
-  _id: string;
-  tableId: string;
+export interface TableData {
   active: string;
   businessId: string;
   createdAt: string;
+  currentTableAmount: number;
+  capacity?: number;
   displayForCaptains: boolean;
   isDeleted: boolean;
   name: string;
   rank: string;
   staffIds: string[];
+  status: string;
+  tableId: string;
   updatedAt: string;
+  tableItemCount: number;
+  userIds: string[];
   zoneId: string;
+  hiCode?: string;
+  _id: string;
 }
 
 export type FilterType = "all" | "active" | "inactive";
 
 interface ZonesAndTablesState {
   zones: Zone[];
-  tables: Table[];
+  tables: TableData[];
   activeFilter: FilterType;
   searchQuery: string;
   setActiveFilter: (filter: FilterType) => void;
   setSearchQuery: (query: string) => void;
   setZones: (zones: Zone[]) => void;
-  setTables: (tables: Table[]) => void;
+  setTables: (tables: TableData[]) => void;
 
   isFilterOpen: boolean;
   setIsFilterOpen: (isOpen: boolean) => void;
@@ -52,7 +58,7 @@ export const useZonesAndTablesStore = create<ZonesAndTablesState>((set) => ({
   setActiveFilter: (filter: FilterType) => set({ activeFilter: filter }),
   setSearchQuery: (query: string) => set({ searchQuery: query }),
   setZones: (zones: Zone[]) => set({ zones }),
-  setTables: (tables: Table[]) => set({ tables }),
+  setTables: (tables: TableData[]) => set({ tables }),
 
   isFilterOpen: false,
   setIsFilterOpen: (isOpen: boolean) => set({ isFilterOpen: isOpen }),

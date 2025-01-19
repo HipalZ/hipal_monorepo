@@ -132,6 +132,7 @@ interface IOutlet {
   businessId: string;
   __v: number;
   address: string;
+  avgRating: number;
   amenities: string[];
   customTiming: {
     day: string;
@@ -194,6 +195,7 @@ export interface IBusinessData {
   cart?: ICart[];
   coupon?: Coupon;
   timings: TimingType;
+  kot: KotOrder;
 }
 
 export interface ICategories extends ICategory {
@@ -565,4 +567,67 @@ export interface IMerchantDetails {
   businessId: string;
   razorpayMerchantId: string;
   razorpayKeyId: string;
+}
+
+interface Extra {
+  name: string;
+  price: number;
+  quantity: number;
+}
+
+interface DishItem {
+  dish: {
+    name: string;
+    price: number;
+    quantity: number;
+  };
+  extras: Extra[];
+}
+
+export interface BillData {
+  billing_user_name: string;
+  serviceCharge: number;
+  discount: number;
+  tax: number;
+  total: number;
+  customerPhone: string;
+  customerName: string;
+  tableName: string;
+  subTotal: number;
+  billRequestId: string;
+  items: DishItem[];
+}
+
+interface CartItem {
+  id: string;
+  portion: string | null;
+  extras: string[];
+  quantity: number;
+  dish: Dish;
+}
+
+export interface KotOrder {
+  _id: string;
+  businessId: string;
+  userId: string;
+  phone: string;
+  tableName: string;
+  tableId: string;
+  cart: CartItem[];
+  date: number;
+  rejected: boolean;
+  accepted: boolean;
+  edited: boolean;
+  settled: boolean;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ICheckTableSession {
+  data: {
+    isTransfer: boolean;
+  };
+  err: boolean;
+  message: string;
 }

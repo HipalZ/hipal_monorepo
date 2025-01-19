@@ -10,8 +10,9 @@ const petPoojaPinTempModelSchema =
       ref: "Business",
     },
     hiCode: {
-      type: Number,
-      required: true,
+      type: String,
+      required: false,
+      default: "",
     },
     pin: {
       type: String,
@@ -24,6 +25,11 @@ const petPoojaPinTempModelSchema =
     customerName: {
       type: String,
       required: true,
+    },
+    customerIds: {
+      type: [ObjectId],
+      required: false,
+      ref: "User",
     },
     phoneNumbers: {
       type: [String],
@@ -38,7 +44,58 @@ const petPoojaPinTempModelSchema =
       type: String,
       required: false,
     },
+    billInvoiceId: {
+      type: String,
+      required: false,
+    },
+    tax: {
+      type: Number,
+      required: false,
+    },
+    serviceCharge: {
+      type: Number,
+      required: false,
+    },
+    settleType: {
+      type: String,
+      required: false,
+    },
+    performedBy: {
+      type: String,
+      required: false,
+    },
+    isTransfer: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    transferTableTo: {
+      type: String,
+      required: false,
+      default: "",
+    },
+    transferTableFrom: {
+      type: String,
+      required: false,
+      default: "",
+    },
+    transferBy: {
+      type: ObjectId,
+      required: false,
+      ref: "User",
+    },
+    transferType: {
+      type: String,
+      enum: ["TABLE", "ITEM"],
+      required: false,
+      default: "TABLE",
+    },
   });
+
+petPoojaPinTempModelSchema.index(
+  { businessId: 1, tableName: 1 },
+  { unique: true },
+);
 
 const PetPoojaPinTemp: Model<PetPoojaPinTempModelType> =
   mongoose.model<PetPoojaPinTempModelType>(

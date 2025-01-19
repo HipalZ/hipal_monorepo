@@ -57,6 +57,7 @@ const MemoCartHeader = () => {
       query: {
         businessId: outletInfo?.businessId || "",
         tableName,
+        userId: userDetails?._id
       },
     });
     const res = await response.json();

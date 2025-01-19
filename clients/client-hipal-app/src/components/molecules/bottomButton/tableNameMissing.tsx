@@ -24,7 +24,7 @@ const MemoTableNameMissing = () => {
       exit={{ opacity: 0, scale: 0.9 }}
       className="relative flex flex-col items-center justify-center h-screen p-6 bg-white"
     >
-      <ConfettiHeader />
+      <ConfettiHeader direction="top" />
       <Image
         src={ScanTable}
         alt="cart-friend"

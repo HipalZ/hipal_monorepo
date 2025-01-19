@@ -1,5 +1,11 @@
 // books.ts
-import { Business, Category, Dish, Pos, Table } from "@hi/db-models";
+import {
+  Business,
+  BusinessPosConfig,
+  Category,
+  Dish,
+  Table,
+} from "@hi/db-models";
 
 import {
   categorySchema,
@@ -7,6 +13,7 @@ import {
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
+import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
@@ -15,7 +22,11 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
-import { petPoojaCateAndDish, transformData } from "../../utils/helper";
+import { transformData } from "../../utils/helper";
+import {
+  getMenuByBId,
+  setPosConfigTransfer,
+} from "../../utils/posTransferCache";
 import { respond } from "../../utils/response";
 
 //updateCategories
@@ -337,7 +348,7 @@ const categoriesRouter = new Hono()
             "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence businessId",
           );
 
-        const isHasPos = await Pos.findOne({
+        const isHasPos = await BusinessPosConfig.findOne({
           businessId,
         });
 
@@ -365,16 +376,42 @@ const categoriesRouter = new Hono()
           populate: { path: "addOnIds" },
         });
 
-        const isHasPos = await Pos.findOne({
+        const isHasPos = await BusinessPosConfig.findOne({
           businessId,
-        });
+        }).populate("posId");
 
         if (isHasPos) {
           const table = await Table.findOne({
             businessId,
           }).select("name");
 
-          const transformedCategories = transformData(petPoojaCateAndDish);
+          const getCache = await getMenuByBId(businessId);
+          if (getCache) {
+            const transformedCategories = transformData(getCache);
+            return c.json(
+              {
+                message: "Data fetched successfully",
+                err: false,
+                data: transformedCategories,
+              },
+              200,
+            );
+          }
+
+          const Config = {
+            "app-key": isHasPos.posId.accessKey,
+            "app-secret": isHasPos.posId.secretKey,
+            "access-token": isHasPos.posId.authToken,
+            restID: isHasPos.posId.restId,
+            tableNo: table?.name,
+          };
+
+          const menu = await axios.post(
+            "https://onlineapipp.petpooja.com/thirdparty_fetch_dinein_menu/",
+            Config,
+          );
+          await setPosConfigTransfer(businessId, menu.data);
+          const transformedCategories = transformData(menu.data);
 
           return c.json(
             {
