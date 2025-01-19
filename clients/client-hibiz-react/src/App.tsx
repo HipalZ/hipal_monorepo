@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import MainRouter from "./routes";
 
 ///////
 
 function App() {
-  const [isOnline, setIsOnline] = useState(true);
+  const isOnlineRef = useRef(navigator.onLine);
   const [isSlow, setIsSlow] = useState(false);
 
   useEffect(() => {
     const checkOnlineStatus = () => {
       const online = navigator.onLine;
-      setIsOnline(online);
+      isOnlineRef.current = online
       console.log(`Network status: ${online ? "Online" : "Offline"}`);
     };
     const handleConnectionChange = () => {
@@ -26,7 +26,7 @@ function App() {
         ) {
           setIsSlow(true);
         } else {
-          setIsSlow(false);
+          setIsSlow(false)
         }
       } else {
         console.log("Network Information API not supported.");
@@ -49,12 +49,12 @@ function App() {
   }, []);
   return (
     <div className="App">
-      {!isOnline && (
+      {!isOnlineRef.current && (
         <div className="text-center text-white bg-red-500">
           Please check your internet connection
         </div>
       )}
-      {isOnline && isSlow && (
+      {isOnlineRef.current && isSlow && (
         <div className="bg-[#ef9b0f] text-center text-white">
           ⚠ Your connection is too slow
         </div>

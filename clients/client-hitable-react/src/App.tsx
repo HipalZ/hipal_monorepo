@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLiteStore } from "./components/store/useLiteStore";
 import MainRouter from "./routes";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -23,7 +23,7 @@ function App() {
   const businessIdMatch = pathName.match(/^\/([^/]+)\/alerts/);
   const businessId = businessIdMatch ? businessIdMatch[1] : null;
   const outletInfo = useBusinessData(s => s.outletInfo);
-  const [isOnline, setIsOnline] = useState(true);
+  const isOnlineRef = useRef(navigator.onLine);
   const [isSlow, setIsSlow] = useState(false);
   const { errorText } = useErrorHandling();
   const {
@@ -150,7 +150,7 @@ function App() {
 
   useEffect(() => {
     const checkOnlineStatus = () => {
-      setIsOnline(navigator.onLine);
+      isOnlineRef.current = navigator.onLine;
     };
 
     const handleConnectionChange = () => {
@@ -213,27 +213,13 @@ function App() {
 
   return (
     <main className="relative">
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossOrigin="anonymous"
-      />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Bungee+Inline&display=swap"
-        rel="stylesheet"
-      />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap"
-        rel="stylesheet"
-      />
-      {!isOnline && (
-        <div className="fixed top-0 z-20 w-full text-center text-white bg-red-500 space-grotesk-700">
+      {!isOnlineRef.current && (
+        <div className="sticky top-0 z-20 w-full text-center text-white bg-red-500 space-grotesk-700">
           Please check your internet connection
         </div>
       )}
-      {isOnline && isSlow && (
-        <div className="space-grotesk-700 fixed top-0 z-20 w-full bg-[#ef9b0f] text-center text-white">
+      {isOnlineRef.current && isSlow && (
+        <div className="sticky top-0 space-grotesk-700 z-20 w-full bg-[#ef9b0f] text-center text-white">
           ⚠ Your connection is too slow
         </div>
       )}
