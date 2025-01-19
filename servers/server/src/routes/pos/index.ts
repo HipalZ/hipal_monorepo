@@ -1435,14 +1435,33 @@ const posRouter = new Hono()
       z.object({
         tableName: z.string().min(1).max(200),
         businessId: z.string().min(1).max(200),
+        userId: z.string().min(1).max(200),
       }),
     ),
 
     async (c) => {
-      const { tableName, businessId } = c.req.query();
+      const { tableName, businessId, userId } = c.req.query();
+
+      const user = await User.findById(userId);
+
+      const TableInfo = await Table.findOne({
+        businessId: businessId,
+        name: tableName,
+      });
+
+      const sessionTableInfo = await PetPoojaPinTemp.findOne({
+        businessId: businessId,
+        phoneNumbers: user.phone,
+        isTransfer: true,
+      });
+
+      const sessionTableFind = await Table.findOne({
+        businessId: businessId,
+        _id: sessionTableInfo?.transferTableTo?.toString(),
+      });
 
       const userKot = await KotOrder.find({
-        tableName: tableName,
+        tableName: sessionTableFind ? sessionTableFind.name : tableName,
         businessId: businessId,
         settled: false,
         rejected: false,
