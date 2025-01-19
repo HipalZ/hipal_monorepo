@@ -29,7 +29,7 @@ const MemoFinalBillLoader = () => {
     }, [setShowScan])
 
     return (
-        <div className="flex flex-col items-center p-6 max-w-md mx-auto">
+        <div className="flex flex-col items-center p-6 pb-24 max-w-md mx-auto">
             {/* Animated circle background */}
             <section className="relative bg-[#8DC1F120] w-[250px] aspect-square rounded-full overflow-hidden mb-6">
                 <TransitionImages images={images} />

@@ -50,7 +50,7 @@ const MemoTotalBillButton = () => {
             <article
                 onClick={handleEligibility}
                 onKeyDown={handleEligibility}
-                className="bg-black text-white px-3 py-2 rounded-lg inter text-sm on_active_bounce"
+                className="bg-black text-white text-center w-[8rem] px-3 py-2 rounded-lg inter text-sm on_active_bounce"
             >
                 <span>Pay Now</span>
             </article>

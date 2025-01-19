@@ -64,7 +64,7 @@ const AvailableCoinz = () => {
     showAlert: s.showAlert,
     setShowAlert: s.setShowAlert,
   }));
-  const [tempClaimedCoinz, setTempClaimedCoinz] = useState(claimedCoinz);
+  const [tempClaimedCoinz, setTempClaimedCoinz] = useState<number | null>(claimedCoinz || null);
 
   const handleChange = (
     event: ChangeEvent<HTMLInputElement>,
@@ -85,7 +85,7 @@ const AvailableCoinz = () => {
     if (claimCouponz > 0) {
       setShowAlert(true);
     } else {
-      handleApplyCoinz(tempClaimedCoinz);
+      handleApplyCoinz(tempClaimedCoinz || 0);
     }
   }, [setShowAlert, tempClaimedCoinz, handleApplyCoinz, claimCouponz]);
 
@@ -94,7 +94,7 @@ const AvailableCoinz = () => {
     setShowAlert(false);
     setAvailedCoupon({});
     toast.success("Coupon removed successfully");
-    handleApplyCoinz(tempClaimedCoinz);
+    handleApplyCoinz(tempClaimedCoinz || 0);
   }, [
     setClaimCouponz,
     setShowAlert,
@@ -145,13 +145,13 @@ const AvailableCoinz = () => {
         </AlertToRemove>
       ) : (
         <BottomPopUp height="40dvh" show={isModalOpen} onClose={closeModal}>
-          <div className="h-[15rem] p-6 bg-white text-black overflow-hidden rounded-t-2xl">
+          <div className="h-[15rem] p-4 bg-white text-black overflow-hidden rounded-t-2xl">
             <h1 className="text-xl font-semibold">
               Available Coins :{" "}
               {claimedCoinz ? userCoinz - claimedCoinz : userCoinz}
             </h1>
-            {tempClaimedCoinz > 0 ? (
-              <p className="mt-1 text-xs">
+            {tempClaimedCoinz && tempClaimedCoinz > 0 ? (
+              <p className="mt-1 text-xs text-red-500">
                 Max Coinz can claim upto {tempClaimedCoinz}
               </p>
             ) : null}
@@ -159,12 +159,15 @@ const AvailableCoinz = () => {
             <input
               onChange={(e) => handleChange(e, userCoinz)}
               type="tel"
-              value={tempClaimedCoinz}
-              placeholder="Enter the coinz to apply"
+              value={tempClaimedCoinz || null}
+              placeholder="Enter the Coinz to apply"
               min={0}
               max={userCoinz}
-              className="border border-[#000] pl-4 min-h-[3rem] mx-auto font-semibold text-[1rem] rounded-[1rem] min-w-389 min-w-[95%] my-auto !py-2 text-black"
+              className="w-full border border-[#000] placeholder:text-sm pl-3 min-h-[3rem] mx-auto font-semibold text-[1rem] rounded-lg my-auto !py-2 text-black"
             />
+            <p className="mt-2 text-center text-sm text-gray-600">
+              Earn exciting rewards with every transaction!
+            </p>
           </div>
           <CommonBottomButton
             fixed

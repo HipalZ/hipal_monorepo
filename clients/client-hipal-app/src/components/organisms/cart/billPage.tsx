@@ -27,8 +27,8 @@ const MemoBillPage = () => {
     }
 
     return (
-        <BottomPopUp bottomCross hide show={showBillPage} onClose={() => setShowBillPage(false)}>
-            <main className="bg-white pb-20">
+        <BottomPopUp height="h-[100dvh]" bottomCross hide show={showBillPage} onClose={() => setShowBillPage(false)}>
+            <main className="bg-white pb-20 overflow-auto h-[100dvh] hide-scrollbar">
                 <motion.div
                     className="max-w-2xl mx-auto rounded-2xl"
                     initial={{ opacity: 0, y: 20 }}
@@ -92,10 +92,10 @@ const MemoBillPage = () => {
 
                                 <div className="flex-1">
                                     <h3 className="text-lg font-bold text-amber-900">
-                                        1 Rupee = 1 Coin
+                                        1 Coin = 1 Rupee
                                     </h3>
                                     <p className="text-amber-700 text-sm">
-                                        Earn coins equal to your bill amount!
+                                        Earn exciting coinz by paying your bill!
                                     </p>
                                 </div>
                             </div>

@@ -1,8 +1,8 @@
 "use client";;
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, lazy } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaArrowLeft } from "react-icons/fa";
-import { RiNewspaperLine, RiQrScan2Line } from "react-icons/ri";
+import { RiNewspaperLine } from "react-icons/ri";
 import { BiRightArrow } from "react-icons/bi";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
@@ -11,7 +11,6 @@ import { useCart } from "@/components/store/useCart";
 import { useLogin } from "@/components/store/useLogin";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useTableData from "@/components/store/useTableData";
-import glassTable from "@/assets/cart/glassTable.png";
 import order from "@/assets/call/order.png";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import MemoFoodType from "@/components/atoms/foodType";
@@ -20,7 +19,7 @@ import { apiRpc } from "@hi/common";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { User, ChevronUp, ChevronDown } from 'lucide-react'
 import { cn } from "@/components/utils/helpers";
-import OrdersHeader from "./headerOrders";
+const OrdersHeader = lazy(() => import("./headerOrders"));
 
 const MemoOrders = () => {
   const { cartHistory, setCartHistory } = useCartStore();
@@ -33,7 +32,6 @@ const MemoOrders = () => {
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const tableName = useTableData((state) => state.tableName);
   const handleBack = useCallback(() => setShowCart(false), [setShowCart]);
-  const openScanAndPay = useCallback(() => setShowScan(true), [setShowScan]);
 
   // Toggle Accordion
   const toggleAccordion = useCallback((id: string) => {
@@ -96,7 +94,7 @@ const MemoOrders = () => {
       <OrdersHeader />
 
       {/* Scrollable Content */}
-      <main className="flex-1 pb-20 overflow-auto bg-gray-50/50">
+      <main className="flex-1 pb-20 overflow-auto bg-gray-50/50 hide-scrollbar">
         <AnimatePresence>
           {cartHistory.map((order) => (
             <motion.div
@@ -118,7 +116,7 @@ const MemoOrders = () => {
                 whileHover={{ scale: 1.002 }}
                 transition={{ type: "spring", stiffness: 400, damping: 30 }}
               >
-                <section className="flex items-center gap-4">
+                <section className="flex items-center gap-2">
                   <div className="flex items-center justify-center w-10 h-10 bg-orange-50 rounded-full">
                     <User className="w-5 h-5 text-black" />
                   </div>
@@ -129,7 +127,7 @@ const MemoOrders = () => {
                     </h3>
                   </div>
                 </section>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center">
                   <span className="px-3 py-1 text-sm font-medium text-black rounded-full poppins-regular">
                     {order?.cart?.length} items
                   </span>
@@ -178,6 +176,10 @@ const MemoOrders = () => {
                               Extra: {item.extras.map(e => e.name).join(", ")}
                             </p>
                           )}
+                          {item?.dish?.instruction?.length > 0 &&
+                            <p className="inline-flex italic mt-1 gap-1 text-sm text-gray-500">
+                              <span>⚠</span> {item?.dish?.instruction}
+                            </p>}
                         </div>
 
                         <div className="text-right flex-shrink-0">

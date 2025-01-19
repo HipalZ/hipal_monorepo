@@ -16,6 +16,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import ConfettiHeader from "@/components/organisms/confettiHeader";
 import { cn } from "@/components/utils/helpers";
+import { HiX } from "react-icons/hi";
 
 const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
   const { errorText } = useErrorHandling();
@@ -77,59 +78,55 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
   ]);
 
   return (
-    <>
-      <div className="flex flex-col h-screen relative pb-[6rem] overflow-auto bg-white">
-        <ConfettiHeader direction="top" />
-        <center className="mt-20">
-          <Image src={ReceptionBell} alt="ReceptionBell" height={143} width={143} />
-          <h1 className="my-2 text-2xl font-semibold text-black">Calling Captain?</h1>
-          <p className="mt-2 text-sm text-gray-500">What should we tell the captain to help you with </p>
-        </center>
-        <br />
-        <motion.ul
-          className="grid flex-grow grid-cols-2 gap-5 p-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          {Object.entries(messageImageMap).map(([messageText, imageSrc]) => (
-            <motion.li
-              key={messageText}
-              className={cn(message === messageText ? "border-[#008800] border-2" : "border-[#CACACA] border", "overflow-hidden rounded-2xl pb-4 h-[11rem] relative cursor-pointer flex flex-col items-center justify-center")}
-              onClick={() => handleSelectMessage(messageText)}
-              whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <motion.div
-                className="py-4 bg-[#ffffff] text-base-content"
-              >
-                <Image
-                  src={imageSrc}
-                  alt={messageText}
-                  height={120}
-                  width={120}
-                  objectFit="cover"
-                  className="transition-transform duration-300 ease-in-out transform"
-                />
-              </motion.div>
-              <h3 className="text-sm font-medium text-center text-[#000000]">
-                {messageText}
-              </h3>
-            </motion.li>
-          ))}
-        </motion.ul>
-        <br />
-        <div className="mx-4 pb-10">
-          <button
-            type="button"
-            onClick={callTheWaiter}
-            className={cn(message?.length > 0 ? "bg-[#008800] text-white" : "bg-[#FFFFFF] text-gray-500", "w-full border border-[#cacaca] text-base p-3 rounded-xl")}
+    <div className="relative h-screen overflow-auto bg-white hide-scrollbar">
+      <ConfettiHeader direction="top" />
+      <center className="mt-20">
+        <Image src={ReceptionBell} alt="ReceptionBell" height={143} width={143} />
+        <h1 className="my-2 text-2xl font-semibold text-black">Calling Captain?</h1>
+        <p className="mt-2 text-sm text-gray-500">What should we tell the captain to help you with </p>
+      </center>
+      <motion.ul
+        className="grid flex-grow grid-cols-2 gap-5 p-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        {Object.entries(messageImageMap).map(([messageText, imageSrc]) => (
+          <motion.li
+            key={messageText}
+            className={cn(message === messageText ? "border-[#008800] border-2" : "border-[#CACACA] border", "overflow-hidden rounded-2xl pb-4 h-[11rem] relative cursor-pointer flex flex-col items-center justify-center")}
+            onClick={() => handleSelectMessage(messageText)}
+            whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
+            whileTap={{ scale: 0.95 }}
           >
-            {message?.length > 0 ? 'Continue' : 'Select the option and call'}
-          </button>
-        </div>
+            <motion.div
+              className="py-4 bg-[#ffffff] text-base-content"
+            >
+              <Image
+                src={imageSrc}
+                alt={messageText}
+                height={120}
+                width={120}
+                objectFit="cover"
+                className="transition-transform duration-300 ease-in-out transform"
+              />
+            </motion.div>
+            <h3 className="text-sm font-medium text-center text-[#000000]">
+              {messageText}
+            </h3>
+          </motion.li>
+        ))}
+      </motion.ul>
+      <div className="mx-4 pb-20">
+        <button
+          type="button"
+          onClick={callTheWaiter}
+          className={cn(message?.length > 0 ? "bg-[#008800] text-white" : "bg-[#FFFFFF] text-gray-500", "w-full border border-[#cacaca] text-base p-3 rounded-xl")}
+        >
+          {message?.length > 0 ? 'Continue' : 'Select the option and call'}
+        </button>
       </div>
-    </>
+    </div>
   );
 };
 

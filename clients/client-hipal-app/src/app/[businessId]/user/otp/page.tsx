@@ -117,11 +117,12 @@ function OtpPage() {
 
   const verifyOtp = async () => {
     const fullOtp = otp.join("");
+    const checkCondition = userDetails.name === "" && customerName === "" && userDetails?.name?.length > 2 && customerName?.length > 2
     if (fullOtp.length !== 4) {
       setError("Please enter the complete OTP.");
       return;
     }
-    if (userDetails.name === "" && customerName === "") {
+    if (checkCondition) {
       setError("Please enter your name.");
       return;
     }

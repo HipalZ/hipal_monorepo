@@ -41,6 +41,7 @@ const MemoConfirmPayment = () => {
         })
         const res = await response.json();
         setIsTransfer(res.data?.isTransfer || false);
+        return res;
     }
 
     useQuery({
@@ -51,7 +52,7 @@ const MemoConfirmPayment = () => {
 
     return (
         <>
-            <div className="flex flex-col items-center px-6 py-8 bg-white">
+            <article className="flex flex-col items-center px-6 py-8 bg-white">
                 <div className="w-full max-w-md space-y-3 text-center my-4 poppins-regular">
                     <h1 className="text-2xl font-bold text-black">
                         {isTransfer ? "Table Transfer Notice" : "Before we get you bill!"}
@@ -78,8 +79,8 @@ const MemoConfirmPayment = () => {
                             : "After the bill is generated for this table."}
                     </p>
                 </motion.div>
-            </div>
-            <div className="mt-36 poppins-regular space-y-4 w-full max-w-md px-4 sticky bottom-2">
+            </article>
+            <article className="mt-36 poppins-regular space-y-4 w-full max-w-md px-4 sticky bottom-2">
                 <button
                     type="button"
                     onClick={goBack}
@@ -89,7 +90,7 @@ const MemoConfirmPayment = () => {
                 </button>
                 {!isTransfer && <SwipeToPlaceOrder placeOrder={placeOrder} />}
                 {isTransfer && <CallTheCaptain messageToSend="Please Settle My Table" />}
-            </div>
+            </article>
         </>
     )
 }
