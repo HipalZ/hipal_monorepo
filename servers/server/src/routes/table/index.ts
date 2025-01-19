@@ -1321,6 +1321,7 @@ const tableRouter = new Hono()
     ),
     async (c) => {
       const { tableName, businessId } = c.req.param();
+
       const tableData = await Table.findOne({
         businessId,
         name: tableName,
