@@ -1475,35 +1475,4 @@ const posRouter = new Hono()
     },
   );
 
-const tableInfo = await PetPoojaPinTemp.findOne({
-  tableName: tableName,
-  businessId: businessId,
-});
-
-if (tableInfo && !tableInfo?.phoneNumbers.includes(user.phone)) {
-  return c.json(
-          {
-            message: `this table is already occupied by ${tableInfo?.customerName} please ask them to place the order`,
-            err: true,
-            data: {
-              success: false,
-            },
-          },
-          403,
-        );
-}
-
-return c.json(
-        {
-          message: "User authorized",
-          err: false,
-          data: {
-            success: true,
-          },
-        },
-        200,
-      );
-},
-  )
-
 export default posRouter;
