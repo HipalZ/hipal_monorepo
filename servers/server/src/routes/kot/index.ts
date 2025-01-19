@@ -316,6 +316,19 @@ const kotRouter = new Hono()
     ),
     async (c) => {
       const { tableId } = c.req.param();
+      const { businessId } = c.req.query();
+
+      const userTableSession = await PetPoojaPinTemp.findOne({
+        businessId: businessId,
+
+        transferTableTo: { $exists: true },
+        transferType: "TABLE",
+      });
+
+      const sessionTable = await Table.findOne({
+        businessId: businessId,
+        _id: userTableSession?.transferTableTo?.toString(),
+      });
 
       const tableName = await Table.findOne({
         _id: tableId,

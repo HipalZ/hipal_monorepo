@@ -704,6 +704,23 @@ const posRouter = new Hono()
           hiCode,
         } = await c.req.json();
 
+        const Tinfo = await Table.findOne({
+          businessId: businessId,
+          name: tableName,
+        });
+
+        const tInfoData = await PetPoojaPinTemp.findOne({
+          businessId: businessId,
+          $or: [
+            {
+              transferTableTo: Tinfo?._id?.toString(),
+            },
+            {
+              transferTableFrom: Tinfo?._id?.toString(),
+            },
+          ],
+        });
+
         const findUserActiveSession = await PetPoojaPinTemp.findOne({
           businessId: businessId,
           phoneNumbers: customerPhone,
@@ -711,7 +728,8 @@ const posRouter = new Hono()
         if (
           findUserActiveSession &&
           findUserActiveSession.tableName !== tableName &&
-          findUserActiveSession.isTransfer === false
+          findUserActiveSession.isTransfer === false &&
+          !tInfoData
         ) {
           return c.json(
             {
