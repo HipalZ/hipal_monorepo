@@ -27,6 +27,7 @@ import { useCartStore } from "../store/useCartStore";
 
 export const usePayments = () => {
   const { businessDetails } = useBusinessDetails();
+  const pathName = usePathname();
   const { errorText } = useErrorHandling();
   const { loyaltySetting } = useLoyaltyData();
   const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
@@ -235,7 +236,7 @@ export const usePayments = () => {
       if (total <= 0) {
         return toast.error("Invalid amount");
       }
-      if (tableName === "") {
+      if (tableName === "" && !pathName.includes("posPayment")) {
         toast.error("Please scan to start");
         return router.push(`/${customLink}/scan`);
       }
@@ -388,7 +389,7 @@ export const usePayments = () => {
   };
   // create offline order
   const handleCreateOfflineOrder = useCallback(async () => {
-    if (tableName === "") {
+    if (tableName === "" && !pathName.includes("posPayment")) {
       toast.error("Please scan qr to start");
       return router.push(`/${customLink}/scan`);
     }
@@ -509,7 +510,7 @@ export const useHandleMode = () => {
     claimCouponz: s.claimCouponz,
   }));
   const { tableName } = useTableData();
-
+  const pathName = usePathname();
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
   const handleMode = useCallback(
@@ -517,7 +518,7 @@ export const useHandleMode = () => {
       if (showInput) {
         return toast.error("Please save the tip amount");
       }
-      if (!tableName) {
+      if (!tableName && !pathName.includes("posPayment")) {
         toast.error("Please Scan Again");
         return router.push(`/${customLink}/scan`);
       }
