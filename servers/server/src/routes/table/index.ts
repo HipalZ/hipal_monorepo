@@ -351,9 +351,15 @@ const tableRouter = new Hono()
               businessId: table?.businessId,
               order_id: saveOrder[0]._id,
               total: saveOrder[0].total,
-              mode: split ? "split" : paymentMode?.name || "offline",
+              mode:
+                settleModes.length > 1
+                  ? "split"
+                  : paymentMode?.name || "offline",
               status: "SUCCESS",
-              paymentMode: split ? "split" : paymentMode?.name || "offline",
+              paymentMode:
+                settleModes.length > 1
+                  ? "split"
+                  : paymentMode?.name || "offline",
               userId: saveOrder[0].userId,
               claimedCoins: 0,
               billValue: saveOrder[0].billValue,
@@ -602,9 +608,15 @@ const tableRouter = new Hono()
               businessId: table?.businessId,
               order_id: saveOrder[0]._id,
               total: saveOrder[0].total,
-              mode: split ? "split" : paymentMode?.name || "offline",
+              mode:
+                settleModes.length > 1
+                  ? "split"
+                  : paymentMode?.name || "offline",
               status: "SUCCESS",
-              paymentMode: split ? "split" : paymentMode?.name || "offline",
+              paymentMode:
+                settleModes.length > 1
+                  ? "split"
+                  : paymentMode?.name || "offline",
               userId: saveOrder[0].userId,
               claimedCoins: 0,
               billValue: saveOrder[0].billValue,

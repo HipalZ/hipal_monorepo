@@ -1719,11 +1719,15 @@ const paymentsRouter = new Hono()
                     businessId: alert.businessId,
                     order_id: order?._id,
                     total: order?.total,
-                    mode: split ? "split" : paymentMode?.name || "offline",
+                    mode:
+                      settleModes.length > 1
+                        ? "split"
+                        : paymentMode?.name || "offline",
                     status: "SUCCESS",
-                    paymentMode: split
-                      ? "split"
-                      : paymentMode?.name || "offline",
+                    paymentMode:
+                      settleModes.length > 1
+                        ? "split"
+                        : paymentMode?.name || "offline",
                     userId: order?.userId._id,
                     claimedCoins: order?.claimedCoins,
                     billValue: order?.billValue,
