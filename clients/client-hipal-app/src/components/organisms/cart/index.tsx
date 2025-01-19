@@ -61,6 +61,7 @@ const Cart = () => {
     setHiCodePopup,
     hiCodePopup,
     setHiCodeUser,
+    setTableName,
   } = useTableData();
   const { setCheckLogin } = usePaymentStore()
   const accessToken = useUserToken.getState().accessToken;
@@ -148,6 +149,10 @@ const Cart = () => {
           return true;
         } if (response.status === 401) {
           resetTableData();
+        } if (response.status === 409) {
+          toast.error(res?.message)
+          setTableName(res?.data?.tableName)
+          setHiCode(res?.data?.hiCode)
         }
         if (response.status === 403) {
           setHiCodeUser(res?.data as HiCodeUser);
