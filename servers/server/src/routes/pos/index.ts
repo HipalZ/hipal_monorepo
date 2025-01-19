@@ -1428,20 +1428,20 @@ const posRouter = new Hono()
         );
       }
 
-      const sessionTable = await Table.findOne({
+      const TableInfo = await Table.findOne({
         businessId: businessId,
         name: tableName,
       });
 
       const sessionTableInfo = await PetPoojaPinTemp.findOne({
-        transferTableTo: sessionTable?._id.toString(),
+        transferTableFrom: TableInfo?._id.toString(),
         businessId: businessId,
         isTransfer: true,
       });
 
       const sessionTableFind = await Table.findOne({
         businessId: businessId,
-        _id: sessionTableInfo?.transferTableFrom?.toString(),
+        _id: sessionTableInfo?.transferTableTo?.toString(),
       });
 
       const tableInfo = await PetPoojaPinTemp.findOne({
