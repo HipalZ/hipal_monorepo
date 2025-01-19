@@ -395,7 +395,7 @@ const Cart = () => {
   }, [cartPage, setShowCart, setCartPage]);
 
   return (
-    <div className={cn("overflow-y-auto h-[100dvh] text-[#000000] bg-[#ffffff] relative")}>
+    <div className={cn("overflow-y-auto h-[100dvh] hide-scrollbar text-[#000000] bg-[#ffffff] relative")}>
       {cartPage === "history" && <CartHeader />}
       {cartPage === "cart" &&
         <section className="relative h-[calc(91dvh+5px)]">

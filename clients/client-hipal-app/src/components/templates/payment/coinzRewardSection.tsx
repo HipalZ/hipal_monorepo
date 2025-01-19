@@ -69,7 +69,6 @@ const MemoCoinzRewardSection = () => {
     billValue,
     claimedCoinz,
     claimCouponz,
-    isModalOpen,
     setIsModalOpen,
     editBillModal,
     setEditBillModal,
@@ -77,7 +76,6 @@ const MemoCoinzRewardSection = () => {
     billValue: s.billValue,
     claimedCoinz: s.claimedCoinz,
     claimCouponz: s.claimCouponz,
-    isModalOpen: s.isModalOpen,
     setIsModalOpen: s.setIsModalOpen,
     editBillModal: s.editBillModal,
     setEditBillModal: s.setEditBillModal,
@@ -92,19 +90,18 @@ const MemoCoinzRewardSection = () => {
     setIsModalOpen(true);
   }, [completeUrl, setCheckLogin, setUrlFrom, accessToken, setIsModalOpen]);
 
-  const openBillModal = useCallback(() => {
-    setEditBillModal(true);
-  }, [editBillModal]);
-
-  const closeBillModal = useCallback(() => {
-    setEditBillModal(false);
-  }, [editBillModal]);
+  const toggleBillModal = useCallback(() => {
+    setEditBillModal(!editBillModal);
+  }, [setEditBillModal, editBillModal]);
 
   const openCouponz = useCallback(() => {
-    setTimeout(() => {
-      setApplyCouponz(true);
-    }, 200);
-  }, [applyCouponz]);
+    if (!accessToken) {
+      setCheckLogin(true)
+      setUrlFrom(completeUrl)
+      return
+    }
+    setApplyCouponz(true);
+  }, [setApplyCouponz, accessToken, completeUrl, setCheckLogin, setUrlFrom]);
 
   const validCouponCount = useMemo(() => {
     const validCoupons = userCouponz?.filter((coupon) => {
@@ -121,7 +118,7 @@ const MemoCoinzRewardSection = () => {
         <center className="flex items-center justify-center my-2 text-primary">
           <button
             type="button"
-            onClick={openBillModal}
+            onClick={toggleBillModal}
             className="on_active_bounce px-3 py-0.5 text-sm rounded-full shadow-lg bg-[#1F1F1F]"
           >
             <RiEdit2Fill className="inline-block text-white stroke-white" />
@@ -226,7 +223,7 @@ const MemoCoinzRewardSection = () => {
       {(editBillModal && !outletInfo?.isPosEnabled) && (
         <BottomPopUp
           show={editBillModal}
-          onClose={closeBillModal}
+          onClose={toggleBillModal}
           linearGradTheme
           height="80dvh"
         >

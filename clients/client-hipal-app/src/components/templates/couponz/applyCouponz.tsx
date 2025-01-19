@@ -364,7 +364,7 @@ const MemoApplyCouponz = () => {
 
   const ApplyCouponzz = () => {
     return (
-      <section className="bg-[#F1F0F5] overflow-y-auto h-full py-4 relative inter">
+      <section className="bg-[#F1F0F5] overflow-y-auto h-full py-4 relative inter hide-scrollbar">
         <section className="fixed top-0 z-20 flex justify-between w-full gap-4 p-2 bg-white">
           <article className="flex items-center gap-4">
             <button
