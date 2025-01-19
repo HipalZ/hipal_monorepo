@@ -13,9 +13,16 @@ export const MemoSessionTimeoutBanner = () => {
     const openScanner = useCallback(() => {
         setShowScan(true)
     }, [setShowScan])
+    const shouldShowSessionTimedOut = (
+        tableName?.length === 0 &&
+        tableNameTimeStamp === null &&
+        isVisible &&
+        !pathName?.includes("posPayment") &&
+        !pathName?.includes("review")
+    );
     return (
         <AnimatePresence >
-            {tableName?.length === 0 && tableNameTimeStamp === null && isVisible && !pathName?.includes("review") && (
+            {shouldShowSessionTimedOut ? (
                 <div className="fixed w-full top-0 bg-gradient-to-b from-white/95 to-white/90 backdrop-blur-md shadow-lg z-50">
                     {/* Animated Warning Line */}
                     <motion.div
@@ -52,7 +59,7 @@ export const MemoSessionTimeoutBanner = () => {
                                         }}
                                         transition={{
                                             duration: 2,
-                                            repeat: Infinity,
+                                            repeat: Number.POSITIVE_INFINITY,
                                         }}
                                     />
                                 </motion.div>
@@ -107,7 +114,7 @@ export const MemoSessionTimeoutBanner = () => {
                     />
                 </div>
             )
-            }
+                : null}
         </AnimatePresence >
     )
 }

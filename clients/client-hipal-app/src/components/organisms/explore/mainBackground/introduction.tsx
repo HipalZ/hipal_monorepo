@@ -10,7 +10,7 @@ import type {
 import { apiRpc, cn } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { useParams, useRouter } from "next/navigation";
-import { memo, useCallback, useEffect } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import SubScribeModal from "../../subscribe";
 import ReviewModal from "../googleReviews/reviewModal";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
@@ -59,7 +59,7 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
       setUserCoinZ(res?.rewards);
       setGoogleReviewCount(res?.googleReviewCount);
     }
-    return response;
+    return res?.data;
   };
 
   const toggleReviewPopup = useCallback(() => {
@@ -87,45 +87,44 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
     }
   }, [businessDetails?.businessId, data?.business?.businessId]);
 
-  const { isPending: isLoader, } = useQuery({
+  const { isPending: isLoader } = useQuery({
     queryKey: ["isSubscribe", customLink, userDetails],
     queryFn: () => isSubscribe(userDetails),
-    enabled: !!userDetails._id && !!customLink,
+    enabled: !!userDetails?._id && !!customLink,
   })
+
 
   return (
     <>
-      {isLoader ? <LoadingSpinnerCircle /> : <>
-        <section className="absolute z-20 bottom-6 left-6 w-[75%] text-white">
-          <span onClick={redirectUrl} className="text-xs px-3 py-2 rounded-full bg-[#ffffff30]">
-            ⭐ {outletInfo?.avgRating || 4.7}
-          </span>
-          <h3 className="mt-2 text-3xl capitalize space-grotesk-700">
-            {data?.business?.name}
-          </h3>
-          <p className={cn("text-sm line-clamp-2 capitalize mb-4")}>
-            {Array.isArray(data?.business?.tags)
-              ? data?.business?.tags.join(" | ")
-              : data?.business?.tags}
-          </p>
-          <h4 className="mb-1 text-xs font-semibold line-clamp-2">
-            {data?.business?.address}
-          </h4>
-        </section>
-        {subscribeModal && (
-          <BottomPopUp show={subscribeModal} onClose={closeSubscribeModal} hide>
-            <SubScribeModal
-              closeSubscribeModal={closeSubscribeModal}
-              business={business}
-            />
-          </BottomPopUp>
-        )}
-        {reviewPopup && (
-          <BottomPopUp show={reviewPopup} onClose={toggleReviewPopup}>
-            <ReviewModal closeModal={toggleReviewPopup} />
-          </BottomPopUp>
-        )}
-      </>}
+      <section className="absolute z-20 bottom-6 left-6 w-[75%] text-white">
+        <span onClick={redirectUrl} className="text-xs px-3 py-2 rounded-full bg-[#ffffff30]">
+          ⭐ {outletInfo?.avgRating || 4.7}
+        </span>
+        <h3 className="mt-2 text-3xl capitalize space-grotesk-700">
+          {data?.business?.name}
+        </h3>
+        <p className={cn("text-sm line-clamp-2 capitalize mb-4")}>
+          {Array.isArray(data?.business?.tags)
+            ? data?.business?.tags.join(" | ")
+            : data?.business?.tags}
+        </p>
+        <h4 className="mb-1 text-xs font-semibold line-clamp-2">
+          {data?.business?.address}
+        </h4>
+      </section>
+      {subscribeModal && (
+        <BottomPopUp show={subscribeModal} onClose={closeSubscribeModal} hide>
+          <SubScribeModal
+            closeSubscribeModal={closeSubscribeModal}
+            business={business}
+          />
+        </BottomPopUp>
+      )}
+      {reviewPopup && (
+        <BottomPopUp show={reviewPopup} onClose={toggleReviewPopup}>
+          <ReviewModal closeModal={toggleReviewPopup} />
+        </BottomPopUp>
+      )}
     </>
   );
 };

@@ -1,4 +1,5 @@
 "use client";
+
 import dynamic from "next/dynamic"
 import { memo, useCallback } from "react";
 import { motion } from "framer-motion";
@@ -8,13 +9,18 @@ import KotMachine from "@/assets/cart/KotMachine.png";
 import BillImage from "@/assets/call/BillImage.png";
 import { cn } from "@/components/utils/helpers"
 import { useCart } from "@/components/store/useCart"
-import TransitionImages from "./transitionImages"
+import { useQuery } from "@tanstack/react-query";
+import { apiRpc } from "@hi/common";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 
+const TransitionImages = dynamic(() => import("./transitionImages"));
+const CallTheCaptain = dynamic(() => import("./callTheCaptain"));
 const SwipeToPlaceOrder = dynamic(() => import("./swipeToPlaceOrder"))
+
 const MemoConfirmPayment = () => {
     const { setCartPage } = useCart()
-    const { tableName } = useTableData()
-
+    const { tableName, isTransfer, setIsTransfer } = useTableData()
+    const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
     // List of images to slide
     const images = [BillPrint, KotMachine, BillImage];
 
@@ -26,12 +32,29 @@ const MemoConfirmPayment = () => {
         setCartPage("order")
     }, [setCartPage]);
 
+    const checkTableSession = async () => {
+        const response = await apiRpc.table.get_table_session[":tableName"][":businessId"].$get({
+            param: {
+                tableName,
+                businessId,
+            }
+        })
+        const res = await response.json();
+        setIsTransfer(res.data?.isTransfer || false);
+    }
+
+    useQuery({
+        queryKey: ["businessSettings", businessId, tableName],
+        queryFn: checkTableSession,
+        enabled: !!businessId && !!tableName,
+    });
+
     return (
         <>
             <div className="flex flex-col items-center px-6 py-8 bg-white">
                 <div className="w-full max-w-md space-y-3 text-center my-4 poppins-regular">
                     <h1 className="text-2xl font-bold text-black">
-                        Before we get you bill!
+                        {isTransfer ? "Table Transfer Notice" : "Before we get you bill!"}
                     </h1>
                     <p className="text-lg text-[#CACACA]">
                         Table: {tableName}
@@ -47,10 +70,12 @@ const MemoConfirmPayment = () => {
                     transition={{ delay: 0.3 }}
                 >
                     <h2 className="text-xl font-semibold text-black">
-                        No further items can be placed!
+                        {isTransfer ? "Cannot Generate Bill" : "No further items can be placed!"}
                     </h2>
                     <p className="text-sm text-black">
-                        After the bill is generated for this table.
+                        {isTransfer
+                            ? "As your table was just shifted, please approach the captain for bill generation."
+                            : "After the bill is generated for this table."}
                     </p>
                 </motion.div>
             </div>
@@ -60,9 +85,10 @@ const MemoConfirmPayment = () => {
                     onClick={goBack}
                     className={cn("bg-gray-50 border-black/50 text-black/50 border w-full text-base p-3 rounded-xl")}
                 >
-                    Go Back and Check Again
+                    {isTransfer ? "Go Back" : "Go Back and Check Again"}
                 </button>
-                <SwipeToPlaceOrder placeOrder={placeOrder} />
+                {!isTransfer && <SwipeToPlaceOrder placeOrder={placeOrder} />}
+                {isTransfer && <CallTheCaptain messageToSend="Please Settle My Table" />}
             </div>
         </>
     )

@@ -5,7 +5,7 @@ import { useLogin } from "@/components/store/useLogin";
 import { toast } from "react-toastify";
 import useTableData from "@/components/store/useTableData";
 
-const MemoCallTheCaptain = () => {
+const MemoCallTheCaptain = ({ messageToSend }: { messageToSend?: string }) => {
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
   const userDetails = useLogin((s) => s.userDetails);
   const tableName = useTableData((s) => s.tableName);
@@ -19,7 +19,7 @@ const MemoCallTheCaptain = () => {
     const payload = {
       businessId: businessId,
       tableName: tableName,
-      message: "Share the code of the table",
+      message: messageToSend ? messageToSend : "Share the code of the table",
       alertType: "WAITER",
       status: "WAITER",
       name: userDetails?.name || "user",

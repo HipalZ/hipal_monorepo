@@ -65,7 +65,7 @@ const MemoTableOptions = () => {
                 size="lg"
                 variant="outline"
                 className="w-full"
-                onClick={() => handleTransferTable('item')}
+                onClick={() => handleTransferTable('ITEM')}
             >
                 <CookingPot className="w-5 h-5 mr-2" />
                 Transfer Item
@@ -74,7 +74,7 @@ const MemoTableOptions = () => {
                 size="lg"
                 variant="outline"
                 className="w-full"
-                onClick={() => handleTransferTable('table')}
+                onClick={() => handleTransferTable('TABLE')}
             >
                 <MdTableBar className="w-5 h-5 mr-2" />
                 Transfer Table

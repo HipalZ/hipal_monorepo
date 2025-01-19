@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import type { TableData } from "./useZonesAndTable";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
-import { OrderData } from "../types/hiClientzData";
+import type { OrderData } from "../types/hiClientzData";
 
 export type orderPages = "online" | "offline" | "history" | "";
-export type TransferTable = "item" | "table" | "";
+export type TransferTable = "ITEM" | "TABLE" | "";
 
 export type orderModal =
   | ""
@@ -31,6 +31,10 @@ interface OrderState {
 
   transferTable: TransferTable;
   setTransferTable: (table: TransferTable) => void;
+
+  selectedItems: string[];
+  setSelectedItems: (items: string[]) => void;
+  toggleSelectedItem: (itemId: string) => void;
 
   orderDataStore: OrderData[];
   setOrderDataStore: (orders: OrderData[]) => void;
@@ -90,6 +94,15 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   orderDataStore: [],
   setOrderDataStore: (orders) => set({ orderDataStore: orders }),
+
+  selectedItems: [],
+  setSelectedItems: (items) => set({ selectedItems: items }),
+  toggleSelectedItem: (itemId) =>
+    set((state) => ({
+      selectedItems: state.selectedItems.includes(itemId)
+        ? state.selectedItems.filter((id) => id !== itemId)
+        : [...state.selectedItems, itemId],
+    })),
 
   transferTable: "",
   setTransferTable: (table) => set({ transferTable: table }),
