@@ -1,4 +1,4 @@
-import { UpiMode } from "@hi/db-models";
+import { Business, UpiMode } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -166,6 +166,67 @@ const upiModeRouter = new Hono()
           data: upiModes,
         },
         200,
+      );
+    },
+  )
+
+  .get(
+    "/bulk_mode/upload",
+
+    async (c) => {
+      const modes = [
+        {
+          name: "upi",
+          active: true,
+        },
+        {
+          name: "cash",
+          active: true,
+        },
+        {
+          name: "card",
+          active: true,
+        },
+        {
+          name: "npc",
+          active: true,
+        },
+
+        {
+          name: "zomatopay",
+          active: true,
+        },
+        {
+          name: "swiggypay",
+          active: true,
+        },
+      ];
+      const businesses = await Business.find({});
+
+      for (const business of businesses) {
+        for (const mode of modes) {
+          const existingUpiMode = await UpiMode.findOne({
+            name: mode.name,
+            businessId: business._id,
+          });
+
+          if (!existingUpiMode) {
+            await UpiMode.create({
+              name: mode.name,
+              businessId: business._id,
+              active: mode.active,
+            });
+          }
+        }
+      }
+
+      return c.json(
+        {
+          message: "Bulk UpiMode created successfully",
+          err: false,
+          data: {},
+        },
+        201,
       );
     },
   );

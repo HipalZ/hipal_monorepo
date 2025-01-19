@@ -940,11 +940,10 @@ const tableRouter = new Hono()
             short_url: "1",
             mobiles: phoneNumbers[i],
             businessname: business?.name,
-            bill: "https://hipal-test.hipalz.com/test/ebill",
+            bill: findLongUrl.shortUrl,
           },
         };
         const res = await axios(options);
-        console.log("billres", res.data);
       }
 
       return c.json(
