@@ -688,6 +688,7 @@ const posRouter = new Hono()
         businessId: z.string().min(1).max(200),
         customerName: z.string().min(1).max(200),
         customerPhone: z.string().min(1).max(200),
+        hiCode: z.string().max(200).optional(),
       }),
     ),
 
@@ -702,6 +703,21 @@ const posRouter = new Hono()
           customerPhone,
           hiCode,
         } = await c.req.json();
+
+        const userTableSession = await PetPoojaPinTemp.findOne({
+          hiCode: hiCode,
+          businessId: businessId,
+          phoneNumbers: customerPhone,
+          isTransfer: true,
+          transferTableTo: { $exists: true },
+        });
+
+        const sessionTable = await Table.findOne({
+          businessId: businessId,
+          _id: userTableSession?.transferTableTo?.toString(),
+        });
+
+        console.log("sessionTable", sessionTable);
 
         const user = await User.findOne({ phone: customerPhone });
         if (!user) {
@@ -719,7 +735,7 @@ const posRouter = new Hono()
         const tableInfo = await Table.findOneAndUpdate(
           {
             businessId: businessId,
-            name: tableName,
+            name: sessionTable ? sessionTable.name : tableName,
           },
           {
             $addToSet: {
@@ -729,8 +745,9 @@ const posRouter = new Hono()
         );
 
         const fetchTableAlreadySettle = await TempTableSettle.findOne({
-          tableName: tableName,
+          tableName: sessionTable ? sessionTable.name : tableName,
           businessId: businessId,
+          hiCode: sessionTable ? sessionTable.hiCode : hiCode,
         });
 
         if (fetchTableAlreadySettle) {
@@ -766,7 +783,7 @@ const posRouter = new Hono()
         }
 
         const fetchHiCode = await PetPoojaPinTemp.findOne({
-          tableName: tableName,
+          tableName: sessionTable ? sessionTable.name : tableName,
           businessId: businessId,
         });
 
@@ -774,7 +791,9 @@ const posRouter = new Hono()
         if (fetchHiCode?.billRequestId) {
           return c.json(
             {
-              message: `Bill already generated for table ${tableName} by ${fetchHiCode?.billGeneratedBy} you can't add more items`,
+              message: `Bill already generated for table ${
+                sessionTable ? sessionTable.name : tableName
+              } by ${fetchHiCode?.billGeneratedBy} you can't add more items`,
               err: true,
               data: {
                 success: false,
@@ -838,7 +857,7 @@ const posRouter = new Hono()
               name: tableName,
             },
             {
-              hiCode: hiCode.toString(),
+              hiCode: hiCode,
             },
           );
 
@@ -902,7 +921,7 @@ const posRouter = new Hono()
           pos?.posId.restId,
           customerName,
           fetchHiCode?.pin,
-          tableName,
+          sessionTable ? sessionTable.name : tableName,
           pos.posId.accessKey,
           pos.posId.secretKey,
 
@@ -915,7 +934,7 @@ const posRouter = new Hono()
           );
         }
         await saveKotOrder(
-          tableName,
+          sessionTable ? sessionTable.name : tableName,
           businessId,
           customerName,
           customerPhone,

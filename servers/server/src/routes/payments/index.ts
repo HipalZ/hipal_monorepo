@@ -1787,6 +1787,7 @@ const paymentsRouter = new Hono()
                       businessId: order.businessId,
                       tableName: order.tableName,
                       settleBy: order.userId?.name,
+                      hiCode: tempTable?.hiCode,
                     },
                   ],
                   {
@@ -2861,6 +2862,7 @@ const paymentsRouter = new Hono()
                   businessId: getOrder.businessId,
                   tableName: getOrder.tableName,
                   settleBy: getOrder.userId?.name,
+                  hiCode: activeTable?.hiCode,
                 },
               ],
               {

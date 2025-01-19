@@ -397,6 +397,7 @@ const tableRouter = new Hono()
               createdAt: Date.now(),
               tableName: table?.name,
               settleBy: captain?.name,
+              hiCode: table?.hiCode,
             },
           ],
           { session },
@@ -648,6 +649,7 @@ const tableRouter = new Hono()
               tableName: table?.name,
               settleBy: captain?.name,
               createdAt: Date.now(),
+              hiCode: table?.hiCode,
             },
           ],
           { session },
@@ -1130,7 +1132,22 @@ const tableRouter = new Hono()
       if (transferType === "ITEM") {
         const kotOrders = await KotOrder.find({
           cart: { $elemMatch: { _id: { $in: itemIds } } },
+          settled: false,
+          accepted: true,
+          tableName: fromTable.name,
+          transferd: false,
         });
+
+        if (kotOrders.length === 0) {
+          return c.json(
+            {
+              message: "No items found in the KotOrder",
+              err: true,
+              data: {},
+            },
+            400,
+          );
+        }
 
         for (const kotOrder of kotOrders) {
           const removedItems = [];
@@ -1139,17 +1156,6 @@ const tableRouter = new Hono()
               // Assuming `transferBy` contains the user ID
               removedItems.push(item);
             }
-          }
-
-          if (removedItems.length === 0) {
-            return c.json(
-              {
-                message: "No items found to transfer",
-                err: true,
-                data: {},
-              },
-              400,
-            );
           }
 
           // Filter out items to be removed from the cart
@@ -1167,8 +1173,6 @@ const tableRouter = new Hono()
 
           // Prepare the new `KotOrder` without `_id` to avoid duplicate key errors
           const { _id, ...newKotOrderData } = kotOrder.toObject();
-
-          console.log("removedItems", removedItems);
 
           const totalBill = calculateCartBill(removedItems);
 
