@@ -30,10 +30,11 @@ const MemoAlertCount = () => {
         }
         if (alert === "Offline") {
             seSelectedNavItem("payments")
-            setPayFilter("OFFLINE")
+            setPayFilter("CALL_CAPTAIN")
             setOpenOrderModal(false)
             return navigate(`/${businessId}/alerts`)
         }
+
         if (alert === "Cart") {
             seSelectedNavItem("cart")
             setOpenOrderModal(false)
@@ -52,7 +53,7 @@ const MemoAlertCount = () => {
                     onClick={() => goToAlerts("Online")}
                 />
                 <AlertCard
-                    title="Offline"
+                    title="Call waiter"
                     count={offlineCount}
                     icon={<WifiOff className="w-6 h-6 text-red-500" />}
                     onClick={() => goToAlerts("Offline")}

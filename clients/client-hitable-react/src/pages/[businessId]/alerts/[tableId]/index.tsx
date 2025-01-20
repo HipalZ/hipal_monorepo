@@ -98,6 +98,8 @@ const TablePos = () => {
         // refetchInterval: 30000,
     });
 
+    console.log('selectedTable', selectedTable);
+
     return (
         <div className="relative w-full max-w-[30rem] mx-auto min-h-[100dvh] bg-gray-50">
             <OrdersHeader />

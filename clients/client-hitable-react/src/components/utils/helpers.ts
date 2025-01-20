@@ -7,6 +7,7 @@ import { MdOutlineHistory, MdOutlineTableBar } from "react-icons/md";
 import type { IconType } from "react-icons";
 import type { NavItemTypes } from "../types/hiClientzData";
 import { HiOutlineShoppingCart } from "react-icons/hi";
+import { BsGraphUpArrow } from "react-icons/bs";
 
 export function timestampToDateTime(timestamp: number): string {
   const IST_OFFSET = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
@@ -93,6 +94,7 @@ export function createNavItems(isPos: boolean): Array<{
   const navItems = [
     { type: "cart" as NavItemTypes, icon: HiOutlineShoppingCart },
     { type: "payments" as NavItemTypes, icon: CiGlobe },
+    { type: "sales" as NavItemTypes, icon: BsGraphUpArrow },
     { type: "history" as NavItemTypes, icon: MdOutlineHistory },
   ];
 
