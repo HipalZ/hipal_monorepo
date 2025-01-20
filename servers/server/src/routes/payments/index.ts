@@ -1629,17 +1629,10 @@ const paymentsRouter = new Hono()
               select: "name",
             });
 
-            const paymentMode = await UpiMode.findById(settleModes[0]._id);
-            if (
-              (split === true && settleModes.length === 1) ||
-              (split === false && settleModes.length === 0)
-            ) {
-              return c.json({
-                message: "Please select at least one split mode",
-                err: true,
-                data: {},
-              });
-            }
+            const paymentMode = await UpiMode.findById(
+              settleModes[0]._id || "678d84c960a74dc5c9a4caf3",
+            );
+
             if (order?.couponId) {
               const coupon = await Couponz.findById(order.couponId).select(
                 "conditions.couponEndDate",
