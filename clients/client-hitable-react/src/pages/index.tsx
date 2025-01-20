@@ -73,7 +73,7 @@ const LoginMemo = () => {
     <center>
       <a
         className="fixed w-full max-w-[30rem] top-0 left-1/2 -translate-x-1/2 flex items-center justify-center h-8 text-white bg-[#4C4DDC]"
-        href="https://assets.hipalz.com/hiclient-1.6.apk"
+        href="https://assets.hipalz.com/hiclient-2.apk"
       >
         <FiDownload className="mr-2 text-white" size={20} />{" "}
         <span>Update App</span>
