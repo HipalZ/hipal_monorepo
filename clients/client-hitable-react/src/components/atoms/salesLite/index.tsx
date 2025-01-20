@@ -54,7 +54,7 @@ const SalesLite = () => {
     }
   }
 
-  const { data: salesData, isLoading, error } = useQuery<ISalesLite, Error>({
+  const { data: salesData, isLoading } = useQuery<ISalesLite, Error>({
     queryKey: ["salesData", businessId, timeStampStart, timeStampEnd],
     queryFn: handleHistoryData,
     enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
@@ -65,15 +65,6 @@ const SalesLite = () => {
     return <OverviewSkeleton />
   }
 
-  if (error || !salesData) {
-    return (
-      <Card className="w-full h-[70vh] flex items-center justify-center">
-        <CardContent>
-          <p className="text-center text-muted-foreground">No sales data found</p>
-        </CardContent>
-      </Card>
-    )
-  }
 
 
   return (
