@@ -11,7 +11,7 @@ import { useCallback } from "react";
 import { useCart } from "@/components/store/useCart";
 import { useLogin } from "@/components/store/useLogin";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import AddAmountModal from "./addAmountModal";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
@@ -94,6 +94,7 @@ export default function BottomButton({
   showBack,
 }: { selected?: ButtonType; showBack?: boolean }) {
   const tableName = useTableData((s) => s.tableName);
+  const router = useRouter()
   const setDirection = useLogin((s) => s.setDirection);
   const accessToken = useUserToken.getState().accessToken;
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
@@ -136,8 +137,9 @@ export default function BottomButton({
       setCheckLogin(true);
     } else {
       setDirection("loyalty")
+      router.push(`/${customLink}/loyalty`)
     }
-  }, [accessToken, setDirection, setCheckLogin]);
+  }, [accessToken, setDirection, setCheckLogin, customLink]);
 
   if (subscribeModal || reviewPopup) {
     return null;

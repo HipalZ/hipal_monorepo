@@ -202,9 +202,6 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
         </center>
       </section>
       <section className="relative">
-        <center className="my-2 text-xl text-black poppins-regular">
-          Rewardz
-        </center>
         {/* <CouponzBlink /> */}
         <RefferalCouponz />
       </section>
