@@ -910,7 +910,7 @@ const tableRouter = new Hono()
       } = await c.req.json();
       const business = await Business.findById(businessId);
 
-      const longUrl = `https://hipal-test.hipalz.com/${business?.customLink}/ebill?tableId=${tableId}`;
+      const longUrl = `https://hipalz.com/${business?.customLink}/ebill?tableId=${tableId}`;
 
       const uniqueOrderId = nanoid(5);
       let findLongUrl = await BillUrlModel.findOne({ longUrl });
@@ -918,7 +918,7 @@ const tableRouter = new Hono()
       if (!findLongUrl) {
         const createShortUrl = await BillUrlModel.create({
           longUrl: longUrl,
-          shortUrl: `https://api.test.hipalz.com/surl/bill_short_url/bill?urlCode=${uniqueOrderId}`,
+          shortUrl: `https://api.hipalz.com/surl/bill_short_url/bill?urlCode=${uniqueOrderId}`,
           urlCode: uniqueOrderId,
         });
 
