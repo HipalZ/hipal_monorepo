@@ -8,7 +8,7 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { getShortUrl, setShortUrl } from "../../utils/cacheHelper";
+import { setShortUrl } from "../../utils/cacheHelper";
 //
 const surlRouter = new Hono()
   .get(
@@ -38,12 +38,6 @@ const surlRouter = new Hono()
         return c.redirect(redirectUrl);
       }
 
-      const getUrlFromCache = (await getShortUrl(urlCode)) as string;
-
-      if (getUrlFromCache) {
-        return c.redirect(getUrlFromCache);
-      }
-
       const result = await UrlModel.findOne({ urlCode });
       if (!result) {
         return c.json(
@@ -55,8 +49,6 @@ const surlRouter = new Hono()
           404,
         );
       }
-
-      setShortUrl(urlCode, result.longUrl);
 
       // Redirect to the original URL
       return c.redirect(result.longUrl);
