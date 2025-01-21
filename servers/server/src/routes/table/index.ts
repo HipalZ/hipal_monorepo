@@ -830,7 +830,7 @@ const tableRouter = new Hono()
             data: {
               qrBillId: qrBill.requestBillId,
               expireIn: qrBill.expireIn,
-              path: `https://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${qrBill.requestBillId}`,
+              path: `https://hipalz.com/${customLink?.customLink}/posPayment?orderId=${qrBill.requestBillId}`,
             },
           },
           200,
@@ -857,7 +857,7 @@ const tableRouter = new Hono()
           data: {
             qrBillId: createQrBill.requestBillId,
             expireIn: createQrBill.expireIn,
-            path: `https://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${createQrBill.requestBillId}`,
+            path: `https://hipalz.com/${customLink?.customLink}/posPayment?orderId=${createQrBill.requestBillId}`,
           },
         },
         200,
