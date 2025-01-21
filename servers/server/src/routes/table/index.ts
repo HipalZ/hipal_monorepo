@@ -1362,6 +1362,72 @@ const tableRouter = new Hono()
         200,
       );
     },
+  )
+
+  .post(
+    "/kick_user",
+    zValidator(
+      "json",
+      z.object({
+        tableId: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { tableId } = await c.req.json();
+
+        const table = await Table.findById(tableId);
+        if (table?.status === "ACTIVE") {
+          return c.json(
+            {
+              message: "Table is active cannot kick user",
+              err: true,
+              data: {},
+            },
+            400,
+          );
+        }
+
+        await KotOrder.updateMany(
+          {
+            tableName: table?.name,
+            settled: false,
+            businessId: table?.businessId,
+            accepted: false,
+            rejected: false,
+          },
+          { $set: { rejected: true } },
+          { session },
+        );
+
+        await PetPoojaPinTemp.deleteOne(
+          {
+            tableName: table?.name,
+            businessId: table?.businessId,
+          },
+          { session },
+        );
+
+        await Table.findByIdAndUpdate(
+          tableId,
+          {
+            hiCode: "",
+            userIds: [],
+          },
+          { session },
+        );
+
+        return c.json(
+          {
+            message: "User kicked successfully",
+            err: false,
+            data: {},
+          },
+          200,
+        );
+      });
+    },
   );
 
 export default tableRouter;
