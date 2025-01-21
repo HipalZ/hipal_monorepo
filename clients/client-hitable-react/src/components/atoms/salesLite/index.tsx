@@ -21,6 +21,19 @@ export interface ISalesLite {
   forceSettle: number;
 }
 
+const salesDataFallback = {
+  totalSale: 0,
+  modeObj: {},
+  totalTips: 0,
+  totalTax: 0,
+  totalServiceCharge: 0,
+  totalClaimedCoins: 0,
+  totalEarnCoins: 0,
+  totalDiscount: 0,
+  forceSettle: 0,
+};
+
+
 const SalesLite = () => {
   const { selectedBiz } = useHiClientZ((s) => ({
     selectedBiz: s.selectedBiz,
@@ -60,6 +73,8 @@ const SalesLite = () => {
     enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
   })
 
+  const salesDataFinal = salesData || salesDataFallback;
+
 
   if (isLoading) {
     return <OverviewSkeleton />
@@ -77,7 +92,7 @@ const SalesLite = () => {
             <CardTitle>Today's Sales</CardTitle>
           </CardHeader>
           <CardContent>
-            <h2 className="text-4xl font-bold">₹ {salesData?.totalSale?.toLocaleString("en-IN")}</h2>
+            <h2 className="text-4xl font-bold">₹ {salesDataFinal?.totalSale?.toLocaleString("en-IN")}</h2>
           </CardContent>
         </Card>
 
@@ -86,7 +101,7 @@ const SalesLite = () => {
             <CardTitle>Total Discount</CardTitle>
           </CardHeader>
           <CardContent>
-            <h2 className="text-4xl font-bold">₹ {salesData?.totalDiscount?.toLocaleString("en-IN")}</h2>
+            <h2 className="text-4xl font-bold">₹ {salesDataFinal?.totalDiscount?.toLocaleString("en-IN")}</h2>
           </CardContent>
         </Card>
       </div>
@@ -97,7 +112,7 @@ const SalesLite = () => {
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-between md:flex-row">
           <div className="grid grid-cols-2 gap-2 mb-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 md:mb-0">
-            {Object.entries(salesData?.modeObj).map(([mode, amount]) => (
+            {Object.entries(salesDataFinal?.modeObj || {}).map(([mode, amount]) => (
               <InfoCard
                 key={mode}
                 title={mode}
@@ -115,37 +130,37 @@ const SalesLite = () => {
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-4">
         <InfoCard
           title="Service Charge"
-          value={salesData?.totalServiceCharge}
+          value={salesDataFinal?.totalServiceCharge}
           icon={<DollarSign className="w-4 h-4" />}
           gradient="from-yellow-300 to-yellow-600"
         />
         <InfoCard
           title="Total Tax"
-          value={salesData?.totalTax}
+          value={salesDataFinal?.totalTax}
           icon={<Percent className="w-4 h-4" />}
           gradient="from-purple-300 to-purple-600"
         />
         <InfoCard
           title="Total Tips"
-          value={salesData?.totalTips}
+          value={salesDataFinal?.totalTips}
           icon={<Tag className="w-4 h-4" />}
           gradient="from-pink-300 to-pink-600"
         />
         <InfoCard
           title="Coins Earned"
-          value={salesData?.totalEarnCoins}
+          value={salesDataFinal?.totalEarnCoins}
           icon={<Coins className="w-4 h-4" />}
           gradient="from-indigo-300 to-indigo-600"
         />
         <InfoCard
           title="Forced Settle"
-          value={salesData?.forceSettle}
+          value={salesDataFinal?.forceSettle}
           icon={<Coins className="w-4 h-4" />}
           gradient="from-red-300 to-red-600"
         />
         <InfoCard
           title="Coins Claimed"
-          value={salesData?.totalClaimedCoins}
+          value={salesDataFinal?.totalClaimedCoins}
           icon={<Coins className="w-4 h-4" />}
           gradient="from-gray-300 to-gray-600"
         />
