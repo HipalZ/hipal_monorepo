@@ -29,7 +29,7 @@ const MemoBillWarning = () => {
 
   return (
     <section className='py-[5rem] min-h-[90dvh] flex items-center justify-center md:py-[8rem] px-4 max-w-md mx-auto'>
-      <Card className="w-full border-none">
+      <Card className="w-full border-none shadow-none">
         <CardHeader className="pb-2">
           <CardTitle className="text-2xl font-semibold text-gray-800">
             Fetch Bill for {selectedTable?.name}

@@ -1,11 +1,23 @@
 import { useOrderStore } from '@/components/store/useOrderData'
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import BillWarning from './billWarning'
 import GetBill from './getBill'
+import TransferWarning from './transferWarning'
 
 const MemoBill = () => {
 
     const { paymentSteps } = useOrderStore()
+    const selectedTable = useOrderStore((s) => s.selectedTable)
+
+    // local state to track transfer confirmation
+    const [transferConfirmed, setTransferConfirmed] = useState(false)
+
+    // 1) If isTransfer === true and not yet confirmed, show TransferWarning
+    if (selectedTable?.isTransfer && !transferConfirmed) {
+        return (
+            <TransferWarning onConfirm={() => setTransferConfirmed(true)} />
+        )
+    }
 
     return (
         <div>

@@ -24,6 +24,7 @@ export interface TableData {
   name: string;
   rank: string;
   staffIds: string[];
+  isTransfer?: boolean;
   status: string;
   tableId: string;
   updatedAt: string;
