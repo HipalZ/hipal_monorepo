@@ -244,7 +244,7 @@ const MemoCategoryPageBtn = () => {
       {
         hiCodePopupBeforeBill && (
           <ItemDescriptionPopup show={hiCodePopupBeforeBill} onClose={() => setHiCodePopupBeforeBill(false)}>
-            <HiCodeValidate placeOrder={() => { }} isOpenMyOrders={true} />
+            <HiCodeValidate isOpenMyOrders={true} />
           </ItemDescriptionPopup>
         )
       }
@@ -277,11 +277,11 @@ const MemoCategoryPageBtn = () => {
             {/* Header */}
             <header className="flex items-center gap-2 mb-4">
               <GiCookingPot className="w-8 h-8 text-orange-500" />
-              <h2 className="text-2xl text-black font-semibold">Cooking Instructions</h2>
+              <h2 className="text-2xl font-semibold text-black">Cooking Instructions</h2>
             </header>
 
             {/* Description */}
-            <p className="text-gray-600 mb-6">
+            <p className="mb-6 text-gray-600">
               Add any special cooking instructions, like less spicy, extra cheese, or no onions.
             </p>
 
@@ -297,7 +297,7 @@ const MemoCategoryPageBtn = () => {
                      placeholder:text-gray-400 resize-none"
                 aria-label="Cooking instructions"
               />
-              <span className="absolute right-3 bottom-3 text-sm text-gray-400">
+              <span className="absolute text-sm text-gray-400 right-3 bottom-3">
                 {tempInstruction.length || 0}/{100}
               </span>
             </div>

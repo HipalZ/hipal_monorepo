@@ -75,12 +75,9 @@ const SalesLite = () => {
 
   const salesDataFinal = salesData || salesDataFallback;
 
-
   if (isLoading) {
     return <OverviewSkeleton />
   }
-
-
 
   return (
     <div className="mx-4 mt-4 space-y-6 md:mt-6 pb-[7rem]">
