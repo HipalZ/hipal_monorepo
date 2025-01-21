@@ -1401,6 +1401,14 @@ const paymentsRouter = new Hono()
       const requestData = await c.req.json();
       const { businessId, tableName, message, userId } = requestData;
 
+      const tableInfo = await Table.findOne({ businessId, name: tableName });
+
+      let hiCode = "";
+
+      if (message === "Share the code of the table") {
+        hiCode = tableInfo?.hiCode;
+      }
+
       const alert = await PaymentAlert.create({
         businessId: businessId,
         alertType: "WAITER",
@@ -1410,6 +1418,7 @@ const paymentsRouter = new Hono()
         message: message,
         date: Date.now(),
         order_id: new ObjectId(),
+        hiCode: hiCode,
       });
 
       const registrationToken = await DeviceToken.find({

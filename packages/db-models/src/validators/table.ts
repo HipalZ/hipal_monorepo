@@ -41,6 +41,8 @@ export const tableSchema = z.object({
   date: z.number().optional(),
   isDeleted: z.boolean().default(false).optional(),
   isTransfer: z.boolean().default(false).optional(),
+  edited: z.boolean().default(false).optional(),
+  editedBy: ObjectIdSchema.optional(),
 });
 
 export type TableType = z.infer<typeof tableSchema>;

@@ -106,6 +106,14 @@ const KotOrderSchema = new Schema<KotOrderType>(
       type: ObjectId,
       ref: "User",
     },
+    fromTable: {
+      type: String,
+      default: "",
+    },
+    toTable: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,

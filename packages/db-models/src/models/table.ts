@@ -84,6 +84,16 @@ const tableSchema = new mongoose.Schema<TableType>(
       required: false,
       default: false,
     },
+    edited: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    editedBy: {
+      type: ObjectId,
+      required: false,
+      ref: "User",
+    },
   },
   {
     timestamps: true,

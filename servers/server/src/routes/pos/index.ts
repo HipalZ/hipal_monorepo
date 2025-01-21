@@ -100,8 +100,9 @@ const saveKotOrder = async (
   userId: string,
   accepted: boolean,
   tableId: string,
+  edited?: boolean,
+  editedBy?: string,
 ) => {
-  console.log("tableId", tableId);
   const saveKot = await KotOrder.create({
     tableName: tableName,
     businessId: businessId,
@@ -112,6 +113,8 @@ const saveKotOrder = async (
     name: customerName,
     accepted: accepted,
     tableId: tableId,
+    edited: edited,
+    editedBy: editedBy,
   });
 
   if (!saveKot) {
@@ -1005,6 +1008,7 @@ const posRouter = new Hono()
           user._id,
           false,
           tableInfo._id.toString(),
+          false,
         );
         return c.json(
           {
@@ -1223,7 +1227,8 @@ const posRouter = new Hono()
             internalCart,
             user._id,
             true,
-            tableInfo._id.toString(),
+            tableInfo?._id.toString(),
+            false,
           );
           const totalBill = calculateCartBill(internalCart);
           const g = await Table.findOneAndUpdate(
@@ -1279,12 +1284,14 @@ const posRouter = new Hono()
         await saveKotOrder(
           tableName,
           businessId,
-          customerName,
+          tableInfo?.edited ? fetchHiCode.customerName : customerName,
           customerPhone,
           internalCart,
           user._id,
           true,
-          tableInfo._id.toString(),
+          tableInfo?._id.toString(),
+          tableInfo?.edited,
+          tableInfo?.editedBy,
         );
         const totalBill = calculateCartBill(internalCart);
         await Table.findOneAndUpdate(
@@ -1300,6 +1307,8 @@ const posRouter = new Hono()
             $set: {
               status: "ACTIVE",
               date: Date.now(),
+              edited: false,
+              editedBy: null,
             },
           },
           {
