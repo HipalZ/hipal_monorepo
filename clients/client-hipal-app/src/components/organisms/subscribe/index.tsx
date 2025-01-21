@@ -28,11 +28,10 @@ const MemoSubScribeModal = ({
 }) => {
   const { errorText } = useErrorHandling();
   const businessData = useBusinessDetails((s) => s.businessDetails);
-  const { userDetails, setSubscribeModal } = useLogin();
+  const { userDetails, setSubscribeModal, setUserCoinZ } = useLogin();
   const setDirection = useLogin((state) => state.setDirection);
   const loyaltyInfo = useLoyaltyData((s) => s.loyaltySetting);
   const { setCheckLogin, setOpenBlastModal } = usePaymentStore()
-  const [coinZ, setCoinz] = useState(0);
 
   function randomInRange(min: number, max: number) {
     return Math.random() * (max - min) + min;
@@ -76,7 +75,7 @@ const MemoSubScribeModal = ({
     if (res.status === 201 || res.status === 200) {
       if (response?.reward > 0 && response?.count === 1) {
         setOpenBlastModal(true);
-        setCoinz(response.reward);
+        setUserCoinZ(response.reward);
         triggerConfettiBlast();
         setTimeout(triggerConfettiBlast, 1000);
         setTimeout(triggerConfettiBlast, 2000);
@@ -129,7 +128,6 @@ const MemoSubScribeModal = ({
           </div>
         )}
         <section className="flex items-center justify-center mt-2 text-2xl text-black">
-          <Avatar />
           Hi
         </section>
         <section className="flex items-center justify-center text-black capitalize">

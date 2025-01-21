@@ -5,12 +5,13 @@ import NumberAnimation from "@/components/atoms/coinsScroll";
 import Sunlight from "@/assets/Ellipse 1-min.png";
 import Image from 'next/image';
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { useLogin } from '@/components/store/useLogin';
 
 
-const MemoSignUpBonus = ({ goNext, coinZ }: {
+const MemoSignUpBonus = ({ goNext }: {
   goNext: () => void
-  coinZ: number
 }) => {
+  const coinZ = useLogin((s) => s.userCoinZ)
   return (
     <section
       id="my_modal_1"
