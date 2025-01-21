@@ -86,6 +86,10 @@ const kotRouter = new Hono()
         .populate({
           path: "transferedBy",
           select: "name phone",
+        })
+        .populate({
+          path: "editedBy",
+          select: "name phone",
         });
 
       return c.json(
@@ -290,7 +294,40 @@ const kotRouter = new Hono()
         if (orderAction === "EDIT") {
           kot.edited = true;
           kot.editedBy = performBy;
+
           await kot.save();
+
+          await PetPoojaPinTemp.findOneAndUpdate(
+            {
+              tableName: kot.tableName,
+              businessId: kot.businessId,
+            },
+            {
+              $set: {
+                customerName: kot.name,
+              },
+            },
+            {
+              session,
+            },
+          );
+
+          await Table.findOneAndUpdate(
+            {
+              businessId: kot.businessId,
+              name: kot.tableName,
+            },
+            {
+              $set: {
+                edited: true,
+                editedBy: performBy,
+              },
+            },
+            {
+              session,
+            },
+          );
+
           return c.json(
             {
               message: "Data fetched successfully",

@@ -31,6 +31,7 @@ const paymentAlertSchema = new mongoose.Schema<PaymentAlertType>(
     coinsApplied: { type: Boolean, default: false },
     date: { type: Number },
     posBillRequestId: { type: String, default: null },
+    hiCode: { type: String, default: "" },
   },
   {
     timestamps: true,
