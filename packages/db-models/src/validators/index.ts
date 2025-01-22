@@ -48,7 +48,6 @@ export * from "./groupAnalytics";
 export * from "./kotOrder";
 export * from "./menuBanner";
 export * from "./note";
-export * from "./petPoojaPinTempModel";
 export * from "./pos";
 export * from "./posBill";
 export * from "./recentCampaign";

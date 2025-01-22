@@ -6,6 +6,7 @@ import {
   Category,
   Dish,
   LoyaltySettings,
+  MenuBanner,
   OutLetInfo,
   Permissions,
   Role,
@@ -76,6 +77,51 @@ const businessesRouter = new Hono()
         },
         { upsert: true, new: true },
       );
+
+      const menuBaners = [
+        {
+          businessId: business._id,
+          heading: "Breakfast Must try",
+          startTime: 4 * 60 * 60 * 1000,
+          endTime: 12 * 60 * 60 * 1000,
+          isPublished: true,
+          dishIds: [],
+        },
+        {
+          businessId: business._id,
+          heading: "Lunchi Munchi",
+          startTime: 12 * 60 * 60 * 1000,
+          endTime: 17 * 60 * 60 * 1000,
+          isPublished: true,
+          dishIds: [],
+        },
+        {
+          businessId: business._id,
+          heading: "Snacky Evenings",
+          startTime: 17 * 60 * 60 * 1000,
+          endTime: 21 * 60 * 60 * 1000,
+          isPublished: true,
+          dishIds: [],
+        },
+        {
+          businessId: business._id,
+          heading: "Late Dinners",
+          startTime: 21 * 60 * 60 * 1000,
+          endTime: 24 * 60 * 60 * 1000,
+          isPublished: true,
+          dishIds: [],
+        },
+        {
+          businessId: business._id,
+          heading: "All Hours Delights",
+          startTime: 0,
+          endTime: 24 * 60 * 60 * 1000,
+          isPublished: true,
+          dishIds: [],
+        },
+      ];
+
+      const menuBanners = await MenuBanner.insertMany(requestData);
 
       return respond(c, "business created", false, 201, business);
     },

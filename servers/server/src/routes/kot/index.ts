@@ -1,10 +1,10 @@
 import {
   BusinessPosConfig,
   KotOrder,
-  PetPoojaPinTemp,
   PosBill,
   Table,
   UserAnalytic,
+  UserSession,
 } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
@@ -206,7 +206,7 @@ const kotRouter = new Hono()
           kot.acceptedBy = performBy;
           await kot.save();
 
-          const tempTable = await PetPoojaPinTemp.findOne({
+          const tempTable = await UserSession.findOne({
             tableName: kot.tableName,
             businessId: kot.businessId,
           });
@@ -297,7 +297,7 @@ const kotRouter = new Hono()
 
           await kot.save();
 
-          await PetPoojaPinTemp.findOneAndUpdate(
+          await UserSession.findOneAndUpdate(
             {
               tableName: kot.tableName,
               businessId: kot.businessId,
@@ -355,7 +355,7 @@ const kotRouter = new Hono()
       const { tableId } = c.req.param();
       const { businessId } = c.req.query();
 
-      const userTableSession = await PetPoojaPinTemp.findOne({
+      const userTableSession = await UserSession.findOne({
         businessId: businessId,
 
         transferTableTo: { $exists: true },

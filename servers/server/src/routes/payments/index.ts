@@ -13,7 +13,6 @@ import {
   OutLetInfo,
   Payment,
   PaymentAlert,
-  PetPoojaPinTemp,
   QrBill,
   Reviews,
   Subscriber,
@@ -27,6 +26,7 @@ import {
   UserCouponGrabb,
   UserReward,
   UserRewardHistory,
+  UserSession,
   UserTags,
 } from "@hi/db-models";
 import type { RazorpayWebhookHeaders } from "@hi/db-models/src/validators";
@@ -591,7 +591,7 @@ const paymentsRouter = new Hono()
         } = requestData;
         const uniqueOrderId = nanoid(15);
 
-        const findTempTable = await PetPoojaPinTemp.findOne({
+        const findTempTable = await UserSession.findOne({
           tableName,
           businessId,
         });
@@ -1049,7 +1049,7 @@ const paymentsRouter = new Hono()
       const getOrder = await Order.findOne({
         order_id: payload.payment.entity.order_id,
       });
-      const tempTable = await PetPoojaPinTemp.findOne({
+      const tempTable = await UserSession.findOne({
         businessId: getOrder?.businessId,
         tableName: getOrder?.tableName,
       });
@@ -1705,7 +1705,7 @@ const paymentsRouter = new Hono()
                 businessId: order.businessId,
               }).populate("posId");
 
-              const tempTable = await PetPoojaPinTemp.findOne({
+              const tempTable = await UserSession.findOne({
                 businessId: order.businessId,
                 tableName: order.tableName,
               });
@@ -1762,12 +1762,16 @@ const paymentsRouter = new Hono()
                   },
                 );
 
+                if (res.data.success === "0") {
+                  throw new Error("payment failed in pos");
+                }
+
                 const tableData = await Table.findOne({
                   businessId: order.businessId,
                   name: order.tableName,
                 });
 
-                await PetPoojaPinTemp.findOneAndUpdate(
+                await UserSession.findOneAndUpdate(
                   {
                     businessId: order.businessId,
                     transferTableFrom: tableData?._id.toString(),
@@ -1844,7 +1848,7 @@ const paymentsRouter = new Hono()
                     session,
                   },
                 );
-                await PetPoojaPinTemp.deleteOne(
+                await UserSession.deleteOne(
                   {
                     tableName: order.tableName,
                     businessId: order.businessId,
@@ -2815,7 +2819,7 @@ const paymentsRouter = new Hono()
         });
 
         if (!paymentAlreadyExist && getOrder) {
-          const activeTable = await PetPoojaPinTemp.findOne({
+          const activeTable = await UserSession.findOne({
             tableName: getOrder.tableName,
             businessId: getOrder.businessId,
           });
@@ -2825,7 +2829,7 @@ const paymentsRouter = new Hono()
             name: getOrder.tableName,
           });
 
-          await PetPoojaPinTemp.findOneAndUpdate(
+          await UserSession.findOneAndUpdate(
             {
               businessId: getOrder.businessId,
               transferTableFrom: table?._id.toString(),
@@ -2870,7 +2874,7 @@ const paymentsRouter = new Hono()
                 session,
               },
             );
-            const g = await QrBill.findOneAndUpdate(
+            await QrBill.findOneAndUpdate(
               {
                 requestBillId: activeTable?.billRequestId,
               },
@@ -2884,9 +2888,7 @@ const paymentsRouter = new Hono()
               },
             );
 
-            console.log("golubaba", g);
-
-            await PetPoojaPinTemp.deleteOne(
+            await UserSession.deleteOne(
               {
                 tableName: getOrder.tableName,
                 businessId: getOrder.businessId,

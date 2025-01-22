@@ -34,7 +34,6 @@ export * from "./order";
 export * from "./outLetInfo";
 export * from "./payment";
 export * from "./paymentAlert";
-export * from "./petPoojaPinTempModel";
 export * from "./pos";
 export * from "./posBill";
 export * from "./qrBill";
