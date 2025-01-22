@@ -1455,8 +1455,8 @@ const posRouter = new Hono()
         tableName: sessionTableFind ? sessionTableFind.name : tableName,
         businessId: businessId,
         settled: false,
-        rejected: false,
-        edited: true,
+
+        accepted: true,
       })
         .populate({
           path: "transferedBy",
