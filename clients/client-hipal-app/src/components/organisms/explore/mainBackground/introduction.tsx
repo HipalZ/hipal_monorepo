@@ -10,10 +10,9 @@ import type {
 import { apiRpc, cn } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { useParams, useRouter } from "next/navigation";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect } from "react";
 import SubScribeModal from "../../subscribe";
 import ReviewModal from "../googleReviews/reviewModal";
-import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { useQuery } from "@tanstack/react-query";
 import { useCart } from "@/components/store/useCart";
@@ -87,12 +86,11 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
     }
   }, [businessDetails?.businessId, data?.business?.businessId]);
 
-  const { isPending: isLoader } = useQuery({
+  useQuery({
     queryKey: ["isSubscribe", customLink, userDetails],
     queryFn: () => isSubscribe(userDetails),
-    enabled: !!userDetails?._id && !!customLink,
+    enabled: !!userDetails?._id && !!accessToken,
   })
-
 
   return (
     <>
