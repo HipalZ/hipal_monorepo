@@ -149,8 +149,8 @@ const MemoEbill = () => {
                                 {users?.map((user) => (
                                     <div
                                         key={user._id}
-                                        onClick={() => handleUserSelect(user.phone)}
-                                        className={`cursor-pointer p-4 rounded-md border transition-all ${phoneNumbers.includes(user.phone)
+                                        onClick={() => handleUserSelect(user?.phone)}
+                                        className={`cursor-pointer p-4 rounded-md border transition-all ${phoneNumbers.includes(user?.phone)
                                             ? "bg-blue-50 border-blue-500"
                                             : "bg-white border-gray-300 hover:border-blue-300"
                                             }`}
@@ -159,12 +159,12 @@ const MemoEbill = () => {
                                             <p className="text-lg font-semibold text-gray-900">{user.name}</p>
                                             <input
                                                 type="checkbox"
-                                                checked={phoneNumbers.includes(user.phone)}
-                                                onChange={() => handleUserSelect(user.phone)}
+                                                checked={phoneNumbers.includes(user?.phone)}
+                                                onChange={() => handleUserSelect(user?.phone)}
                                                 className="w-5 h-5 text-blue-600 form-checkbox"
                                             />
                                         </div>
-                                        <p className="mt-1 text-sm text-gray-500">{user?.phone.slice(0, 3)}****{user?.phone.slice(-3)}</p>
+                                        <p className="mt-1 text-sm text-gray-500">{user?.phone?.slice(0, 3)}****{user?.phone?.slice(-3)}</p>
                                     </div>
                                 ))}
                             </div>

@@ -13,6 +13,7 @@ import { useCart } from '@/components/store/useCart';
 import type { TableData } from '@/components/store/useZonesAndTable';
 import TransferItem from '@/components/atoms/placeOrders/transferItem';
 import EmptyTableList from '@/components/tables';
+import KickUser from '@/components/atoms/placeOrders/kickUser';
 
 // Lazy loaded components
 const PlaceOrders = lazy(() => import('@/components/atoms/placeOrders'));
@@ -290,6 +291,11 @@ const TablePos = () => {
                                 {
                                     transferTable === 'TABLE' && (
                                         <EmptyTableList transfer />
+                                    )
+                                }
+                                {
+                                    transferTable === 'KICK' && (
+                                        <KickUser />
                                     )
                                 }
                             </BottomPopUp>

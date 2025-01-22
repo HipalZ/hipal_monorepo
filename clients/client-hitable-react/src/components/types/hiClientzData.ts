@@ -302,6 +302,8 @@ export interface OrderData {
   rejected: boolean;
   settled: boolean;
   tableName: string;
+  toTable: string;
+  fromTable: string;
   userId: string;
 }
 

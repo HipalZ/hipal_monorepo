@@ -28,7 +28,6 @@ const MemoQrCode = ({ data, qrBillId, toggleQr }: { data: IBillData; qrBillId: s
     const [normalSettle, setNormalSettle] = useState<boolean>(false);
     const { errorText } = useErrorHandling();
     const setOpenOrderModal = useOrderStore((s) => s.setOpenOrderModal);
-    const clickViewMore = useLiteStore((s) => s.clickViewMore);
     const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
     const { removeOfflineAlert } = useLiteStore(
         (s) => ({
