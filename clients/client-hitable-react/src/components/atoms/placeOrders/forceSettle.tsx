@@ -16,6 +16,7 @@ import type { IBillData } from "@/components/types/hiClientzData";
 import { Input } from "@/components/ui/input";
 import { useNavigate, useParams } from "react-router-dom";
 import MultipleModes from "./multipleModes";
+import SingleMode from "./singleMode";
 
 interface IMode {
     _id: string;
@@ -33,6 +34,7 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
     const [customReason, setCustomReason] = useState<string>("");
     const [settleAmount, setSettleAmount] = useState<number | "">(0);
     const [showPaymentMode, setShowPaymentMode] = useState<boolean>(false);
+    const [showSplit, setShowSplit] = useState<boolean>(false);
 
     const predefinedReasons = [
         "Trial",
@@ -44,7 +46,8 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
     const {
         selectedTable,
         settleModes,
-        setOpenOrderModal
+        setOpenOrderModal,
+        setSettleModes,
     } = useOrderStore();
     const captainData = useHiClientZ((s) => s.captainData);
 
@@ -76,6 +79,13 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
 
     const closeModeOfPayments = useCallback(() => {
         setShowPaymentMode(false);
+        setShowSplit(false);
+        setSettleModes([]);
+    }, [])
+
+    const closeSplit = useCallback(() => {
+        setShowSplit(false);
+        setSettleModes([]);
     }, [])
 
     const getAllModes = async () => {
@@ -170,7 +180,13 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
                                 <span>₹{settleAmount}</span>
                             </h3>
 
-                            <MultipleModes paymentModes={paymentMode || []} billData={{ total: Number(settleAmount) || 0 }} />
+                            {
+                                showSplit ?
+                                    <MultipleModes paymentModes={paymentMode || []} billData={{ total: Number(settleAmount) || 0 }} />
+                                    :
+                                    <SingleMode paymentModes={paymentMode || []} billData={{ total: Number(settleAmount) || 0 }} />
+                            }
+
                         </div>
                         :
                         <ScrollArea className="h-[80vh] py-6">
@@ -270,6 +286,11 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
                                     onClick: closeModeOfPayments,
                                     className: "rounded-md pl-3",
                                     isBackButton: true,
+                                },
+                                {
+                                    text: "Split",
+                                    onClick: showSplit ? closeSplit : () => setShowSplit(!showSplit),
+                                    className: "rounded-md",
                                 },
                                 {
                                     text: "Confirm",

@@ -29,6 +29,8 @@ const MemoCartWithPos = () => {
     const [selectedCartId, setSelectedCartId] = useState<string | null>(null);
     const [reason, setReason] = useState<string>("");
     const predefinedReasons = ["Out of stock", "Incorrect order", "Other", "Customer cancelled"];
+    const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
+    const [selectedCartToEdit, setSelectedCartToEdit] = useState<ICartHistory | null>(null);
 
 
     const openPopup = (cartId: string) => {
@@ -64,20 +66,26 @@ const MemoCartWithPos = () => {
         });
     }
 
-    const editTheOrder = async (cart: ICartHistory) => {
-        if (!cart._id) return;
-        removeCart(cart._id);
+    const editTheOrder = (cart: ICartHistory) => {
+        setSelectedCartToEdit(cart);
+        setIsEditPopupOpen(true);
+    };
+
+    const confirmEditOrder = async () => {
+        if (!selectedCartToEdit?._id) return;
+        setIsEditPopupOpen(false);
+        removeCart(selectedCartToEdit._id);
         await updateOrderAction({
-            orderId: cart._id,
+            orderId: selectedCartToEdit._id,
             orderAction: "EDIT",
             performBy: captainData?._id || "Captain",
         });
         setIsCartEdit(true);
-        editExistingOrder(cart);
-        setModalType("addItem")
-        setOpenOrderModal(true)
-        navigate(`/${cart.businessId}/alerts/${cart.tableId}`)
-    }
+        editExistingOrder(selectedCartToEdit);
+        setModalType("addItem");
+        setOpenOrderModal(true);
+        navigate(`/${selectedCartToEdit.businessId}/alerts/${selectedCartToEdit.tableId}`);
+    };
 
     return (
         <>
@@ -168,6 +176,33 @@ const MemoCartWithPos = () => {
                     </Card>
                 </motion.div>
             )) : <center>No Cart Found</center>}
+
+            {isEditPopupOpen && (
+                <BottomPopup width="w-[30rem]" height="h-[30dvh]" show={isEditPopupOpen} onClose={() => setIsEditPopupOpen(false)}>
+                    <div className="p-4 space-y-4">
+                        <h2 className="text-lg font-bold text-center">Edit KOT</h2>
+                        <p className="text-center">Are you sure you want to edit this KOT?</p>
+                    </div>
+                    <CommonBottomButton
+                        position="mid"
+                        maxWidth="30rem"
+                        fixed
+                        buttons={[
+                            {
+                                text: "Cancel",
+                                isBackButton: true,
+                                onClick: () => setIsEditPopupOpen(false),
+                                className: "rounded-md shadow-md w-full pl-3",
+                            },
+                            {
+                                text: "Confirm",
+                                onClick: confirmEditOrder,
+                                className: "rounded-md",
+                            },
+                        ]}
+                    />
+                </BottomPopup>
+            )}
 
             {isPopupOpen && (
                 <BottomPopup height="h-[50dvh]" show={isPopupOpen} onClose={closePopup}>

@@ -139,9 +139,8 @@ const Business = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  aria-label={`${item.text} - ${
-                    isDisabled ? "Activate after Themes" : item.description
-                  }`}
+                  aria-label={`${item.text} - ${isDisabled ? "Activate after Themes" : item.description
+                    }`}
                 >
                   <div className="absolute inset-0">
                     <div className="absolute inset-0 bg-gradient-to-tl from-[#7F66FE50] via-transparent to-transparent">
@@ -181,5 +180,4 @@ const Business = () => {
 };
 
 const MemoBusiness = memo(Business);
-
 export default MemoBusiness;

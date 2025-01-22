@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label";
 
 const MemoSingleMode = ({ paymentModes, billData }: { paymentModes: IMode[]; billData: IBillData }) => {
 
-
     const {
         settleModes,
         setSettleModes,
