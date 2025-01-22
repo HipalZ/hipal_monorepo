@@ -6,12 +6,12 @@ import {
   Order,
   Payment,
   PaymentAlert,
-  PetPoojaPinTemp,
   QrBill,
   Table,
   TempTableSettle,
   UpiMode,
   User,
+  UserSession,
 } from "@hi/db-models";
 import {
   type SwitchTableType,
@@ -274,16 +274,10 @@ const tableRouter = new Hono()
         );
 
         if (getBill.data.success === "0") {
-          return c.json(
-            {
-              message: getBill.data.message,
-              err: true,
-            },
-            400,
-          );
+          throw new Error("Bill not found at pos");
         }
 
-        await PetPoojaPinTemp.findOneAndUpdate(
+        await UserSession.findOneAndUpdate(
           {
             businessId: table?.businessId,
             transferTableFrom: table?._id.toString(),
@@ -308,7 +302,7 @@ const tableRouter = new Hono()
           { session },
         );
         const uniqueOrderId = nanoid(15);
-        const activeTable = await PetPoojaPinTemp.findOne({
+        const activeTable = await UserSession.findOne({
           businessId: table?.businessId,
           tableName: table?.name,
         });
@@ -325,6 +319,10 @@ const tableRouter = new Hono()
           },
         );
 
+        if (res.data.success === "0") {
+          throw new Error("Payment failed at pos");
+        }
+
         const saveOrder = await Order.create(
           [
             {
@@ -335,7 +333,7 @@ const tableRouter = new Hono()
               claimedCoins: 0,
               tableName: table?.name,
               tips: 0,
-              billValue: table?.currentTableAmount,
+              billValue: getBill.data.order_data.total || 0,
               businessId: table?.businessId,
               order_id: uniqueOrderId,
 
@@ -410,7 +408,7 @@ const tableRouter = new Hono()
           { session },
         );
 
-        await PetPoojaPinTemp.deleteOne(
+        await UserSession.deleteOne(
           {
             businessId: table?.businessId,
             tableName: table?.name,
@@ -542,16 +540,10 @@ const tableRouter = new Hono()
         );
 
         if (getBill.data.success === "0") {
-          return c.json(
-            {
-              message: getBill.data.message,
-              err: true,
-            },
-            400,
-          );
+          throw new Error("Bill not found");
         }
 
-        await PetPoojaPinTemp.findOneAndUpdate(
+        await UserSession.findOneAndUpdate(
           {
             businessId: table?.businessId,
             transferTableFrom: table?._id.toString(),
@@ -597,7 +589,7 @@ const tableRouter = new Hono()
           { session },
         );
 
-        const findTable = await PetPoojaPinTemp.findOne({
+        const findTable = await UserSession.findOne({
           businessId: table?.businessId,
           tableName: table?.name,
         });
@@ -680,7 +672,12 @@ const tableRouter = new Hono()
             pin: findTable?.pin,
           },
         );
-        await PetPoojaPinTemp.deleteOne(
+
+        if (res.data.success === "0") {
+          throw new Error("Payment failed at pos");
+        }
+
+        await UserSession.deleteOne(
           {
             businessId: table?.businessId,
             tableName: table?.name,
@@ -755,7 +752,7 @@ const tableRouter = new Hono()
           409,
         );
       }
-      const updateTempTableStatus = await PetPoojaPinTemp.findOneAndUpdate(
+      const updateTempTableStatus = await UserSession.findOneAndUpdate(
         {
           businessId: table?.businessId,
           tableName: table?.name,
@@ -1031,6 +1028,24 @@ const tableRouter = new Hono()
           400,
         );
       }
+      const fetchHiCode = await UserSession.findOne({
+        tableName: fromTable.name,
+        businessId: businessId,
+      });
+
+      // check if bill already generated for a table
+      if (fetchHiCode?.billRequestId) {
+        return c.json(
+          {
+            message: `Bill already generated for table ${fetchHiCode.tableName} by ${fetchHiCode?.billGeneratedBy} you can't transfer the table`,
+            err: true,
+            data: {
+              success: false,
+            },
+          },
+          400,
+        );
+      }
       if (fromTable.status === "EMPTY" || fromTable.totalItemCount === 0) {
         return c.json(
           {
@@ -1096,7 +1111,7 @@ const tableRouter = new Hono()
           { session },
         );
 
-        await PetPoojaPinTemp.findOneAndUpdate(
+        await UserSession.findOneAndUpdate(
           {
             tableName: fromTable.name,
             businessId,
@@ -1186,10 +1201,10 @@ const tableRouter = new Hono()
 
           if (kotOrder.cart.length === 0) {
             // Delete the KotOrder if the cart is empty
-            await KotOrder.deleteOne({ _id: kotOrder._id });
+            await KotOrder.deleteOne({ _id: kotOrder._id }, { session });
           } else {
             // Save the updated `kotOrder` with modified cart
-            await kotOrder.save();
+            await kotOrder.save({ session });
           }
 
           // Prepare the new `KotOrder` without `_id` to avoid duplicate key errors
@@ -1198,7 +1213,7 @@ const tableRouter = new Hono()
           const totalBill = calculateCartBill(removedItems);
 
           // Create a new `KotOrder` with the removed items
-          const newKotOrder = await KotOrder.create(
+          await KotOrder.create(
             [
               {
                 ...newKotOrderData,
@@ -1216,24 +1231,12 @@ const tableRouter = new Hono()
             { session },
           );
 
-          const old = await PetPoojaPinTemp.findOneAndUpdate(
-            {
-              tableName: fromTable.name,
-              businessId,
-            },
-            {
-              $set: {
-                transferTableFrom: fromTable._id,
-                transferTableTo: toTable._id,
-                isTransfer: true,
-                transferBy,
-                transferType: "ITEM",
-              },
-            },
-            { session },
-          );
+          const old = await UserSession.findOne({
+            tableName: fromTable.name,
+            businessId,
+          });
 
-          const fromTempTable = await PetPoojaPinTemp.findOneAndUpdate({
+          const fromTempTable = await UserSession.findOne({
             tableName: toTable.name,
             businessId,
           });
@@ -1256,14 +1259,19 @@ const tableRouter = new Hono()
                 name: old.customerName || "Guest",
               },
             );
-            await PetPoojaPinTemp.create(
+
+            if (registerUser.data.success === "0") {
+              throw new Error("Failed to register user");
+            }
+            await UserSession.create(
               [
                 {
                   businessId,
-                  tableName: fromTable.name,
+                  tableName: toTable.name,
                   transferTableFrom: fromTable._id,
                   transferTableTo: toTable._id,
                   isTransfer: true,
+                  customerName: old.customerName || "Guest",
                   transferBy,
                   transferType: "ITEM",
                   hiCode: hiCode,
@@ -1281,6 +1289,7 @@ const tableRouter = new Hono()
                 currentTableAmount: -totalBill,
                 totalItemCount: -removedItems.length,
               },
+              isTransfer: true,
             },
             { session },
           );
@@ -1330,7 +1339,7 @@ const tableRouter = new Hono()
         name: tableName,
       });
 
-      let tableSession = await PetPoojaPinTemp.findOne({
+      let tableSession = await UserSession.findOne({
         businessId,
         tableName,
       }).select(
@@ -1338,7 +1347,7 @@ const tableRouter = new Hono()
       );
 
       if (!tableSession || tableSession.transferTableFrom === "") {
-        tableSession = await PetPoojaPinTemp.findOne({
+        tableSession = await UserSession.findOne({
           transferTableFrom: tableData?._id.toString(),
           businessId,
         }).select(
@@ -1346,7 +1355,7 @@ const tableRouter = new Hono()
         );
 
         if (!tableSession) {
-          tableSession = await PetPoojaPinTemp.findOne({
+          tableSession = await UserSession.findOne({
             transferTableTo: tableData?._id.toString(),
             businessId,
           }).select(
@@ -1405,7 +1414,7 @@ const tableRouter = new Hono()
           { session },
         );
 
-        await PetPoojaPinTemp.deleteOne(
+        await UserSession.deleteOne(
           {
             tableName: table?.name,
             businessId: table?.businessId,
