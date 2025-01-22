@@ -164,7 +164,7 @@ export const useMediaUpload = () => {
       // Step 1: Start upload session
       // TODO: CALL API TO APPiD TOKEN
       const sessionResponse = await axios.post(
-        `https://graph.facebook.com/v21.0/${response?.data?.appId}/uploads`,
+        "https://graph.facebook.com/v21.0/1166415764661953/uploads",
         null,
         {
           params: {
