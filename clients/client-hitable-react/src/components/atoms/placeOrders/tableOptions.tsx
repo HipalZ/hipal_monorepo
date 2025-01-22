@@ -16,7 +16,6 @@ const MemoTableOptions = () => {
     }, [setModalType])
 
     const handleTransferTable = useCallback((type: TransferTable) => {
-        console.log(type)
         setTransferTable(type)
         setTransferModal(true)
     }, [setTransferTable, setTransferModal, transferModal, transferTable])
@@ -78,6 +77,15 @@ const MemoTableOptions = () => {
             >
                 <MdTableBar className="w-5 h-5 mr-2" />
                 Transfer Table
+            </Button>
+            <Button
+                size="lg"
+                variant="outline"
+                className="w-full"
+                onClick={() => handleTransferTable('KICK')}
+            >
+                <MdTableBar className="w-5 h-5 mr-2" />
+                Free Table
             </Button>
         </CardContent>
     )
