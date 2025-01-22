@@ -31,7 +31,6 @@ const CommonBottomButton = dynamic(
   () => import("@/components/atoms/bottomButton"),
   { ssr: false },
 );
-const CartHeader = dynamic(() => import("./cartHeader"), { ssr: false });
 const CartWarning = dynamic(() => import("./cartWarning"), { ssr: false });
 const ShareCartButtons = dynamic(() => import("./shareCartButtons"), {
   ssr: false,
@@ -401,7 +400,6 @@ const Cart = () => {
 
   return (
     <div className={cn("overflow-y-auto h-[100dvh] hide-scrollbar text-[#000000] bg-[#ffffff] relative")}>
-      {cartPage === "history" && <CartHeader />}
       {cartPage === "cart" &&
         <section className="relative h-[calc(91dvh+5px)]">
           <div className="bg-white z-[500] sticky top-0 flex items-center justify-between px-4 py-3 border-b border-gray-200">
@@ -465,12 +463,6 @@ const Cart = () => {
           </div>
         </section>
       }
-
-      {/* {cartPage === "history" && (
-        <div className="w-full px-4">
-          <HistoryCartItems />
-        </div>
-      )} */}
       {cartPage === "order" && (
         <Orders />
       )}

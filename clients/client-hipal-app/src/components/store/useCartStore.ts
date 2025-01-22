@@ -15,6 +15,17 @@ export interface ICartItem {
 }
 
 export interface ICartHistory {
+  edited: string;
+  editedBy: {
+    _id: string;
+    name: string;
+  };
+  transferd: string;
+  transferedBy: {
+    _id: string;
+    name: string;
+    phone: string;
+  };
   businessId: string;
   cart: ICartItem[];
   date: number;
