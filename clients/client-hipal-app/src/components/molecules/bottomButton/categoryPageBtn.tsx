@@ -326,6 +326,7 @@ const MemoCategoryPageBtn = () => {
           >
             <BottomPopUp
               show={orderPlaced}
+              hide
               onClose={() => setOrderPlaced(false)}
             >
               <OrderPlaced />

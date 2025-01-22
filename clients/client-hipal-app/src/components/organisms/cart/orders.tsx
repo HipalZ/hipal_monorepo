@@ -48,9 +48,11 @@ const MemoOrders = () => {
       query: { businessId: outletInfo?.businessId || "", tableName, userId: userDetails?._id },
     });
     const res = await response.json();
-    setCartHistory(res.data);
-    if (res?.data?.length > 0) {
-      setExpanded(res?.data.map((order) => order._id));
+    setCartHistory(res.data || []);
+    if (Array.isArray(res?.data) && res.data.length > 0) {
+      setExpanded(res.data.map((order) => order._id));
+    } else {
+      setExpanded([]);
     }
     return res;
   };
@@ -116,21 +118,20 @@ const MemoOrders = () => {
                 whileHover={{ scale: 1.002 }}
                 transition={{ type: "spring", stiffness: 400, damping: 30 }}
               >
-                <section className="flex items-center gap-2">
-                  <div className="flex items-center justify-center w-10 h-10 bg-orange-50 rounded-full">
-                    <User className="w-5 h-5 text-black" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 poppins-regular">Orders by</p>
-                    <h3 className="text-base font-semibold text-gray-900 poppins-regular">
-                      {order.name}
+                <section className="space-y-2">
+                  <h3 className="text-sm text-gray-500 poppins-regular">
+                    Orders by <span className="font-semibold text-gray-900">{order.name}</span>
+                  </h3>
+                  {order?.edited && <h3 className="text-sm text-gray-500 poppins-regular">
+                    Order Edited by <span className="font-semibold text-gray-900">{order?.editedBy?.name}</span>
+                  </h3>}
+                  {order?.transferd && <div>
+                    <h3 className="text-sm text-gray-500 poppins-regular">
+                      Transferred by <span className="font-semibold text-gray-900">{order?.transferedBy?.name}</span>
                     </h3>
-                  </div>
+                  </div>}
                 </section>
                 <div className="flex items-center">
-                  <span className="px-3 py-1 text-sm font-medium text-black rounded-full poppins-regular">
-                    {order?.cart?.length} items
-                  </span>
                   {expanded.includes(order._id)
                     ? <ChevronUp className="w-5 h-5 text-gray-400" />
                     : <ChevronDown className="w-5 h-5 text-gray-400" />
