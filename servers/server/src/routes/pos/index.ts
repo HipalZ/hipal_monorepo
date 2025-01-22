@@ -233,7 +233,6 @@ const posRouter = new Hono()
                 {
                   upsert: true,
                   new: true,
-                  session,
                 },
               );
 
@@ -249,7 +248,6 @@ const posRouter = new Hono()
                   serviceCharge: getBill?.data?.order_data?.service_charge || 0,
                   billInvoiceId: getBill.data?.order_data?.invoice_id,
                 },
-                { session },
               );
               const billObj = {
                 billing_user_name: getBill.data.order_data.billing_user_name,
@@ -322,7 +320,6 @@ const posRouter = new Hono()
                 {
                   upsert: true,
                   new: true,
-                  session,
                 },
               );
 
@@ -351,7 +348,6 @@ const posRouter = new Hono()
                   tax: getBill?.data?.order_data?.tax || 0,
                   serviceCharge: getBill?.data?.order_data?.service_charge,
                 },
-                { session },
               );
               return c.json(
                 {
