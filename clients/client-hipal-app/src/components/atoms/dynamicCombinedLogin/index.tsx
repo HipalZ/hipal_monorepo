@@ -16,7 +16,7 @@ const MemoDynamicCombinedLogin = () => {
     const { setSubscribeModal } = useLogin();
     const handleNext = useCallback(() => {
         setOpenBlastModal(false);
-        setCheckLogin(true);
+        setCheckLogin(false);
         setSubscribeModal(false);
         goNext();
     }, [setOpenBlastModal, setCheckLogin, goNext, setSubscribeModal]);
