@@ -1457,7 +1457,15 @@ const posRouter = new Hono()
         settled: false,
         rejected: false,
         edited: false,
-      });
+      })
+        .populate({
+          path: "transferedBy",
+          select: "name phone",
+        })
+        .populate({
+          path: "editedBy",
+          select: "name phone",
+        });
 
       return c.json(
         {
