@@ -1395,22 +1395,6 @@ const tableRouter = new Hono()
 
         const table = await Table.findById(tableId);
         if (table?.status === "ACTIVE") {
-          const alreadySettle = await UnsettleTable.findOne({
-            tableId: tableId,
-            isDeleted: false,
-          });
-
-          if (alreadySettle) {
-            return c.json(
-              {
-                message: "Table already under settle",
-                err: true,
-                data: {},
-              },
-              409,
-            );
-          }
-
           const kots = await KotOrder.find({
             tableName: table?.name,
             settled: false,
