@@ -10,6 +10,7 @@ import FoodType from "@/components/atoms/foodType";
 import { format } from 'date-fns';
 import { usePaymentStore } from "@/components/store/usePaymentStore"
 import { cn } from "@/components/utils/helpers";
+import NoBillFound from "./noBill";
 
 const MemoEBill = () => {
     const searchParams = useSearchParams();
@@ -35,6 +36,8 @@ const MemoEBill = () => {
     });
 
     const allCartItems = useMemo(() => cartHistory.flatMap(order => order.cart), [cartHistory]);
+
+    console.log("allCartItems", allCartItems);
 
     return (
         <main className="min-h-screen  pb-20 bg-gray-50">
@@ -76,8 +79,8 @@ const MemoEBill = () => {
 
                     {/* Items List */}
                     <section className="space-y-3">
-                        <AnimatePresence>
-                            {allCartItems.map((item, index) => (
+                        <AnimatePresence mode="wait">
+                            {allCartItems?.length > 0 ? allCartItems.map((item, index) => (
                                 <motion.article
                                     key={item.id}
                                     initial={{ opacity: 0, y: 10 }}
@@ -127,7 +130,7 @@ const MemoEBill = () => {
                                         </div>
                                     </div>
                                 </motion.article>
-                            ))}
+                            )) : <NoBillFound />}
                         </AnimatePresence>
                     </section>
 
