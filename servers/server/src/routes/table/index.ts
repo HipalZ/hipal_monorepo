@@ -937,7 +937,7 @@ const tableRouter = new Hono()
             template_id: "6787e7e6d6fc0533d778a013",
             sender: "HiPalc",
             short_url: "0",
-            mobiles: phoneNumbers[i],
+            mobiles: `91${phoneNumbers[i]}`,
             businessname: business?.name,
             bill: findLongUrl.shortUrl,
           },
