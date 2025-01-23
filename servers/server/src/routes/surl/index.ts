@@ -64,7 +64,7 @@ const surlRouter = new Hono()
   )
 
   .get(
-    "/bill_short_url/bill",
+    "/c/b",
     zValidator(
       "query",
       z.object({
@@ -75,10 +75,9 @@ const surlRouter = new Hono()
       const { urlCode } = c.req.query();
 
       const result = await BillUrlModel.findOne({
-        urlCode: urlCode.slice(0, -1),
+        urlCode: urlCode.slice(0, 5),
       });
 
-      console.log("result", result);
       if (!result) {
         return c.json(
           {

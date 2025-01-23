@@ -916,7 +916,7 @@ const tableRouter = new Hono()
       if (!findLongUrl) {
         const createShortUrl = await BillUrlModel.create({
           longUrl: longUrl,
-          shortUrl: `https://api.test.hipalz.com/surl/bill_short_url/bill?urlCode=${uniqueOrderId}`,
+          shortUrl: `https://api.test.hipalz.com/surl/c/b?urlCode=${uniqueOrderId}`,
           urlCode: uniqueOrderId,
           createdAt: Date.now(),
         });
