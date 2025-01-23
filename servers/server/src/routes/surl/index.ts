@@ -74,9 +74,9 @@ const surlRouter = new Hono()
     async (c) => {
       const { urlCode } = c.req.query();
 
-      console.log("aara", urlCode);
-
-      const result = await BillUrlModel.findOne({ urlCode });
+      const result = await BillUrlModel.findOne({
+        urlCode: urlCode.slice(0, -1),
+      });
 
       console.log("result", result);
       if (!result) {
