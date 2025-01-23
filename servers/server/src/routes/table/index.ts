@@ -1507,9 +1507,9 @@ const tableRouter = new Hono()
   )
 
   .get(
-    "/unsettle_table",
+    "/unsettle_table/:businessId",
     zValidator(
-      "query",
+      "param",
       z.object({
         businessId: z.string().min(1).max(500),
       }),
@@ -1517,7 +1517,7 @@ const tableRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId } = c.req.query();
+        const { businessId } = c.req.param();
 
         const unSettledTables = await UnsettleTable.find({
           businessId,
