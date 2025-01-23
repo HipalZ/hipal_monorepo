@@ -1456,7 +1456,7 @@ const posRouter = new Hono()
         businessId: businessId,
         settled: false,
 
-        accepted: true,
+        accepted: false,
       })
         .populate({
           path: "transferedBy",

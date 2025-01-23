@@ -9,6 +9,7 @@ import {
   QrBill,
   Table,
   TempTableSettle,
+  UnsettleTable,
   UpiMode,
   User,
   UserSession,
@@ -917,6 +918,7 @@ const tableRouter = new Hono()
           longUrl: longUrl,
           shortUrl: `https://api.test.hipalz.com/surl/bill_short_url/bill?urlCode=${uniqueOrderId}`,
           urlCode: uniqueOrderId,
+          createdAt: Date.now(),
         });
 
         findLongUrl = createShortUrl;
@@ -934,7 +936,7 @@ const tableRouter = new Hono()
           data: {
             template_id: "6787e7e6d6fc0533d778a013",
             sender: "HiPalc",
-            short_url: "1",
+            short_url: "0",
             mobiles: phoneNumbers[i],
             businessname: business?.name,
             bill: findLongUrl.shortUrl,
@@ -1378,30 +1380,100 @@ const tableRouter = new Hono()
   )
 
   .post(
-    "/kick_user",
+    "/free_table",
     zValidator(
       "json",
       z.object({
         tableId: z.string().min(1).max(500),
+        performedBy: z.string().min(1).max(500),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { tableId } = await c.req.json();
+        const { tableId, performedBy } = await c.req.json();
 
         const table = await Table.findById(tableId);
         if (table?.status === "ACTIVE") {
-          return c.json(
+          const alreadySettle = await UnsettleTable.findOne({
+            tableId: tableId,
+            isDeleted: false,
+          });
+
+          if (alreadySettle) {
+            return c.json(
+              {
+                message: "Table already under settle",
+                err: true,
+                data: {},
+              },
+              409,
+            );
+          }
+
+          const kots = await KotOrder.find({
+            tableName: table?.name,
+            settled: false,
+            businessId: table?.businessId,
+            accepted: true,
+          }).select("_id");
+          const kotIds = kots.map((kot) => kot._id.toString());
+
+          const createUnsettleTable = new UnsettleTable(
             {
-              message: "Table is active cannot kick user",
-              err: true,
-              data: {},
+              businessId: table?.businessId,
+              capacity: table?.capacity,
+              tableId: table?._id,
+              kotIds,
+              status: "ACTIVE",
+              totalItemCount: table?.totalItemCount,
+              userIds: table?.userIds,
+              currentTableAmount: table?.currentTableAmount,
+              date: Date.now(),
+              performedBy: performedBy,
             },
-            400,
+            {
+              session,
+            },
+          );
+
+          await createUnsettleTable.save();
+          await KotOrder.updateMany(
+            {
+              tableName: table?.name,
+              settled: false,
+              businessId: table?.businessId,
+              accepted: true,
+            },
+            { $set: { rejected: true, accepted: false } },
+            { session },
+          );
+
+          await UserSession.deleteOne(
+            {
+              tableName: table?.name,
+              businessId: table?.businessId,
+            },
+            { session },
+          );
+
+          await Table.findByIdAndUpdate(
+            tableId,
+            {
+              hiCode: "",
+              userIds: [],
+              currentTableAmount: 0,
+              totalItemCount: 0,
+              status: "EMPTY",
+              totalUserIds: [],
+              isTransfer: false,
+              edited: false,
+              editedBy: null,
+            },
+            { session },
           );
         }
-
+        //for empty table
         await KotOrder.updateMany(
           {
             tableName: table?.name,
@@ -1410,7 +1482,7 @@ const tableRouter = new Hono()
             accepted: false,
             rejected: false,
           },
-          { $set: { rejected: true } },
+          { $set: { settled: true } },
           { session },
         );
 
@@ -1427,6 +1499,13 @@ const tableRouter = new Hono()
           {
             hiCode: "",
             userIds: [],
+            currentTableAmount: 0,
+            totalItemCount: 0,
+            status: "EMPTY",
+            totalUserIds: [],
+            isTransfer: false,
+            edited: false,
+            editedBy: null,
           },
           { session },
         );
@@ -1434,6 +1513,190 @@ const tableRouter = new Hono()
         return c.json(
           {
             message: "User kicked successfully",
+            err: false,
+            data: {},
+          },
+          200,
+        );
+      });
+    },
+  )
+
+  .post(
+    "/unsettle_table",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId } = await c.req.json();
+
+        const unSettledTables = await UnsettleTable.find({
+          businessId,
+          isDeleted: false,
+        })
+          .populate({
+            path: "tableId",
+            select: "name",
+          })
+          .populate({
+            path: "userIds",
+            select: "name phone",
+          })
+          .populate({
+            path: "kotIds",
+            select: "cart",
+          })
+          .populate({
+            path: "performedBy",
+            select: "name",
+          });
+
+        return c.json(
+          {
+            message: "Unsettled tables fetched successfully",
+            err: false,
+            data: unSettledTables,
+          },
+          200,
+        );
+      });
+    },
+  )
+
+  .post(
+    "/resolve_table",
+    zValidator(
+      "json",
+      z.object({
+        unSettleTableId: z.string().min(1).max(500),
+        captainId: z.string().min(1).max(500),
+        businessId: z.string().min(1).max(500),
+        reasonForSettle: z.string().min(1).max(500),
+        settleAmount: z.coerce.number().optional(),
+        orderId: z.string().min(1).max(500).optional(),
+
+        settleModes: z
+          .array(
+            z.object({
+              name: z.string().max(100),
+              amount: z.coerce.number().positive(),
+              _id: z.string().max(100),
+            }),
+          )
+          .min(1)
+          .default([])
+          .optional(),
+        split: z.boolean().default(false).optional(),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const {
+          businessId,
+          unSettleTableId,
+          captainId,
+          reasonForSettle,
+          settleAmount,
+          orderId,
+          settleModes = [],
+          split,
+        } = await c.req.json();
+
+        const paymentMode = await UpiMode.findById(settleModes[0]?._id);
+        const captain = await User.findById(captainId);
+
+        const unSettleTable = await UnsettleTable.findOne({
+          _id: unSettleTableId,
+          businessId,
+          isDeleted: false,
+        }).populate("tableId");
+        if (!unSettleTable) {
+          return c.json(
+            {
+              message: "Unsettled table not found",
+              err: true,
+              data: {},
+            },
+            400,
+          );
+        }
+
+        const uniqueOrderId = nanoid(15);
+
+        const saveOrder = await Order.create(
+          [
+            {
+              total: settleAmount,
+              currency: "INR",
+              receipt: uniqueOrderId,
+              userId: captainId,
+              claimedCoins: 0,
+              tableName: unSettleTable.tableId.name,
+              tips: 0,
+              billValue: settleAmount,
+              businessId: businessId,
+              order_id: uniqueOrderId,
+
+              date: Date.now(),
+            },
+          ],
+          { session },
+        );
+
+        const createPayment = await Payment.create(
+          [
+            {
+              businessId: businessId,
+              order_id: saveOrder[0]._id,
+              total: saveOrder[0].total,
+              mode:
+                settleModes.length > 1
+                  ? "split"
+                  : paymentMode?.name || "offline",
+              status: "SUCCESS",
+              paymentMode:
+                settleModes.length > 1
+                  ? "split"
+                  : paymentMode?.name || "offline",
+              userId: saveOrder[0].userId,
+              claimedCoins: 0,
+              billValue: saveOrder[0].billValue,
+              tips: 0,
+              tableName: saveOrder[0].tableName,
+              earnCoins: 0,
+              razorpayEventId: nanoid(15),
+              razorpayOrderId: nanoid(15),
+              razorpayPaymentId: nanoid(15),
+              settleType: "FORCE_SETTLE",
+              comment: reasonForSettle,
+              posBillId: orderId,
+              unSettleTableId: unSettleTableId,
+              splitModes: settleModes,
+
+              waiterName: captain?.name,
+              date: Date.now(),
+            },
+          ],
+          { session },
+        );
+
+        await UnsettleTable.findByIdAndUpdate(
+          unSettleTableId,
+          {
+            isDeleted: true,
+          },
+          { session },
+        );
+
+        return c.json(
+          {
+            message: "Table resolved successfully",
             err: false,
             data: {},
           },

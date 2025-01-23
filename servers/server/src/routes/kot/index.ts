@@ -294,6 +294,7 @@ const kotRouter = new Hono()
         if (orderAction === "EDIT") {
           kot.edited = true;
           kot.editedBy = performBy;
+          kot.rejected = true;
 
           await kot.save();
 

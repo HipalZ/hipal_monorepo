@@ -16,6 +16,10 @@ const billUrlModelChema = new mongoose.Schema<BillUrlModelType>(
       required: true,
       unique: true,
     },
+    createdAt: {
+      type: Date,
+      expires: 60 * 60 * 24 * 2,
+    },
   },
   {
     timestamps: true,

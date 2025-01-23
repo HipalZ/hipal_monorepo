@@ -48,6 +48,7 @@ export const kotSchema = z.object({
   name: z.string().min(1).max(50),
   fromTable: z.string().max(50).optional(),
   toTable: z.string().max(50).optional(),
+  unSettled: z.boolean().default(false).optional(),
 });
 
 export type KotOrderType = z.infer<typeof kotSchema>;
