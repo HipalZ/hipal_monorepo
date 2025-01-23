@@ -440,3 +440,27 @@ export interface IBillData {
     }>;
   }>;
 }
+
+export interface IUnsettleTables {
+  _id: string;
+  userIds: string[];
+  totalItemCount: number;
+  tableId: {
+    _id: string;
+    name: string;
+  };
+  status: string;
+  performedBy: {
+    _id: string;
+    name: string;
+  };
+  isDeleted: boolean;
+  date: number;
+  currentTableAmount: number;
+  capacity: number;
+  businessId: string;
+  kotIds: {
+    _id: string;
+    cart: CartItem[];
+  }[];
+}

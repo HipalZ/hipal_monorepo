@@ -82,7 +82,7 @@ const MemoTableOptions = () => {
                 size="lg"
                 variant="outline"
                 className="w-full"
-                onClick={() => handleTransferTable('KICK')}
+                onClick={() => handleTransferTable('FREE')}
             >
                 <MdTableBar className="w-5 h-5 mr-2" />
                 Free Table

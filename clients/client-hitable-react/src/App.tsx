@@ -70,7 +70,6 @@ function App() {
     );
 
     if (accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness) {
-      console.log('isValidBusiness', isValidBusiness);
       navigate(`/${selectedBiz?.businessId?._id}/alerts`);
     }
   }, []);

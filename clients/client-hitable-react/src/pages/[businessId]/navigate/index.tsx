@@ -1,19 +1,20 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { FaBell, FaMapMarkerAlt } from "react-icons/fa";
+import { FaBell } from "react-icons/fa";
 import HeaderAlertsMemo from "@/components/liteAlerts/headerAlerts";
 
 const Navigate: React.FC = () => {
   const navigate = useNavigate();
   const params = useParams();
-  const businessId = params.businessId ?? ("" as string); // Replace with actual businessId or fetch it from a context/store
+  const businessId = params.businessId ?? ("" as string);
 
   const navigateToAlerts = () => {
-    navigate(`/${businessId}/alerts`);
+    return navigate(`/${businessId}/alerts`);
   };
 
-  const navigateToZone = () => {
-    navigate(`/${businessId}/zone`);
-  };
+  const navigateToTheUnsettleTables = () => {
+    return navigate(`/${businessId}/unsettle`);
+  }
+
 
   return (
     <>
@@ -21,19 +22,19 @@ const Navigate: React.FC = () => {
       <div className="container px-4 py-8 mx-auto">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Card
-            title="Payment Alerts"
+            title="Payment Alerts "
             icon={<FaBell className="text-3xl" />}
             onClick={navigateToAlerts}
             bgColor="bg-green-100"
             textColor="text-green-700"
           />
-          {/* <Card
-            title="Zones and Tables"
-            icon={<FaMapMarkerAlt className="text-3xl" />}
-            onClick={navigateToZone}
-            bgColor="bg-blue-100"
-            textColor="text-blue-700"
-          /> */}
+          <Card
+            title="Unsettle Tables"
+            icon={<FaBell className="text-3xl" />}
+            onClick={navigateToTheUnsettleTables}
+            bgColor="bg-red-100"
+            textColor="text-red-700"
+          />
         </div>
       </div>
     </>
