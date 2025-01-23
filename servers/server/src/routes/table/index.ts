@@ -1532,10 +1532,6 @@ const tableRouter = new Hono()
             select: "name phone",
           })
           .populate({
-            path: "kotIds",
-            select: "cart",
-          })
-          .populate({
             path: "performedBy",
             select: "name",
           });
