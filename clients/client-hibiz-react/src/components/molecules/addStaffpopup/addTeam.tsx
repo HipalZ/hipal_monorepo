@@ -1,12 +1,14 @@
 import { MdEdit } from "react-icons/md";
 import { useAddStaffStore } from "@/components/store/useAddStaffStore";
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import useBusinessData from "@/components/store/useBusinessData";
 import { apiRpc } from "@hi/common";
 import toast from "react-hot-toast";
 import BottomButton from "@/components/atom/bottomButton";
+import { useQueryClient } from "@tanstack/react-query";
 
-const AddTeam = ({ getUser }: { getUser: () => void }) => {
+const MemoAddTeam = () => {
+  const queryClient = useQueryClient();
   const {
     setPageToggle,
     name,
@@ -18,6 +20,7 @@ const AddTeam = ({ getUser }: { getUser: () => void }) => {
     selectedPermissions,
     permissions,
     setIsAddStaffOpen,
+    removeStaffStore,
   } = useAddStaffStore();
   const businessData = useBusinessData((s) => s.businessData);
 
@@ -59,12 +62,13 @@ const AddTeam = ({ getUser }: { getUser: () => void }) => {
     if (res.status === 201 || res.status === 200) {
       toast.success("Staff added successfully");
       setIsAddStaffOpen(false);
-      getUser();
+      removeStaffStore();
+      queryClient.invalidateQueries({ queryKey: ["getStaff"] });
     }
   };
   const goToRoles = useCallback(() => {
     setPageToggle("ADD_ROLE");
-  }, [pageToggle]);
+  }, [setPageToggle]);
 
   return (
     <div className="pb-[5rem]">
@@ -140,11 +144,12 @@ const AddTeam = ({ getUser }: { getUser: () => void }) => {
         </>
       )}
 
-      <BottomButton  buttons={[
-            { text: "Send Invite", onClick: addStaff, type: "button" },
-          ]} />
+      <BottomButton buttons={[
+        { text: "Send Invite", onClick: addStaff, type: "button" },
+      ]} />
     </div>
   );
 };
 
+const AddTeam = memo(MemoAddTeam)
 export default AddTeam;

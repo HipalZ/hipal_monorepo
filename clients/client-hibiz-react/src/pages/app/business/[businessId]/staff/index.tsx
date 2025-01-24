@@ -121,7 +121,7 @@ const StaffPage = () => {
   };
 
   const { isLoading, refetch } = useQuery({
-    queryKey: ["staff", businessData?._id],
+    queryKey: ["getStaffs", businessData?._id],
     queryFn: getStaff,
     enabled: !!businessData?._id,
   });
@@ -172,13 +172,13 @@ const StaffPage = () => {
 
       {isAddStaffOpen && (
         <PopUp show={isAddStaffOpen} onClose={() => setIsAddStaffOpen(false)}>
-          <NewAddStaff refetch={refetch} />
+          <NewAddStaff />
         </PopUp>
       )}
 
       {isEditStaffOpen && (
         <PopUp show={isEditStaffOpen} onClose={closeEditModal}>
-          <EditStaff refetch={refetch} />
+          <EditStaff />
         </PopUp>
       )}
 

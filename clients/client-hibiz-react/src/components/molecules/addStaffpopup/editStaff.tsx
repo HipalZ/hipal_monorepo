@@ -1,21 +1,22 @@
 import { useAddStaffStore } from "@/components/store/useAddStaffStore";
-import AddRole from "./addRole";
-import AddPermissions from "./addPermissions";
+import { lazy } from "react";
+
+const AddRole = lazy(() => import("./addRole"));
+const AddPermissions = lazy(() => import("./addPermissions"));
+const EditTeam = lazy(() => import("./editTeam"));
 import { memo } from "react";
-import EditTeam from "./editTeam";
 
 
-const MemoiseEditStaff = ({ refetch }: { refetch: () => void }) => {
+const MemoiseEditStaff = () => {
   const {
     pageToggle,
   } = useAddStaffStore();
-
 
   return (
     <section className="h-auto max-h-[85vh] overflow-auto rounded-t-3xl bg-[#F4F4F4]">
 
       {pageToggle === "EDIT_STAFF" && (
-        <EditTeam refetch={refetch} />
+        <EditTeam />
       )}
       {pageToggle === "ADD_ROLE" && <AddRole />}
       {pageToggle === "ADD_PERMISSIONS" && <AddPermissions />}
