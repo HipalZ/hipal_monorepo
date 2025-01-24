@@ -1665,6 +1665,25 @@ const tableRouter = new Hono()
           ],
           { session },
         );
+        await PaymentAlert.create(
+          [
+            {
+              businessId: saveOrder[0]?.businessId,
+              alertType: "FORCE_SETTLE",
+              payment_id: createPayment[0]._id,
+              coinsApplied: 0,
+              status: "SUCCESS",
+              order_id: saveOrder[0]?._id,
+              message: `Paid ${saveOrder[0]?.total}`,
+              tableName: saveOrder[0]?.tableName,
+              isAccepted: false,
+              userId: saveOrder[0]?.userId,
+              posDiscount: 0,
+              date: Date.now(),
+            },
+          ],
+          { session },
+        );
 
         await UnsettleTable.findByIdAndUpdate(
           unSettleTableId,

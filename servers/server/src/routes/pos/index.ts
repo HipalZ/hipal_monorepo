@@ -1456,7 +1456,7 @@ const posRouter = new Hono()
         businessId: businessId,
         settled: false,
 
-        accepted: false,
+        accepted: true,
       })
         .populate({
           path: "transferedBy",
@@ -1466,6 +1466,8 @@ const posRouter = new Hono()
           path: "editedBy",
           select: "name phone",
         });
+
+      console.log("userKot", userKot);
 
       return c.json(
         {

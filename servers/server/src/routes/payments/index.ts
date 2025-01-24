@@ -1644,16 +1644,7 @@ const paymentsRouter = new Hono()
             });
 
             const paymentMode = await UpiMode.findById(settleModes[0]._id);
-            if (
-              (split === true && settleModes.length === 1) ||
-              (split === false && settleModes.length === 0)
-            ) {
-              return c.json({
-                message: "Please select at least one split mode",
-                err: true,
-                data: {},
-              });
-            }
+
             if (order?.couponId) {
               const coupon = await Couponz.findById(order.couponId).select(
                 "conditions.couponEndDate",
@@ -1722,6 +1713,8 @@ const paymentsRouter = new Hono()
                 tableName: order.tableName,
               });
 
+              console.log("tempTable", tempTable);
+
               await Payment.create(
                 [
                   {
@@ -1774,7 +1767,10 @@ const paymentsRouter = new Hono()
                   },
                 );
 
+                console.log("res", res.data);
+
                 if (res.data.success === "0") {
+                  console.log("err", res.data);
                   throw new Error("payment failed in pos");
                 }
 
