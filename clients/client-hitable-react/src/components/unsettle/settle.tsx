@@ -7,22 +7,21 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useOrderStore } from "@/components/store/useOrderData";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import { Input } from "@/components/ui/input";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import MultipleModes from "../atoms/placeOrders/multipleModes";
 import SingleMode from "../atoms/placeOrders/singleMode";
 import CommonBottomButton from "../atoms/bottomButton";
-import type { IMode } from "../atoms/placeOrders/normalsettle";
 import { useUnsettle } from "@/components/store/useUnsettle";
 import toast from "react-hot-toast";
 import SpinnerMemo from "../atoms/loadingSpinner";
+import { useGetAllModes } from "../hooks/useTableData";
 
 const MemoSettleTable = () => {
     const queryClient = useQueryClient();
     const { businessId } = useParams();
-    const navigate = useNavigate();
     const [selectedReason, setSelectedReason] = useState<string | null>(null);
     const [customReason, setCustomReason] = useState<string>("");
     const [settleAmount, setSettleAmount] = useState<number | "">(0);
@@ -30,7 +29,7 @@ const MemoSettleTable = () => {
     const [showPaymentMode, setShowPaymentMode] = useState<boolean>(false);
     const [showSplit, setShowSplit] = useState<boolean>(false);
 
-    const { openUnsettle, selectedUnsettleData, setOpenUnsettle, setSelectedUnsettleData } = useUnsettle()
+    const { selectedUnsettleData, setOpenUnsettle, setSelectedUnsettleData } = useUnsettle()
     const {
         settleModes,
         setSettleModes,
@@ -61,23 +60,7 @@ const MemoSettleTable = () => {
 
     const captainData = useHiClientZ((s) => s.captainData);
 
-    const getAllModes = async () => {
-        const response = await apiRpc.upi_mode.all[':businessId'].$get({
-            param: {
-                businessId: businessId || "",
-            },
-        });
-        const res = await response.json();
-        return res?.data as IMode[] || [];
-    };
-
-    // Query to fetch payment modes
-    const { data: paymentMode } = useQuery({
-        queryKey: ["getAllModes", businessId],
-        queryFn: getAllModes,
-        enabled: !!businessId && !!showPaymentMode,
-        staleTime: 1000 * 60,
-    });
+    const { paymentMode } = useGetAllModes(businessId, showPaymentMode)
 
     const { isPending, mutateAsync } = useMutation({
         mutationFn: async () => {
@@ -269,8 +252,8 @@ const MemoSettleTable = () => {
                                 text: "Confirm",
                                 onClick: () => { showModeOfPayments(); },
                                 className: `w-full rounded-md ${(selectedReason === null && customReason.trim() === "") || orderId.trim() === ""
-                                        ? "opacity-50 cursor-not-allowed"
-                                        : ""
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
                                     }`,
                                 disable: (selectedReason === null && customReason.trim() === "") || orderId.trim() === "",
                             },

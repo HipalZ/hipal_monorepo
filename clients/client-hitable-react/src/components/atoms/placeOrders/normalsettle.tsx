@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import { CreditCard, Banknote, Smartphone } from "lucide-react";
 import CommonBottomButton from "../bottomButton";
@@ -12,6 +12,7 @@ import { useHiClientZ } from "@/components/store/useHiClientzData";
 import MultipleModes from "./multipleModes";
 import SingleMode from "./singleMode";
 import { useLiteStore } from "@/components/store/useLiteStore";
+import { useGetAllModes } from "@/components/hooks/useTableData";
 
 export interface IMode {
     _id: string;
@@ -52,24 +53,16 @@ const MemoNormalSettle = ({
         setSettleModes,
     } = useOrderStore();
 
+    const { removeOnlineAlert, removeOnlineCount } = useLiteStore(
+        (s) => ({
+            removeOnlineAlert: s.removeOnlineAlert,
+            removeOnlineCount: s.removeOnlineCount,
+        }),
+    );
+
     const captainData = useHiClientZ((s) => s.captainData);
 
-    const getAllModes = async () => {
-        const response = await apiRpc.upi_mode.all[":businessId"].$get({
-            param: {
-                businessId: businessId || "",
-            },
-        });
-        const res = await response.json();
-        return (res?.data as IMode[]) || [];
-    };
-
-    const { isLoading, data: paymentModes } = useQuery({
-        queryKey: ["getAllModes", businessId],
-        queryFn: getAllModes,
-        enabled: !!businessId,
-        staleTime: 1000 * 60,
-    });
+    const { isLoading, paymentMode } = useGetAllModes(businessId, selectedTable?.status === "ACTIVE")
 
     const { mutateAsync: settleTable, isPending: isSettling } = useMutation({
         mutationFn: async (payload: {
@@ -128,6 +121,8 @@ const MemoNormalSettle = ({
                 throw new Error("Unauthorized");
             }
             if (res.status === 200) {
+                removeOnlineAlert(id)
+                removeOnlineCount()
                 return res.json();
             }
             throw new Error("Something went wrong.");
@@ -139,7 +134,9 @@ const MemoNormalSettle = ({
             closeNormalSettle();
             setOpenOrderModal(false);
             setClickViewMore(false);
+
             navigate(`/${businessId}/alerts`);
+            return
         },
         onError: (error: any) => {
             toast.error(error?.message || "Something went wrong.");
@@ -204,14 +201,14 @@ const MemoNormalSettle = ({
           SINGLE MODE UI
       ======================== */}
             {!isSplit && (
-                <SingleMode paymentModes={paymentModes || []} billData={billData} />
+                <SingleMode paymentModes={paymentMode || []} billData={billData} />
             )}
 
             {/* =======================
           SPLIT MODE UI
       ======================== */}
             {isSplit && (
-                <MultipleModes paymentModes={paymentModes || []} billData={billData} />
+                <MultipleModes paymentModes={paymentMode || []} billData={billData} />
             )}
 
             {/* =======================

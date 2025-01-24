@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useOrderStore } from "../store/useOrderData";
 import { useHiClientZ } from "../store/useHiClientzData";
 import toast from "react-hot-toast";
+import { IMode } from "../atoms/placeOrders/normalsettle";
 
 export interface ITransferPayload {
   businessId: string;
@@ -129,5 +130,30 @@ export const useTableTransfer = (businessId: string) => {
     isPending,
     closeTransferModal,
     confirmTransfer,
+  };
+};
+
+export const useGetAllModes = (
+  businessId: string,
+  showPaymentMode: boolean,
+) => {
+  const { isLoading, data: paymentMode } = useQuery({
+    queryKey: ["getAllModes"],
+    queryFn: async () => {
+      const response = await apiRpc.upi_mode.all[":businessId"].$get({
+        param: {
+          businessId: businessId || "",
+        },
+      });
+      const res = await response.json();
+      return (res?.data as IMode[]) || [];
+    },
+    enabled: !!businessId && !!showPaymentMode,
+    staleTime: 1000 * 60,
+  });
+
+  return {
+    isLoading,
+    paymentMode,
   };
 };

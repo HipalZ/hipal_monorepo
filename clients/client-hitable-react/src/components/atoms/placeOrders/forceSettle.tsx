@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { useNavigate, useParams } from "react-router-dom";
 import MultipleModes from "./multipleModes";
 import SingleMode from "./singleMode";
+import { useGetAllModes } from "@/components/hooks/useTableData";
 
 interface IMode {
     _id: string;
@@ -88,23 +89,7 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
         setSettleModes([]);
     }, [])
 
-    const getAllModes = async () => {
-        const response = await apiRpc.upi_mode.all[':businessId'].$get({
-            param: {
-                businessId: businessId || "",
-            },
-        });
-        const res = await response.json();
-        return res?.data as IMode[] || [];
-    };
-
-    // Query to fetch payment modes
-    const { isLoading, data: paymentMode } = useQuery({
-        queryKey: ["getAllModes", businessId],
-        queryFn: getAllModes,
-        enabled: !!businessId && !!showPaymentMode,
-        staleTime: 1000 * 60,
-    });
+    const { isLoading, paymentMode } = useGetAllModes(businessId, showPaymentMode)
 
     const handleConfirmForceSettle = async () => {
         if (!selectedReason && customReason.trim() === "") {
@@ -189,7 +174,7 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
 
                         </div>
                         :
-                        <ScrollArea className="h-[80vh] py-6">
+                        <ScrollArea className="h-[90vh] py-6">
                             <div className="px-4 space-y-6">
                                 <div className="flex items-center justify-between">
                                     <h4 className="text-xl font-bold text-gray-800">Force Settle Summary</h4>

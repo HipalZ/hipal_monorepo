@@ -138,6 +138,7 @@ const BillPopUpMemo = () => {
     return <LoadingSpinner />
   }
 
+  console.log(viewData);
 
   return (
     <BottomPopUp height="h-[85dvh]" status={viewData?.alertType} show={clickViewMore} onClose={handleCloseOnline}>
