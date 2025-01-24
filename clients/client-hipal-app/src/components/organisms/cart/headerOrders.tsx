@@ -8,13 +8,13 @@ const ScannerButton = dynamic(() => import('./scannerButton'));
 const MemoOrdersHeader = () => {
     const { cartHistory } = useCartStore();
     return (
-        <header className="flex items-center justify-between p-4 poppins-regular sticky top-0 flex-none bg-white border-b">
-            <h1 className="text-2xl font-medium">Final Cart</h1>
-            <section className="flex items-center gap-2 text-gray-600">
+        <header className="flex items-start justify-between px-4 pt-4 poppins-regular sticky top-0 flex-none bg-white border-b shadow-lg">
+            <section className="gap-2 text-gray-600">
+                <h1 className="text-2xl font-medium">Final Cart</h1>
                 {cartHistory[0]?.tableName && (
-                    <article className="text-sm text-gray-500 inline-flex items-center gap-1">
-                        <Image src={glassTable} alt="Table" className="pb-1" />
-                        <span className="text-base">Table {cartHistory[0]?.tableName}</span>
+                    <article className="text-base text-gray-500 inline-flex items-center gap-1">
+                        <Image src={glassTable} alt="Table" className="pb-1 -ml-2" />
+                        Table <span className="font-semibold text-black">{cartHistory[0]?.tableName}</span>
                     </article>
                 )}
             </section>
