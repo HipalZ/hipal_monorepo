@@ -28,6 +28,7 @@ export const userSessionSchema = z.object({
   transferTableFrom: z.string().min(1).max(50).optional(),
   transferBy: ObjectIdSchema.optional(),
   transferType: z.enum(["TABLE", "ITEM"]).optional(),
+  date: z.coerce.number().optional(),
 });
 
 export type UserSessionSchemaType = z.infer<typeof userSessionSchema>;

@@ -1278,6 +1278,7 @@ const tableRouter = new Hono()
                   transferType: "ITEM",
                   hiCode: hiCode,
                   pin: tenDigitCode,
+                  date: Date.now(),
                 },
               ],
               { session },

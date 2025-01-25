@@ -2826,7 +2826,7 @@ const paymentsRouter = new Hono()
           razorpayEventId: razorpayEventId,
         });
 
-        if (!paymentAlreadyExist && getOrder) {
+        if (getOrder) {
           const activeTable = await UserSession.findOne({
             tableName: getOrder.tableName,
             businessId: getOrder.businessId,

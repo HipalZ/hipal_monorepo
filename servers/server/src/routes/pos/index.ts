@@ -941,6 +941,7 @@ const posRouter = new Hono()
               phoneNumbers: [customerPhone],
               customerIds: [user._id],
               performedBy: "user",
+              date: Date.now(),
             },
             {
               session,
@@ -1171,6 +1172,7 @@ const posRouter = new Hono()
               customerName: customerName,
 
               performedBy: "captain",
+              date: Date.now(),
             },
             {
               session,
