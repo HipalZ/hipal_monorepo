@@ -2822,124 +2822,127 @@ const paymentsRouter = new Hono()
       });
 
       if (event === "payment.captured") {
-        const paymentAlreadyExist = await Payment.findOne({
-          razorpayEventId: razorpayEventId,
-        });
-
         if (getOrder) {
           const activeTable = await UserSession.findOne({
             tableName: getOrder.tableName,
             businessId: getOrder.businessId,
           });
-
-          const table = await Table.findOne({
+          const alreadyTableSettle = await TempTableSettle.findOne({
             businessId: getOrder.businessId,
-            name: getOrder.tableName,
+            tableName: getOrder.tableName,
+            hiCode: activeTable?.hiCode,
           });
 
-          await UserSession.findOneAndUpdate(
-            {
+          if (!alreadyTableSettle) {
+            const table = await Table.findOne({
               businessId: getOrder.businessId,
-              transferTableFrom: table?._id.toString(),
-            },
-            {
-              $set: {
-                transferTableFrom: "",
-              },
-            },
-            {
-              session,
-            },
-          );
+              name: getOrder.tableName,
+            });
 
-          const pos = await BusinessPosConfig.findOne({
-            businessId: getOrder.businessId,
-          }).populate("posId");
-
-          if (pos) {
-            const res = await axios.post(
-              "http://api.petpooja.com/V1/captainorders/success_payment/",
+            await UserSession.findOneAndUpdate(
               {
-                app_key: pos?.posId.accessKey,
-                app_secret: pos?.posId.secretKey,
-                access_token: pos?.posId.authToken,
-                restID: pos?.posId.restId,
-                bill_request_id: activeTable?.billRequestId,
-                amount_paid: getOrder.total,
-                pin: activeTable?.pin,
+                businessId: getOrder.businessId,
+                transferTableFrom: table?._id.toString(),
+              },
+              {
+                $set: {
+                  transferTableFrom: "",
+                },
+              },
+              {
+                session,
               },
             );
-            await TempTableSettle.create(
-              [
+
+            const pos = await BusinessPosConfig.findOne({
+              businessId: getOrder.businessId,
+            }).populate("posId");
+
+            if (pos) {
+              const res = await axios.post(
+                "http://api.petpooja.com/V1/captainorders/success_payment/",
+                {
+                  app_key: pos?.posId.accessKey,
+                  app_secret: pos?.posId.secretKey,
+                  access_token: pos?.posId.authToken,
+                  restID: pos?.posId.restId,
+                  bill_request_id: activeTable?.billRequestId,
+                  amount_paid: getOrder.total,
+                  pin: activeTable?.pin,
+                },
+              );
+              await TempTableSettle.create(
+                [
+                  {
+                    businessId: getOrder.businessId,
+                    tableName: getOrder.tableName,
+                    settleBy: getOrder.userId?.name,
+                    hiCode: activeTable?.hiCode,
+                  },
+                ],
+                {
+                  session,
+                },
+              );
+              await QrBill.findOneAndUpdate(
+                {
+                  requestBillId: activeTable?.billRequestId,
+                },
+                {
+                  $set: {
+                    status: "SUCCESS",
+                  },
+                },
+                {
+                  session,
+                },
+              );
+
+              await UserSession.deleteOne(
+                {
+                  tableName: getOrder.tableName,
+                  businessId: getOrder.businessId,
+                },
+                {
+                  session,
+                },
+              );
+
+              await KotOrder.updateMany(
+                {
+                  tableName: getOrder.tableName,
+                  businessId: getOrder.businessId,
+                },
+                {
+                  $set: {
+                    settled: true,
+                  },
+                },
+                {
+                  session,
+                },
+              );
+
+              await Table.findOneAndUpdate(
                 {
                   businessId: getOrder.businessId,
-                  tableName: getOrder.tableName,
-                  settleBy: getOrder.userId?.name,
-                  hiCode: activeTable?.hiCode,
+                  name: getOrder.tableName,
                 },
-              ],
-              {
-                session,
-              },
-            );
-            await QrBill.findOneAndUpdate(
-              {
-                requestBillId: activeTable?.billRequestId,
-              },
-              {
-                $set: {
-                  status: "SUCCESS",
+                {
+                  $set: {
+                    status: "EMPTY",
+                    currentTableAmount: 0,
+                    userIds: [],
+                    totalItemCount: 0,
+                    capacity: 0,
+                    hiCode: "",
+                  },
                 },
-              },
-              {
-                session,
-              },
-            );
-
-            await UserSession.deleteOne(
-              {
-                tableName: getOrder.tableName,
-                businessId: getOrder.businessId,
-              },
-              {
-                session,
-              },
-            );
-
-            await KotOrder.updateMany(
-              {
-                tableName: getOrder.tableName,
-                businessId: getOrder.businessId,
-              },
-              {
-                $set: {
-                  settled: true,
+                {
+                  session,
                 },
-              },
-              {
-                session,
-              },
-            );
-
-            await Table.findOneAndUpdate(
-              {
-                businessId: getOrder.businessId,
-                name: getOrder.tableName,
-              },
-              {
-                $set: {
-                  status: "EMPTY",
-                  currentTableAmount: 0,
-                  userIds: [],
-                  totalItemCount: 0,
-                  capacity: 0,
-                  hiCode: "",
-                },
-              },
-              {
-                session,
-              },
-            );
+              );
+            }
           }
         }
 
