@@ -29,6 +29,7 @@ export const userSessionSchema = z.object({
   transferBy: ObjectIdSchema.optional(),
   transferType: z.enum(["TABLE", "ITEM"]).optional(),
   date: z.coerce.number().optional(),
+  isPinActive: z.boolean().default(false),
 });
 
 export type UserSessionSchemaType = z.infer<typeof userSessionSchema>;
