@@ -39,3 +39,4 @@ better
 invoice
 builderror 
 pos payment
+free table
