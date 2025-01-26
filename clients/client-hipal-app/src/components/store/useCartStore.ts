@@ -15,6 +15,8 @@ export interface ICartItem {
 }
 
 export interface ICartHistory {
+  fromTable: string;
+  toTable: string;
   edited: string;
   editedBy: {
     _id: string;

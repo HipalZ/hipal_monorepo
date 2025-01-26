@@ -67,18 +67,6 @@ const Overview = () => {
 
   return (
     <div className="mx-4 mt-4 space-y-6 md:mt-6 pb-[7rem]">
-      {/* <Card className="shadow-lg bg-gradient-to-br from-secondary/80 to-secondary text-secondary-foreground">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-center space-x-2 text-center">
-            <Calendar className="w-6 h-6" />
-            <span>Selected Period</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="text-center">
-          <p className="text-xl font-semibold">{timestampToDateTime(timeStampStart)} - {timestampToDateTime(timeStampEnd)}</p>
-        </CardContent>
-      </Card> */}
-
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="shadow-lg bg-gradient-to-br from-secondary/50 to-secondary text-secondary-foreground">
           <CardHeader>

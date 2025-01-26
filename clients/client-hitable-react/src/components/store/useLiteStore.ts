@@ -90,7 +90,7 @@ interface ILiteStore {
 export const useLiteStore = create<ILiteStore>((set) => ({
   clickViewMore: false,
   setClickViewMore: (value) => set({ clickViewMore: value }),
-  selectedNavItem: "Tables",
+  selectedNavItem: "payments",
   setSelectedNavItem: (value) => set({ selectedNavItem: value }),
   clickedConfirm: false,
   setClickedConfirm: (value) => set({ clickedConfirm: value }),

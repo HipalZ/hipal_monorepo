@@ -1,20 +1,24 @@
-import AddTeam from "./addTeam";
-import AddRole from "./addRole";
-import AddPermissions from "./addPermissions";
+import { lazy, Suspense } from "react";
 import { useAddStaffStore } from "@/components/store/useAddStaffStore";
+import { memo } from "react";
+const AddTeam = lazy(() => import("./addTeam"));
+const AddRole = lazy(() => import("./addRole"));
+const AddPermissions = lazy(() => import("./addPermissions"));
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 
-const NewAddStaff = ({refetch}:{refetch:()=>void}) => {
+const MemoNewAddStaff = () => {
   const { pageToggle } = useAddStaffStore();
-   const getUser = () => {
-    refetch()
-   }
+
   return (
-    <section className="max-h-[85vh] overflow-auto rounded-t-3xl bg-[#F4F4F4]">
-      {pageToggle === "ADD_STAFF" && <AddTeam getUser={getUser} />}
-      {pageToggle === "ADD_ROLE" && <AddRole />}
-      {pageToggle === "ADD_PERMISSIONS" &&  <AddPermissions />}
-    </section>
+    <Suspense fallback={<LoadingSpinner />}>
+      <section className="max-h-[85vh] overflow-auto rounded-t-3xl bg-[#F4F4F4]">
+        {pageToggle === "ADD_STAFF" && <AddTeam />}
+        {pageToggle === "ADD_ROLE" && <AddRole />}
+        {pageToggle === "ADD_PERMISSIONS" && <AddPermissions />}
+      </section>
+    </Suspense>
   );
 };
 
+const NewAddStaff = memo(MemoNewAddStaff);
 export default NewAddStaff;

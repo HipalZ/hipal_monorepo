@@ -20,14 +20,19 @@ const EnhancedOrderCard: React.FC<CompactOrderCardProps> = ({ order }) => {
                 <CardContent className="p-3">
                     {
                         order?.transferd && (
-                            <Badge variant="destructive" className="mb-2">
-                                <span>Transferred by {order?.transferedBy?.name}</span>
-                            </Badge>
+                            <section className='flex items-center justify-between gap-2'>
+                                <Badge variant="destructive" className="mb-2">
+                                    <span>Transferred by {order?.transferedBy?.name}</span>
+                                </Badge>
+                                <Badge variant="secondary" className="mb-2 text-base">
+                                    <span>{`${order?.fromTable} => ${order?.toTable}`}</span>
+                                </Badge>
+                            </section>
                         )
                     }
-                    <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center">
-                            <MdPerson className="mr-2 text-gray-500" />
+                    <div className="flex items-center justify-between gap-1 mb-2">
+                        <div className="flex items-center truncate">
+                            <MdPerson className="mr-1 text-gray-500" />
                             <span className="font-semibold">{order?.name}</span>
                         </div>
                         <h3 className="text-sm font-semibold opacity-60">{new Date(order?.date).toLocaleString("en-In")}</h3>
@@ -96,7 +101,7 @@ const EnhancedOrderCard: React.FC<CompactOrderCardProps> = ({ order }) => {
                     <Separator className="my-2" />
                     <div className="flex items-center justify-between text-sm font-medium">
                         <span className='text-lg font-semibold'>Total</span>
-                        <span>₹{order?.cart?.reduce((total, item) => {
+                        <span className='text-lg font-semibold'>₹{order?.cart?.reduce((total, item) => {
                             const itemTotal = item.dish.price * item.quantity;
                             const portionTotal = item.portion ? item.portion.price * item.quantity : 0;
                             const extrasTotal = item.extras?.reduce((sum, extra) => sum + (extra.price * extra.quantity), 0) || 0;

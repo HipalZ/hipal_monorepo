@@ -128,7 +128,7 @@ export default function RootLayout({
       <body className={`${ubuntu.className}`}>
         <Suspense fallback={<Loading />}>
           <section className="relative !z-[9999]">
-            <DynamicInternetConnection />
+            {/* <DynamicInternetConnection /> */}
             <DynamicToast />
           </section>
           <DynamicQueryComponent>

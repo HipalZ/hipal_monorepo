@@ -60,7 +60,7 @@ const OnlineAlertCard = ({ onlineAlertData }: IOnlineProp) => {
       transition={{ duration: 0.5 }}
     >
       <AnimatePresence>
-        {Array.isArray(onlineAlertData) && onlineAlertData.length > 0 ? (
+        {Array.isArray(onlineAlertData) && onlineAlertData.length > 0 &&
           onlineAlertData.map((alert) => (
             <motion.div
               key={alert?._id}
@@ -145,16 +145,7 @@ const OnlineAlertCard = ({ onlineAlertData }: IOnlineProp) => {
               </Card>
             </motion.div>
           ))
-        ) : (
-          <motion.div
-            className="text-2xl font-semibold text-center col-span-full text-muted-foreground"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            No Data Found
-          </motion.div>
-        )}
+        }
       </AnimatePresence>
     </motion.main>
   );

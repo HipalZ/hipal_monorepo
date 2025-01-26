@@ -98,11 +98,11 @@ const MemoPaymentModes = () => {
                         >
                             <article className="relative h-full flex justify-between items-start">
                                 <Image src={method.image} alt={method.title} className="-mt-4" />
-                                <section className="px-4 pb-4 space-y-2 mb-2">
-                                    <h1 className="text-[#5A3A00] font-semibold text-2xl">
+                                <section className="px-4 pb-4 space-y-2 mb-2 p-2 text-right">
+                                    <h1 className="text-[#5A3A00] font-semibold text-xl ">
                                         {method.title}
                                     </h1>
-                                    <p className="text-[#845707] poppins-regular text-base">
+                                    <p className="text-[#845707] poppins-regular text-sm">
                                         {method.description}
                                     </p>
                                     <div className="flex items-center gap-1 justify-end">

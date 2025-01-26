@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { MdOutlineCall } from "react-icons/md";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -46,7 +46,7 @@ const PaymentModal = ({ salesData }: PaymentModalProps) => {
     </div>
   );
 
-  const getBillItems = async (): Promise<BillItem> => {
+  const getBillItems = async (): Promise<BillItem[]> => {
     const response = await apiRpc.kot.get_pos_bill[":billRequestId"].$get({
       param: {
         billRequestId: salesData?.posBillRequestId,
@@ -57,32 +57,32 @@ const PaymentModal = ({ salesData }: PaymentModalProps) => {
     return res.data || [];
   };
 
-  const { isLoading, data: itemsData } = useQuery<BillItem>({
+  const { isLoading, data: itemsData } = useQuery<BillItem[]>({
     queryKey: ["getBillItems", salesData?.posBillRequestId],
     queryFn: getBillItems,
     enabled: !!salesData?.posBillRequestId,
   });
 
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-
   const calculateTotal = (items: BillItem) => {
-    return items.reduce((total, item) => {
+    return items?.reduce((total, item) => {
       const dishTotal = item.dish.price * item.dish.quantity;
       const extrasTotal = item.extras.reduce((sum, extra) => sum + extra.price * extra.quantity, 0);
       return total + dishTotal + extrasTotal;
     }, 0);
   };
 
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <Card className="relative w-full max-w-md mx-auto">
-      <CardHeader className="relative pb-2">
-        <Badge className="absolute transform -translate-x-1/2 top-2 left-1/2" variant="outline">
+    <Card className="relative w-full max-w-[30rem] border-none shadow-none">
+      <section className="flex items-center justify-between px-4 py-2">
+        <h3 className="pt-2 text-lg font-semibold text-center">Payment Details</h3>
+        <Badge className="text-xl font-semibold text-white bg-black">
           {salesData?.mode}
         </Badge>
-        <CardTitle className="mt-4 text-lg font-semibold text-center">Payment Details</CardTitle>
-      </CardHeader>
+      </section>
       <CardContent>
         <ScrollArea className="h-[70vh]">
           <div className="space-y-4">
@@ -94,19 +94,24 @@ const PaymentModal = ({ salesData }: PaymentModalProps) => {
               <span className="text-sm font-medium">Order ID: {salesData?._id.slice(-5)}</span>
             </div>
 
-            <div className="space-y-2">
+            <div className="">
               <InfoRow label="Paid Amount" value={`₹ ${salesData?.order_id?.total}`} />
               <InfoRow label="Bill Value Entered" value={`₹ ${salesData?.order_id?.billValue}`} />
               <InfoRow label="Including Tips" value={`₹ ${salesData?.order_id?.tips}`} />
               <InfoRow label="Discount" value={`${salesData?.order_id?.claimedCoins} Coins used`} />
               <InfoRow label="Payment Mode" value={salesData?.mode} />
               <InfoRow label="Mode of Settle" value={salesData?.settleType} />
+              {
+                salesData?.settleType === "FORCE_SETTLE" && (
+                  <InfoRow label="Force Settle Reason" value={salesData?.comment} />
+                )
+              }
             </div>
 
             <Separator />
 
             {/* User and Table Information */}
-            <div className="space-y-2">
+            <div className="">
               <InfoRow label="User" value={salesData?.userId?.name} />
               <InfoRow label="Table" value={salesData?.order_id?.tableName} />
               <div className="flex items-center justify-between py-2">
@@ -131,10 +136,10 @@ const PaymentModal = ({ salesData }: PaymentModalProps) => {
             </div>
 
             {/* Items List */}
-            <div className="space-y-2">
+            <div className="">
               <h2 className="font-semibold">Bill Items</h2>
               <Card>
-                <CardContent className="p-4 space-y-4">
+                <CardContent className="p-4 space-y-2">
                   {itemsData?.map((item, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex justify-between">

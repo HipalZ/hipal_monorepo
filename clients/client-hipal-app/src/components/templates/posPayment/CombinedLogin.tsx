@@ -77,13 +77,17 @@ const MemoCombinedLogin = () => {
         setLoading(false);
         if (pathName?.includes("explore")) {
             setDirection("explore")
-        } if (pathName?.includes("loyalty")) {
+        }
+        if (pathName?.includes("loyalty")) {
             setDirection("loyalty")
-        } if (pathName?.includes("category")) {
+        }
+        if (pathName?.includes("category")) {
             setDirection("category")
-        } if (pathName?.includes("invoice")) {
+        }
+        if (pathName?.includes("invoice")) {
             setDirection("invoice")
-        } if (pathName?.includes("payment")) {
+        }
+        if (pathName?.includes("payment")) {
             setDirection("payment")
         }
         if (pathName?.includes("posPayment")) {
@@ -228,7 +232,7 @@ const MemoCombinedLogin = () => {
                     </section>
                 )}
                 {showOtpScreen ? (
-                    <section className="space-y-4 pt-4">
+                    <section className="pt-4 space-y-4">
                         {userDetails?.name === "" ? (
                             <>
                                 <div className="text-sm font-semibold">
@@ -266,7 +270,7 @@ const MemoCombinedLogin = () => {
                             ))}
                         </section>
                         {error && (
-                            <div className="mb-2 animate-pulse tracking-wider text-red-500" role="alert">
+                            <div className="mb-2 tracking-wider text-red-500 animate-pulse" role="alert">
                                 {error}
                             </div>
                         )}

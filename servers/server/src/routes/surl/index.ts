@@ -56,7 +56,7 @@ const surlRouter = new Hono()
   )
 
   .get(
-    "/bill_short_url/bill",
+    "/c/b",
     zValidator(
       "query",
       z.object({
@@ -66,11 +66,10 @@ const surlRouter = new Hono()
     async (c) => {
       const { urlCode } = c.req.query();
 
-      console.log("aara", urlCode);
+      const result = await BillUrlModel.findOne({
+        urlCode: urlCode.slice(0, 5),
+      });
 
-      const result = await BillUrlModel.findOne({ urlCode });
-
-      console.log("result", result);
       if (!result) {
         return c.json(
           {

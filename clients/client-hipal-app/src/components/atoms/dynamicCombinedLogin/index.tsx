@@ -31,7 +31,7 @@ const MemoDynamicCombinedLogin = () => {
                 <CombinedLogin />
             </BottomPopUp>
             {openBlastModal ?
-                <SignUpBonus coinZ={coinz} goNext={handleNext} />
+                <SignUpBonus goNext={handleNext} />
                 : null}
         </>
     )

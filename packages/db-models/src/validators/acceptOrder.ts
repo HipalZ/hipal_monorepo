@@ -11,6 +11,7 @@ export const acceptOrderSchema = z.object({
         _id: z.string().max(100),
       }),
     )
+    .min(1)
     .optional(),
 
   split: z.boolean().default(false).optional(),

@@ -5,14 +5,12 @@ import { MdRestaurantMenu, MdReceipt } from 'react-icons/md';
 import { motion } from 'framer-motion';
 import { apiRpc } from '@hi/common';
 import { Button } from '@/components/ui/button';
+import type { TableData } from '@/components/store/useZonesAndTable';
 import { type orderModal, useOrderStore } from '@/components/store/useOrderData';
+import { useCart } from '@/components/store/useCart';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import SpinnerMemo from '@/components/atoms/loadingSpinner';
-import CustomerInformation from '@/components/atoms/placeOrders/customerInformation';
-import { useCart } from '@/components/store/useCart';
-import type { TableData } from '@/components/store/useZonesAndTable';
-import TransferItem from '@/components/atoms/placeOrders/transferItem';
-import EmptyTableList from '@/components/tables';
+
 
 // Lazy loaded components
 const PlaceOrders = lazy(() => import('@/components/atoms/placeOrders'));
@@ -26,6 +24,11 @@ const CartItem = lazy(() => import('@/components/atoms/placeOrders/cartItem'));
 const Bill = lazy(() => import('@/components/atoms/placeOrders/bill'));
 const AlertCount = lazy(() => import('@/components/atoms/placeOrders/alertCount'));
 const Ebill = lazy(() => import('@/components/atoms/placeOrders/ebill'));
+const CustomerInformation = lazy(() => import('@/components/atoms/placeOrders/customerInformation'));
+const TransferItem = lazy(() => import('@/components/atoms/placeOrders/transferItem'));
+const EmptyTableList = lazy(() => import('@/components/tables'));
+const FreeTable = lazy(() => import('@/components/atoms/placeOrders/freeTable'));
+
 
 const TablePos = () => {
     const { tableId, businessId } = useParams();
@@ -82,11 +85,6 @@ const TablePos = () => {
         if (tableData?.status === "EMPTY" && isPlacingNewOrder) {
             openOrderModalHandler('addItem');
         }
-        // if (tableData?.status === "EMPTY" && !isPlacingNewOrder) {
-        //     setOpenOrderModal(false);
-        //     setModalType('');
-        //     return navigate(`/${businessId}/alerts`);
-        // }
         setSelectedTable(tableData);
         return res?.data;
     };
@@ -98,15 +96,15 @@ const TablePos = () => {
         // refetchInterval: 30000,
     });
 
-    console.log('selectedTable', selectedTable);
-
     return (
         <div className="relative w-full max-w-[30rem] mx-auto min-h-[100dvh] bg-gray-50">
-            <OrdersHeader />
+            <Suspense fallback={<SpinnerMemo />}>
+                <OrdersHeader />
+            </Suspense>
+
 
             {/* Tabs */}
             <section className="sticky z-10 top-[4.25rem] py-2 bg-white shadow-sm">
-
                 {
                     selectedTable?.status !== "EMPTY" && (
 
@@ -284,12 +282,23 @@ const TablePos = () => {
                             <BottomPopUp hide show={transferModal} onClose={closeTransferModal}>
                                 {
                                     transferTable === 'ITEM' && (
-                                        <TransferItem />
+                                        <Suspense fallback={<SpinnerMemo />}>
+                                            <TransferItem />
+                                        </Suspense>
                                     )
                                 }
                                 {
                                     transferTable === 'TABLE' && (
-                                        <EmptyTableList transfer />
+                                        <Suspense fallback={<SpinnerMemo />}>
+                                            <EmptyTableList transfer />
+                                        </Suspense>
+                                    )
+                                }
+                                {
+                                    transferTable === 'FREE' && (
+                                        <Suspense fallback={<SpinnerMemo />}>
+                                            <FreeTable />
+                                        </Suspense>
                                     )
                                 }
                             </BottomPopUp>

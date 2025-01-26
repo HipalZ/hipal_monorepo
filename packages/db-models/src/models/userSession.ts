@@ -89,6 +89,14 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: "TABLE",
   },
+  date: {
+    type: Number,
+    required: false,
+  },
+  isPinActive: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 userSessionSchema.index({ businessId: 1, tableName: 1 }, { unique: true });

@@ -80,125 +80,133 @@ const SalesLite = () => {
     return <OverviewSkeleton />
   }
 
-
-
   return (
-    <div className="mx-4 mt-4 space-y-6 md:mt-6 pb-[7rem]">
+    <div className="px-4 mx-auto xl:container">
       <DateRangePickerMemo />
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="shadow-lg bg-gradient-to-br from-secondary/50 to-secondary text-secondary-foreground">
+      <div className="grid gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="text-white col-span-full md:col-span-2 lg:col-span-3 bg-gradient-to-r from-blue-500 to-blue-600">
           <CardHeader>
-            <CardTitle>Today's Sales</CardTitle>
+            <CardTitle className="text-2xl">Today's Sales</CardTitle>
           </CardHeader>
           <CardContent>
-            <h2 className="text-4xl font-bold">₹ {salesDataFinal?.totalSale?.toLocaleString("en-IN")}</h2>
+            <h2 className="text-5xl font-bold">₹ {salesDataFinal.totalSale.toLocaleString("en-IN")}</h2>
           </CardContent>
         </Card>
 
-        <Card className="shadow-lg bg-gradient-to-br from-destructive/50 to-destructive text-destructive-foreground">
-          <CardHeader>
-            <CardTitle>Total Discount</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <h2 className="text-4xl font-bold">₹ {salesDataFinal?.totalDiscount?.toLocaleString("en-IN")}</h2>
-          </CardContent>
-        </Card>
-      </div>
+        <PaymentModes modeObj={salesDataFinal.modeObj} />
 
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle>Sales by Payment Mode</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center justify-between md:flex-row">
-          <div className="grid grid-cols-2 gap-2 mb-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 md:mb-0">
-            {Object.entries(salesDataFinal?.modeObj || {}).map(([mode, amount]) => (
-              <InfoCard
-                key={mode}
-                title={mode}
-                value={amount}
-                icon={mode === "offline" ? <CreditCard className="w-4 h-4" />
-                  : <Globe className="w-4 h-4" />}
-                gradient={mode === "offline" ? "from-blue-300 to-blue-600" : "from-green-400 to-green-600"}
-              />
-            ))}
-          </div>
+        <InfoCard
+          title="Total Discount"
+          value={salesDataFinal.totalDiscount}
+          icon={<Percent className="w-6 h-6" />}
+          gradient="from-red-400 to-red-500"
+        />
 
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-4">
         <InfoCard
           title="Service Charge"
-          value={salesDataFinal?.totalServiceCharge}
-          icon={<DollarSign className="w-4 h-4" />}
-          gradient="from-yellow-300 to-yellow-600"
+          value={salesDataFinal.totalServiceCharge}
+          icon={<DollarSign className="w-6 h-6" />}
+          gradient="from-green-400 to-green-500"
         />
+
         <InfoCard
           title="Total Tax"
-          value={salesDataFinal?.totalTax}
-          icon={<Percent className="w-4 h-4" />}
-          gradient="from-purple-300 to-purple-600"
+          value={salesDataFinal.totalTax}
+          icon={<Percent className="w-6 h-6" />}
+          gradient="from-purple-400 to-purple-500"
         />
+
         <InfoCard
           title="Total Tips"
-          value={salesDataFinal?.totalTips}
-          icon={<Tag className="w-4 h-4" />}
-          gradient="from-pink-300 to-pink-600"
+          value={salesDataFinal.totalTips}
+          icon={<Tag className="w-6 h-6" />}
+          gradient="from-yellow-600 to-yellow-900"
         />
+
         <InfoCard
           title="Coins Earned"
-          value={salesDataFinal?.totalEarnCoins}
-          icon={<Coins className="w-4 h-4" />}
-          gradient="from-indigo-300 to-indigo-600"
+          value={salesDataFinal.totalEarnCoins}
+          icon={<Coins className="w-6 h-6" />}
+          gradient="from-indigo-400 to-indigo-500"
         />
-        <InfoCard
-          title="Forced Settle"
-          value={salesDataFinal?.forceSettle}
-          icon={<Coins className="w-4 h-4" />}
-          gradient="from-red-300 to-red-600"
-        />
+
         <InfoCard
           title="Coins Claimed"
-          value={salesDataFinal?.totalClaimedCoins}
-          icon={<Coins className="w-4 h-4" />}
-          gradient="from-gray-300 to-gray-600"
+          value={salesDataFinal.totalClaimedCoins}
+          icon={<Coins className="w-6 h-6" />}
+          gradient="from-teal-400 to-teal-500"
+        />
+
+        <InfoCard
+          title="Forced Settle"
+          value={salesDataFinal.forceSettle}
+          icon={<CreditCard className="w-6 h-6" />}
+          gradient="from-orange-400 to-orange-500"
         />
       </div>
     </div>
   )
 }
 
-const InfoCard = ({ title, value, icon, gradient }: { title: string; value: number; icon: React.ReactNode; gradient: string }) => (
-
-  <Card className={`bg-gradient-to-br ${gradient} text-white shadow-lg`}>
-    <CardContent className="pt-6">
-      <div className="flex flex-col items-center justify-between">
-        <div className="flex items-center mb-2 space-x-2">
-          {icon}
-          <span className="text-sm font-semibold capitalize">{title}</span>
-        </div>
-        <span className="text-2xl font-bold text-nowrap">₹ {value?.toLocaleString("en-IN")}</span>
+const PaymentModes = memo(({ modeObj }: { modeObj: Record<string, number> }) => (
+  <Card className="col-span-full md:col-span-2 lg:col-span-4">
+    <CardHeader>
+      <CardTitle className="text-xl">Sales by Payment Mode</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {Object.entries(modeObj).map(([mode, amount]) => (
+          <Card
+            key={mode}
+            className={`bg-gradient-to-r ${mode.toLowerCase() === "offline" ? "from-blue-400 to-blue-500" : "from-green-400 to-green-500"} text-white`}
+          >
+            <CardContent className="flex items-center justify-between p-4">
+              <div>
+                <p className="text-sm font-medium capitalize">{mode}</p>
+                <p className="text-2xl font-bold">₹ {amount.toLocaleString("en-IN")}</p>
+              </div>
+              {mode.toLowerCase() === "offline" ? <CreditCard className="w-8 h-8" /> : <Globe className="w-8 h-8" />}
+            </CardContent>
+          </Card>
+        ))}
       </div>
+    </CardContent>
+  </Card>
+))
+
+const InfoCard = ({
+  title,
+  value,
+  icon,
+  gradient,
+}: { title: string; value: number; icon: React.ReactNode; gradient: string }) => (
+  <Card className={`bg-gradient-to-r ${gradient} text-white`}>
+    <CardContent className="flex items-center justify-between p-4">
+      <div>
+        <h3 className="mb-2 text-lg font-semibold">{title}</h3>
+        <p className="text-3xl font-bold">₹ {value.toLocaleString("en-IN")}</p>
+      </div>
+      <div className="p-3 bg-white rounded-full bg-opacity-20">{icon}</div>
     </CardContent>
   </Card>
 )
 
 const OverviewSkeleton = () => (
-  <div className="space-y-6">
-    <Skeleton className="w-full h-40" />
-    <div className="grid grid-cols-2 gap-6">
-      <Skeleton className="w-full h-40" />
-      <Skeleton className="w-full h-40" />
-    </div>
-    <Skeleton className="w-full h-96" />
-    <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-4">
-      {[...Array(4)].map((_, i) => (
-        <Skeleton key={i} className="w-full h-32" />
+  <div className="container px-4 py-8 mx-auto space-y-6">
+    <Skeleton className="w-64 h-10" />
+    <Skeleton className="w-full h-16" />
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <Skeleton className="w-full h-40 col-span-full md:col-span-2 lg:col-span-3" />
+      <Skeleton className="w-full h-40 col-span-full md:col-span-2 lg:col-span-3" />
+      {[...Array(7)].map((_, i) => (
+        <Skeleton key={i} className="w-full h-40" />
       ))}
     </div>
   </div>
 )
 
-const SalesLiteMemo = memo(SalesLite);
-export default SalesLiteMemo;
+const SalesLiteMemo = memo(SalesLite)
+export default SalesLiteMemo
+
+

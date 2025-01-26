@@ -38,7 +38,6 @@ const MemoTransferItem = () => {
         setSelectTable(true);
     };
 
-    console.log("selectedItems", selectedItems, orderDataStore);
 
     return (
         <>

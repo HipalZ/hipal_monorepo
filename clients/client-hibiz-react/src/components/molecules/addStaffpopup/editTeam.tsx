@@ -6,8 +6,10 @@ import { useAddStaffStore } from "@/components/store/useAddStaffStore";
 import { memo, useCallback } from "react";
 import useBusinessData from "@/components/store/useBusinessData";
 import BottomButton from "@/components/atom/bottomButton";
+import { useQueryClient } from "@tanstack/react-query";
 
-const MemoiseEditTeam = ({ refetch }: { refetch: () => void }) => {
+const MemoiseEditTeam = () => {
+  const queryClient = useQueryClient();
   const {
     name,
     phone,
@@ -37,8 +39,6 @@ const MemoiseEditTeam = ({ refetch }: { refetch: () => void }) => {
 
   const formattedPermissions = formatPermissions();
 
-  console.log("test", formattedPermissions);
-
   const deleteStaff = async () => {
     const res = await apiRpc.users[":staffId"].$delete({
       param: {
@@ -49,7 +49,8 @@ const MemoiseEditTeam = ({ refetch }: { refetch: () => void }) => {
       setIsEditStaffOpen(false);
       setIsEditing(false);
       toast.success("Staff deleted successfully");
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ["getStaff"] });
+
     } else {
       toast.error("Failed to delete staff");
     }
@@ -71,7 +72,7 @@ const MemoiseEditTeam = ({ refetch }: { refetch: () => void }) => {
       toast.success("Staff updated successfully");
       setIsEditStaffOpen(false);
       setIsEditing(false);
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ["getStaff"] });
     } else {
       toast.error("Failed to update staff");
     }

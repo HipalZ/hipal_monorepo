@@ -16,7 +16,7 @@ export const MemoSessionTimeoutBanner = () => {
     const shouldShowSessionTimedOut = (
         tableName?.length === 0 &&
         tableNameTimeStamp === null &&
-        isVisible &&
+        isVisible && !pathName?.includes("ebill") &&
         !pathName?.includes("posPayment") &&
         !pathName?.includes("review")
     );
