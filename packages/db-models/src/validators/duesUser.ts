@@ -1,0 +1,17 @@
+import mongoose from "mongoose";
+import { z } from "zod";
+const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
+  z
+    .string()
+    .refine((val) => mongoose.Schema.Types.ObjectId, {
+      message: "Invalid ObjectId",
+    })
+    .transform((val) => new mongoose.Types.ObjectId(val)),
+);
+export const duesUserSchema = z.object({
+  userId: ObjectIdSchema,
+  totalDuesAmount: z.coerce.number().default(0),
+  businessId: ObjectIdSchema,
+});
+
+export type DuesUserType = z.infer<typeof duesUserSchema>;

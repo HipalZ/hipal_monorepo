@@ -6,6 +6,7 @@ import {
   CouponClaim,
   Couponz,
   DeviceToken,
+  DuesUser,
   GroupAnalytic,
   KotOrder,
   LoyaltySettings,
@@ -13,6 +14,7 @@ import {
   OutLetInfo,
   Payment,
   PaymentAlert,
+  PendingDues,
   QrBill,
   Reviews,
   Subscriber,
@@ -1602,6 +1604,7 @@ const paymentsRouter = new Hono()
 
         settleModes = [],
         split = false,
+        duesUserId,
       } = requestData;
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
@@ -1644,6 +1647,18 @@ const paymentsRouter = new Hono()
             });
 
             const paymentMode = await UpiMode.findById(settleModes[0]._id);
+            if (paymentMode?.name === "dues") {
+              if (!duesUserId) {
+                return c.json(
+                  {
+                    message: "duesUserId is required",
+                    err: true,
+                    data: {},
+                  },
+                  400,
+                );
+              }
+            }
 
             if (order?.couponId) {
               const coupon = await Couponz.findById(order.couponId).select(
@@ -1713,9 +1728,7 @@ const paymentsRouter = new Hono()
                 tableName: order.tableName,
               });
 
-              console.log("tempTable", tempTable);
-
-              await Payment.create(
+              const createPayment = await Payment.create(
                 [
                   {
                     businessId: alert.businessId,
@@ -1753,6 +1766,33 @@ const paymentsRouter = new Hono()
                 { session },
               );
 
+              if (duesUserId) {
+                const createPaymentDues = await PendingDues.create(
+                  [
+                    {
+                      billId: createPayment[0]._id,
+                      businessId: order.businessId,
+                      date: Date.now(),
+                      duesUserId: duesUserId,
+                      isSettled: false,
+                    },
+                  ],
+                  {
+                    session,
+                  },
+                );
+
+                await DuesUser.findByIdAndUpdate(
+                  duesUserId,
+                  {
+                    $inc: {
+                      totalDuesAmount: order.total,
+                    },
+                  },
+                  { session },
+                );
+              }
+
               if (isHavePos) {
                 const res = await axios.post(
                   "http://api.petpooja.com/V1/captainorders/success_payment/",
@@ -1766,8 +1806,6 @@ const paymentsRouter = new Hono()
                     pin: tempTable?.pin,
                   },
                 );
-
-                console.log("res", res.data);
 
                 if (res.data.success === "0") {
                   console.log("err", res.data);
@@ -2032,6 +2070,7 @@ const paymentsRouter = new Hono()
           $gte: from ? fromDate : startOfToday.getTime(),
           $lte: to ? toDate : endOfToday.getTime(),
         },
+        mode: { $ne: "dues" },
       };
 
       const existingPayments = await Payment.find(query).select(
@@ -2133,6 +2172,7 @@ const paymentsRouter = new Hono()
             $gte: startOfToday.getTime(),
             $lte: endOfToday.getTime(),
           },
+          mode: { $ne: "dues" },
         })
           .sort({ _id: -1 })
           .skip(skip)
@@ -2165,6 +2205,7 @@ const paymentsRouter = new Hono()
             $gte: fromDate,
             $lte: toDate,
           },
+          mode: { $ne: "dues" },
         })
           .sort({ _id: -1 })
           .skip(skip)

@@ -7,6 +7,7 @@ import categoryRouter from "./categories";
 import couponAnalytics from "./coupon-analytics";
 import couponzRouter from "./couponz";
 import dishesRouter from "./dishes";
+import duesRouter from "./dues";
 import groupRouter from "./groups";
 import hipalzRouter from "./hipalz";
 import iconRouter from "./icon";
@@ -55,6 +56,7 @@ export const routes = app
   .route("/icon", iconRouter)
   .route("/table", tableRouter)
   .route("/kot", kotRouter)
-  .route("/upi_mode", upiModeRouter);
+  .route("/upi_mode", upiModeRouter)
+  .route("/dues", duesRouter);
 
 export type AppType = typeof routes;

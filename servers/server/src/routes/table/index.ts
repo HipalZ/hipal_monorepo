@@ -2,10 +2,12 @@ import {
   BillUrlModel,
   Business,
   BusinessPosConfig,
+  DuesUser,
   KotOrder,
   Order,
   Payment,
   PaymentAlert,
+  PendingDues,
   QrBill,
   Table,
   TempTableSettle,
@@ -190,9 +192,11 @@ const tableRouter = new Hono()
               _id: z.string().max(100),
             }),
           )
+          .min(1)
           .default([])
           .optional(),
         split: z.boolean().default(false).optional(),
+        duesUserId: z.string().max(100).optional(),
       }),
     ),
     async (c) => {
@@ -207,6 +211,7 @@ const tableRouter = new Hono()
           settleModes,
 
           split = false,
+          duesUserId,
         } = await c.req.json();
 
         if (!billRequestId) {
@@ -221,16 +226,19 @@ const tableRouter = new Hono()
         }
 
         const paymentMode = await UpiMode.findById(settleModes[0]?._id);
-        if (
-          (split === true && settleModes.length === 1) ||
-          (split === false && settleModes.length === 0)
-        ) {
-          return c.json({
-            message: "Please select at least one split mode",
-            err: true,
-            data: {},
-          });
+        if (paymentMode?.name === "dues") {
+          if (!duesUserId) {
+            return c.json(
+              {
+                message: "duesUserId is required",
+                err: true,
+                data: {},
+              },
+              400,
+            );
+          }
         }
+
         const billAlreadySettled = await Payment.findOne({
           posBillRequestId: billRequestId,
         });
@@ -382,6 +390,32 @@ const tableRouter = new Hono()
           ],
           { session },
         );
+        if (duesUserId) {
+          const createPaymentDues = await PendingDues.create(
+            [
+              {
+                billId: createPayment[0]._id,
+                businessId: saveOrder[0].businessId,
+                date: Date.now(),
+                duesUserId: duesUserId,
+                isSettled: false,
+              },
+            ],
+            {
+              session,
+            },
+          );
+
+          await DuesUser.findByIdAndUpdate(
+            duesUserId,
+            {
+              $inc: {
+                totalDuesAmount: saveOrder[0].total,
+              },
+            },
+            { session },
+          );
+        }
         await Table.findByIdAndUpdate(
           tableId,
           {
@@ -471,9 +505,11 @@ const tableRouter = new Hono()
               _id: z.string().max(100),
             }),
           )
+          .min(1)
           .default([])
           .optional(),
         split: z.boolean().default(false).optional(),
+        duesUserId: z.string().max(100).optional(),
       }),
     ),
     async (c) => {
@@ -486,17 +522,21 @@ const tableRouter = new Hono()
 
           settleModes = [],
           split,
+          duesUserId,
         } = await c.req.json();
         const paymentMode = await UpiMode.findById(settleModes[0]?._id);
-        if (
-          (split === true && settleModes.length === 1) ||
-          (split === false && settleModes.length === 0)
-        ) {
-          return c.json({
-            message: "Please select at least one split mode",
-            err: true,
-            data: {},
-          });
+
+        if (paymentMode?.name === "dues") {
+          if (!duesUserId) {
+            return c.json(
+              {
+                message: "duesUserId is required",
+                err: true,
+                data: {},
+              },
+              400,
+            );
+          }
         }
 
         const billAlreadySettled = await Payment.findOne({
@@ -633,6 +673,32 @@ const tableRouter = new Hono()
           ],
           { session },
         );
+        if (duesUserId) {
+          const createPaymentDues = await PendingDues.create(
+            [
+              {
+                billId: createPayment[0]._id,
+                businessId: saveOrder[0].businessId,
+                date: Date.now(),
+                duesUserId: duesUserId,
+                isSettled: false,
+              },
+            ],
+            {
+              session,
+            },
+          );
+
+          await DuesUser.findByIdAndUpdate(
+            duesUserId,
+            {
+              $inc: {
+                totalDuesAmount: saveOrder[0].total,
+              },
+            },
+            { session },
+          );
+        }
         await Table.findByIdAndUpdate(
           tableId,
           {
