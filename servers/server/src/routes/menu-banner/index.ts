@@ -18,8 +18,6 @@ const menuBannerRouter = new Hono()
         isPublished: true,
       }).lean();
 
-      console.log("menuBanners", menuBanners);
-
       const allHoursDelights = await MenuBanner.findOne({
         businessId,
         heading: "All Hours Delights",
@@ -45,14 +43,11 @@ const menuBannerRouter = new Hono()
 
       if (convertInSingleObject && allHoursDelights?.dishIds) {
         const existingDishIdsSet = new Set(
-          convertInSingleObject.dishIds.map(
-            (dish) => dish._id.toString() || dish.id.toString(),
-          ),
+          convertInSingleObject.dishIds.map((dish) => dish?.toString()),
         );
 
         const newDishIds = allHoursDelights.dishIds.filter(
-          (dish) =>
-            !existingDishIdsSet.has(dish._id.toString() || dish.id.toString()),
+          (dish) => !existingDishIdsSet.has(dish.toString() || dish.toString()),
         );
 
         convertInSingleObject.dishIds.push(...newDishIds);
