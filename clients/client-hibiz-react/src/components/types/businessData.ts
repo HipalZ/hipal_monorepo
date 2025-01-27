@@ -97,6 +97,12 @@ export type IBusinessDetails = {
   logo: string;
 };
 
+export interface IDuesPersonsData {
+  _id: string;
+  totalDuesAmount: number;
+  userId: UserDetails;
+}
+
 export interface IOutletInfo {
   _id: string;
   businessId: string;

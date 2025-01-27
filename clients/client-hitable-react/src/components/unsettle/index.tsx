@@ -60,7 +60,7 @@ const MemoUnsettleTableData = () => {
             </div>
             {
                 openUnsettle && (
-                    <BottomPopUp height='h-[80dvh]' width="w-[30rem]" show={openUnsettle} onClose={() => setOpenUnsettle(false)}>
+                    <BottomPopUp hide height='h-[100dvh] md:h-[70dvh]' width="w-[30rem]" show={openUnsettle} onClose={() => setOpenUnsettle(false)}>
                         <SettleTable />
                     </BottomPopUp>
                 )
