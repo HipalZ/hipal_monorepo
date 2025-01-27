@@ -62,7 +62,7 @@ const MemoNormalSettle = ({
 
     const captainData = useHiClientZ((s) => s.captainData);
 
-    const { isLoading, paymentMode } = useGetAllModes(businessId, selectedTable?.status === "ACTIVE")
+    const { isLoading, paymentMode } = useGetAllModes(businessId, captainData?.name)
 
     const { mutateAsync: settleTable, isPending: isSettling } = useMutation({
         mutationFn: async (payload: {
