@@ -121,7 +121,7 @@ const businessesRouter = new Hono()
         },
       ];
 
-      const menuBanners = await MenuBanner.insertMany(requestData);
+      await MenuBanner.insertMany(menuBaners);
 
       return respond(c, "business created", false, 201, business);
     },
