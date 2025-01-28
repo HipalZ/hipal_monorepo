@@ -4,6 +4,7 @@ import LoadingSpinner from "@/components/atom/loadingSpinner"
 import { useAllDueUsers } from "@/hooks/useDuesApi"
 import { useParams } from "react-router-dom"
 import UserDueCard from "./userDueCard"
+import type { IDuesPersonsData } from "@/components/types/businessData"
 
 const AddUserToDue = lazy(() => import("./addPersonIndue"))
 const PopUp = lazy(() => import("@/components/atom/popUp"))

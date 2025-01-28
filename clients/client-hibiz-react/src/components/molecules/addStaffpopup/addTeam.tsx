@@ -15,7 +15,6 @@ const MemoAddTeam = () => {
     setName,
     phone,
     setPhone,
-    pageToggle,
     selectedRole,
     selectedPermissions,
     permissions,

@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import toast from "react-hot-toast"
+import { useQueryClient } from "@tanstack/react-query"
 
 const BottomButton = lazy(() => import("@/components/atom/bottomButton"))
 
@@ -16,6 +17,7 @@ const MemoAddUserToDue = () => {
     const { setIsUserAdded } = useDues((s) => ({
         setIsUserAdded: s.setIsUserAdded,
     }))
+    const queryClient = useQueryClient()
     const { businessId } = useParams()
     const [name, setName] = useState("")
     const [phone, setPhone] = useState("")
@@ -47,6 +49,7 @@ const MemoAddUserToDue = () => {
         onSuccess: (data) => {
             if (!data.err) {
                 setIsUserAdded(false)
+                queryClient.invalidateQueries({ queryKey: ["allDueUsers", businessId] })
                 return toast.success(data.message)
             }
             toast.error(data.message)

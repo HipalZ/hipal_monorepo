@@ -4,9 +4,9 @@ import type { IDuesPersonsData } from "@/components/types/businessData"
 import toast from "react-hot-toast"
 import PopUp from "@/components/atom/popUp"
 import ClearDues from "./clearDues"
-import { useState } from "react"
+import { useCallback, useState } from "react"
 
-function formatCurrency(amount: number): string {
+export function formatCurrency(amount: number): string {
     return new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency: "INR",
@@ -41,10 +41,10 @@ const UserDueCard: React.FC<UserDueCardProps> = ({ userDue }) => {
         setOpenSettleDues(true)
     }
 
-    const closeSettleDues = () => {
+    const closeSettleDues = useCallback(() => {
         setOpenSettleDues(false)
         setSelectedUser(null)
-    }
+    }, [])
 
     return (
         <>
@@ -62,8 +62,8 @@ const UserDueCard: React.FC<UserDueCardProps> = ({ userDue }) => {
             </Card>
             {
                 openSettleDues && (
-                    <PopUp onClose={closeSettleDues} show={openSettleDues} height="h-[70dvh]" width="w-[30rem]">
-                        <ClearDues selectedUser={selectedUser} />
+                    <PopUp onClose={closeSettleDues} hide show={openSettleDues} height="h-[100dvh] lg:h-[70dvh]" width="w-[30rem]">
+                        <ClearDues closeSettleDues={closeSettleDues} selectedUser={selectedUser} />
                     </PopUp>
                 )
             }
