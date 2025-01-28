@@ -43,7 +43,7 @@ export const useGoNext = () => {
     let newUrl = `/${customLink}/explore?pay=${isPayment}`;
 
     if (direction === "loyalty") {
-      newUrl = routePaths[PAGE_TYPES.LOYALTY](`/${customLink}`);
+      newUrl = `/${customLink}/loyalty`;
     } else if (direction === "category") {
       newUrl = `/${customLink}/category?pay=${isPayment}`;
     } else if (direction === "explore") {
