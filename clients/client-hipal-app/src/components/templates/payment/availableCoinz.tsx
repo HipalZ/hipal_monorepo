@@ -150,11 +150,6 @@ const AvailableCoinz = () => {
               Available Coins :{" "}
               {claimedCoinz ? userCoinz - claimedCoinz : userCoinz}
             </h1>
-            {tempClaimedCoinz && tempClaimedCoinz > 0 ? (
-              <p className="mt-1 text-xs text-red-500">
-                Max Coinz can claim upto {tempClaimedCoinz}
-              </p>
-            ) : null}
             <br />
             <input
               onChange={(e) => handleChange(e, userCoinz)}

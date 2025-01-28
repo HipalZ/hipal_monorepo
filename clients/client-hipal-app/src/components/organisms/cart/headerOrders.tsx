@@ -3,7 +3,6 @@ import { useCartStore } from '@/components/store/useCartStore';
 import dynamic from 'next/dynamic';
 import glassTable from "@/assets/cart/glassTable.png";
 import Image from 'next/image'
-const ScannerButton = dynamic(() => import('./scannerButton'));
 
 const MemoOrdersHeader = () => {
     const { cartHistory } = useCartStore();
@@ -18,7 +17,6 @@ const MemoOrdersHeader = () => {
                     </article>
                 )}
             </section>
-            <ScannerButton />
         </header>
     )
 }

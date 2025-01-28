@@ -11,7 +11,7 @@ import UniversalNav from "@/components/templates/menu/sideNavbaar/universelSiden
 import MemoizedHeader from "@/components/molecules/header";
 import { FaArrowLeft } from "react-icons/fa";
 
-const navItems = [{ text: "CARD_SELECTION" }, { text: "LOYALTY_USER" }];
+const navItems = [{ text: "CARD_SELECTION" }];
 
 const Loyalty = () => {
   const {
@@ -132,7 +132,6 @@ const Loyalty = () => {
           changeNav={changeLayout}
         />
         {selectedPage === "CARD_SELECTION" && <CardSelection />}
-        {selectedPage === "LOYALTY_USER" && <section>hello</section>}
       </main>
     </section>
   );

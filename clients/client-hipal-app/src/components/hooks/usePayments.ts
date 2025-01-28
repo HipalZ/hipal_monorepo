@@ -716,7 +716,6 @@ export const usePlaceOrder = () => {
     setHiCode,
     hiCode,
     setHiCodePopup,
-    hiCodePopup,
     setHiCodeUser,
   } = useTableData();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
