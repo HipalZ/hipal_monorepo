@@ -2080,6 +2080,7 @@ const paymentsRouter = new Hono()
           offlineSales[mode] = (offlineSales[mode] || 0) + total;
         }
       }
+      const { complementary, ...filteredOfflineSales } = offlineSales;
 
       return c.json({
         err: false,
