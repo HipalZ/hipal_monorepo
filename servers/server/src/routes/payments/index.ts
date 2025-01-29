@@ -2039,90 +2039,56 @@ const paymentsRouter = new Hono()
     ]),
     zValidator("query", paramsSchema),
     async (c) => {
-      try {
-        const { businessId, from, to } = c.req.query();
-        const fromDate = from ? Number(from) : startOfToday.getTime();
-        const toDate = to ? Number(to) : endOfToday.getTime();
+      const { businessId, from, to } = c.req.query();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
 
-        if (fromDate > toDate) {
-          return c.json({
-            err: true,
-            data: {},
-            message: "From date should be less than to date.",
-          });
-        }
-
-        const query = {
-          businessId,
-          date: { $gte: fromDate, $lte: toDate },
-        };
-
-        const payments = await Payment.find({
-          ...query,
-          mode: { $nin: ["dues", "complementary", "npc"] },
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
         });
-
-        const overAllAmount = payments.reduce(
-          (acc, payment) => acc + (payment.total ?? 0),
-          0,
-        );
-
-        // Fetch online payments
-        const onlinePayments = await Payment.find({
-          ...query,
-          paymentMode: "online",
-        });
-
-        const totalOnlineSale = onlinePayments.reduce(
-          (acc, payment) => acc + (payment.total ?? 0),
-          0,
-        );
-
-        // Fetch offline payments (excluding "split" mode)
-        const offlinePayments = await Payment.find({
-          ...query,
-          paymentMode: {
-            $nin: ["online", "upi", "dues", "complementary", "split", "npc"],
-          },
-        });
-
-        // Dynamically categorize offline payments
-        const offlineSales = {} as Record<string, number>;
-
-        for (const payment of offlinePayments) {
-          const mode = payment.mode;
-          offlineSales[mode] = (offlineSales[mode] || 0) + (payment.total ?? 0);
-        }
-
-        // Fetch "split" payments and process settleModes
-        const splitPayments = await Payment.find({
-          ...query,
-          paymentMode: "split",
-        });
-
-        for (const payment of splitPayments) {
-          if (payment.splitModes && Array.isArray(payment.splitModes)) {
-            for (const settle of payment.splitModes) {
-              const mode = settle.name;
-              const amount = settle.amount ?? 0;
-              offlineSales[mode] = (offlineSales[mode] || 0) + amount;
-            }
-          }
-        }
-
-        // Constructing the final saleObject
-        const saleObject = {
-          overAllAmount,
-          onlineSale: {
-            online: totalOnlineSale,
-          },
-          offlineSale: offlineSales,
-        };
-
-        return c.json({ err: false, data: saleObject });
-      } catch (error) {
-        return c.json({ err: true, message: "Internal Server Error", error });
       }
+
+      const payments = await Payment.find({
+        businessId,
+        date: { $gte: fromDate, $lte: toDate },
+      });
+
+      let overAllAmount = 0;
+      let totalOnlineSale = 0;
+      const offlineSales: Record<string, number> = {};
+
+      for (const payment of payments) {
+        const { total = 0, paymentMode, mode, splitModes } = payment;
+
+        if (!["dues", "npc", "complementary"].includes(mode)) {
+          overAllAmount += total;
+        }
+
+        if (paymentMode === "online") {
+          totalOnlineSale += total;
+        } else if (paymentMode === "split" && Array.isArray(splitModes)) {
+          // Process split payments
+          for (const settle of splitModes) {
+            offlineSales[settle.name] =
+              (offlineSales[settle.name] || 0) + (settle.amount ?? 0);
+          }
+        } else if (!["dues", "npc", "complementary"].includes(paymentMode)) {
+          // Process other offline payments
+          offlineSales[mode] = (offlineSales[mode] || 0) + total;
+        }
+      }
+
+      return c.json({
+        err: false,
+        data: {
+          overAllAmount, // Excludes dues, npc, complementary
+          onlineSale: { online: totalOnlineSale },
+          offlineSale: offlineSales,
+        },
+      });
     },
   )
 
