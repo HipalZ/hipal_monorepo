@@ -2072,15 +2072,16 @@ const paymentsRouter = new Hono()
         } else if (paymentMode === "split" && Array.isArray(splitModes)) {
           // Process split payments
           for (const settle of splitModes) {
-            offlineSales[settle.name] =
-              (offlineSales[settle.name] || 0) + (settle.amount ?? 0);
+            if (settle.name !== "complementary") {
+              offlineSales[settle.name] =
+                (offlineSales[settle.name] || 0) + (settle.amount ?? 0);
+            }
           }
         } else if (!["dues", "npc", "complementary"].includes(paymentMode)) {
           // Process other offline payments
           offlineSales[mode] = (offlineSales[mode] || 0) + total;
         }
       }
-      const { complementary, ...filteredOfflineSales } = offlineSales;
 
       return c.json({
         err: false,
