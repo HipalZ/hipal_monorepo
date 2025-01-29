@@ -1,4 +1,4 @@
-import { Business, UpiMode } from "@hi/db-models";
+import { Business, DuesUser, NpcUser, UpiMode } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -15,8 +15,6 @@ const upiModeRouter = new Hono()
     ),
     async (c) => {
       const { businessId, name } = await c.req.json();
-
-      console.log("name", name);
 
       const existingUpiMode = await UpiMode.findOne({
         name: name.trim().toLowerCase(),
@@ -102,7 +100,7 @@ const upiModeRouter = new Hono()
       "json",
       z.object({
         upiModeId: z.string().min(1).max(500),
-        name: z.string().min(1).max(100),
+        name: z.string().min(1).max(100).optional(),
         active: z.boolean().default(true).optional(),
       }),
     ),
@@ -154,10 +152,26 @@ const upiModeRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
-      const upiModes = await UpiMode.find({
+      const duesUser = await DuesUser.findOne({
+        businessId,
+      });
+
+      const npcUser = await NpcUser.findOne({
+        businessId,
+      });
+
+      let upiModes = await UpiMode.find({
         businessId,
         active: true,
       });
+
+      if (!npcUser) {
+        upiModes = upiModes.filter((mode) => mode.name !== "npc");
+      }
+
+      if (!duesUser) {
+        upiModes = upiModes.filter((mode) => mode.name !== "dues");
+      }
 
       return c.json(
         {

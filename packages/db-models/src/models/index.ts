@@ -31,6 +31,7 @@ export * from "./loyaltyCoinsInfo";
 export * from "./loyaltySetting";
 export * from "./menuBanner";
 export * from "./note";
+export * from "./npcUser";
 export * from "./order";
 export * from "./outLetInfo";
 export * from "./payment";

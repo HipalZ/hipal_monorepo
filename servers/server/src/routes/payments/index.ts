@@ -10,6 +10,7 @@ import {
   GroupAnalytic,
   KotOrder,
   LoyaltySettings,
+  NpcUser,
   Order,
   OutLetInfo,
   Payment,
@@ -1605,6 +1606,7 @@ const paymentsRouter = new Hono()
         settleModes = [],
         split = false,
         duesUserId,
+        npcUserId,
       } = requestData;
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
@@ -1617,6 +1619,7 @@ const paymentsRouter = new Hono()
         if (!alert) {
           return c.json({ message: "Alert not found", err: true, data: {} });
         }
+
         const existingLoyalty = await LoyaltySettings.findOne({
           businessId: alert.businessId,
         }).select("loyaltyId");
@@ -1647,39 +1650,6 @@ const paymentsRouter = new Hono()
             });
 
             const paymentMode = await UpiMode.findById(settleModes[0]._id);
-            if (paymentMode?.name === "dues") {
-              if (!duesUserId) {
-                return c.json(
-                  {
-                    message: "duesUserId is required",
-                    err: true,
-                    data: {},
-                  },
-                  400,
-                );
-              }
-            }
-
-            if (order?.couponId) {
-              const coupon = await Couponz.findById(order.couponId).select(
-                "conditions.couponEndDate",
-              );
-
-              if (
-                coupon &&
-                coupon.conditions.couponEndDate > 0 &&
-                coupon.conditions.couponEndDate < Date.now()
-              ) {
-                return c.json(
-                  {
-                    message: "Coupon has expired",
-                    err: true,
-                    data: {},
-                  },
-                  400,
-                );
-              }
-            }
 
             if (order?.claimedCoins && order?.claimedCoins > 0) {
               const existingLoyalty = await LoyaltySettings.findOne({
@@ -1728,12 +1698,14 @@ const paymentsRouter = new Hono()
                 tableName: order.tableName,
               });
 
+              const npcUser = await NpcUser.findById(npcUserId);
+
               const createPayment = await Payment.create(
                 [
                   {
                     businessId: alert.businessId,
                     order_id: order?._id,
-                    total: order?.total,
+                    total: paymentMode?.name === "npc" ? 0 : order?.total,
                     mode:
                       settleModes.length > 1
                         ? "split"
@@ -1743,7 +1715,10 @@ const paymentsRouter = new Hono()
                       settleModes.length > 1
                         ? "split"
                         : paymentMode?.name || "offline",
-                    userId: order?.userId._id,
+                    userId:
+                      paymentMode?.name === "npc"
+                        ? npcUser?.userId
+                        : order?.userId,
                     claimedCoins: order?.claimedCoins,
                     billValue: order?.billValue,
                     tips: order?.tips,
@@ -1766,7 +1741,7 @@ const paymentsRouter = new Hono()
                 { session },
               );
 
-              if (duesUserId) {
+              if (duesUserId && paymentMode?.name === "dues") {
                 const createPaymentDues = await PendingDues.create(
                   [
                     {
@@ -1793,6 +1768,18 @@ const paymentsRouter = new Hono()
                 );
               }
 
+              if (npcUserId && paymentMode?.name === "npc") {
+                await NpcUser.findByIdAndUpdate(
+                  npcUserId,
+                  {
+                    $inc: {
+                      totalNpcAmount: order.total,
+                    },
+                  },
+                  { session },
+                );
+              }
+
               if (isHavePos) {
                 const res = await axios.post(
                   "http://api.petpooja.com/V1/captainorders/success_payment/",
@@ -1802,7 +1789,7 @@ const paymentsRouter = new Hono()
                     access_token: isHavePos?.posId?.authToken,
                     restID: isHavePos?.posId?.restId,
                     bill_request_id: tempTable?.billRequestId,
-                    amount_paid: order.total,
+                    amount_paid: paymentMode?.name === "npc" ? 0 : order?.total,
                     pin: tempTable?.pin,
                   },
                 );
@@ -2052,97 +2039,90 @@ const paymentsRouter = new Hono()
     ]),
     zValidator("query", paramsSchema),
     async (c) => {
-      const { businessId, from, to } = c.req.query();
-      const fromDate = Number(from);
-      const toDate = Number(to);
+      try {
+        const { businessId, from, to } = c.req.query();
+        const fromDate = from ? Number(from) : startOfToday.getTime();
+        const toDate = to ? Number(to) : endOfToday.getTime();
 
-      if (fromDate > toDate) {
-        return c.json({
-          err: true,
-          data: {},
-          message: "from date should be less than to date.",
+        if (fromDate > toDate) {
+          return c.json({
+            err: true,
+            data: {},
+            message: "From date should be less than to date.",
+          });
+        }
+
+        const query = {
+          businessId,
+          date: { $gte: fromDate, $lte: toDate },
+        };
+
+        const payments = await Payment.find({
+          ...query,
+          mode: { $nin: ["dues", "complementary", "npc"] },
         });
-      }
 
-      const query = {
-        businessId,
-        date: {
-          $gte: from ? fromDate : startOfToday.getTime(),
-          $lte: to ? toDate : endOfToday.getTime(),
-        },
-        mode: { $ne: "dues" },
-      };
+        const overAllAmount = payments.reduce(
+          (acc, payment) => acc + (payment.total ?? 0),
+          0,
+        );
 
-      const existingPayments = await Payment.find(query).select(
-        "total claimedCoins paymentMode earnCoins mode tips tax serviceCharge settleType splitModes",
-      );
+        // Fetch online payments
+        const onlinePayments = await Payment.find({
+          ...query,
+          paymentMode: "online",
+        });
 
-      const aggregatedData: AggregatedData = {
-        totalSale: 0,
-        forceSettle: 0,
-        totalTips: 0,
-        totalTax: 0,
-        totalServiceCharge: 0,
-        totalClaimedCoins: 0,
-        totalEarnCoins: 0,
-        modeObj: {},
-      };
+        const totalOnlineSale = onlinePayments.reduce(
+          (acc, payment) => acc + (payment.total ?? 0),
+          0,
+        );
 
-      for (const payment of existingPayments) {
-        const {
-          total = 0,
-          tips = 0,
-          tax = 0,
-          serviceCharge = 0,
-          claimedCoins = 0,
-          earnCoins = 0,
-          mode,
-          settleType,
-          splitModes,
-        } = payment;
+        // Fetch offline payments (excluding "split" mode)
+        const offlinePayments = await Payment.find({
+          ...query,
+          paymentMode: {
+            $nin: ["online", "upi", "dues", "complementary", "split", "npc"],
+          },
+        });
 
-        aggregatedData.totalSale += total;
-        aggregatedData.totalTips += tips;
-        aggregatedData.totalTax += tax;
-        aggregatedData.totalServiceCharge += serviceCharge;
-        aggregatedData.totalClaimedCoins += claimedCoins;
-        aggregatedData.totalEarnCoins += earnCoins;
+        // Dynamically categorize offline payments
+        const offlineSales = {} as Record<string, number>;
 
-        if (settleType === "FORCE_SETTLE") {
-          aggregatedData.forceSettle += total;
+        for (const payment of offlinePayments) {
+          const mode = payment.mode;
+          offlineSales[mode] = (offlineSales[mode] || 0) + (payment.total ?? 0);
         }
 
-        if (!aggregatedData.modeObj[mode]) {
-          aggregatedData.modeObj[mode] = 0;
-        }
-        aggregatedData.modeObj[mode] += total;
+        // Fetch "split" payments and process settleModes
+        const splitPayments = await Payment.find({
+          ...query,
+          paymentMode: "split",
+        });
 
-        if (mode === "split" && Array.isArray(splitModes)) {
-          for (const { name, amount = 0 } of splitModes) {
-            if (!aggregatedData.modeObj[name]) {
-              aggregatedData.modeObj[name] = 0;
+        for (const payment of splitPayments) {
+          if (payment.splitModes && Array.isArray(payment.splitModes)) {
+            for (const settle of payment.splitModes) {
+              const mode = settle.name;
+              const amount = settle.amount ?? 0;
+              offlineSales[mode] = (offlineSales[mode] || 0) + amount;
             }
-            aggregatedData.modeObj[name] += amount;
           }
-          delete aggregatedData.modeObj["split"];
         }
-      }
 
-      return c.json({
-        err: false,
-        data: {
-          totalSale: aggregatedData.totalSale,
-          modeObj: aggregatedData.modeObj,
-          totalTips: aggregatedData.totalTips,
-          totalTax: Math.round(aggregatedData.totalTax),
-          totalServiceCharge: Math.round(aggregatedData.totalServiceCharge),
-          totalClaimedCoins: aggregatedData.totalClaimedCoins,
-          totalEarnCoins: aggregatedData.totalEarnCoins,
-          totalDiscount: aggregatedData.totalClaimedCoins,
-          forceSettle: aggregatedData.forceSettle,
-        },
-        message: "existing payment",
-      });
+        // Constructing the final saleObject
+        const saleObject = {
+          overAllAmount,
+          onlineSale: {
+            online: totalOnlineSale,
+          },
+          offlineSale: offlineSales,
+        };
+
+        return c.json({ err: false, data: saleObject });
+      } catch (error) {
+        return c.json({ err: true, message: "Internal Server Error", error });
+      }
     },
   )
 

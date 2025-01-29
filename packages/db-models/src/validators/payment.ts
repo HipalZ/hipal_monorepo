@@ -127,7 +127,16 @@ export const PaymentSchema = z.object({
     })
     .optional(),
   settleType: z
-    .enum(["NORMAL_SETTLE", "HI_SETTLE", "FORCE_SETTLE", "PAYMENT_GATEWAY"])
+    .enum([
+      "NORMAL_SETTLE",
+      "HI_SETTLE",
+      "FORCE_SETTLE",
+      "PAYMENT_GATEWAY",
+      "FREE_SETTLE",
+      "DUES_SETTLE",
+      "NPC_SETTLE",
+      "COMPLIMENTARY_SETTLE",
+    ])
     .optional(),
   serviceCharge: z.coerce.number({}).optional(),
   tax: z.coerce.number({}).optional(),
@@ -142,6 +151,7 @@ export const PaymentSchema = z.object({
     )
     .default([])
     .optional(),
+  discount: z.coerce.number().default(0).optional(),
 });
 
 export type PaymentType = z.infer<typeof PaymentSchema>;

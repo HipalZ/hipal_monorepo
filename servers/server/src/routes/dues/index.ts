@@ -1,7 +1,19 @@
-import { DuesUser, Payment, PendingDues, UpiMode, User } from "@hi/db-models";
+import {
+  DuesUser,
+  Order,
+  Payment,
+  PendingDues,
+  UpiMode,
+  User,
+} from "@hi/db-models";
+import { duesSettleSchema } from "@hi/db-models/src/validators";
+import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import type { ClientSession } from "mongoose";
+import { nanoid } from "nanoid";
 import { z } from "zod";
+
 //
 
 const roles = [
@@ -159,103 +171,82 @@ const duesRouter = new Hono()
     },
   )
 
-  .put(
-    "/settle_dues",
-    zValidator(
-      "json",
-      z.object({
-        businessId: z.string().min(1).max(50),
-        duesUserId: z.string().min(1).max(50),
-        billIds: z.array(z.string().min(1).max(50)),
-        settleModes: z
-          .array(
-            z.object({
-              name: z.string().max(100),
-              amount: z.coerce.number().positive(),
-              _id: z.string().max(100),
-            }),
-          )
-          .min(1)
-          .default([])
-          .optional(),
-      }),
-    ),
-    async (c) => {
-      const { businessId, duesUserId, billIds, settleModes } =
-        await c.req.json();
+  .put("/settle_dues", zValidator("json", duesSettleSchema), async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session: ClientSession) => {
+      const { businessId, duesUserId, settleModes } = await c.req.json();
       const paymentMode = await UpiMode.findById(settleModes[0]?._id);
 
-      const findBills = await Payment.find({
-        _id: { $in: billIds },
-      });
-
-      console.log("findBills", findBills);
-
-      const totalAmount = findBills.reduce((acc, bill) => {
-        return acc + bill.total;
+      const totalAmount = settleModes.reduce((acc, mode) => {
+        return acc + mode.amount;
       }, 0);
 
-      const updateBills = await Payment.updateMany(
-        {
-          _id: { $in: billIds },
-        },
-        {
-          mode: paymentMode?.name,
-          paymentMode: paymentMode?.name,
-          splitModes: settleModes,
-          date: Date.now(),
-        },
-      );
-
-      const alreadySettled = await PendingDues.find({
-        billId: { $in: billIds },
+      const duesUser = await DuesUser.findByIdAndUpdate(
         duesUserId,
-        isSettled: true,
-      });
-
-      if (alreadySettled.length > 0) {
-        return c.json(
-          {
-            message: "already settled",
-            data: {},
-            err: true,
-          },
-          409,
-        );
-      }
-
-      const updatePendingDues = await PendingDues.updateMany(
         {
-          billId: { $in: billIds },
-          duesUserId,
+          $inc: { totalDuesAmount: -totalAmount },
         },
-        {
-          isSettled: true,
-        },
+        { session, new: true },
       );
 
-      if (updatePendingDues.matchedCount === 0) {
-        return c.json(
-          {
-            message: "already settled",
-            data: {},
-            err: true,
-          },
-          409,
-        );
-      }
+      const uniqueOrderId = nanoid(15);
 
-      await DuesUser.updateOne(
-        { _id: duesUserId },
-        { $inc: { totalDuesAmount: -totalAmount } },
+      const saveOrder = await Order.create(
+        [
+          {
+            total: totalAmount,
+            currency: "INR",
+            receipt: uniqueOrderId,
+            userId: duesUser?.userId,
+            claimedCoins: 0,
+            tableName: "DUES",
+            tips: 0,
+            billValue: totalAmount,
+            businessId: businessId,
+            order_id: uniqueOrderId,
+
+            date: Date.now(),
+          },
+        ],
+        { session },
+      );
+
+      await Payment.create(
+        [
+          {
+            businessId: businessId,
+            order_id: saveOrder[0]._id,
+            total: saveOrder[0].total,
+            mode: settleModes.length > 1 ? "split" : paymentMode?.name,
+            status: "SUCCESS",
+            paymentMode: settleModes.length > 1 ? "split" : paymentMode?.name,
+            userId: duesUser?.userId,
+            claimedCoins: 0,
+            billValue: saveOrder[0].billValue,
+            tips: 0,
+            tableName: saveOrder[0].tableName,
+            earnCoins: 0,
+            razorpayEventId: nanoid(15),
+            razorpayOrderId: nanoid(15),
+            razorpayPaymentId: nanoid(15),
+            settleType: "DUES_SETTLE",
+            comment: "DUES_SETTLE",
+
+            splitModes: settleModes,
+            date: Date.now(),
+          },
+        ],
+        { session },
       );
 
       return c.json({
         message: "Dues Settled",
-        data: {},
+        data: {
+          settleAmount: totalAmount,
+        },
         err: false,
       });
-    },
-  );
+    });
+  });
 
 export default duesRouter;

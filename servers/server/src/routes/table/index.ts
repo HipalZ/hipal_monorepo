@@ -4,6 +4,7 @@ import {
   BusinessPosConfig,
   DuesUser,
   KotOrder,
+  NpcUser,
   Order,
   Payment,
   PaymentAlert,
@@ -18,6 +19,9 @@ import {
 } from "@hi/db-models";
 import {
   type SwitchTableType,
+  forceSettleSchema,
+  normalSettleSchema,
+  resolveTableSchema,
   switchTableschema,
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
@@ -173,623 +177,567 @@ const tableRouter = new Hono()
       );
     },
   )
-  .post(
-    "/force_settle",
-    zValidator(
-      "json",
-      z.object({
-        tableId: z.string().min(1).max(500),
-        captainId: z.string().min(1).max(500),
-        reasonForForceSettle: z.string().min(1).max(500),
-        settleAmount: z.coerce.number().optional(),
-        billRequestId: z.string().min(1).max(500).optional(),
+  .post("/force_settle", zValidator("json", forceSettleSchema), async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session: ClientSession) => {
+      const {
+        tableId,
+        captainId,
+        reasonForForceSettle,
+        settleAmount = 0,
+        billRequestId,
+        settleModes,
 
-        settleModes: z
-          .array(
-            z.object({
-              name: z.string().max(100),
-              amount: z.coerce.number().positive(),
-              _id: z.string().max(100),
-            }),
-          )
-          .min(1)
-          .default([])
-          .optional(),
-        split: z.boolean().default(false).optional(),
-        duesUserId: z.string().max(100).optional(),
-      }),
-    ),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const {
-          tableId,
-          captainId,
-          reasonForForceSettle,
-          settleAmount = 0,
-          billRequestId,
-          settleModes,
+        split = false,
+        duesUserId,
+        npcUserId,
+      } = await c.req.json();
 
-          split = false,
-          duesUserId,
-        } = await c.req.json();
-
-        if (!billRequestId) {
-          return c.json(
-            {
-              message: "You must generate the bill for this table first.",
-              err: true,
-              data: {},
-            },
-            400,
-          );
-        }
-
-        const paymentMode = await UpiMode.findById(settleModes[0]?._id);
-        if (paymentMode?.name === "dues") {
-          if (!duesUserId) {
-            return c.json(
-              {
-                message: "duesUserId is required",
-                err: true,
-                data: {},
-              },
-              400,
-            );
-          }
-        }
-
-        const billAlreadySettled = await Payment.findOne({
-          posBillRequestId: billRequestId,
-        });
-
-        if (billAlreadySettled) {
-          return c.json(
-            {
-              message: "Bill already settled",
-              err: true,
-              data: {},
-            },
-            409,
-          );
-        }
-
-        const captain = await User.findById(captainId);
-
-        const table = await Table.findById(tableId);
-        const pos = await BusinessPosConfig.findOne({
-          businessId: table?.businessId,
-        }).populate("posId");
-
-        if (!pos) {
-          return c.json(
-            {
-              message: "Pos not found",
-              err: true,
-            },
-            400,
-          );
-        }
-        const getBillConfig = {
-          app_key: pos.posId.accessKey,
-          app_secret: pos.posId.secretKey,
-          access_token: pos.posId.authToken,
-          restID: pos.posId.restId,
-          bill_request_id: billRequestId,
-        };
-        const getBill = await axios.post(
-          "http://api.petpooja.com/V1/captainorders/get_bill/",
-          getBillConfig,
+      if (!billRequestId) {
+        return c.json(
+          {
+            message: "You must generate the bill for this table first.",
+            err: true,
+            data: {},
+          },
+          400,
         );
+      }
 
-        if (getBill.data.success === "0") {
-          throw new Error("Bill not found at pos");
-        }
+      const paymentMode = await UpiMode.findById(settleModes[0]?._id);
 
-        await UserSession.findOneAndUpdate(
+      const billAlreadySettled = await Payment.findOne({
+        posBillRequestId: billRequestId,
+      });
+
+      if (billAlreadySettled) {
+        return c.json(
+          {
+            message: "Bill already settled",
+            err: true,
+            data: {},
+          },
+          409,
+        );
+      }
+
+      const captain = await User.findById(captainId);
+      const npcUser = await NpcUser.findById(npcUserId);
+
+      const table = await Table.findById(tableId);
+      const pos = await BusinessPosConfig.findOne({
+        businessId: table?.businessId,
+      }).populate("posId");
+
+      if (!pos) {
+        return c.json(
+          {
+            message: "Pos not found",
+            err: true,
+          },
+          400,
+        );
+      }
+      const getBillConfig = {
+        app_key: pos.posId.accessKey,
+        app_secret: pos.posId.secretKey,
+        access_token: pos.posId.authToken,
+        restID: pos.posId.restId,
+        bill_request_id: billRequestId,
+      };
+      const getBill = await axios.post(
+        "http://api.petpooja.com/V1/captainorders/get_bill/",
+        getBillConfig,
+      );
+
+      if (getBill.data.success === "0") {
+        throw new Error("Bill not found at pos");
+      }
+
+      await UserSession.findOneAndUpdate(
+        {
+          businessId: table?.businessId,
+          transferTableFrom: table?._id.toString(),
+        },
+        {
+          $set: {
+            transferTableFrom: "",
+          },
+        },
+        {
+          session,
+        },
+      );
+
+      await KotOrder.updateMany(
+        {
+          tableName: table?.name,
+          settled: false,
+          businessId: table?.businessId,
+        },
+        { $set: { settled: true } },
+        { session },
+      );
+      const uniqueOrderId = nanoid(15);
+      const activeTable = await UserSession.findOne({
+        businessId: table?.businessId,
+        tableName: table?.name,
+      });
+      const res = await axios.post(
+        "http://api.petpooja.com/V1/captainorders/success_payment/",
+        {
+          app_key: pos?.posId.accessKey,
+          app_secret: pos?.posId.secretKey,
+          access_token: pos?.posId.authToken,
+          restID: pos?.posId.restId,
+          bill_request_id: activeTable?.billRequestId,
+          amount_paid: paymentMode?.name === "npc" ? 0 : settleAmount,
+          pin: activeTable?.pin,
+        },
+      );
+
+      if (res.data.success === "0") {
+        throw new Error("Payment failed at pos");
+      }
+
+      const saveOrder = await Order.create(
+        [
+          {
+            total: paymentMode?.name === "npc" ? 0 : settleAmount,
+            currency: "INR",
+            receipt: uniqueOrderId,
+            userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
+            claimedCoins: 0,
+            tableName: table?.name,
+            tips: 0,
+            billValue: getBill.data.order_data.total || 0,
+            businessId: table?.businessId,
+            order_id: uniqueOrderId,
+
+            date: Date.now(),
+          },
+        ],
+        { session },
+      );
+
+      const createPayment = await Payment.create(
+        [
           {
             businessId: table?.businessId,
-            transferTableFrom: table?._id.toString(),
+            order_id: saveOrder[0]._id,
+            total: saveOrder[0].total,
+            mode:
+              settleModes.length > 1 ? "split" : paymentMode?.name || "offline",
+            status: "SUCCESS",
+            paymentMode:
+              settleModes.length > 1 ? "split" : paymentMode?.name || "offline",
+            userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
+            claimedCoins: 0,
+            billValue: saveOrder[0].billValue,
+            tips: 0,
+            tableName: saveOrder[0].tableName,
+            earnCoins: 0,
+            razorpayEventId: nanoid(15),
+            razorpayOrderId: nanoid(15),
+            razorpayPaymentId: nanoid(15),
+            settleType: "FORCE_SETTLE",
+            comment: reasonForForceSettle,
+            posBillId: getBill.data.order_data.invoice_id,
+            tax: getBill.data.order_data.tax,
+            serviceCharge: getBill.data.order_data.service_charge,
+            posBillRequestId: billRequestId,
+            splitModes: settleModes,
+
+            waiterName: captain?.name,
+            date: Date.now(),
           },
-          {
-            $set: {
-              transferTableFrom: "",
+        ],
+        { session },
+      );
+      if (duesUserId && paymentMode?.name === "dues") {
+        const createPaymentDues = await PendingDues.create(
+          [
+            {
+              billId: createPayment[0]._id,
+              businessId: saveOrder[0].businessId,
+              date: Date.now(),
+              duesUserId: duesUserId,
+              isSettled: false,
             },
-          },
+          ],
           {
             session,
           },
         );
 
-        await KotOrder.updateMany(
+        await DuesUser.findByIdAndUpdate(
+          duesUserId,
           {
-            tableName: table?.name,
-            settled: false,
-            businessId: table?.businessId,
+            $inc: {
+              totalDuesAmount: saveOrder[0].total,
+            },
           },
-          { $set: { settled: true } },
           { session },
         );
-        const uniqueOrderId = nanoid(15);
-        const activeTable = await UserSession.findOne({
+      }
+      if (npcUserId && paymentMode?.name === "npc") {
+        await NpcUser.findByIdAndUpdate(
+          npcUserId,
+          {
+            $inc: {
+              totalNpcAmount: saveOrder[0].total,
+            },
+          },
+          { session },
+        );
+      }
+      await Table.findByIdAndUpdate(
+        tableId,
+        {
+          status: "EMPTY",
+          capacity: 0,
+          hiCode: "",
+          currentTableAmount: 0,
+          totalItemCount: 0,
+          userIds: [],
+          isTransfer: false,
+        },
+        { session },
+      );
+
+      await TempTableSettle.create(
+        [
+          {
+            businessId: table?.businessId,
+            createdAt: Date.now(),
+            tableName: table?.name,
+            settleBy: captain?.name,
+            hiCode: table?.hiCode,
+          },
+        ],
+        { session },
+      );
+
+      await UserSession.deleteOne(
+        {
           businessId: table?.businessId,
           tableName: table?.name,
-        });
-        const res = await axios.post(
-          "http://api.petpooja.com/V1/captainorders/success_payment/",
+        },
+        { session },
+      );
+      await PaymentAlert.updateOne(
+        {
+          tableName: table?.name,
+          isAccepted: false,
+          alertType: "OFFLINE",
+        },
+        { isAccepted: true, isRejected: true },
+        { session },
+      );
+      await PaymentAlert.create(
+        [
           {
-            app_key: pos?.posId.accessKey,
-            app_secret: pos?.posId.secretKey,
-            access_token: pos?.posId.authToken,
-            restID: pos?.posId.restId,
-            bill_request_id: activeTable?.billRequestId,
-            amount_paid: settleAmount,
-            pin: activeTable?.pin,
-          },
-        );
-
-        if (res.data.success === "0") {
-          throw new Error("Payment failed at pos");
-        }
-
-        const saveOrder = await Order.create(
-          [
-            {
-              total: settleAmount,
-              currency: "INR",
-              receipt: uniqueOrderId,
-              userId: captainId,
-              claimedCoins: 0,
-              tableName: table?.name,
-              tips: 0,
-              billValue: getBill.data.order_data.total || 0,
-              businessId: table?.businessId,
-              order_id: uniqueOrderId,
-
-              date: Date.now(),
-            },
-          ],
-          { session },
-        );
-
-        const createPayment = await Payment.create(
-          [
-            {
-              businessId: table?.businessId,
-              order_id: saveOrder[0]._id,
-              total: saveOrder[0].total,
-              mode:
-                settleModes.length > 1
-                  ? "split"
-                  : paymentMode?.name || "offline",
-              status: "SUCCESS",
-              paymentMode:
-                settleModes.length > 1
-                  ? "split"
-                  : paymentMode?.name || "offline",
-              userId: saveOrder[0].userId,
-              claimedCoins: 0,
-              billValue: saveOrder[0].billValue,
-              tips: 0,
-              tableName: saveOrder[0].tableName,
-              earnCoins: 0,
-              razorpayEventId: nanoid(15),
-              razorpayOrderId: nanoid(15),
-              razorpayPaymentId: nanoid(15),
-              settleType: "FORCE_SETTLE",
-              comment: reasonForForceSettle,
-              posBillId: getBill.data.order_data.invoice_id,
-              tax: getBill.data.order_data.tax,
-              serviceCharge: getBill.data.order_data.service_charge,
-              posBillRequestId: billRequestId,
-              splitModes: settleModes,
-
-              waiterName: captain?.name,
-              date: Date.now(),
-            },
-          ],
-          { session },
-        );
-        if (duesUserId) {
-          const createPaymentDues = await PendingDues.create(
-            [
-              {
-                billId: createPayment[0]._id,
-                businessId: saveOrder[0].businessId,
-                date: Date.now(),
-                duesUserId: duesUserId,
-                isSettled: false,
-              },
-            ],
-            {
-              session,
-            },
-          );
-
-          await DuesUser.findByIdAndUpdate(
-            duesUserId,
-            {
-              $inc: {
-                totalDuesAmount: saveOrder[0].total,
-              },
-            },
-            { session },
-          );
-        }
-        await Table.findByIdAndUpdate(
-          tableId,
-          {
-            status: "EMPTY",
-            capacity: 0,
-            hiCode: "",
-            currentTableAmount: 0,
-            totalItemCount: 0,
-            userIds: [],
-            isTransfer: false,
-          },
-          { session },
-        );
-
-        await TempTableSettle.create(
-          [
-            {
-              businessId: table?.businessId,
-              createdAt: Date.now(),
-              tableName: table?.name,
-              settleBy: captain?.name,
-              hiCode: table?.hiCode,
-            },
-          ],
-          { session },
-        );
-
-        await UserSession.deleteOne(
-          {
-            businessId: table?.businessId,
-            tableName: table?.name,
-          },
-          { session },
-        );
-        await PaymentAlert.updateOne(
-          {
-            tableName: table?.name,
+            businessId: saveOrder[0]?.businessId,
+            alertType: "FORCE_SETTLE",
+            payment_id: createPayment[0]._id,
+            coinsApplied: 0,
+            status: "SUCCESS",
+            order_id: saveOrder[0]?._id,
+            message: `Paid ${saveOrder[0]?.total}`,
+            tableName: saveOrder[0]?.tableName,
             isAccepted: false,
-            alertType: "OFFLINE",
+            userId: saveOrder[0]?.userId,
+            posDiscount: 0,
+            date: Date.now(),
           },
-          { isAccepted: true, isRejected: true },
-          { session },
-        );
-        await PaymentAlert.create(
-          [
-            {
-              businessId: saveOrder[0]?.businessId,
-              alertType: "FORCE_SETTLE",
-              payment_id: createPayment[0]._id,
-              coinsApplied: 0,
-              status: "SUCCESS",
-              order_id: saveOrder[0]?._id,
-              message: `Paid ${saveOrder[0]?.total}`,
-              tableName: saveOrder[0]?.tableName,
-              isAccepted: false,
-              userId: saveOrder[0]?.userId,
-              posDiscount: 0,
-              date: Date.now(),
-            },
-          ],
-          { session },
-        );
+        ],
+        { session },
+      );
 
+      return c.json(
+        {
+          message: "Table settled successfully",
+          err: false,
+        },
+        200,
+      );
+    });
+  })
+  .post("/normal_settle", zValidator("json", normalSettleSchema), async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session: ClientSession) => {
+      const {
+        tableId,
+        captainId,
+        billRequestId,
+
+        settleModes = [],
+        split,
+        duesUserId,
+        npcUserId,
+      } = await c.req.json();
+      const paymentMode = await UpiMode.findById(settleModes[0]?._id);
+
+      const billAlreadySettled = await Payment.findOne({
+        posBillRequestId: billRequestId,
+      });
+
+      if (billAlreadySettled) {
         return c.json(
           {
-            message: "Table settled successfully",
-            err: false,
+            message: "Bill already settled",
+            err: true,
+            data: {},
           },
-          200,
+          409,
         );
-      });
-    },
-  )
-  .post(
-    "/normal_settle",
-    zValidator(
-      "json",
-      z.object({
-        tableId: z.string().min(1).max(500),
-        captainId: z.string().min(1).max(500),
-        billRequestId: z.string().min(1).max(500),
-        settleModes: z
-          .array(
-            z.object({
-              name: z.string().max(100),
-              amount: z.coerce.number().positive(),
-              _id: z.string().max(100),
-            }),
-          )
-          .min(1)
-          .default([])
-          .optional(),
-        split: z.boolean().default(false).optional(),
-        duesUserId: z.string().max(100).optional(),
-      }),
-    ),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const {
-          tableId,
-          captainId,
-          billRequestId,
+      }
 
-          settleModes = [],
-          split,
-          duesUserId,
-        } = await c.req.json();
-        const paymentMode = await UpiMode.findById(settleModes[0]?._id);
+      const table = await Table.findById(tableId);
+      const captain = await User.findById(captainId);
+      const pos = await BusinessPosConfig.findOne({
+        businessId: table?.businessId,
+      }).populate("posId");
+      if (!pos) {
+        return c.json(
+          {
+            message: "Pos not found",
+            err: true,
+          },
+          400,
+        );
+      }
+      const getBillConfig = {
+        app_key: pos.posId.accessKey,
+        app_secret: pos.posId.secretKey,
+        access_token: pos.posId.authToken,
+        restID: pos.posId.restId,
+        bill_request_id: billRequestId,
+      };
+      const getBill = await axios.post(
+        "http://api.petpooja.com/V1/captainorders/get_bill/",
+        getBillConfig,
+      );
 
-        if (paymentMode?.name === "dues") {
-          if (!duesUserId) {
-            return c.json(
-              {
-                message: "duesUserId is required",
-                err: true,
-                data: {},
-              },
-              400,
-            );
-          }
-        }
+      if (getBill.data.success === "0") {
+        throw new Error("Bill not found");
+      }
 
-        const billAlreadySettled = await Payment.findOne({
-          posBillRequestId: billRequestId,
-        });
+      const npcUser = await NpcUser.findById(npcUserId);
 
-        if (billAlreadySettled) {
-          return c.json(
-            {
-              message: "Bill already settled",
-              err: true,
-              data: {},
-            },
-            409,
-          );
-        }
-
-        const table = await Table.findById(tableId);
-        const captain = await User.findById(captainId);
-        const pos = await BusinessPosConfig.findOne({
+      await UserSession.findOneAndUpdate(
+        {
           businessId: table?.businessId,
-        }).populate("posId");
-        if (!pos) {
-          return c.json(
-            {
-              message: "Pos not found",
-              err: true,
-            },
-            400,
-          );
-        }
-        const getBillConfig = {
-          app_key: pos.posId.accessKey,
-          app_secret: pos.posId.secretKey,
-          access_token: pos.posId.authToken,
-          restID: pos.posId.restId,
-          bill_request_id: billRequestId,
-        };
-        const getBill = await axios.post(
-          "http://api.petpooja.com/V1/captainorders/get_bill/",
-          getBillConfig,
-        );
+          transferTableFrom: table?._id.toString(),
+        },
+        {
+          $set: {
+            transferTableFrom: "",
+          },
+        },
+        {
+          session,
+        },
+      );
 
-        if (getBill.data.success === "0") {
-          throw new Error("Bill not found");
-        }
+      await KotOrder.updateMany(
+        {
+          tableName: table?.name,
+          settled: false,
+          businessId: table?.businessId,
+        },
+        { $set: { settled: true } },
+        { session },
+      );
+      const uniqueOrderId = nanoid(15);
 
-        await UserSession.findOneAndUpdate(
+      const saveOrder = await Order.create(
+        [
+          {
+            total:
+              paymentMode?.name === "npc" ? 0 : getBill.data.order_data.total,
+            currency: "INR",
+            receipt: uniqueOrderId,
+            userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
+            claimedCoins: 0,
+            tableName: table?.name,
+            tips: 0,
+            billValue: getBill.data.order_data.core_price || 0,
+            businessId: table?.businessId,
+            order_id: uniqueOrderId,
+
+            date: Date.now(),
+          },
+        ],
+        { session },
+      );
+
+      const findTable = await UserSession.findOne({
+        businessId: table?.businessId,
+        tableName: table?.name,
+      });
+
+      const createPayment = await Payment.create(
+        [
           {
             businessId: table?.businessId,
-            transferTableFrom: table?._id.toString(),
+            order_id: saveOrder[0]._id,
+            total: saveOrder[0].total,
+            mode:
+              settleModes.length > 1 ? "split" : paymentMode?.name || "offline",
+            status: "SUCCESS",
+            paymentMode:
+              settleModes.length > 1 ? "split" : paymentMode?.name || "offline",
+            userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
+            claimedCoins: 0,
+            billValue: saveOrder[0].billValue,
+            tips: 0,
+            tableName: saveOrder[0].tableName,
+            earnCoins: 0,
+            razorpayEventId: nanoid(15),
+            razorpayOrderId: nanoid(15),
+            razorpayPaymentId: nanoid(15),
+            settleType: "NORMAL_SETTLE",
+            comment: "NORMAL SETTLE",
+
+            posBillId: getBill.data.order_data.invoice_id,
+            tax: getBill.data.order_data.tax,
+            serviceCharge: getBill.data.order_data.service_charge,
+            posBillRequestId: billRequestId,
+            waiterName: captain?.name,
+            splitModes: settleModes,
+            date: Date.now(),
           },
-          {
-            $set: {
-              transferTableFrom: "",
+        ],
+        { session },
+      );
+      if (duesUserId && paymentMode?.name === "dues") {
+        const createPaymentDues = await PendingDues.create(
+          [
+            {
+              billId: createPayment[0]._id,
+              businessId: saveOrder[0].businessId,
+              date: Date.now(),
+              duesUserId: duesUserId,
+              isSettled: false,
             },
-          },
+          ],
           {
             session,
           },
         );
 
-        await KotOrder.updateMany(
+        await DuesUser.findByIdAndUpdate(
+          duesUserId,
           {
-            tableName: table?.name,
-            settled: false,
-            businessId: table?.businessId,
-          },
-          { $set: { settled: true } },
-          { session },
-        );
-        const uniqueOrderId = nanoid(15);
-
-        const saveOrder = await Order.create(
-          [
-            {
-              total: getBill.data.order_data.total || 0,
-              currency: "INR",
-              receipt: uniqueOrderId,
-              userId: captainId,
-              claimedCoins: 0,
-              tableName: table?.name,
-              tips: 0,
-              billValue: getBill.data.order_data.core_price || 0,
-              businessId: table?.businessId,
-              order_id: uniqueOrderId,
-
-              date: Date.now(),
+            $inc: {
+              totalDuesAmount: saveOrder[0].total,
             },
-          ],
+          },
           { session },
         );
+      }
+      if (npcUserId && paymentMode?.name === "npc") {
+        await NpcUser.findByIdAndUpdate(
+          npcUserId,
+          {
+            $inc: {
+              totalNpcAmount: saveOrder[0].total,
+            },
+          },
+          { session },
+        );
+      }
+      await Table.findByIdAndUpdate(
+        tableId,
+        {
+          status: "EMPTY",
+          capacity: 0,
+          hiCode: "",
+          currentTableAmount: 0,
+          totalItemCount: 0,
+          userIds: [],
+          isTransfer: false,
+        },
+        { session },
+      );
 
-        const findTable = await UserSession.findOne({
+      await TempTableSettle.create(
+        [
+          {
+            businessId: table?.businessId,
+
+            tableName: table?.name,
+            settleBy: captain?.name,
+            createdAt: Date.now(),
+            hiCode: table?.hiCode,
+          },
+        ],
+        { session },
+      );
+
+      const res = await axios.post(
+        "http://api.petpooja.com/V1/captainorders/success_payment/",
+        {
+          app_key: pos?.posId.accessKey,
+          app_secret: pos?.posId.secretKey,
+          access_token: pos?.posId.authToken,
+          restID: pos?.posId.restId,
+          bill_request_id: billRequestId,
+          amount_paid: saveOrder[0].total,
+          pin: findTable?.pin,
+        },
+      );
+
+      if (res.data.success === "0") {
+        throw new Error("Payment failed at pos");
+      }
+
+      await UserSession.deleteOne(
+        {
           businessId: table?.businessId,
           tableName: table?.name,
-        });
-
-        const createPayment = await Payment.create(
-          [
-            {
-              businessId: table?.businessId,
-              order_id: saveOrder[0]._id,
-              total: saveOrder[0].total,
-              mode:
-                settleModes.length > 1
-                  ? "split"
-                  : paymentMode?.name || "offline",
-              status: "SUCCESS",
-              paymentMode:
-                settleModes.length > 1
-                  ? "split"
-                  : paymentMode?.name || "offline",
-              userId: saveOrder[0].userId,
-              claimedCoins: 0,
-              billValue: saveOrder[0].billValue,
-              tips: 0,
-              tableName: saveOrder[0].tableName,
-              earnCoins: 0,
-              razorpayEventId: nanoid(15),
-              razorpayOrderId: nanoid(15),
-              razorpayPaymentId: nanoid(15),
-              settleType: "NORMAL_SETTLE",
-              comment: "NORMAL SETTLE",
-
-              posBillId: getBill.data.order_data.invoice_id,
-              tax: getBill.data.order_data.tax,
-              serviceCharge: getBill.data.order_data.service_charge,
-              posBillRequestId: billRequestId,
-              waiterName: captain?.name,
-              splitModes: settleModes,
-              date: Date.now(),
-            },
-          ],
-          { session },
-        );
-        if (duesUserId) {
-          const createPaymentDues = await PendingDues.create(
-            [
-              {
-                billId: createPayment[0]._id,
-                businessId: saveOrder[0].businessId,
-                date: Date.now(),
-                duesUserId: duesUserId,
-                isSettled: false,
-              },
-            ],
-            {
-              session,
-            },
-          );
-
-          await DuesUser.findByIdAndUpdate(
-            duesUserId,
-            {
-              $inc: {
-                totalDuesAmount: saveOrder[0].total,
-              },
-            },
-            { session },
-          );
-        }
-        await Table.findByIdAndUpdate(
-          tableId,
+        },
+        { session },
+      );
+      await PaymentAlert.updateOne(
+        {
+          tableName: table?.name,
+          isAccepted: false,
+          alertType: "OFFLINE",
+        },
+        { isAccepted: true, isRejected: true },
+        { session },
+      );
+      await PaymentAlert.create(
+        [
           {
-            status: "EMPTY",
-            capacity: 0,
-            hiCode: "",
-            currentTableAmount: 0,
-            totalItemCount: 0,
-            userIds: [],
-            isTransfer: false,
-          },
-          { session },
-        );
-
-        await TempTableSettle.create(
-          [
-            {
-              businessId: table?.businessId,
-
-              tableName: table?.name,
-              settleBy: captain?.name,
-              createdAt: Date.now(),
-              hiCode: table?.hiCode,
-            },
-          ],
-          { session },
-        );
-
-        const res = await axios.post(
-          "http://api.petpooja.com/V1/captainorders/success_payment/",
-          {
-            app_key: pos?.posId.accessKey,
-            app_secret: pos?.posId.secretKey,
-            access_token: pos?.posId.authToken,
-            restID: pos?.posId.restId,
-            bill_request_id: billRequestId,
-            amount_paid: saveOrder[0].total,
-            pin: findTable?.pin,
-          },
-        );
-
-        if (res.data.success === "0") {
-          throw new Error("Payment failed at pos");
-        }
-
-        await UserSession.deleteOne(
-          {
-            businessId: table?.businessId,
-            tableName: table?.name,
-          },
-          { session },
-        );
-        await PaymentAlert.updateOne(
-          {
-            tableName: table?.name,
+            businessId: saveOrder[0]?.businessId,
+            alertType: "NORMAL_SETTLE",
+            payment_id: createPayment[0]._id,
+            coinsApplied: 0,
+            status: "SUCCESS",
+            order_id: saveOrder[0]?._id,
+            message: `Paid ${saveOrder[0]?.total}`,
+            tableName: saveOrder[0]?.tableName,
             isAccepted: false,
-            alertType: "OFFLINE",
+            userId: saveOrder[0]?.userId,
+            posDiscount: 0,
+            date: Date.now(),
           },
-          { isAccepted: true, isRejected: true },
-          { session },
-        );
-        await PaymentAlert.create(
-          [
-            {
-              businessId: saveOrder[0]?.businessId,
-              alertType: "NORMAL_SETTLE",
-              payment_id: createPayment[0]._id,
-              coinsApplied: 0,
-              status: "SUCCESS",
-              order_id: saveOrder[0]?._id,
-              message: `Paid ${saveOrder[0]?.total}`,
-              tableName: saveOrder[0]?.tableName,
-              isAccepted: false,
-              userId: saveOrder[0]?.userId,
-              posDiscount: 0,
-              date: Date.now(),
-            },
-          ],
-          { session },
-        );
+        ],
+        { session },
+      );
 
-        return c.json(
-          {
-            message: "Table settled successfully",
-            err: false,
-          },
-          200,
-        );
-      });
-    },
-  )
+      return c.json(
+        {
+          message: "Table settled successfully",
+          err: false,
+        },
+        200,
+      );
+    });
+  })
   .post(
     "/hi_settle",
     zValidator(
@@ -1615,161 +1563,173 @@ const tableRouter = new Hono()
     },
   )
 
-  .post(
-    "/resolve_table",
-    zValidator(
-      "json",
-      z.object({
-        unSettleTableId: z.string().min(1).max(500),
-        captainId: z.string().min(1).max(500),
-        businessId: z.string().min(1).max(500),
-        reasonForSettle: z.string().min(1).max(500),
-        settleAmount: z.coerce.number().optional(),
-        orderId: z.string().min(1).max(500).optional(),
+  .post("/resolve_table", zValidator("json", resolveTableSchema), async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session: ClientSession) => {
+      const {
+        businessId,
+        unSettleTableId,
+        captainId,
+        reasonForSettle,
+        settleAmount,
+        orderId,
+        settleModes = [],
+        split,
 
-        settleModes: z
-          .array(
-            z.object({
-              name: z.string().max(100),
-              amount: z.coerce.number().positive(),
-              _id: z.string().max(100),
-            }),
-          )
-          .min(1)
-          .default([])
-          .optional(),
-        split: z.boolean().default(false).optional(),
-      }),
-    ),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const {
-          businessId,
-          unSettleTableId,
-          captainId,
-          reasonForSettle,
-          settleAmount,
-          orderId,
-          settleModes = [],
-          split,
-        } = await c.req.json();
+        duesUserId,
+        npcUserId,
+      } = await c.req.json();
 
-        const paymentMode = await UpiMode.findById(settleModes[0]?._id);
-        const captain = await User.findById(captainId);
+      const paymentMode = await UpiMode.findById(settleModes[0]?._id);
+      const captain = await User.findById(captainId);
+      const npcUser = await NpcUser.findById(npcUserId);
 
-        const unSettleTable = await UnsettleTable.findOne({
-          _id: unSettleTableId,
-          businessId,
-          isDeleted: false,
-        }).populate("tableId");
-        if (!unSettleTable) {
-          return c.json(
-            {
-              message: "Unsettled table not found",
-              err: true,
-              data: {},
-            },
-            400,
-          );
-        }
-
-        const uniqueOrderId = nanoid(15);
-
-        const saveOrder = await Order.create(
-          [
-            {
-              total: settleAmount,
-              currency: "INR",
-              receipt: uniqueOrderId,
-              userId: captainId,
-              claimedCoins: 0,
-              tableName: unSettleTable.tableId.name,
-              tips: 0,
-              billValue: settleAmount,
-              businessId: businessId,
-              order_id: uniqueOrderId,
-
-              date: Date.now(),
-            },
-          ],
-          { session },
-        );
-
-        const createPayment = await Payment.create(
-          [
-            {
-              businessId: businessId,
-              order_id: saveOrder[0]._id,
-              total: saveOrder[0].total,
-              mode:
-                settleModes.length > 1
-                  ? "split"
-                  : paymentMode?.name || "offline",
-              status: "SUCCESS",
-              paymentMode:
-                settleModes.length > 1
-                  ? "split"
-                  : paymentMode?.name || "offline",
-              userId: saveOrder[0].userId,
-              claimedCoins: 0,
-              billValue: saveOrder[0].billValue,
-              tips: 0,
-              tableName: saveOrder[0].tableName,
-              earnCoins: 0,
-              razorpayEventId: nanoid(15),
-              razorpayOrderId: nanoid(15),
-              razorpayPaymentId: nanoid(15),
-              settleType: "FORCE_SETTLE",
-              comment: reasonForSettle,
-              posBillId: orderId,
-              unSettleTableId: unSettleTableId,
-              splitModes: settleModes,
-
-              waiterName: captain?.name,
-              date: Date.now(),
-            },
-          ],
-          { session },
-        );
-        await PaymentAlert.create(
-          [
-            {
-              businessId: saveOrder[0]?.businessId,
-              alertType: "FORCE_SETTLE",
-              payment_id: createPayment[0]._id,
-              coinsApplied: 0,
-              status: "SUCCESS",
-              order_id: saveOrder[0]?._id,
-              message: `Paid ${saveOrder[0]?.total}`,
-              tableName: saveOrder[0]?.tableName,
-              isAccepted: false,
-              userId: saveOrder[0]?.userId,
-              posDiscount: 0,
-              date: Date.now(),
-            },
-          ],
-          { session },
-        );
-
-        await UnsettleTable.findByIdAndUpdate(
-          unSettleTableId,
-          {
-            isDeleted: true,
-          },
-          { session },
-        );
-
+      const unSettleTable = await UnsettleTable.findOne({
+        _id: unSettleTableId,
+        businessId,
+        isDeleted: false,
+      }).populate("tableId");
+      if (!unSettleTable) {
         return c.json(
           {
-            message: "Table resolved successfully",
-            err: false,
+            message: "Unsettled table not found",
+            err: true,
             data: {},
           },
-          200,
+          400,
         );
-      });
-    },
-  );
+      }
+
+      const uniqueOrderId = nanoid(15);
+
+      const saveOrder = await Order.create(
+        [
+          {
+            total: paymentMode?.name === "npc" ? 0 : settleAmount,
+            currency: "INR",
+            receipt: uniqueOrderId,
+            userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
+            claimedCoins: 0,
+            tableName: unSettleTable.tableId.name,
+            tips: 0,
+            billValue: settleAmount,
+            businessId: businessId,
+            order_id: uniqueOrderId,
+
+            date: Date.now(),
+          },
+        ],
+        { session },
+      );
+
+      const createPayment = await Payment.create(
+        [
+          {
+            businessId: businessId,
+            order_id: saveOrder[0]._id,
+            total: saveOrder[0].total,
+            mode:
+              settleModes.length > 1 ? "split" : paymentMode?.name || "offline",
+            status: "SUCCESS",
+            paymentMode:
+              settleModes.length > 1 ? "split" : paymentMode?.name || "offline",
+            userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
+            claimedCoins: 0,
+            billValue: saveOrder[0].billValue,
+            tips: 0,
+            tableName: saveOrder[0].tableName,
+            earnCoins: 0,
+            razorpayEventId: nanoid(15),
+            razorpayOrderId: nanoid(15),
+            razorpayPaymentId: nanoid(15),
+            settleType: "FREE_SETTLE",
+            comment: reasonForSettle,
+            posBillId: orderId,
+            unSettleTableId: unSettleTableId,
+            splitModes: settleModes,
+
+            waiterName: captain?.name,
+            date: Date.now(),
+          },
+        ],
+        { session },
+      );
+      if (duesUserId && paymentMode?.name === "dues") {
+        const createPaymentDues = await PendingDues.create(
+          [
+            {
+              billId: createPayment[0]._id,
+              businessId: saveOrder[0].businessId,
+              date: Date.now(),
+              duesUserId: duesUserId,
+              isSettled: false,
+            },
+          ],
+          {
+            session,
+          },
+        );
+
+        await DuesUser.findByIdAndUpdate(
+          duesUserId,
+          {
+            $inc: {
+              totalDuesAmount: saveOrder[0].total,
+            },
+          },
+          { session },
+        );
+      }
+
+      if (npcUserId && paymentMode?.name === "npc") {
+        await NpcUser.findByIdAndUpdate(
+          npcUserId,
+          {
+            $inc: {
+              totalNpcAmount: saveOrder[0].total,
+            },
+          },
+          { session },
+        );
+      }
+
+      await PaymentAlert.create(
+        [
+          {
+            businessId: saveOrder[0]?.businessId,
+            alertType: "FORCE_SETTLE",
+            payment_id: createPayment[0]._id,
+            coinsApplied: 0,
+            status: "SUCCESS",
+            order_id: saveOrder[0]?._id,
+            message: `Paid ${saveOrder[0]?.total}`,
+            tableName: saveOrder[0]?.tableName,
+            isAccepted: false,
+            userId: saveOrder[0]?.userId,
+            posDiscount: 0,
+            date: Date.now(),
+          },
+        ],
+        { session },
+      );
+
+      await UnsettleTable.findByIdAndUpdate(
+        unSettleTableId,
+        {
+          isDeleted: true,
+        },
+        { session },
+      );
+
+      return c.json(
+        {
+          message: "Table resolved successfully",
+          err: false,
+          data: {},
+        },
+        200,
+      );
+    });
+  });
 
 export default tableRouter;
