@@ -20,7 +20,7 @@ const MemoSingleMode = ({ paymentModes, billData }: { paymentModes: IMode[]; bil
 
 
     const handleSelectSingleMode = (mode: IMode) => {
-        if (mode?.name?.toLowerCase() === "dues") {
+        if (mode?.name?.toLowerCase() === "dues" || mode?.name?.toLowerCase() === "npc") {
             setOpenDues(true);
         }
         setSettleModes([
@@ -31,8 +31,6 @@ const MemoSingleMode = ({ paymentModes, billData }: { paymentModes: IMode[]; bil
             },
         ]);
     };
-
-
 
     return (
         <>

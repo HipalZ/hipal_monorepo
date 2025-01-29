@@ -167,6 +167,9 @@ const MemoNormalSettle = ({
             const hasDuesMode = settleModes.some(
                 (mode) => mode.name.toLowerCase() === "dues"
             );
+            const hasNpcMode = settleModes.some(
+                (mode) => mode.name.toLowerCase() === "npc"
+            );
 
             if (alertData) {
                 const payload = {
@@ -181,6 +184,9 @@ const MemoNormalSettle = ({
                 if (hasDuesMode && saveDueUser?._id) {
                     payload["duesUserId"] = saveDueUser._id;
                 }
+                if (hasNpcMode && saveDueUser?._id) {
+                    payload["npcUserId"] = saveDueUser?._id;
+                }
                 await confirmAlert(payload);
             } else {
                 const payload = {
@@ -194,6 +200,10 @@ const MemoNormalSettle = ({
                 // If there's a "dues" mode selected, append the duesUserId
                 if (hasDuesMode && saveDueUser?._id) {
                     payload["duesUserId"] = saveDueUser._id;
+                }
+
+                if (hasNpcMode && saveDueUser?._id) {
+                    payload["npcUserId"] = saveDueUser?._id;
                 }
 
                 // Call the API

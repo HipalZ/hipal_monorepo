@@ -1,5 +1,5 @@
 import { create } from "zustand";
-interface ISettleMode {
+export interface ISettleMode {
   _id: string;
   name: string;
   amount: number;

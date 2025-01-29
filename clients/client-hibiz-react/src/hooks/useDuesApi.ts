@@ -1,3 +1,5 @@
+import type { ISettleMode } from "@/components/store/useDues";
+import type { IMode } from "@/components/templates/payment/selectPaymentMode";
 import type { IDuesPersonsData } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
@@ -45,4 +47,19 @@ export const useGetAllModes = (
     isLoading,
     paymentMode,
   };
+};
+
+export const settleDues = async (
+  businessId: string,
+  userId: string,
+  settleModes: ISettleMode[],
+) => {
+  const response = await apiRpc.dues.settle_dues.$put({
+    json: {
+      businessId,
+      duesUserId: userId,
+      settleModes,
+    },
+  });
+  return response.json();
 };

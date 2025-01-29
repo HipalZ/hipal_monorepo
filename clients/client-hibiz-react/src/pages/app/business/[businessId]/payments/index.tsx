@@ -6,6 +6,7 @@ import Hi from "@/assets/svg/hi.svg"
 import useBusinessData from "@/components/store/useBusinessData"
 import PaymentNavbar from "@/components/templates/menu/sideNavbaar/paymentNavBar"
 import { cn } from "@/components/utils/helper"
+import Npc from "@/components/templates/payment/Npc"
 
 const DateRangePicker = lazy(() => import("@/components/molecules/dateRangePicker"))
 const MemoizedHeader = lazy(() => import("@/components/molecules/header"))
@@ -14,13 +15,14 @@ const PaymentSales = lazy(() => import("@/components/templates/payment/sales"))
 const Dues = lazy(() => import("@/components/templates/payment/dues"))
 
 const Payments = () => {
-  const [selectedTab, setSelectedTab] = useState<"Overview" | "Sales" | "Dues">("Overview")
+  const [selectedTab, setSelectedTab] = useState<"Overview" | "Sales" | "Dues" | "Npc">("Overview")
   const businessData = useBusinessData((s) => s.businessData)
 
   const sidebarItems = [
     { text: "Overview", onClick: () => setSelectedTab("Overview") },
     { text: "Sales", onClick: () => setSelectedTab("Sales") },
     { text: "Dues", onClick: () => setSelectedTab("Dues") },
+    { text: "Npc", onClick: () => setSelectedTab("Npc") },
   ]
 
   const navigate = useNavigate()
@@ -66,7 +68,7 @@ const Payments = () => {
 
       <PaymentNavbar items={sidebarItems} selectedNavItem={selectedTab} />
       {
-        selectedTab !== "Dues" && (
+        (selectedTab !== "Dues" && selectedTab !== "Npc") && (
           <DateRangePicker />
         )
       }
@@ -82,6 +84,9 @@ const Payments = () => {
           {selectedTab === "Overview" && <Overview />}
           {selectedTab === "Sales" && <PaymentSales />}
           {selectedTab === "Dues" && <Dues />}
+          {
+            selectedTab === "Npc" && <Npc />
+          }
         </motion.div>
       </AnimatePresence>
     </main>

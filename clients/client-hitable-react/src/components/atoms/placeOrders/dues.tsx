@@ -12,10 +12,10 @@ const MemoDues = () => {
     const { setSaveDueUser, saveDueUser } = useOrderStore()
 
     const { businessId } = useParams()
+    const settleModes = useOrderStore((s) => s.settleModes)
+    console.log(settleModes)
 
     const { isLoading, data } = useAllDueUsers(businessId)
-
-    console.log("saveDueUser", saveDueUser)
 
     const handleUserClick = useCallback((user: IDuesPersonsData) => {
         setSaveDueUser(user)

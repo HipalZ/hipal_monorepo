@@ -966,3 +966,18 @@ export interface IListPos {
   _id: string;
   name: string;
 }
+
+export type Bill = {
+  _id: string;
+  billId: {
+    _id: string;
+    total: number;
+  };
+  isSettled: boolean;
+  date: number;
+};
+
+export type DuesData = {
+  totalDuesAmount: number;
+  bill: Bill[];
+};

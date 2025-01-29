@@ -35,14 +35,14 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
         <section className="flex flex-row justify-around">
           <button
             onClick={callTheOwner}
-            className="p-4 text-base-100 bg-primary rounded-full"
+            className="p-4 rounded-full text-base-100 bg-primary"
             type="button"
           >
             <MdOutlineCall size="24" />
           </button>
           <button
             onClick={whatsappOwner}
-            className="p-4 text-base-100 bg-primary rounded-full"
+            className="p-4 rounded-full text-base-100 bg-primary"
             type="button"
           >
             <FaWhatsapp size="24" />

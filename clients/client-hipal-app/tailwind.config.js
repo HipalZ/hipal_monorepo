@@ -13,12 +13,21 @@ module.exports = {
         Montserrat: ["Montserrat", "sans-serif"],
       },
       colors: {
-        primary: "var(--p)",
+        primary: {
+          DEFAULT: "var(--p)",
+          foreground: "hsl(var(--primary-foreground))",
+        },
         "base-100": "var(--b1)",
         "primary-content": "var(--pc)",
-        secondary: "var(--s)",
+        secondary: {
+          DEFAULT: "var(--s)_",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
         "secondary-content": "var(--sc)",
-        accent: "var(--a)",
+        accent: {
+          DEFAULT: "var(--a)",
+          foreground: "hsl(var(--accent-foreground))",
+        },
         "accent-content": "var(--ac)",
         neutral: "var(--n)",
         "neutral-content": "var(--nc)",
@@ -28,6 +37,34 @@ module.exports = {
         info: "#E6E6E6",
         success: "#2FBD4E",
         "success-content": "#fff",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        chart: {
+          1: "hsl(var(--chart-1))",
+          2: "hsl(var(--chart-2))",
+          3: "hsl(var(--chart-3))",
+          4: "hsl(var(--chart-4))",
+          5: "hsl(var(--chart-5))",
+        },
       },
       animation: {
         "border-beam": "border-beam calc(var(--duration)*1s) infinite linear",
@@ -42,8 +79,13 @@ module.exports = {
           },
         },
       },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
     },
   },
-  darkMode: "class",
-  plugins: [require("@tailwindcss/typography")],
+  darkMode: ["class", "class"],
+  plugins: [require("@tailwindcss/typography"), require("tailwindcss-animate")],
 };

@@ -148,7 +148,7 @@ const MemoMultipleModes = ({ paymentModes, totalAmount }: { paymentModes: IMode[
     )
 
     return (
-        <div className="relative px-4 gap-4 h-[80dvh] overflow-auto hide-scrollbar pb-[10rem]">
+        <div className="relative px-4 gap-4 h-[80dvh] overflow-auto hide-scrollbar pb-[15rem]">
             {error && (
                 <Alert className="sticky top-0 mb-4 bg-white rounded-none" variant="destructive">
                     <AlertDescription>{error}</AlertDescription>

@@ -1,15 +1,22 @@
-'use client'
-
 import { memo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Globe, CreditCard, DollarSign, Percent, Tag, Coins } from 'lucide-react'
 import useTimings from "@/components/store/useTimings"
 import { apiRpc } from "@hi/common"
 import useBusinessData from "@/components/store/useBusinessData"
-import type { ISalesLite } from "@/components/types/businessData"
-import { PieChart } from "./piechart"
+import { InfoCard } from "./InfoCard"
+import { PieChart } from "./PieCharts"
+
+interface SalesData {
+  overAllAmount: number
+  onlineSale: {
+    [key: string]: number
+  }
+  offlineSale: {
+    [key: string]: number
+  }
+}
 
 const Overview = () => {
   const business = useBusinessData((s) => s.businessData)
@@ -18,7 +25,7 @@ const Overview = () => {
     timeStampEnd: s.timeStampEnd,
   }))
 
-  const handleHistoryData = async (): Promise<ISalesLite> => {
+  const handleHistoryData = async (): Promise<SalesData> => {
     try {
       const response = await apiRpc.payments[":id"].salesDashboard.$get({
         query: {
@@ -28,8 +35,7 @@ const Overview = () => {
         },
         param: { id: business?._id || "" },
       })
-      const data = (await response.json()).data as ISalesLite
-
+      const data = (await response.json()).data as SalesData
       if (response.status === 200) {
         return data
       }
@@ -40,7 +46,11 @@ const Overview = () => {
     }
   }
 
-  const { data: salesData, isLoading, error } = useQuery<ISalesLite, Error>({
+  const {
+    data: salesData,
+    isLoading,
+    error,
+  } = useQuery<SalesData, Error>({
     queryKey: ["salesData", business?._id, timeStampStart, timeStampEnd],
     queryFn: handleHistoryData,
     enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
@@ -60,124 +70,50 @@ const Overview = () => {
     )
   }
 
-  const pieChartData = Object.entries(salesData.modeObj).map(([mode, amount]) => ({
-    name: mode,
-    value: amount,
-  }))
+  const pieChartData = [
+    ...Object.entries(salesData?.onlineSale).map(([mode, amount]) => ({ name: mode, value: amount })),
+    ...Object.entries(salesData?.offlineSale).map(([mode, amount]) => ({ name: mode, value: amount })),
+  ]
 
   return (
-    <div className="mx-4 mt-4 space-y-6 md:mt-6 pb-[7rem]">
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card className="shadow-lg bg-gradient-to-br from-secondary/50 to-secondary text-secondary-foreground">
-          <CardHeader>
-            <CardTitle>Today's Sales</CardTitle>
-          </CardHeader>
+    <div className="container mx-auto">
+      <div className="grid grid-cols-1 gap-6 p-4 sm:grid-cols-2 lg:grid-cols-3">
+        <section className="flex flex-col gap-6" >
+          <InfoCard title="Today's Sales" value={salesData.overAllAmount} />
+          {Object.entries(salesData?.onlineSale).map(([mode, amount]) => (
+            <InfoCard key={`online-${mode}`} title={`${mode}`} value={amount} />
+          ))}
+        </section>
+        <Card className="col-span-1 sm:col-span-2">
           <CardContent>
-            <h2 className="text-4xl font-bold">₹ {salesData?.totalSale?.toLocaleString("en-IN")}</h2>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-lg bg-gradient-to-br from-destructive/50 to-destructive text-destructive-foreground">
-          <CardHeader>
-            <CardTitle>Total Discount</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <h2 className="text-4xl font-bold">₹ {salesData?.totalDiscount?.toLocaleString("en-IN")}</h2>
+            <PieChart data={pieChartData} />
           </CardContent>
         </Card>
       </div>
 
-      <Card className="shadow-lg">
+      <Card className="border-none shadow-none">
         <CardHeader>
-          <CardTitle>Sales by Payment Mode</CardTitle>
+          <CardTitle>Payment Modes</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col items-center justify-between md:flex-row">
-          <div className="grid grid-cols-2 gap-2 mb-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 md:mb-0">
-            {Object.entries(salesData?.modeObj).map(([mode, amount]) => (
-              <InfoCard
-                key={mode}
-                title={mode}
-                value={amount}
-                icon={mode === "offline" ? <CreditCard className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
-                gradient={mode === "offline" ? "from-blue-300 to-blue-600" : "from-green-400 to-green-600"}
-              />
+        <CardContent>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {Object.entries(salesData.offlineSale).map(([mode, amount]) => (
+              <InfoCard key={`offline-${mode}`} title={` ${mode}`} value={amount} />
             ))}
-          </div>
-          <div className="w-full h-64 md:w-[40%]">
-            <PieChart data={pieChartData} />
           </div>
         </CardContent>
       </Card>
-
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-4">
-        <InfoCard
-          title="Service Charge"
-          value={salesData?.totalServiceCharge}
-          icon={<DollarSign className="w-4 h-4" />}
-          gradient="from-yellow-300 to-yellow-600"
-        />
-        <InfoCard
-          title="Total Tax"
-          value={salesData?.totalTax}
-          icon={<Percent className="w-4 h-4" />}
-          gradient="from-purple-300 to-purple-600"
-        />
-        <InfoCard
-          title="Total Tips"
-          value={salesData?.totalTips}
-          icon={<Tag className="w-4 h-4" />}
-          gradient="from-pink-300 to-pink-600"
-        />
-        <InfoCard
-          title="Coins Earned"
-          value={salesData?.totalEarnCoins}
-          icon={<Coins className="w-4 h-4" />}
-          gradient="from-indigo-300 to-indigo-600"
-        />
-        <InfoCard
-          title="Coins Claimed"
-          value={salesData?.totalClaimedCoins}
-          icon={<Coins className="w-4 h-4" />}
-          gradient="from-zinc-300 to-zinc-600"
-        />
-        <InfoCard
-          title="Forced Settle"
-          value={salesData?.forceSettle}
-          icon={<Coins className="w-4 h-4" />}
-          gradient="from-red-300 to-red-600"
-        />
-      </div>
     </div>
   )
 }
 
-const InfoCard = ({ title, value, icon, gradient }: { title: string; value: number; icon: React.ReactNode; gradient: string }) => (
-  <Card className={`bg-gradient-to-br ${gradient} text-white shadow-lg`}>
-    <CardContent className="pt-6">
-      <div className="flex flex-col items-center justify-between">
-        <div className="flex items-center mb-2 space-x-2">
-          {icon}
-          <span className="text-sm font-semibold capitalize">{title}</span>
-        </div>
-        <span className="text-2xl font-bold text-nowrap">₹ {value?.toLocaleString("en-IN")}</span>
-      </div>
-    </CardContent>
-  </Card>
-)
-
 const OverviewSkeleton = () => (
-  <div className="space-y-6">
-    <Skeleton className="w-full h-40" />
-    <div className="grid grid-cols-2 gap-6">
-      <Skeleton className="w-full h-40" />
-      <Skeleton className="w-full h-40" />
+  <div className="container p-4 mx-auto space-y-6">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <Skeleton className="h-40 sm:col-span-2 lg:col-span-1" />
+      <Skeleton className="col-span-1 h-80 sm:col-span-2" />
     </div>
-    <Skeleton className="w-full h-96" />
-    <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-4">
-      {[...Array(4)].map((_, i) => (
-        <Skeleton key={i} className="w-full h-32" />
-      ))}
-    </div>
+    <Skeleton className="h-96" />
   </div>
 )
 
