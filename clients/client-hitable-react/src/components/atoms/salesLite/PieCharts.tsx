@@ -51,7 +51,7 @@ export const PieChart: React.FC<PieChartProps> = ({ data }) => {
             </ResponsiveContainer>
 
             {/* Data values on the right */}
-            <div className="p-4">
+            <div className="p-4 md:w-[100%]">
                 <h3 className="mb-2 text-lg font-semibold">Data Breakdown</h3>
                 <section className="flex flex-wrap gap-4">
                     {dataWithPercentage.map((entry, index) => (

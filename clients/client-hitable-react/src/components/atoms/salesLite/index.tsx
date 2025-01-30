@@ -91,7 +91,7 @@ const SalesLite = () => {
         <section className="flex flex-col gap-6" >
           <InfoCard title="Today's Sales" value={salesData.overAllAmount} />
           {Object.entries(salesData?.onlineSale).map(([mode, amount]) => (
-            <InfoCard key={`online-${mode}`} title={`Online - ${mode}`} value={amount} />
+            <InfoCard key={`online-${mode}`} title={` ${mode}`} value={amount} />
           ))}
         </section>
         <Card className="col-span-1 sm:col-span-2">
@@ -103,12 +103,12 @@ const SalesLite = () => {
 
       <Card className="border-none shadow-none">
         <CardHeader>
-          <CardTitle>Payment Modes</CardTitle>
+          <CardTitle>Offline Payment Modes</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {Object.entries(salesData.offlineSale).map(([mode, amount]) => (
-              <InfoCard key={`offline-${mode}`} title={`Offline - ${mode}`} value={amount} />
+              <InfoCard key={`offline-${mode}`} title={`${mode}`} value={amount} />
             ))}
           </div>
         </CardContent>

@@ -135,7 +135,6 @@ const MemoEditDish = () => {
   };
 
   const handleSaveCropper = () => {
-    console.log("handleSaveCropper");
     handleCrop(
       cropping,
       cropperRef,

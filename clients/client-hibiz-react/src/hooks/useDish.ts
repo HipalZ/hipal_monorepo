@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { apiRpc } from "@hi/common";
 import type { ICategory } from "@/components/types/businessData";
@@ -137,6 +137,17 @@ export async function putDishData(filteredPayload: any): Promise<any> {
   const data = await dishResponse.json();
   return { data, dishResponse };
 }
+
+export const useUpdateDish = () => {
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (payload) => {
+      const { data, dishResponse } = await putDishData(payload);
+      return { data, dishResponse };
+    },
+  });
+
+  return { isPending, mutateAsync };
+};
 
 export async function deleteDishData(id: string): Promise<any> {
   const dishResponse = await apiRpc.dishes[":id"].$delete({

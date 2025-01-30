@@ -21,6 +21,7 @@ import ListOfAddOn from "@/components/templates/menu/addonPage/listOfAddOn";
 import AddOnForm from "@/components/templates/menu/addonPage/addOnform";
 import CreateCategory from "@/components/templates/menu/category/createCategory";
 import CreateDish from "@/components/templates/menu/dish/createDish";
+import QuickMenu from "@/components/templates/menu/QuickMenu";
 
 const MemoiseManager = () => {
   const businessData = useBusinessData((s) => s.businessData);
@@ -34,6 +35,7 @@ const MemoiseManager = () => {
     setEditOpenMenu,
     openMenu,
     setOpenMenu,
+    isMenuManager,
   } = useMenuPageStore((s) => ({
     selectedPage: s.selectedPage,
     setSelectedPage: s.setSelectedPage,
@@ -44,6 +46,7 @@ const MemoiseManager = () => {
     setOpenMenu: s.setOpenMenu,
     resetStore: s.resetStore,
     resetEditDish: s.resetEditDish,
+    isMenuManager: s.isMenuManager,
     setIsMenuManager: s.setIsMenuManager,
   }));
   const navigate = useNavigate();
@@ -80,6 +83,7 @@ const MemoiseManager = () => {
       onClick: () => setSelectedPage("SUB_CATEGORY"),
     },
     { icon: Hi, text: "Add On", onClick: () => setSelectedPage("ADD_ON") },
+    { icon: Hi, text: "Quick Menu", onClick: () => setSelectedPage("QUICK_MENU") },
   ];
 
   const removeAllUnwanted = useCallback((page: MenuPageType, text: string) => {
@@ -101,7 +105,7 @@ const MemoiseManager = () => {
             isIconBusinessShow={false}
           />
         </article>
-        <section className="absolute w-full px-4 space-x-4 text-sm mobile-only">
+        <section className="absolute flex w-full px-4 space-x-4 overflow-auto text-sm text-nowrap flex-nowrap hide-scrollbar mobile-only">
           {sidebarItems.map((item) => (
             <button
               className={cn(
@@ -118,8 +122,14 @@ const MemoiseManager = () => {
             </button>
           ))}
         </section>
-        <Filter />
-        <Search />
+        {
+          selectedPage !== "QUICK_MENU" && (
+            <>
+              <Filter />
+              <Search />
+            </>
+          )
+        }
       </div>
       <Sidebar items={sidebarItems} />
       <section className="min-h-[100dvh]">
@@ -130,6 +140,11 @@ const MemoiseManager = () => {
         {selectedPage === "SUB_CATEGORY" && <ListOfChildCategory />}
 
         {selectedPage === "ADD_ON" && <ListOfAddOn />}
+        {
+          selectedPage === "QUICK_MENU" && isMenuManager && (
+            <QuickMenu />
+          )
+        }
       </section>
       {editOpenMenu && (
         <PopUp show={editOpenMenu} onClose={closeEditMenu} hide>
