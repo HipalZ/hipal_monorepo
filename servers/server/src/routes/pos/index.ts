@@ -179,41 +179,32 @@ const posRouter = new Hono()
           );
         }
 
-        let getPin = await UserSession.findOne({
+        const getPin = await UserSession.findOne({
           businessId: businessId,
           tableName: tableName,
         });
 
-        console.log("getPin", getPin);
-
-        if (!getPin?.isPinActive) {
-          console.log("first");
-          const tenDigitCode = generateTenDigitCode();
-          const registerUser = await axios.post(
-            "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
-            {
-              app_key: pos?.posId.accessKey,
-              app_secret: pos?.posId.secretKey,
-              access_token: pos?.posId.authToken,
-              restID: pos?.posId.restId,
-              phone: tenDigitCode,
-              name: generatedBy,
-            },
-          );
-          if (registerUser.data.success === "0") {
-            throw new Error("user not registered");
+        if (getPin) {
+          const currentTime = new Date();
+          const pinTime = new Date(getPin.date);
+          const timeDifference =
+            (currentTime.getTime() - pinTime.getTime()) / (1000 * 60 * 60); // Difference in hours
+          if (timeDifference > 3) {
+            const registerUser = await axios.post(
+              "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
+              {
+                app_key: pos?.posId.accessKey,
+                app_secret: pos?.posId.secretKey,
+                access_token: pos?.posId.authToken,
+                restID: pos?.posId.restId,
+                phone: getPin.pin,
+                name: generatedBy,
+              },
+            );
+            if (registerUser.data.success === "0") {
+              throw new Error("user not registered");
+            }
           }
-          getPin = await UserSession.findOneAndUpdate(
-            {
-              businessId: businessId,
-              tableName: tableName,
-            },
-            {
-              pin: tenDigitCode,
-              isPinActive: true,
-            },
-            { new: true, session },
-          );
         }
 
         const billConfig = {
@@ -937,20 +928,20 @@ const posRouter = new Hono()
 
         if (!fetchHiCode) {
           const tenDigitCode = generateTenDigitCode();
-          // const registerUser = await axios.post(
-          //   "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
-          //   {
-          //     app_key: pos?.posId.accessKey,
-          //     app_secret: pos?.posId.secretKey,
-          //     access_token: pos?.posId.authToken,
-          //     restID: pos?.posId.restId,
-          //     phone: tenDigitCode,
-          //     name: customerName,
-          //   },
-          // );
-          // if (registerUser.data.success === "0") {
-          //   throw new Error("user not registered");
-          // }
+          const registerUser = await axios.post(
+            "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
+            {
+              app_key: pos?.posId.accessKey,
+              app_secret: pos?.posId.secretKey,
+              access_token: pos?.posId.authToken,
+              restID: pos?.posId.restId,
+              phone: tenDigitCode,
+              name: customerName,
+            },
+          );
+          if (registerUser.data.success === "0") {
+            throw new Error("user not registered");
+          }
           const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
 
           await Table.findOneAndUpdate(
@@ -1181,20 +1172,20 @@ const posRouter = new Hono()
 
         const tenDigitCode = generateTenDigitCode();
         if (!fetchHiCode) {
-          // const registerUser = await axios.post(
-          //   "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
-          //   {
-          //     app_key: pos?.posId.accessKey,
-          //     app_secret: pos?.posId.secretKey,
-          //     access_token: pos?.posId.authToken,
-          //     restID: pos?.posId.restId,
-          //     phone: tenDigitCode,
-          //     name: customerName,
-          //   },
-          // );
-          // if (registerUser.data.success === "0") {
-          //   throw new Error("user not registered");
-          // }
+          const registerUser = await axios.post(
+            "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
+            {
+              app_key: pos?.posId.accessKey,
+              app_secret: pos?.posId.secretKey,
+              access_token: pos?.posId.authToken,
+              restID: pos?.posId.restId,
+              phone: tenDigitCode,
+              name: customerName,
+            },
+          );
+          if (registerUser.data.success === "0") {
+            throw new Error("user not registered");
+          }
           const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
           const userSession = new UserSession(
             {

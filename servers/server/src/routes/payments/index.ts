@@ -665,6 +665,7 @@ const paymentsRouter = new Hono()
               date: Date.now(),
               posDiscount: posDiscount,
               posBillRequestId: findTempTable?.billRequestId,
+              mode: "OFFLINE",
             },
           ],
           { session },
@@ -1087,6 +1088,7 @@ const paymentsRouter = new Hono()
                 date: Date.now(),
                 message: `Fail ${payload.payment.entity.notes.total}`,
                 couponId: payload.payment.entity.notes.couponId,
+                mode: payload.payment.entity.method,
               },
             ],
             { session },
@@ -1210,6 +1212,7 @@ const paymentsRouter = new Hono()
                 userId: getOrder?.userId,
                 posDiscount: posDiscount,
                 date: Date.now(),
+                mode: payload.payment.entity.method,
               },
             ],
             { session },
@@ -1624,12 +1627,7 @@ const paymentsRouter = new Hono()
           businessId: alert.businessId,
         }).select("loyaltyId");
 
-        if (
-          alert.alertType === "ONLINE" ||
-          alert.alertType === "WAITER" ||
-          alert.alertType === "FORCE_SETTLE" ||
-          alert.alertType === "NORMAL_SETTLE"
-        ) {
+        if (alert.alertType !== "OFFLINE") {
           const updateAlert = await PaymentAlert.findByIdAndUpdate(
             alertId,
             { isAccepted: true, comment, waiterName },
@@ -1700,21 +1698,39 @@ const paymentsRouter = new Hono()
 
               const npcUser = await NpcUser.findById(npcUserId);
 
+              let modifyTotal = 0;
+              if (
+                paymentMode?.name === "npc" ||
+                paymentMode?.name === "dues" ||
+                paymentMode?.name === "complementary"
+              ) {
+                modifyTotal = 0;
+              } else {
+                modifyTotal = order.total;
+
+                if (settleModes.length > 1) {
+                  for (const settle of settleModes) {
+                    if (settle.name === "complementary") {
+                      modifyTotal -= settle.amount ?? 0;
+                    }
+                  }
+                }
+              }
+
               const createPayment = await Payment.create(
                 [
                   {
                     businessId: alert.businessId,
                     order_id: order?._id,
-                    total: paymentMode?.name === "npc" ? 0 : order?.total,
-                    mode:
-                      settleModes.length > 1
-                        ? "split"
-                        : paymentMode?.name || "offline",
+                    total:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : order?.total,
+                    mode: settleModes.length > 1 ? "split" : paymentMode?.name,
                     status: "SUCCESS",
                     paymentMode:
-                      settleModes.length > 1
-                        ? "split"
-                        : paymentMode?.name || "offline",
+                      settleModes.length > 1 ? "split" : paymentMode?.name,
                     userId:
                       paymentMode?.name === "npc"
                         ? npcUser?.userId
@@ -1729,10 +1745,10 @@ const paymentsRouter = new Hono()
                     razorpayPaymentId: nanoid(15),
                     couponId: order?.couponId,
                     channelId: order?.channelId,
-                    posBillId: tempTable?.billInvoiceId || "",
-                    tax: tempTable?.tax || 0,
-                    serviceCgarge: tempTable?.serviceCharge || 0,
-                    posBillRequestId: tempTable?.billRequestId || "",
+                    posBillId: tempTable?.billInvoiceId,
+                    tax: tempTable?.tax,
+                    serviceCgarge: tempTable?.serviceCharge,
+                    posBillRequestId: tempTable?.billRequestId,
                     splitModes: settleModes,
                     waiterName,
                     date: Date.now(),
@@ -1789,7 +1805,7 @@ const paymentsRouter = new Hono()
                     access_token: isHavePos?.posId?.authToken,
                     restID: isHavePos?.posId?.restId,
                     bill_request_id: tempTable?.billRequestId,
-                    amount_paid: paymentMode?.name === "npc" ? 0 : order?.total,
+                    amount_paid: modifyTotal,
                     pin: tempTable?.pin,
                   },
                 );
@@ -2063,29 +2079,36 @@ const paymentsRouter = new Hono()
       for (const payment of payments) {
         const { total = 0, paymentMode, mode, splitModes } = payment;
 
-        if (!["dues", "npc", "complementary"].includes(mode)) {
-          overAllAmount += total;
+        if (mode === "split" && Array.isArray(splitModes)) {
+          let splitTotal = 0;
+
+          for (const settle of splitModes) {
+            if (settle.name !== "complementary") {
+              splitTotal += settle.amount ?? 0;
+              offlineSales[settle.name] =
+                (offlineSales[settle.name] || 0) + (settle.amount ?? 0);
+            }
+          }
+
+          overAllAmount += splitTotal; // Only add non-complementary split values
+        } else if (!["dues", "npc", "complementary"].includes(mode)) {
+          overAllAmount += total; // Add total if it's not dues, npc, or complementary
         }
 
         if (paymentMode === "online") {
           totalOnlineSale += total;
-        } else if (paymentMode === "split" && Array.isArray(splitModes)) {
-          // Process split payments
-          for (const settle of splitModes) {
-            offlineSales[settle.name] =
-              (offlineSales[settle.name] || 0) + (settle.amount ?? 0);
-          }
         } else if (!["dues", "npc", "complementary"].includes(paymentMode)) {
-          // Process other offline payments
           offlineSales[mode] = (offlineSales[mode] || 0) + total;
         }
       }
+
       delete offlineSales["complementary"];
+      delete offlineSales["split"];
 
       return c.json({
         err: false,
         data: {
-          overAllAmount, // Excludes dues, npc, complementary
+          overAllAmount, // Excludes complementary but includes cash in split modes
           onlineSale: { online: totalOnlineSale },
           offlineSale: offlineSales,
         },
@@ -2106,85 +2129,70 @@ const paymentsRouter = new Hono()
 
     async (c) => {
       const { businessId, from, to } = c.req.query();
-      const fromDate = Number(from);
-      const toDate = Number(to);
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
+
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
       const PAGE_SIZE = 20;
       const pageNumber = c.req.query("pageNumber") as string;
       const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
 
-      if (!from && !to) {
-        const existingPayments = await Payment.find({
-          businessId,
-          date: {
-            $gte: startOfToday.getTime(),
-            $lte: endOfToday.getTime(),
-          },
-          mode: { $ne: "dues" },
+      const existingPayments = await Payment.find({
+        businessId,
+        date: {
+          $gte: fromDate,
+          $lte: toDate,
+        },
+      })
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .populate({
+          path: "order_id",
         })
-          .sort({ _id: -1 })
-          .skip(skip)
-          .limit(PAGE_SIZE)
-          .populate({
-            path: "order_id",
-          })
-          .populate({
-            path: "userId",
-            select: "name phone",
-          });
-        const totalSale = existingPayments.reduce(
-          (acc, payment) => acc + (payment.total ?? 0),
-          0,
-        );
-
-        return c.json({
-          err: false,
-          data: {
-            totalSale,
-            existingPayments,
-          },
-          message: "existing payment",
+        .populate({
+          path: "userId",
+          select: "name phone",
         });
-      }
-      if (from && to) {
-        const existingPayments = await Payment.find({
-          businessId,
-          date: {
-            $gte: fromDate,
-            $lte: toDate,
-          },
-          mode: { $ne: "dues" },
-        })
-          .sort({ _id: -1 })
-          .skip(skip)
-          .limit(PAGE_SIZE)
-          .populate({
-            path: "order_id",
-          })
-          .populate({
-            path: "userId",
-            select: "name phone",
-          });
-        const totalSale = existingPayments.reduce(
-          (acc, payment) => acc + (payment.total ?? 0),
-          0,
-        );
 
-        return c.json({
-          err: false,
-          data: {
-            totalSale,
-            existingPayments,
-          },
-          message: "existing payment",
-        });
+      let totalSale = 0;
+
+      for (const payment of existingPayments) {
+        const { total = 0, mode, splitModes } = payment;
+
+        if (mode === "split" && Array.isArray(splitModes)) {
+          let splitTotal = 0;
+
+          for (const settle of splitModes) {
+            if (settle.name !== "complementary") {
+              splitTotal += settle.amount ?? 0;
+            }
+          }
+
+          totalSale += splitTotal; // Only adding valid split mode amounts
+        } else if (!["dues", "npc", "complementary"].includes(mode)) {
+          totalSale += total; // Add total if it's not dues, npc, or complementary
+        }
       }
+
       return c.json({
-        err: true,
-        data: {},
-        message: "Invalid date range",
+        err: false,
+        data: {
+          totalSale, // Excludes complementary but includes valid split amounts
+          existingPayments,
+        },
+        message: "existing payment",
       });
     },
   )
+
   .put(
     "updateAll/payments",
 
@@ -2939,6 +2947,176 @@ const paymentsRouter = new Hono()
 
       return respond(c, "3 Webhook received successfully", false, 200, {});
     });
-  });
+  })
+
+  .get(
+    "/sale/exception_and_rewards",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string(),
+        from: z.string().optional(),
+        to: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const { businessId, from, to } = c.req.query();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
+
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
+      const payments = await Payment.find({
+        businessId,
+        date: { $gte: fromDate, $lte: toDate },
+      });
+
+      let totalDuesReceived = 0;
+      let totalDiscount = 0;
+      let totalDuesGiven = 0;
+      let totalNpc = 0;
+      let totalComplementary = 0;
+      let totalCoinsGiven = 0;
+      let totalCoinsReceived = 0;
+      let totalCouponUsed = 0;
+
+      for (const payment of payments) {
+        if (payment.settleType === "DUES_SETTLE") {
+          totalDuesReceived += payment.total;
+        }
+
+        totalDiscount += payment.discount ?? 0;
+
+        if (payment.mode === "dues") {
+          totalDuesGiven += payment.total;
+        }
+
+        if (payment.mode === "npc") {
+          totalNpc += payment.billValue;
+        }
+
+        if (payment.mode === "complementary") {
+          totalComplementary += payment.billValue;
+        }
+
+        if (Array.isArray(payment.splitModes)) {
+          for (const split of payment.splitModes) {
+            if (split.name === "complementary") {
+              totalComplementary += split.amount ?? 0;
+            }
+          }
+        }
+
+        totalCoinsGiven += payment.earnCoins ?? 0;
+
+        if (!payment.couponId) {
+          totalCoinsReceived += payment.claimedCoins ?? 0;
+        }
+
+        if (payment.couponId) {
+          totalCouponUsed += payment.claimedCoins ?? 0;
+        }
+      }
+
+      return c.json({
+        err: false,
+        data: {
+          exceptionSale: {
+            totalDuesReceived,
+            totalDuesGiven,
+            totalNpc,
+            totalComplementary,
+            totalDiscount,
+          },
+          rewardSale: {
+            totalCoinsGiven,
+            totalCoinUsed: totalCoinsReceived,
+            totalCouponUsed,
+          },
+        },
+      });
+    },
+  )
+
+  .get(
+    "/sale/other_and_warnings",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string(),
+        from: z.string().optional(),
+        to: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const { businessId, from, to } = c.req.query();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
+
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
+      const payments = await Payment.find({
+        businessId,
+        date: { $gte: fromDate, $lte: toDate },
+      });
+
+      let totalTax = 0;
+      let totalTip = 0;
+      let totalServiceCharge = 0;
+      let totalForceSettle = 0;
+      let totalFreeSettle = 0;
+
+      for (const payment of payments) {
+        totalTax += payment.tax ?? 0;
+        totalTip += payment.tips ?? 0;
+        totalServiceCharge += payment.serviceCharge ?? 0;
+
+        if (payment.settleType === "FORCE_SETTLE") {
+          totalForceSettle += payment.total;
+        } else if (payment.settleType === "FREE_SETTLE") {
+          totalFreeSettle += payment.total;
+        }
+      }
+
+      return c.json({
+        err: false,
+        data: {
+          otherSale: {
+            totalTax: Math.round(totalTax),
+            totalTip,
+            totalServiceCharge: Math.round(totalServiceCharge),
+          },
+          warningSale: {
+            totalForceSettle,
+            totalFreeSettle,
+          },
+        },
+      });
+    },
+  );
 
 export default paymentsRouter;

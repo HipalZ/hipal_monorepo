@@ -283,6 +283,25 @@ const tableRouter = new Hono()
         businessId: table?.businessId,
         tableName: table?.name,
       });
+
+      let modifyTotal = 0;
+      if (
+        paymentMode?.name === "npc" ||
+        paymentMode?.name === "dues" ||
+        paymentMode?.name === "complementary"
+      ) {
+        modifyTotal = 0;
+      } else {
+        modifyTotal = settleAmount;
+
+        if (settleModes.length > 1) {
+          for (const settle of settleModes) {
+            if (settle.name === "complementary") {
+              modifyTotal -= settle.amount ?? 0;
+            }
+          }
+        }
+      }
       const res = await axios.post(
         "http://api.petpooja.com/V1/captainorders/success_payment/",
         {
@@ -291,7 +310,7 @@ const tableRouter = new Hono()
           access_token: pos?.posId.authToken,
           restID: pos?.posId.restId,
           bill_request_id: activeTable?.billRequestId,
-          amount_paid: paymentMode?.name === "npc" ? 0 : settleAmount,
+          amount_paid: modifyTotal,
           pin: activeTable?.pin,
         },
       );
@@ -303,7 +322,11 @@ const tableRouter = new Hono()
       const saveOrder = await Order.create(
         [
           {
-            total: paymentMode?.name === "npc" ? 0 : settleAmount,
+            total:
+              paymentMode?.name === "npc" ||
+              paymentMode?.name === "complementary"
+                ? 0
+                : settleAmount,
             currency: "INR",
             receipt: uniqueOrderId,
             userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
@@ -326,11 +349,9 @@ const tableRouter = new Hono()
             businessId: table?.businessId,
             order_id: saveOrder[0]._id,
             total: saveOrder[0].total,
-            mode:
-              settleModes.length > 1 ? "split" : paymentMode?.name || "offline",
+            mode: settleModes.length > 1 ? "split" : paymentMode?.name,
             status: "SUCCESS",
-            paymentMode:
-              settleModes.length > 1 ? "split" : paymentMode?.name || "offline",
+            paymentMode: settleModes.length > 1 ? "split" : paymentMode?.name,
             userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
             claimedCoins: 0,
             billValue: saveOrder[0].billValue,
@@ -350,6 +371,7 @@ const tableRouter = new Hono()
 
             waiterName: captain?.name,
             date: Date.now(),
+            discount: getBill.data.order_data.discount,
           },
         ],
         { session },
@@ -449,6 +471,7 @@ const tableRouter = new Hono()
             userId: saveOrder[0]?.userId,
             posDiscount: 0,
             date: Date.now(),
+            mode: paymentMode?.name,
           },
         ],
         { session },
@@ -551,11 +574,33 @@ const tableRouter = new Hono()
       );
       const uniqueOrderId = nanoid(15);
 
+      let modifyTotal = 0;
+      if (
+        paymentMode?.name === "npc" ||
+        paymentMode?.name === "dues" ||
+        paymentMode?.name === "complementary"
+      ) {
+        modifyTotal = 0;
+      } else {
+        modifyTotal = getBill.data.order_data.total;
+
+        if (settleModes.length > 1) {
+          for (const settle of settleModes) {
+            if (settle.name === "complementary") {
+              modifyTotal -= settle.amount ?? 0;
+            }
+          }
+        }
+      }
+
       const saveOrder = await Order.create(
         [
           {
             total:
-              paymentMode?.name === "npc" ? 0 : getBill.data.order_data.total,
+              paymentMode?.name === "npc" ||
+              paymentMode?.name === "complementary"
+                ? 0
+                : getBill.data.order_data.total,
             currency: "INR",
             receipt: uniqueOrderId,
             userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
@@ -583,11 +628,9 @@ const tableRouter = new Hono()
             businessId: table?.businessId,
             order_id: saveOrder[0]._id,
             total: saveOrder[0].total,
-            mode:
-              settleModes.length > 1 ? "split" : paymentMode?.name || "offline",
+            mode: settleModes.length > 1 ? "split" : paymentMode?.name,
             status: "SUCCESS",
-            paymentMode:
-              settleModes.length > 1 ? "split" : paymentMode?.name || "offline",
+            paymentMode: settleModes.length > 1 ? "split" : paymentMode?.name,
             userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
             claimedCoins: 0,
             billValue: saveOrder[0].billValue,
@@ -607,10 +650,12 @@ const tableRouter = new Hono()
             waiterName: captain?.name,
             splitModes: settleModes,
             date: Date.now(),
+            discount: getBill.data.order_data.discount,
           },
         ],
         { session },
       );
+
       if (duesUserId && paymentMode?.name === "dues") {
         const createPaymentDues = await PendingDues.create(
           [
@@ -684,7 +729,7 @@ const tableRouter = new Hono()
           access_token: pos?.posId.authToken,
           restID: pos?.posId.restId,
           bill_request_id: billRequestId,
-          amount_paid: saveOrder[0].total,
+          amount_paid: modifyTotal,
           pin: findTable?.pin,
         },
       );
@@ -724,6 +769,7 @@ const tableRouter = new Hono()
             userId: saveOrder[0]?.userId,
             posDiscount: 0,
             date: Date.now(),
+            mode: paymentMode?.name,
           },
         ],
         { session },
@@ -1602,10 +1648,33 @@ const tableRouter = new Hono()
 
       const uniqueOrderId = nanoid(15);
 
+      let modifyTotal = 0;
+      if (
+        paymentMode?.name === "npc" ||
+        paymentMode?.name === "dues" ||
+        paymentMode?.name === "complementary"
+      ) {
+        modifyTotal = 0;
+      } else {
+        modifyTotal = settleAmount;
+
+        if (settleModes.length > 1) {
+          for (const settle of settleModes) {
+            if (settle.name === "complementary") {
+              modifyTotal -= settle.amount ?? 0;
+            }
+          }
+        }
+      }
+
       const saveOrder = await Order.create(
         [
           {
-            total: paymentMode?.name === "npc" ? 0 : settleAmount,
+            total:
+              paymentMode?.name === "npc" ||
+              paymentMode?.name === "complementary"
+                ? 0
+                : settleAmount,
             currency: "INR",
             receipt: uniqueOrderId,
             userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
@@ -1628,11 +1697,9 @@ const tableRouter = new Hono()
             businessId: businessId,
             order_id: saveOrder[0]._id,
             total: saveOrder[0].total,
-            mode:
-              settleModes.length > 1 ? "split" : paymentMode?.name || "offline",
+            mode: settleModes.length > 1 ? "split" : paymentMode?.name,
             status: "SUCCESS",
-            paymentMode:
-              settleModes.length > 1 ? "split" : paymentMode?.name || "offline",
+            paymentMode: settleModes.length > 1 ? "split" : paymentMode?.name,
             userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
             claimedCoins: 0,
             billValue: saveOrder[0].billValue,
@@ -1708,6 +1775,7 @@ const tableRouter = new Hono()
             userId: saveOrder[0]?.userId,
             posDiscount: 0,
             date: Date.now(),
+            mode: paymentMode?.name,
           },
         ],
         { session },

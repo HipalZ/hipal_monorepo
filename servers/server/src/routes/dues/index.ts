@@ -191,10 +191,33 @@ const duesRouter = new Hono()
 
       const uniqueOrderId = nanoid(15);
 
+      let modifyTotal = 0;
+      if (
+        paymentMode?.name === "npc" ||
+        paymentMode?.name === "dues" ||
+        paymentMode?.name === "complementary"
+      ) {
+        modifyTotal = 0;
+      } else {
+        modifyTotal = totalAmount;
+
+        if (settleModes.length > 1) {
+          for (const settle of settleModes) {
+            if (settle.name === "complementary") {
+              modifyTotal -= settle.amount;
+            }
+          }
+        }
+      }
+
       const saveOrder = await Order.create(
         [
           {
-            total: totalAmount,
+            total:
+              paymentMode?.name === "npc" ||
+              paymentMode?.name === "complementary"
+                ? 0
+                : totalAmount,
             currency: "INR",
             receipt: uniqueOrderId,
             userId: duesUser?.userId,
