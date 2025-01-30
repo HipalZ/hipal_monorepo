@@ -9,8 +9,7 @@ export const usePushNotifications = () => {
   const { setNotificationStatus } = useLiteStore((s) => ({
     setNotificationStatus: s.setNotificationStatus,
   }));
-  const { pushToken, setPushToken, setPlatform } = useHiClientZ((s) => ({
-    pushToken: s.pushToken,
+  const { setPushToken, setPlatform } = useHiClientZ((s) => ({
     setPushToken: s.setPushToken,
     setPlatform: s.setPlatform,
   }));
@@ -30,7 +29,6 @@ export const usePushNotifications = () => {
       if (platform === "android") {
         const token =
           await pushNotificationService.initializePushNotifications();
-        console.log("token", token);
         if (token) {
           setPushToken(token);
           pushNotificationService.initListeners();

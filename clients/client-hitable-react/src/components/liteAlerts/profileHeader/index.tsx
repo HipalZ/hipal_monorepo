@@ -34,12 +34,13 @@ const ProfileHeader = () => {
     navigate("/businesses");
   }, [navigate]);
 
-  const handleLogout = useCallback(() => {
+  const handleLogout = useCallback(async () => {
     setAccessToken("");
     setRefreshToken("");
     navigate("/");
     setSelectedBiz({});
-  }, [navigate, setAccessToken, setRefreshToken, setSelectedBiz]);
+    await updateNotificationsApi(false);
+  }, [navigate, setAccessToken, setRefreshToken, setSelectedBiz, updateNotificationsApi]);
 
   const UpdateNotification = useCallback(async () => {
     const updatedNotification = !notification;

@@ -13,12 +13,14 @@ import { memo, useState } from "react";
 import toast from "react-hot-toast";
 import { useErrorHandling } from "@/components/utils/helpers";
 import { FiDownload } from "react-icons/fi";
+import { useUpdateNotifications } from "@/utils/apiService";
 
 //test//
 const LoginMemo = () => {
   const { errorText } = useErrorHandling();
   const setAccessToken = useUserToken((s) => s.setAccessToken);
   const setRefreshToken = useUserToken((s) => s.setRefreshToken);
+  const { updateNotificationsApi } = useUpdateNotifications();
   const [password, setPassword] = useState<string>("");
 
   const { setLoading } = useLiteStore();
@@ -56,6 +58,7 @@ const LoginMemo = () => {
         setCaptainData(response.data.user);
         setRefreshToken(response.data.refreshToken);
         setAccessToken(response.data.accessToken);
+        await updateNotificationsApi(true);
         toast.success(`Hi ${response.data.user.name}! Welcome to HiClientZ`);
         setLoading(false);
         window.location.href = "/businesses";
