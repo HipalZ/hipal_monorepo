@@ -13,7 +13,7 @@ import { putDishData, useDishes, useLinkedDishes, useUpdateDish } from "@/hooks/
 const QuickMenu = () => {
     const { dishes } = useDishesStore((s) => ({ dishes: s.dishes }));
     const { isLoading, refetch } = useDishes();
-    const { data: linkedCategories } = useLinkedDishes();
+    const { data: linkedCategories, refetchLinked } = useLinkedDishes();
     const { isPending, mutateAsync } = useUpdateDish();
 
     const allDishes = useMemo(() => {
@@ -93,6 +93,7 @@ const QuickMenu = () => {
                 await mutateAsync(dishPayload);
             }
             refetch();
+            refetchLinked();
             clearEditedDishes();
             console.log("All updated dishes have been processed.");
         } catch (err) {

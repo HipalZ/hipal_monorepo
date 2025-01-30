@@ -85,12 +85,17 @@ export const useLinkedDishes = () => {
     return data?.data as CategoryType[];
   };
 
-  const { data, isLoading, isError } = useQuery<CategoryType[]>({
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch: refetchLinked,
+  } = useQuery<CategoryType[]>({
     queryKey: ["linkedDishes", businessId],
     queryFn: () => getAllLinkedDishes(businessId ?? ""),
     enabled: !!businessId && linkedDishes.length === 0,
   });
-  return { data, isLoading, isError };
+  return { data, isLoading, isError, refetchLinked };
 };
 
 export const useAddons = (dishStep: string) => {
