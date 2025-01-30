@@ -73,7 +73,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
   }, [businessId, tableName, message, name, userDetails._id, loading, errorText, onClose])
 
   const handleCloseInput = useCallback(() => {
-    if (Object.keys(messageImageMap).includes(message)) {
+    if (!Object.keys(messageImageMap).includes(message)) {
       setMessage("")
     }
     setIsFocused(false)
