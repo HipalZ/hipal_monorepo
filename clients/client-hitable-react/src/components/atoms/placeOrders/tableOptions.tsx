@@ -19,7 +19,6 @@ const MemoTableOptions = () => {
         setTransferTable(type)
         setTransferModal(true)
     }, [setTransferTable, setTransferModal, transferModal, transferTable])
-    console.log(transferTable, transferModal)
 
     return (
         <CardContent className="space-y-4 pt-[5rem] md:pt-[8.5rem]">

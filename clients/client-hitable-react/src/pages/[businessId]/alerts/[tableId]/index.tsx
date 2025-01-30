@@ -5,7 +5,7 @@ import { MdRestaurantMenu, MdReceipt } from 'react-icons/md';
 import { motion } from 'framer-motion';
 import { apiRpc } from '@hi/common';
 import { Button } from '@/components/ui/button';
-import type { TableData } from '@/components/store/useZonesAndTable';
+import { useZonesAndTablesStore, type TableData } from '@/components/store/useZonesAndTable';
 import { type orderModal, useOrderStore } from '@/components/store/useOrderData';
 import { useCart } from '@/components/store/useCart';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -32,6 +32,7 @@ const FreeTable = lazy(() => import('@/components/atoms/placeOrders/freeTable'))
 
 const TablePos = () => {
     const { tableId, businessId } = useParams();
+    const tables = useZonesAndTablesStore(s => s.tables);
     const navigate = useNavigate();
     const { isPlacingNewOrder } = useCart()
     const {
