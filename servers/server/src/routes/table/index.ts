@@ -687,7 +687,7 @@ const tableRouter = new Hono()
           npcUserId,
           {
             $inc: {
-              totalNpcAmount: saveOrder[0].total,
+              totalNpcAmount: saveOrder[0].billValue,
             },
           },
           { session },
