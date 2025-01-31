@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from "@/components/ui/input"
 import SpinnerMemo from '../atoms/loadingSpinner';
@@ -30,11 +30,19 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
     } = useTableTransfer(businessId || '');
 
     const tables = useZonesAndTablesStore((s) => s.tables);
-    const allTables = transfer && selectedItems.length > 0
-        ? [...new Map([...tables, ...filteredTables].map(item => [item._id, item])).values()]
-        : searchTerm.length > 0 && !transfer
-            ? filteredTables
-            : tables;
+
+    const allTables = useMemo(() => {
+        if (!transfer) {
+            return filteredTables;
+        }
+        if (transfer && selectedItems.length > 0) {
+            return [...new Map([...tables, ...filteredTables].map(item => [item._id, item])).values()];
+        }
+        if (transfer && selectedItems.length === 0) {
+            return filteredTables;
+        }
+        return filteredTables;
+    }, [transfer, selectedItems, tables, filteredTables]);
 
     const handleTableClick = (table: TableData) => {
         if (transfer) {
