@@ -29,7 +29,7 @@ export const PieChart: React.FC<PieChartProps> = ({ data }) => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-between w-full md:flex-row">
+        <div className="flex flex-col items-center justify-between w-full">
             {/* Pie Chart on the left */}
             <ResponsiveContainer width="100%" height={280}>
                 <RechartsPieChart>
@@ -59,7 +59,10 @@ export const PieChart: React.FC<PieChartProps> = ({ data }) => {
                             <span className="font-semibold" style={{ color: COLORS[index % COLORS.length] }}>
                                 {entry.name}:
                             </span>
-                            {` ${new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(entry.value)}`}
+                            <span className="ml-1 text-base font-semibold">
+
+                                {` ${new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(entry.value)}`}
+                            </span>
                         </div>
                     ))}
                 </section>

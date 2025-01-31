@@ -42,7 +42,7 @@ export const PieChart: React.FC<PieChartProps> = ({ data }) => {
                         fill="#8884d8"
                         dataKey="value"
                     >
-                        {dataWithPercentage.map((entry, index) => (
+                        {dataWithPercentage.map((_, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                     </Pie>
@@ -51,7 +51,7 @@ export const PieChart: React.FC<PieChartProps> = ({ data }) => {
             </ResponsiveContainer>
 
             {/* Data values on the right */}
-            <div className="p-4 md:w-[100%]">
+            <div className="md:w-[100%]">
                 <h3 className="mb-2 text-lg font-semibold">Data Breakdown</h3>
                 <section className="flex flex-wrap gap-4">
                     {dataWithPercentage.map((entry, index) => (
@@ -67,3 +67,5 @@ export const PieChart: React.FC<PieChartProps> = ({ data }) => {
         </div>
     );
 };
+
+

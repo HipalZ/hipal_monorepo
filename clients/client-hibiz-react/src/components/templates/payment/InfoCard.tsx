@@ -1,20 +1,28 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { formatCurrency } from "./userDueCard"
+import { motion } from "framer-motion"
 
 interface InfoCardProps {
     title: string
     value: number
-    className?: string
+    icon: React.ReactNode
+    gradient: string
 }
 
-export const InfoCard: React.FC<InfoCardProps> = ({ title, value, className }) => (
-    <Card className={className}>
-        <CardHeader>
-            <CardTitle className="font-semibold  text-muted-foreground">{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-            <p className="text-2xl font-bold">{formatCurrency(value)}</p>
-        </CardContent>
-    </Card>
-)
+export const InfoCard: React.FC<InfoCardProps> = ({ title, value, icon, gradient }) => {
+    return (
+        <motion.div whileHover={{ scale: 1.05 }} transition={{ type: "spring", stiffness: 300 }}>
+            <Card className={`bg-gradient-to-br ${gradient} relative`}>
+                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                    <CardTitle className="text-sm font-semibold tracking-wider text-white">{title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="text-2xl font-bold text-white">₹{value.toLocaleString()}</div>
+                </CardContent>
+                <article className="absolute top-0 right-0 p-2 text-white">
+                    {icon}
+                </article>
+            </Card>
+        </motion.div>
+    )
+}
 

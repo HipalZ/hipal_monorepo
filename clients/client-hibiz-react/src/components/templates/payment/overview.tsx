@@ -7,14 +7,41 @@ import { apiRpc } from "@hi/common"
 import useBusinessData from "@/components/store/useBusinessData"
 import { InfoCard } from "./InfoCard"
 import { PieChart } from "./PieCharts"
+import { motion } from "framer-motion"
+import { DollarSign, CreditCard, Gift, AlertTriangle } from "lucide-react"
+import { BarChart } from "./BarChart"
+import { LineChart } from "./LineChart"
 
-interface SalesData {
+export interface SalesData {
   overAllAmount: number
-  onlineSale: {
-    [key: string]: number
+  onlineSale: Record<string, number>
+  offlineSale: Record<string, number>
+}
+
+interface OtherAndWarningData {
+  otherSale: {
+    totalTax: number
+    totalTip: number
+    totalServiceCharge: number
   }
-  offlineSale: {
-    [key: string]: number
+  warningSale: {
+    totalForceSettle: number
+    totalFreeSettle: number
+  }
+}
+
+interface SalesExceptionData {
+  exceptionSale: {
+    totalDuesReceived: number
+    totalDuesGiven: number
+    totalNpc: number
+    totalComplementary: number
+    totalDiscount: number
+  }
+  rewardSale: {
+    totalCoinsGiven: number
+    totalCoinUsed: number
+    totalCouponUsed: number
   }
 }
 
@@ -46,6 +73,30 @@ const Overview = () => {
     }
   }
 
+  const otherAndWarning = async (): Promise<OtherAndWarningData> => {
+    const response = await apiRpc.payments.sale.other_and_warnings.$get({
+      query: {
+        businessId: business?._id,
+        from: timeStampStart.toString(),
+        to: timeStampEnd.toString(),
+      },
+    })
+    const data = (await response.json()).data as OtherAndWarningData
+    return data
+  }
+
+  const salesException = async (): Promise<SalesExceptionData> => {
+    const response = await apiRpc.payments.sale.exception_and_rewards.$get({
+      query: {
+        businessId: business?._id,
+        from: timeStampStart.toString(),
+        to: timeStampEnd.toString(),
+      },
+    })
+    const data = (await response.json()).data as SalesExceptionData
+    return data
+  }
+
   const {
     data: salesData,
     isLoading,
@@ -53,6 +104,18 @@ const Overview = () => {
   } = useQuery<SalesData, Error>({
     queryKey: ["salesData", business?._id, timeStampStart, timeStampEnd],
     queryFn: handleHistoryData,
+    enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
+  })
+
+  const { data: otherData } = useQuery<OtherAndWarningData, Error>({
+    queryKey: ["otherAndWarning", business?._idv, timeStampStart, timeStampEnd],
+    queryFn: otherAndWarning,
+    enabled: !!business?._idv && !!timeStampStart && !!timeStampEnd,
+  })
+
+  const { data: salesExceptionData } = useQuery<SalesExceptionData, Error>({
+    queryKey: ["salesException", business?._id, timeStampStart, timeStampEnd],
+    queryFn: salesException,
     enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
   })
 
@@ -70,50 +133,147 @@ const Overview = () => {
     )
   }
 
-  const pieChartData = [
-    ...Object.entries(salesData?.onlineSale).map(([mode, amount]) => ({ name: mode, value: amount })),
-    ...Object.entries(salesData?.offlineSale).map(([mode, amount]) => ({ name: mode, value: amount })),
-  ]
+  const totalOfflineSale = Object.values(salesData.offlineSale).reduce((acc, curr) => acc + curr, 0)
+  const totalExceptionAndReward = salesExceptionData
+    ? Object.values(salesExceptionData.exceptionSale).reduce((acc, curr) => acc + curr, 0) +
+    Object.values(salesExceptionData.rewardSale).reduce((acc, curr) => acc + curr, 0)
+    : 0
+  const totalOtherAndWarning = otherData
+    ? Object.values(otherData.otherSale).reduce((acc, curr) => acc + curr, 0) +
+    Object.values(otherData.warningSale).reduce((acc, curr) => acc + curr, 0)
+    : 0
 
   return (
     <div className="container mx-auto">
-      <div className="grid grid-cols-1 gap-6 p-4 sm:grid-cols-2 lg:grid-cols-3">
-        <section className="flex flex-col gap-6" >
-          <InfoCard title="Today's Sales" value={salesData.overAllAmount} />
-          {Object.entries(salesData?.onlineSale).map(([mode, amount]) => (
-            <InfoCard key={`online-${mode}`} title={`${mode}`} value={amount} />
-          ))}
-        </section>
-        <Card className="col-span-1 sm:col-span-2">
-          <CardContent>
-            <PieChart data={pieChartData} />
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 gap-4 p-4 md:grid-cols-4 lg:grid-cols-4">
+        <InfoCard
+          title="Total Sales"
+          value={salesData.overAllAmount}
+          icon={<DollarSign className="w-4 h-4" />}
+          gradient="from-blue-600 to-blue-200"
+        />
+        <InfoCard
+          title="Online Sales"
+          value={salesData.onlineSale.online}
+          icon={<DollarSign className="w-4 h-4" />}
+          gradient="from-black to-gray-100"
+        />
+        <InfoCard
+          title="Offline Sales"
+          value={totalOfflineSale}
+          icon={<CreditCard className="w-4 h-4" />}
+          gradient="from-green-600 to-green-100"
+        />
+        <InfoCard
+          title="Exception & Reward"
+          value={totalExceptionAndReward}
+          icon={<Gift className="w-4 h-4" />}
+          gradient="from-purple-600 to-purple-100"
+        />
+        <InfoCard
+          title="Other & Warning"
+          value={totalOtherAndWarning}
+          icon={<AlertTriangle className="w-4 h-4" />}
+          gradient="from-red-900 to-red-200"
+        />
       </div>
 
-      <Card className="border-none shadow-none">
-        <CardHeader>
-          <CardTitle>Offline Payment Modes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {Object.entries(salesData.offlineSale).map(([mode, amount]) => (
-              <InfoCard key={`offline-${mode}`} title={` ${mode}`} value={amount} />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 gap-6 p-4 md:grid-cols-1">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Sales Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PieChart
+                data={[
+                  ...Object.entries(salesData.onlineSale).map(([mode, amount]) => ({ name: mode, value: amount })),
+                  ...Object.entries(salesData.offlineSale).map(([mode, amount]) => ({ name: mode, value: amount })),
+                ]}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Offline Payment Modes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BarChart
+                data={Object.entries(salesData.offlineSale).map(([mode, amount]) => ({ name: mode, value: amount }))}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {salesExceptionData && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Exception & Reward Sales</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <LineChart
+                  data={[
+                    ...Object.entries(salesExceptionData.exceptionSale).map(([key, value]) => ({ name: key, value })),
+                    ...Object.entries(salesExceptionData.rewardSale).map(([key, value]) => ({ name: key, value })),
+                  ]}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+      </div>
+      {otherData && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.8 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Other & Warning Sales</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BarChart
+                data={[
+                  ...Object.entries(otherData.otherSale).map(([key, value]) => ({ name: key, value })),
+                  ...Object.entries(otherData.warningSale).map(([key, value]) => ({ name: key, value })),
+                ]}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
     </div>
   )
 }
 
 const OverviewSkeleton = () => (
   <div className="container p-4 mx-auto space-y-6">
-    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      <Skeleton className="h-40 sm:col-span-2 lg:col-span-1" />
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <Skeleton className="h-40 col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4" />
+      <Skeleton className="col-span-1 h-80 sm:col-span-2 lg:col-span-3" />
+      <Skeleton className="col-span-1 h-80" />
+      <Skeleton className="col-span-1 h-80 sm:col-span-2 lg:col-span-3" />
+      <Skeleton className="col-span-1 h-80 sm:col-span-2" />
       <Skeleton className="col-span-1 h-80 sm:col-span-2" />
     </div>
-    <Skeleton className="h-96" />
   </div>
 )
 

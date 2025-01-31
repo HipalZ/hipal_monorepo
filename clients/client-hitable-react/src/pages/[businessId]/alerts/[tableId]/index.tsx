@@ -1,11 +1,11 @@
-import { useState, useCallback, Suspense, lazy } from 'react';
+import { useState, useCallback, Suspense, lazy, memo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MdRestaurantMenu, MdReceipt } from 'react-icons/md';
 import { motion } from 'framer-motion';
 import { apiRpc } from '@hi/common';
 import { Button } from '@/components/ui/button';
-import { useZonesAndTablesStore, type TableData } from '@/components/store/useZonesAndTable';
+import type { TableData } from '@/components/store/useZonesAndTable';
 import { type orderModal, useOrderStore } from '@/components/store/useOrderData';
 import { useCart } from '@/components/store/useCart';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -30,9 +30,8 @@ const EmptyTableList = lazy(() => import('@/components/tables'));
 const FreeTable = lazy(() => import('@/components/atoms/placeOrders/freeTable'));
 
 
-const TablePos = () => {
+const MemoTablePos = () => {
     const { tableId, businessId } = useParams();
-    const tables = useZonesAndTablesStore(s => s.tables);
     const navigate = useNavigate();
     const { isPlacingNewOrder } = useCart()
     const {
@@ -311,4 +310,5 @@ const TablePos = () => {
     );
 };
 
+const TablePos = memo(MemoTablePos);
 export default TablePos;
