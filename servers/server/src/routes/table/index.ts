@@ -607,7 +607,7 @@ const tableRouter = new Hono()
             claimedCoins: 0,
             tableName: table?.name,
             tips: 0,
-            billValue: getBill.data.order_data.core_price || 0,
+            billValue: getBill.data.order_data.total || 0,
             businessId: table?.businessId,
             order_id: uniqueOrderId,
 
