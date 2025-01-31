@@ -243,6 +243,51 @@ const upiModeRouter = new Hono()
         201,
       );
     },
+  )
+
+  .get(
+    "/bulk_mode/upload/update",
+
+    async (c) => {
+      const businesses = await Business.find({});
+
+      for (const business of businesses) {
+        await UpiMode.updateMany(
+          {
+            businessId: business._id,
+            name: "upi",
+          },
+          {
+            $set: {
+              name: "(upi)machine",
+            },
+          },
+        );
+      }
+
+      for (const business of businesses) {
+        await UpiMode.updateMany(
+          {
+            businessId: business._id,
+            name: "card",
+          },
+          {
+            $set: {
+              name: "(card)machine",
+            },
+          },
+        );
+      }
+
+      return c.json(
+        {
+          message: "Bulk UpiMode updated successfully",
+          err: false,
+          data: {},
+        },
+        201,
+      );
+    },
   );
 
 export default upiModeRouter;
