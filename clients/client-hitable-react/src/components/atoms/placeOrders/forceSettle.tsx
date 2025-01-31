@@ -9,7 +9,7 @@ import CommonBottomButton from "../bottomButton";
 import { useOrderStore } from "@/components/store/useOrderData";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import toast from "react-hot-toast";
 import type { IBillData } from "@/components/types/hiClientzData";
@@ -18,13 +18,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import MultipleModes from "./multipleModes";
 import SingleMode from "./singleMode";
 import { useGetAllModes } from "@/components/hooks/useTableData";
-
-interface IMode {
-    _id: string;
-    name: string;
-    active: boolean;
-}
-
 
 
 const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => void; data?: IBillData }) => {
@@ -49,6 +42,8 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
         settleModes,
         setOpenOrderModal,
         setSettleModes,
+        saveDueUser,
+        setSaveDueUser,
     } = useOrderStore();
     const captainData = useHiClientZ((s) => s.captainData);
 
@@ -57,7 +52,6 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
     };
 
     const { mutateAsync, isPending } = useMutation({
-        mutationKey: ["forceSettle", selectedTable?._id, customReason, captainData?._id],
         mutationFn: async (payload: any) => {
             const response = await apiRpc.table.force_settle.$post({
                 json: {
@@ -66,11 +60,22 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
                     captainId: payload.captainId || "",
                     billRequestId: payload.billId || "",
                     settleAmount: payload.settleAmount || 0,
-                    settleModes: settleModes,
+                    settleModes: payload.settleModes || [],
                 },
             });
-            const res = await response.json();
-            return res;
+            if (response.status === 400 || response.status === 403) {
+                return toast.error("Force settle failed");
+            }
+            if (response.status === 200 || response.status === 201) {
+                const res = await response.json();
+                toast.success("Table force settled successfully");
+                setForceSettle(false);
+                setOpenOrderModal(false);
+                setSettleModes([]);
+                setSaveDueUser(null)
+                navigate(`/${businessId}/alerts`);
+                return res;
+            }
         },
     });
 
@@ -101,24 +106,33 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
         }
 
         try {
+
+            const hasDuesMode = settleModes.some(
+                (mode) => mode.name.toLowerCase() === "dues"
+            );
+            const hasNpcMode = settleModes.some(
+                (mode) => mode.name.toLowerCase() === "npc"
+            );
+
             const payload = {
                 tableId: selectedTable?._id,
                 reason: selectedReason || customReason,
                 captainId: captainData?._id,
                 billId: data?.billRequestId,
                 settleAmount,
+                settleModes: settleModes,
             };
 
-            const response = await mutateAsync(payload);
-
-            if (response?.err) {
-                toast.error(response?.message || "Force settle failed");
-            } else {
-                toast.success("Table force settled successfully");
-                setForceSettle(false);
-                setOpenOrderModal(false);
-                navigate(`/${businessId}/alerts`);
+            if (hasDuesMode && saveDueUser?._id) {
+                payload["duesUserId"] = saveDueUser._id;
             }
+            if (hasNpcMode && saveDueUser?._id) {
+                payload["npcUserId"] = saveDueUser?._id;
+            }
+
+            await mutateAsync(payload);
+
+
         } catch (error) {
             toast.error("An error occurred. Please try again.");
         }
