@@ -22,7 +22,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
   }, [phone]);
   const whatsappOwner = useCallback(() => {
     if (typeof window === "undefined") return;
-    window.open(`https://wa.me/${phone}`);
+    window.open(`https://wa.me/+91${phone}`);
   }, [phone]);
   return (
     <div className="relative items-center px-8">
