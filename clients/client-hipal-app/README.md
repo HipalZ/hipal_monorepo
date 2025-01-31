@@ -40,3 +40,4 @@ invoice
 builderror 
 pos payment
 free table
+sales breakdown
