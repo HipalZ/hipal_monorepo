@@ -108,9 +108,9 @@ const Overview = () => {
   })
 
   const { data: otherData } = useQuery<OtherAndWarningData, Error>({
-    queryKey: ["otherAndWarning", business?._idv, timeStampStart, timeStampEnd],
+    queryKey: ["otherAndWarning", business?._id, timeStampStart, timeStampEnd],
     queryFn: otherAndWarning,
-    enabled: !!business?._idv && !!timeStampStart && !!timeStampEnd,
+    enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
   })
 
   const { data: salesExceptionData } = useQuery<SalesExceptionData, Error>({
