@@ -333,7 +333,11 @@ const tableRouter = new Hono()
             claimedCoins: 0,
             tableName: table?.name,
             tips: 0,
-            billValue: getBill.data.order_data.total || 0,
+            billValue:
+              paymentMode?.name === "npc" ||
+              paymentMode?.name === "complementary"
+                ? settleAmount
+                : getBill.data.order_data.total,
             businessId: table?.businessId,
             order_id: uniqueOrderId,
 
