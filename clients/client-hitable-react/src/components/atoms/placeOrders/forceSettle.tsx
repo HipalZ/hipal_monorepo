@@ -44,6 +44,7 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
         setSettleModes,
         saveDueUser,
         setSaveDueUser,
+        setOpenDues,
     } = useOrderStore();
     const captainData = useHiClientZ((s) => s.captainData);
 
@@ -82,6 +83,7 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
                 setOpenOrderModal(false);
                 setSettleModes([]);
                 setSaveDueUser(null)
+                setOpenDues(false);
                 navigate(`/${businessId}/alerts`);
                 return res;
             }
