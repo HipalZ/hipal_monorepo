@@ -16,7 +16,10 @@ interface IAcessControl {
 export interface CustomRole {
   businessId: string;
   customRoleId: string;
-  permissions: string[];
+  permissions: {
+    title: string;
+    isHaveAccess: boolean;
+  }[];
   role: string;
   bookmark: boolean;
   _id: string;
@@ -32,6 +35,9 @@ export interface UserProfile {
   password: string;
   id: string;
   _id: string;
+  createdAt: string;
+  updatedAt: string;
+  isHaveAccess: boolean;
 }
 export interface IBusinessData {
   tags?: string[];

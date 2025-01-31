@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import useBusinessData from "./useBusinessData";
 
 export type bussinessControlPages =
   | "BUSINESS_CONTROL"
@@ -50,61 +51,64 @@ interface BusinessCtrl {
   disableLayoutFlow: () => void;
 }
 
-const useBusinessCtrl = create<BusinessCtrl>((set) => ({
-  step: 0,
-  setStep: (step: number) => set({ step }),
-  exploreLayout: "BUTTER",
-  setExploreLayout: (layout: exploreLayout) => set({ exploreLayout: layout }),
-  menuLayout: "MAIN_AND_SUB_CATEGORY",
-  setMenuLayout: (layout: MenuLayout) => set({ menuLayout: layout }),
-  primaryColor: "",
-  setPrimaryColor: (color: string) => set({ primaryColor: color }),
-  secondaryColor: "",
-  setSecondaryColor: (color: string) => set({ secondaryColor: color }),
-  businessType: "",
-  setBusinessType: (type: businessType) => set({ businessType: type }),
-  outletType: "",
-  setOutletType: (type: string) => set({ outletType: type }),
-  businessName: "",
-  setBusinessName: (name: string) => set({ businessName: name }),
-  customLink: "",
-  setCustomLink: (link: string) => set({ customLink: link }),
-  branches: [],
-  setBranches: (branches) => set({ branches }),
-  selectedBranch: "",
-  setSelectedBranch: (branch: string) => set({ selectedBranch: branch }),
-  menu: false,
-  setMenu: (value: boolean) => set({ menu: value }),
-  themes: false,
-  setThemes: (value: boolean) => set({ themes: value }),
-  rewards: false,
-  setRewards: (value: boolean) => set({ rewards: value }),
-  paymentAndBusinessSettings: false,
-  setPaymentAndBusinessSettings: (value: boolean) =>
-    set({ paymentAndBusinessSettings: value }),
-  reset: () =>
-    set({
-      step: 0,
-      exploreLayout: "BUTTER",
-      menuLayout: "MAIN_AND_SUB_CATEGORY",
-      primaryColor: "",
-      secondaryColor: "",
-      businessType: "",
-      outletType: "",
-      businessName: "",
-      customLink: "",
-      branches: [],
-      selectedBranch: "",
-      menu: false,
-      themes: false,
-      rewards: false,
-      paymentAndBusinessSettings: false,
-    }),
+const useBusinessCtrl = create<BusinessCtrl>((set) => {
+  const businessData = useBusinessData.getState().businessData;
+  return {
+    step: 0,
+    setStep: (step: number) => set({ step }),
+    exploreLayout: "BUTTER",
+    setExploreLayout: (layout: exploreLayout) => set({ exploreLayout: layout }),
+    menuLayout: "MAIN_AND_SUB_CATEGORY",
+    setMenuLayout: (layout: MenuLayout) => set({ menuLayout: layout }),
+    primaryColor: businessData?.primaryColor || "#EDDEB8",
+    setPrimaryColor: (color: string) => set({ primaryColor: color }),
+    secondaryColor: businessData?.secondaryColor || "#116D6E",
+    setSecondaryColor: (color: string) => set({ secondaryColor: color }),
+    businessType: "",
+    setBusinessType: (type: businessType) => set({ businessType: type }),
+    outletType: "",
+    setOutletType: (type: string) => set({ outletType: type }),
+    businessName: "",
+    setBusinessName: (name: string) => set({ businessName: name }),
+    customLink: "",
+    setCustomLink: (link: string) => set({ customLink: link }),
+    branches: [],
+    setBranches: (branches) => set({ branches }),
+    selectedBranch: "",
+    setSelectedBranch: (branch: string) => set({ selectedBranch: branch }),
+    menu: false,
+    setMenu: (value: boolean) => set({ menu: value }),
+    themes: false,
+    setThemes: (value: boolean) => set({ themes: value }),
+    rewards: false,
+    setRewards: (value: boolean) => set({ rewards: value }),
+    paymentAndBusinessSettings: false,
+    setPaymentAndBusinessSettings: (value: boolean) =>
+      set({ paymentAndBusinessSettings: value }),
+    reset: () =>
+      set({
+        step: 0,
+        exploreLayout: "BUTTER",
+        menuLayout: "MAIN_AND_SUB_CATEGORY",
+        primaryColor: "",
+        secondaryColor: "",
+        businessType: "",
+        outletType: "",
+        businessName: "",
+        customLink: "",
+        branches: [],
+        selectedBranch: "",
+        menu: false,
+        themes: false,
+        rewards: false,
+        paymentAndBusinessSettings: false,
+      }),
 
-  layoutFlowEnabled: false,
-  setLayoutFlowEnabled: (value: boolean) => set({ layoutFlowEnabled: value }),
-  enableLayoutFlow: () => set({ layoutFlowEnabled: true }),
-  disableLayoutFlow: () => set({ layoutFlowEnabled: false }),
-}));
+    layoutFlowEnabled: false,
+    setLayoutFlowEnabled: (value: boolean) => set({ layoutFlowEnabled: value }),
+    enableLayoutFlow: () => set({ layoutFlowEnabled: true }),
+    disableLayoutFlow: () => set({ layoutFlowEnabled: false }),
+  };
+});
 
 export default useBusinessCtrl;

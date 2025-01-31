@@ -62,7 +62,7 @@ const MemoAddTeam = () => {
       toast.success("Staff added successfully");
       setIsAddStaffOpen(false);
       removeStaffStore();
-      queryClient.invalidateQueries({ queryKey: ["getStaff"] });
+      queryClient.invalidateQueries({ queryKey: ["getStaffs"] });
     }
   };
   const goToRoles = useCallback(() => {
