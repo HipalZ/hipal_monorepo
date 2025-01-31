@@ -364,8 +364,16 @@ const tableRouter = new Hono()
             settleType: "FORCE_SETTLE",
             comment: reasonForForceSettle,
             posBillId: getBill.data.order_data.invoice_id,
-            tax: getBill.data.order_data.tax,
-            serviceCharge: getBill.data.order_data.service_charge,
+            tax:
+              paymentMode?.name === "npc" ||
+              paymentMode?.name === "complementary"
+                ? 0
+                : getBill.data.order_data.tax,
+            serviceCharge:
+              paymentMode?.name === "npc" ||
+              paymentMode?.name === "complementary"
+                ? 0
+                : getBill.data.order_data.service_charge,
             posBillRequestId: billRequestId,
             splitModes: settleModes,
 
@@ -644,8 +652,16 @@ const tableRouter = new Hono()
             comment: "NORMAL SETTLE",
 
             posBillId: getBill.data.order_data.invoice_id,
-            tax: getBill.data.order_data.tax,
-            serviceCharge: getBill.data.order_data.service_charge,
+            tax:
+              paymentMode?.name === "npc" ||
+              paymentMode?.name === "complementary"
+                ? 0
+                : getBill.data.order_data.tax,
+            serviceCharge:
+              paymentMode?.name === "npc" ||
+              paymentMode?.name === "complementary"
+                ? 0
+                : getBill.data.order_data.service_charge,
             posBillRequestId: billRequestId,
             waiterName: captain?.name,
             splitModes: settleModes,

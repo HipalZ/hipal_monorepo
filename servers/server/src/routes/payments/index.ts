@@ -1649,43 +1649,54 @@ const paymentsRouter = new Hono()
 
             const paymentMode = await UpiMode.findById(settleModes[0]._id);
 
-            if (order?.claimedCoins && order?.claimedCoins > 0) {
-              const existingLoyalty = await LoyaltySettings.findOne({
-                businessId: alert.businessId,
-              }).select("loyaltyId");
-              await removeCoins(
-                Number(order?.claimedCoins),
-                order.tableName || "",
-                existingLoyalty?.loyaltyId.toString() || "",
-                order._id.toString(),
-                order.userId._id.toString(),
+            if (
+              paymentMode?.name !== "complementary" &&
+              paymentMode?.name !== "npc"
+            ) {
+              if (order?.claimedCoins && order?.claimedCoins > 0) {
+                const existingLoyalty = await LoyaltySettings.findOne({
+                  businessId: alert.businessId,
+                }).select("loyaltyId");
 
-                session,
-              );
+                await removeCoins(
+                  Number(order?.claimedCoins),
+                  order.tableName || "",
+                  existingLoyalty?.loyaltyId.toString() || "",
+                  order._id.toString(),
+                  order.userId._id.toString(),
+                  session,
+                );
+              }
             }
 
             if (order) {
-              let cashBack = await calculatedCashbackCoins(
-                order.businessId.toString(),
-                Number(order.billValue),
-                Number(order.claimedCoins),
-              );
+              let finalCashBack = 0;
+              if (
+                paymentMode?.name !== "complementary" &&
+                paymentMode?.name !== "npc"
+              ) {
+                let cashBack = await calculatedCashbackCoins(
+                  order.businessId.toString(),
+                  Number(order.billValue),
+                  Number(order.claimedCoins),
+                );
 
-              if (order.cashbackAvailable === false) {
-                cashBack = 0;
+                if (order.cashbackAvailable === false) {
+                  cashBack = 0;
+                }
+
+                finalCashBack = await addCoins(
+                  cashBack,
+                  order.userId._id.toString(),
+                  order._id.toString(),
+                  order.tableName || "",
+                  order.businessId.toString(),
+
+                  existingLoyalty?.loyaltyId.toString() || "",
+
+                  session,
+                );
               }
-
-              const finalCashBack = await addCoins(
-                cashBack,
-                order.userId._id.toString(),
-                order._id.toString(),
-                order.tableName || "",
-                order.businessId.toString(),
-
-                existingLoyalty?.loyaltyId.toString() || "",
-
-                session,
-              );
 
               const isHavePos = await BusinessPosConfig.findOne({
                 businessId: order.businessId,
@@ -1735,19 +1746,35 @@ const paymentsRouter = new Hono()
                       paymentMode?.name === "npc"
                         ? npcUser?.userId
                         : order?.userId,
-                    claimedCoins: order?.claimedCoins,
+                    claimedCoins:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : order?.claimedCoins,
                     billValue: order?.billValue,
                     tips: order?.tips,
                     tableName: order?.tableName,
-                    earnCoins: finalCashBack,
+                    earnCoins:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : finalCashBack,
                     razorpayEventId: nanoid(15),
                     razorpayOrderId: nanoid(15),
                     razorpayPaymentId: nanoid(15),
                     couponId: order?.couponId,
                     channelId: order?.channelId,
                     posBillId: tempTable?.billInvoiceId,
-                    tax: tempTable?.tax,
-                    serviceCgarge: tempTable?.serviceCharge,
+                    tax:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : tempTable?.tax,
+                    serviceCgarge:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : tempTable?.serviceCharge,
                     posBillRequestId: tempTable?.billRequestId,
                     splitModes: settleModes,
                     waiterName,
