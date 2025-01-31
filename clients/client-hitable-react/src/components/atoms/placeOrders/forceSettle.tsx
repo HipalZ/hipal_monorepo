@@ -53,15 +53,24 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
 
     const { mutateAsync, isPending } = useMutation({
         mutationFn: async (payload: any) => {
+
+            const newPayload = {
+                tableId: payload.tableId,
+                reasonForForceSettle: payload.reason,
+                captainId: payload.captainId,
+                billRequestId: payload.billId,
+                settleAmount: payload.settleAmount,
+                settleModes: payload.settleModes,
+            }
+            if (payload.duesUserId) {
+                newPayload["duesUserId"] = payload.duesUserId;
+            }
+            if (payload.npcUserId) {
+                newPayload["npcUserId"] = payload.npcUserId;
+            }
+
             const response = await apiRpc.table.force_settle.$post({
-                json: {
-                    tableId: payload.tableId || "",
-                    reasonForForceSettle: payload?.reason || "",
-                    captainId: payload.captainId || "",
-                    billRequestId: payload.billId || "",
-                    settleAmount: payload.settleAmount || 0,
-                    settleModes: payload.settleModes || [],
-                },
+                json: newPayload,
             });
             if (response.status === 400 || response.status === 403) {
                 return toast.error("Force settle failed");
