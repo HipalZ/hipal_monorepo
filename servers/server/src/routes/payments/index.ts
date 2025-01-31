@@ -3011,7 +3011,10 @@ const paymentsRouter = new Hono()
           totalComplementary += payment.billValue;
         }
 
-        if (Array.isArray(payment.splitModes)) {
+        if (
+          Array.isArray(payment.splitModes) &&
+          payment.splitModes.length > 1
+        ) {
           for (const split of payment.splitModes) {
             if (split.name === "complementary") {
               totalComplementary += split.amount ?? 0;
