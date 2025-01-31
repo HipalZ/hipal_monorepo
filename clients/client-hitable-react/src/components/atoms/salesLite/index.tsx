@@ -1,51 +1,63 @@
-import { memo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useHiClientZ } from "@/components/store/useHiClientzData";
-import useTimings from "@/components/store/useTimings";
+import { memo } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { useHiClientZ } from "@/components/store/useHiClientzData"
+import useTimings from "@/components/store/useTimings"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { apiRpc } from "@hi/common";
-import { Coins, CreditCard, DollarSign, Globe, Percent, Tag } from "lucide-react";
-import DateRangePickerMemo from "../dateRangePicker";
+import { apiRpc } from "@hi/common"
+import DateRangePickerMemo from "../dateRangePicker"
+import { InfoCard } from "./InfoCard"
+import { PieChart } from "./PieCharts"
+import { BarChart } from "./BarChart"
+import { LineChart } from "./LineChart"
+import { motion } from "framer-motion"
+import { DollarSign, CreditCard, Gift, AlertTriangle } from "lucide-react"
 
-
-export interface ISalesLite {
-  totalSale: number;
-  modeObj: Record<string, number>;
-  totalTips: number;
-  totalTax: number;
-  totalServiceCharge: number;
-  totalClaimedCoins: number;
-  totalEarnCoins: number;
-  totalDiscount: number;
-  forceSettle: number;
+export interface SalesData {
+  overAllAmount: number
+  onlineSale: Record<string, number>
+  offlineSale: Record<string, number>
 }
 
-const salesDataFallback = {
-  totalSale: 0,
-  modeObj: {},
-  totalTips: 0,
-  totalTax: 0,
-  totalServiceCharge: 0,
-  totalClaimedCoins: 0,
-  totalEarnCoins: 0,
-  totalDiscount: 0,
-  forceSettle: 0,
-};
+interface OtherAndWarningData {
+  otherSale: {
+    totalTax: number
+    totalTip: number
+    totalServiceCharge: number
+  }
+  warningSale: {
+    totalForceSettle: number
+    totalFreeSettle: number
+  }
+}
 
+interface SalesExceptionData {
+  exceptionSale: {
+    totalDuesReceived: number
+    totalDuesGiven: number
+    totalNpc: number
+    totalComplementary: number
+    totalDiscount: number
+  }
+  rewardSale: {
+    totalCoinsGiven: number
+    totalCoinUsed: number
+    totalCouponUsed: number
+  }
+}
 
 const SalesLite = () => {
   const { selectedBiz } = useHiClientZ((s) => ({
     selectedBiz: s.selectedBiz,
-  }));
-  const businessId = selectedBiz?.businessId?._id;
+  }))
+  const businessId = selectedBiz?.businessId?._id
 
   const { timeStampStart, timeStampEnd } = useTimings((s) => ({
     timeStampStart: s.timeStampStart,
     timeStampEnd: s.timeStampEnd,
-  }));
+  }))
 
-  const handleHistoryData = async (): Promise<ISalesLite> => {
+  const handleHistoryData = async (): Promise<SalesData> => {
     try {
       const response = await apiRpc.payments[":id"].salesDashboard.$get({
         query: {
@@ -55,8 +67,7 @@ const SalesLite = () => {
         },
         param: { id: businessId || "" },
       })
-      const data = (await response.json()).data as ISalesLite
-
+      const data = (await response.json()).data as SalesData
       if (response.status === 200) {
         return data
       }
@@ -67,146 +78,216 @@ const SalesLite = () => {
     }
   }
 
-  const { data: salesData, isLoading } = useQuery<ISalesLite, Error>({
+  const otherAndWarning = async (): Promise<OtherAndWarningData> => {
+    const response = await apiRpc.payments.sale.other_and_warnings.$get({
+      query: {
+        businessId: businessId,
+        from: timeStampStart.toString(),
+        to: timeStampEnd.toString(),
+      },
+    })
+    const data = (await response.json()).data as OtherAndWarningData
+    return data
+  }
+
+  const salesException = async (): Promise<SalesExceptionData> => {
+    const response = await apiRpc.payments.sale.exception_and_rewards.$get({
+      query: {
+        businessId: businessId,
+        from: timeStampStart.toString(),
+        to: timeStampEnd.toString(),
+      },
+    })
+    const data = (await response.json()).data as SalesExceptionData
+    return data
+  }
+
+  const {
+    data: salesData,
+    isLoading,
+    error,
+  } = useQuery<SalesData, Error>({
     queryKey: ["salesData", businessId, timeStampStart, timeStampEnd],
     queryFn: handleHistoryData,
     enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
   })
 
-  const salesDataFinal = salesData || salesDataFallback;
+  const { data: otherData } = useQuery<OtherAndWarningData, Error>({
+    queryKey: ["otherAndWarning", businessId, timeStampStart, timeStampEnd],
+    queryFn: otherAndWarning,
+    enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
+  })
 
+  const { data: salesExceptionData } = useQuery<SalesExceptionData, Error>({
+    queryKey: ["salesException", businessId, timeStampStart, timeStampEnd],
+    queryFn: salesException,
+    enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
+  })
 
   if (isLoading) {
     return <OverviewSkeleton />
   }
 
+  if (error || !salesData) {
+    return (
+      <Card className="w-full h-[70vh] px-4 mx-auto xl:container">
+        <DateRangePickerMemo />
+        <CardContent>
+          <p className="text-center text-muted-foreground">No sales data found</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const totalOfflineSale = Object.values(salesData.offlineSale).reduce((acc, curr) => acc + curr, 0)
+  const totalExceptionAndReward = salesExceptionData
+    ? Object.values(salesExceptionData.exceptionSale).reduce((acc, curr) => acc + curr, 0) +
+    Object.values(salesExceptionData.rewardSale).reduce((acc, curr) => acc + curr, 0)
+    : 0
+  const totalOtherAndWarning = otherData
+    ? Object.values(otherData.otherSale).reduce((acc, curr) => acc + curr, 0) +
+    Object.values(otherData.warningSale).reduce((acc, curr) => acc + curr, 0)
+    : 0
+
   return (
-    <div className="px-4 mx-auto xl:container">
+    <div className="mx-auto lg:px-4 xl:container">
       <DateRangePickerMemo />
 
-      <div className="grid gap-6 mt-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card className="text-white col-span-full md:col-span-2 lg:col-span-3 bg-gradient-to-r from-blue-500 to-blue-600">
-          <CardHeader>
-            <CardTitle className="text-2xl">Today's Sales</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <h2 className="text-5xl font-bold">₹ {salesDataFinal.totalSale.toLocaleString("en-IN")}</h2>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 gap-4 p-4 md:grid-cols-4 lg:grid-cols-4">
+        <section className="col-span-2 md:col-span-1 lg:col-span-1">
 
-        <PaymentModes modeObj={salesDataFinal.modeObj} />
-
+          <InfoCard
+            title="Total Sales"
+            value={salesData.overAllAmount}
+            icon={<DollarSign className="w-4 h-4" />}
+            gradient="from-blue-600 to-blue-200"
+          />
+        </section>
         <InfoCard
-          title="Total Discount"
-          value={salesDataFinal.totalDiscount}
-          icon={<Percent className="w-6 h-6" />}
-          gradient="from-red-400 to-red-500"
+          title="Online Sales"
+          value={salesData.onlineSale.online}
+          icon={<DollarSign className="w-4 h-4" />}
+          gradient="from-black to-gray-100"
         />
-
         <InfoCard
-          title="Service Charge"
-          value={salesDataFinal.totalServiceCharge}
-          icon={<DollarSign className="w-6 h-6" />}
-          gradient="from-green-400 to-green-500"
+          title="Offline Sales"
+          value={totalOfflineSale}
+          icon={<CreditCard className="w-4 h-4" />}
+          gradient="from-green-600 to-green-100"
         />
-
         <InfoCard
-          title="Total Tax"
-          value={salesDataFinal.totalTax}
-          icon={<Percent className="w-6 h-6" />}
-          gradient="from-purple-400 to-purple-500"
+          title="Exception & Reward"
+          value={totalExceptionAndReward}
+          icon={<Gift className="w-4 h-4" />}
+          gradient="from-purple-600 to-purple-100"
         />
-
         <InfoCard
-          title="Total Tips"
-          value={salesDataFinal.totalTips}
-          icon={<Tag className="w-6 h-6" />}
-          gradient="from-yellow-600 to-yellow-900"
+          title="Other & Warning"
+          value={totalOtherAndWarning}
+          icon={<AlertTriangle className="w-4 h-4" />}
+          gradient="from-red-900 to-red-100"
         />
+      </div>
 
-        <InfoCard
-          title="Coins Earned"
-          value={salesDataFinal.totalEarnCoins}
-          icon={<Coins className="w-6 h-6" />}
-          gradient="from-indigo-400 to-indigo-500"
-        />
+      <div className="grid grid-cols-1 gap-6 p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Sales Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PieChart
+                data={[
+                  ...Object.entries(salesData.onlineSale).map(([mode, amount]) => ({ name: mode, value: amount })),
+                  ...Object.entries(salesData.offlineSale).map(([mode, amount]) => ({ name: mode, value: amount })),
+                ]}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        <InfoCard
-          title="Coins Claimed"
-          value={salesDataFinal.totalClaimedCoins}
-          icon={<Coins className="w-6 h-6" />}
-          gradient="from-teal-400 to-teal-500"
-        />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Offline Payment Modes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BarChart
+                data={Object.entries(salesData.offlineSale).map(([mode, amount]) => ({ name: mode, value: amount }))}
+              />
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        <InfoCard
-          title="Forced Settle"
-          value={salesDataFinal.forceSettle}
-          icon={<CreditCard className="w-6 h-6" />}
-          gradient="from-orange-400 to-orange-500"
-        />
+        {salesExceptionData && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Exception & Reward Sales</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <LineChart
+                  data={[
+                    ...Object.entries(salesExceptionData.exceptionSale).map(([key, value]) => ({ name: key, value })),
+                    ...Object.entries(salesExceptionData.rewardSale).map(([key, value]) => ({ name: key, value })),
+                  ]}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {otherData && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Other & Warning Sales</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <BarChart
+                  data={[
+                    ...Object.entries(otherData.otherSale).map(([key, value]) => ({ name: key, value })),
+                    ...Object.entries(otherData.warningSale).map(([key, value]) => ({ name: key, value })),
+                  ]}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
       </div>
     </div>
   )
 }
 
-const PaymentModes = memo(({ modeObj }: { modeObj: Record<string, number> }) => (
-  <Card className="col-span-full md:col-span-2 lg:col-span-4">
-    <CardHeader>
-      <CardTitle className="text-xl">Sales by Payment Mode</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {Object.entries(modeObj).map(([mode, amount]) => (
-          <Card
-            key={mode}
-            className={`bg-gradient-to-r ${mode.toLowerCase() === "offline" ? "from-blue-400 to-blue-500" : "from-green-400 to-green-500"} text-white`}
-          >
-            <CardContent className="flex items-center justify-between p-4">
-              <div>
-                <p className="text-sm font-medium capitalize">{mode}</p>
-                <p className="text-2xl font-bold">₹ {amount.toLocaleString("en-IN")}</p>
-              </div>
-              {mode.toLowerCase() === "offline" ? <CreditCard className="w-8 h-8" /> : <Globe className="w-8 h-8" />}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </CardContent>
-  </Card>
-))
-
-const InfoCard = ({
-  title,
-  value,
-  icon,
-  gradient,
-}: { title: string; value: number; icon: React.ReactNode; gradient: string }) => (
-  <Card className={`bg-gradient-to-r ${gradient} text-white`}>
-    <CardContent className="flex items-center justify-between p-4">
-      <div>
-        <h3 className="mb-2 text-lg font-semibold">{title}</h3>
-        <p className="text-3xl font-bold">₹ {value.toLocaleString("en-IN")}</p>
-      </div>
-      <div className="p-3 bg-white rounded-full bg-opacity-20">{icon}</div>
-    </CardContent>
-  </Card>
-)
-
 const OverviewSkeleton = () => (
-  <div className="container px-4 py-8 mx-auto space-y-6">
-    <Skeleton className="w-64 h-10" />
-    <Skeleton className="w-full h-16" />
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <Skeleton className="w-full h-40 col-span-full md:col-span-2 lg:col-span-3" />
-      <Skeleton className="w-full h-40 col-span-full md:col-span-2 lg:col-span-3" />
-      {[...Array(7)].map((_, i) => (
-        <Skeleton key={i} className="w-full h-40" />
-      ))}
+  <div className="container p-4 mx-auto space-y-6">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <Skeleton className="h-40 col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4" />
+      <Skeleton className="col-span-1 h-80 sm:col-span-2 lg:col-span-3" />
+      <Skeleton className="col-span-1 h-80" />
+      <Skeleton className="col-span-1 h-80 sm:col-span-2 lg:col-span-3" />
+      <Skeleton className="col-span-1 h-80 sm:col-span-2" />
+      <Skeleton className="col-span-1 h-80 sm:col-span-2" />
     </div>
   </div>
 )
 
 const SalesLiteMemo = memo(SalesLite)
 export default SalesLiteMemo
-
 

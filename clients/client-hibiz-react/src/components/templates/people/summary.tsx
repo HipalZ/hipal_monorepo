@@ -17,7 +17,6 @@ const symbol = ["💸", "🔁", "⭐", "👥"];
 const typeArr = ["₹", "%", "", "%"];
 const MemoSummary = () => {
   const { peopleData } = useHiPeopleStore();
-  console.log(peopleData);
   const {
     openDatePickerModal,
     setOpenDatePickerModal,

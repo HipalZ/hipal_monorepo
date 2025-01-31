@@ -218,11 +218,12 @@ const MemoGetBill = () => {
             }
             {
                 normalSettle && (
-                    <BottomPopUp height="h-[70dvh]" width="w-[30rem]" show={normalSettle} onClose={() => setNormalSettle(false)}>
+                    <BottomPopUp height="h-[100dvh] lg:h-[80dvh]" hide width="w-[30rem]" show={normalSettle} onClose={() => setNormalSettle(false)}>
                         <Normalsettle closeNormalSettle={closeNormalSettle} data={data} />
                     </BottomPopUp>
                 )
             }
+
 
             <CommonBottomButton
                 offset={screenSize === "xs" ? "4.5rem"

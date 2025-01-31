@@ -1,24 +1,20 @@
 "use client";
-
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { memo, useMemo, useCallback } from "react";
-import { QrCode, Clock } from 'lucide-react';
+import { memo, useMemo } from "react";
+import { Clock } from 'lucide-react';
 import FoodType from "@/components/atoms/foodType";
 import { format } from 'date-fns';
-import { usePaymentStore } from "@/components/store/usePaymentStore"
-import { cn } from "@/components/utils/helpers";
-import NoBillFound from "./noBill";
+import dynamic from "next/dynamic";
+
+const NoBillFound = dynamic(() => import("./noBill"));
 
 const MemoEBill = () => {
     const searchParams = useSearchParams();
     const tableId = searchParams?.get("tableId");
-    const { setShowScan } = usePaymentStore()
-    const openScanner = useCallback(() => {
-        setShowScan(true)
-    }, [setShowScan])
+
     const getEBill = async () => {
         const response = await apiRpc.kot.table_kot[":tableId"].$get({
             param: {
@@ -37,10 +33,8 @@ const MemoEBill = () => {
 
     const allCartItems = useMemo(() => cartHistory.flatMap(order => order.cart), [cartHistory]);
 
-    console.log("allCartItems", allCartItems);
-
     return (
-        <main className="min-h-screen  pb-20 bg-gray-50">
+        <main className="min-h-screen pb-20 bg-gray-50">
             {isPending ? <div className="flex items-center justify-center min-h-screen bg-gray-50">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
             </div> :
@@ -53,8 +47,8 @@ const MemoEBill = () => {
                         {cartHistory[0] && (
                             <div className="flex items-center justify-center gap-2 text-sm text-gray-900">
                                 <Clock className="w-4 h-4" />
-                                <time dateTime={cartHistory[0].createdAt}>
-                                    {format(new Date(cartHistory[0].createdAt), 'PPpp')}
+                                <time dateTime={cartHistory[0]?.createdAt}>
+                                    {format(new Date(cartHistory[0]?.createdAt), 'PPpp')}
                                 </time>
                             </div>
                         )}
@@ -62,18 +56,8 @@ const MemoEBill = () => {
 
                     {/* Order Info */}
                     {cartHistory[0] && (
-                        <article className="flex justify-between items-center bg-white rounded-lg text-black px-4 py-3 shadow-sm border border-gray-100">
-                            <span>Table {cartHistory[0].tableName}</span>
-                            <button
-                                type="button"
-                                className={cn(
-                                    "inline-flex items-center gap-2 transition-all duration-300 transform hover:scale-105 text-black"
-                                )}
-                                onClick={openScanner}
-                            >
-                                <QrCode className="w-5 h-5" />
-                                Scan To Pay
-                            </button>
+                        <article className="flex justify-center items-center bg-white rounded-lg text-black px-4 py-3 shadow-sm border border-gray-100">
+                            <span>Table {cartHistory[0]?.tableName}</span>
                         </article>
                     )}
 
@@ -135,6 +119,9 @@ const MemoEBill = () => {
                     </section>
 
                     {/* Footer */}
+                    <center className="fixed space-grotesk-700 bottom-16 left-0 right-0 p-2 text-center text-xs text-red-500 bg-red-50">
+                        <strong>Note: This is a summary bill without taxations</strong>
+                    </center>
                     <center className="fixed space-grotesk-700 bottom-0 left-0 right-0 p-4 text-center backdrop-blur-sm">
                         <strong className="text-gray-900 text-base">Powered by Hipalz</strong>
                     </center>

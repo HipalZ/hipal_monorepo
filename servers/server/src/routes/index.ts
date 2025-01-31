@@ -7,11 +7,13 @@ import categoryRouter from "./categories";
 import couponAnalytics from "./coupon-analytics";
 import couponzRouter from "./couponz";
 import dishesRouter from "./dishes";
+import duesRouter from "./dues";
 import groupRouter from "./groups";
 import hipalzRouter from "./hipalz";
 import iconRouter from "./icon";
 import kotRouter from "./kot";
 import menuBannerRouter from "./menu-banner";
+import npcRouter from "./npc";
 import paymentsRouter from "./payments";
 import posRouter from "./pos";
 import googleReview from "./reviews";
@@ -55,6 +57,8 @@ export const routes = app
   .route("/icon", iconRouter)
   .route("/table", tableRouter)
   .route("/kot", kotRouter)
-  .route("/upi_mode", upiModeRouter);
+  .route("/upi_mode", upiModeRouter)
+  .route("/dues", duesRouter)
+  .route("/npc", npcRouter);
 
 export type AppType = typeof routes;

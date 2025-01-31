@@ -6,13 +6,16 @@ import {
   CouponClaim,
   Couponz,
   DeviceToken,
+  DuesUser,
   GroupAnalytic,
   KotOrder,
   LoyaltySettings,
+  NpcUser,
   Order,
   OutLetInfo,
   Payment,
   PaymentAlert,
+  PendingDues,
   QrBill,
   Reviews,
   Subscriber,
@@ -657,6 +660,7 @@ const paymentsRouter = new Hono()
               date: Date.now(),
               posDiscount: posDiscount,
               posBillRequestId: findTempTable?.billRequestId,
+              mode: "OFFLINE",
             },
           ],
           { session },
@@ -1079,6 +1083,7 @@ const paymentsRouter = new Hono()
                 date: Date.now(),
                 message: `Fail ${payload.payment.entity.notes.total}`,
                 couponId: payload.payment.entity.notes.couponId,
+                mode: payload.payment.entity.method,
               },
             ],
             { session },
@@ -1202,6 +1207,7 @@ const paymentsRouter = new Hono()
                 userId: getOrder?.userId,
                 posDiscount: posDiscount,
                 date: Date.now(),
+                mode: payload.payment.entity.method,
               },
             ],
             { session },
@@ -1597,6 +1603,8 @@ const paymentsRouter = new Hono()
 
         settleModes = [],
         split = false,
+        duesUserId,
+        npcUserId,
       } = requestData;
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
@@ -1609,16 +1617,12 @@ const paymentsRouter = new Hono()
         if (!alert) {
           return c.json({ message: "Alert not found", err: true, data: {} });
         }
+
         const existingLoyalty = await LoyaltySettings.findOne({
           businessId: alert.businessId,
         }).select("loyaltyId");
 
-        if (
-          alert.alertType === "ONLINE" ||
-          alert.alertType === "WAITER" ||
-          alert.alertType === "FORCE_SETTLE" ||
-          alert.alertType === "NORMAL_SETTLE"
-        ) {
+        if (alert.alertType !== "OFFLINE") {
           const updateAlert = await PaymentAlert.findByIdAndUpdate(
             alertId,
             { isAccepted: true, comment, waiterName },
@@ -1640,64 +1644,54 @@ const paymentsRouter = new Hono()
 
             const paymentMode = await UpiMode.findById(settleModes[0]._id);
 
-            if (order?.couponId) {
-              const coupon = await Couponz.findById(order.couponId).select(
-                "conditions.couponEndDate",
-              );
+            if (
+              paymentMode?.name !== "complementary" &&
+              paymentMode?.name !== "npc"
+            ) {
+              if (order?.claimedCoins && order?.claimedCoins > 0) {
+                const existingLoyalty = await LoyaltySettings.findOne({
+                  businessId: alert.businessId,
+                }).select("loyaltyId");
 
-              if (
-                coupon &&
-                coupon.conditions.couponEndDate > 0 &&
-                coupon.conditions.couponEndDate < Date.now()
-              ) {
-                return c.json(
-                  {
-                    message: "Coupon has expired",
-                    err: true,
-                    data: {},
-                  },
-                  400,
+                await removeCoins(
+                  Number(order?.claimedCoins),
+                  order.tableName || "",
+                  existingLoyalty?.loyaltyId.toString() || "",
+                  order._id.toString(),
+                  order.userId._id.toString(),
+                  session,
                 );
               }
             }
 
-            if (order?.claimedCoins && order?.claimedCoins > 0) {
-              const existingLoyalty = await LoyaltySettings.findOne({
-                businessId: alert.businessId,
-              }).select("loyaltyId");
-              await removeCoins(
-                Number(order?.claimedCoins),
-                order.tableName || "",
-                existingLoyalty?.loyaltyId.toString() || "",
-                order._id.toString(),
-                order.userId._id.toString(),
-
-                session,
-              );
-            }
-
             if (order) {
-              let cashBack = await calculatedCashbackCoins(
-                order.businessId.toString(),
-                Number(order.billValue),
-                Number(order.claimedCoins),
-              );
+              let finalCashBack = 0;
+              if (
+                paymentMode?.name !== "complementary" &&
+                paymentMode?.name !== "npc"
+              ) {
+                let cashBack = await calculatedCashbackCoins(
+                  order.businessId.toString(),
+                  Number(order.billValue),
+                  Number(order.claimedCoins),
+                );
 
-              if (order.cashbackAvailable === false) {
-                cashBack = 0;
+                if (order.cashbackAvailable === false) {
+                  cashBack = 0;
+                }
+
+                finalCashBack = await addCoins(
+                  cashBack,
+                  order.userId._id.toString(),
+                  order._id.toString(),
+                  order.tableName || "",
+                  order.businessId.toString(),
+
+                  existingLoyalty?.loyaltyId.toString() || "",
+
+                  session,
+                );
               }
-
-              const finalCashBack = await addCoins(
-                cashBack,
-                order.userId._id.toString(),
-                order._id.toString(),
-                order.tableName || "",
-                order.businessId.toString(),
-
-                existingLoyalty?.loyaltyId.toString() || "",
-
-                session,
-              );
 
               const isHavePos = await BusinessPosConfig.findOne({
                 businessId: order.businessId,
@@ -1708,38 +1702,75 @@ const paymentsRouter = new Hono()
                 tableName: order.tableName,
               });
 
-              console.log("tempTable", tempTable);
+              const npcUser = await NpcUser.findById(npcUserId);
 
-              await Payment.create(
+              let modifyTotal = 0;
+              if (
+                paymentMode?.name === "npc" ||
+                paymentMode?.name === "dues" ||
+                paymentMode?.name === "complementary"
+              ) {
+                modifyTotal = 0;
+              } else {
+                modifyTotal = order.total;
+
+                if (settleModes.length > 1) {
+                  for (const settle of settleModes) {
+                    if (settle.name === "complementary") {
+                      modifyTotal -= settle.amount ?? 0;
+                    }
+                  }
+                }
+              }
+
+              const createPayment = await Payment.create(
                 [
                   {
                     businessId: alert.businessId,
                     order_id: order?._id,
-                    total: order?.total,
-                    mode:
-                      settleModes.length > 1
-                        ? "split"
-                        : paymentMode?.name || "offline",
+                    total:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : order?.total,
+                    mode: settleModes.length > 1 ? "split" : paymentMode?.name,
                     status: "SUCCESS",
                     paymentMode:
-                      settleModes.length > 1
-                        ? "split"
-                        : paymentMode?.name || "offline",
-                    userId: order?.userId._id,
-                    claimedCoins: order?.claimedCoins,
+                      settleModes.length > 1 ? "split" : paymentMode?.name,
+                    userId:
+                      paymentMode?.name === "npc"
+                        ? npcUser?.userId
+                        : order?.userId,
+                    claimedCoins:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : order?.claimedCoins,
                     billValue: order?.billValue,
                     tips: order?.tips,
                     tableName: order?.tableName,
-                    earnCoins: finalCashBack,
+                    earnCoins:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : finalCashBack,
                     razorpayEventId: nanoid(15),
                     razorpayOrderId: nanoid(15),
                     razorpayPaymentId: nanoid(15),
                     couponId: order?.couponId,
                     channelId: order?.channelId,
-                    posBillId: tempTable?.billInvoiceId || "",
-                    tax: tempTable?.tax || 0,
-                    serviceCgarge: tempTable?.serviceCharge || 0,
-                    posBillRequestId: tempTable?.billRequestId || "",
+                    posBillId: tempTable?.billInvoiceId,
+                    tax:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : tempTable?.tax,
+                    serviceCgarge:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : tempTable?.serviceCharge,
+                    posBillRequestId: tempTable?.billRequestId,
                     splitModes: settleModes,
                     waiterName,
                     date: Date.now(),
@@ -1747,6 +1778,45 @@ const paymentsRouter = new Hono()
                 ],
                 { session },
               );
+
+              if (duesUserId && paymentMode?.name === "dues") {
+                const createPaymentDues = await PendingDues.create(
+                  [
+                    {
+                      billId: createPayment[0]._id,
+                      businessId: order.businessId,
+                      date: Date.now(),
+                      duesUserId: duesUserId,
+                      isSettled: false,
+                    },
+                  ],
+                  {
+                    session,
+                  },
+                );
+
+                await DuesUser.findByIdAndUpdate(
+                  duesUserId,
+                  {
+                    $inc: {
+                      totalDuesAmount: order.total,
+                    },
+                  },
+                  { session },
+                );
+              }
+
+              if (npcUserId && paymentMode?.name === "npc") {
+                await NpcUser.findByIdAndUpdate(
+                  npcUserId,
+                  {
+                    $inc: {
+                      totalNpcAmount: order.total,
+                    },
+                  },
+                  { session },
+                );
+              }
 
               if (isHavePos) {
                 const res = await axios.post(
@@ -1757,7 +1827,7 @@ const paymentsRouter = new Hono()
                     access_token: isHavePos?.posId?.authToken,
                     restID: isHavePos?.posId?.restId,
                     bill_request_id: tempTable?.billRequestId,
-                    amount_paid: order.total,
+                    amount_paid: modifyTotal,
                     pin: tempTable?.pin,
                   },
                 );
@@ -2008,94 +2078,62 @@ const paymentsRouter = new Hono()
     zValidator("query", paramsSchema),
     async (c) => {
       const { businessId, from, to } = c.req.query();
-      const fromDate = Number(from);
-      const toDate = Number(to);
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
 
       if (fromDate > toDate) {
         return c.json({
           err: true,
           data: {},
-          message: "from date should be less than to date.",
+          message: "from date should be less than to date",
         });
       }
 
-      const query = {
+      const payments = await Payment.find({
         businessId,
-        date: {
-          $gte: from ? fromDate : startOfToday.getTime(),
-          $lte: to ? toDate : endOfToday.getTime(),
-        },
-      };
+        date: { $gte: fromDate, $lte: toDate },
+      });
 
-      const existingPayments = await Payment.find(query).select(
-        "total claimedCoins paymentMode earnCoins mode tips tax serviceCharge settleType splitModes",
-      );
+      let overAllAmount = 0;
+      let totalOnlineSale = 0;
+      const offlineSales: Record<string, number> = {};
 
-      const aggregatedData: AggregatedData = {
-        totalSale: 0,
-        forceSettle: 0,
-        totalTips: 0,
-        totalTax: 0,
-        totalServiceCharge: 0,
-        totalClaimedCoins: 0,
-        totalEarnCoins: 0,
-        modeObj: {},
-      };
-
-      for (const payment of existingPayments) {
-        const {
-          total = 0,
-          tips = 0,
-          tax = 0,
-          serviceCharge = 0,
-          claimedCoins = 0,
-          earnCoins = 0,
-          mode,
-          settleType,
-          splitModes,
-        } = payment;
-
-        aggregatedData.totalSale += total;
-        aggregatedData.totalTips += tips;
-        aggregatedData.totalTax += tax;
-        aggregatedData.totalServiceCharge += serviceCharge;
-        aggregatedData.totalClaimedCoins += claimedCoins;
-        aggregatedData.totalEarnCoins += earnCoins;
-
-        if (settleType === "FORCE_SETTLE") {
-          aggregatedData.forceSettle += total;
-        }
-
-        if (!aggregatedData.modeObj[mode]) {
-          aggregatedData.modeObj[mode] = 0;
-        }
-        aggregatedData.modeObj[mode] += total;
+      for (const payment of payments) {
+        const { total = 0, paymentMode, mode, splitModes } = payment;
 
         if (mode === "split" && Array.isArray(splitModes)) {
-          for (const { name, amount = 0 } of splitModes) {
-            if (!aggregatedData.modeObj[name]) {
-              aggregatedData.modeObj[name] = 0;
+          let splitTotal = 0;
+
+          for (const settle of splitModes) {
+            if (settle.name !== "complementary") {
+              splitTotal += settle.amount ?? 0;
+              offlineSales[settle.name] =
+                (offlineSales[settle.name] || 0) + (settle.amount ?? 0);
             }
-            aggregatedData.modeObj[name] += amount;
           }
-          delete aggregatedData.modeObj["split"];
+
+          overAllAmount += splitTotal; // Only add non-complementary split values
+        } else if (!["dues", "npc", "complementary"].includes(mode)) {
+          overAllAmount += total; // Add total if it's not dues, npc, or complementary
+        }
+
+        if (paymentMode === "online") {
+          totalOnlineSale += total;
+        } else if (!["dues", "npc", "complementary"].includes(paymentMode)) {
+          offlineSales[mode] = (offlineSales[mode] || 0) + total;
         }
       }
+
+      delete offlineSales["complementary"];
+      delete offlineSales["split"];
 
       return c.json({
         err: false,
         data: {
-          totalSale: aggregatedData.totalSale,
-          modeObj: aggregatedData.modeObj,
-          totalTips: aggregatedData.totalTips,
-          totalTax: Math.round(aggregatedData.totalTax),
-          totalServiceCharge: Math.round(aggregatedData.totalServiceCharge),
-          totalClaimedCoins: aggregatedData.totalClaimedCoins,
-          totalEarnCoins: aggregatedData.totalEarnCoins,
-          totalDiscount: aggregatedData.totalClaimedCoins,
-          forceSettle: aggregatedData.forceSettle,
+          overAllAmount, // Excludes complementary but includes cash in split modes
+          onlineSale: { online: totalOnlineSale },
+          offlineSale: offlineSales,
         },
-        message: "existing payment",
       });
     },
   )
@@ -2113,83 +2151,70 @@ const paymentsRouter = new Hono()
 
     async (c) => {
       const { businessId, from, to } = c.req.query();
-      const fromDate = Number(from);
-      const toDate = Number(to);
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
+
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
       const PAGE_SIZE = 20;
       const pageNumber = c.req.query("pageNumber") as string;
       const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
 
-      if (!from && !to) {
-        const existingPayments = await Payment.find({
-          businessId,
-          date: {
-            $gte: startOfToday.getTime(),
-            $lte: endOfToday.getTime(),
-          },
+      const existingPayments = await Payment.find({
+        businessId,
+        date: {
+          $gte: fromDate,
+          $lte: toDate,
+        },
+      })
+        .sort({ _id: -1 })
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .populate({
+          path: "order_id",
         })
-          .sort({ _id: -1 })
-          .skip(skip)
-          .limit(PAGE_SIZE)
-          .populate({
-            path: "order_id",
-          })
-          .populate({
-            path: "userId",
-            select: "name phone",
-          });
-        const totalSale = existingPayments.reduce(
-          (acc, payment) => acc + (payment.total ?? 0),
-          0,
-        );
-
-        return c.json({
-          err: false,
-          data: {
-            totalSale,
-            existingPayments,
-          },
-          message: "existing payment",
+        .populate({
+          path: "userId",
+          select: "name phone",
         });
-      }
-      if (from && to) {
-        const existingPayments = await Payment.find({
-          businessId,
-          date: {
-            $gte: fromDate,
-            $lte: toDate,
-          },
-        })
-          .sort({ _id: -1 })
-          .skip(skip)
-          .limit(PAGE_SIZE)
-          .populate({
-            path: "order_id",
-          })
-          .populate({
-            path: "userId",
-            select: "name phone",
-          });
-        const totalSale = existingPayments.reduce(
-          (acc, payment) => acc + (payment.total ?? 0),
-          0,
-        );
 
-        return c.json({
-          err: false,
-          data: {
-            totalSale,
-            existingPayments,
-          },
-          message: "existing payment",
-        });
+      let totalSale = 0;
+
+      for (const payment of existingPayments) {
+        const { total = 0, mode, splitModes } = payment;
+
+        if (mode === "split" && Array.isArray(splitModes)) {
+          let splitTotal = 0;
+
+          for (const settle of splitModes) {
+            if (settle.name !== "complementary") {
+              splitTotal += settle.amount ?? 0;
+            }
+          }
+
+          totalSale += splitTotal; // Only adding valid split mode amounts
+        } else if (!["dues", "npc", "complementary"].includes(mode)) {
+          totalSale += total; // Add total if it's not dues, npc, or complementary
+        }
       }
+
       return c.json({
-        err: true,
-        data: {},
-        message: "Invalid date range",
+        err: false,
+        data: {
+          totalSale, // Excludes complementary but includes valid split amounts
+          existingPayments,
+        },
+        message: "existing payment",
       });
     },
   )
+
   .put(
     "updateAll/payments",
 
@@ -2944,6 +2969,179 @@ const paymentsRouter = new Hono()
 
       return respond(c, "3 Webhook received successfully", false, 200, {});
     });
-  });
+  })
+
+  .get(
+    "/sale/exception_and_rewards",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string(),
+        from: z.string().optional(),
+        to: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const { businessId, from, to } = c.req.query();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
+
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
+      const payments = await Payment.find({
+        businessId,
+        date: { $gte: fromDate, $lte: toDate },
+      });
+
+      let totalDuesReceived = 0;
+      let totalDiscount = 0;
+      let totalDuesGiven = 0;
+      let totalNpc = 0;
+      let totalComplementary = 0;
+      let totalCoinsGiven = 0;
+      let totalCoinsReceived = 0;
+      let totalCouponUsed = 0;
+
+      for (const payment of payments) {
+        if (payment.settleType === "DUES_SETTLE") {
+          totalDuesReceived += payment.total;
+        }
+
+        totalDiscount += payment.discount ?? 0;
+
+        if (payment.mode === "dues") {
+          totalDuesGiven += payment.total;
+        }
+
+        if (payment.mode === "npc") {
+          totalNpc += payment.billValue;
+        }
+
+        if (payment.mode === "complementary") {
+          totalComplementary += payment.billValue;
+        }
+
+        if (
+          Array.isArray(payment.splitModes) &&
+          payment.splitModes.length > 1
+        ) {
+          for (const split of payment.splitModes) {
+            if (split.name === "complementary") {
+              totalComplementary += split.amount ?? 0;
+            }
+          }
+        }
+
+        totalCoinsGiven += payment.earnCoins ?? 0;
+
+        if (!payment.couponId) {
+          totalCoinsReceived += payment.claimedCoins ?? 0;
+        }
+
+        if (payment.couponId) {
+          totalCouponUsed += payment.claimedCoins ?? 0;
+        }
+      }
+
+      return c.json({
+        err: false,
+        data: {
+          exceptionSale: {
+            totalDuesReceived,
+            totalDuesGiven,
+            totalNpc,
+            totalComplementary,
+            totalDiscount,
+          },
+          rewardSale: {
+            totalCoinsGiven,
+            totalCoinUsed: totalCoinsReceived,
+            totalCouponUsed,
+          },
+        },
+      });
+    },
+  )
+
+  .get(
+    "/sale/other_and_warnings",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string(),
+        from: z.string().optional(),
+        to: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const { businessId, from, to } = c.req.query();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
+
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
+      const payments = await Payment.find({
+        businessId,
+        date: { $gte: fromDate, $lte: toDate },
+      });
+
+      let totalTax = 0;
+      let totalTip = 0;
+      let totalServiceCharge = 0;
+      let totalForceSettle = 0;
+      let totalFreeSettle = 0;
+
+      for (const payment of payments) {
+        totalTax += payment.tax ?? 0;
+        totalTip += payment.tips ?? 0;
+        totalServiceCharge += payment.serviceCharge ?? 0;
+
+        if (payment.settleType === "FORCE_SETTLE") {
+          totalForceSettle += payment.total;
+        } else if (payment.settleType === "FREE_SETTLE") {
+          totalFreeSettle += payment.total;
+        }
+      }
+
+      return c.json({
+        err: false,
+        data: {
+          otherSale: {
+            totalTax: Math.round(totalTax),
+            totalTip,
+            totalServiceCharge: Math.round(totalServiceCharge),
+          },
+          warningSale: {
+            totalForceSettle,
+            totalFreeSettle,
+          },
+        },
+      });
+    },
+  );
 
 export default paymentsRouter;

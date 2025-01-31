@@ -122,7 +122,16 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
 
     settleType: {
       type: String,
-      enum: ["NORMAL_SETTLE", "HI_SETTLE", "FORCE_SETTLE", "PAYMENT_GATEWAY"],
+      enum: [
+        "NORMAL_SETTLE",
+        "HI_SETTLE",
+        "FORCE_SETTLE",
+        "PAYMENT_GATEWAY",
+        "FREE_SETTLE",
+        "DUES_SETTLE",
+        "NPC_SETTLE",
+        "COMPLIMENTARY_SETTLE",
+      ],
       required: false,
     },
     comment: {
@@ -160,6 +169,10 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
         },
       },
     ],
+    discount: {
+      type: Number,
+      default: 0,
+    },
   },
 
   { timestamps: true },

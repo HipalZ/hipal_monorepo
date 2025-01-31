@@ -77,7 +77,7 @@ function App() {
   useEffect(() => {
     initializedRef.current = false;
     initializePushNotifications();
-  }, [notificationStatus]);
+  }, [notificationStatus, accessToken]);
 
   const handleOnlineAlerts = async () => {
     if (!businessId) return;

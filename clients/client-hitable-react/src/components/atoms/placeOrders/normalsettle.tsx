@@ -51,6 +51,10 @@ const MemoNormalSettle = ({
         setIsSplit,
         settleModes,
         setSettleModes,
+        openDues,
+        setOpenDues,
+        setSaveDueUser,
+        saveDueUser
     } = useOrderStore();
 
     const { removeOnlineAlert, removeOnlineCount } = useLiteStore(
@@ -75,6 +79,7 @@ const MemoNormalSettle = ({
                 amount: number;
             }[];
             split?: boolean;
+            duesUserId?: string;
         }) => {
             const response = await apiRpc.table.normal_settle.$post({
                 json: payload,
@@ -91,6 +96,9 @@ const MemoNormalSettle = ({
             closeNormalSettle();
             setOpenOrderModal(false);
             setIsSplit(false);
+            setOpenDues(false);
+            setSettleModes([]);
+            setSaveDueUser(null)
             navigate(`/${businessId}/alerts`);
         },
         onError: (error: any) => {
@@ -99,29 +107,22 @@ const MemoNormalSettle = ({
     });
 
     const { mutateAsync: confirmAlert, isPending: isAlertLoading } = useMutation({
-        mutationFn: async ({
-            id,
-            comment,
-            settleModes,
-        }: {
+        mutationFn: async (payload: {
             id: string;
             comment: string;
+            waiterName: string;
             settleModes: { _id: string; name: string; amount: number }[];
+            duesUserId?: string;
         }) => {
             const res = await apiRpc.payments[":pid"].order[":alertId"].$put({
-                param: { alertId: id },
-                json: {
-                    comment,
-                    waiterName: captainData?.name,
-                    settleModes,
-                    split: settleModes.length > 1,
-                },
+                param: { alertId: payload.id },
+                json: payload,
             });
             if (res.status === 401) {
                 throw new Error("Unauthorized");
             }
             if (res.status === 200) {
-                removeOnlineAlert(id)
+                removeOnlineAlert(payload.id)
                 removeOnlineCount()
                 return res.json();
             }
@@ -134,7 +135,9 @@ const MemoNormalSettle = ({
             closeNormalSettle();
             setOpenOrderModal(false);
             setClickViewMore(false);
-
+            setOpenDues(false);
+            setSettleModes([]);
+            setSaveDueUser(null)
             navigate(`/${businessId}/alerts`);
             return
         },
@@ -152,29 +155,59 @@ const MemoNormalSettle = ({
 
             // Validate total
             const sum = settleModes.reduce((acc, item) => acc + item.amount, 0);
-            if (sum !== (billData?.total ?? 0)) {
+            if (sum !== (alertData?.order_id?.total
+                ? alertData.order_id.total
+                : billData?.total ?? 0)) {
                 toast.error("Selected amounts must match the total bill.");
                 return;
             }
 
             const isMultiple = settleModes.length > 1;
 
+            const hasDuesMode = settleModes.some(
+                (mode) => mode.name.toLowerCase() === "dues"
+            );
+            const hasNpcMode = settleModes.some(
+                (mode) => mode.name.toLowerCase() === "npc"
+            );
+
             if (alertData) {
-                await confirmAlert({
+                const payload = {
                     id: alertData._id,
+                    waiterName: captainData?.name,
                     comment: isMultiple
                         ? "Confirmed by waiter (split)."
                         : "Confirmed by waiter (single).",
                     settleModes,
-                });
+                }
+
+                if (hasDuesMode && saveDueUser?._id) {
+                    payload["duesUserId"] = saveDueUser._id;
+                }
+                if (hasNpcMode && saveDueUser?._id) {
+                    payload["npcUserId"] = saveDueUser?._id;
+                }
+                await confirmAlert(payload);
             } else {
-                await settleTable({
+                const payload = {
                     tableId: selectedTable?._id || "",
                     billRequestId: billData?.billRequestId || "",
                     captainId: captainData?._id || "",
                     settleModes,
                     split: isMultiple,
-                });
+                };
+
+                // If there's a "dues" mode selected, append the duesUserId
+                if (hasDuesMode && saveDueUser?._id) {
+                    payload["duesUserId"] = saveDueUser._id;
+                }
+
+                if (hasNpcMode && saveDueUser?._id) {
+                    payload["npcUserId"] = saveDueUser?._id;
+                }
+
+                // Call the API
+                await settleTable(payload);
             }
         } catch (err) {
             console.error(err);
@@ -194,60 +227,101 @@ const MemoNormalSettle = ({
         <section className="mx-auto">
             <h2 className="flex items-center justify-between p-4 mb-2 text-2xl font-bold text-center">
                 <span>{isSplit ? "Split Payment" : "Select Payment Mode"}</span>
-                <span>₹{billData?.total}</span>
+                <span>₹{
+                    alertData?.order_id?.total
+                        ? alertData.order_id.total
+                        : billData?.total
+                }</span>
             </h2>
 
             {/* =======================
           SINGLE MODE UI
       ======================== */}
             {!isSplit && (
-                <SingleMode paymentModes={paymentMode || []} billData={billData} />
-            )}
+                <SingleMode
+                    paymentModes={paymentMode || []}
+                    billData={
+                        alertData?.order_id?.total
+                            ? { total: Number(alertData.order_id.total) }
+                            : billData
+                    }
+                />)}
 
             {/* =======================
           SPLIT MODE UI
       ======================== */}
             {isSplit && (
-                <MultipleModes paymentModes={paymentMode || []} billData={billData} />
+                <MultipleModes paymentModes={paymentMode || []}
+                    billData={
+                        alertData?.order_id?.total
+                            ? { total: Number(alertData.order_id.total) }
+                            : billData
+                    }
+                />
             )}
 
             {/* =======================
           BOTTOM BUTTONS
       ======================== */}
-            <div className="mt-8">
-                <CommonBottomButton
-                    fixed={true}
-                    maxWidth="30rem"
-                    buttons={[
-                        {
-                            text: "Back",
-                            onClick: () => {
-                                if (isSplit) {
-                                    setIsSplit(false);
-                                } else {
-                                    closeNormalSettle();
-                                }
+            {
+                !openDues ? (
+                    <CommonBottomButton
+                        fixed={true}
+                        maxWidth="30rem"
+                        buttons={[
+                            {
+                                text: "Back",
+                                onClick: () => {
+                                    if (isSplit) {
+                                        setIsSplit(false);
+                                    } else {
+                                        closeNormalSettle();
+                                    }
+                                },
+                                className: "w-full rounded-md pl-3",
+                                isBackButton: true,
                             },
-                            className: "w-full rounded-md pl-3",
-                            isBackButton: true,
-                        },
-                        {
-                            text: isSplit ? "Normal" : "Split",
-                            onClick: () => {
-                                setIsSplit(!isSplit);
+                            {
+                                text: isSplit ? "Normal" : "Split",
+                                onClick: () => {
+                                    setIsSplit(!isSplit);
+                                },
+                                className: "w-full rounded-md pl-3",
                             },
-                            className: "w-full rounded-md pl-3",
-                        },
-                        {
-                            text: "Confirm",
-                            onClick: async () => await handleConfirm(),
-                            className: "w-full rounded-md",
-                            disable: settleModes.length === 0,
-                            isLoading: isSettling || isAlertLoading,
-                        },
-                    ]}
-                />
-            </div>
+                            {
+                                text: "Confirm",
+                                onClick: async () => await handleConfirm(),
+                                className: "w-full rounded-md",
+                                disable: settleModes.length === 0,
+                                isLoading: isSettling || isAlertLoading,
+                            },
+                        ]}
+                    />
+                )
+                    : <CommonBottomButton
+                        fixed={true}
+                        maxWidth="30rem"
+                        buttons={[
+                            {
+                                text: "Back",
+                                onClick: () => {
+                                    setOpenDues(false);
+                                    setSettleModes([]);
+                                    setSaveDueUser(null)
+                                },
+                                className: "w-full rounded-md pl-3",
+                                isBackButton: true,
+                            },
+                            {
+                                text: "Confirm",
+                                onClick: async () => await handleConfirm(),
+                                className: "w-full rounded-md",
+                                disable: settleModes.length === 0,
+                                isLoading: isSettling || isAlertLoading,
+                            },
+                        ]}
+                    />}
+
         </section>
     );
 };

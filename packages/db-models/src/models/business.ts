@@ -2,6 +2,8 @@ import type { Model } from "mongoose";
 import mongoose from "mongoose";
 import type { BusinessType } from "../validators";
 import { BusinessEnumType, ExploreLayout, MenuLayout } from "../validators";
+import { MenuBanner } from "./menuBanner";
+import { UpiMode } from "./upiMode";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const businessSchema = new mongoose.Schema<BusinessType>(
   {
@@ -75,6 +77,68 @@ const businessSchema = new mongoose.Schema<BusinessType>(
     timestamps: true,
   },
 );
+
+//middlewares
+businessSchema.post("save", async (doc) => {
+  const defaultUpiModes = [
+    { name: "cash", businessId: doc._id },
+    { name: "(upi)machine", businessId: doc._id },
+    { name: "(card)machine", businessId: doc._id },
+    { name: "npc", businessId: doc._id },
+    { name: "swiggypay", businessId: doc._id },
+    { name: "zomatopay", businessId: doc._id },
+    { name: "dues", businessId: doc._id },
+    { name: "magicpin", businessId: doc._id },
+    { name: "dineout", businessId: doc._id },
+    { name: "complementary", businessId: doc._id },
+  ];
+  await UpiMode.insertMany(defaultUpiModes);
+
+  const menuBaners = [
+    {
+      businessId: doc._id,
+      heading: "Breakfast Must try",
+      startTime: 4 * 60 * 60 * 1000,
+      endTime: 12 * 60 * 60 * 1000,
+      isPublished: true,
+      dishIds: [],
+    },
+    {
+      businessId: doc._id,
+      heading: "Lunchi Munchi",
+      startTime: 12 * 60 * 60 * 1000,
+      endTime: 17 * 60 * 60 * 1000,
+      isPublished: true,
+      dishIds: [],
+    },
+    {
+      businessId: doc._id,
+      heading: "Snacky Evenings",
+      startTime: 17 * 60 * 60 * 1000,
+      endTime: 21 * 60 * 60 * 1000,
+      isPublished: true,
+      dishIds: [],
+    },
+    {
+      businessId: doc._id,
+      heading: "Late Dinners",
+      startTime: 21 * 60 * 60 * 1000,
+      endTime: 24 * 60 * 60 * 1000,
+      isPublished: true,
+      dishIds: [],
+    },
+    {
+      businessId: doc._id,
+      heading: "All Hours Delights",
+      startTime: 0,
+      endTime: 24 * 60 * 60 * 1000,
+      isPublished: true,
+      dishIds: [],
+    },
+  ];
+
+  await MenuBanner.insertMany(menuBaners);
+});
 
 const Business: Model<BusinessType> = mongoose.model<BusinessType>(
   "Business",

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { TableData } from "./useZonesAndTable";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
-import type { OrderData } from "../types/hiClientzData";
+import type { OrderData, User } from "../types/hiClientzData";
 
 export type orderPages = "online" | "offline" | "history" | "";
 export type TransferTable = "ITEM" | "TABLE" | "" | "FREE";
@@ -25,12 +25,24 @@ interface ISettleMode {
   amount: number;
 }
 
+export interface IDuesPersonsData {
+  _id: string;
+  totalDuesAmount: number;
+  userId: User;
+}
+
 interface OrderState {
   currentPage: orderPages;
   setCurrentPage: (page: orderPages) => void;
 
   transferTable: TransferTable;
   setTransferTable: (table: TransferTable) => void;
+
+  saveDueUser: IDuesPersonsData | null;
+  setSaveDueUser: (user: IDuesPersonsData | null) => void;
+
+  openDues: boolean;
+  setOpenDues: (open: boolean) => void;
 
   selectedItems: string[];
   setSelectedItems: (items: string[]) => void;
@@ -91,6 +103,12 @@ interface OrderState {
 export const useOrderStore = create<OrderState>((set, get) => ({
   currentPage: "",
   setCurrentPage: (page) => set({ currentPage: page }),
+
+  openDues: false,
+  setOpenDues: (open) => set({ openDues: open }),
+
+  saveDueUser: null,
+  setSaveDueUser: (user) => set({ saveDueUser: user }),
 
   orderDataStore: [],
   setOrderDataStore: (orders) => set({ orderDataStore: orders }),

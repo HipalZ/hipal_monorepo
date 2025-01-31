@@ -67,6 +67,9 @@ const MemoMultipleModes = ({ paymentModes, billData }: { paymentModes: IMode[]; 
             paymentModes?.map((mode) => {
                 const existing = settleModes.find((m) => m._id === mode._id)
                 const isChecked = !!existing
+                if (mode?.name?.toLowerCase() === 'dues' || mode?.name?.toLowerCase() === 'npc') {
+                    return null
+                }
 
                 return (
                     <motion.div

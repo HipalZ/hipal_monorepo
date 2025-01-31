@@ -13,7 +13,8 @@ export type MenuPageType =
   | "ADD_ON"
   | "ALERT"
   | "SERVICES"
-  | "CATALOGUE";
+  | "CATALOGUE"
+  | "QUICK_MENU";
 export type CategoryTypeToggle = "MAIN_CATEGORY" | "SUB_CATEGORY" | "";
 export type CategoryStep =
   | "CATEGORY_STEP_1"

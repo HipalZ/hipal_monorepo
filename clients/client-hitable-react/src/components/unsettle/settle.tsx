@@ -114,8 +114,8 @@ const MemoSettleTable = () => {
 
                 </div>
                 :
-                <ScrollArea className="h-[80vh] pt-4 pb-[7rem]">
-                    <div className="px-4 space-y-6">
+                <ScrollArea className="h-[100vh] pt-4 ">
+                    <div className="px-4 space-y-6 pb-[12rem]">
                         <div className="flex items-center justify-between">
                             <h4 className="text-xl font-bold text-gray-800">Settle Summary</h4>
                             <button type="button" onClick={() => setOpenUnsettle(false)} className="text-gray-500 hover:text-gray-700">

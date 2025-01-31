@@ -1,11 +1,11 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from "@/components/ui/input"
 import SpinnerMemo from '../atoms/loadingSpinner';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useCart } from '../store/useCart';
 import CommonBottomButton from '../atoms/bottomButton';
-import type { TableData } from '../store/useZonesAndTable';
+import { useZonesAndTablesStore, type TableData } from '../store/useZonesAndTable';
 import { useTableData, useTableTransfer } from '../hooks/useTableData';
 import { useOrderStore } from '../store/useOrderData';
 
@@ -17,7 +17,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
     const navigate = useNavigate();
     const { businessId } = useParams();
     const { setIsPlacingNewOrder } = useCart();
-    const { selectedTable } = useOrderStore();
+    const { selectedTable, selectedItems } = useOrderStore();
     const { isLoading, filteredTables, searchTerm, setSearchTerm } = useTableData();
     const {
         toTable,
@@ -29,6 +29,21 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
         confirmTransfer,
     } = useTableTransfer(businessId || '');
 
+    const tables = useZonesAndTablesStore((s) => s.tables);
+
+    const allTables = useMemo(() => {
+        if (!transfer) {
+            return filteredTables;
+        }
+        if (transfer && selectedItems.length > 0) {
+            return [...new Map([...tables, ...filteredTables].map(item => [item._id, item])).values()];
+        }
+        if (transfer && selectedItems.length === 0) {
+            return filteredTables;
+        }
+        return filteredTables;
+    }, [transfer, selectedItems, tables, filteredTables]);
+
     const handleTableClick = (table: TableData) => {
         if (transfer) {
             setToTable(table);
@@ -39,6 +54,8 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
     };
 
     if (isLoading || isPending) return <SpinnerMemo />;
+
+    // const allTables = searchTerm.length > 0 && !transfer ? filteredTables : [...tables, ...filteredTables];
 
     return (
         <>
@@ -62,11 +79,11 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
                         </div>
                     </section>
                     <section className="px-4 pt-6 pb-20 overflow-y-auto hide-scrollbar">
-                        {filteredTables.length === 0 ? (
+                        {allTables?.length === 0 ? (
                             <p className="text-center text-gray-500">No tables found.</p>
                         ) : (
                             <div className="grid grid-cols-3 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                                {filteredTables.map((table) => (
+                                {allTables?.map((table) => (
                                     <button
                                         type="button"
                                         onClick={() => handleTableClick(table)}

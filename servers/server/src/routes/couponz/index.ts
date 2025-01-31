@@ -246,7 +246,7 @@ const couponzRouter = new Hono()
         availability.endTime = 24;
       }
 
-      const createdCoupon = await Couponz.create([requestData], { session });
+      const createdCoupon = await Couponz.create(requestData);
 
       if (!createdCoupon) {
         return c.json({
@@ -257,36 +257,32 @@ const couponzRouter = new Hono()
       }
 
       // Schedule deactivation if couponEndDate is set
-      if (createdCoupon[0].conditions.couponEndDate > 0) {
+      if (createdCoupon.conditions.couponEndDate > 0) {
         const reminderDateObj = new Date(
-          createdCoupon[0].conditions.couponEndDate,
+          createdCoupon.conditions.couponEndDate,
         );
         const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
           reminderDateObj.getMonth() + 1
         } *`;
 
         schedule(cronExpression, async () => {
-          await Couponz.findByIdAndUpdate(
-            createdCoupon[0]._id,
-            {
-              isActive: false,
-              isDeleted: true,
-              isExpired: true,
-            },
-            { session },
-          );
+          const data = await Couponz.findByIdAndUpdate(createdCoupon._id, {
+            isActive: false,
+            isDeleted: true,
+            isExpired: true,
+          });
         });
       }
 
       // Find or create default channel
       let channelId = await CouponChannel.findOne({
         name: "default",
-        businessId: createdCoupon[0].businessId,
+        businessId: createdCoupon.businessId,
       }).select("_id");
 
       if (!channelId) {
         channelId = await CouponChannel.create({
-          businessId: createdCoupon[0].businessId,
+          businessId: createdCoupon.businessId,
           name: "default",
           date: Date.now(),
           isActive: true,
@@ -302,7 +298,7 @@ const couponzRouter = new Hono()
       }
 
       // Generate short URL
-      const longUrl = `https://api.hipalz.com/coupon-analytics/social/${createdCoupon[0].businessId}/${createdCoupon[0]._id}/${channelId._id}`;
+      const longUrl = `https://api.hipalz.com/coupon-analytics/social/${createdCoupon.businessId}/${createdCoupon._id}/${channelId._id}`;
       const uniqueOrderId = nanoid(10);
       let createShortUrl = await UrlModel.findOne({ longUrl });
 
@@ -326,8 +322,8 @@ const couponzRouter = new Hono()
       await CouponLink.create(
         [
           {
-            businessId: createdCoupon[0].businessId,
-            couponId: createdCoupon[0]._id,
+            businessId: createdCoupon.businessId,
+            couponId: createdCoupon._id,
             channelId: channelId._id,
             date: Date.now(),
             link: createShortUrl.shortUrl,
@@ -336,15 +332,15 @@ const couponzRouter = new Hono()
         { session },
       );
       const { userIds = [], groupIds = [] } =
-        createdCoupon?.[0].conditions?.eligibleUser || {};
+        createdCoupon.conditions?.eligibleUser || {};
 
       const scheduleCouponForUser = async (userId: string) => {
         await createAndScheduleCoupon(
           userId.toString(),
-          createdCoupon[0].businessId.toString(),
-          createdCoupon[0].conditions.expiryAfterGrabbed ?? 0,
-          createdCoupon[0]._id.toString(),
-          createdCoupon[0].conditions.couponEndDate,
+          createdCoupon.businessId.toString(),
+          createdCoupon.conditions.expiryAfterGrabbed,
+          createdCoupon._id.toString(),
+          createdCoupon.conditions.couponEndDate,
         );
       };
 
@@ -360,29 +356,29 @@ const couponzRouter = new Hono()
       }
 
       const couponResponse = {
-        _id: createdCoupon[0]._id,
-        businessId: createdCoupon[0].businessId,
-        name: createdCoupon[0].name,
+        _id: createdCoupon._id,
+        businessId: createdCoupon.businessId,
+        name: createdCoupon.name,
         config: {
-          value: createdCoupon[0].config.value,
-          discountType: createdCoupon[0].config.discountType,
-          upto: createdCoupon[0].config.upto,
+          value: createdCoupon.config.value,
+          discountType: createdCoupon.config.discountType,
+          upto: createdCoupon.config.upto,
         },
-        image: createdCoupon[0].image,
-        bgColour: createdCoupon[0].bgColour,
+        image: createdCoupon.image,
+        bgColour: createdCoupon.bgColour,
         conditions: {
-          billValue: createdCoupon[0].conditions.billValue,
-          couponStartDate: createdCoupon[0].conditions.couponStartDate,
-          couponEndDate: createdCoupon[0].conditions.couponEndDate,
-          requiredFields: createdCoupon[0].conditions.requiredFields,
+          billValue: createdCoupon.conditions.billValue,
+          couponStartDate: createdCoupon.conditions.couponStartDate,
+          couponEndDate: createdCoupon.conditions.couponEndDate,
+          requiredFields: createdCoupon.conditions.requiredFields,
           availability: {
-            when: createdCoupon[0].conditions.availability.when,
-            startTime: createdCoupon[0].conditions.availability.startTime,
-            endTime: createdCoupon[0].conditions.availability.endTime,
-            customDays: createdCoupon[0].conditions.availability.customDays,
+            when: createdCoupon.conditions.availability.when,
+            startTime: createdCoupon.conditions.availability.startTime,
+            endTime: createdCoupon.conditions.availability.endTime,
+            customDays: createdCoupon.conditions.availability.customDays,
           },
-          eligibleUser: createdCoupon[0].conditions.eligibleUser,
-          tc: createdCoupon[0].conditions.tc,
+          eligibleUser: createdCoupon.conditions.eligibleUser,
+          tc: createdCoupon.conditions.tc,
           links: [
             {
               channelId: {
