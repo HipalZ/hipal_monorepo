@@ -104,6 +104,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
             maxLength={30}
             onChange={(e) => setMessage(e.target.value)}
             onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
             className="w-full pl-4 py-2 text-gray-700 border border-gray-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-green-400 focus:border-green-500 transition-all duration-200"
           />
           <AnimatePresence>
@@ -112,7 +113,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               onClick={handleCloseInput}
-              className="absolute right-2 top-2 p-1 text-red-500 rounded-full hover:bg-gray-200 transition-colors"
+              className="absolute right-2 top-2 p-1 text-red-500 rounded-full transition-colors"
             >
               <X className="w-5 h-5" />
             </motion.button>
