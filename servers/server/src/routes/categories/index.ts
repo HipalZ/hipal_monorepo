@@ -300,6 +300,7 @@ const categoriesRouter = new Hono()
         const existingCategories = await Category.find({
           businessId,
           isDeleted: false,
+          visibility: true,
         }).select(
           "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage businessId",
         );
@@ -324,6 +325,7 @@ const categoriesRouter = new Hono()
         const existingCategories = await Category.find({
           businessId,
           hierarchy: hierarchy,
+          visibility: true,
           isDeleted: false,
         }).select(
           "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage businessId",
@@ -341,6 +343,7 @@ const categoriesRouter = new Hono()
         const existingCategories = await Category.find({
           businessId,
           isDeleted: false,
+          visibility: true,
           hierarchy: "PARENT",
         })
           .sort({ sequence: 1 })
@@ -369,6 +372,7 @@ const categoriesRouter = new Hono()
         const existingCategories = await Category.find({
           businessId,
           isDeleted: false,
+          visibility: true,
           hierarchy: "CHILD",
         }).populate({
           path: "dishIds",
@@ -434,6 +438,7 @@ const categoriesRouter = new Hono()
 
       const existingCategories = await Category.find({
         businessId,
+        visibility: true,
         isDeleted: false,
       });
 
