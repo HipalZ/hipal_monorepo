@@ -1899,7 +1899,7 @@ const paymentsRouter = new Hono()
                       totalItemCount: 0,
                       capacity: 0,
                       hiCode: "",
-                      isTransfered: false,
+                      isTransfer: false,
                     },
                   },
                   {
@@ -2954,6 +2954,7 @@ const paymentsRouter = new Hono()
                     totalItemCount: 0,
                     capacity: 0,
                     hiCode: "",
+                    isTransfer: false,
                   },
                 },
                 {

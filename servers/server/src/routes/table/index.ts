@@ -1218,6 +1218,7 @@ const tableRouter = new Hono()
             currentTableAmount: 0,
             totalItemCount: 0,
             userIds: [],
+            isTransfer: false,
           },
           { session },
         );
