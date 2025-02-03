@@ -202,14 +202,26 @@ const kotRouter = new Hono()
         }
 
         if (orderAction === "ACCEPT") {
-          kot.accepted = true;
-          kot.acceptedBy = performBy;
-          await kot.save();
-
           const tempTable = await UserSession.findOne({
             tableName: kot.tableName,
             businessId: kot.businessId,
           });
+          if (tempTable?.billRequestId) {
+            return c.json(
+              {
+                message: `Bill already generated for table ${tempTable.tableName} by ${tempTable?.billGeneratedBy} you can't add more items`,
+                err: true,
+                data: {
+                  success: false,
+                },
+              },
+              400,
+            );
+          }
+          kot.accepted = true;
+          kot.acceptedBy = performBy;
+          await kot.save();
+
           const totalBill = calculateCartBill(kot.cart);
 
           const petpoojaCart = convertToPetpoojaCart(
