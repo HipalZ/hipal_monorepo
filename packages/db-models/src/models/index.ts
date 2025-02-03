@@ -37,6 +37,8 @@ export * from "./outLetInfo";
 export * from "./payment";
 export * from "./paymentAlert";
 export * from "./pendingDues";
+export * from "./permission";
+export * from "./permissionGroup";
 export * from "./pos";
 export * from "./posBill";
 export * from "./qrBill";

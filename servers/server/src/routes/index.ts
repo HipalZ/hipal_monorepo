@@ -15,6 +15,7 @@ import kotRouter from "./kot";
 import menuBannerRouter from "./menu-banner";
 import npcRouter from "./npc";
 import paymentsRouter from "./payments";
+import permissionRouter from "./permission";
 import posRouter from "./pos";
 import googleReview from "./reviews";
 import settingsRouter from "./settings";
@@ -59,6 +60,7 @@ export const routes = app
   .route("/kot", kotRouter)
   .route("/upi_mode", upiModeRouter)
   .route("/dues", duesRouter)
-  .route("/npc", npcRouter);
+  .route("/npc", npcRouter)
+  .route("/permission", permissionRouter);
 
 export type AppType = typeof routes;

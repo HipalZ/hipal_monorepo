@@ -51,6 +51,8 @@ export * from "./menuBanner";
 export * from "./note";
 export * from "./npcUser";
 export * from "./pendingDues";
+export * from "./permission";
+export * from "./permissionGroup";
 export * from "./pos";
 export * from "./posBill";
 export * from "./recentCampaign";

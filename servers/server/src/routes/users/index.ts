@@ -2,12 +2,17 @@
 import {
   DeviceToken,
   LoyaltyCoinsInfo,
+  StaffPermission,
+  StaffPermissionGroup,
   Subscriber,
   User,
   UserReward,
   UserRewardHistory,
 } from "@hi/db-models";
-import type { UserType } from "@hi/db-models/src/validators";
+import type {
+  AddStaffValidatorType,
+  UserType,
+} from "@hi/db-models/src/validators";
 import {
   UserAttrs,
   addStaffValidator,
@@ -122,6 +127,38 @@ export const createRefreshToken = (id: string, role: string) => {
     { expiresIn: "50d" }, // Add 30 day expiration
   );
 };
+
+async function createPermissionObject(
+  permissionIds: string[],
+  permissionGroupIds: string[],
+) {
+  const permissions = await StaffPermission.find({
+    _id: { $in: permissionIds },
+  });
+  const groupPermissions = await StaffPermissionGroup.find({
+    _id: { $in: permissionGroupIds },
+  });
+
+  if (!permissions || !groupPermissions) {
+    throw new Error("Permission not found");
+  }
+
+  const perObj: Record<string, boolean> = {};
+
+  // Add individual permissions
+  for (const permission of permissions) {
+    perObj[permission.name] = true;
+  }
+
+  // Add group permissions
+  for (const group of groupPermissions) {
+    for (const permission of Object.keys(group.permissions)) {
+      perObj[permission] = true;
+    }
+  }
+
+  return perObj;
+}
 const usersRouter = new Hono()
   .post("/:id/signUp", zValidator("json", UserAttrs), async (c) => {
     const requestData = await c.req.json();
@@ -499,144 +536,223 @@ const usersRouter = new Hono()
 
     async (c) => {
       const requestData = await c.req.json();
-      const { name, phone, businessId, role } = requestData;
-      const permissions = [
-        {
-          title: "managebooking",
-          isHaveAccess: false,
-        },
-        {
-          title: "tableandordering",
-          isHaveAccess: false,
-        },
-        {
-          title: "review",
-          isHaveAccess: false,
-        },
-        {
-          title: "payment",
-          isHaveAccess: false,
-        },
-      ];
-      const newCustomRole = {
-        businessId: businessId,
-        permissions: permissions,
-        bookMark: true,
-        role: role,
-      };
-
-      const password = "6344";
+      const {
+        name,
+        phone,
+        businessId,
+        role,
+        permissionIds = [],
+        permissionGroupIds = [],
+        password,
+      } = requestData as AddStaffValidatorType;
 
       const existingUser = await User.findOne({
         phone,
-        customRole: { $elemMatch: { businessId: businessId } },
       });
 
       if (existingUser) {
-        return respond(c, "Staff already exist", true, 400, existingUser);
+        const perObj = await createPermissionObject(
+          permissionIds,
+          permissionGroupIds,
+        );
+        const customRole = {
+          businessId,
+          role,
+
+          permissionGroupIds,
+          default: false,
+          isDeleted: false,
+          permissions: perObj,
+          permissionIds,
+        };
+
+        console.log("customRole", customRole);
+
+        const updateUser = await User.findOneAndUpdate(
+          { phone },
+          {
+            $addToSet: {
+              customRole: customRole,
+            },
+          },
+          { new: true },
+        );
+
+        return c.json({
+          message: "Staff added successfully",
+          data: { user: updateUser },
+          err: false,
+        });
       }
 
-      const updateUser = await User.findOneAndUpdate(
-        { phone },
-        {
-          $set: {
-            name,
-            phone,
-            role: roles,
-            password: await hashPassword(password),
-          },
-          $addToSet: { customRole: newCustomRole },
-        },
-        { new: true, upsert: true },
+      const hashPass = await hashPassword(password);
+
+      const perObj = await createPermissionObject(
+        permissionIds,
+        permissionGroupIds,
       );
 
-      if (!updateUser) return respond(c, "staff failed", true, 400, {});
-      return respond(c, "Staff created!", false, 200, updateUser);
+      const customRole = {
+        businessId,
+        role,
+
+        permissionGroupIds,
+        default: false,
+        isDeleted: false,
+        permissions: perObj,
+        permissionIds,
+      };
+
+      const user = await User.create({
+        name,
+        phone,
+        role: roles,
+        customRole: [customRole],
+        password: hashPass,
+      });
+
+      return c.json({
+        message: "Staff created successfully",
+        data: { user },
+        err: false,
+      });
     },
   )
   .put(
     "/:staffId/staff",
-
     zValidator(
       "json",
-      z
-        .object({
-          role: z.enum(roles).optional(),
-          phone: z.string().min(10).max(10).optional(),
-          password: z.string().optional(),
-          businessId: z.string(),
-          permissions: z
-            .array(
-              z.object({
-                title: z.string(),
-                subPermissions: z.array(z.string()).optional(),
-              }),
-            )
-            .optional(),
-        })
-        .partial(),
+      z.object({
+        businessId: z.string(),
+        name: z.string().min(2).max(30).optional(),
+        role: z.string().optional(),
+        permissionIds: z.array(z.string()).optional().default([]),
+        permissionGroupIds: z.array(z.string()).optional().default([]),
+        password: z.string().min(4).max(15).optional(),
+        removePermissionIds: z.array(z.string()).optional().default([]),
+        removePermissionGroupIds: z.array(z.string()).optional().default([]),
+        bookMark: z.boolean().optional(),
+      }),
     ),
-
     async (c) => {
       const requestData = await c.req.json();
       const { staffId } = c.req.param();
-      const { phone, permissions, role, password, businessId } = requestData;
+      const {
+        name,
+        role,
+        permissionIds = [],
+        permissionGroupIds = [],
+        password,
+        removePermissionIds = [],
+        removePermissionGroupIds = [],
+        businessId,
+        bookMark,
+      } = requestData;
 
-      const staff = await User.findOne({
-        _id: staffId,
-        customRole: { $elemMatch: { businessId: businessId } },
-      });
+      const existingUser = await User.findById(staffId);
 
-      if (!staff) {
-        return respond(c, "Staff not found", true, 404, {});
+      if (!existingUser) {
+        return c.json(
+          {
+            message: "Staff not found",
+            data: {},
+            err: true,
+          },
+          404,
+        );
       }
 
-      const hashPass = password ? await hashPassword(password) : null;
+      if (removePermissionIds.length > 0) {
+        await User.findOneAndUpdate(
+          {
+            _id: staffId,
+            "customRole.businessId": businessId,
+          },
+          {
+            $pull: {
+              "customRole.permissionIds": {
+                $in: removePermissionIds,
+              },
+            },
+          },
+        );
+      }
 
-      const updateUser = await User.findOneAndUpdate(
-        { _id: staffId, "customRole.businessId": businessId },
+      if (removePermissionGroupIds.length > 0) {
+        await User.findOneAndUpdate(
+          {
+            _id: staffId,
+            "customRole.businessId": businessId,
+          },
+          {
+            $pull: {
+              "customRole.permissionGroupIds": {
+                $in: removePermissionGroupIds,
+              },
+            },
+          },
+        );
+      }
+
+      const perObj = await createPermissionObject(
+        permissionIds,
+        permissionGroupIds,
+      );
+
+      const customRole = {
+        businessId,
+        role,
+        permissionGroupIds,
+        default: false,
+        isDeleted: false,
+        permissions:
+          permissionGroupIds.length > 0 || permissionIds.length > 0
+            ? perObj
+            : {},
+        permissionIds,
+      };
+
+      await User.findOneAndUpdate(
+        {
+          _id: staffId,
+          "customRole.businessId": businessId,
+        },
         {
           $set: {
-            "customRole.$.permissions": permissions, // Update permissions in the matched customRole
-            "customRole.$.bookMark": true,
-            "customRole.$.role": role || staff?.customRole?.[0]?.role,
-
-            phone, // Assuming these are user-level updates
-            role: roles,
-            password: hashPass || staff.password,
+            "customRole.$": customRole,
+            password: password ? await hashPassword(password) : undefined,
+            name: name || undefined,
+            bookMark: bookMark,
           },
         },
-        { new: true },
       );
 
-      if (!updateUser) {
-        return respond(c, "staff failed", true, 400, {});
-      }
-
-      return respond(
-        c,
-        updateUser ? "User updated with new custom role!" : "Staff created!",
-        false,
-        200,
-        updateUser,
-      );
+      return c.json({
+        message: "Staff updated successfully",
+        data: {},
+        err: false,
+      });
     },
   )
 
   .delete(
-    "/:staffId",
+    "/:staffId/:businessId",
 
     zValidator(
       "param",
       z.object({
         staffId: z.string(),
+        businessId: z.string(),
       }),
     ),
     async (c) => {
-      const { staffId } = c.req.param();
+      const { staffId, businessId } = c.req.param();
 
-      const deleteStaff = await User.findByIdAndUpdate(
-        staffId,
+      const deleteStaff = await User.findOneAndUpdate(
+        {
+          _id: staffId,
+          "customRole.businessId": businessId,
+        },
         { isDeleted: true },
         { new: true },
       );
@@ -726,6 +842,13 @@ const usersRouter = new Hono()
     const { businessId } = c.req.param();
     const existingUser = await User.find({
       "customRole.businessId": businessId,
+      "customRole.isDeleted": false,
+    }).select({
+      name: 1,
+      phone: 1,
+      customRole: {
+        $elemMatch: { businessId: businessId },
+      },
     });
 
     return respond(c, "Staff fetched successfully", false, 200, existingUser);

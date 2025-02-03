@@ -241,7 +241,7 @@ const kotRouter = new Hono()
             petpoojaCart,
           );
 
-          const t = await Table.findOneAndUpdate(
+          await Table.findOneAndUpdate(
             {
               businessId: kot.businessId,
               name: kot.tableName,
