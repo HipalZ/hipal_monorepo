@@ -2,20 +2,22 @@
   "name": "client-hipal-app",
   "version": "0.1.0",
   "scripts": {
-    "dev": "dotenv -e ./.env.local next --host ",
-    "dev:test": "dotenv -e ./.env.test next --host",
+    "setup:pnpm": "npm i -g pnpm@latest && pnpm install",
+    "dev": "dotenv -e ./.env.local pnpm run setup:pnpm && next --host",
+    "dev:test": "dotenv -e ./.env.test pnpm run setup:pnpm && next --host",
+    "build": "pnpm run setup:pnpm && next build",
+    "build:local": "dotenv -e .env.local pnpm run setup:pnpm && pnpm run build",
+    "build:test": "dotenv -e ./.env.test pnpm run setup:pnpm && pnpm run build",
+    "build:production": "dotenv -e ./.env.production pnpm run setup:pnpm && pnpm run build",
+    "bundle": "next build",
     "bundle:development": "dotenv -e .env pnpm run bundle",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "build:local": "dotenv -e .env.local pnpm run build",
     "bundle:local": "dotenv -e .env.local pnpm run bundle",
-    "build:test": "dotenv -e ./.env.test pnpm run build",
     "bundle:test": "dotenv -e ./.env.test pnpm run bundle",
-    "build:production": "dotenv -e ./.env.production pnpm run build",
     "bundle:production": "dotenv -e ./.env.production pnpm run bundle",
-    "bundle": "next build"
+    "lint": "next lint",
+    "start": "next start"
   },
+
   "dependencies": {
     "@fontsource-variable/darker-grotesque": "^5.0.5",
     "@headlessui/react": "^2.0.4",
