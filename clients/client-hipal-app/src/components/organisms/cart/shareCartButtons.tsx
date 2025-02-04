@@ -54,7 +54,7 @@ const MemoShareCartButtons = () => {
         toast.error(res.message || "Failed to create cart link");
       }
     } catch (error) {
-      console.error("Error  creating cart link:", error);
+      console.error("Error  creating cart:", error);
       toast.error("An error occurred while creating the cart link");
     }
   };
