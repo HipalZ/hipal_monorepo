@@ -40,4 +40,4 @@ invoice
 builderror 
 pos payment
 test deploy
-vercel json filed testings
+vercel json filed testings vercel

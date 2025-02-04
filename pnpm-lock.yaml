@@ -542,9 +542,6 @@ importers:
       run:
         specifier: ^1.5.0
         version: 1.5.0
-      shadcn-ui:
-        specifier: ^0.9.4
-        version: 0.9.4(typescript@5.5.2)
       sharp:
         specifier: ^0.33.4
         version: 0.33.5
@@ -589,7 +586,7 @@ importers:
         specifier: ^18.3.0
         version: 18.3.5(@types/react@18.3.18)
       autoprefixer:
-        specifier: ^10.4.19
+        specifier: ^10.4.20
         version: 10.4.20(postcss@8.5.1)
       dotenv-cli:
         specifier: ^7.3.0
@@ -604,7 +601,7 @@ importers:
         specifier: ^8.10.0
         version: 8.10.0(eslint@8.33.0)
       postcss:
-        specifier: ^8.4.38
+        specifier: ^8.5.1
         version: 8.5.1
       postcss-preset-env:
         specifier: ^9.5.14
@@ -612,6 +609,9 @@ importers:
       prettier:
         specifier: ^2.8.8
         version: 2.8.8
+      shadcn-ui:
+        specifier: ^0.9.4
+        version: 0.9.4(typescript@5.5.2)
       tailwindcss:
         specifier: ^3.4.4
         version: 3.4.17
