@@ -1,3 +1,12 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "rewrites": [{ "source": "/(.*)", "destination": "/" }],
+  "installCommand": "rm -rf node_modules .next && pnpm install",
+  "buildCommand": "rm -rf .next && pnpm run build"
 }
