@@ -1,5 +1,3 @@
 {
-  "rewrites": [{ "source": "/:path*", "destination": "/:path*" }],
-  "installCommand": "pnpm install --no-frozen-lockfile",
-  "buildCommand": "pnpm run build:test"
+  "rewrites": [{ "source": "/:path*", "destination": "/:path*" }]
 }
