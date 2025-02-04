@@ -528,7 +528,6 @@ const usersRouter = new Hono()
       err: false,
     });
   })
-  //TODO: ADD PERMISSION DONE
   .post(
     "/addStaff",
 
@@ -628,7 +627,6 @@ const usersRouter = new Hono()
         role: z.string().optional(),
         permissionIds: z.array(z.string()).optional().default([]),
         permissionGroupIds: z.array(z.string()).optional().default([]),
-        password: z.string().min(4).max(15).optional(),
         removePermissionIds: z.array(z.string()).optional().default([]),
         removePermissionGroupIds: z.array(z.string()).optional().default([]),
         bookMark: z.boolean().optional(),
@@ -642,7 +640,6 @@ const usersRouter = new Hono()
         role,
         permissionIds = [],
         permissionGroupIds = [],
-        password,
         removePermissionIds = [],
         removePermissionGroupIds = [],
         businessId,
@@ -720,7 +717,6 @@ const usersRouter = new Hono()
         {
           $set: {
             "customRole.$": customRole,
-            password: password ? await hashPassword(password) : undefined,
             name: name || undefined,
             bookMark: bookMark,
           },
@@ -729,6 +725,134 @@ const usersRouter = new Hono()
 
       return c.json({
         message: "Staff updated successfully",
+        data: {},
+        err: false,
+      });
+    },
+  )
+
+  .put(
+    "/:staffId/change_password",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string(),
+        oldPassword: z.string(),
+        newPassword: z.string(),
+        forgetPassword: z.boolean().optional().default(false),
+        otp: z.string().optional(),
+      }),
+    ),
+    async (c) => {
+      const requestData = await c.req.json();
+      const { staffId } = c.req.param();
+      const { oldPassword, newPassword, businessId, forgetPassword, otp } =
+        requestData;
+
+      const user = await User.findById(staffId);
+
+      if (forgetPassword) {
+        const options = {
+          method: "POST",
+          url: `https://control.msg91.com/api/v5/otp?template_id=64393bf9d6fc05380863b002&mobile=91${user?.phone}`,
+          headers: {
+            accept: "application/json",
+            "content-type": "application/json",
+            authkey: "387796AmyGlDBq63b2d75aP1",
+          },
+        };
+        const response = await axios(options);
+
+        if (otp.length > 1) {
+          const options = {
+            method: "GET",
+            url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${user?.phone}`,
+            headers: {
+              accept: "application/json",
+              authkey: "387796AmyGlDBq63b2d75aP1",
+            },
+          };
+
+          const response = await axios(options);
+
+          if (
+            response?.data?.message === "Mobile no. not found" ||
+            response?.data?.message === "OTP not match" ||
+            response?.data?.message === "OTP expired" ||
+            response?.data?.message === "Otp empty or not numeric" ||
+            response?.data?.message ===
+              "Max limit reached for this otp verification"
+          ) {
+            return c.json(
+              {
+                err: true,
+                status: false,
+                message: "Please enter valid Otp !!",
+              },
+              400,
+            );
+          }
+
+          await User.findOneAndUpdate(
+            {
+              _id: staffId,
+            },
+            {
+              $set: {
+                password: newPassword
+                  ? await hashPassword(newPassword)
+                  : undefined,
+              },
+            },
+          );
+
+          return c.json({
+            message: "password updated successfully",
+            data: {},
+            err: false,
+          });
+        }
+      }
+
+      if (!user) {
+        return c.json(
+          {
+            message: "Staff not found",
+            data: {},
+            err: true,
+          },
+          404,
+        );
+      }
+
+      const isMatch = await verifyPassword(
+        oldPassword,
+        user.password as string,
+      );
+      if (!isMatch) {
+        return c.json(
+          {
+            message: "Old password does not match",
+            data: {},
+            err: true,
+          },
+          400,
+        );
+      }
+
+      await User.findOneAndUpdate(
+        {
+          _id: staffId,
+        },
+        {
+          $set: {
+            password: newPassword ? await hashPassword(newPassword) : undefined,
+          },
+        },
+      );
+
+      return c.json({
+        message: "password updated successfully",
         data: {},
         err: false,
       });
