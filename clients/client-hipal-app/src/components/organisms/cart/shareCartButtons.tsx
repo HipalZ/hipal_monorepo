@@ -81,7 +81,7 @@ const MemoShareCartButtons = () => {
       const message = encodeURIComponent(
         `Hi, I am interested in this item. Can I know more details?\n*See the cart:* ${shareState.url}`,
       );
-      const whatsappUrl = `https://wa.me/${outletInfo?.phone}?text=${message}`;
+      const whatsappUrl = `https://wa.me/+91${outletInfo?.phone}?text=${message}`;
       window.open(whatsappUrl, "_blank");
     }
 
@@ -97,7 +97,7 @@ const MemoShareCartButtons = () => {
         <FiShare className="mr-2 text-xl" />
         Share
       </button>
-      {shareState.showOptions && (
+      {shareState?.showOptions && (
         <BottomPopUp
           show={shareState.showOptions}
           onClose={() => setShareState({ ...shareState, showOptions: false })}

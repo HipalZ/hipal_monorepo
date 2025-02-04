@@ -1,7 +1,6 @@
 import { isEmpty } from "lodash-es";
 import PlaceholderImg from "../placeholder";
-import type { IDish } from "@/components/types/businessData";
-import { memo, useCallback } from "react";
+import { memo } from "react";
 import { cn } from "@hi/common";
 import { useCart } from "@/components/store/useCart";
 import MemoNotAvailable from "../notAvailable";
@@ -11,12 +10,7 @@ import CommonBottomButton from "../bottomButton";
 import { BUSINESS_KEYID } from "@/configs";
 import { useParams } from "next/navigation";
 import { useCartStore } from "@/components/store/useCartStore";
-import MemoChoosePortions from "@/components/molecules/choosePortions";
-import ExtraWithDishWithSelect from "@/components/organisms/dishDescription/extras";
-import MemoAlertVariant from "../alertVariant";
-import { useBottomPanel } from "@/components/store/useBottomPanel";
 import Head from "next/head";
-import BottomPopUp from "../bottomPopUp";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
@@ -25,9 +19,8 @@ function generateCartItemId(dishId, portionId, extras) {
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((e) => `${e.id}:${e.quantity}`)
     .join("|");
-  return `${dishId}_${portionId || "no_portion"}_${
-    sortedExtras || "no_extras"
-  }`;
+  return `${dishId}_${portionId || "no_portion"}_${sortedExtras || "no_extras"
+    }`;
 }
 
 function MemoOutletItemInfo() {
@@ -35,6 +28,7 @@ function MemoOutletItemInfo() {
   const isAvailable = dishData?.availability;
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const customLink = useParams()?.businessId as string;
+  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const { showCart } = useCart();
   const handleInsideClick = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
@@ -43,57 +37,22 @@ function MemoOutletItemInfo() {
   };
 
   const {
-    openBottomPanel,
-    setOpenBottomPanel,
-    cartPopup,
     removeFromCart,
-    selectedDish,
-    selectedPortion,
-    selectedChoices,
     addToCart,
     cart,
-    resetSelections,
   } = useCartStore();
 
-  const { displayAlert } = useBottomPanel();
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent(
       `Hi, I am interested in this item. Can I know more details?\n\n*Product Name:* ${dishData?.name}\n*Dish ID:* ${dishData?._id}\n*See the product:* ${BUSINESS_KEYID}${customLink}/${dishData?._id}`,
     );
 
-    const whatsappUrl = `https://wa.me/${outletInfo?.phone}?text=${message}`;
+    const whatsappUrl = `https://wa.me/+91${outletInfo?.phone}?text=${message}`;
 
     window.open(whatsappUrl, "_blank");
   };
 
-  // const handleOpenModal = useCallback(() => {
-  //   setOpenBottomPanel(true);
-  // }, [setOpenBottomPanel]);
-
-  const closeModal = useCallback(() => {
-    setOpenBottomPanel(false);
-    resetSelections();
-  }, [setOpenBottomPanel]);
-
-  const handleAddToCart = useCallback(() => {
-    const item = {
-      id: generateCartItemId(
-        selectedDish._id,
-        selectedPortion?._id || null,
-        selectedChoices.map((choice) => ({
-          id: choice.id,
-          quantity: choice.quantity,
-        })),
-      ),
-      dish: selectedDish,
-      portion: selectedPortion,
-      extras: selectedChoices,
-      quantity: 1,
-    };
-    addToCart(item);
-    closeModal();
-  }, [selectedDish, selectedPortion, selectedChoices, addToCart, closeModal]);
 
   return (
     <>
@@ -148,36 +107,36 @@ function MemoOutletItemInfo() {
                 ),
             )
               ? {
-                  text: "Remove from Cart",
-                  onClick: () => {
-                    const itemId = generateCartItemId(
-                      dishData._id,
-                      dishData.portions?.[0]?._id || null,
-                      [],
-                    );
-                    removeFromCart(itemId);
-                  },
-                  type: "button",
-                }
-              : {
-                  text: "Add to Cart",
-                  onClick: () => {
-                    const itemId = generateCartItemId(
-                      dishData._id,
-                      dishData.portions?.[0]?._id || null,
-                      [],
-                    );
-                    const item = {
-                      id: itemId,
-                      dish: dishData,
-                      portion: dishData.portions?.[0] || null,
-                      extras: [],
-                      quantity: 1,
-                    };
-                    addToCart(item);
-                  },
-                  type: "button",
+                text: "Remove from Cart",
+                onClick: () => {
+                  const itemId = generateCartItemId(
+                    dishData._id,
+                    dishData.portions?.[0]?._id || null,
+                    [],
+                  );
+                  removeFromCart(itemId);
                 },
+                type: "button",
+              }
+              : {
+                text: "Add to Cart",
+                onClick: () => {
+                  const itemId = generateCartItemId(
+                    dishData._id,
+                    dishData.portions?.[0]?._id || null,
+                    [],
+                  );
+                  const item = {
+                    id: itemId,
+                    dish: dishData,
+                    portion: dishData.portions?.[0] || null,
+                    extras: [],
+                    quantity: 1,
+                  };
+                  addToCart(item);
+                },
+                type: "button",
+              },
             {
               text: "Chat on Whatsapp",
               onClick: handleWhatsAppClick,

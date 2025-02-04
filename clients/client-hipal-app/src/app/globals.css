@@ -78,6 +78,7 @@ body {
 	--gradient-background: linear-gradient(to right, #C53293 -4.88%, #4990FB 90.05%);
 	background-color: #010818;
 	color: #fff;
+	--radius: 0.75rem;
   }
 
 

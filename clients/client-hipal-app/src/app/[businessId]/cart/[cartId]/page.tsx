@@ -103,9 +103,7 @@ const CartPage = () => {
               const message = encodeURIComponent(
                 `Hi, I am interested in this item. Can I know more details?\n*See the cart:* ${BUSINESS_KEYID}/${customLink}/cart/${cartId}`,
               );
-              const whatsappUrl = `https://wa.me/${
-                outletInfo?.phone || "8668229890"
-              }?text=${message}`;
+              const whatsappUrl = `https://wa.me/+91${outletInfo?.phone}?text=${message}`;
               window.open(whatsappUrl, "_blank");
             },
           },

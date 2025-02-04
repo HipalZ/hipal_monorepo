@@ -26,10 +26,10 @@ function MemoIndividualItemDescription() {
     <div className="no-scrollbar pb-[5rem] text-[#000000]">
       {dishData?.tags && dishData?.tags?.length > 0 && (
         <section className="flex items-center gap-2 mt-2">
-          {dishData?.tags.map((ele, index) => (
+          {dishData?.tags?.map((ele, index) => (
             <div key={ele} className="text-sm font-semibold text-[#000000]">
               {ele}
-              {index < dishData?.tags.length - 1 && ","}
+              {index < dishData?.tags?.length - 1 && ","}
             </div>
           ))}
         </section>

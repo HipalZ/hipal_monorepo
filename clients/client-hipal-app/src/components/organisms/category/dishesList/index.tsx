@@ -227,7 +227,7 @@ const DishesList: FC<IDishesProps> = (props) => {
             </InView>
             <div className="flex flex-col divide-y divide-gray-100">
               {dishesToRender.length > 0 &&
-              outletInfo?.outLetType !== "OTHER" ? (
+                outletInfo?.outLetType !== "OTHER" ? (
                 dishesToRender.map((dishData: DishType, dishIndex) => (
                   <HorizontalCard
                     dishData={dishData}
@@ -235,7 +235,7 @@ const DishesList: FC<IDishesProps> = (props) => {
                   />
                 ))
               ) : (
-                <section className="grid grid-cols-2 gap-4 px-4 mt-4">
+                <section className="grid gap-4 px-4 mt-4">
                   {dishesToRender.map((dishData: DishType, dishIndex) => (
                     <OtherOutletCard
                       dishData={dishData}

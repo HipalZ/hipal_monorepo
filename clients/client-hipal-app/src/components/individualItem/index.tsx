@@ -58,9 +58,7 @@ const IndividualItemPage = ({ dishData }: IndividualItemPageProps) => {
     );
 
     // WhatsApp URL for a specific number
-    const whatsappUrl = `https://wa.me/${
-      outletInfo?.phone || "8668229890"
-    }?text=${message}`;
+    const whatsappUrl = `https://wa.me/+91${outletInfo?.phone}?text=${message}`;
 
     window.open(whatsappUrl, "_blank");
   };
