@@ -1,5 +1,5 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }],
-  "installCommand": "npm i -g pnpm@latest && pnpm store prune && pnpm install",
-  "buildCommand": "rm -rf node_modules .next .vercel/cache && pnpm build:test"
+  "rewrites": [{ "source": "/:path*", "destination": "/:path*" }],
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm run build:test"
 }
