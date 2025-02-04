@@ -1,105 +1,90 @@
-import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton";
-import { getPrice } from "@/components/utils/helpers";
-import { memo, useCallback, useMemo, useState } from "react";
-import { AiOutlineExpand } from "react-icons/ai";
-import type { DishType } from "@hi/db-models/src/validators";
-import ShimmerImage from "../imageshimmer";
-import OtherPlaceholderImg from "../placeholder/othePlaceholder";
-import { cn } from "@hi/common";
-import ItemDescriptionPopup from "../dishDescription/itemDescription";
-import OutletItemInfo from "../dishPopup/outletcard";
-import { useActiveClass } from "@/components/store/useActiveClass";
+import { memo, useCallback, useMemo, useState } from "react"
+import type { DishType } from "@hi/db-models/src/validators"
+import { cn } from "@hi/common"
+import { Badge } from "@/components/ui/badge"
+import { getPrice } from "@/components/utils/helpers"
+import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton"
+import ShimmerImage from "../imageshimmer"
+import OtherPlaceholderImg from "../placeholder/othePlaceholder"
+import ItemDescriptionPopup from "../dishDescription/itemDescription"
+import OutletItemInfo from "../dishPopup/outletcard"
+import { useActiveClass } from "@/components/store/useActiveClass"
+import MemoReadMore from "../readMore"
 
 const MemoOtherOutletCard = ({
   dishData,
 }: {
-  dishData: DishType;
+  dishData: DishType
 }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { isSelectedDish, setSelectedDish } = useActiveClass();
-  const price = useMemo(
-    () => getPrice(dishData?.price || 0),
-    [dishData?.price],
-  );
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const { isSelectedDish, setSelectedDish } = useActiveClass()
+  const price = useMemo(() => getPrice(dishData?.price || 0), [dishData?.price])
 
   const openModal = useCallback(() => {
-    setSelectedDish(dishData);
-    console.log(dishData);
-    setIsModalOpen(true);
-  }, [dishData]);
+    setSelectedDish(dishData)
+    setIsModalOpen(true)
+  }, [dishData, setSelectedDish])
 
   const closeModal = useCallback(() => {
-    setSelectedDish({} as DishType);
-    setIsModalOpen(false);
-  }, []);
+    setSelectedDish({} as DishType)
+    setIsModalOpen(false)
+  }, [setSelectedDish])
+
   return (
-    <div className="w-full pb-4">
-      <section className="overflow-hidden">
-        <div className="relative w-full h-52">
+    <div className="relative pb-8 overflow-hidden border-b border-gray-200">
+      <div className="flex p-0">
+        <div className="flex-grow pr-4 text-[#000000]">
+          {dishData.tags && dishData.tags.length > 0 && (
+            <Badge variant="secondary" className="mb-2">
+              {dishData.tags[0]}
+            </Badge>
+          )}
+          <h3 className="mb-1 text-lg font-semibold text-[#000000]">{dishData.name}</h3>
+          {Number(price) > 1 && (
+            <p className="text-sm text-muted-foreground">₹ {Number(price).toLocaleString("en-IN")}</p>
+          )}
+          {dishData?.description && (
+            <div className="mt-2 text-xs leading-3 text-[#000000]">
+              <MemoReadMore className="font-semibold !opacity-40" text={dishData?.description || ""} />
+            </div>
+          )}
+        </div>
+        <div className="flex-shrink-0 w-32 h-32">
+          {" "}
+          {/* Fixed width and height */}
           {dishData?.images?.[0] ? (
             <ShimmerImage
-              src={dishData.images[0]}
+              src={dishData?.images?.[0]}
               alt="dish"
               quality={95}
-              width={160}
-              height={200}
+              width={128}
+              height={128}
               onClick={openModal}
-              className={`object-cover w-full h-full rounded-lg ${
-                dishData.availability ? "" : "grayscale"
-              }`}
+              className={cn("object-cover w-full h-full rounded-lg", !dishData.availability && "grayscale")}
             />
           ) : (
-            <OtherPlaceholderImg className="object-cover w-full h-full bg-base-200" />
-          )}
-          <button
-            type="button"
-            className="absolute p-2 bg-white rounded-full -top-2 -right-2"
-            onClick={openModal}
-          >
-            <AiOutlineExpand className="mt-1 mr-1 text-lg text-[#000000]" />
-          </button>
-          {dishData.availability && (
-            <div className="absolute right-0 scale-75 bottom-2">
-              <DishQuantityButton dishData={dishData} />
-            </div>
+            <OtherPlaceholderImg onClick={openModal} className="w-full h-full rounded-lg bg-muted" />
           )}
         </div>
-        {dishData.tags && dishData.tags.length > 0 && (
-          <section className="mt-2">
-            {/* {dishData.tags.map((ele) => ( */}
-            <div className="text-sm font-semibold text-[#000000]">
-              {dishData?.tags?.[0]}
-            </div>
-            {/* ))} */}
-          </section>
+      </div>
+      <div className="absolute mt-4 bottom-2.5 right-4">
+        {dishData.availability ? (
+          <DishQuantityButton dishData={dishData} />
+        ) : (
+          <span className="text-sm text-muted-foreground">Not available</span>
         )}
-        {Number(price) > 1 && (
-          <div className="mt-1 ml-1 font-medium text-[#000000] opacity-80">
-            ₹ {Number(price)?.toLocaleString("en-IN")}
-          </div>
-        )}
-        <div
-          className={cn(
-            "mt-1 ml-1 text-sm font-medium capitalize text-[#000000]",
-          )}
-        >
-          {dishData?.name || ""}
-        </div>
-      </section>
+      </div>
 
       {isModalOpen && (
-        <ItemDescriptionPopup
-          heading={isSelectedDish?.name}
-          show={isModalOpen}
-          onClose={closeModal}
-        >
+        <ItemDescriptionPopup heading={isSelectedDish?.name} show={isModalOpen} onClose={closeModal}>
           <OutletItemInfo />
         </ItemDescriptionPopup>
       )}
     </div>
-  );
-};
+  )
+}
 
-const OtherOutletCard = memo(MemoOtherOutletCard);
+const OtherOutletCard = memo(MemoOtherOutletCard)
 
-export default OtherOutletCard;
+export default OtherOutletCard
+

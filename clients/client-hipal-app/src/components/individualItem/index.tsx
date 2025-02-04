@@ -14,6 +14,7 @@ import LoadingSpinnerCircle from "../atoms/loader";
 import Head from "next/head";
 import { BUSINESS_KEYID } from "@/configs";
 import Script from "next/script";
+import { _useAllBusiness } from "../store/useAllBusiness";
 
 interface IndividualItemPageProps {
   dishData: IDish;
@@ -23,6 +24,7 @@ const IndividualItemPage = ({ dishData }: IndividualItemPageProps) => {
   const router = useRouter();
   const isAvailable = dishData.availability;
   const customLink = useParams()?.businessId as string;
+  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
 
   // Fetch business settings and update theme
   const fetchSettings = async () => {
@@ -56,7 +58,7 @@ const IndividualItemPage = ({ dishData }: IndividualItemPageProps) => {
     );
 
     // WhatsApp URL for a specific number
-    const whatsappUrl = `https://wa.me/8668229890?text=${message}`;
+    const whatsappUrl = `https://wa.me/+91${outletInfo?.phone}?text=${message}`;
 
     window.open(whatsappUrl, "_blank");
   };
