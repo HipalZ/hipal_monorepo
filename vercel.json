@@ -1,12 +1,5 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
-    }
-  ],
   "rewrites": [{ "source": "/(.*)", "destination": "/" }],
-  "installCommand": "rm -rf node_modules .next && pnpm install",
-  "buildCommand": "rm -rf .next && pnpm run build"
+  "installCommand": "npm i -g pnpm@latest && pnpm store prune && pnpm install",
+  "buildCommand": "rm -rf node_modules .next .vercel/cache && pnpm build:test"
 }
