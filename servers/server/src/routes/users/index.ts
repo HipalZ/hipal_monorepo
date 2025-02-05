@@ -27,6 +27,7 @@ import { zValidator } from "@hono/zod-validator";
 import argon2 from "argon2";
 import axios from "axios";
 import { Hono } from "hono";
+import { setCookie } from "hono/cookie";
 //@ts-ignore
 import jwt from "jsonwebtoken";
 import { z } from "zod";
@@ -962,21 +963,26 @@ const usersRouter = new Hono()
     });
   })
 
-  .get("/:businessId", zValidator("param", paramsSchema), async (c) => {
-    const { businessId } = c.req.param();
-    const existingUser = await User.find({
-      "customRole.businessId": businessId,
-      "customRole.isDeleted": false,
-    }).select({
-      name: 1,
-      phone: 1,
-      customRole: {
-        $elemMatch: { businessId: businessId },
-      },
-    });
+  .get(
+    "/:businessId",
+    zValidator("param", paramsSchema),
 
-    return respond(c, "Staff fetched successfully", false, 200, existingUser);
-  })
+    async (c) => {
+      const { businessId } = c.req.param();
+      const existingUser = await User.find({
+        "customRole.businessId": businessId,
+        "customRole.isDeleted": false,
+      }).select({
+        name: 1,
+        phone: 1,
+        customRole: {
+          $elemMatch: { businessId: businessId },
+        },
+      });
+
+      return respond(c, "Staff fetched successfully", false, 200, existingUser);
+    },
+  )
   .get(
     "/getStaff/:staffId",
 
@@ -1441,6 +1447,80 @@ const usersRouter = new Hono()
       }
 
       return respond(c, "User updated successfully", false, 200, user);
+    },
+  )
+
+  .post(
+    "/set_session",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string(),
+        userId: z.string(),
+        bookMark: z.boolean().optional(),
+      }),
+    ),
+    async (c) => {
+      const requestData = await c.req.json();
+      const { businessId, userId, bookMark } = requestData;
+
+      const existingUser = await User.findOne(
+        {
+          _id: userId,
+          "customRole.businessId": businessId,
+        },
+        {
+          name: 1,
+          email: 1,
+          phone: 1,
+          customRole: {
+            $elemMatch: { businessId: businessId },
+          },
+        },
+      );
+
+      if (!existingUser) {
+        return respond(c, "User not found", true, 404, {});
+      }
+
+      if (bookMark) {
+        await User.findOneAndUpdate(
+          {
+            _id: userId,
+            "customRole.businessId": businessId,
+          },
+          {
+            $set: {
+              "customRole.$.bookMark": bookMark,
+            },
+          },
+        );
+      }
+
+      const permissionToken = jwt.sign(
+        {
+          id: existingUser._id,
+          permissions: existingUser?.customRole?.[0]?.permissions || {},
+        },
+        Bun.env.JWT_SECRET as string,
+      );
+      // setCookie(c, "token", permissionToken, {
+      //   httpOnly: true, // Prevents JavaScript access to the cookie
+      //   secure: true, // Ensures the cookie is only sent over HTTPS
+      //   sameSite: "Lax", // Helps mitigate CSRF attacks
+      //   domain: "yourdomain.com", // Replace with your actual domain
+      //   path: "/", // Ensures the cookie is sent with all requests to your domain
+      // });
+
+      setCookie(c, "token", permissionToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "Lax",
+        domain: "localhost",
+        path: "/",
+      });
+
+      return respond(c, "Session set successfully", false, 200, {});
     },
   );
 

@@ -22,6 +22,7 @@ import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
+import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import {
   calculateCartBill,
   convertToPetpoojaCart,
@@ -147,6 +148,7 @@ const posRouter = new Hono()
   })
   .get(
     "/get_bill",
+    ubacMiddleware("bill"),
 
     zValidator(
       "query",
@@ -1094,6 +1096,7 @@ const posRouter = new Hono()
 
   .post(
     "/captain/save_kot",
+    ubacMiddleware("place_order"),
     zValidator(
       "json",
       z.object({

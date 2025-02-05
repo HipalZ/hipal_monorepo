@@ -11,6 +11,7 @@ import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { Hono } from "hono";
 import { z } from "zod";
+import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { calculateCartBill, convertToPetpoojaCart } from "../../utils/helper";
 const generateTenDigitCode = (): string => {
   const min = 1000000000; // Minimum 10-digit number
@@ -137,6 +138,7 @@ const kotRouter = new Hono()
   )
   .put(
     "/",
+    ubacMiddleware("order_accept"),
     zValidator(
       "json",
       z.object({
