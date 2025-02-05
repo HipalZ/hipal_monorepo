@@ -33,6 +33,8 @@ const MemoSettleTable = () => {
     const {
         settleModes,
         setSettleModes,
+        saveDueUser,
+        setSaveDueUser,
     } = useOrderStore();
     const showModeOfPayments = useCallback(() => {
         setShowPaymentMode(true);
@@ -64,16 +66,35 @@ const MemoSettleTable = () => {
 
     const { isPending, mutateAsync } = useMutation({
         mutationFn: async () => {
+
+            const hasDuesMode = settleModes.some(
+                (mode) => mode.name.toLowerCase() === "dues"
+            );
+            const hasNpcMode = settleModes.some(
+                (mode) => mode.name.toLowerCase() === "npc"
+            );
+
+            let payload = {
+                unSettleTableId: selectedUnsettleData?._id || "",
+                captainId: captainData?._id || "",
+                businessId: businessId || "",
+                settleAmount: Number(settleAmount) || 0,
+                orderId: orderId,
+                reasonForSettle: selectedReason || customReason,
+                settleModes: settleModes,
+            }
+
+            if (hasDuesMode && saveDueUser?._id) {
+                payload["duesUserId"] = saveDueUser._id;
+            }
+            if (hasNpcMode && saveDueUser?._id) {
+                payload["npcUserId"] = saveDueUser?._id;
+            }
+
+
+
             const response = await apiRpc.table.resolve_table.$post({
-                json: {
-                    unSettleTableId: selectedUnsettleData?._id || "",
-                    captainId: captainData?._id || "",
-                    businessId: businessId || "",
-                    settleAmount: Number(settleAmount) || 0,
-                    orderId: orderId,
-                    reasonForSettle: selectedReason || customReason,
-                    settleModes: settleModes,
-                }
+                json: payload
             })
             const res = await response.json();
             return res
@@ -82,6 +103,7 @@ const MemoSettleTable = () => {
             if (!data.err) {
                 setOpenUnsettle(false);
                 setSelectedUnsettleData(null);
+                setSaveDueUser(null);
                 closeModeOfPayments()
                 toast.success("Table settled successfully");
                 queryClient.invalidateQueries({ queryKey: ["getUnsettledTables"] });
