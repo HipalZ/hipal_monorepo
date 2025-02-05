@@ -878,7 +878,11 @@ const usersRouter = new Hono()
           _id: staffId,
           "customRole.businessId": businessId,
         },
-        { isDeleted: true },
+        {
+          $set: {
+            "customRole.$.isDeleted": true,
+          },
+        },
         { new: true },
       );
       return respond(
@@ -970,13 +974,20 @@ const usersRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
       const existingUser = await User.find({
-        "customRole.businessId": businessId,
-        "customRole.isDeleted": false,
+        customRole: {
+          $elemMatch: {
+            businessId: businessId,
+            isDeleted: false,
+          },
+        },
       }).select({
         name: 1,
         phone: 1,
         customRole: {
-          $elemMatch: { businessId: businessId },
+          $elemMatch: {
+            businessId: businessId,
+            isDeleted: false,
+          },
         },
       });
 
