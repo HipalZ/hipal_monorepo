@@ -8,22 +8,17 @@ import type { User } from "../store/useOwnerLogin";
 import type { BannerType } from "../utils/bannerLayouts";
 import type Area from "react-easy-crop";
 
-interface IAcessControl {
-  [key: string]: string;
-  _id: string;
-}
-
 export interface CustomRole {
   businessId: string;
   customRoleId: string;
+  permissionGroupIds: string[];
+  permissionIds: string[];
   permissions: {
-    title: string;
-    isHaveAccess: boolean;
-  }[];
+    [key: string]: boolean;
+  };
   role: string;
   bookmark: boolean;
   _id: string;
-  accessControl: IAcessControl;
 }
 
 export interface UserProfile {
@@ -32,12 +27,16 @@ export interface UserProfile {
   phone: string;
   role: string;
   customRole: CustomRole[];
+  staffPermissions?: {
+    _id: string;
+    name: string;
+    isHaveAccess: boolean;
+  }[];
   password: string;
   id: string;
   _id: string;
   createdAt: string;
   updatedAt: string;
-  isHaveAccess: boolean;
 }
 export interface IBusinessData {
   tags?: string[];

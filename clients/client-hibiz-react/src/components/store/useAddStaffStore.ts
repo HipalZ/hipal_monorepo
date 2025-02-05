@@ -23,25 +23,36 @@ export interface IRoles {
   description: string;
 }
 
-export interface ISubPermission {
-  subTitle: string;
-  descriptions: string;
-  _id: string;
-}
-
 export interface IPermissions {
-  title: string;
-  subPermissions: ISubPermission[];
+  _id: string;
+  name: string;
 }
 
 interface AddStaffState {
   pageToggle: AddStaffProps;
+
   name: string;
+  setName: (value: string) => void;
+
   phone: string;
+  setPhone: (value: string) => void;
+
+  password: string;
+  setPassword: (value: string) => void;
+
   selectedPermissions: string[];
+  setSelectedPermissions: (value: string[]) => void;
+  addPermission: (value: string) => void;
+
   selectedRole: role;
+  setSelectedRole: (value: role) => void;
+
   roles: IRoles[];
-  permissions: { [role: string]: IPermissions[] };
+  setRoles: (value: IRoles[]) => void;
+
+  permissions: IPermissions[];
+  setPermissions: (value: IPermissions[]) => void;
+
   isEditing: boolean;
   editStaffId: string;
   isEditStaffOpen: boolean;
@@ -49,54 +60,42 @@ interface AddStaffState {
   setIsAddStaffOpen: (value: boolean) => void;
   setIsEditing: (value: boolean) => void;
   setEditStaffId: (value: string) => void;
-  setName: (value: string) => void;
-  setPhone: (value: string) => void;
   setPageToggle: (value: AddStaffProps) => void;
-  setSelectedRole: (value: role) => void;
-  setRoles: (roles: IRoles[]) => void;
-  setPermissions: (permissions: { [role: string]: IPermissions[] }) => void;
-  toggleMainService: (permission: string, services: string[]) => void;
-  toggleSubService: (serviceTitle: string) => void;
-  setPermissionsBasedOnRole: (role: string) => void;
-  setSelectedPermissions: (permissions: string[]) => void;
   setIsEditStaffOpen: (value: boolean) => void;
   removeStaffStore: () => void;
 }
 
-export const getPermissionsForRole = (
-  permissions: { [role: string]: IPermissions[] },
-  role: string,
-): string[] => {
-  return (permissions[role] || []).flatMap((p) => [
-    p.title,
-    ...p.subPermissions.map((s) => s.subTitle),
-  ]);
-};
-export const getUserPermissionsForRole = (
-  permissions: IPermissions[],
-  userPermissions: any,
-): string[] => {
-  const allPermissions = permissions.flatMap((p) => [
-    p.title,
-    ...p.subPermissions.map((s) => s.subTitle),
-  ]);
-  const userSelectedPermissions = userPermissions.flatMap((p) => [
-    p.title,
-    ...p.subPermissions,
-  ]);
-  return allPermissions.filter((permission) =>
-    userSelectedPermissions.includes(permission),
-  );
-};
-
 export const useAddStaffStore = create<AddStaffState>((set) => ({
   pageToggle: "ADD_STAFF",
+
   selectedPermissions: [],
+  setSelectedPermissions: (value: string[]) =>
+    set({ selectedPermissions: value }),
+
+  addPermission: (value: string) =>
+    set((state) => ({
+      selectedPermissions: state.selectedPermissions.includes(value)
+        ? state.selectedPermissions.filter((permission) => permission !== value)
+        : [...state.selectedPermissions, value],
+    })),
+
   name: "",
+  setName: (value: string) => set({ name: value }),
   phone: "",
+  setPhone: (value: string) => set({ phone: value }),
+
+  password: "",
+  setPassword: (value: string) => set({ password: value }),
+
   selectedRole: "",
+  setSelectedRole: (value: role) => set({ selectedRole: value }),
+
   roles: [],
-  permissions: {},
+  setRoles: (value: IRoles[]) => set({ roles: value }),
+
+  permissions: [],
+  setPermissions: (value: IPermissions[]) => set({ permissions: value }),
+
   isEditing: false,
   editStaffId: "",
   isEditStaffOpen: false,
@@ -106,51 +105,7 @@ export const useAddStaffStore = create<AddStaffState>((set) => ({
   setIsEditStaffOpen: (value: boolean) => set({ isEditStaffOpen: value }),
   setIsEditing: (value: boolean) => set({ isEditing: value }),
   setEditStaffId: (value: string) => set({ editStaffId: value }),
-
-  setName: (value: string) => set({ name: value }),
-  setPhone: (value: string) => set({ phone: value }),
   setPageToggle: (value: AddStaffProps) => set({ pageToggle: value }),
-  setSelectedRole: (value: role) =>
-    set((state) => {
-      const permissions = getPermissionsForRole(state.permissions, value);
-      return {
-        selectedRole: value,
-        selectedPermissions: permissions,
-      };
-    }),
-  setRoles: (roles: IRoles[]) => set({ roles }),
-  setPermissions: (permissions: { [role: string]: IPermissions[] }) =>
-    set({ permissions }),
-  toggleMainService: (permission, services) =>
-    set((state) => {
-      const isSelected = state.selectedPermissions.includes(permission);
-      return {
-        selectedPermissions: isSelected
-          ? state.selectedPermissions.filter(
-              (item) => item !== permission && !services.includes(item),
-            )
-          : [...state.selectedPermissions, permission, ...services],
-      };
-    }),
-  toggleSubService: (serviceTitle) =>
-    set((state) => {
-      const isSelected = state.selectedPermissions.includes(serviceTitle);
-      return {
-        selectedPermissions: isSelected
-          ? state.selectedPermissions.filter((item) => item !== serviceTitle)
-          : [...state.selectedPermissions, serviceTitle],
-      };
-    }),
-  setSelectedPermissions: (permissions) =>
-    set({ selectedPermissions: permissions }), // New state setter
-
-  setPermissionsBasedOnRole: (role) =>
-    set((state) => {
-      const permissions = getPermissionsForRole(state.permissions, role);
-      return {
-        selectedPermissions: permissions,
-      };
-    }),
 
   removeStaffStore: () =>
     set({
@@ -158,6 +113,5 @@ export const useAddStaffStore = create<AddStaffState>((set) => ({
       phone: "",
       selectedRole: "",
       selectedPermissions: [],
-      permissions: {},
     }),
 }));
