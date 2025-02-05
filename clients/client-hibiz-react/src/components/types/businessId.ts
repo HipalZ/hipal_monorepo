@@ -24,7 +24,7 @@ export const getButtons = (outletType: string): ILiteVersionCardButton[] => [
     image: Themes,
     text: "Themes ",
     description: "Make your app look good",
-    navigateTo: "businessControl",
+    navigateTo: "themes",
   },
   {
     image: BillsImage,
@@ -42,7 +42,7 @@ export const getButtons = (outletType: string): ILiteVersionCardButton[] => [
     image: HibizImage,
     text: "Hi site",
     description: "Make your website more beautiful",
-    navigateTo: "hiSite",
+    navigateTo: "explorePage",
   },
   {
     image: Settings,

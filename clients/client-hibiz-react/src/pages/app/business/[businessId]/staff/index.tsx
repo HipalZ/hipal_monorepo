@@ -28,10 +28,10 @@ const EditStaff = lazy(() => import("@/components/molecules/addStaffpopup/editSt
 type Role = "MANAGER" | "CAPTAIN" | "MARKETING_AGENT" | "CO_OWNER"
 
 const roleGradients = {
-  MANAGER: "from-blue-500 to-indigo-600",
-  CAPTAIN: "from-emerald-500 to-teal-600",
-  MARKETING_AGENT: "from-orange-500 to-amber-600",
-  CO_OWNER: "from-gray-500 to-gray-600",
+  MANAGER: "bg-blue-400",
+  CAPTAIN: "bg-green-400",
+  MARKETING_AGENT: "bg-yellow-400",
+  CO_OWNER: "bg-gray-400",
 }
 
 const StaffPage = () => {
@@ -168,7 +168,7 @@ const StaffPage = () => {
                       {/* Avatar */}
                       <article className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-50 to-purple-50 flex items-center justify-center overflow-hidden ring-1 ring-black/5">
                         <div className="absolute inset-0 bg-gradient-to-br from-violet-100 to-purple-50" />
-                        <span className="relative text-xl font-bold bg-gradient-to-br from-violet-600 to-purple-600 bg-clip-text text-transparent">
+                        <span className="relative text-xl capitalize font-bold bg-gradient-to-br from-violet-600 to-purple-600 bg-clip-text text-transparent">
                           {staff.name.charAt(0)}
                         </span>
                       </article>
@@ -182,8 +182,7 @@ const StaffPage = () => {
                           <div
                             className={`
                           scale-90 -ml-2 px-2 py-1 rounded-full text-sm font-medium shadow-lg 
-                          bg-gradient-to-r text-white
-                          ${roleGradients[staff.customRole[0]?.role as Role] || roleGradients.DEFAULT}
+                          text-white ${roleGradients[staff.customRole[0]?.role as Role] || roleGradients.CAPTAIN}
                         `}
                           >
                             <div className="flex items-center gap-1">
@@ -280,7 +279,7 @@ const StaffPage = () => {
         </PopUp>
       )}
 
-      <MotionButton onClick={addStaff} buttonName="Add Staff" />
+      <MotionButton onClick={addStaff} buttonName="Add Staff" type="button" />
     </main>
   )
 }

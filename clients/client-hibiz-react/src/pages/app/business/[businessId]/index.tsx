@@ -119,7 +119,7 @@ const Business = () => {
           >
             {buttons.map((item, index) => {
               const isDisabled =
-                item.navigateTo !== "businessControl" &&
+                item.navigateTo !== "themes" &&
                 !businessData?.themeApplied;
 
               return (

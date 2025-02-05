@@ -102,7 +102,7 @@ const MemoAllCouponz = () => {
 
   return (
     <section className="h-[21rem] overflow-hidden">
-      <h2 className="py-4 mt-4 text-2xl text-center text-primary">
+      <h2 className="py-4 text-2xl text-center text-primary">
         My Couponz
       </h2>
       <EmblaCarousel2 customCarousel>

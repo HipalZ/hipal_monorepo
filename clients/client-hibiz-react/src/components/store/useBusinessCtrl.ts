@@ -52,7 +52,22 @@ interface BusinessCtrl {
 }
 
 const useBusinessCtrl = create<BusinessCtrl>((set) => {
+  const defaultPrimaryColor = "#EDDEB8";
+  const defaultSecondaryColor = "#116D6E";
   const businessData = useBusinessData.getState().businessData;
+  // Subscribe to changes in businessData to dynamically update colors
+  useBusinessData.subscribe((state) => {
+    if (
+      state.businessData?.primaryColor ||
+      state.businessData?.secondaryColor
+    ) {
+      set({
+        primaryColor: state.businessData.primaryColor || defaultPrimaryColor,
+        secondaryColor:
+          state.businessData.secondaryColor || defaultSecondaryColor,
+      });
+    }
+  });
   return {
     step: 0,
     setStep: (step: number) => set({ step }),

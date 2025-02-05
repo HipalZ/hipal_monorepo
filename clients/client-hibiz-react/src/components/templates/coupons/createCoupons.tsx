@@ -23,14 +23,14 @@ const menuArray = [
     image: Simple,
     flow: "GRAB" as CouponFlowType,
   },
-  {
-    id: 3,
-    title: "You are special couponz",
-    subTitle:
-      "Give to your customers in place of refund or make unsatisfied customers visit you again",
-    image: Special,
-    flow: "SPECIAL" as CouponFlowType,
-  },
+  // {
+  //   id: 3,
+  //   title: "You are special couponz",
+  //   subTitle:
+  //     "Give to your customers in place of refund or make unsatisfied customers visit you again",
+  //   image: Special,
+  //   flow: "SPECIAL" as CouponFlowType,
+  // },
 ];
 
 const MemoCreateCouponPage = () => {
@@ -46,12 +46,12 @@ const MemoCreateCouponPage = () => {
     setSelectedPage("DETAILS");
     resetCouponState();
     setSelectFlow(flow);
-  }, []);
+  }, [setSelectedPage, resetCouponState, setSelectFlow]);
 
   return (
     <section>
       <div className="flex flex-wrap gap-2 mx-4 mt-4 lg:mx-0">
-        {menuArray.slice(0, 2).map((menu) => {
+        {menuArray.map((menu) => {
           return (
             <button
               type="button"

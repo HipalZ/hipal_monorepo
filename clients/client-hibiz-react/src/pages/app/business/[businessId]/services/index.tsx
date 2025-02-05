@@ -5,7 +5,6 @@ import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
 import Manager from "@/assets/menuManager.png";
-import Card from "@/assets/cards/card62.png";
 import service from "@/assets/services/services.png";
 
 const menuArray = [
@@ -24,14 +23,14 @@ const menuArray = [
     navigate: "serviceManager",
     image: Manager,
   },
-  //   {
-  //     id: 3,
-  //     title: "Menu Banners",
-  //     subTitle:
-  //       "Promote what makes your place special across different timings and situations",
-  //     navigate: "menubanners",
-  //     image: Card,
-  //   },
+  // {
+  //   id: 3,
+  //   title: "Menu Banners",
+  //   subTitle:
+  //     "Promote what makes your place special across different timings and situations",
+  //   navigate: "menubanners",
+  //   image: Card,
+  // },
 ];
 
 const MemoService = () => {

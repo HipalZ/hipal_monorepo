@@ -1,76 +1,24 @@
 import {
   useFooterSection,
-  useImageChange,
 } from "@/components/helpers/explorePageHelpers";
 import { useExploreStore } from "@/components/store/useExploreStore";
-import { cn, handleClick } from "@/components/utils/helper";
-import { lazy, memo, useRef } from "react";
-import { CiEdit } from "react-icons/ci";
+import { lazy, memo } from "react";
 
 const Paragraph = lazy(() => import("@/components/atom/paragraph"));
-const PlusButton = lazy(() => import("@/components/atom/plusButton"));
 const SubHeader = lazy(() => import("@/components/atom/subHeader"));
 const MemoFooterSection = () => {
-  const { bizInfo, img } = useExploreStore((s) => ({
+  const { bizInfo } = useExploreStore((s) => ({
     bizInfo: s.bizInfo,
-    img: s.img,
   }));
   const { handleFooterComment, handleFssaiNumber, handlegst } =
     useFooterSection();
-  const { handleImageChange } = useImageChange();
-
-  const footerInputRef = useRef<HTMLInputElement | null>(null);
 
   return (
     <section className="md:flex md:space-x-10">
-      <section className="flex-1 mt-4">
-        <SubHeader text="Footer Banner" />
-        <article
-          className={cn(
-            "relative rounded-xl h-[20rem] w-[20rem] sm:w-[22rem]",
-            img?.footer?.length > 0
-              ? ""
-              : "border-dashed border-2 border-[#8C63FF]",
-          )}
-        >
-          <input
-            ref={footerInputRef}
-            onClick={(e) => handleClick(e, footerInputRef)}
-            type="file"
-            id="footerInput"
-            style={{ display: "none" }}
-            onChange={handleImageChange}
-            data-type="footer"
-          />
-          <figure className="w-full max-w-[28rem] h-[320px] mx-auto lg:mx-0 ">
-            <label
-              htmlFor="footerInput"
-              className="flex items-center justify-center overflow-hidden cursor-pointer rounded-xl"
-            >
-              <figure className="w-full max-w-[28rem] h-[320px]">
-                {img.footer ? (
-                  <div className="relative w-full max-w-[28rem] h-[320px]">
-                    <figure className="w-full h-full">
-                      <img
-                        src={img.footer}
-                        alt="Footer"
-                        className="object-cover w-full h-full rounded-2xl"
-                      />
-                    </figure>
-                    <CiEdit className="absolute top-0 right-0 w-8 h-8 p-1 text-black bg-white rounded-full cursor-pointer" />
-                  </div>
-                ) : (
-                  <PlusButton />
-                )}
-              </figure>
-            </label>
-          </figure>
-        </article>
-      </section>
-      <section className="flex-1 w-full mt-10 md:mt-4">
+      <section className="flex-1 mt-10 md:mt-4 w-full">
         <SubHeader text="Footer Section" />
-        <article className="p-4 bg-white rounded-2xl">
-          <div className="relative">
+        <article className="p-4 bg-white rounded-2xl md:flex md:justify-between md:items-center md:gap-2 ">
+          <div className="relative flex-1">
             <textarea
               minLength={10}
               maxLength={200}
@@ -83,8 +31,8 @@ const MemoFooterSection = () => {
               {bizInfo?.footerDescription?.length || 0}/{200}
             </small>
           </div>
-          <Paragraph text="Optional Sections" />
-          <article className="mt-4 space-y-4 rounded-2xl">
+          <article className="mt-4 md:-mt-20 space-y-4 rounded-2xl">
+            <Paragraph text="Optional Sections" />
             <div className="relative">
               <input
                 minLength={14}
@@ -115,7 +63,6 @@ const MemoFooterSection = () => {
             </div>
           </article>
         </article>
-        <br />
       </section>
     </section>
   );

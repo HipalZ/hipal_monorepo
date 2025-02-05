@@ -1,6 +1,11 @@
 import { create } from "zustand";
-import type { IDish } from "../types/businessData";
-
+import type { IDish, SocialMediaLink } from "../types/businessData";
+import facebook from "@/assets/socialMedia/fb.png";
+import instagram from "@/assets/socialMedia/instagram.png";
+import twitter from "@/assets/socialMedia/twitter.png";
+import telegram from "@/assets/socialMedia/telegram.png";
+import youtube from "@/assets/socialMedia/youtube.png";
+import website from "@/assets/socialMedia/website.png";
 interface DayTiming {
   day: string;
   openTime: string;
@@ -51,6 +56,9 @@ interface ExploreTempState {
   setFixedTime: (fixedTime: { openTime: string; closeTime: string }) => void;
 
   updateBizInfo: (payload) => void;
+
+  socialMediaLinks: SocialMediaLink[];
+  setSocialMediaLinks: (data: SocialMediaLink[]) => void;
 }
 
 export const useExploreTemp = create<ExploreTempState>((set, get) => ({
@@ -164,4 +172,14 @@ export const useExploreTemp = create<ExploreTempState>((set, get) => ({
       set({ customTimings: updatedTimings });
     }
   },
+
+  socialMediaLinks: [
+    { _id: 1, icon: "instagram", logo: instagram, link: "" },
+    { _id: 2, icon: "facebook", logo: facebook, link: "" },
+    { _id: 3, icon: "twitter", logo: twitter, link: "" },
+    { _id: 4, icon: "telegram", logo: telegram, link: "" },
+    { _id: 5, icon: "youtube", logo: youtube, link: "" },
+    { _id: 6, icon: "website", logo: website, link: "" },
+  ],
+  setSocialMediaLinks: (data) => set({ socialMediaLinks: data }),
 }));

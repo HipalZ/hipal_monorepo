@@ -287,6 +287,11 @@ export const useWhatsapp = create(
   persist<whatsappTemplate>(
     (set, get) => {
       const businessName = useBusinessData.getState().businessData?.name || "";
+      useBusinessData.subscribe((state) => {
+        if (state.businessData?.name) {
+          set({ websiteUrl: `${BASE_URL}/${state.businessData?.name || ""}` });
+        }
+      });
       return {
         step: Step.SETUP,
         setStep: (step: Step) => set({ step }),

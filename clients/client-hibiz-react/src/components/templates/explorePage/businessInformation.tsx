@@ -12,6 +12,7 @@ import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useExploreTemp } from "@/components/store/useExploreTemp";
 import { useBizInfoChanges } from "../../helpers/bizInforHelpers";
 import { filterPayload } from "@/components/utils/helper";
+import { QueryClient } from "@tanstack/react-query";
 
 const PopUp = lazy(() => import("@/components/atom/popUp"));
 const BasicInformationSection = lazy(
@@ -23,7 +24,7 @@ const CustomTimings = lazy(
   () => import("../businessInformation/customTimings"),
 );
 
-const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
+const MemoBizInfo = () => {
   const {
     setToggleBizInfo,
     toggleBizInfo,
@@ -39,6 +40,8 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
     toggleExplorePages: state.toggleExplorePages,
     setToggleExplorePages: state.setToggleExplorePages,
   }));
+
+  const queryClient = new QueryClient();
   const businessId = useParams()?.businessId;
   const showErrorToasts = useShowErrorToasts();
   // Temporary state variables
@@ -140,7 +143,7 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
       });
       const outletInfoData: IBizPayload = await outletInfo.json();
       if (outletInfo.status === 200 || outletInfo.status === 201) {
-        refetch();
+        queryClient.invalidateQueries({ queryKey: ["bizInfo", businessId] });
         toast.success("Data saved successfully");
         setToggleBizInfo(!toggleBizInfo);
         if (toggleExplorePages === ExplorePages.BIZINFO) {
@@ -154,7 +157,7 @@ const MemoBizInfo = ({ refetch }: { refetch: () => void }) => {
   };
 
   return (
-    <form onSubmit={handleCreateInfo} className="px-4 mt-16">
+    <form onSubmit={handleCreateInfo} className="px-4">
       <BasicInformationSection />
       <ContactInfo />
       <button

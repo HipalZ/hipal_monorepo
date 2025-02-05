@@ -213,7 +213,7 @@ const MemoSetting = () => {
         </section>
 
         {/* Save Button */}
-        <MotionButton onClick={apiCall} buttonName="Save Colors" />
+        <MotionButton onClick={apiCall} buttonName="Save Colors" type="button" />
       </main>
 
       {open && (
