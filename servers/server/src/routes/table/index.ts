@@ -507,7 +507,6 @@ const tableRouter = new Hono()
   .post(
     "/normal_settle",
 
-    ubacMiddleware("normal_settle"),
     zValidator("json", normalSettleSchema),
     async (c) => {
       //@ts-ignore
@@ -1475,7 +1474,6 @@ const tableRouter = new Hono()
 
   .post(
     "/free_table",
-    ubacMiddleware("free_table"),
     zValidator(
       "json",
       z.object({
@@ -1643,200 +1641,195 @@ const tableRouter = new Hono()
     },
   )
 
-  .post(
-    "/resolve_table",
-    ubacMiddleware("resolve_table"),
-    zValidator("json", resolveTableSchema),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const {
-          businessId,
-          unSettleTableId,
-          captainId,
-          reasonForSettle,
-          settleAmount,
-          orderId,
-          settleModes = [],
-          split,
+  .post("/resolve_table", zValidator("json", resolveTableSchema), async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session: ClientSession) => {
+      const {
+        businessId,
+        unSettleTableId,
+        captainId,
+        reasonForSettle,
+        settleAmount,
+        orderId,
+        settleModes = [],
+        split,
 
-          duesUserId,
-          npcUserId,
-        } = await c.req.json();
+        duesUserId,
+        npcUserId,
+      } = await c.req.json();
 
-        const paymentMode = await UpiMode.findById(settleModes[0]?._id);
-        const captain = await User.findById(captainId);
-        const npcUser = await NpcUser.findById(npcUserId);
+      const paymentMode = await UpiMode.findById(settleModes[0]?._id);
+      const captain = await User.findById(captainId);
+      const npcUser = await NpcUser.findById(npcUserId);
 
-        const unSettleTable = await UnsettleTable.findOne({
-          _id: unSettleTableId,
-          businessId,
-          isDeleted: false,
-        }).populate("tableId");
-        if (!unSettleTable) {
-          return c.json(
-            {
-              message: "Unsettled table not found",
-              err: true,
-              data: {},
-            },
-            400,
-          );
-        }
+      const unSettleTable = await UnsettleTable.findOne({
+        _id: unSettleTableId,
+        businessId,
+        isDeleted: false,
+      }).populate("tableId");
+      if (!unSettleTable) {
+        return c.json(
+          {
+            message: "Unsettled table not found",
+            err: true,
+            data: {},
+          },
+          400,
+        );
+      }
 
-        const uniqueOrderId = nanoid(15);
+      const uniqueOrderId = nanoid(15);
 
-        let modifyTotal = 0;
-        if (
-          paymentMode?.name === "npc" ||
-          paymentMode?.name === "dues" ||
-          paymentMode?.name === "complementary"
-        ) {
-          modifyTotal = 0;
-        } else {
-          modifyTotal = settleAmount;
+      let modifyTotal = 0;
+      if (
+        paymentMode?.name === "npc" ||
+        paymentMode?.name === "dues" ||
+        paymentMode?.name === "complementary"
+      ) {
+        modifyTotal = 0;
+      } else {
+        modifyTotal = settleAmount;
 
-          if (settleModes.length > 1) {
-            for (const settle of settleModes) {
-              if (settle.name === "complementary") {
-                modifyTotal -= settle.amount ?? 0;
-              }
+        if (settleModes.length > 1) {
+          for (const settle of settleModes) {
+            if (settle.name === "complementary") {
+              modifyTotal -= settle.amount ?? 0;
             }
           }
         }
+      }
 
-        const saveOrder = await Order.create(
-          [
-            {
-              total:
-                paymentMode?.name === "npc" ||
-                paymentMode?.name === "complementary"
-                  ? 0
-                  : settleAmount,
-              currency: "INR",
-              receipt: uniqueOrderId,
-              userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
-              claimedCoins: 0,
-              tableName: unSettleTable.tableId.name,
-              tips: 0,
-              billValue: settleAmount,
-              businessId: businessId,
-              order_id: uniqueOrderId,
-
-              date: Date.now(),
-            },
-          ],
-          { session },
-        );
-
-        const createPayment = await Payment.create(
-          [
-            {
-              businessId: businessId,
-              order_id: saveOrder[0]._id,
-              total: saveOrder[0].total,
-              mode: settleModes.length > 1 ? "split" : paymentMode?.name,
-              status: "SUCCESS",
-              paymentMode: settleModes.length > 1 ? "split" : paymentMode?.name,
-              userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
-              claimedCoins: 0,
-              billValue: saveOrder[0].billValue,
-              tips: 0,
-              tableName: saveOrder[0].tableName,
-              earnCoins: 0,
-              razorpayEventId: nanoid(15),
-              razorpayOrderId: nanoid(15),
-              razorpayPaymentId: nanoid(15),
-              settleType: "FREE_SETTLE",
-              comment: reasonForSettle,
-              posBillId: orderId,
-              unSettleTableId: unSettleTableId,
-              splitModes: settleModes,
-
-              waiterName: captain?.name,
-              date: Date.now(),
-            },
-          ],
-          { session },
-        );
-        if (duesUserId && paymentMode?.name === "dues") {
-          const createPaymentDues = await PendingDues.create(
-            [
-              {
-                billId: createPayment[0]._id,
-                businessId: saveOrder[0].businessId,
-                date: Date.now(),
-                duesUserId: duesUserId,
-                isSettled: false,
-              },
-            ],
-            {
-              session,
-            },
-          );
-
-          await DuesUser.findByIdAndUpdate(
-            duesUserId,
-            {
-              $inc: {
-                totalDuesAmount: saveOrder[0].total,
-              },
-            },
-            { session },
-          );
-        }
-
-        if (npcUserId && paymentMode?.name === "npc") {
-          await NpcUser.findByIdAndUpdate(
-            npcUserId,
-            {
-              $inc: {
-                totalNpcAmount: saveOrder[0].total,
-              },
-            },
-            { session },
-          );
-        }
-
-        await PaymentAlert.create(
-          [
-            {
-              businessId: saveOrder[0]?.businessId,
-              alertType: "FORCE_SETTLE",
-              payment_id: createPayment[0]._id,
-              coinsApplied: 0,
-              status: "SUCCESS",
-              order_id: saveOrder[0]?._id,
-              message: `Paid ${saveOrder[0]?.total}`,
-              tableName: saveOrder[0]?.tableName,
-              isAccepted: false,
-              userId: saveOrder[0]?.userId,
-              posDiscount: 0,
-              date: Date.now(),
-              mode: paymentMode?.name,
-            },
-          ],
-          { session },
-        );
-
-        await UnsettleTable.findByIdAndUpdate(
-          unSettleTableId,
+      const saveOrder = await Order.create(
+        [
           {
-            isDeleted: true,
+            total:
+              paymentMode?.name === "npc" ||
+              paymentMode?.name === "complementary"
+                ? 0
+                : settleAmount,
+            currency: "INR",
+            receipt: uniqueOrderId,
+            userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
+            claimedCoins: 0,
+            tableName: unSettleTable.tableId.name,
+            tips: 0,
+            billValue: settleAmount,
+            businessId: businessId,
+            order_id: uniqueOrderId,
+
+            date: Date.now(),
+          },
+        ],
+        { session },
+      );
+
+      const createPayment = await Payment.create(
+        [
+          {
+            businessId: businessId,
+            order_id: saveOrder[0]._id,
+            total: saveOrder[0].total,
+            mode: settleModes.length > 1 ? "split" : paymentMode?.name,
+            status: "SUCCESS",
+            paymentMode: settleModes.length > 1 ? "split" : paymentMode?.name,
+            userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
+            claimedCoins: 0,
+            billValue: saveOrder[0].billValue,
+            tips: 0,
+            tableName: saveOrder[0].tableName,
+            earnCoins: 0,
+            razorpayEventId: nanoid(15),
+            razorpayOrderId: nanoid(15),
+            razorpayPaymentId: nanoid(15),
+            settleType: "FREE_SETTLE",
+            comment: reasonForSettle,
+            posBillId: orderId,
+            unSettleTableId: unSettleTableId,
+            splitModes: settleModes,
+
+            waiterName: captain?.name,
+            date: Date.now(),
+          },
+        ],
+        { session },
+      );
+      if (duesUserId && paymentMode?.name === "dues") {
+        const createPaymentDues = await PendingDues.create(
+          [
+            {
+              billId: createPayment[0]._id,
+              businessId: saveOrder[0].businessId,
+              date: Date.now(),
+              duesUserId: duesUserId,
+              isSettled: false,
+            },
+          ],
+          {
+            session,
+          },
+        );
+
+        await DuesUser.findByIdAndUpdate(
+          duesUserId,
+          {
+            $inc: {
+              totalDuesAmount: saveOrder[0].total,
+            },
           },
           { session },
         );
+      }
 
-        return c.json(
+      if (npcUserId && paymentMode?.name === "npc") {
+        await NpcUser.findByIdAndUpdate(
+          npcUserId,
           {
-            message: "Table resolved successfully",
-            err: false,
-            data: {},
+            $inc: {
+              totalNpcAmount: saveOrder[0].total,
+            },
           },
-          200,
+          { session },
         );
-      });
-    },
-  );
+      }
+
+      await PaymentAlert.create(
+        [
+          {
+            businessId: saveOrder[0]?.businessId,
+            alertType: "FORCE_SETTLE",
+            payment_id: createPayment[0]._id,
+            coinsApplied: 0,
+            status: "SUCCESS",
+            order_id: saveOrder[0]?._id,
+            message: `Paid ${saveOrder[0]?.total}`,
+            tableName: saveOrder[0]?.tableName,
+            isAccepted: false,
+            userId: saveOrder[0]?.userId,
+            posDiscount: 0,
+            date: Date.now(),
+            mode: paymentMode?.name,
+          },
+        ],
+        { session },
+      );
+
+      await UnsettleTable.findByIdAndUpdate(
+        unSettleTableId,
+        {
+          isDeleted: true,
+        },
+        { session },
+      );
+
+      return c.json(
+        {
+          message: "Table resolved successfully",
+          err: false,
+          data: {},
+        },
+        200,
+      );
+    });
+  });
 
 export default tableRouter;

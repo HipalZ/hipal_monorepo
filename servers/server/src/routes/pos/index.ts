@@ -148,7 +148,6 @@ const posRouter = new Hono()
   })
   .get(
     "/get_bill",
-    ubacMiddleware("bill"),
 
     zValidator(
       "query",

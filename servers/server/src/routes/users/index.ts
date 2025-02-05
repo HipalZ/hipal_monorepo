@@ -969,6 +969,7 @@ const usersRouter = new Hono()
 
   .get(
     "/:businessId",
+
     zValidator("param", paramsSchema),
 
     async (c) => {
@@ -1523,14 +1524,12 @@ const usersRouter = new Hono()
       //   path: "/", // Ensures the cookie is sent with all requests to your domain
       // });
 
-      setCookie(c, "token", permissionToken, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "Lax",
-        domain: "localhost",
-        path: "/",
+      const g = setCookie(c, "token", permissionToken, {
+        httpOnly: false, // Change to true after debugging
+        secure: false, // Must be true in production (HTTPS)
       });
 
+      console.log("g", g);
       return respond(c, "Session set successfully", false, 200, {});
     },
   );

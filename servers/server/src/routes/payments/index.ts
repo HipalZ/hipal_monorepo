@@ -55,7 +55,6 @@ import {
   ClientRoles,
   requireAuthorization,
 } from "../../../middleware/authorization";
-import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { getMerchantConfig } from "../../utils/cacheHelper";
 import {
@@ -1596,7 +1595,6 @@ const paymentsRouter = new Hono()
       ClientRoles.HIPAL_CUSTOMER,
       ClientRoles.CAPTAIN,
     ]),
-    ubacMiddleware("offline_settle"),
 
     zValidator("param", z.object({ alertId: z.string() })),
 
@@ -2082,7 +2080,6 @@ const paymentsRouter = new Hono()
       ClientRoles.HIPAL_CUSTOMER,
       ClientRoles.CAPTAIN,
     ]),
-    ubacMiddleware("sale_summary"),
     zValidator("query", paramsSchema),
     async (c) => {
       const { businessId, from, to } = c.req.query();
