@@ -109,6 +109,15 @@ export interface IDuesPersonsData {
   userId: UserDetails;
 }
 
+export interface IPaymentMode {
+  _id: string;
+  businessId: string;
+  name: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface IOutletInfo {
   _id: string;
   businessId: string;

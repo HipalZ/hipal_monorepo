@@ -1,4 +1,4 @@
-import { lazy, memo, useState } from "react"
+import { lazy, memo, useCallback, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { FaArrowLeft } from "react-icons/fa"
 import { useNavigate } from "react-router-dom"
@@ -7,6 +7,7 @@ import useBusinessData from "@/components/store/useBusinessData"
 import PaymentNavbar from "@/components/templates/menu/sideNavbaar/paymentNavBar"
 import { cn } from "@/components/utils/helper"
 import Npc from "@/components/templates/payment/Npc"
+import Modes from "@/components/templates/payment/modes"
 
 const DateRangePicker = lazy(() => import("@/components/molecules/dateRangePicker"))
 const MemoizedHeader = lazy(() => import("@/components/molecules/header"))
@@ -14,21 +15,30 @@ const Overview = lazy(() => import("@/components/templates/payment/overview"))
 const PaymentSales = lazy(() => import("@/components/templates/payment/sales"))
 const Dues = lazy(() => import("@/components/templates/payment/dues"))
 
+enum PaymentTabs {
+  Overview = "Overview",
+  Sales = "Sales",
+  Dues = "Dues",
+  Npc = "Npc",
+  Modes = "Modes"
+}
+
 const Payments = () => {
-  const [selectedTab, setSelectedTab] = useState<"Overview" | "Sales" | "Dues" | "Npc">("Overview")
+  const navigate = useNavigate()
+  const [selectedTab, setSelectedTab] = useState<PaymentTabs>(PaymentTabs.Overview)
   const businessData = useBusinessData((s) => s.businessData)
 
   const sidebarItems = [
-    { text: "Overview", onClick: () => setSelectedTab("Overview") },
-    { text: "Sales", onClick: () => setSelectedTab("Sales") },
-    { text: "Dues", onClick: () => setSelectedTab("Dues") },
-    { text: "Npc", onClick: () => setSelectedTab("Npc") },
+    { text: PaymentTabs.Overview, onClick: () => setSelectedTab(PaymentTabs.Overview) },
+    { text: PaymentTabs.Sales, onClick: () => setSelectedTab(PaymentTabs.Sales) },
+    { text: PaymentTabs.Dues, onClick: () => setSelectedTab(PaymentTabs.Dues) },
+    { text: PaymentTabs.Npc, onClick: () => setSelectedTab(PaymentTabs.Npc) },
+    { text: PaymentTabs.Modes, onClick: () => setSelectedTab(PaymentTabs.Modes) }
   ]
 
-  const navigate = useNavigate()
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     navigate(`/app/business/${businessData?._id}`)
-  }
+  }, [navigate, businessData?._id])
 
   return (
     <main className="relative">
@@ -67,11 +77,7 @@ const Payments = () => {
       </motion.nav>
 
       <PaymentNavbar items={sidebarItems} selectedNavItem={selectedTab} />
-      {
-        (selectedTab !== "Dues" && selectedTab !== "Npc") && (
-          <DateRangePicker />
-        )
-      }
+      {(selectedTab === PaymentTabs.Overview || selectedTab === PaymentTabs.Sales) ? (<DateRangePicker />) : null}
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -81,12 +87,11 @@ const Payments = () => {
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.3 }}
         >
-          {selectedTab === "Overview" && <Overview />}
-          {selectedTab === "Sales" && <PaymentSales />}
-          {selectedTab === "Dues" && <Dues />}
-          {
-            selectedTab === "Npc" && <Npc />
-          }
+          {selectedTab === PaymentTabs.Overview && <Overview />}
+          {selectedTab === PaymentTabs.Sales && <PaymentSales />}
+          {selectedTab === PaymentTabs.Dues && <Dues />}
+          {selectedTab === PaymentTabs.Npc && <Npc />}
+          {selectedTab === PaymentTabs.Modes && <Modes />}
         </motion.div>
       </AnimatePresence>
     </main>
