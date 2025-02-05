@@ -521,6 +521,37 @@ const categoriesRouter = new Hono()
 
       return respond(c, "fetched successfully", false, 200, existingCategories);
     },
+  )
+  .post(
+    "/sequence/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+    zValidator(
+      "json",
+      z.array(
+        z.object({
+          categoryId: z.string(),
+          sequence: z.number(),
+        }),
+      ),
+    ),
+    async (c) => {
+      const { businessId } = c.req.param();
+      const requestData = await c.req.json();
+
+      for (let i = 0; i < requestData.length; i++) {
+        await Category.updateOne(
+          { _id: requestData[i].categoryId, businessId, hierarchy: "PARENT" },
+          { $set: { sequence: requestData[i].sequence } },
+        );
+      }
+
+      return respond(c, "sequence updated successfully", false, 200, {});
+    },
   );
 
 export default categoriesRouter;

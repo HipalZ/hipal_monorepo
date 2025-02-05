@@ -16,7 +16,7 @@ const MemoDues = () => {
         setIsUserAdded: s.setIsUserAdded,
     }))
     const { businessId } = useParams()
-    const { isLoading, data } = useAllDueUsers(businessId)
+    const { isLoading, data } = useAllDueUsers(businessId || "")
 
     return (
         <div className="container px-4 pt-4 pb-[7rem] mx-auto">
