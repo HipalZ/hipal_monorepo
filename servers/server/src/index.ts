@@ -46,7 +46,7 @@ app.use(
       "http://localhost:3001",
       "http://localhost:3000",
       "http://localhost:3002",
-      "https:biz.test.hipalz.com",
+      "https://biz.test.hipalz.com",
       "https://hipal-test.hipalz.com",
     ], // Update this with your frontend URL
     credentials: true, // Allow sending cookies
