@@ -326,7 +326,7 @@ const categoriesRouter = new Hono()
           hierarchy: hierarchy,
           isDeleted: false,
         }).select(
-          "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage",
+          "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence",
         );
 
         return respond(
@@ -536,6 +536,7 @@ const categoriesRouter = new Hono()
         z.object({
           categoryId: z.string(),
           sequence: z.number(),
+          hierarchy: z.string(),
         }),
       ),
     ),
@@ -545,7 +546,11 @@ const categoriesRouter = new Hono()
 
       for (let i = 0; i < requestData.length; i++) {
         await Category.updateOne(
-          { _id: requestData[i].categoryId, businessId, hierarchy: "PARENT" },
+          {
+            _id: requestData[i].categoryId,
+            businessId,
+            hierarchy: requestData?.hierarchy,
+          },
           { $set: { sequence: requestData[i].sequence } },
         );
       }

@@ -14,7 +14,8 @@ export type MenuPageType =
   | "ALERT"
   | "SERVICES"
   | "CATALOGUE"
-  | "QUICK_MENU";
+  | "QUICK_MENU"
+  | "";
 export type CategoryTypeToggle = "MAIN_CATEGORY" | "SUB_CATEGORY" | "";
 export type CategoryStep =
   | "CATEGORY_STEP_1"
@@ -87,11 +88,6 @@ export type SetImageFilesFunction = (
 export type SetImagePreviewsFunction = (
   update: (prev: ImagePreviews) => ImagePreviews,
 ) => void;
-
-import type Area from "react-easy-crop";
-interface CropperRef {
-  getCroppedAreaPixels: () => Area | null;
-}
 
 interface MenuPageStore {
   selectedPage: MenuPageType;
@@ -187,6 +183,9 @@ interface MenuPageStore {
 
   tags: string[];
   setTags: (tags: string[]) => void;
+
+  delayTime: number;
+  setDelayTime: (time: number) => void;
 
   availability: boolean;
   setAvailability: (avail: boolean) => void;
@@ -372,7 +371,7 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
   availability: true,
   setAvailability: (avail: boolean) => set({ availability: avail }),
 
-  sortOrder: "asc",
+  sortOrder: "none",
   setSortOrder: (order: string) => set({ sortOrder: order }),
 
   selectedFile: null,
