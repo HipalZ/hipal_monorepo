@@ -536,7 +536,7 @@ const categoriesRouter = new Hono()
         z.object({
           categoryId: z.string(),
           sequence: z.number(),
-          hierarchy: z.string(),
+          hierarchy: z.string().optional(),
         }),
       ),
     ),
@@ -549,7 +549,7 @@ const categoriesRouter = new Hono()
           {
             _id: requestData[i].categoryId,
             businessId,
-            hierarchy: requestData?.hierarchy,
+            hierarchy: requestData?.hierarchy || "PARENT",
           },
           { $set: { sequence: requestData[i].sequence } },
         );
