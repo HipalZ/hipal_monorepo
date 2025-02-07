@@ -1,8 +1,16 @@
-import { Business, Payment, Subscriber, UserReward } from "@hi/db-models";
+import {
+  Business,
+  DeviceToken,
+  Payment,
+  Subscriber,
+  UserReward,
+} from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 //
+const admin = require("firebase-admin");
+
 const iconRouter = new Hono()
   .get(
     "/:businessId",
@@ -120,6 +128,66 @@ const iconRouter = new Hono()
       return c.json({
         ans,
       });
+    },
+  )
+
+  .get(
+    "/send_update/app",
+
+    async (c) => {
+      const registrationToken = await DeviceToken.find({});
+
+      if (registrationToken.length > 0) {
+        for (const obj of registrationToken) {
+          if (obj.notification) {
+            const pushMessage = {
+              token: obj.token, // or use 'topic' if you're sending to a topic
+              notification: {
+                title: "New Update Available",
+                body: `Click here to download: <a href='https://google.com'>Download</a>`,
+              },
+              android: {
+                notification: {
+                  channel_id: "custom_channel_id",
+                  sound: "order",
+                },
+              },
+            };
+
+            admin
+              .messaging()
+              .send(pushMessage)
+              .then((response: unknown) => {
+                console.log("Successfully sent message:", response);
+                return c.json({
+                  message: "FCM message sent successfully",
+                  err: false,
+                  data: response,
+                });
+              })
+              .catch((err: Error) => {
+                console.log("Error sending FCM message:", err);
+                return c.json(
+                  {
+                    message: "Error sending FCM message",
+                    err: true,
+                    data: {},
+                  },
+                  400,
+                );
+              });
+          }
+        }
+      }
+
+      return c.json(
+        {
+          message: "send_update/app",
+          err: true,
+          data: {},
+        },
+        200,
+      );
     },
   );
 

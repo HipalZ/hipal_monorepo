@@ -48,6 +48,9 @@ app.use(
       "http://localhost:3002",
       "https://biz.test.hipalz.com",
       "https://hipal-test.hipalz.com",
+      "https://hipalz.com",
+      "https://hibiz.hipalz.com",
+      "https://hiclient.hipalz.com",
     ], // Update this with your frontend URL
     credentials: true, // Allow sending cookies
     allowHeaders: ["Authorization", "Content-Type", "x-refresh-token"],
