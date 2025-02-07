@@ -325,9 +325,11 @@ const categoriesRouter = new Hono()
           businessId,
           hierarchy: hierarchy,
           isDeleted: false,
-        }).select(
-          "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence",
-        );
+        })
+          .select(
+            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy",
+          )
+          .sort({ sequence: 1 });
 
         return respond(
           c,
@@ -543,16 +545,21 @@ const categoriesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
       const requestData = await c.req.json();
+      console.log("requestData", requestData);
+
+      console.log("businessId", businessId);
 
       for (let i = 0; i < requestData.length; i++) {
-        await Category.updateOne(
+        const res = await Category.findOneAndUpdate(
           {
             _id: requestData[i].categoryId,
             businessId,
-            hierarchy: requestData?.hierarchy || "PARENT",
+            hierarchy: requestData[i]?.hierarchy || "PARENT",
           },
           { $set: { sequence: requestData[i].sequence } },
+          { new: true },
         );
+        console.log("res", res);
       }
 
       return respond(c, "sequence updated successfully", false, 200, {});
