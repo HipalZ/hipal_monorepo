@@ -62,7 +62,7 @@ const MemoListOfParentCategory = () => {
   const [sequenceMode, setSequenceMode] = useState(false);
   const [selected, setSelected] = useState(null);
   const filteredCategories = useMemo(() => {
-    let filtered = categories;
+    let filtered = categories.slice();
 
     if (search) {
       filtered = fuse.search(search).map((result) => result.item);
@@ -76,13 +76,15 @@ const MemoListOfParentCategory = () => {
 
     if (filtered.length === 0) return [];
 
-    if (sortOrder === "asc") {
-      filtered = filtered.sort((a, b) => a.name.localeCompare(b.name));
-    } else if (sortOrder === "desc") {
-      filtered = filtered.sort((a, b) => b.name.localeCompare(a.name));
+    switch (sortOrder) {
+      case "asc":
+        return filtered.slice().sort((a, b) => a.name.localeCompare(b.name));
+      case "desc":
+        return filtered.slice().sort((a, b) => b.name.localeCompare(a.name));
+      default:
+        return filtered;
     }
 
-    return filtered;
   }, [categories, search, visibilityFilter, sortOrder, fuse]);
 
   const editCategory = useCallback((category: CategoryType) => {
