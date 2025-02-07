@@ -22,6 +22,7 @@ const CallCaptanMainComp = lazy(() => import("@/components/liteAlerts/callWaiter
 
 const AlertsMemo = () => {
   const { selectedNavItem } = useLiteStore();
+  const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const { setIsFilterOpen, isFilterOpen } = useZonesAndTablesStore();
   const [openTable, setOpenTable] = useState<boolean>(false);
   const { payFilter } = useFilters();
@@ -78,7 +79,7 @@ const AlertsMemo = () => {
           </Suspense>
         )}
         <Suspense fallback={<SpinnerMemo />}>
-          <BillPopUpMemo />
+          {clickViewMore && <BillPopUpMemo />}
         </Suspense>
         {isFilterOpen && (
           <Suspense fallback={<SpinnerMemo />}>
