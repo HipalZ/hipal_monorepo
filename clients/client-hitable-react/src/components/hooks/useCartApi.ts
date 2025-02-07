@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { useCartStore } from "../store/useCartStore";
 import { useOrderStore } from "../store/useOrderData";
 import { useCart } from "../store/useCart";
+import { useError } from "../store/useError";
 
 export const useDeleteCart = () => {
   const { mutateAsync, isPending } = useMutation({
@@ -36,12 +37,17 @@ export const useCreateOrder = () => {
 
   const { setOpenOrderModal, setModalType, setOrderError, setShowOrderError } =
     useOrderStore();
+  const { setError, setOpenErrorModal } = useError();
   const { setIsPlacingNewOrder } = useCart();
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (order: any) => {
       const res = await apiRpc.pos.captain.save_kot.$post({
         json: order,
       });
+      if(res.status === 401 || res.status === 403) {
+        setOpenErrorModal(true);
+        setError("You are not authorized to perform this action");
+      }
       if (res.status === 200 || res.status === 201) {
         setOpenOrderModal(false);
         setIsPlacingNewOrder(false);
@@ -49,7 +55,7 @@ export const useCreateOrder = () => {
         useCartStore.setState({ cart: [] });
         queryClient.invalidateQueries({ queryKey: ["getTableOrders"] });
         queryClient.invalidateQueries({ queryKey: ["fetchIndividualTable"] });
-        return true;
+        toast.success("Order placed successfully");
       }
       return res.json();
     },
@@ -59,7 +65,6 @@ export const useCreateOrder = () => {
         setShowOrderError(true);
         return;
       }
-      toast.success(data.message);
     },
     onError: (error: any) => {
       toast.error(`Error creating order: ${error.message}`);

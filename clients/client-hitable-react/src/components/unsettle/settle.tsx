@@ -18,6 +18,7 @@ import { useUnsettle } from "@/components/store/useUnsettle";
 import toast from "react-hot-toast";
 import SpinnerMemo from "../atoms/loadingSpinner";
 import { useGetAllModes } from "../hooks/useTableData";
+import { useError } from "../store/useError";
 
 const MemoSettleTable = () => {
     const queryClient = useQueryClient();
@@ -33,7 +34,12 @@ const MemoSettleTable = () => {
     const {
         settleModes,
         setSettleModes,
+        saveDueUser,
+        setSaveDueUser,
     } = useOrderStore();
+
+    const { setError, setOpenErrorModal } = useError();
+
     const showModeOfPayments = useCallback(() => {
         setShowPaymentMode(true);
     }, [])
@@ -64,30 +70,58 @@ const MemoSettleTable = () => {
 
     const { isPending, mutateAsync } = useMutation({
         mutationFn: async () => {
+
+            const hasDuesMode = settleModes.some(
+                (mode) => mode.name.toLowerCase() === "dues"
+            );
+            const hasNpcMode = settleModes.some(
+                (mode) => mode.name.toLowerCase() === "npc"
+            );
+
+            let payload = {
+                unSettleTableId: selectedUnsettleData?._id || "",
+                captainId: captainData?._id || "",
+                businessId: businessId || "",
+                settleAmount: Number(settleAmount) || 0,
+                orderId: orderId,
+                reasonForSettle: selectedReason || customReason,
+                settleModes: settleModes,
+            }
+
+            if (hasDuesMode && saveDueUser?._id) {
+                payload["duesUserId"] = saveDueUser._id;
+            }
+            if (hasNpcMode && saveDueUser?._id) {
+                payload["npcUserId"] = saveDueUser?._id;
+            }
+
             const response = await apiRpc.table.resolve_table.$post({
-                json: {
-                    unSettleTableId: selectedUnsettleData?._id || "",
-                    captainId: captainData?._id || "",
-                    businessId: businessId || "",
-                    settleAmount: Number(settleAmount) || 0,
-                    orderId: orderId,
-                    reasonForSettle: selectedReason || customReason,
-                    settleModes: settleModes,
-                }
+                json: payload
             })
+
+            if (response.status === 401 || response.status === 403) {
+                setOpenErrorModal(true);
+                setError("You are not authorized to perform this action");
+                return { err: true, message: "You are not authorized to perform this action" };
+            }
+
             const res = await response.json();
             return res
         },
         onSuccess: (data) => {
+            if(data.err) {
+                toast.error(data.message);
+                return;
+            }
             if (!data.err) {
                 setOpenUnsettle(false);
                 setSelectedUnsettleData(null);
                 closeModeOfPayments()
+                setSaveDueUser(null)
                 toast.success("Table settled successfully");
                 queryClient.invalidateQueries({ queryKey: ["getUnsettledTables"] });
                 return;
             }
-            toast.error(data.message);
         }
     })
 

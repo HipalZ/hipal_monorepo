@@ -13,6 +13,7 @@ import MultipleModes from "./multipleModes";
 import SingleMode from "./singleMode";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import { useGetAllModes } from "@/components/hooks/useTableData";
+import { useError } from "@/components/store/useError";
 
 export interface IMode {
     _id: string;
@@ -43,7 +44,7 @@ const MemoNormalSettle = ({
     const { businessId } = useParams();
     const navigate = useNavigate();
     const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
-
+    const { setError, setOpenErrorModal } = useError();
     const {
         selectedTable,
         setOpenOrderModal,
@@ -84,22 +85,31 @@ const MemoNormalSettle = ({
             const response = await apiRpc.table.normal_settle.$post({
                 json: payload,
             });
-            const res = await response.json();
-            if (res?.err) {
-                throw new Error(res.message || "Error settling the table");
+            if (response.status === 401 || response.status === 403) {
+                setOpenErrorModal(true);
+                setError("You are not authorized to perform this action");
+                return { err: true, message: "You are not authorized to perform this action" };
             }
+            const res = await response.json();
             return res;
         },
-        onSuccess: () => {
-            toast.success("Table settled successfully!");
-            setSettleModes([]);
-            closeNormalSettle();
-            setOpenOrderModal(false);
-            setIsSplit(false);
-            setOpenDues(false);
-            setSettleModes([]);
-            setSaveDueUser(null)
-            navigate(`/${businessId}/alerts`);
+        onSuccess: (data) => {
+            if (data?.err) {
+                toast.error(data.message);
+                return;
+            }
+            if(!data?.err) {
+                toast.success("Table settled successfully!");
+                setSettleModes([]);
+                closeNormalSettle();
+                setOpenOrderModal(false);
+                setIsSplit(false);
+                setOpenDues(false);
+                setSettleModes([]);
+                setSaveDueUser(null)
+                navigate(`/${businessId}/alerts`);
+            }
+           
         },
         onError: (error: any) => {
             toast.error(error?.message || "Something went wrong.");
@@ -118,28 +128,34 @@ const MemoNormalSettle = ({
                 param: { alertId: payload.id },
                 json: payload,
             });
-            if (res.status === 401) {
-                throw new Error("Unauthorized");
-            }
-            if (res.status === 200) {
-                removeOnlineAlert(payload.id)
-                removeOnlineCount()
+
+            if (res.status === 401 || res.status === 403) {
+                setOpenErrorModal(true);
+                setError("You are not authorized to perform this action");
                 return res.json();
             }
-            throw new Error("Something went wrong.");
+            if (res.status === 200 || res.status === 201) {
+                removeOnlineAlert(payload.id)
+                removeOnlineCount()
+                toast.success("Order confirmed successfully!");
+                setSettleModes([]);
+                setIsSplit(false);
+                closeNormalSettle();
+                setOpenOrderModal(false);
+                setClickViewMore(false);
+                setOpenDues(false);
+                setSettleModes([]);
+                setSaveDueUser(null)
+                navigate(`/${businessId}/alerts`);
+                return res.json();
+            }
         },
-        onSuccess: () => {
-            toast.success("Order confirmed successfully!");
-            setSettleModes([]);
-            setIsSplit(false);
-            closeNormalSettle();
-            setOpenOrderModal(false);
-            setClickViewMore(false);
-            setOpenDues(false);
-            setSettleModes([]);
-            setSaveDueUser(null)
-            navigate(`/${businessId}/alerts`);
-            return
+        onSuccess: (data) => {
+            if(data?.err) {
+                toast.error(data.message);
+                return
+            }
+           
         },
         onError: (error: any) => {
             toast.error(error?.message || "Something went wrong.");

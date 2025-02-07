@@ -103,15 +103,6 @@ const BillPopUpMemo = () => {
     }
   };
 
-  const handleConfirm = useCallback(
-    (id: string, comment: string) => {
-      handleConfirmAlert(id, comment);
-      removeOfflineAlert(id);
-      setClickViewMore(!clickViewMore);
-    },
-    [clickViewMore],
-  );
-
   const hideMiddleNumbers = useCallback((phone: string) => {
     if (phone.length <= 2) return phone;
     const firstPart = phone.slice(0, 2);

@@ -18,12 +18,14 @@ import BottomPopUp from "../universalPopup";
 import type { IBillData } from "@/components/types/hiClientzData";
 import QrCodePreview from "./qrCode";
 import Normalsettle from "./normalsettle";
+import { useError } from "@/components/store/useError";
 
 const MemoGetBill = () => {
     const { businessId } = useParams();
     const queryClient = useQueryClient();
     const selectedTable = useOrderStore((s) => s.selectedTable);
     const screenSize = useScreenSize()
+    const { setError, setOpenErrorModal } = useError();
     const { captainData: userData } = useHiClientZ();
     const [qrBillId, setQrBillId] = useState<string | null>(null);
     const [showqr, setShowqr] = useState<boolean>(false);
@@ -45,6 +47,11 @@ const MemoGetBill = () => {
                 status: 400,
                 message: "Server timeout occurred",
             });
+        }
+        if(response.status === 403 || response.status === 401) {
+            setOpenErrorModal(true);
+            setError("You are not authorized to perform this action");
+            return
         }
 
         const res = await response.json();

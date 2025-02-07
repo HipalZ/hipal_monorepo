@@ -14,6 +14,7 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import { useErrorHandling } from "./components/utils/helpers";
 import useBusinessData from "./components/store/useBusinessData";
+import ErrorPopup from "./components/ErrorPopup";
 
 function App() {
   const navigate = useNavigate();
@@ -250,6 +251,7 @@ function App() {
       )} */}
       {loading ? <SpinnerMemo /> : null}
       <MainRouter />
+      <ErrorPopup />
     </main>
   );
 }

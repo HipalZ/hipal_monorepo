@@ -1,6 +1,6 @@
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import avatar from "@/assets/img/avatar.png";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState } from "react";
 import { cn } from "@/components/utils/helpers";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiDownload } from "react-icons/fi";
@@ -10,6 +10,8 @@ import { AiOutlineLogout } from "react-icons/ai";
 import { useUpdateNotifications } from "@/utils/apiService";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useUserToken } from "@hi/common/src/useUserToken";
+import { LaptopMinimalCheck } from "lucide-react";
+import BottomPopUp from "@/components/atoms/universalPopup";
 
 const ProfileHeader = () => {
   const location = useLocation();
@@ -17,6 +19,8 @@ const ProfileHeader = () => {
     setAccessToken: s.setAccessToken,
     setRefreshToken: s.setRefreshToken,
   }));
+
+  const [showPermissons, setShowPermissions] = useState<boolean>(false);
   const position = location.pathname.includes("businesses");
   const navigate = useNavigate();
   const { notification, setNotification, setSelectedBiz } = useHiClientZ(
@@ -49,6 +53,8 @@ const ProfileHeader = () => {
   }, [notification, updateNotificationsApi, setNotification]);
 
   return (
+    <>
+    
     <Menu as="div" className="relative inline-block text-left">
       <div>
         <MenuButton className="inline-flex justify-center w-full p-1 text-white bg-gray-300 rounded-full">
@@ -63,10 +69,10 @@ const ProfileHeader = () => {
         <div className="border-t-2 border-l-2 border-gray-200 absolute top-[-10px] right-8 w-4 h-4 bg-white rotate-45" />
         <div className="px-1 py-1">
           <MenuItem>
-            {({ active }) => (
+            {({ focus }) => (
               <a
                 href="https://t-static.blr1.digitaloceanspaces.com/app-debug.apk"
-                className={cn(defaultClass, active ? "bg-gray-100" : "")}
+                className={cn(defaultClass, focus ? "bg-gray-100" : "")}
               >
                 <FiDownload className="mr-2 text-blue-500" size={20} /> Download
                 App
@@ -74,11 +80,11 @@ const ProfileHeader = () => {
             )}
           </MenuItem>
           <MenuItem>
-            {({ active }) => (
+            {({ focus }) => (
               <button
                 type="button"
                 onClick={UpdateNotification}
-                className={cn(defaultClass, active ? "bg-gray-100" : "")}
+                className={cn(defaultClass, focus ? "bg-gray-100" : "")}
               >
                 {notification ? (
                   <LuBellRing className="mr-2 text-green-500" size={20} />
@@ -90,14 +96,14 @@ const ProfileHeader = () => {
             )}
           </MenuItem>
           <MenuItem>
-            {({ active }) => (
+            {({ focus }) => (
               <button
                 type="button"
                 disabled={position}
                 onClick={redirectDashboard}
                 className={cn(
                   defaultClass,
-                  active ? "bg-gray-100" : "",
+                  focus ? "bg-gray-100" : "",
                   position ? "opacity-50" : "",
                 )}
               >
@@ -107,11 +113,23 @@ const ProfileHeader = () => {
             )}
           </MenuItem>
           <MenuItem>
-            {({ active }) => (
+            {({ focus }) => (
               <button
                 type="button"
                 onClick={handleLogout}
-                className={cn(defaultClass, active ? "bg-gray-100" : "")}
+                className={cn(defaultClass, focus ? "bg-gray-100" : "")}
+              >
+                <LaptopMinimalCheck className="mr-2 text-black" size={20} />
+                Permissions
+              </button>
+            )}
+          </MenuItem>
+          <MenuItem>
+            {({ focus }) => (
+              <button
+                type="button"
+                onClick={handleLogout}
+                className={cn(defaultClass, focus ? "bg-gray-100" : "")}
               >
                 <AiOutlineLogout className="mr-2 text-red-500" size={20} />{" "}
                 Logout
@@ -121,6 +139,14 @@ const ProfileHeader = () => {
         </div>
       </MenuItems>
     </Menu>
+    {
+      showPermissons && (
+        <BottomPopUp bottomCross hide show={showPermissons} onClose={() => setShowPermissions(false)}>
+          hello
+        </BottomPopUp>
+      )
+    }
+    </>
   );
 };
 
