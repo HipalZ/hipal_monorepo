@@ -12,6 +12,7 @@ import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { LaptopMinimalCheck } from "lucide-react";
 import BottomPopUp from "@/components/atoms/universalPopup";
+import UserPermissions from "./UserPermissions";
 
 const ProfileHeader = () => {
   const location = useLocation();
@@ -51,6 +52,10 @@ const ProfileHeader = () => {
     setNotification(updatedNotification);
     await updateNotificationsApi(updatedNotification);
   }, [notification, updateNotificationsApi, setNotification]);
+
+  const openPermissions = useCallback(() => {
+    setShowPermissions(true);
+  }, []);
 
   return (
     <>
@@ -116,7 +121,7 @@ const ProfileHeader = () => {
             {({ focus }) => (
               <button
                 type="button"
-                onClick={handleLogout}
+                onClick={openPermissions}
                 className={cn(defaultClass, focus ? "bg-gray-100" : "")}
               >
                 <LaptopMinimalCheck className="mr-2 text-black" size={20} />
@@ -142,7 +147,7 @@ const ProfileHeader = () => {
     {
       showPermissons && (
         <BottomPopUp bottomCross hide show={showPermissons} onClose={() => setShowPermissions(false)}>
-          hello
+          <UserPermissions />
         </BottomPopUp>
       )
     }
