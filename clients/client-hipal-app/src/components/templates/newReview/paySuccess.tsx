@@ -3,7 +3,7 @@ import { useLogin } from "@/components/store/useLogin";
 import useUserReward from "@/components/store/useUserReward";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
