@@ -1433,6 +1433,7 @@ const paymentsRouter = new Hono()
         hiCode: hiCode,
         v: appInfo?.v,
         appUrl: appInfo?.appUrl,
+        updateFeature: appInfo?.updateFeature,
       });
 
       const registrationToken = await DeviceToken.find({
@@ -1588,6 +1589,7 @@ const paymentsRouter = new Hono()
         {
           v: appInfo?.v,
           appUrl: appInfo?.appUrl,
+          updateFeature: appInfo?.updateFeature,
         },
         { new: true },
       );
@@ -1616,6 +1618,7 @@ const paymentsRouter = new Hono()
               {
                 v: appInfo?.v,
                 appUrl: appInfo?.appUrl,
+                updateFeature: appInfo?.updateFeature,
               },
             ]
           : existingPaymentAlerts,

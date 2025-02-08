@@ -35,6 +35,7 @@ const paymentAlertSchema = new mongoose.Schema<PaymentAlertType>(
     mode: { type: String, default: "" },
     appUrl: { type: String, default: "" },
     v: { type: Number },
+    updateFeature: { type: [String], default: [] },
   },
   {
     timestamps: true,
