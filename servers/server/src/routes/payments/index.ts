@@ -1410,6 +1410,7 @@ const paymentsRouter = new Hono()
 
       const appInfo = await DeviceToken.findOne({
         token: { $exists: true },
+        v: { $exists: true },
       });
 
       const tableInfo = await Table.findOne({ businessId, name: tableName });
@@ -1573,9 +1574,23 @@ const paymentsRouter = new Hono()
 
       const appInfo = await DeviceToken.findOne({
         token: { $exists: true },
+        v: { $exists: true },
       });
 
       console.log("appInfo", appInfo);
+
+      PaymentAlert.updateMany(
+        {
+          businessId,
+          alertType: ["WAITER"],
+          isAccepted: false,
+        },
+        {
+          v: appInfo?.v,
+          appUrl: appInfo?.appUrl,
+        },
+        { new: true },
+      );
 
       const existingPaymentAlerts = await PaymentAlert.find({
         businessId,
