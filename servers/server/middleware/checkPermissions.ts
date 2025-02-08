@@ -15,10 +15,6 @@ export const ubacMiddleware = (key: string) => {
       const token = getCookie(c, "token");
       console.log("token", token);
 
-      if (!token) {
-        return c.json({ message: "Not Authorized" }, 401);
-      }
-
       let decodedToken: DecodedToken;
 
       try {

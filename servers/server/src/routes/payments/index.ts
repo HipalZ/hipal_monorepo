@@ -1408,6 +1408,10 @@ const paymentsRouter = new Hono()
       const requestData = await c.req.json();
       const { businessId, tableName, message, userId } = requestData;
 
+      const appInfo = await DeviceToken.findOne({
+        token: { $exists: true },
+      });
+
       const tableInfo = await Table.findOne({ businessId, name: tableName });
 
       let hiCode = "";
@@ -1426,6 +1430,8 @@ const paymentsRouter = new Hono()
         date: Date.now(),
         order_id: new ObjectId(),
         hiCode: hiCode,
+        v: appInfo?.v,
+        appUrl: appInfo?.appUrl,
       });
 
       const registrationToken = await DeviceToken.find({
@@ -1565,6 +1571,12 @@ const paymentsRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.query();
 
+      const appInfo = await DeviceToken.findOne({
+        token: { $exists: true },
+      });
+
+      console.log("appInfo", appInfo);
+
       const existingPaymentAlerts = await PaymentAlert.find({
         businessId,
         alertType: ["WAITER"],
@@ -1584,7 +1596,14 @@ const paymentsRouter = new Hono()
         "existing paymentAlert",
         false,
         200,
-        existingPaymentAlerts,
+        existingPaymentAlerts.length === 0
+          ? [
+              {
+                v: appInfo?.v,
+                appUrl: appInfo?.appUrl,
+              },
+            ]
+          : existingPaymentAlerts,
       );
     },
   )
