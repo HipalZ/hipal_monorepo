@@ -5,6 +5,7 @@ const config: PermCapacitorConfig = {
   appName: "hitable-test",
   webDir: "dist",
   server: {
+    url: "https://table.test.hipalz.com",
     androidScheme: "https",
   },
   android: {
