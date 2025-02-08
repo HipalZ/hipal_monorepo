@@ -110,7 +110,9 @@ function App() {
     setOfflineAlertData(data);
     setIsVersionPopup(Number(version) !== data[0]?.v);
     setUpdateUrl(data[0]?.appUrl);
-    if (data[0]?.v !== version) {
+    console.log(data[0]?.v, version);
+    console.log(version);
+    if (data[0]?.v !== Number(version)) {
       setUpdateFeature(data[0]?.updateFeature);
     }
     setOfflineCount(data.length);
