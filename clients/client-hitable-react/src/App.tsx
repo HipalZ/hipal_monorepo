@@ -15,6 +15,7 @@ import { apiRpc } from "@hi/common";
 import { useErrorHandling } from "./components/utils/helpers";
 import useBusinessData from "./components/store/useBusinessData";
 import ErrorPopup from "./components/ErrorPopup";
+import BottomPopUp from "./components/atoms/universalPopup";
 
 function App() {
   const navigate = useNavigate();
@@ -26,6 +27,9 @@ function App() {
   const outletInfo = useBusinessData(s => s.outletInfo);
   const isOnlineRef = useRef(navigator.onLine);
   const [isSlow, setIsSlow] = useState(false);
+  const [isVersionPopup, setIsVersionPopup] = useState(false);
+  const [updateUrl, setUpdateUrl] = useState("");
+  const version = import.meta.env.VITE_APP_VERSION;
   const { errorText } = useErrorHandling();
   const {
     offlineCount,
@@ -104,6 +108,12 @@ function App() {
     if (!businessId) return;
     const data: Alert[] = await fetchAlerts(businessId, "ALL");
     setOfflineAlertData(data);
+    console.log("data", data[0]?.v);
+    console.log('type of version', typeof Number(version));
+    console.log('type of data', typeof data[0]?.v);
+    console.log("correct or not", version !== data[0]?.v);
+    setIsVersionPopup(Number(version) !== data[0]?.v);
+    setUpdateUrl(data[0]?.appUrl);
     setOfflineCount(data.length);
     if (data && data.length > offlineCount && platform === "web") {
       const sound = new Howl({
@@ -217,6 +227,12 @@ function App() {
     refetchInterval: isSlow ? 29000 : 23000,
   });
 
+
+  const handleUpdateApp = () => {
+    setIsVersionPopup(false);
+    window.open(updateUrl, "_blank");
+  }
+
   return (
     <main className="relative">
       {!isOnlineRef.current && (
@@ -249,6 +265,16 @@ function App() {
           </button>
         </div>
       )} */}
+      {isVersionPopup && <BottomPopUp height="90dvh" onClose={() => setIsVersionPopup(false)} show={isVersionPopup} bottomCross hide>
+        <section className="h-[80dvh] flex flex-col items-center justify-center space-y-4">
+          <h1 className="text-2xl text-black">New update Available</h1>
+          <article className="flex items-center justify-center space-x-4">
+            <button className="bg-indigo-500 p-3 text-white" type="button" onClick={handleUpdateApp}>
+              Update
+            </button>
+          </article>
+        </section>
+      </BottomPopUp>}
       {loading ? <SpinnerMemo /> : null}
       <MainRouter />
       <ErrorPopup />

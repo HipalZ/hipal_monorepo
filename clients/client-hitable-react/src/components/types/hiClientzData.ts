@@ -60,6 +60,8 @@ export interface Order {
 }
 
 export interface Alert {
+  appUrl: string;
+  v: number;
   userId: {
     name: string;
     _id: string;
