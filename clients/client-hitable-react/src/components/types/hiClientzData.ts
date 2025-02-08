@@ -60,6 +60,7 @@ export interface Order {
 }
 
 export interface Alert {
+  updateFeature: string[];
   appUrl: string;
   v: number;
   userId: {
