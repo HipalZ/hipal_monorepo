@@ -5,7 +5,7 @@ import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import HiAnimation from "@/components/atoms/hiClientzAnimation";
-import { usePushTokenApi } from "@/utils/apiService";
+import { usePushTokenApi, useUpdateNotifications } from "@/utils/apiService";
 import useBusinessData from "@/components/store/useBusinessData";
 
 const ViewInBizMemo = () => {
@@ -14,6 +14,7 @@ const ViewInBizMemo = () => {
     selectedBiz: s.selectedBiz,
     captainData: s.captainData,
   }));
+  const { updateNotificationsApi } = useUpdateNotifications();
   const outletInfo = useBusinessData((s) => s?.outletInfo);
   const businessId = selectedBiz?.businessId?._id;
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ const ViewInBizMemo = () => {
 
   const navigateToBiz = async () => {
     await savePushToken();
+    await updateNotificationsApi(true);
     if (!outletInfo?.isPosEnabled) {
       navigate(`/${businessId}/navigate`);
     } else {

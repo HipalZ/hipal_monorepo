@@ -13,6 +13,7 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { LaptopMinimalCheck } from "lucide-react";
 import BottomPopUp from "@/components/atoms/universalPopup";
 import UserPermissions from "./UserPermissions";
+import useBusinessData from "@/components/store/useBusinessData";
 
 const ProfileHeader = () => {
   const location = useLocation();
@@ -20,7 +21,7 @@ const ProfileHeader = () => {
     setAccessToken: s.setAccessToken,
     setRefreshToken: s.setRefreshToken,
   }));
-
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId)
   const [showPermissons, setShowPermissions] = useState<boolean>(false);
   const position = location.pathname.includes("businesses");
   const navigate = useNavigate();
@@ -59,98 +60,98 @@ const ProfileHeader = () => {
 
   return (
     <>
-    
-    <Menu as="div" className="relative inline-block text-left">
-      <div>
-        <MenuButton className="inline-flex justify-center w-full p-1 text-white bg-gray-300 rounded-full">
-          <img
-            src={avatar}
-            alt="avatar"
-            className="rounded-full sm:w-10 sm:h-10 lg:h-12 lg:w-12"
-          />
-        </MenuButton>
-      </div>
-      <MenuItems className="absolute right-0 w-56 mt-2 origin-top-right bg-white divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-        <div className="border-t-2 border-l-2 border-gray-200 absolute top-[-10px] right-8 w-4 h-4 bg-white rotate-45" />
-        <div className="px-1 py-1">
-          <MenuItem>
-            {({ focus }) => (
-              <a
-                href="https://t-static.blr1.digitaloceanspaces.com/app-debug.apk"
-                className={cn(defaultClass, focus ? "bg-gray-100" : "")}
-              >
-                <FiDownload className="mr-2 text-blue-500" size={20} /> Download
-                App
-              </a>
-            )}
-          </MenuItem>
-          <MenuItem>
-            {({ focus }) => (
-              <button
-                type="button"
-                onClick={UpdateNotification}
-                className={cn(defaultClass, focus ? "bg-gray-100" : "")}
-              >
-                {notification ? (
-                  <LuBellRing className="mr-2 text-green-500" size={20} />
-                ) : (
-                  <LuBellOff className="mr-2 text-red-500" size={20} />
-                )}{" "}
-                Alerts {notification ? "On" : "Off"}
-              </button>
-            )}
-          </MenuItem>
-          <MenuItem>
-            {({ focus }) => (
-              <button
-                type="button"
-                disabled={position}
-                onClick={redirectDashboard}
-                className={cn(
-                  defaultClass,
-                  focus ? "bg-gray-100" : "",
-                  position ? "opacity-50" : "",
-                )}
-              >
-                <RxDashboard className="mr-2 text-[#6f2eff]" size={20} />{" "}
-                Dashboard
-              </button>
-            )}
-          </MenuItem>
-          <MenuItem>
-            {({ focus }) => (
-              <button
-                type="button"
-                onClick={openPermissions}
-                className={cn(defaultClass, focus ? "bg-gray-100" : "")}
-              >
-                <LaptopMinimalCheck className="mr-2 text-black" size={20} />
-                Permissions
-              </button>
-            )}
-          </MenuItem>
-          <MenuItem>
-            {({ focus }) => (
-              <button
-                type="button"
-                onClick={handleLogout}
-                className={cn(defaultClass, focus ? "bg-gray-100" : "")}
-              >
-                <AiOutlineLogout className="mr-2 text-red-500" size={20} />{" "}
-                Logout
-              </button>
-            )}
-          </MenuItem>
+
+      <Menu as="div" className="relative inline-block text-left">
+        <div>
+          <MenuButton className="inline-flex justify-center w-full p-1 text-white bg-gray-300 rounded-full">
+            <img
+              src={avatar}
+              alt="avatar"
+              className="rounded-full sm:w-10 sm:h-10 lg:h-12 lg:w-12"
+            />
+          </MenuButton>
         </div>
-      </MenuItems>
-    </Menu>
-    {
-      showPermissons && (
-        <BottomPopUp bottomCross hide show={showPermissons} onClose={() => setShowPermissions(false)}>
-          <UserPermissions />
-        </BottomPopUp>
-      )
-    }
+        <MenuItems className="absolute right-0 w-56 mt-2 origin-top-right bg-white divide-y divide-gray-100 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+          <div className="border-t-2 border-l-2 border-gray-200 absolute top-[-10px] right-8 w-4 h-4 bg-white rotate-45" />
+          <div className="px-1 py-1">
+            <MenuItem>
+              {({ focus }) => (
+                <a
+                  href="https://t-static.blr1.digitaloceanspaces.com/app-debug.apk"
+                  className={cn(defaultClass, focus ? "bg-gray-100" : "")}
+                >
+                  <FiDownload className="mr-2 text-blue-500" size={20} /> Download
+                  App
+                </a>
+              )}
+            </MenuItem>
+            {businessId ? <MenuItem>
+              {({ focus }) => (
+                <button
+                  type="button"
+                  onClick={UpdateNotification}
+                  className={cn(defaultClass, focus ? "bg-gray-100" : "")}
+                >
+                  {notification ? (
+                    <LuBellRing className="mr-2 text-green-500" size={20} />
+                  ) : (
+                    <LuBellOff className="mr-2 text-red-500" size={20} />
+                  )}{" "}
+                  Alerts {notification ? "On" : "Off"}
+                </button>
+              )}
+            </MenuItem> : null}
+            <MenuItem>
+              {({ focus }) => (
+                <button
+                  type="button"
+                  disabled={position}
+                  onClick={redirectDashboard}
+                  className={cn(
+                    defaultClass,
+                    focus ? "bg-gray-100" : "",
+                    position ? "opacity-50" : "",
+                  )}
+                >
+                  <RxDashboard className="mr-2 text-[#6f2eff]" size={20} />{" "}
+                  Dashboard
+                </button>
+              )}
+            </MenuItem>
+            <MenuItem>
+              {({ focus }) => (
+                <button
+                  type="button"
+                  onClick={openPermissions}
+                  className={cn(defaultClass, focus ? "bg-gray-100" : "")}
+                >
+                  <LaptopMinimalCheck className="mr-2 text-black" size={20} />
+                  Permissions
+                </button>
+              )}
+            </MenuItem>
+            <MenuItem>
+              {({ focus }) => (
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className={cn(defaultClass, focus ? "bg-gray-100" : "")}
+                >
+                  <AiOutlineLogout className="mr-2 text-red-500" size={20} />{" "}
+                  Logout
+                </button>
+              )}
+            </MenuItem>
+          </div>
+        </MenuItems>
+      </Menu>
+      {
+        showPermissons && (
+          <BottomPopUp bottomCross hide show={showPermissons} onClose={() => setShowPermissions(false)}>
+            <UserPermissions />
+          </BottomPopUp>
+        )
+      }
     </>
   );
 };
