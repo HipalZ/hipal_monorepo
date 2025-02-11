@@ -444,7 +444,11 @@ const zonesAndTablesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
-      const tables = await Table.find({ businessId, isDeleted: false });
+      const tables = await Table.find({
+        businessId,
+        isDeleted: false,
+        visibility: true,
+      });
       return c.json(
         {
           message: "Tables fetched successfully",
@@ -466,7 +470,11 @@ const zonesAndTablesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
-      const zones = await Zone.find({ businessId, isDeleted: false });
+      const zones = await Zone.find({
+        businessId,
+        isDeleted: false,
+        visibility: true,
+      });
       return c.json(
         {
           message: "zones fetched successfully",
