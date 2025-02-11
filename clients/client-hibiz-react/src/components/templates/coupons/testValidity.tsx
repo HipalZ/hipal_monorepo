@@ -78,11 +78,7 @@ const MemoTestValidity = () => {
     }, [couponEndDate, couponStartDate]);
 
     return (
-        <section
-            className={cn(
-                couponType === "PERCENTAGE" ? "lg:-mt-[18rem]" : "lg:-mt-[13rem]",
-            )}
-        >
+        <section>
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                     Validity

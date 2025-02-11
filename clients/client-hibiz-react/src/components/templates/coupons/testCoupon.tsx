@@ -35,8 +35,13 @@ const MemoTestCoupon = () => {
         }
     }, [setCouponPrice]);
 
+    const handleSubmit = useCallback((e) => {
+        e.preventDefault();
+        console.log('Coupon Created');
+    }, []);
+
     return (
-        <div className="min-h-screen bg-gray-50 p-6 max-w-4xl mx-auto md:flex gap-8">
+        <div className="bg-gray-50 p-6 max-w-4xl mx-auto md:flex gap-8">
             {/* Coupon Preview */}
             <section className="z-50 w-[50dvw] h-64 mx-auto md:w-1/4 sticky top-6 rounded-lg shadow-lg overflow-hidden">
                 <article className="p-4" style={{ backgroundColor: bgColor }}>
@@ -60,7 +65,7 @@ const MemoTestCoupon = () => {
             </section>
 
             {/* Form */}
-            <div className="flex-1 bg-white rounded-lg shadow-lg p-6">
+            <form onSubmit={handleSubmit} className="flex-1 relative bg-white rounded-lg shadow-lg p-6">
                 <h2 className="text-xl font-semibold mb-6">Create Your Coupon</h2>
                 {/* Basic Details */}
                 <div className="space-y-4 mb-1">
@@ -128,11 +133,11 @@ const MemoTestCoupon = () => {
                     <button type="button" className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
                         Cancel
                     </button>
-                    <button type="button" className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                    <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
                         Create Coupon
                     </button>
                 </div>
-            </div>
+            </form>
         </div>
     );
 }

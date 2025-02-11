@@ -27,7 +27,7 @@ const MemoTestDiscountType = () => {
     return (
         <section>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-                Discount Type & Value
+                Discount Type & Value <span className='text-red-500'>*</span>
             </label>
             <div className="flex gap-2">
                 <div className="flex-1">
@@ -49,8 +49,10 @@ const MemoTestDiscountType = () => {
                     <input
                         type="number"
                         value={couponDiscount}
-                        onChange={(e) => setCouponDiscount(e.target.value)}
-                        onBlur={() => setShowDropdown(false)}
+                        required
+                        min={0}
+                        max={couponType === 'PERCENTAGE' ? 100 : 10000}
+                        onChange={(e) => handleOptionClick(e.target.value)}
                         onClick={() => setShowDropdown(true)}
                         className="pl-10 w-full rounded-md border border-gray-300 py-2 px-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         placeholder={couponType === 'PERCENTAGE' ? "Enter percentage" : "Enter amount"}
@@ -63,6 +65,7 @@ const MemoTestDiscountType = () => {
                                     key={option}
                                     className="py-2 px-4 hover:bg-gray-100 cursor-pointer"
                                     onClick={() => handleOptionClick(option)}
+                                    onKeyDown={() => handleOptionClick(option)}
                                 >
                                     {option}%
                                 </div>
