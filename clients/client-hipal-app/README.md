@@ -41,3 +41,4 @@ builderror
 pos payment
 free table
 sales breakdown
+video upload
