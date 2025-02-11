@@ -42,9 +42,8 @@ const zoneSchema = new mongoose.Schema<ZoneType>(
       ref: "COUPONZ",
     },
     taxes: {
-      type: [ObjectId],
+      type: [Object],
       required: false,
-      ref: "tax",
     },
     visibility: {
       type: Boolean,
