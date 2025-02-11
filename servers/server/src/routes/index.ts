@@ -23,6 +23,7 @@ import subsCriberRouter from "./subscribers";
 import surlRouter from "./surl";
 import tableRouter from "./table";
 import tagRouter from "./tags";
+import taxRouter from "./tax";
 import upiModeRouter from "./upimode";
 import usersRouter from "./users";
 import whatsappRouter from "./whatsapp";
@@ -61,6 +62,7 @@ export const routes = app
   .route("/upi_mode", upiModeRouter)
   .route("/dues", duesRouter)
   .route("/npc", npcRouter)
-  .route("/permission", permissionRouter);
+  .route("/permission", permissionRouter)
+  .route("/tax", taxRouter);
 
 export type AppType = typeof routes;

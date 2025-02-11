@@ -48,6 +48,7 @@ export * from "./role";
 export * from "./table";
 export * from "./tags";
 export * from "./tagType";
+export * from "./tax";
 export * from "./tempTableSettle";
 export * from "./theme";
 export * from "./uniquelyYours";

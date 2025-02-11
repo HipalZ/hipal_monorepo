@@ -36,6 +36,26 @@ const zoneSchema = new mongoose.Schema<ZoneType>(
       type: String,
       required: false,
     },
+    couponIds: {
+      type: [ObjectId],
+      required: false,
+      ref: "COUPONZ",
+    },
+    taxes: {
+      type: [ObjectId],
+      required: false,
+      ref: "tax",
+    },
+    visibility: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+    tableIds: {
+      type: [ObjectId],
+      required: false,
+      ref: "table",
+    },
   },
   {
     timestamps: true,

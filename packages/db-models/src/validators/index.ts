@@ -61,6 +61,7 @@ export * from "./switchtable";
 export * from "./table";
 export * from "./tags";
 export * from "./tagType";
+export * from "./tax";
 export * from "./tempTableSettle";
 export * from "./token";
 export * from "./uniquelyYours";
