@@ -17,7 +17,7 @@ const MemoTopSectionVideo = () => {
           style={{ width: "100%", overflow: "hidden" }}
         >
           <video
-            src="https://assets.hipalz.com/new%20year%202.mp4"
+            src="https://assets.hipalz.com/123.mp4"
             autoPlay
             loop
             muted
