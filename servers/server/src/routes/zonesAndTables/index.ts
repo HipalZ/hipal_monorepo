@@ -13,14 +13,15 @@ import { z } from "zod";
 const zonesAndTablesRouter = new Hono()
   .post("/zone", zValidator("json", zoneChema), async (c) => {
     //@ts-ignore
-    await runInTransaction(async (session) => {
+    return runInTransaction(async (session) => {
       const {
         businessId,
         name,
         staffIds = [],
         visibility,
-        taxes = [],
+        taxes,
         couponIds = [],
+        tableIds = [],
       } = await c.req.json();
 
       const isHavePos = await BusinessPosConfig.findOne({
@@ -56,6 +57,7 @@ const zonesAndTablesRouter = new Hono()
         visibility,
         taxes,
         couponIds,
+        tableIds
       });
 
       await zone.save({ session });
@@ -81,15 +83,16 @@ const zonesAndTablesRouter = new Hono()
 
   .put("/zone", zValidator("json", updateZoneChema), async (c) => {
     //@ts-ignore
-    await runInTransaction(async (session) => {
+    return runInTransaction(async (session) => {
       const {
         businessId,
         name,
         staffIds = [],
         visibility,
-        taxes = [],
+        taxes,
         couponIds = [],
-
+        tableIds = [],
+        _id,
         zoneId,
       } = await c.req.json();
 
@@ -100,7 +103,7 @@ const zonesAndTablesRouter = new Hono()
       if (isHavePos) {
         return c.json(
           {
-            message: "pos is enabled for this business you can't create zone",
+            message: "pos is enabled for this business you can't update zone",
             err: true,
           },
           409,
@@ -108,8 +111,11 @@ const zonesAndTablesRouter = new Hono()
       }
 
       const alreadyExists = await Zone.findOne({
-        businessId: { $ne: businessId },
-        name: { $eq: name },
+        businessId,
+        name,
+        _id: {
+          $ne: _id,
+        },
       });
 
       if (alreadyExists) {
@@ -132,7 +138,7 @@ const zonesAndTablesRouter = new Hono()
         return c.json(
           {
             message:
-              "you can't update this zone because this zone have active table",
+              "you can't update this zone because this zone has active tables",
             err: true,
           },
           409,
@@ -141,13 +147,14 @@ const zonesAndTablesRouter = new Hono()
 
       const updatedZone = await Zone.findOneAndUpdate(
         {
-          _id: zoneId,
+          _id: _id,
           businessId,
         },
         {
           name,
           staffIds,
           visibility,
+          tableIds,
           taxes,
           couponIds,
         },
@@ -179,7 +186,7 @@ const zonesAndTablesRouter = new Hono()
 
   .post("/table", zValidator("json", createTableSchema), async (c) => {
     //@ts-ignore
-    await runInTransaction(async (session) => {
+    return runInTransaction(async (session) => {
       const {
         businessId,
         name,
@@ -322,7 +329,7 @@ const zonesAndTablesRouter = new Hono()
 
   .put("/table", zValidator("json", updateTableSchema), async (c) => {
     //@ts-ignore
-    await runInTransaction(async (session) => {
+    return runInTransaction(async (session) => {
       const {
         businessId,
         name,
@@ -473,7 +480,6 @@ const zonesAndTablesRouter = new Hono()
       const zones = await Zone.find({
         businessId,
         isDeleted: false,
-        visibility: true,
       });
       return c.json(
         {

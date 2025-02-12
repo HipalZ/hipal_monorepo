@@ -42,7 +42,7 @@ const zoneSchema = new mongoose.Schema<ZoneType>(
       ref: "COUPONZ",
     },
     taxes: {
-      type: [Object],
+      type: Number,
       required: false,
     },
     visibility: {

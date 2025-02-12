@@ -1,4 +1,4 @@
-import { type FC, memo, useMemo } from "react";
+ import { type FC, memo, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";

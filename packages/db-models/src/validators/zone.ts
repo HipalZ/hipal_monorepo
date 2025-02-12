@@ -27,13 +27,7 @@ export const zoneChema = z.object({
   active: z.string().min(1).max(30).optional(),
   rank: z.string().min(1).max(30).optional(),
   visibility: z.boolean().default(true),
-  taxes: z
-    .array(
-      z.object({
-        value: z.coerce.number().min(0).max(100),
-      }),
-    )
-    .optional(),
+  taxes: z.number().min(1).max(100).optional(),
   couponIds: z.array(ObjectIdSchema).optional(),
   tableIds: z.array(ObjectIdSchema).optional(),
 });
@@ -51,13 +45,7 @@ export const updateZoneChema = z.object({
     }),
   staffIds: z.array(ObjectIdSchema).optional(),
   visibility: z.boolean().default(true),
-  taxes: z
-    .array(
-      z.object({
-        value: z.coerce.number().min(0).max(100),
-      }),
-    )
-    .optional(),
+  taxes: z.number().min(1).max(100).optional(),
   couponIds: z.array(ObjectIdSchema).optional(),
   zoneId: z.string().min(3).max(100).optional(),
 });

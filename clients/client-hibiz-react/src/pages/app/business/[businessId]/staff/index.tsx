@@ -54,7 +54,6 @@ const StaffPage = () => {
   const fetchPermissions = async () => {
     const res = await apiRpc.permission.$get()
     const data = await res.json()
-    console.log("permissions", data.data)
     if (res.status === 200 || res.status === 201) {
       setPermissions(data.data)
     } else {
@@ -63,7 +62,7 @@ const StaffPage = () => {
     return data.data
   }
 
-  const handleStaffDetails = async (staff: UserProfile) => {
+  const handleStaffDetails = (staff: UserProfile) => {
     const matchingData = staff.customRole.filter((item: CustomRole) => item.businessId === businessData?._id)
     const role = matchingData[0].role as Role
     setSelectedPermissions(matchingData[0].permissionIds)
@@ -143,8 +142,6 @@ const StaffPage = () => {
       };
     });
   }, [rawStaffDetails, allPermissions, businessData?._id]);
-
-  console.log("staffDetailsFunc", staffDetailsFunc)
 
   if (isLoadingStaff || isLoadingPermissions) return <LoadingSpinner />
 

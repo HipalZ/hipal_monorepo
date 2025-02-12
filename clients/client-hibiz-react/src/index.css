@@ -1358,3 +1358,36 @@ button:hover .shine2 {
     @apply bg-background text-foreground;
   }
 }
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.bento-grid > * {
+  transition: all 0.3s ease;
+}
+
+.bento-grid > *:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 768px) {
+  .bento-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .bento-grid > *:nth-child(1) {
+    grid-column: span 2;
+  }
+
+  .bento-grid > *:nth-child(2) {
+    grid-row: span 2;
+  }
+
+  .bento-grid > *:nth-child(4) {
+    grid-column: span 2;
+  }
+}

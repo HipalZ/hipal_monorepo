@@ -1,4 +1,4 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { MdEdit } from "react-icons/md";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { removeUnwanted } from "@/components/utils/helper";
+import { Eye, EyeOff } from "lucide-react";
 
 const MemoAddTeam = () => {
   const queryClient = useQueryClient();
@@ -30,6 +31,7 @@ const MemoAddTeam = () => {
   } = useAddStaffStore();
 
   const businessData = useBusinessData((s) => s.businessData);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   // Validate & Add Staff
   const addStaff = async () => {
@@ -72,7 +74,6 @@ const MemoAddTeam = () => {
     setPageToggle("ADD_ROLE");
   }, [setPageToggle]);
 
-  // Map selected permissions to their names
   const selectedPermissionNames = selectedPermissions
     .map((permId) => permissions.find((perm) => perm._id === permId)?.name)
     .filter((name) => name);
@@ -84,7 +85,6 @@ const MemoAddTeam = () => {
       </header>
 
       <section className="grid grid-cols-1 gap-6 mx-4 md:mx-0 md:grid-cols-2">
-        {/* Staff Information */}
         <Card>
           <CardHeader>
             <CardTitle>Staff Information</CardTitle>
@@ -106,13 +106,24 @@ const MemoAddTeam = () => {
               maxLength={10}
               required
             />
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
-              required
-            />
+              <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"} // Toggle password visibility
+                value={password}
+                minLength={4}
+                maxLength={4}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+                required
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 flex items-center text-gray-600 right-3"
+                onClick={() => setShowPassword(!showPassword)} // Toggle state
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
           </CardContent>
         </Card>
 
