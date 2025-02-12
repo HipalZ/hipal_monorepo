@@ -27,6 +27,7 @@ import taxRouter from "./tax";
 import upiModeRouter from "./upimode";
 import usersRouter from "./users";
 import whatsappRouter from "./whatsapp";
+import whatsAppFlowRouter from "./whatsappflow";
 import zonesAndTablesRouter from "./zonesAndTables";
 
 ////
@@ -63,6 +64,7 @@ export const routes = app
   .route("/dues", duesRouter)
   .route("/npc", npcRouter)
   .route("/permission", permissionRouter)
-  .route("/tax", taxRouter);
+  .route("/tax", taxRouter)
+  .route("/whatsapp_flow", whatsAppFlowRouter);
 
 export type AppType = typeof routes;
