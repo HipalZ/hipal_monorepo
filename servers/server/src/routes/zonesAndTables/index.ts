@@ -241,22 +241,24 @@ const zonesAndTablesRouter = new Hono()
       }
 
       if (tableNames.length > 1) {
+        const createdTables = []; 
         for (const tableName of tableNames) {
           const alreadyExists = await Table.findOne({
             businessId,
             name: tableName,
           });
-
+      
           if (alreadyExists) {
-            return c.json(
-              {
-                message: `Table with the name ${tableName} already exists`,
-                err: true,
-              },
-              409,
-            );
+            continue;
+            // return c.json(
+            //   {
+            //     message: `Table with the name ${tableName} already exists`,
+            //     err: true,
+            //   },
+            //   409,
+            // );
           }
-
+      
           const table = new Table({
             businessId,
             name: tableName,
@@ -265,9 +267,9 @@ const zonesAndTablesRouter = new Hono()
             capacity,
             internalZoneId,
           });
-
+      
           await table.save({ session });
-
+      
           await Zone.updateOne(
             {
               _id: internalZoneId,
@@ -280,16 +282,29 @@ const zonesAndTablesRouter = new Hono()
             },
             { session },
           );
+      
+          createdTables.push(table);
+        }
 
+        if (createdTables.length === 0) {
           return c.json(
             {
-              message: "table created successfully",
-              err: false,
+              message: "No new tables were created because they already exist",
+              err: true,
               data: {},
             },
-            201,
+            409
           );
         }
+      
+        return c.json(
+          {
+            message: "Tables created successfully",
+            err: false,
+            data: createdTables,
+          },
+          201,
+        );
       }
 
       const table = new Table({

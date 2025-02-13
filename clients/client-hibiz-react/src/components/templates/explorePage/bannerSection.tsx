@@ -1,5 +1,3 @@
-"use client"
-
 import { lazy, memo, useCallback, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, ChevronRight } from "lucide-react"

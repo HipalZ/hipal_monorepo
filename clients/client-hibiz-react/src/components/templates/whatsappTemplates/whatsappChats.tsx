@@ -1,4 +1,3 @@
-"use client";
 import { lazy, memo, useCallback } from "react";
 import { BiSend } from "react-icons/bi";
 import whatzAppDoodle from "@/assets/whatzapp/whatsappdoodle.jpg";
