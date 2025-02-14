@@ -1,4 +1,10 @@
-import { BusinessPosConfig, Table, Zone } from "@hi/db-models";
+import {
+  Business,
+  BusinessPosConfig,
+  Table,
+  UrlModel,
+  Zone,
+} from "@hi/db-models";
 import {
   createTableSchema,
   updateTableSchema,
@@ -8,6 +14,7 @@ import {
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { nanoid } from "nanoid";
 import { z } from "zod";
 //
 const zonesAndTablesRouter = new Hono()
@@ -57,7 +64,7 @@ const zonesAndTablesRouter = new Hono()
         visibility,
         taxes,
         couponIds,
-        tableIds
+        tableIds,
       });
 
       await zone.save({ session });
@@ -195,6 +202,11 @@ const zonesAndTablesRouter = new Hono()
         capacity,
         internalZoneId,
       } = await c.req.json();
+      const businessInfo =
+        await Business.findById(businessId).select("customLink");
+      //TODO: change the url to the actual url
+
+      const uniqueOrderId = nanoid(5);
 
       const isHavePos = await BusinessPosConfig.findOne({
         businessId,
@@ -241,24 +253,33 @@ const zonesAndTablesRouter = new Hono()
       }
 
       if (tableNames.length > 1) {
-        const createdTables = []; 
+        const createdTables = [];
         for (const tableName of tableNames) {
           const alreadyExists = await Table.findOne({
             businessId,
             name: tableName,
           });
-      
+
           if (alreadyExists) {
             continue;
-            // return c.json(
-            //   {
-            //     message: `Table with the name ${tableName} already exists`,
-            //     err: true,
-            //   },
-            //   409,
-            // );
           }
-      
+
+          const longUrl = `http://localhost:3000/${businessInfo?.customLink}/explore?tableName=${tableName}`;
+
+          const createShortUrl = await UrlModel.create(
+            [
+              {
+                longUrl: longUrl,
+                shortUrl: `https://api.test.hipalz.com/surl/${uniqueOrderId}`,
+                urlCode: uniqueOrderId,
+                businessId: businessId,
+              },
+            ],
+            {
+              session,
+            },
+          );
+
           const table = new Table({
             businessId,
             name: tableName,
@@ -266,10 +287,11 @@ const zonesAndTablesRouter = new Hono()
             visibility,
             capacity,
             internalZoneId,
+            tableLink: createShortUrl[0].shortUrl,
           });
-      
+
           await table.save({ session });
-      
+
           await Zone.updateOne(
             {
               _id: internalZoneId,
@@ -282,7 +304,7 @@ const zonesAndTablesRouter = new Hono()
             },
             { session },
           );
-      
+
           createdTables.push(table);
         }
 
@@ -293,10 +315,10 @@ const zonesAndTablesRouter = new Hono()
               err: true,
               data: {},
             },
-            409
+            409,
           );
         }
-      
+
         return c.json(
           {
             message: "Tables created successfully",
@@ -307,6 +329,22 @@ const zonesAndTablesRouter = new Hono()
         );
       }
 
+      const longUrl = `http://localhost:3000/${businessInfo?.customLink}/explore?tableName=${name}`;
+
+      const createShortUrl = await UrlModel.create(
+        [
+          {
+            longUrl: longUrl,
+            shortUrl: `https://api.test.hipalz.com/surl/${uniqueOrderId}`,
+            urlCode: uniqueOrderId,
+            businessId: businessId,
+          },
+        ],
+        {
+          session,
+        },
+      );
+
       const table = new Table({
         businessId,
         name,
@@ -314,6 +352,7 @@ const zonesAndTablesRouter = new Hono()
         visibility,
         capacity,
         internalZoneId,
+        tableLink: createShortUrl[0].shortUrl,
       });
 
       await table.save({ session });

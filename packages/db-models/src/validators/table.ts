@@ -46,6 +46,7 @@ export const tableSchema = z.object({
   edited: z.boolean().default(false).optional(),
   editedBy: ObjectIdSchema.optional(),
   internalZoneId: ObjectIdSchema.optional(),
+  tableLink: z.string().min(3).max(60).optional(),
 });
 
 export const createTableSchema = z.object({

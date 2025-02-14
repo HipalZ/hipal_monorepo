@@ -104,6 +104,10 @@ const tableSchema = new mongoose.Schema<TableType>(
       required: false,
       default: true,
     },
+    tableLink: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,
