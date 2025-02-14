@@ -1,3 +1,4 @@
+import ReactDOM from "react-dom/client"
 import { useCallback, useState, useMemo } from "react"
 import BottomButton from "@/components/atom/bottomButton"
 import PopUp from "@/components/atom/popUp"
@@ -6,11 +7,14 @@ import CreateTable from "./CreateTable"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { SearchIcon, UsersIcon, MapPinIcon } from "lucide-react"
+import { SearchIcon, UsersIcon, MapPinIcon, Download } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useError } from "@/components/store/useError"
 import BulkUploadTables from "./BulkTableUpload"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import QRCode from "react-qr-code"
+import { toPng } from "html-to-image"
+import { Button } from "@/components/ui/button"
 
 interface User {
   _id: string
@@ -61,7 +65,7 @@ const TablesMain = () => {
 
       return matchesSearch && matchesZone
     })
-  }, [allTables, searchTerm, selectedZone, allStaff, getUserName, getZoneName]) 
+  }, [allTables, searchTerm, selectedZone, allStaff, getUserName, getZoneName])
 
   const groupedTables = useMemo(() => {
     const groups: { [key: string]: ITable[] } = {}
@@ -87,6 +91,54 @@ const TablesMain = () => {
     },
     [setError, setOpenErrorModal, setEditTable, setCreateTableModal],
   )
+
+  const downloadQRCodeImage = async (table: ITable) => {
+    const container = document.createElement("div")
+    container.style.position = "absolute"
+    container.style.top = "-10000px"
+    container.style.left = "-10000px"
+    document.body.appendChild(container)
+
+    const root = ReactDOM.createRoot(container)
+    root.render(
+      <div
+        style={{
+          padding: "20px",
+          background: "white",
+          border: "1px solid #ccc",
+          display: "inline-block",
+        }}
+      >
+        <QRCode value={table.tableLink} size={200} />
+        <div className="capitalise" style={{ textAlign: "center", marginTop: "8px", fontSize: "20px", fontWeight: "bold" }}>
+          {table.name}
+        </div>
+      </div>
+    )
+
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
+    try {
+      if (container.firstChild) {
+        const dataUrl = await toPng(container.firstChild as HTMLElement)
+        const link = document.createElement("a")
+        link.download = `${table.name}.png`
+        link.href = dataUrl
+        link.click()
+      }
+    } catch (error) {
+      console.error("Failed to generate QR code image:", error)
+    } finally {
+      root.unmount()
+      document.body.removeChild(container)
+    }
+  }
+
+  const downloadAllQRCodes = async (tables: ITable[]) => {
+    for (const table of tables) {
+      await downloadQRCodeImage(table)
+    }
+  }
 
   return (
     <section className="p-4">
@@ -115,14 +167,33 @@ const TablesMain = () => {
       <ScrollArea className="w-full mb-[7rem]">
         {Object.entries(groupedTables).map(([zoneName, tables]) => (
           <div key={zoneName} className="mb-6">
-            <h2 className="mb-3 text-xl font-semibold">{zoneName}</h2>
+            <div className="flex items-center gap-4 mb-3">
+              <h2 className="text-xl font-semibold">{zoneName}</h2>
+              {
+                zoneName !== "Unknown Zone" &&
+                <Button
+                  type="button"
+                  onClick={() => downloadAllQRCodes(tables)}
+                >
+                  <Download />
+                  All QR
+                </Button>
+              }
+             
+            </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {tables.map((table: ITable) => (
-                <Card onClick={() => editTableFunc(table)} key={table._id} className="flex flex-col justify-between">
+                <Card
+                  onClick={() => editTableFunc(table)}
+                  key={table._id}
+                  className="relative flex flex-col justify-between"
+                >
                   <CardContent className="pt-6">
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="text-lg font-semibold">{table.name}</h3>
-                      <Badge variant={table.status === "EMPTY" ? "secondary" : "destructive"}>{table.status}</Badge>
+                      <Badge variant={table.status === "EMPTY" ? "secondary" : "destructive"}>
+                        {table.status}
+                      </Badge>
                     </div>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center text-muted-foreground">
@@ -142,6 +213,20 @@ const TablesMain = () => {
                       </div>
                     </div>
                   </CardContent>
+                  {
+                    table.tableLink &&
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        downloadQRCodeImage(table)
+                      }}
+                      className="absolute bottom-2 right-2"
+                      variant="outline"
+                    >
+                      <Download />
+                      QR
+                    </Button>
+                  }
                 </Card>
               ))}
             </div>
@@ -188,4 +273,3 @@ const TablesMain = () => {
 }
 
 export default TablesMain
-

@@ -264,6 +264,8 @@ const zonesAndTablesRouter = new Hono()
             continue;
           }
 
+           const uniqueOrderId = nanoid(5);
+
           const longUrl = `http://localhost:3000/${businessInfo?.customLink}/explore?tableName=${tableName}`;
 
           const createShortUrl = await UrlModel.create(

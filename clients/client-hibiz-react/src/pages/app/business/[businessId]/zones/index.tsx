@@ -8,23 +8,25 @@ import UniversalNav from "@/components/templates/menu/sideNavbaar/universelSiden
 import LoadingSpinner from "@/components/atom/loadingSpinner"
 import { useGetAllStaff } from "@/hooks/useStaff"
 import { useGetAllTables, useGetAllZones } from "@/hooks/useZone"
+// import QrCreation from "@/components/templates/ZonesAndTables/QrCreation"
 
 
 const ZonesMain = lazy(() => import("@/components/templates/ZonesAndTables"))
 const TablesMain = lazy(() => import("@/components/templates/ZonesAndTables/TablesMain"))
+const QrCreation = lazy(() => import("@/components/templates/ZonesAndTables/QrCreation"))
 
 
-const navItems = [{ text: "Zones" }, { text: "Tables" }];
+const navItems = [{ text: "Zones" }, { text: "Tables" }, {text: "Qrs"}];
 
 const MemoZonesAndTables = () => {
     const businessData = useBusinessData((s) => s.businessData);
     const navigate = useNavigate();
-    const [selectedTab, setSelectedTab] = useState<"zones" | "tables">("zones");
+    const [selectedTab, setSelectedTab] = useState<"zones" | "tables" | "qrs">("zones");
     const { isLoadingStaff } = useGetAllStaff(businessData?._id as string)
     const { isLoading: gettingZones } = useGetAllZones(businessData?._id as string)
     const { isLoading } = useGetAllTables(businessData?._id as string)
     const changeLayout = (text: string) => {
-        setSelectedTab(text.toLowerCase() as "zones" | "tables");
+        setSelectedTab(text.toLowerCase() as "zones" | "tables" | "qrs");
     };
 
     const handleBack = useCallback(() => {
@@ -71,6 +73,10 @@ const MemoZonesAndTables = () => {
                 {
                     selectedTab === "tables" &&
                     <TablesMain />
+                }
+                {
+                    selectedTab === "qrs" &&
+                    <QrCreation />
                 }
             </Suspense>
         </main>

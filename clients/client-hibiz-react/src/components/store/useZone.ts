@@ -15,6 +15,7 @@ export interface IZone {
     tableIds: string[];
     taxes: number;
     visibility: boolean;
+    zoneId: string;
 }
 
 export interface ITable {
@@ -27,9 +28,11 @@ export interface ITable {
     isDeleted?: boolean;
     rank?: number;
     staffIds: string[];
+    tableLink?: string;
     taxes?: number;
     visibility?: boolean;
     status?: string;
+    zoneId?: string;
 }
 
 interface ZoneStore {
@@ -86,6 +89,7 @@ interface ZoneStore {
 
     selectedTableIds: string[];
     setSelectedTableIds: (value: string[]) => void;
+    toggleTableIds: (value: string) => void;
 
     selectedCouponIds: string[];
     setSelectedCouponIds: (value: string[]) => void;
@@ -169,6 +173,7 @@ const useZoneStore = create<ZoneStore>((set) => ({
 
     selectedTableIds: [],
     setSelectedTableIds: (value) => set({ selectedTableIds: value }),
+    toggleTableIds: (value) => set((state) => ({ selectedTableIds: state.selectedTableIds.includes(value) ? state.selectedTableIds.filter((id) => id !== value) : [...state.selectedTableIds, value] })),
 
     selectedCouponIds: [],
     setSelectedCouponIds: (value) => set({ selectedCouponIds: value }),
