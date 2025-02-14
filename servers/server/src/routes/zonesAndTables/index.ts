@@ -264,7 +264,7 @@ const zonesAndTablesRouter = new Hono()
             continue;
           }
 
-           const uniqueOrderId = nanoid(5);
+          const uniqueOrderId = nanoid(5);
 
           const longUrl = `http://localhost:3000/${businessInfo?.customLink}/explore?tableName=${tableName}`;
 
@@ -453,6 +453,19 @@ const zonesAndTablesRouter = new Hono()
           );
         }
       }
+
+      await UrlModel.updateOne(
+        {
+          businessId,
+          shortUrl: tableAlreadyActive?.tableLink,
+        },
+        {
+          $set: {
+            longUrl: `http://localhost:3000/${businessId}/explore?tableName=${name}`,
+          },
+        },
+        { session },
+      );
 
       const updatedTable = await Table.findOneAndUpdate(
         {
