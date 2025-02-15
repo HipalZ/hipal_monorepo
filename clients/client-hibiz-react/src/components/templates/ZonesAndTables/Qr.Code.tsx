@@ -2,12 +2,11 @@ import { useState, useRef, useEffect, type FC } from "react"
 import { useDrag } from "@use-gesture/react"
 
 interface QrCodeProps {
-  setPosition: (position: { x: number; y: number }) => void
   setSize: (size: number) => void
   children: React.ReactNode
 }
 
-const QrCode: FC<QrCodeProps> = ({ setPosition, setSize, children }) => {
+const QrCode: FC<QrCodeProps> = ({  setSize, children }) => {
   const [localPosition, setLocalPosition] = useState({ x: 0, y: 0 })
   const [localSize, setLocalSize] = useState(100)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -18,7 +17,6 @@ const QrCode: FC<QrCodeProps> = ({ setPosition, setSize, children }) => {
       const newX = Math.max(0, Math.min(x, containerRect.width - localSize))
       const newY = Math.max(0, Math.min(y, containerRect.height - localSize))
       setLocalPosition({ x: newX, y: newY })
-      setPosition({ x: newX, y: newY })
     }
   })
 
