@@ -44,7 +44,7 @@ const MemoSendTemplate = () => {
   }, [scheduledDate, scheduledTime, setSendLaterTime]);
 
   return (
-    <div className="space-y-4 bg-gray-100 lg:mx-auto">
+    <div className="p-2 rounded-lg space-y-4 bg-gray-100 lg:mx-auto">
       <h2 className="text-2xl font-bold text-gray-800">
         Message Sending Options
       </h2>
@@ -54,9 +54,8 @@ const MemoSendTemplate = () => {
             <Disclosure key={value}>
               {({ open }) => (
                 <div
-                  className={`w-full bg-white rounded-lg shadow-sm overflow-hidden ${
-                    open ? "ring-1 ring-gray-200" : ""
-                  }`}
+                  className={`w-full bg-white rounded-lg shadow-sm overflow-hidden ${open ? "ring-1 ring-gray-200" : ""
+                    }`}
                 >
                   <DisclosureButton className="lg:w-[25rem] w-full flex items-center justify-between p-3 text-left bg-white hover:bg-gray-50 focus:outline-none focus-visible:ring focus-visible:ring-green-500 focus-visible:ring-opacity-75">
                     <div className="flex items-center space-x-3">
@@ -89,11 +88,10 @@ const MemoSendTemplate = () => {
                   >
                     <DisclosurePanel className="border-t border-gray-200">
                       <div
-                        className={`text-sm text-gray-500 ${
-                          sendOptions === value
+                        className={`text-sm text-gray-500 ${sendOptions === value
                             ? "opacity-100 pointer-events-auto"
                             : "opacity-50 pointer-events-none"
-                        }`}
+                          }`}
                       >
                         {value === "sendNow" && (
                           <div className="max-w-[25rem] p-4 text-center rounded-lg bg-gray-50">

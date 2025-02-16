@@ -1,12 +1,15 @@
 import { create } from "zustand";
 import type {
+  IWhatsAppFlows,
   IWhatsAppMessage,
   WhatsAppTemplatePayload,
 } from "../types/businessData";
+import { ISelectedFlowType } from "../helpers/whatzAppHelpers";
 
 export enum Tabs {
   TEMPLATES = "templates",
   CAMPAIGNS = "campaigns",
+  AUTOMATION = "automation",
   CHATS = "chats",
 }
 
@@ -171,6 +174,15 @@ interface ITempStore {
 
   openAccordionId: string | null;
   setOpenAccordionId: (value: string | null) => void;
+
+  selectedFlowType: ISelectedFlowType | null;
+  setSelectedFlowType: (value: ISelectedFlowType | null) => void;
+
+  createEditFlow: boolean;
+  setCreateEditFlow: (value: boolean) => void;
+
+  editFlowObject: IWhatsAppFlows | null;
+  setEditFlowObject: (value: IWhatsAppFlows | null) => void;
 }
 
 export const useWhatsappTempStore = create<ITempStore>((set) => ({
@@ -320,4 +332,15 @@ export const useWhatsappTempStore = create<ITempStore>((set) => ({
 
   openAccordionId: null,
   setOpenAccordionId: (value: string | null) => set({ openAccordionId: value }),
+
+  selectedFlowType: ISelectedFlowType.SAME_DAY,
+  setSelectedFlowType: (value: ISelectedFlowType | null) =>
+    set({ selectedFlowType: value }),
+
+  createEditFlow: false,
+  setCreateEditFlow: (value: boolean) => set({ createEditFlow: value }),
+
+  editFlowObject: null,
+  setEditFlowObject: (value: IWhatsAppFlows | null) =>
+    set({ editFlowObject: value }),
 }));

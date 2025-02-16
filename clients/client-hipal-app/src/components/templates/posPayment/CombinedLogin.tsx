@@ -150,10 +150,11 @@ const MemoCombinedLogin = () => {
         if (res.status === 401) {
             return errorText(res.status);
         }
-        const response = (await res.json()).data;
+        const responseData = await res.json();
+        const response = responseData.data;
         if (res.status === 400) {
-            setError("Invalid OTP");
-            toast.error("Invalid OTP");
+            setError(responseData?.message);
+            toast.error(responseData?.message);
             setLoading(false);
             return;
         }

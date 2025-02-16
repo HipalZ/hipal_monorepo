@@ -77,7 +77,7 @@ const MemoShowOptionsToSend = () => {
   });
 
   return (
-    <div className="space-y-4 bg-gray-100 lg:mx-auto">
+    <div className="p-2 rounded-lg space-y-4 bg-gray-100 lg:mx-auto">
       <h2 className="text-2xl font-bold text-gray-800">Message Recipients</h2>
       {options.map(({ value, label, icon: Icon }) => (
         <Disclosure key={value}>
@@ -91,9 +91,8 @@ const MemoShowOptionsToSend = () => {
                 className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
               />
               <article
-                className={`bg-white rounded-lg shadow-sm overflow-hidden w-full ${
-                  open ? "ring-1 ring-gray-200" : ""
-                }`}
+                className={`bg-white rounded-lg shadow-sm overflow-hidden w-full ${open ? "ring-1 ring-gray-200" : ""
+                  }`}
               >
                 <DisclosureButton className="w-full lg:w-[30rem] flex items-center justify-between p-4 text-left bg-white hover:bg-gray-50 focus:outline-none focus-visible:ring focus-visible:ring-green-500 focus-visible:ring-opacity-75">
                   <div className="flex items-center space-x-2">

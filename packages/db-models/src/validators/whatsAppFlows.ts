@@ -13,6 +13,7 @@ export const whatsAppFlowSchema = z.object({
   name: z.string().min(3).max(100),
   businessId: ObjectIdSchema,
   status: z.boolean().default(true),
+  description: z.string().default(""),
   flows: z.array(
     z.object({
       templateName: z.string().min(3).max(100),
@@ -26,6 +27,7 @@ export const updateWhatsAppFlowSchema = z.object({
   name: z.string().min(3).max(100),
   businessId: ObjectIdSchema,
   status: z.boolean().default(true),
+  description: z.string().default(""),
   flows: z.array(
     z.object({
       templateName: z.string().min(3).max(100),

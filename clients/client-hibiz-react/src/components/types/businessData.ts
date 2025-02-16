@@ -995,3 +995,22 @@ export type DuesData = {
   totalDuesAmount: number;
   bill: Bill[];
 };
+
+export interface IWhatsAppFlows {
+  description?: string;
+  _id: string;
+  businessId: string;
+  name: string;
+  flows: FlowStep[];
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  flowId?: string;
+}
+
+export interface FlowStep {
+  _id: string;
+  templateId: string;
+  templateName: string;
+  triggerAt: number;
+}

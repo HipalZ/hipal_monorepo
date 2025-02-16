@@ -14,13 +14,15 @@ import POS from "@/assets/services/POS.png";
 import Zones from "@/assets/services/zones.png";
 
 export interface ILiteVersionCardButton {
-  image: string
-  text: string
-  description: string
-  navigateTo: string
+  image: string;
+  text: string;
+  description: string;
+  navigateTo: string;
 }
 
-export const getButtons = (outletType: string): { [key: string]: ILiteVersionCardButton[] } => ({
+export const getButtons = (
+  outletType: string,
+): { [key: string]: ILiteVersionCardButton[] } => ({
   management: [
     {
       image: Themes,
@@ -119,7 +121,7 @@ export const getButtons = (outletType: string): { [key: string]: ILiteVersionCar
       image: HiPeopleImage, // You might want to replace this with a WhatsApp-specific image
       text: "WhatsApp",
       description: "Manage your WhatsApp",
-      navigateTo: "whatsapp",
+      navigateTo: "whatzapp",
     },
     {
       image: Analytics,
@@ -128,7 +130,7 @@ export const getButtons = (outletType: string): { [key: string]: ILiteVersionCar
       navigateTo: "analytics",
     },
   ],
-})
+});
 
 export interface Dish {
   id: string;

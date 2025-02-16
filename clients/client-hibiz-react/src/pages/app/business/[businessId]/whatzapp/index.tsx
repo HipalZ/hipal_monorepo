@@ -10,10 +10,7 @@ import { lazy, memo, useCallback } from "react";
 import { useCheckRegistration } from "@/hooks/useTemplates";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Tabs,
-  useWhatsappTempStore,
-} from "@/components/store/useWhatsappTempStore";
+import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
 import WhatsAppRegistration from "@/components/templates/whatsappTemplates/mainForm";
 import { FaArrowLeft } from "react-icons/fa";
 import WhatsAppLoader from "@/components/templates/whatsappTemplates/whatsappLoader";
@@ -48,13 +45,23 @@ const MemoWhatzapp = () => {
   const setNotEditPopup = useWhatsapp((s) => s.setNotEditPopup);
   const templateSteps = useWhatsapp((s) => s.templateSteps);
   const setTemplateSteps = useWhatsapp((s) => s.setTemplateSteps);
-  const openAnalytics = useWhatsappTempStore((s) => s.openAnalytics);
-  const activeTab = useWhatsappTempStore((s) => s.activeTab);
-  const setOpenAnalytics = useWhatsappTempStore((s) => s.setOpenAnalytics);
   const whatzappFormEnabled = useWhatsapp((s) => s.whatzappFormEnabled);
-  const checkReg = useWhatsappTempStore((s) => s.checkReg);
-  const whatzappStatus = useWhatsappTempStore((s) => s.whatzappStatus);
   const businessData = useBusinessData((s) => s.businessData);
+  const {
+    whatzappStatus,
+    checkReg,
+    setOpenAnalytics,
+    openAnalytics,
+    setCreateEditFlow,
+    createEditFlow,
+  } = useWhatsappTempStore((s) => ({
+    whatzappStatus: s.whatzappStatus,
+    checkReg: s.checkReg,
+    setOpenAnalytics: s.setOpenAnalytics,
+    openAnalytics: s.openAnalytics,
+    setCreateEditFlow: s.setCreateEditFlow,
+    createEditFlow: s.createEditFlow,
+  }))
 
   const navigate = useNavigate();
 
@@ -106,9 +113,12 @@ const MemoWhatzapp = () => {
           setStep(Step.SETUP);
           break;
         case Step.SETUP:
-          if (activeTab === Tabs.CAMPAIGNS && openAnalytics) {
+          if (openAnalytics || createEditFlow) {
             setOpenAnalytics(false);
-          } else {
+            setCreateEditFlow(false);
+            console.log("createEditFlow", createEditFlow);
+          }
+          else {
             navigate(`/app/business/${businessData?._id}/`);
           }
           break;
@@ -124,9 +134,10 @@ const MemoWhatzapp = () => {
     setTemplateSteps,
     navigate,
     businessData,
-    activeTab,
     openAnalytics,
     setOpenAnalytics,
+    createEditFlow,
+    setCreateEditFlow,
   ]);
 
   const { isLoading } = useQuery({
@@ -156,7 +167,7 @@ const MemoWhatzapp = () => {
           {whatzappFormEnabled && whatzappStatus && (
             <div className="mx-auto">
               {/* Header */}
-              <div className="sticky top-0 z-50 w-full rounded-lg whatzapp_gradient_background">
+              <div className="absolute top-20 z-50 w-full rounded-lg whatzapp_gradient_background">
                 <MemoizedHeader
                   title="WhatzApp"
                   leftIcon={<FaArrowLeft />}

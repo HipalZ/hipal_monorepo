@@ -9,7 +9,7 @@ import { z } from "zod";
 //
 const whatsAppFlowRouter = new Hono()
   .post("/", zValidator("json", whatsAppFlowSchema), async (c) => {
-    const { name, businessId, flows, status } = await c.req.json();
+    const { name, businessId, flows, status, description } = await c.req.json();
 
     const existingWhatsAppFlow = await WhatsAppFlow.findOne({
       name: name.trim().toLowerCase(),
@@ -32,6 +32,7 @@ const whatsAppFlowRouter = new Hono()
       businessId,
       flows,
       status,
+      description,
     });
 
     if (!createWhatsAppFlow) {
@@ -56,7 +57,8 @@ const whatsAppFlowRouter = new Hono()
   })
 
   .put("/", zValidator("json", updateWhatsAppFlowSchema), async (c) => {
-    const { name, businessId, flows, flowId, status } = await c.req.json();
+    const { name, businessId, flows, flowId, status, description } =
+      await c.req.json();
 
     const existingWhatsAppFlow = await WhatsAppFlow.findOne({
       name: {
@@ -87,6 +89,7 @@ const whatsAppFlowRouter = new Hono()
         businessId,
         flows,
         status,
+        description,
       },
     );
 

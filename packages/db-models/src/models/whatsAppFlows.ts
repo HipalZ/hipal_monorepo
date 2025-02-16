@@ -6,6 +6,7 @@ const whatsAppFlowSchema = new mongoose.Schema<WhatsAppFlowType>(
   {
     name: { type: String, required: true },
     status: { type: Boolean, default: true },
+    description: { type: String, required: false, default: "" },
     businessId: {
       type: ObjectId,
       required: true,
