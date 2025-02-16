@@ -747,6 +747,19 @@ const posRouter = new Hono()
           name: tableName,
         });
 
+        if (!Tinfo) {
+          return c.json(
+            {
+              message: "Table not found",
+              err: true,
+              data: {
+                success: false,
+              },
+            },
+            404,
+          );
+        }
+
         //
         const tInfoData = await UserSession.findOne({
           businessId: businessId,
