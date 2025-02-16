@@ -41,3 +41,4 @@ builderror
 pos payment
 test deploy
 vercel json filed testings vercel removed build
+pnpm
