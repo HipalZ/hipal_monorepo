@@ -16,21 +16,26 @@ export const ubacMiddleware = (key: string) => {
 
       let decodedToken: DecodedToken;
 
-      try {
-        decodedToken = jwt.verify(token, Bun.env.JWT_SECRET) as DecodedToken;
-      } catch (err) {
-        return c.json(
-          { status: false, error: true, message: "Invalid Token!" },
-          401,
-        );
-      }
+      if (token) {
+        try {
+          decodedToken = jwt.verify(token, Bun.env.JWT_SECRET) as DecodedToken;
+        } catch (err) {
+          return c.json(
+            { status: false, error: true, message: "Invalid Token!" },
+            401,
+          );
+        }
 
-      if (
-        Object.keys(decodedToken.permissions).length !== 0 && // Check if the object has at least one key
-        (!Object.prototype.hasOwnProperty.call(decodedToken.permissions, key) ||
-          !decodedToken.permissions[key])
-      ) {
-        return c.json({ message: "Not Authorized" }, 401);
+        if (
+          Object.keys(decodedToken.permissions).length !== 0 && // Check if the object has at least one key
+          (!Object.prototype.hasOwnProperty.call(
+            decodedToken.permissions,
+            key,
+          ) ||
+            !decodedToken.permissions[key])
+        ) {
+          return c.json({ message: "Not Authorized" }, 401);
+        }
       }
 
       await next();
