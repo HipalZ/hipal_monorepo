@@ -24,8 +24,8 @@ import {
 import {
   RazorpayWebhookHeadersSchema,
   WhatAppRazorpayWebhookBodySchema,
-  WhatsAppBusinessConfigType,
-  WhatsAppWalletType,
+  type WhatsAppBusinessConfigType,
+  type WhatsAppWalletType,
   campaignSchema,
   validatePaymentSchema,
   validateWhatAppTemplateSchema,
@@ -215,8 +215,6 @@ const scheduleCampaign = async (
     date: Date.now(),
   });
 
-  console.log("createCampaign", createCampaign);
-
   // for recent campaign to track the last campaign sent by the business
   const recentCamp = await RecentCampaign.findOneAndUpdate(
     {
@@ -232,9 +230,6 @@ const scheduleCampaign = async (
     },
   );
 
-  console.log("customerArray", customersArray);
-
-  console.log("recentCamp", recentCamp);
   for (const customer of customersArray) {
     // return components for the body
     const components = await returnBodyComponents(
@@ -265,8 +260,6 @@ const scheduleCampaign = async (
           },
         },
       );
-
-      console.log("res", res.data);
 
       // for track campaign
       await setWhatsAppMessageConfig(res.data.messages?.[0].id, {
@@ -841,11 +834,22 @@ const whatsappRouter = new Hono()
           }[];
 
           for (const customer of allCustomersList) {
-            customersArray.push({
-              name: customer?.userId?.name,
-              phone: customer?.userId?.phone,
-              email: customer?.userId?.email,
-            });
+            let findBlockedUser = await getBlockedUser(customer?.userId?.phone);
+            if (!findBlockedUser) {
+              const blockedUser = await WhatsAppBlockedUser.findOne({
+                phone: customer?.userId?.phone,
+              }).select("phone");
+
+              findBlockedUser = blockedUser?.phone;
+            }
+
+            if (findBlockedUser !== customer?.userId?.phone) {
+              customersArray.push({
+                name: customer?.userId?.name,
+                phone: customer?.userId?.phone,
+                email: customer?.userId?.email,
+              });
+            }
           }
 
           const { insufficientBalance, reduceAmount } =
@@ -1048,10 +1052,23 @@ const whatsappRouter = new Hono()
                   path: "userId",
                   select: "phone name",
                 });
-              groupIdsList.push({
-                name: findUser?.userId?.name,
-                phone: findUser?.userId?.phone,
-              });
+              let findBlockedUser = await getBlockedUser(
+                findUser?.userId?.phone,
+              );
+              if (!findBlockedUser) {
+                const blockedUser = await WhatsAppBlockedUser.findOne({
+                  phone: findUser?.userId?.phone,
+                }).select("phone");
+
+                findBlockedUser = blockedUser?.phone;
+              }
+
+              if (findBlockedUser !== findUser?.userId?.phone) {
+                groupIdsList.push({
+                  name: findUser?.userId?.name,
+                  phone: findUser?.userId?.phone,
+                });
+              }
             }
           }
 
@@ -1939,16 +1956,12 @@ const whatsappRouter = new Hono()
             category: firstStatus.pricing?.category,
           };
 
-          console.log("extractedData", extractedData);
-
           const wamid = firstStatus.id;
           const userPhoneNumber = firstStatus?.recipient_id.toString().slice(2);
 
           const getTemplateIdInfo = (await getTemplateId(
             wamid,
           )) as CampaignConfig;
-
-          console.log("getTemplateIdInfo", getTemplateIdInfo);
 
           const userInfo = await User.findOne({
             phone: userPhoneNumber,
@@ -2053,8 +2066,8 @@ const whatsappRouter = new Hono()
                 );
               }
             }
-            if (userText.trim().toLowerCase() === "resume") {
-              const G = await WhatsAppBlockedUser.findOneAndDelete({
+            if (userText.trim().toLowerCase() === "unstop") {
+              await WhatsAppBlockedUser.findOneAndDelete({
                 phone: userPhone.toString().slice(2),
               });
               await deleteBlockedUser(userPhone.toString().slice(2));
@@ -2112,7 +2125,7 @@ const whatsappRouter = new Hono()
                 seen: false,
               }).select("seen");
 
-              const data = await Subscriber.findOneAndUpdate(
+              await Subscriber.findOneAndUpdate(
                 {
                   userId: user?._id,
                   businessId: config?.businessId,
@@ -2264,9 +2277,9 @@ const whatsappRouter = new Hono()
       const config = await WhatsAppBusinessConfig.findOne({
         businessId,
       }).select("token phoneId");
-      const response = await axios({
+      await axios({
         method: "POST",
-        url: `https://graph.facebook.com/v21.0/${config?.phoneId}/messages?access_token=${config?.token}`,
+        url: `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages?access_token=${config?.token}`,
         data: {
           messaging_product: "whatsapp",
           to: phoneNumber?.toString(),
