@@ -1578,8 +1578,6 @@ const paymentsRouter = new Hono()
         v: { $exists: true },
       });
 
-      console.log("appInfo", appInfo);
-
       PaymentAlert.updateMany(
         {
           businessId,

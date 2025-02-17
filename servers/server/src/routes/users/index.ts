@@ -974,6 +974,7 @@ const usersRouter = new Hono()
 
     async (c) => {
       const { businessId } = c.req.param();
+
       const existingUser = await User.find({
         customRole: {
           $elemMatch: {
@@ -1512,24 +1513,18 @@ const usersRouter = new Hono()
       const permissionToken = jwt.sign(
         {
           id: existingUser._id,
-          permissions: existingUser?.customRole?.[0]?.permissions || {},
+          permissions: Array.isArray(existingUser?.customRole?.[0]?.permissions)
+            ? {}
+            : existingUser?.customRole?.[0]?.permissions || {},
         },
         Bun.env.JWT_SECRET as string,
       );
-      // setCookie(c, "token", permissionToken, {
-      //   httpOnly: true, // Prevents JavaScript access to the cookie
-      //   secure: true, // Ensures the cookie is only sent over HTTPS
-      //   sameSite: "Lax", // Helps mitigate CSRF attacks
-      //   domain: "yourdomain.com", // Replace with your actual domain
-      //   path: "/", // Ensures the cookie is sent with all requests to your domain
-      // });
 
-      const g = setCookie(c, "token", permissionToken, {
-        httpOnly: false, // Change to true after debugging
-        secure: false, // Must be true in production (HTTPS)
+      setCookie(c, "token", permissionToken, {
+        httpOnly: true,
+        secure: true,
       });
 
-      console.log("g", g);
       return respond(c, "Session set successfully", false, 200, {});
     },
   );

@@ -13,7 +13,6 @@ export const ubacMiddleware = (key: string) => {
   return async (c: Context, next: Next) => {
     try {
       const token = getCookie(c, "token");
-      console.log("token", token);
 
       let decodedToken: DecodedToken;
 
@@ -26,15 +25,10 @@ export const ubacMiddleware = (key: string) => {
         );
       }
 
-      if (!decodedToken || !decodedToken.permissions) {
-        return c.json({ message: "Not Authorized" }, 401);
-      }
-
-      console.log("permissions", decodedToken.permissions);
-
       if (
-        !Object.prototype.hasOwnProperty.call(decodedToken.permissions, key) ||
-        !decodedToken.permissions[key]
+        Object.keys(decodedToken.permissions).length !== 0 && // Check if the object has at least one key
+        (!Object.prototype.hasOwnProperty.call(decodedToken.permissions, key) ||
+          !decodedToken.permissions[key])
       ) {
         return c.json({ message: "Not Authorized" }, 401);
       }

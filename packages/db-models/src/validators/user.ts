@@ -17,7 +17,7 @@ export const CustomRole = z.object({
   permissionIds: z.array(ObjectIdSchema).optional(),
   permissionGroupIds: z.array(ObjectIdSchema).optional(),
   bookMark: z.boolean().optional(),
-  isDeleted: z.boolean().optional(),
+  isDeleted: z.boolean().optional().default(false),
 });
 
 export const UserAttrs = z.object({
