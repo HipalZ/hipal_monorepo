@@ -312,6 +312,8 @@ const calculateAndCheckBalance = (
     if (businessWallet.currentBalance < totalCost) {
       return { insufficientBalance: true, reduceAmount: 0 };
     }
+
+    reduceAmount = totalCost;
   }
 
   if (templateCategory === "UTILITY") {
@@ -320,7 +322,7 @@ const calculateAndCheckBalance = (
     if (businessWallet.currentBalance < totalCost) {
       return { insufficientBalance: true, reduceAmount: 0 };
     }
-    reduceAmount = Math.round(totalCost);
+    reduceAmount = totalCost;
   }
 
   return { insufficientBalance: false, reduceAmount };
@@ -788,8 +790,6 @@ const whatsappRouter = new Hono()
           reminderDateObj.getMonth() + 1
         } *`;
 
-        console.log("cronExpression", cronExpression);
-
         const template = (await WhatAppTemplate.findOne({
           businessId,
           templateId,
@@ -867,17 +867,40 @@ const whatsappRouter = new Hono()
             );
           }
 
-          const scheduleCampaignResponse = await scheduleCampaign(
-            customersArray,
-            template,
-            businessName,
-            address,
-            bodyVariableSequence,
-            imageUrl,
-            whatsAppConfigData,
-            businessId,
-            templateId,
+          schedule(
+            cronExpression,
+            async () => {
+              console.log("scheduled");
+              await scheduleCampaign(
+                customersArray,
+                template,
+                businessName,
+                address,
+                bodyVariableSequence,
+                imageUrl,
+                whatsAppConfigData,
+                businessId,
+                templateId,
+              );
+            },
+            {
+              scheduled: true,
+              timezone: "Asia/Kolkata",
+            },
           );
+
+          if (template.category === "UTILITY") {
+            await WhatsAppWallet.findOneAndUpdate(
+              {
+                businessId,
+              },
+              {
+                $inc: {
+                  currentBalance: -reduceAmount,
+                },
+              },
+            );
+          }
 
           return c.json({
             message: "Campaign scheduled successfully",
@@ -985,8 +1008,6 @@ const whatsappRouter = new Hono()
             );
           }
 
-          console.log("data", data);
-
           return c.json({
             message: "Campaign scheduled successfully",
             err: false,
@@ -997,7 +1018,10 @@ const whatsappRouter = new Hono()
         }
         // for group customers
         if (groupIds.length > 0) {
-          const groupIdsList = [];
+          const groupIdsList = [] as {
+            name: string;
+            phone: string;
+          }[];
 
           for (let i = 0; i < groupIds.length; i++) {
             const group = await GroupModel.findOne({
@@ -1050,17 +1074,39 @@ const whatsappRouter = new Hono()
             );
           }
 
-          const scheduleCampaignResponse = await scheduleCampaign(
-            groupIdsList,
-            template,
-            businessName,
-            address,
-            bodyVariableSequence,
-            imageUrl,
-            whatsAppConfigData,
-            businessId,
-            templateId,
+          schedule(
+            cronExpression,
+            async () => {
+              await scheduleCampaign(
+                groupIdsList,
+                template,
+                businessName,
+                address,
+                bodyVariableSequence,
+                imageUrl,
+                whatsAppConfigData,
+                businessId,
+                templateId,
+              );
+            },
+            {
+              scheduled: true,
+              timezone: "Asia/Kolkata",
+            },
           );
+
+          if (template.category === "UTILITY") {
+            await WhatsAppWallet.findOneAndUpdate(
+              {
+                businessId,
+              },
+              {
+                $inc: {
+                  currentBalance: -reduceAmount,
+                },
+              },
+            );
+          }
 
           return c.json({
             message: "Campaign scheduled successfully",
@@ -1296,25 +1342,35 @@ const whatsappRouter = new Hono()
           );
         }
 
-        const currentTimestamp = Math.floor(Date.now() / 1000); // Current timestamp in seconds
-        const thirtyDaysAgoTimestamp = currentTimestamp - 20 * 24 * 60 * 60;
-
         const templateById = await WhatAppTemplate.findOne({
           businessId,
           isDeleted: false,
           templateId: templateId,
         }).select("templateId templateName");
+
+        if (!templateById) {
+          return c.json(
+            {
+              message: "Template not found",
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
         const failedCount = await WhatsAppAnalyticsUser.find({
           templateId: templateId,
           status: "failed",
         }).count();
+        const currentTimestamp = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+        const ninetyDaysAgoTimestamp = currentTimestamp - 60 * 24 * 60 * 60;
 
         const getWhatAppTemplate = await axios.get(
-          `https://graph.facebook.com/v21.0/${
+          `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${
             whatsAppConfigData.whatsAppAccountId
-          }/template_analytics?start=${thirtyDaysAgoTimestamp}&end=${currentTimestamp}&granularity=daily&metric_types=clicked,delivered,read,sent,cost&template_ids=${[
+          }/template_analytics?start=${ninetyDaysAgoTimestamp}&end=${currentTimestamp}&granularity=daily&metric_types=clicked,delivered,read,sent,cost&template_ids=${[
             templateById?.templateId,
-          ]}&limit=1000`,
+          ]}&limit=5000`,
           {
             headers: {
               Authorization: `Bearer ${whatsAppConfigData.token}`,
