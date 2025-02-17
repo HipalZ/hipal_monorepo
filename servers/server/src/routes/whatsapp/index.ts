@@ -772,12 +772,16 @@ const whatsappRouter = new Hono()
 
         if (sendLaterTime === 0) {
           const currentDate = new Date();
-          const currentISTDate = new Date(currentDate.getTime()); // IST is UTC+5:30
+          const currentISTDate = new Date(
+            currentDate.getTime() + 330 * 60 * 1000,
+          ); // IST is UTC+5:30
           currentISTDate.setMinutes(currentISTDate.getMinutes() + 1);
           reminderDateObj = currentISTDate;
         } else {
           reminderDateObj = new Date(sendLaterTime);
-          reminderDateObj = new Date(reminderDateObj.getTime());
+          reminderDateObj = new Date(
+            reminderDateObj.getTime() + 330 * 60 * 1000,
+          );
         }
 
         const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
