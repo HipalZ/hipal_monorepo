@@ -67,6 +67,7 @@ export * from "./userSession";
 export * from "./userTag";
 export * from "./whatAppTemplate";
 export * from "./whatsAppAnalyticsUser";
+export * from "./whatsAppBlockedUser";
 export * from "./whatsAppBusinessConfig";
 export * from "./whatsAppFlows";
 export * from "./whatsAppOrder";

@@ -84,6 +84,7 @@ export * from "./validate_webhook";
 export * from "./waiterPaymentAlert";
 export * from "./whatAppTemplate";
 export * from "./whatsAppAnalyticsUser";
+export * from "./whatsAppBlockedUser";
 export * from "./whatsAppBusinessConfig";
 export * from "./whatsAppFlows";
 export * from "./whatsAppOrder";

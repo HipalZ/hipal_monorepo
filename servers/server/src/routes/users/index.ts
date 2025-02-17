@@ -1059,7 +1059,7 @@ const usersRouter = new Hono()
         response?.data?.message ===
           "Max limit reached for this otp verification"
       )
-        return respond(c, "Please enter valid Otp !", true, 400, {});
+        return respond(c, `${response?.data?.message}`, true, 400, {});
 
       try {
         if (loyaltyId && signUpBonus && signUpBonus > 0) {

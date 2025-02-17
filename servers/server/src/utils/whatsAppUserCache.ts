@@ -26,3 +26,15 @@ export const setWhatsAppMessageConfig = async (
 ) => {
   cache.set(wamid, CampaignConfigData as CampaignConfig);
 };
+
+export const getBlockedUser = async (phone: string) => {
+  return cache.get(phone);
+};
+
+export const setBlockedUser = async (phone: string, value: string) => {
+  cache.set(phone, value as string);
+};
+
+export const deleteBlockedUser = async (phone: string) => {
+  cache.delete(phone);
+};
