@@ -2892,7 +2892,10 @@ const paymentsRouter = new Hono()
             businessId: getOrder.businessId,
             tableName: getOrder.tableName,
             hiCode: activeTable?.hiCode,
+            pin: activeTable?.pin,
           });
+
+          console.log("alreadyTableSettle", alreadyTableSettle);
 
           if (!alreadyTableSettle) {
             const table = await Table.findOne({
@@ -2939,6 +2942,7 @@ const paymentsRouter = new Hono()
                     tableName: getOrder.tableName,
                     settleBy: getOrder.userId?.name,
                     hiCode: activeTable?.hiCode,
+                    pin: activeTable?.pin,
                   },
                 ],
                 {
