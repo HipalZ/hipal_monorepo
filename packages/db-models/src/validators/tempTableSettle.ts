@@ -14,7 +14,7 @@ const tempTableSettleSchema = z.object({
   settleBy: z.string().min(1).max(100).optional(),
   createdAt: z.date().optional(),
   hiCode: z.string().min(1).max(100).optional(),
-  pin: z.string().min(1).max(100).optional(),
+  pin: z.string().max(100).optional(),
 });
 
 export type TempTebleSettleType = z.infer<typeof tempTableSettleSchema>;
