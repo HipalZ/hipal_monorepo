@@ -21,6 +21,11 @@ const tempTebleSettleSchema = new mongoose.Schema<TempTebleSettleType>(
       required: false,
       default: "",
     },
+    pin: {
+      type: String,
+      required: false,
+      default: "",
+    },
   },
   {
     timestamps: true,
