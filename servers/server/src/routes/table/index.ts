@@ -1329,21 +1329,21 @@ const tableRouter = new Hono()
               businessId,
             }).populate("posId");
             const tenDigitCode = generateTenDigitCode();
-            // const registerUser = await axios.post(
-            //   "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
-            //   {
-            //     app_key: pos?.posId.accessKey,
-            //     app_secret: pos?.posId.secretKey,
-            //     access_token: pos?.posId.authToken,
-            //     restID: pos?.posId.restId,
-            //     phone: tenDigitCode,
-            //     name: old.customerName || "Guest",
-            //   },
-            // );
+            const registerUser = await axios.post(
+              "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
+              {
+                app_key: pos?.posId.accessKey,
+                app_secret: pos?.posId.secretKey,
+                access_token: pos?.posId.authToken,
+                restID: pos?.posId.restId,
+                phone: tenDigitCode,
+                name: old.customerName || "Guest",
+              },
+            );
 
-            // if (registerUser.data.success === "0") {
-            //   throw new Error("Failed to register user");
-            // }
+            if (registerUser.data.success === "0") {
+              throw new Error("Failed to register user");
+            }
             await UserSession.create(
               [
                 {

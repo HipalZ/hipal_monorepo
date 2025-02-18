@@ -754,7 +754,7 @@ const usersRouter = new Hono()
         otp: z.string().length(4),
         loyaltyId: z.string().optional(),
         signUpBonus: z.number().optional(),
-        name: z.string().min(3).max(100).optional(),
+        name: z.string().min(2).max(40).optional(),
         userId: z.string(),
         phone: z.string().min(10).max(10),
         businessId: z.string().optional(),
