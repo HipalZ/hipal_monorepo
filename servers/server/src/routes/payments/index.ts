@@ -20,7 +20,6 @@ import {
   Reviews,
   Subscriber,
   Table,
-  TagModel,
   TempTableSettle,
   UpiMode,
   User,
@@ -49,7 +48,6 @@ import { ObjectId } from "bson";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
-import { schedule } from "node-cron";
 import { z } from "zod";
 import {
   ClientRoles,
@@ -471,26 +469,6 @@ const paymentsRouter = new Hono()
         const { merchantId } = c.req.param();
         const uniqueOrderId = nanoid(15);
 
-        if (couponId) {
-          const coupon = await Couponz.findById(couponId).select(
-            "conditions.couponEndDate",
-          );
-
-          if (
-            coupon &&
-            coupon.conditions.couponEndDate > 0 &&
-            coupon.conditions.couponEndDate < Date.now()
-          ) {
-            return c.json(
-              {
-                message: "Coupon has expired",
-                err: true,
-                data: {},
-              },
-              400,
-            );
-          }
-        }
         const client = await razorpayWrapper.getClient(merchantId);
         const response = await client.orders.create({
           amount: total * 100, // Fixed multiplication logic
@@ -525,6 +503,79 @@ const paymentsRouter = new Hono()
         return respond(c, "Order created successfully", false, 200, {
           order_id: response.id,
         });
+      });
+    },
+  )
+
+  .post(
+    "/fetch_update_bill/:businessId",
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.HIPAL_CUSTOMER]),
+    zValidator(
+      "json",
+      z.object({
+        tableName: z.string().min(1).max(20),
+        claimedCoins: z.coerce.number().default(0),
+        tips: z.coerce.number().optional(),
+        total: z.coerce.number(),
+      }),
+    ),
+    zValidator("param", z.object({ businessId: z.string().min(1).max(50) })),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const {
+          tableName,
+          claimedCoins = 0,
+          tips = 0,
+          total = 0,
+        } = requestData;
+        const { businessId } = c.req.param();
+
+        const tempTable = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+        if (!tempTable) {
+          return respond(c, "Table not found", true, 400, {});
+        }
+
+        // step 1: find finalSubTotal
+        const finalSubTotal = Math.round(
+          tempTable.intialSubTotal - claimedCoins,
+        ); // or discount
+        // step 2: find gstPercentage
+        const gstPercentage =
+          (tempTable.intialTax / tempTable.intialSubTotal) * 100;
+        // step 3: find gstAmount
+        const finalTax = Math.round((gstPercentage / 100) * finalSubTotal);
+        // step 4: find finalTotal
+        const finalTotal = Math.round(
+          finalSubTotal + finalTax + tempTable?.serviceCharge + tips,
+        );
+
+        await UserSession.findOneAndUpdate(
+          { businessId, tableName },
+          {
+            finalSubTotal,
+            finalTotal,
+            finalTax,
+            tips,
+            claimedCoins,
+          },
+          { session },
+        );
+
+        return c.json(
+          {
+            message: "Bill updated successfully",
+            err: false,
+            data: {},
+          },
+          200,
+        );
       });
     },
   )
@@ -1188,11 +1239,16 @@ const paymentsRouter = new Hono()
                 channelId: getOrder?.channelId,
                 earnCoins: getCashBack,
                 date: Date.now(),
-                tax: tempTable?.tax || 0,
-                serviceCharge: tempTable?.serviceCharge || 0,
-                posBillRequestId: tempTable?.billRequestId || "",
-                posBillId: tempTable?.billInvoiceId || "",
+                tax: tempTable?.finalTax,
+                serviceCharge: tempTable?.serviceCharge,
+                posBillRequestId: tempTable?.billRequestId,
+                posBillId: tempTable?.billInvoiceId,
                 settleType: tempTable?.settleType || "PAYMENT_GATEWAY",
+                intialSubTotal: tempTable?.intialSubTotal,
+                intialTax: tempTable?.intialTax,
+                intialTotal: tempTable?.intialTotal,
+                finalSubTotal: tempTable?.finalSubTotal,
+                discount: tempTable?.discount,
               },
             ],
             { session },
@@ -1806,7 +1862,7 @@ const paymentsRouter = new Hono()
                       paymentMode?.name === "npc" ||
                       paymentMode?.name === "complementary"
                         ? 0
-                        : tempTable?.tax,
+                        : tempTable?.finalTax,
                     serviceCgarge:
                       paymentMode?.name === "npc" ||
                       paymentMode?.name === "complementary"
@@ -1816,6 +1872,10 @@ const paymentsRouter = new Hono()
                     splitModes: settleModes,
                     waiterName,
                     date: Date.now(),
+                    intialSubTotal: tempTable?.intialSubTotal,
+                    intialTax: tempTable?.intialTax,
+                    intialTotal: tempTable?.intialTotal,
+                    finalSubTotal: tempTable?.finalSubTotal,
                   },
                 ],
                 { session },
@@ -2137,9 +2197,19 @@ const paymentsRouter = new Hono()
         date: { $gte: fromDate, $lte: toDate },
       });
 
+      const totalOrders = payments.length;
+
       let overAllAmount = 0;
       let totalOnlineSale = 0;
       const offlineSales: Record<string, number> = {};
+
+      const activeTable = await Table.find({
+        businessId: businessId,
+        status: "ACTIVE",
+      });
+      const totalActiveTableValue = activeTable.reduce((acc, table) => {
+        return acc + (table?.currentTableAmount ?? 0);
+      }, 0);
 
       for (const payment of payments) {
         const { total = 0, paymentMode, mode, splitModes } = payment;
@@ -2176,6 +2246,8 @@ const paymentsRouter = new Hono()
           overAllAmount, // Excludes complementary but includes cash in split modes
           onlineSale: { online: totalOnlineSale },
           offlineSale: offlineSales,
+          totalOrders,
+          totalActiveTableValue,
         },
       });
     },
@@ -2636,9 +2708,11 @@ const paymentsRouter = new Hono()
       z.object({
         tagIds: z.array(z.string()).optional(),
         comment: z.string().optional(),
-        userId: z.string({
-          message: "userId is required",
-        }),
+        userId: z
+          .string({
+            message: "userId is required",
+          })
+          .optional(),
         businessId: z.string({
           message: "businessId is required",
         }),
@@ -2681,59 +2755,59 @@ const paymentsRouter = new Hono()
         { new: true },
       );
 
-      const user = await User.findById(userId).select("name phone");
+      // const user = await User.findById(userId).select("name phone");
 
-      const date = Date.now();
-      const customDate = new Date(date).setHours(0, 0, 0, 0);
+      // const date = Date.now();
+      // const customDate = new Date(date).setHours(0, 0, 0, 0);
 
-      for (let i = 0; i < tagIds.length; i++) {
-        const tagId = tagIds[i];
-        const tag = await TagModel.findById(tagIds[i]).select("duration time");
+      // for (let i = 0; i < tagIds.length; i++) {
+      //   const tagId = tagIds[i];
+      //   const tag = await TagModel.findById(tagIds[i]).select("duration time");
 
-        const createUserTag = await UserTags.create({
-          userId,
-          tagId,
-          businessId,
-          date: Date.now(),
-          reminderDate: customDate + tag.duration + tag.time,
-        });
-        const reminderDateObj = new Date(createUserTag.reminderDate);
-        const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
-          reminderDateObj.getMonth() + 1
-        } *`;
+      //   const createUserTag = await UserTags.create({
+      //     userId,
+      //     tagId,
+      //     businessId,
+      //     date: Date.now(),
+      //     reminderDate: customDate + tag.duration + tag.time,
+      //   });
+      //   const reminderDateObj = new Date(createUserTag.reminderDate);
+      //   const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
+      //     reminderDateObj.getMonth() + 1
+      //   } *`;
 
-        schedule(cronExpression, async () => {
-          const options = {
-            method: "POST",
-            url: "https://control.msg91.com/api/v5/flow/",
-            headers: {
-              accept: "application/json",
-              "content-type": "application/json",
-              authkey: "387796AmyGlDBq63b2d75aP1",
-            },
-            data: {
-              template_id: "66b1f189d6fc055e463e3b63",
-              sender: "HiPalc",
-              mobiles: `91${user.phone}`,
-              var: `${user.name}`,
-            },
-          };
-          await axios(options);
-        });
-      }
+      //   schedule(cronExpression, async () => {
+      //     const options = {
+      //       method: "POST",
+      //       url: "https://control.msg91.com/api/v5/flow/",
+      //       headers: {
+      //         accept: "application/json",
+      //         "content-type": "application/json",
+      //         authkey: "387796AmyGlDBq63b2d75aP1",
+      //       },
+      //       data: {
+      //         template_id: "66b1f189d6fc055e463e3b63",
+      //         sender: "HiPalc",
+      //         mobiles: `91${user.phone}`,
+      //         var: `${user.name}`,
+      //       },
+      //     };
+      //     await axios(options);
+      //   });
+      // }
 
-      if (!payment) {
-        return c.json({
-          err: true,
-          data: {},
-          message: "Payment not found",
-        });
-      }
+      // if (!payment) {
+      //   return c.json({
+      //     err: true,
+      //     data: {},
+      //     message: "Payment not found",
+      //   });
+      // }
 
       return c.json({
         err: false,
-        data: payment,
-        message: "Payment updated successfully",
+        data: {},
+        message: "Payment tag updated successfully",
       });
     },
   )
@@ -3053,20 +3127,17 @@ const paymentsRouter = new Hono()
         date: { $gte: fromDate, $lte: toDate },
       });
 
-      let totalDuesReceived = 0;
       let totalDiscount = 0;
       let totalDuesGiven = 0;
       let totalNpc = 0;
       let totalComplementary = 0;
       let totalCoinsGiven = 0;
-      let totalCoinsReceived = 0;
+      let totalCoinsUsed = 0;
       let totalCouponUsed = 0;
+      let totalCouponzCount = 0;
+      let totalCoinsUsedCount = 0;
 
       for (const payment of payments) {
-        if (payment.settleType === "DUES_SETTLE") {
-          totalDuesReceived += payment.total;
-        }
-
         totalDiscount += payment.discount ?? 0;
 
         if (payment.mode === "dues") {
@@ -3094,12 +3165,14 @@ const paymentsRouter = new Hono()
 
         totalCoinsGiven += payment.earnCoins ?? 0;
 
-        if (!payment.couponId) {
-          totalCoinsReceived += payment.claimedCoins ?? 0;
+        if (payment.claimedCoins && !payment.couponId) {
+          totalCoinsUsed += payment.claimedCoins ?? 0;
+          totalCoinsUsedCount += 1;
         }
 
         if (payment.couponId) {
           totalCouponUsed += payment.claimedCoins ?? 0;
+          totalCouponzCount += 1;
         }
       }
 
@@ -3107,7 +3180,6 @@ const paymentsRouter = new Hono()
         err: false,
         data: {
           exceptionSale: {
-            totalDuesReceived,
             totalDuesGiven,
             totalNpc,
             totalComplementary,
@@ -3115,7 +3187,9 @@ const paymentsRouter = new Hono()
           },
           rewardSale: {
             totalCoinsGiven,
-            totalCoinUsed: totalCoinsReceived,
+            totalCoinsUsed,
+            totalCoinsUsedCount,
+            totalCouponzCount,
             totalCouponUsed,
           },
         },

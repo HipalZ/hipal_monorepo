@@ -26,24 +26,25 @@ export const PaymentSchema = z.object({
     .string({
       message: "Mode must be a string",
     })
-    .min(3)
+    .min(2)
     .max(100),
   paymentMode: z.string().min(3).max(100),
   tableName: z
     .string({
       message: "Table name must be a string",
     })
-    .min(3, {
+    .min(1, {
       message: "Table name must be at least 3 characters",
     })
-    .max(100, {
+    .max(20, {
       message: "Table name must be at most 100 characters",
     }),
   claimedCoins: z.coerce
     .number({
       message: "Claimed coins must be a number",
     })
-    .optional(),
+    .optional()
+    .default(0),
   tips: z.coerce
     .number({
       message: "Tips must be a number",
@@ -112,7 +113,7 @@ export const PaymentSchema = z.object({
 
   reviewId: ObjectIdSchema.optional(),
 
-  earnCoins: z.coerce.number({}).optional(),
+  earnCoins: z.coerce.number({}).optional().default(0),
   couponId: ObjectIdSchema.optional(),
   channelId: ObjectIdSchema.optional(),
   posBillId: z
@@ -138,8 +139,8 @@ export const PaymentSchema = z.object({
       "COMPLIMENTARY_SETTLE",
     ])
     .optional(),
-  serviceCharge: z.coerce.number({}).optional(),
-  tax: z.coerce.number({}).optional(),
+  serviceCharge: z.coerce.number({}).optional().default(0),
+  tax: z.coerce.number({}).optional().default(0),
   posBillRequestId: z.string().optional(),
   splitModes: z
     .array(
@@ -152,6 +153,11 @@ export const PaymentSchema = z.object({
     .default([])
     .optional(),
   discount: z.coerce.number().default(0).optional(),
+  intialGst: z.coerce.number().default(0).optional(),
+  intialSubTotal: z.coerce.number().default(0).optional(),
+  intialTotal: z.coerce.number().default(0).optional(),
+  finalSubTotal: z.coerce.number().default(0).optional(),
+  discountType: z.enum(["COINZ", "COUPONZ"]).optional().default("COINZ"),
 });
 
 export type PaymentType = z.infer<typeof PaymentSchema>;

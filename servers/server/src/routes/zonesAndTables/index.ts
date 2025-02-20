@@ -559,6 +559,65 @@ const zonesAndTablesRouter = new Hono()
         200,
       );
     },
+  )
+
+  .get(
+    "/fetch_active_tables/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.param();
+
+      let totalTableAmount = 0;
+
+      // Fetch zones
+      const zones = await Zone.find({
+        businessId,
+        isDeleted: false,
+      });
+
+      // Construct output array
+      const outPut = await Promise.all(
+        zones.map(async (zone) => {
+          // Fetch tables for each zone
+          const tables = await Table.find({
+            businessId,
+            zoneId: zone.zoneId,
+            status: "ACTIVE",
+          });
+
+          // Construct tables array
+          const tablesArray = tables.map((table) => {
+            totalTableAmount += table.currentTableAmount || 0;
+            return {
+              tableName: table.name,
+              currentTableAmount: table.currentTableAmount,
+            };
+          });
+
+          return {
+            zoneName: zone.name,
+            tables: tablesArray,
+          };
+        }),
+      );
+
+      return c.json(
+        {
+          message: "Active tables fetched successfully",
+          err: false,
+          data: {
+            totalTableAmount,
+            zoneAndTables: outPut,
+          },
+        },
+        200,
+      );
+    },
   );
 
 export default zonesAndTablesRouter;

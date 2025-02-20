@@ -1151,28 +1151,6 @@ const tableRouter = new Hono()
       }
 
       if (transferType === "TABLE") {
-        const alreadyTransfer = await Table.findOne({
-          businessId,
-          name: toTable.name,
-          isTransfer: true,
-        });
-
-        const alreadyTransfer2 = await Table.findOne({
-          businessId,
-          name: fromTable.name,
-          isTransfer: true,
-        });
-
-        if (alreadyTransfer || alreadyTransfer2) {
-          return c.json(
-            {
-              message: "Table already transfered",
-              err: true,
-              data: {},
-            },
-            400,
-          );
-        }
         if (toTable.status === "ACTIVE") {
           return c.json(
             {

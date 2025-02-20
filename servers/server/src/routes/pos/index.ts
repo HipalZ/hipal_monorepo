@@ -185,28 +185,107 @@ const posRouter = new Hono()
           tableName: tableName,
         });
 
-        if (getPin) {
-          const currentTime = new Date();
-          const pinTime = new Date(getPin.date);
-          const timeDifference =
-            (currentTime.getTime() - pinTime.getTime()) / (1000 * 60 * 60); // Difference in hours
-          if (timeDifference > 3) {
-            const registerUser = await axios.post(
-              "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
+        if (getPin?.billRequestId) {
+          const bill_request_id = getPin.billRequestId;
+
+          const getBillConfig = {
+            app_key: pos.posId.accessKey,
+            app_secret: pos.posId.secretKey,
+            access_token: pos.posId.authToken,
+            restID: pos.posId.restId,
+            bill_request_id: bill_request_id,
+          };
+
+          const getBill = await axios.post(
+            "http://api.petpooja.com/V1/captainorders/get_bill/",
+            getBillConfig,
+          );
+
+          const simpleArray =
+            transformItemsToSimpleArray(getBill.data.items_data || []) || [];
+
+          if (getBill.data.success === "1") {
+            await PosBill.findOneAndUpdate(
               {
-                app_key: pos?.posId.accessKey,
-                app_secret: pos?.posId.secretKey,
-                access_token: pos?.posId.authToken,
-                restID: pos?.posId.restId,
-                phone: getPin.pin,
-                name: generatedBy,
+                businessId: businessId,
+                billRequestId: bill_request_id,
+              },
+              {
+                items: simpleArray,
+                billInfo: getBill.data.order_data,
+                createdAt: Date.now(),
+              },
+              {
+                upsert: true,
+                new: true,
               },
             );
-            if (registerUser.data.success === "0") {
-              throw new Error("user not registered");
-            }
+
+            await UserSession.findOneAndUpdate(
+              {
+                businessId: businessId,
+                tableName: tableName,
+              },
+              {
+                billGeneratedBy: generatedBy,
+                billRequestId: bill_request_id,
+                tax: getBill?.data?.order_data?.tax || 0,
+                serviceCharge: getBill?.data?.order_data?.service_charge || 0,
+                billInvoiceId: getBill.data?.order_data?.invoice_id,
+                intialTax: getBill?.data?.order_data?.tax || 0,
+                intialSubTotal: getBill?.data?.order_data?.core_price || 0,
+                intialTotal: getBill?.data?.order_data?.total || 0,
+                discount: getBill?.data?.order_data?.discount || 0,
+              },
+            );
+            const billObj = {
+              billing_user_name: getBill.data.order_data.billing_user_name,
+              serviceCharge: getBill.data.order_data.service_charge,
+              discount: getBill.data.order_data.discount,
+              tax: getPin.finalTax || getBill.data.order_data.tax,
+              total: getPin.finalTotal || getBill.data.order_data.total,
+              customerPhone: getBill.data.order_data.customer_phone,
+              customerName: getBill.data.order_data.customer_name,
+              tableName: getBill.data.order_data.table_no,
+              tips: getPin.tips || 0,
+              subTotal: getBill.data.order_data.core_price,
+              billRequestId: bill_request_id,
+              items: simpleArray,
+              claimedCoins: getPin.claimedCoins || 0,
+            };
+            return c.json(
+              {
+                message: "Data fetched successfully",
+                err: false,
+                data: billObj,
+              },
+              200,
+            );
           }
         }
+
+        // if (getPin) {
+        //   const currentTime = new Date();
+        //   const pinTime = new Date(getPin.date);
+        //   const timeDifference =
+        //     (currentTime.getTime() - pinTime.getTime()) / (1000 * 60 * 60); // Difference in hours
+        //   if (timeDifference > 3) {
+        //     const registerUser = await axios.post(
+        //       "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
+        //       {
+        //         app_key: pos?.posId.accessKey,
+        //         app_secret: pos?.posId.secretKey,
+        //         access_token: pos?.posId.authToken,
+        //         restID: pos?.posId.restId,
+        //         phone: getPin.pin,
+        //         name: generatedBy,
+        //       },
+        //     );
+        //     if (registerUser.data.success === "0") {
+        //       throw new Error("user not registered");
+        //     }
+        //   }
+        // }
 
         const billConfig = {
           app_key: pos.posId.accessKey,
@@ -272,21 +351,26 @@ const posRouter = new Hono()
                   tax: getBill?.data?.order_data?.tax || 0,
                   serviceCharge: getBill?.data?.order_data?.service_charge || 0,
                   billInvoiceId: getBill.data?.order_data?.invoice_id,
+                  intialTax: getBill?.data?.order_data?.tax || 0,
+                  intialSubTotal: getBill?.data?.order_data?.core_price || 0,
+                  intialTotal: getBill?.data?.order_data?.total || 0,
+                  discount: getBill?.data?.order_data?.discount || 0,
                 },
               );
               const billObj = {
                 billing_user_name: getBill.data.order_data.billing_user_name,
                 serviceCharge: getBill.data.order_data.service_charge,
                 discount: getBill.data.order_data.discount,
-                tax: getBill.data.order_data.tax,
-                total: getBill.data.order_data.total,
+                tax: getPin?.finalTax || getBill.data.order_data.tax,
+                total: getPin?.finalTotal || getBill.data.order_data.total,
                 customerPhone: getBill.data.order_data.customer_phone,
                 customerName: getBill.data.order_data.customer_name,
                 tableName: getBill.data.order_data.table_no,
-
+                tips: getPin?.tips || 0,
                 subTotal: getBill.data.order_data.core_price,
                 billRequestId: bill_request_id,
                 items: simpleArray,
+                claimedCoins: getPin?.claimedCoins || 0,
               };
               return c.json(
                 {
@@ -311,6 +395,8 @@ const posRouter = new Hono()
             "http://api.petpooja.com/V1/captainorders/check_bill/",
             billRequestConfig,
           );
+
+          console.log("Fetch Bill Details", fetchBillDetails.data);
 
           if (fetchBillDetails.data.success === "1") {
             const bill_request_id = fetchBillDetails.data.bill_request_id;
@@ -352,14 +438,16 @@ const posRouter = new Hono()
                 billing_user_name: getBill.data.order_data.billing_user_name,
                 serviceCharge: getBill.data.order_data.service_charge,
                 discount: getBill.data.order_data.discount,
-                tax: getBill.data.order_data.tax,
-                total: getBill.data.order_data.total,
+                tax: getPin?.finalTax || getBill.data.order_data.tax,
+                total: getPin?.finalTotal || getBill.data.order_data.total,
                 customerPhone: getBill.data.order_data.customer_phone,
                 customerName: getBill.data.order_data.customer_name,
                 tableName: getBill.data.order_data.table_no,
                 billRequestId: bill_request_id,
                 items: simpleArray,
                 subTotal: getBill.data.order_data.core_price,
+                tips: getPin?.tips || 0,
+                claimedCoins: getPin?.claimedCoins || 0,
               };
               await UserSession.findOneAndUpdate(
                 {
@@ -372,6 +460,10 @@ const posRouter = new Hono()
                   billInvoiceId: getBill.data?.order_data?.invoice_id,
                   tax: getBill?.data?.order_data?.tax || 0,
                   serviceCharge: getBill?.data?.order_data?.service_charge,
+                  intialTax: getBill?.data?.order_data?.tax || 0,
+                  intialSubTotal: getBill?.data?.order_data?.core_price || 0,
+                  intialTotal: getBill?.data?.order_data?.total || 0,
+                  discount: getBill?.data?.order_data?.discount || 0,
                 },
               );
               return c.json(
