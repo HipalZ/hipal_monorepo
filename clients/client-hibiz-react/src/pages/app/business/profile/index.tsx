@@ -86,20 +86,27 @@ const MemoizedProfile = () => {
       });
 
       window.FB.login(
-        async (response: any) => {
+        (response: any) => {
           if (response.authResponse) {
             const { accessToken } = response.authResponse;
 
-            try {
-              await axios.post("/api/login", { accessToken });
-              setLoginStep("review");
-            } catch (error) {
-              setErrorMessage("Failed to authenticate with the backend.");
-            }
+            // Use a separate async function for API call
+            const handleLogin = async () => {
+              try {
+                await axios.post("/api/login", { accessToken });
+                setLoginStep("review");
+              } catch (error) {
+                setErrorMessage("Failed to authenticate with the backend.");
+              } finally {
+                setLoading(false);
+              }
+            };
+
+            handleLogin(); // Call the async function separately
           } else {
             setErrorMessage("User cancelled login or did not fully authorize.");
+            setLoading(false);
           }
-          setLoading(false);
         },
         {
           config_id: CONFIG_ID,
@@ -110,8 +117,9 @@ const MemoizedProfile = () => {
           extras: {
             sessionInfoVersion: 2,
           },
-        },
+        }
       );
+
     } else {
       setErrorMessage("Facebook SDK not loaded.");
     }
