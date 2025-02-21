@@ -7,7 +7,6 @@ import {
   Pos,
   PosBill,
   Table,
-  TempTableSettle,
   UniquelyYours,
   UrlModel,
   User,
@@ -859,24 +858,24 @@ const posRouter = new Hono()
           { session },
         );
 
-        const fetchTableAlreadySettle = await TempTableSettle.findOne({
-          tableName: sessionTable ? sessionTable.name : tableName,
-          businessId: businessId,
-          hiCode: sessionTable ? sessionTable.hiCode : hiCode,
-        });
+        // const fetchTableAlreadySettle = await TempTableSettle.findOne({
+        //   tableName: sessionTable ? sessionTable.name : tableName,
+        //   businessId: businessId,
+        //   hiCode: sessionTable ? sessionTable.hiCode : hiCode,
+        // });
 
-        if (fetchTableAlreadySettle) {
-          return c.json(
-            {
-              message: `Table already settled by ${fetchTableAlreadySettle.settleBy} please scan the QR code again`,
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            401,
-          );
-        }
+        // if (fetchTableAlreadySettle) {
+        //   return c.json(
+        //     {
+        //       message: `Table already settled by ${fetchTableAlreadySettle.settleBy} please scan the QR code again`,
+        //       err: true,
+        //       data: {
+        //         success: false,
+        //       },
+        //     },
+        //     401,
+        //   );
+        // }
 
         //TODO
         // find posconfig for a place order
