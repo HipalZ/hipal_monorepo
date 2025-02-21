@@ -1,130 +1,119 @@
+import MemoizedHeader from "@/components/molecules/header";
 import { memo, useCallback, useEffect, useState } from "react";
 import { FaArrowLeft, FaFacebookSquare } from "react-icons/fa";
-import { CONFIG_ID, APP_ID } from "@/configs";
 import { useNavigate } from "react-router-dom";
-import MemoizedHeader from "@/components/molecules/header";
-import axios from "axios";
-
-declare global {
-  interface Window {
-    fbq: any;
-    FB: any;
-    fbAsyncInit: any;
-  }
-}
 
 const MemoizedProfile = () => {
-  const [facebookSDKLoaded, setFacebookSDKLoaded] = useState(false);
-  const [loginStep, setLoginStep] = useState<"initial" | "review" | "success">(
-    "initial",
-  );
-  const [loading, setLoading] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [sessionInfo, setSessionInfo] = useState(null);
+  const [sdkResponse, setSdkResponse] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const initializeFacebookSDK = () => {
-      if (window.FB) {
-        setFacebookSDKLoaded(true);
-        return;
-      }
-
-      ((f, b, e, v, n, t, s) => {
-        if (f.fbq) return;
-        n = f.fbq = (...args) => {
-          n.callMethod ? n.callMethod.apply(n, args) : n.queue.push(args);
-        };
-        if (!f._fbq) f._fbq = n;
-        n.push = n;
-        n.loaded = true;
-        n.version = "2.0";
-        n.queue = [];
-        t = b.createElement(e);
-        t.async = true;
-        t.src = v;
-        s = b.getElementsByTagName(e)[0];
-        s.parentNode.insertBefore(t, s);
-      })(
-        window,
-        document,
-        "script",
-        "https://connect.facebook.net/en_US/fbevents.js",
-      );
-
-      window.fbAsyncInit = () => {
-        window.FB.init({
-          appId: APP_ID,
-          cookie: true,
-          xfbml: true,
-          version: "v19.0",
-        });
-        setFacebookSDKLoaded(true);
-      };
-
-      ((d, s, id) => {
-        let js: HTMLScriptElement;
-        const fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) return;
-        js = d.createElement(s) as HTMLScriptElement;
-        js.id = id;
-        js.src = "https://connect.facebook.net/en_US/sdk.js";
-        fjs.parentNode.insertBefore(js, fjs);
-      })(document, "script", "facebook-jssdk");
+    // Load Facebook SDK
+    window.fbAsyncInit = function () {
+      window.FB.init({
+        appId: "1166415764661953",
+        autoLogAppEvents: true,
+        xfbml: true,
+        version: "v22.0",
+      });
     };
 
-    initializeFacebookSDK();
+    (function (d, s, id) {
+      let js,
+        fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s);
+      js.id = id;
+      js.src = "https://connect.facebook.net/en_US/sdk.js";
+      fjs.parentNode.insertBefore(js, fjs);
+    })(document, "script", "facebook-jssdk");
+
+    // Listen for messages from Facebook's embedded signup
+    const handleMessage = (event) => {
+      if (
+        event.origin !== "https://www.facebook.com" &&
+        event.origin !== "https://web.facebook.com"
+      ) {
+        return;
+      }
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "WA_EMBEDDED_SIGNUP") {
+          if (data.event === "FINISH") {
+            const { phone_number_id, waba_id } = data.data;
+            console.log(
+              "Phone number ID: ",
+              phone_number_id,
+              " WhatsApp business account ID: ",
+              waba_id
+            );
+            saveToDatabase({ phone_number_id, waba_id });
+          } else if (data.event === "CANCEL") {
+            console.warn("User canceled at step: ", data.data.current_step);
+          } else if (data.event === "ERROR") {
+            console.error("Error: ", data.data.error_message);
+          }
+        }
+        setSessionInfo(data);
+      } catch (error) {
+        console.log("Non JSON response received: ", event.data);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
   }, []);
 
-  const launchWhatsAppSignup = async () => {
-    if (facebookSDKLoaded && typeof window.FB !== "undefined") {
-      setLoading(true);
-      setErrorMessage(null);
+  const fbLoginCallback = (response) => {
+    if (response.authResponse) {
+      const code = response.authResponse.code;
+      console.log("Facebook Auth Code: ", code);
 
-      window.fbq("trackCustom", "WhatsAppOnboardingStart", {
-        appId: APP_ID,
-        feature: "whatsapp_embedded_signup",
-      });
-
-      window.FB.login(
-        (response: any) => {
-          if (response.authResponse) {
-            console.log('response', response);
-            const { accessToken } = response.authResponse;
-
-            // Use a separate async function for API call
-            const handleLogin = async () => {
-              try {
-                await axios.post("/api/login", { accessToken });
-                setLoginStep("review");
-              } catch (error) {
-                setErrorMessage("Failed to authenticate with the backend.");
-              } finally {
-                setLoading(false);
-              }
-            };
-
-            handleLogin(); // Call the async function separately
-          } else {
-            setErrorMessage("User cancelled login or did not fully authorize.");
-            setLoading(false);
-          }
+      // Send code to the backend to exchange for an access token
+      fetch("/api/save-fb-token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        {
-          config_id: CONFIG_ID,
-          response_type: "code",
-          override_default_response_type: true,
-          scope: "business_management,whatsapp_business_management",
-          return_scopes: true,
-          extras: {
-            sessionInfoVersion: 2,
-          },
-        }
-      );
+        body: JSON.stringify({ code }),
+      })
+        .then((res) => res.json())
+        .then((data) => console.log("Token saved:", data))
+        .catch((error) => console.error("Error saving token:", error));
+    }
+    setSdkResponse(response);
+  };
 
-    } else {
-      setErrorMessage("Facebook SDK not loaded.");
+  const launchWhatsAppSignup = () => {
+    window.FB.login(fbLoginCallback, {
+      config_id: "1187408585794361", // Your configuration ID
+      response_type: "code", // Required for system user access token
+      override_default_response_type: true,
+      extras: {
+        setup: {},
+        featureType: "",
+        sessionInfoVersion: "2",
+      },
+    });
+  };
+
+  const saveToDatabase = async (data) => {
+    try {
+      const response = await fetch("/api/save-whatsapp-data", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json();
+      console.log("Data saved to database:", result);
+    } catch (error) {
+      console.error("Error saving to database:", error);
     }
   };
+
 
   const handleBack = useCallback(() => {
     navigate("/app/business/");
@@ -142,36 +131,29 @@ const MemoizedProfile = () => {
           />
         </div>
       </nav>
-
       <center>
         <section className="bg-white rounded-lg shadow-md p-8 w-[350px] mt-8">
-          {loading && <p>Loading...</p>}
           <h1 className="mb-2 text-2xl font-bold">Connect with Facebook</h1>
           <p className="mb-6 text-gray-600">
             Login and connect with your Facebook account to get started
           </p>
-
-          {errorMessage && <p className="text-red-500">{errorMessage}</p>}
-
           <div className="space-y-4">
-            {loginStep === "initial" && (
-              <button
-                type="button"
-                onClick={launchWhatsAppSignup}
-                className="flex items-center justify-center w-full px-4 py-2 font-medium text-white transition duration-300 bg-blue-600 rounded-md hover:bg-blue-700"
-              >
-                <FaFacebookSquare className="mr-2" />
-                Login with Facebook
-              </button>
-            )}
-            {loginStep === "review" && (
-              <p>Reviewing your account information...</p>
-            )}
-            {loginStep === "success" && (
-              <p>You're successfully connected to WhatsApp!</p>
-            )}
+            <button
+              type="button"
+              onClick={launchWhatsAppSignup}
+              className="flex items-center justify-center w-full px-4 py-2 font-medium text-white transition duration-300 bg-blue-600 rounded-md hover:bg-blue-700"
+            >
+              <FaFacebookSquare className="mr-2" />
+              Login with Facebook
+            </button>
+
           </div>
         </section>
+        <p>Session info response:</p>
+        <pre>{JSON.stringify(sessionInfo, null, 2)}</pre>
+
+        <p>SDK response:</p>
+        <pre>{JSON.stringify(sdkResponse, null, 2)}</pre>
       </center>
     </main>
   );
