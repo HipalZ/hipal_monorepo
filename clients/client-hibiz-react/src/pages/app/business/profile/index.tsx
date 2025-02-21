@@ -88,6 +88,7 @@ const MemoizedProfile = () => {
       window.FB.login(
         (response: any) => {
           if (response.authResponse) {
+            console.log('response', response);
             const { accessToken } = response.authResponse;
 
             // Use a separate async function for API call
