@@ -1230,7 +1230,6 @@ const tableRouter = new Hono()
           settled: false,
           accepted: true,
           tableName: fromTable.name,
-          transferd: false,
         });
 
         if (kotOrders.length === 0) {
