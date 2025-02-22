@@ -1,6 +1,7 @@
 import {
   BusinessPosConfig,
   Cart,
+  DeviceToken,
   KotOrder,
   MenuBanner,
   OutLetInfo,
@@ -26,6 +27,7 @@ import {
   convertToPetpoojaCart,
   transformItemsToSimpleArray,
 } from "../../utils/helper";
+const admin = require("firebase-admin");
 
 interface AxiosError {
   response?: {
@@ -757,6 +759,52 @@ const posRouter = new Hono()
             },
             404,
           );
+        }
+
+        const registrationToken = await DeviceToken.find({
+          businessId: businessId,
+        });
+
+        if (registrationToken.length > 0) {
+          for (const obj of registrationToken) {
+            if (obj.notification) {
+              const pushMessage = {
+                token: obj.token, // or use 'topic' if you're sending to a topic
+                notification: {
+                  title: "New Order",
+                  body: `New order received from ${customerName} for table ${tableName}`,
+                },
+                android: {
+                  notification: {
+                    channel_id: "custom_channel_id",
+                    sound: "order",
+                  },
+                },
+              };
+
+              admin
+                .messaging()
+                .send(pushMessage)
+                .then((response: unknown) => {
+                  console.log("Successfully sent message:", response);
+                  return c.json({
+                    message: "FCM message sent successfully",
+                    err: false,
+                    data: response,
+                  });
+                })
+                .catch((err: Error) => {
+                  return c.json(
+                    {
+                      message: "Error sending FCM message",
+                      err: true,
+                      data: {},
+                    },
+                    400,
+                  );
+                });
+            }
+          }
         }
 
         //
