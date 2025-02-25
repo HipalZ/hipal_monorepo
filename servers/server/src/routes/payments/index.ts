@@ -2265,6 +2265,7 @@ const paymentsRouter = new Hono()
     zValidator("query", paramsSchema),
 
     async (c) => {
+      let { appliedFilter } = c.req.query();
       const { businessId, from, to } = c.req.query();
       const fromDate = from ? Number(from) : startOfToday.getTime();
       const toDate = to ? Number(to) : endOfToday.getTime();
@@ -2281,23 +2282,70 @@ const paymentsRouter = new Hono()
       const pageNumber = c.req.query("pageNumber") as string;
       const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
 
-      const existingPayments = await Payment.find({
-        businessId,
-        date: {
-          $gte: fromDate,
-          $lte: toDate,
-        },
-      })
+      const filterConditions = [
+        { businessId },
+        { date: { $gte: fromDate, $lte: toDate } }
+      ];
+
+      if (typeof appliedFilter === 'string') {
+        try {
+          appliedFilter = JSON.parse(appliedFilter);
+        } catch (err) {
+          console.error('Failed to parse appliedFilter', err);
+          appliedFilter = []; 
+        }
+      }
+      
+      if (appliedFilter && Array.isArray(appliedFilter) && appliedFilter.length > 0) {
+        console.log('modeFilter');
+        
+        const modeFilter = appliedFilter.find(f => f.key === 'mode');
+        console.log('modeFilter', modeFilter);
+        if (modeFilter && Array.isArray(modeFilter.value)) {
+          const modeValues = modeFilter.value.map(v => v.toLowerCase());
+          if (modeValues.includes('online')) {
+            filterConditions.push({ paymentMode: 'online' });
+          } else if (modeValues.includes('offline')) {
+            filterConditions.push({ paymentMode: { $ne: 'online' } });
+          }
+        }
+      
+        const typeFilter = appliedFilter.find(f => f.key === 'type');
+        if (typeFilter && Array.isArray(typeFilter.value)) {
+          const typeMapping = {
+            'Coinz': 'COINZ',
+            'Couponz': 'COUPONZ',
+            'No Rewardz': 'NO_REWARDZ',
+            'Disscount': 'DISCOUNT'
+          };
+          const types = typeFilter.value.map(v => typeMapping[v] || v);
+          filterConditions.push({ discountType: { $in: types } });
+        }
+      
+        const warningsFilter = appliedFilter.find(f => f.key === 'warnings');
+        if (
+          warningsFilter &&
+          Array.isArray(warningsFilter.value) &&
+          !warningsFilter.value.includes('All')
+        ) {
+          const warningsMapping = {
+            'Force Settle': 'FORCE_SETTLE',
+            'Free Tables': 'FREE_SETTLE'
+          };
+          const warnings = warningsFilter.value.map(v => warningsMapping[v] || v);
+          filterConditions.push({ settleType: { $in: warnings } });
+        }
+      }
+      
+      const queryObject = { $and: filterConditions };
+      console.log('queryObject', queryObject);
+      
+      const existingPayments = await Payment.find(queryObject)
         .sort({ _id: -1 })
         .skip(skip)
         .limit(PAGE_SIZE)
-        .populate({
-          path: "order_id",
-        })
-        .populate({
-          path: "userId",
-          select: "name phone",
-        });
+        .populate({ path: "order_id" })
+        .populate({ path: "userId", select: "name phone" });
 
       let totalSale = 0;
 

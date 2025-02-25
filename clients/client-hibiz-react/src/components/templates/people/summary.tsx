@@ -1,4 +1,5 @@
 import { memo } from "react";
+import { Pie, PieChart } from "recharts"
 import { PiPersonArmsSpreadFill, PiThumbsUp } from "react-icons/pi";
 import { BiStar } from "react-icons/bi";
 import { LiaThumbsDown } from "react-icons/lia";
@@ -12,6 +13,8 @@ import PopUp from "@/components/atom/popUp";
 import { SlCalender } from "react-icons/sl";
 import { format } from "date-fns";
 import NoData from "@/assets/nodata.jpg";
+import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui/chart"
+
 
 const symbol = ["💸", "🔁", "⭐", "👥"];
 const typeArr = ["₹", "%", "", "%"];
@@ -61,24 +64,43 @@ const MemoSummary = () => {
           <h3 className="text-[#5197F8] py-6 pl-6">Target Groups</h3>
           {peopleData?.groups && peopleData.groups.length > 0 ? (
             <>
-              <div className="flex items-end justify-center px-6 pb-4 space-x-3 overflow-hidden flex-nowrap h-30">
-                {peopleData.groups.slice(0, 4).map((group) => (
-                  <article key={group._id}>
-                    <h3 className="text-xs text-center text-[#5197F8]">
-                      {group.userPercentage}%
-                    </h3>
-                    <div className="flex flex-col items-center">
-                      <div
-                        className="w-16 lg:w-20 bg-[#5197F8] rounded-t"
-                        style={{
-                          height: group.userPercentage,
-                          backgroundColor: group.groupColor,
-                        }}
-                      />
-                      <span className="mt-2 text-sm">{group.userCount}</span>
-                    </div>
-                  </article>
-                ))}
+             <div className="relative w-full">
+                <div className="absolute inset-0 flex flex-col items-center justify-center -mt-8">
+                  <span className="text-3xl font-semibold">{peopleData.totalSubscriberCount?.toLocaleString()}</span>
+                  <span className="text-sm text-muted-foreground"> Subscribers</span>
+                </div>
+                <ChartContainer
+                  config={peopleData.groups.slice(0, 4).reduce((acc, group) => {
+                    acc[group.groupName] = {
+                      label: group.groupName,
+                      color: group.groupColor,
+                    }
+                    return acc
+                  }, {})}
+                  className="[&.recharts-wrapper]:!pb-12 [&.recharts-legend-wrapper]:!bottom-0"
+                >
+                  <PieChart>
+                    <Pie
+                      data={peopleData.groups.slice(0, 4).map((group) => ({
+                        name: group.groupName,
+                        value: group.userCount,
+                        fill: group.groupColor,
+                      }))}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius="60%"
+                      outerRadius="85%"
+                      startAngle={180}
+                      endAngle={-180}
+                      paddingAngle={3}
+                      cornerRadius={4}
+                    />
+                     <ChartLegend
+                      content={<ChartLegendContent nameKey="name" />}
+                      className="-translate-y-2 flex-wrap rounded-md gap-2 [&>]:basis-1/3 [&>]:justify-center"
+                    />
+                  </PieChart>
+                </ChartContainer>
               </div>
               {peopleData.groups.slice(0, 4).map((group, index) => (
                 <div

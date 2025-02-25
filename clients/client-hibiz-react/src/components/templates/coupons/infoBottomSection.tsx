@@ -17,6 +17,7 @@ const MemoInfoBottomSection = () => {
     couponForEveryOne,
     links,
     isPublish,
+    couponImage
   } = useCouponsStore((s) => ({
     couponName: s.couponName,
     couponType: s.couponType,
@@ -33,6 +34,7 @@ const MemoInfoBottomSection = () => {
     isActive: s.isActive,
     links: s.links,
     isPublish: s.isPublish,
+    couponImage: s.couponImage,
   }));
 
   const copyToClipboard = (link: string) => {

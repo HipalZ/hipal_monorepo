@@ -1,5 +1,6 @@
 import useBusinessData from "@/components/store/useBusinessData";
 import useCouponsStore from "@/components/store/useCouponsStore";
+import useTimings from "@/components/store/useTimings";
 import type { ICoupon, IUserId } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -256,7 +257,11 @@ export interface IAnalytics {
 
 export const useIndividualCouponAnalytics = (to: number) => {
   const couponId = useCouponsStore((state) => state.couponId);
-  const { couponStartDate } = useCouponsStore();
+  const {
+    timeStampStart,
+  } = useTimings((s) => ({
+    timeStampStart: s.timeStampStart,
+  }));
   const getIndividualAnalytics = useCallback(async () => {
     const res = await apiRpc["coupon-analytics"].couponDashboard[
       ":couponId"
@@ -265,18 +270,18 @@ export const useIndividualCouponAnalytics = (to: number) => {
         couponId,
       },
       query: {
-        from: couponStartDate?.toString(),
+        from: timeStampStart?.toString(),
         to: to.toString(),
       },
     });
     const data = (await res.json()).data as IAnalytics;
     return data;
-  }, [couponStartDate, to, couponId]);
+  }, [timeStampStart, to, couponId]);
 
   const { data: analytics, isLoading } = useQuery({
-    queryKey: ["getIndividualAnalytics", couponId, couponStartDate, to],
+    queryKey: ["getIndividualAnalytics", couponId, timeStampStart, to],
     queryFn: getIndividualAnalytics,
-    enabled: !!couponId && !!couponStartDate && !!to,
+    enabled: !!couponId && !!timeStampStart && !!to,
   });
 
   return {

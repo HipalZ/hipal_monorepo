@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useUpdateZone } from "@/hooks/useZone"
 import { Delete, ShieldCheck, Users } from "lucide-react"
+import { useError } from "@/components/store/useError"
 
 const ShowZoneDetails = () => {
   const {
@@ -16,12 +17,13 @@ const ShowZoneDetails = () => {
     allTables,
     setSaveZoneDetails,
     selectedTableIds,
-    setSelectedTableIds,
     setCreateZoneModal,
     setEditZone,
     setShowZoneDetails,
+    toggleTableIds
   } = useZoneStore()
   const { isPending, updateZone } = useUpdateZone()
+  const {setError,setOpenErrorModal} = useError()
 
   const saveZoneData = useCallback(
     (zone: IZone) => {
@@ -31,15 +33,26 @@ const ShowZoneDetails = () => {
     [setCreateZoneModal, setEditZone],
   )
 
-  const getTablesForZone = (zoneId: string) => {
+  const getTablesForZone = useCallBack((zoneId: string) => {
     return allTables.filter((table: ITable) => table.internalZoneId === zoneId)
-  }
+  },[allTables])
 
   const handleTableSelection = (tableId: string) => {
-    setSelectedTableIds((prev) => (prev.includes(tableId) ? prev.filter((id) => id !== tableId) : [...prev, tableId]))
+    toggleTableIds(tableId)
   }
 
+  const isActiveTableInZone = useCallback((zoneId: string) => {
+    return allTables.some((table) => table.internalZoneId === zoneId && table.status !== "EMPTY")
+  }, [allTables])
+
   const quickEditZone = async (zone: IZone) => {
+
+    if (isActiveTableInZone(zone?._id as string)) {
+      setError("Zone cannot be disabled because there are active tables.")
+      setOpenErrorModal(true)
+      return
+    }
+
     await updateZone({
       _id: zone._id || "",
       visibility: !zone.visibility,

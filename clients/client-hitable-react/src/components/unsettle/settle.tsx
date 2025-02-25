@@ -79,7 +79,7 @@ const MemoSettleTable = () => {
             );
 
             let payload = {
-                unSettleTableId: selectedUnsettleData?._id || "",
+                unSettleTableId: selectedUnsettleData?._id || "Unsettle",
                 captainId: captainData?._id || "",
                 businessId: businessId || "",
                 settleAmount: Number(settleAmount) || 0,
@@ -158,7 +158,7 @@ const MemoSettleTable = () => {
                         </div>
 
                         <h3 className="flex justify-between text-lg font-semibold text-gray-800">
-                            <span>Table: {selectedUnsettleData?.tableId?.name}</span>
+                            <span>Table: {selectedUnsettleData?.tableId?.name || "unsettled"}</span>
                         </h3>
                         <Card>
                             <CardContent className="p-4">
@@ -172,6 +172,7 @@ const MemoSettleTable = () => {
                                         Amount: ₹{selectedUnsettleData?.currentTableAmount || 0}
                                     </span>
                                 </div>
+
                             </CardContent>
                         </Card>
 

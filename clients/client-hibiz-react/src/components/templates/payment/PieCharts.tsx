@@ -1,5 +1,6 @@
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
-
+import { Card, CardContent } from "@/components/ui/card"
+import { useCallback } from "react";
 interface PieChartProps {
     data: Array<{ name: string; value: number }>;
 }
@@ -28,6 +29,10 @@ export const PieChart: React.FC<PieChartProps> = ({ data }) => {
         return null;
     };
 
+      const rectifyNames = useCallback((name: string) => {
+            return name.replace(/([a-z])([A-Z])/g, '$1 $2')
+        }, [])
+
     return (
         <div className="flex flex-col items-center justify-between w-full">
             {/* Pie Chart on the left */}
@@ -52,20 +57,17 @@ export const PieChart: React.FC<PieChartProps> = ({ data }) => {
 
             {/* Data values on the right */}
             <div className="p-4 md:w-[100%]">
-                <h3 className="mb-2 text-lg font-semibold">Data Breakdown</h3>
-                <section className="flex flex-wrap gap-4">
-                    {dataWithPercentage.map((entry, index) => (
-                        <div key={index} className="mb-1">
-                            <span className="font-semibold" style={{ color: COLORS[index % COLORS.length] }}>
-                                {entry.name}:
-                            </span>
-                            <span className="ml-1 text-base font-semibold">
-
-                                {` ${new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(entry.value)}`}
-                            </span>
-                        </div>
+                <h3 className="mb-2 font-semibold">Offline Payment Breakdown</h3>
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+                    {data.map((item, index) => (
+                        <Card key={index} className="w-full bg-white sm:w-auto">
+                            <CardContent className="p-4">
+                                <div className="text-sm font-semibold capitalize opacity-70">{rectifyNames(item.name)}</div>
+                                <div className="mt-2 text-2xl font-bold">₹ {item.value}</div>
+                            </CardContent>
+                        </Card>
                     ))}
-                </section>
+                </div>
             </div>
         </div>
     );

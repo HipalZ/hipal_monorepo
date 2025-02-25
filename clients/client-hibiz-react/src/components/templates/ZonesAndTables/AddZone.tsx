@@ -146,6 +146,7 @@ const AddZone = () => {
             className: "rounded-md pl-3",
             swipe: zoneName,
             disable: !zoneName,
+            highlight: true,
           },
         ]}
       />

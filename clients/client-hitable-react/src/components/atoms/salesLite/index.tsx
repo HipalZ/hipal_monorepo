@@ -17,6 +17,8 @@ export interface SalesData {
   overAllAmount: number
   onlineSale: Record<string, number>
   offlineSale: Record<string, number>
+  totalOrders: number
+  totalActiveTableValue: number
 }
 
 interface OtherAndWarningData {
@@ -154,7 +156,7 @@ const SalesLite = () => {
       <DateRangePickerMemo />
 
       <div className="grid grid-cols-2 gap-4 p-4 md:grid-cols-4 lg:grid-cols-4">
-        <section className="col-span-2 md:col-span-1 lg:col-span-1">
+        <section className="col-span-2 md:col-span-2 ">
 
           <InfoCard
             title="Total Sales"
@@ -163,12 +165,14 @@ const SalesLite = () => {
             gradient="from-blue-600 to-blue-200"
           />
         </section>
-        <InfoCard
-          title="Online Sales"
-          value={salesData.onlineSale.online}
-          icon={<DollarSign className="w-4 h-4" />}
-          gradient="from-black to-gray-100"
-        />
+        <section className="col-span-2 md:col-span-2 ">
+          <InfoCard
+            title="Online Sales"
+            value={salesData.onlineSale.online}
+            icon={<DollarSign className="w-4 h-4" />}
+            gradient="from-black to-gray-100"
+          />
+        </section>
         <InfoCard
           title="Offline Sales"
           value={totalOfflineSale}
@@ -187,6 +191,7 @@ const SalesLite = () => {
           icon={<AlertTriangle className="w-4 h-4" />}
           gradient="from-red-900 to-red-100"
         />
+
       </div>
 
       <div className="grid grid-cols-1 gap-6 p-4">

@@ -5,11 +5,11 @@ import { cn } from "@hi/common";
 import { toPng } from "html-to-image";
 
 const buttonData = [
+  { id: "storySize", label: "Story Size" },
+  { id: "socialMedia", label: "Social Media" },
   { id: "beforeGrabbing", label: "Before Grabbing" },
   { id: "afterGrabbing", label: "After Grabbing" },
   { id: "smallCoupon", label: "Home Page" },
-  { id: "socialMedia", label: "Social Media" },
-  { id: "storySize", label: "Story Size" },
 ];
 
 const BeforeGrabbingCoupon = lazy(
@@ -23,6 +23,8 @@ const AfterGrabbingCoupon = lazy(
 const SmallCoupon = lazy(() => import("./previewTypes/smallCoupon"));
 
 const previews = [
+  { id: "storySize", component: <StorySize key="storySize" /> },
+  { id: "socialMedia", component: <InfoSocialMedia key="socialMedia" /> },
   {
     id: "beforeGrabbing",
     component: <BeforeGrabbingCoupon key="beforeGrabbing" />,
@@ -32,8 +34,6 @@ const previews = [
     component: <AfterGrabbingCoupon key="afterGrabbing" />,
   },
   { id: "smallCoupon", component: <SmallCoupon key="smallCoupon" /> },
-  { id: "socialMedia", component: <InfoSocialMedia key="socialMedia" /> },
-  { id: "storySize", component: <StorySize key="storySize" /> },
 ];
 
 const MemoInfoPreview = () => {
@@ -50,12 +50,10 @@ const MemoInfoPreview = () => {
     }
 
     try {
-      // Convert the current preview to PNG
       const dataUrl = await toPng(previewRef.current);
 
-      // Create a link to trigger download
       const link = document.createElement("a");
-      link.download = `${buttonData[currentIndex].id}.png`; // Use the preview's id for the file name
+      link.download = `${buttonData[currentIndex].id}.png`;
       link.href = dataUrl;
       link.click();
     } catch (error) {

@@ -8,7 +8,6 @@ import UniversalNav from "@/components/templates/menu/sideNavbaar/universelSiden
 import LoadingSpinner from "@/components/atom/loadingSpinner"
 import { useGetAllStaff } from "@/hooks/useStaff"
 import { useGetAllTables, useGetAllZones } from "@/hooks/useZone"
-// import QrCreation from "@/components/templates/ZonesAndTables/QrCreation"
 
 
 const ZonesMain = lazy(() => import("@/components/templates/ZonesAndTables"))

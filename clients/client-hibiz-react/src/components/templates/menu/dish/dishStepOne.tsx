@@ -23,6 +23,8 @@ import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import BottomButton from "@/components/atom/bottomButton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+
 
 const MemoDishForm = () => {
   const { businessId } = useParams<{ businessId?: string }>();
@@ -293,31 +295,22 @@ const MemoDishForm = () => {
           </section>
         </div>
         {portions.length > 0 ? (
-          <div className="relative mb-4 overflow-x-auto">
-            <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-              <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                <tr>
-                  <th scope="col" className="px-6 py-3">
-                    Portion Name
-                  </th>
-                  <th scope="col" className="px-6 py-3">
-                    Price
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {portions.map((portion, index) => (
-                  <tr
-                    key={`${portion?.name}+${index}`}
-                    className="bg-white border-b dark:bg-gray-800 dark:border-gray-700"
-                  >
-                    <td className="px-6 py-4">{portion.name}</td>
-                    <td className="px-6 py-4">{portion?.price ?? "N/A"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+           <Table>
+           <TableHeader>
+             <TableRow>
+               <TableHead>Portion Name</TableHead>
+               <TableHead>Price</TableHead>
+             </TableRow>
+           </TableHeader>
+           <TableBody>
+             {portions.map((portion, index) => (
+               <TableRow key={`${portion.name}+${index}`}>
+                 <TableCell>{portion.name}</TableCell>
+                 <TableCell>{portion.price ?? "N/A"}</TableCell>
+               </TableRow>
+             ))}
+           </TableBody>
+         </Table>
         ) : null}
         <section
           onClick={() => redirectToSection(DishSteps.LINK_CATEGORY_STEP)}

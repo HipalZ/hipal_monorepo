@@ -21,8 +21,6 @@ const MemoSummarySection = ({ analytics }: { analytics?: IAnalytics }) => {
     }
   }, []);
 
-  console.log(analytics);
-
   return (
     <section className="flex gap-4 mx-4 mt-4 lg:mx-0 lg:max-w-[28rem]">
       {Object.keys(analytics)
