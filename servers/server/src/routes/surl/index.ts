@@ -1,5 +1,6 @@
 import {
   BillUrlModel,
+  Payment,
   QrBill,
   UrlModel,
   UserSession,
@@ -147,6 +148,21 @@ const surlRouter = new Hono()
     ),
     async (c) => {
       const { orderId } = c.req.param();
+
+      const alreadyExists = await Payment.findOne({
+        posBillRequestId: orderId,
+      });
+
+      if (!alreadyExists) {
+        return c.json(
+          {
+            message: "Bill already settled",
+            err: true,
+            data: {},
+          },
+          409,
+        );
+      }
 
       const userSession = await UserSession.findOne({ billRequestId: orderId });
 
