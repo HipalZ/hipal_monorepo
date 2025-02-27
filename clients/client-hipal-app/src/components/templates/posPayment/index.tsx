@@ -7,7 +7,7 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import type { IBusinessData } from "@/components/types/businessData";
+import type { BillData, IBusinessData } from "@/components/types/businessData";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import useTableData from "@/components/store/useTableData";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
@@ -110,7 +110,9 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
         selectedMode,
         showError,
         showBillPage,
-        setBillData
+        setBillData,
+        setClaimedCoinz,
+        setSelectedTip
     } = usePaymentStore();
 
     const { setTableName } = useTableData()
@@ -126,15 +128,18 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
                 }
             })
             const res = await response.json()
+            const payment = res.data as BillData
             if (response?.status === 404) {
                 toast.error(response?.data?.message || "Something went wrong")
             }
-            if (res?.data?.tableName && res?.data?.tableName?.length > 0) {
-                setTableName(res?.data?.tableName)
+            if (payment?.tableName && payment?.tableName?.length > 0) {
+                setTableName(payment?.tableName)
             }
-            setBillValue(res.data.total)
-            setBillData(res.data)
-            return res.data
+            setBillValue(payment.total)
+            setBillData(payment)
+            setClaimedCoinz(payment?.claimedCoins);
+            setSelectedTip(payment?.tips?.toString() || "");
+            return payment
         } catch (e) {
             console.error(e)
         }

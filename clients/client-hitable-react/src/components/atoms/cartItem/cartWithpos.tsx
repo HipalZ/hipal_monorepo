@@ -175,7 +175,14 @@ const MemoCartWithPos = () => {
                         }
                     </Card>
                 </motion.div>
-            )) : <center>No Cart Found</center>}
+            )) : <motion.div
+                className="text-2xl font-semibold text-center col-span-full text-muted-foreground"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+            >
+                No Cart Found
+            </motion.div>}
 
             {isEditPopupOpen && (
                 <BottomPopup width="w-[30rem]" height="h-[30dvh]" show={isEditPopupOpen} onClose={() => setIsEditPopupOpen(false)}>

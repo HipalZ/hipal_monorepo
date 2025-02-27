@@ -176,6 +176,7 @@ const AvailableCoinz = () => {
               value={tempClaimedCoinz || null}
               placeholder="Enter the Coinz to apply"
               min={0}
+              maxLength={5}
               max={userCoinz}
               className="w-full border border-[#000] placeholder:text-sm pl-3 min-h-[3rem] mx-auto font-semibold text-[1rem] rounded-lg my-auto !py-2 text-black"
             />

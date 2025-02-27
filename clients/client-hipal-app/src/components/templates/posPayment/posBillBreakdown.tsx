@@ -1,8 +1,6 @@
 import { useBillSummary, } from '@/components/hooks/usePayments'
 import useCouponTemp from '@/components/store/useCouponTemp'
 import { usePaymentStore } from '@/components/store/usePaymentStore'
-import { calculateFinalBill } from '@/components/utils/helpers'
-import React from 'react'
 import { CiCirclePlus } from 'react-icons/ci'
 import { FaMoneyBillWave, FaPercent, FaTags } from 'react-icons/fa'
 import { RiEdit2Fill } from 'react-icons/ri'
@@ -55,22 +53,22 @@ const PosBillBreakdown = () => {
                     <BillItem
                         icon={<FaMoneyBillWave />}
                         label="Subtotal"
-                        value={`₹${billData?.subTotal?.toFixed(2) || 0}`}
+                        value={`₹${(Number(billData?.subTotal ?? 0) - Number(billData?.claimedCoins ?? 0)) || 0}`}
                     />
                     <BillItem
                         icon={<FaPercent />}
                         label="Service Charge"
-                        value={`₹${billData?.serviceCharge?.toFixed(2) || 0}`}
+                        value={`₹${billData?.serviceCharge || 0}`}
                     />
                     <BillItem
                         icon={<FaTags />}
                         label="Discount"
-                        value={`₹${billData?.discount?.toFixed(2) || 0}`}
+                        value={`₹${billData?.discount || 0}`}
                     />
                     <BillItem
                         icon={<FaPercent />}
                         label="Tax"
-                        value={`₹${billData?.tax?.toFixed(2) || 0}`}
+                        value={`₹${billData?.tax || 0}`}
                     />
                 </div>
                 <hr
@@ -84,12 +82,6 @@ const PosBillBreakdown = () => {
                         height: "1px",
                         border: "none",
                     }}
-                />
-                <BillItem
-                    icon={<FaMoneyBillWave className="text-green-600" />}
-                    label="Total"
-                    value={`₹${billData?.total?.toFixed(2) || 0}`}
-                    className="px-4 text-lg !font-bold"
                 />
                 <div className="mx-2 mt-2">
                     {claimCouponz > 0 || claimedCoinz > 0 ? (
@@ -173,6 +165,12 @@ const PosBillBreakdown = () => {
                             </button>
                         </div>
                     )}
+                    <BillItem
+                        icon={<FaMoneyBillWave className="text-green-600" />}
+                        label="Total"
+                        value={`₹${billData?.total || 0}`}
+                        className="px-2 text-lg !font-bold"
+                    />
                     <hr
                         className="mt-3 bg-white"
                         style={{
@@ -196,6 +194,7 @@ const PosBillBreakdown = () => {
                         </span>
                     </div>
                 </div>
+
             </div>
         </section>
     )
