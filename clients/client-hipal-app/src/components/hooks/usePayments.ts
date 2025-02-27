@@ -82,9 +82,17 @@ export const usePayments = () => {
   ]);
 
   // calculation of revward
+  const subTotalWithoutCoinz = useMemo(() => {
+    return (
+      Number(billData?.subTotal ?? 0) - Number(billData?.claimedCoins ?? 0)
+    );
+  }, [billData?.subTotal, billData?.claimedCoins]);
+
   const finalAmountForReward = useMemo(() => {
-    return outletInfo?.isPosEnabled ? billData?.subTotal : billValue;
-  }, [outletInfo?.isPosEnabled, billData?.subTotal, billValue]);
+    return outletInfo?.isPosEnabled
+      ? subTotalWithoutCoinz
+      : billValue - claimedCoins;
+  }, [outletInfo?.isPosEnabled, subTotalWithoutCoinz, billValue, claimedCoins]);
 
   // initialTotal for sending to razorpay
   const initialTotal = useMemo(() => {
@@ -954,7 +962,10 @@ export const useGetOrderId = () => {
       const res = await response.json();
       const payment = res.data as BillData;
       if (response?.status === 404) {
-        toast.error(response?.data?.message || "Something went wrong");
+        toast.error(res?.data?.message || "Something went wrong");
+      }
+      if (response?.status === 409) {
+        toast.error(res?.data?.message || "Something went wrong");
       }
       if (payment?.tableName && payment?.tableName?.length > 0) {
         setTableName(payment?.tableName);

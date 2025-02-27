@@ -117,9 +117,6 @@ const MemoApplyCouponz = () => {
   const { updateBill } = useUpdateBill()
   const { mutateAsync } = useMutation({
     mutationFn: updateBill,
-    onSuccess: (data) => {
-      console.log(data);
-    }
   })
 
   const [selectedCoupon, setSelectedCouponState] = useState(null);

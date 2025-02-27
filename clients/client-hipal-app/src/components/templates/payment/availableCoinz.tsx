@@ -35,9 +35,6 @@ const AvailableCoinz = () => {
   const { loyaltySetting } = useLoyaltyData();
   const { mutateAsync } = useMutation({
     mutationFn: updateBill,
-    onSuccess: (data) => {
-      console.log(data);
-    }
   })
 
   const handleApplyCoinz = (finalValue: number) => {

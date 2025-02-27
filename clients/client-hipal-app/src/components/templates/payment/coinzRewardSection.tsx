@@ -160,12 +160,12 @@ const MemoCoinzRewardSection = () => {
               <article className="z-20 scaled-card-container-rotate">
                 <CardSection />
               </article>
-              {accessToken && userDetails?._id && <article className="bg-[#FFFFFFD9] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
-                <h1 className="mb-1 text-base">Coinz : {userCoinZ}</h1>
+              <article className="bg-[#FFFFFFD9] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
+                {accessToken && userDetails?._id && <h1 className="mb-1 text-base">Coinz : {userCoinZ}</h1>}
                 {claimedCoins > 0 && !billData?.couponId && (
                   <h1 className="text-sm">Coinz Applied: {claimedCoins}</h1>
                 )}
-              </article>}
+              </article>
             </article>
             <article
               style={{

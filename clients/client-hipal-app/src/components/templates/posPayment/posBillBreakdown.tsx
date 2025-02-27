@@ -107,7 +107,7 @@ const PosBillBreakdown = () => {
                             </article>
                         </article>
                     ) : null}
-                    <div className="flex justify-between m-2 text-sm capitalize text-[#101018]">
+                    <div className="flex justify-between p-2 text-sm capitalize text-[#101018]">
                         <div className="flex items-center">
                             <div
                                 className="flex items-center text-red-500"
