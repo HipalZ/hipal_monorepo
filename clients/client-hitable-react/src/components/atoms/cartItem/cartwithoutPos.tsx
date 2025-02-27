@@ -136,7 +136,14 @@ const MemoCartwithoutPos = () => {
                         )}
                     </AnimatePresence>
                 </motion.div>
-            )) : <center>No Cart Found</center>}
+            )) : <motion.div
+                className="text-2xl font-semibold text-center col-span-full text-muted-foreground"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+            >
+                No Cart Found
+            </motion.div>}
         </>
     )
 }

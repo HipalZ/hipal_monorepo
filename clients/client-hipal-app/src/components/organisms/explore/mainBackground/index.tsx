@@ -25,7 +25,7 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
   const setBusinessData = _useAllBusiness((s) => s.setData);
   const { setBusinessDetails } = useBusinessDetails();
   const { setCheckLogin } = usePaymentStore();
-  const { resetCartStoreKeys } = useCart();
+  const { resetCartStoreKeys, setShowCart } = useCart();
 
   // Move accessToken check to client side
   const accessToken = useUserToken.getState().accessToken;
@@ -37,7 +37,7 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
   useEffect(() => {
     if (tableName !== null) {
       setTableName(tableName || "");
-      // cart store unexpected popups error handling
+      setShowCart(false);
       resetCartStoreKeys();
       const timeStamp = Date.now();
       setTableNameTimeStamp(timeStamp);

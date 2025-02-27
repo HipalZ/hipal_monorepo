@@ -14,7 +14,6 @@ import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import MemoCart from "@/components/organisms/cart";
 import { useCart } from "@/components/store/useCart";
-import { usePathname, useRouter } from "next/navigation";
 import { useUserToken } from "@hi/common/src/useUserToken";
 
 const CashbackMessage = dynamic(() => import("./cashbackMessage"), {
@@ -48,8 +47,7 @@ const AddAmountModal = dynamic(
 
 const MemoCoinzRewardSection = () => {
   const completeUrl = window.location.href;
-  const { applyCouponz, setApplyCouponz } = useCouponTemp((s) => ({
-    applyCouponz: s.applyCouponz,
+  const { setApplyCouponz } = useCouponTemp((s) => ({
     setApplyCouponz: s.setApplyCouponz,
   }));
   const { setShowCart, showCart } =
@@ -114,6 +112,7 @@ const MemoCoinzRewardSection = () => {
     const count = validCoupons?.length ?? 0;
     return count;
   }, [billValue, userCouponz]);
+
   return (
     <section className="text-primary poppins-regular">
       {!outletInfo?.isPosEnabled && (

@@ -1,6 +1,5 @@
 "use client";;
 import { memo } from "react";
-import { useEffect } from "react";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import type { IBusinessData } from "@/components/types/businessData";
 import dynamic from "next/dynamic";

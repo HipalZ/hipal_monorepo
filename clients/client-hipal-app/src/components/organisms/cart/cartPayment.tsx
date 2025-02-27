@@ -22,6 +22,7 @@ const MemoCartPayment = () => {
   // Payment store hooks
   const {
     billValue,
+    billData,
     setEditBillModal,
     setClaimCouponz,
     setClaimedCoinz,
@@ -90,7 +91,7 @@ const MemoCartPayment = () => {
   ]);
 
   useEffect(() => {
-    if (billValue && billValue > 0) {
+    if ((billValue && billValue > 0) || (billData?.total && billData?.total > 0)) {
       setEditBillModal(false);
       setClaimCouponz(0);
       setClaimedCoinz(0);

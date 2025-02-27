@@ -65,12 +65,24 @@ export const usePayments = () => {
     setShowError: s.setShowError,
   }));
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
-  const finalAmount = outletInfo?.isPosEnabled
-    ? billData?.total
-    : calculateFinalBill(billValue, claimedCoinz, claimCouponz, tips);
-  const initialTotal = outletInfo?.isPosEnabled
-    ? billData?.initialTotal
-    : billValue;
+  // for pos and non pos finalAmount varies
+  const finalAmount = useMemo(() => {
+    return outletInfo?.isPosEnabled
+      ? billData?.total
+      : calculateFinalBill(billValue, claimedCoinz, claimCouponz, tips);
+  }, [
+    outletInfo?.isPosEnabled,
+    billData?.total,
+    billValue,
+    claimedCoinz,
+    claimCouponz,
+    tips,
+  ]);
+  // initialTotal for sending to razorpay
+  const initialTotal = useMemo(() => {
+    return outletInfo?.isPosEnabled ? billData?.initialTotal : billValue;
+  }, [outletInfo?.isPosEnabled, billData?.initialTotal, billValue]);
+
   const { tableName, setTableName } = useTableData();
   // payment response
   const sendPaymentResponse = useCallback(
@@ -238,7 +250,6 @@ export const usePayments = () => {
   // create order
   const handleCreateOrder = useCallback(
     async (total: number, mode: string) => {
-      console.log("totakl", total);
       if (total < 0) {
         return toast.error("Invalid amount");
       }
@@ -549,6 +560,7 @@ export const useGetBill = () => {
   const userDetails = useLogin((state) => state.userDetails);
   const setClaimedCoinz = usePaymentStore((state) => state.setClaimedCoinz);
   const setEditBillModal = usePaymentStore((state) => state.setEditBillModal);
+  const setBillValue = usePaymentStore((state) => state.setBillValue);
   const setBillData = usePaymentStore((state) => state.setBillData);
   const selectedMode = usePaymentStore((state) => state.selectedMode);
   const setSelectedTip = usePaymentStore((state) => state.setSelectedTip);
@@ -570,8 +582,8 @@ export const useGetBill = () => {
 
     const res = await response.json();
     const payment = res?.data as BillData;
-    console.log("payment", payment);
     setBillData(payment);
+    setBillValue(payment?.total);
     setClaimedCoinz(payment?.claimedCoins);
     setSelectedTip(payment?.tips?.toString() || "");
     if (payment?.total === 0) {
@@ -877,6 +889,7 @@ export const usePlaceOrder = () => {
 
 export const useUpdateBill = () => {
   const queryClient = useQueryClient();
+  const pathName = usePathname();
   const { loyaltySetting } = useLoyaltyData();
   const { billData } = usePaymentStore();
   const { tableName } = useTableData();
@@ -905,6 +918,11 @@ export const useUpdateBill = () => {
       if (outletInfo?.isPosEnabled) {
         queryClient.invalidateQueries({
           queryKey: ["getBill", outletInfo?.businessId, tableName],
+        });
+      }
+      if (pathName?.includes("posPayment")) {
+        queryClient.invalidateQueries({
+          queryKey: ["getBusinessDetails"],
         });
       }
     }
