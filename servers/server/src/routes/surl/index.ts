@@ -148,7 +148,7 @@ const surlRouter = new Hono()
     async (c) => {
       const { orderId } = c.req.param();
 
-      const userSession = await UserSession.findOne({ requestBillId: orderId });
+      const userSession = await UserSession.findOne({ billRequestId: orderId });
 
       const updateBill = await QrBill.findOneAndUpdate(
         { requestBillId: orderId },
