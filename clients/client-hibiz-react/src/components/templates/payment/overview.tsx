@@ -200,7 +200,7 @@ const Overview = () => {
             <CardHeader>
               <CardTitle>Total In-store sales</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4">
               <PieChart
                 data={[
                   ...Object.entries(salesData.offlineSale).map(([mode, amount]) => ({ name: mode, value: amount })),

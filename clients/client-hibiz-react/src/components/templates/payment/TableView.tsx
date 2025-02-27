@@ -18,7 +18,7 @@ export function TableView({ data, onRowClick }: TableViewProps) {
             <TableHead>Customer</TableHead>
             <TableHead>Captain</TableHead>
             <TableHead className="text-right">Original Bill</TableHead>
-            <TableHead className="text-right">Discounted Bill</TableHead>
+            <TableHead className="text-right">Discount</TableHead>
             <TableHead className="text-right">Payment Mode(s)</TableHead>
           </TableRow>
         </TableHeader>
@@ -33,13 +33,13 @@ export function TableView({ data, onRowClick }: TableViewProps) {
               <TableCell>{new Date(item.createdAt).toLocaleString("en-In")}</TableCell>
               <TableCell>
                 {item.userId.name || "Anonymous"}
-                {item.userId.phone && <div className="text-sm text-muted-foreground">{item.userId.phone}</div>}
+                {item.userId.phone && <div className="text-sm text-muted-foreground">{item?.userId?.phone}</div>}
               </TableCell>
               <TableCell>{item?.waiterName}</TableCell>
-              <TableCell className="text-right">₹{item?.order_id?.initialSubTotal?.toFixed(2)}</TableCell>
-              <TableCell className="text-right">₹{item?.total?.toFixed(2)}</TableCell>
+              <TableCell className="text-right">₹{item?.billValue?.toFixed(2)}</TableCell>
+              <TableCell className="text-right">₹{item?.claimedCoins?.toFixed(2) || item?.discount}</TableCell>
               <TableCell className="text-right">
-                {item?.splitModes.map((mode, index) => (
+                {item?.splitModes.map((mode) => (
                   <Badge key={mode._id} variant="outline" className="ml-1">
                     {mode.name}
                   </Badge>

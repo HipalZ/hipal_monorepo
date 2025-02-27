@@ -251,6 +251,15 @@ export interface IExistingPayments {
   createdAt: string;
   updatedAt: string;
   posBillRequestId?: string;
+  waiterName: string;
+  razorpayPaymentId: string;
+  razorpayOrderId: string;
+  discount: number;
+  posBillId: string;
+  splitModes: {
+      _id: string;
+      name: string;
+    }[]
   __v: number;
 }
 export interface HistoryData {
@@ -757,12 +766,12 @@ interface ExpiryClaimLimit {
 // Define the Availability type
 interface Availability {
   when:
-    | "custom"
-    | "allthetime"
-    | "birthdayweek"
-    | "birthdaymonth"
-    | "weekdays"
-    | "weekends";
+  | "custom"
+  | "allthetime"
+  | "birthdayweek"
+  | "birthdaymonth"
+  | "weekdays"
+  | "weekends";
   customDays: string[];
   startTime: number;
   endTime: number;

@@ -1,40 +1,32 @@
-import { cn } from "@/components/utils/helper";
-import { Dialog } from "@headlessui/react";
-import { AnimatePresence, motion } from "framer-motion";
-import { memo } from "react";
-import { HiX } from "react-icons/hi";
+import { Button } from "@/components/ui/button"
+import { cn } from "@/components/utils/helper"
+import { Dialog } from "@headlessui/react"
+import { AnimatePresence, motion } from "framer-motion"
+import { memo, type ReactNode, type SyntheticEvent } from "react"
+import { HiX } from "react-icons/hi"
 
-function MemoizedPopUp({
-  children,
-  show,
-  onClose,
-  hide,
-  width,
-  height,
-}: {
-  children: React.ReactNode;
-  show: boolean;
-  onClose: () => void;
-  hide?: boolean;
-  width?: string;
-  height?: string;
-}) {
-  const stopClosing = (e: any) => {
+interface PopUpProps {
+  children: ReactNode
+  show: boolean
+  onClose: () => void
+  hide?: boolean
+  width?: string
+  height?: string
+  rightTopBack?: boolean
+}
+
+function MemoizedPopUp({ children, show, onClose, hide, width, height, rightTopBack }: PopUpProps) {
+  const stopClosing = (e: SyntheticEvent) => {
     if (hide) {
-      return onClose();
+      return onClose()
     }
-    e.preventDefault();
-  };
+    e.preventDefault()
+  }
 
   return (
     <AnimatePresence>
       {show && (
-        <Dialog
-          open={show}
-          as="div"
-          className="fixed inset-0 z-50"
-          onClose={stopClosing}
-        >
+        <Dialog open={show} as="div" className="fixed inset-0 z-50" onClose={stopClosing}>
           <div className="fixed inset-0 flex px-0 lg:px-6 items-end justify-center bg-black lg:items-center bg-opacity-50 backdrop-blur-sm lg:pt-[2rem]">
             <motion.div
               initial={{ y: "100%", opacity: 0 }}
@@ -48,13 +40,15 @@ function MemoizedPopUp({
                 !hide ? "rounded-t-[1.5rem] lg:rounded-2xl" : "lg:rounded-2xl",
               )}
             >
-              {!hide && (
+              {!hide && !rightTopBack && (
                 <div className="absolute z-50 flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 on_active_bounce -top-8 left-1/2">
-                  <HiX
-                    className="p-2 text-4xl text-black bg-white rounded-full cursor-pointer"
-                    onClick={onClose}
-                  />
+                  <HiX className="p-2 text-4xl text-black bg-white rounded-full cursor-pointer" onClick={onClose} />
                 </div>
+              )}
+              {rightTopBack && (
+                <Button className="absolute z-50 w-8 h-8 rounded-full top-2 right-2" onClick={onClose}>
+                  <HiX className="text-2xl cursor-pointer "/>
+                </Button>
               )}
               {children}
             </motion.div>
@@ -62,9 +56,10 @@ function MemoizedPopUp({
         </Dialog>
       )}
     </AnimatePresence>
-  );
+  )
 }
 
-const PopUp = memo(MemoizedPopUp);
+const PopUp = memo(MemoizedPopUp)
 
-export default PopUp;
+export default PopUp
+

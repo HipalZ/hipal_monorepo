@@ -2331,22 +2331,37 @@ const paymentsRouter = new Hono()
           appliedFilter = [];
         }
       }
-
-      if (
-        appliedFilter &&
-        Array.isArray(appliedFilter) &&
-        appliedFilter.length > 0
-      ) {
-        console.log("modeFilter");
-
-        const modeFilter = appliedFilter.find((f) => f.key === "mode");
-        console.log("modeFilter", modeFilter);
+      
+      if (appliedFilter && Array.isArray(appliedFilter) && appliedFilter.length > 0) {
+        
+        const modeFilter = appliedFilter.find(f => f.key === 'mode');
+        // if (modeFilter && Array.isArray(modeFilter.value)) {
+        //   const modeValues = modeFilter.value.map(v => v.toLowerCase());
+        //   const includesOnline = modeValues.includes('online');
+        //   const offlineModes = modeValues.filter(value => value !== 'online');
+          
+        //   if (includesOnline && offlineModes.length > 0) {
+        //     filterConditions.push({
+        //       $or: [
+        //         { paymentMode: 'online' },
+        //         { paymentMode: { $in: offlineModes } }
+        //       ]
+        //     });
+        //   } else if (includesOnline) {
+        //     filterConditions.push({ paymentMode: 'online' });
+        //   } else if (offlineModes.length > 0) {
+        //     filterConditions.push({ paymentMode: { $in: offlineModes } });
+        //   }
+        // }
         if (modeFilter && Array.isArray(modeFilter.value)) {
-          const modeValues = modeFilter.value.map((v) => v.toLowerCase());
-          if (modeValues.includes("online")) {
-            filterConditions.push({ paymentMode: "online" });
-          } else if (modeValues.includes("offline")) {
-            filterConditions.push({ paymentMode: { $ne: "online" } });
+          const modeValues = modeFilter.value.map(v => v.toLowerCase());
+          const includesOnline = modeValues.includes('online');
+          const offlineModes = modeValues.filter(value => value !== 'online');
+          
+          const combinedModes = [...(includesOnline ? ['online'] : []), ...offlineModes];
+          
+          if (combinedModes.length > 0) {
+            filterConditions.push({ paymentMode: { $in: combinedModes } });
           }
         }
 

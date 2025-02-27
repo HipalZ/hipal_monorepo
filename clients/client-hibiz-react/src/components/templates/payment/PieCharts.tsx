@@ -34,7 +34,7 @@ export const PieChart: React.FC<PieChartProps> = ({ data }) => {
         }, [])
 
     return (
-        <div className="flex flex-col items-center justify-between w-full">
+        <div className="flex flex-col items-center justify-between w-full md:flex-row">
             {/* Pie Chart on the left */}
             <ResponsiveContainer width="100%" height={280}>
                 <RechartsPieChart>
@@ -47,7 +47,7 @@ export const PieChart: React.FC<PieChartProps> = ({ data }) => {
                         fill="#8884d8"
                         dataKey="value"
                     >
-                        {dataWithPercentage.map((entry, index) => (
+                        {dataWithPercentage.map((_, index) => (
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                     </Pie>
@@ -55,8 +55,7 @@ export const PieChart: React.FC<PieChartProps> = ({ data }) => {
                 </RechartsPieChart>
             </ResponsiveContainer>
 
-            {/* Data values on the right */}
-            <div className="p-4 md:w-[100%]">
+            <div className="md:w-[100%] w-full">
                 <h3 className="mb-2 font-semibold">Offline Payment Breakdown</h3>
                 <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
                     {data.map((item, index) => (
