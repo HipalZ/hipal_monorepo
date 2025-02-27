@@ -26,6 +26,7 @@ import ShimmerImage from "@/components/atoms/imageshimmer";
 import { useErrorHandling } from "@/utils/helper";
 import { useUpdateBill } from "@/components/hooks/usePayments";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const AvailableDays = dynamic(() => import("./availableDays"), {
   loading: () => <SkeletonLoader height={20} />,
@@ -47,16 +48,15 @@ const ApplyCouponDatePopup = dynamic(
 
 const MemoApplyCouponz = () => {
   const { errorText } = useErrorHandling();
-  const logoUrl = useBusinessDetails(
-    (state) => state?.businessDetails?.logoUrl,
-  );
+  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
 
   const { showAlert, setShowAlert } = useCouponTemp((s) => ({
     showAlert: s.showAlert,
     setShowAlert: s.setShowAlert,
   }));
-  const { businessId } = useBusinessDetails((s) => ({
+  const { businessId, logoUrl } = useBusinessDetails((s) => ({
     businessId: s.businessDetails?.businessId,
+    logoUrl: s.businessDetails?.logoUrl,
   }));
 
   const { userDetails } = useLogin((s) => ({
@@ -249,11 +249,12 @@ const MemoApplyCouponz = () => {
         billValue,
         claimedCoins,
       );
-
-      mutateAsync({
-        coinz: discountValue,
-        couponId: coupon?._id,
-      })
+      if (outletInfo?.isPosEnabled) {
+        mutateAsync({
+          coinz: discountValue,
+          couponId: coupon?._id,
+        })
+      }
       setClaimCouponz(discountValue);
       if (resetClaimedCoins) {
         setClaimedCoins(0);

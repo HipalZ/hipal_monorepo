@@ -3,7 +3,7 @@
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { calculateFinalBill, cn } from "@/components/utils/helpers";
 import { FaCaretRight } from "react-icons/fa";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import { usePayments } from "@/components/hooks/usePayments";
@@ -27,7 +27,7 @@ const MemoPaymentModes = () => {
         merchantDetails,
         billData,
     } = usePaymentStore();
-
+    const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
     const total = calculateFinalBill(billValue, claimedCoins, claimCouponz, tips);
 
     const paymentMode = useCallback(() => {
@@ -47,6 +47,10 @@ const MemoPaymentModes = () => {
         handleCreateOrder(billValue, "ONLINE");
     }, [billValue, total, handleCreateOrder, merchantDetails]);
 
+    const disableCondition = useMemo(() => {
+        return outletInfo?.isPosEnabled ? !billData?.total : !billValue;
+    }, [outletInfo, billData, billValue]);
+
     const paymentMethods = [
         {
             image: Pay,
@@ -55,7 +59,7 @@ const MemoPaymentModes = () => {
             bgColor: "#C497DC",
             footerText: "Instant coinz back",
             onClick: paymentMode,
-            disabled: !merchantDetails?.razorpayMerchantId || !billData?.total || isLoading,
+            disabled: !merchantDetails?.razorpayMerchantId || disableCondition || isLoading,
         },
         {
             image: BillPayment,
