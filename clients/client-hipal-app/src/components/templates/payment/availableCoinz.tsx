@@ -43,10 +43,12 @@ const AvailableCoinz = () => {
   const handleApplyCoinz = (finalValue: number) => {
     setClaimedCoins(finalValue);
     handleCoins(finalValue);
-    mutateAsync({
-      coinz: finalValue,
-      couponId: ""
-    });
+    if (outletInfo?.isPosEnabled) {
+      mutateAsync({
+        coinz: finalValue,
+        couponId: ""
+      });
+    }
   };
 
   const handleCoins = useCallback(async (claimedCoins: number) => {
