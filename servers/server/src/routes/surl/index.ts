@@ -159,6 +159,7 @@ const surlRouter = new Hono()
           tips: userSession?.tips,
           claimedCoins: userSession?.claimedCoins,
           couponId: userSession?.couponId,
+          initialTotal: userSession?.initialTotal,
         },
         { new: true },
       );

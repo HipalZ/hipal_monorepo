@@ -67,6 +67,11 @@ const qrBillOrderSchema = new mongoose.Schema<QrBillOrderType>(
       type: ObjectId,
       required: false,
     },
+    initialTotal: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   },
   {
     timestamps: true,
