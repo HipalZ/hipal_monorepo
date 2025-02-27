@@ -153,7 +153,7 @@ export const PaymentSchema = z.object({
     .default([])
     .optional(),
   discount: z.coerce.number().default(0).optional(),
-  initialGst: z.coerce.number().default(0).optional(),
+  initialTax: z.coerce.number().default(0).optional(),
   initialSubTotal: z.coerce.number().default(0).optional(),
   initialTotal: z.coerce.number().default(0).optional(),
   finalSubTotal: z.coerce.number().default(0).optional(),

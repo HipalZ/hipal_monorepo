@@ -314,20 +314,13 @@ const categoriesRouter = new Hono()
       }
 
       if (child) {
-        const menuType =
-          await Business.findById(businessId).select("menuLayout");
-        if (!menuType) return respond(c, "Business not found", true, 404, {});
-        let hierarchy = "CHILD";
-        if (menuType.menuLayout !== "MAIN_AND_SUB_CATEGORY") {
-          hierarchy = "PARENT";
-        }
         const existingCategories = await Category.find({
           businessId,
-          hierarchy: hierarchy,
+          hierarchy: "CHILD",
           isDeleted: false,
         })
           .select(
-            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy",
+            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId",
           )
           .sort({ sequence: 1 });
 

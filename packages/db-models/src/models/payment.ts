@@ -173,7 +173,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: Number,
       default: 0,
     },
-    initialGst: {
+    initialTax: {
       type: Number,
       default: 0,
     },
