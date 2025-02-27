@@ -48,6 +48,13 @@ app.use(
       "https://hipalz.com",
       "https://hibiz.hipalz.com",
       "https://hiclient.hipalz.com",
+      "https://www.table.test.hipalz.com",
+
+      "https://www.biz.test.hipalz.com",
+      "https://www.hipal-test.hipalz.com",
+      "https://www.hipalz.com",
+      "https://www.hibiz.hipalz.com",
+      "https://www.hiclient.hipalz.com",
     ], // Update this with your frontend URL
     credentials: true, // Allow sending cookies
     allowHeaders: ["Authorization", "Content-Type", "x-refresh-token"],
