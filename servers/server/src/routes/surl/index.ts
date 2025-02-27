@@ -153,7 +153,9 @@ const surlRouter = new Hono()
         posBillRequestId: orderId,
       });
 
-      if (!alreadyExists) {
+      console.log("alreadyExists", alreadyExists);
+
+      if (alreadyExists) {
         return c.json(
           {
             message: "Bill already settled",
