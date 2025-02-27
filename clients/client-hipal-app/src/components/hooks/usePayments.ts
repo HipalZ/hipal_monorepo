@@ -80,6 +80,12 @@ export const usePayments = () => {
     claimCouponz,
     tips,
   ]);
+
+  // calculation of revward
+  const finalAmountForReward = useMemo(() => {
+    return outletInfo?.isPosEnabled ? billData?.subTotal : billValue;
+  }, [outletInfo?.isPosEnabled, billData?.subTotal, billValue]);
+
   // initialTotal for sending to razorpay
   const initialTotal = useMemo(() => {
     return outletInfo?.isPosEnabled ? billData?.initialTotal : billValue;
@@ -448,7 +454,7 @@ export const usePayments = () => {
         (claimedCoins === 0 && claimCouponz === 0)
       ) {
         const coinsObtained =
-          finalAmount * (loyaltySetting?.setCashBackPercentage / 100);
+          finalAmountForReward * (loyaltySetting?.setCashBackPercentage / 100);
         const existingCoins = claimedCoins
           ? userCoinz - claimedCoins
           : userCoinz;
