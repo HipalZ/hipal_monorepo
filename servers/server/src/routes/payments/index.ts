@@ -2331,15 +2331,18 @@ const paymentsRouter = new Hono()
           appliedFilter = [];
         }
       }
-      
-      if (appliedFilter && Array.isArray(appliedFilter) && appliedFilter.length > 0) {
-        
-        const modeFilter = appliedFilter.find(f => f.key === 'mode');
+
+      if (
+        appliedFilter &&
+        Array.isArray(appliedFilter) &&
+        appliedFilter.length > 0
+      ) {
+        const modeFilter = appliedFilter.find((f) => f.key === "mode");
         // if (modeFilter && Array.isArray(modeFilter.value)) {
         //   const modeValues = modeFilter.value.map(v => v.toLowerCase());
         //   const includesOnline = modeValues.includes('online');
         //   const offlineModes = modeValues.filter(value => value !== 'online');
-          
+
         //   if (includesOnline && offlineModes.length > 0) {
         //     filterConditions.push({
         //       $or: [
@@ -2354,12 +2357,15 @@ const paymentsRouter = new Hono()
         //   }
         // }
         if (modeFilter && Array.isArray(modeFilter.value)) {
-          const modeValues = modeFilter.value.map(v => v.toLowerCase());
-          const includesOnline = modeValues.includes('online');
-          const offlineModes = modeValues.filter(value => value !== 'online');
-          
-          const combinedModes = [...(includesOnline ? ['online'] : []), ...offlineModes];
-          
+          const modeValues = modeFilter.value.map((v) => v.toLowerCase());
+          const includesOnline = modeValues.includes("online");
+          const offlineModes = modeValues.filter((value) => value !== "online");
+
+          const combinedModes = [
+            ...(includesOnline ? ["online"] : []),
+            ...offlineModes,
+          ];
+
           if (combinedModes.length > 0) {
             filterConditions.push({ paymentMode: { $in: combinedModes } });
           }
@@ -2395,7 +2401,6 @@ const paymentsRouter = new Hono()
       }
 
       const queryObject = { $and: filterConditions };
-      console.log("queryObject", queryObject);
 
       const existingPayments = await Payment.find(queryObject)
         .sort({ _id: -1 })

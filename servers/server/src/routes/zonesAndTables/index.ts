@@ -266,7 +266,7 @@ const zonesAndTablesRouter = new Hono()
 
           const uniqueOrderId = nanoid(5);
 
-          const longUrl = `http://localhost:3000/${businessInfo?.customLink}/explore?tableName=${tableName}`;
+          const longUrl = `https://hipal-test.hipalz.com/${businessInfo?.customLink}/explore?tableName=${tableName}`;
 
           const createShortUrl = await UrlModel.create(
             [
@@ -331,7 +331,7 @@ const zonesAndTablesRouter = new Hono()
         );
       }
 
-      const longUrl = `http://localhost:3000/${businessInfo?.customLink}/explore?tableName=${name}`;
+      const longUrl = `https://hipal-test.hipalz.com/${businessInfo?.customLink}/explore?tableName=${name}`;
 
       const createShortUrl = await UrlModel.create(
         [
@@ -461,7 +461,7 @@ const zonesAndTablesRouter = new Hono()
         },
         {
           $set: {
-            longUrl: `http://localhost:3000/${businessId}/explore?tableName=${name}`,
+            longUrl: `https://hipal-test.hipalz.com/${businessId}/explore?tableName=${name}`,
           },
         },
         { session },
