@@ -1,8 +1,7 @@
-import { UrlModel } from "@hi/db-models";
+import { Business, UrlModel, WhatsAppBusinessConfig } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
-import { getShortUrl, setShortUrl } from "../../utils/cacheHelper";
 //
 const hipalzRouter = new Hono().get(
   "/:urlCode",
@@ -14,12 +13,7 @@ const hipalzRouter = new Hono().get(
   ),
   async (c) => {
     const { urlCode } = c.req.param();
-
-    const getUrlFromCache = (await getShortUrl(urlCode)) as string;
-
-    if (getUrlFromCache) {
-      return c.redirect(getUrlFromCache);
-    }
+    const { q } = c.req.query();
 
     const result = await UrlModel.findOne({ urlCode });
     if (!result) {
@@ -32,8 +26,23 @@ const hipalzRouter = new Hono().get(
         404,
       );
     }
+    if (!q) {
+      const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
+        businessId: result?.businessId,
+      });
 
-    setShortUrl(urlCode, result.longUrl);
+      const menuRedirection = whatsAppBusinessConfig?.menuRedirection;
+
+      const business = await Business.findOne({
+        businessId: result.businessId,
+      });
+
+      if (menuRedirection && menuRedirection === "WA") {
+        const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, ${business?.name}. I'm interested to know coupon, can you share me link:${urlCode}`;
+
+        return c.redirect(redirectUrl);
+      }
+    }
 
     // Redirect to the original URL
     return c.redirect(result.longUrl);

@@ -37,7 +37,6 @@ const buttonVariants = {
     tap: { scale: 0.75, rotateX: 0, rotateY: 0, translateZ: 0 },
 };
 
-// Helper to return the inside label/spinner/back arrow
 function getButtonInnerContent(button: ButtonConfig) {
     const { highlight, borderClasses, isBackButton, isLoading, text } = button;
 
@@ -71,7 +70,6 @@ function getButtonInnerContent(button: ButtonConfig) {
     return text;
 }
 
-// SwipeButton - only used when button.swipe === true
 function SwipeButton({
     button,
     index,
@@ -151,7 +149,7 @@ const MemoAdvancedBottomButton = (props: MemoBottomButtonProps) => {
                     "left-0": position === "left",
                     "right-0": position === "right",
                     "mx-auto": position === "mid",
-                    "w-full": position === "mid",
+                    "w-full left-0 right-0": position === "mid",
                 },
                 shadow ? "shadow-[0_-2px_15px_rgba(0,0,0,0.1)]" : ""
             )}
@@ -170,7 +168,6 @@ const MemoAdvancedBottomButton = (props: MemoBottomButtonProps) => {
                 {buttons.map((button, index) =>
                     !button.hide ? (
                         button.swipe ? (
-                            // If swipe is enabled
                             <SwipeButton
                                 key={button.text}
                                 button={button}
@@ -178,7 +175,6 @@ const MemoAdvancedBottomButton = (props: MemoBottomButtonProps) => {
                                 buttonsLength={buttons.length}
                             />
                         ) : (
-                            // The original motion.button for normal usage
                             <motion.button
                                 key={button.text}
                                 className={cn(

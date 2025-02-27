@@ -37,7 +37,22 @@ app.get("/metrics", printMetrics);
 app.use(timeout(1800000, customTimeoutException));
 app.use(secureHeaders());
 app.use(prettyJSON());
-app.use(cors());
+app.use(
+  "*",
+  cors({
+    origin: [
+      "https://table.test.hipalz.com",
+
+      "https://biz.test.hipalz.com",
+      "https://hipal-test.hipalz.com",
+      "https://hipalz.com",
+      "https://hibiz.hipalz.com",
+      "https://hiclient.hipalz.com",
+    ], // Update this with your frontend URL
+    credentials: true, // Allow sending cookies
+    allowHeaders: ["Authorization", "Content-Type", "x-refresh-token"],
+  }),
+);
 app.use(csrf());
 app.use(logger());
 app.use("/assets/*", serveStatic({ path: "./assets" }));
@@ -48,6 +63,7 @@ app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404));
   await connectDB();
 })();
 /////
+
 app.route("/", routes);
 
 app.get("/", async (c) => {

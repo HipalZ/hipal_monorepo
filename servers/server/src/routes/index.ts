@@ -15,6 +15,7 @@ import kotRouter from "./kot";
 import menuBannerRouter from "./menu-banner";
 import npcRouter from "./npc";
 import paymentsRouter from "./payments";
+import permissionRouter from "./permission";
 import posRouter from "./pos";
 import googleReview from "./reviews";
 import settingsRouter from "./settings";
@@ -22,9 +23,11 @@ import subsCriberRouter from "./subscribers";
 import surlRouter from "./surl";
 import tableRouter from "./table";
 import tagRouter from "./tags";
+import taxRouter from "./tax";
 import upiModeRouter from "./upimode";
 import usersRouter from "./users";
 import whatsappRouter from "./whatsapp";
+import whatsAppFlowRouter from "./whatsappflow";
 import zonesAndTablesRouter from "./zonesAndTables";
 
 //////
@@ -59,6 +62,9 @@ export const routes = app
   .route("/kot", kotRouter)
   .route("/upi_mode", upiModeRouter)
   .route("/dues", duesRouter)
-  .route("/npc", npcRouter);
+  .route("/npc", npcRouter)
+  .route("/permission", permissionRouter)
+  .route("/tax", taxRouter)
+  .route("/whatsapp_flow", whatsAppFlowRouter);
 
 export type AppType = typeof routes;

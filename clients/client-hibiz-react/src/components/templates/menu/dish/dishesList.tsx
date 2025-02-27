@@ -15,8 +15,6 @@ const MemoListOfDishes = () => {
     sortOrder,
     setEditDish,
     setDishStep,
-    dishStep,
-    editOpenMenu,
     setEditOpenMenu,
     setEditDishFunction,
   } = useMenuPageStore((state) => ({
@@ -24,9 +22,7 @@ const MemoListOfDishes = () => {
     visibilityFilter: state.visibilityFilter,
     sortOrder: state.sortOrder,
     setEditDish: state.setEditDish,
-    dishStep: state.dishStep,
     setDishStep: state.setDishStep,
-    editOpenMenu: state.editOpenMenu,
     setEditOpenMenu: state.setEditOpenMenu,
     setEditDishFunction: state.setEditDishFunction,
   }));
@@ -44,20 +40,24 @@ const MemoListOfDishes = () => {
 
   // applying filters and using memo to avoid re-render
   const filteredDishes = useMemo(() => {
-    let filtered = search
-      ? fuse.search(search).map((result) => {
-          return result.item;
-        })
-      : dishes;
+    let filtered = dishes.slice() || [];
+    if (search) {
+      filtered = fuse.search(search).map((result) => result.item);
+    }
     if (visibilityFilter !== "all") {
       filtered = filtered.filter(
         (c) => c.visibility === (visibilityFilter === "visible"),
       );
     }
-    if (Object.keys(filtered).length === 0) return [];
-    return sortOrder === "asc"
-      ? filtered?.sort((a, b) => a?.name?.localeCompare(b?.name))
-      : filtered?.sort((a, b) => b?.name?.localeCompare(a?.name));
+    if (filtered.length === 0) return [];
+    switch (sortOrder) {
+      case "asc":
+        return filtered.slice().sort((a, b) => a.name.localeCompare(b.name));
+      case "desc":
+        return filtered.slice().sort((a, b) => b.name.localeCompare(a.name));
+      default:
+        return filtered;
+    }
   }, [search, fuse, visibilityFilter, sortOrder, dishes]);
 
   // storing dish data for edit and opening edit menu popup
@@ -68,14 +68,12 @@ const MemoListOfDishes = () => {
       setEditOpenMenu(true);
       setEditDishFunction(dish); // setting data for edit dish
     },
-    [dishStep, editOpenMenu],
+    [setEditDish, setDishStep, setEditOpenMenu, setEditDishFunction],
   );
 
   if (isLoading) {
     return (
-      <div>
-        <LoadingSpinner />
-      </div>
+      <LoadingSpinner />
     );
   }
 
@@ -87,30 +85,30 @@ const MemoListOfDishes = () => {
       </h3>
       {filteredDishes
         ? filteredDishes.map((dish) => (
-            <button
-              onClick={() => handleEditDish(dish)}
-              type="button"
-              key={dish.name}
-              className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow md:max-w-[21rem] lg:max-w-[20rem] xl:max-w-[20rem] 2xl:max-w-[21.5rem]"
+          <button
+            onClick={() => handleEditDish(dish)}
+            type="button"
+            key={dish.name}
+            className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow md:max-w-[21rem] lg:max-w-[20rem] xl:max-w-[20rem] 2xl:max-w-[21.5rem]"
+          >
+            <h3
+              title={dish.name}
+              className="mb-2 text-lg font-semibold text-left"
             >
-              <h3
-                title={dish.name}
-                className="mb-2 text-lg font-semibold text-left"
-              >
-                {dish.name}
-              </h3>
-              <div className="flex items-center mb-2 text-gray-500">
-                {dish.visibility ? (
-                  <FaEye className="text-green-500" />
-                ) : (
-                  <FaEyeSlash className="text-red-500" />
-                )}
-                {!dish.availability && (
-                  <span className="ml-2 text-red-500">N/A</span>
-                )}
-              </div>
-            </button>
-          ))
+              {dish.name}
+            </h3>
+            <div className="flex items-center mb-2 text-gray-500">
+              {dish.visibility ? (
+                <FaEye className="text-green-500" />
+              ) : (
+                <FaEyeSlash className="text-red-500" />
+              )}
+              {!dish.availability && (
+                <span className="ml-2 text-red-500">N/A</span>
+              )}
+            </div>
+          </button>
+        ))
         : null}
     </section>
   );

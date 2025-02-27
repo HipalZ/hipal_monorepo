@@ -97,22 +97,26 @@ const upiModeRouter = new Hono()
   .put(
     "/:upiModeId",
     zValidator(
-      "json",
+      "param",
       z.object({
         upiModeId: z.string().min(1).max(500),
-        name: z.string().min(1).max(100).optional(),
+      }),
+    ),
+    zValidator(
+      "json",
+      z.object({
         active: z.boolean().default(true).optional(),
       }),
     ),
     async (c) => {
-      const { upiModeId, name, active } = await c.req.json();
+      const { active } = await c.req.json();
+      const { upiModeId } = c.req.param();
 
       const upiMode = await UpiMode.findByIdAndUpdate(
         upiModeId,
         {
           $set: {
             active: active,
-            name: name.trim().toLowerCase(),
           },
         },
         {
@@ -286,6 +290,31 @@ const upiModeRouter = new Hono()
           data: {},
         },
         201,
+      );
+    },
+  )
+  .get(
+    "/all_modes/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.param();
+
+      const upiModes = await UpiMode.find({
+        businessId,
+      });
+
+      return c.json(
+        {
+          message: "UpiModes fetched successfully",
+          err: false,
+          data: upiModes,
+        },
+        200,
       );
     },
   );

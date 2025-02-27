@@ -18,7 +18,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import MultipleModes from "./multipleModes";
 import SingleMode from "./singleMode";
 import { useGetAllModes } from "@/components/hooks/useTableData";
-
+import { useError } from "@/components/store/useError";
 
 const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => void; data?: IBillData }) => {
     const { businessId } = useParams();
@@ -29,6 +29,7 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
     const [settleAmount, setSettleAmount] = useState<number | "">(0);
     const [showPaymentMode, setShowPaymentMode] = useState<boolean>(false);
     const [showSplit, setShowSplit] = useState<boolean>(false);
+    const {setError,setOpenErrorModal} = useError()
 
     const predefinedReasons = [
         "Trial",
@@ -73,9 +74,14 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
             const response = await apiRpc.table.force_settle.$post({
                 json: newPayload,
             });
-            if (response.status === 400 || response.status === 403) {
+            if (response.status === 400 ) {
                 return toast.error("Force settle failed");
             }
+            if(response.status === 401 || response.status === 403) {
+                setOpenErrorModal(true);
+                setError("You are not authorized to perform this action");
+                return;
+              }
             if (response.status === 200 || response.status === 201) {
                 const res = await response.json();
                 toast.success("Table force settled successfully");

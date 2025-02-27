@@ -32,7 +32,7 @@ const whatsAppUserSchema = new mongoose.Schema<WhatsappUserType>({
   },
   ownerId: {
     type: ObjectId,
-    required: true,
+    required: false,
     ref: "User",
   },
   seen: {

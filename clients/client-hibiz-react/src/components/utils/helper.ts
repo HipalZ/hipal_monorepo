@@ -622,3 +622,8 @@ export const getSuccessRateClass = (successRate: number) => {
   }
   return "text-red-500";
 };
+
+export const removeUnwanted = (heading: string) => {
+  const str = heading.replace(/_/g, " ");
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};

@@ -85,6 +85,18 @@ interface ILiteStore {
 
   isAscending: boolean;
   setIsAscending: (value: boolean) => void;
+
+  isSlow: boolean;
+  setIsSlow: (value: boolean) => void;
+
+  isVersionPopup: boolean;
+  setIsVersionPopup: (value: boolean) => void;
+
+  updateUrl: string;
+  setUpdateUrl: (value: string) => void;
+
+  updateFeature: string[];
+  setUpdateFeature: (value: string[]) => void;
 }
 
 export const useLiteStore = create<ILiteStore>((set) => ({
@@ -156,4 +168,16 @@ export const useLiteStore = create<ILiteStore>((set) => ({
 
   isAscending: false,
   setIsAscending: (value) => set({ isAscending: value }),
+
+  isSlow: false,
+  setIsSlow: (value) => set({ isSlow: value }),
+
+  isVersionPopup: false,
+  setIsVersionPopup: (value) => set({ isVersionPopup: value }),
+
+  updateUrl: "",
+  setUpdateUrl: (value) => set({ updateUrl: value }),
+
+  updateFeature: [],
+  setUpdateFeature: (value) => set({ updateFeature: value }),
 }));

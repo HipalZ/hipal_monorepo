@@ -8,6 +8,7 @@ import SpinnerMemo from "@/components/atoms/loadingSpinner"
 import { useUnsettle } from '../store/useUnsettle'
 import BottomPopUp from '../atoms/universalPopup'
 import SettleTable from './settle'
+import { Badge } from '../ui/badge'
 const MemoUnsettleTableData = () => {
 
     const { businessId } = useParams()
@@ -47,10 +48,13 @@ const MemoUnsettleTableData = () => {
                         <Card onClick={() => saveUnsettledTables(table)} key={table._id} className="transition-shadow shadow-md hover:shadow-lg">
                             <CardContent className="p-4">
                                 <div className="flex items-center justify-between mb-2">
-                                    <h3 className="text-lg font-semibold">{table.tableId.name}</h3>
-                                    <span className="font-bold text-green-600">₹{table.currentTableAmount.toLocaleString("en-IN")}</span>
+                                    <h3 className="text-lg font-semibold">{table?.tableId?.name || "unsettle"}</h3>
+                                    <Badge>{new Date(table.date).toLocaleDateString("en-In")}</Badge>
                                 </div>
-                                <p className="text-sm text-gray-600">Action by: {table.performedBy.name}</p>
+                                <div className="flex items-center justify-between mb-2">
+                                <p className="text-sm text-gray-600">Action by: {table?.performedBy?.name}</p>
+                                    <span className="font-bold text-green-600">₹{table?.currentTableAmount?.toLocaleString("en-IN")}</span>
+                                </div>
                             </CardContent>
                         </Card>
                     ))

@@ -7,7 +7,7 @@ import RemoveTag from "./removeTag";
 import { cn } from "@/components/utils/helper";
 import { TiStarburstOutline } from "react-icons/ti";
 import Fuse from "fuse.js";
-import EditTagz from "./editTagz";
+const EditTagz = lazy(() => import("./editTagz"));
 const CreateTag = lazy(() => import("./createTagz"));
 const PopUp = lazy(() => import("@/components/atom/popUp"));
 import NoData from "@/assets/nodata.jpg";
@@ -78,18 +78,18 @@ const MemoTagz = () => {
   const toggleSearch = useCallback(() => {
     setIsSearchOpen(!isSearchOpen);
     setSearchQuery("");
-  }, [searchQuery, isSearchOpen]);
+  }, [isSearchOpen]);
 
   const handleSearchChange = useCallback(
     (e) => {
       setSearchQuery(e.target.value);
     },
-    [searchQuery],
+    [],
   );
 
   const handleCloseDelete = useCallback(() => {
     setOpenDeletePopup(false);
-  }, [openDeletePopup]);
+  }, [setOpenDeletePopup]);
 
   const handleDelete = useCallback(
     (e, id) => {
@@ -97,7 +97,7 @@ const MemoTagz = () => {
       setOpenDeletePopup(!openDeletePopup);
       setSelectedDeleteTagId(id);
     },
-    [openDeletePopup, selectedDeleteTagId],
+    [setOpenDeletePopup, openDeletePopup, setSelectedDeleteTagId],
   );
 
   const handleEditTag = useCallback(
@@ -105,7 +105,7 @@ const MemoTagz = () => {
       setSingleTagData(tag);
       setOpenEditTagPopup(true);
     },
-    [openEditTagPopup],
+    [setSingleTagData, setOpenEditTagPopup],
   );
 
   const handleClose = useCallback(() => {
@@ -115,7 +115,7 @@ const MemoTagz = () => {
     setDuration("");
     setTime("");
     setDisplayToCaptain(false);
-  }, [openEditTagPopup, tagNotes, remainder, duration, time]);
+  }, [openEditTagPopup, setTagNotes, setRemainder, setDuration, setTime, setDisplayToCaptain, setOpenEditTagPopup]);
 
   const handleCreateTagz = useCallback(() => {
     setOpenCreateTagPopup(!openCreateTagPopup);
@@ -127,7 +127,7 @@ const MemoTagz = () => {
     setRemainder("");
     setHistory([]);
     setSingleTagData({});
-  }, [openCreateTagPopup]);
+  }, [setOpenCreateTagPopup, openCreateTagPopup, setTagName, setTagNotes, setDisplayToCaptain, setDuration, setTime, setRemainder, setHistory, setSingleTagData]);
 
   return (
     <main>
@@ -157,7 +157,7 @@ const MemoTagz = () => {
             </button>
           )}
         </article>
-        <section className="relative py-6 bg-gray-100 pb-[10rem]">
+        <section className="relative py-6 pb-[10rem]">
           {filteredTags && filteredTags.length > 0 ? (
             <div className="grid grid-cols-3 gap-2 md:grid-cols-5 lg:grid-cols-6">
               {filteredTags.map((tag) => (

@@ -9,12 +9,14 @@ import SpinnerMemo from "../loadingSpinner"
 import { useHiClientZ } from "@/components/store/useHiClientzData"
 import toast from "react-hot-toast"
 import { AlertTriangle } from "lucide-react"
+import { useError } from "@/components/store/useError"
 
 const MemoFreeTable = () => {
     const { setTransferTable, setTransferModal, setSelectedItems, selectedTable, setOpenOrderModal } = useOrderStore()
 
     const { businessId } = useParams()
     const navigate = useNavigate()
+    const { setError, setOpenErrorModal } = useError();
 
     const { setSelectedNavItem } = useLiteStore()
     const captainData = useHiClientZ((s) => s.captainData)
@@ -33,18 +35,22 @@ const MemoFreeTable = () => {
                     performedBy: captainData?._id || "",
                 },
             })
-            const res = await response.json()
-            return res
+            return response
         },
         onSuccess: (data) => {
-            if (!data?.err) {
+            console.log(data)
+            if (!data?.ok) {
+                setOpenErrorModal(true);
+                setError("You are not authorized to perform this action");
+                return toast.error("You are not authorized to perform this action")
+            }
+            if(data?.ok){
                 setOpenOrderModal(false)
                 setSelectedNavItem("Tables")
                 toast.success("Table freed successfully")
                 closeModal()
                 return navigate(`/${businessId}/alerts`)
             }
-            return toast.error(data?.message || "Something went wrong")
         },
     })
 

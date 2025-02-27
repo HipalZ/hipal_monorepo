@@ -1,15 +1,20 @@
-import { RiDeleteBin5Line } from "react-icons/ri";
-import toast from "react-hot-toast";
-import { apiRpc } from "@hi/common";
-import { MdEdit } from "react-icons/md";
-import { useAddStaffStore } from "@/components/store/useAddStaffStore";
-import { memo, useCallback } from "react";
-import useBusinessData from "@/components/store/useBusinessData";
-import BottomButton from "@/components/atom/bottomButton";
-import { useQueryClient } from "@tanstack/react-query";
+import { memo, useCallback } from "react"
+import { useQueryClient } from "@tanstack/react-query"
+import toast from "react-hot-toast"
+import { RiDeleteBin5Line } from "react-icons/ri"
+import { MdEdit } from "react-icons/md"
+import { apiRpc } from "@hi/common"
+import { useAddStaffStore } from "@/components/store/useAddStaffStore"
+import useBusinessData from "@/components/store/useBusinessData"
+import BottomButton from "@/components/atom/bottomButton"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { removeUnwanted } from "@/components/utils/helper"
 
 const MemoiseEditTeam = () => {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   const {
     name,
     phone,
@@ -18,147 +23,150 @@ const MemoiseEditTeam = () => {
     editStaffId,
     setIsEditing,
     setIsEditStaffOpen,
-    permissions,
     selectedPermissions,
-  } = useAddStaffStore();
+    permissions,
+    removeStaffStore
+  } = useAddStaffStore()
 
-  const businessData = useBusinessData((s) => s.businessData);
+  const businessData = useBusinessData((s) => s.businessData)
 
-  const formatPermissions = useCallback(() => {
-    if (!selectedRole) return [];
-    const perms = permissions[selectedRole] || [];
-    return perms
-      .map((permission) => ({
-        title: permission.title,
-        subPermissions: permission.subPermissions
-          .filter((sp) => selectedPermissions.includes(sp.subTitle))
-          .map((sp) => sp.subTitle),
-      }))
-      .filter((p) => p.subPermissions.length > 0);
-  }, [selectedPermissions, selectedRole, permissions]);
+  const deleteStaff = useCallback(async () => {
+    try {
+      const res = await apiRpc.users[":staffId"][":businessId"].$delete({
+        param: {
+          staffId: editStaffId,
+          businessId: businessData?._id || "",
+        },
+      })
 
-  const formattedPermissions = formatPermissions();
-
-  const deleteStaff = async () => {
-    const res = await apiRpc.users[":staffId"].$delete({
-      param: {
-        staffId: editStaffId,
-      },
-    });
-    if (res.status === 200 || res.status === 201) {
-      setIsEditStaffOpen(false);
-      setIsEditing(false);
-      toast.success("Staff deleted successfully");
-      queryClient.invalidateQueries({ queryKey: ["getStaff"] });
-
-    } else {
-      toast.error("Failed to delete staff");
+      if (res.status === 200 || res.status === 201) {
+        setIsEditStaffOpen(false)
+        setIsEditing(false)
+        toast.success("Staff deleted successfully")
+        queryClient.invalidateQueries({ queryKey: ["getStaffs"] })
+      } else {
+        throw new Error("Failed to delete staff")
+      }
+    } catch (error) {
+      toast.error("Failed to delete staff")
     }
-  };
+  }, [editStaffId, queryClient, setIsEditStaffOpen, setIsEditing, businessData?._id])
 
-  const saveEdits = async () => {
-    const res = await apiRpc.users[":staffId"].staff.$put({
-      param: {
-        staffId: editStaffId,
-      },
-      json: {
-        businessId: businessData?._id || "",
-        phone: phone,
-        role: selectedRole || "CAPTAIN",
-        permissions: formatPermissions(),
-      },
-    });
-    if (res.status === 200 || res.status === 201) {
-      toast.success("Staff updated successfully");
-      setIsEditStaffOpen(false);
-      setIsEditing(false);
-      queryClient.invalidateQueries({ queryKey: ["getStaff"] });
-    } else {
-      toast.error("Failed to update staff");
+  const saveEdits = useCallback(async () => {
+    try {
+      const res = await apiRpc.users[":staffId"].staff.$put({
+        param: { staffId: editStaffId },
+        json: {
+          businessId: businessData?._id || "",
+          role: selectedRole || "CAPTAIN",
+          permissionIds: selectedPermissions,
+        },
+      })
+
+      if (res.status === 200 || res.status === 201) {
+        toast.success("Staff updated successfully")
+        setIsEditStaffOpen(false)
+        setIsEditing(false)
+        removeStaffStore()
+        queryClient.invalidateQueries({ queryKey: ["getStaffs"] })
+      } else {
+        throw new Error("Failed to update staff")
+      }
+    } catch (error) {
+      toast.error("Failed to update staff")
     }
-  };
+  }, [businessData?._id, editStaffId, selectedRole, selectedPermissions, queryClient, setIsEditStaffOpen, setIsEditing])
+
+  const selectedPermissionNames = selectedPermissions
+    .map((permId) => permissions.find((perm) => perm._id === permId)?.name)
+    .filter((name) => name)
+
   return (
-    <section className="pb-[5rem]">
-      <center className="pt-6 text-xl font-semibold">Edit Staff</center>
-      <button
-        onClick={deleteStaff}
-        type="button"
-        className="text-[#FF3B30] text-2xl bg-[#FF636356] float-right mr-6 -mt-8 px-4 py-1 border rounded-full"
-      >
-        <RiDeleteBin5Line />
-      </button>
-      <h6 className="mx-4 mt-4 -mb-2 opacity-50">Staff</h6>
-      <section className="p-4 m-4 space-y-4 bg-white rounded-xl">
-        <input
-          type="text"
-          value={name}
-          // onChange={(e) => setName(e.target.value)}
-          className="w-full px-4 py-3 border border-black rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-          placeholder="Enter your name"
-          maxLength={20}
-          required
-        />
-        <input
-          type="tel"
-          value={phone}
-          // onChange={(e) => setPhone(e.target.value)}
-          className="w-full px-4 py-3 border border-black rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-          placeholder="Enter phone number"
-          maxLength={10}
-          required
-        />
-      </section>
-      <h6 className="mx-4 mt-6 mb-2 opacity-50">Role</h6>
-      <section className="p-4 mx-4 space-y-4 bg-white rounded-xl">
-        {selectedRole !== "" && (
-          <button
-            type="button"
-            className="px-4 py-2 rounded-2xl bg-[#2C01A360] text-white inline-block"
-          >
-            {selectedRole}
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={() => setPageToggle("ADD_ROLE")}
-          className="flex items-center justify-center px-4 py-2 rounded-2xl bg-[#EFEFF3] w-full"
-        >
-          <MdEdit /> Edit Role
-        </button>
-      </section>
-      {selectedRole !== "" && (
-        <>
-          <h6 className="mx-4 mt-6 mb-2 opacity-50">
-            Customize Permissions for {selectedRole}
-          </h6>
-          <section className="p-4 mx-4 space-y-4 bg-white rounded-xl">
-            {formattedPermissions.length > 0 &&
-              formattedPermissions.map((permission) => (
-                <button
-                  type="button"
-                  key={permission.title}
-                  className="px-4 py-2 mr-4 rounded-2xl bg-[#2C01A360] text-white"
-                >
-                  {permission.title}
-                </button>
-              ))}
+    <div className="container max-w-2xl pb-20 mx-auto">
+      <header className="flex items-center justify-between px-4 py-6 md:px-0">
+        <h1 className="text-2xl font-semibold">Edit Staff</h1>
+        <Button onClick={deleteStaff} variant="destructive" size="icon" className="rounded-full">
+          <RiDeleteBin5Line className="w-5 h-5" />
+        </Button>
+      </header>
 
-            <button
-              type="button"
-              onClick={() => setPageToggle("ADD_PERMISSIONS")}
-              className="flex items-center justify-center px-4 py-2 rounded-2xl bg-[#EFEFF3] w-full"
-            >
-              <MdEdit /> Edit Permissions
-            </button>
-          </section>
-        </>
+      <section className="grid grid-cols-1 gap-6 mx-4 md:mx-0 md:grid-cols-2">
+
+        <Card className="">
+          <CardHeader>
+            <CardTitle>Staff Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Input
+              type="text"
+              value={name}
+              className="w-full"
+              placeholder="Enter your name"
+              maxLength={20}
+              required
+              disabled
+            />
+            <Input
+              type="tel"
+              value={phone}
+              className="w-full"
+              placeholder="Enter phone number"
+              maxLength={10}
+              required
+              disabled
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="">
+          <CardHeader>
+            <CardTitle>Role</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {selectedRole ? (
+              <Badge variant="destructive" className="text-lg">
+                {selectedRole}
+              </Badge>
+            ) : (
+              <p className="text-muted-foreground">No role assigned</p>
+            )}
+            <Button onClick={() => setPageToggle("ADD_ROLE")} variant="outline" className="w-full">
+              <MdEdit className="mr-2" /> Edit Role
+            </Button>
+          </CardContent>
+        </Card>
+      </section>
+
+
+      {selectedRole && (
+        <Card className="mx-4 my-6 md:mx-0">
+          <CardHeader>
+            <CardTitle>Customize Permissions for {selectedRole}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {selectedPermissionNames.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {selectedPermissionNames.map((permName) => (
+                  <Badge key={permName} variant="outline">
+                    {removeUnwanted(permName)}
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No permissions assigned</p>
+            )}
+            <Button onClick={() => setPageToggle("ADD_PERMISSIONS")} variant="outline" className="w-full">
+              <MdEdit className="mr-2" /> Edit Permissions
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
-      <BottomButton
-        buttons={[{ text: "Save Changes", onClick: saveEdits, type: "button" }]}
-      />
-    </section>
-  );
-};
-const EditTeam = memo(MemoiseEditTeam);
-export default EditTeam;
+      <BottomButton buttons={[{ text: "Save Changes", onClick: saveEdits, type: "button" }]} />
+    </div>
+  )
+}
+
+const EditTeam = memo(MemoiseEditTeam)
+export default EditTeam
+

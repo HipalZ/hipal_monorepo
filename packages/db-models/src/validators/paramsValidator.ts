@@ -16,6 +16,26 @@ export const paramsSchema = z
     alertId: z.string().optional(),
     pageNumber: z.string().optional(),
     alertType: z.enum(['ONLINE', 'OFFLINE', 'WAITER', 'ALL']).optional(),
+    appliedFilter: z.preprocess(
+      (arg) => {
+        if (typeof arg === 'string') {
+          try {
+            return JSON.parse(arg);
+          } catch (err) {
+            return undefined;
+          }
+        }
+        return arg;
+      },
+      z
+        .array(
+          z.object({
+            key: z.string(),
+            value: z.array(z.string()),
+          })
+        )
+        .optional()
+    ),
     from: z.string().optional(),
     to: z.string().optional(),
     customLink: z.string().optional(),

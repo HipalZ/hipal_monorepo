@@ -14,7 +14,6 @@ import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import MemoCart from "@/components/organisms/cart";
 import { useCart } from "@/components/store/useCart";
-import { usePathname, useRouter } from "next/navigation";
 import { useUserToken } from "@hi/common/src/useUserToken";
 
 const CashbackMessage = dynamic(() => import("./cashbackMessage"), {
@@ -48,8 +47,7 @@ const AddAmountModal = dynamic(
 
 const MemoCoinzRewardSection = () => {
   const completeUrl = window.location.href;
-  const { applyCouponz, setApplyCouponz } = useCouponTemp((s) => ({
-    applyCouponz: s.applyCouponz,
+  const { setApplyCouponz } = useCouponTemp((s) => ({
     setApplyCouponz: s.setApplyCouponz,
   }));
   const { setShowCart, showCart } =
@@ -67,18 +65,20 @@ const MemoCoinzRewardSection = () => {
   }));
   const {
     billValue,
-    claimedCoinz,
+    claimedCoins,
     claimCouponz,
     setIsModalOpen,
     editBillModal,
     setEditBillModal,
+    billData,
   } = usePaymentStore((s) => ({
     billValue: s.billValue,
-    claimedCoinz: s.claimedCoinz,
+    claimedCoins: s.claimedCoins,
     claimCouponz: s.claimCouponz,
     setIsModalOpen: s.setIsModalOpen,
     editBillModal: s.editBillModal,
     setEditBillModal: s.setEditBillModal,
+    billData: s.billData,
   }));
 
   const openModal = useCallback(() => {
@@ -112,6 +112,7 @@ const MemoCoinzRewardSection = () => {
     const count = validCoupons?.length ?? 0;
     return count;
   }, [billValue, userCouponz]);
+
   return (
     <section className="text-primary poppins-regular">
       {!outletInfo?.isPosEnabled && (
@@ -159,16 +160,16 @@ const MemoCoinzRewardSection = () => {
               <article className="z-20 scaled-card-container-rotate">
                 <CardSection />
               </article>
-              {accessToken && userDetails?._id && <article className="bg-[#FFFFFFD9] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
-                <h1 className="mb-1 text-base">Coinz : {userCoinZ}</h1>
-                {claimedCoinz > 0 && (
-                  <h1 className="text-sm">Coinz Applied: {claimedCoinz}</h1>
+              <article className="bg-[#FFFFFFD9] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
+                {accessToken && userDetails?._id && <h1 className="mb-1 text-base">Coinz : {userCoinZ}</h1>}
+                {claimedCoins > 0 && !billData?.couponId && (
+                  <h1 className="text-sm">Coinz Applied: {claimedCoins}</h1>
                 )}
-              </article>}
+              </article>
             </article>
             <article
               style={{
-                opacity: claimedCoinz > 0 ? 0.5 : 1,
+                opacity: claimedCoins > 0 ? 0.5 : 1,
               }}
               className="z-10 scaled-card-container-2 rounded-2xl h-[235px] coupon-card-responsive mr-4 bg-white relative"
             >
@@ -202,10 +203,16 @@ const MemoCoinzRewardSection = () => {
               onClick={openModal}
               onKeyDown={openModal}
             >
-              <GameButton
-                text={cn(claimedCoinz > 0 ? "Applied" : "Use Coinz")}
-                hideShine={claimedCoinz > 0 || false}
+              {outletInfo?.isPosEnabled ? <GameButton
+                text={cn(claimedCoins > 0 && !billData?.couponId ? "Applied" : "Use Coinz")}
+                hideShine={claimedCoins > 0 && !billData?.couponId || false}
               />
+                :
+                <GameButton
+                  text={cn(claimedCoins > 0 ? "Applied" : "Use Coinz")}
+                  hideShine={claimedCoins > 0 || false}
+                />
+              }
             </article>
             <article
               onClick={openCouponz}
@@ -213,8 +220,8 @@ const MemoCoinzRewardSection = () => {
               className="relative flex items-center mr-4"
             >
               <GameButton
-                text={cn(claimCouponz > 0 ? "Applied" : "Use Couponz")}
-                hideShine={claimCouponz > 0 || false}
+                text={cn(claimCouponz > 0 || !!billData?.couponId ? "Applied" : "Use Couponz")}
+                hideShine={claimCouponz > 0 || !!billData?.couponId || false}
               />
             </article>
           </section>

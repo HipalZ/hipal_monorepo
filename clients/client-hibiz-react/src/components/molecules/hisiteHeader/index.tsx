@@ -2,8 +2,6 @@ import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { TbSettings } from "react-icons/tb";
 import { FaArrowLeft } from "react-icons/fa";
-import { cn } from "@/components/utils/helper";
-import { useIsExplorePage } from "@/hooks/useExplore";
 interface HeaderProps {
   leftIcon?: JSX.Element;
   centerImage?: string;
@@ -13,6 +11,7 @@ interface HeaderProps {
   title?: string;
   onBack?: () => void;
   children?: React.ReactNode;
+  classes?: string;
 }
 
 const MemoizedHeader: React.FC<HeaderProps> = memo(
@@ -24,9 +23,9 @@ const MemoizedHeader: React.FC<HeaderProps> = memo(
     rightButton,
     children,
     onBack,
+    classes,
   }) => {
     const navigate = useNavigate();
-    const isExplorePage = useIsExplorePage();
 
     const handleBackClick = () => {
       if (onBack) {
@@ -48,10 +47,7 @@ const MemoizedHeader: React.FC<HeaderProps> = memo(
     return (
       <>
         <div
-          className={cn(
-            "fixed top-0 z-10 flex items-center justify-between w-full p-6 md:max-w-[69rem] rounded-b-xl",
-            isExplorePage ? "bg-white" : "",
-          )}
+          className={`fixed top-0 z-10 flex items-center justify-between w-full p-6 md:max-w-[69rem] rounded-b-xl ${classes}`}
         >
           <button
             type="button"
@@ -61,9 +57,8 @@ const MemoizedHeader: React.FC<HeaderProps> = memo(
             {leftIcon || <FaArrowLeft />}
           </button>
           <div
-            className={`${
-              centerImage ? "flex items-center justify-center" : ""
-            } `}
+            className={`${centerImage ? "flex items-center justify-center" : ""
+              } `}
           >
             {centerImage && (
               <button type="button" onClick={logoutUser}>
@@ -72,11 +67,10 @@ const MemoizedHeader: React.FC<HeaderProps> = memo(
             )}
             &nbsp;
             <span
-              className={`${
-                centerImage
-                  ? ""
-                  : "absolute w-max transform -translate-x-1/2 left-1/2"
-              } text-2xl font-medium capitalize`}
+              className={`${centerImage
+                ? ""
+                : "absolute w-max transform -translate-x-1/2 left-1/2"
+                } text-2xl font-medium capitalize`}
             >
               {title}
             </span>
@@ -89,7 +83,7 @@ const MemoizedHeader: React.FC<HeaderProps> = memo(
               <TbSettings size={24} />
             </button>
           )}
-        </div>
+        </div >
         &nbsp;
         {children ? <center>{children}</center> : null}
       </>

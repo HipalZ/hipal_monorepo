@@ -20,7 +20,6 @@ import {
   Reviews,
   Subscriber,
   Table,
-  TagModel,
   TempTableSettle,
   UpiMode,
   User,
@@ -49,12 +48,12 @@ import { ObjectId } from "bson";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
-import { schedule } from "node-cron";
 import { z } from "zod";
 import {
   ClientRoles,
   requireAuthorization,
 } from "../../../middleware/authorization";
+import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { getMerchantConfig } from "../../utils/cacheHelper";
 import {
@@ -465,26 +464,11 @@ const paymentsRouter = new Hono()
         const { merchantId } = c.req.param();
         const uniqueOrderId = nanoid(15);
 
-        if (couponId) {
-          const coupon = await Couponz.findById(couponId).select(
-            "conditions.couponEndDate",
-          );
+        const userSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
 
-          if (
-            coupon &&
-            coupon.conditions.couponEndDate > 0 &&
-            coupon.conditions.couponEndDate < Date.now()
-          ) {
-            return c.json(
-              {
-                message: "Coupon has expired",
-                err: true,
-                data: {},
-              },
-              400,
-            );
-          }
-        }
         const client = await razorpayWrapper.getClient(merchantId);
         const response = await client.orders.create({
           amount: total * 100, // Fixed multiplication logic
@@ -496,7 +480,7 @@ const paymentsRouter = new Hono()
             {
               total,
               currency,
-              billValue,
+              billValue: userSession?.initialTotal || billValue,
               businessId,
               receipt: uniqueOrderId,
               userId,
@@ -522,6 +506,110 @@ const paymentsRouter = new Hono()
       });
     },
   )
+
+  .post(
+    "/fetch_update_bill/:businessId",
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.HIPAL_CUSTOMER]),
+    zValidator(
+      "json",
+      z.object({
+        tableName: z.string().min(1).max(20),
+        claimedCoins: z.coerce.number().default(0),
+        tips: z.coerce.number().optional(),
+        total: z.coerce.number(),
+        couponId: z.string().optional(),
+        removeCoins: z.boolean().optional(),
+        removeTips: z.boolean().optional(),
+      }),
+    ),
+    zValidator("param", z.object({ businessId: z.string().min(1).max(50) })),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        try {
+          const requestData = await c.req.json();
+          const {
+            tableName,
+            claimedCoins = 0,
+            tips = 0,
+            total = 0,
+            couponId,
+            removeCoins,
+            removeTips,
+          } = requestData;
+          const { businessId } = c.req.param();
+
+          const tempTable = await UserSession.findOne({
+            businessId,
+            tableName,
+          });
+          if (!tempTable) {
+            return respond(c, "Table not found", true, 400, {});
+          }
+
+          const effectiveClaimedCoins = claimedCoins || tempTable.claimedCoins;
+
+          console.log("effectiveClaimedCoins", effectiveClaimedCoins);
+
+          // Step 1: Calculate finalSubTotal
+          const finalSubTotal =
+            tempTable.initialSubTotal -
+            (removeCoins
+              ? 0
+              : Math.min(effectiveClaimedCoins, tempTable.initialSubTotal));
+
+          console.log("finalSubTotal", finalSubTotal);
+
+          // Step 2: Calculate gstPercentage
+          const gstPercentage =
+            (tempTable.initialTax / tempTable.initialSubTotal) * 100;
+
+          console.log("gstPercentage", gstPercentage);
+
+          // Step 3: Calculate finalTax
+          const finalTax = (gstPercentage / 100) * finalSubTotal;
+
+          console.log("finalTax", finalTax);
+
+          // Step 4: Calculate finalTotal
+          const finalTotal = Math.round(
+            finalSubTotal +
+              finalTax +
+              (removeTips ? 0 : tips || tempTable.tips) +
+              tempTable.serviceCharge,
+          );
+
+          await UserSession.findOneAndUpdate(
+            { businessId, tableName },
+            {
+              finalSubTotal,
+              finalTotal,
+              couponId: couponId || null,
+              finalTax: finalTax.toFixed(2),
+              tips: removeTips ? 0 : tips || tempTable.tips,
+              claimedCoins: removeCoins ? 0 : effectiveClaimedCoins,
+            },
+            { session, new: true },
+          );
+
+          return c.json(
+            {
+              message: "Bill updated successfully",
+              err: false,
+              data: {},
+            },
+            200,
+          );
+        } catch (error) {
+          console.error("Error updating bill:", error);
+          return respond(c, "Internal server error", true, 500, {});
+        }
+      });
+    },
+  )
+
   .post(
     "/reviews",
     authTokenValidator,
@@ -625,7 +713,7 @@ const paymentsRouter = new Hono()
               claimedCoins: claimedCoins,
               tableName,
               tips,
-              billValue,
+              billValue: findTempTable?.initialTotal || billValue,
               businessId,
               order_id: uniqueOrderId,
               couponId,
@@ -1182,11 +1270,16 @@ const paymentsRouter = new Hono()
                 channelId: getOrder?.channelId,
                 earnCoins: getCashBack,
                 date: Date.now(),
-                tax: tempTable?.tax || 0,
-                serviceCharge: tempTable?.serviceCharge || 0,
-                posBillRequestId: tempTable?.billRequestId || "",
-                posBillId: tempTable?.billInvoiceId || "",
+                tax: tempTable?.finalTax,
+                serviceCharge: tempTable?.serviceCharge,
+                posBillRequestId: tempTable?.billRequestId,
+                posBillId: tempTable?.billInvoiceId,
                 settleType: tempTable?.settleType || "PAYMENT_GATEWAY",
+                initialSubTotal: tempTable?.initialSubTotal,
+                initialTax: tempTable?.initialTax,
+                initialTotal: tempTable?.initialTotal,
+                finalSubTotal: tempTable?.finalSubTotal,
+                discount: tempTable?.discount,
               },
             ],
             { session },
@@ -1402,6 +1495,11 @@ const paymentsRouter = new Hono()
       const requestData = await c.req.json();
       const { businessId, tableName, message, userId } = requestData;
 
+      const appInfo = await DeviceToken.findOne({
+        token: { $exists: true },
+        v: { $exists: true },
+      });
+
       const tableInfo = await Table.findOne({ businessId, name: tableName });
 
       let hiCode = "";
@@ -1420,6 +1518,9 @@ const paymentsRouter = new Hono()
         date: Date.now(),
         order_id: new ObjectId(),
         hiCode: hiCode,
+        v: appInfo?.v,
+        appUrl: appInfo?.appUrl,
+        updateFeature: appInfo?.updateFeature,
       });
 
       const registrationToken = await DeviceToken.find({
@@ -1559,6 +1660,25 @@ const paymentsRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.query();
 
+      const appInfo = await DeviceToken.findOne({
+        token: { $exists: true },
+        v: { $exists: true },
+      });
+
+      PaymentAlert.updateMany(
+        {
+          businessId,
+          alertType: ["WAITER"],
+          isAccepted: false,
+        },
+        {
+          v: appInfo?.v,
+          appUrl: appInfo?.appUrl,
+          updateFeature: appInfo?.updateFeature,
+        },
+        { new: true },
+      );
+
       const existingPaymentAlerts = await PaymentAlert.find({
         businessId,
         alertType: ["WAITER"],
@@ -1578,7 +1698,15 @@ const paymentsRouter = new Hono()
         "existing paymentAlert",
         false,
         200,
-        existingPaymentAlerts,
+        existingPaymentAlerts.length === 0
+          ? [
+              {
+                v: appInfo?.v,
+                appUrl: appInfo?.appUrl,
+                updateFeature: appInfo?.updateFeature,
+              },
+            ]
+          : existingPaymentAlerts,
       );
     },
   )
@@ -1590,6 +1718,7 @@ const paymentsRouter = new Hono()
       ClientRoles.HIPAL_CUSTOMER,
       ClientRoles.CAPTAIN,
     ]),
+    ubacMiddleware("offline_settle"),
 
     zValidator("param", z.object({ alertId: z.string() })),
 
@@ -1764,7 +1893,7 @@ const paymentsRouter = new Hono()
                       paymentMode?.name === "npc" ||
                       paymentMode?.name === "complementary"
                         ? 0
-                        : tempTable?.tax,
+                        : tempTable?.finalTax,
                     serviceCgarge:
                       paymentMode?.name === "npc" ||
                       paymentMode?.name === "complementary"
@@ -1774,6 +1903,10 @@ const paymentsRouter = new Hono()
                     splitModes: settleModes,
                     waiterName,
                     date: Date.now(),
+                    initialSubTotal: tempTable?.initialSubTotal,
+                    initialTax: tempTable?.initialTax,
+                    initialTotal: tempTable?.initialTotal,
+                    finalSubTotal: tempTable?.finalSubTotal,
                   },
                 ],
                 { session },
@@ -2075,6 +2208,7 @@ const paymentsRouter = new Hono()
       ClientRoles.HIPAL_CUSTOMER,
       ClientRoles.CAPTAIN,
     ]),
+    ubacMiddleware("sale_summary"),
     zValidator("query", paramsSchema),
     async (c) => {
       const { businessId, from, to } = c.req.query();
@@ -2094,9 +2228,19 @@ const paymentsRouter = new Hono()
         date: { $gte: fromDate, $lte: toDate },
       });
 
+      const totalOrders = payments.length;
+
       let overAllAmount = 0;
       let totalOnlineSale = 0;
       const offlineSales: Record<string, number> = {};
+
+      const activeTable = await Table.find({
+        businessId: businessId,
+        status: "ACTIVE",
+      });
+      const totalActiveTableValue = activeTable.reduce((acc, table) => {
+        return acc + (table?.currentTableAmount ?? 0);
+      }, 0);
 
       for (const payment of payments) {
         const { total = 0, paymentMode, mode, splitModes } = payment;
@@ -2133,6 +2277,8 @@ const paymentsRouter = new Hono()
           overAllAmount, // Excludes complementary but includes cash in split modes
           onlineSale: { online: totalOnlineSale },
           offlineSale: offlineSales,
+          totalOrders,
+          totalActiveTableValue,
         },
       });
     },
@@ -2150,6 +2296,7 @@ const paymentsRouter = new Hono()
     zValidator("query", paramsSchema),
 
     async (c) => {
+      let { appliedFilter } = c.req.query();
       const { businessId, from, to } = c.req.query();
       const fromDate = from ? Number(from) : startOfToday.getTime();
       const toDate = to ? Number(to) : endOfToday.getTime();
@@ -2166,23 +2313,96 @@ const paymentsRouter = new Hono()
       const pageNumber = c.req.query("pageNumber") as string;
       const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
 
-      const existingPayments = await Payment.find({
-        businessId,
-        date: {
-          $gte: fromDate,
-          $lte: toDate,
-        },
-      })
+      const filterConditions = [
+        { businessId },
+        { date: { $gte: fromDate, $lte: toDate } },
+      ];
+
+      if (typeof appliedFilter === "string") {
+        try {
+          appliedFilter = JSON.parse(appliedFilter);
+        } catch (err) {
+          console.error("Failed to parse appliedFilter", err);
+          appliedFilter = [];
+        }
+      }
+
+      if (
+        appliedFilter &&
+        Array.isArray(appliedFilter) &&
+        appliedFilter.length > 0
+      ) {
+        const modeFilter = appliedFilter.find((f) => f.key === "mode");
+        // if (modeFilter && Array.isArray(modeFilter.value)) {
+        //   const modeValues = modeFilter.value.map(v => v.toLowerCase());
+        //   const includesOnline = modeValues.includes('online');
+        //   const offlineModes = modeValues.filter(value => value !== 'online');
+
+        //   if (includesOnline && offlineModes.length > 0) {
+        //     filterConditions.push({
+        //       $or: [
+        //         { paymentMode: 'online' },
+        //         { paymentMode: { $in: offlineModes } }
+        //       ]
+        //     });
+        //   } else if (includesOnline) {
+        //     filterConditions.push({ paymentMode: 'online' });
+        //   } else if (offlineModes.length > 0) {
+        //     filterConditions.push({ paymentMode: { $in: offlineModes } });
+        //   }
+        // }
+        if (modeFilter && Array.isArray(modeFilter.value)) {
+          const modeValues = modeFilter.value.map((v) => v.toLowerCase());
+          const includesOnline = modeValues.includes("online");
+          const offlineModes = modeValues.filter((value) => value !== "online");
+
+          const combinedModes = [
+            ...(includesOnline ? ["online"] : []),
+            ...offlineModes,
+          ];
+
+          if (combinedModes.length > 0) {
+            filterConditions.push({ paymentMode: { $in: combinedModes } });
+          }
+        }
+
+        const typeFilter = appliedFilter.find((f) => f.key === "type");
+        if (typeFilter && Array.isArray(typeFilter.value)) {
+          const typeMapping = {
+            Coinz: "COINZ",
+            Couponz: "COUPONZ",
+            "No Rewardz": "NO_REWARDZ",
+            Disscount: "DISCOUNT",
+          };
+          const types = typeFilter.value.map((v) => typeMapping[v] || v);
+          filterConditions.push({ discountType: { $in: types } });
+        }
+
+        const warningsFilter = appliedFilter.find((f) => f.key === "warnings");
+        if (
+          warningsFilter &&
+          Array.isArray(warningsFilter.value) &&
+          !warningsFilter.value.includes("All")
+        ) {
+          const warningsMapping = {
+            "Force Settle": "FORCE_SETTLE",
+            "Free Tables": "FREE_SETTLE",
+          };
+          const warnings = warningsFilter.value.map(
+            (v) => warningsMapping[v] || v,
+          );
+          filterConditions.push({ settleType: { $in: warnings } });
+        }
+      }
+
+      const queryObject = { $and: filterConditions };
+
+      const existingPayments = await Payment.find(queryObject)
         .sort({ _id: -1 })
         .skip(skip)
         .limit(PAGE_SIZE)
-        .populate({
-          path: "order_id",
-        })
-        .populate({
-          path: "userId",
-          select: "name phone",
-        });
+        .populate({ path: "order_id" })
+        .populate({ path: "userId", select: "name phone" });
 
       let totalSale = 0;
 
@@ -2593,9 +2813,11 @@ const paymentsRouter = new Hono()
       z.object({
         tagIds: z.array(z.string()).optional(),
         comment: z.string().optional(),
-        userId: z.string({
-          message: "userId is required",
-        }),
+        userId: z
+          .string({
+            message: "userId is required",
+          })
+          .optional(),
         businessId: z.string({
           message: "businessId is required",
         }),
@@ -2638,59 +2860,59 @@ const paymentsRouter = new Hono()
         { new: true },
       );
 
-      const user = await User.findById(userId).select("name phone");
+      // const user = await User.findById(userId).select("name phone");
 
-      const date = Date.now();
-      const customDate = new Date(date).setHours(0, 0, 0, 0);
+      // const date = Date.now();
+      // const customDate = new Date(date).setHours(0, 0, 0, 0);
 
-      for (let i = 0; i < tagIds.length; i++) {
-        const tagId = tagIds[i];
-        const tag = await TagModel.findById(tagIds[i]).select("duration time");
+      // for (let i = 0; i < tagIds.length; i++) {
+      //   const tagId = tagIds[i];
+      //   const tag = await TagModel.findById(tagIds[i]).select("duration time");
 
-        const createUserTag = await UserTags.create({
-          userId,
-          tagId,
-          businessId,
-          date: Date.now(),
-          reminderDate: customDate + tag.duration + tag.time,
-        });
-        const reminderDateObj = new Date(createUserTag.reminderDate);
-        const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
-          reminderDateObj.getMonth() + 1
-        } *`;
+      //   const createUserTag = await UserTags.create({
+      //     userId,
+      //     tagId,
+      //     businessId,
+      //     date: Date.now(),
+      //     reminderDate: customDate + tag.duration + tag.time,
+      //   });
+      //   const reminderDateObj = new Date(createUserTag.reminderDate);
+      //   const cronExpression = `${reminderDateObj.getMinutes()} ${reminderDateObj.getHours()} ${reminderDateObj.getDate()} ${
+      //     reminderDateObj.getMonth() + 1
+      //   } *`;
 
-        schedule(cronExpression, async () => {
-          const options = {
-            method: "POST",
-            url: "https://control.msg91.com/api/v5/flow/",
-            headers: {
-              accept: "application/json",
-              "content-type": "application/json",
-              authkey: "387796AmyGlDBq63b2d75aP1",
-            },
-            data: {
-              template_id: "66b1f189d6fc055e463e3b63",
-              sender: "HiPalc",
-              mobiles: `91${user.phone}`,
-              var: `${user.name}`,
-            },
-          };
-          await axios(options);
-        });
-      }
+      //   schedule(cronExpression, async () => {
+      //     const options = {
+      //       method: "POST",
+      //       url: "https://control.msg91.com/api/v5/flow/",
+      //       headers: {
+      //         accept: "application/json",
+      //         "content-type": "application/json",
+      //         authkey: "387796AmyGlDBq63b2d75aP1",
+      //       },
+      //       data: {
+      //         template_id: "66b1f189d6fc055e463e3b63",
+      //         sender: "HiPalc",
+      //         mobiles: `91${user.phone}`,
+      //         var: `${user.name}`,
+      //       },
+      //     };
+      //     await axios(options);
+      //   });
+      // }
 
-      if (!payment) {
-        return c.json({
-          err: true,
-          data: {},
-          message: "Payment not found",
-        });
-      }
+      // if (!payment) {
+      //   return c.json({
+      //     err: true,
+      //     data: {},
+      //     message: "Payment not found",
+      //   });
+      // }
 
       return c.json({
         err: false,
-        data: payment,
-        message: "Payment updated successfully",
+        data: {},
+        message: "Payment tag updated successfully",
       });
     },
   )
@@ -3010,20 +3232,17 @@ const paymentsRouter = new Hono()
         date: { $gte: fromDate, $lte: toDate },
       });
 
-      let totalDuesReceived = 0;
       let totalDiscount = 0;
       let totalDuesGiven = 0;
       let totalNpc = 0;
       let totalComplementary = 0;
       let totalCoinsGiven = 0;
-      let totalCoinsReceived = 0;
+      let totalCoinsUsed = 0;
       let totalCouponUsed = 0;
+      let totalCouponzCount = 0;
+      let totalCoinsUsedCount = 0;
 
       for (const payment of payments) {
-        if (payment.settleType === "DUES_SETTLE") {
-          totalDuesReceived += payment.total;
-        }
-
         totalDiscount += payment.discount ?? 0;
 
         if (payment.mode === "dues") {
@@ -3051,12 +3270,14 @@ const paymentsRouter = new Hono()
 
         totalCoinsGiven += payment.earnCoins ?? 0;
 
-        if (!payment.couponId) {
-          totalCoinsReceived += payment.claimedCoins ?? 0;
+        if (payment.claimedCoins && !payment.couponId) {
+          totalCoinsUsed += payment.claimedCoins ?? 0;
+          totalCoinsUsedCount += 1;
         }
 
         if (payment.couponId) {
           totalCouponUsed += payment.claimedCoins ?? 0;
+          totalCouponzCount += 1;
         }
       }
 
@@ -3064,7 +3285,6 @@ const paymentsRouter = new Hono()
         err: false,
         data: {
           exceptionSale: {
-            totalDuesReceived,
             totalDuesGiven,
             totalNpc,
             totalComplementary,
@@ -3072,7 +3292,9 @@ const paymentsRouter = new Hono()
           },
           rewardSale: {
             totalCoinsGiven,
-            totalCoinUsed: totalCoinsReceived,
+            totalCoinsUsed,
+            totalCoinsUsedCount,
+            totalCouponzCount,
             totalCouponUsed,
           },
         },
@@ -3121,7 +3343,9 @@ const paymentsRouter = new Hono()
       let totalFreeSettle = 0;
 
       for (const payment of payments) {
-        totalTax += payment.tax ?? 0;
+        if (payment.mode !== "dues") {
+          totalTax += payment.tax ?? 0;
+        }
         totalTip += payment.tips ?? 0;
         totalServiceCharge += payment.serviceCharge ?? 0;
 

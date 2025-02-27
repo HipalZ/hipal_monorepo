@@ -3,8 +3,8 @@
 import flowbitePlugin from "flowbite/plugin";
 
 export default {
-    darkMode: ["class"],
-    content: [
+  darkMode: ["class"],
+  content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
     "./public/**/*.html",
@@ -24,19 +24,19 @@ export default {
   		},
   		colors: {
   			primary: {
-  				DEFAULT: 'hsl(var(--primary))',
-  				foreground: 'hsl(var(--primary-foreground))'
+  				DEFAULT: 'var(--primary)',
+  				foreground: 'var(--primary-foreground)'
   			},
   			'base-100': 'var(--b1)',
   			'primary-content': 'var(--pc)',
   			secondary: {
-  				DEFAULT: 'hsl(var(--secondary))',
-  				foreground: 'hsl(var(--secondary-foreground))'
+  				DEFAULT: 'var(--secondary)',
+  				foreground: 'var(--secondary-foreground)'
   			},
   			'secondary-content': 'var(--sc)',
   			accent: {
-  				DEFAULT: 'hsl(var(--accent))',
-  				foreground: 'hsl(var(--accent-foreground))'
+  				DEFAULT: 'var(--accent)',
+  				foreground: 'var(--accent-foreground)'
   			},
   			'accent-content': 'var(--ac)',
   			neutral: 'var(--n)',
@@ -80,7 +80,41 @@ export default {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
+  		},
+		  animation: {
+			shine: 'shine var(--duration) infinite linear',
+			  'accordion-down': 'accordion-down 0.2s ease-out',
+			  'accordion-up': 'accordion-up 0.2s ease-out'
+		  },
+  		keyframes: {
+			shine: {
+				'0%': {
+					'background-position': '0% 0%'
+				},
+				'50%': {
+					'background-position': '100% 100%'
+				},
+				to: {
+					'background-position': '0% 0%'
+				}
+			},
+  			'accordion-down': {
+  				from: {
+  					height: '0'
+  				},
+  				to: {
+  					height: 'var(--radix-accordion-content-height)'
+  				}
+  			},
+  			'accordion-up': {
+  				from: {
+  					height: 'var(--radix-accordion-content-height)'
+  				},
+  				to: {
+  					height: '0'
+  				}
+  			}
+  		},
   	}
   },
 

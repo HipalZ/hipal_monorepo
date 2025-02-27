@@ -28,7 +28,7 @@ const AddAmountModal = memo(() => {
     setBillValue,
     setEditBillModal,
     setClaimCouponz,
-    setClaimedCoinz,
+    setClaimedCoins,
     setCustomTip,
     setTips,
     setSelectedTip,
@@ -60,7 +60,7 @@ const AddAmountModal = memo(() => {
       setIsPayment(false);
       setEditBillModal(false);
       setClaimCouponz(0);
-      setClaimedCoinz(0);
+      setClaimedCoins(0);
       setSelectedTip("");
       setCustomTip("");
       setShowInput(false);
@@ -76,7 +76,7 @@ const AddAmountModal = memo(() => {
     setEditBillModal,
     setIsPayment,
     setClaimCouponz,
-    setClaimedCoinz,
+    setClaimedCoins,
     setCustomTip,
     setTips,
     setSelectedTip,
@@ -103,7 +103,7 @@ const AddAmountModal = memo(() => {
     };
 
     mutate(payload);
-  }, [businessId, tableName, name, userDetails._id]);
+  }, [businessId, tableName, name, userDetails._id, mutate]);
   return (
     <section className=" relative overflow-y-auto overflow-x-hidden mb-[2rem]">
       <header className="bg-base-100 h-[4.25rem] flex items-center text-primary">
@@ -160,13 +160,13 @@ const AddAmountModal = memo(() => {
         buttons={[
           ...(outletInfo?.outLetType !== "OTHER"
             ? [
-                {
-                  text: "Call Captain",
-                  onClick: callTheWaiter,
-                  disable: isPending,
-                  isLoading: isPending,
-                },
-              ]
+              {
+                text: "Call Captain",
+                onClick: callTheWaiter,
+                disable: isPending,
+                isLoading: isPending,
+              },
+            ]
             : []),
           {
             text: "Next",

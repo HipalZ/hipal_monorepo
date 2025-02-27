@@ -50,10 +50,12 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
   tax: {
     type: Number,
     required: false,
+    default: 0,
   },
   serviceCharge: {
     type: Number,
     required: false,
+    default: 0,
   },
   settleType: {
     type: String,
@@ -96,6 +98,59 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
   isPinActive: {
     type: Boolean,
     default: false,
+  },
+  finalSubTotal: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  finalTotal: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  finalTax: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  initialSubTotal: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  initialTotal: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  initialTax: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  discount: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  tips: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  claimedCoins: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  couponId: {
+    type: String,
+    required: false,
+  },
+  requestId: {
+    type: String,
+    required: false,
   },
 });
 

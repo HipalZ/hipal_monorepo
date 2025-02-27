@@ -21,7 +21,7 @@ export const useMerchantDetails = () => {
   const {
     setMerchantDetails,
     setBillValue,
-    setClaimedCoinz,
+    setClaimedCoins,
     setClaimCouponz,
     setTips,
     setSelectedTip,
@@ -29,7 +29,7 @@ export const useMerchantDetails = () => {
   } = usePaymentStore((s) => ({
     setMerchantDetails: s.setMerchantDetails,
     setBillValue: s.setBillValue,
-    setClaimedCoinz: s.setClaimedCoinz,
+    setClaimedCoins: s.setClaimedCoins,
     setClaimCouponz: s.setClaimCouponz,
     setTips: s.setTips,
     setSelectedTip: s.setSelectedTip,
@@ -51,7 +51,7 @@ export const useMerchantDetails = () => {
         });
       });
       // by default setting to zero instead of previous stale data
-      setClaimedCoinz(0);
+      setClaimedCoins(0);
       setClaimCouponz(0);
       setTips(0);
       setSelectedTip("");
@@ -67,10 +67,8 @@ export const useMerchantDetails = () => {
     return response?.data;
   }, [
     businessId,
-    searchParams,
     setMerchantDetails,
-    setBillValue,
-    setClaimedCoinz,
+    setClaimedCoins,
     setClaimCouponz,
     setTips,
     setSelectedTip,

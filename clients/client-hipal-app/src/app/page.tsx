@@ -21,7 +21,6 @@ export default function Home() {
       <center
         onKeyDown={goToAllBusiness}
         onClick={goToAllBusiness}
-        className="mb-4"
       >
         <Image
           className="nav_bar_logo_mobile show_mobile"

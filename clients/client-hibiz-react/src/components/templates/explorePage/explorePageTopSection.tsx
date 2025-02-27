@@ -16,6 +16,7 @@ import {
 } from "react";
 import { CiEdit } from "react-icons/ci";
 import { useImageChange } from "../../helpers/explorePageHelpers";
+import { ChevronRight } from "lucide-react";
 
 const PlusButton = lazy(() => import("@/components/atom/plusButton"));
 const SubHeader = lazy(() => import("@/components/atom/subHeader"));
@@ -23,7 +24,6 @@ const SubHeader = lazy(() => import("@/components/atom/subHeader"));
 const MemoExplorePageSection = () => {
   const {
     bizInfo,
-    toggleExplorePages,
     setToggleExplorePages,
     img,
     toggleBizInfo,
@@ -31,7 +31,6 @@ const MemoExplorePageSection = () => {
     setBizInfo,
   } = useExploreStore((s) => ({
     bizInfo: s.bizInfo,
-    toggleExplorePages: s.toggleExplorePages,
     setToggleExplorePages: s.setToggleExplorePages,
     img: s.img,
     toggleBizInfo: s.toggleBizInfo,
@@ -45,13 +44,13 @@ const MemoExplorePageSection = () => {
     (e: ChangeEvent<HTMLInputElement>) => {
       setBizInfo({ ...bizInfo, name: e.target.value });
     },
-    [bizInfo],
+    [bizInfo, setBizInfo],
   );
 
   const handleBizInfo = useCallback(() => {
     setToggleBizInfo(!toggleBizInfo);
     setToggleExplorePages(ExplorePages.BIZINFO);
-  }, [toggleBizInfo, toggleExplorePages]);
+  }, [toggleBizInfo, setToggleBizInfo, setToggleExplorePages]);
 
   const bannerInputRef = useRef<HTMLInputElement | null>(null);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
@@ -81,9 +80,9 @@ const MemoExplorePageSection = () => {
   }, [bizInfo]);
 
   return (
-    <section className="gap-4 mt-16 md:flex">
+    <section className="gap-4 md:flex">
       <section className="flex-1 mb-4">
-        <SubHeader text="Banner" />
+        <SubHeader text="Main Banner" />
         <article
           className={cn(
             "relative rounded-xl h-[20rem] w-[20rem] sm:w-[22rem]",
@@ -125,8 +124,8 @@ const MemoExplorePageSection = () => {
         </article>
       </section>
       &nbsp;
-      <section className="flex-1 lg:space-y-10">
-        <SubHeader text="Basic Info" />
+      <section className="flex-1 md:space-y-4">
+        <SubHeader text="Logo & Biz Name" />
         <section className="flex items-center justify-between flex-1 space-x-4 md:justify-start">
           <article
             className={cn(
@@ -185,25 +184,29 @@ const MemoExplorePageSection = () => {
           <article
             onClick={handleBizInfo}
             onKeyDown={handleBizInfo}
-            className="flex flex-wrap gap-4 p-2 mt-4 bg-white rounded-xl"
+            className="relative flex flex-wrap items-center gap-4 p-4 bg-white rounded-xl hover:bg-gray-50 cursor-pointer group"
           >
             {basicInfos.map((info) => {
               const isFilled = bizInfoFilled[info?.text?.toLowerCase()];
               return (
                 <div
                   key={info._id}
-                  className={`${
-                    isFilled ? "border-green-500" : "border-black"
-                  } border border-1 border-dashed p-2 rounded-lg`}
+                  className={`
+                border-2 border-dashed p-2 rounded-lg min-w-[120px]
+                ${isFilled ? "border-[#008800]" : "border-black"}
+              `}
                 >
-                  <span
-                    className={`${isFilled ? "text-green-500" : "text-black"}`}
-                  >
-                    {isFilled ? "\u2713" : "\u26A0"}&nbsp;{info.text}
+                  <span className={`${isFilled ? "text-[#008800]" : "text-black"}`}>
+                    {isFilled ? "✓" : "!"}&nbsp;{info.text}
                   </span>
                 </div>
               );
             })}
+
+            {/* Click indicator */}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-black transition-colors" />
+            </div>
           </article>
         </section>
       </section>

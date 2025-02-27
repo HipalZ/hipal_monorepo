@@ -68,11 +68,11 @@ const MemoizeDishAndCat = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
-  }, [fileInputRef]);
+  }, []);
 
   const navigate = useNavigate();
   const handleBack = () => {
-    navigate(routeToDashboard(businessData?._id as string));
+    navigate(`/app/business/${businessData?._id}/menu`);
   };
 
   const pathname = useLocation().pathname;
@@ -80,6 +80,7 @@ const MemoizeDishAndCat = () => {
   useEffect(() => {
     const isManagerExists = pathname.includes("dishandcat");
     setIsMenuManager(!isManagerExists);
+    setSelectedPage("DISHES");
   }, []);
 
   const openMenuModel = useCallback(() => {
@@ -91,21 +92,21 @@ const MemoizeDishAndCat = () => {
     }
     setOpenMenu(true);
     resetEditDish();
-  }, [selectedPage]);
+  }, [selectedPage, resetStore, resetEditDish, setSelectedCategory, setOpenMenu]);
 
   const closeMenu = useCallback(() => {
     setTempPage(selectedPage);
     setSelectedPage("ALERT");
-  }, [openMenu]);
+  }, [selectedPage, setSelectedPage, setTempPage]);
 
   const closeEditMenu = useCallback(() => {
     setEditOpenMenu(false);
-  }, [editOpenMenu]);
+  }, [setEditOpenMenu]);
 
   const showPopUp = useCallback(() => {
     setTempPage(selectedPage);
     setSelectedPage("ALERT");
-  }, [showAlertPopUp]);
+  }, [setSelectedPage, setTempPage, selectedPage]);
 
   const sidebarItems = [
     { icon: Hi, text: "Dishes", onClick: () => setSelectedPage("DISHES") },
@@ -146,9 +147,7 @@ const MemoizeDishAndCat = () => {
 
   if (isPending) {
     return (
-      <div>
-        <LoadingSpinner />
-      </div>
+      <LoadingSpinner />
     );
   }
 
@@ -235,7 +234,7 @@ const MemoizeDishAndCat = () => {
         </PopUp>
       )}
 
-      <div className="fixed z-50 flex flex-col items-end space-y-4 lg:sticky lg:float-right bottom-6 right-6">
+      <div className={`${selectedPage === "MAIN_CATEGORY" ? "bottom-16" : "bottom-6"}  fixed z-50 flex flex-col items-end space-y-4 lg:sticky lg:float-right lg:bottom-6 right-6`}>
         {selectedPage === "DISHES" && (
           <>
             <button

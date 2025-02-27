@@ -8,22 +8,17 @@ import type { User } from "../store/useOwnerLogin";
 import type { BannerType } from "../utils/bannerLayouts";
 import type Area from "react-easy-crop";
 
-interface IAcessControl {
-  [key: string]: string;
-  _id: string;
-}
-
 export interface CustomRole {
   businessId: string;
   customRoleId: string;
+  permissionGroupIds: string[];
+  permissionIds: string[];
   permissions: {
-    title: string;
-    isHaveAccess: boolean;
-  }[];
+    [key: string]: boolean;
+  };
   role: string;
   bookmark: boolean;
   _id: string;
-  accessControl: IAcessControl;
 }
 
 export interface UserProfile {
@@ -32,12 +27,16 @@ export interface UserProfile {
   phone: string;
   role: string;
   customRole: CustomRole[];
+  staffPermissions?: {
+    _id: string;
+    name: string;
+    isHaveAccess: boolean;
+  }[];
   password: string;
   id: string;
   _id: string;
   createdAt: string;
   updatedAt: string;
-  isHaveAccess: boolean;
 }
 export interface IBusinessData {
   tags?: string[];
@@ -107,6 +106,15 @@ export interface IDuesPersonsData {
   _id: string;
   totalDuesAmount: number;
   userId: UserDetails;
+}
+
+export interface IPaymentMode {
+  _id: string;
+  businessId: string;
+  name: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface IOutletInfo {
@@ -243,6 +251,15 @@ export interface IExistingPayments {
   createdAt: string;
   updatedAt: string;
   posBillRequestId?: string;
+  waiterName: string;
+  razorpayPaymentId: string;
+  razorpayOrderId: string;
+  discount: number;
+  posBillId: string;
+  splitModes: {
+      _id: string;
+      name: string;
+    }[]
   __v: number;
 }
 export interface HistoryData {
@@ -749,12 +766,12 @@ interface ExpiryClaimLimit {
 // Define the Availability type
 interface Availability {
   when:
-    | "custom"
-    | "allthetime"
-    | "birthdayweek"
-    | "birthdaymonth"
-    | "weekdays"
-    | "weekends";
+  | "custom"
+  | "allthetime"
+  | "birthdayweek"
+  | "birthdaymonth"
+  | "weekdays"
+  | "weekends";
   customDays: string[];
   startTime: number;
   endTime: number;
@@ -987,3 +1004,22 @@ export type DuesData = {
   totalDuesAmount: number;
   bill: Bill[];
 };
+
+export interface IWhatsAppFlows {
+  description?: string;
+  _id: string;
+  businessId: string;
+  name: string;
+  flows: FlowStep[];
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  flowId?: string;
+}
+
+export interface FlowStep {
+  _id: string;
+  templateId: string;
+  templateName: string;
+  triggerAt: number;
+}

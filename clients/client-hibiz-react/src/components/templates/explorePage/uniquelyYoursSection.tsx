@@ -2,28 +2,46 @@ import { lazy, memo, useCallback } from "react";
 import dummyImage from "@/assets/hisite/placeholder.png";
 import type { IDish } from "@/components/types/businessData";
 import { useExploreStore } from "@/components/store/useExploreStore";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
+import { useUniquelyYours } from "@/hooks/useExplore";
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
 
 const SubHeader = lazy(() => import("@/components/atom/subHeader"));
 const Paragraph = lazy(() => import("@/components/atom/paragraph"));
 const PlusButton = lazy(() => import("@/components/atom/plusButton"));
 
 const MemoUniquelyYoursSection = () => {
-  const { uniquelyDishes, showUniquePopUp, setShowUniquePopUp } =
+  const businessId = useParams()?.businessId;
+  const { fetchUniquelyYours } = useUniquelyYours();
+  const { uniquelyDishes, setShowUniquePopUp } =
     useExploreStore((s) => ({
       uniquelyDishes: s.uniquelyDishes,
-      showUniquePopUp: s.showUniquePopUp,
       setShowUniquePopUp: s.setShowUniquePopUp,
     }));
 
   // open popup
   const handleOpenPopUp = useCallback(() => {
     setShowUniquePopUp(true);
-  }, [showUniquePopUp]);
+  }, [setShowUniquePopUp]);
+
+  // => fetch uniquely yours
+  const { isLoading: uniquelyLoading } = useQuery({
+    queryKey: ["categories", businessId],
+    queryFn: fetchUniquelyYours,
+    enabled: !!businessId,
+  });
+
+  if (uniquelyLoading) {
+    return <article className="h-96">
+      <LoadingSpinner />
+    </article>
+  }
 
   return (
     <section className="mb-4">
       <SubHeader text="Uniquely Yours" />
-      <Paragraph text="select your best items on explore page upto 6" />
+      <Paragraph text="Showcase up to 6 of your best items on the Explore page" />
       <article className="flex flex-wrap gap-2 p-4 mt-2 bg-white rounded-2xl min-h-[7rem]">
         {uniquelyDishes.length > 0 &&
           uniquelyDishes.map((dish: IDish, index: number) => {

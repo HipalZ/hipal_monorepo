@@ -288,7 +288,7 @@ export const useBulkUploadContacts = () => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["getContacts"]);
+      queryClient.invalidateQueries({ queryKey: ["getContacts"] });
     },
     onError: () => {
       toast.error("Failed to upload contacts");
@@ -315,4 +315,29 @@ export const useGetAllGroups = () => {
     return response.data;
   };
   return { fetchAllGroups };
+};
+
+
+export enum ISelectedFlowType {
+  SAME_DAY = "sameday",
+  COME_BACK = "comeback",
+  SCAN = "scan",
+}
+
+export const flowOptions = [
+  { id: ISelectedFlowType.SAME_DAY, label: "Same Day Flow" },
+  { id: ISelectedFlowType.COME_BACK, label: "Comeback Day Flow" },
+  { id: ISelectedFlowType.SCAN, label: "Scan Flow" },
+]
+
+export const formatTriggerTime = (triggerAt: number, selectedFlowType: string) => {
+  if (selectedFlowType === ISelectedFlowType.COME_BACK) {
+    const weeks = triggerAt / (24 * 60 * 60 * 1000);
+    return `${weeks.toFixed(2)} week${weeks > 1 ? "s" : ""}`;
+  } if (triggerAt >= 3600 * 1000) {
+    const hours = triggerAt / (60 * 60 * 1000);
+    return `${hours.toFixed(2)} hour${hours > 1 ? "s" : ""}`;
+  }
+  const minutes = triggerAt / (60 * 1000);
+  return `${minutes.toFixed(2)} minute${minutes > 1 ? "s" : ""}`;
 };

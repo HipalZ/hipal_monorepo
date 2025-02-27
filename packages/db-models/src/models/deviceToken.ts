@@ -24,6 +24,16 @@ const deviceTokenSchema = new mongoose.Schema<DeviceTokenType>({
     type: Boolean,
     default: true,
   },
+  appUrl: {
+    type: String,
+  },
+  v: {
+    type: Number,
+  },
+  updateFeature: {
+    type: [String],
+    default: [],
+  },
 });
 
 const DeviceToken: Model<DeviceTokenType> = mongoose.model<DeviceTokenType>(

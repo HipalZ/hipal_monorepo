@@ -5,6 +5,7 @@ import BottomPopUp from '../bottomPopUp'
 import { usePaymentStore } from '@/components/store/usePaymentStore'
 import useTableData, { resetTableData } from '@/components/store/useTableData';
 import { debounce } from 'lodash-es';
+import { usePathname } from 'next/navigation';
 
 const MemoDynamicScanPage = () => {
     const { showScan,
@@ -12,6 +13,7 @@ const MemoDynamicScanPage = () => {
     } = usePaymentStore()
 
     const { tableNameTimeStamp, setTableNameTimeStamp, setIsVisible } = useTableData()
+    const pathName = usePathname()
 
     useEffect(() => {
         const checkTableNameExpiry = () => {
@@ -19,7 +21,7 @@ const MemoDynamicScanPage = () => {
             const threeHoursInMillis = 3 * 60 * 60 * 1000;
 
             // If the last update timestamp is recent, skip resetting
-            if (tableNameTimeStamp && (currentTime - tableNameTimeStamp) < threeHoursInMillis) {
+            if ((tableNameTimeStamp && (currentTime - tableNameTimeStamp) < threeHoursInMillis) || pathName.includes("posPayment")) {
                 return;
             }
 

@@ -39,7 +39,7 @@ const arrow1Variants = {
     opacity: [1, 0.3],
     transition: {
       duration: 1.5,
-      repeat: Infinity,
+      repeat: Number.POSITIVE_INFINITY,
       ease: "easeInOut",
       times: [0, 1],
     },
@@ -52,7 +52,7 @@ const arrow2Variants = {
     opacity: [0.3, 1],
     transition: {
       duration: 1.5,
-      repeat: Infinity,
+      repeat: Number.POSITIVE_INFINITY,
       ease: "easeInOut",
       delay: 0.1,
       times: [0, 1],
@@ -101,7 +101,7 @@ const MemoManage = () => {
             <motion.article
               className="absolute w-[300px]"
               animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 5, ease: "linear" }}
+              transition={{ repeat: Number.POSITIVE_INFINITY, duration: 5, ease: "linear" }}
             >
               <img
                 width={1080}

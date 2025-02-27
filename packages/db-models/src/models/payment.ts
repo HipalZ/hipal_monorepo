@@ -173,6 +173,29 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: Number,
       default: 0,
     },
+    initialTax: {
+      type: Number,
+      default: 0,
+    },
+
+    initialSubTotal: {
+      type: Number,
+      default: 0,
+    },
+    initialTotal: {
+      type: Number,
+      default: 0,
+    },
+    finalSubTotal: {
+      type: Number,
+      default: 0,
+    },
+    discountType: {
+      type: String,
+      enum: ["COINZ", "COUPONZ"],
+      required: false,
+      default: "COINZ",
+    },
   },
 
   { timestamps: true },

@@ -315,21 +315,15 @@ const categoriesRouter = new Hono()
       }
 
       if (child) {
-        const menuType =
-          await Business.findById(businessId).select("menuLayout");
-        if (!menuType) return respond(c, "Business not found", true, 404, {});
-        let hierarchy = "CHILD";
-        if (menuType.menuLayout !== "MAIN_AND_SUB_CATEGORY") {
-          hierarchy = "PARENT";
-        }
         const existingCategories = await Category.find({
           businessId,
-          hierarchy: hierarchy,
-          visibility: true,
+          hierarchy: "CHILD",
           isDeleted: false,
-        }).select(
-          "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage businessId",
-        );
+        })
+          .select(
+            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId",
+          )
+          .sort({ sequence: 1 });
 
         return respond(
           c,
@@ -525,6 +519,47 @@ const categoriesRouter = new Hono()
       }).select("_id name coverImage");
 
       return respond(c, "fetched successfully", false, 200, existingCategories);
+    },
+  )
+  .post(
+    "/sequence/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+    zValidator(
+      "json",
+      z.array(
+        z.object({
+          categoryId: z.string(),
+          sequence: z.number(),
+          hierarchy: z.string().optional(),
+        }),
+      ),
+    ),
+    async (c) => {
+      const { businessId } = c.req.param();
+      const requestData = await c.req.json();
+      console.log("requestData", requestData);
+
+      console.log("businessId", businessId);
+
+      for (let i = 0; i < requestData.length; i++) {
+        const res = await Category.findOneAndUpdate(
+          {
+            _id: requestData[i].categoryId,
+            businessId,
+            hierarchy: requestData[i]?.hierarchy || "PARENT",
+          },
+          { $set: { sequence: requestData[i].sequence } },
+          { new: true },
+        );
+        console.log("res", res);
+      }
+
+      return respond(c, "sequence updated successfully", false, 200, {});
     },
   );
 

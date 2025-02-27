@@ -54,6 +54,9 @@ export const PaymentAlertSchema = z.object({
   userId: ObjectIdSchema,
   hiCode: z.string().default("").optional(),
   mode: z.string().min(1).max(100).optional(),
+  v: z.coerce.number().optional(),
+  appUrl: z.string().min(10).max(50).optional(),
+  updateFeature: z.array(z.string()).optional(),
 });
 
 export type PaymentAlertType = z.infer<typeof PaymentAlertSchema>;

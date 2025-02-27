@@ -7,9 +7,15 @@ import dummyImage from "@/assets/hisite/placeholder.png";
 import { apiRpc } from "@hi/common";
 import { useParams } from "react-router-dom";
 import { useExploreTemp } from "@/components/store/useExploreTemp";
+import MotionButton from "@/components/atom/motionButton";
+import { useUniquelyYours } from "@/hooks/useExplore";
+import { useQuery } from "@tanstack/react-query";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const MemoUniquelyYoursPopUp = () => {
   const businessId = useParams()?.businessId;
+  const { getUniquelyDishes } = useUniquelyYours();
+
   const { setDishes, dishes } = useExploreTemp((s) => ({
     setDishes: s.setDishes,
     dishes: s.dishes,
@@ -126,8 +132,21 @@ const MemoUniquelyYoursPopUp = () => {
     return combinedDishes;
   }, [dishes, selectedDishes, searchQuery, fuse]);
 
+  // => fetch categories
+  const { isLoading: dishesLoading } = useQuery({
+    queryKey: ["categoriez", businessId, showUniquePopUp],
+    queryFn: getUniquelyDishes,
+    enabled: !!businessId && showUniquePopUp,
+  });
+
+  if (dishesLoading) {
+    return <article className="h-96">
+      <LoadingSpinner />
+    </article>
+  }
+
   return (
-    <div className="relative px-4 pb-[5rem] h-[80dvh] overflow-auto">
+    <div className="relative px-4 pb-[5rem] h-[80dvh] overflow-auto hide-scrollbar">
       <div className="sticky top-0 mt-4 bg-base-100">
         <center className="mb-4 text-2xl">
           Uniquely Yours{" "}
@@ -224,9 +243,7 @@ const MemoUniquelyYoursPopUp = () => {
           </center>
         )}
       </div>
-      <button onClick={handleSaveDish} type="button" className="bottom_btn">
-        Save
-      </button>
+      <MotionButton buttonName="Save" type="button" onClick={handleSaveDish} />
     </div>
   );
 };

@@ -11,106 +11,126 @@ import Services from "@/assets/services/services.png";
 import Analytics from "@/assets/services/analytics.png";
 import Review from "@/assets/services/review.png";
 import POS from "@/assets/services/POS.png";
+import Zones from "@/assets/services/zones.png";
 
 export interface ILiteVersionCardButton {
   image: string;
   text: string;
   description: string;
-  navigateTo?: string;
+  navigateTo: string;
 }
 
-export const getButtons = (outletType: string): ILiteVersionCardButton[] => [
-  {
-    image: Themes,
-    text: "Themes ",
-    description: "Make your app look good",
-    navigateTo: "businessControl",
-  },
-  {
-    image: BillsImage,
-    text: "Payments",
-    description: "All payment related stuff",
-    navigateTo: "payments",
-  },
-  {
-    image: StaffImage,
-    text: "Staff",
-    description: "Create your Team",
-    navigateTo: "staff",
-  },
-  {
-    image: HibizImage,
-    text: "Hi site",
-    description: "Make your website more beautiful",
-    navigateTo: "hiSite",
-  },
-  {
-    image: Settings,
-    text: "Settings",
-    description: "All settings in one place",
-    navigateTo: "settings",
-  },
-  outletType === "MENU"
-    ? {
-        image: MenuImage,
-        text: "Menu",
-        description: "Manage your menu",
-        navigateTo: "menu",
-      }
-    : {
-        image: Services,
-        text: "Service",
-        description: "Manage your services",
-        navigateTo: "services",
-      },
-  {
-    image: HiPeopleImage,
-    text: "Hi People",
-    description: "Manage your PplZ Data",
-    navigateTo: "people",
-  },
-  {
-    image: LoyaltyImage,
-    text: "Loyalty",
-    description: "Manage your Loyalty",
-    navigateTo: "loyalty",
-  },
-  {
-    image: CouponsImage,
-    text: "Coupons",
-    description: "Manage your coupons",
-    navigateTo: "coupons",
-  },
-
-  {
-    image: HiPeopleImage,
-    text: "WhatzApp",
-    description: "Manage your WhatsApp",
-    navigateTo: "whatzapp",
-  },
-  {
-    image: Review,
-    text: "Reviews",
-    description: "Manage your reviews",
-    navigateTo: "reviews",
-  },
-  {
-    image: Analytics,
-    text: "Analytics",
-    description: "Get insights of your business",
-    navigateTo: "analytics",
-  },
-  ...(outletType === "MENU"
-    ? [
-        {
-          image: POS,
-          text: "POS",
-          description: "Manage your POS",
-          navigateTo: "pos",
-        },
-      ]
-    : []),
-];
+export const getButtons = (
+  outletType: string,
+): { [key: string]: ILiteVersionCardButton[] } => ({
+  management: [
+    {
+      image: Themes,
+      text: "Themes",
+      description: "Make your app look good",
+      navigateTo: "themes",
+    },
+    {
+      image: StaffImage,
+      text: "Staff",
+      description: "Create your Team",
+      navigateTo: "staff",
+    },
+    {
+      image: Settings,
+      text: "Settings",
+      description: "All settings in one place",
+      navigateTo: "settings",
+    },
+    {
+      image: BillsImage,
+      text: "Payments",
+      description: "All payment related stuff",
+      navigateTo: "payments",
+    },
+  ],
+  services: [
+    {
+      image: HibizImage,
+      text: "Hi site",
+      description: "Make your website more beautiful",
+      navigateTo: "explorePage",
+    },
+    {
+      image: Zones,
+      text: "Zones",
+      description: "Manage your Zones and Tables",
+      navigateTo: "zones",
+    },
+    ...(outletType === "MENU"
+      ? [
+          {
+            image: MenuImage,
+            text: "Menu",
+            description: "Manage your menu",
+            navigateTo: "menu",
+          },
+        ]
+      : [
+          {
+            image: Services,
+            text: "Services",
+            description: "Manage your services",
+            navigateTo: "services",
+          },
+        ]),
+    ...(outletType === "MENU"
+      ? [
+          {
+            image: POS,
+            text: "POS",
+            description: "Manage your POS",
+            navigateTo: "pos",
+          },
+        ]
+      : []),
+  ],
+  Coupon_And_Loyalty: [
+    {
+      image: LoyaltyImage,
+      text: "Loyalty",
+      description: "Manage your Loyalty",
+      navigateTo: "loyalty",
+    },
+    {
+      image: CouponsImage,
+      text: "Coupons",
+      description: "Manage your coupons",
+      navigateTo: "coupons",
+    },
+  ],
+  Marketing: [
+    {
+      image: HiPeopleImage,
+      text: "Hi People",
+      description: "Manage your PplZ Data",
+      navigateTo: "people",
+    },
+    {
+      image: Review,
+      text: "Reviews",
+      description: "Manage your reviews",
+      navigateTo: "reviews",
+    },
+    {
+      image: HiPeopleImage, // You might want to replace this with a WhatsApp-specific image
+      text: "WhatsApp",
+      description: "Manage your WhatsApp",
+      navigateTo: "whatzapp",
+    },
+    {
+      image: Analytics,
+      text: "Analytics",
+      description: "Get insights of your business",
+      navigateTo: "analytics",
+    },
+  ],
+});
 
 export interface Dish {
   id: string;

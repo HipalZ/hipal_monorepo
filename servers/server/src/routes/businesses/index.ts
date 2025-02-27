@@ -701,7 +701,7 @@ const businessesRouter = new Hono()
 
     async (c) => {
       const { businessId } = c.req.param();
-      const existingRoles = await Role.find({}).select("_id name description");
+      const existingRoles = await Role.find({}).select("name -_id");
 
       return respond(c, "roles found", false, 200, existingRoles);
     },

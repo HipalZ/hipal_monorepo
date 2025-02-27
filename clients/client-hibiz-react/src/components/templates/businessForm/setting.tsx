@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useCallback, memo } from "react"
 import { IphoneCategory, IphoneExplore } from "@/components/atom/svgtheme"
 import useBusinessCtrl from "@/components/store/useBusinessCtrl"
@@ -213,7 +211,7 @@ const MemoSetting = () => {
         </section>
 
         {/* Save Button */}
-        <MotionButton onClick={apiCall} buttonName="Save Colors" />
+        <MotionButton onClick={apiCall} buttonName="Save Colors" type="button" />
       </main>
 
       {open && (

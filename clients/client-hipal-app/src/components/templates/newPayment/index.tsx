@@ -1,6 +1,5 @@
 "use client";;
 import { memo } from "react";
-import { useEffect } from "react";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import type { IBusinessData } from "@/components/types/businessData";
 import dynamic from "next/dynamic";
@@ -126,7 +125,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
           <>
             {showBillPage ?
               <BillPage />
-              : <div>
+              : <>
                 <section>
                   <PaymentBack data={data} />
                   {selectedMode === "INVOICE" ? (
@@ -149,7 +148,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   <NewPaymentComponent />
                 )}
                 <AvailableCoinz />
-              </div>}
+              </>}
           </>
         )}
       </>

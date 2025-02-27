@@ -13,7 +13,7 @@ export const BarChart: React.FC<BarChartProps> = ({ data }) => {
     }, [])
     return (
         <div className="flex flex-col gap-4">
-            <div className="flex-grow">
+            {/* <div className="flex-grow">
                 <ResponsiveContainer width="100%" height={300}>
                     <RechartsBarChart data={data}>
                         <CartesianGrid strokeDasharray="3 3" />
@@ -23,7 +23,7 @@ export const BarChart: React.FC<BarChartProps> = ({ data }) => {
                         <Bar dataKey="value" fill="#8884d8" />
                     </RechartsBarChart>
                 </ResponsiveContainer>
-            </div>
+            </div> */}
             <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
                 {data.map((item, index) => (
                     <Card key={index} className="w-full bg-white sm:w-auto">

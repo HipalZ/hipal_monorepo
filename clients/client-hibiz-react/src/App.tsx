@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import MainRouter from "./routes";
-
-////////
+import ErrorPopup from "./components/error";
 
 function App() {
   const isOnlineRef = useRef(navigator.onLine);
@@ -60,6 +59,7 @@ function App() {
         </div>
       )}
       <MainRouter />
+      <ErrorPopup />
     </div>
   );
 }

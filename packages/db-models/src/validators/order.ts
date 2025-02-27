@@ -46,17 +46,20 @@ export const OrderSchema = z.object({
     .number({
       message: "Tips must be a number",
     })
-    .optional(),
+    .optional()
+    .default(0),
   claimedCoins: z.coerce
     .number({
       message: "Claimed coins must be a number",
     })
-    .optional(),
+    .optional()
+    .default(0),
   discount: z.coerce
     .number({
       message: "Discount must be a number",
     })
-    .optional(),
+    .optional()
+    .default(0),
   businessId: ObjectIdSchema,
   order_id: z
     .string({

@@ -60,6 +60,16 @@ const whatsAppBusinessConfigSchema =
         required: false,
         ref: "User",
       },
+      marketingTemplateCost: {
+        type: Number,
+        required: false,
+        default: 0.89,
+      },
+      utilityTemplateCost: {
+        type: Number,
+        required: false,
+        default: 0.2,
+      },
     },
     {
       timestamps: true,

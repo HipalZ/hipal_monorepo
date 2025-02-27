@@ -20,7 +20,6 @@ const MemoPlaceOrders = () => {
         })
 
         const res = await response.json()
-        console.log(res.data)
         setOrderDataStore(res.data)
         if (res?.data?.length > 0) {
             setIsPlacingNewOrder(false);

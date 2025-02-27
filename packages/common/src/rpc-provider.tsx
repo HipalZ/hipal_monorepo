@@ -51,8 +51,10 @@ const refreshToken = useUserToken.getState().refreshToken;
 console.log("baseUrl", baseUrl);
 
 export const apiRpc = hc<AppType>(baseUrl, {
-  headers: {
+  headers: () => ({
     Authorization: `Bearer ${useUserToken.getState().accessToken}`,
     "x-refresh-token": useUserToken.getState().refreshToken,
-  },
+  }),
+  fetch: (input, init) => fetch(input, { ...init, credentials: "include" }), // Force fetch to include cookies
 });
+

@@ -18,8 +18,8 @@ export const userSessionSchema = z.object({
   billGeneratedBy: z.string().min(1).max(50).optional(),
   billRequestId: z.string().min(1).max(50).optional(),
   billInvoiceId: z.string().min(1).max(50).optional(),
-  tax: z.coerce.number().optional(),
-  serviceCharge: z.coerce.number().optional(),
+  tax: z.coerce.number().optional().default(0),
+  serviceCharge: z.coerce.number().optional().default(0),
   settleType: z.string().min(1).max(50).optional(),
   performedBy: z.string().min(1).max(50).optional(),
   customerIds: z.array(ObjectIdSchema).optional(),
@@ -30,6 +30,17 @@ export const userSessionSchema = z.object({
   transferType: z.enum(["TABLE", "ITEM"]).optional(),
   date: z.coerce.number().optional(),
   isPinActive: z.boolean().default(false),
+  initialTax: z.coerce.number().optional().default(0),
+  initialTotal: z.coerce.number().optional().default(0),
+  initialSubTotal: z.coerce.number().optional().default(0),
+  finalTax: z.coerce.number().optional().default(0),
+  finalTotal: z.coerce.number().optional().default(0),
+  finalSubTotal: z.coerce.number().optional().default(0),
+  discount: z.coerce.number().optional().default(0),
+  tips: z.coerce.number().optional().default(0),
+  claimedCoins: z.coerce.number().optional().default(0),
+  couponId: z.string().max(50).optional(),
+  requestId: z.string().max(50).optional(),
 });
 
 export type UserSessionSchemaType = z.infer<typeof userSessionSchema>;

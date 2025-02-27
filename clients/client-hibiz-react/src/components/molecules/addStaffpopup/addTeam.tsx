@@ -1,11 +1,17 @@
-import { MdEdit } from "react-icons/md";
-import { useAddStaffStore } from "@/components/store/useAddStaffStore";
-import { memo, useCallback } from "react";
-import useBusinessData from "@/components/store/useBusinessData";
-import { apiRpc } from "@hi/common";
-import toast from "react-hot-toast";
-import BottomButton from "@/components/atom/bottomButton";
+import { memo, useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { MdEdit } from "react-icons/md";
+import { apiRpc } from "@hi/common";
+import { useAddStaffStore } from "@/components/store/useAddStaffStore";
+import useBusinessData from "@/components/store/useBusinessData";
+import BottomButton from "@/components/atom/bottomButton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { removeUnwanted } from "@/components/utils/helper";
+import { Eye, EyeOff } from "lucide-react";
 
 const MemoAddTeam = () => {
   const queryClient = useQueryClient();
@@ -15,140 +21,169 @@ const MemoAddTeam = () => {
     setName,
     phone,
     setPhone,
+    password,
+    setPassword,
     selectedRole,
     selectedPermissions,
     permissions,
     setIsAddStaffOpen,
     removeStaffStore,
   } = useAddStaffStore();
+
   const businessData = useBusinessData((s) => s.businessData);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
-  const formatPermissions = useCallback(() => {
-    if (!selectedRole) return [];
-    const perms = permissions[selectedRole] || [];
-    return perms
-      .map((permission) => ({
-        title: permission.title,
-        subPermissions: permission.subPermissions
-          .filter((sp) => selectedPermissions.includes(sp.subTitle))
-          .map((sp) => sp.subTitle),
-      }))
-      .filter((p) => p.subPermissions.length > 0);
-  }, [permissions, selectedPermissions, selectedRole]);
-
-  const formattedPermissions = formatPermissions();
-
+  // Validate & Add Staff
   const addStaff = async () => {
-    if (!name || !phone || !selectedRole) {
-      toast.error("Please fill all the fields");
+    if (!name || !phone || !password || !selectedRole) {
+      toast.error("All fields are required.");
       return;
     }
     if (phone.length !== 10) {
-      toast.error("Phone number should be of 10 digits");
+      toast.error("Phone number should be 10 digits.");
+      return;
     }
-    const res = await apiRpc.users.addStaff.$post({
-      json: {
-        businessId: businessData?._id || "",
-        name: name,
-        phone: phone,
-        role: selectedRole || "CAPTAIN",
-        permissions: formatPermissions(),
-      },
-    });
-    if (res.status === 400 || res.status === 403 || res.status === 409) {
-      toast.error("Failed to add staff");
-    }
-    if (res.status === 201 || res.status === 200) {
-      toast.success("Staff added successfully");
-      setIsAddStaffOpen(false);
-      removeStaffStore();
-      queryClient.invalidateQueries({ queryKey: ["getStaffs"] });
+
+    try {
+      const res = await apiRpc.users.addStaff.$post({
+        json: {
+          businessId: businessData?._id || "",
+          name,
+          phone,
+          password,
+          role: selectedRole,
+          permissionIds: selectedPermissions,
+        },
+      });
+
+      if (res.status === 201 || res.status === 200) {
+        toast.success("Staff added successfully.");
+        setIsAddStaffOpen(false);
+        removeStaffStore();
+        queryClient.invalidateQueries({ queryKey: ["getStaffs"] });
+      } else {
+        throw new Error("Unexpected response from server.");
+      }
+    } catch (error) {
+      console.error("Error adding staff:", error);
+      toast.error("Failed to add staff. Please try again.");
     }
   };
+
   const goToRoles = useCallback(() => {
     setPageToggle("ADD_ROLE");
   }, [setPageToggle]);
 
+  const selectedPermissionNames = selectedPermissions
+    .map((permId) => permissions.find((perm) => perm._id === permId)?.name)
+    .filter((name) => name);
+
   return (
-    <div className="pb-[5rem]">
-      <center className="pt-6 text-2xl font-semibold">Add Staff</center>
-      <h6 className="mx-4 mt-4 -mb-2 opacity-50">Staff</h6>
+    <div className="px-0 pb-20 mx-auto md:px-4">
+      <header className="flex items-center justify-between px-4 py-6 md:px-0">
+        <h1 className="text-2xl font-semibold">Add Staff</h1>
+      </header>
 
-      <section className="p-4 m-4 space-y-4 bg-white rounded-xl">
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full px-4 py-3 border border-black rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-          placeholder="Enter your name"
-          maxLength={20}
-          required
-        />
-        <input
-          type="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="w-full px-4 py-3 border border-black rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-          placeholder="Enter phone number"
-          maxLength={10}
-          required
-        />
+      <section className="grid grid-cols-1 gap-6 mx-4 md:mx-0 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Staff Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter staff name"
+              maxLength={20}
+              required
+            />
+            <Input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="Enter phone number"
+              maxLength={10}
+              required
+            />
+              <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"} // Toggle password visibility
+                value={password}
+                minLength={4}
+                maxLength={4}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password"
+                required
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 flex items-center text-gray-600 right-3"
+                onClick={() => setShowPassword(!showPassword)} // Toggle state
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Role Selection */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Role</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {selectedRole ? (
+              <Badge variant="destructive" className="text-lg">
+                {selectedRole}
+              </Badge>
+            ) : (
+              <p className="text-muted-foreground">No role assigned</p>
+            )}
+            <Button onClick={goToRoles} variant="outline" className="w-full">
+              <MdEdit className="mr-2" /> Assign Role
+            </Button>
+          </CardContent>
+        </Card>
       </section>
 
-      <h6 className="mx-4 mt-6 mb-2 opacity-50">Role</h6>
-
-      <section className="p-4 mx-4 space-y-4 bg-white rounded-xl">
-        {selectedRole !== "" && (
-          <button
-            type="button"
-            className="px-4 py-2 rounded-2xl bg-[#2C01A360] text-white inline-block"
-          >
-            {selectedRole}
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={goToRoles}
-          className="flex items-center justify-center px-4 py-2 rounded-2xl bg-[#EFEFF3] w-full"
-        >
-          <MdEdit /> Assign Role
-        </button>
-      </section>
-
-      {selectedRole !== "" && (
-        <>
-          {" "}
-          <h6 className="mx-4 mt-6 mb-2 opacity-50">
-            Customize Permissions for Co owner
-          </h6>
-          <section className="p-4 mx-4 space-y-4 bg-white rounded-xl">
-            {formattedPermissions.length > 0 &&
-              formattedPermissions.map((permission) => (
-                <button
-                  type="button"
-                  key={permission.title}
-                  className="px-4 py-2 mr-4 rounded-2xl bg-[#2C01A360] text-white"
-                >
-                  {permission.title}
-                </button>
-              ))}
-            <button
-              type="button"
-              onClick={() => setPageToggle("ADD_PERMISSIONS")}
-              className="flex items-center justify-center px-4 py-2 rounded-2xl bg-[#EFEFF3] w-full"
-            >
-              <MdEdit /> Manage Permissions{" "}
-            </button>
-          </section>
-        </>
+      {/* Permissions Section */}
+      {selectedRole && (
+        <Card className="mx-4 my-6 md:mx-0">
+          <CardHeader>
+            <CardTitle>Permissions for {selectedRole}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {selectedPermissionNames.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {selectedPermissionNames?.map((permName) => (
+                  <Badge key={permName} variant="outline">
+                    {removeUnwanted(permName)}
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No permissions assigned</p>
+            )}
+            <Button onClick={() => setPageToggle("ADD_PERMISSIONS")} variant="outline" className="w-full">
+              <MdEdit className="mr-2" /> Manage Permissions
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
-      <BottomButton buttons={[
-        { text: "Send Invite", onClick: addStaff, type: "button" },
-      ]} />
+      <BottomButton
+        buttons={
+          [
+            {
+              text: "Send Invite",
+              onClick: addStaff,
+            }
+          ]
+        } />
     </div>
   );
 };
 
-const AddTeam = memo(MemoAddTeam)
+const AddTeam = memo(MemoAddTeam);
 export default AddTeam;

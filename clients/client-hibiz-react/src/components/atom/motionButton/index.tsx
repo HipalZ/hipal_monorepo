@@ -2,11 +2,12 @@ import { memo } from 'react'
 import { motion } from "framer-motion"
 
 interface IMotionButton {
-    onClick: () => void
+    onClick?: () => void
     buttonName: string
+    type?: "button" | "submit" | "reset"
 }
 
-const MemoMotionButton = ({ onClick, buttonName }: IMotionButton) => {
+const MemoMotionButton = ({ onClick = () => { }, buttonName, type }: IMotionButton) => {
     return (
         <motion.div
             className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-white via-white"
@@ -17,7 +18,7 @@ const MemoMotionButton = ({ onClick, buttonName }: IMotionButton) => {
             <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                type="button"
+                type={type}
                 onClick={onClick}
                 className="w-full max-w-md mx-auto h-14 bg-black text-white rounded-2xl shadow-lg hover:shadow-xl transition-all font-medium flex items-center justify-center gap-2"
             >

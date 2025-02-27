@@ -53,6 +53,25 @@ const qrBillOrderSchema = new mongoose.Schema<QrBillOrderType>(
       enum: ["PENDING", "SUCCESS", "FAILED", "EXPIRED"],
       default: "PENDING",
     },
+    claimedCoins: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    tips: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    couponId: {
+      type: ObjectId,
+      required: false,
+    },
+    initialTotal: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   },
   {
     timestamps: true,

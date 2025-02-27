@@ -16,6 +16,9 @@ import {
   useWhatsappTempStore,
 } from "@/components/store/useWhatsappTempStore";
 import { MessageCircle } from "lucide-react";
+import { TbSettingsAutomation } from "react-icons/tb";
+import WhatsappFlows from "./whatsappFlows";
+import WhatsAppAutomationFlow from "./whatsappAutomation";
 
 const WhatsappChats = lazy(() => import("./whatsappChats"));
 const CampaignAdvancedAnalytics = lazy(
@@ -38,11 +41,12 @@ const MemoWhatzappDashboard = () => {
     resetTemplateData: s.resetTemplateData,
     setShowSuccessPopup: s.setShowSuccessPopup,
   }));
-  const { activeTab, setActiveTab, openAnalytics } = useWhatsappTempStore(
+  const { activeTab, setActiveTab, openAnalytics, createEditFlow } = useWhatsappTempStore(
     (s) => ({
       setActiveTab: s.setActiveTab,
       activeTab: s.activeTab,
       openAnalytics: s.openAnalytics,
+      createEditFlow: s.createEditFlow,
     }),
   );
 
@@ -74,6 +78,8 @@ const MemoWhatzappDashboard = () => {
         return <MdCampaign className="w-5 h-5 mr-2" />;
       case Tabs.TEMPLATES:
         return <HiOutlineTemplate className="w-5 h-5 mr-2" />;
+      case Tabs.AUTOMATION:
+        return <TbSettingsAutomation className="w-5 h-5 mr-2" />;
       case Tabs.CHATS:
         return <MessageCircle className="w-5 h-5 mr-2" />;
       default:
@@ -88,19 +94,18 @@ const MemoWhatzappDashboard = () => {
   });
 
   return (
-    <main className="container relative h-screen px-2 mx-auto my-4">
-      {!openAnalytics && (
-        <nav className="flex items-center justify-between px-2 py-4 mb-2 bg-white rounded-xl">
-          <ul className="flex space-x-2 overflow-auto">
+    <main className="container relative mx-auto my-4">
+      {!openAnalytics && !createEditFlow && (
+        <nav className="border overflow-auto hide-scrollbar sticky top-20 z-50 w-full flex items-center justify-between px-2 py-4 mb-2 bg-gray-100">
+          <ul className="flex space-x-2">
             {Object.values(Tabs).map((tab) => (
               <li key={tab}>
                 <button
                   type="button"
-                  className={`flex items-center capitalize px-4 py-2 rounded-lg transition-colors duration-300 ${
-                    activeTab === tab
-                      ? "bg-[#075E54] text-white shadow-lg"
-                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
-                  }`}
+                  className={`flex items-center capitalize px-4 py-2 rounded-lg transition-colors duration-300 ${activeTab === tab
+                    ? "bg-[#075E54] text-white shadow-lg"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+                    }`}
                   onClick={() => setActiveTab(tab)}
                 >
                   {getTabIcon(tab)}
@@ -161,6 +166,10 @@ const MemoWhatzappDashboard = () => {
             />
           </article>
         </section>
+      )}
+      {activeTab === Tabs.AUTOMATION && !createEditFlow && <WhatsappFlows />}
+      {activeTab === Tabs.AUTOMATION && createEditFlow && (
+        <WhatsAppAutomationFlow />
       )}
       {activeTab === Tabs.CHATS && <WhatsappChats />}
       {activeTab === Tabs.CAMPAIGNS && !openAnalytics && <CampaignAnalytics />}

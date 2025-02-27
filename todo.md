@@ -1,7 +1,7 @@
 1. go to servers/categories/src/route/create-categories
 
 2. go to this endPoint ="/v1/categories"
-
+///
 3. line no-34 :
    Argument of type '(session: ClientSession) => Promise<express.Response<any, Record<string, any>>>' is not assignable to parameter of type 'TransactionCallback'.
    Type 'Promise<Response<any, Record<string, any>>>' is not assignable to type 'Promise<void>'.

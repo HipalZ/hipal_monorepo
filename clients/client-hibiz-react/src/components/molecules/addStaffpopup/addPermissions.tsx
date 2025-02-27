@@ -1,177 +1,91 @@
-import { memo, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
-import {
-  Disclosure,
-  DisclosureButton,
-  DisclosurePanel,
-} from "@headlessui/react";
-import { IoChevronDown } from "react-icons/io5";
-import { AnimatePresence, easeOut, motion } from "framer-motion";
-import { useAddStaffStore } from "@/components/store/useAddStaffStore";
-import { apiRpc } from "@hi/common";
-import { cn } from "@/components/utils/helper";
-import toast from "react-hot-toast";
-import useBusinessData from "@/components/store/useBusinessData";
-import BottomButton from "@/components/atom/bottomButton";
+import { memo, useCallback, useState } from "react"
+import { useAddStaffStore } from "@/components/store/useAddStaffStore"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { cn } from "@/lib/utils"
+import BottomButton from "@/components/atom/bottomButton"
+import { removeUnwanted } from "@/components/utils/helper"
+import { Check } from "lucide-react"
 
 const AddPermissions = () => {
-  const {
-    selectedPermissions,
-    toggleMainService,
-    toggleSubService,
-    setPageToggle,
-    permissions,
-    setPermissions,
-    selectedRole,
-    isEditing,
-  } = useAddStaffStore();
-  const businessData = useBusinessData((s) => s.businessData);
+  const { selectedPermissions, setPageToggle, permissions, isEditing, addPermission, setSelectedPermissions } =
+    useAddStaffStore()
+
+  const [isAllSelected, setIsAllSelected] = useState(false)
 
   const goBack = useCallback(() => {
-    if (isEditing) {
-      setPageToggle("EDIT_STAFF");
-      return;
-    }
-    setPageToggle("ADD_STAFF");
-  }, [setPageToggle]);
+    setPageToggle(isEditing ? "EDIT_STAFF" : "ADD_STAFF")
+  }, [isEditing, setPageToggle])
 
-  const handleMainServiceChange = useCallback(
-    (permission: string, services: string[]) => {
-      toggleMainService(permission, services);
-    },
-    [toggleMainService],
-  );
+  const togglePermission = (permId: string) => {
+    addPermission(permId)
+  }
 
-  const handleSubServiceChange = useCallback(
-    (serviceTitle: string) => {
-      toggleSubService(serviceTitle);
-    },
-    [toggleSubService],
-  );
-
-  const isSubServiceSelected = useCallback(
-    (serviceTitle: string) => selectedPermissions.includes(serviceTitle),
-    [selectedPermissions],
-  );
-
-  const fetchPermissions = async () => {
-    const res = await apiRpc.businesses[":businessId"].permissions.$get({
-      param: {
-        businessId: businessData?._id,
-      },
-    });
-    const data = await res.json();
-    if (res.status === 200 || res.status === 201) {
-      setPermissions(data.data);
+  const toggleAllPermissions = () => {
+    if (isAllSelected) {
+      setSelectedPermissions([])
     } else {
-      toast.error("Failed to fetch permissions");
+      setSelectedPermissions(permissions.map((perm) => perm._id))
     }
-    return data.data;
-  };
-
-  useQuery({
-    queryKey: ["roles", businessData?._id],
-    queryFn: fetchPermissions,
-    enabled: !!businessData?._id,
-  });
+    setIsAllSelected(!isAllSelected)
+  }
 
   return (
-    <section className="relative pb-[7rem] rounded">
-      <center className="sticky top-0 z-20 p-2 mt-4 text-xl font-semibold bg-[#f4f4f4]">
-        {isEditing ? "Edit" : "Add"} Permissions
-      </center>
-
-      {(permissions[selectedRole] || []).map((permission) => (
-        <Disclosure
-          as="div"
-          key={permission.title}
-          defaultOpen={false}
-          className="pt-4 mx-4"
-        >
-          {({ open }) => (
-            <>
-              <DisclosureButton
-                className={cn(
-                  "flex items-center justify-between w-full p-4 bg-white border border-b-black",
-                  open ? "rounded-t-xl" : "rounded-xl",
-                )}
-              >
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    defaultChecked={selectedPermissions.includes(
-                      permission.title,
-                    )}
-                    defaultValue={selectedPermissions}
-                    value={permission.title}
-                    checked={selectedPermissions.includes(permission.title)}
-                    onChange={() =>
-                      handleMainServiceChange(
-                        permission.title,
-                        permission.subPermissions.map(
-                          (service) => service.subTitle,
-                        ),
-                      )
-                    }
-                    className="mr-2 rounded-sm"
-                  />
-                  <span className="font-bold">{permission.title}</span>
-                </div>
-                <IoChevronDown className={cn("w-5", open && "rotate-180")} />
-              </DisclosureButton>
-              <div className="overflow-hidden">
-                <AnimatePresence>
-                  {open && (
-                    <DisclosurePanel
-                      static
-                      as={motion.div}
-                      initial={{ opacity: 0, y: -24 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -24 }}
-                      transition={{ duration: 0.2, ease: easeOut }}
-                      className="p-4 space-y-4 text-sm origin-top bg-white rounded-b-xl"
+    <section className="px-4 mx-auto pb-[7rem]">
+      <Card className="mt-4">
+        <CardHeader className="sticky top-0 z-20 flex flex-row items-center justify-between bg-background">
+          <CardTitle className="flex-grow text-center">{isEditing ? "Edit" : "Add"} Permissions</CardTitle>
+          <Button variant="outline" size="sm" onClick={toggleAllPermissions} className="flex items-center gap-2">
+            {isAllSelected ? <Check className="w-4 h-4" /> : null}
+            {isAllSelected ? "Deselect All" : "Select All"}
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <ScrollArea className="h-[calc(100vh-16rem)]">
+            {permissions.length > 0 ? (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                {permissions.map((perm) => {
+                  const isSelected = selectedPermissions.includes(perm._id)
+                  return (
+                    <Button
+                      key={perm._id}
+                      onClick={() => togglePermission(perm._id)}
+                      variant={isSelected ? "default" : "outline"}
+                      className={cn(
+                        "w-full justify-start font-medium text-sm h-auto py-2 px-3",
+                        isSelected
+                          ? "bg-primary text-base-100 hover:bg-primary/90"
+                          : "bg-background text-foreground hover:bg-accent hover:text-accent-foreground",
+                      )}
                     >
-                      {permission.subPermissions.map((service) => (
-                        <div key={service._id} className="flex">
-                          <input
-                            type="checkbox"
-                            checked={isSubServiceSelected(service.subTitle)}
-                            onChange={() =>
-                              handleSubServiceChange(service.subTitle)
-                            }
-                            className="mr-2"
-                          />
-                          <div>
-                            <p className="font-bold">{service.subTitle}</p>
-                            <p className="text-gray-600">
-                              {service.descriptions}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </DisclosurePanel>
-                  )}
-                </AnimatePresence>
+                      {isSelected && <Check className="flex-shrink-0 w-4 h-4 mr-2" />}
+                      <span className="truncate">{removeUnwanted(perm?.name)}</span>
+                    </Button>
+                  )
+                })}
               </div>
-            </>
-          )}
-        </Disclosure>
-      ))}
+            ) : (
+              <p className="text-center text-muted-foreground">No permissions available</p>
+            )}
+          </ScrollArea>
+        </CardContent>
+      </Card>
 
-      
-<BottomButton
+      <BottomButton
         buttons={[
           { text: "Back", onClick: goBack, type: "button" },
-          { text: "Save",     onClick: () =>
-            setPageToggle(isEditing ? "EDIT_STAFF" : "ADD_STAFF"), type: "button" },
+          {
+            text: "Save",
+            onClick: () => setPageToggle(isEditing ? "EDIT_STAFF" : "ADD_STAFF"),
+            type: "button",
+          },
         ]}
       />
-
-   
     </section>
-  );
-};
+  )
+}
 
-const MemoizedAddPermissions = memo(AddPermissions);
+const MemoizedAddPermissions = memo(AddPermissions)
+export default MemoizedAddPermissions
 
-export default MemoizedAddPermissions;

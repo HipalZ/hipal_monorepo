@@ -23,8 +23,10 @@ export const tableSchema = z.object({
     .max(100, {
       message: "name must be atmost 100 characters long",
     }),
+
+  visibility: z.boolean().default(true).optional(),
   businessId: ObjectIdSchema,
-  zoneId: z.string().min(4).max(100),
+  zoneId: z.string().min(4).max(100).optional(),
   staffIds: z.array(ObjectIdSchema).optional(),
   capacity: z.number().optional(),
   displayForCaptains: z.boolean().default(true).optional(),
@@ -43,6 +45,48 @@ export const tableSchema = z.object({
   isTransfer: z.boolean().default(false).optional(),
   edited: z.boolean().default(false).optional(),
   editedBy: ObjectIdSchema.optional(),
+  internalZoneId: ObjectIdSchema.optional(),
+  tableLink: z.string().min(3).max(60).optional(),
+});
+
+export const createTableSchema = z.object({
+  name: z
+    .string({
+      message: "name is required",
+    })
+    .min(1, {
+      message: "name must be atleast 3 characters long",
+    })
+    .max(100, {
+      message: "name must be atmost 100 characters long",
+    })
+    .trim(),
+  businessId: ObjectIdSchema,
+  staffIds: z.array(ObjectIdSchema).optional(),
+  capacity: z.number().optional(),
+  visibility: z.boolean().default(true),
+
+  internalZoneId: ObjectIdSchema,
+});
+
+export const updateTableSchema = z.object({
+  name: z
+    .string({
+      message: "name is required",
+    })
+    .min(1, {
+      message: "name must be atleast 3 characters long",
+    })
+    .max(100, {
+      message: "name must be atmost 100 characters long",
+    }),
+  businessId: ObjectIdSchema,
+  staffIds: z.array(ObjectIdSchema).optional(),
+  capacity: z.number().optional(),
+  visibility: z.boolean().default(true),
+  tableId: z.string().min(3).max(100).optional(),
+
+  internalZoneId: ObjectIdSchema,
 });
 
 export type TableType = z.infer<typeof tableSchema>;

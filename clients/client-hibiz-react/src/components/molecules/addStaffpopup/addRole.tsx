@@ -1,4 +1,4 @@
-import { useCallback, lazy, memo } from "react";
+import { useCallback, memo } from "react";
 import { cn } from "@/components/utils/helper";
 import {
   type IRoles,
@@ -35,7 +35,7 @@ const AddRole = () => {
       return;
     }
     if (selectedRole) {
-      setPageToggle(isEditing ? "EDIT_STAFF" : "ADD_STAFF");
+      setPageToggle("ADD_PERMISSIONS");
     }
   };
 
@@ -46,7 +46,6 @@ const AddRole = () => {
       },
     });
     const response = (await res.json()).data;
-    console.log("roles", response);
     if (res.status === 400 || res.status === 403 || res.status === 409) {
       toast.error("roles not found");
     }
@@ -75,7 +74,7 @@ const AddRole = () => {
       <center className="sticky top-0 z-20 p-2 my-4 text-xl font-semibold bg-[#f4f4f4]">
         {isEditing ? "Edit Staff" : "Add Staff"}
       </center>
-      {roles.length > 0 && (
+      {roles?.length > 0 && (
         <section>
           {roles?.map((item: IRoles) => (
             <div

@@ -1,6 +1,4 @@
-// DateRangePicker.tsx
-
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import PopUp from "@/components/atom/popUp";
 import usePaginationStore from "@/components/store/usePaginationStore";
 import useTimings from "@/components/store/useTimings";
@@ -30,7 +28,16 @@ const DateRangePicker: React.FC = memo(() => {
     setOutTime,
     selectedRange,
     setSelectedRange,
-  } = useTimings();
+  } = useTimings(
+    (s) => ({
+      setInTime: s.setInTime,
+      setTimeStampStart: s.setTimeStampStart,
+      setTimeStampEnd: s.setTimeStampEnd,
+      setOutTime: s.setOutTime,
+      selectedRange: s.selectedRange,
+      setSelectedRange: s.setSelectedRange,
+    }),
+  );
   const { setPageNumber } = usePaginationStore((s) => ({
     setPageNumber: s.setPageNumber,
   }));
@@ -74,6 +81,17 @@ const DateRangePicker: React.FC = memo(() => {
     setValidationError("");
   }, [setSelectedRange]);
 
+  const dateRangeDisplay = useMemo(() => {
+    if (startDate && endDate) {
+      return (
+        <center className="font-semibold text-[#8C63FF] bg-[#8C63FF30] text-sm py-1">
+          selected date range: {formatDate(startDate)} - {formatDate(endDate)}
+        </center>
+      )
+    }
+    return "";
+  }, [startDate, endDate]);
+
   useEffect(() => {
     if (selectedRange === "today") {
       handleTodayClick();
@@ -90,129 +108,129 @@ const DateRangePicker: React.FC = memo(() => {
   };
 
   return (
-    <div className="flex items-center justify-between pt-4 pl-4 space-x-2">
-      <div className="sticky top-0">
-        <div className="flex flex-wrap items-center justify-start space-x-2">
-          <button
-            type="button"
-            className={`rounded-md border px-2 py-1 text-xs ${
-              selectedRange === "today" ? "bg-[#000000] text-white" : "bg-white"
-            }`}
-            onClick={handleTodayClick}
-          >
-            Today
-          </button>
-          <button
-            type="button"
-            className={`rounded-md border px-2 py-1 text-xs ${
-              selectedRange === "yesterday"
-                ? "bg-[#000000] text-white"
-                : "bg-white"
-            }`}
-            onClick={handleYesterdayClick}
-          >
-            Yesterday
-          </button>
-          <button
-            type="button"
-            className={`rounded-md border px-2 py-1 text-xs ${
-              selectedRange === "thisMonth"
-                ? "bg-[#000000] text-white"
-                : "bg-white"
-            }`}
-            onClick={handleThisMonthClick}
-          >
-            This Month
-          </button>
-          <button
-            type="button"
-            className={`rounded-md border px-2 py-1 text-xs ${
-              selectedRange === "custom"
-                ? "bg-[#000000] text-white"
-                : "bg-white"
-            }`}
-            onClick={handleCustomDatesClick}
-          >
-            Custom dates
-          </button>
-        </div>
-      </div>
-      <div className="mx-6 date-picker-container">
-        {isCustomDate && (
-          <PopUp
-            hide
-            show={isCustomDate}
-            onClose={() => setIsCustomDate(false)}
-            width="w-full max-w-[36rem]"
-            height="h-[100dvh] md:h-[80dvh] lg:h-[30rem]"
-          >
+    <>
+      <div className="flex items-center justify-between pt-4 pl-4 space-x-2">
+        <div className="sticky top-0">
+          <div className="flex flex-wrap items-center justify-start space-x-2">
             <button
               type="button"
-              className="absolute left-4 top-4 px-2 py-1 text-xs bg-[#ffffff] border rounded-md"
-              onClick={() => setIsCustomDate(false)}
+              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === "today" ? "bg-[#000000] text-white" : "bg-white"
+                }`}
+              onClick={handleTodayClick}
             >
-              <FaArrowLeft className="mr-1" />
+              Today
             </button>
-            <h3 className="mt-4 font-semibold text-center">
-              Select the Custom Date Range
-            </h3>
-            <div className="flex flex-col items-center pt-6 date-picker-container">
-              <div className="flex flex-col items-start lg:flex-row lg:gap-4">
-                <div>
-                  <p className="text-sm font-medium">Start Date:</p>
-                  <StartDatePicker
-                    startDate={startDate}
-                    endDate={endDate}
-                    setStartDate={(date) => {
-                      setStartDate(date);
-                      if (date > endDate) {
-                        setValidationError(
-                          "Start date cannot be after end date.",
-                        );
-                      } else {
-                        setValidationError("");
-                      }
-                    }}
-                    setValidationError={setValidationError}
-                  />
+            <button
+              type="button"
+              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === "yesterday"
+                ? "bg-[#000000] text-white"
+                : "bg-white"
+                }`}
+              onClick={handleYesterdayClick}
+            >
+              Yesterday
+            </button>
+            <button
+              type="button"
+              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === "thisMonth"
+                ? "bg-[#000000] text-white"
+                : "bg-white"
+                }`}
+              onClick={handleThisMonthClick}
+            >
+              This Month
+            </button>
+            <button
+              type="button"
+              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === "custom"
+                ? "bg-[#000000] text-white"
+                : "bg-white"
+                }`}
+              onClick={handleCustomDatesClick}
+            >
+              Custom dates
+            </button>
+          </div>
+        </div>
+        <div className="mx-6 date-picker-container">
+          {isCustomDate && (
+            <PopUp
+              hide
+              show={isCustomDate}
+              onClose={() => setIsCustomDate(false)}
+              width="w-full max-w-[36rem]"
+              height="h-[100dvh] md:h-[80dvh] lg:h-[30rem]"
+            >
+              <button
+                type="button"
+                className="absolute left-4 top-4 px-2 py-1 text-xs bg-[#ffffff] border rounded-md"
+                onClick={() => setIsCustomDate(false)}
+              >
+                <FaArrowLeft className="mr-1" />
+              </button>
+              <h3 className="mt-4 font-semibold text-center">
+                Select the Custom Date Range
+              </h3>
+              <div className="flex flex-col items-center pt-6 date-picker-container">
+                <div className="flex flex-col items-start lg:flex-row lg:gap-4">
+                  <div>
+                    <p className="text-sm font-medium">Start Date:</p>
+                    <StartDatePicker
+                      startDate={startDate}
+                      endDate={endDate}
+                      setStartDate={(date) => {
+                        setStartDate(date);
+                        if (date > endDate) {
+                          setValidationError(
+                            "Start date cannot be after end date.",
+                          );
+                        } else {
+                          setValidationError("");
+                        }
+                      }}
+                      setValidationError={setValidationError}
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">End Date:</p>
+                    <EndDatePicker
+                      startDate={startDate}
+                      endDate={endDate}
+                      setEndDate={(date) => {
+                        setEndDate(date);
+                        if (date < startDate) {
+                          setValidationError(
+                            "End date cannot be before start date.",
+                          );
+                        } else {
+                          setValidationError("");
+                        }
+                      }}
+                      setValidationError={setValidationError}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium">End Date:</p>
-                  <EndDatePicker
-                    startDate={startDate}
-                    endDate={endDate}
-                    setEndDate={(date) => {
-                      setEndDate(date);
-                      if (date < startDate) {
-                        setValidationError(
-                          "End date cannot be before start date.",
-                        );
-                      } else {
-                        setValidationError("");
-                      }
-                    }}
-                    setValidationError={setValidationError}
-                  />
-                </div>
+                {validationError && (
+                  <p className="mt-2 text-sm font-medium text-red-600">
+                    {validationError}
+                  </p>
+                )}
+                <BottomButton
+                  buttons={[
+                    {
+                      text: "Save",
+                      onClick: handleSave,
+                    },
+                  ]}
+                />
               </div>
-              {validationError && (
-                <p className="mt-2 text-sm font-medium text-red-600">
-                  {validationError}
-                </p>
-              )}
-              <BottomButton
-                buttons={[
-                  {
-                    text: "Save",
-                    onClick: handleSave,
-                  },
-                ]}
-              />
-            </div>
-          </PopUp>
-        )}
+            </PopUp>
+          )}
+        </div>
       </div>
-    </div>
+      <div className="mt-4 w-full max-w-[28rem]">{dateRangeDisplay}</div>
+
+    </>
   );
 });
 

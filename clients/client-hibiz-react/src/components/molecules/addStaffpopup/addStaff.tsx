@@ -11,7 +11,7 @@ const MemoNewAddStaff = () => {
 
   return (
     <Suspense fallback={<LoadingSpinner />}>
-      <section className="max-h-[85vh] overflow-auto rounded-t-3xl bg-[#F4F4F4]">
+      <section className="max-h-[85vh] overflow-auto rounded-t-3xl bg-[#F4F4F4] pb-[7rem] hide-scrollbar">
         {pageToggle === "ADD_STAFF" && <AddTeam />}
         {pageToggle === "ADD_ROLE" && <AddRole />}
         {pageToggle === "ADD_PERMISSIONS" && <AddPermissions />}

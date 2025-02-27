@@ -1,25 +1,16 @@
-import useShowErrorToasts from "@/components/atom/errorToasts";
-import { useExploreStore } from "@/components/store/useExploreStore";
-import type { CropperRef, IBizPayload } from "@/components/types/businessData";
-import { filterPayload } from "@/components/utils/helper";
 import { apiRpc } from "@hi/common";
-import {
-  type ChangeEvent,
-  type FormEvent,
-  lazy,
-  memo,
-  useCallback,
-  useRef,
-} from "react";
-import toast from "react-hot-toast";
-import { useNavigate, useParams } from "react-router-dom";
-import type { SocialMediaLink } from "@/components/types/businessData";
+import { filterPayload } from "@/components/utils/helper";
+import { type FormEvent, lazy, memo, useRef } from "react";
 import { useCheckValidations } from "../../helpers/bannersHelper";
-import EasyReactCropper from "@/components/cropper/cropper";
-import BottomButton from "@/components/atom/bottomButton";
 import { useCroppedImg } from "@/components/helpers/explorePageHelpers";
-
-//lazy loads
+import { useExploreStore } from "@/components/store/useExploreStore";
+import { useNavigate, useParams } from "react-router-dom";
+import BottomButton from "@/components/atom/bottomButton";
+import EasyReactCropper from "@/components/cropper/cropper";
+import toast from "react-hot-toast";
+import type { CropperRef, IBizPayload } from "@/components/types/businessData";
+import useShowErrorToasts from "@/components/atom/errorToasts";
+import { useExploreTemp } from "@/components/store/useExploreTemp";
 
 const SocialMediaLinks = lazy(
   () => import("@/components/templates/explorePage/socialMediaLinks"),
@@ -43,12 +34,7 @@ const UniquelyYoursSection = lazy(
   () => import("@/components/templates/explorePage/uniquelyYoursSection"),
 );
 
-type Props = {
-  socialMediaLinks: SocialMediaLink[];
-  setSocialMediaLinks: (data: SocialMediaLink[]) => void;
-};
-const MemoMainForm = (props: Props) => {
-  const { setSocialMediaLinks, socialMediaLinks } = props;
+const MemoMainForm = () => {
   const { checkValidations } = useCheckValidations();
   const cropperRef = useRef<CropperRef>(null);
   const {
@@ -68,30 +54,19 @@ const MemoMainForm = (props: Props) => {
     setShowCropper: s.setShowCropper,
     setShowUniquePopUp: s.setShowUniquePopUp,
   }));
-  const { selectedSocialMedia } = useExploreStore((s) => ({
-    selectedSocialMedia: s.selectedSocialMedia,
+
+  const {
+    socialMediaLinks,
+  } = useExploreTemp((s) => ({
+    socialMediaLinks: s.socialMediaLinks,
   }));
+
   const navigate = useNavigate();
   const businessId = useParams()?.businessId;
   const { handleCrop } = useCroppedImg();
   const showErrorToasts = useShowErrorToasts();
 
   // Update the `socialMediaLinks` state by mapping over the previous links and updating the link that matches the selected social media icon.
-
-  const handleSaveSocialMediaLink = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const newLink = event.target.value;
-      setSocialMediaLinks((prevLinks: SocialMediaLink[]) =>
-        prevLinks.map((link) => {
-          if (link.icon === selectedSocialMedia) {
-            return { ...link, link: newLink };
-          }
-          return link;
-        }),
-      );
-    },
-    [selectedSocialMedia],
-  );
 
   const handleSaveExplorePage = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -172,13 +147,11 @@ const MemoMainForm = (props: Props) => {
       <BannerSection />
       <UniquelyYoursSection />
       <FooterSection />
-      <SocialMediaLinks
-        handleSaveSocialMediaLink={handleSaveSocialMediaLink}
-        socialMediaLinks={socialMediaLinks}
-      />
+      <SocialMediaLinks />
       <button type="submit" className="cursor-pointer bottom_btn">
         Save
       </button>
+
       <PopUp hide show={showCropper} onClose={() => setShowCropper(false)}>
         <section className="my-[10rem]">
           <EasyReactCropper

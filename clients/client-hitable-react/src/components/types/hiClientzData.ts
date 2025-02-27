@@ -22,6 +22,9 @@ export interface CustomRole {
   customRoleId: string;
   role: string;
   accessControl: AccessControl;
+  permissions: string[];
+  permissionIds: string[];
+  permissionGroupIds: string[];
   bookMark: boolean;
   _id: string;
 }
@@ -57,6 +60,9 @@ export interface Order {
 }
 
 export interface Alert {
+  updateFeature: string[];
+  appUrl: string;
+  v: number;
   userId: {
     name: string;
     _id: string;

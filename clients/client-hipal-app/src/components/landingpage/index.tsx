@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { Menu } from "lucide-react"
@@ -18,12 +17,6 @@ const navItems = [
 ]
 
 const Navbar = () => {
-    const [isOpen, setIsOpen] = useState(false)
-
-    const toggleMenu = () => {
-        setIsOpen(!isOpen)
-    }
-
     return (
         <nav className="bg-white shadow-md">
             <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">

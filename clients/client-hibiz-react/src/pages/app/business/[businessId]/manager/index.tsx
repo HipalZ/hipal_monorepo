@@ -64,11 +64,11 @@ const MemoiseManager = () => {
   const closeMenu = useCallback(() => {
     resetStore();
     setOpenMenu(false);
-  }, [openMenu]);
+  }, [resetStore, setOpenMenu]);
 
   const closeEditMenu = useCallback(() => {
     setEditOpenMenu(false);
-  }, [editOpenMenu]);
+  }, [setEditOpenMenu]);
 
   const sidebarItems = [
     { icon: Hi, text: "Dishes", onClick: () => setSelectedPage("DISHES") },

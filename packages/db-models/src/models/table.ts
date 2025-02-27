@@ -14,7 +14,7 @@ const tableSchema = new mongoose.Schema<TableType>(
     },
     zoneId: {
       type: String,
-      required: true,
+      required: false,
     },
     staffIds: {
       type: [ObjectId],
@@ -93,6 +93,20 @@ const tableSchema = new mongoose.Schema<TableType>(
       type: ObjectId,
       required: false,
       ref: "User",
+    },
+    internalZoneId: {
+      type: ObjectId,
+      required: false,
+      ref: "zone",
+    },
+    visibility: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+    tableLink: {
+      type: String,
+      required: false,
     },
   },
   {

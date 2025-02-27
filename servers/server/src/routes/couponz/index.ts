@@ -82,11 +82,18 @@ export const createAndScheduleCoupon = async (
       expiryDate.getMonth() + 1
     } *`;
 
-    schedule(cronExpression, async () => {
-      await UserCouponGrabb.findByIdAndUpdate(grabbedCoupon._id, {
-        isDeleted: true,
-      });
-    });
+    schedule(
+      cronExpression,
+      async () => {
+        await UserCouponGrabb.findByIdAndUpdate(grabbedCoupon._id, {
+          isDeleted: true,
+        });
+      },
+      {
+        scheduled: true,
+        timezone: "Asia/Kolkata",
+      },
+    );
   }
 };
 
@@ -265,13 +272,20 @@ const couponzRouter = new Hono()
           reminderDateObj.getMonth() + 1
         } *`;
 
-        schedule(cronExpression, async () => {
-          const data = await Couponz.findByIdAndUpdate(createdCoupon._id, {
-            isActive: false,
-            isDeleted: true,
-            isExpired: true,
-          });
-        });
+        schedule(
+          cronExpression,
+          async () => {
+            await Couponz.findByIdAndUpdate(createdCoupon._id, {
+              isActive: false,
+              isDeleted: true,
+              isExpired: true,
+            });
+          },
+          {
+            scheduled: true,
+            timezone: "Asia/Kolkata",
+          },
+        );
       }
 
       // Find or create default channel
@@ -299,7 +313,7 @@ const couponzRouter = new Hono()
 
       // Generate short URL
       const longUrl = `https://api.hipalz.com/coupon-analytics/social/${createdCoupon.businessId}/${createdCoupon._id}/${channelId._id}`;
-      const uniqueOrderId = nanoid(10);
+      const uniqueOrderId = nanoid(5);
       let createShortUrl = await UrlModel.findOne({ longUrl });
 
       if (!createShortUrl) {

@@ -11,6 +11,7 @@ import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { Hono } from "hono";
 import { z } from "zod";
+import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { calculateCartBill, convertToPetpoojaCart } from "../../utils/helper";
 const generateTenDigitCode = (): string => {
   const min = 1000000000; // Minimum 10-digit number
@@ -137,6 +138,7 @@ const kotRouter = new Hono()
   )
   .put(
     "/",
+    ubacMiddleware("order_accept"),
     zValidator(
       "json",
       z.object({
@@ -206,11 +208,10 @@ const kotRouter = new Hono()
             tableName: kot.tableName,
             businessId: kot.businessId,
           });
-
           if (tempTable?.billRequestId) {
             return c.json(
               {
-                message: `Bill already generated for table ${tempTable?.tableName} by ${tempTable?.billGeneratedBy} you can't add more items`,
+                message: `Bill already generated for table ${tempTable.tableName} by ${tempTable?.billGeneratedBy} you can't add more items`,
                 err: true,
                 data: {
                   success: false,
@@ -242,7 +243,7 @@ const kotRouter = new Hono()
             petpoojaCart,
           );
 
-          const t = await Table.findOneAndUpdate(
+          await Table.findOneAndUpdate(
             {
               businessId: kot.businessId,
               name: kot.tableName,

@@ -7,7 +7,7 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import type { IBusinessData } from "@/components/types/businessData";
+import type { BillData, IBusinessData } from "@/components/types/businessData";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import useTableData from "@/components/store/useTableData";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
@@ -103,49 +103,16 @@ const PaymentCard = dynamic(
 );
 
 const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
-    const orderId = useSearchParams().get("orderId") as string;
     const {
-        setBillValue,
         isLoading,
         selectedMode,
         showError,
         showBillPage,
-        setBillData
     } = usePaymentStore();
 
-    const { setTableName } = useTableData()
     const { applyCouponz } = useCouponTemp((s) => ({
         applyCouponz: s.applyCouponz,
     }));
-
-    const handleGetOrderId = async () => {
-        try {
-            const response = await apiRpc.surl.get_table_data[":orderId"].$get({
-                param: {
-                    orderId: orderId
-                }
-            })
-            const res = await response.json()
-            if (response?.status === 404) {
-                toast.error(response?.data?.message || "Something went wrong")
-            }
-            if (res?.data?.tableName && res?.data?.tableName?.length > 0) {
-                setTableName(res?.data?.tableName)
-            }
-            setBillValue(res.data.total)
-            setBillData(res.data)
-            return res.data
-        } catch (e) {
-            console.error(e)
-        }
-    }
-
-    useQuery({
-        queryKey: ["getBusinessDetails", orderId],
-        queryFn: handleGetOrderId,
-        enabled: orderId !== null,
-        staleTime: 1000 * 60 * 5,
-    })
 
     return (
         <main className="relative h-screen bg-black">

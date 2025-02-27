@@ -2,7 +2,7 @@ import mongoose, { type Model } from "mongoose";
 import type { CustomRoleType, UserType } from "../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
-const CustomRoleSchema = new mongoose.Schema({
+const CustomRoleSchema = new mongoose.Schema<CustomRoleType>({
   businessId: {
     type: ObjectId,
     required: true, // Assuming ObjectIdSchema is required
@@ -13,12 +13,24 @@ const CustomRoleSchema = new mongoose.Schema({
     required: true,
   },
   permissions: {
-    type: [],
+    type: {},
+    required: false, // Optional in Zod
+  },
+  permissionGroupIds: {
+    type: [ObjectId],
+    required: false, // Optional in Zod
+  },
+  permissionIds: {
+    type: [ObjectId],
     required: false, // Optional in Zod
   },
   bookMark: {
     type: Boolean,
-    required: false, // Optional in Zod
+    default: false,
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false,
   },
 });
 

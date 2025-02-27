@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, useEffect } from "react";
 import { useLiteStore } from "./components/store/useLiteStore";
 import MainRouter from "./routes";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -14,6 +14,9 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import { useErrorHandling } from "./components/utils/helpers";
 import useBusinessData from "./components/store/useBusinessData";
+const ErrorPopup = lazy(() => import("./components/ErrorPopup"));
+const InternetConnection = lazy(() => import("./components/atoms/internet"));
+const UpdateApp = lazy(() => import("./components/atoms/updateApp"));
 
 function App() {
   const navigate = useNavigate();
@@ -23,8 +26,7 @@ function App() {
   const businessIdMatch = pathName.match(/^\/([^/]+)\/alerts/);
   const businessId = businessIdMatch ? businessIdMatch[1] : null;
   const outletInfo = useBusinessData(s => s.outletInfo);
-  const isOnlineRef = useRef(navigator.onLine);
-  const [isSlow, setIsSlow] = useState(false);
+  const version = import.meta.env.VITE_APP_VERSION;
   const { errorText } = useErrorHandling();
   const {
     offlineCount,
@@ -39,15 +41,18 @@ function App() {
     setNotificationStatus,
     setCartData,
     setCartCount,
+    isSlow,
+    setUpdateUrl,
+    setIsVersionPopup,
+    setUpdateFeature,
   } = useLiteStore();
   const { initializePushNotifications, initializedRef } =
     usePushNotifications();
-  const { selectedBiz, platform, pushToken, notification, captainData } = useHiClientZ(
+  const { selectedBiz, platform, pushToken, captainData } = useHiClientZ(
     (s) => ({
       selectedBiz: s.selectedBiz,
       platform: s.platform,
       pushToken: s.pushToken,
-      notification: s.notification,
       captainData: s.captainData,
     }),
   );
@@ -103,6 +108,12 @@ function App() {
     if (!businessId) return;
     const data: Alert[] = await fetchAlerts(businessId, "ALL");
     setOfflineAlertData(data);
+    setIsVersionPopup(Number(version) !== data[0]?.v);
+    setUpdateUrl(data[0]?.appUrl);
+    console.log('alert version', data[0]?.v, 'env version', version);
+    if (data[0]?.v !== Number(version)) {
+      setUpdateFeature(data[0]?.updateFeature);
+    }
     setOfflineCount(data.length);
     if (data && data.length > offlineCount && platform === "web") {
       const sound = new Howl({
@@ -152,48 +163,6 @@ function App() {
     return res.data;
   };
 
-
-  useEffect(() => {
-    const checkOnlineStatus = () => {
-      isOnlineRef.current = navigator.onLine;
-    };
-
-    const handleConnectionChange = () => {
-      if ("connection" in navigator) {
-        const connection =
-          navigator.connection ||
-          (navigator as any).mozConnection ||
-          (navigator as any).webkitConnection;
-        if (
-          connection.effectiveType === "slow-2g" ||
-          connection.effectiveType === "2g" ||
-          connection.downlink < 0.5
-        ) {
-          setIsSlow(true);
-        } else {
-          setIsSlow(false);
-        }
-      } else {
-        console.log("Network Information API not supported.");
-      }
-    };
-    checkOnlineStatus();
-    handleConnectionChange();
-
-    window.addEventListener("online", checkOnlineStatus);
-    window.addEventListener("offline", checkOnlineStatus);
-    window.addEventListener("change", handleConnectionChange);
-    const intervalId = setInterval(checkOnlineStatus, 5000);
-    const intervalId2 = setInterval(handleConnectionChange, 5000);
-    return () => {
-      window.removeEventListener("online", checkOnlineStatus);
-      window.removeEventListener("offline", checkOnlineStatus);
-      window.removeEventListener("change", handleConnectionChange);
-      clearInterval(intervalId);
-      clearInterval(intervalId2);
-    };
-  }, []);
-
   // UseQuery with adaptive polling based on pingTime and connection speed
   useQuery({
     queryKey: ["onlineAlerts", businessId, selectedBiz],
@@ -218,21 +187,7 @@ function App() {
 
   return (
     <main className="relative">
-      {!isOnlineRef.current && (
-        <div className="sticky top-0 z-20 w-full text-center text-white bg-red-500 space-grotesk-700">
-          Please check your internet connection
-        </div>
-      )}
-      {isOnlineRef.current && isSlow && (
-        <div className="sticky top-0 space-grotesk-700 z-20 w-full bg-[#ef9b0f] text-center text-white">
-          ⚠ Your connection is too slow
-        </div>
-      )}
-      {notification ? null : (
-        <center className="z-20 w-full p-2 text-center text-white bg-red-200 border space-grotesk-700">
-          You Turned off alerts, Turn on to get Alerts
-        </center>
-      )}
+      <InternetConnection />
       {/* {!notificationStatus && platform === "android" && (
         <div className="fixed z-20 top-0 left-1/2 -translate-x-1/2 w-full max-w-[30rem] flex items-center justify-between h-12 px-2 text-center text-black bg-[#6f2eff] border space-grotesk-700">
           <h1 className="flex items-center gap-2 text-white">
@@ -248,8 +203,10 @@ function App() {
           </button>
         </div>
       )} */}
+      <UpdateApp />
       {loading ? <SpinnerMemo /> : null}
       <MainRouter />
+      <ErrorPopup />
     </main>
   );
 }

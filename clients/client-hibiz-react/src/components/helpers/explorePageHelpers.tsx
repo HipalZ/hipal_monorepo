@@ -38,7 +38,7 @@ export const useExploreNavigation = () => {
       clearImageFiles();
       clearBizInfo();
       setImg({});
-      navigate(`/app/business/${businessId}/hisite`);
+      navigate(`/app/business/${businessId}/`);
     }
   }, [
     businessId,

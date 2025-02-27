@@ -31,20 +31,21 @@ interface PaymentModalProps {
   salesData: IExistingPayments | undefined;
 }
 
-const PaymentModal = ({ salesData }: PaymentModalProps) => {
-  const hideMiddleNumbers = (phone: string) => {
-    if (phone?.length <= 4) return phone;
-    const firstPart = phone?.slice(0, 3);
-    const lastPart = phone?.slice(-3);
-    return `${firstPart}****${lastPart}`;
-  };
-
   const InfoRow = ({ label, value }: { label: string; value: string | number | undefined }) => (
     <div className="flex items-center justify-between py-2">
       <span className="text-sm text-gray-600">{label}</span>
       <span className="font-medium">{value}</span>
     </div>
   );
+
+  const hideMiddleNumbers = (phone: string) => {
+    if (phone?.length <= 4) return phone;
+    const firstPart = phone?.slice(0, 3);
+    const lastPart = phone?.slice(-3);
+    return `${firstPart}****${lastPart}`;
+  };
+  
+const PaymentModal = ({ salesData }: PaymentModalProps) => {
 
   const getBillItems = async (): Promise<BillItem[]> => {
     const response = await apiRpc.kot.get_pos_bill[":billRequestId"].$get({
@@ -54,7 +55,7 @@ const PaymentModal = ({ salesData }: PaymentModalProps) => {
     });
 
     const res = await response.json();
-    return res.data || [];
+    return res.data as  BillItem[];
   };
 
   const { isLoading, data: itemsData } = useQuery<BillItem[]>({
@@ -62,14 +63,6 @@ const PaymentModal = ({ salesData }: PaymentModalProps) => {
     queryFn: getBillItems,
     enabled: !!salesData?.posBillRequestId,
   });
-
-  const calculateTotal = (items: BillItem) => {
-    return items?.reduce((total, item) => {
-      const dishTotal = item.dish.price * item.dish.quantity;
-      const extrasTotal = item.extras.reduce((sum, extra) => sum + extra.price * extra.quantity, 0);
-      return total + dishTotal + extrasTotal;
-    }, 0);
-  };
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -140,39 +133,34 @@ const PaymentModal = ({ salesData }: PaymentModalProps) => {
               <h2 className="font-semibold">Bill Items</h2>
               <Card>
                 <CardContent className="p-4 space-y-2">
-                  {itemsData?.map((item, index) => (
+                    {itemsData?.slice(0, -2).map((item, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex justify-between">
-                        <div>
-                          <p className="font-medium">{item.dish.name}</p>
-                          <p className="text-sm text-gray-500">
-                            Qty: {item.dish.quantity} × ₹{item.dish.price.toFixed(2)}
-                          </p>
-                        </div>
-                        <p className="font-medium">
-                          ₹{(item.dish.price * item.dish.quantity).toFixed(2)}
+                      <div>
+                        <p className="font-medium">{item.dish.name}</p>
+                        <p className="text-sm text-gray-500">
+                        Qty: {item.dish.quantity} × ₹{item.dish.price.toFixed(2)}
                         </p>
                       </div>
+                      <p className="font-medium">
+                        ₹{(item.dish.price * item.dish.quantity).toFixed(2)}
+                      </p>
+                      </div>
                       {item.extras.length > 0 && (
-                        <div className="pl-4 space-y-1">
-                          {item.extras.map((extra, extraIndex) => (
-                            <div key={extraIndex} className="flex justify-between text-sm">
-                              <span>{extra.name}</span>
-                              <span>
-                                {extra.quantity} × ₹{extra.price.toFixed(2)} = ₹
-                                {(extra.quantity * extra.price).toFixed(2)}
-                              </span>
-                            </div>
-                          ))}
+                      <div className="pl-4 space-y-1">
+                        {item.extras.map((extra, extraIndex) => (
+                        <div key={extraIndex} className="flex justify-between text-sm">
+                          <span>{extra.name}</span>
+                          <span>
+                          {extra.quantity} × ₹{extra.price.toFixed(2)} = ₹
+                          {(extra.quantity * extra.price).toFixed(2)}
+                          </span>
                         </div>
+                        ))}
+                      </div>
                       )}
                     </div>
-                  ))}
-                  <Separator />
-                  <div className="flex justify-between font-semibold">
-                    <span>Total</span>
-                    <span>₹{calculateTotal(itemsData || []).toFixed(2)}</span>
-                  </div>
+                    ))}
                 </CardContent>
               </Card>
             </div>

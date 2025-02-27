@@ -8,6 +8,7 @@ import useBusinessData from "../store/useBusinessData";
 import { useHiClientZ } from "../store/useHiClientzData";
 import { useOrderStore } from "../store/useOrderData";
 import type { TableData } from "../store/useZonesAndTable";
+import { useError } from "../store/useError";
 
 export interface ITransferPayload {
   businessId: string;
@@ -57,6 +58,7 @@ export const useTableData = () => {
 export const useTableTransfer = (businessId: string) => {
   const navigate = useNavigate();
   const [toTable, setToTable] = useState<TableData | null>(null);
+  const { setError, setOpenErrorModal } = useError();
   const [isConfirming, setIsConfirming] = useState(false);
   const {
     selectedTable,
@@ -74,13 +76,19 @@ export const useTableTransfer = (businessId: string) => {
       const response = await apiRpc.table.transfer_table.$post({
         json: payload,
       });
-      return await response.json();
+      return  response;
     },
-    onSuccess: () => {
-      toast.success("Table transferred successfully");
+    onSuccess: (data) => {
+      if(!data?.ok){
+        setOpenErrorModal(true);
+        setError("Bill already fetched");
+      }
+      if(data?.ok){
+      toast.success("Transferred successfully");
       closeTransferModal();
       setOpenOrderModal(false);
       navigate(`/${businessId}/alerts`);
+      }
     },
     onError: () => {
       toast.error("Failed to transfer table");

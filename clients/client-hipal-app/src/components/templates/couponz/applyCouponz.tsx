@@ -16,7 +16,6 @@ import { toast } from "react-toastify";
 import confetti from "canvas-confetti";
 import { apiRpc } from "@hi/common";
 import { useLogin } from "@/components/store/useLogin";
-import { useQuery } from "@tanstack/react-query";
 import { DialogTitle } from "@headlessui/react";
 import { GoAlert } from "react-icons/go";
 import { IoCheckmark } from "react-icons/io5";
@@ -25,6 +24,9 @@ import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import { useErrorHandling } from "@/utils/helper";
+import { useUpdateBill } from "@/components/hooks/usePayments";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const AvailableDays = dynamic(() => import("./availableDays"), {
   loading: () => <SkeletonLoader height={20} />,
@@ -46,16 +48,15 @@ const ApplyCouponDatePopup = dynamic(
 
 const MemoApplyCouponz = () => {
   const { errorText } = useErrorHandling();
-  const logoUrl = useBusinessDetails(
-    (state) => state?.businessDetails?.logoUrl,
-  );
+  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
 
   const { showAlert, setShowAlert } = useCouponTemp((s) => ({
     showAlert: s.showAlert,
     setShowAlert: s.setShowAlert,
   }));
-  const { businessId } = useBusinessDetails((s) => ({
+  const { businessId, logoUrl } = useBusinessDetails((s) => ({
     businessId: s.businessDetails?.businessId,
+    logoUrl: s.businessDetails?.logoUrl,
   }));
 
   const { userDetails } = useLogin((s) => ({
@@ -70,15 +71,17 @@ const MemoApplyCouponz = () => {
   const {
     billValue,
     setClaimCouponz,
-    claimedCoinz,
-    setClaimedCoinz,
+    claimedCoins,
+    setClaimedCoins,
     claimCouponz,
+    billData
   } = usePaymentStore((s) => ({
     billValue: s.billValue,
-    claimedCoinz: s.claimedCoinz,
-    setClaimedCoinz: s.setClaimedCoinz,
+    claimedCoins: s.claimedCoins,
+    setClaimedCoins: s.setClaimedCoins,
     setClaimCouponz: s.setClaimCouponz,
     claimCouponz: s.claimCouponz,
+    billData: s.billData,
   }));
 
   const {
@@ -111,6 +114,11 @@ const MemoApplyCouponz = () => {
     setUpcomingCouponz: s.setUpcomingCouponz,
   }));
 
+  const { updateBill } = useUpdateBill()
+  const { mutateAsync } = useMutation({
+    mutationFn: updateBill,
+  })
+
   const [selectedCoupon, setSelectedCouponState] = useState(null);
   const { applyCouponz, setApplyCouponz, setIsLoading } = useCouponTemp(
     (s) => ({
@@ -122,7 +130,7 @@ const MemoApplyCouponz = () => {
 
   const closeCouponz = useCallback(() => {
     setApplyCouponz(false);
-  }, [applyCouponz]);
+  }, [setApplyCouponz]);
 
   const applyCoupon = useCallback(
     async (coupon) => {
@@ -176,7 +184,7 @@ const MemoApplyCouponz = () => {
       if (coupon?.conditions?.billValue > billValue)
         return toast.info("Bill value is less than coupon value");
 
-      if (claimedCoinz > 0) {
+      if (claimedCoins > 0) {
         setSelectedCouponState(coupon);
         setShowAlert(true);
         return;
@@ -184,17 +192,17 @@ const MemoApplyCouponz = () => {
 
       await applyCouponLogic(coupon);
     },
-    [billValue, claimedCoinz, setShowAlert, setSelectedCouponState],
+    [billValue, claimedCoins, setShowAlert, setSelectedCouponState],
   );
 
   const replaceLoyalty = useCallback(async () => {
-    setClaimedCoinz(0);
+    setClaimedCoins(0);
     setShowAlert(false);
     toast.success("Coinz removed successfully");
     if (selectedCoupon) {
       await applyCouponLogic(selectedCoupon);
     }
-  }, [setClaimedCoinz, setShowAlert, selectedCoupon]);
+  }, [setClaimedCoins, setShowAlert, selectedCoupon]);
 
   const applyCouponLogic = useCallback(
     async (coupon) => {
@@ -233,15 +241,20 @@ const MemoApplyCouponz = () => {
       }
       setIsLoading(false);
       // any condition apply the coupon
-      const { discountValue, resetClaimedCoinz } = calculateDiscount(
+      const { discountValue, resetClaimedCoins } = calculateDiscount(
         coupon,
         billValue,
-        claimedCoinz,
+        claimedCoins,
       );
-
+      if (outletInfo?.isPosEnabled) {
+        mutateAsync({
+          coinz: discountValue,
+          couponId: coupon?._id,
+        })
+      }
       setClaimCouponz(discountValue);
-      if (resetClaimedCoinz) {
-        setClaimedCoinz(0);
+      if (resetClaimedCoins) {
+        setClaimedCoins(0);
       }
 
       setApplyCouponz(false);
@@ -264,10 +277,10 @@ const MemoApplyCouponz = () => {
     },
     [
       billValue,
-      claimedCoinz,
+      claimedCoins,
       setDirection,
       setClaimCouponz,
-      setClaimedCoinz,
+      setClaimedCoins,
       setApplyCouponz,
       setAvailedCoupon,
     ],
@@ -282,15 +295,15 @@ const MemoApplyCouponz = () => {
 
   useEffect(() => {
     if (availedCoupon?._id) {
-      const { discountValue, resetClaimedCoinz } = calculateDiscount(
+      const { discountValue, resetClaimedCoins } = calculateDiscount(
         availedCoupon,
         billValue,
-        claimedCoinz,
+        claimedCoins,
       );
 
       setClaimCouponz(discountValue);
-      if (resetClaimedCoinz) {
-        setClaimedCoinz(0);
+      if (resetClaimedCoins) {
+        setClaimedCoins(0);
       }
     }
   }, [availedCoupon]);
@@ -399,7 +412,7 @@ const MemoApplyCouponz = () => {
               <article className="w-full px-2 py-4 text-black bg-white shadow-2xl rounded-2xl">
                 <div
                   className={cn(
-                    availedCoupon?._id === coupon?._id
+                    (availedCoupon?._id || billData?.couponId) === coupon?._id
                       ? "bg-[#00C37E]"
                       : "bg-[#9268EC]",
                     "h-4 -mx-2 -my-4 overflow-hidden rounded-t-2xl mb-2",
@@ -410,7 +423,7 @@ const MemoApplyCouponz = () => {
                     {coupon?.name}
                     <AvailableDays coupon={coupon} />
                   </h1>
-                  {availedCoupon?._id === coupon?._id ? (
+                  {(availedCoupon?._id || billData?.couponId) === coupon?._id ? (
                     <button
                       type="button"
                       className="text-[#f13f8a] text-sm mt-1 font-bold"

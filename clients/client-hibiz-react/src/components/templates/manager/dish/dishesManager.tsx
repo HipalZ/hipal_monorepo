@@ -51,17 +51,24 @@ const MemoDishesManager = () => {
   });
 
   const filteredDishes = useMemo(() => {
-    let filtered = search
-      ? fuse.search(search).map((result) => result.item)
-      : allDishes;
+    let filtered = allDishes.slice() || [];
+    if (search) {
+      filtered = fuse.search(search).map((result) => result.item);
+    }
     if (visibilityFilter !== "all") {
       filtered = filtered.filter(
         (c) => c?.visibility === (visibilityFilter === "visible"),
       );
     }
-    return sortOrder === "asc"
-      ? filtered.sort((a, b) => a?.name.localeCompare(b?.name))
-      : filtered.sort((a, b) => b?.name.localeCompare(a?.name));
+    if (filtered.length === 0) return [];
+    switch (sortOrder) {
+      case "asc":
+        return filtered.slice().sort((a, b) => a.name.localeCompare(b.name));
+      case "desc":
+        return filtered.slice().sort((a, b) => b.name.localeCompare(a.name));
+      default:
+        return filtered;
+    }
   }, [search, allDishes, fuse, visibilityFilter, sortOrder]);
 
   const filteredLinkedCategories = useMemo(() => {
@@ -89,7 +96,7 @@ const MemoDishesManager = () => {
       setEditOpenMenu(true);
       setEditDishFunction(dish);
     },
-    [dishStep, setEditDish, setDishStep, setEditOpenMenu, setEditDishFunction],
+    [setEditDish, setDishStep, setEditOpenMenu, setEditDishFunction],
   );
 
   const redirectionDish = useCallback(() => {
@@ -103,7 +110,7 @@ const MemoDishesManager = () => {
         [categoryId]: !prev[categoryId],
       }));
     },
-    [openCategoryIds],
+    [],
   );
 
   const handleDishClick = (dishId: string) => {
@@ -121,9 +128,7 @@ const MemoDishesManager = () => {
 
   if (isLoading) {
     return (
-      <div>
-        <LoadingSpinner />
-      </div>
+      <LoadingSpinner />
     );
   }
 
@@ -176,44 +181,44 @@ const MemoDishesManager = () => {
           <section className="h-[60dvh] overflow-y-auto flex flex-wrap justify-center">
             {filteredLinkedCategories && filteredLinkedCategories?.length > 0
               ? filteredLinkedCategories?.map((category) => (
-                  <div
-                    key={category?._id}
-                    className="relative flex flex-col w-[90%] p-2 rounded-lg md:max-w-[14rem] lg:max-w-[14rem]"
+                <div
+                  key={category?._id}
+                  className="relative flex flex-col w-[90%] p-2 rounded-lg md:max-w-[14rem] lg:max-w-[14rem]"
+                >
+                  <label
+                    className="flex items-center cursor-pointer"
+                    onClick={() => toggleCategory(category._id)}
                   >
-                    <label
-                      className="flex items-center cursor-pointer"
-                      onClick={() => toggleCategory(category._id)}
-                    >
-                      <h3 className="text-sm">{category?.name} </h3>
-                      {openCategoryIds[category._id] ? (
-                        <>
-                          <span className="text-xs">
-                            {category?.dishIds?.length}
-                          </span>
-                          <IoMdArrowDropup className="text-gray-500" />
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-xs">
-                            {category?.dishIds?.length}
-                          </span>
-                          <IoMdArrowDropdown className="ml-4 text-gray-500" />
-                        </>
-                      )}
-                    </label>
-                    {openCategoryIds[category._id] &&
-                      category?.dishIds.map((dish) => (
-                        <a
-                          key={dish._id.toString()}
-                          href={`#${dish._id}`}
-                          onClick={() => handleDishClick(dish._id.toString())}
-                          className="mt-2 ml-2"
-                        >
-                          <p className="text-sm font-medium">{dish?.name}</p>
-                        </a>
-                      ))}
-                  </div>
-                ))
+                    <h3 className="text-sm">{category?.name} </h3>
+                    {openCategoryIds[category._id] ? (
+                      <>
+                        <span className="text-xs">
+                          {category?.dishIds?.length}
+                        </span>
+                        <IoMdArrowDropup className="text-gray-500" />
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-xs">
+                          {category?.dishIds?.length}
+                        </span>
+                        <IoMdArrowDropdown className="ml-4 text-gray-500" />
+                      </>
+                    )}
+                  </label>
+                  {openCategoryIds[category._id] &&
+                    category?.dishIds.map((dish) => (
+                      <a
+                        key={dish._id.toString()}
+                        href={`#${dish._id}`}
+                        onClick={() => handleDishClick(dish._id.toString())}
+                        className="mt-2 ml-2"
+                      >
+                        <p className="text-sm font-medium">{dish?.name}</p>
+                      </a>
+                    ))}
+                </div>
+              ))
               : null}
           </section>
         </section>

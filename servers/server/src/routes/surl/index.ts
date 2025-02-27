@@ -1,7 +1,9 @@
 import {
   BillUrlModel,
+  Payment,
   QrBill,
   UrlModel,
+  UserSession,
   WhatsAppBusinessConfig,
 } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
@@ -21,21 +23,24 @@ const surlRouter = new Hono()
     ),
     async (c) => {
       const { urlCode } = c.req.param();
+      const { q } = c.req.query();
 
-      const Bid = await UrlModel.findOne({
-        urlCode,
-      }).select("businessId");
+      if (!q) {
+        const Bid = await UrlModel.findOne({
+          urlCode,
+        }).select("businessId");
 
-      const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
-        businessId: Bid?.businessId,
-      });
+        const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
+          businessId: Bid?.businessId,
+        });
 
-      const menuRedirection = whatsAppBusinessConfig?.menuRedirection;
+        const menuRedirection = whatsAppBusinessConfig?.menuRedirection;
 
-      if (menuRedirection && menuRedirection === "WA") {
-        const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, I'm interested in your menu. Could you share more details? I am sitting at T-${urlCode}`;
+        if (menuRedirection && menuRedirection === "WA") {
+          const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, I'm interested in your menu. Could you share more details? I am sitting at T-${urlCode}`;
 
-        return c.redirect(redirectUrl);
+          return c.redirect(redirectUrl);
+        }
       }
 
       const result = await UrlModel.findOne({ urlCode });
@@ -142,11 +147,40 @@ const surlRouter = new Hono()
     async (c) => {
       const { orderId } = c.req.param();
 
-      const billInfo = await QrBill.findOne({
-        requestBillId: orderId,
+      const alreadyExists = await Payment.findOne({
+        posBillRequestId: orderId,
       });
 
-      if (!billInfo) {
+      console.log("alreadyExists", alreadyExists);
+
+      if (alreadyExists) {
+        return c.json(
+          {
+            message: "Bill already settled",
+            err: true,
+            data: {},
+          },
+          409,
+        );
+      }
+
+      const userSession = await UserSession.findOne({ billRequestId: orderId });
+
+      const updateBill = await QrBill.findOneAndUpdate(
+        { requestBillId: orderId },
+        {
+          total: userSession?.finalTotal,
+          tax: userSession?.finalTax.toFixed(2),
+          subTotal: userSession?.initialSubTotal,
+          tips: userSession?.tips,
+          claimedCoins: userSession?.claimedCoins,
+          couponId: userSession?.couponId,
+          initialTotal: userSession?.initialTotal,
+        },
+        { new: true },
+      );
+
+      if (!updateBill) {
         return c.json(
           {
             message: "Bill not found",
@@ -160,7 +194,7 @@ const surlRouter = new Hono()
       return c.json({
         message: "Bill found",
         err: false,
-        data: billInfo,
+        data: updateBill,
       });
     },
   );

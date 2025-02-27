@@ -20,7 +20,7 @@ const BillSummary = () => {
     customTip,
     billValue,
     claimCouponz,
-    claimedCoinz,
+    claimedCoins,
     tips,
   } = usePaymentStore();
 
@@ -59,10 +59,10 @@ const BillSummary = () => {
               }}
             />
             <div className="mx-2 mt-2">
-              {claimCouponz > 0 || claimedCoinz > 0 ? (
+              {claimCouponz > 0 || claimedCoins > 0 ? (
                 <article className="flex items-center justify-between mx-2 text-xs">
                   <h1 className="text-[#4CAF50]">
-                    {claimedCoinz > 0 ? (
+                    {claimedCoins > 0 ? (
                       <>Hi-Coinz applied</>
                     ) : (
                       <>Couponz applied</>
@@ -72,7 +72,7 @@ const BillSummary = () => {
                     <h1>
                       ₹ {getDisplayValue(
                         billValue,
-                        claimedCoinz,
+                        claimedCoins,
                         claimCouponz,
                       )}{" "}
                     </h1>
@@ -112,7 +112,7 @@ const BillSummary = () => {
               </div>
               {isTipActive ? (
                 <div className="flex mx-2 space-x-2">
-                  {["100", "200", "500", "Other"].map((tip, index) => (
+                  {[100, 200, 500, "Other"].map((tip, index) => (
                     <button
                       type="button"
                       key={index?.toString()}
@@ -163,7 +163,7 @@ const BillSummary = () => {
                 <span className="text-base font-bold">
                   {" "}
                   ₹{" "}
-                  {calculateFinalBill(billValue, claimedCoinz, claimCouponz, tips)}
+                  {calculateFinalBill(billValue, claimedCoins, claimCouponz, tips)}
                 </span>
               </div>
             </div>

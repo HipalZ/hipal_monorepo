@@ -3,7 +3,7 @@ import { useLogin } from "@/components/store/useLogin";
 import useUserReward from "@/components/store/useUserReward";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
@@ -106,7 +106,7 @@ const MemoPayOnlineSuccess = () => {
           subHeader: "Your Payment of",
           amount: `₹ ${amount}`,
           footer: "Is Successful",
-          coinzContent: `You won ${claim} coinz`,
+          coinzContent: `You won approx. ${claim} coinz`,
         };
       default:
         return {
@@ -115,7 +115,7 @@ const MemoPayOnlineSuccess = () => {
           subHeader: "Your Payment of",
           amount: `₹ ${amount}`,
           footer: "Will be confirmed by the staff",
-          coinzContent: `You will get ${claim} coinz`,
+          coinzContent: `You'll get approx. ${claim} coinz`,
         };
     }
   }, [mode, amount, claim]);

@@ -148,7 +148,6 @@ const MemoCoupons = () => {
   }, [selectedPage]);
 
   return (
-    <Suspense fallback={<LoadingSpinner />}>
       <main className="relative">
         <section
           style={{
@@ -164,21 +163,23 @@ const MemoCoupons = () => {
             headingColor={selectedPage === "PREVIEW" ? "#FFFFFF" : ""}
           />
         </section>
-        {selectedPage === "MANAGE" && <Manage />}
-        {selectedPage === "CREATE" && <CreateCouponPage />}
-        {selectedPage === "DETAILS" && <CouponDetails />}
-        {selectedPage === "EXPIRED" && <AllConditions />}
-        {selectedPage === "PREVIEW" && <Preview />}
-        {selectedPage === "Terms" && <Terms />}
-        {selectedPage === "CUSTOM" && <Custom />}
-        {selectedPage === "SHARE" && <Share />}
-        {selectedPage === "INFO" && <Info />}
-        {selectedPage === "ANALYTICS" && <CouponAnalytics />}
-        {selectedPage === "ANALYTICS_INFO" && <CouponAnalyticsInfo />}
-        {selectedPage === "LINK_CHANNELS" && <AllLinkChannels />}
-        {selectedPage === "CHANNELS" && <Channel />}
+
+        <Suspense fallback={<LoadingSpinner />}>
+          {selectedPage === "MANAGE" && <Manage />}
+          {selectedPage === "CREATE" && <CreateCouponPage />}
+          {selectedPage === "DETAILS" && <CouponDetails />}
+          {selectedPage === "EXPIRED" && <AllConditions />}
+          {selectedPage === "PREVIEW" && <Preview />}
+          {selectedPage === "Terms" && <Terms />}
+          {selectedPage === "CUSTOM" && <Custom />}
+          {selectedPage === "SHARE" && <Share />}
+          {selectedPage === "INFO" && <Info />}
+          {selectedPage === "ANALYTICS" && <CouponAnalytics />}
+          {selectedPage === "ANALYTICS_INFO" && <CouponAnalyticsInfo />}
+          {selectedPage === "LINK_CHANNELS" && <AllLinkChannels />}
+          {selectedPage === "CHANNELS" && <Channel />}
+        </Suspense>
       </main>
-    </Suspense>
   );
 };
 

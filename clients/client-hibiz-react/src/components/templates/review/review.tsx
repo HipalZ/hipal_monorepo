@@ -8,7 +8,7 @@ import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useGetAllUsersReview } from "@/hooks/useReview";
 import type { ReviewsType } from "@hi/db-models/src/validators";
 import { useReview } from "@/components/store/useReview";
-import { formatDate, getReviewAttributes } from "@/components/utils/helper";
+import {  getReviewAttributes } from "@/components/utils/helper";
 import { apiRpc } from "@hi/common";
 import useTimings from "@/components/store/useTimings";
 import { FaArrowRightLong } from "react-icons/fa6";
@@ -27,8 +27,6 @@ const MemoReview = () => {
     setReview: s.setReview,
     setPage: s.setPage,
   }));
-
-  const { timeStampStart, timeStampEnd } = useTimings();
 
   // Filter states
   const [priceSort, setPriceSort] = useState<"none" | "asc" | "desc">("none");
@@ -105,7 +103,7 @@ const MemoReview = () => {
 
   return (
     <section className="mt-12 lg:mt-0">
-      <section className="relative flex items-center justify-between">
+      <section className="relative flex flex-col justify-between">
         <DateRangePicker />
         <div className="absolute top-0 flex justify-end pr-0 mt-4 right-4 lg:mx-0">
           <Menu as="div" className="relative inline-block text-left">
@@ -263,14 +261,7 @@ const MemoReview = () => {
           </Menu>
         </div>
       </section>
-      {timeStampEnd && (
-        <div className="my-4">
-          <center className="font-semibold text-[#8C63FF] bg-[#8C63FF30] text-sm py-1">
-            Selected Date Range: {formatDate(new Date(timeStampStart))} -{" "}
-            {formatDate(new Date(timeStampEnd))}
-          </center>
-        </div>
-      )}
+    
       {filteredReviews.length !== 0 ? (
         <section className="grid grid-cols-1 gap-4 pb-[5rem] mx-4 mt-4 lg:mx-0 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
           {filteredReviews.map((review) => (

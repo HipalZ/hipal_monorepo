@@ -11,13 +11,16 @@ import { useZonesAndTablesStore } from "@/components/store/useZonesAndTable";
 import { IoArrowBack } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import useBusinessData from "@/components/store/useBusinessData";
+import { useQuery } from "@tanstack/react-query";
+import { apiRpc } from "@hi/common";
 
 const HeaderAlerts = ({
   hide,
   hideBack,
 }: { hide?: boolean; hideBack?: boolean }) => {
-  const { selectedBiz } = useHiClientZ((s) => ({
+  const { selectedBiz, captainData } = useHiClientZ((s) => ({
     selectedBiz: s.selectedBiz,
+    captainData: s.captainData,
   }));
   const navigate = useNavigate();
   const outletInfo = useBusinessData((s) => s.outletInfo);
@@ -40,6 +43,22 @@ const HeaderAlerts = ({
       refetchOfflineAlerts();
     }
   };
+
+  const sessionStart = async () => {
+    const response = await apiRpc.users.set_session.$post({
+      json: {
+        businessId: selectedBiz.businessId._id,
+        userId: captainData._id,
+      }
+    })
+    return response
+  }
+
+  useQuery({
+    queryKey: ["session", selectedBiz.businessId._id, captainData._id],
+    queryFn: sessionStart,
+    enabled: !!captainData._id
+  })
 
   const navigateToBiz = () => {
     navigate(`/${selectedBiz.businessId._id}/navigate`);

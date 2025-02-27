@@ -7,7 +7,6 @@ import type {
   IBannerResponse,
   IBizInfo,
   IBizInfoResponse,
-  SocialMediaLink,
 } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import { useMemo } from "react";
@@ -32,6 +31,10 @@ export function useIsExplorePage() {
 
 export const useOutletInfo = () => {
   const businessId = useParams()?.businessId;
+  const { socialMediaLinks, setSocialMediaLinks } = useExploreTemp((s) => ({
+    socialMediaLinks: s.socialMediaLinks,
+    setSocialMediaLinks: s.setSocialMediaLinks,
+  }));
   const { setBizInfo, setToggleExplorePages, setImg } = useExploreStore(
     (state) => ({
       setBizInfo: state.setBizInfo,
@@ -46,10 +49,7 @@ export const useOutletInfo = () => {
       },
     });
   };
-  const fetchBizInfo = async (
-    socialMediaLinks: SocialMediaLink[],
-    setSocialMediaLinks: (data: SocialMediaLink[]) => void,
-  ) => {
+  const fetchBizInfo = async () => {
     const res = await getAllBizInfo();
     const response: IBizInfoResponse = await res.json();
     if (response?.data?.specialBannerUrl) {

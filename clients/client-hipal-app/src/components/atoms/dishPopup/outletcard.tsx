@@ -28,6 +28,7 @@ function MemoOutletItemInfo() {
   const isAvailable = dishData?.availability;
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const customLink = useParams()?.businessId as string;
+  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const { showCart } = useCart();
   const handleInsideClick = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,

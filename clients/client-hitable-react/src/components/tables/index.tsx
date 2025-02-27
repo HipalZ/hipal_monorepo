@@ -55,8 +55,6 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
 
     if (isLoading || isPending) return <SpinnerMemo />;
 
-    // const allTables = searchTerm.length > 0 && !transfer ? filteredTables : [...tables, ...filteredTables];
-
     return (
         <>
             {!isConfirming ? (

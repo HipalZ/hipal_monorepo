@@ -22,6 +22,7 @@ import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
+import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import {
   calculateCartBill,
   convertToPetpoojaCart,
@@ -148,7 +149,7 @@ const posRouter = new Hono()
   })
   .get(
     "/get_bill",
-
+    ubacMiddleware("bill"),
     zValidator(
       "query",
       z.object({
@@ -208,6 +209,58 @@ const posRouter = new Hono()
           }
         }
 
+        if (getPin?.billRequestId) {
+          const bill_request_id = getPin.billRequestId;
+
+          const getBillConfig = {
+            app_key: pos.posId.accessKey,
+            app_secret: pos.posId.secretKey,
+            access_token: pos.posId.authToken,
+            restID: pos.posId.restId,
+            bill_request_id: bill_request_id,
+          };
+
+          const getBill = await axios.post(
+            "http://api.petpooja.com/V1/captainorders/get_bill/",
+            getBillConfig,
+          );
+
+          const simpleArray = transformItemsToSimpleArray(
+            getBill.data.items_data || [],
+          );
+
+          if (getBill.data.success === "1") {
+            const billObj = {
+              billing_user_name: getBill.data.order_data.billing_user_name,
+              serviceCharge: getBill.data.order_data.service_charge,
+              discount: getBill.data.order_data.discount,
+              tax: getPin?.finalTax,
+
+              total: getPin?.finalTotal,
+              customerPhone: getBill.data.order_data.customer_phone,
+              customerName: getBill.data.order_data.customer_name,
+              tableName: getBill.data.order_data.table_no,
+              billRequestId: bill_request_id,
+              items: simpleArray,
+              subTotal: getBill.data.order_data.core_price,
+              tips: getPin?.tips || 0,
+              claimedCoins: getPin?.claimedCoins || 0,
+              couponId: getPin?.couponId,
+              initialTotal: getPin?.initialTotal,
+            };
+
+            console.log("Get Bill if already", getBill.data);
+            return c.json(
+              {
+                message: "Data fetched successfully",
+                err: false,
+                data: billObj,
+              },
+              200,
+            );
+          }
+        }
+
         const billConfig = {
           app_key: pos.posId.accessKey,
           app_secret: pos.posId.secretKey,
@@ -222,82 +275,24 @@ const posRouter = new Hono()
           billConfig,
         );
 
+        console.log("Fetch Bill12", fetchBill.data);
+
         if (fetchBill.data.success === "1") {
-          const request_id = fetchBill.data.request_id;
-
-          if (!request_id) {
-            const bill_request_id = fetchBill.data.bill_request_id;
-
-            const getBillConfig = {
-              app_key: pos.posId.accessKey,
-              app_secret: pos.posId.secretKey,
-              access_token: pos.posId.authToken,
-              restID: pos.posId.restId,
-              bill_request_id: bill_request_id,
-            };
-
-            const getBill = await axios.post(
-              "http://api.petpooja.com/V1/captainorders/get_bill/",
-              getBillConfig,
+          if (!getPin?.requestId) {
+            await UserSession.findOneAndUpdate(
+              {
+                businessId: businessId,
+                tableName: tableName,
+              },
+              {
+                requestId: fetchBill.data.request_id,
+              },
+              {
+                new: true,
+              },
             );
-
-            const simpleArray =
-              transformItemsToSimpleArray(getBill.data.items_data || []) || [];
-
-            if (getBill.data.success === "1") {
-              await PosBill.findOneAndUpdate(
-                {
-                  businessId: businessId,
-                  billRequestId: bill_request_id,
-                },
-                {
-                  items: simpleArray,
-                  billInfo: getBill.data.order_data,
-                  createdAt: Date.now(),
-                },
-                {
-                  upsert: true,
-                  new: true,
-                },
-              );
-
-              await UserSession.findOneAndUpdate(
-                {
-                  businessId: businessId,
-                  tableName: tableName,
-                },
-                {
-                  billGeneratedBy: generatedBy,
-                  billRequestId: bill_request_id,
-                  tax: getBill?.data?.order_data?.tax || 0,
-                  serviceCharge: getBill?.data?.order_data?.service_charge || 0,
-                  billInvoiceId: getBill.data?.order_data?.invoice_id,
-                },
-              );
-              const billObj = {
-                billing_user_name: getBill.data.order_data.billing_user_name,
-                serviceCharge: getBill.data.order_data.service_charge,
-                discount: getBill.data.order_data.discount,
-                tax: getBill.data.order_data.tax,
-                total: getBill.data.order_data.total,
-                customerPhone: getBill.data.order_data.customer_phone,
-                customerName: getBill.data.order_data.customer_name,
-                tableName: getBill.data.order_data.table_no,
-
-                subTotal: getBill.data.order_data.core_price,
-                billRequestId: bill_request_id,
-                items: simpleArray,
-              };
-              return c.json(
-                {
-                  message: "Data fetched successfully",
-                  err: false,
-                  data: billObj,
-                },
-                200,
-              );
-            }
           }
+          const request_id = getPin?.requestId || fetchBill.data.request_id;
 
           const billRequestConfig = {
             app_key: pos.posId.accessKey,
@@ -312,8 +307,23 @@ const posRouter = new Hono()
             billRequestConfig,
           );
 
+          console.log("Fetch Bill Details000", fetchBillDetails.data);
+
           if (fetchBillDetails.data.success === "1") {
             const bill_request_id = fetchBillDetails.data.bill_request_id;
+
+            if (!bill_request_id) {
+              return c.json(
+                {
+                  message: "Error fetching data",
+                  err: true,
+                  data: {
+                    success: false,
+                  },
+                },
+                400,
+              );
+            }
 
             const getBillConfig = {
               app_key: pos.posId.accessKey,
@@ -328,8 +338,11 @@ const posRouter = new Hono()
               getBillConfig,
             );
 
-            const simpleArray =
-              transformItemsToSimpleArray(getBill.data.items_data || []) || [];
+            console.log("Get Billghyu", getBill.data);
+
+            const simpleArray = transformItemsToSimpleArray(
+              getBill.data.items_data || [],
+            );
 
             if (getBill.data.success === "1") {
               await PosBill.findOneAndUpdate(
@@ -348,20 +361,7 @@ const posRouter = new Hono()
                 },
               );
 
-              const billObj = {
-                billing_user_name: getBill.data.order_data.billing_user_name,
-                serviceCharge: getBill.data.order_data.service_charge,
-                discount: getBill.data.order_data.discount,
-                tax: getBill.data.order_data.tax,
-                total: getBill.data.order_data.total,
-                customerPhone: getBill.data.order_data.customer_phone,
-                customerName: getBill.data.order_data.customer_name,
-                tableName: getBill.data.order_data.table_no,
-                billRequestId: bill_request_id,
-                items: simpleArray,
-                subTotal: getBill.data.order_data.core_price,
-              };
-              await UserSession.findOneAndUpdate(
+              const updateSession = await UserSession.findOneAndUpdate(
                 {
                   businessId: businessId,
                   tableName: tableName,
@@ -372,8 +372,38 @@ const posRouter = new Hono()
                   billInvoiceId: getBill.data?.order_data?.invoice_id,
                   tax: getBill?.data?.order_data?.tax || 0,
                   serviceCharge: getBill?.data?.order_data?.service_charge,
+                  initialTax: getBill?.data?.order_data?.tax || 0,
+                  initialSubTotal: getBill?.data?.order_data?.core_price || 0,
+                  discount: getBill?.data?.order_data?.discount || 0,
+                  initialTotal: getBill?.data?.order_data?.total || 0,
+                  finalTax: getBill?.data?.order_data?.tax || 0,
+                  finalTotal: getBill?.data?.order_data?.total || 0,
+                  finalSubTotal: getBill?.data?.order_data?.core_price || 0,
+                },
+                {
+                  new: true,
                 },
               );
+
+              const billObj = {
+                billing_user_name: getBill.data.order_data.billing_user_name,
+                serviceCharge: getBill.data.order_data.service_charge,
+                discount: getBill.data.order_data.discount,
+                tax: updateSession?.finalTax,
+
+                total: updateSession?.finalTotal,
+                customerPhone: getBill.data.order_data.customer_phone,
+                customerName: getBill.data.order_data.customer_name,
+                tableName: getBill.data.order_data.table_no,
+                billRequestId: bill_request_id,
+                items: simpleArray,
+                subTotal: getBill.data.order_data.core_price,
+                tips: updateSession?.tips || 0,
+                claimedCoins: updateSession?.claimedCoins || 0,
+                couponId: updateSession?.couponId,
+                initialTotal: updateSession?.initialTotal,
+              };
+
               return c.json(
                 {
                   message: "Data fetched successfully",
@@ -1154,6 +1184,7 @@ const posRouter = new Hono()
 
   .post(
     "/captain/save_kot",
+    ubacMiddleware("place_order"),
     zValidator(
       "json",
       z.object({
