@@ -42,7 +42,7 @@ app.use(
   cors({
     origin: [
       "https://table.test.hipalz.com",
-
+      "https://localhost/",
       "https://biz.test.hipalz.com",
       "https://hipal-test.hipalz.com",
       "https://hipalz.com",
