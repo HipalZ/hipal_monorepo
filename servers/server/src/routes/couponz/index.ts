@@ -313,7 +313,7 @@ const couponzRouter = new Hono()
 
       // Generate short URL
       const longUrl = `https://api.test.hipalz.com/coupon-analytics/social/${createdCoupon.businessId}/${createdCoupon._id}/${channelId._id}`;
-      const uniqueOrderId = nanoid(10);
+      const uniqueOrderId = nanoid(5);
       let createShortUrl = await UrlModel.findOne({ longUrl });
 
       if (!createShortUrl) {
