@@ -111,46 +111,45 @@ const MemoPaymentSales = () => {
               <span className="opacity-50">Last Synced</span> recently
             </p>
           </article>
-          <section className="flex items-center px-4">
-            <section className="flex items-center gap-2 w-full max-w-[30rem] justify-end md:max-w-full overflow-x-auto">
-              {selectedFilters && selectedFilters.length > 0 && (
-                <>
-                  {selectedFilters.map((filter) => (
-                    <div key={filter.key} className="flex items-center space-x-2 flex-nowrap">
-                      {filter?.value?.map((value) => (
-                        <Button
-                          onClick={() => removeSingleFilter(filter.key, value)}
-                          key={value}
-                          className="capitalize whitespace-nowrap"
-                        >
-                          {value}
-                          <RxCrossCircled className="ml-2" />
-                        </Button>
-                      ))}
-                    </div>
-                  ))}
-                </>
-              )}
-              <Button
-                variant={viewMode === "grid" ? "secondary" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("grid")}
-                className="shrink-0"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === "table" ? "secondary" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("table")}
-                className="shrink-0"
-              >
-                <Table className="w-4 h-4 " />
-              </Button>
-              <Button variant="outline" onClick={() => setOpenFilterModal(true)}>
-                <CiFilter className="mr-2" /> Filters
-              </Button>
-            </section>
+          <section className="flex gap-2 w-full max-w-[30rem] px-4 md:max-w-full overflow-x-auto">
+        
+            <Button
+              variant={viewMode === "grid" ? "secondary" : "outline"}
+              size="icon"
+              onClick={() => setViewMode("grid")}
+              className="shrink-0"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === "table" ? "secondary" : "outline"}
+              size="icon"
+              onClick={() => setViewMode("table")}
+              className="shrink-0"
+            >
+              <Table className="w-4 h-4 " />
+            </Button>
+            <Button variant="outline" onClick={() => setOpenFilterModal(true)}>
+              <CiFilter className="mr-2" /> Filters
+            </Button>
+            {selectedFilters && selectedFilters.length > 0 && (
+              <>
+                {selectedFilters.map((filter) => (
+                  <div key={filter.key} className="flex items-center space-x-2 flex-nowrap">
+                    {filter?.value?.map((value) => (
+                      <Button
+                        onClick={() => removeSingleFilter(filter.key, value)}
+                        key={value}
+                        className="capitalize whitespace-nowrap"
+                      >
+                        {value}
+                        <RxCrossCircled className="ml-2" />
+                      </Button>
+                    ))}
+                  </div>
+                ))}
+              </>
+            )}
           </section>
           <section className="pb-[5rem] mx-4 mt-4">
             {historyData.length > 0 ? (
