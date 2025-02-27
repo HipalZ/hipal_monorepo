@@ -201,28 +201,33 @@ const posRouter = new Hono()
             getBillConfig,
           );
 
-          const simpleArray =
-            transformItemsToSimpleArray(getBill.data.items_data || []) || [];
+          const simpleArray = transformItemsToSimpleArray(
+            getBill.data.items_data || [],
+          );
+
+          console.log("simpleArray", simpleArray);
 
           if (getBill.data.success === "1") {
             const billObj = {
               billing_user_name: getBill.data.order_data.billing_user_name,
               serviceCharge: getBill.data.order_data.service_charge,
               discount: getBill.data.order_data.discount,
-              tax: getPin.finalTax,
-              total: getPin.finalTotal,
+              tax: getPin?.finalTax,
+
+              total: getPin?.finalTotal,
               customerPhone: getBill.data.order_data.customer_phone,
               customerName: getBill.data.order_data.customer_name,
               tableName: getBill.data.order_data.table_no,
-              tips: getPin.tips || 0,
-              subTotal: getBill.data.order_data.core_price,
               billRequestId: bill_request_id,
               items: simpleArray,
-              claimedCoins: getPin.claimedCoins || 0,
-              couponId: getPin.couponId,
+              subTotal: getBill.data.order_data.core_price,
+              tips: getPin?.tips || 0,
+              claimedCoins: getPin?.claimedCoins || 0,
+              couponId: getPin?.couponId,
               initialTotal: getPin?.initialTotal,
-              finalSubTotal: getPin?.finalSubTotal,
             };
+
+            console.log("Get Bill if already", getBill.data);
             return c.json(
               {
                 message: "Data fetched successfully",
@@ -248,8 +253,24 @@ const posRouter = new Hono()
           billConfig,
         );
 
+        console.log("Fetch Bill12", fetchBill.data);
+
         if (fetchBill.data.success === "1") {
-          const request_id = fetchBill.data.request_id;
+          if (!getPin?.requestId) {
+            await UserSession.findOneAndUpdate(
+              {
+                businessId: businessId,
+                tableName: tableName,
+              },
+              {
+                requestId: fetchBill.data.request_id,
+              },
+              {
+                new: true,
+              },
+            );
+          }
+          const request_id = getPin?.requestId || fetchBill.data.request_id;
 
           const billRequestConfig = {
             app_key: pos.posId.accessKey,
@@ -264,13 +285,21 @@ const posRouter = new Hono()
             billRequestConfig,
           );
 
+          console.log("Fetch Bill Details000", fetchBillDetails.data);
+
           if (fetchBillDetails.data.success === "1") {
             const bill_request_id = fetchBillDetails.data.bill_request_id;
 
             if (!bill_request_id) {
-              const fetchBillDetails = await axios.post(
-                "http://api.petpooja.com/V1/captainorders/check_bill/",
-                billRequestConfig,
+              return c.json(
+                {
+                  message: "Error fetching data",
+                  err: true,
+                  data: {
+                    success: false,
+                  },
+                },
+                400,
               );
             }
 
@@ -287,8 +316,11 @@ const posRouter = new Hono()
               getBillConfig,
             );
 
-            const simpleArray =
-              transformItemsToSimpleArray(getBill.data.items_data || []) || [];
+            console.log("Get Billghyu", getBill.data);
+
+            const simpleArray = transformItemsToSimpleArray(
+              getBill.data.items_data || [],
+            );
 
             if (getBill.data.success === "1") {
               await PosBill.findOneAndUpdate(
@@ -307,7 +339,7 @@ const posRouter = new Hono()
                 },
               );
 
-              await UserSession.findOneAndUpdate(
+              const updateSession = await UserSession.findOneAndUpdate(
                 {
                   businessId: businessId,
                   tableName: tableName,
@@ -326,26 +358,28 @@ const posRouter = new Hono()
                   finalTotal: getBill?.data?.order_data?.total || 0,
                   finalSubTotal: getBill?.data?.order_data?.core_price || 0,
                 },
-                { new: true },
+                {
+                  new: true,
+                },
               );
 
               const billObj = {
                 billing_user_name: getBill.data.order_data.billing_user_name,
                 serviceCharge: getBill.data.order_data.service_charge,
                 discount: getBill.data.order_data.discount,
-                tax: getPin?.finalTax,
+                tax: updateSession?.finalTax,
 
-                total: getPin?.finalTotal,
+                total: updateSession?.finalTotal,
                 customerPhone: getBill.data.order_data.customer_phone,
                 customerName: getBill.data.order_data.customer_name,
                 tableName: getBill.data.order_data.table_no,
                 billRequestId: bill_request_id,
                 items: simpleArray,
                 subTotal: getBill.data.order_data.core_price,
-                tips: getPin?.tips || 0,
-                claimedCoins: getPin?.claimedCoins || 0,
-                couponId: getPin?.couponId,
-                initialTotal: getPin?.initialTotal,
+                tips: updateSession?.tips || 0,
+                claimedCoins: updateSession?.claimedCoins || 0,
+                couponId: updateSession?.couponId,
+                initialTotal: updateSession?.initialTotal,
               };
 
               return c.json(

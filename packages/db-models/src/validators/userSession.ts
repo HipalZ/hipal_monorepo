@@ -40,6 +40,7 @@ export const userSessionSchema = z.object({
   tips: z.coerce.number().optional().default(0),
   claimedCoins: z.coerce.number().optional().default(0),
   couponId: ObjectIdSchema.optional(),
+  requestId: z.string().max(50).optional(),
 });
 
 export type UserSessionSchemaType = z.infer<typeof userSessionSchema>;

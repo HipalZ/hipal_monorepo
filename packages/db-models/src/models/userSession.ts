@@ -149,6 +149,10 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     ref: "Coupon",
   },
+  requestId: {
+    type: String,
+    required: false,
+  },
 });
 
 userSessionSchema.index({ businessId: 1, tableName: 1 }, { unique: true });
