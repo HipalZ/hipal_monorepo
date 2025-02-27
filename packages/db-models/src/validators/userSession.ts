@@ -39,7 +39,7 @@ export const userSessionSchema = z.object({
   discount: z.coerce.number().optional().default(0),
   tips: z.coerce.number().optional().default(0),
   claimedCoins: z.coerce.number().optional().default(0),
-  couponId: ObjectIdSchema.optional(),
+  couponId: z.string().max(50).optional(),
   requestId: z.string().max(50).optional(),
 });
 

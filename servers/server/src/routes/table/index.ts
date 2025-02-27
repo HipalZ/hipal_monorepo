@@ -539,6 +539,17 @@ const tableRouter = new Hono()
         }
 
         const table = await Table.findById(tableId);
+
+        if (!table) {
+          return c.json(
+            {
+              message: "Table not found",
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
         const captain = await User.findById(captainId);
         const pos = await BusinessPosConfig.findOne({
           businessId: table?.businessId,
@@ -552,6 +563,8 @@ const tableRouter = new Hono()
             400,
           );
         }
+
+        console.log("1");
         const getBillConfig = {
           app_key: pos.posId.accessKey,
           app_secret: pos.posId.secretKey,
@@ -563,7 +576,7 @@ const tableRouter = new Hono()
           "http://api.petpooja.com/V1/captainorders/get_bill/",
           getBillConfig,
         );
-
+        console.log("2");
         if (getBill.data.success === "0") {
           throw new Error("Bill not found");
         }
@@ -585,6 +598,8 @@ const tableRouter = new Hono()
           },
         );
 
+        console.log("3");
+
         await KotOrder.updateMany(
           {
             tableName: table?.name,
@@ -594,6 +609,8 @@ const tableRouter = new Hono()
           { $set: { settled: true } },
           { session },
         );
+
+        console.log("4");
         const uniqueOrderId = nanoid(15);
 
         let modifyTotal = 0;
@@ -638,6 +655,7 @@ const tableRouter = new Hono()
           ],
           { session },
         );
+        console.log("5");
 
         const findTable = await UserSession.findOne({
           businessId: table?.businessId,
@@ -685,6 +703,8 @@ const tableRouter = new Hono()
           ],
           { session },
         );
+
+        console.log("6");
 
         if (duesUserId && paymentMode?.name === "dues") {
           const createPaymentDues = await PendingDues.create(
@@ -750,6 +770,8 @@ const tableRouter = new Hono()
           ],
           { session },
         );
+
+        console.log("7");
 
         const res = await axios.post(
           "http://api.petpooja.com/V1/captainorders/success_payment/",

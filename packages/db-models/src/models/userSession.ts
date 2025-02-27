@@ -145,9 +145,8 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     default: 0,
   },
   couponId: {
-    type: ObjectId,
+    type: String,
     required: false,
-    ref: "Coupon",
   },
   requestId: {
     type: String,
