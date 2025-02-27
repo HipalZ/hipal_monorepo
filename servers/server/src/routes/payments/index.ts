@@ -469,6 +469,11 @@ const paymentsRouter = new Hono()
         const { merchantId } = c.req.param();
         const uniqueOrderId = nanoid(15);
 
+        const userSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
         const client = await razorpayWrapper.getClient(merchantId);
         const response = await client.orders.create({
           amount: total * 100, // Fixed multiplication logic
@@ -480,7 +485,7 @@ const paymentsRouter = new Hono()
             {
               total,
               currency,
-              billValue,
+              billValue: userSession?.initialTotal || billValue,
               businessId,
               receipt: uniqueOrderId,
               userId,
@@ -581,15 +586,13 @@ const paymentsRouter = new Hono()
               tempTable.serviceCharge,
           );
 
-          console.log("finalTotal", finalTotal);
-
           await UserSession.findOneAndUpdate(
             { businessId, tableName },
             {
               finalSubTotal,
               finalTotal,
               couponId: couponId || null,
-              finalTax,
+              finalTax: finalTax.toFixed(2),
               tips: removeTips ? 0 : tips || tempTable.tips,
               claimedCoins: removeCoins ? 0 : effectiveClaimedCoins,
             },
@@ -715,7 +718,7 @@ const paymentsRouter = new Hono()
               claimedCoins: claimedCoins,
               tableName,
               tips,
-              billValue,
+              billValue: findTempTable?.initialTotal || billValue,
               businessId,
               order_id: uniqueOrderId,
               couponId,
