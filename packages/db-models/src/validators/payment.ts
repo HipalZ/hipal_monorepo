@@ -153,9 +153,9 @@ export const PaymentSchema = z.object({
     .default([])
     .optional(),
   discount: z.coerce.number().default(0).optional(),
-  intialGst: z.coerce.number().default(0).optional(),
-  intialSubTotal: z.coerce.number().default(0).optional(),
-  intialTotal: z.coerce.number().default(0).optional(),
+  initialGst: z.coerce.number().default(0).optional(),
+  initialSubTotal: z.coerce.number().default(0).optional(),
+  initialTotal: z.coerce.number().default(0).optional(),
   finalSubTotal: z.coerce.number().default(0).optional(),
   discountType: z.enum(["COINZ", "COUPONZ"]).optional().default("COINZ"),
 });
