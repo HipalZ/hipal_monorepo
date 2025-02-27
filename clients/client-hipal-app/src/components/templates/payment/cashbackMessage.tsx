@@ -1,3 +1,4 @@
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { useCouponz } from "@/components/store/useCouponz";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
@@ -5,14 +6,17 @@ import { calculateReward } from "@/components/utils/helpers";
 import React, { memo, useMemo } from "react";
 
 const MemoCashbackMessage = () => {
-  const { claimedCoinz, billValue, tips, userCoinz, claimCouponz } =
+  const { claimedCoinz, billValue, tips, userCoinz, claimCouponz, billData } =
     usePaymentStore((s) => ({
       claimedCoinz: s.claimedCoinz,
       billValue: s.billValue,
       tips: s.tips,
       userCoinz: s.userCoinz,
       claimCouponz: s.claimCouponz,
+      billData: s.billData,
     }));
+
+  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
 
   const { availedCoupon } = useCouponz((s) => ({
     availedCoupon: s.availedCoupon,
@@ -38,6 +42,9 @@ const MemoCashbackMessage = () => {
   );
 
   const finalReward = useMemo(() => {
+    if (outletInfo?.isPosEnabled) {
+      return billData?.total * (loyaltySetting?.setCashBackPercentage / 100);
+    }
     if (
       (availedCoupon?.cashbackAvailable && claimCouponz > 0) ||
       claimedCoinz > 0 ||
@@ -57,6 +64,9 @@ const MemoCashbackMessage = () => {
     existingCoins,
     coinsObtained,
     loyaltySetting?.rewardLimit,
+    loyaltySetting?.setCashBackPercentage,
+    outletInfo?.isPosEnabled,
+    billData?.total,
   ]);
 
   return (

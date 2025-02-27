@@ -1,4 +1,5 @@
 import { useHandleMode } from '@/components/hooks/usePayments';
+import { _useAllBusiness } from '@/components/store/useAllBusiness';
 import { useLogin } from '@/components/store/useLogin';
 import { usePaymentStore } from '@/components/store/usePaymentStore';
 import { calculateFinalBill } from '@/components/utils/helpers';
@@ -6,8 +7,9 @@ import { useUserToken } from '@hi/common/src/useUserToken';
 import { memo, useCallback } from 'react';
 
 const MemoTotalBillButton = () => {
-    const { claimedCoinz, claimCouponz, tips, setEditBillModal, billValue, setCheckLogin } = usePaymentStore();
+    const { claimedCoinz, claimCouponz, tips, setEditBillModal, billValue, billData, setCheckLogin } = usePaymentStore();
     const { handleMode } = useHandleMode()
+    const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
     const accessToken = useUserToken.getState().accessToken;
     const { setUrlFrom } = useLogin()
     const completeUrl = window.location.href;
@@ -33,16 +35,18 @@ const MemoTotalBillButton = () => {
         >
             <h1 className="text-sm text-left inter">
                 Total Bill Amount: ₹{" "}
-                {calculateFinalBill(
-                    billValue,
-                    claimedCoinz,
-                    claimCouponz,
-                    tips,
-                )}
+                {
+                    outletInfo?.isPosEnabled ? billData?.total : calculateFinalBill(
+                        billValue,
+                        claimedCoinz,
+                        claimCouponz,
+                        tips,
+                    )
+                }
                 <span className="text-xs">
                     {claimedCoinz > 0 ? (
                         <p className="text-[#4CAF50]">
-                            {claimedCoinz} Saved, using coinz
+                            {claimedCoinz} Saved, using {billData?.couponId ? "Couponz" : "Hi-Coinz"}
                         </p>
                     ) : null}
                 </span>

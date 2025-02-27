@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import type { PageStates } from "../utils/helpers";
 import type { BillData, IMerchantDetails } from "../types/businessData";
+import type { PageStates } from "../utils/helpers";
 
 interface IUsePaymentStore {
   claimedCoinz: number;
@@ -154,6 +154,9 @@ export const usePaymentStore = create<IUsePaymentStore>((set) => ({
     serviceCharge: 0,
     discount: 0,
     tax: 0,
+    tips: 0,
+    claimCouponz: 0,
+    claimedCoinz: 0,
     total: 0,
     customerPhone: "",
     customerName: "",

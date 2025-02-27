@@ -25,6 +25,7 @@ const MemoPaymentModes = () => {
         claimCouponz,
         tips,
         merchantDetails,
+        billData,
     } = usePaymentStore();
 
     const total = calculateFinalBill(billValue, claimedCoinz, claimCouponz, tips);
@@ -54,7 +55,7 @@ const MemoPaymentModes = () => {
             bgColor: "#C497DC",
             footerText: "Instant coinz back",
             onClick: paymentMode,
-            disabled: !merchantDetails?.razorpayMerchantId || isLoading,
+            disabled: !merchantDetails?.razorpayMerchantId || !billData?.total || isLoading,
         },
         {
             image: BillPayment,
@@ -77,7 +78,7 @@ const MemoPaymentModes = () => {
             {/* Payment Options */}
             <section className="w-full text-primary" aria-labelledby="payment-heading">
                 <article className="text-center space-y-2 pt-4 bg-transparent w-full h-[5rem]">
-                    <h1 id="payment-heading" className="text-black text-2xl">
+                    <h1 id="payment-heading" className="text-2xl text-black">
                         Choose mode of payment
                     </h1>
                     <p className="text-sm text-gray-600">
@@ -85,7 +86,7 @@ const MemoPaymentModes = () => {
                     </p>
                 </article>
 
-                <div className="flex flex-col gap-4 w-full max-w-md space-y-6 mt-12 mx-auto p-4">
+                <div className="flex flex-col w-full max-w-md gap-4 p-4 mx-auto mt-12 space-y-6">
                     {paymentMethods.map((method, index) => (
                         !method.disabled && (
                             <motion.button
@@ -97,16 +98,16 @@ const MemoPaymentModes = () => {
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                             >
-                                <article className="relative h-full flex justify-between items-start">
+                                <article className="relative flex items-start justify-between h-full">
                                     <Image src={method.image} alt={method.title} className="-mt-4" />
-                                    <section className="px-4 pb-4 space-y-2 mb-2 p-2 text-right">
+                                    <section className="p-2 px-4 pb-4 mb-2 space-y-2 text-right">
                                         <h1 className="text-[#5A3A00] font-semibold text-xl ">
                                             {method.title}
                                         </h1>
                                         <p className="text-[#845707] poppins-regular text-sm">
                                             {method.description}
                                         </p>
-                                        <div className="flex items-center gap-1 justify-end">
+                                        <div className="flex items-center justify-end gap-1">
                                             {[0, 1, 2].map((i) => (
                                                 <motion.div
                                                     key={i}
@@ -135,8 +136,8 @@ const MemoPaymentModes = () => {
 
                 {/* Loading Spinner */}
                 {isLoading && (
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center rounded-2xl">
-                        <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-2xl">
+                        <div className="w-6 h-6 border-2 border-white rounded-full border-t-transparent animate-spin" />
                     </div>
                 )}
             </section>

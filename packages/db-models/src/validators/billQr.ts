@@ -26,6 +26,9 @@ const qrBillOrderSchema = z.object({
   date: z.number(),
   createdAt: z.date().optional(),
   subTotal: z.coerce.number().optional(),
+  claimedCoins: z.coerce.number().optional(),
+  tips: z.coerce.number().optional(),
+  couponId: ObjectIdSchema.optional(),
 });
 
 export type QrBillOrderType = z.infer<typeof qrBillOrderSchema>;

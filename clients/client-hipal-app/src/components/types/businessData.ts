@@ -596,6 +596,11 @@ export interface BillData {
   subTotal: number;
   billRequestId: string;
   items: DishItem[];
+  claimedCoins: number;
+  tips: number;
+  initialTotal: number;
+  couponId: string;
+  finalSubTotal: number;
 }
 
 interface CartItem {
@@ -630,4 +635,10 @@ export interface ICheckTableSession {
   };
   err: boolean;
   message: string;
+}
+
+export interface OptionalPropsData {
+  coinz?: number;
+  tips?: number;
+  couponId?: string;
 }

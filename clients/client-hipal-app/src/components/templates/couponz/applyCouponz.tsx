@@ -16,7 +16,6 @@ import { toast } from "react-toastify";
 import confetti from "canvas-confetti";
 import { apiRpc } from "@hi/common";
 import { useLogin } from "@/components/store/useLogin";
-import { useQuery } from "@tanstack/react-query";
 import { DialogTitle } from "@headlessui/react";
 import { GoAlert } from "react-icons/go";
 import { IoCheckmark } from "react-icons/io5";
@@ -25,6 +24,8 @@ import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import { useErrorHandling } from "@/utils/helper";
+import { useUpdateBill } from "@/components/hooks/usePayments";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 const AvailableDays = dynamic(() => import("./availableDays"), {
   loading: () => <SkeletonLoader height={20} />,
@@ -73,12 +74,14 @@ const MemoApplyCouponz = () => {
     claimedCoinz,
     setClaimedCoinz,
     claimCouponz,
+    billData
   } = usePaymentStore((s) => ({
     billValue: s.billValue,
     claimedCoinz: s.claimedCoinz,
     setClaimedCoinz: s.setClaimedCoinz,
     setClaimCouponz: s.setClaimCouponz,
     claimCouponz: s.claimCouponz,
+    billData: s.billData,
   }));
 
   const {
@@ -111,6 +114,14 @@ const MemoApplyCouponz = () => {
     setUpcomingCouponz: s.setUpcomingCouponz,
   }));
 
+  const { updateBill } = useUpdateBill()
+  const { mutateAsync } = useMutation({
+    mutationFn: updateBill,
+    onSuccess: (data) => {
+      console.log(data);
+    }
+  })
+
   const [selectedCoupon, setSelectedCouponState] = useState(null);
   const { applyCouponz, setApplyCouponz, setIsLoading } = useCouponTemp(
     (s) => ({
@@ -122,7 +133,7 @@ const MemoApplyCouponz = () => {
 
   const closeCouponz = useCallback(() => {
     setApplyCouponz(false);
-  }, [applyCouponz]);
+  }, [setApplyCouponz]);
 
   const applyCoupon = useCallback(
     async (coupon) => {
@@ -239,6 +250,10 @@ const MemoApplyCouponz = () => {
         claimedCoinz,
       );
 
+      mutateAsync({
+        coinz: discountValue,
+        couponId: coupon?._id,
+      })
       setClaimCouponz(discountValue);
       if (resetClaimedCoinz) {
         setClaimedCoinz(0);
@@ -399,7 +414,7 @@ const MemoApplyCouponz = () => {
               <article className="w-full px-2 py-4 text-black bg-white shadow-2xl rounded-2xl">
                 <div
                   className={cn(
-                    availedCoupon?._id === coupon?._id
+                    (availedCoupon?._id || billData?.couponId) === coupon?._id
                       ? "bg-[#00C37E]"
                       : "bg-[#9268EC]",
                     "h-4 -mx-2 -my-4 overflow-hidden rounded-t-2xl mb-2",
@@ -410,7 +425,7 @@ const MemoApplyCouponz = () => {
                     {coupon?.name}
                     <AvailableDays coupon={coupon} />
                   </h1>
-                  {availedCoupon?._id === coupon?._id ? (
+                  {(availedCoupon?._id || billData?.couponId) === coupon?._id ? (
                     <button
                       type="button"
                       className="text-[#f13f8a] text-sm mt-1 font-bold"

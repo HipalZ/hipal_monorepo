@@ -144,6 +144,11 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: 0,
   },
+  couponId: {
+    type: ObjectId,
+    required: false,
+    ref: "Coupon",
+  },
 });
 
 userSessionSchema.index({ businessId: 1, tableName: 1 }, { unique: true });

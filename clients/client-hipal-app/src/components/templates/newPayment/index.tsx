@@ -126,7 +126,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
           <>
             {showBillPage ?
               <BillPage />
-              : <div>
+              : <>
                 <section>
                   <PaymentBack data={data} />
                   {selectedMode === "INVOICE" ? (
@@ -149,7 +149,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   <NewPaymentComponent />
                 )}
                 <AvailableCoinz />
-              </div>}
+              </>}
           </>
         )}
       </>

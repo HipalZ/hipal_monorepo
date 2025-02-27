@@ -10,6 +10,7 @@ import { RiEdit2Fill } from 'react-icons/ri'
 const PosBillBreakdown = () => {
     const { billData } = usePaymentStore()
     const { setApplyCouponz } = useCouponTemp()
+
     const {
         isTipActive,
         showInput,
@@ -50,53 +51,51 @@ const PosBillBreakdown = () => {
                 }}
                 className="relative mx-4 mt-4 text-[1.25rem] text-[#101018] py-4 rounded-2xl border"
             >
-                <>
-                    <div className="px-4 space-y-3">
-                        <BillItem
-                            icon={<FaMoneyBillWave />}
-                            label="Subtotal"
-                            value={`₹${billData?.subTotal?.toFixed(2) || 0}`}
-                        />
-                        <BillItem
-                            icon={<FaPercent />}
-                            label="Service Charge"
-                            value={`₹${billData?.serviceCharge?.toFixed(2) || 0}`}
-                        />
-                        <BillItem
-                            icon={<FaTags />}
-                            label="Discount"
-                            value={`₹${billData?.discount?.toFixed(2) || 0}`}
-                        />
-                        <BillItem
-                            icon={<FaPercent />}
-                            label="Tax"
-                            value={`₹${billData?.tax?.toFixed(2) || 0}`}
-                        />
-                    </div>
-                    <hr
-                        className="mx-2 my-4 bg-white"
-                        style={{
-                            backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
-                                "#10101875",
-                            )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e\")`,
-                            backgroundRepeat: "no-repeat",
-                            backgroundPosition: "center",
-                            height: "1px",
-                            border: "none",
-                        }}
+                <div className="px-4 space-y-3">
+                    <BillItem
+                        icon={<FaMoneyBillWave />}
+                        label="Subtotal"
+                        value={`₹${billData?.subTotal?.toFixed(2) || 0}`}
                     />
                     <BillItem
-                        icon={<FaMoneyBillWave className="text-green-600" />}
-                        label="Total"
-                        value={`₹${billData?.total?.toFixed(2) || 0}`}
-                        className="px-4 text-lg !font-bold"
+                        icon={<FaPercent />}
+                        label="Service Charge"
+                        value={`₹${billData?.serviceCharge?.toFixed(2) || 0}`}
                     />
-                </>
+                    <BillItem
+                        icon={<FaTags />}
+                        label="Discount"
+                        value={`₹${billData?.discount?.toFixed(2) || 0}`}
+                    />
+                    <BillItem
+                        icon={<FaPercent />}
+                        label="Tax"
+                        value={`₹${billData?.tax?.toFixed(2) || 0}`}
+                    />
+                </div>
+                <hr
+                    className="mx-2 my-4 bg-white"
+                    style={{
+                        backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
+                            "#10101875",
+                        )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e\")`,
+                        backgroundRepeat: "no-repeat",
+                        backgroundPosition: "center",
+                        height: "1px",
+                        border: "none",
+                    }}
+                />
+                <BillItem
+                    icon={<FaMoneyBillWave className="text-green-600" />}
+                    label="Total"
+                    value={`₹${billData?.total?.toFixed(2) || 0}`}
+                    className="px-4 text-lg !font-bold"
+                />
                 <div className="mx-2 mt-2">
                     {claimCouponz > 0 || claimedCoinz > 0 ? (
                         <article className="flex items-center justify-between mx-2 text-xs">
                             <h1 className="text-[#4CAF50]">
-                                {claimedCoinz > 0 ? (
+                                {claimedCoinz > 0 && !billData?.couponId ? (
                                     <>Hi-Coinz applied</>
                                 ) : (
                                     <>Couponz applied</>
@@ -137,7 +136,7 @@ const PosBillBreakdown = () => {
                             ) : null}
                         </div>
                         <div className="flex">
-                            <span className="text-sm text-black">₹ {tips || 0}</span>
+                            <span className="text-sm text-black">₹ {billData?.tips || tips || 0}</span>
                         </div>
                     </div>
                     {isTipActive ? (
@@ -193,7 +192,7 @@ const PosBillBreakdown = () => {
                         <span className="text-base font-bold">
                             {" "}
                             ₹{" "}
-                            {calculateFinalBill(billValue, claimedCoinz, claimCouponz, tips)}
+                            {billData?.total}
                         </span>
                     </div>
                 </div>
@@ -207,9 +206,9 @@ export default PosBillBreakdown
 export const BillItem = ({ icon, label, value, className = "" }) => (
     <div className={`poppins-regular flex items-center justify-between ${className}`}>
         <div className="flex items-center">
-            <h3 className="mr-2 text-black text-sm">{icon}</h3>
-            <h3 className="text-black text-sm">{label}</h3>
+            <h3 className="mr-2 text-sm text-black">{icon}</h3>
+            <h3 className="text-sm text-black">{label}</h3>
         </div>
-        <h3 className="text-black text-sm">{value || 0}</h3>
+        <h3 className="text-sm text-black">{value || 0}</h3>
     </div>
 );

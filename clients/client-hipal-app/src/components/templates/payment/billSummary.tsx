@@ -112,7 +112,7 @@ const BillSummary = () => {
               </div>
               {isTipActive ? (
                 <div className="flex mx-2 space-x-2">
-                  {["100", "200", "500", "Other"].map((tip, index) => (
+                  {[100, 200, 500, "Other"].map((tip, index) => (
                     <button
                       type="button"
                       key={index?.toString()}

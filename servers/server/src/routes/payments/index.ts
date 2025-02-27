@@ -518,67 +518,100 @@ const paymentsRouter = new Hono()
         claimedCoins: z.coerce.number().default(0),
         tips: z.coerce.number().optional(),
         total: z.coerce.number(),
+        couponId: z.string().optional(),
+        removeCoins: z.boolean().optional(),
+        removeTips: z.boolean().optional(),
       }),
     ),
     zValidator("param", z.object({ businessId: z.string().min(1).max(50) })),
 
     async (c) => {
       //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const requestData = await c.req.json();
-        const {
-          tableName,
-          claimedCoins = 0,
-          tips = 0,
-          total = 0,
-        } = requestData;
-        const { businessId } = c.req.param();
+      return runInTransaction(async (session) => {
+        try {
+          const requestData = await c.req.json();
+          const {
+            tableName,
+            claimedCoins = 0,
+            tips = 0,
+            total = 0,
+            couponId,
+            removeCoins,
+            removeTips,
+          } = requestData;
+          const { businessId } = c.req.param();
 
-        const tempTable = await UserSession.findOne({
-          businessId,
-          tableName,
-        });
-        if (!tempTable) {
-          return respond(c, "Table not found", true, 400, {});
+          const tempTable = await UserSession.findOne({
+            businessId,
+            tableName,
+          });
+          if (!tempTable) {
+            return respond(c, "Table not found", true, 400, {});
+          }
+
+          const effectiveClaimedCoins = claimedCoins || tempTable.claimedCoins;
+
+          console.log("effectiveClaimedCoins", effectiveClaimedCoins);
+
+          // Step 1: Calculate finalSubTotal
+          const finalSubTotal =
+            tempTable.intialSubTotal -
+            (removeCoins
+              ? 0
+              : Math.min(effectiveClaimedCoins, tempTable.intialSubTotal));
+
+          console.log("finalSubTotal", finalSubTotal);
+
+          // Step 2: Calculate gstPercentage
+          const gstPercentage =
+            (tempTable.intialTax / tempTable.intialSubTotal) * 100;
+
+          console.log("gstPercentage", gstPercentage);
+
+          // Step 3: Calculate finalTax
+          const finalTax = (gstPercentage / 100) * finalSubTotal;
+
+          console.log("finalTax", finalTax);
+
+          // Step 4: Calculate finalTotal
+          const finalTotal = Math.round(
+            finalSubTotal +
+              finalTax +
+              (removeTips ? 0 : tips || tempTable.tips) +
+              tempTable.serviceCharge,
+          );
+
+          console.log("finalTotal", finalTotal);
+
+          await UserSession.findOneAndUpdate(
+            { businessId, tableName },
+            {
+              finalSubTotal,
+              finalTotal,
+              couponId: couponId || null,
+              finalTax,
+              tips: removeTips ? 0 : tips || tempTable.tips,
+              claimedCoins: removeCoins ? 0 : effectiveClaimedCoins,
+            },
+            { session, new: true },
+          );
+
+          return c.json(
+            {
+              message: "Bill updated successfully",
+              err: false,
+              data: {},
+            },
+            200,
+          );
+        } catch (error) {
+          console.error("Error updating bill:", error);
+          return respond(c, "Internal server error", true, 500, {});
         }
-
-        // step 1: find finalSubTotal
-        const finalSubTotal = Math.round(
-          tempTable.intialSubTotal - claimedCoins,
-        ); // or discount
-        // step 2: find gstPercentage
-        const gstPercentage =
-          (tempTable.intialTax / tempTable.intialSubTotal) * 100;
-        // step 3: find gstAmount
-        const finalTax = Math.round((gstPercentage / 100) * finalSubTotal);
-        // step 4: find finalTotal
-        const finalTotal = Math.round(
-          finalSubTotal + finalTax + tempTable?.serviceCharge + tips,
-        );
-
-        await UserSession.findOneAndUpdate(
-          { businessId, tableName },
-          {
-            finalSubTotal,
-            finalTotal,
-            finalTax,
-            tips,
-            claimedCoins,
-          },
-          { session },
-        );
-
-        return c.json(
-          {
-            message: "Bill updated successfully",
-            err: false,
-            data: {},
-          },
-          200,
-        );
       });
     },
   )
+
   .post(
     "/reviews",
     authTokenValidator,
@@ -2284,62 +2317,68 @@ const paymentsRouter = new Hono()
 
       const filterConditions = [
         { businessId },
-        { date: { $gte: fromDate, $lte: toDate } }
+        { date: { $gte: fromDate, $lte: toDate } },
       ];
 
-      if (typeof appliedFilter === 'string') {
+      if (typeof appliedFilter === "string") {
         try {
           appliedFilter = JSON.parse(appliedFilter);
         } catch (err) {
-          console.error('Failed to parse appliedFilter', err);
-          appliedFilter = []; 
+          console.error("Failed to parse appliedFilter", err);
+          appliedFilter = [];
         }
       }
-      
-      if (appliedFilter && Array.isArray(appliedFilter) && appliedFilter.length > 0) {
-        console.log('modeFilter');
-        
-        const modeFilter = appliedFilter.find(f => f.key === 'mode');
-        console.log('modeFilter', modeFilter);
+
+      if (
+        appliedFilter &&
+        Array.isArray(appliedFilter) &&
+        appliedFilter.length > 0
+      ) {
+        console.log("modeFilter");
+
+        const modeFilter = appliedFilter.find((f) => f.key === "mode");
+        console.log("modeFilter", modeFilter);
         if (modeFilter && Array.isArray(modeFilter.value)) {
-          const modeValues = modeFilter.value.map(v => v.toLowerCase());
-          if (modeValues.includes('online')) {
-            filterConditions.push({ paymentMode: 'online' });
-          } else if (modeValues.includes('offline')) {
-            filterConditions.push({ paymentMode: { $ne: 'online' } });
+          const modeValues = modeFilter.value.map((v) => v.toLowerCase());
+          if (modeValues.includes("online")) {
+            filterConditions.push({ paymentMode: "online" });
+          } else if (modeValues.includes("offline")) {
+            filterConditions.push({ paymentMode: { $ne: "online" } });
           }
         }
-      
-        const typeFilter = appliedFilter.find(f => f.key === 'type');
+
+        const typeFilter = appliedFilter.find((f) => f.key === "type");
         if (typeFilter && Array.isArray(typeFilter.value)) {
           const typeMapping = {
-            'Coinz': 'COINZ',
-            'Couponz': 'COUPONZ',
-            'No Rewardz': 'NO_REWARDZ',
-            'Disscount': 'DISCOUNT'
+            Coinz: "COINZ",
+            Couponz: "COUPONZ",
+            "No Rewardz": "NO_REWARDZ",
+            Disscount: "DISCOUNT",
           };
-          const types = typeFilter.value.map(v => typeMapping[v] || v);
+          const types = typeFilter.value.map((v) => typeMapping[v] || v);
           filterConditions.push({ discountType: { $in: types } });
         }
-      
-        const warningsFilter = appliedFilter.find(f => f.key === 'warnings');
+
+        const warningsFilter = appliedFilter.find((f) => f.key === "warnings");
         if (
           warningsFilter &&
           Array.isArray(warningsFilter.value) &&
-          !warningsFilter.value.includes('All')
+          !warningsFilter.value.includes("All")
         ) {
           const warningsMapping = {
-            'Force Settle': 'FORCE_SETTLE',
-            'Free Tables': 'FREE_SETTLE'
+            "Force Settle": "FORCE_SETTLE",
+            "Free Tables": "FREE_SETTLE",
           };
-          const warnings = warningsFilter.value.map(v => warningsMapping[v] || v);
+          const warnings = warningsFilter.value.map(
+            (v) => warningsMapping[v] || v,
+          );
           filterConditions.push({ settleType: { $in: warnings } });
         }
       }
-      
+
       const queryObject = { $and: filterConditions };
-      console.log('queryObject', queryObject);
-      
+      console.log("queryObject", queryObject);
+
       const existingPayments = await Payment.find(queryObject)
         .sort({ _id: -1 })
         .skip(skip)

@@ -1,13 +1,18 @@
 import AlertToRemove from "@/components/atoms/alertToRemove";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
+import { useGetBill, useUpdateBill } from "@/components/hooks/usePayments";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import { useCouponz } from "@/components/store/useCouponz";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import useTableData from "@/components/store/useTableData";
 import { DialogTitle } from "@headlessui/react";
+import { apiRpc } from "@hi/common";
+import { useMutation } from "@tanstack/react-query";
 import confetti from "canvas-confetti";
-import { type ChangeEvent, memo, useCallback, useState } from "react";
+import { type ChangeEvent, memo, useCallback, useMemo, useState } from "react";
 import { GoAlert } from "react-icons/go";
 import { IoCheckmark } from "react-icons/io5";
 import { RxCross2 } from "react-icons/rx";
@@ -23,17 +28,28 @@ const AvailableCoinz = () => {
     setClaimedCoinz,
     isModalOpen,
     setIsModalOpen,
+    billData,
   } = usePaymentStore();
+  const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
+  // getBill
+  const { updateBill } = useUpdateBill()
   const { loyaltySetting } = useLoyaltyData();
+  const { mutateAsync } = useMutation({
+    mutationFn: updateBill,
+    onSuccess: (data) => {
+      console.log(data);
+    }
+  })
 
-  const handleApplyCoinz = useCallback(
-    (finalValue: number) => {
-      setClaimedCoinz(finalValue);
-      handleCoins(finalValue);
-    },
-    [setClaimedCoinz],
-  );
+  const handleApplyCoinz = (finalValue: number) => {
+    setClaimedCoinz(finalValue);
+    handleCoins(finalValue);
+    mutateAsync({
+      coinz: finalValue,
+      couponId: ""
+    });
+  };
 
   const handleCoins = useCallback(async (claimedCoinz: number) => {
     // if has claim coinz then celebrate
@@ -66,15 +82,18 @@ const AvailableCoinz = () => {
   }));
   const [tempClaimedCoinz, setTempClaimedCoinz] = useState<number | null>(claimedCoinz || null);
 
+  const maxClaim = useMemo(() => {
+    const canClaimCoinz = Math.round((billData?.subTotal || billValue) * (loyaltySetting?.setClaimedPercentage / 100) || 0);
+    return canClaimCoinz < userCoinz ? canClaimCoinz : userCoinz;
+  }, [billData?.subTotal, billValue, loyaltySetting?.setClaimedPercentage, userCoinz]);
+
   const handleChange = (
     event: ChangeEvent<HTMLInputElement>,
     userCoinz: number,
   ) => {
     const userEnteredValue = Number(event.target.value.replace(/[^0-9.]/g, ""));
-    const canClaimCoinz = Math.round(billValue * (loyaltySetting?.setClaimedPercentage / 100) || 0);
-    const coinsToSet = canClaimCoinz < userCoinz ? canClaimCoinz : userCoinz;
-    if (userEnteredValue > coinsToSet) {
-      setTempClaimedCoinz(coinsToSet);
+    if (userEnteredValue > maxClaim) {
+      setTempClaimedCoinz(maxClaim);
     } else {
       setTempClaimedCoinz(userEnteredValue);
     }
@@ -160,9 +179,16 @@ const AvailableCoinz = () => {
               max={userCoinz}
               className="w-full border border-[#000] placeholder:text-sm pl-3 min-h-[3rem] mx-auto font-semibold text-[1rem] rounded-lg my-auto !py-2 text-black"
             />
-            <p className="mt-2 text-center text-sm text-gray-600">
+            <p className="my-2 text-sm text-center text-gray-600">
               Earn exciting rewards with every transaction!
             </p>
+            {outletInfo?.isPosEnabled ? <p className="text-xs text-center text-gray-600">
+              *Note:- coinz can be applied only on bill subtotal amount upto {maxClaim}, tips will not be considered.
+            </p>
+              : <p className="text-xs text-center text-gray-600">
+                *Note:- coinz can be applied upto {maxClaim}, tips will not be considered.
+              </p>
+            }
           </div>
           <CommonBottomButton
             fixed

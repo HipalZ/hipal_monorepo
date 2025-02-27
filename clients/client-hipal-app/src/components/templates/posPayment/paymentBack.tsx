@@ -1,4 +1,5 @@
 import { useMerchantDetails } from '@/components/hooks/useMerchantSecret';
+import { useGetBill } from '@/components/hooks/usePayments';
 import { useUserCoinz } from '@/components/hooks/useUserCoinz';
 import { _useAllBusiness } from '@/components/store/useAllBusiness';
 import useBusinessDetails from '@/components/store/useBusinessDetails';
@@ -14,6 +15,7 @@ import { BiArrowBack } from 'react-icons/bi'
 
 const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
     useMerchantDetails();
+    useGetBill();
     useUserCoinz(data?.loyalty?.loyaltyId || "");
     const pathName = usePathname();
     const { setShowCart } = useCart();

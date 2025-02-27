@@ -2,6 +2,7 @@ import {
   BillUrlModel,
   QrBill,
   UrlModel,
+  UserSession,
   WhatsAppBusinessConfig,
 } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
@@ -150,11 +151,22 @@ const surlRouter = new Hono()
     async (c) => {
       const { orderId } = c.req.param();
 
-      const billInfo = await QrBill.findOne({
-        requestBillId: orderId,
-      });
+      const userSession = await UserSession.findOne({ requestBillId: orderId });
 
-      if (!billInfo) {
+      const updateBill = await QrBill.findOneAndUpdate(
+        { requestBillId: orderId },
+        {
+          total: userSession?.finalTotal,
+          tax: userSession?.finalTax.toFixed(2),
+          subTotal: userSession?.intialSubTotal,
+          tips: userSession?.tips,
+          claimedCoins: userSession?.claimedCoins,
+          couponId: userSession?.couponId,
+        },
+        { new: true },
+      );
+
+      if (!updateBill) {
         return c.json(
           {
             message: "Bill not found",
@@ -168,7 +180,7 @@ const surlRouter = new Hono()
       return c.json({
         message: "Bill found",
         err: false,
-        data: billInfo,
+        data: updateBill,
       });
     },
   );

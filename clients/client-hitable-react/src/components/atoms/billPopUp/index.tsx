@@ -246,15 +246,6 @@ const BillPopUpMemo = () => {
                   Final Discount to Apply in POS:
                   <span> ₹ {viewData?.posDiscount} </span>
                 </p>
-                <p className="mt-4 !text-base font-bold text-black">
-                  Final Discount percentage to Apply in POS:
-                  <span>
-                    {viewData?.order_id?.billValue && viewData?.posDiscount
-                      ? ((viewData?.posDiscount / viewData?.order_id.billValue) * 100).toFixed(2)
-                      : "0"}
-                    %
-                  </span>
-                </p>
               </div>
               <div className="flex self-end">
                 <span
@@ -299,7 +290,7 @@ const BillPopUpMemo = () => {
                 </button>
               </div>
             ) : (
-              <div className="bg-base-100 shadow-base-100 fixed bottom-0 z-20 w-[100%] max-w-[28rem] rotate-180 py-2 shadow-lg">
+              <div className="bg-white shadow-base-100 fixed bottom-0 z-20 w-[100%] max-w-[48rem] rotate-180 py-2 shadow-lg">
                 <div className="flex justify-between gap-4 rotate-180">
                   <button
                     type="button"
