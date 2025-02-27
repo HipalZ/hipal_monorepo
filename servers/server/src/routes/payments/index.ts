@@ -3348,7 +3348,9 @@ const paymentsRouter = new Hono()
       let totalFreeSettle = 0;
 
       for (const payment of payments) {
-        totalTax += payment.tax ?? 0;
+        if (payment.mode !== "dues") {
+          totalTax += payment.tax ?? 0;
+        }
         totalTip += payment.tips ?? 0;
         totalServiceCharge += payment.serviceCharge ?? 0;
 

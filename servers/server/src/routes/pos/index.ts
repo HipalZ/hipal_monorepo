@@ -184,6 +184,29 @@ const posRouter = new Hono()
           tableName: tableName,
         });
 
+        if (getPin) {
+          const currentTime = new Date();
+          const pinTime = new Date(getPin.date);
+          const timeDifference =
+            (currentTime.getTime() - pinTime.getTime()) / (1000 * 60 * 60); // Difference in hours
+          if (timeDifference > 3) {
+            const registerUser = await axios.post(
+              "http://api.petpooja.com/V1/captainorders/save_menu_qr_customer_information",
+              {
+                app_key: pos?.posId.accessKey,
+                app_secret: pos?.posId.secretKey,
+                access_token: pos?.posId.authToken,
+                restID: pos?.posId.restId,
+                phone: getPin.pin,
+                name: generatedBy,
+              },
+            );
+            if (registerUser.data.success === "0") {
+              throw new Error("user not registered");
+            }
+          }
+        }
+
         if (getPin?.billRequestId) {
           const bill_request_id = getPin.billRequestId;
 
