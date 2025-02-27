@@ -43,6 +43,7 @@ app.use(
     origin: [
       "https://table.test.hipalz.com",
       "https://localhost/",
+      "https://localhost",
       "https://biz.test.hipalz.com",
       "https://hipal-test.hipalz.com",
       "https://hipalz.com",
