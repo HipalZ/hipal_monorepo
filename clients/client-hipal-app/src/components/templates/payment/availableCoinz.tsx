@@ -1,15 +1,13 @@
 import AlertToRemove from "@/components/atoms/alertToRemove";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
-import { useGetBill, useUpdateBill } from "@/components/hooks/usePayments";
+import { useUpdateBill } from "@/components/hooks/usePayments";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import { useCouponz } from "@/components/store/useCouponz";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import useTableData from "@/components/store/useTableData";
 import { DialogTitle } from "@headlessui/react";
-import { apiRpc } from "@hi/common";
 import { useMutation } from "@tanstack/react-query";
 import confetti from "canvas-confetti";
 import { type ChangeEvent, memo, useCallback, useMemo, useState } from "react";
@@ -22,10 +20,10 @@ const AvailableCoinz = () => {
   const {
     billValue,
     userCoinz,
-    claimedCoinz,
+    claimedCoins,
     claimCouponz,
     setClaimCouponz,
-    setClaimedCoinz,
+    setClaimedCoins,
     isModalOpen,
     setIsModalOpen,
     billData,
@@ -43,7 +41,7 @@ const AvailableCoinz = () => {
   })
 
   const handleApplyCoinz = (finalValue: number) => {
-    setClaimedCoinz(finalValue);
+    setClaimedCoins(finalValue);
     handleCoins(finalValue);
     mutateAsync({
       coinz: finalValue,
@@ -51,10 +49,10 @@ const AvailableCoinz = () => {
     });
   };
 
-  const handleCoins = useCallback(async (claimedCoinz: number) => {
+  const handleCoins = useCallback(async (claimedCoins: number) => {
     // if has claim coinz then celebrate
     setIsModalOpen(false);
-    if (claimedCoinz !== null && claimedCoinz > 0) {
+    if (claimedCoins !== null && claimedCoins > 0) {
       confetti({
         particleCount: 100,
         spread: 70,
@@ -80,7 +78,7 @@ const AvailableCoinz = () => {
     showAlert: s.showAlert,
     setShowAlert: s.setShowAlert,
   }));
-  const [tempClaimedCoinz, setTempClaimedCoinz] = useState<number | null>(claimedCoinz || null);
+  const [tempClaimedCoins, setTempClaimedCoins] = useState<number | null>(claimedCoins || null);
 
   const maxClaim = useMemo(() => {
     const canClaimCoinz = Math.round((billData?.subTotal || billValue) * (loyaltySetting?.setClaimedPercentage / 100) || 0);
@@ -89,13 +87,12 @@ const AvailableCoinz = () => {
 
   const handleChange = (
     event: ChangeEvent<HTMLInputElement>,
-    userCoinz: number,
   ) => {
     const userEnteredValue = Number(event.target.value.replace(/[^0-9.]/g, ""));
     if (userEnteredValue > maxClaim) {
-      setTempClaimedCoinz(maxClaim);
+      setTempClaimedCoins(maxClaim);
     } else {
-      setTempClaimedCoinz(userEnteredValue);
+      setTempClaimedCoins(userEnteredValue);
     }
   };
 
@@ -104,21 +101,21 @@ const AvailableCoinz = () => {
     if (claimCouponz > 0) {
       setShowAlert(true);
     } else {
-      handleApplyCoinz(tempClaimedCoinz || 0);
+      handleApplyCoinz(tempClaimedCoins || 0);
     }
-  }, [setShowAlert, tempClaimedCoinz, handleApplyCoinz, claimCouponz]);
+  }, [setShowAlert, tempClaimedCoins, handleApplyCoinz, claimCouponz]);
 
   const replaceLoyalty = useCallback(() => {
     setClaimCouponz(0);
     setShowAlert(false);
     setAvailedCoupon({});
     toast.success("Coupon removed successfully");
-    handleApplyCoinz(tempClaimedCoinz || 0);
+    handleApplyCoinz(tempClaimedCoins || 0);
   }, [
     setClaimCouponz,
     setShowAlert,
     handleApplyCoinz,
-    tempClaimedCoinz,
+    tempClaimedCoins,
     setAvailedCoupon,
   ]);
 
@@ -167,13 +164,13 @@ const AvailableCoinz = () => {
           <div className="h-[15rem] p-4 bg-white text-black overflow-hidden rounded-t-2xl">
             <h1 className="text-xl font-semibold">
               Available Coins :{" "}
-              {claimedCoinz ? userCoinz - claimedCoinz : userCoinz}
+              {claimedCoins ? userCoinz - claimedCoins : userCoinz}
             </h1>
             <br />
             <input
-              onChange={(e) => handleChange(e, userCoinz)}
+              onChange={(e) => handleChange(e)}
               type="tel"
-              value={tempClaimedCoinz || null}
+              value={tempClaimedCoins || null}
               placeholder="Enter the Coinz to apply"
               min={0}
               maxLength={5}

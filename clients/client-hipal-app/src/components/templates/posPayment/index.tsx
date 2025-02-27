@@ -103,54 +103,16 @@ const PaymentCard = dynamic(
 );
 
 const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
-    const orderId = useSearchParams().get("orderId") as string;
     const {
-        setBillValue,
         isLoading,
         selectedMode,
         showError,
         showBillPage,
-        setBillData,
-        setClaimedCoinz,
-        setSelectedTip
     } = usePaymentStore();
 
-    const { setTableName } = useTableData()
     const { applyCouponz } = useCouponTemp((s) => ({
         applyCouponz: s.applyCouponz,
     }));
-
-    const handleGetOrderId = async () => {
-        try {
-            const response = await apiRpc.surl.get_table_data[":orderId"].$get({
-                param: {
-                    orderId: orderId
-                }
-            })
-            const res = await response.json()
-            const payment = res.data as BillData
-            if (response?.status === 404) {
-                toast.error(response?.data?.message || "Something went wrong")
-            }
-            if (payment?.tableName && payment?.tableName?.length > 0) {
-                setTableName(payment?.tableName)
-            }
-            setBillValue(payment.total)
-            setBillData(payment)
-            setClaimedCoinz(payment?.claimedCoins);
-            setSelectedTip(payment?.tips?.toString() || "");
-            return payment
-        } catch (e) {
-            console.error(e)
-        }
-    }
-
-    useQuery({
-        queryKey: ["getBusinessDetails", orderId],
-        queryFn: handleGetOrderId,
-        enabled: orderId !== null,
-        staleTime: 1000 * 60 * 5,
-    })
 
     return (
         <main className="relative h-screen bg-black">

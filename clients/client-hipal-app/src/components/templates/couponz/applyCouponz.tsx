@@ -71,14 +71,14 @@ const MemoApplyCouponz = () => {
   const {
     billValue,
     setClaimCouponz,
-    claimedCoinz,
-    setClaimedCoinz,
+    claimedCoins,
+    setClaimedCoins,
     claimCouponz,
     billData
   } = usePaymentStore((s) => ({
     billValue: s.billValue,
-    claimedCoinz: s.claimedCoinz,
-    setClaimedCoinz: s.setClaimedCoinz,
+    claimedCoins: s.claimedCoins,
+    setClaimedCoins: s.setClaimedCoins,
     setClaimCouponz: s.setClaimCouponz,
     claimCouponz: s.claimCouponz,
     billData: s.billData,
@@ -187,7 +187,7 @@ const MemoApplyCouponz = () => {
       if (coupon?.conditions?.billValue > billValue)
         return toast.info("Bill value is less than coupon value");
 
-      if (claimedCoinz > 0) {
+      if (claimedCoins > 0) {
         setSelectedCouponState(coupon);
         setShowAlert(true);
         return;
@@ -195,17 +195,17 @@ const MemoApplyCouponz = () => {
 
       await applyCouponLogic(coupon);
     },
-    [billValue, claimedCoinz, setShowAlert, setSelectedCouponState],
+    [billValue, claimedCoins, setShowAlert, setSelectedCouponState],
   );
 
   const replaceLoyalty = useCallback(async () => {
-    setClaimedCoinz(0);
+    setClaimedCoins(0);
     setShowAlert(false);
     toast.success("Coinz removed successfully");
     if (selectedCoupon) {
       await applyCouponLogic(selectedCoupon);
     }
-  }, [setClaimedCoinz, setShowAlert, selectedCoupon]);
+  }, [setClaimedCoins, setShowAlert, selectedCoupon]);
 
   const applyCouponLogic = useCallback(
     async (coupon) => {
@@ -244,10 +244,10 @@ const MemoApplyCouponz = () => {
       }
       setIsLoading(false);
       // any condition apply the coupon
-      const { discountValue, resetClaimedCoinz } = calculateDiscount(
+      const { discountValue, resetClaimedCoins } = calculateDiscount(
         coupon,
         billValue,
-        claimedCoinz,
+        claimedCoins,
       );
 
       mutateAsync({
@@ -255,8 +255,8 @@ const MemoApplyCouponz = () => {
         couponId: coupon?._id,
       })
       setClaimCouponz(discountValue);
-      if (resetClaimedCoinz) {
-        setClaimedCoinz(0);
+      if (resetClaimedCoins) {
+        setClaimedCoins(0);
       }
 
       setApplyCouponz(false);
@@ -279,10 +279,10 @@ const MemoApplyCouponz = () => {
     },
     [
       billValue,
-      claimedCoinz,
+      claimedCoins,
       setDirection,
       setClaimCouponz,
-      setClaimedCoinz,
+      setClaimedCoins,
       setApplyCouponz,
       setAvailedCoupon,
     ],
@@ -297,15 +297,15 @@ const MemoApplyCouponz = () => {
 
   useEffect(() => {
     if (availedCoupon?._id) {
-      const { discountValue, resetClaimedCoinz } = calculateDiscount(
+      const { discountValue, resetClaimedCoins } = calculateDiscount(
         availedCoupon,
         billValue,
-        claimedCoinz,
+        claimedCoins,
       );
 
       setClaimCouponz(discountValue);
-      if (resetClaimedCoinz) {
-        setClaimedCoinz(0);
+      if (resetClaimedCoins) {
+        setClaimedCoins(0);
       }
     }
   }, [availedCoupon]);

@@ -65,7 +65,7 @@ const MemoCoinzRewardSection = () => {
   }));
   const {
     billValue,
-    claimedCoinz,
+    claimedCoins,
     claimCouponz,
     setIsModalOpen,
     editBillModal,
@@ -73,7 +73,7 @@ const MemoCoinzRewardSection = () => {
     billData,
   } = usePaymentStore((s) => ({
     billValue: s.billValue,
-    claimedCoinz: s.claimedCoinz,
+    claimedCoins: s.claimedCoins,
     claimCouponz: s.claimCouponz,
     setIsModalOpen: s.setIsModalOpen,
     editBillModal: s.editBillModal,
@@ -162,14 +162,14 @@ const MemoCoinzRewardSection = () => {
               </article>
               {accessToken && userDetails?._id && <article className="bg-[#FFFFFFD9] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
                 <h1 className="mb-1 text-base">Coinz : {userCoinZ}</h1>
-                {claimedCoinz > 0 && !billData?.couponId && (
-                  <h1 className="text-sm">Coinz Applied: {claimedCoinz}</h1>
+                {claimedCoins > 0 && !billData?.couponId && (
+                  <h1 className="text-sm">Coinz Applied: {claimedCoins}</h1>
                 )}
               </article>}
             </article>
             <article
               style={{
-                opacity: claimedCoinz > 0 ? 0.5 : 1,
+                opacity: claimedCoins > 0 ? 0.5 : 1,
               }}
               className="z-10 scaled-card-container-2 rounded-2xl h-[235px] coupon-card-responsive mr-4 bg-white relative"
             >
@@ -204,13 +204,13 @@ const MemoCoinzRewardSection = () => {
               onKeyDown={openModal}
             >
               {outletInfo?.isPosEnabled ? <GameButton
-                text={cn(claimedCoinz > 0 && !billData?.couponId ? "Applied" : "Use Coinz")}
-                hideShine={claimedCoinz > 0 && !billData?.couponId || false}
+                text={cn(claimedCoins > 0 && !billData?.couponId ? "Applied" : "Use Coinz")}
+                hideShine={claimedCoins > 0 && !billData?.couponId || false}
               />
                 :
                 <GameButton
-                  text={cn(claimedCoinz > 0 ? "Applied" : "Use Coinz")}
-                  hideShine={claimedCoinz > 0 || false}
+                  text={cn(claimedCoins > 0 ? "Applied" : "Use Coinz")}
+                  hideShine={claimedCoins > 0 || false}
                 />
               }
             </article>

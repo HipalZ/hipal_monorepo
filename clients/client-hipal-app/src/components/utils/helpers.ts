@@ -561,7 +561,7 @@ export const getAvailabilityText = (when: string, customDays: string[]) => {
 
 export type PageStates = "INVOICE" | "MODE" | "ONLINE" | "OFFLINE";
 
-export const calculateDiscount = (coupon, billValue, claimedCoinz) => {
+export const calculateDiscount = (coupon, billValue, claimedCoins) => {
   let discountValue = 0;
 
   if (
@@ -578,7 +578,7 @@ export const calculateDiscount = (coupon, billValue, claimedCoinz) => {
     discountValue = coupon?.config?.value;
   }
 
-  return { discountValue, resetClaimedCoinz: claimedCoinz > 0 };
+  return { discountValue, resetClaimedCoins: claimedCoins > 0 };
 };
 
 const calculateDiscountValue = (
@@ -609,13 +609,13 @@ const calculateDiscountValue = (
 
 export const calculateFinalBill = (
   billValue: number,
-  claimedCoinz: number,
+  claimedCoins: number,
   claimCouponz: number,
   tips: number,
 ): number => {
   const adjustedClaimCouponz =
     claimCouponz >= billValue ? billValue : claimCouponz;
-  const finalBillValue = billValue - claimedCoinz - adjustedClaimCouponz + tips;
+  const finalBillValue = billValue - claimedCoins - adjustedClaimCouponz + tips;
   return finalBillValue;
 };
 

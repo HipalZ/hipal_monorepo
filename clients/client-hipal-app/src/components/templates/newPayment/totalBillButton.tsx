@@ -7,7 +7,7 @@ import { useUserToken } from '@hi/common/src/useUserToken';
 import { memo, useCallback } from 'react';
 
 const MemoTotalBillButton = () => {
-    const { claimedCoinz, claimCouponz, tips, setEditBillModal, billValue, billData, setCheckLogin } = usePaymentStore();
+    const { claimedCoins, claimCouponz, tips, setEditBillModal, billValue, billData, setCheckLogin } = usePaymentStore();
     const { handleMode } = useHandleMode()
     const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
     const accessToken = useUserToken.getState().accessToken;
@@ -38,15 +38,15 @@ const MemoTotalBillButton = () => {
                 {
                     outletInfo?.isPosEnabled ? billData?.total : calculateFinalBill(
                         billValue,
-                        claimedCoinz,
+                        claimedCoins,
                         claimCouponz,
                         tips,
                     )
                 }
                 <span className="text-xs">
-                    {claimedCoinz > 0 ? (
+                    {claimedCoins > 0 ? (
                         <p className="text-[#4CAF50]">
-                            {claimedCoinz} Saved, using {billData?.couponId ? "Couponz" : "Hi-Coinz"}
+                            {claimedCoins} Saved, using {billData?.couponId ? "Couponz" : "Hi-Coinz"}
                         </p>
                     ) : null}
                 </span>

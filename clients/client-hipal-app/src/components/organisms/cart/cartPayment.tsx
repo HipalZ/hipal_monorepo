@@ -25,7 +25,7 @@ const MemoCartPayment = () => {
     billData,
     setEditBillModal,
     setClaimCouponz,
-    setClaimedCoinz,
+    setClaimedCoins,
     setCustomTip,
     setTips,
     setSelectedTip,
@@ -66,7 +66,7 @@ const MemoCartPayment = () => {
   const goBack = useCallback(() => {
     setEditBillModal(false);
     setClaimCouponz(0);
-    setClaimedCoinz(0);
+    setClaimedCoins(0);
     setSelectedTip("");
     setCustomTip("");
     setShowInput(false);
@@ -78,7 +78,7 @@ const MemoCartPayment = () => {
   }, [
     setEditBillModal,
     setClaimCouponz,
-    setClaimedCoinz,
+    setClaimedCoins,
     setCustomTip,
     setCartPage,
     setTips,
@@ -94,7 +94,7 @@ const MemoCartPayment = () => {
     if ((billValue && billValue > 0) || (billData?.total && billData?.total > 0)) {
       setEditBillModal(false);
       setClaimCouponz(0);
-      setClaimedCoinz(0);
+      setClaimedCoins(0);
       setSelectedTip("");
       setCustomTip("");
       setShowInput(false);

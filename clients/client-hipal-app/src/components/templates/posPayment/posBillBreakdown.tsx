@@ -16,18 +16,18 @@ const PosBillBreakdown = () => {
         customTip,
         billValue,
         claimCouponz,
-        claimedCoinz,
+        claimedCoins,
         tips,
         setIsTipActive,
     } = usePaymentStore();
 
     function getDisplayValue(
         billValue: number,
-        claimedCoinz: number,
+        claimedCoins: number,
         claimCouponz: number,
     ): number {
-        if (claimedCoinz > 0) {
-            return claimedCoinz;
+        if (claimedCoins > 0) {
+            return claimedCoins;
         }
         if (claimCouponz > billValue) {
             return billValue;
@@ -84,10 +84,10 @@ const PosBillBreakdown = () => {
                     }}
                 />
                 <div className="mx-2 mt-2">
-                    {claimCouponz > 0 || claimedCoinz > 0 ? (
+                    {claimCouponz > 0 || claimedCoins > 0 ? (
                         <article className="flex items-center justify-between mx-2 text-xs">
                             <h1 className="text-[#4CAF50]">
-                                {claimedCoinz > 0 && !billData?.couponId ? (
+                                {claimedCoins > 0 && !billData?.couponId ? (
                                     <>Hi-Coinz applied</>
                                 ) : (
                                     <>Couponz applied</>
@@ -97,7 +97,7 @@ const PosBillBreakdown = () => {
                                 <h1>
                                     ₹ {getDisplayValue(
                                         billValue,
-                                        claimedCoinz,
+                                        claimedCoins,
                                         claimCouponz,
                                     )}{" "}
                                 </h1>

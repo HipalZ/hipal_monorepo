@@ -24,6 +24,8 @@ import {
   calculateFinalBill,
   calculateReward,
 } from "../utils/helpers";
+import { useSearchParams } from "next/navigation";
+import useCouponTemp from "../store/useCouponTemp";
 
 export const usePayments = () => {
   const { businessDetails } = useBusinessDetails();
@@ -47,7 +49,7 @@ export const usePayments = () => {
     merchantDetails,
     billValue,
     billData,
-    claimedCoinz,
+    claimedCoins,
     claimCouponz,
     tips,
     userCoinz,
@@ -58,7 +60,7 @@ export const usePayments = () => {
     merchantDetails: s.merchantDetails,
     billValue: s.billValue,
     billData: s.billData,
-    claimedCoinz: s.claimedCoinz,
+    claimedCoins: s.claimedCoins,
     claimCouponz: s.claimCouponz,
     tips: s.tips,
     userCoinz: s.userCoinz,
@@ -69,12 +71,12 @@ export const usePayments = () => {
   const finalAmount = useMemo(() => {
     return outletInfo?.isPosEnabled
       ? billData?.total
-      : calculateFinalBill(billValue, claimedCoinz, claimCouponz, tips);
+      : calculateFinalBill(billValue, claimedCoins, claimCouponz, tips);
   }, [
     outletInfo?.isPosEnabled,
     billData?.total,
     billValue,
-    claimedCoinz,
+    claimedCoins,
     claimCouponz,
     tips,
   ]);
@@ -110,20 +112,20 @@ export const usePayments = () => {
       const orderId = data?.data as string;
       const coinsObtained =
         finalAmount * (loyaltySetting?.setCashBackPercentage / 100);
-      const existingCoins = claimedCoinz ? userCoinz - claimedCoinz : userCoinz;
+      const existingCoins = claimedCoins ? userCoinz - claimedCoins : userCoinz;
       let finalReward = 0;
       if (
         outletInfo?.isPosEnabled &&
         ((availedCoupon?.cashbackAvailable && claimCouponz > 0) ||
-          claimedCoinz > 0 ||
-          (claimedCoinz === 0 && claimCouponz === 0))
+          claimedCoins > 0 ||
+          (claimedCoins === 0 && claimCouponz === 0))
       ) {
         finalReward =
           billData?.subTotal * (loyaltySetting?.setCashBackPercentage / 100);
       } else if (
         (availedCoupon?.cashbackAvailable && claimCouponz > 0) ||
-        claimedCoinz > 0 ||
-        (claimedCoinz === 0 && claimCouponz === 0)
+        claimedCoins > 0 ||
+        (claimedCoins === 0 && claimCouponz === 0)
       ) {
         finalReward = calculateReward(
           existingCoins,
@@ -155,7 +157,7 @@ export const usePayments = () => {
       availedCoupon?._id,
       userDetails?._id,
       billValue,
-      claimedCoinz,
+      claimedCoins,
       claimCouponz,
       tips,
       loyaltySetting?.setCashBackPercentage,
@@ -213,7 +215,7 @@ export const usePayments = () => {
           businessId: businessId || "",
           total: finalAmount,
           currency: "INR",
-          claimedCoins: claimedCoinz || claimCouponz,
+          claimedCoins: claimedCoins || claimCouponz,
           billValue: initialTotal,
           userId: userDetails?._id,
           tips: tips,
@@ -236,7 +238,7 @@ export const usePayments = () => {
       merchantDetails.razorpayMerchantId,
       businessId,
       billValue,
-      claimedCoinz,
+      claimedCoins,
       claimCouponz,
       tips,
       userDetails?._id,
@@ -349,7 +351,7 @@ export const usePayments = () => {
           address: "Paltribe solutions",
           businessId: businessId,
           total: finalAmount,
-          claimedCoins: claimedCoinz || claimCouponz,
+          claimedCoins: claimedCoins || claimCouponz,
           billValue: initialTotal,
           tips: tips,
           loyaltyId: loyaltySetting.loyaltyId,
@@ -415,7 +417,7 @@ export const usePayments = () => {
       json: {
         businessId: businessId || "",
         total: finalAmount,
-        claimedCoins: claimedCoinz || claimCouponz,
+        claimedCoins: claimedCoins || claimCouponz,
         billValue: initialTotal,
         userId: userDetails?._id,
         tips: tips,
@@ -442,13 +444,13 @@ export const usePayments = () => {
       let finalReward = 0;
       if (
         (availedCoupon?.cashbackAvailable && claimCouponz > 0) ||
-        claimedCoinz > 0 ||
-        (claimedCoinz === 0 && claimCouponz === 0)
+        claimedCoins > 0 ||
+        (claimedCoins === 0 && claimCouponz === 0)
       ) {
         const coinsObtained =
           finalAmount * (loyaltySetting?.setCashBackPercentage / 100);
-        const existingCoins = claimedCoinz
-          ? userCoinz - claimedCoinz
+        const existingCoins = claimedCoins
+          ? userCoinz - claimedCoins
           : userCoinz;
         finalReward = calculateReward(
           existingCoins,
@@ -473,7 +475,7 @@ export const usePayments = () => {
     apiRpc,
     businessId,
     billValue,
-    claimedCoinz,
+    claimedCoins,
     claimCouponz,
     tips,
     userDetails?._id,
@@ -505,7 +507,7 @@ export const useHandleMode = () => {
     showInput,
     billValue,
     tips,
-    claimedCoinz,
+    claimedCoins,
     claimCouponz,
     billData,
   } = usePaymentStore((s) => ({
@@ -514,7 +516,7 @@ export const useHandleMode = () => {
     showInput: s.showInput,
     billValue: s.billValue,
     tips: s.tips,
-    claimedCoinz: s.claimedCoinz,
+    claimedCoins: s.claimedCoins,
     claimCouponz: s.claimCouponz,
     billData: s.billData,
   }));
@@ -534,7 +536,7 @@ export const useHandleMode = () => {
         toast.error("Please Scan Again");
         return router.push(`/${customLink}/scan`);
       }
-      if (initialTotal - claimedCoinz - claimCouponz + tips === 0)
+      if (initialTotal - claimedCoins - claimCouponz + tips === 0)
         return toast.error("Please scan to pay");
       setSelectedMode(mode);
     },
@@ -543,7 +545,7 @@ export const useHandleMode = () => {
       selectedMode,
       tableName,
       initialTotal,
-      claimedCoinz,
+      claimedCoins,
       claimCouponz,
       tips,
     ],
@@ -558,7 +560,7 @@ export const useGetBill = () => {
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const tableName = useTableData((state) => state.tableName);
   const userDetails = useLogin((state) => state.userDetails);
-  const setClaimedCoinz = usePaymentStore((state) => state.setClaimedCoinz);
+  const setClaimedCoins = usePaymentStore((state) => state.setClaimedCoins);
   const setEditBillModal = usePaymentStore((state) => state.setEditBillModal);
   const setBillValue = usePaymentStore((state) => state.setBillValue);
   const setBillData = usePaymentStore((state) => state.setBillData);
@@ -584,7 +586,7 @@ export const useGetBill = () => {
     const payment = res?.data as BillData;
     setBillData(payment);
     setBillValue(payment?.total);
-    setClaimedCoinz(payment?.claimedCoins);
+    setClaimedCoins(payment?.claimedCoins);
     setSelectedTip(payment?.tips?.toString() || "");
     if (payment?.total === 0) {
       setEditBillModal(true);
@@ -613,11 +615,11 @@ export const useGetBill = () => {
 export const useDisplayValue = () => {
   function getDisplayValue(
     billValue: number,
-    claimedCoinz: number,
+    claimedCoins: number,
     claimCouponz: number,
   ): number {
-    if (claimedCoinz > 0) {
-      return claimedCoinz;
+    if (claimedCoins > 0) {
+      return claimedCoins;
     }
     if (claimCouponz > billValue) {
       return billValue;
@@ -653,9 +655,6 @@ export const useBillSummary = () => {
 
   const { mutateAsync } = useMutation({
     mutationFn: updateBill,
-    onSuccess: (data) => {
-      console.log(data);
-    },
   });
 
   const handleTipSelect = useCallback(
@@ -930,4 +929,45 @@ export const useUpdateBill = () => {
   };
 
   return { updateBill };
+};
+
+export const useGetOrderId = () => {
+  const orderId = useSearchParams().get("orderId") as string;
+  const { setBillValue, setBillData, setClaimedCoins, setSelectedTip } =
+    usePaymentStore();
+
+  const { setTableName } = useTableData();
+
+  const handleGetOrderId = async () => {
+    try {
+      const response = await apiRpc.surl.get_table_data[":orderId"].$get({
+        param: {
+          orderId: orderId,
+        },
+      });
+      const res = await response.json();
+      const payment = res.data as BillData;
+      if (response?.status === 404) {
+        toast.error(response?.data?.message || "Something went wrong");
+      }
+      if (payment?.tableName && payment?.tableName?.length > 0) {
+        setTableName(payment?.tableName);
+      }
+      setBillValue(payment.total);
+      setBillData(payment);
+      setClaimedCoins(payment?.claimedCoins || 0);
+      setSelectedTip(payment?.tips?.toString() || "");
+      return payment;
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const { isLoading } = useQuery({
+    queryKey: ["getBusinessDetails", orderId],
+    queryFn: handleGetOrderId,
+    enabled: orderId !== null,
+  });
+
+  return { isLoading };
 };

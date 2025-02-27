@@ -6,9 +6,9 @@ import { calculateReward } from "@/components/utils/helpers";
 import React, { memo, useMemo } from "react";
 
 const MemoCashbackMessage = () => {
-  const { claimedCoinz, billValue, tips, userCoinz, claimCouponz, billData } =
+  const { claimedCoins, billValue, tips, userCoinz, claimCouponz, billData } =
     usePaymentStore((s) => ({
-      claimedCoinz: s.claimedCoinz,
+      claimedCoins: s.claimedCoins,
       billValue: s.billValue,
       tips: s.tips,
       userCoinz: s.userCoinz,
@@ -27,8 +27,8 @@ const MemoCashbackMessage = () => {
   }));
 
   const total = useMemo(
-    () => billValue - claimedCoinz - claimCouponz + tips,
-    [billValue, claimedCoinz, claimCouponz, tips],
+    () => billValue - claimedCoins - claimCouponz + tips,
+    [billValue, claimedCoins, claimCouponz, tips],
   );
 
   const coinsObtained = useMemo(
@@ -37,8 +37,8 @@ const MemoCashbackMessage = () => {
   );
 
   const existingCoins = useMemo(
-    () => (claimedCoinz ? userCoinz - claimedCoinz : userCoinz),
-    [claimedCoinz, userCoinz],
+    () => (claimedCoins ? userCoinz - claimedCoins : userCoinz),
+    [claimedCoins, userCoinz],
   );
 
   const finalReward = useMemo(() => {
@@ -47,8 +47,8 @@ const MemoCashbackMessage = () => {
     }
     if (
       (availedCoupon?.cashbackAvailable && claimCouponz > 0) ||
-      claimedCoinz > 0 ||
-      (claimedCoinz > 0 && claimCouponz === 0)
+      claimedCoins > 0 ||
+      (claimedCoins > 0 && claimCouponz === 0)
     ) {
       return calculateReward(
         existingCoins,
@@ -60,7 +60,7 @@ const MemoCashbackMessage = () => {
   }, [
     availedCoupon,
     claimCouponz,
-    claimedCoinz,
+    claimedCoins,
     existingCoins,
     coinsObtained,
     loyaltySetting?.rewardLimit,
@@ -71,7 +71,7 @@ const MemoCashbackMessage = () => {
 
   return (
     <>
-      {(claimedCoinz > 0 || availedCoupon?.cashbackAvailable) && (
+      {(claimedCoins > 0 || availedCoupon?.cashbackAvailable) && (
         <center className="relative">
           <h1 className="text-xs btn-shine">
             You will get {Math.round(finalReward)} on this bill

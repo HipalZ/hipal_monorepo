@@ -3,8 +3,8 @@ import type { BillData, IMerchantDetails } from "../types/businessData";
 import type { PageStates } from "../utils/helpers";
 
 interface IUsePaymentStore {
-  claimedCoinz: number;
-  setClaimedCoinz: (coinz: number) => void;
+  claimedCoins: number;
+  setClaimedCoins: (coinz: number) => void;
   claimCouponz: number;
   setClaimCouponz: (coinz: number) => void;
   tips: number;
@@ -74,8 +74,8 @@ interface IUsePaymentStore {
 }
 
 export const usePaymentStore = create<IUsePaymentStore>((set) => ({
-  claimedCoinz: 0,
-  setClaimedCoinz: (coinz: number) => set(() => ({ claimedCoinz: coinz })),
+  claimedCoins: 0,
+  setClaimedCoins: (coinz: number) => set(() => ({ claimedCoins: coinz })),
 
   claimCouponz: 0,
   setClaimCouponz: (coinz: number) => set(() => ({ claimCouponz: coinz })),
@@ -156,7 +156,7 @@ export const usePaymentStore = create<IUsePaymentStore>((set) => ({
     tax: 0,
     tips: 0,
     claimCouponz: 0,
-    claimedCoinz: 0,
+    claimedCoins: 0,
     total: 0,
     customerPhone: "",
     customerName: "",

@@ -21,14 +21,14 @@ const MemoPaymentModes = () => {
     const {
         isLoading,
         billValue,
-        claimedCoinz,
+        claimedCoins,
         claimCouponz,
         tips,
         merchantDetails,
         billData,
     } = usePaymentStore();
 
-    const total = calculateFinalBill(billValue, claimedCoinz, claimCouponz, tips);
+    const total = calculateFinalBill(billValue, claimedCoins, claimCouponz, tips);
 
     const paymentMode = useCallback(() => {
         if (total <= 0) {

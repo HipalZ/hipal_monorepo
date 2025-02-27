@@ -4,10 +4,10 @@ import { memo, useCallback, useEffect, useMemo } from "react";
 
 const MemoPaymentCard = () => {
   const {
-    claimCouponz, claimedCoinz, billData
+    claimCouponz, claimedCoins, billData
   } = usePaymentStore();
 
-  const offer = claimedCoinz || claimCouponz
+  const offer = claimedCoins || claimCouponz
   const { billValue, setShowBillPage } = usePaymentStore();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
