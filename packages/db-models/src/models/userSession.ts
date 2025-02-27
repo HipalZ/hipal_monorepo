@@ -114,17 +114,17 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: 0,
   },
-  intialSubTotal: {
+  initialSubTotal: {
     type: Number,
     required: false,
     default: 0,
   },
-  intialTotal: {
+  initialTotal: {
     type: Number,
     required: false,
     default: 0,
   },
-  intialTax: {
+  initialTax: {
     type: Number,
     required: false,
     default: 0,

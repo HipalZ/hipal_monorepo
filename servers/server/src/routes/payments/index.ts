@@ -555,16 +555,16 @@ const paymentsRouter = new Hono()
 
           // Step 1: Calculate finalSubTotal
           const finalSubTotal =
-            tempTable.intialSubTotal -
+            tempTable.initialSubTotal -
             (removeCoins
               ? 0
-              : Math.min(effectiveClaimedCoins, tempTable.intialSubTotal));
+              : Math.min(effectiveClaimedCoins, tempTable.initialSubTotal));
 
           console.log("finalSubTotal", finalSubTotal);
 
           // Step 2: Calculate gstPercentage
           const gstPercentage =
-            (tempTable.intialTax / tempTable.intialSubTotal) * 100;
+            (tempTable.initialTax / tempTable.initialSubTotal) * 100;
 
           console.log("gstPercentage", gstPercentage);
 
@@ -1277,9 +1277,9 @@ const paymentsRouter = new Hono()
                 posBillRequestId: tempTable?.billRequestId,
                 posBillId: tempTable?.billInvoiceId,
                 settleType: tempTable?.settleType || "PAYMENT_GATEWAY",
-                intialSubTotal: tempTable?.intialSubTotal,
-                intialTax: tempTable?.intialTax,
-                intialTotal: tempTable?.intialTotal,
+                initialSubTotal: tempTable?.initialSubTotal,
+                initialTax: tempTable?.initialTax,
+                initialTotal: tempTable?.initialTotal,
                 finalSubTotal: tempTable?.finalSubTotal,
                 discount: tempTable?.discount,
               },
@@ -1905,9 +1905,9 @@ const paymentsRouter = new Hono()
                     splitModes: settleModes,
                     waiterName,
                     date: Date.now(),
-                    intialSubTotal: tempTable?.intialSubTotal,
-                    intialTax: tempTable?.intialTax,
-                    intialTotal: tempTable?.intialTotal,
+                    initialSubTotal: tempTable?.initialSubTotal,
+                    initialTax: tempTable?.initialTax,
+                    initialTotal: tempTable?.initialTotal,
                     finalSubTotal: tempTable?.finalSubTotal,
                   },
                 ],

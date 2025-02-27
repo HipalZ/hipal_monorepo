@@ -220,7 +220,7 @@ const posRouter = new Hono()
               items: simpleArray,
               claimedCoins: getPin.claimedCoins || 0,
               couponId: getPin.couponId,
-              initialTotal: getPin?.intialTotal,
+              initialTotal: getPin?.initialTotal,
               finalSubTotal: getPin?.finalSubTotal,
             };
             return c.json(
@@ -267,6 +267,13 @@ const posRouter = new Hono()
           if (fetchBillDetails.data.success === "1") {
             const bill_request_id = fetchBillDetails.data.bill_request_id;
 
+            if (!bill_request_id) {
+              const fetchBillDetails = await axios.post(
+                "http://api.petpooja.com/V1/captainorders/check_bill/",
+                billRequestConfig,
+              );
+            }
+
             const getBillConfig = {
               app_key: pos.posId.accessKey,
               app_secret: pos.posId.secretKey,
@@ -300,6 +307,28 @@ const posRouter = new Hono()
                 },
               );
 
+              await UserSession.findOneAndUpdate(
+                {
+                  businessId: businessId,
+                  tableName: tableName,
+                },
+                {
+                  billGeneratedBy: generatedBy,
+                  billRequestId: bill_request_id,
+                  billInvoiceId: getBill.data?.order_data?.invoice_id,
+                  tax: getBill?.data?.order_data?.tax || 0,
+                  serviceCharge: getBill?.data?.order_data?.service_charge,
+                  initialTax: getBill?.data?.order_data?.tax || 0,
+                  initialSubTotal: getBill?.data?.order_data?.core_price || 0,
+                  discount: getBill?.data?.order_data?.discount || 0,
+                  initialTotal: getBill?.data?.order_data?.total || 0,
+                  finalTax: getBill?.data?.order_data?.tax || 0,
+                  finalTotal: getBill?.data?.order_data?.total || 0,
+                  finalSubTotal: getBill?.data?.order_data?.core_price || 0,
+                },
+                { new: true },
+              );
+
               const billObj = {
                 billing_user_name: getBill.data.order_data.billing_user_name,
                 serviceCharge: getBill.data.order_data.service_charge,
@@ -316,30 +345,9 @@ const posRouter = new Hono()
                 tips: getPin?.tips || 0,
                 claimedCoins: getPin?.claimedCoins || 0,
                 couponId: getPin?.couponId,
-                initialTotal: getPin?.intialTotal,
+                initialTotal: getPin?.initialTotal,
               };
-              await UserSession.findOneAndUpdate(
-                {
-                  businessId: businessId,
-                  tableName: tableName,
-                },
-                {
-                  billGeneratedBy: generatedBy,
-                  billRequestId: bill_request_id,
-                  billInvoiceId: getBill.data?.order_data?.invoice_id,
-                  tax: getBill?.data?.order_data?.tax || 0,
-                  serviceCharge: getBill?.data?.order_data?.service_charge,
-                  intialTax: getBill?.data?.order_data?.tax || 0,
-                  intialSubTotal: getBill?.data?.order_data?.core_price || 0,
-                  intialTotal: getBill?.data?.order_data?.total || 0,
-                  discount: getBill?.data?.order_data?.discount || 0,
-                  initialTotal: getBill?.data?.order_data?.total || 0,
-                  finalTax: getBill?.data?.order_data?.tax || 0,
-                  finalTotal: getBill?.data?.order_data?.total || 0,
-                  finalSubTotal: getBill?.data?.order_data?.core_price || 0,
-                },
-                { new: true },
-              );
+
               return c.json(
                 {
                   message: "Data fetched successfully",

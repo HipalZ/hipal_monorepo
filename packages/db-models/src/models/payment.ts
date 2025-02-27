@@ -173,16 +173,16 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: Number,
       default: 0,
     },
-    intialGst: {
+    initialGst: {
       type: Number,
       default: 0,
     },
 
-    intialSubTotal: {
+    initialSubTotal: {
       type: Number,
       default: 0,
     },
-    intialTotal: {
+    initialTotal: {
       type: Number,
       default: 0,
     },
