@@ -2594,6 +2594,90 @@ const whatsappRouter = new Hono()
         },
       });
     },
+  )
+
+  .post(
+    "/wa_embedded_signup",
+    zValidator(
+      "json",
+      z.object({
+        client_id: z.string().min(1).max(50),
+        client_secret: z.string().min(1).max(70),
+        code: z.string().min(1).max(500),
+        businessId: z.string().min(1).max(50),
+      }),
+    ),
+
+    async (c) => {
+      try {
+        const { client_id, client_secret, code, businessId } =
+          await c.req.json();
+
+        const getAccessToken = await axios.get(
+          `${whatsAppApiBaseUrl.BASE_URL}/v18.0/oauth/access_token?client_id=${client_id}&client_secret=${client_secret}&code=${code}`,
+        );
+
+        const { access_token, token_type } = getAccessToken.data;
+
+        const appInfo = await axios.get(
+          `${whatsAppApiBaseUrl.BASE_URL}/v21.0/app`,
+          {
+            headers: {
+              Authorization: `Bearer ${access_token}`,
+            },
+          },
+        );
+
+        // create whatsapp business config
+
+        const alreadyExist = await WhatsAppBusinessConfig.findOne({
+          businessId,
+        });
+
+        if (alreadyExist) {
+          return c.json(
+            {
+              message: "whatsapp business config already exist",
+              err: true,
+              data: {},
+            },
+            409,
+          );
+        }
+
+        // const createWhatsAppConfig = await WhatsAppBusinessConfig.create({
+        //   businessId: appInfo.data.business.id,
+        //   token: access_token,
+        //   version: "v1",
+        //   whatsAppAccountId: appInfo.data.id,
+        //   whatsAppPhone: appInfo.data.phone_number,
+        //   appId: appInfo.data.app_id,
+        //   configId: appInfo.data.config_id,
+        // });
+
+        return c.json(
+          {
+            message: "whatsapp business config created",
+            err: false,
+            data: {},
+          },
+          200,
+        );
+      } catch (error) {
+        const axiosError = error as AxiosError;
+        const message =
+          axiosError.response?.data?.error?.message || axiosError.message;
+
+        return c.json(
+          {
+            message: `Error fetching template: ${message}`,
+            err: true,
+            data: axiosError.response?.data || {},
+          },
+          400,
+        );
+      }
+    },
   );
 
 export default whatsappRouter;
