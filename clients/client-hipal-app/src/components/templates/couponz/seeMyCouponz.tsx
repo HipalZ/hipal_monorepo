@@ -114,9 +114,8 @@ const MemoSeeMyCouponz = () => {
           return (
             <section
               key={coupon?._id}
-              className={`flex max-h-full m-4 rounded-2xl inter ${
-                coupon?._id === selectedCoupon?._id ? "shake" : ""
-              }`}
+              className={`flex max-h-full m-4 rounded-2xl inter ${coupon?._id === selectedCoupon?._id ? "shake" : ""
+                }`}
             >
               <picture className="max-w-[8.5rem] w-full shrink-0 shadow-2xl rounded-2xl">
                 <Image
@@ -189,7 +188,7 @@ const MemoSeeMyCouponz = () => {
       <button
         type="button"
         onClick={redirectExplore}
-        className="fixed md:absolute z-20 w-[92%] mx-4 text-white bg-black rounded-full btn bottom-4"
+        className="fixed md:absolute z-20 w-[92%] mx-4 py-2 text-white bg-black rounded-full btn bottom-4"
       >
         Go to explore
       </button>
