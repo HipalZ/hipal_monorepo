@@ -2,7 +2,9 @@ import mongoose from "mongoose";
 
 import type { Model } from "mongoose";
 import type { OutLetInfoType } from "../validators";
-import { Amenities } from "../validators";
+
+import { Amenities, BusinessEnumType } from "../validators";
+import { Business } from "./business";
 const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
   businessId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -152,7 +154,9 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
   },
   outLetType: {
     type: String,
+    enum: BusinessEnumType,
     required: false,
+    default: "FOOD",
   },
   hideDishPrice: {
     type: Boolean,
@@ -173,6 +177,19 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     required: false,
     ref: "businessposconfig",
   },
+});
+
+//middlewares
+outLetInfoSchema.post("save", async (doc) => {
+  const business = await Business.findById(doc.businessId);
+
+  if (business) {
+    await OutLetInfo.findByIdAndUpdate(doc._id, {
+      $set: {
+        outLetType: business.businessType,
+      },
+    });
+  }
 });
 
 const OutLetInfo: Model<OutLetInfoType> = mongoose.model<OutLetInfoType>(

@@ -299,6 +299,54 @@ const usersRouter = new Hono()
     },
   )
   .post(
+    "/verifyOtp",
+    zValidator(
+      "json",
+      z.object({
+        phone: z.string().min(10).max(10),
+        otp: z.string().min(4).max(4),
+      }),
+    ),
+
+    async (c) => {
+      const requestData = await c.req.json();
+
+      const { phone, otp } = requestData;
+
+      const options = {
+        method: "GET",
+        url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
+        headers: {
+          accept: "application/json",
+          authkey: "387796AmyGlDBq63b2d75aP1",
+        },
+      };
+
+      const response = await axios(options);
+
+      if (
+        response?.data?.message === "Mobile no. not found" ||
+        response?.data?.message === "OTP not match" ||
+        response?.data?.message === "OTP expired" ||
+        response?.data?.message === "Otp empty or not numeric" ||
+        response?.data?.message ===
+          "Max limit reached for this otp verification"
+      ) {
+        return c.json(
+          { err: true, status: false, message: "Please enter valid Otp !!" },
+          400,
+        );
+      }
+
+      return c.json({
+        status: true,
+        message: "Otp verified successfully",
+        data: {},
+        err: false,
+      });
+    },
+  )
+  .post(
     "/ownerSignIn",
     zValidator(
       "json",

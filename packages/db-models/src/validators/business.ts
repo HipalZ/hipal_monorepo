@@ -11,7 +11,16 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 
 export const ExploreLayout = ["BUTTER", "SUNFLOWER"] as const;
 export const MenuLayout = ["MAIN_CATEGORY", "MAIN_AND_SUB_CATEGORY"] as const;
-export const BusinessEnumType = ["FOOD", "OTHER"] as const;
+export const BusinessEnumType = [
+  "FOOD",
+  "OTHER",
+  "RESTAURENT",
+  "HOTEL",
+  "E-COMMERCE",
+  "CLINIC",
+  "FASHION_AND_JEWELRY",
+  "MENU",
+] as const;
 export const BusinessSchema = z.object({
   name: z.string().min(2).max(50),
   businessType: z.enum(BusinessEnumType),
@@ -28,6 +37,7 @@ export const BusinessSchema = z.object({
   themeApplied: z.boolean().optional().default(false),
   logo: z.string().optional(),
   address: z.string().optional(),
+  recovery: z.string().min(2).max(50).optional(),
 });
 
 export const BranchSchema = z.object({
@@ -51,7 +61,7 @@ export const UpdateBusinessSchema = z.object({
   name: z.string().min(2).max(50).optional(),
   staffIds: z.array(ObjectIdSchema).optional(),
 
-  businessType: z.enum(["FOOD", "OTHER"]),
+  businessType: z.enum(BusinessEnumType),
   exploreLayout: z.enum(ExploreLayout).optional(),
   menuLayout: z.enum(MenuLayout).optional(),
   primaryColor: z.string().min(5).max(30).optional(),

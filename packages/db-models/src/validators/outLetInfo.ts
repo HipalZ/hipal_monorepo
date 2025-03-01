@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { z } from "zod";
+import { BusinessEnumType } from "./business";
 
 const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
   z
@@ -95,7 +96,7 @@ export const outLetInfoSchema = z.object({
   specialDay: z.number().optional(),
   serviceChargePercentage: z.coerce.number().default(0).optional(),
   gstPercentage: z.coerce.number().default(5).optional(),
-  outLetType: z.string().min(4).max(30).optional(),
+  outLetType: z.enum(BusinessEnumType).optional(),
   hideDishPrice: z.boolean().optional(),
   isPosEnabled: z.boolean().default(false).optional(),
   restId: z.string().min(3).max(200).optional(),
