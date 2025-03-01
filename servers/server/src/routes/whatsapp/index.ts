@@ -1934,6 +1934,8 @@ const whatsappRouter = new Hono()
     async (c) => {
       const body = await c.req.json();
 
+      console.log("hello");
+
       if (body.object) {
         const entry = body.entry?.[0];
         const changes = entry?.changes?.[0];
@@ -2084,6 +2086,8 @@ const whatsappRouter = new Hono()
               urlCode: tableCode,
             }).select("longUrl shortUrl shortUrlType");
 
+            console.log("findLongUrl", findLongUrl);
+
             longUrl = `${findLongUrl?.shortUrl}?q=wa`;
             shortUrlType = findLongUrl?.shortUrlType || "";
           }
@@ -2095,6 +2099,7 @@ const whatsappRouter = new Hono()
           console.log("phon_no_id", phon_no_id);
 
           if (phon_no_id && from && longUrl) {
+            console.log("longUrl", longUrl);
             if (shortUrlType === "COUPON") {
               await axios({
                 method: "POST",
@@ -2125,21 +2130,22 @@ const whatsappRouter = new Hono()
                   "Content-Type": "application/json",
                 },
               });
-            }
-            await axios({
-              method: "POST",
-              url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
-              data: {
-                messaging_product: "whatsapp",
-                to: from,
-                text: {
-                  body: `Welcome to ${bName?.name}! ☕\nWe’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${longUrl}\n🍽️ View our curated menu featuring handcrafted delights.`,
+            } else {
+              await axios({
+                method: "POST",
+                url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
+                data: {
+                  messaging_product: "whatsapp",
+                  to: from,
+                  text: {
+                    body: `Welcome to ${bName?.name}! ☕\nWe’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${longUrl}\n🍽️ View our curated menu featuring handcrafted delights.`,
+                  },
                 },
-              },
-              headers: {
-                "Content-Type": "application/json",
-              },
-            });
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
+            }
           } else {
             const user = await User.findOne({
               phone: userPhone,

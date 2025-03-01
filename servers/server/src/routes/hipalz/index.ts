@@ -34,7 +34,7 @@ const hipalzRouter = new Hono().get(
       const menuRedirection = whatsAppBusinessConfig?.menuRedirection;
 
       const business = await Business.findOne({
-        businessId: result.businessId,
+        _id: result.businessId,
       });
 
       if (menuRedirection && menuRedirection === "WA") {
