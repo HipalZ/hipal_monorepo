@@ -6,6 +6,7 @@ import { HiChevronLeft } from "react-icons/hi";
 import { getRandomBlurImg } from "@/components/utils/images";
 import PlaceholderImg from "@/components/atoms/placeholder";
 import Link from "next/link";
+import TermsAndConditions from "@/components/landingPage/Terms&Consitions";
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
 
@@ -36,7 +37,7 @@ const MemoHipalTerms = () => {
         <b>
           <b>Hipalz</b>
         </b>{" "}
-        - Terms of Use
+        - Terms And Conditions for Users
       </h1>
       <h3 className="subheading">1. Introduction</h3>
       <p className="paragraph">
@@ -426,6 +427,17 @@ const MemoHipalTerms = () => {
         and process, please contact our customer service team mentioned in the
         contact us form
       </p>
+
+      <h1 className="heading">Terms and conditions for merchants</h1>
+
+      <TermsAndConditions
+      companyName="Hipalz"
+      services={["Hipalz", "Hi Clientz", "HiBiz"]}
+      effectiveDate="11-12-2023"
+      contactEmail="info@paltribe.in"
+      websiteUrl="https://www.hipalz.in"
+    />
+
       <h1 className="heading">Contact Paltribe Solutions Pvt</h1>
       <p className="paragraph">
         If you have any questions about this Privacy Policy, You can contact us:

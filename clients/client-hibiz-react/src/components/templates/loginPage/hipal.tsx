@@ -1,6 +1,8 @@
 import HipalLogo from "@/assets/hipal.png";
 import Background from "@/assets/login/background.png";
 import useLoginStore from "@/components/store/useLogin";
+import { Button } from "@/components/ui/button";
+import { Link } from "lucide-react";
 import { memo } from "react";
 import { LuMoveRight } from "react-icons/lu";
 
@@ -31,6 +33,9 @@ const Hipal = () => {
             Create account
           </button>
         </article>
+        <Button className="absolute bottom-0 mt-4 -translate-x-1/2 translate-y-[2rem] trasnform left-1/2" onClick={() => setStep(2)} variant="ghost" >
+         <Link/> Terms And Conditions
+        </Button>
       </section>
       <button type="button" onClick={() => setStep(2)} className="bottom_btn">
         <div className="flex items-center justify-between px-4">
