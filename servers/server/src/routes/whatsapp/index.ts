@@ -2023,6 +2023,7 @@ const whatsappRouter = new Hono()
           const userText = messages?.text?.body;
 
           let longUrl = "";
+          let shortUrlType = "";
 
           if (userText) {
             if (userText.trim().toLowerCase() === "stop") {
@@ -2081,9 +2082,10 @@ const whatsappRouter = new Hono()
 
             const findLongUrl = await UrlModel.findOne({
               urlCode: tableCode,
-            }).select("longUrl shortUrl");
+            }).select("longUrl shortUrl shortUrlType");
 
             longUrl = `${findLongUrl?.shortUrl}?q=wa`;
+            shortUrlType = findLongUrl?.shortUrlType || "";
           }
 
           if (userPhone) {
@@ -2093,6 +2095,37 @@ const whatsappRouter = new Hono()
           console.log("phon_no_id", phon_no_id);
 
           if (phon_no_id && from && longUrl) {
+            if (shortUrlType === "COUPON") {
+              await axios({
+                method: "POST",
+                url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
+                data: {
+                  messaging_product: "whatsapp",
+                  to: from,
+                  text: {
+                    body: `Welcome to ${bName?.name} 🌿
+              
+              Hey there! Thanks for stopping by at the Lala Land Flea Market! 🎉
+              
+              We’re excited to introduce Urban Nemo – where great coffee, delicious food, and a peaceful ambiance come together. Here's a special treat just for you!
+              
+              🎁 Grab Coupon: ${longUrl}
+              
+              ✅ Enjoy Flat 20% OFF  
+              👉 At our stall in the flea market  
+              👉 At Urban Nemo Garden Cafe near Jubilee Hills Checkpost  
+              
+              📍 Find us here: https://g.co/kgs/9dszAqh  
+              📸 Follow us for more perks: https://www.instagram.com/urbannemocafehyd  
+              
+              Show this message to claim your discount! Looking forward to serving you! ☕`,
+                  },
+                },
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
+            }
             await axios({
               method: "POST",
               url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,

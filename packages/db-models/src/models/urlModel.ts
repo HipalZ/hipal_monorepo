@@ -22,6 +22,11 @@ const urlModelChema = new mongoose.Schema<UrlModelType>(
       required: false,
       ref: "Business",
     },
+    shortUrlType: {
+      type: String,
+      required: false,
+      default: "TABLE",
+    },
   },
   {
     timestamps: true,
