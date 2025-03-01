@@ -13,6 +13,7 @@ const UrlModelSchema = z.object({
   shortUrl: z.string(),
   urlCode: z.string(),
   businessId: ObjectIdSchema.optional(),
+  shortUrlType: z.string().optional().default("TABLE"),
 });
 
 export type UrlModelType = z.infer<typeof UrlModelSchema>;
