@@ -1932,8 +1932,6 @@ const whatsappRouter = new Hono()
     async (c) => {
       const body = await c.req.json();
 
-      console.log("hello");
-
       if (body.object) {
         const entry = body.entry?.[0];
         const changes = entry?.changes?.[0];
@@ -2024,6 +2022,7 @@ const whatsappRouter = new Hono()
 
           let longUrl = "";
           let shortUrlType = "";
+          let urlObj;
 
           if (userText) {
             if (userText.trim().toLowerCase() === "stop") {
@@ -2084,18 +2083,16 @@ const whatsappRouter = new Hono()
               urlCode: tableCode,
             }).select("longUrl shortUrl shortUrlType");
 
-            console.log("findLongUrl", findLongUrl);
-
             longUrl = `${findLongUrl?.shortUrl}?q=wa`;
             shortUrlType = findLongUrl?.shortUrlType || "";
+            urlObj = findLongUrl;
           }
 
           if (userPhone) {
             userPhone = userPhone.toString().slice(2);
           }
 
-          if (phon_no_id && from && longUrl) {
-            console.log("longUrl", longUrl);
+          if (phon_no_id && from && urlObj) {
             if (shortUrlType === "COUPON") {
               await axios({
                 method: "POST",
