@@ -2111,9 +2111,10 @@ const whatsappRouter = new Hono()
               
               🎁 Grab Coupon: ${longUrl}
               
-              ✅ Enjoy Flat 20% OFF  
-              👉 At our stall in the flea market  
-              👉 At Urban Nemo Garden Cafe near Jubilee Hills Checkpost  
+              🎁 Enjoy Flat 10% OFF
+              👉 At our stall in the flea market
+              🎁 Enjoy Flat 20% OFF
+              👉 At Urban Nemo Garden Cafe near Jubilee Hills Checkpost
               
               📍 Find us here: https://g.co/kgs/9dszAqh  
               📸 Follow us for more perks: https://www.instagram.com/urbannemocafehyd  
