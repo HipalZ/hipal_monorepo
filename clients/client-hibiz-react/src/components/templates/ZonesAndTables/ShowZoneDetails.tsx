@@ -33,7 +33,7 @@ const ShowZoneDetails = () => {
     [setCreateZoneModal, setEditZone],
   )
 
-  const getTablesForZone = useCallBack((zoneId: string) => {
+  const getTablesForZone = useCallback((zoneId: string) => {
     return allTables.filter((table: ITable) => table.internalZoneId === zoneId)
   },[allTables])
 

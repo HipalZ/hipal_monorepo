@@ -7,13 +7,27 @@ export type bussinessControlPages =
   | "MENU_PAGE"
   | "SETTING"
   | "CONGRATULATION";
-export type businessType = "FOOD" | "OTHER" | "";
+export type businessType =
+  | "FOOD"
+  | "OTHER"
+  | "RESTAURANT"
+  | "HOTEL"
+  | "ECOMMERCE"
+  | "CLINIC"
+  | "FASHION_JEWELRY"
+  | "PERSONAL_BRAND"
+  | ""
+
 export type MenuLayout = "MAIN_CATEGORY" | "MAIN_AND_SUB_CATEGORY";
 export type exploreLayout = "BUTTER" | "SUNFLOWER";
 
 interface BusinessCtrl {
   step: number;
   setStep: (step: number) => void;
+  goNext: () => void;
+  goPrevious: () => void;
+ 
+
   exploreLayout: exploreLayout;
   menuLayout: MenuLayout;
   setExploreLayout: (layout: exploreLayout) => void;
@@ -55,7 +69,6 @@ const useBusinessCtrl = create<BusinessCtrl>((set) => {
   const defaultPrimaryColor = "#EDDEB8";
   const defaultSecondaryColor = "#116D6E";
   const businessData = useBusinessData.getState().businessData;
-  // Subscribe to changes in businessData to dynamically update colors
   useBusinessData.subscribe((state) => {
     if (
       state.businessData?.primaryColor ||
@@ -71,6 +84,9 @@ const useBusinessCtrl = create<BusinessCtrl>((set) => {
   return {
     step: 0,
     setStep: (step: number) => set({ step }),
+    goNext: () => set((state) => ({ step: state.step + 1 })),
+    goPrevious: () => set((state) => ({ step: state.step - 1 })),
+
     exploreLayout: "BUTTER",
     setExploreLayout: (layout: exploreLayout) => set({ exploreLayout: layout }),
     menuLayout: "MAIN_AND_SUB_CATEGORY",
