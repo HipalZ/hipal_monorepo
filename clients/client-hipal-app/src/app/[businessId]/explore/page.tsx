@@ -4,8 +4,10 @@ import UniquelyDishes from "@/components/organisms/explore/uniquelyDishes";
 import type {
   IBannerPayload,
   IBusinessData,
+  IOutlet,
 } from "@/components/types/businessData";
 import { cn, defaultThemes } from "@/components/utils/helpers";
+import { apiRpc } from "@hi/common";
 import dynamics from "next/dynamic";
 import { Suspense } from "react";
 
@@ -58,10 +60,47 @@ const PageName = dynamics(() => import("@/components/molecules/pageName"), {
   loading: () => <SkeletonLoader height={50} />,
 });
 
-export async function generateMetadata() {
+export async function generateMetadata({ params }: { params: { businessId: string } }) {
+    const { businessId } = params;
+    const data = await apiRpc.businesses.outletInfo[":businessId"].$get(
+      {
+        param: {
+          businessId: businessId,
+        },
+      },
+    ) 
+
+    
+  const outletInfo = await data?.data.json() as IOutlet;
+
+  if (!outletInfo?.name) {
+    return {
+      title: "Explore",
+      description: "Explore page for businesses",
+    };
+  }
+
+  const { name, description,logoUrl } = outletInfo;
+
+  const metaDescription = description || "Explore our business offerings!";
+
   return {
-    title: "Explore",
-    description: "Explore page for businesses",
+    title: name,
+    description: metaDescription,
+
+    openGraph: {
+      title: name,
+      description: metaDescription,
+      images: [
+        {
+          url: logoUrl || "https://example.com/fallback-image.jpg",
+          width: 1200,
+          height: 630,
+          alt: name,
+        },
+      ],
+      type: "website",
+    },
   };
 }
 export default async function Explore({

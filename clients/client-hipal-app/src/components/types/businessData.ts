@@ -127,7 +127,7 @@ export interface IStyles {
   };
 }
 
-interface IOutlet {
+export interface IOutlet {
   _id: string;
   businessId: string;
   __v: number;

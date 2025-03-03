@@ -2,6 +2,7 @@ import Background from "@/components/atom/feildBackground";
 import useCouponsStore from "@/components/store/useCouponsStore";
 import { memo } from "react";
 import toast from "react-hot-toast";
+import { Helmet } from "react-helmet-async";
 
 const MemoInfoBottomSection = () => {
   const {
@@ -48,7 +49,21 @@ const MemoInfoBottomSection = () => {
       },
     );
   };
+
+  const metaTitle = couponName || "Great Coupon";
+  const metaDescription = "Check out our amazing discount offer!";
+  const metaUrl = links?.[0]?.link || "https://example.com";
   return (
+
+    <>
+     <Helmet>
+        <title>{metaTitle}</title>
+        <meta name="description" content={metaDescription} />
+        <meta property="og:title" content={metaTitle} />
+        <meta property="og:description" content={metaDescription} />
+        <meta property="og:url" content={metaUrl} />
+        <meta property="og:image" content={couponImage} />
+      </Helmet>
     <section className="grid lg:gap-4 gap-4 lg:flex-2 md:grid-cols-2 grid-col-1 !mx-6 !lg:mx-0">
       <section>
         <h2 className="mb-2 font-bold opacity-60">Coupon Name</h2>
@@ -212,6 +227,7 @@ const MemoInfoBottomSection = () => {
         </section>
       )}
     </section>
+    </>
   );
 };
 

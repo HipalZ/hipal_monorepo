@@ -31,7 +31,7 @@ const AddBusinessForm = () => {
   // No need for useCallback here since these are simple lookups
   const title = STEP_TITLES[step] || ""
   const subHeading = STEP_SUBHEADINGS[step] || ""
-  const isLastStep = step === 3
+  const isLastStep = step === 4
 
   return (
     <section className="min-h-screen">

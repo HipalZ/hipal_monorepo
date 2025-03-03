@@ -33,7 +33,7 @@ export const businessTypeArray = [
     ],
     tagColor: "#FF8C00",
     gradient: "linear-gradient(135deg, #FFE98550 0%, #FA742B50 100%)",
-    type: "ECOMMERCE" as businessType,
+    type: "E-COMMERCE" as businessType,
   },
   {
     title: "🏥 Clinics",
@@ -49,22 +49,22 @@ export const businessTypeArray = [
     tags: ["Virtual Try-On", "Custom Orders", "Look Books", "VIP Customer Service", "Event Invitations"],
     tagColor: "#A239CA",
     gradient: "linear-gradient(135deg, #E8CBC050 0%, #636FA450 100%)",
-    type: "FASHION_JEWELRY" as businessType,
+    type: "FASHION_AND_JEWELRY" as businessType,
   },
-  {
-    title: "👤 Personal Brand",
-    description: "Build and grow your personal brand with tools tailored for influencers, coaches, and entrepreneurs.",
-    tags: [
-      "Portfolio Showcase",
-      "Booking System",
-      "Content Management",
-      "Social Media Integration",
-      "Newsletter Signup",
-    ],
-    tagColor: "#1E90FF",
-    gradient: "linear-gradient(135deg, #FDEB7150 0%, #F8D80050 100%)",
-    type: "PERSONAL_BRAND" as businessType,
-  },
+  // {
+  //   title: "👤 Personal Brand",
+  //   description: "Build and grow your personal brand with tools tailored for influencers, coaches, and entrepreneurs.",
+  //   tags: [
+  //     "Portfolio Showcase",
+  //     "Booking System",
+  //     "Content Management",
+  //     "Social Media Integration",
+  //     "Newsletter Signup",
+  //   ],
+  //   tagColor: "#1E90FF",
+  //   gradient: "linear-gradient(135deg, #FDEB7150 0%, #F8D80050 100%)",
+  //   type: "PERSONAL_BRAND" as businessType,
+  // },
   {
     title: "🍕 Food Biz",
     description:
