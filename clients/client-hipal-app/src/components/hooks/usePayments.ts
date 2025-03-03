@@ -229,10 +229,12 @@ export const usePayments = () => {
           businessId: businessId || "",
           total: finalAmount,
           currency: "INR",
-          claimedCoins: claimedCoins || claimCouponz,
+          claimedCoins: outletInfo?.isPosEnabled
+            ? billData?.claimedCoins
+            : claimedCoins || claimCouponz,
           billValue: initialTotal,
           userId: userDetails?._id,
-          tips: tips,
+          tips: outletInfo?.isPosEnabled ? billData?.tips : tips,
           tableName: tableName,
           couponId: availedCoupon?._id,
           ...(channelId && { channelId }),
@@ -365,9 +367,11 @@ export const usePayments = () => {
           address: "Paltribe solutions",
           businessId: businessId,
           total: finalAmount,
-          claimedCoins: claimedCoins || claimCouponz,
+          claimedCoins: outletInfo?.isPosEnabled
+            ? billData?.claimedCoins
+            : claimedCoins || claimCouponz,
           billValue: initialTotal,
-          tips: tips,
+          tips: outletInfo?.isPosEnabled ? billData?.tips : tips,
           loyaltyId: loyaltySetting.loyaltyId,
           tableName: tableName,
           couponId: availedCoupon?._id,
@@ -431,10 +435,12 @@ export const usePayments = () => {
       json: {
         businessId: businessId || "",
         total: finalAmount,
-        claimedCoins: claimedCoins || claimCouponz,
+        claimedCoins: outletInfo?.isPosEnabled
+          ? billData?.claimedCoins
+          : claimedCoins || claimCouponz,
         billValue: initialTotal,
         userId: userDetails?._id,
-        tips: tips,
+        tips: outletInfo?.isPosEnabled ? billData?.tips : tips,
         currency: "INR",
         tableName: tableName,
         couponId: availedCoupon?._id,

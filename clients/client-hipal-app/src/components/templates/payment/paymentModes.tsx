@@ -28,8 +28,7 @@ const MemoPaymentModes = () => {
         billData,
     } = usePaymentStore();
     const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
-    const total = calculateFinalBill(billValue, claimedCoins, claimCouponz, tips);
-
+    const total = outletInfo?.isPosEnabled ? billData?.total : calculateFinalBill(billValue, claimedCoins, claimCouponz, tips);
     const paymentMode = useCallback(() => {
         if (total <= 0) {
             return toast.error(
