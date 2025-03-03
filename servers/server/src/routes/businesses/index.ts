@@ -630,6 +630,7 @@ const businessesRouter = new Hono()
 
       const exitingSettings = await LoyaltySettings.findOne({
         businessId: businessId,
+        isActive: true,
       });
 
       if (!exitingSettings)
@@ -881,6 +882,39 @@ const businessesRouter = new Hono()
 
       return c.json({
         data: existingBusinesses,
+        status: 200,
+        error: false,
+      });
+    },
+  )
+
+  .post(
+    "/loyalty/status/:businessId",
+
+    zValidator("param", z.object({ businessId: z.string() })),
+    zValidator("json", z.object({ isActive: z.boolean() })),
+    async (c) => {
+      const { businessId } = c.req.param();
+      const { isActive } = await c.req.json();
+
+      const updateSettings = await LoyaltySettings.findOneAndUpdate(
+        { businessId: businessId },
+        { isActive },
+        { new: true },
+      );
+
+      if (!updateSettings)
+        return c.json(
+          {
+            data: {},
+            message: "loyalty settings not found",
+            err: true,
+          },
+          404,
+        );
+
+      return c.json({
+        data: updateSettings,
         status: 200,
         error: false,
       });
