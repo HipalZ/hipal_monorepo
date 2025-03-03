@@ -91,22 +91,21 @@ const MemoCartPayment = () => {
   ]);
 
   useEffect(() => {
-    if ((billValue && billValue > 0) || (billData?.total && billData?.total > 0)) {
-      setEditBillModal(false);
-      setClaimCouponz(0);
-      setClaimedCoins(0);
-      setSelectedTip("");
-      setCustomTip("");
-      setShowInput(false);
-      setIsTipActive(false);
-      setTips(0);
-      setAvailedCoupon({});
-      setCartPage("payment");
-      setTimeout(() => {
-        router.push(`/${customLink}/payment`);
-        setDisplayTimer(10);
-      }, 1000);
-    }
+    if (billValue === undefined || billValue < 0) return;
+    setEditBillModal(false);
+    setClaimCouponz(0);
+    setClaimedCoins(0);
+    setSelectedTip("");
+    setCustomTip("");
+    setShowInput(false);
+    setIsTipActive(false);
+    setTips(0);
+    setAvailedCoupon({});
+    setCartPage("payment");
+    setTimeout(() => {
+      router.push(`/${customLink}/payment`);
+      setDisplayTimer(10);
+    }, 1000);
   }, [billValue])
 
   return (

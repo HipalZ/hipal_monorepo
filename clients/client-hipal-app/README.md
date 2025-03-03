@@ -46,3 +46,4 @@ test deploy
 vercel json filed testings vercel removed build
 pnpm
 test to prod
+pnpm lock trigger
