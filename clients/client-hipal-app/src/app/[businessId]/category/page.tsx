@@ -84,48 +84,76 @@ async function fetchData(businessId: string) {
   return data;
 }
 
-export async function generateMetadata({ params }: { params: { businessId: string } }) {
-    const { businessId } = params;
-    const data = await apiRpc.businesses.outletInfo[":businessId"].$get(
-      {
-        param: {
-          businessId: businessId,
-        },
-      },
-    ) 
+export async function generateMetadata({
+  params,
+}: {
+  params: { businessId: string };
+}) {
+  const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+  const { businessId } = params;
 
-    
-  const outletInfo = await data?.data.json() as IOutlet;
+  let bId = businessId;
 
-  if (!outletInfo?.name) {
-    return {
-      title: "Category",
-      description: "Explore page for businesses",
+  if (!objectIdRegex.test(businessId)) {
+    const res = await apiRpc.businesses.n[":customLink"].$get({
+      param: { customLink: businessId },
+    });
+    const response = await res.json() as {
+      data: IBusinessData;
+      message: string;
+      error: boolean;
     };
+
+    bId = response?.data?.businessId;
+
+    if (!bId) {
+      return {
+        title: "Category",
+        description: "Category page for businesses",
+      };
+    }
   }
 
-  const { name, description, logoUrl } = outletInfo;
+  try {
+    const data = await apiRpc.businesses.outletInfo[":businessId"].$get({
+      param: { businessId: bId },
+    });
+    const json = await data.json();
+    const outletInfo = json?.data as IOutlet;
 
-  const metaDescription = description || "Explore our business offerings!";
+    if (!outletInfo?.name) {
+      return {
+        title: "Category",
+        description: "Category page for businesses",
+      };
+    }
 
-  return {
-    title: name,
-    description: metaDescription,
+    const { name, description, logoUrl } = outletInfo;
+    const metaDescription = description || "Category our business offerings!";
 
-    openGraph: {
+    return {
       title: name,
       description: metaDescription,
-      images: [
-        {
-          url: logoUrl || "https://example.com/fallback-image.jpg",
-          width: 1200,
-          height: 630,
-          alt: name,
-        },
-      ],
-      type: "website",
-    },
-  };
+      openGraph: {
+        title: name,
+        description: metaDescription,
+        images: [
+          {
+            url: logoUrl || "https://example.com/fallback-image.jpg",
+            width: 1200,
+            height: 630,
+            alt: name,
+          },
+        ],
+        type: "website",
+      },
+    };
+  } catch (error) {
+    return {
+      title: "Category",
+      description: "Category page for businesses",
+    };
+  }
 }
 
 export default async function Page({

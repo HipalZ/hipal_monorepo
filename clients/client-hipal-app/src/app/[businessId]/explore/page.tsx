@@ -2,6 +2,7 @@ import { businessApis } from "@/apis/explore";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import UniquelyDishes from "@/components/organisms/explore/uniquelyDishes";
 import type {
+  BusinessDetails,
   IBannerPayload,
   IBusinessData,
   IOutlet,
@@ -60,48 +61,76 @@ const PageName = dynamics(() => import("@/components/molecules/pageName"), {
   loading: () => <SkeletonLoader height={50} />,
 });
 
-export async function generateMetadata({ params }: { params: { businessId: string } }) {
-    const { businessId } = params;
-    const data = await apiRpc.businesses.outletInfo[":businessId"].$get(
-      {
-        param: {
-          businessId: businessId,
-        },
+export async function generateMetadata({
+  params,
+}: {
+  params: { businessId: string };
+}) {
+  const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+  const { businessId } = params;
+
+  let bId = businessId;
+
+  if (!objectIdRegex.test(businessId)) {
+    const res = await apiRpc.businesses.n[":customLink"].$get({
+      param: { customLink: businessId },
+    });
+    const response = await res.json() as {
+      data: IBusinessData;
+      message: string;
+      error: boolean;
+    };
+
+    bId = response?.data?.businessId;
+
+    if (!bId) {
+      return {
+        title: "Explore",
+        description: "Explore page for businesses",
+      };
+    }
+  }
+
+  try {
+    const data = await apiRpc.businesses.outletInfo[":businessId"].$get({
+      param: { businessId: bId },
+    });
+    const json = await data.json();
+    const outletInfo = json?.data as IOutlet;
+
+    if (!outletInfo?.name) {
+      return {
+        title: "Explore",
+        description: "Explore page for businesses",
+      };
+    }
+
+    const { name, description, logoUrl } = outletInfo;
+    const metaDescription = description || "Explore our business offerings!";
+
+    return {
+      title: name,
+      description: metaDescription,
+      openGraph: {
+        title: name,
+        description: metaDescription,
+        images: [
+          {
+            url: logoUrl || "https://example.com/fallback-image.jpg",
+            width: 1200,
+            height: 630,
+            alt: name,
+          },
+        ],
+        type: "website",
       },
-    ) 
-
-    
-  const outletInfo = await data?.data.json() as IOutlet;
-
-  if (!outletInfo?.name) {
+    };
+  } catch (error) {
     return {
       title: "Explore",
       description: "Explore page for businesses",
     };
   }
-
-  const { name, description,logoUrl } = outletInfo;
-
-  const metaDescription = description || "Explore our business offerings!";
-
-  return {
-    title: name,
-    description: metaDescription,
-
-    openGraph: {
-      title: name,
-      description: metaDescription,
-      images: [
-        {
-          url: logoUrl || "https://example.com/fallback-image.jpg",
-          width: 1200,
-          height: 630,
-          alt: name,
-        },
-      ],
-      type: "website",
-    },
-  };
 }
 export default async function Explore({
   params,
