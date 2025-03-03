@@ -1725,7 +1725,6 @@ const paymentsRouter = new Hono()
       ClientRoles.HIPAL_CUSTOMER,
       ClientRoles.CAPTAIN,
     ]),
-    ubacMiddleware("offline_settle"),
 
     zValidator("param", z.object({ alertId: z.string() })),
 
