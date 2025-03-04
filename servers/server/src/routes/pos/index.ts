@@ -1,10 +1,10 @@
 import {
+  Business,
   BusinessPosConfig,
   Cart,
   DeviceToken,
   KotOrder,
   MenuBanner,
-  OutLetInfo,
   Pos,
   PosBill,
   Table,
@@ -21,6 +21,7 @@ import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
+import { nanoid } from "nanoid";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import {
@@ -559,7 +560,7 @@ const posRouter = new Hono()
     zValidator(
       "json",
       z.object({
-        posId: z.string().min(3).max(200),
+        restId: z.string().min(3).max(200),
         businessId: z.string().min(3).max(200),
       }),
     ),
@@ -567,39 +568,32 @@ const posRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
-        const { posId, businessId } = await c.req.json();
+        const { restId, businessId } = await c.req.json();
 
-        const pos = await Pos.findById(posId);
-
-        if (!pos) {
-          return c.json(
-            {
-              message: "POS not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
-        }
+        const business = await Business.findById(businessId);
 
         const fetchAreaAndTable = await axios.post(
           "https://onlineapipp.petpooja.com/thirdparty_fetch_dinein_menu",
           {
-            "app-key": pos.accessKey,
-            "app-secret": pos.secretKey,
-            "access-token": pos.authToken,
-            restID: pos.restId,
+            "app-key": "6jh08fc457wp2qkv1dntbrma3yeouxig",
+            "app-secret": "26669606e665e4a014ca1d426ff2d643551ed21a",
+            "access-token": "9aeec28f3aab55dd23033194beb39972d7ff6890",
+            restID: restId,
             tableNo: "",
           },
         );
+        if (fetchAreaAndTable.data.success === "0") {
+          throw new Error("area and table not fetched");
+        }
 
         if (fetchAreaAndTable.data.success === "1") {
+          // areas or zones
           const areas = fetchAreaAndTable.data.areas;
+          // tables
           const tables = fetchAreaAndTable.data.tables;
-
+          // save areas and tables
           for (const area of areas) {
+            // to find exact zone from zoneId
             const zoneId = area.restaurantareaid;
             const zoneName = area.displayname;
             const active = area.active;
@@ -624,15 +618,14 @@ const posRouter = new Hono()
             );
           }
 
-          for (let i = 0; i < tables.length; i++) {
-            const table = tables[i];
+          for (const table of tables) {
             const zoneId = table.restaurantareaid;
             const tableName = table.table_no;
             const active = table.active;
             const rank = table.rank;
             const tableId = table.id;
 
-            await Table.findOneAndUpdate(
+            const creatingTable = await Table.findOneAndUpdate(
               {
                 tableId,
               },
@@ -651,50 +644,39 @@ const posRouter = new Hono()
               },
             );
 
-            const shortUrls = await UrlModel.find({
+            // create table short url
+
+            const uniqueOrderId = nanoid(5);
+
+            const alreadyExists = await UrlModel.findOne({
               businessId: businessId,
+              longUrl: `https://hipalz.com/${business?.customLink}/explore?tableName=${creatingTable.name}`,
             });
 
-            const shortUrl = shortUrls[i];
-            if (shortUrl) {
-              const shortUrlLongUrl = new URL(shortUrl.longUrl);
+            if (!alreadyExists) {
+              const createShortUrl = await UrlModel.create({
+                businessId: businessId,
+                longUrl: `https://hipalz.com/${business?.customLink}/explore?tableName=${creatingTable.name}`,
+                shortUrl: `https://api.hipalz.com/surl/${uniqueOrderId}`,
+                urlCode: uniqueOrderId,
+              });
 
-              shortUrlLongUrl.searchParams.set("tableName", tableName);
-
-              const updatedLongUrl = shortUrlLongUrl.toString();
-
-              await UrlModel.findOneAndUpdate(
+              await Table.findOneAndUpdate(
                 {
-                  businessId: businessId,
-                  longUrl: shortUrl.longUrl,
+                  tableId,
                 },
                 {
-                  longUrl: updatedLongUrl,
+                  tableLink: createShortUrl.shortUrl,
                 },
                 {
+                  new: true,
                   session,
                 },
               );
-            } else {
-              console.error(`Invalid shortUrl or longUrl at index ${i}`);
             }
           }
 
-          await OutLetInfo.findOneAndUpdate(
-            {
-              businessId,
-            },
-            {
-              isPosEnabled: true,
-              restId: pos.restId,
-            },
-            {
-              new: true,
-              upsert: true,
-              session,
-            },
-          );
-
+          // update uniquely yours
           await UniquelyYours.findOneAndUpdate(
             {
               businessId,
@@ -707,7 +689,7 @@ const posRouter = new Hono()
               session,
             },
           );
-
+          // update menu banner
           await MenuBanner.findOneAndUpdate(
             {
               businessId,
@@ -720,29 +702,7 @@ const posRouter = new Hono()
               session,
             },
           );
-
-          return c.json(
-            {
-              message: "Data fetched successfully",
-              err: false,
-              data: {
-                success: true,
-              },
-            },
-            200,
-          );
         }
-
-        return c.json(
-          {
-            message: "Error fetching data",
-            err: true,
-            data: {
-              success: false,
-            },
-          },
-          400,
-        );
       });
     },
   )
