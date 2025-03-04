@@ -572,6 +572,23 @@ const posRouter = new Hono()
 
         const business = await Business.findById(businessId);
 
+        const posConfigAlreadyExists = await BusinessPosConfig.findOne({
+          businessId,
+        });
+
+        if (posConfigAlreadyExists) {
+          return c.json(
+            {
+              message: "POS Config already exists",
+              err: true,
+              data: {
+                exist: true,
+              },
+            },
+            409,
+          );
+        }
+
         const fetchAreaAndTable = await axios.post(
           "https://onlineapipp.petpooja.com/thirdparty_fetch_dinein_menu",
           {
