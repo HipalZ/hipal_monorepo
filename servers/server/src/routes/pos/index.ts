@@ -605,9 +605,13 @@ const posRouter = new Hono()
 
         if (fetchAreaAndTable.data.success === "1") {
           // areas or zones
-          const areas = fetchAreaAndTable.data.areas;
+          const areas = fetchAreaAndTable.data.areas.filter(
+            (area: any) => area.active === "1",
+          );
           // tables
-          const tables = fetchAreaAndTable.data.tables;
+          const tables = fetchAreaAndTable.data.tables.filter(
+            (table: any) => table.active === "1",
+          );
           // save areas and tables
           for (const area of areas) {
             // to find exact zone from zoneId
