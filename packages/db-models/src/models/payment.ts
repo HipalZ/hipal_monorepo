@@ -196,6 +196,11 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       required: false,
       default: "COINZ",
     },
+
+    downloadUrl: {
+      type: String,
+      required: false,
+    },
   },
 
   { timestamps: true },

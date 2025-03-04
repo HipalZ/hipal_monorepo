@@ -7,6 +7,7 @@ import categoryRouter from "./categories";
 import couponAnalytics from "./coupon-analytics";
 import couponzRouter from "./couponz";
 import dishesRouter from "./dishes";
+import download from "./download";
 import duesRouter from "./dues";
 import groupRouter from "./groups";
 import hipalzRouter from "./hipalz";
@@ -65,6 +66,7 @@ export const routes = app
   .route("/npc", npcRouter)
   .route("/permission", permissionRouter)
   .route("/tax", taxRouter)
-  .route("/whatsapp_flow", whatsAppFlowRouter);
+  .route("/whatsapp_flow", whatsAppFlowRouter)
+  .route("/download", download);
 
 export type AppType = typeof routes;

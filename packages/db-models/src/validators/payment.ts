@@ -158,6 +158,7 @@ export const PaymentSchema = z.object({
   initialTotal: z.coerce.number().default(0).optional(),
   finalSubTotal: z.coerce.number().default(0).optional(),
   discountType: z.enum(["COINZ", "COUPONZ"]).optional().default("COINZ"),
+  downloadUrl: z.string().min(3).max(200).optional(),
 });
 
 export type PaymentType = z.infer<typeof PaymentSchema>;
