@@ -50,11 +50,13 @@ const QrCode: FC<QrCodeProps> = ({  setSize, children }) => {
           width: localSize,
           height: localSize,
           backgroundColor: "white",
-          border: "2px solid black",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           cursor: "move",
+          padding: "4px",
+          borderRadius: "4px",
+          zIndex: 15,
         }}
       >
         {children}

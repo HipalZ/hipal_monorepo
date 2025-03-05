@@ -109,8 +109,8 @@ const TablesMain = () => {
           display: "inline-block",
         }}
       >
-        <QRCode value={table.tableLink} size={200} />
-        <div className="capitalise" style={{ textAlign: "center", marginTop: "8px", fontSize: "20px", fontWeight: "bold" }}>
+        <QRCode value={table.tableLink} size={1080} />
+        <div className="capitalise" style={{ textAlign: "center", marginTop: "40px", fontSize: "80px", fontWeight: "bold" }}>
           {table.name}
         </div>
       </div>

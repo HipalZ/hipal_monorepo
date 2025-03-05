@@ -1,5 +1,4 @@
-
-import { useState } from "react"
+import { useCallback, useState } from "react"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -8,29 +7,33 @@ import { Button } from "@/components/ui/button"
 import { Search, X } from "lucide-react"
 import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton"
 import PopUp from "@/components/atom/popUp"
-import type { ITable } from "@/components/store/useZone"
-
+import useZoneStore from "@/components/store/useZone"
 
 interface TableSelectionPopupProps {
   show: boolean
   onClose: () => void
-  allTables: ITable[]
-  selectedTableIds: string[]
-  toggleTableIds: (id: string) => void
   handleDownloadAll: () => void
 }
 
 const TableSelectionPopup: React.FC<TableSelectionPopupProps> = ({
   show,
   onClose,
-  allTables,
-  selectedTableIds,
-  toggleTableIds,
   handleDownloadAll,
 }) => {
   const [searchTerm, setSearchTerm] = useState("")
+  const { selectedTableIds, toggleTableIds, allTables, setSelectedTableIds } = useZoneStore()
 
-  const filteredTables = allTables.filter((table) => table.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  const selectAllTheTables = useCallback(() => {
+    if (selectedTableIds.length === allTables.length) {
+      setSelectedTableIds([])
+    } else {
+      setSelectedTableIds(allTables?.map((table) => table._id))
+    }
+  },[selectedTableIds])
+
+  const filteredTables = allTables.filter((table) =>
+    table.name.toLowerCase().includes(searchTerm.toLowerCase()) && table?.tableLink
+  )
 
   return (
     <PopUp hide show={show} onClose={onClose} width="w-[30rem]" height="h-[100dvh] lg:h-[80dvh]">
@@ -63,26 +66,17 @@ const TableSelectionPopup: React.FC<TableSelectionPopupProps> = ({
                 </Label>
                 <Switch
                   id={table._id}
-                  checked={selectedTableIds.includes(table._id)}
-                  onCheckedChange={() => toggleTableIds(table._id)}
+                  checked={selectedTableIds.includes(table?._id)}
+                  onCheckedChange={() => toggleTableIds(table?._id)}
                 />
               </div>
             ))}
           </div>
         </ScrollArea>
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">
-            {selectedTableIds.length} of {allTables.length} tables selected
-          </p>
-          <div className="space-x-2">
-            <Button variant="outline" onClick={() => toggleTableIds("all")}>
-              {selectedTableIds.length === allTables.length ? "Deselect All" : "Select All"}
-            </Button>
-          </div>
-        </div>
+      
         <AdvancedBottomButton
-          fixed={false}
-          maxWidth="100%"
+          fixed={true}
+          maxWidth="30rem"
           buttons={[
             {
               text: "Cancel",
@@ -91,9 +85,14 @@ const TableSelectionPopup: React.FC<TableSelectionPopupProps> = ({
               className: "rounded-md pl-3",
             },
             {
+              text:  `Select ${selectedTableIds.length === allTables.length ? "None" : "All"}`,
+              onClick: selectAllTheTables,
+              className: "rounded-md",
+            },
+            {
               text: "Download Selected",
               onClick: handleDownloadAll,
-              className: "rounded-md",
+              className: "rounded-md px-4",
               disable: selectedTableIds.length === 0,
             },
           ]}
@@ -104,4 +103,3 @@ const TableSelectionPopup: React.FC<TableSelectionPopupProps> = ({
 }
 
 export default TableSelectionPopup
-
