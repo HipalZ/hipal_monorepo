@@ -19,6 +19,7 @@ interface ButtonConfig {
     highlight?: boolean;
     borderClasses?: string;
     swipe?: boolean;
+    icon?: React.ReactNode; // New icon parameter
 }
 
 interface MemoBottomButtonProps {
@@ -38,7 +39,21 @@ const buttonVariants = {
 };
 
 function getButtonInnerContent(button: ButtonConfig) {
-    const { highlight, borderClasses, isBackButton, isLoading, text } = button;
+    const { highlight, borderClasses, isBackButton, isLoading, text, icon: Icon } = button;
+
+    let content;
+    if (isBackButton) {
+        content = <ChevronLeft />;
+    } else if (isLoading) {
+        content = <SpinnerMemo />;
+    } else {
+        content = (
+            <div className="flex items-center justify-center gap-2 truncate">
+                {Icon && <h3 className="inline-flex items-center">{Icon}</h3>}
+                <h3 className="truncate">{text}</h3>
+            </div>
+        );
+    }
 
     if (highlight) {
         return (
@@ -48,26 +63,12 @@ function getButtonInnerContent(button: ButtonConfig) {
                 duration={5}
                 className={borderClasses || ""}
             >
-                {isBackButton ? (
-                    <ChevronLeft />
-                ) : isLoading ? (
-                    <SpinnerMemo />
-                ) : (
-                    text
-                )}
+                {content}
             </ShineBorder>
         );
     }
 
-    if (isBackButton) {
-        return <ChevronLeft />;
-    }
-
-    if (isLoading) {
-        return <SpinnerMemo />;
-    }
-
-    return text;
+    return content;
 }
 
 function SwipeButton({
@@ -80,7 +81,6 @@ function SwipeButton({
     buttonsLength: number;
 }) {
     const x = useMotionValue(0);
-    // Optionally transform the circle color or background color
     const background = useTransform(x, [0, 200], ["#fff", "#22c55e"]);
 
     const handleDragEnd = () => {
