@@ -23,6 +23,7 @@ import {
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { transformData } from "../../utils/helper";
+import { posApiPaths } from "../../utils/posConfig/petPooja";
 import {
   getMenuByBId,
   setPosConfigTransfer,
@@ -373,7 +374,7 @@ const categoriesRouter = new Hono()
 
         const isHasPos = await BusinessPosConfig.findOne({
           businessId,
-        }).populate("posId");
+        });
 
         if (isHasPos) {
           const table = await Table.findOne({
@@ -394,17 +395,14 @@ const categoriesRouter = new Hono()
           }
 
           const Config = {
-            "app-key": isHasPos.posId.accessKey,
-            "app-secret": isHasPos.posId.secretKey,
-            "access-token": isHasPos.posId.authToken,
-            restID: isHasPos.posId.restId,
+            "app-key": isHasPos.accessKey,
+            "app-secret": isHasPos.secretKey,
+            "access-token": isHasPos.authToken,
+            restID: isHasPos.restId,
             tableNo: table?.name,
           };
 
-          const menu = await axios.post(
-            "https://onlineapipp.petpooja.com/thirdparty_fetch_dinein_menu/",
-            Config,
-          );
+          const menu = await axios.post(posApiPaths.fetchMenu, Config);
           await setPosConfigTransfer(businessId, menu.data);
           const transformedCategories = transformData(menu.data);
 
@@ -538,9 +536,6 @@ const categoriesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
       const requestData = await c.req.json();
-      console.log("requestData", requestData);
-
-      console.log("businessId", businessId);
 
       for (let i = 0; i < requestData.length; i++) {
         const res = await Category.findOneAndUpdate(
@@ -552,7 +547,6 @@ const categoriesRouter = new Hono()
           { $set: { sequence: requestData[i].sequence } },
           { new: true },
         );
-        console.log("res", res);
       }
 
       return respond(c, "sequence updated successfully", false, 200, {});

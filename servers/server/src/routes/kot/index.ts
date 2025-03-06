@@ -6,6 +6,7 @@ import {
   UserAnalytic,
   UserSession,
 } from "@hi/db-models";
+import { kotOrderAcceptSchema } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
@@ -13,39 +14,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { calculateCartBill, convertToPetpoojaCart } from "../../utils/helper";
-const generateTenDigitCode = (): string => {
-  const min = 1000000000; // Minimum 10-digit number
-  const max = 9999999999; // Maximum 10-digit number
-  const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-  return randomNumber.toString();
-};
-
-const saveKotOrder = async (
-  tableName: string,
-  businessId: string,
-  customerName: string,
-  customerPhone: string,
-  internalCart: unknown[],
-  userId: string,
-  tableId: string,
-) => {
-  const saveKot = await KotOrder.create({
-    tableName: tableName,
-    businessId: businessId,
-    phone: customerPhone,
-    cart: internalCart,
-    date: Date.now(),
-    userId: userId,
-    name: customerName,
-    tableId: tableId,
-  });
-
-  if (!saveKot) {
-    return false;
-  }
-
-  return true;
-};
+import { posApiPaths } from "../../utils/posConfig/petPooja";
 
 const kotRouter = new Hono()
   .get(
@@ -53,7 +22,7 @@ const kotRouter = new Hono()
     zValidator(
       "param",
       z.object({
-        tableId: z.string().min(1).max(500),
+        tableId: z.string().min(1).max(100),
       }),
     ),
     async (c) => {
@@ -108,7 +77,7 @@ const kotRouter = new Hono()
     zValidator(
       "json",
       z.object({
-        userIds: z.array(z.string()).min(1).max(500),
+        userIds: z.array(z.string()).min(1).max(100),
       }),
     ),
     async (c) => {
@@ -139,15 +108,7 @@ const kotRouter = new Hono()
   .put(
     "/",
     ubacMiddleware("order_accept"),
-    zValidator(
-      "json",
-      z.object({
-        orderId: z.string().min(1).max(500),
-        orderAction: z.enum(["ACCEPT", "REJECT", "EDIT"]),
-        performBy: z.string().min(1).max(500),
-        reasonOfRejection: z.string().min(1).max(500).optional(),
-      }),
-    ),
+    zValidator("json", kotOrderAcceptSchema),
 
     async (c) => {
       //@ts-ignore
@@ -157,7 +118,7 @@ const kotRouter = new Hono()
 
         const orderAlreadyAccepted = await KotOrder.findOne({
           _id: orderId,
-          accepted: true,
+          $or: [{ accepted: true }, { settled: true }],
         });
         if (orderAlreadyAccepted) {
           return c.json(
@@ -189,7 +150,7 @@ const kotRouter = new Hono()
         // find posconfig for a place order
         const pos = await BusinessPosConfig.findOne({
           businessId: kot.businessId,
-        }).populate("posId");
+        });
         if (!pos) {
           return c.json(
             {
@@ -204,14 +165,16 @@ const kotRouter = new Hono()
         }
 
         if (orderAction === "ACCEPT") {
-          const tempTable = await UserSession.findOne({
+          const tableSession = await UserSession.findOne({
             tableName: kot.tableName,
             businessId: kot.businessId,
           });
-          if (tempTable?.billRequestId) {
+
+          // check if bill already generated for table
+          if (tableSession?.billRequestId) {
             return c.json(
               {
-                message: `Bill already generated for table ${tempTable.tableName} by ${tempTable?.billGeneratedBy} you can't add more items`,
+                message: `Bill already generated for table ${tableSession.tableName} by ${tableSession?.billGeneratedBy} you can't add more items`,
                 err: true,
                 data: {
                   success: false,
@@ -228,20 +191,21 @@ const kotRouter = new Hono()
 
           const petpoojaCart = convertToPetpoojaCart(
             kot.cart,
-            pos?.posId.restId,
+            pos.restId,
             kot.name,
-            tempTable?.pin,
+            tableSession?.pin,
             kot.tableName,
-            pos.posId.accessKey,
-            pos.posId.secretKey,
+            pos.accessKey,
+            pos.secretKey,
 
-            pos.posId.authToken,
+            pos.authToken,
           );
 
-          const saveKot = await axios.post(
-            "https://api.petpooja.com/V1/captainorders/save_kot_qr_order",
-            petpoojaCart,
-          );
+          const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
+
+          if (saveKot.data.status === "0") {
+            throw new Error("Error in saving kot");
+          }
 
           await Table.findOneAndUpdate(
             {
@@ -259,6 +223,7 @@ const kotRouter = new Hono()
               },
             },
             {
+              session,
               new: true, // Return the updated document
             },
           );
@@ -269,7 +234,6 @@ const kotRouter = new Hono()
               err: false,
               data: {
                 success: true,
-                hiCode: 0,
                 name: kot.name,
                 phone: kot.phone,
               },
@@ -279,16 +243,6 @@ const kotRouter = new Hono()
         }
 
         if (orderAction === "REJECT") {
-          if (!reasonOfRejection) {
-            return c.json(
-              {
-                message: "Rejected reason is required",
-                err: true,
-                data: null,
-              },
-              400,
-            );
-          }
           kot.rejected = true;
           kot.rejectedBy = performBy;
           kot.reasonOfRejection = reasonOfRejection;

@@ -7,7 +7,6 @@ import categoryRouter from "./categories";
 import couponAnalytics from "./coupon-analytics";
 import couponzRouter from "./couponz";
 import dishesRouter from "./dishes";
-import download from "./download";
 import duesRouter from "./dues";
 import groupRouter from "./groups";
 import hipalzRouter from "./hipalz";
@@ -19,6 +18,7 @@ import paymentsRouter from "./payments";
 import permissionRouter from "./permission";
 import posRouter from "./pos";
 import googleReview from "./reviews";
+import scriptRouter from "./script";
 import settingsRouter from "./settings";
 import subsCriberRouter from "./subscribers";
 import surlRouter from "./surl";
@@ -67,6 +67,6 @@ export const routes = app
   .route("/permission", permissionRouter)
   .route("/tax", taxRouter)
   .route("/whatsapp_flow", whatsAppFlowRouter)
-  .route("/download", download);
+  .route("/script", scriptRouter);
 
 export type AppType = typeof routes;
