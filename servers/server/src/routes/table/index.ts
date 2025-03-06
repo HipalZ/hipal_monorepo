@@ -1674,7 +1674,7 @@ const tableRouter = new Hono()
               businessId: businessId,
               order_id: uniqueOrderId,
 
-              date: Date.now(),
+              date: unSettleTable.date || Date.now(),
             },
           ],
           { session },
@@ -1707,7 +1707,7 @@ const tableRouter = new Hono()
               initialSubTotal: 0,
               initialTotal: 0,
               waiterName: captain?.name,
-              date: Date.now(),
+              date: unSettleTable.date || Date.now(),
             },
           ],
           { session },
