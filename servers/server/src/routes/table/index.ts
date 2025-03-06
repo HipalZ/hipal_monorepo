@@ -1475,7 +1475,7 @@ const tableRouter = new Hono()
               businessId: table?.businessId,
               accepted: true,
             },
-            { $set: { rejected: true, accepted: false } },
+            { $set: { accepted: true, settled: true } },
             { session },
           );
 
@@ -1503,42 +1503,6 @@ const tableRouter = new Hono()
             { session },
           );
         }
-        //for empty table
-        await KotOrder.updateMany(
-          {
-            tableName: table?.name,
-            settled: false,
-            businessId: table?.businessId,
-            accepted: false,
-            rejected: false,
-          },
-          { $set: { settled: true } },
-          { session },
-        );
-
-        await UserSession.deleteOne(
-          {
-            tableName: table?.name,
-            businessId: table?.businessId,
-          },
-          { session },
-        );
-
-        await Table.findByIdAndUpdate(
-          tableId,
-          {
-            hiCode: "",
-            userIds: [],
-            currentTableAmount: 0,
-            totalItemCount: 0,
-            status: "EMPTY",
-            totalUserIds: [],
-            isTransfer: false,
-            edited: false,
-            editedBy: null,
-          },
-          { session },
-        );
 
         return c.json(
           {
