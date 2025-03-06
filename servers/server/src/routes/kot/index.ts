@@ -155,20 +155,20 @@ const kotRouter = new Hono()
         const { orderId, orderAction, performBy, reasonOfRejection } =
           await c.req.json();
 
-        const orderAlreadyAccepted = await KotOrder.findOne({
-          _id: orderId,
-          accepted: true,
-        });
-        if (orderAlreadyAccepted) {
-          return c.json(
-            {
-              message: "Order already accepted",
-              err: true,
-              data: {},
-            },
-            400,
-          );
-        }
+          const orderAlreadyAccepted = await KotOrder.findOne({
+            _id: orderId,
+            $or: [{ accepted: true }, { settled: true }],
+          });
+          if (orderAlreadyAccepted) {
+            return c.json(
+              {
+                message: "Order already accepted",
+                err: true,
+                data: {},
+              },
+              400,
+            );
+          }
         const kot = await KotOrder.findOne({
           _id: orderId,
           accepted: false,
