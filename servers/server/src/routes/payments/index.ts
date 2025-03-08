@@ -1143,6 +1143,7 @@ const paymentsRouter = new Hono()
       const getOrder = await Order.findOne({
         order_id: payload.payment.entity.order_id,
       });
+      console.log("getOrderMAMAMAAAAAAAAAAAAAAAAAAA", getOrder);
       const tempTable = await UserSession.findOne({
         businessId: getOrder?.businessId,
         tableName: getOrder?.tableName,
@@ -1192,7 +1193,13 @@ const paymentsRouter = new Hono()
           razorpayEventId: razorpayEventId,
         });
 
+        console.log(
+          "paymentAlreadyExistMAMAMMMMMMMMMMMMMMMMM",
+          paymentAlreadyExist,
+        );
+
         if (!paymentAlreadyExist && getOrder) {
+          console.log("getOrderMAMAMAAAAAAAAAAAAAAAAAAAANDER AYYA");
           const claimCoins = Number(getOrder?.claimedCoins) || 0;
           await PaymentAlert.updateOne(
             {
@@ -1206,7 +1213,7 @@ const paymentsRouter = new Hono()
           let posDiscount = 0;
           if (claimCoins > 0) {
             posDiscount = await calculateDiscount(
-              payload.payment.entity.notes.businessId,
+              getOrder.businessId.toString(),
               Number(getOrder?.billValue),
               claimCoins,
             );
@@ -1218,7 +1225,7 @@ const paymentsRouter = new Hono()
             if (claimCoins > 0) {
               await removeCoins(
                 claimCoins,
-                getOrder?.tableName || "",
+                getOrder?.tableName,
                 payload.payment.entity.notes.loyaltyId || "",
                 getOrder?._id.toString() || "",
                 getOrder?.userId.toString() || "",
