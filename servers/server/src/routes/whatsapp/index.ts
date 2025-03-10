@@ -2633,6 +2633,46 @@ const whatsappRouter = new Hono()
         },
       });
     },
+  )
+
+  .post(
+    "/deactivate/wa_redirection/:businessId",
+    zValidator("param", z.object({ businessId: z.string() })),
+
+    zValidator("json", z.object({ menuRedirection: z.string() })),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+      const { menuRedirection } = await c.req.json();
+
+      const updateConfig = await WhatsAppBusinessConfig.findOneAndUpdate(
+        {
+          businessId,
+        },
+        {
+          $set: {
+            menuRedirection,
+          },
+        },
+        {
+          new: true,
+        },
+      );
+
+      if (!updateConfig) {
+        return c.json({
+          message: "Error updating config",
+          err: true,
+          data: {},
+        });
+      }
+
+      return c.json({
+        message: "Updated successfully",
+        err: false,
+        data: updateConfig,
+      });
+    },
   );
 
 export default whatsappRouter;
