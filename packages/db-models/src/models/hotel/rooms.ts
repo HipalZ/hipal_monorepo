@@ -77,6 +77,19 @@ const hotelRoomsSchema = new mongoose.Schema<HotelRoomType>({
     type: String,
     required: false,
   },
+  description: {
+    type: String,
+    required: false,
+  },
+  images: {
+    type: [String],
+    required: false,
+    default: [],
+  },
+  downLoadLink: {
+    type: String,
+    required: false,
+  },
 });
 
 hotelRoomsSchema.index({ businessId: 1, name: 1 }, { unique: true });

@@ -48,6 +48,9 @@ export const hotelRoom = z.object({
   authCode: z.string().min(4).max(4).optional(),
   rating: z.number().optional().default(4.5),
   size: z.string().min(1).max(50).optional(),
+  description: z.string().min(1).max(300).optional(),
+  images: z.array(z.string().min(10).max(70)).optional().default([]),
+  downLoadLink: z.string().min(1).max(100).optional(),
 });
 
 export const updateHotelRoom = z.object({
@@ -62,6 +65,9 @@ export const updateHotelRoom = z.object({
   capacity: z.coerce.number().default(0).optional(),
   roomStatus: z.enum(hotelStatusEnum).optional().default("AVAILABLE"),
   staffIds: z.array(ObjectIdSchema).optional().default([]),
+  description: z.string().min(1).max(300).optional(),
+  images: z.array(z.string().min(10).max(70)).optional().default([]),
+  size: z.string().min(1).max(50).optional(),
 });
 
 export const bulkHotelRoom = z.object({

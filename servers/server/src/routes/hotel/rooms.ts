@@ -1,4 +1,4 @@
-import { HotelRoom, HotelZone } from "@hi/db-models";
+import { Business, HotelRoom, HotelZone, UrlModel } from "@hi/db-models";
 import {
   bulkHotelRoom,
   hotelRoom,
@@ -7,6 +7,7 @@ import {
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { nanoid } from "nanoid";
 import { z } from "zod";
 import { respond } from "../../utils/response";
 
@@ -66,10 +67,43 @@ const roomRouter = new Hono()
         return respond(c, "Room already exists", true, 409, {});
       }
 
+      const business = await Business.findById(requestData.businessId)
+        .select("customLink")
+        .lean();
+
+      if (!business) {
+        return respond(c, "Business not found", true, 404, {});
+      }
+
       const [room] = await HotelRoom.create([requestData], { session });
 
       if (!room) {
         throw new Error("Error creating room");
+      }
+
+      const longUrl = `http://localhost:3000/${business.customLink}/explore?roomName=${requestData.name}`;
+
+      const urlAlreadyExists = await UrlModel.exists({
+        longUrl,
+        businessId: requestData.businessId,
+      });
+
+      if (!urlAlreadyExists) {
+        const uniqueOrderId = nanoid(5);
+
+        const shortUrl = await UrlModel.create({
+          longUrl,
+          businessId: requestData.businessId,
+          shortUrl: `http://localhost:4500/surl/${uniqueOrderId}`,
+          urlCode: uniqueOrderId,
+        });
+
+        if (!shortUrl) {
+          throw new Error("Error creating short url");
+        }
+
+        room.downLoadLink = shortUrl.shortUrl;
+        await room.save({ session });
       }
 
       // Add room to its assigned zone
@@ -155,15 +189,11 @@ const roomRouter = new Hono()
 
       const [, prefix, start, end] = match;
 
-      console.log("prefix", "start", "end", prefix, start, end);
-
       const roomNames = [];
 
       for (let i = Number(start); i <= Number(end); i++) {
         roomNames.push(`${prefix}${i}`);
       }
-
-      console.log("roomNames", roomNames);
 
       const existingRooms = await HotelRoom.find({
         businessId: requestData.businessId,
@@ -190,6 +220,40 @@ const roomRouter = new Hono()
 
       if (!createdRooms || createdRooms.length === 0) {
         throw new Error("Error creating new rooms");
+      }
+
+      for (const room of createdRooms) {
+        const business = await Business.findById(requestData.businessId)
+          .select("customLink")
+          .lean();
+
+        if (!business) {
+          return respond(c, "Business not found", true, 404, {});
+        }
+        const longUrl = `http://localhost:3000/${business.customLink}/explore?roomName=${room.name}`;
+
+        const urlAlreadyExists = await UrlModel.exists({
+          longUrl,
+          businessId: requestData.businessId,
+        });
+
+        if (!urlAlreadyExists) {
+          const uniqueOrderId = nanoid(5);
+
+          const shortUrl = await UrlModel.create({
+            longUrl,
+            businessId: requestData.businessId,
+            shortUrl: `http://localhost:4500/surl/${uniqueOrderId}`,
+            urlCode: uniqueOrderId,
+          });
+
+          if (!shortUrl) {
+            throw new Error("Error creating short url");
+          }
+
+          room.downLoadLink = shortUrl.shortUrl;
+          await room.save({ session });
+        }
       }
 
       // Add only newly created rooms to their assigned zone
