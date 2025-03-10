@@ -35,6 +35,7 @@ export const addHotelStaff = z.object({
   name: z.string().min(2).max(50),
   phone: z.string().min(10).max(10),
   businessId: z.string().min(2).max(50),
+  serviceIds: z.array(ObjectIdSchema).optional(),
   role: z.enum(hotelStaffRoleEnum),
   nickName: z.string().min(2).max(50).optional(),
   password: z.string().min(4).max(50).optional(),
@@ -43,6 +44,7 @@ export const addHotelStaff = z.object({
 export const editHotelStaff = z.object({
   name: z.string().min(2).max(50).optional(),
   businessId: z.string().min(2).max(50),
+  serviceIds: z.array(ObjectIdSchema).optional(),
   staffId: ObjectIdSchema,
   role: z.enum(hotelStaffRoleEnum).optional(),
   nickName: z.string().min(2).max(50).optional(),

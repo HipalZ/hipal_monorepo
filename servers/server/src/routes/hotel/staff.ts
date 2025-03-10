@@ -98,7 +98,7 @@ const staffRouter = new Hono()
     //@ts-ignore
     return runInTransaction(async (session) => {
       const requestData = await c.req.json();
-      const { role, name, phone, businessId, password, nickName } =
+      const { role, name, phone, businessId, password, nickName, serviceIds } =
         requestData as AddHotelStaffType;
 
       const existingStaff = await User.exists({ phone });
@@ -109,6 +109,7 @@ const staffRouter = new Hono()
         default: false,
         isDeleted: false,
         nickName: nickName ?? name,
+        serviceIds: serviceIds ?? [],
       };
 
       if (existingStaff) {

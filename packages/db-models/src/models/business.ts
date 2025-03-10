@@ -2,6 +2,7 @@ import type { Model } from "mongoose";
 import mongoose from "mongoose";
 import type { BusinessType } from "../validators";
 import { BusinessEnumType, ExploreLayout, MenuLayout } from "../validators";
+import { HotelService } from "./hotel";
 import { MenuBanner } from "./menuBanner";
 import { UpiMode } from "./upiMode";
 const ObjectId = mongoose.Schema.Types.ObjectId;
@@ -154,6 +155,17 @@ businessSchema.post("save", async (doc) => {
   ];
 
   await MenuBanner.insertMany(menuBaners);
+
+  if (doc.businessType === "HOTEL") {
+    const defaultHotelService = [
+      { name: "Other", businessId: doc._id },
+      { name: "Laundry", businessId: doc._id },
+      { name: "Cleaning", businessId: doc._id },
+      { name: "OrderFood", businessId: doc._id },
+      { name: "Bathroom", businessId: doc._id },
+    ];
+    await HotelService.insertMany(defaultHotelService);
+  }
 });
 
 const Business: Model<BusinessType> = mongoose.model<BusinessType>(

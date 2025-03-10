@@ -63,6 +63,20 @@ const hotelRoomsSchema = new mongoose.Schema<HotelRoomType>({
     default: [],
     ref: "User",
   },
+  authCode: {
+    type: String,
+    required: false,
+    default: "",
+  },
+  rating: {
+    type: Number,
+    required: false,
+    default: 4.5,
+  },
+  size: {
+    type: String,
+    required: false,
+  },
 });
 
 hotelRoomsSchema.index({ businessId: 1, name: 1 }, { unique: true });

@@ -19,6 +19,7 @@ export const CustomRole = z.object({
   bookMark: z.boolean().optional(),
   isDeleted: z.boolean().optional().default(false),
   nickName: z.string().optional(),
+  serviceIds: z.array(ObjectIdSchema).optional(),
 });
 
 export const UserAttrs = z.object({

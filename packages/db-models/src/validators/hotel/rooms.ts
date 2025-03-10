@@ -45,6 +45,9 @@ export const hotelRoom = z.object({
   roomStatus: z.enum(hotelStatusEnum).optional().default("AVAILABLE"),
   date: z.number().optional(),
   staffIds: z.array(ObjectIdSchema).optional().default([]),
+  authCode: z.string().min(4).max(4).optional(),
+  rating: z.number().optional().default(4.5),
+  size: z.string().min(1).max(50).optional(),
 });
 
 export const updateHotelRoom = z.object({
