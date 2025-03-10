@@ -5,6 +5,29 @@ import type { OutLetInfoType } from "../validators";
 
 import { Amenities, BusinessEnumType } from "../validators";
 import { Business } from "./business";
+
+const serviceStatusSchema = new mongoose.Schema({
+  whatsapp: {
+    type: Boolean,
+    default: false,
+  },
+  payment_gateway: {
+    type: Boolean,
+    default: false,
+  },
+  google_my_business: {
+    type: Boolean,
+    default: false,
+  },
+  make_my_trip: {
+    type: Boolean,
+    default: false,
+  },
+  trip_advisor: {
+    type: Boolean,
+    default: false,
+  },
+});
 const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
   businessId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -98,16 +121,7 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
       },
     },
   ],
-  billingStartTime: {
-    type: String,
 
-    required: false,
-  },
-  billingEndTime: {
-    type: String,
-
-    required: false,
-  },
   brandName: {
     type: String,
 
@@ -117,12 +131,7 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: Boolean,
     default: false,
   },
-  fixOpenTime: {
-    type: String,
-  },
-  fixCloseTime: {
-    type: String,
-  },
+
   branchName: {
     type: String,
 
@@ -177,11 +186,44 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     required: false,
     ref: "businessposconfig",
   },
+  startTime: {
+    type: Number,
+    default: 0,
+  },
+  endTime: {
+    type: Number,
+    default: 24,
+  },
+  aadharCard: {
+    type: String,
+    required: false,
+  },
+  bankAccount: {
+    type: String,
+    required: false,
+  },
+  companyRegistration: {
+    type: String,
+    required: false,
+  },
+  instruction: {
+    type: String,
+    required: false,
+  },
+  panCard: {
+    type: String,
+    required: false,
+  },
+  serviceStatus: serviceStatusSchema,
+  helpPhoneNumber: {
+    type: String,
+    required: false,
+  },
 });
 
 //middlewares
 outLetInfoSchema.post("save", async (doc) => {
-  const business = await Business.findById(doc.businessId);
+  const business = await Business.findById(doc._id);
 
   if (business) {
     await OutLetInfo.findByIdAndUpdate(doc._id, {

@@ -1,0 +1,72 @@
+import mongoose from "mongoose";
+import { z } from "zod";
+const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
+  z
+    .string()
+    .refine((val) => mongoose.Schema.Types.ObjectId, {
+      message: "Invalid ObjectId",
+    })
+    .transform((val) => new mongoose.Types.ObjectId(val)),
+);
+
+export const roomTypeEnum = [
+  "SINGLE",
+  "DOUBLE",
+  "TRIPLE",
+  "QUAD",
+  "SUITE",
+  "DELUXE",
+] as const;
+
+export type HotelRoomEnumType = (typeof roomTypeEnum)[number];
+
+export const hotelStatusEnum = [
+  "AVAILABLE",
+  "BOOKED",
+  "OCCUPIED",
+  "MAINTENANCE",
+  "CLEANING",
+  "RESERVED",
+  "BLOCKED",
+] as const;
+
+export type HotelStatusEnumType = (typeof hotelStatusEnum)[number];
+
+export const hotelRoom = z.object({
+  businessId: ObjectIdSchema,
+  name: z.string().min(1).max(50),
+  tax: z.number().optional(),
+  zoneId: ObjectIdSchema,
+  availability: z.boolean().optional().default(true),
+  amenities: z.array(z.string()).optional().default([]),
+  roomType: z.enum(roomTypeEnum),
+  pricePerNight: z.coerce.number().default(0).optional(),
+  capacity: z.coerce.number().default(0).optional(),
+  roomStatus: z.enum(hotelStatusEnum).optional().default("AVAILABLE"),
+  date: z.number().optional(),
+  staffIds: z.array(ObjectIdSchema).optional().default([]),
+});
+
+export const updateHotelRoom = z.object({
+  name: z.string().min(1).max(50).optional(),
+  tax: z.number().optional(),
+  zoneId: ObjectIdSchema.optional(),
+  roomId: ObjectIdSchema,
+  availability: z.boolean().optional().default(true),
+  amenities: z.array(z.string()).optional().default([]),
+  roomType: z.enum(roomTypeEnum).optional(),
+  pricePerNight: z.coerce.number().default(0).optional(),
+  capacity: z.coerce.number().default(0).optional(),
+  roomStatus: z.enum(hotelStatusEnum).optional().default("AVAILABLE"),
+  staffIds: z.array(ObjectIdSchema).optional().default([]),
+});
+
+export const bulkHotelRoom = z.object({
+  name: z.string().min(1).max(50),
+  zoneId: ObjectIdSchema,
+  roomType: z.enum(roomTypeEnum),
+  capacity: z.coerce.number().default(0).optional(),
+  staffIds: z.array(ObjectIdSchema).optional().default([]),
+});
+
+export type HotelRoomType = z.infer<typeof hotelRoom>;

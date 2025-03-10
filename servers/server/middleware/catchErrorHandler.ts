@@ -16,11 +16,10 @@ export const catchErrorHandler = (app: Hono) => {
       );
     }
 
-    console.error(err);
     return c.json(
       {
-        errors: " Something went wrong",
-        CustomError: false,
+        err: true,
+        CustomError: true,
         message: err.message,
         data: {},
       },

@@ -10,6 +10,7 @@ import dishesRouter from "./dishes";
 import duesRouter from "./dues";
 import groupRouter from "./groups";
 import hipalzRouter from "./hipalz";
+import hotelRouter from "./hotel";
 import iconRouter from "./icon";
 import kotRouter from "./kot";
 import menuBannerRouter from "./menu-banner";
@@ -67,6 +68,7 @@ export const routes = app
   .route("/permission", permissionRouter)
   .route("/tax", taxRouter)
   .route("/whatsapp_flow", whatsAppFlowRouter)
-  .route("/script", scriptRouter);
+  .route("/script", scriptRouter)
+  .route("/hotel", hotelRouter);
 
 export type AppType = typeof routes;

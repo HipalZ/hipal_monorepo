@@ -72,6 +72,22 @@ const businessSchema = new mongoose.Schema<BusinessType>(
       type: String,
       required: false,
     },
+    hotelIds: {
+      type: [ObjectId],
+      required: false,
+    },
+    restaurantIds: {
+      type: [ObjectId],
+      required: false,
+    },
+    recovery: {
+      type: String,
+      required: false,
+    },
+    registeredName: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,

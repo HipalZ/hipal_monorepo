@@ -226,8 +226,8 @@ const businessesRouter = new Hono()
   )
   .post(
     "/outletInfo",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
 
     zValidator("json", outLetInfoSchema),
 
@@ -589,7 +589,7 @@ const businessesRouter = new Hono()
   )
   .get(
     "/get/Single/:businessId",
-    zValidator("param", paramsSchema),
+    zValidator("param", z.object({ businessId: z.string() })),
     async (c) => {
       const { businessId } = c.req.param();
 
@@ -602,6 +602,7 @@ const businessesRouter = new Hono()
       });
     },
   )
+
   .get("/n/:customLink", zValidator("param", paramsSchema), async (c) => {
     let { customLink } = c.req.param();
 

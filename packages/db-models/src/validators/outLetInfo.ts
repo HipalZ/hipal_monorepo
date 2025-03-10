@@ -57,6 +57,7 @@ export const outLetInfoSchema = z.object({
     .max(100)
     .optional(),
   description: z.string().min(4).max(250).optional(),
+  instruction: z.string().min(4).max(250).optional(),
   tags: z.array(z.string().min(3).max(30)).optional(),
   phone: z
     .string({ message: "enter valid 10 digit phone" })
@@ -80,12 +81,11 @@ export const outLetInfoSchema = z.object({
     )
     .optional(),
   address: z.string().min(4).max(100).optional(),
-  fixOpenTime: z.string().min(2).max(6).optional(),
-  fixCloseTime: z.string().min(2).max(6).optional(),
+  startTime: z.coerce.number().optional().default(0),
+  endTime: z.coerce.number().optional().default(24),
   footerDescription: z.string().min(10).max(200).optional(),
   socialMediaLinks: z.array(SocialMedia).optional(),
-  billingStartTime: z.string().min(4).max(30).optional(),
-  billingEndTime: z.string().min(4).max(30).optional(),
+
   brandName: z.string().min(4).max(30).optional(),
   branchName: z.string().min(4).max(30).optional(),
   isCustomTime: z.boolean().optional(),
@@ -101,6 +101,20 @@ export const outLetInfoSchema = z.object({
   isPosEnabled: z.boolean().default(false).optional(),
   restId: z.string().min(3).max(200).optional(),
   posBusinessConfigId: ObjectIdSchema.optional(),
+  companyRegistration: z.string().min(3).max(100).url().optional(),
+  bankAccount: z.string().min(3).max(100).url().optional(),
+  aadharCard: z.string().min(3).max(100).url().optional(),
+  panCard: z.string().min(3).max(100).url().optional(),
+  serviceStatus: z
+    .object({
+      whatsapp: z.boolean().optional().default(false),
+      payment_gateway: z.boolean().optional().default(false),
+      google_my_business: z.boolean().optional().default(false),
+      make_my_trip: z.boolean().optional().default(false),
+      trip_advisor: z.boolean().optional().default(false),
+    })
+    .optional(),
+  helpPhoneNumber: z.string().min(10).max(10).optional(),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;
