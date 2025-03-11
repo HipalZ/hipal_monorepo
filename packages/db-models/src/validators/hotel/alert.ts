@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { z } from "zod";
+import { dishSchema, portionSchema } from "../dish";
 const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
   z
     .string()
@@ -18,6 +19,18 @@ export const alertProgressEnum = [
 
 export type HotelAlertProgressEnumType = (typeof alertProgressEnum)[number];
 
+const CartItemSchema = z.object({
+  id: z.string().min(1),
+  dish: dishSchema,
+  portion: portionSchema.nullable(),
+  extras: z
+    .array(z.object({}), {
+      message: "addOnIds is required",
+    })
+    .default([]),
+  quantity: z.number().positive(),
+});
+
 export const hotelAlert = z.object({
   alertProgress: z.enum(alertProgressEnum).optional().default("CREATED"),
   serviceIds: z.array(ObjectIdSchema),
@@ -32,6 +45,7 @@ export const hotelAlert = z.object({
   deliveredBy: ObjectIdSchema.optional(),
   rejectedBy: ObjectIdSchema.optional(),
   roomId: ObjectIdSchema,
+  cart: z.array(CartItemSchema),
 });
 
 export const acceptHotelAlert = z.object({

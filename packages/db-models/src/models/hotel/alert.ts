@@ -77,6 +77,10 @@ const hotelAlertSchema = new mongoose.Schema<HotelAlertType>({
     required: false,
     ref: "hotelroom",
   },
+  cart: {
+    type: [Object],
+    required: false,
+  },
 });
 
 const HotelAlert: Model<HotelAlertType> = mongoose.model<HotelAlertType>(
