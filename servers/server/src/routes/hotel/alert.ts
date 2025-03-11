@@ -44,6 +44,7 @@ const hotelAlertRouter = new Hono()
       const alertQuery = {
         businessId,
         alertProgress: { $in: ["CREATED", "ACCEPTED"] },
+        staffIds: { $in: [userId] },
       };
 
       if (role !== "HELP_DESK") {
@@ -103,6 +104,7 @@ const hotelAlertRouter = new Hono()
       const alertQuery = {
         businessId,
         alertProgress: "DELIVERED",
+        staffIds: { $in: [userId] },
       };
 
       if (role !== "HELP_DESK") {
