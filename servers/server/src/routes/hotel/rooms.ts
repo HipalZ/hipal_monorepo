@@ -301,7 +301,7 @@ const roomRouter = new Hono()
 
       const roomAlreadyBooked = await HotelRoom.exists({
         _id: roomId,
-        roomStatus: "BOOKED",
+        roomStatus: "OCCUPIED",
       });
 
       if (roomAlreadyBooked) {
@@ -323,7 +323,7 @@ const roomRouter = new Hono()
       const updatedRoom = await HotelRoom.findByIdAndUpdate(
         roomId,
         {
-          roomStatus: "BOOKED",
+          roomStatus: "OCCUPIED",
           userIds: [user._id],
           authCode,
         },
