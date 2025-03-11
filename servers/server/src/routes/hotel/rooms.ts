@@ -6,6 +6,7 @@ import {
   UrlModel,
   User,
 } from "@hi/db-models";
+import { WhatsAppBusinessConfig } from "@hi/db-models/src/models/whatsAppBusinessConfig";
 import {
   bulkHotelRoom,
   hotelRoom,
@@ -15,10 +16,12 @@ import {
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
+import axios from "axios";
 import { Hono } from "hono";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { respond } from "../../utils/response";
+import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
 
 const roomRouter = new Hono()
 
@@ -294,10 +297,13 @@ const roomRouter = new Hono()
       const requestData = await c.req.json();
       const { roomId, name, phone } = requestData;
 
-      const roomExists = await HotelRoom.exists({ _id: roomId });
+      const roomExists = await HotelRoom.findOne({ _id: roomId });
       if (!roomExists) {
         return respond(c, "Room not found", true, 404, {});
       }
+      const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+        businessId: roomExists.businessId,
+      });
 
       const roomAlreadyBooked = await HotelRoom.exists({
         _id: roomId,
@@ -350,6 +356,53 @@ const roomRouter = new Hono()
 
       if (!roomSession) {
         throw new Error("Error creating room session");
+      }
+
+      if (whatsAppConfig) {
+        const res = await axios.post(
+          `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+          {
+            messaging_product: "whatsapp",
+            to: user?.phone?.toString(),
+            type: "template",
+            template: {
+              name: "authcode_template",
+              language: { code: "en" },
+              components: [
+                {
+                  type: "body",
+                  parameters: [
+                    {
+                      type: "text",
+                      text: user?.name,
+                    },
+
+                    {
+                      type: "text",
+                      text: authCode,
+                    },
+
+                    {
+                      type: "text",
+                      text: roomExists?.name,
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${whatsAppConfig.token}`,
+            },
+          },
+        );
+
+        if (res.status !== 200) {
+          throw new Error("Error sending message");
+        }
+
+        console.log("sent message", res.data);
       }
 
       return respond(c, "Checked in successfully", false, 200, {
