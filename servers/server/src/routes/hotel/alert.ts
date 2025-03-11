@@ -1,4 +1,4 @@
-import { HotelAlert } from "@hi/db-models";
+import { HotelAlert, User } from "@hi/db-models";
 import {
   type AcceptHotelAlertType,
   acceptHotelAlert,
@@ -17,33 +17,54 @@ const hotelAlertRouter = new Hono()
       "query",
       z.object({
         businessId: z.string().min(2).max(50),
+        userId: z.string().min(2).max(50),
       }),
     ),
-
     async (c) => {
-      const { businessId } = c.req.query();
-      const alerts = await HotelAlert.find({
+      const { businessId, userId } = c.req.query();
+
+      const staff = await User.findOne(
+        { _id: userId, "customRole.businessId": businessId },
+        { customRole: 1 }, // Fetch only required fields
+      ).lean();
+
+      if (!staff) {
+        return respond(c, "Staff not found", true, 404, {});
+      }
+
+      const customRole = staff.customRole?.find(
+        (role) => role.businessId.toString() === businessId,
+      );
+      if (!customRole) {
+        return respond(c, "Role not found for this business", true, 404, {});
+      }
+
+      const { role, serviceIds } = customRole;
+
+      const alertQuery = {
         businessId,
         alertProgress: { $in: ["CREATED", "ACCEPTED"] },
-      })
-        .populate({
-          path: "serviceIds",
-          select: "name",
-        })
+      };
 
-        .populate({
-          path: "createdBy",
-          select: "name phone",
-        })
-        .populate({
-          path: "acceptedBy",
-          select: "name phone",
-        })
+      if (role !== "HELP_DESK") {
+        if (!serviceIds || serviceIds.length === 0) {
+          return respond(
+            c,
+            "No assigned services found for this staff",
+            true,
+            403,
+            {},
+          );
+        }
+        alertQuery.serviceIds = { $in: serviceIds };
+      }
 
-        .populate({
-          path: "roomId",
-          select: "name",
-        });
+      const alerts = await HotelAlert.find(alertQuery)
+        .populate({ path: "serviceIds", select: "name" })
+        .populate({ path: "createdBy", select: "name phone" })
+        .populate({ path: "acceptedBy", select: "name phone" })
+        .populate({ path: "roomId", select: "name" })
+        .lean();
 
       return respond(c, "Alerts fetched successfully", false, 200, alerts);
     },
@@ -55,39 +76,63 @@ const hotelAlertRouter = new Hono()
       "query",
       z.object({
         businessId: z.string().min(2).max(50),
+        userId: z.string().min(2).max(50),
       }),
     ),
-
     async (c) => {
-      const { businessId } = c.req.query();
-      const alerts = await HotelAlert.find({
+      const { businessId, userId } = c.req.query();
+
+      const staff = await User.findOne(
+        { _id: userId, "customRole.businessId": businessId },
+        { customRole: 1 },
+      ).lean();
+
+      if (!staff) {
+        return respond(c, "Staff not found", true, 404, {});
+      }
+
+      const customRole = staff.customRole?.find(
+        (role) => role.businessId.toString() === businessId,
+      );
+      if (!customRole) {
+        return respond(c, "Role not found for this business", true, 404, {});
+      }
+
+      const { role, serviceIds } = customRole;
+
+      const alertQuery = {
         businessId,
-        alertProgress: { $in: ["DELIVERED"] },
-      })
-        .populate({
-          path: "serviceIds",
-          select: "name",
-        })
+        alertProgress: "DELIVERED",
+      };
 
-        .populate({
-          path: "createdBy",
-          select: "name phone",
-        })
-        .populate({
-          path: "acceptedBy",
-          select: "name phone",
-        })
-        .populate({
-          path: "deliveredBy",
-          select: "name phone",
-        })
+      if (role !== "HELP_DESK") {
+        if (!serviceIds || serviceIds.length === 0) {
+          return respond(
+            c,
+            "No assigned services found for this staff",
+            true,
+            403,
+            {},
+          );
+        }
+        alertQuery.serviceIds = { $in: serviceIds };
+      }
 
-        .populate({
-          path: "roomId",
-          select: "name",
-        });
+      const alerts = await HotelAlert.find(alertQuery)
+        .populate({ path: "serviceIds", select: "name" })
+        .populate({ path: "createdBy", select: "name phone" })
+        .populate({ path: "acceptedBy", select: "name phone" })
+        .populate({ path: "deliveredBy", select: "name phone" })
+        .populate({ path: "roomId", select: "name" })
+        .lean();
 
-      return respond(c, "Alerts fetched successfully", false, 200, alerts);
+      return respond(
+        c,
+        "Alerts history fetched successfully",
+        false,
+        200,
+        alerts,
+      );
     },
   )
 
