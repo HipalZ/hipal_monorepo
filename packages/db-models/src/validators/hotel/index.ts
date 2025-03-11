@@ -1,3 +1,4 @@
+export * from "./alert";
 export * from "./amenities";
 export * from "./book";
 export * from "./rooms";

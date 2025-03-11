@@ -41,6 +41,7 @@ export const BusinessSchema = z.object({
   registeredName: z.string().min(2).max(50).optional(),
   restaurantIds: z.array(ObjectIdSchema).optional(),
   hotelIds: z.array(ObjectIdSchema).optional(),
+  expiry: z.number().optional(),
 });
 
 export const BranchSchema = z.object({
