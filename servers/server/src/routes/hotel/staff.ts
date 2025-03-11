@@ -162,21 +162,58 @@ const staffRouter = new Hono()
     //@ts-ignore
     return runInTransaction(async (session) => {
       const requestData = await c.req.json();
-      const { staffId } = requestData;
+      const { staffId, businessId, role, nickName, serviceIds, name } =
+        requestData;
 
-      const updatedStaff = await User.findOneAndUpdate(
-        { _id: staffId },
-        { $set: requestData },
-        { new: true, session },
+      const staff = await User.findById(staffId).lean();
+
+      console.log("staff", staff);
+
+      if (!staff) {
+        return respond(c, "Staff not found", true, 404, {});
+      }
+
+      const customRoleIndex = staff.customRole.findIndex(
+        (r) => r.businessId.toString() === businessId,
+      );
+
+      console.log("customRoleIndex", customRoleIndex);
+
+      if (customRoleIndex === -1) {
+        return respond(
+          c,
+          "Business role not found for this staff",
+          true,
+          404,
+          {},
+        );
+      }
+
+      const updatedCustomRole = [...staff.customRole];
+      updatedCustomRole[customRoleIndex] = {
+        ...updatedCustomRole[customRoleIndex],
+        role,
+        serviceIds: serviceIds || updatedCustomRole[customRoleIndex].serviceIds,
+        nickName: nickName || updatedCustomRole[customRoleIndex].nickName,
+      };
+
+      const updatedStaff = await User.findByIdAndUpdate(
+        staffId,
+        { customRole: updatedCustomRole, name: name || staff.name },
+        { new: true },
       );
 
       if (!updatedStaff) {
-        return respond(c, "Error updating staff", true, 500, {});
+        return respond(c, "Error updating staff role", true, 500, {});
       }
 
-      return respond(c, "Staff updated successfully", false, 200, {
-        _id: updatedStaff._id,
-      });
+      return respond(
+        c,
+        "Staff role updated successfully",
+        false,
+        200,
+        updatedStaff,
+      );
     });
   });
 
