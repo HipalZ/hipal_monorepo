@@ -51,6 +51,28 @@ export const hotelRoom = z.object({
   description: z.string().min(1).max(300).optional(),
   images: z.array(z.string().min(10).max(70)).optional().default([]),
   downLoadLink: z.string().min(1).max(100).optional(),
+  userIds: z.array(ObjectIdSchema).optional().default([]),
+});
+
+export const hotelRoomCheckIn = z.object({
+  roomId: ObjectIdSchema,
+  name: z.string().min(1).max(50),
+  phone: z.string().min(10).max(10),
+});
+
+export const hotelRoomCheckOut = z.object({
+  roomId: ObjectIdSchema,
+  userIds: z.array(ObjectIdSchema).optional().default([]),
+});
+
+export const hotelRoomSession = z.object({
+  roomId: ObjectIdSchema,
+  name: z.string().min(1).max(50),
+  userIds: z.array(ObjectIdSchema).optional().default([]),
+  date: z.number().optional(),
+  checkIn: z.number().optional(),
+  checkOut: z.number().optional(),
+  authCode: z.string().min(4).max(4).optional(),
 });
 
 export const updateHotelRoom = z.object({
@@ -79,3 +101,5 @@ export const bulkHotelRoom = z.object({
 });
 
 export type HotelRoomType = z.infer<typeof hotelRoom>;
+export type HotelRoomCheckInType = z.infer<typeof hotelRoomCheckIn>;
+export type HotelRoomSessionType = z.infer<typeof hotelRoomSession>;

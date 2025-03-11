@@ -34,4 +34,11 @@ export const hotelAlert = z.object({
   roomId: ObjectIdSchema,
 });
 
+export const acceptHotelAlert = z.object({
+  alertId: ObjectIdSchema,
+  userId: ObjectIdSchema,
+  action: z.enum(alertProgressEnum),
+});
+
 export type HotelAlertType = z.infer<typeof hotelAlert>;
+export type AcceptHotelAlertType = z.infer<typeof acceptHotelAlert>;

@@ -1,7 +1,16 @@
-import { Business, HotelRoom, HotelZone, UrlModel } from "@hi/db-models";
+import {
+  Business,
+  HotelRoom,
+  HotelRoomSession,
+  HotelZone,
+  UrlModel,
+  User,
+} from "@hi/db-models";
 import {
   bulkHotelRoom,
   hotelRoom,
+  hotelRoomCheckIn,
+  hotelRoomCheckOut,
   updateHotelRoom,
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
@@ -269,6 +278,116 @@ const roomRouter = new Hono()
 
       return respond(c, "Rooms created", false, 201, {
         success: true,
+      });
+    });
+  })
+
+  .post("/check_in", zValidator("json", hotelRoomCheckIn), async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session) => {
+      const requestData = await c.req.json();
+      const { roomId, name, phone } = requestData;
+
+      const roomExists = await HotelRoom.exists({ _id: roomId });
+      if (!roomExists) {
+        return respond(c, "Room not found", true, 404, {});
+      }
+
+      const roomAlreadyBooked = await HotelRoom.exists({
+        _id: roomId,
+        roomStatus: "BOOKED",
+      });
+
+      if (roomAlreadyBooked) {
+        return respond(c, "Room already booked", true, 400, {});
+      }
+
+      const user = await User.findOneAndUpdate(
+        { phone },
+        { name, phone },
+        { upsert: true, new: true, session },
+      );
+
+      if (!user) {
+        throw new Error("Error creating user");
+      }
+
+      const authCode = nanoid(4);
+
+      const updatedRoom = await HotelRoom.findByIdAndUpdate(
+        roomId,
+        {
+          roomStatus: "BOOKED",
+          userIds: [user._id],
+          authCode,
+        },
+        { new: true, session },
+      );
+
+      if (!updatedRoom) {
+        throw new Error("Error checking in");
+      }
+
+      const roomSession = await HotelRoomSession.create(
+        [
+          {
+            roomId,
+            name: updatedRoom.name,
+            userIds: [user._id],
+            date: Date.now(),
+            checkIn: Date.now(),
+            authCode,
+          },
+        ],
+        { session },
+      );
+
+      if (!roomSession) {
+        throw new Error("Error creating room session");
+      }
+
+      return respond(c, "Checked in successfully", false, 200, {
+        _id: updatedRoom._id,
+      });
+    });
+  })
+
+  .post("/check_out", zValidator("json", hotelRoomCheckOut), async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session) => {
+      const requestData = await c.req.json();
+      const { roomId } = requestData;
+
+      const roomExists = await HotelRoom.exists({ _id: roomId });
+      if (!roomExists) {
+        return respond(c, "Room not found", true, 404, {});
+      }
+
+      const updatedRoom = await HotelRoom.findByIdAndUpdate(
+        roomId,
+        {
+          roomStatus: "AVAILABLE",
+          userIds: [],
+          authCode: "",
+        },
+        { new: true, session },
+      );
+
+      if (!updatedRoom) {
+        throw new Error("Error checking out");
+      }
+
+      const removeSession = await HotelRoomSession.deleteOne(
+        { roomId },
+        { session },
+      );
+
+      if (!removeSession) {
+        throw new Error("Error removing room session");
+      }
+
+      return respond(c, "Checked out successfully", false, 200, {
+        _id: updatedRoom._id,
       });
     });
   });
