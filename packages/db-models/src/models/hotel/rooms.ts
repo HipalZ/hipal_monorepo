@@ -97,6 +97,10 @@ const hotelRoomsSchema = new mongoose.Schema<HotelRoomType>({
     default: [],
     ref: "User",
   },
+  slug: {
+    type: String,
+    required: false,
+  },
 });
 
 hotelRoomsSchema.index({ businessId: 1, name: 1 }, { unique: true });

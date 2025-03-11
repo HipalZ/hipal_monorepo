@@ -38,6 +38,11 @@ const hotelRoomsSessionSchema = new mongoose.Schema<HotelRoomSessionType>({
     type: String,
     required: true,
   },
+  isAuthCodeVerified: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
 });
 
 const HotelRoomSession: Model<HotelRoomSessionType> =

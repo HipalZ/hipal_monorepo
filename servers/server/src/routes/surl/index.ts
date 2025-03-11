@@ -1,5 +1,7 @@
 import {
   BillUrlModel,
+  HotelRoom,
+  HotelRoomSession,
   Payment,
   QrBill,
   UrlModel,
@@ -56,6 +58,99 @@ const surlRouter = new Hono()
       }
 
       setShortUrl(urlCode, result.longUrl);
+
+      // Redirect to the original URL
+      return c.redirect(result.longUrl);
+    },
+  )
+
+  .get(
+    "/r/:urlCode",
+    zValidator(
+      "param",
+      z.object({
+        urlCode: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      console.log("yaha aya");
+      const { urlCode } = c.req.param();
+      const { q } = c.req.query();
+
+      const room = await HotelRoom.findOne({
+        slug: urlCode,
+      });
+
+      if (!room) {
+        return c.json(
+          {
+            message: "Room not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
+
+      if (room) {
+        const roomSession = await HotelRoomSession.findOne({
+          roomId: room._id,
+        });
+
+        if (!roomSession) {
+          return c.json(
+            {
+              message: "please check in first",
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
+
+        if (roomSession) {
+          if (!roomSession.isAuthCodeVerified) {
+            return c.json(
+              {
+                message: "please verify the auth code",
+                err: true,
+                data: {},
+              },
+              401,
+            );
+          }
+        }
+      }
+
+      if (!q) {
+        const Bid = await UrlModel.findOne({
+          urlCode,
+        }).select("businessId");
+
+        const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
+          businessId: Bid?.businessId,
+        });
+
+        const menuRedirection = whatsAppBusinessConfig?.menuRedirection;
+
+        if (menuRedirection && menuRedirection === "WA") {
+          const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, I'm interested in your room. Could you share more details? I am in room ${urlCode}`;
+
+          return c.redirect(redirectUrl);
+        }
+      }
+
+      const result = await UrlModel.findOne({ urlCode });
+      if (!result) {
+        return c.json(
+          {
+            message: "URL not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
 
       // Redirect to the original URL
       return c.redirect(result.longUrl);

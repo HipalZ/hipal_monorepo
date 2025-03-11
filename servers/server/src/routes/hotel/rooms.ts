@@ -55,7 +55,10 @@ const roomRouter = new Hono()
       const rooms = await HotelRoom.find({
         businessId,
         availability: true,
-      }).lean();
+      }).populate({
+        path: "userIds",
+        select: "name phone",
+      });
 
       return respond(c, "All rooms", false, 200, rooms);
     },
@@ -65,7 +68,7 @@ const roomRouter = new Hono()
     //@ts-ignore
     return runInTransaction(async (session) => {
       const requestData = await c.req.json();
-
+      const uniqueOrderId = nanoid(5);
       // Check if room already exists
       const roomExists = await HotelRoom.exists({
         businessId: requestData.businessId,
@@ -84,13 +87,16 @@ const roomRouter = new Hono()
         return respond(c, "Business not found", true, 404, {});
       }
 
-      const [room] = await HotelRoom.create([requestData], { session });
+      const [room] = await HotelRoom.create(
+        [{ ...requestData, slug: uniqueOrderId }],
+        { session },
+      );
 
       if (!room) {
         throw new Error("Error creating room");
       }
 
-      const longUrl = `http://localhost:3000/${business.customLink}/explore?roomName=${requestData.name}`;
+      const longUrl = `http://localhost:3000/${business.customLink}/hotel/checkin?room=${room.name}`;
 
       const urlAlreadyExists = await UrlModel.exists({
         longUrl,
@@ -98,13 +104,12 @@ const roomRouter = new Hono()
       });
 
       if (!urlAlreadyExists) {
-        const uniqueOrderId = nanoid(5);
-
         const shortUrl = await UrlModel.create({
           longUrl,
           businessId: requestData.businessId,
-          shortUrl: `http://localhost:4500/surl/${uniqueOrderId}`,
+          shortUrl: `http://localhost:4500/surl/r/${uniqueOrderId}`,
           urlCode: uniqueOrderId,
+          shortUrlType: "ROOM",
         });
 
         if (!shortUrl) {
@@ -239,7 +244,7 @@ const roomRouter = new Hono()
         if (!business) {
           return respond(c, "Business not found", true, 404, {});
         }
-        const longUrl = `http://localhost:3000/${business.customLink}/explore?roomName=${room.name}`;
+        const longUrl = `http://localhost:3000/${business.customLink}/hotel/checkin?room=${room.name}`;
 
         const urlAlreadyExists = await UrlModel.exists({
           longUrl,
@@ -248,12 +253,12 @@ const roomRouter = new Hono()
 
         if (!urlAlreadyExists) {
           const uniqueOrderId = nanoid(5);
-
           const shortUrl = await UrlModel.create({
             longUrl,
             businessId: requestData.businessId,
-            shortUrl: `http://localhost:4500/surl/${uniqueOrderId}`,
+            shortUrl: `http://localhost:4500/surl/r/${uniqueOrderId}`,
             urlCode: uniqueOrderId,
+            shortUrlType: "ROOM",
           });
 
           if (!shortUrl) {
@@ -261,6 +266,7 @@ const roomRouter = new Hono()
           }
 
           room.downLoadLink = shortUrl.shortUrl;
+          room.slug = uniqueOrderId;
           await room.save({ session });
         }
       }
@@ -390,6 +396,37 @@ const roomRouter = new Hono()
         _id: updatedRoom._id,
       });
     });
-  });
+  })
+
+  .post(
+    "/verify_authcode",
+    zValidator(
+      "json",
+      z.object({
+        authCode: z.string().min(4).max(4),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
+        const { authCode } = requestData;
+
+        const roomSession = await HotelRoomSession.findOneAndUpdate(
+          { authCode },
+          { isAuthCodeVerified: true },
+          { new: true, session },
+        );
+
+        if (!roomSession) {
+          return respond(c, "Invalid auth code", true, 400, {});
+        }
+
+        return respond(c, "Auth code verified", false, 200, {
+          _id: roomSession._id,
+        });
+      });
+    },
+  );
 
 export default roomRouter;

@@ -5,6 +5,7 @@ import {
   CouponLink,
   Couponz,
   GroupModel,
+  HotelRoom,
   RecentCampaign,
   Subscriber,
   UrlModel,
@@ -2081,7 +2082,7 @@ const whatsappRouter = new Hono()
 
             const findLongUrl = await UrlModel.findOne({
               urlCode: tableCode,
-            }).select("longUrl shortUrl shortUrlType");
+            }).select("longUrl shortUrl shortUrlType urlCode");
 
             longUrl = `${findLongUrl?.shortUrl}?q=wa`;
             shortUrlType = findLongUrl?.shortUrlType || "";
@@ -2117,6 +2118,39 @@ const whatsappRouter = new Hono()
               📸 Follow us for more perks: https://www.instagram.com/urbannemocafehyd  
               
               Show this message to claim your discount! Looking forward to serving you! ☕`,
+                  },
+                },
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
+            } else if (shortUrlType === "ROOM") {
+              const user = await User.findOne({
+                phone: userPhone,
+              }).select("_id");
+
+              await HotelRoom.findOneAndUpdate(
+                {
+                  slug: urlObj?.urlCode,
+                },
+                {
+                  $addToSet: {
+                    userIds: user?._id,
+                  },
+                },
+              );
+              await axios({
+                method: "POST",
+                url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
+                data: {
+                  messaging_product: "whatsapp",
+                  to: from,
+                  text: {
+                    body: `**🏨 Welcome to ${bName?.name}! 🏨**  
+We are delighted to provide you with a **comfortable and luxurious stay**. 🛏️✨  
+🔑 **Book Your Stay**: ${longUrl}  
+🏡 **Discover our beautifully designed rooms and premium amenities.**  
+Enjoy **a seamless check-in experience** and **relax in comfort** with us. 🌟😊`,
                   },
                 },
                 headers: {

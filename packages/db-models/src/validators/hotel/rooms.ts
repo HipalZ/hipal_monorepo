@@ -52,6 +52,7 @@ export const hotelRoom = z.object({
   images: z.array(z.string().min(10).max(70)).optional().default([]),
   downLoadLink: z.string().min(1).max(100).optional(),
   userIds: z.array(ObjectIdSchema).optional().default([]),
+  slug: z.string().min(1).max(50).optional(),
 });
 
 export const hotelRoomCheckIn = z.object({
@@ -73,6 +74,7 @@ export const hotelRoomSession = z.object({
   checkIn: z.number().optional(),
   checkOut: z.number().optional(),
   authCode: z.string().min(4).max(4).optional(),
+  isAuthCodeVerified: z.boolean().optional().default(false),
 });
 
 export const updateHotelRoom = z.object({
