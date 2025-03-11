@@ -159,9 +159,6 @@ businessSchema.post("save", async (doc) => {
   ];
 
   await MenuBanner.insertMany(menuBaners);
-
-  if (doc.businessType === "HOTEL") {
-  }
 });
 
 const Business: Model<BusinessType> = mongoose.model<BusinessType>(
