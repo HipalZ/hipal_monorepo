@@ -1,5 +1,9 @@
-import { HotelService } from "@hi/db-models";
-import { hotelService, updateHotelService } from "@hi/db-models/src/validators";
+import { HotelService, HotelServiceCategory } from "@hi/db-models";
+import {
+  hotelService,
+  hotelServiceCategory,
+  updateHotelService,
+} from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
@@ -47,6 +51,67 @@ const serviceRouter = new Hono()
     },
   )
 
+  .get(
+    "/fetch_service_category",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId } = c.req.query();
+      const categories = await HotelServiceCategory.find({
+        businessId,
+        availability: true,
+      })
+        .populate({
+          path: "serviceIds",
+          select: "name image",
+        })
+        .select("name image serviceIds")
+        .lean();
+
+      return respond(c, "All service categories", false, 200, categories);
+    },
+  )
+
+  .post(
+    "/add_category",
+    zValidator("json", hotelServiceCategory),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
+
+        // Check if category already exists
+        const categoryExists = await HotelServiceCategory.exists({
+          businessId: requestData.businessId,
+          name: requestData.name,
+          availability: true,
+        });
+
+        if (categoryExists) {
+          return respond(c, "Category service already exists", true, 409, {});
+        }
+
+        const [category] = await HotelServiceCategory.create([requestData], {
+          session,
+        });
+
+        if (!category) {
+          throw new Error("Category not created");
+        }
+
+        return respond(c, "Category created", false, 201, {
+          _id: category._id,
+        });
+      });
+    },
+  )
+
   .post(
     "/add_service",
     zValidator("json", hotelService),
@@ -71,6 +136,12 @@ const serviceRouter = new Hono()
         if (!service) {
           throw new Error("Service not created");
         }
+
+        await HotelServiceCategory.findOneAndUpdate(
+          { _id: requestData.categoryId },
+          { $push: { serviceIds: service._id } },
+          { session },
+        );
 
         return respond(c, "Service created", false, 201, { _id: service._id });
       });

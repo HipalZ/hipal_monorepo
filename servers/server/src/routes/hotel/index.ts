@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import hotelAmenitiesRouter from "./amenities";
 import roomBookRouter from "./book";
 import restaurantRouter from "./restaurant";
 import roomRouter from "./rooms";
@@ -12,6 +13,7 @@ const hotelRouter = new Hono()
   .route("/staff", staffRouter)
   .route("/restaurant", restaurantRouter)
   .route("/service", serviceRouter)
-  .route("/book", roomBookRouter);
+  .route("/book", roomBookRouter)
+  .route("/amenities", hotelAmenitiesRouter);
 
 export default hotelRouter;

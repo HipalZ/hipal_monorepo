@@ -613,7 +613,7 @@ const businessesRouter = new Hono()
     }).select("_id");
     const outLetInfo = await OutLetInfo.findOne({
       businessId: getBusiness?._id,
-    });
+    }).populate("newAmenities");
 
     if (!outLetInfo) return respond(c, "business not found", true, 404, {});
     return respond(c, "business found", false, 200, outLetInfo);

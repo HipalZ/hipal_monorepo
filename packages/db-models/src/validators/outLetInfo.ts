@@ -115,6 +115,8 @@ export const outLetInfoSchema = z.object({
     })
     .optional(),
   helpPhoneNumber: z.string().min(10).max(10).optional(),
+
+  newAmenities: z.array(ObjectIdSchema).optional(),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;

@@ -14,6 +14,15 @@ export const hotelService = z.object({
   businessId: ObjectIdSchema,
   availability: z.boolean().optional().default(true),
   image: z.string().url().min(5).max(50).optional(),
+  categoryId: ObjectIdSchema,
+});
+
+export const hotelServiceCategory = z.object({
+  name: z.string().min(1).max(50),
+  businessId: ObjectIdSchema,
+  availability: z.boolean().optional().default(true),
+  image: z.string().url().min(5).max(50).optional(),
+  serviceIds: z.array(ObjectIdSchema).optional(),
 });
 
 export const updateHotelService = z.object({
@@ -24,3 +33,4 @@ export const updateHotelService = z.object({
 });
 
 export type HotelServiceType = z.infer<typeof hotelService>;
+export type HotelServiceCategoryType = z.infer<typeof hotelServiceCategory>;

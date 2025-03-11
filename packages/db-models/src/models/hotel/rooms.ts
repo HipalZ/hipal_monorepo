@@ -9,8 +9,9 @@ const hotelRoomsSchema = new mongoose.Schema<HotelRoomType>({
     required: true,
   },
   amenities: {
-    type: [String],
+    type: [ObjectId],
     required: false,
+    ref: "hotelamenitie",
     default: [],
   },
   availability: {

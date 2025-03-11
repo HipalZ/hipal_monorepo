@@ -8,9 +8,10 @@ const hotelZonesSchema = new mongoose.Schema<HotelZonesType>({
     required: true,
   },
   amenities: {
-    type: [String],
+    type: [ObjectId],
     required: false,
     default: [],
+    ref: "hotelamenitie",
   },
   availability: {
     type: Boolean,

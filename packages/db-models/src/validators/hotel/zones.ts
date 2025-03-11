@@ -15,7 +15,7 @@ export const hotelZones = z.object({
   tax: z.number().optional(),
   roomIds: z.array(ObjectIdSchema).optional().default([]),
   availability: z.boolean().optional().default(true),
-  amenities: z.array(z.string()).optional().default([]),
+  amenities: z.array(ObjectIdSchema).optional().default([]),
 });
 
 export const updateHotelZones = z.object({
@@ -24,7 +24,7 @@ export const updateHotelZones = z.object({
   tax: z.number().optional(),
   roomIds: z.array(ObjectIdSchema).optional().default([]),
   availability: z.boolean().optional().default(true),
-  amenities: z.array(z.string()).optional().default([]),
+  amenities: z.array(ObjectIdSchema).optional().default([]),
 });
 
 export type HotelZonesType = z.infer<typeof hotelZones>;

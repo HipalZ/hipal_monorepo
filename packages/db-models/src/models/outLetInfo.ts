@@ -5,6 +5,7 @@ import type { OutLetInfoType } from "../validators";
 
 import { Amenities, BusinessEnumType } from "../validators";
 import { Business } from "./business";
+const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const serviceStatusSchema = new mongoose.Schema({
   whatsapp: {
@@ -217,6 +218,11 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
   serviceStatus: serviceStatusSchema,
   helpPhoneNumber: {
     type: String,
+    required: false,
+  },
+  newAmenities: {
+    type: [ObjectId],
+    ref: "hotelamenitie",
     required: false,
   },
 });
