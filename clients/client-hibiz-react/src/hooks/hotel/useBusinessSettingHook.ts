@@ -51,7 +51,6 @@ export const useSaveBusinessSetting = () => {
             return response;
         },
         onSuccess:async (data, variables) => {
-            console.log(data)
             const extraData = await data.json()
             if (data.status === 400 || data.status === 401) {
                 setError(extraData?.error?.issues[0]?.message)

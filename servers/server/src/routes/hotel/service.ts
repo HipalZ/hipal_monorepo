@@ -44,7 +44,6 @@ const serviceRouter = new Hono()
       const { businessId } = c.req.query();
       const services = await HotelService.find({
         businessId,
-        availability: true,
       }).lean();
 
       return respond(c, "All services ", false, 200, services);
@@ -68,7 +67,7 @@ const serviceRouter = new Hono()
       })
         .populate({
           path: "serviceIds",
-          select: "name image",
+          select: "name image availability",
         })
         .select("name image serviceIds")
         .lean();

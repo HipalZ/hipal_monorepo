@@ -6,15 +6,13 @@ import useBusinessData from "@/components/store/useBusinessData"
 import { cn } from "@hi/common"
 import UniversalNav from "@/components/templates/menu/sideNavbaar/universelSidenav"
 import LoadingSpinner from "@/components/atom/loadingSpinner"
+import HotelActions from "@/components/hotel/Actions"
 
 const HotelCards = lazy(() => import("@/components/hotel/HotelCards"))
 
 const navItems = [
     {
         text: "Essentials",
-    },
-    {
-        text: "Integrations"
     },
     {
         text: "Actions"
@@ -78,7 +76,7 @@ const MemoHotelInfoMain = () => {
                 }
                 {
                     selectedTab === "actions" &&
-                    <div>Actions</div>
+                    <HotelActions />
                 }
             </Suspense>
            
