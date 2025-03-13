@@ -70,7 +70,7 @@ const MemoCallCaptain = ({ offlineAlertData }: IOfflineProp) => {
             transition={{ duration: 0.5 }}
         >
             <AnimatePresence>
-                {Array.isArray(offlineAlertData) && offlineAlertData.length > 1 ? (
+                {Array.isArray(offlineAlertData) && offlineAlertData.length > 0 ? (
                     offlineAlertData.map((alert: Alert) => {
                         if (alert?.alertType !== "WAITER") {
                             return null;

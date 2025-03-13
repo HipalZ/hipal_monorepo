@@ -69,14 +69,19 @@ function App() {
     }
   };
 
-  useEffect(() => {
+  const checkAllowRedirectionConditions = () => {
     const isValidBusiness = captainData?.customRole?.some(
       (role) => role.businessId?._id === selectedBiz?.businessId?._id
     );
-
-    if (accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness) {
+    if(accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType !== "HOTEL"){
       navigate(`/${selectedBiz?.businessId?._id}/alerts`);
+    }else if(accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType === "HOTEL"){
+      navigate(`hotel/${selectedBiz?.businessId?._id}/`);
     }
+  }
+
+  useEffect(() => {
+    checkAllowRedirectionConditions();
   }, []);
 
   useEffect(() => {

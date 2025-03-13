@@ -6,7 +6,7 @@ import { useLiteStore } from "@/components/store/useLiteStore";
 import type { CustomRole } from "@/components/types/hiClientzData";
 import { memo } from "react";
 import { FiDownload } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import smartPhone from "@/assets//img/smartphone.png";
 import { apiRpc } from "@hi/common";
 import useBusinessData from "@/components/store/useBusinessData";
@@ -47,6 +47,11 @@ const BusinessesMemo = memo(() => {
       <header className="flex h-[5rem] items-center justify-between px-6 py-4">
         <h1 className="text-xl font-medium">Hi, {captainData?.name}</h1>
         <ProfileHeader />
+        <Link to="/hotel/123">
+          <button type="button" className="text-sm font-semibold text-black">
+            Hotel
+          </button>
+        </Link>
       </header>
       <article
         style={{ backgroundColor: "#4C4DDC" }}

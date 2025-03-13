@@ -6,8 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 const MemoErrorPopup = () => {
   const { openErrorModal, error, resetErrorStates } = useError();
 
-  console.log("ErrorPopup rendered");
-
   const onClose = () => {
     resetErrorStates();
   };

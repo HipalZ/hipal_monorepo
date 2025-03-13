@@ -31,8 +31,10 @@ const ViewInBizMemo = () => {
   const navigateToBiz = async () => {
     await savePushToken();
     await updateNotificationsApi(true);
-    if (!outletInfo?.isPosEnabled) {
+    if (!outletInfo?.isPosEnabled && outletInfo?.outLetType !== "HOTEL") {
       navigate(`/${businessId}/navigate`);
+    } else if (outletInfo?.outLetType === "HOTEL") {
+      navigate(`/hotel/${businessId}/`);
     } else {
       navigate(`/${businessId}/alerts`);
     }
