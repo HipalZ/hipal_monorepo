@@ -1,12 +1,14 @@
 import type { Model } from "mongoose";
 import mongoose from "mongoose";
 import type { HotelRoomSessionType } from "../../validators";
+import tableRouter from "../../../../../servers/server/src/routes/table";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const hotelRoomsSessionSchema = new mongoose.Schema<HotelRoomSessionType>({
   roomId: {
     type: ObjectId,
     required: true,
     ref: "hotelroom",
+    unique:true
   },
   name: {
     type: String,
