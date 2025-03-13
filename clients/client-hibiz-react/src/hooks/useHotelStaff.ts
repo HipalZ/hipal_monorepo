@@ -82,14 +82,14 @@ export const useGetAllHotelServices = (businessId: string) => {
     if (!businessId) return;
 
     const getHotelServices = async () => {
-        const response = await apiRpc.hotel.staff.fetch_services.$get({
+        const response = await apiRpc.hotel.service.fetch_services.$get({
             query: {
                 businessId: businessId
             }
         })
 
         const result = await response.json();
-        const hotelServices = result.data as IService[] | undefined;
+        const hotelServices = result.data as IService[] ;
         return hotelServices ?? [];
     }
 

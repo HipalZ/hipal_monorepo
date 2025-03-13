@@ -16,33 +16,38 @@ export function ViewPortContainer({ children, className }: ContainerProps) {
 interface HotelBackgroundContainerProps {
   children: ReactNode
   className?: string
-  overlayOpacity?: number // Optional prop to control the overlay darkness
+  overlayOpacity?: number 
 }
 
 export function HotelBackgroundContainer({
   children,
   className,
-  overlayOpacity = 0.1 // Default overlay opacity
+  overlayOpacity = 10
 }: HotelBackgroundContainerProps) {
   return (
-      <div className={cn("relative w-full overflow-hidden", className)}>
-          {/* Background Image */}
-          <div className="absolute -z-10 opacity-10">
-              <Image
-                  src={HotelBackground || "/placeholder.svg"}
-                  alt="Hotel background"
-                  priority
-                  width={1980}
-                  height={1980}
-                  className="object-contain object-top w-[1980px] h-[1980px]"
-                  sizes="100vw"
-              />
-          </div>
-
-          {/* Content Container */}
-          <div className="relative z-10 w-full max-w-[1280px] mx-auto">
-              {children}
-          </div>
+    <div className={cn("relative w-full overflow-hidden", className)}>
+      {/* Background Image */}
+      <div  className={`absolute -z-10 mt-6 lg:mt-0 opacity-${overlayOpacity} md:opacity-10`}>
+        <Image
+          src={HotelBackground || "/placeholder.svg"}
+          alt="Hotel background"
+          priority
+          width={1980}
+          height={1980}
+          style={{
+            objectFit: "contain",
+            objectPosition: "top",
+            backgroundRepeat:"repeat"
+          }}
+          className=" w-[1980px] h-screen lg:h-[1980px]"
+          sizes="100vw"
+        />
       </div>
+
+      {/* Content Container */}
+      <div className="relative z-10 w-full max-w-[1280px] mx-auto">
+        {children}
+      </div>
+    </div>
   )
 }

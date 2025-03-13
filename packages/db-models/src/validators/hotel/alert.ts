@@ -45,7 +45,7 @@ export const hotelAlert = z.object({
   deliveredBy: ObjectIdSchema.optional(),
   rejectedBy: ObjectIdSchema.optional(),
   roomId: ObjectIdSchema,
-  cart: z.array(CartItemSchema),
+  cart: z.array(CartItemSchema).optional(),
 });
 
 export const acceptHotelAlert = z.object({

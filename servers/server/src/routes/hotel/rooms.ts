@@ -25,24 +25,47 @@ import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
 
 const roomRouter = new Hono()
 
-  .get(
-    "/fetch_room",
-    zValidator(
-      "query",
-      z.object({
-        roomId: z.string().min(2).max(50),
-      }),
-    ),
-    async (c) => {
-      const { roomId } = c.req.query();
+.get(
+  "/fetch_room",
+  zValidator(
+    "query",
+    z
+      .object({
+        businessId: z.string().min(2).max(50), // Now mandatory
+        roomId: z.string().min(2).max(50).optional(),
+        roomName: z.string().min(2).max(50).optional(),
+      })
+      .refine(
+        (data) => data.roomId || data.roomName,
+        {
+          message: "Either roomId or roomName must be provided",
+        }
+      )
+  ),
+  async (c) => {
+    const { businessId, roomId, roomName } = c.req.query();
 
-      const room = await HotelRoom.findById(roomId).lean();
+    let room;
+    if (roomId) {
+      // Ensure that the roomId belongs to the specified business
+      room = await HotelRoom.findOne({
+        _id: roomId,
+        businessId,
+      }).lean();
+    } else if (roomName) {
+      room = await HotelRoom.findOne({
+        businessId,
+        name: roomName,
+      }).lean();
+    }
 
-      return room
-        ? respond(c, "Room details", false, 200, room)
-        : respond(c, "Room not found", true, 404, {});
-    },
-  )
+    return room
+      ? respond(c, "Room details", false, 200, room)
+      : respond(c, "Room not found", true, 404, {});
+  }
+)
+
+
 
   .get(
     "/fetch_rooms",
@@ -82,8 +105,11 @@ const roomRouter = new Hono()
       const roomData = await HotelRoom.findOne({
         businessId,
         name: room
-
       })
+
+      if(!roomData){
+        return respond(c, "Room not found", true, 404, {});
+      }
 
       const isVerify = await HotelRoomSession.findOne({
         roomId: roomData._id

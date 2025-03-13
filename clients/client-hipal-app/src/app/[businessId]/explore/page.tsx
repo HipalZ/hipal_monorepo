@@ -2,6 +2,7 @@ import { businessApis } from "@/apis/explore";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import UniquelyDishes from "@/components/organisms/explore/uniquelyDishes";
 import type {
+  BusinessDetails,
   IBannerPayload,
   IBusinessData,
   IOutlet,

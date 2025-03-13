@@ -9,7 +9,7 @@ import { apiRpc } from "@hi/common";
 import { BiArrowBack, BiEditAlt } from "react-icons/bi";
 import { useLogin } from "@/components/store/useLogin";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import { useParams, usePathname } from "next/navigation";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
@@ -20,6 +20,7 @@ import { useCart } from "@/components/store/useCart";
 
 const MemoCombinedLogin = () => {
     const pathName = usePathname()
+    const query = useSearchParams()
     const { goNext } = useGoNext();
     const { errorText } = useErrorHandling();
     const [otp, setOtp] = useState(["", "", "", ""]);
@@ -54,6 +55,7 @@ const MemoCombinedLogin = () => {
 
     const handlePhoneSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+       
         if (loading) return toast.error("Please wait...");
 
         if (phone.length !== 10) {
@@ -75,6 +77,10 @@ const MemoCombinedLogin = () => {
             toast.error(response?.message || "Failed to send OTP");
         }
         setLoading(false);
+        if(pathName?.includes("checkin")){
+            const hotelUrl = `room=${query.get("room")}` 
+            setDirection(hotelUrl)
+        }
         if (pathName?.includes("explore")) {
             setDirection("explore")
         }

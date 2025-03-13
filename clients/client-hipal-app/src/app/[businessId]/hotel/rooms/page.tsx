@@ -2,6 +2,7 @@ import dynamic from 'next/dynamic'
 import { getBusinessData } from '@/apis/commonApis'
 import SkeletonLoader from '@/components/atoms/loader/skeletonLoader'
 import type { BusinessDetails } from '@/components/types/businessData'
+// import ResponsiveImage from '@/components/hotels/room/RoomTopSection'
 
 export async function generateMetadata({
     params,
@@ -70,18 +71,25 @@ const NavBarHotel = dynamic(
     },
 )
 
+const ResponsiveImage = dynamic(
+    () => import("@/components/hotels/room/RoomTopSection"),
+    {
+        loading: () => <SkeletonLoader height={200} />,
+    },
+)
+
 const Room = async ({
     params,
 }: {
     params: { businessId: string }
 }) => {
-
+    
  
     return (
         <HotelBackgroundContainer >
             <ViewPortContainer className="relative mx-auto max-w-[30rem] min-h-screen">
-                <NavBarHotel text="Room View" hideLogo centerText showBackButton  />
-                
+                <NavBarHotel text="Room View" hideLogo hideChat centerText showBackButton  />
+                <ResponsiveImage imageUrl='' alt='Room Top Section' />
                 <BottomBtnRoom />
             </ViewPortContainer>
         </HotelBackgroundContainer>

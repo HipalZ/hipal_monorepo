@@ -27,7 +27,6 @@ const MemoBottomPopUp = ({
     leave: { transform: "translateY(100%)", opacity: 0 },
     config: { tension: 250, friction: 30 },
   });
-
   useEffect(() => {
     if (show) {
       const originalHash = window.location.hash;
