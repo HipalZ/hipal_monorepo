@@ -47,11 +47,6 @@ const BusinessesMemo = memo(() => {
       <header className="flex h-[5rem] items-center justify-between px-6 py-4">
         <h1 className="text-xl font-medium">Hi, {captainData?.name}</h1>
         <ProfileHeader />
-        <Link to="/hotel/123">
-          <button type="button" className="text-sm font-semibold text-black">
-            Hotel
-          </button>
-        </Link>
       </header>
       <article
         style={{ backgroundColor: "#4C4DDC" }}
