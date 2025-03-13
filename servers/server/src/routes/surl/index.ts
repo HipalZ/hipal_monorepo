@@ -73,55 +73,8 @@ const surlRouter = new Hono()
       }),
     ),
     async (c) => {
-      console.log("yaha aya");
       const { urlCode } = c.req.param();
       const { q } = c.req.query();
-
-      const room = await HotelRoom.findOne({
-        slug: urlCode,
-      });
-
-      if (!room) {
-        return c.json(
-          {
-            message: "Room not found",
-            err: true,
-            data: {},
-          },
-          404,
-        );
-      }
-
-      if (room) {
-        const roomSession = await HotelRoomSession.findOne({
-          roomId: room._id,
-        });
-
-        if (!roomSession) {
-          return c.json(
-            {
-              message: "please check in first",
-              err: true,
-              data: {},
-            },
-            404,
-          );
-        }
-
-        if (roomSession) {
-          if (!roomSession.isAuthCodeVerified) {
-            return c.json(
-              {
-                message: "please verify the auth code",
-                err: true,
-                data: {},
-              },
-              401,
-            );
-          }
-        }
-      }
-
       if (!q) {
         const Bid = await UrlModel.findOne({
           urlCode,

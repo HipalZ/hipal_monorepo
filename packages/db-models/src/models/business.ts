@@ -4,6 +4,7 @@ import type { BusinessType } from "../validators";
 import { BusinessEnumType, ExploreLayout, MenuLayout } from "../validators";
 import { MenuBanner } from "./menuBanner";
 import { UpiMode } from "./upiMode";
+import { OutLetInfo } from "./outLetInfo";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const businessSchema = new mongoose.Schema<BusinessType>(
   {
@@ -159,6 +160,14 @@ businessSchema.post("save", async (doc) => {
   ];
 
   await MenuBanner.insertMany(menuBaners);
+
+
+  await OutLetInfo.findOneAndUpdate(
+    { businessId: doc._id }, // Filter condition
+    { $set: { outLetType: doc.businessType } }, // Update operation
+    { upsert: true, new: true } // Options: upsert ensures it creates a new document if not found
+  );
+
 });
 
 const Business: Model<BusinessType> = mongoose.model<BusinessType>(

@@ -67,6 +67,47 @@ const roomRouter = new Hono()
     },
   )
 
+  .get(
+    "/auth_code",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(2).max(50),
+        room: z.string().min(2).max(50),
+      }),
+    ),
+    async (c) => {
+      const { businessId, room } = c.req.query();
+
+      const roomData = await HotelRoom.findOne({
+        businessId,
+        name: room
+
+      })
+
+      const isVerify = await HotelRoomSession.findOne({
+        roomId: roomData._id
+      })
+
+
+      if (!isVerify) {
+        return respond(c, "please checkIn first", true, 400, {});
+
+      }
+
+      if (!isVerify.isAuthCodeVerified) {
+
+        return respond(c, "need room entry code", true, 401, {});
+
+
+      }
+
+      return respond(c, "success", true, 200, {});
+
+
+    },
+  )
+
   .post("/", zValidator("json", hotelRoom), async (c) => {
     //@ts-ignore
     return runInTransaction(async (session) => {

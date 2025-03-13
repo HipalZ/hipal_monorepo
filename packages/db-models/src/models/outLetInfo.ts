@@ -236,6 +236,10 @@ outLetInfoSchema.post("save", async (doc) => {
       $set: {
         outLetType: business.businessType,
       },
+
+
+    }, {
+      new: true, upsert: true
     });
   }
 });
