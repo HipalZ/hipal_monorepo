@@ -33,6 +33,7 @@ export async function fetchCommonData(
   if (!bizId) {
     redirect("/");
   }
+  
   const settingsResponse = await apiRpc.businesses.themes[":businessId"].$get({
     param: {
       businessId: bizId,
@@ -40,5 +41,39 @@ export async function fetchCommonData(
   });
   const settings = await settingsResponse.json();
   data["settings"] = settings?.data?.theme || {};
+
   return { data, bizId };
 }
+
+export const getBusinessData = async (customLink: string) => {
+  
+  if(!customLink){
+    return  redirect("/");
+  }
+    try {
+      const res = await apiRpc.businesses.n[":customLink"].$get({
+        param: { customLink },
+      });
+      
+      const response = await res.json() as unknown as {
+        data: BusinessDetails;
+        message: string;
+        error?: boolean;
+        err?: boolean;
+      };
+  
+      if (response.error || !response.data) {
+        throw new Error("Failed to fetch business data");
+      }
+  
+      if(response.err){
+        console.error("Error fetching business data:", response);
+        redirect("/");
+      }
+  
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching business data:", error);
+      redirect("/");
+    }
+  }

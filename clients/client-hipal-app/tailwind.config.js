@@ -11,11 +11,37 @@ module.exports = {
     extend: {
       fontFamily: {
         Montserrat: ["Montserrat", "sans-serif"],
+        playfair: ["var(--font-playfair)", "serif"],
       },
       colors: {
         primary: {
           DEFAULT: "var(--p)",
           foreground: "hsl(var(--primary-foreground))",
+        },
+        "h-primary": {
+          DEFAULT: "var(--h-p)",
+          foreground: "var(--h-pf)",
+          content: "var(--h-pc)",
+        },
+        "h-base": {
+          100: "var(--h-b1)",
+          200: "var(--h-b2)",
+          300: "var(--h-b3)",
+          content: "var(--h-bc)",
+        },
+        "h-secondary": {
+          DEFAULT: "var(--h-s)",
+          foreground: "var(--h-sf)",
+          content: "var(--h-sc)",
+        },
+        "h-accent": {
+          DEFAULT: "var(--h-a)",
+          foreground: "var(--h-af)",
+          content: "var(--h-ac)",
+        },
+        "h-neutral": {
+          DEFAULT: "var(--h-n)",
+          content: "var(--h-nc)",
         },
         "base-100": "var(--b1)",
         "primary-content": "var(--pc)",

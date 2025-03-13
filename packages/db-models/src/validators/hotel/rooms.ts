@@ -49,7 +49,7 @@ export const hotelRoom = z.object({
   rating: z.number().optional().default(4.5),
   size: z.string().min(1).max(50).optional(),
   description: z.string().min(1).max(300).optional(),
-  images: z.array(z.string().min(10).max(70)).optional().default([]),
+  images: z.array(z.string().min(10).max(200)).optional().default([]),
   downLoadLink: z.string().min(1).max(100).optional(),
   userIds: z.array(ObjectIdSchema).optional().default([]),
   slug: z.string().min(1).max(50).optional(),
@@ -90,7 +90,7 @@ export const updateHotelRoom = z.object({
   roomStatus: z.enum(hotelStatusEnum).optional().default("AVAILABLE"),
   staffIds: z.array(ObjectIdSchema).optional().default([]),
   description: z.string().min(1).max(300).optional(),
-  images: z.array(z.string().min(10).max(70)).optional().default([]),
+  images: z.array(z.string().min(10).max(200)).optional().default([]),
   size: z.string().min(1).max(50).optional(),
 });
 

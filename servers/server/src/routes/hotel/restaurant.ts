@@ -13,7 +13,7 @@ const restaurantRouter = new Hono()
       const restaurants = await Business.find({
         businessType: "MENU",
       })
-        .select("_id name")
+        .select("_id name logo logoUrl")
         .lean();
 
       return respond(c, "All restaurants", false, 200, restaurants);
@@ -35,7 +35,7 @@ const restaurantRouter = new Hono()
         businessType: "MENU",
         hotelIds: businessId,
       })
-        .select("_id name customLink ")
+        .select("_id name customLink logo")
         .lean();
 
       return respond(c, "All restaurants ", false, 200, restaurants);

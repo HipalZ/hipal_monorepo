@@ -464,6 +464,7 @@ export interface BusinessDetails {
   logoUrl: string;
   specialBannerUrl: string;
   endBannerUrl: string;
+  outLetType: string;
   isCustomTime: boolean;
   description: string;
   avgPricingForTwo: number;

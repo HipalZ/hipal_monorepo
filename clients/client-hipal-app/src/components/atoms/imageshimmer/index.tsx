@@ -1,6 +1,6 @@
 import { type CSSProperties, type FC, memo, useState } from "react";
 import Image, { type StaticImageData } from "next/image";
-import { cn } from "@hi/common";
+import { cn } from "@/lib/utils";
 
 interface ShimmerImageProps {
   src: string | StaticImageData;
@@ -11,12 +11,11 @@ interface ShimmerImageProps {
   isAvailable?: boolean;
   style?: CSSProperties;
   quality?: number;
-  layout?: "fill" | "responsive" | "intrinsic";
-  objectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
   onClick?: () => void;
   sizes?: string;
   priority?: boolean;
   hide?: boolean;
+  fill?: boolean;
   onLoad?: (event: React.SyntheticEvent<HTMLImageElement, Event>) => void;
 }
 
@@ -29,12 +28,11 @@ const MemoShimmerImage: FC<ShimmerImageProps> = ({
   isAvailable = true,
   quality,
   style,
-  layout,
-  objectFit,
   onClick,
   sizes,
   priority,
   hide,
+  fill,
   onLoad,
 }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -49,21 +47,33 @@ const MemoShimmerImage: FC<ShimmerImageProps> = ({
   };
 
   return (
-    <div className={cn(!hide ? "imageWrapper" : "")}>
-      {isLoading && <div className="shimmer" />}
+    <div className={cn(
+      !hide ? "relative" : "",
+      isLoading ? "overflow-hidden" : "",
+      className
+    )}>
+      {isLoading && (
+        <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-shimmer" />
+      )}
       <Image
-        src={src}
+        src={src || "/placeholder.svg"}
         alt={alt}
         width={width}
         height={height}
         quality={quality}
-        style={style}
+        style={{
+          ...style,
+          objectFit: style?.objectFit || 'cover',
+        }}
         onClick={onClick}
-        layout={layout}
-        objectFit={objectFit}
         priority={priority}
         sizes={sizes}
-        className={`${className} ${isAvailable ? "" : "grayscale"}`}
+        fill={fill}
+        className={cn(
+          isAvailable ? "" : "grayscale",
+          "transition-opacity",
+          isLoading ? "opacity-0" : "opacity-100"
+        )}
         onLoad={handleImageLoad}
       />
     </div>
