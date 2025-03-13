@@ -4,7 +4,7 @@ import type { MenuPageType } from "@/components/store/useMenuStorage";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import { cn } from "@hi/common";
 import { memo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface SidebarProps {
   items: { icon: string; text: string; onClick: () => void }[];
@@ -12,11 +12,13 @@ interface SidebarProps {
 
 const MemoiseSidebar: React.FC<SidebarProps> = ({ items }) => {
   const navigate = useNavigate();
+  const {hotelId} = useParams()
   const businessId = useBusinessData((state) => state.businessData?._id);
 
   const goToHome = useCallback(() => {
-    navigate(`/app/business/${businessId}`);
-  }, [navigate]);
+    if(hotelId) return navigate(`/app/hotel/${hotelId}`);
+    if(businessId) return navigate(`/app/business/${businessId}`);
+  }, [navigate, businessId, hotelId]);
 
   const { selectedPage } = useMenuPageStore((state) => ({
     selectedPage: state.selectedPage,

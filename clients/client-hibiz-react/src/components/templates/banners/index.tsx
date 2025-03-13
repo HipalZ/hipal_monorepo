@@ -31,7 +31,7 @@ const MemoBanners = () => {
     }));
 
   const { bannersApi } = useBannersApi();
-  const businessId = useParams()?.businessId;
+  const { businessId, hotelId } = useParams();
   // setting banner page and layout
   const { handleNewBanner } = useNewBanner();
 
@@ -77,9 +77,9 @@ const MemoBanners = () => {
   };
 
   useQuery({
-    queryKey: ["banners", businessId],
+    queryKey: ["banners", businessId, hotelId],
     queryFn: bannersApi,
-    enabled: !!businessId,
+    enabled: !!businessId || !!hotelId,
   });
 
   return (

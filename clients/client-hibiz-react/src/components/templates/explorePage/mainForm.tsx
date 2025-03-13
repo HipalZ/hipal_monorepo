@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import type { CropperRef, IBizPayload } from "@/components/types/businessData";
 import useShowErrorToasts from "@/components/atom/errorToasts";
 import { useExploreTemp } from "@/components/store/useExploreTemp";
+import useBusinessData from "@/components/store/useBusinessData";
 
 const SocialMediaLinks = lazy(
   () => import("@/components/templates/explorePage/socialMediaLinks"),
@@ -37,9 +38,9 @@ const UniquelyYoursSection = lazy(
 const MemoMainForm = () => {
   const { checkValidations } = useCheckValidations();
   const cropperRef = useRef<CropperRef>(null);
+  const outletInfo = useBusinessData((s)=>s.outletInfo);
   const {
     bizInfo,
-    setIsLoading,
     showUniquePopUp,
     setShowUniquePopUp,
     showCropper,
@@ -47,12 +48,15 @@ const MemoMainForm = () => {
     setShowCropper,
   } = useExploreStore((s) => ({
     bizInfo: s.bizInfo,
-    setIsLoading: s.setIsLoading,
     showUniquePopUp: s.showUniquePopUp,
     showCropper: s.showCropper,
     cropping: s.cropping,
     setShowCropper: s.setShowCropper,
     setShowUniquePopUp: s.setShowUniquePopUp,
+  }));
+
+  const {setIsLoading} = useExploreTemp((s) => ({
+    setIsLoading: s.setIsLoading,
   }));
 
   const {
@@ -63,6 +67,7 @@ const MemoMainForm = () => {
 
   const navigate = useNavigate();
   const businessId = useParams()?.businessId;
+  const hotelId = useParams()?.hotelId;
   const { handleCrop } = useCroppedImg();
   const showErrorToasts = useShowErrorToasts();
 
@@ -70,7 +75,7 @@ const MemoMainForm = () => {
 
   const handleSaveExplorePage = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!businessId) return;
+    if (!businessId && !hotelId) return;
     const { bannerExplore, logoExplore, footerExplore } =
       await checkValidations();
 
@@ -93,7 +98,7 @@ const MemoMainForm = () => {
     }));
 
     const payload: IBizPayload = {
-      businessId,
+      businessId : businessId || hotelId,
       logoUrl: logoExplore,
       specialBannerUrl: bannerExplore,
       endBannerUrl: footerExplore,
@@ -106,8 +111,8 @@ const MemoMainForm = () => {
 
     // filter out empty values undefined, null or not used keys
     const filteredPayload = filterPayload(payload);
-
     setIsLoading(true);
+
     let res: {
       status: number;
     };
@@ -126,13 +131,14 @@ const MemoMainForm = () => {
       ].$put({
         json: filteredPayload,
         param: {
-          businessId: businessId,
+          businessId: businessId || hotelId,
         },
       });
       const outletInfoData = await outletInfo.json();
       if (outletInfo.status === 200) {
         toast.success("Data saved successfully");
-        navigate(`/app/business/${businessId}/`);
+        if(businessId) navigate(`/app/business/${businessId}/explorePage`);
+        if(hotelId) navigate(`/app/hotel/${hotelId}/website-display`);
       } else if (outletInfo.status === 400) {
         showErrorToasts(outletInfoData?.error);
       }
@@ -145,7 +151,7 @@ const MemoMainForm = () => {
       <ExplorePageTopSection />
       <br />
       <BannerSection />
-      <UniquelyYoursSection />
+      {outletInfo?.outLetType !=="HOTEL" && <UniquelyYoursSection />}
       <FooterSection />
       <SocialMediaLinks />
       <button type="submit" className="cursor-pointer bottom_btn">

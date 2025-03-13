@@ -1,6 +1,4 @@
 import { memo, useCallback, Suspense, lazy } from "react";
-import { useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import {
   ExplorePages,
   useExploreStore,
@@ -32,7 +30,6 @@ const LoadingSpinner = lazy(() => import("@/components/atom/loadingSpinner"));
 const HisiteHeader = lazy(() => import("@/components/molecules/hisiteHeader"));
 
 const MemoExplorePage = () => {
-  const businessId = useParams()?.businessId;
   const {
     toggleExplorePages,
     setToggleExplorePages,
@@ -46,17 +43,10 @@ const MemoExplorePage = () => {
   }));
 
   // Fetch business info data
-  const { fetchBizInfo } = useOutletInfo();
+  const { isBizLoading } = useOutletInfo();
 
   // explore navigation
   const { handleNavigate } = useExploreNavigation();
-
-  // => Fetch business info
-  const { isLoading: isBizLoading } = useQuery({
-    queryKey: ["bizInfo", businessId],
-    queryFn: () => fetchBizInfo(),
-    enabled: !!businessId,
-  });
 
   const handleBack = useCallback(() => {
     setToggleExplorePages(ExplorePages.BANNERS);

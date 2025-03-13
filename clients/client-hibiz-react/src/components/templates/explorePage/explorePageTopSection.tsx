@@ -55,8 +55,9 @@ const MemoExplorePageSection = () => {
   const bannerInputRef = useRef<HTMLInputElement | null>(null);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
 
-  const { businessData } = useBusinessData((s) => ({
+  const { businessData, outletInfo } = useBusinessData((s) => ({
     businessData: s.businessData,
+    outletInfo: s.outletInfo,
   }));
 
   const [bizInfoFilled, setBizInfoFilled] = useState({
@@ -73,7 +74,10 @@ const MemoExplorePageSection = () => {
         description: !!bizInfo.description && bizInfo.description.length > 0,
         phone: !!bizInfo.phone && bizInfo.phone.length > 0,
         amenities:
-          Array.isArray(bizInfo.amenities) && !!bizInfo.amenities.length,
+          Array.isArray(bizInfo.amenities || bizInfo.newAmenities) &&
+          (outletInfo?.outLetType === "HOTEL"
+        ? !!bizInfo?.newAmenities?.length
+        : !!bizInfo?.amenities?.length),
         tags: Array.isArray(bizInfo.tags) && !!bizInfo.tags.length,
       });
     }

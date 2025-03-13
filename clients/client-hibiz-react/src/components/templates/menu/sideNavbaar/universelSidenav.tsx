@@ -2,7 +2,7 @@ import logoPlaceholder from "@/assets/hisite/logoPlaceholder.png";
 import useBusinessData from "@/components/store/useBusinessData";
 import { cn } from "@hi/common";
 import { memo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface SidebarProps {
   items: { icon?: string; text: string }[];
@@ -19,10 +19,12 @@ const MemoUniversalNav: React.FC<SidebarProps> = ({
   const businessId = useBusinessData((state) => state.businessData?._id);
   const businessLogo = useBusinessData((s) => s?.businessData?.logo);
   const fallbackBusinessLogo = useBusinessData((s) => s?.outletInfo?.logoUrl);
-
+  const { hotelId } = useParams()
+  
   const goToHome = useCallback(() => {
-    navigate(`/app/business/${businessId}`);
-  }, [navigate]);
+    if (hotelId) return navigate("/app/business/");
+    if (businessId) return navigate(`/app/business/${businessId}`);
+  }, [navigate, businessId, hotelId]);
 
   return (
     <section className="sidebar">

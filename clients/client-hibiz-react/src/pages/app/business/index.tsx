@@ -16,8 +16,10 @@ import { TbHomePlus } from "react-icons/tb";
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
 import type { LoyaltyType } from "@hi/db-models/src/validators";
 import { useCategoryStore } from "@/components/store/useCategoryStore";
+import { useExploreStore } from "@/components/store/useExploreStore";
 
 const Business = () => {
+  const setBanners = useExploreStore((s) => s.setBanners);
   const setBusinessData = useBusinessData((s) => s.setBusinessData);
   const setExistingLoyalty = useBusinessData((s) => s.setExistingLoyalty);
   const { reset } = useBusinessCtrl();
@@ -65,6 +67,7 @@ const Business = () => {
     setBusinessData(business);
     getLoyaltyData(business);
     useCategoryStore.persist.clearStorage();
+    setBanners([]);
     getBusinessInfo(business._id);
   };
 

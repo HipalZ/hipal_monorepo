@@ -94,7 +94,7 @@ export const useBizInfoChanges = () => {
       }
       setAmenities(updatedAmenities);
     },
-    [amenities],
+    [amenities, setAmenities],
   );
 
   const handleTimings = useCallback(() => {

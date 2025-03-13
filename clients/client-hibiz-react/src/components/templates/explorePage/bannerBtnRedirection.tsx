@@ -127,8 +127,10 @@ const MemoBannerBtnRedirection = () => {
           >
             <h1>
               &#128279;{" "}
-              {outLetType === "OTHER"
+                {outLetType === "OTHER"
                 ? "Services | Catalogues"
+                : outLetType === "HOTEL"
+                ? "Add Link"
                 : "Categories | dish"}{" "}
               <span className="font-semibold">{itemName}</span>
             </h1>

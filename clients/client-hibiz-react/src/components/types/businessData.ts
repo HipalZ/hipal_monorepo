@@ -320,6 +320,7 @@ export interface ICategory {
 }
 
 export interface IBizInfo {
+  newAmenities: string[];
   _id: string;
   logoUrl: string;
   endBannerUrl: string;
