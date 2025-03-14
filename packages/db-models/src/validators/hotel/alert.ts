@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { z } from "zod";
+import { object, z } from "zod";
 import { dishSchema, portionSchema } from "../dish";
 const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
   z
@@ -45,7 +45,7 @@ export const hotelAlert = z.object({
   deliveredBy: ObjectIdSchema.optional(),
   rejectedBy: ObjectIdSchema.optional(),
   roomId: ObjectIdSchema,
-  cart: z.array(CartItemSchema).optional(),
+  cart: z.array(z.object({})).optional(),
 });
 
 export const acceptHotelAlert = z.object({

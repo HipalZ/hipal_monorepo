@@ -8,6 +8,7 @@ import {
   User,
   UserReward,
   UserRewardHistory,
+  Business
 } from "@hi/db-models";
 import type {
   AddStaffValidatorType,
@@ -1076,6 +1077,12 @@ const usersRouter = new Hono()
     ),
     async (c) => {
       const requestData = await c.req.json();
+      const {id} = c.req.param()
+
+      const business= await Business.findOne({
+        customLink:id
+      })
+
       const { otp, loyaltyId, signUpBonus, name, userId, phone, businessId } =
         requestData;
 
@@ -1174,13 +1181,13 @@ const usersRouter = new Hono()
 
       const subscriber = await Subscriber.findOne({
         userId: existingUser._id,
-        businessId: businessId,
+        businessId: businessId || business?._id.toString(),
       }).select("_id");
 
       if (!subscriber) {
         await Subscriber.create({
           userId: userId,
-          businessId: businessId,
+          businessId: businessId || business?._id.toString(),
           userCount: 1,
           date: Date.now(),
         });
@@ -1188,7 +1195,7 @@ const usersRouter = new Hono()
         await Subscriber.findOneAndUpdate(
           {
             userId: userId,
-            businessId: businessId,
+            businessId: businessId || business?._id.toString(),
           },
           {
             $inc: {
