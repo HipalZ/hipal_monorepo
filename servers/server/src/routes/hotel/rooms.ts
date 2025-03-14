@@ -166,7 +166,7 @@ const roomRouter = new Hono()
         throw new Error("Error creating room");
       }
 
-      const longUrl = `http://localhost:3000/${business.customLink}/hotel/checkin?room=${room.name}`;
+      const longUrl = `https://hipal-test-hipalz.com/${business.customLink}/hotel/checkin?room=${room.name}`;
 
       const urlAlreadyExists = await UrlModel.exists({
         longUrl,
@@ -177,7 +177,7 @@ const roomRouter = new Hono()
         const shortUrl = await UrlModel.create({
           longUrl,
           businessId: requestData.businessId,
-          shortUrl: `http://localhost:4500/surl/r/${uniqueOrderId}`,
+          shortUrl: `https://api.test.hipalz.com/surl/r/${uniqueOrderId}`,
           urlCode: uniqueOrderId,
           shortUrlType: "ROOM",
         });
@@ -314,7 +314,7 @@ const roomRouter = new Hono()
         if (!business) {
           return respond(c, "Business not found", true, 404, {});
         }
-        const longUrl = `http://localhost:3000/${business.customLink}/hotel/checkin?room=${room.name}`;
+        const longUrl = `https://hipal-test.hipalz.com/${business.customLink}/hotel/checkin?room=${room.name}`;
 
         const urlAlreadyExists = await UrlModel.exists({
           longUrl,
@@ -326,7 +326,7 @@ const roomRouter = new Hono()
           const shortUrl = await UrlModel.create({
             longUrl,
             businessId: requestData.businessId,
-            shortUrl: `http://localhost:4500/surl/r/${uniqueOrderId}`,
+            shortUrl: `https://api.test.hipalz.com/surl/r/${uniqueOrderId}`,
             urlCode: uniqueOrderId,
             shortUrlType: "ROOM",
           });
