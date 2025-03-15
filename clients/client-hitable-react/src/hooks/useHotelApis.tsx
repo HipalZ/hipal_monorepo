@@ -1,3 +1,4 @@
+import { useAlertsStore } from "@/components/store/useAlertStore"
 import useBusinessData from "@/components/store/useBusinessData"
 import { useHiClientZ } from "@/components/store/useHiClientzData"
 import { useHotelStore } from "@/components/store/useHotelStore"
@@ -83,6 +84,7 @@ export const useCheckOut = () => {
 export const useRoomAlerts = () => {
     const businessId = useBusinessData((s) => s.outletInfo?.businessId)
     const userId = useHiClientZ((s) => s.captainData._id)
+    const { setAlerts } = useAlertsStore()
     const roomAlerts = async () => {
         const response = await apiRpc.hotel.alert.fetch_room_alerts.$get({
             query: {
@@ -92,6 +94,7 @@ export const useRoomAlerts = () => {
         })
         const res = await response.json()
         if (response.status === 200 || response.status === 201) {
+            setAlerts(res.data)
             return res.data
         }
     }
@@ -141,7 +144,6 @@ export const useRespondAlerts = () => {
         })
         const res = await response.json()
         if (response.status === 200 || response.status === 201) {
-            toast.success(`${action} successfully`)
             queryClient.invalidateQueries({
                 queryKey: ["roomAlerts"],
             })

@@ -17,7 +17,7 @@ import { useHistoryAlerts } from "@/hooks/useHotelApis"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { useAlertsColors, type SortOption } from "../utils/helpersHotel";
+import { useAlertsColors, type SortOption, useFormatTimes } from "../utils/helpersHotel";
 
 const HistoryHotel = () => {
   const [searchTerm, setSearchTerm] = useState("")
@@ -25,6 +25,7 @@ const HistoryHotel = () => {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
   const { historyData } = useHistoryAlerts()
   const {getSortLabel} = useAlertsColors()
+  const {formatTimestamp, formatDate} = useFormatTimes()
 
   // Toggle accordion item
   const toggleItem = (id: string) => {

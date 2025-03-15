@@ -129,7 +129,10 @@ export const useAlertsColors = () => {
         }
     }
 
-    // Format timestamp to readable date and time
+    return { statusOptions, getStatusColor, getStatusIcon, borderColor, getStatusStyles, getSortLabel }
+}
+
+export const useFormatTimes = ()=>{
     const formatTimestamp = (timestamp: number) => {
         return format(new Date(timestamp), "MMM d, h:mm a")
     }
@@ -139,7 +142,8 @@ export const useAlertsColors = () => {
         return format(new Date(timestamp), "MMM d, yyyy")
     }
 
-    return { getStatusColor, getStatusIcon, borderColor, getStatusStyles, getSortLabel, formatTimestamp, formatDate }
+    return { formatTimestamp, formatDate }
 }
 
 export type SortOption = "newest" | "oldest" | "roomAsc" | "roomDesc" | "fastest" | "slowest"
+export const statusOptions = ["CREATED", "ACCEPTED", "REJECTED", "DELIVERED"]

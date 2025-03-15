@@ -17,7 +17,6 @@ export function BookRoomsHotel({ rooms, imageUrl }: { rooms: Room[], imageUrl: s
     Price: ₹${room.pricePerNight.toLocaleString()} per night
     Capacity: ${room.capacity} ${room.capacity === 1 ? "Guest" : "Guests"}
     Size: ${room.size || "110"} sqft
-    Image: ${room.images[0]}
     ${room.description ? `Description: ${room.description}` : ""}
         `.trim()
         shareCart(roomDetails)

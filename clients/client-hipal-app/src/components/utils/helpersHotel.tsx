@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useHotelTemp } from "../store/useHotelTemp";
-import { toast } from "react-toastify";
 import { _useAllBusiness } from "../store/useAllBusiness";
 
 export const useImageNextPrev = () => {

@@ -1,5 +1,5 @@
 import SpinnerMemo from "@/components/atoms/loadingSpinner"
-import RoomAlertCard from "@/components/hotel/alertHotel";
+import AlertHotel from "@/components/hotel/alertHotel";
 import HistoryHotel from "@/components/hotel/historyHotel";
 import { useHotelStore } from "@/components/store/useHotelStore";
 import { NavItemsHotelEnum } from "@/components/types/hotelData";
@@ -24,7 +24,7 @@ const MemoHotel = () => {
             )}
             {selectedNavItem === NavItemsHotelEnum.Alerts && (
                 <Suspense fallback={<SpinnerMemo />}>
-                    <RoomAlertCard />
+                    <AlertHotel />
                 </Suspense>
             )}
             {
