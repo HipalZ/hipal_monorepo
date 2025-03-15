@@ -4,7 +4,7 @@ import useLoyaltyData from "@/components/store/useLoyaltyData";
 import type { BusinessDetails } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import Image from "next/image";
-import { memo, useState } from "react";
+import { memo } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import Hifi from "@/assets/login/subscribe.png";
 import HipalWhiteLogo from "@/assets/hipalLogoOtp.svg";
@@ -12,12 +12,6 @@ import confetti from "canvas-confetti";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import { useErrorHandling } from "@/utils/helper";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import { BottomBarSkeleton } from "@/components/atoms/paymentPageLoader";
-import dynamic from "next/dynamic";
-
-const Avatar = dynamic(() => import("@/components/atoms/avatar"), {
-  loading: () => <BottomBarSkeleton />,
-});
 
 const MemoSubScribeModal = ({
   business,

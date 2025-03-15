@@ -1,4 +1,5 @@
-'use client'
+'use client';
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { usePaymentStore } from "@/components/store/usePaymentStore"
 import useTableData from "@/components/store/useTableData"
 import { motion, AnimatePresence } from "framer-motion"
@@ -8,6 +9,7 @@ import { memo, useCallback } from "react"
 
 export const MemoSessionTimeoutBanner = () => {
     const pathName = usePathname()
+    const outletInfo = _useAllBusiness((s)=>s.data?.outletInfo)
     const { tableName, tableNameTimeStamp, isVisible, setIsVisible } = useTableData();
     const { setShowScan } = usePaymentStore()
     const openScanner = useCallback(() => {
@@ -18,7 +20,7 @@ export const MemoSessionTimeoutBanner = () => {
         tableNameTimeStamp === null &&
         isVisible && !pathName?.includes("ebill") &&
         !pathName?.includes("posPayment") &&
-        !pathName?.includes("review")
+        !pathName?.includes("review") && outletInfo?.outLetType !== "HOTEL"
     );
     return (
         <AnimatePresence >
