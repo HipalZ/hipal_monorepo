@@ -4,7 +4,7 @@ import LoadingSpinner from "../atoms/loadingSpinner";
 import { useCallback, useMemo, useState } from "react";
 import { useHotelStore } from "../store/useHotelStore";
 import { cn } from "../utils/helpers";
-import { BedDouble, BedSingle, Users, Search, X, Filter } from "lucide-react"
+import { BedDouble, BedSingle, Users, Search, X, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,56 +13,14 @@ import {
     DropdownMenuCheckboxItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useAlertsColors } from "../utils/helpersHotel";
 
 export default function RoomsHotel() {
     const { allRooms, isLoading } = useGetAllRooms()
     const { setRoomData, setOpenRoomModal } = useHotelStore()
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilters, setStatusFilters] = useState<string[]>([])
-    const getStatusStyles = useCallback((status: string) => {
-        switch (status) {
-            case "AVAILABLE":
-                return {
-                    dot: "bg-green-500",
-                    text: "text-green-700",
-                    border: "border-green-500",
-                    gradient: "from-green-200/20 to-transparent",
-                    badge: "bg-green-100",
-                }
-            case "BOOKED":
-                return {
-                    dot: "bg-amber-500",
-                    text: "text-amber-700",
-                    border: "border-amber-500",
-                    gradient: "from-amber-200/20 to-transparent",
-                    badge: "bg-amber-100",
-                }
-            case "OCCUPIED":
-                return {
-                    dot: "bg-blue-500",
-                    text: "text-blue-700",
-                    border: "border-blue-500",
-                    gradient: "from-blue-200/20 to-transparent",
-                    badge: "bg-blue-100",
-                }
-            case "MAINTENANCE":
-                return {
-                    dot: "bg-red-500",
-                    text: "text-red-700",
-                    border: "border-red-500",
-                    gradient: "from-red-200/20 to-transparent",
-                    badge: "bg-red-100",
-                }
-            default:
-                return {
-                    dot: "bg-gray-500",
-                    text: "text-gray-700",
-                    border: "border-gray-500",
-                    gradient: "from-gray-200/20 to-transparent",
-                    badge: "bg-gray-100",
-                }
-        }
-    }, [])
+    const { getStatusStyles } = useAlertsColors()
 
     const handleRoom = useCallback((room: RoomData) => {
         setRoomData(room)
@@ -95,57 +53,65 @@ export default function RoomsHotel() {
     return (
         <div className="mx-auto py-6 px-4 min-h-screen hide-scrollbar">
             {/* Search and Filter UI */}
-            <div className="mb-6 bg-white rounded-lg shadow-sm p-3 border border-gray-200 h-16">
-                <div className="flex flex-col sm:flex-row gap-3 float-right">
-                    <div className="relative">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                        <Input
-                            placeholder="Search room, service..."
-                            className="pl-9 border-blue-200 focus-visible:ring-blue-500"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                    <div className="flex gap-2">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="border-gray-200 bg-gray-50">
-                                    <Filter className="h-4 w-4 mr-2" />
-                                    Status
-                                    {statusFilters.length > 0 && (
-                                        <span className="ml-1 w-5 h-5 rounded-full bg-gray-200 text-xs flex items-center justify-center">
-                                            {statusFilters.length}
-                                        </span>
-                                    )}
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                                {statusOptions.map((status) => {
-                                    const styles = getStatusStyles(status)
-                                    return (
-                                        <DropdownMenuCheckboxItem
-                                            key={status}
-                                            checked={statusFilters.includes(status)}
-                                            onCheckedChange={() => toggleStatusFilter(status)}
-                                        >
-                                            <div className="flex items-center">
-                                                <div className={cn("w-2 h-2 rounded-full mr-2", styles.dot)} />
-                                                <span className="capitalize">{status.toLowerCase()}</span>
-                                            </div>
-                                        </DropdownMenuCheckboxItem>
-                                    )
-                                })}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+            <div className="mb-6 bg-white rounded-lg border p-4 shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <h1 className="text-2xl font-bold flex items-center gap-2">
+                        Rooms
+                    </h1>
+                    <div className="flex items-center gap-2">
+                        <div className="relative">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                            <Input
+                                placeholder="Search room, service..."
+                                className="pl-9 border-blue-200 focus-visible:ring-blue-500"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="border-gray-200 bg-gray-50">
+                                        <Filter className="h-4 w-4 mr-2" />
+                                        Status
+                                        {statusFilters.length > 0 && (
+                                            <span className="ml-1 w-5 h-5 rounded-full bg-gray-200 text-xs flex items-center justify-center">
+                                                {statusFilters.length}
+                                            </span>
+                                        )}
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48">
+                                    {statusOptions.map((status) => {
+                                        const styles = getStatusStyles(status)
+                                        return (
+                                            <DropdownMenuCheckboxItem
+                                                key={status}
+                                                checked={statusFilters.includes(status)}
+                                                onCheckedChange={() => toggleStatusFilter(status)}
+                                            >
+                                                <div className="flex items-center">
+                                                    <div className={cn("w-2 h-2 rounded-full mr-2", styles.dot)} />
+                                                    <span className="capitalize">{status.toLowerCase()}</span>
+                                                </div>
+                                            </DropdownMenuCheckboxItem>
+                                        )
+                                    })}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
 
-                        {(searchQuery || statusFilters.length > 0) && (
-                            <Button variant="ghost" onClick={clearFilters} className="text-black bg-gray-200 hover:text-gray-700">
-                                Clear
-                            </Button>
-                        )}
+                            {(searchQuery || statusFilters.length > 0) && (
+                                <Button variant="ghost" onClick={clearFilters} className="text-black bg-gray-200 hover:text-gray-700">
+                                    Clear
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
-
+                {/* Results count */}
+                <h1 className="mb-4 text-sm text-black">
+                    {filteredRooms?.length} {filteredRooms.length === 1 ? "room" : "rooms"} found
+                </h1>
                 {/* Active filters display */}
                 {statusFilters.length > 0 && (
                     <section className="flex flex-wrap gap-2 mt-3">
@@ -162,6 +128,7 @@ export default function RoomsHotel() {
                                 >
                                     <span className="capitalize">{status.toLowerCase()}</span>
                                     <button
+                                        type="button"
                                         onClick={() => toggleStatusFilter(status)}
                                         className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
                                     >
@@ -174,16 +141,11 @@ export default function RoomsHotel() {
                 )}
             </div>
 
-            {/* Results count */}
-            <h1 className="mb-4 text-sm text-black">
-                {filteredRooms.length} {filteredRooms.length === 1 ? "room" : "rooms"} found
-            </h1>
 
             {/* Room cards grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 pb-[5rem]">
-                {filteredRooms.map((room: RoomData) => {
+                {filteredRooms?.map((room: RoomData) => {
                     const statusStyles = getStatusStyles(room.roomStatus)
-
                     return (
                         <section
                             onClick={() => handleRoom(room)}
@@ -247,7 +209,7 @@ export default function RoomsHotel() {
             </div>
 
             {/* Empty state */}
-            {filteredRooms.length === 0 && (
+            {filteredRooms?.length === 0 && (
                 <div className="bg-white rounded-lg p-8 text-center border border-gray-200 shadow-sm">
                     <div className="text-gray-400 mb-2">
                         <Search className="h-12 w-12 mx-auto opacity-50" />

@@ -2,6 +2,8 @@ import dynamic from 'next/dynamic'
 import { getBusinessData } from '@/apis/commonApis'
 import SkeletonLoader from '@/components/atoms/loader/skeletonLoader'
 import type { BusinessDetails } from '@/components/types/businessData'
+import { BookRoomsHotel } from '@/components/hotels/room/BookRoomsHotel'
+import { getInfoForHotel, getRooms } from '@/apis/hotel'
 // import ResponsiveImage from '@/components/hotels/room/RoomTopSection'
 
 export async function generateMetadata({
@@ -83,13 +85,15 @@ const Room = async ({
 }: {
     params: { businessId: string }
 }) => {
-    
- 
+
+    const data = await getRooms(params.businessId)
+    const {business, rooms} = data;
     return (
         <HotelBackgroundContainer >
             <ViewPortContainer className="relative mx-auto max-w-[30rem] min-h-screen">
-                <NavBarHotel text="Room View" hideLogo hideChat centerText showBackButton  />
-                <ResponsiveImage imageUrl='' alt='Room Top Section' />
+                <NavBarHotel text="Room View" hideLogo hideChat centerText showBackButton />
+                <ResponsiveImage imageUrl={business?.specialBannerUrl} alt='Room Top Section' />
+                <BookRoomsHotel rooms={rooms} imageUrl={business?.specialBannerUrl}/>
                 <BottomBtnRoom />
             </ViewPortContainer>
         </HotelBackgroundContainer>

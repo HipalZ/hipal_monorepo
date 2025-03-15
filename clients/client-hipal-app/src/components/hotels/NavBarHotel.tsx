@@ -45,7 +45,7 @@ export function NavBarHotel({
     <>
       <motion.div
         className={cn(
-          "fixed w-full max-w-[30rem] !transform left-1/2 top-0 -translate-x-1/2  z-50 bg-[#ffffff20] backdrop-blur-lg border-b"
+          "fixed w-full max-w-[30rem] !transform left-1/2 top-0 -translate-x-1/2  z-50 bg-white border-b"
         )}
         initial={{ y: 0 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}

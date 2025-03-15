@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react"
-import { format } from "date-fns"
 import {
   Clock,
   Package,
@@ -18,14 +17,14 @@ import { useHistoryAlerts } from "@/hooks/useHotelApis"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-
-type SortOption = "newest" | "oldest" | "roomAsc" | "roomDesc" | "fastest" | "slowest"
+import { useAlertsColors, type SortOption } from "../utils/helpersHotel";
 
 const HistoryHotel = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState<SortOption>("newest")
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
   const { historyData } = useHistoryAlerts()
+  const {getSortLabel} = useAlertsColors()
 
   // Toggle accordion item
   const toggleItem = (id: string) => {
@@ -74,15 +73,6 @@ const HistoryHotel = () => {
     })
   }, [filteredHistory, sortBy])
 
-  // Format timestamp to readable date and time
-  const formatTimestamp = (timestamp: number) => {
-    return format(new Date(timestamp), "MMM d, h:mm a")
-  }
-
-  // Format date only
-  const formatDate = (timestamp: number) => {
-    return format(new Date(timestamp), "MMM d, yyyy")
-  }
 
   // Calculate time difference between timestamps in minutes
   const getTimeDifference = (start: number, end: number) => {
@@ -99,34 +89,14 @@ const HistoryHotel = () => {
     return `${diffMins} minute${diffMins > 1 ? "s" : ""}`
   }
 
-  // Get sort option label
-  const getSortLabel = (option: SortOption) => {
-    switch (option) {
-      case "newest":
-        return "Newest First"
-      case "oldest":
-        return "Oldest First"
-      case "roomAsc":
-        return "Room (A-Z)"
-      case "roomDesc":
-        return "Room (Z-A)"
-      case "fastest":
-        return "Fastest Completion"
-      case "slowest":
-        return "Slowest Completion"
-    }
-  }
-
   return (
     <div className="mx-auto px-4 py-6">
       {/* Header with search and filters */}
       <div className="mb-6 bg-white rounded-lg border p-4 shadow-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Clock className="h-6 w-6 text-blue-500" />
             Service History
           </h1>
-
           <div className="flex items-center gap-2">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
@@ -193,7 +163,7 @@ const HistoryHotel = () => {
           </div>
         </div>
 
-        <div className="text-sm text-gray-500 flex items-center gap-1">
+        <div className="text-sm text-gray-500 flex items-center gap-1 mt-4">
           <Filter className="h-3.5 w-3.5" />
           <span>Sorting by: </span>
           <span className="font-medium text-blue-600">{getSortLabel(sortBy)}</span>
@@ -207,14 +177,15 @@ const HistoryHotel = () => {
         {sortedHistory.map((item) => (
           <div
             key={item._id}
-            className="rounded-lg overflow-hidden bg-white transition-all duration-200"
+            className="rounded-lg overflow-hidden transition-all duration-200"
           >
             {/* Header - Always visible */}
-            <div
-              className="p-3 bg-indigo-50 flex justify-between items-center cursor-pointer"
+            <section
+              className="p-3 border flex justify-between items-center cursor-pointer bg-gray-100"
               onClick={() => toggleItem(item._id)}
+              onKeyDown={(e) => e.key === "Enter" && toggleItem(item._id)}
             >
-              <div className="flex items-center gap-2">
+              <article className="flex items-center gap-2">
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 text-white">
                   <Home className="h-4 w-4" />
                 </div>
@@ -222,17 +193,17 @@ const HistoryHotel = () => {
                   <div className="font-medium">Room:- {item.roomId.name}</div>
                   <div className="text-xs text-gray-600">{formatDate(item.createdAt)}</div>
                 </div>
-              </div>
+              </article>
 
-              <div className="flex items-center gap-2">
-              <div className="font-medium">{item?.serviceIds[0].name}</div>
+              <article className="flex items-center gap-2">
+              <h1 className="font-medium">{item?.serviceIds[0].name}</h1>
                 {expandedItems.has(item._id) ? (
                   <ChevronUp className="h-5 w-5 text-gray-500" />
                 ) : (
                   <ChevronDown className="h-5 w-5 text-gray-500" />
                 )}
-              </div>
-            </div>
+              </article>
+            </section>
 
             {/* Accordion content */}
             <div
@@ -300,9 +271,9 @@ const HistoryHotel = () => {
               </div>
 
               {/* Footer */}
-              <div className="border-t p-3 bg-gradient-to-r from-gray-50 to-blue-50 text-sm flex justify-between items-center">
+              <div className="border-y p-3 text-sm flex justify-between items-center">
                 <div className="text-gray-600">
-                  <span className="font-medium">Total Time:</span> {getTimeDifference(item.createdAt, item.deliveredAt)}
+                  <span className="font-medium">Time to complete:</span> {getTimeDifference(item.createdAt, item.deliveredAt)}
                 </div>
                 <Badge variant="outline" className="bg-white border-blue-200">
                   ID: {item._id.slice(-6)}

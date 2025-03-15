@@ -2,6 +2,7 @@ import type { BusinessDetails, IBanner, IBusinessData } from "@/components/types
 import { apiRpc } from "@hi/common"
 import type { ILoyaltySetting } from "@/components/store/useLoyaltyData"
 import { getBusinessData } from "../commonApis"
+import type { IRoomProps, Room } from "@/components/types/hotelTypes"
 
 export const getInfoForHotel = async (businessIdOrCustomLink: string): Promise<IBusinessData> => {
   try {
@@ -29,6 +30,28 @@ export const getInfoForHotel = async (businessIdOrCustomLink: string): Promise<I
   } catch (error) {
     console.error("Error in getInfoForHotel:", error)
     throw error
+  }
+}
+
+export const getRooms = async (businessIdOrCustomLink: string): Promise<IRoomProps> => {
+  try {
+    const businessData = await getBusinessData(businessIdOrCustomLink) as BusinessDetails
+
+    const [roomsResponse] = await Promise.all([
+      apiRpc.hotel.rooms.fetch_rooms.$get({
+        query: { businessId: businessData.businessId },
+      })
+    ])
+
+    const rooms = await roomsResponse.json()
+
+    return {
+      business: businessData,
+      rooms: rooms?.data,
+    }
+  } catch (err) {
+    console.error("Error in getRooms:", err)
+    throw err
   }
 }
 

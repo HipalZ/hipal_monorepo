@@ -53,6 +53,7 @@ interface Room {
 }
 
 export interface Alert {
+    name: string;
     _id: string;
     alertProgress: "CREATED" | "ACCEPTED" | "REJECTED" | "DELIVERED";
     serviceIds: Service[];

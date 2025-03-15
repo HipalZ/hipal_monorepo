@@ -1,6 +1,7 @@
 import type { ICart } from "@/components/store/useCart";
 import type { CategoryType } from "@hi/db-models/src/validators";
 import type { ILoyaltySetting } from "../store/useLoyaltyData";
+import { Room } from "./hotelTypes";
 
 export interface IBiz {
   placeId: string;
