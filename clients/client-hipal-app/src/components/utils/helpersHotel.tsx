@@ -1,15 +1,16 @@
+import { useState } from "react";
 import { useHotelTemp } from "../store/useHotelTemp";
+import { toast } from "react-toastify";
+import { _useAllBusiness } from "../store/useAllBusiness";
 
 export const useImageNextPrev = () => {
   const { nextImage: nextImageStore, prevImage: prevImageStore } = useHotelTemp();
-  
-  const nextImage = (e: React.MouseEvent, roomId: string, imagesLength: number) => {
-    e.stopPropagation();
+
+  const nextImage = (roomId: string, imagesLength: number) => {
     nextImageStore(roomId, imagesLength);
   };
 
-  const prevImage = (e: React.MouseEvent, roomId: string, imagesLength: number) => {
-    e.stopPropagation();
+  const prevImage = (roomId: string, imagesLength: number) => {
     prevImageStore(roomId, imagesLength);
   };
 
@@ -19,11 +20,29 @@ export const useImageNextPrev = () => {
     const clickPosition = clientX - left;
 
     if (clickPosition < width / 2) {
-      prevImage(e, roomId, imagesLength);
+      prevImage(roomId, imagesLength);
     } else {
-      nextImage(e, roomId, imagesLength);
+      nextImage(roomId, imagesLength);
     }
   };
 
   return { nextImage, prevImage, handleImageClick };
 };
+
+export const useShareRoom = () => {
+  const [shareState, setShareState] = useState({ showOptions: false, url: "" });
+  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
+  const shareCart = async (content: string) => {
+    const message = encodeURIComponent(
+      `Hi, I am interested in booking this room. Can I know more details?\n\n${content}`,
+    )
+
+    const whatsappUrl = `https://wa.me/+91${outletInfo?.phone}?text=${message}`
+
+    // Open WhatsApp in a new tab
+    window.open(whatsappUrl, "_blank")
+    setShareState({ ...shareState, showOptions: false })
+  }
+
+  return { shareCart, shareState, setShareState };
+}
