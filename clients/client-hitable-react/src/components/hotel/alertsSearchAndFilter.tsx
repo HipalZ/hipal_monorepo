@@ -63,9 +63,9 @@ export function AlertsSearchAndFilter() {
                 <Button variant="outline" className="whitespace-nowrap">
                   <Filter className="h-4 w-4 sm:mr-2" />
                   <span>Rooms</span>
-                  {selectedRooms.length > 0 && (
+                  {selectedRooms?.length > 0 && (
                     <span className="ml-1 w-5 h-5 rounded-full bg-gray-200 text-xs flex items-center justify-center">
-                      {selectedRooms.length}
+                      {selectedRooms?.length}
                     </span>
                   )}
                 </Button>
@@ -144,7 +144,7 @@ export function AlertsSearchAndFilter() {
         </div>
       </div>
       <span className="my-4 text-sm text-black">
-        {filteredAlerts.length} {filteredAlerts.length === 1 ? "alert" : "alerts"} found
+        {filteredAlerts?.length} {filteredAlerts?.length === 1 ? "alert" : "alerts"} found
       </span>
 
       {/* Active filters display */}

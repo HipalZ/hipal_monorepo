@@ -14,6 +14,7 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import { useErrorHandling } from "./components/utils/helpers";
 import useBusinessData from "./components/store/useBusinessData";
+import { useRoomAlerts } from "@/hooks/useHotelApis";
 const ErrorPopup = lazy(() => import("./components/ErrorPopup"));
 const InternetConnection = lazy(() => import("./components/atoms/internet"));
 const UpdateApp = lazy(() => import("./components/atoms/updateApp"));
@@ -189,6 +190,9 @@ function App() {
     enabled: !!businessId,
     refetchInterval: isSlow ? 29000 : 23000,
   });
+
+  // hotel alerts api
+  useRoomAlerts();
 
   return (
     <main className="relative">

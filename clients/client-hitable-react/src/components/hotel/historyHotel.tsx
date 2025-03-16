@@ -44,9 +44,9 @@ const MemoHistoryHotel = () => {
 
     return historyData.filter(
       (item) =>
-        item.roomId.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.serviceIds.some((service) => service.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        item.createdBy.name.toLowerCase().includes(searchTerm.toLowerCase()),
+        item?.roomId?.name.toLowerCase().includes(searchTerm?.toLowerCase()) ||
+        item?.serviceIds?.some((service) => service?.name?.toLowerCase().includes(searchTerm?.toLowerCase())) ||
+        item?.createdBy?.name.toLowerCase().includes(searchTerm?.toLowerCase()),
     )
   }, [historyData, searchTerm])
 

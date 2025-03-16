@@ -2,15 +2,17 @@ import { memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { hotelNavItems } from "@/components/utils/helpersHotel";
 import { useHotelStore } from "@/components/store/useHotelStore";
-import type { NavItemHotelTypes } from "@/components/types/hotelData";
+import { NavItemsHotelEnum, type NavItemHotelTypes } from "@/components/types/hotelData";
 
 const MemoNavItemsHotel = () => {
   const {
     selectedNavItem,
     setSelectedNavItem,
+    hotelAlertsCount,
   } = useHotelStore((s) => ({
     selectedNavItem: s.selectedNavItem,
     setSelectedNavItem: s.setSelectedNavItem,
+    hotelAlertsCount: s.hotelAlertsCount,
   }));
 
   const handleNavItemClick = useCallback(
@@ -18,6 +20,16 @@ const MemoNavItemsHotel = () => {
       setSelectedNavItem(type);
     },
     [setSelectedNavItem],
+  );
+
+  const handleCount = useCallback(
+    (type: string) => {
+      if (type === NavItemsHotelEnum.Alerts && hotelAlertsCount > 0) {
+        return hotelAlertsCount;
+      }
+      return null;
+    },
+    [hotelAlertsCount],
   );
 
   const navItems = hotelNavItems();
@@ -64,6 +76,16 @@ const MemoNavItemsHotel = () => {
                 </motion.span>
               )}
             </AnimatePresence>
+            {handleCount(type) !== null && (
+              <motion.span
+                className="absolute z-50 px-2 py-1 text-xs font-bold text-white bg-red-500 rounded-full -top-2 right-1"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 500, damping: 25 }}
+              >
+                {handleCount(type)}
+              </motion.span>
+            )}
           </motion.button>
         );
       })}

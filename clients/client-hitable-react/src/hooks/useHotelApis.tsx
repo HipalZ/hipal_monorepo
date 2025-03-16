@@ -85,6 +85,7 @@ export const useRoomAlerts = () => {
     const businessId = useBusinessData((s) => s.outletInfo?.businessId)
     const userId = useHiClientZ((s) => s.captainData._id)
     const { setAlerts } = useAlertsStore()
+    const {setHotelAlertsCount} = useHotelStore()
     const roomAlerts = async () => {
         const response = await apiRpc.hotel.alert.fetch_room_alerts.$get({
             query: {
@@ -95,6 +96,7 @@ export const useRoomAlerts = () => {
         const res = await response.json()
         if (response.status === 200 || response.status === 201) {
             setAlerts(res.data)
+            setHotelAlertsCount(res.data.length)
             return res.data
         }
     }
@@ -103,6 +105,7 @@ export const useRoomAlerts = () => {
         queryKey: ["roomAlerts", businessId, userId],
         queryFn: roomAlerts,
         enabled: !!businessId && !!userId,
+        refetchInterval: 17000,
     })
 
     return { alerts, isPending }

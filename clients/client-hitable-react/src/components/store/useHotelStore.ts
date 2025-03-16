@@ -33,6 +33,9 @@ interface IHotelStore {
 
   sortByHistory: SortOption;
   setSortByHistory: (value: SortOption) => void;
+
+  hotelAlertsCount: number;
+  setHotelAlertsCount: (value: number) => void;
 }
 
 export const useHotelStore = create<IHotelStore>((set) => ({
@@ -65,4 +68,7 @@ export const useHotelStore = create<IHotelStore>((set) => ({
 
   sortByHistory: "newest",
   setSortByHistory: (value) => set({ sortByHistory: value }),
+
+  hotelAlertsCount: 0,
+  setHotelAlertsCount: (value) => set({ hotelAlertsCount: value }),
 }));
