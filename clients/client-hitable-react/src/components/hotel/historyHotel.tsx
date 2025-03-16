@@ -169,13 +169,13 @@ const HistoryHotel = () => {
           <span>Sorting by: </span>
           <span className="font-medium text-blue-600">{getSortLabel(sortBy)}</span>
           <span className="mx-2">•</span>
-          <span>{sortedHistory.length} results</span>
+          <span>{sortedHistory?.length} results</span>
         </div>
       </div>
 
       {/* History items grid */}
       <div className="pb-20 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-        {sortedHistory.map((item) => (
+        {sortedHistory?.map((item) => (
           <div
             key={item._id}
             className="rounded-lg overflow-hidden transition-all duration-200"
@@ -191,8 +191,8 @@ const HistoryHotel = () => {
                   <Home className="h-4 w-4" />
                 </div>
                 <div>
-                  <div className="font-medium">Room:- {item.roomId.name}</div>
-                  <div className="text-xs text-gray-600">{formatDate(item.createdAt)}</div>
+                  <div className="font-medium">Room:- {item?.roomId?.name}</div>
+                  <div className="text-xs text-gray-600">{formatDate(item?.createdAt)}</div>
                 </div>
               </article>
 
@@ -222,7 +222,7 @@ const HistoryHotel = () => {
                     <div className="font-medium">{item?.serviceIds.map((service) => service?.name).join(", ")}</div>
                     <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
                       <User className="h-3.5 w-3.5" />
-                      Requested by {item.createdBy.name}
+                      Requested by {item?.createdBy?.name}
                     </div>
                   </div>
                 </div>
@@ -247,10 +247,10 @@ const HistoryHotel = () => {
                     <div className="pl-4 group-hover:translate-x-1 transition-transform">
                       <div className="text-sm font-medium">Request Accepted</div>
                       <div className="text-xs text-gray-600">
-                        {formatTimestamp(item.acceptedAt)} •
-                        <span className="ml-1">{getTimeDifference(item.createdAt, item.acceptedAt)} after request</span>
+                        {formatTimestamp(item?.acceptedAt)} •
+                        <span className="ml-1">{getTimeDifference(item?.createdAt, item?.acceptedAt)} after request</span>
                       </div>
-                      <div className="text-xs text-gray-600">by {item.acceptedBy.name}</div>
+                      <div className="text-xs text-gray-600">by {item?.acceptedBy?.name}</div>
                     </div>
                   </div>
 
@@ -260,12 +260,12 @@ const HistoryHotel = () => {
                     <div className="pl-4 group-hover:translate-x-1 transition-transform">
                       <div className="text-sm font-medium">Service Delivered</div>
                       <div className="text-xs text-gray-600">
-                        {formatTimestamp(item.deliveredAt)} •
+                        {formatTimestamp(item?.deliveredAt)} •
                         <span className="ml-1">
-                          {getTimeDifference(item.acceptedAt, item.deliveredAt)} after acceptance
+                          {getTimeDifference(item?.acceptedAt, item?.deliveredAt)} after acceptance
                         </span>
                       </div>
-                      <div className="text-xs text-gray-600">by {item.deliveredBy.name}</div>
+                      <div className="text-xs text-gray-600">by {item?.deliveredBy?.name}</div>
                     </div>
                   </div>
                 </div>
@@ -274,7 +274,7 @@ const HistoryHotel = () => {
               {/* Footer */}
               <div className="border-y p-3 text-sm flex justify-between items-center">
                 <div className="text-gray-600">
-                  <span className="font-medium">Time to complete:</span> {getTimeDifference(item.createdAt, item.deliveredAt)}
+                  <span className="font-medium">Time to complete:</span> {getTimeDifference(item?.createdAt, item?.deliveredAt)}
                 </div>
                 <Badge variant="outline" className="bg-white border-blue-200">
                   ID: {item._id.slice(-6)}
@@ -284,7 +284,7 @@ const HistoryHotel = () => {
           </div>
         ))}
 
-        {sortedHistory.length === 0 && (
+        {sortedHistory?.length === 0 && (
           <div className="text-center py-12 border rounded-lg bg-white shadow-sm md:col-span-2 xl:col-span-3 2xl:col-span-4">
             <Clock className="h-16 w-16 text-gray-300 mx-auto mb-3" />
             <h3 className="text-xl font-medium text-gray-700">No history found</h3>
