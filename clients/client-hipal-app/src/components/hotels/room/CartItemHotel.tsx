@@ -10,6 +10,7 @@ import type { DishType } from "@hi/db-models/src/validators";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { cn } from "@/components/utils/helpers";
 import EmptyCart from "@/components/organisms/cart/emptyCart";
+import InstructionPopup from "./InstructionPopup";
 
 interface CartItemProp {
   hide?: boolean;
@@ -35,10 +36,10 @@ const MemoizedCartItemHotel = ({ cartItem, hide }: CartItemProp) => {
     updateCartItem,
     removeFromCart,
     setInstructionId,
+    openInstructionModal,
     setOpenInstructionModal,
     removeInstructionFromDish,
   } = useCartStore();
-
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   // 🛠️ Filter Logic: Check if the current cart item matches the selected dish
@@ -73,8 +74,9 @@ const MemoizedCartItemHotel = ({ cartItem, hide }: CartItemProp) => {
 
   const handleInstruction = useCallback((id: string) => {
     setInstructionId(id);
-    setOpenInstructionModal(true);
-  }, [setInstructionId, setOpenInstructionModal]);
+    setOpenInstructionModal(!openInstructionModal);
+  }, [setInstructionId, setOpenInstructionModal, openInstructionModal]);
+
 
   return (
     <>
@@ -175,6 +177,7 @@ const MemoizedCartItemHotel = ({ cartItem, hide }: CartItemProp) => {
               )}
             </div>
           </motion.div> : <EmptyCart />}
+      <InstructionPopup />
     </>
   );
 };

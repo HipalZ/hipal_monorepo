@@ -1,7 +1,7 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { Utensils } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import Image from "next/image"
 
 interface ILinkHotels {
@@ -18,25 +18,36 @@ interface RestaurantCardProps {
 }
 
 export const RestaurantCard = ({ restaurant, onSelect, isSelected }: RestaurantCardProps) => {
+  const displayImage = restaurant.logo || ""
+
   return (
     <Card
-      className={`overflow-hidden transition-all cursor-pointer hover:shadow-md ${
-        isSelected ? "border-h-primary bg-h-primary/5" : ""
-      }`}
+      className={`overflow-hidden transition-all cursor-pointer shadow-xl ${
+        isSelected ? "border-h-primary" : "border-transparent"
+      } rounded-xl`}
       onClick={() => onSelect(restaurant)}
     >
-      <div className="flex items-center gap-4 p-3">
-        <div className="relative w-12 h-12 mr-3 overflow-hidden bg-gray-100 rounded-md">
-          {restaurant.logo ? (
-            <Image src={restaurant.logo || "/placeholder.svg"} alt={restaurant.name} fill className="object-cover" />
-          ) : (
-            <div className="flex items-center justify-center w-full h-full bg-h-primary/10">
-              <Utensils className="w-6 h-6 text-h-primary/60" />
-            </div>
-          )}
-        </div>
-        <h3 className="font-medium text-h-primary">{restaurant.name}</h3>
+      {/* Image Section */}
+      <div className="relative w-full h-28 overflow-hidden bg-gray-100">
+        <Image
+          src={displayImage || ""}
+          alt={restaurant.name}
+          fill
+          className="object-cover transition-transform duration-300 hover:scale-105"
+        />
       </div>
+
+      {/* Content Section */}
+      <div className="p-4 flex justify-between">
+        <div>
+          <h3 className="font-medium text-lg text-gray-900">{restaurant.name}</h3>
+          #Restaurant
+        </div>
+          <ArrowRight className="text-gray-900 h-5 w-5 mt-1" />
+      </div>
+
+      {/* Selected Indicator */}
+      {isSelected && <div className="absolute inset-0 border-2 border-h-primary rounded-xl pointer-events-none" />}
     </Card>
   )
 }

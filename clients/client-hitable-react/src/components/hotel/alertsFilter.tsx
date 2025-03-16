@@ -1,4 +1,3 @@
-'use client';
 import { useFilters } from '../store/useFilters'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"

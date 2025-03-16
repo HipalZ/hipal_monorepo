@@ -82,7 +82,7 @@ function MemoRoomsHotel() {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48">
-                                    {statusOptions.map((status) => {
+                                    {statusOptions?.map((status) => {
                                         const styles = getStatusStyles(status)
                                         return (
                                             <DropdownMenuCheckboxItem
@@ -100,7 +100,7 @@ function MemoRoomsHotel() {
                                 </DropdownMenuContent>
                             </DropdownMenu>
 
-                            {(searchQuery || statusFilters.length > 0) && (
+                            {(searchQuery || statusFilters?.length > 0) && (
                                 <Button variant="ghost" onClick={clearFilters} className="text-black bg-gray-200 hover:text-gray-700">
                                     Clear
                                 </Button>
@@ -113,9 +113,9 @@ function MemoRoomsHotel() {
                     {filteredRooms?.length} {filteredRooms.length === 1 ? "room" : "rooms"} found
                 </h1>
                 {/* Active filters display */}
-                {statusFilters.length > 0 && (
+                {statusFilters?.length > 0 && (
                     <section className="flex flex-wrap gap-2 mt-3">
-                        {statusFilters.map((status) => {
+                        {statusFilters?.map((status) => {
                             const styles = getStatusStyles(status)
                             return (
                                 <article
@@ -168,8 +168,8 @@ function MemoRoomsHotel() {
                             />
                             <article className="relative z-10">
                                 <div className="flex items-center justify-between mb-3">
-                                    <h3 className="text-base font-medium text-gray-900 truncate pr-2">{room.name}</h3>
-                                    <div className={cn("w-2.5 h-2.5 rounded-full", statusStyles.dot)} />
+                                    <h3 className="text-base font-medium text-gray-900 truncate pr-2">{room?.name}</h3>
+                                    <div className={cn("w-2.5 h-2.5 rounded-full", statusStyles?.dot)} />
                                 </div>
                                 <article className="flex items-center justify-between">
                                     <article className="flex items-center space-x-1.5">
@@ -183,23 +183,23 @@ function MemoRoomsHotel() {
 
                                         <div className="bg-gray-100 rounded-md p-1.5 shadow-sm">
                                             <Users className="h-3.5 w-3.5 text-gray-600" />
-                                            <span className="sr-only">{room.capacity} capacity</span>
+                                            <span className="sr-only">{room?.capacity} capacity</span>
                                         </div>
                                     </article>
                                     <article
                                         className={cn(
                                             "text-xs font-medium capitalize px-2 py-1 rounded-full",
                                             "bg-gray-100 shadow-sm",
-                                            statusStyles.text,
+                                            statusStyles?.text,
                                         )}
                                     >
-                                        {room.roomStatus.toLowerCase()}
+                                        {room?.roomStatus.toLowerCase()}
                                     </article>
                                 </article>
                                 <article className="mt-2 text-xs text-gray-500 flex justify-between items-center">
-                                    <span>{room.roomType.charAt(0) + room.roomType.slice(1).toLowerCase()}</span>
+                                    <span>{room?.roomType.charAt(0) + room?.roomType?.slice(1).toLowerCase()}</span>
                                     <span>
-                                        {room.capacity} {room.capacity === 1 ? "person" : "people"}
+                                        {room?.capacity} {room.capacity === 1 ? "person" : "people"}
                                     </span>
                                 </article>
                             </article>

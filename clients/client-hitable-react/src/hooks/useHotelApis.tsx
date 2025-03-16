@@ -105,7 +105,7 @@ export const useRoomAlerts = () => {
         queryKey: ["roomAlerts", businessId, userId],
         queryFn: roomAlerts,
         enabled: !!businessId && !!userId,
-        refetchInterval: 17000,
+        refetchInterval: 7000,
     })
 
     return { alerts, isPending }

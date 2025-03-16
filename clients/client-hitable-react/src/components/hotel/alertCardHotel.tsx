@@ -41,8 +41,8 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
     [mutateAsync, setIsLoading],
   )
 
-  const hasCart = alert.cart && alert.cart.length > 0
-  const timeAgo = formatDistanceToNow(new Date(alert.createdAt), { addSuffix: true })
+  const hasCart = alert?.cart && alert?.cart?.length > 0
+  const timeAgo = formatDistanceToNow(new Date(alert?.createdAt), { addSuffix: true })
 
   return (
     <Card
@@ -176,7 +176,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
       </div>
 
       {/* Order details popup */}
-      {showOrderDetails === alert._id && (
+      {showOrderDetails === alert?._id && (
         <BottomPopUp hide show={true} onClose={() => setShowOrderDetails(null)}>
           <div className="pt-4">
             <div className="flex items-center gap-4">

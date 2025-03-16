@@ -18,7 +18,7 @@ export default function RoomCard({ roomNumber,  className }: RoomCardProps) {
       <div className="w-[45%] h-full flex items-center justify-center">
         <div className="text-center text-white">
           <div className="text-sm tracking-wider uppercase opacity-70">Room Number</div>
-          <div className="mt-2 text-4xl font-bold font-play">{roomNumber}</div>
+          <div className="mt-2 text-3xl font-bold font-play">{roomNumber}</div>
         </div>
       </div>
 

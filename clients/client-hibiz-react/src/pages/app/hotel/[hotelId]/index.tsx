@@ -32,7 +32,7 @@ const MemoHotelInfoMain = () => {
 
     const handleBack = useCallback(() => {
         navigate("/app/business");
-    }, [businessData]);
+    }, [navigate]);
 
     return (
         <main className="min-h-screen ">

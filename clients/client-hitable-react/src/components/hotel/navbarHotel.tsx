@@ -56,13 +56,6 @@ const MemoNavbarHotel = ({
             )}
 
             <div className="flex items-center space-x-3">
-                {selectedNavItem === NavItemsHotelEnum.Alerts && !hide ? (
-                    <HiOutlineRefresh
-                        size={24}
-                    // className={`cursor-pointer text-green-500 transition-transform duration-300 ${loading ? "animate-spin" : "hover:rotate-180"
-                    //     }`}
-                    />
-                ) : null}
                 <MemoProfileHeader />
             </div>
         </header>

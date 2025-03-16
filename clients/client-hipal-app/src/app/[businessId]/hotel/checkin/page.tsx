@@ -92,7 +92,7 @@ const page = async ({
       <ViewPortContainer className="relative mx-auto max-w-[30rem] pb-[10rem]">
         <NavBarHotel text={room || "Room Number"} centerText showBackButton={false} />
 
-        <ResponsiveImage imageUrl={businessData.specialBannerUrl || ""} alt="Room Top Section" />
+        <ResponsiveImage imageUrl={businessData.endBannerUrl || ""} alt="Room Top Section" />
 
         <section className="p-6">
           <RoomCard roomNumber={room} />
@@ -100,6 +100,7 @@ const page = async ({
 
         <HotelWelcomeCard
           hotelName={businessData.name}
+          logo={businessData.logoUrl}
           room={room}
           businessId={businessData.businessId}
           customLink={params.businessId}

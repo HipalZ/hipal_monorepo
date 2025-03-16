@@ -1,4 +1,4 @@
-import { Settings, Globe, Users, Home, UtensilsCrossed } from "lucide-react"
+import { Settings, Globe, Users, Home, UtensilsCrossed, Palette } from "lucide-react";
 import { Link } from "react-router-dom"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -53,6 +53,16 @@ const essentialCards = [
         ),
         href: "add-restaurant",
     },
+    {
+        title:"Themes",
+        description:"Customize the look and feel of your hotel website",
+        icon:(
+            <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-blue-400 to-blue-600 hover:scale-105">
+                <Palette className="w-8 h-8 text-white drop-shadow-md" />
+            </div>
+        ),
+        href:"add-themes"
+    }
 ]
 
 const HotelCards = () => {

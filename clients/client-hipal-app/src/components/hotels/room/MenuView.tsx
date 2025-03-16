@@ -23,18 +23,16 @@ interface MenuViewProps {
 export const MenuView = ({ restaurant, onBack, isLoading }: MenuViewProps) => {
     const { menuLoading, menuData } = useGetAllRestaurantMenu(restaurant._id as string)
 
-    console.log(menuLoading, menuData)
-
     return (
         <div className="relative p-4">
             <div className="flex items-center mb-4">
-                <button onClick={onBack} className="p-1 mr-2 rounded-full hover:bg-gray-100">
+                <button type="button" onClick={onBack} className="p-1 mr-2 rounded-full hover:bg-gray-100">
                     <ArrowLeft className="w-5 h-5 text-h-primary" />
                 </button>
                 <h2 className="text-xl font-bold text-h-primary">{restaurant.name}</h2>
             </div>
 
-            {isLoading ? (
+            {isLoading || menuLoading ? (
                 <div className="mb-20 space-y-3">
                     {[1, 2, 3, 4].map((i) => (
                         <MenuItemSkeleton key={i} />
@@ -42,19 +40,19 @@ export const MenuView = ({ restaurant, onBack, isLoading }: MenuViewProps) => {
                 </div>
             ) : (
                 <>
-                <div className="mb-20">
-                    <MenuBannerPage
-                        timings={menuData?.timings}
-                        childCategory={menuData?.childCategories || []}
-                    />
+                    <div className="mb-20">
+                        <MenuBannerPage
+                            timings={menuData?.timings}
+                            childCategory={menuData?.childCategories || []}
+                        />
                         <DishesList
                             parentCategory={menuData?.parentCategories || []}
                             childCategory={menuData?.childCategories || []}
                             timings={menuData?.timings}
                         />
                         <LiveCartHotel />
-                </div>
-                
+                    </div>
+
                 </>
             )}
         </div>

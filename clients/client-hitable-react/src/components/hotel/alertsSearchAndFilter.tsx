@@ -29,6 +29,7 @@ export function AlertsSearchAndFilter() {
 
   const uniqueRooms = getUniqueRooms()
   const uniqueServices = getUniqueServices()
+  const hasFilters = hasActiveFilters()
   const statusOptions = ["CREATED", "ACCEPTED", "REJECTED", "DELIVERED"]
 
   return (
@@ -71,10 +72,10 @@ export function AlertsSearchAndFilter() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                {uniqueRooms.map((room) => (
+                {uniqueRooms?.map((room) => (
                   <DropdownMenuCheckboxItem
                     key={room}
-                    checked={selectedRooms.includes(room)}
+                    checked={selectedRooms?.includes(room)}
                     onCheckedChange={() => toggleRoomFilter(room)}
                   >
                     Room {room}
@@ -88,21 +89,21 @@ export function AlertsSearchAndFilter() {
                 <Button variant="outline" className="whitespace-nowrap">
                   <Package className="h-4 w-4 sm:mr-2" />
                   <span>Services</span>
-                  {selectedServices.length > 0 && (
+                  {selectedServices?.length > 0 && (
                     <span className="ml-1 w-5 h-5 rounded-full bg-gray-200 text-xs flex items-center justify-center">
-                      {selectedServices.length}
+                      {selectedServices?.length}
                     </span>
                   )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                {uniqueServices.map((service) => (
+                {uniqueServices?.map((service) => (
                   <DropdownMenuCheckboxItem
-                    key={service.id}
-                    checked={selectedServices.includes(service.id)}
-                    onCheckedChange={() => toggleServiceFilter(service.id)}
+                    key={service?.id}
+                    checked={selectedServices?.includes(service?.id)}
+                    onCheckedChange={() => toggleServiceFilter(service?.id)}
                   >
-                    {service.name}
+                    {service?.name}
                   </DropdownMenuCheckboxItem>
                 ))}
               </DropdownMenuContent>
@@ -112,18 +113,18 @@ export function AlertsSearchAndFilter() {
                 <Button variant="outline" className="whitespace-nowrap">
                   <ListFilter className="h-4 w-4 sm:mr-2" />
                   <span>Status</span>
-                  {selectedStatuses.length > 0 && (
+                  {selectedStatuses?.length > 0 && (
                     <span className="ml-1 w-5 h-5 rounded-full bg-gray-200 text-xs flex items-center justify-center">
-                      {selectedStatuses.length}
+                      {selectedStatuses?.length}
                     </span>
                   )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                {statusOptions.map((status) => (
+                {statusOptions?.map((status) => (
                   <DropdownMenuCheckboxItem
                     key={status}
-                    checked={selectedStatuses.includes(status)}
+                    checked={selectedStatuses?.includes(status)}
                     onCheckedChange={() => toggleStatusFilter(status)}
                   >
                     {status}
@@ -131,7 +132,7 @@ export function AlertsSearchAndFilter() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            {hasActiveFilters() && (
+            {hasFilters && (
               <Button
                 variant="ghost"
                 onClick={clearFilters}
@@ -148,9 +149,9 @@ export function AlertsSearchAndFilter() {
       </span>
 
       {/* Active filters display */}
-      {hasActiveFilters() && (
+      {hasFilters && (
         <div className="flex flex-wrap gap-2 mt-2">
-          {selectedRooms.map((room) => (
+          {selectedRooms?.map((room) => (
             <Badge key={room} variant="secondary" className="flex items-center gap-1">
               Room {room}
               <button
@@ -163,8 +164,8 @@ export function AlertsSearchAndFilter() {
             </Badge>
           ))}
 
-          {selectedServices.map((serviceId) => {
-            const service = uniqueServices.find((s) => s.id === serviceId)
+          {selectedServices?.map((serviceId) => {
+            const service = uniqueServices?.find((s) => s.id === serviceId)
             return (
               <Badge key={serviceId} variant="secondary" className="flex items-center gap-1">
                 {service?.name}
@@ -179,7 +180,7 @@ export function AlertsSearchAndFilter() {
             )
           })}
 
-          {selectedStatuses.map((status) => (
+          {selectedStatuses?.map((status) => (
             <Badge key={status} variant="secondary" className="flex items-center gap-1">
               {status}
               <button

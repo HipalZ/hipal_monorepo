@@ -11,11 +11,13 @@ const Setting = lazy(
 
 const MainBusinessPage: React.FC = () => {
   const navigate = useNavigate();
+  const outletInfo = useBusinessData((s) => s.outletInfo);
   const businessId = useBusinessData((s) => s.businessData?._id);
 
   const handleBack = useCallback(() => {
+    if(outletInfo?.outLetType ==="HOTEL") return navigate(`/app/hotel/${businessId}`);
     navigate(`/app/business/${businessId}`);
-  }, [businessId, navigate]);
+  }, [businessId, navigate, outletInfo?.outLetType]);
 
   return (
     <main className="business_control_background">

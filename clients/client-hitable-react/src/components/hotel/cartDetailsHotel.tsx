@@ -1,18 +1,23 @@
 import { motion } from "framer-motion";
 import { cn } from "../utils/helpers";
+import type { CartItem } from "../types/hiClientzData";
 
-const CartDetailsHotel = ({ cart }: { cart }) => {
+interface CartDetailsHotelProps {
+    cart: CartItem[]
+}
+
+const CartDetailsHotel = ({ cart }: CartDetailsHotelProps) => {
     return (
         <div>
-            {cart.map((item, index) => (
+            {cart?.map((item, index) => (
                 <motion.div
-                    key={item.id}
+                    key={item?.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
                     className={cn(
                         "flex items-start gap-4 p-2 bg-gray-50 shadow-sm",
-                        index !== cart.length - 1 && "border-b border-gray-100"
+                        index !== cart?.length - 1 && "border-b border-gray-100"
                     )}
                 >
                     <div className="flex-1 min-w-0">
@@ -41,7 +46,7 @@ const CartDetailsHotel = ({ cart }: { cart }) => {
 
                     <div className="text-right flex-shrink-0">
                         <div className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-50 rounded">
-                            × {item.quantity}
+                            × {item?.quantity}
                         </div>
                         <p className="mt-1 text-base font-semibold text-gray-900">
                             ₹{(item?.dish?.price * item?.quantity).toFixed(2)}

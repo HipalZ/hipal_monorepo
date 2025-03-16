@@ -77,7 +77,7 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
                 console.log("Fetching menu for restaurant:", restaurant._id)
             }
         },
-        [selectedRestaurant,cart, setCartEmpty, setShowCart],
+        [selectedRestaurant],
     )
 
     // Handle back to restaurants list
@@ -85,12 +85,12 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
         setCurrentView("restaurants")
         setCartEmpty()
         setShowCart(false)
-    }, [])
+    }, [ setCartEmpty, setShowCart])
 
     // Handle order submission
     const handlePlaceOrder = useCallback(async () => {
         try {
-            // setOrderStatus("loading")
+            setOrderStatus("loading")
 
             // Get room data
             const roomData = await roomPayload({
@@ -110,21 +110,22 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
                 cart: sanitizedCart,
             })
 
-            // setOrderStatus("success")
+            setOrderStatus("success")
 
             // Close popup after a delay
-            // setTimeout(() => {
-            //     onClose()
-            //     setOrderStatus("idle")
-            //     setCurrentView("restaurants")
-            //     setSelectedRestaurant(null)
-            // }, 1500)
+            setTimeout(() => {
+                onClose()
+                setCartEmpty()
+                setOrderStatus("idle")
+                setCurrentView("restaurants")
+                setSelectedRestaurant(null)
+            }, 5000)
         } catch (error) {
             console.error("Error placing food order:", error)
             setOrderStatus("error")
             toast.error("Failed to place your order. Please try again.")
         }
-    }, [roomPayload, businessId, room, createAlert, userId, services, onClose, selectedRestaurant,cart])
+    }, [roomPayload, businessId, room, createAlert, userId, services, onClose,sanitizedCart, setCartEmpty])
 
     // Loading state
     const isLoading = fetchingRestaurants || gettingRoomLoader || creatingAlert || orderStatus === "loading"

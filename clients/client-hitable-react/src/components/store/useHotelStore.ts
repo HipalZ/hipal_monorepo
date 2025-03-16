@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { NavItemsHotelEnum, type RoomData } from "../types/hotelData";
-import { SortOption } from "../utils/helpersHotel";
+import type { SortOption } from "../utils/helpersHotel";
 
 interface IHotelStore {
   // nav items toggling
@@ -21,6 +21,8 @@ interface IHotelStore {
 
   reviewUserIds: string[];
   setReviewUserIds: (value: string[]) => void;
+  toggleReviewUserId: (userId: string) => void;
+  toggleAllReviewUserIds: () => void;
 
   openReviewModal: boolean;
   setOpenReviewModal: (value: boolean) => void;
@@ -41,7 +43,7 @@ interface IHotelStore {
 export const useHotelStore = create<IHotelStore>((set) => ({
   selectedNavItem: NavItemsHotelEnum.Rooms,
   setSelectedNavItem: (value) => set({ selectedNavItem: value }),
-  
+
   roomData: {} as RoomData,
   setRoomData: (value: RoomData) => set({ roomData: value }),
 
@@ -56,6 +58,27 @@ export const useHotelStore = create<IHotelStore>((set) => ({
 
   reviewUserIds: [],
   setReviewUserIds: (value) => set({ reviewUserIds: value }),
+
+  // New toggle function for a single user ID
+  toggleReviewUserId: (userId) =>
+    set((state) => {
+      if (state.reviewUserIds.includes(userId)) {
+        return {
+          reviewUserIds: state.reviewUserIds.filter((id) => id !== userId),
+        };
+      }
+      return { reviewUserIds: [...state.reviewUserIds, userId] };
+    }),
+
+  // New toggle all function
+  toggleAllReviewUserIds: () =>
+    set((state) => {
+      const allUserIds = state.roomData?.userIds?.map((user) => user._id) || [];
+      if (state.reviewUserIds.length === allUserIds.length) {
+        return { reviewUserIds: [] };
+      }
+      return { reviewUserIds: allUserIds };
+    }),
 
   openReviewModal: false,
   setOpenReviewModal: (value) => set({ openReviewModal: value }),
