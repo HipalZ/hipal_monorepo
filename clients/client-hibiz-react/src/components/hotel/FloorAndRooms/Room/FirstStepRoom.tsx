@@ -3,9 +3,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import useRoomFormStore from "@/components/store/hotel/useRoomFormStore"
-import { roomTypeEnum, hotelStatusEnum } from "@/hooks/hotel/useRoomHook"
+import { roomTypeEnum } from "@/hooks/hotel/useRoomHook";
 
 const FirstStepRoom: React.FC = () => {
     const { roomInfo, errors, setRoomInfo } = useRoomFormStore((state) => ({
@@ -42,7 +41,7 @@ const FirstStepRoom: React.FC = () => {
                         value={roomInfo.description}
                         onChange={(e) => setRoomInfo({ description: e.target.value })}
                         placeholder="Enter room description"
-                        className={`min-h-[100px] ${errors.description ? "border-destructive" : ""}`}
+                        className={`resize-none min-h-[100px] ${errors.description ? "border-destructive" : ""}`}
                     />
                     {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
                 </div>
@@ -91,6 +90,8 @@ const FirstStepRoom: React.FC = () => {
                             <Input
                                 id="pricePerNight"
                                 type="number"
+                                min={0}
+                                maxLength={6}
                                 value={roomInfo.pricePerNight}
                                 onChange={(e) => setRoomInfo({ pricePerNight: Number(e.target.value) })}
                                 placeholder="Enter price"
@@ -112,6 +113,7 @@ const FirstStepRoom: React.FC = () => {
                             placeholder="Enter capacity"
                             className={errors.capacity ? "border-destructive" : ""}
                             min={1}
+                            maxLength={99}
                         />
                         {errors.capacity && <p className="text-sm text-destructive">{errors.capacity}</p>}
                     </div>
@@ -144,7 +146,7 @@ const FirstStepRoom: React.FC = () => {
                 </div>
             </div>
         </div>
-    )
+    );
 }
 
 export default memo(FirstStepRoom)

@@ -28,7 +28,6 @@ const BusinessesMemo = memo(() => {
       },
     });
     const response = (await res.json()).data;
-    console.log(response);
     if (res.status === 200 || res.status === 201) {
       useBusinessData.getState().setOutletInfo(response);
     }

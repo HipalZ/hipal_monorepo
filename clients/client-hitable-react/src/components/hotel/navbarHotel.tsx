@@ -8,8 +8,9 @@ import MemoProfileHeader from "@/components/liteAlerts/profileHeader";
 import { useHotelStore } from "@/components/store/useHotelStore";
 import { NavItemsHotelEnum } from "@/components/types/hotelData";
 import NavItemsHotel from "../atoms/navItemsHotel";
+import { memo } from "react";
 
-const NavbarHotel = ({
+const MemoNavbarHotel = ({
     hide,
     hideBack,
 }: { hide?: boolean; hideBack?: boolean }) => {
@@ -68,4 +69,5 @@ const NavbarHotel = ({
     );
 };
 
-export default NavbarHotel;
+const NavbarHotel = memo(MemoNavbarHotel);
+export default NavbarHotel

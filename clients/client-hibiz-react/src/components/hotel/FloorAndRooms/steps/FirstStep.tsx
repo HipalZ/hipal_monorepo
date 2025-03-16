@@ -38,6 +38,8 @@ const FirstStep: React.FC = () => {
             id="tax"
             type="number"
             value={floorInfo.tax}
+            max={100}
+            min={0}
             onChange={(e) => setFloorInfo({ tax: Number(e.target.value) })}
             placeholder="Enter tax percentage"
             className={errors.tax ? "border-destructive" : ""}

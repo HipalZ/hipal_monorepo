@@ -1,11 +1,11 @@
-import { Suspense } from "react";
+import { memo, Suspense } from "react";
 import { useAlertsStore } from "../store/useAlertStore";
 import { AlertsSearchAndFilter } from "./alertsSearchAndFilter";
 import { AlertCardHotel } from "./alertCardHotel";
 import { EmptyAlerts } from "./emptyAlerts";
 import { useRoomAlerts } from "@/hooks/useHotelApis";
 
-const AlertHotel = () => {
+const MemoAlertHotel = () => {
   useRoomAlerts();
   const { filteredAlerts } = useAlertsStore();
   return (
@@ -30,4 +30,5 @@ const AlertHotel = () => {
   );
 };
 
-export default AlertHotel;
+const AlertHotel = memo(MemoAlertHotel);
+export default AlertHotel

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, memo } from "react"
 import {
   Clock,
   Package,
@@ -12,14 +12,14 @@ import {
   ArrowUpAZ,
   Filter,
 } from "lucide-react";
-import { Input } from "@/components/ui/input"
-import { useHistoryAlerts } from "@/hooks/useHotelApis"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
 import { useAlertsColors, type SortOption, useFormatTimes } from "../utils/helpersHotel";
+import { useHistoryAlerts } from "@/hooks/useHotelApis"
 
-const HistoryHotel = () => {
+const MemoHistoryHotel = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState<SortOption>("newest")
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
@@ -305,5 +305,6 @@ const HistoryHotel = () => {
   )
 }
 
+const HistoryHotel = memo(MemoHistoryHotel)
 export default HistoryHotel
 

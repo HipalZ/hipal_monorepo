@@ -6,9 +6,11 @@ import { useCheckOut } from '@/hooks/useHotelApis';
 import { useHotelStore } from '../store/useHotelStore';
 import { useMutation } from '@tanstack/react-query';
 import CommonBottomButton from '../atoms/bottomButton';
-import ReviewUsersHotel from "./reviewUsersHotel";
+import { memo, lazy } from "react";
 
-const BookedRoomHotel = () => {
+const ReviewUsersHotel = lazy(() => import("./reviewUsersHotel"));
+
+const MemoBookedRoomHotel = () => {
     const { setOpenRoomModal, roomData } = useHotelStore();
     const { checkOut } = useCheckOut();
     const handleCopyAuthCode = () => {
@@ -100,6 +102,6 @@ const BookedRoomHotel = () => {
         </section>
     )
 }
-
+const BookedRoomHotel = memo(MemoBookedRoomHotel)
 export default BookedRoomHotel
 

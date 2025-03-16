@@ -1,14 +1,14 @@
-import { Phone, User, BedDouble, PhoneIcon as WhatsappLogo, Bell, Info } from "lucide-react";
 import { CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input"
-import CommonBottomButton from "../atoms/bottomButton"
+import { memo, useState } from "react";
+import { Phone, User, BedDouble, PhoneIcon as WhatsappLogo } from "lucide-react";
 import { useCheckIn } from "@/hooks/useHotelApis";
-import { useState } from "react";
 import { useHotelStore } from "../store/useHotelStore"
-import toast from "react-hot-toast"
 import { useMutation } from "@tanstack/react-query";
+import CommonBottomButton from "../atoms/bottomButton"
+import toast from "react-hot-toast"
 
-const AvailableRoomHotel = () => {
+const MemoAvailableRoomHotel = () => {
     const { roomData, setOpenRoomModal, guestName, setGuestName, phoneNumber, setPhoneNumber } = useHotelStore();
     const { checkIn } = useCheckIn();
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -143,4 +143,5 @@ const AvailableRoomHotel = () => {
     )
 }
 
+const AvailableRoomHotel = memo(MemoAvailableRoomHotel)
 export default AvailableRoomHotel

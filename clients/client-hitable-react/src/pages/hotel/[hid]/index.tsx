@@ -1,12 +1,12 @@
-import SpinnerMemo from "@/components/atoms/loadingSpinner"
-import AlertHotel from "@/components/hotel/alertHotel";
-import HistoryHotel from "@/components/hotel/historyHotel";
-import { useHotelStore } from "@/components/store/useHotelStore";
-import { NavItemsHotelEnum } from "@/components/types/hotelData";
 import { memo, Suspense, lazy } from "react";
+import { NavItemsHotelEnum } from "@/components/types/hotelData";
+import { useHotelStore } from "@/components/store/useHotelStore";
+import BottomPopUp from "@/components/atoms/universalPopup";
+import SpinnerMemo from "@/components/atoms/loadingSpinner"
 
+const AlertHotel = lazy(() => import("@/components/hotel/alertHotel"));
+const HistoryHotel = lazy(() => import("@/components/hotel/historyHotel"));
 const NavItemsHotel = lazy(() => import("@/components/atoms/navItemsHotel"));
-const BottomPopUp = lazy(() => import("@/components/atoms/universalPopup"));
 const NavbarHotel = lazy(() => import("@/components/hotel/navbarHotel"));
 const AvailableRoomHotel = lazy(() => import("@/components/hotel/availableRoomHotel"));
 const BookedRoomHotel = lazy(() => import("@/components/hotel/bookedRoomHotel"));

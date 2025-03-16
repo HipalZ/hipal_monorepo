@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { NavItemsHotelEnum, type RoomData } from "../types/hotelData";
+import { SortOption } from "../utils/helpersHotel";
 
 interface IHotelStore {
   // nav items toggling
@@ -26,6 +27,12 @@ interface IHotelStore {
 
   isFilterOpen: boolean;
   setIsFilterOpen: (value: boolean) => void;
+
+  searchHistory: string;
+  setSearchHistory: (value: string) => void;
+
+  sortByHistory: SortOption;
+  setSortByHistory: (value: SortOption) => void;
 }
 
 export const useHotelStore = create<IHotelStore>((set) => ({
@@ -52,4 +59,10 @@ export const useHotelStore = create<IHotelStore>((set) => ({
 
   isFilterOpen: false,
   setIsFilterOpen: (value) => set({ isFilterOpen: value }),
+
+  searchHistory: "",
+  setSearchHistory: (value) => set({ searchHistory: value }),
+
+  sortByHistory: "newest",
+  setSortByHistory: (value) => set({ sortByHistory: value }),
 }));

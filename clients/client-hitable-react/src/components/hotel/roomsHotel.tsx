@@ -1,12 +1,12 @@
-import { useGetAllRooms } from "@/hooks/useHotelApis"
-import type { RoomData } from "../types/hotelData"
-import LoadingSpinner from "../atoms/loadingSpinner";
-import { useCallback, useMemo, useState } from "react";
-import { useHotelStore } from "../store/useHotelStore";
-import { cn } from "../utils/helpers";
 import { BedDouble, BedSingle, Users, Search, X, Filter } from "lucide-react";
-import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { cn } from "../utils/helpers";
+import { Input } from "@/components/ui/input"
+import { memo, useCallback, useMemo, useState } from "react";
+import { useGetAllRooms } from "@/hooks/useHotelApis"
+import { useHotelStore } from "../store/useHotelStore";
+import LoadingSpinner from "../atoms/loadingSpinner";
+import type { RoomData } from "../types/hotelData"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAlertsColors } from "../utils/helpersHotel";
 
-export default function RoomsHotel() {
+function MemoRoomsHotel() {
     const { allRooms, isLoading } = useGetAllRooms()
     const { setRoomData, setOpenRoomModal } = useHotelStore()
     const [searchQuery, setSearchQuery] = useState("")
@@ -225,3 +225,5 @@ export default function RoomsHotel() {
     )
 }
 
+const RoomsHotel = memo(MemoRoomsHotel)
+export default RoomsHotel

@@ -1,14 +1,13 @@
-"use client";
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
 import { CheckCircle2, ThumbsUp } from "lucide-react";
+import { Label } from "@/components/ui/label"
+import { memo, useState } from "react"
 import { motion } from "framer-motion"
 import { useHotelStore } from "../store/useHotelStore"
 
-const ReviewUsersHotel = () => {
+const MemoReviewUsersHotel = () => {
     const { reviewUserIds, setReviewUserIds, roomData } = useHotelStore()
     const [isSuccess, setIsSuccess] = useState(false)
     const handleToggleUser = (userId: string) => {
@@ -105,5 +104,6 @@ const ReviewUsersHotel = () => {
     )
 }
 
+const ReviewUsersHotel = memo(MemoReviewUsersHotel)
 export default ReviewUsersHotel
 
