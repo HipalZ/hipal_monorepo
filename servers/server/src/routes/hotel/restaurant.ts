@@ -64,7 +64,7 @@ const restaurantRouter = new Hono()
 
         const updateHotel = await Business.findByIdAndUpdate(
           businessId,
-          { $push: { restaurantIds: { $each: restaurantIds } } },
+          { $addToSet: { restaurantIds: { $each: restaurantIds } } },
           { session },
         );
 
@@ -74,7 +74,7 @@ const restaurantRouter = new Hono()
 
         const updateRestaurant = await Business.updateMany(
           { _id: { $in: restaurantIds } },
-          { $push: { hotelIds: businessId } },
+          { $addToSet: { hotelIds: businessId } },
           { session },
         );
 
