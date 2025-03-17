@@ -1,5 +1,6 @@
 import {
   Business,
+  DeviceToken,
   HotelRoom,
   HotelRoomSession,
   HotelZone,
@@ -22,50 +23,59 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
+const admin = require("firebase-admin");
 
+const sendPushNotification = async (token: string, hotelNo: string) => {
+  const pushMessage = {
+    token: token, // or use 'topic' if you're sending to a topic
+    notification: {
+      title: "Room Ready for Cleaning",
+      body: `Room ${hotelNo} has just been checked out and is now ready for cleaning. Please ensure it is cleaned and prepared for the next guest. Thank you!`,
+    },
+    android: {
+      notification: {
+        channel_id: "custom_channel_id",
+        sound: "order",
+      },
+    },
+  };
+
+  try {
+    const response = await admin.messaging().send(pushMessage);
+    return { success: true, response };
+  } catch (error) {
+    console.error("Error sending FCM message:", error);
+  }
+};
 const roomRouter = new Hono()
 
-.get(
-  "/fetch_room",
-  zValidator(
-    "query",
-    z
-      .object({
-        businessId: z.string().min(2).max(50), // Now mandatory
-        roomId: z.string().min(2).max(50).optional(),
-        roomName: z.string().min(2).max(50).optional(),
-      })
-      .refine(
-        (data) => data.roomId || data.roomName,
-        {
+  .get(
+    "/fetch_room",
+    zValidator(
+      "query",
+      z
+        .object({
+          businessId: z.string().min(2).max(50), // Now mandatory
+          roomId: z.string().min(2).max(50).optional(),
+          roomName: z.string().min(2).max(50).optional(),
+        })
+        .refine((data) => data.roomId || data.roomName, {
           message: "Either roomId or roomName must be provided",
-        }
-      )
-  ),
-  async (c) => {
-    const { businessId, roomId, roomName } = c.req.query();
+        }),
+    ),
+    async (c) => {
+      const { businessId, roomId, roomName } = c.req.query();
 
-    let room;
-    if (roomId) {
-      // Ensure that the roomId belongs to the specified business
-      room = await HotelRoom.findOne({
-        _id: roomId,
+      const room = await HotelRoom.findOne({
         businessId,
-      }).lean();
-    } else if (roomName) {
-      room = await HotelRoom.findOne({
-        businessId,
-        name: roomName,
-      }).lean();
-    }
+        $or: [{ _id: roomId }, { name: roomName }],
+      });
 
-    return room
-      ? respond(c, "Room details", false, 200, room)
-      : respond(c, "Room not found", true, 404, {});
-  }
-)
-
-
+      return room
+        ? respond(c, "Room details", false, 200, room)
+        : respond(c, "Room not found", true, 404, {});
+    },
+  )
 
   .get(
     "/fetch_rooms",
@@ -104,33 +114,26 @@ const roomRouter = new Hono()
 
       const roomData = await HotelRoom.findOne({
         businessId,
-        name: room
-      })
+        name: room,
+      });
 
-      if(!roomData){
+      if (!roomData) {
         return respond(c, "Room not found", true, 404, {});
       }
 
       const isVerify = await HotelRoomSession.findOne({
-        roomId: roomData._id
-      })
-
+        roomId: roomData._id,
+      });
 
       if (!isVerify) {
         return respond(c, "please checkIn first", true, 400, {});
-
       }
 
       if (!isVerify.isAuthCodeVerified) {
-
         return respond(c, "need room entry code", true, 401, {});
-
-
       }
 
       return respond(c, "success", true, 200, {});
-
-
     },
   )
 
@@ -510,6 +513,19 @@ const roomRouter = new Hono()
 
       if (!removeSession) {
         throw new Error("Error removing room session");
+      }
+
+      const registrationToken = await DeviceToken.find({
+        businessId: requestData.businessId,
+      });
+
+      // send push notification to all devices
+      if (registrationToken.length > 0) {
+        for (const obj of registrationToken) {
+          if (obj.notification) {
+            sendPushNotification(obj.token, updatedRoom.name);
+          }
+        }
       }
 
       return respond(c, "Checked out successfully", false, 200, {

@@ -79,7 +79,7 @@ const saveKotOrder = async (
   return true;
 };
 
-const sendPushNotification = async (
+export const sendPushNotification = async (
   token: string,
   customerName: string,
   tableName: string,

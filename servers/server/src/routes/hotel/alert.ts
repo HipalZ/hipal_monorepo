@@ -1,4 +1,4 @@
-import { HotelAlert, User } from "@hi/db-models";
+import { DeviceToken, HotelAlert, HotelRoom, User } from "@hi/db-models";
 import {
   type AcceptHotelAlertType,
   acceptHotelAlert,
@@ -9,6 +9,30 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
 import { respond } from "../../utils/response";
+const admin = require("firebase-admin");
+
+const sendPushNotification = async (token: string, hotelNo: string) => {
+  const pushMessage = {
+    token: token, // or use 'topic' if you're sending to a topic
+    notification: {
+      title: "Room Attention Required",
+      body: `Room ${hotelNo} requires your attention. Please check and address any necessary tasks as soon as possible. Thank you for your prompt action!`,
+    },
+    android: {
+      notification: {
+        channel_id: "custom_channel_id",
+        sound: "order",
+      },
+    },
+  };
+
+  try {
+    const response = await admin.messaging().send(pushMessage);
+    return { success: true, response };
+  } catch (error) {
+    console.error("Error sending FCM message:", error);
+  }
+};
 
 const hotelAlertRouter = new Hono()
   .get(
@@ -143,6 +167,12 @@ const hotelAlertRouter = new Hono()
     return runInTransaction(async (session) => {
       const requestData = await c.req.json();
 
+      const roomData = await HotelRoom.findById(requestData.roomId);
+
+      if (!roomData) {
+        return respond(c, "Room not found", true, 404, {});
+      }
+
       const alert = new HotelAlert({
         ...requestData,
         createdAt: Date.now(),
@@ -153,6 +183,19 @@ const hotelAlertRouter = new Hono()
 
       if (!alert) {
         throw new Error("Failed to create alert");
+      }
+
+      const registrationToken = await DeviceToken.find({
+        businessId: requestData.businessId,
+      });
+
+      // send push notification to all devices
+      if (registrationToken.length > 0) {
+        for (const obj of registrationToken) {
+          if (obj.notification) {
+            sendPushNotification(obj.token, roomData.name);
+          }
+        }
       }
 
       return respond(c, "Alert created successfully", false, 201, {
