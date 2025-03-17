@@ -47,7 +47,7 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                                 <div className="flex justify-between gap-4">
                                     {/* Logo Section */}
                                     <div className="w-32">
-                                        <div className="relative w-24 h-24 overflow-hidden border-2 shadow-lg rounded-xl border-h-primary">
+                                        <div className="relative w-24 h-24 overflow-hidden rounded-xl border-h-primary">
                                             {logoUrl ? (
                                                 <ShimmerImage
                                                     src={logoUrl}
@@ -83,7 +83,7 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                                 <section className="flex flex-row justify-around gap-2 pb-12 -ml-2">
                                     <Button
                                         onClick={callTheOwner}
-                                        className="px-3 py-4 transition-colors rounded-full text-h-base-100 bg-h-primary hover:bg-h-primary/90"
+                                        className="px-3 py-4 transition-colors rounded-full text-white bg-[#DC4C35]"
                                         type="button"
                                         aria-label="Call"
                                     >
@@ -92,7 +92,7 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                                     </Button>
                                     <Button
                                         onClick={whatsappOwner}
-                                        className="px-3 py-4 transition-colors rounded-full text-h-base-100 bg-h-primary hover:bg-h-primary/90"
+                                        className="px-3 py-4 transition-colors rounded-full text-white bg-[#DC4C35]"
                                         type="button"
                                         aria-label="WhatsApp"
                                     >
@@ -100,7 +100,7 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                                     </Button>
                                     <Button
                                         onClick={goToLocation}
-                                        className="px-3 py-4 transition-colors rounded-full bg-h-primary text-h-base-100 hover:bg-h-primary/90"
+                                        className="px-3 py-4 transition-colors rounded-full text-white bg-[#DC4C35]"
                                         type="button"
                                         aria-label="Location"
                                     >
@@ -118,7 +118,7 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                     <section className="flex flex-row justify-around pt-12 pb-2">
                         <Button
                             onClick={callTheOwner}
-                            className="p-4 transition-colors rounded-full text-h-base-100 bg-h-primary hover:bg-h-primary/90"
+                            className="p-4 transition-colors rounded-full text-white bg-[#DC4C35]"
                             type="button"
                             aria-label="Call"
                         >
@@ -127,7 +127,7 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                         </Button>
                         <Button
                             onClick={whatsappOwner}
-                            className="p-4 transition-colors rounded-full text-h-base-100 bg-h-primary hover:bg-h-primary/90"
+                            className="p-4 transition-colors rounded-full text-white bg-[#DC4C35]"
                             type="button"
                             aria-label="WhatsApp"
                         >
@@ -135,7 +135,7 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                         </Button>
                         <Button
                             onClick={goToLocation}
-                            className="p-4 transition-colors rounded-full bg-h-primary text-h-base-100 hover:bg-h-primary/90"
+                            className="p-4 transition-colors rounded-full text-white bg-[#DC4C35]"
                             type="button"
                             aria-label="Location"
                         >

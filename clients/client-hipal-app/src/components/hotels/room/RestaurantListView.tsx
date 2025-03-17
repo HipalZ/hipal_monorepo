@@ -29,7 +29,7 @@ export const RestaurantListView = ({
 
       {isLoading ? (
         <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
+          {[1,2,3].map((i) => (
             <RestaurantCardSkeleton key={i} />
           ))}
         </div>

@@ -109,7 +109,7 @@ function MemoRoomsHotel() {
                     </div>
                 </div>
                 {/* Results count */}
-                <h1 className="mb-4 text-sm text-black">
+                <h1 className="mt-4 text-sm text-black">
                     {filteredRooms?.length} {filteredRooms.length === 1 ? "room" : "rooms"} found
                 </h1>
                 {/* Active filters display */}

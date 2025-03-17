@@ -45,17 +45,17 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
     const { creatingAlert, createAlert } = useCreateAlert()
     const { fetchingRestaurants, restaurantData } = useGetAllLinkRestautants(businessId)
 
-     const { cart,setCartEmpty } = useCartStore();
-      const { setShowCart, cartPage} = useCart();
-     
-    
-      const sanitizedCart = useMemo(() => {
+    const { cart, setCartEmpty } = useCartStore();
+    const { setShowCart } = useCart();
+
+
+    const sanitizedCart = useMemo(() => {
         return cart.map(({ dish, ...item }) => {
-          const { recommendationIds, addOnIds, ...sanitizedDish } = dish;
-          return { ...item, dish: sanitizedDish };
+            const { recommendationIds, addOnIds, ...sanitizedDish } = dish;
+            return { ...item, dish: sanitizedDish };
         });
-      }, [cart]);
-      
+    }, [cart]);
+
     // Handle restaurant selection
     const handleSelectRestaurant = useCallback(
         (restaurant: ILinkHotels) => {
@@ -63,10 +63,10 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
                 // If already selected, toggle menu view
                 setCurrentView((prev) => (prev === "restaurants" ? "menu" : "restaurants"))
             } else {
-                
+
                 setSelectedRestaurant(restaurant)
                 setCurrentView("menu")
-              
+
                 // Simulate menu loading
                 setMenuLoading(true)
                 setTimeout(() => {
@@ -85,7 +85,7 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
         setCurrentView("restaurants")
         setCartEmpty()
         setShowCart(false)
-    }, [ setCartEmpty, setShowCart])
+    }, [setCartEmpty, setShowCart])
 
     // Handle order submission
     const handlePlaceOrder = useCallback(async () => {
@@ -111,21 +111,12 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
             })
 
             setOrderStatus("success")
-
-            // Close popup after a delay
-            setTimeout(() => {
-                onClose()
-                setCartEmpty()
-                setOrderStatus("idle")
-                setCurrentView("restaurants")
-                setSelectedRestaurant(null)
-            }, 5000)
         } catch (error) {
             console.error("Error placing food order:", error)
             setOrderStatus("error")
             toast.error("Failed to place your order. Please try again.")
         }
-    }, [roomPayload, businessId, room, createAlert, userId, services, onClose,sanitizedCart, setCartEmpty])
+    }, [roomPayload, businessId, room, createAlert, userId, services, onClose, sanitizedCart, setCartEmpty])
 
     // Loading state
     const isLoading = fetchingRestaurants || gettingRoomLoader || creatingAlert || orderStatus === "loading"
@@ -157,7 +148,6 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
     return (
         <BottomPopUp hide show={show} onClose={onClose}>
             <section className="relative overflow-auto h-[100dvh] hide-scrollbar">
-
                 {renderContent()}
             </section>
 
@@ -172,7 +162,7 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
                         disable: isLoading,
                     },
                     {
-                        text: orderStatus === "success" ? "Done" : "Place Orders",
+                        text: orderStatus === "success" ? "Back to room" : "Place Orders",
                         onClick: orderStatus === "success" ? onClose : handlePlaceOrder,
                         className: "w-full rounded-md",
                         disable: isLoading || (!selectedRestaurant && orderStatus !== "success"),

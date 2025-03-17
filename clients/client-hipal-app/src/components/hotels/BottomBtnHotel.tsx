@@ -24,7 +24,7 @@ export function BottomBtnHotel() {
                 buttons={[
                     {
                         text: "Book Now",
-                        className: "w-full",
+                        className: "w-full !text-white !bg-[#DC4C35]",
                         icon: <BookmarkPlus />,
                         onClick: navigateToRooms,
                     },
@@ -55,7 +55,7 @@ export const BottomBtnRoom = () => {
                     },
                     {
                         text: "Book Now",
-                        className: "w-full rounded-md",
+                        className: "w-full rounded-md !text-white !bg-[#DC4C35]",
                         icon: <BookmarkPlus />,
                         onClick: goBack,
                     },

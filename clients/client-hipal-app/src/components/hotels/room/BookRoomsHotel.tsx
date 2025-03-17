@@ -38,7 +38,7 @@ export function BookRoomsHotel({ rooms, imageUrl }: { rooms: Room[], imageUrl: s
                         </CardHeader>
                         <BookRoomsContent room={room} />
                         <CardFooter className="p-4 pt-0 mt-auto">
-                            <Button type='button' onClick={() => handleBookNow(room)} className="w-full text-h-base-100 bg-h-primary hover:bg-h-primary/90" size="lg">
+                            <Button type='button' onClick={() => handleBookNow(room)} className="w-full text-white bg-[#DC4C35]" size="lg">
                                 Book now
                             </Button>
                         </CardFooter>
