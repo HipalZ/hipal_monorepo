@@ -81,7 +81,7 @@ const BusinessSettingsHotel = () => {
         }
 
         const payload = {
-            businessId: businessData?._id,
+            businessId: businessData?.businessId,
             branchName: formData.branchName,
             billingStartTime: formData.startTime,
             billingEndTime: formData.endTime,
