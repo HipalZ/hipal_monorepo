@@ -107,7 +107,7 @@ export const useCreateHotelRoom = () => {
     const { resetForm } = useRoomFormStore((state) => ({
         resetForm: state.resetForm,
     }))
-    const {setOpenAddRoomModal} = useRoomStore((state) => ({
+    const { setOpenAddRoomModal } = useRoomStore((state) => ({
         setOpenAddRoomModal: state.setOpenAddRoomModal
     }))
 
@@ -153,7 +153,7 @@ export const useUpdateHotelRoom = () => {
     const { resetForm } = useRoomFormStore((state) => ({
         resetForm: state.resetForm,
     }))
-    const {setOpenAddRoomModal} = useRoomStore((state) => ({
+    const { setOpenAddRoomModal } = useRoomStore((state) => ({
         setOpenAddRoomModal: state.setOpenAddRoomModal
     }))
 
@@ -162,19 +162,13 @@ export const useUpdateHotelRoom = () => {
             const response = await apiRpc.hotel.rooms.$put({
                 json: payload
             })
+            const res = await response.json()
+            if (!response.ok) {
+                throw new Error(res.message || `HTTP error! Status: ${response.status}`);
+            }
             return response
         },
         onSuccess: (data, variables) => {
-            if (data.status === 400 || data.status === 401) {
-                setError(data.message)
-                setOpenErrorModal(true)
-                return toast.error("Failed to update room")
-            }
-            if (data.status === 409) {
-                setError(data.message)
-                setOpenErrorModal(true)
-                return toast.error("Room already exists")
-            }
             if (data.status === 200 || data.status === 201) {
                 resetForm()
                 setOpenAddRoomModal(false)
@@ -183,6 +177,7 @@ export const useUpdateHotelRoom = () => {
             }
         },
         onError: (error) => {
+            console.log(error)
             setError(error.message)
             setOpenErrorModal(true)
         },

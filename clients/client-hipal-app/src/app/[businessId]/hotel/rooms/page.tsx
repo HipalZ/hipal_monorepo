@@ -3,8 +3,10 @@ import { getBusinessData } from '@/apis/commonApis'
 import SkeletonLoader from '@/components/atoms/loader/skeletonLoader'
 import type { BusinessDetails } from '@/components/types/businessData'
 import { BookRoomsHotel } from '@/components/hotels/room/BookRoomsHotel'
-import { getInfoForHotel, getRooms } from '@/apis/hotel'
-// import ResponsiveImage from '@/components/hotels/room/RoomTopSection'
+import { getRooms } from '@/apis/hotel';
+
+export const dynamics = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 export async function generateMetadata({
     params,
@@ -92,7 +94,7 @@ const Room = async ({
         <HotelBackgroundContainer >
             <ViewPortContainer className="relative mx-auto max-w-[30rem] min-h-screen">
                 <NavBarHotel text="Room View" hideLogo hideChat centerText showBackButton />
-                <ResponsiveImage imageUrl={business?.specialBannerUrl} alt='Room Top Section' />
+                <ResponsiveImage imageUrl={business?.endBannerUrl} alt='Room Top Section' />
                 <BookRoomsHotel rooms={rooms} imageUrl={business?.specialBannerUrl}/>
                 <BottomBtnRoom />
             </ViewPortContainer>

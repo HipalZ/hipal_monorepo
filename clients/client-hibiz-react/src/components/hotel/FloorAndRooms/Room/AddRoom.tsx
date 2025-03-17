@@ -118,7 +118,6 @@ const AddRoom: React.FC<AddRoomProps> = ({ roomToEdit, onClose }) => {
       }
     } catch (error) {
       console.error(`Error ${isEditMode ? "updating" : "creating"} room:`, error)
-      toast.error(`Failed to ${isEditMode ? "update" : "create"} room`)
     } finally {
       setIsSubmitting(false)
     }
