@@ -193,7 +193,7 @@ const hotelAlertRouter = new Hono()
       if (registrationToken.length > 0) {
         for (const obj of registrationToken) {
           if (obj.notification) {
-            sendPushNotification(obj.token, roomData.name);
+            await sendPushNotification(obj.token, roomData.name);
           }
         }
       }

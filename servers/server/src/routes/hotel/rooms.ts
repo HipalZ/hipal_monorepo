@@ -523,7 +523,7 @@ const roomRouter = new Hono()
       if (registrationToken.length > 0) {
         for (const obj of registrationToken) {
           if (obj.notification) {
-            sendPushNotification(obj.token, updatedRoom.name);
+            await sendPushNotification(obj.token, updatedRoom.name);
           }
         }
       }
