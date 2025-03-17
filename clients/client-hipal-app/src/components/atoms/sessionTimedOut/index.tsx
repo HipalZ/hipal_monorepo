@@ -20,7 +20,7 @@ export const MemoSessionTimeoutBanner = () => {
         tableNameTimeStamp === null &&
         isVisible && !pathName?.includes("ebill") &&
         !pathName?.includes("posPayment") &&
-        !pathName?.includes("review") && outletInfo?.outLetType !== "HOTEL"
+        !pathName?.includes("review") && !pathName.includes("HOTEL")
     );
     return (
         <AnimatePresence >

@@ -17,6 +17,7 @@ import { useLogin } from "@/components/store/useLogin"
 import { toast } from "react-toastify"
 import LoadingSpinnerCircle from "@/components/atoms/loader"
 import dynamic from "next/dynamic"
+import { useCartStore } from "@/components/store/useCartStore"
 
 // Lazy-loaded components for better tree-shaking
 const AlertCircle = dynamic(() => import("lucide-react").then((mod) => ({ default: mod.AlertCircle })), { ssr: false })
@@ -118,6 +119,7 @@ export default function ServiceCategoryCard({ category, className = "", business
   const room = query.get("room")
   const { gettingRoomLoader, roomPayload } = useHotelRoomData()
   const { creatingAlert, createAlert } = useCreateAlert()
+  const { setCartEmpty } = useCartStore();
 
   // Check if this is the food order category
   const isFoodOrderCategory = category.name.toLowerCase() === "order food"
@@ -138,7 +140,8 @@ export default function ServiceCategoryCard({ category, className = "", business
 
   const closeServicePopup = useCallback(() => {
     setServicePopup(false)
-  }, [])
+    setCartEmpty()
+  }, [ setCartEmpty])
 
   const handleServiceToggle = useCallback((serviceId: string) => {
     setSelectedServices((prev) => {

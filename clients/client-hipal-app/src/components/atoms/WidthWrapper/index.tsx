@@ -39,7 +39,7 @@ export function HotelBackgroundContainer({
             objectPosition: "top",
             backgroundRepeat:"repeat"
           }}
-          className=" w-[1980px] h-screen lg:h-[1980px]"
+          className="hidden md:block w-[1980px] h-screen lg:h-[1980px]"
           sizes="100vw"
         />
       </div>

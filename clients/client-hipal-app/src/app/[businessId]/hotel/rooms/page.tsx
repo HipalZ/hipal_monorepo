@@ -96,7 +96,7 @@ const Room = async ({
                 <NavBarHotel text="Room View" hideLogo hideChat centerText showBackButton />
                 <ResponsiveImage imageUrl={business?.endBannerUrl} alt='Room Top Section' />
                 <BookRoomsHotel rooms={rooms} imageUrl={business?.specialBannerUrl}/>
-                <BottomBtnRoom />
+                {/* <BottomBtnRoom /> */}
             </ViewPortContainer>
         </HotelBackgroundContainer>
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { MessageCircle, ChevronLeft } from "lucide-react"
+import { MessageCircle, ArrowLeft } from "lucide-react";
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -58,10 +58,10 @@ export function NavBarHotel({
                 variant="destructive"
                 size="icon"
                 onClick={handleBackClick}
-                className="mr-1 text-black hover:bg-black/5"
+                className="mr-1 text-white hover:bg-black/5"
                 aria-label="Go back"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ArrowLeft className="w-5 h-5" />
               </Button>
             )}
 
@@ -89,7 +89,7 @@ export function NavBarHotel({
           {/* Center Text */}
           {text && centerText && (
             <div className="absolute transform -translate-x-1/2 left-1/2">
-              <h1 className="text-lg font-medium text-h-primary font-playfair">
+              <h1 className="text-lg font-bold text-h-primary font-playfair">
                 {text}
               </h1>
             </div>

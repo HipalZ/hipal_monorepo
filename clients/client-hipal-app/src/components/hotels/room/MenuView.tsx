@@ -24,7 +24,7 @@ export const MenuView = ({ restaurant, onBack, isLoading }: MenuViewProps) => {
     const { menuLoading, menuData } = useGetAllRestaurantMenu(restaurant._id as string)
 
     return (
-        <div className="relative p-4">
+        <div className="relative p-2">
             <div className="flex items-center mb-4">
                 <button type="button" onClick={onBack} className="p-1 mr-2 rounded-full hover:bg-gray-100">
                     <ArrowLeft className="w-5 h-5 text-h-primary" />
