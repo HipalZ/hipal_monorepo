@@ -151,8 +151,6 @@ const surlRouter = new Hono()
         posBillRequestId: orderId,
       });
 
-      console.log("alreadyExists", alreadyExists);
-
       if (alreadyExists) {
         return c.json(
           {

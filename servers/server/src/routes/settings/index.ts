@@ -153,7 +153,6 @@ const settingsRouter = new Hono()
           requestData.razorpayWebhookSecret
         ) {
           const deletes = cache.delete(requestData.businessId as string);
-          console.log("deletes", deletes);
 
           await BusinessSettings.findByIdAndUpdate(settingsId, {
             razorpayKeyId: requestData.razorpayKeyId,
@@ -328,7 +327,6 @@ const settingsRouter = new Hono()
 
       // Update each banner's sequence according to the order in bannerIds
       for (let i = 0; i < sequenceOfBannerIds.length; i++) {
-        console.log("sequenceOfBannerIds[i]", sequenceOfBannerIds[i], i);
         await Banner.updateOne(
           { _id: sequenceOfBannerIds[i] },
           { $set: { sequence: i + 1 } },
@@ -356,7 +354,6 @@ const settingsRouter = new Hono()
         businessId as string,
       )) as MerChantDetails;
       if (!merchant) {
-        console.log("from db");
         merchant = await BusinessSettings.findOne({
           businessId,
         })
@@ -364,8 +361,6 @@ const settingsRouter = new Hono()
           .lean();
         await cache.set(businessId as string, merchant as MerChantDetails);
       }
-
-      console.log("form cache", merchant);
 
       if (businessId === "67b2f3e2d2f9b3b220e7959b") {
         return respond(c, "Settings fetched successfully", false, 200, {});
@@ -474,7 +469,6 @@ const settingsRouter = new Hono()
         businessId as string,
       )) as MerChantDetails;
       if (!merchant) {
-        console.log("from db");
         merchant = await BusinessSettings.findOne({
           businessId: "66b08937c88e8035f92d2f77",
         })
@@ -515,7 +509,6 @@ const settingsRouter = new Hono()
         businessId as string,
       )) as MerChantDetails;
       if (!merchant) {
-        console.log("from db");
         merchant = await BusinessSettings.findOne({
           businessId,
         })

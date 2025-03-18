@@ -1159,8 +1159,6 @@ const groupRouter = new Hono()
         bestUserGroup.filter[0],
       );
 
-      console.log("matchedUsers", matchedUsers);
-
       matchedUsers.map((user) => {
         user.tags = user.tags.filter((tag) => {
           return bestUserGroup.filter[0].tags.some(
@@ -1681,7 +1679,6 @@ const groupRouter = new Hono()
 
     async (c) => {
       const { userIds = [], message, businessId } = await c.req.json();
-      console.log(userIds, message, businessId);
       return c.json(
         {
           message: "Message sent successfully",

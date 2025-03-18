@@ -335,8 +335,6 @@ const dishesRouter = new Hono()
       const { dishArray } = await c.req.json();
       const { businessId } = c.req.param();
 
-      console.log("businessId", businessId);
-
       const removeOldDishes = await UniquelyYours.updateMany(
         { businessId },
         { isDeleted: true },

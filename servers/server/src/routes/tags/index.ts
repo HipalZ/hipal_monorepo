@@ -223,7 +223,6 @@ const tagRouter = new Hono()
 
       for (let i = 0; i < tagIds.length; i++) {
         const tag = await TagModel.findById(tagIds[i]).select("duration time");
-        console.log("tag", tag);
         const updateUserTag = await UserTags.findOneAndUpdate(
           {
             tagId: tagIds[i],

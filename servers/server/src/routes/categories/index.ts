@@ -58,7 +58,6 @@ const categoriesRouter = new Hono()
           return respond(c, "Already exists", true, 409, {});
 
         const menuType = await Business.findOne({ businessId });
-        console.log("menuType", menuType);
         if (!menuType) return respond(c, "Business not found", true, 404, {});
 
         const creatingCategory = await Category.create(
@@ -542,9 +541,6 @@ const categoriesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
       const requestData = await c.req.json();
-      console.log("requestData", requestData);
-
-      console.log("businessId", businessId);
 
       for (let i = 0; i < requestData.length; i++) {
         const res = await Category.findOneAndUpdate(
@@ -556,7 +552,6 @@ const categoriesRouter = new Hono()
           { $set: { sequence: requestData[i].sequence } },
           { new: true },
         );
-        console.log("res", res);
       }
 
       return respond(c, "sequence updated successfully", false, 200, {});

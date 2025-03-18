@@ -240,7 +240,6 @@ const menuBannerRouter = new Hono()
     const token =
       "EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD";
     const phoneId = "365941956611521";
-    console.log("body", body);
 
     try {
       const response = await axios.post(
@@ -276,7 +275,6 @@ const menuBannerRouter = new Hono()
         },
         { headers: { Authorization: `Bearer ${token}` } },
       );
-      console.log("response", response);
       return c.json(
         {
           message: "Whatsapp template sent",

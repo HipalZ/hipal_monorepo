@@ -250,7 +250,6 @@ const posRouter = new Hono()
               initialTotal: getPin?.initialTotal,
             };
 
-            console.log("Get Bill if already", getBill.data);
             return c.json(
               {
                 message: "Data fetched successfully",
@@ -275,8 +274,6 @@ const posRouter = new Hono()
           "http://api.petpooja.com/V1/captainorders/request_bill/",
           billConfig,
         );
-
-        console.log("Fetch Bill12", fetchBill.data);
 
         if (fetchBill.data.success === "1") {
           if (!getPin?.requestId) {
@@ -308,8 +305,6 @@ const posRouter = new Hono()
             billRequestConfig,
           );
 
-          console.log("Fetch Bill Details000", fetchBillDetails.data);
-
           if (fetchBillDetails.data.success === "1") {
             const bill_request_id = fetchBillDetails.data.bill_request_id;
 
@@ -338,8 +333,6 @@ const posRouter = new Hono()
               "http://api.petpooja.com/V1/captainorders/get_bill/",
               getBillConfig,
             );
-
-            console.log("Get Billghyu", getBill.data);
 
             const simpleArray = transformItemsToSimpleArray(
               getBill.data.items_data || [],
@@ -797,7 +790,6 @@ const posRouter = new Hono()
                 .messaging()
                 .send(pushMessage)
                 .then((response: unknown) => {
-                  console.log("Successfully sent message:", response);
                   return c.json({
                     message: "FCM message sent successfully",
                     err: false,
@@ -1627,8 +1619,6 @@ const posRouter = new Hono()
         tableName: sessionTableFind ? sessionTableFind.name : tableName,
         businessId: businessId,
       });
-
-      console.log("TableInfo", tableInfo);
 
       if (tableInfo && !tableInfo?.phoneNumbers.includes(user.phone)) {
         return c.json(

@@ -551,8 +551,6 @@ const paymentsRouter = new Hono()
 
           const effectiveClaimedCoins = claimedCoins || tempTable.claimedCoins;
 
-          console.log("effectiveClaimedCoins", effectiveClaimedCoins);
-
           // Step 1: Calculate finalSubTotal
           const finalSubTotal =
             tempTable.initialSubTotal -
@@ -560,18 +558,12 @@ const paymentsRouter = new Hono()
               ? 0
               : Math.min(effectiveClaimedCoins, tempTable.initialSubTotal));
 
-          console.log("finalSubTotal", finalSubTotal);
-
           // Step 2: Calculate gstPercentage
           const gstPercentage =
             (tempTable.initialTax / tempTable.initialSubTotal) * 100;
 
-          console.log("gstPercentage", gstPercentage);
-
           // Step 3: Calculate finalTax
           const finalTax = (gstPercentage / 100) * finalSubTotal;
-
-          console.log("finalTax", finalTax);
 
           // Step 4: Calculate finalTotal
           const finalTotal = Math.round(
@@ -780,7 +772,6 @@ const paymentsRouter = new Hono()
                 .messaging()
                 .send(pushMessage)
                 .then((response: unknown) => {
-                  console.log("Successfully sent message:", response);
                   return c.json({
                     message: "FCM message sent successfully",
                     err: false,
@@ -788,7 +779,6 @@ const paymentsRouter = new Hono()
                   });
                 })
                 .catch((err: Error) => {
-                  console.log("Error sending FCM message:", err);
                   return c.json(
                     {
                       message: "Error sending FCM message",
@@ -1045,7 +1035,6 @@ const paymentsRouter = new Hono()
               .messaging()
               .send(pushMessage)
               .then((response: unknown) => {
-                console.log("Successfully sent message:", response);
                 return c.json({
                   message: "FCM message sent successfully",
                   err: false,
@@ -1053,7 +1042,6 @@ const paymentsRouter = new Hono()
                 });
               })
               .catch((err: Error) => {
-                console.log("Error sending FCM message:", err);
                 return c.json(
                   {
                     message: "Error sending FCM message",
@@ -1104,7 +1092,6 @@ const paymentsRouter = new Hono()
       }
 
       if (!RAZORPAY_WEBHOOK_SECRET) {
-        console.log("razorpay_webhook_secret missing");
       }
 
       const headersResult = RazorpayWebhookHeadersSchema.safeParse(
@@ -1112,6 +1099,7 @@ const paymentsRouter = new Hono()
       );
       if (!headersResult.success) {
         console.log("Invalid headers");
+
         return respond(c, "Invalid headers", true, 200, {});
       }
 
@@ -1133,8 +1121,7 @@ const paymentsRouter = new Hono()
       const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
 
       if (!bodyResult.success) {
-        console.log("Invalid body", bodyResult);
-
+        console.log("Invalid body");
         return respond(c, "Invalid body", true, 200, {});
       }
       //@ts-ignore
@@ -1143,7 +1130,6 @@ const paymentsRouter = new Hono()
       const getOrder = await Order.findOne({
         order_id: payload.payment.entity.order_id,
       });
-      console.log("getOrderMAMAMAAAAAAAAAAAAAAAAAAA", getOrder);
       const tempTable = await UserSession.findOne({
         businessId: getOrder?.businessId,
         tableName: getOrder?.tableName,
@@ -1193,13 +1179,7 @@ const paymentsRouter = new Hono()
           razorpayEventId: razorpayEventId,
         });
 
-        console.log(
-          "paymentAlreadyExistMAMAMMMMMMMMMMMMMMMMM",
-          paymentAlreadyExist,
-        );
-
         if (!paymentAlreadyExist && getOrder) {
-          console.log("getOrderMAMAMAAAAAAAAAAAAAAAAAAAANDER AYYA");
           const claimCoins = Number(getOrder?.claimedCoins) || 0;
           await PaymentAlert.updateOne(
             {
@@ -1341,14 +1321,12 @@ const paymentsRouter = new Hono()
       }
 
       if (!RAZORPAY_WEBHOOK_SECRET) {
-        console.log("razorpay_webhook_secret missing");
       }
 
       const headersResult = RazorpayWebhookHeadersSchema.safeParse(
         c.req.header(),
       );
       if (!headersResult.success) {
-        console.log("Invalid headers");
         return respond(c, "Invalid headers", true, 200, {});
       }
 
@@ -1363,15 +1341,12 @@ const paymentsRouter = new Hono()
         RAZORPAY_WEBHOOK_SECRET,
       );
       if (!isSignatureValid) {
-        console.log("Invalid signature");
         return respond(c, "Invalid signature", true, 200, {});
       }
 
       const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
 
       if (!bodyResult.success) {
-        console.log("Invalid body", bodyResult);
-
         return respond(c, "Invalid body", true, 200, {});
       }
       //@ts-ignore
@@ -1557,7 +1532,6 @@ const paymentsRouter = new Hono()
               .messaging()
               .send(pushMessage)
               .then((response: unknown) => {
-                console.log("Successfully sent message:", response);
                 return c.json({
                   message: "FCM message sent successfully",
                   err: false,
@@ -1565,7 +1539,6 @@ const paymentsRouter = new Hono()
                 });
               })
               .catch((err: Error) => {
-                console.log("Error sending FCM message:", err);
                 return c.json(
                   {
                     message: "Error sending FCM message",
@@ -1974,7 +1947,6 @@ const paymentsRouter = new Hono()
                 );
 
                 if (res.data.success === "0") {
-                  console.log("err", res.data);
                   throw new Error("payment failed in pos");
                 }
 
@@ -3026,14 +2998,12 @@ const paymentsRouter = new Hono()
       }
 
       if (!RAZORPAY_WEBHOOK_SECRET) {
-        console.log("razorpay_webhook_secret missing");
       }
 
       const headersResult = RazorpayWebhookHeadersSchema.safeParse(
         c.req.header(),
       );
       if (!headersResult.success) {
-        console.log("Invalid headers");
         return respond(c, "Invalid headers", true, 200, {});
       }
 
@@ -3048,15 +3018,12 @@ const paymentsRouter = new Hono()
         RAZORPAY_WEBHOOK_SECRET,
       );
       if (!isSignatureValid) {
-        console.log("Invalid signature");
         return respond(c, "Invalid signature", true, 200, {});
       }
 
       const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
 
       if (!bodyResult.success) {
-        console.log("Invalid body", bodyResult);
-
         return respond(c, "Invalid body", true, 200, {});
       }
       //@ts-ignore
@@ -3081,8 +3048,6 @@ const paymentsRouter = new Hono()
             hiCode: activeTable?.hiCode,
             pin: activeTable?.pin,
           });
-
-          console.log("alreadyTableSettle", alreadyTableSettle);
 
           if (!alreadyTableSettle) {
             const table = await Table.findOne({
