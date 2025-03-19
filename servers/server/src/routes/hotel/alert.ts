@@ -1,4 +1,10 @@
-import { DeviceToken, HotelAlert, HotelRoom, User } from "@hi/db-models";
+import {
+  DeviceToken,
+  HotelAlert,
+  HotelRoom,
+  HotelService,
+  User,
+} from "@hi/db-models";
 import {
   type AcceptHotelAlertType,
   acceptHotelAlert,
@@ -7,6 +13,7 @@ import {
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { schedule } from "node-cron";
 import { z } from "zod";
 import { respond } from "../../utils/response";
 const admin = require("firebase-admin");
@@ -31,6 +38,41 @@ const sendPushNotification = async (token: string, hotelNo: string) => {
     return { success: true, response };
   } catch (error) {
     console.error("Error sending FCM message:", error);
+  }
+};
+
+const scheduleAlertUpdate = (
+  alertId: string,
+  avgTime: number,
+  checkStatus: string,
+  newProgress: string,
+) => {
+  console.log("avgTime", avgTime);
+  if (avgTime > 0) {
+    // Calculate the run time: current time + avgTime minutes
+    const runTime = new Date(Date.now() + avgTime * 60 * 1000);
+    const cronExpression = `${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${
+      runTime.getMonth() + 1
+    } *`;
+
+    const data = schedule(
+      cronExpression,
+      async () => {
+        const alertData = await HotelAlert.findById(alertId);
+
+        if (alertData && alertData.alertProgress !== checkStatus) {
+          const alertData = await HotelAlert.findByIdAndUpdate(alertId, {
+            alertProgress: newProgress,
+          });
+        }
+      },
+      {
+        scheduled: true,
+        timezone: "Asia/Kolkata",
+      },
+    );
+
+    console.log("Scheduled job:", data);
   }
 };
 
@@ -92,6 +134,53 @@ const hotelAlertRouter = new Hono()
         .lean();
 
       return respond(c, "Alerts fetched successfully", false, 200, alerts);
+    },
+  )
+
+  .get(
+    "/fetch_escalation_alerts",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(2).max(50),
+        userId: z.string().min(2).max(50),
+      }),
+    ),
+    async (c) => {
+      const { businessId, userId } = c.req.query();
+
+      const staff = await User.findOne(
+        { _id: userId, "customRole.businessId": businessId },
+        { customRole: 1 }, // Fetch only required fields
+      ).lean();
+
+      if (!staff) {
+        return respond(c, "Staff not found", true, 404, {});
+      }
+
+      const customRole = staff.customRole?.find(
+        (role) => role.businessId.toString() === businessId,
+      );
+      if (!customRole) {
+        return respond(c, "Role not found for this business", true, 404, {});
+      }
+
+      const { role } = customRole;
+
+      if (role === "MANAGER") {
+        const alerts = await HotelAlert.find({
+          businessId,
+          alertProgress: { $in: ["ESCALATION"] },
+        })
+          .populate({ path: "serviceIds", select: "name" })
+          .populate({ path: "createdBy", select: "name phone" })
+          .populate({ path: "acceptedBy", select: "name phone" })
+          .populate({ path: "roomId", select: "name" })
+          .lean();
+        return respond(c, "Alerts fetched successfully", false, 200, alerts);
+      }
+
+      return respond(c, "fetch successfully", false, 200, {});
     },
   )
 
@@ -168,39 +257,53 @@ const hotelAlertRouter = new Hono()
       const requestData = await c.req.json();
 
       const roomData = await HotelRoom.findById(requestData.roomId);
-
       if (!roomData) {
         return respond(c, "Room not found", true, 404, {});
       }
 
-      const alert = new HotelAlert({
-        ...requestData,
-        createdAt: Date.now(),
-        createdBy: requestData.userId,
-      });
+      const serviceIds = requestData.serviceIds || [];
 
-      await alert.save({ session });
+      for (const serviceId of serviceIds) {
+        const alert = new HotelAlert({
+          ...requestData,
+          serviceIds: [serviceId],
+          createdAt: Date.now(),
+          createdBy: requestData.userId,
+        });
 
-      if (!alert) {
-        throw new Error("Failed to create alert");
+        await alert.save({ session });
+        if (!alert) {
+          throw new Error("Failed to create alert");
+        }
+
+        const serviceData = await HotelService.findById(serviceId);
+        const avgCompletionTime = serviceData?.avgCompletionTime;
+        const avgAcceptanceTime = serviceData?.avgAcceptanceTime;
+        const avgDeliveryTime = serviceData?.avgDeliveryTime;
+
+        // Schedule updates based on average times
+        scheduleAlertUpdate(
+          alert._id.toString(),
+          15,
+          "DELIVERED",
+          "ESCALATION",
+        );
+        scheduleAlertUpdate(alert._id.toString(), 5, "ACCEPTED", "WARNING");
+        scheduleAlertUpdate(alert._id.toString(), 7, "DELIVERED", "WARNING");
       }
 
-      const registrationToken = await DeviceToken.find({
+      const registrationTokens = await DeviceToken.find({
         businessId: requestData.businessId,
       });
-
-      // send push notification to all devices
-      if (registrationToken.length > 0) {
-        for (const obj of registrationToken) {
+      await Promise.all(
+        registrationTokens.map(async (obj) => {
           if (obj.notification) {
             await sendPushNotification(obj.token, roomData.name);
           }
-        }
-      }
+        }),
+      );
 
-      return respond(c, "Alert created successfully", false, 201, {
-        _id: alert._id,
-      });
+      return respond(c, "Alert created successfully", false, 201, {});
     });
   })
 

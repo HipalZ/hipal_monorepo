@@ -38,9 +38,6 @@ export const hotelRoom = z.object({
   tax: z.number().optional(),
   zoneId: ObjectIdSchema,
   availability: z.boolean().optional().default(true),
-  amenities: z.array(ObjectIdSchema).optional().default([]),
-  roomType: z.enum(roomTypeEnum),
-  pricePerNight: z.coerce.number().default(0).optional(),
   capacity: z.coerce.number().default(0).optional(),
   roomStatus: z.enum(hotelStatusEnum).optional().default("AVAILABLE"),
   date: z.number().optional(),
@@ -53,6 +50,7 @@ export const hotelRoom = z.object({
   downLoadLink: z.string().min(1).max(100).optional(),
   userIds: z.array(ObjectIdSchema).optional().default([]),
   slug: z.string().min(1).max(50).optional(),
+  roomTypeId: ObjectIdSchema,
 });
 
 export const hotelRoomCheckIn = z.object({
@@ -84,22 +82,21 @@ export const updateHotelRoom = z.object({
   roomId: ObjectIdSchema,
   availability: z.boolean().optional().default(true),
   amenities: z.array(ObjectIdSchema).optional().default([]),
-  roomType: z.enum(roomTypeEnum).optional(),
-  pricePerNight: z.coerce.number().default(0).optional(),
   capacity: z.coerce.number().default(0).optional(),
   roomStatus: z.enum(hotelStatusEnum).optional().default("AVAILABLE"),
   staffIds: z.array(ObjectIdSchema).optional().default([]),
   description: z.string().min(1).max(300).optional(),
   images: z.array(z.string().min(10).max(200)).optional().default([]),
   size: z.string().min(1).max(50).optional(),
+  roomTypeId: ObjectIdSchema.optional(),
 });
 
 export const bulkHotelRoom = z.object({
   name: z.string().min(1).max(50),
   zoneId: ObjectIdSchema,
-  roomType: z.enum(roomTypeEnum),
   capacity: z.coerce.number().default(0).optional(),
   staffIds: z.array(ObjectIdSchema).optional().default([]),
+  roomTypeId: ObjectIdSchema,
 });
 
 export type HotelRoomType = z.infer<typeof hotelRoom>;

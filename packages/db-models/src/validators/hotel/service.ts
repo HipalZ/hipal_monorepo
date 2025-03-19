@@ -15,6 +15,9 @@ export const hotelService = z.object({
   availability: z.boolean().optional().default(true),
   image: z.string().url().min(5).max(50).optional(),
   categoryId: ObjectIdSchema,
+  avgCompletionTime: z.number().optional().default(4),
+  avgAcceptanceTime: z.number().optional().default(2),
+  avgDeliveryTime: z.number().optional().default(3),
 });
 
 export const hotelServiceCategory = z.object({

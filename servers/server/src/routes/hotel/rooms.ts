@@ -3,6 +3,7 @@ import {
   DeviceToken,
   HotelRoom,
   HotelRoomSession,
+  HotelRoomType,
   HotelZone,
   UrlModel,
   User,
@@ -107,30 +108,23 @@ const roomRouter = new Hono()
       z.object({
         businessId: z.string().min(2).max(50),
         room: z.string().min(2).max(50),
+        userId: z.string().min(2).max(50),
       }),
     ),
     async (c) => {
-      const { businessId, room } = c.req.query();
+      const { businessId, room, userId } = c.req.query();
 
       const roomData = await HotelRoom.findOne({
         businessId,
         name: room,
-      });
+      }).lean();
 
       if (!roomData) {
         return respond(c, "Room not found", true, 404, {});
       }
 
-      const isVerify = await HotelRoomSession.findOne({
-        roomId: roomData._id,
-      });
-
-      if (!isVerify) {
-        return respond(c, "please checkIn first", true, 400, {});
-      }
-
-      if (!isVerify.isAuthCodeVerified) {
-        return respond(c, "need room entry code", true, 401, {});
+      if (!roomData.userIds.some((id) => id.toString() === userId)) {
+        return respond(c, "User not authorized for this room", true, 403, {});
       }
 
       return respond(c, "success", true, 200, {});
@@ -204,6 +198,16 @@ const roomRouter = new Hono()
         throw new Error("Error updating zone");
       }
 
+      const updatedRoomType = await HotelRoomType.findByIdAndUpdate(
+        requestData.roomTypeId,
+        { $addToSet: { roomIds: room._id } },
+        { session, new: true },
+      );
+
+      if (!updatedRoomType) {
+        throw new Error("Error updating room type");
+      }
+
       return respond(c, "Room created", false, 201, { _id: room._id });
     });
   })
@@ -212,7 +216,7 @@ const roomRouter = new Hono()
     //@ts-ignore
     return runInTransaction(async (session) => {
       const requestData = await c.req.json();
-      const { roomId, zoneId } = requestData;
+      const { roomId, zoneId, roomTypeId } = requestData;
 
       const nameAlreadyExists = await HotelRoom.exists({
         businessId: requestData.businessId,
@@ -255,6 +259,18 @@ const roomRouter = new Hono()
 
         if (!updatedZone) {
           throw new Error("Error updating zone");
+        }
+      }
+
+      if (roomTypeId) {
+        const updatedRoomType = await HotelRoomType.findByIdAndUpdate(
+          roomTypeId,
+          { $addToSet: { roomIds: updatedRoom._id } },
+          { new: true, session },
+        );
+
+        if (!updatedRoomType) {
+          throw new Error("Error updating  room type");
         }
       }
 
@@ -355,6 +371,16 @@ const roomRouter = new Hono()
         throw new Error("Error updating zone");
       }
 
+      const updateRoomType = await HotelRoomType.findByIdAndUpdate(
+        requestData.roomTypeId,
+        { $addToSet: { roomIds: { $each: createdRooms.map((r) => r._id) } } },
+        { session, new: true },
+      );
+
+      if (!updateRoomType) {
+        throw new Error("Error updating room type");
+      }
+
       return respond(c, "Rooms created", false, 201, {
         success: true,
       });
@@ -394,7 +420,7 @@ const roomRouter = new Hono()
         throw new Error("Error creating user");
       }
 
-      const authCode = nanoid(4);
+      const authCode = nanoid(4).toUpperCase();
 
       const updatedRoom = await HotelRoom.findByIdAndUpdate(
         roomId,
@@ -540,23 +566,32 @@ const roomRouter = new Hono()
       "json",
       z.object({
         authCode: z.string().min(4).max(4),
+        userId: z.string().min(2).max(50),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
         const requestData = await c.req.json();
-        const { authCode } = requestData;
+        const { authCode, userId } = requestData;
 
-        const roomSession = await HotelRoomSession.findOneAndUpdate(
-          { authCode },
-          { isAuthCodeVerified: true },
-          { new: true, session },
-        );
+        const roomSession = await HotelRoomSession.findOne({ authCode });
 
         if (!roomSession) {
           return respond(c, "Invalid auth code", true, 400, {});
         }
+
+        await HotelRoom.findOneAndUpdate(
+          {
+            _id: roomSession.roomId,
+          },
+          {
+            $addToSet: {
+              userIds: userId,
+            },
+          },
+          { session },
+        );
 
         return respond(c, "Auth code verified", false, 200, {
           _id: roomSession._id,

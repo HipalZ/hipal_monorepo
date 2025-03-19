@@ -1,19 +1,14 @@
 import type { Model } from "mongoose";
 import mongoose from "mongoose";
 import type { HotelRoomType } from "../../validators";
-import { hotelStatusEnum, roomTypeEnum } from "../../validators";
+import { hotelStatusEnum } from "../../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const hotelRoomsSchema = new mongoose.Schema<HotelRoomType>({
   businessId: {
     type: ObjectId,
     required: true,
   },
-  amenities: {
-    type: [ObjectId],
-    required: false,
-    ref: "hotelamenitie",
-    default: [],
-  },
+
   availability: {
     type: Boolean,
     required: false,
@@ -33,16 +28,7 @@ const hotelRoomsSchema = new mongoose.Schema<HotelRoomType>({
     required: true,
     ref: "hotelzone",
   },
-  roomType: {
-    type: String,
-    required: false,
-    enum: roomTypeEnum,
-  },
-  pricePerNight: {
-    type: Number,
-    required: false,
-    default: 0,
-  },
+
   capacity: {
     type: Number,
     required: false,
@@ -100,6 +86,11 @@ const hotelRoomsSchema = new mongoose.Schema<HotelRoomType>({
   slug: {
     type: String,
     required: false,
+  },
+  roomTypeId: {
+    type: ObjectId,
+    required: true,
+    ref: "hotelroomtype",
   },
 });
 

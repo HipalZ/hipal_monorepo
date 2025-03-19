@@ -13,6 +13,9 @@ const hotelServiceSchema = new Schema<HotelServiceType>({
   businessId: { type: ObjectId, required: true, ref: "Business" }, // ✅ Ensure this matches lowercase model
   image: { type: String },
   categoryId: { type: ObjectId, required: true, ref: "hotelservicecategory" },
+  avgCompletionTime: { type: Number, default: 4 },
+  avgAcceptanceTime: { type: Number, default: 2 },
+  avgDeliveryTime: { type: Number, default: 3 },
 });
 
 const hotelServiceCategorySchema = new Schema<HotelServiceCategoryType>({

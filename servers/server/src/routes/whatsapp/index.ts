@@ -6,6 +6,7 @@ import {
   Couponz,
   GroupModel,
   HotelRoom,
+  HotelRoomSession,
   RecentCampaign,
   Subscriber,
   UrlModel,
@@ -2128,14 +2129,72 @@ const whatsappRouter = new Hono()
               const user = await User.findOne({
                 phone: userPhone,
               }).select("_id");
+              const authCode = nanoid(4).toUpperCase();
+              const room = await HotelRoom.findOne({
+                slug: urlObj?.urlCode,
+              });
 
-              await HotelRoom.findOneAndUpdate(
+              if (room && room.userIds.length === 0) {
+                await HotelRoom.findOneAndUpdate(
+                  {
+                    slug: urlObj?.urlCode,
+                  },
+                  {
+                    $addToSet: {
+                      userIds: user?._id,
+                    },
+                    roomStatus: "OCCUPIED",
+                    authCode,
+                  },
+                );
+              }
+
+              const roomSession = await HotelRoomSession.create({
+                roomId: room?._id,
+                name: room?.name,
+                $addToSet: {
+                  userIds: user?._id,
+                },
+                date: Date.now(),
+                checkIn: Date.now(),
+                authCode,
+              });
+
+              const res = await axios.post(
+                `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
                 {
-                  slug: urlObj?.urlCode,
+                  messaging_product: "whatsapp",
+                  to: user?.phone?.toString(),
+                  type: "template",
+                  template: {
+                    name: "authcode_template",
+                    language: { code: "en" },
+                    components: [
+                      {
+                        type: "body",
+                        parameters: [
+                          {
+                            type: "text",
+                            text: user?.name,
+                          },
+
+                          {
+                            type: "text",
+                            text: authCode,
+                          },
+
+                          {
+                            type: "text",
+                            text: room?.name,
+                          },
+                        ],
+                      },
+                    ],
+                  },
                 },
                 {
-                  $addToSet: {
-                    userIds: user?._id,
+                  headers: {
+                    Authorization: `Bearer ${config.token}`,
                   },
                 },
               );
@@ -2148,7 +2207,7 @@ const whatsappRouter = new Hono()
                   text: {
                     body: `**🏨 Welcome to ${bName?.name}! 🏨**  
 We are delighted to provide you with a **comfortable and luxurious stay**. 🛏️✨  
-🔑 **Book Your Stay**: ${longUrl}  
+🔑 **Explore service In Room **: ${longUrl}  
 🏡 **Discover our beautifully designed rooms and premium amenities.**  
 Enjoy **a seamless check-in experience** and **relax in comfort** with us. 🌟😊`,
                   },

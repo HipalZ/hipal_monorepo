@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { object, z } from "zod";
+import { z } from "zod";
 import { dishSchema, portionSchema } from "../dish";
 const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
   z
@@ -15,6 +15,8 @@ export const alertProgressEnum = [
   "ACCEPTED",
   "DELIVERED",
   "REJECTED",
+  "WARNING",
+  "ACCELERATED",
 ] as const;
 
 export type HotelAlertProgressEnumType = (typeof alertProgressEnum)[number];
