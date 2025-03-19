@@ -29,20 +29,15 @@ export const RazorpayWebhookBodySchema = z.object({
     payment: z.object({
       entity: z.object({
         notes: z.object({
-          businessId: z.string(),
-          tableName: z.string(),
-
-          total: z.string(),
-
           tips: z.string().optional(),
           claimedCoins: z.string().optional(),
-          billValue: z.string(),
-          loyaltyId: z.string(),
+          billValue: z.string().optional(),
+          loyaltyId: z.string().optional(),
           couponId: z.string().optional(),
           channelId: z.string().optional(),
           cashbackAvailable: z.string().optional(),
         }),
-        created_at: number().positive().optional(),
+
         id: z.string().optional(),
         order_id: z.string(),
         acquirer_data: z.any(), // Define more specifically if possible
