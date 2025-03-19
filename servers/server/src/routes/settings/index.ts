@@ -365,6 +365,10 @@ const settingsRouter = new Hono()
       if (businessId === "67b2f3e2d2f9b3b220e7959b") {
         return respond(c, "Settings fetched successfully", false, 200, {});
       }
+
+      if (businessId === "67625557911a1466207b5018") {
+        return respond(c, "Settings fetched successfully", false, 200, {});
+      }
       if (businessId === "66a8032dd1afb0385308ba86") {
         merchant = {
           businessId: "66a8032dd1afb0385308ba86",
