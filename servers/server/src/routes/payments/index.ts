@@ -1130,10 +1130,10 @@ const paymentsRouter = new Hono()
       const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
 
       if (!bodyResult.success) {
-        console.log("Invalid body", bodyResult);
-
+        console.log("Invalid body", bodyResult.error);
         return respond(c, "Invalid body", true, 200, {});
       }
+
       //@ts-ignore
       const { event, payload } = bodyResult.data;
 
@@ -1146,6 +1146,7 @@ const paymentsRouter = new Hono()
       });
 
       if (event === "payment.failed") {
+        console.log("Payment failed");
         const claimCoins = Number(getOrder?.claimedCoins) || 0;
         const alertExist = await PaymentAlert.findOne({
           order_id: getOrder?._id,
@@ -1158,18 +1159,18 @@ const paymentsRouter = new Hono()
               {
                 errorReason: payload.payment.entity.error_reason,
                 errorDescription: payload.payment.entity.error_description,
-                businessId: payload.payment.entity.notes.businessId,
+                businessId: getOrder?.businessId,
                 alertType: "ONLINE",
                 order_id: getOrder?._id,
                 userId: getOrder?.userId,
                 status: "FAIL",
-                tableName: payload.payment.entity.notes.tableName,
+                tableName: getOrder?.tableName,
                 coinsApplied: tableSession?.claimedCoins || claimCoins > 0,
                 isAccepted: false,
                 date: Date.now(),
-                message: `Fail ${payload.payment.entity.notes.total}`,
-                couponId: payload.payment.entity.notes.couponId,
-                mode: payload.payment.entity.method,
+                message: `Fail ${getOrder?.total}`,
+                couponId: payload?.payment?.entity.notes?.couponId,
+                mode: payload?.payment?.entity?.method,
               },
             ],
             { session },
@@ -1184,6 +1185,7 @@ const paymentsRouter = new Hono()
       }
 
       if (event === "payment.captured") {
+        console.log("Payment captured");
         const paymentAlreadyExist = await Payment.findOne({
           razorpayEventId: razorpayEventId,
         });
@@ -1210,7 +1212,7 @@ const paymentsRouter = new Hono()
 
           let getCashBack = 0;
 
-          if (payload.payment.entity.notes.loyaltyId) {
+          if (payload?.payment?.entity?.notes?.loyaltyId) {
             if (claimCoins > 0) {
               await removeCoins(
                 claimCoins,
