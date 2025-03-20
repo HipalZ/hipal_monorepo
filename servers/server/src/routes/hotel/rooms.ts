@@ -107,7 +107,7 @@ const roomRouter = new Hono()
       "query",
       z.object({
         businessId: z.string().min(2).max(50),
-        room: z.string().min(2).max(50),
+        room: z.string().min(1).max(50),
         userId: z.string().min(2).max(50),
       }),
     ),
@@ -117,17 +117,30 @@ const roomRouter = new Hono()
       const roomData = await HotelRoom.findOne({
         businessId,
         name: room,
-      }).lean();
+      }).populate({
+        path: "userIds",
+        select: "name phone",
+      });
 
       if (!roomData) {
         return respond(c, "Room not found", true, 404, {});
       }
 
       if (!roomData.userIds.some((id) => id.toString() === userId)) {
-        return respond(c, "User not authorized for this room", true, 403, {});
+        return respond(
+          c,
+          `Room already Occupied by ${roomData.userIds[0].name} `,
+          true,
+          403,
+          {},
+        );
       }
 
-      return respond(c, "success", true, 200, {});
+      return c.json({
+        message: "Room details",
+        data: {},
+        err: false,
+      });
     },
   )
 
