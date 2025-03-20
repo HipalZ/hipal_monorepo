@@ -176,7 +176,7 @@ const roomRouter = new Hono()
         throw new Error("Error creating room");
       }
 
-      const longUrl = `https://hipal-test-hipalz.com/${business.customLink}/hotel/checkin?room=${room.name}`;
+      const longUrl = `https://hipal-test.hipalz.com/${business.customLink}/hotel/checkin?room=${room.name}`;
 
       const urlAlreadyExists = await UrlModel.exists({
         longUrl,
@@ -197,7 +197,7 @@ const roomRouter = new Hono()
         }
 
         room.downLoadLink = shortUrl.shortUrl;
-        await room.save({ session });
+        await room.save();
       }
 
       // Add room to its assigned zone

@@ -16,7 +16,8 @@ export const alertProgressEnum = [
   "DELIVERED",
   "REJECTED",
   "WARNING",
-  "ACCELERATED",
+  "ESCALATION",
+  "NOT_DELIVERED",
 ] as const;
 
 export type HotelAlertProgressEnumType = (typeof alertProgressEnum)[number];

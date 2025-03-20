@@ -2,6 +2,7 @@ import {
   DeviceToken,
   HotelAlert,
   HotelRoom,
+  HotelRoomChat,
   HotelService,
   User,
 } from "@hi/db-models";
@@ -109,7 +110,9 @@ const hotelAlertRouter = new Hono()
 
       const alertQuery = {
         businessId,
-        alertProgress: { $in: ["CREATED", "ACCEPTED"] },
+        alertProgress: {
+          $in: ["CREATED", "ACCEPTED", "ESCALATION", "WARNING"],
+        },
         staffIds: { $in: [userId] },
       };
 
@@ -248,6 +251,47 @@ const hotelAlertRouter = new Hono()
         200,
         alerts,
       );
+    },
+  )
+
+  .get(
+    "/room_chat",
+    zValidator(
+      "query",
+      z.object({
+        authCode: z.string().min(4).max(6),
+      }),
+    ),
+    async (c) => {
+      const { authCode } = c.req.query();
+
+      const roomChat = await HotelRoomChat.find({
+        authCode,
+        isDeleted: false,
+      })
+        .populate({
+          path: "userId",
+          select: "name",
+        })
+        .populate({
+          path: "alertId",
+          select: "alertProgress",
+          populate: {
+            path: "serviceIds",
+            select: "name",
+          },
+        })
+        .populate({
+          path: "roomChatReplyIds",
+          select:
+            "description userId date action status roomChatId complainIds",
+          populate: {
+            path: "userId",
+            select: "name",
+          },
+        });
+
+      return respond(c, "Room chat fetched successfully", false, 200, roomChat);
     },
   )
 

@@ -2,6 +2,7 @@ export * from "./alert";
 export * from "./amenities";
 export * from "./book";
 export * from "./hotelRoomType";
+export * from "./roomChat";
 export * from "./rooms";
 export * from "./service";
 export * from "./staffRole";

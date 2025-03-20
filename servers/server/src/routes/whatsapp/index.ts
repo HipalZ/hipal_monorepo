@@ -2095,7 +2095,9 @@ const whatsappRouter = new Hono()
           }
 
           if (phon_no_id && from && urlObj) {
+            console.log("shortUrlType", shortUrlType);
             if (shortUrlType === "COUPON") {
+              console.log("incoupon");
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
@@ -2126,16 +2128,17 @@ const whatsappRouter = new Hono()
                 },
               });
             } else if (shortUrlType === "ROOM") {
+              console.log("inroom");
               const user = await User.findOne({
                 phone: userPhone,
-              }).select("_id");
+              }).select("_id name phone");
               const authCode = nanoid(4).toUpperCase();
               const room = await HotelRoom.findOne({
                 slug: urlObj?.urlCode,
               });
 
               if (room && room.userIds.length === 0) {
-                await HotelRoom.findOneAndUpdate(
+                const a = await HotelRoom.findOneAndUpdate(
                   {
                     slug: urlObj?.urlCode,
                   },
@@ -2144,60 +2147,77 @@ const whatsappRouter = new Hono()
                       userIds: user?._id,
                     },
                     roomStatus: "OCCUPIED",
-                    authCode,
                   },
                 );
+
+                const roomSession = await HotelRoomSession.find({
+                  roomId: a?._id.toString(),
+                });
+
+                console.log("roomSession", roomSession);
+
+                if (!roomSession) {
+                  const roomSession = await HotelRoomSession.create({
+                    roomId: a?._id,
+                    name: room?.name,
+                    userIds: [user?._id],
+                    date: Date.now(),
+                    checkIn: Date.now(),
+                    authCode,
+                  });
+
+                  await HotelRoom.findOneAndUpdate(
+                    {
+                      _id: a?._id,
+                    },
+                    {
+                      authCode: roomSession.authCode,
+                    },
+                  );
+                }
+
+                const res = await axios.post(
+                  `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
+                  {
+                    messaging_product: "whatsapp",
+                    to: user?.phone?.toString(),
+                    type: "template",
+                    template: {
+                      name: "authcode_template",
+                      language: { code: "en" },
+                      components: [
+                        {
+                          type: "body",
+                          parameters: [
+                            {
+                              type: "text",
+                              text: user?.name,
+                            },
+
+                            {
+                              type: "text",
+                              text: authCode,
+                            },
+
+                            {
+                              type: "text",
+                              text: room?.name,
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${config.token}`,
+                    },
+                  },
+                );
+
+                // console.log("res", res.data);
               }
 
-              const roomSession = await HotelRoomSession.create({
-                roomId: room?._id,
-                name: room?.name,
-                $addToSet: {
-                  userIds: user?._id,
-                },
-                date: Date.now(),
-                checkIn: Date.now(),
-                authCode,
-              });
-
-              const res = await axios.post(
-                `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
-                {
-                  messaging_product: "whatsapp",
-                  to: user?.phone?.toString(),
-                  type: "template",
-                  template: {
-                    name: "authcode_template",
-                    language: { code: "en" },
-                    components: [
-                      {
-                        type: "body",
-                        parameters: [
-                          {
-                            type: "text",
-                            text: user?.name,
-                          },
-
-                          {
-                            type: "text",
-                            text: authCode,
-                          },
-
-                          {
-                            type: "text",
-                            text: room?.name,
-                          },
-                        ],
-                      },
-                    ],
-                  },
-                },
-                {
-                  headers: {
-                    Authorization: `Bearer ${config.token}`,
-                  },
-                },
-              );
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
@@ -2205,11 +2225,11 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: `**🏨 Welcome to ${bName?.name}! 🏨**  
-We are delighted to provide you with a **comfortable and luxurious stay**. 🛏️✨  
-🔑 **Explore service In Room **: ${longUrl}  
-🏡 **Discover our beautifully designed rooms and premium amenities.**  
-Enjoy **a seamless check-in experience** and **relax in comfort** with us. 🌟😊`,
+                    body: `**🏨 Welcome to ${bName?.name}! 🏨**
+              We are delighted to provide you with a **comfortable and luxurious stay**. 🛏️✨
+              🔑 **Explore service In Room **: ${longUrl}
+              🏡 **Discover our beautifully designed rooms and premium amenities.**
+              Enjoy **a seamless check-in experience** and **relax in comfort** with us. 🌟😊`,
                   },
                 },
                 headers: {
@@ -2217,6 +2237,7 @@ Enjoy **a seamless check-in experience** and **relax in comfort** with us. 🌟�
                 },
               });
             } else {
+              console.log("intablescan");
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
