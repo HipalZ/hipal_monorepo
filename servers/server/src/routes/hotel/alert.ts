@@ -490,8 +490,6 @@ const hotelAlertRouter = new Hono()
         throw new Error("Failed to update alert");
       }
 
-      console.log("first", validTransitions[action]);
-
       if (action === "ACCEPTED") {
         const roomChat = await HotelRoomChat.findOne({
           alertId: alertId,
@@ -719,7 +717,7 @@ const hotelAlertRouter = new Hono()
       // Link the new complaint to the original chat reply
       await HotelRoomChatReply.findByIdAndUpdate(
         roomChatReply._id,
-        { $addToSet: { complainIds: newChatComplaint._id } },
+        { $set: { complainIds: newChatComplaint._id } },
         { session },
       );
 
