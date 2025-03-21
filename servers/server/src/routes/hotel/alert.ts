@@ -118,7 +118,13 @@ const hotelAlertRouter = new Hono()
       const alertQuery = {
         businessId,
         alertProgress: {
-          $in: ["CREATED", "ACCEPTED", "ESCALATION", "WARNING"],
+          $in: [
+            "CREATED",
+            "ACCEPTED",
+            "ESCALATION",
+            "WARNING",
+            "NOT_DELIVERED",
+          ],
         },
         staffIds: { $in: [userId] },
       };
