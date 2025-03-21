@@ -9,7 +9,6 @@ import type {
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const hotelRoomChatSchema = new Schema<HotelRoomChatType>({
-  authCode: { type: String, required: true },
   userId: { type: ObjectId, required: true, ref: "User" },
   roomId: { type: ObjectId, required: true, ref: "hotelroom" },
   alertId: { type: ObjectId, required: true, ref: "hotelalert" },

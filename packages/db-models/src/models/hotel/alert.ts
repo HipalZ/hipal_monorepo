@@ -81,6 +81,12 @@ const hotelAlertSchema = new mongoose.Schema<HotelAlertType>({
     type: [Object],
     required: false,
   },
+  roomChatComplainId: {
+    type: ObjectId,
+    required: false,
+    ref: "hotelroomchatcomplain",
+    default: null,
+  },
 });
 
 const HotelAlert: Model<HotelAlertType> = mongoose.model<HotelAlertType>(

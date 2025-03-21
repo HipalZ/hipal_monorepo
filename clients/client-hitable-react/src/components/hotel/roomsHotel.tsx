@@ -197,7 +197,7 @@ function MemoRoomsHotel() {
                                     </article>
                                 </article>
                                 <article className="mt-2 text-xs text-gray-500 flex justify-between items-center">
-                                    <span>{room?.roomType.charAt(0) + room?.roomType?.slice(1).toLowerCase()}</span>
+                                    <span>{room?.roomType?.charAt(0) + room?.roomType?.slice(1).toLowerCase()}</span>
                                     <span>
                                         {room?.capacity} {room.capacity === 1 ? "person" : "people"}
                                     </span>

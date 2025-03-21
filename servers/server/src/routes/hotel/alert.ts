@@ -3,6 +3,9 @@ import {
   HotelAlert,
   HotelRoom,
   HotelRoomChat,
+  HotelRoomChatComplain,
+  HotelRoomChatComplainReply,
+  HotelRoomChatReply,
   HotelService,
   User,
 } from "@hi/db-models";
@@ -10,6 +13,7 @@ import {
   type AcceptHotelAlertType,
   acceptHotelAlert,
   hotelAlert,
+  updateRoomChat,
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
@@ -259,14 +263,14 @@ const hotelAlertRouter = new Hono()
     zValidator(
       "query",
       z.object({
-        authCode: z.string().min(4).max(6),
+        roomId: z.string().min(4).max(30),
       }),
     ),
     async (c) => {
-      const { authCode } = c.req.query();
+      const { roomId } = c.req.query();
 
       const roomChat = await HotelRoomChat.find({
-        authCode,
+        roomId: roomId,
         isDeleted: false,
       })
         .populate({
@@ -295,6 +299,38 @@ const hotelAlertRouter = new Hono()
     },
   )
 
+  .post(
+    "/fetch_room_complain",
+    zValidator(
+      "json",
+      z.object({
+        complainIds: z.array(z.string().min(1).max(50)),
+      }),
+    ),
+    async (c) => {
+      const { complainIds } = await c.req.json();
+
+      const roomChatComplain = await HotelRoomChatComplain.find({
+        _id: { $in: complainIds },
+      }).populate({
+        path: "roomChatComplainReplyIds",
+        select: "description date userId",
+        populate: {
+          path: "userId",
+          select: "name",
+        },
+      });
+
+      return respond(
+        c,
+        "Room chat complain fetched successfully",
+        false,
+        200,
+        roomChatComplain,
+      );
+    },
+  )
+
   .post("/create_alert", zValidator("json", hotelAlert), async (c) => {
     //@ts-ignore
     return runInTransaction(async (session) => {
@@ -318,6 +354,20 @@ const hotelAlertRouter = new Hono()
         await alert.save({ session });
         if (!alert) {
           throw new Error("Failed to create alert");
+        }
+
+        const create = new HotelRoomChat({
+          alertId: alert._id,
+          userId: requestData.userId,
+          authCode: roomData.authCode,
+          roomId: roomData._id,
+          date: Date.now(),
+          description: "Alert created",
+        });
+        await create.save({ session });
+
+        if (!create) {
+          throw new Error("Failed to create room chat");
         }
 
         const serviceData = await HotelService.findById(serviceId);
@@ -367,6 +417,7 @@ const hotelAlertRouter = new Hono()
         ACCEPTED: "CREATED",
         DELIVERED: "ACCEPTED",
         REJECTED: "CREATED",
+        RESOLVED: "NOT_DELIVERED",
       };
 
       const updateFields: Record<string, object> = {
@@ -384,6 +435,11 @@ const hotelAlertRouter = new Hono()
           alertProgress: "REJECTED",
           rejectedAt: Date.now(),
           rejectedBy: userId,
+        },
+        RESOLVED: {
+          alertProgress: "DELIVERED",
+          deliveredAt: Date.now(),
+          deliveredBy: userId,
         },
       };
 
@@ -411,8 +467,193 @@ const hotelAlertRouter = new Hono()
         throw new Error("Failed to update alert");
       }
 
+      console.log("first", validTransitions[action]);
+
+      if (action === "ACCEPTED") {
+        const roomChat = await HotelRoomChat.findOne({
+          alertId: alertId,
+        });
+
+        if (!roomChat) {
+          throw new Error("Room chat not found");
+        }
+
+        const roomChatReply = new HotelRoomChatReply({
+          action: false,
+          description: "In Progress",
+          roomChatId: roomChat._id,
+          userId: userId,
+          status: "NORMAL",
+          date: Date.now(),
+        });
+
+        await roomChatReply.save({ session });
+
+        if (!roomChatReply) {
+          throw new Error("Failed to create room chat reply");
+        }
+
+        console.log("roomChatReply", roomChatReply);
+
+        await HotelRoomChat.findByIdAndUpdate(
+          roomChat._id,
+          {
+            $addToSet: { roomChatReplyIds: roomChatReply._id },
+          },
+          { session },
+        );
+      }
+      if (action === "DELIVERED") {
+        const roomChat = await HotelRoomChat.findOne({
+          alertId: alertId,
+        });
+        if (!roomChat) {
+          throw new Error("Room chat not found");
+        }
+
+        const roomChatReply = new HotelRoomChatReply({
+          action: true,
+          description: "Delivered",
+          roomChatId: roomChat._id,
+          userId: userId,
+          status: "NORMAL",
+          date: Date.now(),
+        });
+
+        await roomChatReply.save({ session });
+
+        if (!roomChatReply) {
+          throw new Error("Failed to create room chat reply");
+        }
+
+        await HotelRoomChat.findByIdAndUpdate(
+          roomChat._id,
+          {
+            $addToSet: { roomChatReplyIds: roomChatReply._id },
+          },
+          { session },
+        );
+      }
+
+      if (action === "RESOLVED") {
+        const roomChatComplainId = alert.roomChatComplainId;
+
+        const roomChatReply =
+          await HotelRoomChatComplain.findById(roomChatComplainId);
+
+        if (!roomChatReply) {
+          throw new Error("Room chat reply not found");
+        }
+
+        const createComplainReply = new HotelRoomChatComplainReply({
+          userId: userId,
+          date: Date.now(),
+          description: "Resolved successfully",
+          roomChatComplainId: roomChatReply._id,
+        });
+
+        await createComplainReply.save({ session });
+
+        if (!createComplainReply) {
+          throw new Error("Failed to create room chat reply");
+        }
+        await HotelRoomChatComplain.findByIdAndUpdate(
+          roomChatComplainId,
+          {
+            $addToSet: { roomChatComplainReplyIds: createComplainReply._id },
+          },
+          { session },
+        );
+
+        if (!roomChatReply) {
+          throw new Error("Failed to create room chat reply");
+        }
+      }
+
       return respond(c, `Alert ${action} successfully`, false, 200, {
         _id: updatedAlert._id,
+      });
+    });
+  })
+
+  .post("/chat_complain", zValidator("json", updateRoomChat), async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session) => {
+      const { roomChatReplyId } = await c.req.json();
+
+      // Retrieve the existing chat reply and its parent room chat
+      const roomChatReply = await HotelRoomChatReply.findById(roomChatReplyId);
+      if (!roomChatReply) {
+        return respond(c, "Room chat reply not found", true, 404, {});
+      }
+
+      const roomChat = await HotelRoomChat.findById(roomChatReply.roomChatId);
+      if (!roomChat) {
+        return respond(c, "Room chat not found", true, 404, {});
+      }
+
+      const updatedChatReply = await HotelRoomChatReply.findByIdAndUpdate(
+        roomChatReplyId,
+        { status: "WARNING" },
+        { session, new: true },
+      );
+      if (!updatedChatReply) {
+        throw new Error("Failed to update room chat reply");
+      }
+
+      // Create a new chat reply as a response
+      const newChatReply = new HotelRoomChatReply({
+        action: false,
+        description: "we got your complain and we are working on it",
+        roomChatId: roomChat._id,
+        userId: roomChatReply.userId,
+        status: "NORMAL",
+        date: Date.now(),
+      });
+      await newChatReply.save({ session });
+
+      if (!newChatReply) {
+        throw new Error("Failed to create new room chat reply");
+      }
+
+      await HotelRoomChat.findByIdAndUpdate(
+        roomChat._id,
+        { $addToSet: { roomChatReplyIds: newChatReply._id } },
+        { session },
+      );
+
+      // Create a new chat complaint for the existing chat reply
+      const newChatComplaint = new HotelRoomChatComplain({
+        userId: roomChatReply.userId,
+        roomChatReplyId: roomChatReply._id,
+        date: Date.now(),
+        alertId: roomChat.alertId,
+        description: "Room chat complain",
+      });
+      await newChatComplaint.save({ session });
+
+      // Link the new complaint to the original chat reply
+      await HotelRoomChatReply.findByIdAndUpdate(
+        roomChatReply._id,
+        { $addToSet: { complainIds: newChatComplaint._id } },
+        { session },
+      );
+
+      const updateAlert = await HotelAlert.findByIdAndUpdate(
+        roomChat.alertId,
+        {
+          alertProgress: "NOT_DELIVERED",
+          roomChatComplainId: newChatComplaint._id,
+        },
+        { session },
+      );
+
+      if (!updateAlert) {
+        throw new Error("Failed to update alert");
+      }
+
+      return respond(c, "Room chat complain created successfully", false, 200, {
+        _id: newChatComplaint._id,
       });
     });
   });

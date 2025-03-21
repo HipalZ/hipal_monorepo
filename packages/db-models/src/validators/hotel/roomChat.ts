@@ -10,7 +10,6 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
 );
 
 export const hotelRoomChat = z.object({
-  authCode: z.string().min(4).max(6),
   userId: ObjectIdSchema,
   roomId: ObjectIdSchema,
   alertId: ObjectIdSchema,
@@ -35,6 +34,10 @@ export const hotelRoomChatComplainReply = z.object({
   date: z.number().optional(),
   description: z.string().min(1).max(200),
   roomChatComplainId: ObjectIdSchema,
+});
+
+export const updateRoomChat = z.object({
+  roomChatReplyId: ObjectIdSchema,
 });
 
 export const hotelRoomChatComplain = z.object({

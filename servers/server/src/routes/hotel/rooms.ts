@@ -58,7 +58,7 @@ const roomRouter = new Hono()
         .object({
           businessId: z.string().min(2).max(50), // Now mandatory
           roomId: z.string().min(2).max(50).optional(),
-          roomName: z.string().min(2).max(50).optional(),
+          roomName: z.string().min(1).max(50).optional(),
         })
         .refine((data) => data.roomId || data.roomName, {
           message: "Either roomId or roomName must be provided",
@@ -579,7 +579,7 @@ const roomRouter = new Hono()
       "json",
       z.object({
         authCode: z.string().min(4).max(4),
-        userId: z.string().min(2).max(50),
+        userId: z.string().min(2).max(50).optional(),
       }),
     ),
     async (c) => {
@@ -600,7 +600,7 @@ const roomRouter = new Hono()
           },
           {
             $addToSet: {
-              userIds: userId,
+              userIds: "66a25e263318398937eb87f3",
             },
           },
           { session },
