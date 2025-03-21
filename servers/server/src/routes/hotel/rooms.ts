@@ -687,6 +687,7 @@ const roomRouter = new Hono()
           userId,
           reviewRating,
           staffs: [userId],
+          date: Date.now(),
         });
 
         if (!createReview) {
