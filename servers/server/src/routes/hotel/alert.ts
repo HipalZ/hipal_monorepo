@@ -442,13 +442,11 @@ const hotelAlertRouter = new Hono()
         return respond(c, "Room not found", true, 404, {});
       }
 
-      const validTransitions: Record<string, string> = {
-        ACCEPTED: "CREATED",
-        DELIVERED: "ACCEPTED",
-        REJECTED: "CREATED",
-        RESOLVED: "NOT_DELIVERED",
-        WARNING: "WARNING",
-        ESCALATION: "ESCALATION",
+      const validTransitions: Record<string, string[]> = {
+        ACCEPTED: ["CREATED", "WARNING", "ESCALATION"],
+        DELIVERED: ["ACCEPTED"],
+        REJECTED: ["CREATED"],
+        RESOLVED: ["NOT_DELIVERED"],
       };
 
       const updateFields: Record<string, object> = {
@@ -478,7 +476,21 @@ const hotelAlertRouter = new Hono()
         return respond(c, "Invalid action", true, 400, {});
       }
 
-      if (alert.alertProgress !== validTransitions[action]) {
+      if (!validTransitions[action].includes(alert.alertProgress)) {
+        return respond(
+          c,
+          `Cannot mark alert as ${action} because it is in ${alert.alertProgress} state.`,
+          true,
+          400,
+          {},
+        );
+      }
+
+      if (!validTransitions[action]) {
+        return respond(c, "Invalid action", true, 400, {});
+      }
+
+      if (!validTransitions[action].includes(alert.alertProgress)) {
         return respond(
           c,
           `Cannot mark alert as ${action} because it is in ${alert.alertProgress} state.`,
