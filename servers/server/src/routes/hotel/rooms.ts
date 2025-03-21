@@ -2,9 +2,12 @@ import {
   Business,
   DeviceToken,
   HotelRoom,
+  HotelRoomChat,
+  HotelRoomChatReply,
   HotelRoomSession,
   HotelRoomType,
   HotelZone,
+  Reviews,
   UrlModel,
   User,
 } from "@hi/db-models";
@@ -606,6 +609,92 @@ const roomRouter = new Hono()
 
         return respond(c, "Auth code verified", false, 200, {
           _id: roomSession._id,
+        });
+      });
+    },
+  )
+
+  .post(
+    "/reviews",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(2).max(50),
+        userId: z.string().min(2).max(50),
+        reviewRating: z.coerce
+          .number({
+            message: "Review rating must be a number",
+          })
+          .min(1, {
+            message: "Review rating must be greater than 0",
+          })
+          .max(5, {
+            message: "Review rating must be less than 6",
+          })
+          .optional(),
+        roomChatReplyId: z.string().min(2).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
+        const { businessId, userId, reviewRating } = requestData;
+
+        const roomChatReply = await HotelRoomChatReply.findOneAndUpdate(
+          {
+            _id: requestData.roomChatReplyId,
+          },
+          {
+            action: false,
+            status: "NORMAL",
+          },
+        );
+
+        if (!roomChatReply) {
+          return respond(c, "Room chat reply not found", true, 404, {});
+        }
+        const roomChat = await HotelRoomChat.findOne({
+          _id: roomChatReply.roomChatId,
+        });
+
+        if (!roomChat) {
+          return respond(c, "Room chat not found", true, 404, {});
+        }
+
+        const newChatReply = new HotelRoomChatReply({
+          action: false,
+          description: "thank you for your feedback 😃 ",
+          roomChatId: roomChat._id,
+          userId: roomChatReply.userId,
+          status: "NORMAL",
+          date: Date.now(),
+        });
+        await newChatReply.save({ session });
+
+        if (!newChatReply) {
+          throw new Error("Failed to create new room chat reply");
+        }
+
+        await HotelRoomChat.findByIdAndUpdate(
+          roomChat._id,
+          { $addToSet: { roomChatReplyIds: newChatReply._id } },
+          { session },
+        );
+
+        const createReview = await Reviews.create({
+          businessId,
+          userId,
+          reviewRating,
+          staffs: [userId],
+        });
+
+        if (!createReview) {
+          throw new Error("Failed to create review");
+        }
+
+        return respond(c, "Review created successfully", false, 201, {
+          _id: createReview._id,
         });
       });
     },
