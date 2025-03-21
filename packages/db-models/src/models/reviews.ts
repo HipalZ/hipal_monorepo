@@ -1,5 +1,6 @@
 import mongoose, { type Model } from "mongoose";
 import type { ReviewsType } from "../validators";
+import { fetchAllBusinessIds } from "../../../../clients/client-hipal-app/src/apis/loyalty";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const reviewsSchema = new mongoose.Schema<ReviewsType>(
@@ -57,7 +58,7 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
     order_id: {
       type: ObjectId,
       ref: "Order",
-      required: true,
+      required: false,
     },
     seen: {
       type: Boolean,
