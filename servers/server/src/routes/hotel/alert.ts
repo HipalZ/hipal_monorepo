@@ -4,7 +4,6 @@ import {
   HotelRoom,
   HotelRoomChat,
   HotelRoomChatComplain,
-  HotelRoomChatComplainReply,
   HotelRoomChatReply,
   HotelService,
   User,
@@ -640,6 +639,18 @@ const hotelAlertRouter = new Hono()
       if (action === "RESOLVED") {
         const roomChatComplainId = alert.roomChatComplainId;
 
+        if (!roomChatComplainId) {
+          throw new Error("Room chat complain ID not found");
+        }
+
+        const roomChat = await HotelRoomChat.findOne({
+          alertId: alertId,
+        });
+
+        if (!roomChat) {
+          throw new Error("Room chat not found");
+        }
+
         const roomChatReply =
           await HotelRoomChatComplain.findById(roomChatComplainId);
 
@@ -647,29 +658,25 @@ const hotelAlertRouter = new Hono()
           throw new Error("Room chat reply not found");
         }
 
-        const createComplainReply = new HotelRoomChatComplainReply({
-          userId: userId,
+        const newChatReply = new HotelRoomChatReply({
+          action: false,
+          description: `your service ${alert?.serviceIds[0]?.name} is resolved`,
+          roomChatId: roomChat._id,
+          userId: roomChatReply.userId,
+          status: "NORMAL",
           date: Date.now(),
-          description: "Resolved successfully",
-          roomChatComplainId: roomChatReply._id,
         });
+        await newChatReply.save({ session });
 
-        await createComplainReply.save({ session });
-
-        if (!createComplainReply) {
-          throw new Error("Failed to create room chat reply");
+        if (!newChatReply) {
+          throw new Error("Failed to create new room chat reply");
         }
-        await HotelRoomChatComplain.findByIdAndUpdate(
-          roomChatComplainId,
-          {
-            $addToSet: { roomChatComplainReplyIds: createComplainReply._id },
-          },
+
+        await HotelRoomChat.findByIdAndUpdate(
+          roomChat._id,
+          { $addToSet: { roomChatReplyIds: newChatReply._id } },
           { session },
         );
-
-        if (!roomChatReply) {
-          throw new Error("Failed to create room chat reply");
-        }
       }
 
       return respond(c, `Alert ${action} successfully`, false, 200, {
