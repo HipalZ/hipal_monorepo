@@ -510,8 +510,6 @@ const roomRouter = new Hono()
         if (res.status !== 200) {
           throw new Error("Error sending message");
         }
-
-        console.log("sent message", res.data);
       }
 
       return respond(c, "Checked in successfully", false, 200, {

@@ -8,6 +8,7 @@ import {
   HotelRoomChatReply,
   HotelService,
   User,
+  WhatsAppBusinessConfig,
 } from "@hi/db-models";
 import {
   type AcceptHotelAlertType,
@@ -17,10 +18,12 @@ import {
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
+import axios from "axios";
 import { Hono } from "hono";
 import { schedule } from "node-cron";
 import { z } from "zod";
 import { respond } from "../../utils/response";
+import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
 const admin = require("firebase-admin");
 
 const sendPushNotification = async (token: string, hotelNo: string) => {
@@ -407,10 +410,30 @@ const hotelAlertRouter = new Hono()
       const requestData = await c.req.json();
       const { alertId, userId, action } = requestData as AcceptHotelAlertType;
 
-      const alert = await HotelAlert.findById(alertId);
+      const alert = await HotelAlert.findById(alertId).populate({
+        path: "serviceIds",
+        select: "name",
+      });
 
       if (!alert) {
         return respond(c, "Alert not found", true, 404, {});
+      }
+
+      const captainData = await User.findById(userId);
+
+      if (!captainData) {
+        return respond(c, "User not found", true, 404, {});
+      }
+
+      const userData = await User.findById(alert.userId);
+      if (!userData) {
+        return respond(c, "User not found", true, 404, {});
+      }
+
+      const roomData = await HotelRoom.findById(alert.roomId);
+
+      if (!roomData) {
+        return respond(c, "Room not found", true, 404, {});
       }
 
       const validTransitions: Record<string, string> = {
@@ -533,6 +556,67 @@ const hotelAlertRouter = new Hono()
           },
           { session },
         );
+
+        const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+          businessId: alert.businessId,
+        });
+
+        if (whatsAppConfig) {
+          const res = await axios.post(
+            `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+            {
+              messaging_product: "whatsapp",
+              to: userData?.phone?.toString(),
+              type: "template",
+              template: {
+                name: "chat_delivered_template",
+                language: { code: "en" },
+                components: [
+                  {
+                    type: "body",
+                    parameters: [
+                      {
+                        type: "text",
+                        text: userData?.name,
+                      },
+
+                      {
+                        type: "text",
+                        text: alert?.serviceIds[0]?.name || "other",
+                      },
+
+                      {
+                        type: "text",
+                        text: roomData?.name,
+                      },
+                      {
+                        type: "text",
+                        text: captainData?.name,
+                      },
+                      {
+                        type: "text",
+                        text: "https://www.google.com",
+                      },
+                      {
+                        type: "text",
+                        text: "https://www.google.com",
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${whatsAppConfig.token}`,
+              },
+            },
+          );
+
+          if (res.status !== 200) {
+            throw new Error("Error sending message");
+          }
+        }
       }
 
       if (action === "RESOLVED") {
