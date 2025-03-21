@@ -54,7 +54,6 @@ const scheduleAlertUpdate = (
   checkStatus: string,
   newProgress: string,
 ) => {
-  console.log("avgTime", avgTime);
   if (avgTime > 0) {
     // Calculate the run time: current time + avgTime minutes
     const runTime = new Date(Date.now() + avgTime * 60 * 1000);
@@ -67,7 +66,12 @@ const scheduleAlertUpdate = (
       async () => {
         const alertData = await HotelAlert.findById(alertId);
 
-        if (alertData && alertData.alertProgress !== checkStatus) {
+        if (
+          (alertData &&
+            alertData.alertProgress !== checkStatus &&
+            alertData.alertProgress !== "DELIVERED") ||
+          alertData?.alertProgress !== "REJECTED"
+        ) {
           const alertData = await HotelAlert.findByIdAndUpdate(alertId, {
             alertProgress: newProgress,
           });
@@ -659,11 +663,11 @@ const hotelAlertRouter = new Hono()
         }
 
         const newChatReply = new HotelRoomChatReply({
-          action: false,
           description: `your service ${alert?.serviceIds[0]?.name} is resolved`,
           roomChatId: roomChat._id,
           userId: roomChatReply.userId,
-          status: "NORMAL",
+          action: true,
+          status: "WARNING",
           date: Date.now(),
         });
         await newChatReply.save({ session });
