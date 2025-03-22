@@ -73,6 +73,7 @@ const roomRouter = new Hono()
       const room = await HotelRoom.findOne({
         businessId,
         $or: [{ _id: roomId }, { name: roomName }],
+        isDeleted: false,
       });
 
       return room
@@ -95,6 +96,7 @@ const roomRouter = new Hono()
       const rooms = await HotelRoom.find({
         businessId,
         availability: true,
+        isDeleted: false,
       }).populate({
         path: "userIds",
         select: "name phone",

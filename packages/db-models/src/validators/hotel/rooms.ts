@@ -51,6 +51,7 @@ export const hotelRoom = z.object({
   userIds: z.array(ObjectIdSchema).optional().default([]),
   slug: z.string().min(1).max(50).optional(),
   roomTypeId: ObjectIdSchema,
+  isDeleted: z.boolean().optional().default(false),
 });
 
 export const hotelRoomCheckIn = z.object({
@@ -89,6 +90,7 @@ export const updateHotelRoom = z.object({
   images: z.array(z.string().min(10).max(200)).optional().default([]),
   size: z.string().min(1).max(50).optional(),
   roomTypeId: ObjectIdSchema.optional(),
+  isDeleted: z.boolean().optional().default(false),
 });
 
 export const bulkHotelRoom = z.object({
