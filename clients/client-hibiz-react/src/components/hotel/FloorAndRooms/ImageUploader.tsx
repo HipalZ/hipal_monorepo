@@ -1,19 +1,19 @@
-import { memo, useState, useCallback } from "react"
+import * as React from "react"
+import { useState, useCallback } from "react"
+import { Upload, X, Loader2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Upload, X, ImageIcon, AlertCircle } from "lucide-react"
-import useRoomFormStore from "@/components/store/hotel/useRoomFormStore"
 import { Button } from "@/components/ui/button"
-import toast from "react-hot-toast"
+import { toast } from "react-hot-toast"
 import { storeImageAfterSave } from "@/components/utils/helper"
 
-const SecondStepRoom: React.FC = () => {
-  const { roomImages, addRoomImage, removeRoomImage, isEditMode } = useRoomFormStore((state) => ({
-    roomImages: state.roomImages,
-    addRoomImage: state.addRoomImage,
-    removeRoomImage: state.removeRoomImage,
-    isEditMode: state.isEditMode,
-  }))
+interface ImageUploaderProps {
+  images: string[]
+  onAddImage: (imageUrl: string) => void
+  onRemoveImage: (imageUrl: string) => void
+  maxImages?: number
+}
 
+const ImageUploader = ({ images, onAddImage, onRemoveImage, maxImages = 6 }: ImageUploaderProps) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
@@ -26,9 +26,9 @@ const SecondStepRoom: React.FC = () => {
       if (!files) return
 
       // Check if adding these files would exceed the limit
-      const totalFiles = selectedFiles.length + roomImages.length + files.length
-      if (totalFiles > 6) {
-        toast.error("You can upload a maximum of 6 images")
+      const totalFiles = selectedFiles.length + images.length + files.length
+      if (totalFiles > maxImages) {
+        toast.error(`You can upload a maximum of ${maxImages} images`)
         return
       }
 
@@ -65,7 +65,7 @@ const SecondStepRoom: React.FC = () => {
       // Reset the input value to allow selecting the same file again
       event.target.value = ""
     },
-    [selectedFiles, roomImages.length],
+    [selectedFiles, images.length, maxImages],
   )
 
   // Handle file removal from selection
@@ -73,14 +73,6 @@ const SecondStepRoom: React.FC = () => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index))
     setPreviews((prev) => prev.filter((_, i) => i !== index))
   }, [])
-
-  // Handle removing an already uploaded image
-  const handleRemoveUploadedImage = useCallback(
-    (url: string) => {
-      removeRoomImage(url)
-    },
-    [removeRoomImage],
-  )
 
   // Upload all selected files
   const handleUploadFiles = useCallback(async () => {
@@ -106,7 +98,7 @@ const SecondStepRoom: React.FC = () => {
         })
 
         if (imageUrl) {
-          addRoomImage(imageUrl)
+          onAddImage(imageUrl)
         }
       } catch (error) {
         console.error("Error uploading image:", error)
@@ -118,15 +110,10 @@ const SecondStepRoom: React.FC = () => {
     setPreviews([])
     setIsUploading(false)
     toast.success("Images uploaded successfully")
-  }, [selectedFiles, previews, addRoomImage])
+  }, [selectedFiles, previews, onAddImage])
 
   return (
     <div className="space-y-4">
-      <h2 className="text-xl font-semibold">Room Images</h2>
-      <p className="text-sm text-muted-foreground">
-        Upload up to 6 images of the room. Supported formats: JPG, PNG, WEBP
-      </p>
-
       {/* Image upload area */}
       <Card className="border-2 border-dashed">
         <CardContent className="flex flex-col items-center justify-center p-6">
@@ -134,7 +121,7 @@ const SecondStepRoom: React.FC = () => {
             <Upload className="w-10 h-10 text-muted-foreground" />
           </div>
           <p className="mb-2 text-sm text-center">Drag and drop images here or click to browse</p>
-          <p className="mb-4 text-xs text-center text-muted-foreground">Maximum 6 images, 5MB each</p>
+          <p className="mb-4 text-xs text-center text-muted-foreground">Maximum {maxImages} images, 5MB each</p>
           <input
             type="file"
             id="image-upload"
@@ -147,7 +134,7 @@ const SecondStepRoom: React.FC = () => {
           <Button
             variant="outline"
             onClick={() => document.getElementById("image-upload")?.click()}
-            disabled={isUploading || selectedFiles.length + roomImages.length >= 6}
+            disabled={isUploading || selectedFiles.length + images.length >= maxImages}
           >
             Select Images
           </Button>
@@ -160,7 +147,14 @@ const SecondStepRoom: React.FC = () => {
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-medium">Selected Images</h3>
             <Button size="sm" onClick={handleUploadFiles} disabled={isUploading} className="h-8">
-              {isUploading ? `Uploading ${uploadProgress}%` : "Upload All"}
+              {isUploading ? (
+                <div className="flex items-center">
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <span>Uploading {uploadProgress}%</span>
+                </div>
+              ) : (
+                "Upload All"
+              )}
             </Button>
           </div>
           <div className="grid grid-cols-3 gap-3">
@@ -188,11 +182,11 @@ const SecondStepRoom: React.FC = () => {
       )}
 
       {/* Already uploaded images */}
-      {roomImages.length > 0 && (
+      {images.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-medium">Uploaded Images</h3>
           <div className="grid grid-cols-3 gap-3">
-            {roomImages.map((url, index) => (
+            {images.map((url, index) => (
               <div key={index} className="relative group">
                 <div className="overflow-hidden border rounded-md aspect-square bg-muted">
                   <img
@@ -203,7 +197,7 @@ const SecondStepRoom: React.FC = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => handleRemoveUploadedImage(url)}
+                  onClick={() => onRemoveImage(url)}
                   className="absolute p-1 text-white transition-opacity rounded-full opacity-0 top-1 right-1 bg-black/70 group-hover:opacity-100"
                 >
                   <X className="w-4 h-4" />
@@ -213,31 +207,9 @@ const SecondStepRoom: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Empty state */}
-      {roomImages.length === 0 && previews.length === 0 && (
-        <div className="p-6 text-center rounded-lg bg-muted/30">
-          <ImageIcon className="w-10 h-10 mx-auto mb-2 text-muted-foreground" />
-          <h3 className="text-sm font-medium">No images added yet</h3>
-          <p className="mt-1 text-xs text-muted-foreground">Add images to showcase the room to potential guests</p>
-        </div>
-      )}
-
-      {/* Warning for edit mode */}
-      {isEditMode && (
-        <div className="flex items-start gap-2 p-3 mt-4 border rounded-md bg-amber-50 border-amber-200">
-          <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium text-amber-800">Editing Room Images</p>
-            <p className="text-xs text-amber-700">
-              Only new images will be uploaded. Existing images will remain unless removed.
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
 
-export default memo(SecondStepRoom)
+export default ImageUploader
 

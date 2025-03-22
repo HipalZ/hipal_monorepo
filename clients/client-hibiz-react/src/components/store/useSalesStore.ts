@@ -14,6 +14,9 @@ interface SalesStore {
     open: boolean
     setOpen: (open: boolean) => void
 
+    downloadCsv: boolean
+    setDownloadCsv: (downloadCsv: boolean) => void
+
     salesData:IExistingPayments[]
     setSalesData: (salesData: IExistingPayments[]) => void
 
@@ -46,6 +49,9 @@ interface SalesStore {
 export const useSalesStore = create<SalesStore>((set) => ({
     open: false,
     setOpen: (open) => set({ open }),
+
+    downloadCsv: false,
+    setDownloadCsv: (downloadCsv) => set({ downloadCsv }),
 
     salesData: [],
     setSalesData: (salesData) => set({ salesData }),

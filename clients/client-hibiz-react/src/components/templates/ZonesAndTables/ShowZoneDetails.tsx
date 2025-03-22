@@ -142,7 +142,7 @@ const ShowZoneDetails = () => {
           {
             text: "Edit Zone",
             onClick: () => saveZoneData(saveZoneDetails),
-            className: "rounded-md pl-3",
+            className: "rounded-md pl-3 w-full",
           },
         ]}
       />

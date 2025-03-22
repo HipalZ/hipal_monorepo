@@ -12,7 +12,9 @@ export const useAllDueUsers = (businessId: string) => {
       },
     });
     const res = await response.json();
-    return res.data as IDuesPersonsData[];
+    let duesData = res.data as IDuesPersonsData[];
+    duesData = duesData.filter(due => due.userId !== null);
+    return duesData as IDuesPersonsData[];
   };
 
   const { isLoading, data } = useQuery({

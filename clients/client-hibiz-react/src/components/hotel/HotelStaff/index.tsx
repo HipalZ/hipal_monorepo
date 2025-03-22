@@ -64,11 +64,11 @@ const HotelStaffMain = () => {
   }
 
   const handleDeleteStaff = (staffId: string) => {
-    console.log("Delete staff:", staffId)
+    console.log(staffId)
   }
 
   const handleAddStaff = () => {
-    console.log("Add new staff")
+    setStaffModal(true)
   }
 
   const renderSkeletons = () => {
@@ -153,13 +153,13 @@ const HotelStaffMain = () => {
                           <Edit className="w-4 h-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem
+                        {/* <DropdownMenuItem
                           onClick={() => handleDeleteStaff(staff?._id)}
                           className="text-destructive focus:text-destructive"
                         >
                           <Trash className="w-4 h-4 mr-2" />
                           Delete
-                        </DropdownMenuItem>
+                        </DropdownMenuItem> */}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>

@@ -7,10 +7,11 @@ import { useQuery } from "@tanstack/react-query"
 
 export interface salesPayload {
     businessId: string
-    pageNumber: string
+    pageNumber?: string
     from: string
     to: string
     appliedFilters?: Filters
+    download?:string
 }
 
 export const useGetallSalesByGet = (payload: salesPayload) => {

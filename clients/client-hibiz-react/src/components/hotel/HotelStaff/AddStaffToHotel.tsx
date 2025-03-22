@@ -34,13 +34,13 @@ const AddStaffToHotel = () => {
                 ? {
                     text: "Next",
                     onClick: handleNext,
-                    className: "rounded-md",
+                    className: "rounded-md w-full",
                 }
                 : {
                     text: isEditMode ? "Update Staff" : "Add Staff",
                     onClick: handleSubmit,
                     icon: <User className="w-4 h-4 ml-2" />,
-                    className: "rounded-md",
+                    className: "rounded-md w-full",
                     highlight: true,
                     disable: isSubmitting,
                 },

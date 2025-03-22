@@ -196,7 +196,7 @@ const AddRestaurant = () => {
               {
                 text: linkingRestaurantLoader ? "Saving..." : "Save",
                 onClick: handleSave,
-                className: "w-full rounded-md",
+                className: "w-full rounded-md w-full",
                 disable: linkingRestaurantLoader,
               },
             ]}

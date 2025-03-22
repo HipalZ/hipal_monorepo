@@ -36,14 +36,12 @@ const MemoStaffManagementHotel = () => {
         <HotelStaffMain />
       </Suspense>
 
-      {
-        staffModal &&
-        <PopUp width="w-[30rem]" hide height="h-[100dvh] lg:h-[90dvh]" show={staffModal} onClose={toggleModal}>
-          <Suspense fallback={<LoadingSpinner />}>
+
+      <PopUp width="w-[30rem]" hide height="h-[100dvh] lg:h-[90dvh]" show={staffModal} onClose={toggleModal}>
+        <Suspense fallback={<LoadingSpinner />}>
           <AddStaffToHotel />
-          </Suspense>
-        </PopUp>
-      }
+        </Suspense>
+      </PopUp>
 
 
       <AdvancedBottomButton
@@ -60,7 +58,7 @@ const MemoStaffManagementHotel = () => {
             text: "Add Staff",
             onClick: toggleModal,
             icon: <User size={24} />,
-            className: "rounded-md",
+            className: "rounded-md w-full",
             highlight: true,
           },
         ]}

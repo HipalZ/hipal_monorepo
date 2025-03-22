@@ -87,12 +87,12 @@ const TableSelectionPopup: React.FC<TableSelectionPopupProps> = ({
             {
               text:  `Select ${selectedTableIds.length === allTables.length ? "None" : "All"}`,
               onClick: selectAllTheTables,
-              className: "rounded-md",
+              className: "rounded-md w-full",
             },
             {
               text: "Download Selected",
               onClick: handleDownloadAll,
-              className: "rounded-md px-4",
+              className: "rounded-md px-4 w-full",
               disable: selectedTableIds.length === 0,
             },
           ]}

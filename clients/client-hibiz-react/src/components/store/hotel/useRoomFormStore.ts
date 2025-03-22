@@ -1,8 +1,7 @@
 import { create } from "zustand"
-import type { IHotelRoom, RoomType, HotelStatusEnumType } from "@/hooks/hotel/useRoomHook"
-import type { IAmenity } from "@/hooks/hotel/useAmenities"
-import { IStaffMember } from "./useHotelStaff"
+import type { IHotelRoom } from "@/hooks/hotel/useRoomHook"
 
+// Update the errors interface to match RoomFormErrors
 interface RoomFormState {
   // Form mode
   isEditMode: boolean
@@ -11,34 +10,23 @@ interface RoomFormState {
   // Form data
   roomInfo: {
     name: string
-    description: string
-    roomType: RoomType
-    pricePerNight: number
-    capacity: number
-    size: string
-    availability: boolean
-    roomStatus: HotelStatusEnumType
   }
-  selectedAmenities: string[] // Amenity IDs
+  roomTypeId: string
   selectedFloorId: string
   selectedStaffIds: string[]
-  roomImages: string[] // Array of image URLs
 
   // Form state
   currentStep: number
   errors: {
     name: string
-    description: string
-    roomType: string
-    pricePerNight: string
-    capacity: string
-    size: string
-    floor: string
+    roomTypeId: string
+    staffIds: string
+    zoneId: string
   }
 
   // Actions
   setRoomInfo: (info: Partial<RoomFormState["roomInfo"]>) => void
-  toggleAmenity: (amenityId: string) => void
+  setRoomTypeId: (id: string) => void
   setSelectedFloorId: (floorId: string) => void
   toggleStaff: (staffId: string) => void
   setCurrentStep: (step: number) => void
@@ -47,44 +35,29 @@ interface RoomFormState {
   clearErrors: () => void
   setError: (field: keyof RoomFormState["errors"], message: string) => void
 
-  // Image actions
-  addRoomImage: (imageUrl: string) => void
-  removeRoomImage: (imageUrl: string) => void
-  setRoomImages: (images: string[]) => void
-
   // Edit mode actions
   setEditMode: (isEdit: boolean) => void
   setEditRoomId: (id: string | null) => void
-  initializeFormForEdit: (roomData: IHotelRoom, amenities: IAmenity[], staffData: IStaffMember[]) => void
+  initializeFormForEdit: (roomData: IHotelRoom) => void
 }
 
+// Update the initial errors state
 const useRoomFormStore = create<RoomFormState>((set, get) => ({
   // Initial state
   isEditMode: false,
   editRoomId: null,
   roomInfo: {
     name: "",
-    description: "",
-    roomType: "SINGLE",
-    pricePerNight: 0,
-    capacity: 1,
-    size: "",
-    availability: true,
-    roomStatus: "AVAILABLE",
   },
-  selectedAmenities: [],
+  roomTypeId: "",
   selectedFloorId: "",
   selectedStaffIds: [],
-  roomImages: [],
   currentStep: 1,
   errors: {
     name: "",
-    description: "",
-    roomType: "",
-    pricePerNight: "",
-    capacity: "",
-    size: "",
-    floor: "",
+    roomTypeId: "",
+    staffIds: "",
+    zoneId: "",
   },
 
   // Actions
@@ -93,19 +66,9 @@ const useRoomFormStore = create<RoomFormState>((set, get) => ({
       roomInfo: { ...state.roomInfo, ...info },
     })),
 
-  toggleAmenity: (amenityId) =>
-    set((state) => {
-      const isSelected = state.selectedAmenities.includes(amenityId)
-
-      if (isSelected) {
-        return {
-          selectedAmenities: state.selectedAmenities.filter((id) => id !== amenityId),
-        }
-      } else {
-        return {
-          selectedAmenities: [...state.selectedAmenities, amenityId],
-        }
-      }
+  setRoomTypeId: (id) =>
+    set({
+      roomTypeId: id,
     }),
 
   setSelectedFloorId: (floorId) =>
@@ -128,22 +91,6 @@ const useRoomFormStore = create<RoomFormState>((set, get) => ({
       }
     }),
 
-  // Image actions
-  addRoomImage: (imageUrl) =>
-    set((state) => ({
-      roomImages: [...state.roomImages, imageUrl],
-    })),
-
-  removeRoomImage: (imageUrl) =>
-    set((state) => ({
-      roomImages: state.roomImages.filter((url) => url !== imageUrl),
-    })),
-
-  setRoomImages: (images) =>
-    set({
-      roomImages: images,
-    }),
-
   setCurrentStep: (step) => set({ currentStep: step }),
 
   resetForm: () =>
@@ -152,32 +99,22 @@ const useRoomFormStore = create<RoomFormState>((set, get) => ({
       editRoomId: null,
       roomInfo: {
         name: "",
-        description: "",
-        roomType: "SINGLE",
-        pricePerNight: 0,
-        capacity: 1,
-        size: "",
-        availability: true,
-        roomStatus: "AVAILABLE",
       },
-      selectedAmenities: [],
+      roomTypeId: "",
       selectedFloorId: "",
       selectedStaffIds: [],
-      roomImages: [],
       currentStep: 1,
       errors: {
         name: "",
-        description: "",
-        roomType: "",
-        pricePerNight: "",
-        capacity: "",
-        size: "",
-        floor: "",
+        roomTypeId: "",
+        staffIds: "",
+        zoneId: "",
       },
     }),
 
+  // Update the validateCurrentStep function to use zoneId instead of floor
   validateCurrentStep: () => {
-    const { currentStep, roomInfo, selectedFloorId, clearErrors, setError } = get()
+    const { currentStep, roomInfo, roomTypeId, selectedFloorId, clearErrors, setError } = get()
 
     // Clear previous errors
     clearErrors()
@@ -191,28 +128,8 @@ const useRoomFormStore = create<RoomFormState>((set, get) => ({
         isValid = false
       }
 
-      if (!roomInfo.description.trim()) {
-        setError("description", "Room description is required")
-        isValid = false
-      }
-
-      if (!roomInfo.roomType) {
-        setError("roomType", "Room type is required")
-        isValid = false
-      }
-
-      if (roomInfo.pricePerNight < 0) {
-        setError("pricePerNight", "Price cannot be negative")
-        isValid = false
-      }
-
-      if (roomInfo.capacity < 1) {
-        setError("capacity", "Capacity must be at least 1")
-        isValid = false
-      }
-
-      if (!roomInfo.size.trim()) {
-        setError("size", "Room size is required")
+      if (!roomTypeId) {
+        setError("roomTypeId", "Please select a room type")
         isValid = false
       }
 
@@ -223,7 +140,7 @@ const useRoomFormStore = create<RoomFormState>((set, get) => ({
       let isValid = true
 
       if (!selectedFloorId) {
-        setError("floor", "Please select a floor")
+        setError("zoneId", "Please select a floor")
         isValid = false
       }
 
@@ -233,16 +150,14 @@ const useRoomFormStore = create<RoomFormState>((set, get) => ({
     return true
   },
 
+  // Update the clearErrors function
   clearErrors: () =>
     set({
       errors: {
         name: "",
-        description: "",
-        roomType: "",
-        pricePerNight: "",
-        capacity: "",
-        size: "",
-        floor: "",
+        roomTypeId: "",
+        staffIds: "",
+        zoneId: "",
       },
     }),
 
@@ -259,24 +174,16 @@ const useRoomFormStore = create<RoomFormState>((set, get) => ({
 
   setEditRoomId: (id) => set({ editRoomId: id }),
 
-  initializeFormForEdit: (roomData, amenities, staffData) => {
+  initializeFormForEdit: (roomData) => {
     set({
       isEditMode: true,
       editRoomId: roomData._id,
       roomInfo: {
         name: roomData.name,
-        description: roomData.description || "",
-        roomType: roomData.roomType,
-        pricePerNight: roomData.pricePerNight,
-        capacity: roomData.capacity,
-        size: roomData.size || "",
-        availability: roomData.availability,
-        roomStatus: roomData.roomStatus,
       },
-      selectedAmenities: roomData.amenities || [],
+      roomTypeId: roomData.roomTypeId || "",
       selectedFloorId: roomData.zoneId || "",
       selectedStaffIds: roomData.staffIds || [],
-      roomImages: roomData.images || [],
       currentStep: 1,
     })
   },

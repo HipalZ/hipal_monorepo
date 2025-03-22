@@ -230,18 +230,18 @@ const MemoQrCreation = () => {
                 icon: <Upload size={16} className="" />,
                 onClick: () => fileInputRef.current?.click(),
                 color: "purple",
-                className: "rounded-md px-2",
+                className: "rounded-md w-[20%]",
               },
               {
                 text: "",
                 icon: <LetterTextIcon size={24} className="" />,
                 onClick: toggleEditTextModal,
-                className: "rounded-md",
+                className: "rounded-md w-[20%]",
               },
               {
                 text: "Next",
                 onClick: () => setShowTables(true),
-                className: "rounded-md",
+                className: "rounded-md w-[50%]",
               },
             ]}
           />

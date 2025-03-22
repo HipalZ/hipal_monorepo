@@ -1,4 +1,4 @@
-import { Payment, PosBill } from "@hi/db-models";
+import { OutLetInfo, Payment, PosBill } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import FormData from "form-data";
@@ -22,6 +22,14 @@ const downloadRouter = new Hono().get(
         return c.json({ err: true, message: "Payment not found" }, 404);
       }
 
+      const outLetInfo = await OutLetInfo.findOne({
+        businessId: payment.businessId,
+      });
+
+      if (!outLetInfo) {
+        return c.json({ err: true, message: "Outlet info not found" }, 404);
+      }
+
       const posBill = await PosBill.findOne({
         billRequestId: payment?.posBillRequestId,
       });
@@ -34,138 +42,190 @@ const downloadRouter = new Hono().get(
         });
       }
 
-      const doc = new PDFDocument({ margin: 50 });
+      const doc = new PDFDocument({
+        margin: 40,
+        bufferPages: true,
+        size: 'A4'
+      });
+
       const formData = new FormData();
       formData.append("file", doc, {
         filename: `payment_${paymentId}.pdf`,
         contentType: "application/pdf",
       });
 
-      doc
-        .fontSize(18)
-        .font("Helvetica-Bold")
-        .text("Payment Receipt", { align: "center" });
-      doc.moveDown(1);
+      let y = 50;
 
+      // Invoice Title
       doc
-        .fontSize(12)
-        .font("Helvetica-Bold")
-        .text("Payment Details", { underline: true });
-      doc.moveDown(0.5);
+        .fontSize(20)
+        .font('Helvetica-Bold')
+        .text('TAX INVOICE', { align: 'center', y: y + 10 });
 
-      doc.font("Helvetica-Bold");
-      doc
-        .text(`Payment ID: `, { continued: true })
-        .font("Helvetica")
-        .text(payment._id.toString().slice(-6));
-      doc
-        .font("Helvetica-Bold")
-        .text(`Customer Name: `, { continued: true })
-        .font("Helvetica")
-        .text(payment.userId?.name || "Unknown");
-      doc
-        .font("Helvetica-Bold")
-        .text(`Phone: `, { continued: true })
-        .font("Helvetica")
-        .text(payment.userId?.phone || "N/A");
-      doc
-        .font("Helvetica-Bold")
-        .text(`Payment Mode: `, { continued: true })
-        .font("Helvetica")
-        .text(payment.paymentMode.toUpperCase());
-      doc
-        .font("Helvetica-Bold")
-        .text(`Table: `, { continued: true })
-        .font("Helvetica")
-        .text(payment.tableName);
-      doc
-        .font("Helvetica-Bold")
-        .text(`Created At: `, { continued: true })
-        .font("Helvetica")
-        .text(new Date(payment.date).toLocaleString());
-      doc.moveDown(1);
+      y += 30;
 
+      // Logo and Business Info
+      if (outLetInfo.logoUrl) {
+        try {
+          const logoResponse = await axios.get(outLetInfo.logoUrl, {
+            responseType: 'arraybuffer'
+          });
+          const logoBuffer = Buffer.from(logoResponse.data, 'binary');
+          doc.image(logoBuffer, 50, y, {
+            width: 60,
+            height: 60,
+            fit: [60, 60]
+          });
+        } catch (error) {
+          console.error('Error loading logo:', error);
+        }
+      }
+
+      // Business Information
       doc
-        .fontSize(12)
-        .font("Helvetica-Bold")
-        .text("Items Purchased", { underline: true });
-      doc.moveDown(0.5);
+        .font('Helvetica-Bold')
+        .fontSize(16)
+        .text(outLetInfo?.name?.toUpperCase(), 120, y + 10)
+        .font('Helvetica')
+        .fontSize(10)
+        .text(outLetInfo.address, 120, y + 30, { width: 300 })
+        .text(`Phone: ${outLetInfo.phone}`, 120, y + 55)
+        .text(`FSSAI: ${outLetInfo.fssai}`, 120, y + 65)
+        .text(`GSTIN: ${outLetInfo.gst}`, 120, y + 80);
 
-      doc.font("Helvetica-Bold");
-      doc.text("Item       Price       Qty");
-      doc.moveDown(0.5);
+      // Header Separator
+      y += 100;
+      // Left Column
+      doc
+        .fontSize(10)
+        .font('Helvetica-Bold')
+        .text('Invoice Number:', 50, y + 20)
+        .font('Helvetica')
+        .text(payment._id.toString().slice(-6).toUpperCase(), 130, y + 20)
+        .font('Helvetica-Bold')
+        .text('Date & Time:', 50, y + 40)
+        .font('Helvetica')
+        .text(new Date(payment.date).toLocaleString(), 130, y + 40)
+        .font('Helvetica-Bold')
+        .text('Order Type:', 50, y + 60)
+        .font('Helvetica')
+        .text(payment.orderType?.toUpperCase() || 'DINE-IN', 130, y + 60);
 
-      doc.font("Helvetica");
-      if (
-        !posBill ||
-        !Array.isArray(posBill.items) ||
-        posBill.items.length === 0
-      ) {
-        doc.text("No items found.");
-      } else {
+      // Right Column
+      doc
+        .font('Helvetica-Bold')
+        .fontSize(10)
+        .text('Customer Name:', 300, y + 20)
+        .font('Helvetica')
+        .text(payment.userId?.name || 'Guest', 390, y + 20)
+        .font('Helvetica-Bold')
+        .text('Contact:', 300, y + 40)
+        .font('Helvetica')
+        .text(payment.userId?.phone || 'N/A', 390, y + 40)
+        .font('Helvetica-Bold')
+        .text('Table:', 300, y + 60)
+        .font('Helvetica')
+        .text(payment.tableName, 390, y + 60);
+
+      // Items Section
+      let posY = y + 100;
+      if (posBill?.items?.length) {
+        doc
+          .fontSize(14)
+          .font('Helvetica-Bold')
+          .text('ITEMS PURCHASED', 50, posY)
+          .moveDown(0.5);
+
+        // Table Header
+        doc
+          .fillColor('#444444')
+          .font('Helvetica-Bold')
+          .text('Item', 50, posY + 20)
+          .text('Price', 300, posY + 20, { width: 100, align: 'right' })
+          .text('Qty', 400, posY + 20, { width: 50, align: 'right' })
+          .text('Total', 450, posY + 20, { width: 100, align: 'right' });
+
+        posY += 40;
+        doc.font('Helvetica').fontSize(12);
+
         posBill.items.forEach((item) => {
-          doc.text(
-            `${item?.dish?.name || "Unknown"}   ${item?.dish?.price || 0}   ${
-              item?.dish?.quantity || 0
-            }`,
-          );
-        });
-      }
-      doc.moveDown(1);
+          const price = item?.dish?.price || 0;
+          const qty = item?.dish?.quantity || 0;
+          const total = price * qty;
 
-      doc
-        .fontSize(12)
-        .font("Helvetica-Bold")
-        .text("Payment Summary", { underline: true });
-      doc.moveDown(0.5);
-      doc
-        .font("Helvetica-Bold")
-        .text("Subtotal: ", { continued: true })
-        .font("Helvetica")
-        .text(`${payment.initialSubTotal}`);
-      doc
-        .font("Helvetica-Bold")
-        .text("Discount: ", { continued: true })
-        .font("Helvetica")
-        .text(`${payment.discount}`);
-      doc
-        .font("Helvetica-Bold")
-        .text("Total: ", { continued: true })
-        .font("Helvetica")
-        .text(`${payment.initialTotal}`);
-      doc
-        .font("Helvetica-Bold")
-        .text("Tax: ", { continued: true })
-        .font("Helvetica")
-        .text(`${payment.tax}`);
-      doc
-        .font("Helvetica-Bold")
-        .text("Service Charge: ", { continued: true })
-        .font("Helvetica")
-        .text(`${payment.serviceCharge}`);
-      doc
-        .font("Helvetica-Bold")
-        .text("Amount Paid: ", { continued: true })
-        .font("Helvetica")
-        .text(`${payment.total}`);
-      doc.moveDown(1);
-
-      doc
-        .fontSize(12)
-        .font("Helvetica-Bold")
-        .text("Split Payment Modes", { underline: true });
-      doc.moveDown(0.5);
-      if (!payment.splitModes || payment.splitModes.length === 0) {
-        doc.text("No split payment modes.");
-      } else {
-        payment.splitModes.forEach((mode) => {
           doc
-            .font("Helvetica-Bold")
-            .text(`${mode?.name?.toUpperCase()}: `, { continued: true })
-            .font("Helvetica")
-            .text(`${mode.amount}`);
+            .text(item?.dish?.name || 'Unknown', 50, posY)
+            .text(`${price.toFixed(2)}`, 300, posY, { width: 100, align: 'right' })
+            .text(qty.toString(), 400, posY, { width: 50, align: 'right' })
+            .text(`${total.toFixed(2)}`, 450, posY, { width: 100, align: 'right' })
+
+          // Item separator
+          doc
+            .strokeColor('#333333')
+            .lineWidth(1)
+            .moveTo(50, posY + 10)
+            .lineTo(550, posY + 10)
+            .stroke();
+
+          posY += 20;
         });
+      } else {
+        posY += 20;
       }
+
+      // Summary Section
+      posY += 30;
+      doc
+        .fontSize(14)
+        .font('Helvetica-Bold')
+        .text('PAYMENT SUMMARY', 50, posY)
+        .moveDown(0.5);
+
+      const summary = [
+        { label: 'Subtotal:', value: payment.initialSubTotal },
+        { label: `Discount (${payment?.discountPercentage || 0}%):`, value: payment.discount },
+        { label: `Tax (${outLetInfo.gstPercentage}%):`, value: payment.tax },
+        { label: `Service Charge (${outLetInfo.serviceChargePercentage}%):`, value: payment.serviceCharge },
+        { label: 'Total Amount:', value: payment.total },
+      ];
+
+      summary.forEach((item) => {
+        doc
+          .font('Helvetica-Bold')
+          .text(item.label, 375, posY)
+          .font('Helvetica')
+          .text(`${item.value.toFixed(2)}`, 500, posY, { align: 'right' });
+        posY += 20;
+      });
+
+      // Payment Methods Section
+      posY += 30;
+      doc
+        .fontSize(14)
+        .font('Helvetica-Bold')
+        .text('PAYMENT METHODS', 50, posY)
+        .moveDown(0.5);
+
+      if (payment.splitModes?.length) {
+        payment.splitModes.forEach((mode) => {
+          posY += 20;
+          doc
+            .font('Helvetica-Bold')
+            .text(`${mode.name.toUpperCase()}:`, 50, posY)
+            .font('Helvetica')
+            .text(`${mode.amount.toFixed(2)}`, 500, posY, { align: 'right' });
+        });
+      } else {
+        posY += 20;
+        doc.font('Helvetica').text(`Payment Mode: ${payment.mode}`, 50, posY);
+      }
+
+      // Footer Section
+      posY = 700;
+      doc
+        .fontSize(9)
+        .text("This is a computer-generated invoice. No signature required.", 50, posY + 70, { align: 'center' });
+
       doc.end();
 
       const uploadResponse = await axios.post(

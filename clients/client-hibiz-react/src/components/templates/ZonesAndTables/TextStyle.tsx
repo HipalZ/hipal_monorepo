@@ -450,12 +450,12 @@ const TextStyle = () => {
             icon: <TbCircleLetterAFilled size={24} />,
             onClick: toggleBackground,
             color: "purple",
-            className: "rounded-md",
+            className: "rounded-md w-full",
           },
           {
             text: "Save",
             onClick: toggleEditTextModal,
-            className: "rounded-md md:px-[6rem] px-12",
+            className: "rounded-md md:px-[6rem] px-12 w-full",
           },
         ]}
       />

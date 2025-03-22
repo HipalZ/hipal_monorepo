@@ -53,7 +53,7 @@ const FloorMain: React.FC = () => {
         roomData: s.roomData
     }))
 
-    const { setEditMode, setEditFloorId, initializeFormForEdit,setCurrentStep } = useFloorFormStore((state) => ({
+    const { setEditMode, setEditFloorId, initializeFormForEdit, setCurrentStep } = useFloorFormStore((state) => ({
         setEditMode: state.setEditMode,
         setEditFloorId: state.setEditFloorId,
         initializeFormForEdit: state.initializeFormForEdit,
@@ -134,13 +134,9 @@ const FloorMain: React.FC = () => {
             ) : (
                 <EmptyState onAddFloor={handleAddFloor} />
             )}
-            {
-                addFloorModal && (
-                    <PopUp hide width="w-[30rem]" height="h-[100dvh] lg:h-[90dvh]" show={addFloorModal} onClose={() => setAddFloorModal(false)}>
-                        <AddFloor />
-                    </PopUp>
-                )
-            }
+            <PopUp hide width="w-[30rem]" height="h-[100dvh] lg:h-[90dvh]" show={addFloorModal} onClose={() => setAddFloorModal(false)}>
+                <AddFloor />
+            </PopUp>
             <AdvancedBottomButton
                 fixed={true}
                 maxWidth="30rem"

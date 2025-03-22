@@ -167,8 +167,6 @@ const staffRouter = new Hono()
 
       const staff = await User.findById(staffId).lean();
 
-      console.log("staff", staff);
-
       if (!staff) {
         return respond(c, "Staff not found", true, 404, {});
       }
@@ -176,8 +174,6 @@ const staffRouter = new Hono()
       const customRoleIndex = staff.customRole.findIndex(
         (r) => r.businessId.toString() === businessId,
       );
-
-      console.log("customRoleIndex", customRoleIndex);
 
       if (customRoleIndex === -1) {
         return respond(

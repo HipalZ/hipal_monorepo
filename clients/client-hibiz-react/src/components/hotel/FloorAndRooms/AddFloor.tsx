@@ -136,13 +136,13 @@ const AddFloor: React.FC<AddFloorProps> = ({ floorToEdit, onClose }) => {
         ? {
           text: "Next",
           onClick: handleNext,
-          className: "rounded-md",
+          className: "rounded-md w-full",
         }
         : {
           text: isSubmitting ? "Saving..." : isEditMode ? "Update Floor" : "Create Floor",
           onClick: handleSubmit,
           icon: isEditMode ? <Edit className="w-4 h-4 ml-2" /> : <Building2 className="w-4 h-4 ml-2" />,
-          className: "rounded-md",
+          className: "rounded-md w-full",
           highlight: true,
           disable: isSubmitting || createHotlePending || updateFloorPending,
         },

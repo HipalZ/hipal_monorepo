@@ -116,7 +116,7 @@ const FloorCard: React.FC<FloorCardProps> = ({
             <Separator />
 
             <CardFooter className="flex justify-between pt-4">
-                <Button
+                {/* <Button
                     variant="outline"
                     size="sm"
                     className="flex items-center gap-1"
@@ -133,12 +133,12 @@ const FloorCard: React.FC<FloorCardProps> = ({
                             <span>Enable</span>
                         </>
                     )}
-                </Button>
+                </Button> */}
 
                 <Button
                     variant="default"
                     size="sm"
-                    className="flex items-center gap-1"
+                    className="flex items-center w-full gap-1"
                     onClick={() => onManageRooms(floor._id)}
                 >
                     <Bed className="w-4 h-4" />

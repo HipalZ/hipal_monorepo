@@ -1,28 +1,31 @@
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import FloorMain from "@/components/hotel/FloorAndRooms/FloorMain";
-import RoomMain from "@/components/hotel/FloorAndRooms/RoomMain";
+import NewRoomCreation from "@/components/hotel/FloorAndRooms/RoomMain";
+import RoomTypeMain from "@/components/hotel/FloorAndRooms/RoomtypeMain";
 import MemoizedHeader from "@/components/molecules/header"
 import useBusinessData from "@/components/store/useBusinessData";
 import UniversalNav from "@/components/templates/menu/sideNavbaar/universelSidenav";
 import { useGetAllHotelRooms } from "@/hooks/hotel/useRoomHook";
+import { useGetAllRoomTypes } from "@/hooks/hotel/useRoomTypeHook";
 import { useGetAllHotelFloors } from "@/hooks/useFloorHook";
 import { cn } from "@hi/common";
 import { memo, useState } from "react";
 import { FaArrowLeft } from "react-icons/fa"
 
-const navItems = [{ text: "floors" }, { text: "Rooms" }];
+const navItems = [{ text: "floors" }, { text: "Room Types" }, { text: "Rooms" },];
 
 const MemoManageRoomsHotel = () => {
     const businessId = useBusinessData((s) => s.businessData?._id)
     const { floorsLoading } = useGetAllHotelFloors(businessId as string)
     const { roomLoading } = useGetAllHotelRooms(businessId as string)
-    const [selectedTab, setSelectedTab] = useState<"floors" | "rooms">("floors");
+    const { roomTypesLoading } = useGetAllRoomTypes(businessId as string)
+    const [selectedTab, setSelectedTab] = useState<"floors" | "room types" | "rooms">("floors");
     const changeLayout = (text: string) => {
         setSelectedTab(text.toLowerCase() as "floors" | "rooms");
     };
 
 
-    if (floorsLoading || roomLoading) return <LoadingSpinner />
+    if (floorsLoading || roomLoading || roomTypesLoading) return <LoadingSpinner />
 
     return (
         <main>
@@ -61,10 +64,14 @@ const MemoManageRoomsHotel = () => {
             }
             {selectedTab === "rooms" &&
                 (
-                    <RoomMain />
+                    <NewRoomCreation />
                 )
             }
-
+            {
+                selectedTab === "room types" && (
+                    <RoomTypeMain />
+                )
+            }
 
         </main>
     )

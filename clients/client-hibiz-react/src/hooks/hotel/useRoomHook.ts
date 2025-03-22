@@ -4,7 +4,6 @@ import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import useRoomFormStore from "@/components/store/hotel/useRoomFormStore";
 
 
 export const roomTypeEnum = [
@@ -52,6 +51,7 @@ export interface IHotelRoom {
     downloadlink: string,
     userIds: string[],
     slug: string,
+    roomTypeId?: string,
 }
 
 export const useGetAllHotelRooms = (businessId: string) => {
@@ -99,14 +99,13 @@ export interface IHotelRoomPayload {
     images: string[],
     userIds: string[],
     roomId?: string,
+    roomTypeId?: string,
 }
 
 export const useCreateHotelRoom = () => {
     const { setError, setOpenErrorModal } = useError()
     const queryClient = useQueryClient()
-    const { resetForm } = useRoomFormStore((state) => ({
-        resetForm: state.resetForm,
-    }))
+   
     const { setOpenAddRoomModal } = useRoomStore((state) => ({
         setOpenAddRoomModal: state.setOpenAddRoomModal
     }))
@@ -130,7 +129,6 @@ export const useCreateHotelRoom = () => {
                 return toast.error("Room already exists")
             }
             if (data.status === 200 || data.status === 201) {
-                resetForm()
                 setOpenAddRoomModal(false)
                 queryClient.invalidateQueries({ queryKey: ["getAllHotelRooms", variables.businessId] })
                 return toast.success("Room added successfully")
@@ -150,9 +148,7 @@ export const useUpdateHotelRoom = () => {
     const { setError, setOpenErrorModal } = useError()
     const queryClient = useQueryClient()
 
-    const { resetForm } = useRoomFormStore((state) => ({
-        resetForm: state.resetForm,
-    }))
+ 
     const { setOpenAddRoomModal } = useRoomStore((state) => ({
         setOpenAddRoomModal: state.setOpenAddRoomModal
     }))
@@ -170,14 +166,12 @@ export const useUpdateHotelRoom = () => {
         },
         onSuccess: (data, variables) => {
             if (data.status === 200 || data.status === 201) {
-                resetForm()
                 setOpenAddRoomModal(false)
                 queryClient.invalidateQueries({ queryKey: ["getAllHotelRooms", variables.businessId] })
                 return toast.success("Room updated successfully")
             }
         },
         onError: (error) => {
-            console.log(error)
             setError(error.message)
             setOpenErrorModal(true)
         },
