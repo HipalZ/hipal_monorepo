@@ -1,6 +1,5 @@
 import { getBusinessData } from "@/apis/commonApis"
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader"
-import HotelWelcomeCard from "@/components/hotels/room/RoomWelcome"
 import ServiceCategoriesSection from "@/components/hotels/room/ServiceCategoriesSection"
 import type { BusinessDetails } from "@/components/types/businessData"
 import dynamic from "next/dynamic"
@@ -75,6 +74,13 @@ const RoomCard = dynamic(() => import("@/components/hotels/room/RoomNumber"), {
   loading: () => <SkeletonLoader height={200} />,
 })
 
+const HotelWelcomeCard = dynamic(() => import("@/components/hotels/room/RoomWelcome"), {
+  loading: () => <SkeletonLoader height={200} />,
+})
+
+const ChatHotel = dynamic(() => import("@/components/hotels/room/ChatHotel"), {
+  loading: () => <SkeletonLoader height={200} />,
+})
 
 
 const page = async ({
@@ -86,7 +92,6 @@ const page = async ({
 }) => {
   const businessData = (await getBusinessData(params.businessId)) as BusinessDetails
   const room = typeof searchParams.room === "string" ? searchParams.room : "hipalz"
-
   return (
     <HotelBackgroundContainer overlayOpacity={50}>
       <ViewPortContainer className="relative mx-auto max-w-[30rem] pb-[10rem]">
@@ -104,6 +109,13 @@ const page = async ({
           room={room}
           businessId={businessData.businessId}
           customLink={params.businessId}
+        />
+
+        <ChatHotel
+          hotelName={businessData.name}
+          logo={businessData.logoUrl}
+          room={room}
+          businessId={businessData.businessId}
         />
 
         <section className="px-6 pb-6">

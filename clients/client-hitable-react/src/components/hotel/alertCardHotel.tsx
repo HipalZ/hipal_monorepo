@@ -27,11 +27,11 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
     mutationFn: respondAlert,
   })
   const handleAction = useCallback(
-    async (alertId: string, action: "ACCEPTED" | "REJECTED" | "DELIVERED") => {
+    async (alertId: string, action) => {
       setIsLoading(action)
       try {
         await mutateAsync({ alertId, action })
-        toast.success(`Alert ${action.toLowerCase()} successfully`)
+        toast.success(`Alert ${action?.toLowerCase()} successfully`)
       } catch (error) {
         toast.error("Failed to perform action")
       } finally {
@@ -43,10 +43,17 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
   const hasCart = alert?.cart && alert?.cart?.length > 0
   const timeAgo = formatDistanceToNow(new Date(alert?.createdAt), { addSuffix: true })
+  // const acceptedTime = formatDistanceToNow(new Date(alert?.acceptedAt), { addSuffix: true })
+
+  const alertProgress: Record<string, string> = {
+    CREATED: "CREATED",
+    WARNING: "WARNING",
+    ESCALATION: "ESCALATION",
+  }
 
   return (
     <Card
-      className="border border-l-4 overflow-hidden hover:shadow-md transition-all duration-200"
+      className={`${alert?.alertProgress ==="NOT_DELIVERED" ? "animation-blink" : ""} border border-l-4 overflow-hidden hover:shadow-md transition-all duration-200`}
       style={{
         borderLeftColor: borderColor(alert?.alertProgress),
       }}
@@ -112,6 +119,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
                     <div className="flex items-center text-green-600">
                       <User className="h-3.5 w-3.5 mr-1" />
                       <span className="font-medium">{alert?.acceptedBy?.name}</span>
+                      {/* <span className="ml-auto">{acceptedTime}</span> */}
                     </div>
                   </div>
                 )}
@@ -122,7 +130,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
         {/* Action buttons */}
         <div className="flex gap-2">
-          {alert.alertProgress === "CREATED" && (
+          {alertProgress[alert?.alertProgress] && (
             <>
               <Button
                 variant="outline"
@@ -166,6 +174,22 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
               Mark as Delivered
             </Button>
           )}
+
+          {alert.alertProgress === "NOT_DELIVERED" && (
+            <Button
+              className="w-full bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => handleAction(alert?._id, "RESOLVED")}
+              disabled={isLoading !== null}
+            >
+              {isLoading === "NOT_DELIVERED" ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <CheckCheck className="h-4 w-4 mr-2" />
+              )}
+              Mark as Resolved
+            </Button>
+          )}
+
 
           {(alert?.alertProgress === "REJECTED" || alert?.alertProgress === "DELIVERED") && (
             <div className="w-full text-center text-sm text-gray-500 py-2 bg-gray-50 rounded-md">

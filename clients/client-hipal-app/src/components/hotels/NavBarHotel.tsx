@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useHotelBusinessData } from "../store/useHotelBusinessData"
 import { useRouter } from "next/navigation"
+import { useHotelTemp } from "../store/useHotelTemp";
 
 interface NavBarHotelProps {
   businessName?: string
-  onChatClick?: () => void
+  // onChatClick?: () => void
   onBackClick?: () => void
   showBackButton?: boolean
   hideChat?: boolean
@@ -21,7 +22,7 @@ interface NavBarHotelProps {
 
 export function NavBarHotel({
   businessName,
-  onChatClick,
+  // onChatClick,
   onBackClick,
   showBackButton = false,
   hideChat = false,
@@ -29,6 +30,7 @@ export function NavBarHotel({
   centerText = false,
   hideLogo = false,
 }: NavBarHotelProps) {
+  const {setIsOpenChat, isOpenChat} = useHotelTemp()
   const router = useRouter()
   const logoUrl = useHotelBusinessData(s => s.hotelData.logoUrl)
 
@@ -39,6 +41,10 @@ export function NavBarHotel({
     } else {
       router.back()
     }
+  }
+
+  const onChatClick = () => {
+    setIsOpenChat(!isOpenChat)
   }
 
   return (

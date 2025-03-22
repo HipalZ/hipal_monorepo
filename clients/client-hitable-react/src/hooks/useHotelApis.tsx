@@ -2,7 +2,7 @@ import { useAlertsStore } from "@/components/store/useAlertStore"
 import useBusinessData from "@/components/store/useBusinessData"
 import { useHiClientZ } from "@/components/store/useHiClientzData"
 import { useHotelStore } from "@/components/store/useHotelStore"
-import type { Alert } from "@/components/types/hotelData"
+import type { Alert, AlertProgress } from "@/components/types/hotelData"
 import { apiRpc } from "@hi/common"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import toast from "react-hot-toast"
@@ -105,7 +105,7 @@ export const useRoomAlerts = () => {
         queryKey: ["roomAlerts", businessId, userId],
         queryFn: roomAlerts,
         enabled: !!businessId && !!userId,
-        refetchInterval: 7000,
+        refetchInterval: 5000,
     })
 
     return { alerts, isPending }
@@ -137,7 +137,7 @@ export const useAllServices = () => {
 export const useRespondAlerts = () => {
     const queryClient = useQueryClient()
     const userId = useHiClientZ((s) => s.captainData._id)
-    const respondAlert = async ({ alertId, action }: { alertId: string, action: string }) => {
+    const respondAlert = async ({ alertId, action }: { alertId: string, action: AlertProgress }) => {
         const response = await apiRpc.hotel.alert.accept_alert.$post({
             json: {
                 alertId,
