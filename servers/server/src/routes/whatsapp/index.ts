@@ -2094,23 +2094,27 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: `Welcome to ${bName?.name} 🌿
-              
-              Hey there! Thanks for stopping by at the Lala Land Flea Market! 🎉
-              
-              We’re excited to introduce Urban Nemo – where great coffee, delicious food, and a peaceful ambiance come together. Here's a special treat just for you!
-              
-              🎁 Grab Coupon: ${longUrl}
-              
-              🎁 Enjoy Flat 10% OFF
-              👉 At our stall in the flea market
-              🎁 Enjoy Flat 20% OFF
-              👉 At Urban Nemo Garden Cafe near Jubilee Hills Checkpost
-              
-              📍 Find us here: https://g.co/kgs/9dszAqh  
-              📸 Follow us for more perks: https://www.instagram.com/urbannemocafehyd  
-              
-              Show this message to claim your discount! Looking forward to serving you! ☕`,
+                    body: `🍨 Welcome to  ${bName?.name}!
+Hey there! Thanks for stopping by to enjoy our delicious ice creams 🎉
+
+We're excited to introduce Smaakenzzo – where 100% pure milk-based ice creams, mouth-watering desserts, and a stunning ambiance come together.
+
+Here's a special treat just for you! 🎁
+
+🎟 Grab Your Coupon:
+${longUrl}
+
+🍦 Enjoy a Free Ice Cream
+👉 Only at Smaakenzzo Cafe, Preston Prime Mall, Gachibowli
+
+📍 Find us here:
+https://g.co/kgs/GG2rkoR
+
+📸 Follow us for more perks:
+https://www.instagram.com/smaakenzzo
+
+📲 Show this message to claim your discount!
+We’re looking forward to serving you! `,
                   },
                 },
                 headers: {
