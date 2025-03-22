@@ -53,18 +53,17 @@ export const useAlertsColors = () => {
 
     // border color
     const borderColor = useCallback((progress: string) => {
-        switch (progress) {
-            case "CREATED":
-                return "#10b981"
-            case "ACCEPTED":
-                return "#1E88E5"
-            case "REJECTED":
-                return "#ef4444"
-            case "DELIVERED":
-                return "#3b82f6"
-            default:
-                return "#d1d5db"
+        const a:Record<string,string>= {
+            CREATED: "#10b981",
+            ACCEPTED: "#1E88E5",
+            REJECTED: "#ef4444",
+            DELIVERED: "#3b82f6",
+            WARNING: "#FFA500",
+            ESCALATION:"#FEE12B",
+            NOT_DELIVERED:"#FF0000"
         }
+
+        return a[progress] || "#d1d5db"
     }, [])
 
     const getStatusStyles = useCallback((status: string) => {

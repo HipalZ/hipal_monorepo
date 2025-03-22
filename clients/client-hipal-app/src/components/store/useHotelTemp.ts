@@ -6,6 +6,9 @@ interface IHotelTemp {
   updateImageIndex: (roomId: string, index: number) => void;
   nextImage: (roomId: string, imagesLength: number) => void;
   prevImage: (roomId: string, imagesLength: number) => void;
+
+  isOpenChat: boolean;
+  setIsOpenChat: (isOpenChat: boolean) => void;
 }
 
 export const useHotelTemp = create<IHotelTemp>((set, get) => ({
@@ -42,5 +45,8 @@ export const useHotelTemp = create<IHotelTemp>((set, get) => ({
         [roomId]: currentIndex === 0 ? imagesLength - 1 : currentIndex - 1
       }
     };
-  })
+  }),
+
+  isOpenChat: false,
+  setIsOpenChat: (isOpenChat) => set({ isOpenChat })
 }));

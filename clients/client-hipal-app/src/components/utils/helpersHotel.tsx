@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useHotelTemp } from "../store/useHotelTemp";
 import { _useAllBusiness } from "../store/useAllBusiness";
+import { format } from "date-fns";
 
 export const useImageNextPrev = () => {
   const { nextImage: nextImageStore, prevImage: prevImageStore } = useHotelTemp();
@@ -45,3 +46,26 @@ export const useShareRoom = () => {
 
   return { shareCart, shareState, setShareState };
 }
+
+export enum ActionType {
+  NotDelivered = "Not delivered",
+  ReviewAndThanks = "Review & Thanks",
+  Delivered = "Delivered",
+  ESCALATION = "Escalation",
+  WARNING = "WARNING",
+}
+
+export const actionOptions = [
+  { id: "not-delivered", text: ActionType.NotDelivered },
+  { id: "review", text: ActionType.ReviewAndThanks },
+];
+
+export const reviewOptions = [
+  { id: "bad", text: "😞", value: 1 },
+  { id: "good", text: "😊", value: 3 },
+  { id: "great", text: "😍", value: 5 },
+]
+
+export const formatHotelTime = (timestamp: number) => {
+  return format(new Date(timestamp), "h:mm a");
+};

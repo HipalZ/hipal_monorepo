@@ -2,6 +2,7 @@ import CouponsImage from "@/assets/services/coupons.png";
 import HibizImage from "@/assets/services/hibiz.png";
 import BillsImage from "@/assets/services/bills.png";
 import HiPeopleImage from "@/assets/services/hi ppl.png";
+import WhatzappImage from "@/assets/services/whatzapp.png";
 import LoyaltyImage from "@/assets/services/loyalty.png";
 import MenuImage from "@/assets/services/menu.png";
 import StaffImage from "@/assets/services/staff.png";
@@ -118,7 +119,7 @@ export const getButtons = (
       navigateTo: "reviews",
     },
     {
-      image: HiPeopleImage, // You might want to replace this with a WhatsApp-specific image
+      image: WhatzappImage,
       text: "WhatsApp",
       description: "Manage your WhatsApp",
       navigateTo: "whatzapp",

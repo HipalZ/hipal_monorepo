@@ -15,13 +15,13 @@ import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { motion } from "framer-motion"
 
-interface HotelWelcomeCardProps {
+export interface HotelWelcomeCardProps {
     hotelName: string
     logo: string
     room?: string
     className?: string
     businessId?: string
-    customLink: string
+    customLink?: string
 }
 
 export default function HotelWelcomeCard({

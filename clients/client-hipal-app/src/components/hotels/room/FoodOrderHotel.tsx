@@ -116,7 +116,7 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
             setOrderStatus("error")
             toast.error("Failed to place your order. Please try again.")
         }
-    }, [roomPayload, businessId, room, createAlert, userId, services, onClose, sanitizedCart, setCartEmpty])
+    }, [roomPayload, businessId, room, createAlert, userId, services, sanitizedCart])
 
     // Loading state
     const isLoading = fetchingRestaurants || gettingRoomLoader || creatingAlert || orderStatus === "loading"

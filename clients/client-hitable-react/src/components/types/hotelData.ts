@@ -55,7 +55,7 @@ interface Room {
 export interface Alert {
     name: string;
     _id: string;
-    alertProgress: "CREATED" | "ACCEPTED" | "REJECTED" | "DELIVERED";
+    alertProgress: "CREATED" | "ACCEPTED" | "REJECTED" | "DELIVERED" | "WARNING" | "ESCALATION" | "NOT_DELIVERED";
     serviceIds: Service[];
     businessId: string;
     userId: string;
@@ -68,4 +68,8 @@ export interface Alert {
     acceptedAt: number;
     deliveredAt: number;
     deliveredBy: AcceptedBy;
+}
+
+export interface AlertProgress {
+    alertProgress: "CREATED" | "ACCEPTED" | "REJECTED" | "DELIVERED" | "WARNING" | "ESCALATION" | "NOT_DELIVERED";
 }
