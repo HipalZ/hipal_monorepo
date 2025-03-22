@@ -38,6 +38,9 @@ interface IHotelStore {
 
   hotelAlertsCount: number;
   setHotelAlertsCount: (value: number) => void;
+
+  isOpenChat: boolean;
+  setIsOpenChat: (value: boolean) => void;
 }
 
 export const useHotelStore = create<IHotelStore>((set) => ({
@@ -94,4 +97,7 @@ export const useHotelStore = create<IHotelStore>((set) => ({
 
   hotelAlertsCount: 0,
   setHotelAlertsCount: (value) => set({ hotelAlertsCount: value }),
+
+  isOpenChat: false,
+  setIsOpenChat: (value) => set({ isOpenChat: value }),
 }));

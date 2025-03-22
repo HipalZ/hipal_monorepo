@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge"
-import { BedDouble, BedSingle, User, Key, Star, Copy } from "lucide-react";
+import { BedDouble, BedSingle, User, Key, Star, Copy, MessageCircleMore } from "lucide-react";
 import { Button } from "@/components/ui/button"
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCheckOut } from '@/hooks/useHotelApis';
@@ -7,11 +7,14 @@ import { useHotelStore } from '../store/useHotelStore';
 import { useMutation } from '@tanstack/react-query';
 import CommonBottomButton from '../atoms/bottomButton';
 import { memo, lazy } from "react";
+import useBusinessData from "../store/useBusinessData";
 
+const ChatHotel = lazy(() => import("./ChatHotel"));
 const ReviewUsersHotel = lazy(() => import("./reviewUsersHotel"));
 
 const MemoBookedRoomHotel = () => {
-    const { setOpenRoomModal, roomData } = useHotelStore();
+    const outletInfo = useBusinessData((s)=>s.outletInfo);
+    const { setOpenRoomModal, roomData, setIsOpenChat, isOpenChat } = useHotelStore();
     const { checkOut } = useCheckOut();
     const handleCopyAuthCode = () => {
         navigator.clipboard.writeText(roomData?.authCode)
@@ -22,12 +25,24 @@ const MemoBookedRoomHotel = () => {
     const handleCheckOut = async () => {
         mutateAsync()
     }
+    const handleChat = () => {
+        setIsOpenChat(!isOpenChat)
+    }
 
     return (
-        <section className="w-full mx-auto min-h-screen hide-scrollbar">
+        <section className="w-full h-[90dvh] overflow-y-auto bg-white">
+            {isOpenChat ? <ChatHotel
+                hotelName={outletInfo?.name || ""}
+                logo={outletInfo?.logoUrl || ""}
+                room={roomData?.name}
+                businessId={outletInfo?.businessId}
+            /> : <>
             <CardHeader className="space-y-4">
                 <CardTitle className="text-2xl">
                     <header className="text-center">Room {roomData?.name}</header>
+                    <header onClick={handleChat} className="cursor-pointer text-center text-base -mt-8 float-right">
+                        <MessageCircleMore color="green" /> Chat
+                    </header>
                 </CardTitle>
             </CardHeader>
             <center className="flex justify-around items-center gap-2 text-sm text-black">
@@ -99,6 +114,7 @@ const MemoBookedRoomHotel = () => {
                     },
                 ]}
             />
+            </>}
         </section>
     )
 }

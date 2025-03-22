@@ -146,3 +146,24 @@ export const useFormatTimes = ()=>{
 
 export type SortOption = "newest" | "oldest" | "roomAsc" | "roomDesc" | "fastest" | "slowest"
 export const statusOptions = ["CREATED", "ACCEPTED", "REJECTED", "DELIVERED"]
+export enum ActionType {
+    NotDelivered = "Not delivered",
+    ReviewAndThanks = "Review & Thanks",
+    Delivered = "Delivered",
+    ESCALATION = "Escalation",
+    WARNING = "WARNING",
+  }
+  
+  export const actionOptions = [
+    { id: "review", text: ActionType.ReviewAndThanks },
+  ];
+  
+  export const reviewOptions = [
+    { id: "bad", text: "😞", value: 1 },
+    { id: "good", text: "😊", value: 3 },
+    { id: "great", text: "😍", value: 5 },
+  ]
+  
+  export const formatHotelTime = (timestamp: number) => {
+    return format(new Date(timestamp), "h:mm a");
+  };

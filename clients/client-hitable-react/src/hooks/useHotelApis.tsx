@@ -4,8 +4,12 @@ import { useHiClientZ } from "@/components/store/useHiClientzData"
 import { useHotelStore } from "@/components/store/useHotelStore"
 import type { Alert, AlertProgress } from "@/components/types/hotelData"
 import { apiRpc } from "@hi/common"
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import toast from "react-hot-toast"
+interface IHotelRoomData {
+  businessId: string;
+  roomName: string;
+}
 
 export const useGetAllRooms = () => {
     const businessId = useBusinessData((s) => s.outletInfo?.businessId)
@@ -180,3 +184,73 @@ export const useHistoryAlerts = () => {
 
     return { historyData, isPending }
 }
+
+export const useGetAllChats = (payload:IHotelRoomData) => {
+    const getChats = async () => {
+      const roomResponse = await apiRpc.hotel.rooms.fetch_room.$get({
+        query: payload,
+      });
+      if(!roomResponse.ok) return []
+      const roomData = await roomResponse.json();
+      const response = await apiRpc.hotel.alert.room_chat.$get({
+        query: {
+          roomId:roomData?.data?._id,
+        },
+      });
+      const res = await response.json();
+      return res.data;
+    };
+  
+    const {data:chatData} = useQuery({
+      queryKey: ["getChats", payload],
+      queryFn: getChats,
+      enabled: !!payload.roomName,
+      refetchInterval: 10000,
+    }) 
+  
+    return  { chatData }
+  };
+  
+  export const useSendChat = () => {
+    const queryClient = useQueryClient();
+    const { mutateAsync: sendChat, isPending: sendingChat } = useMutation({
+      mutationFn: async (payload: any) => {
+        const response = await apiRpc.hotel.alert.chat_complain.$post({
+          json: payload,
+        });
+        return response.json();
+      },
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({
+          queryKey:["getChats"]
+        });
+      },
+      onError: (error) => {
+        console.error("Error sending chat:", error);
+      },
+    });
+  
+    return { sendChat, sendingChat };
+  }
+  
+  export const useReviewChat = () => {
+    const queryClient = useQueryClient();
+    const { mutateAsync: reviewChat, isPending: reviewingChat } = useMutation({
+      mutationFn: async (payload: any) => {
+        const response = await apiRpc.hotel.rooms.reviews.$post({
+          json: payload,
+        });
+        return response.json();
+      },
+      onSuccess: (data) => {
+        queryClient.invalidateQueries({
+          queryKey:["getChats"]
+        });
+      },
+      onError: (error) => {
+        console.error("Error reviewing chat:", error);
+      },
+    });
+  
+    return { reviewChat, reviewingChat };
+  }

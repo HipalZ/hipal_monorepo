@@ -13,6 +13,7 @@ import LoadingSpinnerCircle from "@/components/atoms/loader"
 import { toast } from "react-toastify"
 import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
+import { useUserToken } from "@hi/common/src/useUserToken";
 import { motion } from "framer-motion"
 
 export interface HotelWelcomeCardProps {
@@ -35,12 +36,13 @@ export default function HotelWelcomeCard({
     const [showPopup, setShowPopup] = useState(false)
     const [verificationCode, setVerificationCode] = useState("")
     const [codeError, setCodeError] = useState("")
+    const accessToken = useUserToken.getState().accessToken;
 
-    const { checkingIn, checkRoom } = useCheckRoomStatus(businessId || "", room || "", customLink)
+    const { checkRoom } = useCheckRoomStatus(businessId || "", room || "", customLink)
 
     useEffect(() => {
-        if (checkRoom?.status === 400 || checkRoom?.status === 401 ||
-            checkRoom?.status === 403) {
+        if (accessToken !=="" && (checkRoom?.status === 400 || checkRoom?.status === 401 ||
+            checkRoom?.status === 403)) {
             setShowPopup(true)
         }
     }, [checkRoom])

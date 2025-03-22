@@ -45,7 +45,7 @@ const MemoAvailableRoomHotel = () => {
         }
     }
     return (
-        <section className="w-full mx-auto">
+        <section className="w-full mx-auto bg-white">
             <CardHeader className="space-y-4">
                 <CardTitle className="text-2xl">
                     <header className="text-center flex items-center justify-center gap-2">

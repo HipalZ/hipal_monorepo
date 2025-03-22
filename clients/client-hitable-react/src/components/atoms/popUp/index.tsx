@@ -1,64 +1,65 @@
-import { Fragment, memo } from "react";
-import { Dialog, DialogPanel, Transition, TransitionChild } from "@headlessui/react";
-import { HiX } from "react-icons/hi";
-import { CiGlobe } from "react-icons/ci";
-import { cn } from "@/components/utils/helpers";
-import { useLiteStore } from "@/components/store/useLiteStore";
-import { GiTakeMyMoney } from "react-icons/gi";
+import { Button } from "@/components/ui/button"
+import { Dialog } from "@headlessui/react"
+import { cn } from "@hi/common"
+import { AnimatePresence, motion } from "framer-motion"
+import { memo, type ReactNode, type SyntheticEvent } from "react"
+import { HiX } from "react-icons/hi"
 
-function PopUp({
-  children,
-  show,
-  onClose,
-  status,
-}: {
-  children: React.ReactNode;
-  show: boolean;
-  onClose?: () => void;
-  status?: string;
-}) {
-  const { viewData } = useLiteStore();
-  const closeModalNothing = () => {
-    // e.preventDefault()
-  };
-  return (
-    <Transition appear show={show} as={Fragment}>
-      <Dialog
-        as="div"
-        className="fixed inset-0 z-50 overflow-y-auto"
-        onClose={closeModalNothing}
-      >
-        <div className="fixed inset-0 flex items-end justify-center bg-black backdrop-blur-sm bg-opacity-70">
-          <TransitionChild
-            as={Fragment}
-            enter="transition ease-out duration-200 transform"
-            enterFrom="opacity-0 translate-y-full"
-            enterTo="opacity-100 translate-y-0"
-            leave="transition ease-in duration-150 transform"
-            leaveFrom="opacity-100 translate-y-0"
-            leaveTo="opacity-0 translate-y-full"
-          >
-            <DialogPanel className={cn("relative w-full max-w-md shadow-md bg-white rounded-t-[1.5rem]", status?.length > 0 ? ' h-[85vh]' : '')}>
-              <div className={cn("absolute z-50 flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 on_active_bounce left-1/2", status?.length > 0 ? '' : '-top-8')}>
-                <HiX
-                  className="absolute -top-10 p-2 text-4xl text-black rounded-full cursor-pointer bg-white"
-                  onClick={onClose}
-                />
-                {status && status.length > 0 ?
-                  <article className={cn("flex items-center p-2 rounded-full bg-green-100")}>
-                    <span>{viewData?.alertType === "ONLINE" ? <CiGlobe size={24} />: <GiTakeMyMoney size={24}/>}</span>&nbsp;
-                    <h1 className="text-base">{status}</h1>
-                  </article>
-                  : null}
-              </div>
-              {children}
-            </DialogPanel>
-          </TransitionChild>
-        </div>
-      </Dialog>
-    </Transition>
-  );
+interface PopUpProps {
+  children: ReactNode
+  show: boolean
+  onClose: () => void
+  hide?: boolean
+  width?: string
+  height?: string
+  rightTopBack?: boolean
 }
 
-const PopUpMemo = memo(PopUp);
-export default PopUpMemo;
+function MemoizedPopUp({ children, show, onClose, hide, width, height, rightTopBack }: PopUpProps) {
+  const stopClosing = (e: SyntheticEvent) => {
+    if (hide) {
+      return onClose()
+    }
+    e.preventDefault()
+  }
+
+  return (
+    <AnimatePresence>
+      {show && (
+        <Dialog open={show} as="div" className="fixed inset-0 z-50" onClose={stopClosing}>
+          <div className="fixed inset-0 flex px-0 lg:px-6 items-end justify-center bg-black lg:items-center bg-opacity-50 backdrop-blur-sm lg:pt-[2rem]">
+            <motion.div
+              initial={{ y: "100%", opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: "100%", opacity: 0 }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+              className={cn(
+                "bg-base-100 shadow-md relative",
+                width ? width : "w-full max-w-[69rem]",
+                height ? height : "h-auto",
+                !hide ? "rounded-t-[1.5rem] lg:rounded-2xl" : "lg:rounded-2xl",
+              )}
+            >
+              {!hide && !rightTopBack && (
+                <div className="absolute z-50 flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 on_active_bounce -top-8 left-1/2">
+                  <HiX className="p-2 text-4xl text-black bg-white rounded-full cursor-pointer" onClick={onClose} />
+                </div>
+              )}
+              {rightTopBack && (
+                <Button className="absolute z-50 w-8 h-8 rounded-full top-2 right-2" onClick={onClose}>
+                  <HiX className="text-2xl cursor-pointer "/>
+                </Button>
+              )}
+              {children}
+            </motion.div>
+          </div>
+        </Dialog>
+      )}
+    </AnimatePresence>
+  )
+}
+
+const PopUp = memo(MemoizedPopUp)
+
+export default PopUp
+
