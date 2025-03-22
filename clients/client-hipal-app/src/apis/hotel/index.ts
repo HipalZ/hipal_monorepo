@@ -33,24 +33,22 @@ export const getInfoForHotel = async (businessIdOrCustomLink: string): Promise<I
   }
 }
 
-export const getRooms = async (businessIdOrCustomLink: string): Promise<IRoomProps> => {
+export const getRoomTypes = async (businessIdOrCustomLink: string) => {
   try {
-    const businessData = await getBusinessData(businessIdOrCustomLink) as BusinessDetails
+    const businessData = (await getBusinessData(businessIdOrCustomLink)) as BusinessDetails
 
-    const [roomsResponse] = await Promise.all([
-      apiRpc.hotel.rooms.fetch_rooms.$get({
-        query: { businessId: businessData.businessId },
-      })
-    ])
+    const roomTypesResponse = await apiRpc.hotel.room_type.fetch_room_types.$get({
+      query: { businessId: businessData.businessId },
+    })
 
-    const rooms = await roomsResponse.json()
+    const roomTypes = await roomTypesResponse.json()
 
     return {
       business: businessData,
-      rooms: rooms?.data,
+      roomTypes: roomTypes?.data || [],
     }
   } catch (err) {
-    console.error("Error in getRooms:", err)
+    console.error("Error in getRoomTypes:", err)
     throw err
   }
 }
