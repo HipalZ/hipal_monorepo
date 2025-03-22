@@ -82,8 +82,6 @@ const scheduleAlertUpdate = (
         timezone: "Asia/Kolkata",
       },
     );
-
-    console.log("Scheduled job:", data);
   }
 };
 
@@ -474,20 +472,6 @@ const hotelAlertRouter = new Hono()
           deliveredBy: userId,
         },
       };
-
-      if (!validTransitions[action]) {
-        return respond(c, "Invalid action", true, 400, {});
-      }
-
-      if (!validTransitions[action].includes(alert.alertProgress)) {
-        return respond(
-          c,
-          `Cannot mark alert as ${action} because it is in ${alert.alertProgress} state.`,
-          true,
-          400,
-          {},
-        );
-      }
 
       if (!validTransitions[action]) {
         return respond(c, "Invalid action", true, 400, {});

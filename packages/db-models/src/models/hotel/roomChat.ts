@@ -1,6 +1,5 @@
 import mongoose, { Schema, type Model } from "mongoose";
 import type {
-  HotelRoomChatComplainReplyType,
   HotelRoomChatComplainType,
   HotelRoomChatReplyType,
   HotelRoomChatType,
@@ -26,7 +25,6 @@ const hotelRoomChatReplySchema = new Schema<HotelRoomChatReplyType>({
   date: { type: Number, default: Date.now() },
   description: { type: String, required: true },
   roomChatId: { type: ObjectId, required: true, ref: "hotelroomchat" },
-  complainIds: [{ type: ObjectId, ref: "hotelroomchatcomplain" }],
 });
 
 // Hotel Room Chat Complain Schema
@@ -40,23 +38,7 @@ const hotelRoomChatComplainSchema = new Schema<HotelRoomChatComplainType>({
   date: { type: Number, default: Date.now },
   alertId: { type: ObjectId, required: true, ref: "hotelalert" },
   description: { type: String, required: true, minlength: 1, maxlength: 200 },
-  roomChatComplainReplyIds: [
-    { type: ObjectId, ref: "hotelroomchatcomplainreply" },
-  ],
 });
-
-// Hotel Room Chat Complain Reply Schema
-const hotelRoomChatComplainReplySchema =
-  new Schema<HotelRoomChatComplainReplyType>({
-    userId: { type: ObjectId, required: true, ref: "User" },
-    date: { type: Number, default: Date.now },
-    description: { type: String, required: true, minlength: 1, maxlength: 200 },
-    roomChatComplainId: {
-      type: ObjectId,
-      required: true,
-      ref: "hotelroomchatcomplain",
-    },
-  });
 
 // Models
 const HotelRoomChat: Model<HotelRoomChatType> =
@@ -74,15 +56,4 @@ const HotelRoomChatComplain: Model<HotelRoomChatComplainType> =
     hotelRoomChatComplainSchema,
   );
 
-const HotelRoomChatComplainReply: Model<HotelRoomChatComplainReplyType> =
-  mongoose.model<HotelRoomChatComplainReplyType>(
-    "hotelroomchatcomplainreply",
-    hotelRoomChatComplainReplySchema,
-  );
-
-export {
-  HotelRoomChat,
-  HotelRoomChatComplain,
-  HotelRoomChatComplainReply,
-  HotelRoomChatReply,
-};
+export { HotelRoomChat, HotelRoomChatComplain, HotelRoomChatReply };

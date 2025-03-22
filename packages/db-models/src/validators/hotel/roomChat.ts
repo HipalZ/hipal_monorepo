@@ -26,14 +26,6 @@ export const hotelRoomChatReply = z.object({
   date: z.number().optional(),
   description: z.string().min(1).max(200),
   roomChatId: ObjectIdSchema,
-  complainIds: z.array(ObjectIdSchema).optional(),
-});
-
-export const hotelRoomChatComplainReply = z.object({
-  userId: ObjectIdSchema,
-  date: z.number().optional(),
-  description: z.string().min(1).max(200),
-  roomChatComplainId: ObjectIdSchema,
 });
 
 export const updateRoomChat = z.object({
@@ -52,6 +44,3 @@ export const hotelRoomChatComplain = z.object({
 export type HotelRoomChatType = z.infer<typeof hotelRoomChat>;
 export type HotelRoomChatReplyType = z.infer<typeof hotelRoomChatReply>;
 export type HotelRoomChatComplainType = z.infer<typeof hotelRoomChatComplain>;
-export type HotelRoomChatComplainReplyType = z.infer<
-  typeof hotelRoomChatComplainReply
->;
