@@ -1,5 +1,6 @@
 // books.ts
 import {
+  Business,
   DeviceToken,
   LoyaltyCoinsInfo,
   StaffPermission,
@@ -8,7 +9,6 @@ import {
   User,
   UserReward,
   UserRewardHistory,
-  Business
 } from "@hi/db-models";
 import type {
   AddStaffValidatorType,
@@ -1077,11 +1077,11 @@ const usersRouter = new Hono()
     ),
     async (c) => {
       const requestData = await c.req.json();
-      const {id} = c.req.param()
+      const { id } = c.req.param();
 
-      const business= await Business.findOne({
-        customLink:id
-      })
+      const business = await Business.findOne({
+        customLink: id,
+      });
 
       const { otp, loyaltyId, signUpBonus, name, userId, phone, businessId } =
         requestData;
@@ -1581,6 +1581,38 @@ const usersRouter = new Hono()
       });
 
       return respond(c, "Session set successfully", false, 200, {});
+    },
+  )
+
+  .get(
+    "/user_profile/:userId",
+
+    zValidator("param", z.object({ userId: z.string() })),
+
+    async (c) => {
+      const { userId } = c.req.param();
+
+      const existingUser = await User.findById(userId);
+
+      if (!existingUser) {
+        return respond(c, "User not found", true, 404, {});
+      }
+
+      const accessToken = createAccessToken(
+        existingUser._id?.toString() || "",
+        "HIPAL_CUSTOMER",
+      );
+      const refreshToken = createRefreshToken(
+        existingUser._id?.toString() || "",
+        "HIPAL_CUSTOMER",
+      );
+      const modifyUser = {
+        ...existingUser,
+        accessToken,
+        refreshToken,
+      };
+
+      return respond(c, "User fetched successfully", false, 200, modifyUser);
     },
   );
 

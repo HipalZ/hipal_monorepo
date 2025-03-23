@@ -381,19 +381,31 @@ const hotelAlertRouter = new Hono()
         }
 
         const serviceData = await HotelService.findById(serviceId);
-        const avgCompletionTime = serviceData?.avgCompletionTime;
-        const avgAcceptanceTime = serviceData?.avgAcceptanceTime;
-        const avgDeliveryTime = serviceData?.avgDeliveryTime;
+        const avgCompletionTime = serviceData?.avgCompletionTime || 0;
+        const avgAcceptanceTime = serviceData?.avgAcceptanceTime || 0;
+        const avgDeliveryTime = serviceData?.avgDeliveryTime || 0;
 
-        // Schedule updates based on average times
-        scheduleAlertUpdate(
-          alert._id.toString(),
-          15,
-          "DELIVERED",
-          "ESCALATION",
-        );
-        scheduleAlertUpdate(alert._id.toString(), 5, "ACCEPTED", "WARNING");
-        scheduleAlertUpdate(alert._id.toString(), 7, "DELIVERED", "WARNING");
+        if (avgCompletionTime > 0) {
+          // Schedule updates based on average times
+          scheduleAlertUpdate(
+            alert._id.toString(),
+            avgCompletionTime,
+            "DELIVERED",
+            "ESCALATION",
+          );
+          scheduleAlertUpdate(
+            alert._id.toString(),
+            avgAcceptanceTime,
+            "ACCEPTED",
+            "WARNING",
+          );
+          scheduleAlertUpdate(
+            alert._id.toString(),
+            avgDeliveryTime,
+            "DELIVERED",
+            "WARNING",
+          );
+        }
       }
 
       const registrationTokens = await DeviceToken.find({
@@ -520,8 +532,6 @@ const hotelAlertRouter = new Hono()
         if (!roomChatReply) {
           throw new Error("Failed to create room chat reply");
         }
-
-        console.log("roomChatReply", roomChatReply);
 
         await HotelRoomChat.findByIdAndUpdate(
           roomChat._id,
