@@ -582,7 +582,7 @@ const roomRouter = new Hono()
       "json",
       z.object({
         authCode: z.string().min(4).max(4),
-        userId: z.string().min(2).max(50).optional(),
+        userId: z.string().min(2).max(50),
       }),
     ),
     async (c) => {
@@ -603,7 +603,7 @@ const roomRouter = new Hono()
           },
           {
             $addToSet: {
-              userIds: "66a25e263318398937eb87f3",
+              userIds: userId,
             },
           },
           { session },

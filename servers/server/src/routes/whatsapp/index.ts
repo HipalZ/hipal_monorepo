@@ -2077,7 +2077,31 @@ const whatsappRouter = new Hono()
               await deleteBlockedUser(userPhone.toString().slice(2));
             }
           }
-
+          let userObj;
+          if (userPhone) {
+            userPhone = userPhone.toString().slice(2);
+            if (userPhone.length === 10) {
+              const userData = await User.findOneAndUpdate(
+                {
+                  phone: userPhone,
+                },
+                {
+                  name: userName,
+                  role: [
+                    "HIPAL_CUSTOMER",
+                    "OWNER",
+                    "MANAGER",
+                    "CAPTAIN",
+                    "CO_OWNER",
+                  ],
+                },
+                {
+                  upsert: true,
+                },
+              );
+              userObj = userData;
+            }
+          }
           if (userText) {
             const tableCode = userText.slice(-5);
 
@@ -2088,14 +2112,21 @@ const whatsappRouter = new Hono()
             longUrl = `${findLongUrl?.shortUrl}?q=wa`;
             shortUrlType = findLongUrl?.shortUrlType || "";
             urlObj = findLongUrl;
-          }
+            const lUrl = `${
+              findLongUrl?.longUrl
+            }&&id=${userObj?._id.toString()}`;
 
-          if (userPhone) {
-            userPhone = userPhone.toString().slice(2);
+            await UrlModel.findOneAndUpdate(
+              {
+                urlCode: tableCode,
+              },
+              {
+                longUrl: lUrl,
+              },
+            );
           }
 
           if (phon_no_id && from && urlObj) {
-            console.log("shortUrlType", shortUrlType);
             if (shortUrlType === "COUPON") {
               console.log("incoupon");
               await axios({
@@ -2128,7 +2159,6 @@ const whatsappRouter = new Hono()
                 },
               });
             } else if (shortUrlType === "ROOM") {
-              console.log("inroom");
               const user = await User.findOne({
                 phone: userPhone,
               }).select("_id name phone");
@@ -2153,8 +2183,6 @@ const whatsappRouter = new Hono()
                 const roomSession = await HotelRoomSession.find({
                   roomId: a?._id.toString(),
                 });
-
-                console.log("roomSession", roomSession);
 
                 if (!roomSession) {
                   const roomSession = await HotelRoomSession.create({
@@ -2214,8 +2242,6 @@ const whatsappRouter = new Hono()
                     },
                   },
                 );
-
-                // console.log("res", res.data);
               }
 
               await axios({
@@ -2288,27 +2314,6 @@ const whatsappRouter = new Hono()
                 { new: true },
               );
             }
-          }
-
-          if (userPhone.length === 10) {
-            await User.findOneAndUpdate(
-              {
-                phone: userPhone,
-              },
-              {
-                name: userName,
-                role: [
-                  "HIPAL_CUSTOMER",
-                  "OWNER",
-                  "MANAGER",
-                  "CAPTAIN",
-                  "CO_OWNER",
-                ],
-              },
-              {
-                upsert: true,
-              },
-            );
           }
 
           return c.json({
