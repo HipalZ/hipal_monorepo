@@ -17,6 +17,7 @@ export const hotelRoomChat = z.object({
   date: z.number().optional(),
   description: z.string().min(1).max(200).optional(),
   isDeleted: z.boolean().default(false),
+  cart: z.array(z.object({})).optional(),
 });
 
 export const hotelRoomChatReply = z.object({

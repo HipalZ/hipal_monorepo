@@ -373,6 +373,7 @@ const hotelAlertRouter = new Hono()
           roomId: roomData._id,
           date: Date.now(),
           description: "Alert created",
+          cart: requestData.cart,
         });
         await create.save({ session });
 

@@ -15,6 +15,9 @@ const hotelRoomChatSchema = new Schema<HotelRoomChatType>({
   date: { type: Number, default: Date.now() },
   description: { type: String, required: false },
   isDeleted: { type: Boolean, default: false },
+  cart: {
+    type: [Object],
+  },
 });
 
 // Hotel Room Chat Reply Schema
