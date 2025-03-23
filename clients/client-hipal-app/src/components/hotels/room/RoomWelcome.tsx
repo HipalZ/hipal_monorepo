@@ -38,7 +38,6 @@ export default function HotelWelcomeCard({
     const [verificationCode, setVerificationCode] = useState("")
     const [codeError, setCodeError] = useState("")
     const accessToken = useUserToken.getState().accessToken;
-
     const { checkRoom } = useCheckRoomStatus(businessId || "", room || "", customLink)
 
     useEffect(() => {
@@ -57,6 +56,7 @@ export default function HotelWelcomeCard({
             const response = await apiRpc.hotel.rooms.verify_authcode.$post({
                 json: {
                     authCode: code,
+                    userId: userID,
                 }
             })
             return response
@@ -113,7 +113,7 @@ export default function HotelWelcomeCard({
             </div>
             {
                 accessToken === "" && userID && (
-                  <AutoLogin userID={userID} />
+                    <AutoLogin userID={userID} />
                 )
             }
 

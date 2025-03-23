@@ -131,10 +131,11 @@ const roomRouter = new Hono()
         return respond(c, "Room not found", true, 404, {});
       }
 
-      if (!roomData.userIds.some((id) => id.toString() === userId)) {
+      // Check if the provided userId exists in roomData.userIds by comparing with the _id field
+      if (!roomData.userIds.some((user) => user._id.toString() === userId)) {
         return respond(
           c,
-          `Room already Occupied by ${roomData.userIds[0].name} `,
+          `Room already Occupied by ${roomData.userIds[0].name}`,
           true,
           403,
           {},
@@ -143,7 +144,7 @@ const roomRouter = new Hono()
 
       return c.json({
         message: "Room details",
-        data: {},
+        data: { _id: roomData._id },
         err: false,
       });
     },
@@ -529,9 +530,61 @@ const roomRouter = new Hono()
       const requestData = await c.req.json();
       const { roomId } = requestData;
 
-      const roomExists = await HotelRoom.exists({ _id: roomId });
+      const roomExists = await HotelRoom.findOne({ _id: roomId });
       if (!roomExists) {
         return respond(c, "Room not found", true, 404, {});
+      }
+      const userData = await User.findById(roomExists?.userIds[0])
+        .select("phone name")
+        .lean();
+
+      const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+        businessId: roomExists.businessId,
+      }).populate("businessId");
+
+      if (whatsAppConfig) {
+        const res = await axios.post(
+          `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+          {
+            messaging_product: "whatsapp",
+            to: userData?.phone?.toString(),
+            type: "template",
+            template: {
+              name: "checkout_template",
+              language: { code: "en" },
+              components: [
+                {
+                  type: "body",
+                  parameters: [
+                    {
+                      type: "text",
+                      text: userData?.name,
+                    },
+
+                    {
+                      type: "text",
+                      text: whatsAppConfig?.businessId?.name,
+                    },
+
+                    {
+                      type: "text",
+                      text: "https:google.com",
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${whatsAppConfig.token}`,
+            },
+          },
+        );
+
+        if (res.status !== 200) {
+          throw new Error("Error sending message");
+        }
       }
 
       const updatedRoom = await HotelRoom.findByIdAndUpdate(
