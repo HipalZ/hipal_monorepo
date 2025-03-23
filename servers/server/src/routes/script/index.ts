@@ -91,6 +91,16 @@ const scriptRouter = new Hono()
           image: "https://assets.hipalz.com/other_service.png",
           businessId,
         },
+        {
+          name: "Carpenter",
+          image: "https://assets.hipalz.com/other_service.png",
+          businessId,
+        },
+        {
+          name: "Plumber",
+          image: "https://assets.hipalz.com/other_service.png",
+          businessId,
+        },
       ];
 
       // **3. Insert Categories and Get IDs**
@@ -147,26 +157,14 @@ const scriptRouter = new Hono()
         },
 
         {
-          name: "Breakfast Order",
-          image: "https://assets.hipalz.com/breakfast_order.png",
-          businessId,
-          categoryId: categoryMap["Order Food"],
-        },
-        {
-          name: "Lunch Order",
-          image: "https://assets.hipalz.com/lunch_order.png",
-          businessId,
-          categoryId: categoryMap["Order Food"],
-        },
-        {
-          name: "Dinner Order",
+          name: "Food",
           image: "https://assets.hipalz.com/dinner_order.png",
           businessId,
           categoryId: categoryMap["Order Food"],
         },
 
         {
-          name: "Plumbing Fix",
+          name: "Clean Bathroom",
           image: "https://assets.hipalz.com/plumbing_fix.png",
           businessId,
           categoryId: categoryMap["Bathroom"],
@@ -179,7 +177,7 @@ const scriptRouter = new Hono()
         },
 
         {
-          name: "General Electrical Work",
+          name: "Tv Remote not working",
           image: "https://assets.hipalz.com/electrical_work.png",
           businessId,
           categoryId: categoryMap["Electrician"],
@@ -189,6 +187,64 @@ const scriptRouter = new Hono()
           image: "https://assets.hipalz.com/light_repair.png",
           businessId,
           categoryId: categoryMap["Electrician"],
+        },
+        {
+          name: "Setup box not working",
+          image: "https://assets.hipalz.com/light_repair.png",
+          businessId,
+          categoryId: categoryMap["Electrician"],
+        },
+        {
+          name: "Fan Repair",
+          image: "https://assets.hipalz.com/fan_repair.png",
+          businessId,
+          categoryId: categoryMap["Electrician"],
+        },
+        {
+          name: "Ac not working",
+          image: "https://assets.hipalz.com/fan_repair.png",
+          businessId,
+          categoryId: categoryMap["Electrician"],
+        },
+
+        {
+          name: "wifi not working",
+          image: "https://assets.hipalz.com/fan_repair.png",
+          businessId,
+          categoryId: categoryMap["Electrician"],
+        },
+
+        {
+          name: "Door Repair",
+          image: "https://assets.hipalz.com/door_repair.png",
+          businessId,
+          categoryId: categoryMap["Carpenter"],
+        },
+        {
+          name: "Window Repair",
+          image: "https://assets.hipalz.com/window_repair.png",
+          businessId,
+          categoryId: categoryMap["Carpenter"],
+        },
+
+        {
+          name: "Leakage Fixing",
+          image: "https://assets.hipalz.com/leakage_fix.png",
+          businessId,
+          categoryId: categoryMap["Plumber"],
+        },
+        {
+          name: "Pipe Repair",
+          image: "https://assets.hipalz.com/pipe_repair.png",
+          businessId,
+          categoryId: categoryMap["Plumber"],
+        },
+
+        {
+          name: "water supply not working",
+          image: "https://assets.hipalz.com/pipe_repair.png",
+          businessId,
+          categoryId: categoryMap["Plumber"],
         },
       ];
 

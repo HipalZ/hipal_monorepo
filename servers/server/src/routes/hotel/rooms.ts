@@ -611,6 +611,7 @@ const roomRouter = new Hono()
 
         return respond(c, "Auth code verified", false, 200, {
           _id: roomSession._id,
+          authCode,
         });
       });
     },
