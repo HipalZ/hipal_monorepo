@@ -4,18 +4,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { useGetAllRoomTypes } from "@/hooks/hotel/useRoomTypeHook"
-import useBusinessData from "@/components/store/useBusinessData"
 import type { StepProps } from "./types"
-import LoadingSpinner from "@/components/atom/loadingSpinner"
+import { useRoomStore } from "@/components/store/hotel/useRoomStore"
 
 const BasicInfoStep = ({ formData, errors, handleChange }: StepProps) => {
-  const businessId = useBusinessData((s) => s.businessData?._id) as string
-  const { roomTypesData, roomTypesLoading } = useGetAllRoomTypes(businessId)
+  const { roomType: roomTypesData } = useRoomStore((s) => ({
+      roomType: s.roomType,
+    }))
 
-  if (roomTypesLoading) {
-    return <LoadingSpinner />
-  }
 
   return (
     <div className="space-y-6 pb-[7rem]">

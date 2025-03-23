@@ -17,6 +17,7 @@ export interface IRoomType {
     roomIds?: string[]
     createdAt: string
     updatedAt: string
+    downLoadLink?: string
 }
 
 interface CreateRoomTypePayload {

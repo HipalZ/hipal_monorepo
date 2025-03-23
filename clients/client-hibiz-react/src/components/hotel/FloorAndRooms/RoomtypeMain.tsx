@@ -7,15 +7,16 @@ import { Separator } from "@/components/ui/separator"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import LoadingSpinner from "@/components/atom/loadingSpinner"
 import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton"
-import useBusinessData from "@/components/store/useBusinessData"
 import PopUp from "@/components/atom/popUp"
 import AddRoomType from "./AddRoomType"
 import useRoomTypeStore from "@/components/store/hotel/useRoomTypeStore"
-import { type IRoomType, useGetAllRoomTypes } from "@/hooks/hotel/useRoomTypeHook"
+import type { IRoomType } from "@/hooks/hotel/useRoomTypeHook"
+import { useRoomStore } from "@/components/store/hotel/useRoomStore"
 
 const RoomTypeMain = () => {
-    const businessId = useBusinessData((s) => s.businessData?._id)
-    const { roomTypesData, roomTypesLoading } = useGetAllRoomTypes(businessId as string)
+    const { roomType:roomTypesData  } = useRoomStore((s) => ({
+        roomType:s.roomType,
+      }))
     const [hoveredCard, setHoveredCard] = useState<string | null>(null)
 
     const { setOpenRoomTypeModal, setEditMode, setEditRoomTypeId, initializeFormForEdit, openRoomTypeModal } = useRoomTypeStore()
@@ -52,10 +53,6 @@ const RoomTypeMain = () => {
             DELUXE: "from-cyan-400 to-cyan-600",
         }
         return colors[type] || "from-gray-400 to-gray-600"
-    }
-
-    if (roomTypesLoading) {
-        return <LoadingSpinner />
     }
 
     return (

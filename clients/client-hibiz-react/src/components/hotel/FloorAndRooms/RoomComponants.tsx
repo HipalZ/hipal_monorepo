@@ -1,5 +1,5 @@
 import { memo } from "react"
-import { Building2, Users, MoreVertical, Edit, Trash2, Bed, Plus } from "lucide-react"
+import { Building2, Users, MoreVertical, Edit, Trash2, Bed, Plus, Download } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,6 +12,7 @@ interface RoomCardProps {
   onEdit: (roomId: string) => void
   floorName: string
   staffNames: string[]
+  downloadSingleQRCode: (e: React.MouseEvent<HTMLButtonElement>, roomId: string) => void
 }
 
 // Get room status color
@@ -28,9 +29,9 @@ function getRoomStatusColor(status: string) {
   return statusColors[status] || { color: "#6b7280", bgColor: "bg-gray-100", textColor: "text-gray-800" }
 }
 
-export const RoomCard = memo(({ room, onEdit, floorName, staffNames }: RoomCardProps) => {
+export const RoomCard = memo(({ room, onEdit, floorName, staffNames,downloadSingleQRCode }: RoomCardProps) => {
   const handleDelete = () => {
-    toast.error("Delete functionality not implemented yet")
+    toast.error("You Dont Have Permission to Delete Room")
   }
 
   return (
@@ -52,10 +53,10 @@ export const RoomCard = memo(({ room, onEdit, floorName, staffNames }: RoomCardP
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Room
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleDelete()} className="text-destructive focus:text-destructive">
+              {/* <DropdownMenuItem onClick={() => handleDelete()} className="text-destructive focus:text-destructive">
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete Room
-              </DropdownMenuItem>
+              </DropdownMenuItem> */}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -103,6 +104,19 @@ export const RoomCard = memo(({ room, onEdit, floorName, staffNames }: RoomCardP
           </Badge>
         </div>
       </CardFooter>
+      {room.downLoadLink && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            downloadSingleQRCode(e, room._id)
+          }}
+          className="flex items-center w-full gap-1 rounded-none"
+        >
+          <Download className="w-4 h-4" />
+          QR Code
+        </Button>
+      )}
     </Card>
   )
 })
