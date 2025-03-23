@@ -2112,18 +2112,18 @@ const whatsappRouter = new Hono()
             longUrl = `${findLongUrl?.shortUrl}?q=wa`;
             shortUrlType = findLongUrl?.shortUrlType || "";
             urlObj = findLongUrl;
-            const lUrl = `${
-              findLongUrl?.longUrl
-            }&&id=${userObj?._id.toString()}`;
-
-            await UrlModel.findOneAndUpdate(
-              {
-                urlCode: tableCode,
-              },
-              {
-                longUrl: lUrl,
-              },
-            );
+            const existingUrl = new URL(findLongUrl?.longUrl || "");
+            if (!existingUrl.searchParams.has("id")) {
+              existingUrl.searchParams.append("id", userObj?._id.toString());
+              await UrlModel.findOneAndUpdate(
+                {
+                  urlCode: tableCode,
+                },
+                {
+                  longUrl: existingUrl.toString(),
+                },
+              );
+            }
           }
 
           if (phon_no_id && from && urlObj) {
