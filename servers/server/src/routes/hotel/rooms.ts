@@ -131,10 +131,11 @@ const roomRouter = new Hono()
         return respond(c, "Room not found", true, 404, {});
       }
 
-      if (!roomData.userIds.some((id) => id.toString() === userId)) {
+      // Check if the provided userId exists in roomData.userIds by comparing with the _id field
+      if (!roomData.userIds.some((user) => user._id.toString() === userId)) {
         return respond(
           c,
-          `Room already Occupied by ${roomData.userIds[0].name} `,
+          `Room already Occupied by ${roomData.userIds[0].name}`,
           true,
           403,
           {},
@@ -143,7 +144,7 @@ const roomRouter = new Hono()
 
       return c.json({
         message: "Room details",
-        data: {},
+        data: { _id: roomData._id },
         err: false,
       });
     },
