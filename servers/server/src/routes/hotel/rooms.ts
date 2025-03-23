@@ -530,40 +530,16 @@ const roomRouter = new Hono()
       const requestData = await c.req.json();
       const { roomId } = requestData;
 
-      const roomExists = await HotelRoom.exists({ _id: roomId });
+      const roomExists = await HotelRoom.findOne({ _id: roomId });
       if (!roomExists) {
         return respond(c, "Room not found", true, 404, {});
       }
-
-      const updatedRoom = await HotelRoom.findByIdAndUpdate(
-        roomId,
-        {
-          roomStatus: "AVAILABLE",
-          userIds: [],
-          authCode: "",
-        },
-        { new: true, session },
-      );
-
-      const userData = await User.findById(updatedRoom?.userIds)
+      const userData = await User.findById(roomExists?.userIds[0])
         .select("phone name")
         .lean();
 
-      if (!updatedRoom) {
-        throw new Error("Error checking out");
-      }
-
-      const removeSession = await HotelRoomSession.deleteOne(
-        { roomId },
-        { session },
-      );
-
-      if (!removeSession) {
-        throw new Error("Error removing room session");
-      }
-
       const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
-        businessId: updatedRoom.businessId,
+        businessId: roomExists.businessId,
       }).populate("businessId");
 
       if (whatsAppConfig) {
@@ -609,6 +585,29 @@ const roomRouter = new Hono()
         if (res.status !== 200) {
           throw new Error("Error sending message");
         }
+      }
+
+      const updatedRoom = await HotelRoom.findByIdAndUpdate(
+        roomId,
+        {
+          roomStatus: "AVAILABLE",
+          userIds: [],
+          authCode: "",
+        },
+        { new: true, session },
+      );
+
+      if (!updatedRoom) {
+        throw new Error("Error checking out");
+      }
+
+      const removeSession = await HotelRoomSession.deleteOne(
+        { roomId },
+        { session },
+      );
+
+      if (!removeSession) {
+        throw new Error("Error removing room session");
       }
 
       const registrationToken = await DeviceToken.find({
