@@ -122,7 +122,7 @@ const hotelAlertRouter = new Hono()
           $in: [
             "CREATED",
             "ACCEPTED",
-            "ESCALATION",
+
             "WARNING",
             "NOT_DELIVERED",
           ],
