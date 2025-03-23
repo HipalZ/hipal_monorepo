@@ -2172,7 +2172,7 @@ const whatsappRouter = new Hono()
                   },
                 );
 
-                const roomSession = await HotelRoomSession.find({
+                const roomSession = await HotelRoomSession.findOne({
                   roomId: a?._id.toString(),
                 });
 
