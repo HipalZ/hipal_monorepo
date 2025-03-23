@@ -4,7 +4,7 @@ import { memo, useCallback, useState } from "react";
 import { Phone, User, BedDouble } from "lucide-react";
 import { useCheckIn } from "@/hooks/useHotelApis";
 import { useHotelStore } from "../store/useHotelStore"
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import CommonBottomButton from "../atoms/bottomButton"
 import toast from "react-hot-toast"
 import QRCode from "react-qr-code";
@@ -12,6 +12,7 @@ import QRCode from "react-qr-code";
 const MemoAvailableRoomHotel = () => {
     const { roomData, setOpenRoomModal, guestName, setGuestName, phoneNumber, setPhoneNumber } = useHotelStore();
     const { checkIn } = useCheckIn();
+    const queryClient = useQueryClient()
     const [isSubmitting, setIsSubmitting] = useState(false)
     // Simple validation
     const isValidName = guestName.trim().length >= 3
@@ -22,7 +23,7 @@ const MemoAvailableRoomHotel = () => {
         // Allow only numbers and + sign
         const value = e.target.value.replace(/[^\d+]/g, "")
         setPhoneNumber(value)
-    },[setPhoneNumber])
+    }, [setPhoneNumber])
 
     const { isPending,
         mutateAsync
@@ -44,6 +45,13 @@ const MemoAvailableRoomHotel = () => {
             setIsSubmitting(false)
         }
     }
+
+    const handleBack = useCallback(() => {
+        setOpenRoomModal(false)
+        queryClient.invalidateQueries({
+            queryKey: ["allRooms"],
+        })
+    },[setOpenRoomModal, queryClient])
 
     return (
         <section className="w-full mx-auto bg-white min-h-[90dvh]">
@@ -103,7 +111,7 @@ const MemoAvailableRoomHotel = () => {
                     {
                         text: "",
                         isBackButton: true,
-                        onClick: () => setOpenRoomModal(false),
+                        onClick: handleBack,
                         className: "rounded-md pl-3",
                     },
                     {
