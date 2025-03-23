@@ -36,8 +36,8 @@ const MemoReviewUsersHotel = () => {
     }
 
     return (
-        <Card className="mx-auto !border-none !shadow-none pb-5">
-            <CardHeader className="space-y-3">
+        <Card className="mx-4 !px-3 pb-3 !shadow-none">
+            <CardHeader className="!px-0">
                 <CardTitle>
                     <span>Review & Send Feedback</span>
                 </CardTitle>
@@ -46,7 +46,7 @@ const MemoReviewUsersHotel = () => {
                 </CardDescription>
             </CardHeader>
 
-            <CardContent className="pb-0">
+            <CardContent className="pb-0 !px-0">
                 <div className="mb-4 flex items-center justify-between">
                     <Button variant="outline" size="sm" onClick={toggleAllReviewUserIds} className="text-xs h-8">
                         {reviewUserIds.length === roomData?.userIds?.length ? "Deselect All" : "Select All"}

@@ -48,10 +48,10 @@ export interface IHotelRoom {
     size: number,
     description: string,
     images: string[],
-    downloadlink: string,
     userIds: string[],
     slug: string,
     roomTypeId?: string,
+    downLoadLink?: string,
 }
 
 export const useGetAllHotelRooms = (businessId: string) => {

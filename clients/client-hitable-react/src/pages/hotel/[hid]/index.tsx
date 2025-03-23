@@ -28,9 +28,9 @@ const MemoHotel = () => {
                 </Suspense>
             )}
             {
-                selectedNavItem === NavItemsHotelEnum.History &&(
+                selectedNavItem === NavItemsHotelEnum.History && (
                     <Suspense fallback={<SpinnerMemo />}>
-                        <HistoryHotel/>
+                        <HistoryHotel />
                     </Suspense>
                 )
             }
@@ -43,11 +43,13 @@ const MemoHotel = () => {
             </div>
             {openRoomModal && (
                 <PopUp width="w-[30rem]" onClose={() => setOpenRoomModal(false)} show={openRoomModal} hide>
-                    <Suspense fallback={<SpinnerMemo />}>
-                        {roomData?.roomStatus === "AVAILABLE" ? (
-                            <AvailableRoomHotel />
-                        ) : <BookedRoomHotel />}
-                    </Suspense>
+                    <section className="overflow-y-scroll h-[90vh] bg-gray-50">
+                        <Suspense fallback={<SpinnerMemo />}>
+                            {roomData?.roomStatus === "AVAILABLE" ? (
+                                <AvailableRoomHotel />
+                            ) : <BookedRoomHotel />}
+                        </Suspense>
+                    </section>
                 </PopUp>
             )}
         </>

@@ -11,9 +11,11 @@ interface RoomTypeSectionProps {
   onEditRoom: (roomId: string) => void
   getFloorName: (floorId: string) => string
   getStaffNames: (staffIds: string[]) => string[]
+  downloadSingleQRCode: (e: React.MouseEvent<HTMLButtonElement>, roomId: string) => void
+
 }
 
-const RoomTypeSection = ({ roomType, rooms, onEditRoom, getFloorName, getStaffNames }: RoomTypeSectionProps) => {
+const RoomTypeSection = ({ roomType, rooms, onEditRoom, getFloorName, getStaffNames,downloadSingleQRCode }: RoomTypeSectionProps) => {
   if (rooms.length === 0) return null
 
   return (
@@ -36,6 +38,7 @@ const RoomTypeSection = ({ roomType, rooms, onEditRoom, getFloorName, getStaffNa
             onEdit={onEditRoom}
             floorName={getFloorName(room.zoneId)}
             staffNames={getStaffNames(room.staffIds || [])}
+            downloadSingleQRCode={downloadSingleQRCode}
           />
         ))}
       </div>

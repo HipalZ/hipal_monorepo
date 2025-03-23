@@ -3,15 +3,15 @@ import { Bed, Building2, Users, Check } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { useGetAllRoomTypes } from "@/hooks/hotel/useRoomTypeHook"
 import { useFloorStore } from "@/components/store/hotel/useFloorStore"
-import useBusinessData from "@/components/store/useBusinessData"
 import type { StepProps } from "./types"
 import { useStaffDataStore } from "@/components/store/hotel/useHotelStaff"
+import { useRoomStore } from "@/components/store/hotel/useRoomStore"
 
 const PreviewStep = ({ formData }: StepProps) => {
-  const businessId = useBusinessData((s) => s.businessData?._id) as string
-  const { roomTypesData } = useGetAllRoomTypes(businessId)
+  const { roomType: roomTypesData } = useRoomStore((s) => ({
+    roomType: s.roomType,
+  }))
   const floorData = useFloorStore((state) => state.floorData)
   const staffData = useStaffDataStore((state) => state.staffData)
 

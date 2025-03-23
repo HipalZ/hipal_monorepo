@@ -6,7 +6,7 @@ import { useLiteStore } from "@/components/store/useLiteStore";
 import type { CustomRole } from "@/components/types/hiClientzData";
 import { memo } from "react";
 import { FiDownload } from "react-icons/fi";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import smartPhone from "@/assets//img/smartphone.png";
 import { apiRpc } from "@hi/common";
 import useBusinessData from "@/components/store/useBusinessData";
@@ -34,7 +34,6 @@ const BusinessesMemo = memo(() => {
   };
 
   const exploreBusiness = (biz: CustomRole) => {
-    console.log(biz);
     setSelectedBiz(biz);
     setTriggerSound(true);
     getBusinessInfo(biz?.businessId?._id);
