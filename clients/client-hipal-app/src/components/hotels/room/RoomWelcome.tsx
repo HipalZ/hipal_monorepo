@@ -57,6 +57,7 @@ export default function HotelWelcomeCard({
             const response = await apiRpc.hotel.rooms.verify_authcode.$post({
                 json: {
                     authCode: code,
+                    userId: userID,
                 }
             })
             return response
@@ -113,7 +114,7 @@ export default function HotelWelcomeCard({
             </div>
             {
                 accessToken === "" && userID && (
-                  <AutoLogin userID={userID} />
+                    <AutoLogin userID={userID} />
                 )
             }
 
