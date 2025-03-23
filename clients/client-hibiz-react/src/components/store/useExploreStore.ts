@@ -43,9 +43,6 @@ interface IExploreStore {
   toggleBizInfo: boolean;
   setToggleBizInfo: (toggle: boolean) => void;
 
-  isLoading: boolean;
-  setIsLoading: (loading: boolean) => void;
-
   toggleExplorePages: ExplorePages;
   setToggleExplorePages: (toggle: ExplorePages) => void;
 
@@ -84,6 +81,7 @@ export const useExploreStore = create(
       bizInfo: {
         _id: "",
         amenities: [],
+        newAmenities: [],
         avgPricingForTwo: "",
         businessId: "",
         description: "",
@@ -109,6 +107,7 @@ export const useExploreStore = create(
           bizInfo: {
             _id: newBizInfo._id || "",
             amenities: newBizInfo.amenities || [],
+            newAmenities: newBizInfo.newAmenities || [],
             avgPricingForTwo: newBizInfo.avgPricingForTwo || "",
             businessId: newBizInfo.businessId || "",
             description: newBizInfo.description || "",
@@ -232,8 +231,7 @@ export const useExploreStore = create(
 
       toggleBizInfo: false,
       setToggleBizInfo: (toggle) => set(() => ({ toggleBizInfo: toggle })),
-      isLoading: false,
-      setIsLoading: (loading) => set(() => ({ isLoading: loading })),
+
       toggleExplorePages: ExplorePages.MAINFORM,
       setToggleExplorePages: (toggle) =>
         set(() => ({ toggleExplorePages: toggle })),

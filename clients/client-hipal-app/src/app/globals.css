@@ -5,6 +5,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Montserrat&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap");
 
 body {
 	font-family: 'Darker Grotesque Variable', sans-serif;
@@ -14,6 +15,10 @@ body {
 	font-family: 'Bungee Inline', sans-serif;
 	font-weight: 400;
 	font-style: normal;
+}
+
+.font-play {
+	font-family: 'Playfair Display', serif;
 }
 
 .montserrat-400 {
@@ -61,6 +66,20 @@ body {
 /* Or create a specific class to use the font */
 
 :root {
+  --h-p: #000000;  
+  --h-pf: #ffffff;
+  --h-s: #7c3aed;  
+  --h-sf: #ffffff;
+  --h-sc: #ffffff;
+  --h-a: #d97706;  
+  --h-af: #ffffff;
+  --h-ac: #ffffff;
+  --h-n: #1e293b;  
+  --h-nc: #ffffff;
+  --h-b1: #ffffff;
+  --h-b2: #f1f5f9;
+  --h-b3: #e2e8f0;
+  --h-bc: #0f172a;
 	
 	--btn-border: 1px solid rgba(255, 255, 255, 0.2);
     --btn-bg: transparent;
@@ -76,7 +95,7 @@ body {
     );
 	--font-family-darker-grotesque: 'Darker Grotesque', sans-serif;
 	--gradient-background: linear-gradient(to right, #C53293 -4.88%, #4990FB 90.05%);
-	background-color: #010818;
+	/* background-color: #010818; */
 	color: #fff;
 	--radius: 0.75rem;
   }
@@ -909,6 +928,7 @@ input[type='password'] {
 	--slide-spacing: 0rem;
 	--slide-size: 78%;
 }
+
 .embla2 {
 	width: 100%;
 	aspect-ratio: 1;
@@ -917,6 +937,7 @@ input[type='password'] {
 	--slide-spacing: 0rem;
 	--slide-size: 78%;
 }
+
 .embla__button-container {
   display: flex;
   justify-content: space-between;
@@ -1576,6 +1597,12 @@ input[type='password'] {
 	  }
 	  
 	  @media (min-width: 1024px) {
+
+		.embla {
+			width: 100%;
+			max-width: 28rem;
+		}
+
 		.auto_container {
 		  max-width: 1275px;
 		  max-height: 608px;

@@ -1,13 +1,20 @@
-interface ThemeData {
-  primaryColor?: string;
-  secondaryColor?: string;
-  accentColor?: string;
+interface ThemeVariables {
+  [key: `--${string}`]: string;
 }
 
-export const updateTheme = (data: ThemeData | undefined): void => {
-  if (typeof document === "undefined" || !data) return;
-
-  for (const key of Object.keys(data)) {
-    document.documentElement.style.setProperty(`${key}`, `hsl(${data[key]})`);
-  }
+export const updateTheme = (data: ThemeVariables | undefined): void => {
+  if (!data) return;
+  
+  const root = document.documentElement;
+  
+  Object.entries(data).forEach(([key, value]) => {
+    if (key.startsWith('--')) {
+      // Add proper HSL formatting if missing
+      const formattedValue = value.startsWith('hsl(') 
+        ? value 
+        : `hsl(${value.replace(/\s+/g, ', ')})`;
+      
+      root.style.setProperty(key, formattedValue);
+    }
+  });
 };

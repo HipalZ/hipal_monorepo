@@ -87,6 +87,7 @@ const MemoClearDues = ({ selectedUser, closeSettleDues }: {
                                 },
                                 swipe: true,
                                 disable: amountToPay === 0,
+                                className: "rounded-md w-full",
                             },
                         ]}
                     />
@@ -126,6 +127,7 @@ const MemoClearDues = ({ selectedUser, closeSettleDues }: {
                                     }
                                     await mutateAsync();
                                 },
+                                className: "rounded-md w-full",
                                 swipe: true,
                                 disable: settleModes.length === 0 || amountInSettleModes !== amountToPay,
                                 isLoading: isPending,

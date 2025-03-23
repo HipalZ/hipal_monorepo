@@ -1,6 +1,6 @@
 import { memo, useEffect, type ReactNode } from "react";
 import { useTransition, animated } from "@react-spring/web";
-import { FaArrowLeft, FaCross } from "react-icons/fa";
+import { FaArrowLeft } from "react-icons/fa";
 import { createPortal } from "react-dom";
 import { cn } from "@hi/common";
 import { HiX } from "react-icons/hi";

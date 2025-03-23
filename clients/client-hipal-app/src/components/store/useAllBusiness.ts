@@ -1,5 +1,3 @@
-//@ts-nocheck
-"use client"
 import type { IBusinessData } from "@/components/types/businessData"
 import { isEqual } from "lodash-es"
 import { useCallback, useMemo } from "react"

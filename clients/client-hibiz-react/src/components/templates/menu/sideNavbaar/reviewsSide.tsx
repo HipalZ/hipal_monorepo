@@ -12,6 +12,8 @@ interface ReviewSidebarProps {
 const MemoiseReviewSidebar: React.FC<ReviewSidebarProps> = ({ items }) => {
   const navigate = useNavigate();
   const businessId = useBusinessData((state) => state.businessData?._id);
+   const businessLogo = useBusinessData((s) => s?.businessData?.logo);
+    const fallbackBusinessLogo = useBusinessData((s) => s?.outletInfo?.logoUrl);
 
   const goToHome = useCallback(() => {
     navigate(`/app/business/${businessId}`);
@@ -27,10 +29,18 @@ const MemoiseReviewSidebar: React.FC<ReviewSidebarProps> = ({ items }) => {
 
   return (
     <section className="sidebar">
-      <center onClick={goToHome} className="mt-8 mb-4 cursor-pointer">
-        <img src={logoPlaceholder} alt="logo placeholder" />
-        <span>Home</span>
-      </center>
+    <button
+        type="button"
+        onClick={goToHome}
+        className="flex flex-col items-center justify-center mx-auto mt-8 mb-4 text-center cursor-pointer"
+      >
+        <img
+          src={businessLogo || fallbackBusinessLogo || logoPlaceholder}
+          alt="logo placeholder"
+          className="w-[75px] h-[75px] object-cover rounded-full"
+        />
+        <span className="mt-2">Home</span>
+      </button>
       {items.map((item, index) => (
         <center
           className={cn(

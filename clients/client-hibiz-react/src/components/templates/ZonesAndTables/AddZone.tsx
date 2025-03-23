@@ -143,7 +143,7 @@ const AddZone = () => {
           {
             text: editZoneId ? "Update Zone" : "Create Zone",
             onClick: editZoneId ? updateZoneFunc : createZoneFunc,
-            className: "rounded-md pl-3",
+            className: "rounded-md pl-3 w-full",
             swipe: zoneName,
             disable: !zoneName,
             highlight: true,

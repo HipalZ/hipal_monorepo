@@ -907,7 +907,7 @@ input[type='color' i] {
   position: fixed;
   display: flex;
   flex-direction: column;
-  width: 100px;
+  width: 116px;
   height: 100vh;
   background-color: #f0f0f0;
   left: 0;
@@ -915,7 +915,7 @@ input[type='color' i] {
 }
 
 .sidebar-item {
-  padding: 16px 10px;
+  padding: 20px 10px;
   border: none;
   background: none;
   cursor: pointer;

@@ -81,6 +81,26 @@ const discountSchema = z
     },
   );
 
-export { discountSchema };
+const kotOrderAcceptSchema = z
+  .object({
+    orderId: z.string().min(1).max(500),
+    orderAction: z.enum(["ACCEPT", "REJECT", "EDIT"]),
+    performBy: z.string().min(1).max(500),
+    reasonOfRejection: z.string().min(1).max(500).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.orderAction === "REJECT" && !data.reasonOfRejection) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "reasonOfRejection is required when orderAction is REJECT",
+      path: ["reasonOfRejection"], // specify the path to the field that caused the error
+    },
+  );
+
+export { discountSchema, kotOrderAcceptSchema };
 
 export type AcceptOrderType = z.infer<typeof acceptOrderSchema>;

@@ -9,6 +9,7 @@ export const useLayoutThemes = () => {
   const navigate = useNavigate();
   const updateThemeApplied = useBusinessData((s) => s.updateAppliedTheme);
   const { setStep } = useBusinessCtrl();
+  const outletInfo = useBusinessData((s) => s.outletInfo);
   const businessData = useBusinessData((s) => s.businessData);
 
   return useMutation({
@@ -26,6 +27,7 @@ export const useLayoutThemes = () => {
         toast.success("Colors saved successfully");
         updateThemeApplied(true);
         setStep(0);
+        if(outletInfo?.outLetType ==="HOTEL") return navigate(`/app/hotel/${businessData?._id}`);
         navigate(`/app/business/${businessData?._id}`);
       }
     },

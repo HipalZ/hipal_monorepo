@@ -100,11 +100,13 @@ export default function BulkUploadTables() {
                     {
                         text: currentStep === 0 ? "Close" : "Previous",
                         onClick: currentStep === 0 ? resetAllValues : handlePrevious,
+                        className: "rounded-md w-full",
                     },
                     {
                         text: currentStep < steps.length - 1 ? "Next" : "Confirm",
                         onClick: currentStep < steps.length - 1 ? handleNext : handleConfirm,
                         disable: isNextDisabled(),
+                        className: "rounded-md w-full",
                     }
                 ]}
             />

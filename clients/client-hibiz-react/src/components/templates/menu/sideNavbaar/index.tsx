@@ -4,7 +4,7 @@ import type { MenuPageType } from "@/components/store/useMenuStorage";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import { cn } from "@hi/common";
 import { memo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface SidebarProps {
   items: { icon: string; text: string; onClick: () => void }[];
@@ -12,11 +12,13 @@ interface SidebarProps {
 
 const MemoiseSidebar: React.FC<SidebarProps> = ({ items }) => {
   const navigate = useNavigate();
+  const {hotelId} = useParams()
   const businessId = useBusinessData((state) => state.businessData?._id);
 
   const goToHome = useCallback(() => {
-    navigate(`/app/business/${businessId}`);
-  }, [navigate]);
+    if(hotelId) return navigate(`/app/hotel/${hotelId}`);
+    if(businessId) return navigate(`/app/business/${businessId}`);
+  }, [navigate, businessId, hotelId]);
 
   const { selectedPage } = useMenuPageStore((state) => ({
     selectedPage: state.selectedPage,
@@ -29,12 +31,23 @@ const MemoiseSidebar: React.FC<SidebarProps> = ({ items }) => {
     return isMatch;
   }, []);
 
+    const businessLogo = useBusinessData((s) => s?.businessData?.logo);
+    const fallbackBusinessLogo = useBusinessData((s) => s?.outletInfo?.logoUrl);
+
   return (
     <section className="sidebar">
-      <center onClick={goToHome} className="mt-8 mb-4 cursor-pointer">
-        <img src={logoPlaceholder} alt="logo placeholder" />
-        <span>Home</span>
-      </center>
+     <button
+        type="button"
+        onClick={goToHome}
+        className="flex flex-col items-center justify-center mx-auto mt-8 mb-4 text-center cursor-pointer"
+      >
+        <img
+          src={businessLogo || fallbackBusinessLogo || logoPlaceholder}
+          alt="logo placeholder"
+          className="w-[75px] h-[75px] object-cover rounded-full"
+        />
+        <span className="mt-2">Home</span>
+      </button>
       {items.map((item, index) => (
         <center
           className={cn(

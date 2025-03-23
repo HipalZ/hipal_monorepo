@@ -173,10 +173,12 @@ const SalesFilters = () => {
           {
             text: `${appliedFilters.length > 0 ? "Clear All" : "Close"}`,
             onClick: appliedFilters.length > 0 ? handleClearAll : () => setOpenFilterModal(false),
+            className: "rounded-md pl-3 w-full",
           },
           {
             text: `Apply Filters ${appliedFilters.length > 0 ? `(${appliedFilters.length})` : ""}`,
             onClick: handleApplyFilters,
+            className: "rounded-md w-full",
           },
         ]}
       />

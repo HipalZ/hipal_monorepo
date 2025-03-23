@@ -23,7 +23,7 @@ const MemoDues = () => {
             <h1 className="mb-6 text-2xl font-bold">User Dues</h1>
             {isLoading ? (
                 <LoadingSpinner />
-            ) : data && data.length > 0 ? (
+            ) : data && data?.length > 0 ? (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {data?.map((userDue: IDuesPersonsData) => (
                         <UserDueCard key={userDue._id} userDue={userDue} />

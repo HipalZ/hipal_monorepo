@@ -205,7 +205,7 @@ const zonesAndTablesRouter = new Hono()
       const businessInfo =
         await Business.findById(businessId).select("customLink");
       //TODO: change the url to the actual url
-
+      console.log("NAME", name);
       const uniqueOrderId = nanoid(5);
 
       const isHavePos = await BusinessPosConfig.findOne({

@@ -13,8 +13,7 @@ const MemoNpc = () => {
         setIsUserAdded: s.setIsUserAdded,
     }))
     const { businessId } = useParams()
-    const { isLoading, data } = useAllNpcUsers(businessId)
-
+    const { isLoading, data } = useAllNpcUsers(businessId as string)
 
     return (
         <div className="container px-4 pt-4 pb-[7rem] mx-auto">

@@ -1,6 +1,11 @@
 import type { Model } from "mongoose";
 import mongoose from "mongoose";
 import type { BusinessPosConfigType } from "../validators";
+import {
+  OrderModeEnum,
+  OrderVerificationTypeEnum,
+} from "../validators/businessPosConfig";
+
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const businessPosConfigSchema = new mongoose.Schema<BusinessPosConfigType>(
   {
@@ -10,25 +15,18 @@ const businessPosConfigSchema = new mongoose.Schema<BusinessPosConfigType>(
       ref: "Business",
       unique: true,
     },
-    posId: {
-      type: ObjectId,
-      required: true,
-      ref: "pos",
-    },
+
     orderMode: {
       type: String,
       required: true,
-      enum: ["WITH_ORDER", "WITHOUT_ORDER"],
+      enum: OrderModeEnum,
     },
     orderVerificationType: {
       type: String,
       required: false,
-      enum: ["USER", "CAPTAIN"],
+      enum: OrderVerificationTypeEnum,
     },
-    petPoojaId: {
-      type: String,
-      required: true,
-    },
+
     restName: {
       type: String,
       required: true,
@@ -36,6 +34,45 @@ const businessPosConfigSchema = new mongoose.Schema<BusinessPosConfigType>(
     date: {
       type: Number,
       required: true,
+    },
+    branchId: {
+      type: String,
+      required: true,
+    },
+
+    accessKey: {
+      type: String,
+      required: true,
+    },
+
+    secretKey: {
+      type: String,
+      required: true,
+    },
+
+    restId: {
+      type: String,
+      required: true,
+    },
+
+    authToken: {
+      type: String,
+      required: true,
+    },
+
+    isDeleted: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    posName: {
+      type: String,
+      required: true,
+      default: "PETPOOJA",
+    },
+    posId: {
+      type: String,
+      required: false,
     },
   },
   {

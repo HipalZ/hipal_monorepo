@@ -30,18 +30,18 @@ export function TableView({ data, onRowClick }: TableViewProps) {
               onClick={() => onRowClick(item)}
             >
               <TableCell className="font-medium">{item?.posBillId}</TableCell>
-              <TableCell>{new Date(item.createdAt).toLocaleString("en-In")}</TableCell>
+              <TableCell>{new Date(item?.createdAt).toLocaleString("en-In")}</TableCell>
               <TableCell>
-                {item.userId.name || "Anonymous"}
-                {item.userId.phone && <div className="text-sm text-muted-foreground">{item?.userId?.phone}</div>}
+                {item?.userId?.name || "Anonymous"}
+                {item?.userId?.phone && <div className="text-sm text-muted-foreground">{item?.userId?.phone}</div>}
               </TableCell>
               <TableCell>{item?.waiterName}</TableCell>
               <TableCell className="text-right">₹{item?.billValue?.toFixed(2)}</TableCell>
               <TableCell className="text-right">₹{item?.claimedCoins?.toFixed(2) || item?.discount}</TableCell>
               <TableCell className="text-right">
-                {item?.splitModes.map((mode) => (
+                {item?.splitModes?.map((mode) => (
                   <Badge key={mode._id} variant="outline" className="ml-1">
-                    {mode.name}
+                    {mode?.name}
                   </Badge>
                 ))}
               </TableCell>

@@ -158,10 +158,10 @@ const TextStyle = () => {
   // Constants
   const colorsPerPage = 10
   const fontsPerPage = 6
-    const fontWeightsPerPage = 3
+  const fontWeightsPerPage = 3
   const totalColorPages = Math.ceil(colorOptions.length / colorsPerPage)
   const totalFontPages = Math.ceil(fontOptions.length / fontsPerPage)
-    const totalFontWeightPages = Math.ceil(fontWeightOptions.length / fontWeightsPerPage)
+  const totalFontWeightPages = Math.ceil(fontWeightOptions.length / fontWeightsPerPage)
 
   // Get current colors and fonts
   const currentColors = colorOptions.slice(colorPage * colorsPerPage, (colorPage + 1) * colorsPerPage)
@@ -254,55 +254,55 @@ const TextStyle = () => {
 
       {/* Font Weight and Style Controls */}
 
-    <div className="space-y-2">
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
-            <Label>Font Weight</Label>
-            <div className="flex space-x-2">
-                <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setFontWeightPage((prev) => Math.max(0, prev - 1))}
-                    disabled={fontWeightPage === 0}
-                >
-                    <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <span className="px-2">
-                    {fontWeightPage + 1}/{totalFontWeightPages}
-                </span>
-                <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setFontWeightPage((prev) => Math.min(totalFontWeightPages - 1, prev + 1))}
-                    disabled={fontWeightPage === totalFontWeightPages - 1}
-                >
-                    <ChevronRight className="w-4 h-4" />
-                </Button>
-            </div>
+          <Label>Font Weight</Label>
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setFontWeightPage((prev) => Math.max(0, prev - 1))}
+              disabled={fontWeightPage === 0}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="px-2">
+              {fontWeightPage + 1}/{totalFontWeightPages}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setFontWeightPage((prev) => Math.min(totalFontWeightPages - 1, prev + 1))}
+              disabled={fontWeightPage === totalFontWeightPages - 1}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
         <AnimatePresence mode="wait">
-            <motion.div
-                key={fontWeightPage}
-                className="grid grid-cols-3 gap-2 mt-2"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-            >
-                {fontWeightOptions
-                    .slice(fontWeightPage * fontWeightsPerPage, (fontWeightPage + 1) * fontWeightsPerPage)
-                    .map((weight) => (
-                        <Button
-                            key={weight.value}
-                            variant={fontWeight === weight.value ? "default" : "outline"}
-                            className={weight.value}
-                            onClick={() => setFontWeight(weight.value)}
-                        >
-                            {weight.name}
-                        </Button>
-                    ))}
-            </motion.div>
+          <motion.div
+            key={fontWeightPage}
+            className="grid grid-cols-3 gap-2 mt-2"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            {fontWeightOptions
+              .slice(fontWeightPage * fontWeightsPerPage, (fontWeightPage + 1) * fontWeightsPerPage)
+              .map((weight) => (
+                <Button
+                  key={weight.value}
+                  variant={fontWeight === weight.value ? "default" : "outline"}
+                  className={weight.value}
+                  onClick={() => setFontWeight(weight.value)}
+                >
+                  {weight.name}
+                </Button>
+              ))}
+          </motion.div>
         </AnimatePresence>
-    </div>
+      </div>
 
       <div className="space-y-2">
         <div className="grid grid-cols-3 gap-2">
@@ -450,12 +450,12 @@ const TextStyle = () => {
             icon: <TbCircleLetterAFilled size={24} />,
             onClick: toggleBackground,
             color: "purple",
-            className: "rounded-md",
+            className: "rounded-md w-full",
           },
           {
             text: "Save",
             onClick: toggleEditTextModal,
-            className: "rounded-md md:px-[6rem] px-12",
+            className: "rounded-md md:px-[6rem] px-12 w-full",
           },
         ]}
       />

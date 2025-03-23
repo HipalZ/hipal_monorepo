@@ -32,6 +32,15 @@ const CustomRoleSchema = new mongoose.Schema<CustomRoleType>({
     type: Boolean,
     default: false,
   },
+  nickName: {
+    type: String,
+    required: false,
+  },
+  serviceIds: {
+    type: [ObjectId],
+    required: false,
+    ref: "hotelservice",
+  },
 });
 
 const userSchema = new mongoose.Schema<UserType>(

@@ -52,7 +52,7 @@ export default function CreateTable() {
       internalZoneId: selectZone?._id || "",
       staffIds: selectedStaffIds,
       businessId: businessData?._id,
-      
+
     }
     if (editTableId) {
       payload.tableId = editTableId
@@ -108,11 +108,13 @@ export default function CreateTable() {
           {
             text: currentStep === 0 ? "Close" : "Previous",
             onClick: currentStep === 0 ? resetAllValues : handlePrevious,
+            className: "pl-3 rounded-md w-full",
           },
           {
             text: currentStep < steps.length - 1 ? "Next" : "Confirm",
             onClick: currentStep < steps.length - 1 ? handleNext : handleConfirm,
             disable: isNextDisabled(),
+            className: "rounded-md w-full"
           }
         ]}
       />

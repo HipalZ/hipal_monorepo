@@ -41,7 +41,7 @@ export async function storeImageAfterSave(
     formData.append("fileData", file);
     formData.append("fileName", `${imageId}`);
     formData.append("bucketName", "assets");
-
+    
     const response = await axios.post(
       "https://storage.test.hipalz.com/upload",
       formData,

@@ -2,15 +2,16 @@ import { businessApis } from "@/apis/explore";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import UniquelyDishes from "@/components/organisms/explore/uniquelyDishes";
 import type {
+  BusinessDetails,
   IBannerPayload,
   IBusinessData,
+  IOutlet,
 } from "@/components/types/businessData";
 import { cn, defaultThemes } from "@/components/utils/helpers";
+import { apiRpc } from "@hi/common";
 import dynamics from "next/dynamic";
 import { Suspense } from "react";
 
-// export const dynamic = "force-dynamic";
-// export const fetchCache = "force-no-store";
 export const revalidate = 300;
 //
 const AllCouponz = dynamics(
@@ -58,12 +59,64 @@ const PageName = dynamics(() => import("@/components/molecules/pageName"), {
   loading: () => <SkeletonLoader height={50} />,
 });
 
-export async function generateMetadata() {
+export async function generateMetadata({
+  params,
+}: {
+  params: { businessId: string };
+}) {
+  const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+  const { businessId } = params;
+
+  if (!objectIdRegex.test(businessId)) {
+    const res = await apiRpc.businesses.n[":customLink"].$get({
+      param: { customLink: businessId },
+    });
+    const response = (await res.json()) as {
+      data: BusinessDetails;
+      message: string;
+      error: boolean;
+    };
+
+    const businessData = response?.data;
+    if (!businessData) {
+      return {
+        title: "Explore",
+        description: "Explore page for businesses",
+      };
+    }
+
+    const { name, description, logoUrl } = businessData;
+    const metaDescription = description || "Explore our business offerings!";
+
+    return {
+      title: name,
+      description: metaDescription,
+      icons: {
+        icon: logoUrl,
+      },
+      openGraph: {
+        title: name,
+        description: metaDescription,
+        images: [
+          {
+            url: logoUrl || "https://example.com/fallback-image.jpg",
+            width: 1200,
+            height: 630,
+            alt: name,
+          },
+        ],
+        type: "website",
+      },
+    };
+  }
+
   return {
     title: "Explore",
     description: "Explore page for businesses",
   };
 }
+
+
 export default async function Explore({
   params,
 }: { params: { businessId: string } }) {

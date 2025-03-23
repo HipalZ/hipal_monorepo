@@ -613,7 +613,7 @@ const reviewRouter = new Hono()
           // send whatsapp message
           const token =
             "EAAQk2VVQJsEBOZBP8xHCHCZAvBWeAX1APC5E08Y0PCMCTGemp6OUsJrugkr6nNNYWnnrJcTL18GHoRzRBPuW2L0CGQvkK98djZBCxaAkUxKbH148EOMtYGxvj87NTqPz9TfoyjdVWMp5sKgZBI5tIdI4yvGBtyxsRCY5y81ZBvlYdLQNCaqQQP94ZC5llBP1EtJAZDZD";
-          const body = `${message}.\nhttps://hipal-test.hipalz.com/${customLink}/explore?tableName=review`;
+          const body = `${message}.\nhttps://hipalz.com/${customLink}/explore?tableName=review`;
           const whatappConfig = {
             method: "post",
             url: "https://graph.facebook.com/v21.0/365941956611521/messages",
@@ -792,7 +792,8 @@ const reviewRouter = new Hono()
         return respond(c, " successfully", false, 200, {});
       });
     },
-  ).post(
+  )
+  .post(
     "/googleRatings",
     zValidator(
       "json",
@@ -822,11 +823,11 @@ const reviewRouter = new Hono()
         { businessId },
         {
           avgRating,
-        }
+        },
       );
 
       return respond(c, "rating fetched successfully", false, 200, {});
-   },
-  )
+    },
+  );
 
 export default reviewRouter;

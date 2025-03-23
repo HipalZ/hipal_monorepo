@@ -7,6 +7,7 @@ import Boundary from "./components/molecules/boundary";
 import { Toaster } from "react-hot-toast";
 import "react-datepicker/dist/react-datepicker.css";
 import "./index.css";
+import { HelmetProvider } from "react-helmet-async";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,9 +22,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <Router>
         <Toaster position="top-center" />
-        <Boundary>
-          <App />
-        </Boundary>
+        <HelmetProvider>
+          <Boundary>
+            <App />
+          </Boundary>
+        </HelmetProvider>
       </Router>
     </QueryClientProvider>
   </React.StrictMode>,

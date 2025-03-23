@@ -12,7 +12,8 @@ import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useExploreTemp } from "@/components/store/useExploreTemp";
 import { useBizInfoChanges } from "../../helpers/bizInforHelpers";
 import { filterPayload } from "@/components/utils/helper";
-import { QueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import useBusinessData from "@/components/store/useBusinessData";
 
 const PopUp = lazy(() => import("@/components/atom/popUp"));
 const BasicInformationSection = lazy(
@@ -25,24 +26,29 @@ const CustomTimings = lazy(
 );
 
 const MemoBizInfo = () => {
+  const outletInfo = useBusinessData((s) => s.outletInfo);
   const {
     setToggleBizInfo,
     toggleBizInfo,
-    isLoading,
-    setIsLoading,
     toggleExplorePages,
     setToggleExplorePages,
   } = useExploreStore((state) => ({
     toggleBizInfo: state.toggleBizInfo,
     setToggleBizInfo: state.setToggleBizInfo,
-    isLoading: state.isLoading,
-    setIsLoading: state.setIsLoading,
     toggleExplorePages: state.toggleExplorePages,
     setToggleExplorePages: state.setToggleExplorePages,
   }));
 
-  const queryClient = new QueryClient();
-  const businessId = useParams()?.businessId;
+  const {
+    isLoading,
+    setIsLoading
+  } = useExploreTemp((s) => ({
+    isLoading: s.isLoading,
+    setIsLoading: s.setIsLoading
+  }))
+
+  const queryClient = useQueryClient();
+  const { businessId, hotelId } = useParams();
   const showErrorToasts = useShowErrorToasts();
   // Temporary state variables
   const {
@@ -93,7 +99,7 @@ const MemoBizInfo = () => {
       location: location,
       avgPricingForTwo: avgPricingForTwo,
       tags: tags.filter((tag) => tag.trim() !== ""),
-      amenities: amenities,
+      ...(outletInfo?.outLetType !== "HOTEL" ? { amenities: amenities } : { newAmenities: amenities }),
       fixOpenTime: fixedTime?.openTime,
       fixCloseTime: fixedTime?.closeTime,
       customTiming: customTimings,
@@ -105,17 +111,17 @@ const MemoBizInfo = () => {
 
   const handleCreateInfo = async (e) => {
     e.preventDefault();
-    if (!businessId) return;
+    if (!businessId && !hotelId) return;
     setIsLoading(true);
     const payload: IBizPayload = {
-      businessId,
+      businessId: businessId || hotelId,
       isCustomTime: showCustomTime,
       description: description,
       phone: phone,
       location: location,
       avgPricingForTwo: avgPricingForTwo,
       tags: tags.filter((tag) => tag.trim() !== ""),
-      amenities: amenities,
+      ...(outletInfo?.outLetType !== "HOTEL" ? { amenities: amenities } : { newAmenities: amenities }),
       fixOpenTime: fixedTime?.openTime,
       fixCloseTime: fixedTime?.closeTime,
       customTiming: customTimings.filter(
@@ -138,12 +144,12 @@ const MemoBizInfo = () => {
       ].$put({
         json: filteredPayload,
         param: {
-          businessId: businessId,
+          businessId: businessId || hotelId,
         },
       });
       const outletInfoData: IBizPayload = await outletInfo.json();
       if (outletInfo.status === 200 || outletInfo.status === 201) {
-        queryClient.invalidateQueries({ queryKey: ["bizInfo", businessId] });
+        queryClient.invalidateQueries({ queryKey: ["bizInfo"] });
         toast.success("Data saved successfully");
         setToggleBizInfo(!toggleBizInfo);
         if (toggleExplorePages === ExplorePages.BIZINFO) {

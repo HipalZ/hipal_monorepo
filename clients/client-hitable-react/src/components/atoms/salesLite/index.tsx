@@ -156,7 +156,7 @@ const SalesLite = () => {
       <DateRangePickerMemo />
 
       <div className="grid grid-cols-2 gap-4 p-4 md:grid-cols-4 lg:grid-cols-4">
-        <section className="col-span-2 md:col-span-2 ">
+        <section className="col-span-2">
 
           <InfoCard
             title="Total Sales"
@@ -165,7 +165,7 @@ const SalesLite = () => {
             gradient="from-blue-600 to-blue-200"
           />
         </section>
-        <section className="col-span-2 md:col-span-2 ">
+        <section className="col-span-2">
           <InfoCard
             title="Online Sales"
             value={salesData.onlineSale.online}
@@ -191,7 +191,12 @@ const SalesLite = () => {
           icon={<AlertTriangle className="w-4 h-4" />}
           gradient="from-red-900 to-red-100"
         />
-
+        <InfoCard
+          title="Total Active Table Value"
+          value={salesData.totalActiveTableValue}
+          icon={<CreditCard className="w-4 h-4" />}
+          gradient="from-blue-600 to-blue-200"
+        />
       </div>
 
       <div className="grid grid-cols-1 gap-6 p-4">
@@ -207,7 +212,6 @@ const SalesLite = () => {
             <CardContent>
               <PieChart
                 data={[
-                  ...Object.entries(salesData.onlineSale).map(([mode, amount]) => ({ name: mode, value: amount })),
                   ...Object.entries(salesData.offlineSale).map(([mode, amount]) => ({ name: mode, value: amount })),
                 ]}
               />

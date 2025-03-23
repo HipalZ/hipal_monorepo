@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { ExplorePages, useExploreStore } from "@/components/store/useExploreStore"
 import type { IBannerPayload } from "@/components/types/businessData"
-import { useParams } from "react-router-dom"
-import { useQuery } from "@tanstack/react-query"
 import { useBanners } from "@/hooks/useExplore"
 import LoadingSpinner from "@/components/atom/loadingSpinner"
 
@@ -14,13 +12,11 @@ const BannersExplorePage = lazy(() => import("../createdBannerLayouts"))
 
 const MemoBannerSection = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const businessId = useParams()?.businessId
-  const { fetchBanners } = useBanners()
+  const { bannersLoading } = useBanners()
   const { setToggleExplorePages, banners } = useExploreStore((state) => ({
     setToggleExplorePages: state.setToggleExplorePages,
     banners: state.banners,
   }))
-
   const handleNavigation = useCallback(() => {
     setToggleExplorePages(ExplorePages.BANNERS)
   }, [setToggleExplorePages])
@@ -38,13 +34,6 @@ const MemoBannerSection = () => {
       })
     }
   }
-
-  // => Fetch banners
-  const { isLoading: bannersLoading } = useQuery({
-    queryKey: ["banners", businessId],
-    queryFn: fetchBanners,
-    enabled: !!businessId,
-  })
 
   if (bannersLoading) {
     return (

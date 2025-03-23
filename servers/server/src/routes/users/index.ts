@@ -1,5 +1,6 @@
 // books.ts
 import {
+  Business,
   DeviceToken,
   LoyaltyCoinsInfo,
   StaffPermission,
@@ -294,6 +295,54 @@ const usersRouter = new Hono()
           err: false,
         });
       }
+    },
+  )
+  .post(
+    "/verifyOtp",
+    zValidator(
+      "json",
+      z.object({
+        phone: z.string().min(10).max(10),
+        otp: z.string().min(4).max(4),
+      }),
+    ),
+
+    async (c) => {
+      const requestData = await c.req.json();
+
+      const { phone, otp } = requestData;
+
+      const options = {
+        method: "GET",
+        url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
+        headers: {
+          accept: "application/json",
+          authkey: "387796AmyGlDBq63b2d75aP1",
+        },
+      };
+
+      const response = await axios(options);
+
+      if (
+        response?.data?.message === "Mobile no. not found" ||
+        response?.data?.message === "OTP not match" ||
+        response?.data?.message === "OTP expired" ||
+        response?.data?.message === "Otp empty or not numeric" ||
+        response?.data?.message ===
+          "Max limit reached for this otp verification"
+      ) {
+        return c.json(
+          { err: true, status: false, message: "Please enter valid Otp !!" },
+          400,
+        );
+      }
+
+      return c.json({
+        status: true,
+        message: "Otp verified successfully",
+        data: {},
+        err: false,
+      });
     },
   )
   .post(
@@ -1023,6 +1072,12 @@ const usersRouter = new Hono()
     ),
     async (c) => {
       const requestData = await c.req.json();
+      const { id } = c.req.param();
+
+      const business = await Business.findOne({
+        customLink: id,
+      });
+
       const { otp, loyaltyId, signUpBonus, name, userId, phone, businessId } =
         requestData;
 
@@ -1120,13 +1175,13 @@ const usersRouter = new Hono()
 
       const subscriber = await Subscriber.findOne({
         userId: existingUser._id,
-        businessId: businessId,
+        businessId: businessId || business?._id.toString(),
       }).select("_id");
 
       if (!subscriber) {
         await Subscriber.create({
           userId: userId,
-          businessId: businessId,
+          businessId: businessId || business?._id.toString(),
           userCount: 1,
           date: Date.now(),
         });
@@ -1134,7 +1189,7 @@ const usersRouter = new Hono()
         await Subscriber.findOneAndUpdate(
           {
             userId: userId,
-            businessId: businessId,
+            businessId: businessId || business?._id.toString(),
           },
           {
             $inc: {
@@ -1519,6 +1574,38 @@ const usersRouter = new Hono()
       });
 
       return respond(c, "Session set successfully", false, 200, {});
+    },
+  )
+
+  .get(
+    "/user_profile/:userId",
+
+    zValidator("param", z.object({ userId: z.string() })),
+
+    async (c) => {
+      const { userId } = c.req.param();
+
+      const existingUser = await User.findById(userId).lean();
+
+      if (!existingUser) {
+        return respond(c, "User not found", true, 404, {});
+      }
+
+      const accessToken = createAccessToken(
+        existingUser._id?.toString() || "",
+        "HIPAL_CUSTOMER",
+      );
+      const refreshToken = createRefreshToken(
+        existingUser._id?.toString() || "",
+        "HIPAL_CUSTOMER",
+      );
+      const modifyUser = {
+        ...existingUser,
+        accessToken,
+        refreshToken,
+      };
+
+      return respond(c, "User fetched successfully", false, 200, modifyUser);
     },
   );
 

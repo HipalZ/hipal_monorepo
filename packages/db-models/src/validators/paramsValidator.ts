@@ -40,6 +40,7 @@ export const paramsSchema = z
     to: z.string().optional(),
     customLink: z.string().optional(),
     UniquelyYours: z.string().optional(),
+    download: z.string().optional(),
   })
   .refine(
     (data) => {

@@ -157,8 +157,7 @@ const MemoRedirectionPopUp = (props: IProps) => {
   });
 
   return (
-    <section className="m-6 h-[80vh] overflow-y-auto pb-[5rem]">
-      <div>
+    <section className="m-6 h-[50vh] overflow-y-auto pb-[5rem]">
         <button
           type="button"
           onClick={handleBack}
@@ -166,12 +165,11 @@ const MemoRedirectionPopUp = (props: IProps) => {
         >
           <FaArrowLeft />
         </button>
-        <center className="mb-4 -mt-6 text-2xl">Add Redirection</center>
-      </div>
+        <center className="mb-4 -mt-8 text-2xl">Add Redirection</center>
       {selectedLink === "" ? (
-        <article className="md:mx-10">
+        <article className="md:mx-10 px-4">
           <SubHeader text="Link Action Button" />
-          <article className="p-4 mt-6 mb-4 space-y-10 bg-white rounded-2xl">
+          {outLetType !== "HOTEL" ? <article className="p-4 mt-6 mb-4 space-y-10 bg-white rounded-2xl">
             <button
               onClick={handleSelectCategory}
               type="button"
@@ -203,11 +201,19 @@ const MemoRedirectionPopUp = (props: IProps) => {
             >
               <h1>&#128279; External Link</h1>
             </button>
-          </article>
+          </article> :
+            <button
+              onClick={handleExternalLink}
+              type="button"
+              className="w-full py-2 bg-gray-100 rounded-full"
+            >
+              <h1>&#128279; External Link</h1>
+            </button>
+          }
         </article>
       ) : (
         <>
-          <div className="relative flex items-center justify-between h-6 mx-6 mt-4 space-x-10">
+          <div className="relative flex items-center justify-between mx-6 mt-4 space-x-10">
             {isVisible && (
               <div className="w-[90vw]">
                 <input
@@ -269,13 +275,15 @@ const MemoRedirectionPopUp = (props: IProps) => {
               ))}
             {selectedLink === RedirectionType.LINK && (
               <>
-                <span className="ml-4 text-xl truncate">External Link</span>
-                <section className="flex items-center gap-4 p-4 m-2 bg-white rounded-2xl">
+                <span className="ml-4 text-xl">External Link</span>
+                <h6 className="ml-4 text-gray-500 text-sm">Add your custom link to redirect</h6>
+                <section className="flex items-center gap-4 p-4 bg-white">
                   <label className="flex items-center w-full gap-4 cursor-pointer">
                     <input
                       type="text"
                       name="external"
-                      className="w-full text-lg text-black rounded-2xl"
+                      placeholder="Enter any external link"
+                      className="w-full text-sm text-black rounded-xl"
                       onChange={(e) => handleItem(e.target.value, "EXTERNAL")}
                     />
                   </label>

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { IDish, SocialMediaLink } from "../types/businessData";
+import useBusinessData from "./useBusinessData";
 import facebook from "@/assets/socialMedia/fb.png";
 import instagram from "@/assets/socialMedia/instagram.png";
 import twitter from "@/assets/socialMedia/twitter.png";
@@ -59,127 +60,130 @@ interface ExploreTempState {
 
   socialMediaLinks: SocialMediaLink[];
   setSocialMediaLinks: (data: SocialMediaLink[]) => void;
+
+  isLoading: boolean;
+  setIsLoading: (isLoading: boolean) => void;
 }
 
-export const useExploreTemp = create<ExploreTempState>((set, get) => ({
-  selectedDishes: [],
-  setSelectedDishes: (dishes: string[]) => set({ selectedDishes: dishes }),
+export const useExploreTemp = create<ExploreTempState>((set, get) => {
+  return {
+    selectedDishes: [],
+    setSelectedDishes: (dishes:string[]) => set({ selectedDishes: dishes }),
 
-  dishes: [],
-  setDishes: (dishes) => set(() => ({ dishes })),
-  originalDishes: [],
-  setOriginalDishes: (dishes) => set(() => ({ originalDishes: dishes })),
-  clearOriginalDishes: () => set(() => ({ originalDishes: [] })),
+    dishes: [],
+    setDishes: (dishes) => set(() => ({ dishes })),
 
-  description: "",
-  setDescription: (description: string) => set({ description }),
+    originalDishes: [],
+    setOriginalDishes: (dishes) => set(() => ({ originalDishes: dishes })),
+    clearOriginalDishes: () => set(() => ({ originalDishes: [] })),
 
-  phone: "",
-  setPhone: (phone: string) => set({ phone }),
+    description: "",
+    setDescription: (description:string) => set({ description }),
 
-  location: "",
-  setLocation: (location: string) => set({ location }),
+    phone: "",
+    setPhone: (phone:string) => set({ phone }),
 
-  avgPricingForTwo: "",
-  setAvgPricingForTwo: (avgPricingForTwo: string) => set({ avgPricingForTwo }),
+    location: "",
+    setLocation: (location:string) => set({ location }),
 
-  // space for tags to map them to the input field
-  tags: ["", "", ""],
-  setTags: (tags: string[]) => set({ tags }),
+    avgPricingForTwo: "",
+    setAvgPricingForTwo: (avgPricingForTwo:string) => set({ avgPricingForTwo }),
 
-  amenities: [],
-  setAmenities: (amenities: string[]) => set({ amenities }),
+    tags: ["", "", ""],
+    setTags: (tags:string[]) => set({ tags }),
 
-  address: "",
-  setAddress: (address: string) => set({ address }),
+    amenities: [],
+    setAmenities: (amenities:string[]) => set({ amenities }),
 
-  openTimings: false,
-  setOpenTimings: (openTimings: boolean) => set({ openTimings }),
+    address: "",
+    setAddress: (address:string) => set({ address }),
 
-  showCustomTime: false,
-  setShowCustomTime: (showCustomTime: boolean) => set({ showCustomTime }),
+    openTimings: false,
+    setOpenTimings: (openTimings:boolean) => set({ openTimings }),
 
-  customTimings: [
-    { day: "Monday", openTime: "", closeTime: "" },
-    { day: "Tuesday", openTime: "", closeTime: "" },
-    { day: "Wednesday", openTime: "", closeTime: "" },
-    { day: "Thursday", openTime: "", closeTime: "" },
-    { day: "Friday", openTime: "", closeTime: "" },
-    { day: "Saturday", openTime: "", closeTime: "" },
-    { day: "Sunday", openTime: "", closeTime: "" },
-  ],
+    showCustomTime: false,
+    setShowCustomTime: (showCustomTime:boolean) => set({ showCustomTime }),
 
-  setCustomTimings: (customTimings: []) => set({ customTimings }),
+    customTimings: [
+      { day: "Monday", openTime: "", closeTime: "" },
+      { day: "Tuesday", openTime: "", closeTime: "" },
+      { day: "Wednesday", openTime: "", closeTime: "" },
+      { day: "Thursday", openTime: "", closeTime: "" },
+      { day: "Friday", openTime: "", closeTime: "" },
+      { day: "Saturday", openTime: "", closeTime: "" },
+      { day: "Sunday", openTime: "", closeTime: "" },
+    ],
+    setCustomTimings: (customTimings:[]) => set({ customTimings }),
 
-  fixedTime: {
-    openTime: "",
-    closeTime: "",
-  },
+    fixedTime: { openTime: "", closeTime: "" },
+    setFixedTime: (newFixedTime) =>
+      set((state) => ({
+        fixedTime: { ...state.fixedTime, ...newFixedTime },
+      })),
 
-  setFixedTime: (newFixedTime) =>
-    set((state) => ({
-      fixedTime: {
-        ...state.fixedTime,
-        ...newFixedTime,
-      },
-    })),
+    updateBizInfo: (payload) => {
+      const outletInfo = useBusinessData.getState().outletInfo; 
 
-  updateBizInfo: (payload) => {
-    const {
-      description,
-      phone,
-      location,
-      avgPricingForTwo,
-      tags,
-      amenities,
-      address,
-      selectedDishes,
-      fixOpenTime,
-      fixCloseTime,
-      customTiming,
-    } = payload;
+      const {
+        description,
+        phone,
+        location,
+        avgPricingForTwo,
+        tags,
+        amenities,
+        newAmenities,
+        address,
+        selectedDishes,
+        fixOpenTime,
+        fixCloseTime,
+        customTiming,
+      } = payload;
 
-    set({
-      description: description || "",
-      phone: phone || "",
-      location: location || "",
-      avgPricingForTwo: avgPricingForTwo || "",
-      // all the tags are mapped to the input field
-      tags:
-        tags && tags.length > 0
-          ? [...tags, ...Array(3 - tags.length).fill("")]
-          : ["", "", ""],
-      amenities: amenities && amenities.length > 0 ? [...amenities] : [],
-      address: address || "",
-      selectedDishes: selectedDishes || [],
-      fixedTime: {
-        openTime: fixOpenTime || "",
-        closeTime: fixCloseTime || "",
-      },
-    });
-
-    if (customTiming && customTiming.length > 0) {
-      const flattenedCustomTimings = customTiming.flat();
-      const currentCustomTimings = get().customTimings;
-
-      const updatedTimings = currentCustomTimings.map((timing) => {
-        const matchingBizTiming = flattenedCustomTimings.find(
-          (bizTiming) => bizTiming.day === timing.day,
-        );
-        return matchingBizTiming ? { ...timing, ...matchingBizTiming } : timing;
+      set({
+        description: description || "",
+        phone: phone || "",
+        location: location || "",
+        avgPricingForTwo: avgPricingForTwo || "",
+        tags:
+          tags?.length > 0 ? [...tags, ...Array(3 - tags.length).fill("")] : ["", "", ""],
+        amenities:
+          outletInfo?.outLetType === "HOTEL"
+            ? newAmenities?.length > 0
+              ? newAmenities
+              : []
+            : amenities?.length > 0
+            ? amenities
+            : [],
+        address: address || "",
+        selectedDishes: selectedDishes || [],
+        fixedTime: { openTime: fixOpenTime || "", closeTime: fixCloseTime || "" },
       });
 
-      set({ customTimings: updatedTimings });
-    }
-  },
+      if (customTiming?.length > 0) {
+        const flattenedCustomTimings = customTiming.flat();
+        const currentCustomTimings = get().customTimings;
 
-  socialMediaLinks: [
-    { _id: 1, icon: "instagram", logo: instagram, link: "" },
-    { _id: 2, icon: "facebook", logo: facebook, link: "" },
-    { _id: 3, icon: "twitter", logo: twitter, link: "" },
-    { _id: 4, icon: "telegram", logo: telegram, link: "" },
-    { _id: 5, icon: "youtube", logo: youtube, link: "" },
-    { _id: 6, icon: "website", logo: website, link: "" },
-  ],
-  setSocialMediaLinks: (data) => set({ socialMediaLinks: data }),
-}));
+        const updatedTimings = currentCustomTimings.map((timing) => {
+          const matchingBizTiming = flattenedCustomTimings.find(
+            (bizTiming) => bizTiming.day === timing.day
+          );
+          return matchingBizTiming ? { ...timing, ...matchingBizTiming } : timing;
+        });
+
+        set({ customTimings: updatedTimings });
+      }
+    },
+    socialMediaLinks: [
+      { _id: 1, icon: "instagram", logo: instagram, link: "" },
+      { _id: 2, icon: "facebook", logo: facebook, link: "" },
+      { _id: 3, icon: "twitter", logo: twitter, link: "" },
+      { _id: 4, icon: "telegram", logo: telegram, link: "" },
+      { _id: 5, icon: "youtube", logo: youtube, link: "" },
+      { _id: 6, icon: "website", logo: website, link: "" },
+    ],
+    setSocialMediaLinks: (data) => set({ socialMediaLinks: data }),
+
+    isLoading: false,
+    setIsLoading: (isLoading) => set({ isLoading }),
+  };
+});

@@ -28,6 +28,7 @@ export const useExploreNavigation = () => {
     clearOriginalDishes: s.clearOriginalDishes,
   }));
   const businessId = useParams()?.businessId;
+  const hotelId = useParams()?.hotelId;
   const navigate = useNavigate();
   const handleNavigate = useCallback(() => {
     if (toggleExplorePages === ExplorePages.BIZINFO) {
@@ -38,7 +39,8 @@ export const useExploreNavigation = () => {
       clearImageFiles();
       clearBizInfo();
       setImg({});
-      navigate(`/app/business/${businessId}/`);
+      if(hotelId) navigate(`/app/hotel/${hotelId}/`);
+      if(businessId) navigate(`/app/business/${businessId}/`);
     }
   }, [
     businessId,
@@ -49,6 +51,7 @@ export const useExploreNavigation = () => {
     toggleExplorePages,
     clearOriginalDishes,
     navigate,
+    hotelId,
   ]);
 
   return { handleNavigate };

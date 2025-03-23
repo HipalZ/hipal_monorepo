@@ -7,13 +7,35 @@ export type bussinessControlPages =
   | "MENU_PAGE"
   | "SETTING"
   | "CONGRATULATION";
-export type businessType = "FOOD" | "OTHER" | "";
+export type businessType =
+"FOOD"
+| "OTHER" 
+| "HOTEL" 
+| "CLINIC" 
+| "RESTAURENT" 
+| "E-COMMERCE" 
+| "FASHION_AND_JEWELRY" 
+| "MENU"
+
 export type MenuLayout = "MAIN_CATEGORY" | "MAIN_AND_SUB_CATEGORY";
 export type exploreLayout = "BUTTER" | "SUNFLOWER";
 
 interface BusinessCtrl {
   step: number;
   setStep: (step: number) => void;
+  goNext: () => void;
+  goPrevious: () => void;
+
+  phone: string;
+  setPhone: (phone: string) => void;
+  otp: Array<string>;
+  setOtp: (otp: Array<string>) => void;
+  termsAccepted: boolean;
+  setTermsAccepted: (value: boolean) => void;
+  showOtp: boolean;
+  setShowOtp: (value: boolean) => void;
+
+
   exploreLayout: exploreLayout;
   menuLayout: MenuLayout;
   setExploreLayout: (layout: exploreLayout) => void;
@@ -55,7 +77,6 @@ const useBusinessCtrl = create<BusinessCtrl>((set) => {
   const defaultPrimaryColor = "#EDDEB8";
   const defaultSecondaryColor = "#116D6E";
   const businessData = useBusinessData.getState().businessData;
-  // Subscribe to changes in businessData to dynamically update colors
   useBusinessData.subscribe((state) => {
     if (
       state.businessData?.primaryColor ||
@@ -71,6 +92,20 @@ const useBusinessCtrl = create<BusinessCtrl>((set) => {
   return {
     step: 0,
     setStep: (step: number) => set({ step }),
+    goNext: () => set((state) => ({ step: state.step + 1 })),
+    goPrevious: () => set((state) => ({ step: state.step - 1 })),
+
+    phone: "",
+    setPhone: (phone: string) => set({ phone }),
+    otp: ["", "", "", ""],
+    setOtp: (otp: Array<string>) => set({ otp }),
+    termsAccepted: false,
+    setTermsAccepted: (value: boolean) => set({ termsAccepted: value }),
+    showOtp: false,
+    setShowOtp: (value: boolean) => set({
+      showOtp: value
+    }),
+
     exploreLayout: "BUTTER",
     setExploreLayout: (layout: exploreLayout) => set({ exploreLayout: layout }),
     menuLayout: "MAIN_AND_SUB_CATEGORY",

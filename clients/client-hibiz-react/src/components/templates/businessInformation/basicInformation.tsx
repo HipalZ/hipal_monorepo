@@ -27,13 +27,12 @@ const MemoBasicInformationSection = () => {
             {description?.length}/{250}
           </small>
         </div>
-        &nbsp;
-        <div className="lg:flex lg:flex-col lg:justify-end lg:items-end">
+        <div className="mt-4 lg:flex lg:flex-col lg:justify-end lg:items-end">
           <Paragraph text="Describe Your business with 4 words" />
           {tags.map((tag, index) => (
             <section
               key={index.toString()}
-              className="flex items-center my-4 space-x-4"
+              className="flex items-center my-2 space-x-4"
             >
               <h1>{index + 1}</h1>
               <div className="relative">

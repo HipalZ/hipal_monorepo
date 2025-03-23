@@ -26,6 +26,7 @@ export * from "./googleAuthUsers";
 export * from "./googleReviews";
 export * from "./group";
 export * from "./groupAnalytics";
+export * from "./hotel";
 export * from "./kotOrder";
 export * from "./loyaltyCoinsInfo";
 export * from "./loyaltySetting";

@@ -19,7 +19,7 @@ interface ButtonConfig {
     highlight?: boolean;
     borderClasses?: string;
     swipe?: boolean;
-    icon?: React.ReactNode; // New icon parameter
+    icon?: React.ReactNode;
 }
 
 interface MemoBottomButtonProps {

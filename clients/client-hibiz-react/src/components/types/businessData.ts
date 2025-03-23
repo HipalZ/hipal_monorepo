@@ -256,6 +256,7 @@ export interface IExistingPayments {
   razorpayOrderId: string;
   discount: number;
   posBillId: string;
+  settleType: string;
   splitModes: {
       _id: string;
       name: string;
@@ -320,6 +321,7 @@ export interface ICategory {
 }
 
 export interface IBizInfo {
+  newAmenities: string[];
   _id: string;
   logoUrl: string;
   endBannerUrl: string;

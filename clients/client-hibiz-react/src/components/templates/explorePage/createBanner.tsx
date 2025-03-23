@@ -41,7 +41,7 @@ const LoadingSpinner = lazy(() => import("@/components/atom/loadingSpinner"));
 const HisiteHeader = lazy(() => import("@/components/molecules/hisiteHeader"));
 
 const MemoCreateBanner = () => {
-  const { businessId } = useParams();
+  const { businessId, hotelId } = useParams();
   const {
     itemName,
     showCropper,
@@ -156,7 +156,7 @@ const MemoCreateBanner = () => {
   ]);
 
   const handleCreateBanner = async (isPublish?: boolean) => {
-    if (!businessId) return;
+    if (!businessId && !hotelId) return;
     if ((heading.length < 4 || paragraph.length < 4) && !onlyImage) {
       return toast.error(
         "Heading, Description should be more than 4 characters",
@@ -178,7 +178,7 @@ const MemoCreateBanner = () => {
       bannerImage = await storeImageAfterSave(imageFiles, img, setIsLoading);
     }
     const payload: IBannerPayload = {
-      businessId,
+      businessId: businessId || hotelId,
       isPublished: isPublish ?? isPublished,
       layout: selectedBannerType,
       bannerImage,
@@ -227,7 +227,7 @@ const MemoCreateBanner = () => {
 
   const handlePreview = useCallback(() => {
     setOpenPreview(!openPreview);
-  }, [openPreview]);
+  }, [setOpenPreview, openPreview]);
 
   return (
     <Suspense fallback={<LoadingSpinner />}>

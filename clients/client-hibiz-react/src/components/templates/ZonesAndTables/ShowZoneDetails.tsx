@@ -33,7 +33,7 @@ const ShowZoneDetails = () => {
     [setCreateZoneModal, setEditZone],
   )
 
-  const getTablesForZone = useCallBack((zoneId: string) => {
+  const getTablesForZone = useCallback((zoneId: string) => {
     return allTables.filter((table: ITable) => table.internalZoneId === zoneId)
   },[allTables])
 
@@ -142,7 +142,7 @@ const ShowZoneDetails = () => {
           {
             text: "Edit Zone",
             onClick: () => saveZoneData(saveZoneDetails),
-            className: "rounded-md pl-3",
+            className: "rounded-md pl-3 w-full",
           },
         ]}
       />

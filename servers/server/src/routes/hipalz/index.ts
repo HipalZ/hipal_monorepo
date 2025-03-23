@@ -44,7 +44,7 @@ const hipalzRouter = new Hono().get(
       }
     }
 
-    // Redirect to the original URL
+    // Redirect to the original UR
     return c.redirect(result.longUrl);
   },
 );

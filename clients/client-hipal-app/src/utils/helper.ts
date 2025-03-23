@@ -39,28 +39,46 @@ export const useErrorHandling = () => {
 export const useGoNext = () => {
   const customLink = useParams()?.businessId as string;
   const { direction, isPayment, invoiceUrl, urlFrom } = useLogin();
+
   const goNext = useCallback(() => {
     let newUrl = `/${customLink}/explore?pay=${isPayment}`;
 
-    if (direction === "loyalty") {
-      newUrl = `/${customLink}/loyalty`;
-    } else if (direction === "category") {
-      newUrl = `/${customLink}/category?pay=${isPayment}`;
-    } else if (direction === "explore") {
-      newUrl = `/${customLink}/explore?pay=${isPayment}`;
-    } else if (direction === "invoice") {
-      newUrl = invoiceUrl;
-    } else if (direction === "posPayment") {
-      newUrl = urlFrom;
-    } else if (direction === "payment") {
-      newUrl = `/${customLink}/payment?pay=${isPayment}`;
-    } else if (direction === "couponz") {
-      newUrl = urlFrom;
-    } else if (direction === "explore-googleReview") {
-      newUrl = `/${customLink}/explore`;
+    if (direction && direction.startsWith("room")) {
+      newUrl = `/${customLink}/hotel/checkin?${direction}`;
+    } else {
+      switch (direction) {
+        case "loyalty":
+          newUrl = `/${customLink}/loyalty`;
+          break;
+        case "category":
+          newUrl = `/${customLink}/category?pay=${isPayment}`;
+          break;
+        case "explore":
+          newUrl = `/${customLink}/explore?pay=${isPayment}`;
+          break;
+        case "invoice":
+          newUrl = invoiceUrl;
+          break;
+        case "posPayment":
+          newUrl = urlFrom;
+          break;
+        case "payment":
+          newUrl = `/${customLink}/payment?pay=${isPayment}`;
+          break;
+        case "couponz":
+          newUrl = urlFrom;
+          break;
+        case "explore-googleReview":
+          newUrl = `/${customLink}/explore`;
+          break;
+        default:
+          break;
+      }
     }
+
     window.location.href = newUrl;
   }, [direction, customLink, isPayment, urlFrom, invoiceUrl]);
 
   return { goNext };
 };
+

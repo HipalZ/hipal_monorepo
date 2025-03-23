@@ -64,19 +64,6 @@ const businessesRouter = new Hono()
           message: "business not created !",
         });
       }
-      const outLetType = requestData.businessType === "FOOD" ? "MENU" : "OTHER";
-      await OutLetInfo.findOneAndUpdate(
-        {
-          businessId: business._id,
-        },
-        {
-          $set: {
-            name: business.name,
-            outLetType,
-          },
-        },
-        { upsert: true, new: true },
-      );
 
       return respond(c, "business created", false, 201, business);
     },
@@ -203,8 +190,8 @@ const businessesRouter = new Hono()
   )
   .post(
     "/outletInfo",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
 
     zValidator("json", outLetInfoSchema),
 
@@ -568,7 +555,7 @@ const businessesRouter = new Hono()
   )
   .get(
     "/get/Single/:businessId",
-    zValidator("param", paramsSchema),
+    zValidator("param", z.object({ businessId: z.string() })),
     async (c) => {
       const { businessId } = c.req.param();
 
@@ -581,6 +568,7 @@ const businessesRouter = new Hono()
       });
     },
   )
+
   .get("/n/:customLink", zValidator("param", paramsSchema), async (c) => {
     let { customLink } = c.req.param();
 
@@ -591,7 +579,7 @@ const businessesRouter = new Hono()
     }).select("_id");
     const outLetInfo = await OutLetInfo.findOne({
       businessId: getBusiness?._id,
-    });
+    }).populate("newAmenities");
 
     if (!outLetInfo) return respond(c, "business not found", true, 404, {});
     return respond(c, "business found", false, 200, outLetInfo);

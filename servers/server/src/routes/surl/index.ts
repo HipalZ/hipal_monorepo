@@ -1,5 +1,7 @@
 import {
   BillUrlModel,
+  HotelRoom,
+  HotelRoomSession,
   Payment,
   QrBill,
   UrlModel,
@@ -38,6 +40,52 @@ const surlRouter = new Hono()
 
         if (menuRedirection && menuRedirection === "WA") {
           const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, I'm interested in your menu. Could you share more details? I am sitting at T-${urlCode}`;
+
+          return c.redirect(redirectUrl);
+        }
+      }
+
+      const result = await UrlModel.findOne({ urlCode });
+      if (!result) {
+        return c.json(
+          {
+            message: "URL not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
+
+      // Redirect to the original URL
+      return c.redirect(result.longUrl);
+    },
+  )
+
+  .get(
+    "/r/:urlCode",
+    zValidator(
+      "param",
+      z.object({
+        urlCode: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { urlCode } = c.req.param();
+      const { q } = c.req.query();
+      if (!q) {
+        const Bid = await UrlModel.findOne({
+          urlCode,
+        }).select("businessId");
+
+        const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
+          businessId: Bid?.businessId,
+        });
+
+        const menuRedirection = whatsAppBusinessConfig?.menuRedirection;
+
+        if (menuRedirection && menuRedirection === "WA") {
+          const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, I'm interested in your room. Could you share more details? I am in room ${urlCode}`;
 
           return c.redirect(redirectUrl);
         }

@@ -13,13 +13,17 @@ export const OrderVerificationTypeEnum = ["USER", "CAPTAIN"] as const;
 
 export const businessPosConfigSchema = z.object({
   businessId: ObjectIdSchema,
-  posId: ObjectIdSchema,
   orderMode: z.enum(OrderModeEnum),
-  petPoojaId: z.string().min(4).max(50),
+  branchId: z.string().min(4).max(100),
   restName: z.string().min(4).max(50),
-
-  orderVerificationType: z.enum(OrderVerificationTypeEnum).optional(),
-  userId: z.string(),
+  accessKey: z.string().min(4).max(100).optional(),
+  secretKey: z.string().min(4).max(100).optional(),
+  authToken: z.string().min(4).max(100).optional(),
+  restId: z.string().min(4).max(100),
+  isDeleted: z.boolean().optional().default(false),
+  orderVerificationType: z.enum(OrderVerificationTypeEnum),
+  posName: z.string().min(2).max(100),
+  posId: z.string().min(4).max(100).optional(),
 
   date: z.number().optional(),
 });

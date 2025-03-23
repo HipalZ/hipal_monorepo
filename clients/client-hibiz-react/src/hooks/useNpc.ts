@@ -3,6 +3,7 @@ import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
 
 export const useAllNpcUsers = (businessId: string) => {
+  if(businessId === "") return ;
   const getAllUsers = async () => {
     const response = await apiRpc.npc[":businessId"].$get({
       param: {
@@ -10,7 +11,9 @@ export const useAllNpcUsers = (businessId: string) => {
       },
     });
     const res = await response.json();
-    return res.data as IDuesPersonsData[];
+    let npcData = res.data as IDuesPersonsData[];
+    npcData = npcData.filter(npc => npc.userId !== null);
+    return npcData ?? [] as IDuesPersonsData[];
   };
 
   const { isLoading, data } = useQuery({

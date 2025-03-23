@@ -24,6 +24,7 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
+import { posApiPaths } from "../../utils/posConfig/petPooja";
 import { respond } from "../../utils/response";
 //
 const dishesRouter = new Hono()
@@ -50,16 +51,13 @@ const dishesRouter = new Hono()
             businessId,
           }).select("name");
 
-          const posDishes = await axios.post(
-            "https://onlineapipp.petpooja.com/thirdparty_fetch_dinein_menu",
-            {
-              "app-key": isHasPos.accessKey,
-              "app-secret": isHasPos.secretKey,
-              "access-token": isHasPos.authToken,
-              restID: isHasPos.restId,
-              tableNo: table.name,
-            },
-          );
+          const posDishes = await axios.post(posApiPaths.fetchMenu, {
+            "app-key": isHasPos.accessKey,
+            "app-secret": isHasPos.secretKey,
+            "access-token": isHasPos.authToken,
+            restID: isHasPos.restId,
+            tableNo: table?.name,
+          });
 
           if (posDishes.data.success === "1") {
             const posDishesData = posDishes.data.items.map((item: any) => {

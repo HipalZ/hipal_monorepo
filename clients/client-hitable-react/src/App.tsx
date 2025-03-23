@@ -14,6 +14,7 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import { useErrorHandling } from "./components/utils/helpers";
 import useBusinessData from "./components/store/useBusinessData";
+import { useRoomAlerts } from "@/hooks/useHotelApis";
 const ErrorPopup = lazy(() => import("./components/ErrorPopup"));
 const InternetConnection = lazy(() => import("./components/atoms/internet"));
 const UpdateApp = lazy(() => import("./components/atoms/updateApp"));
@@ -69,14 +70,19 @@ function App() {
     }
   };
 
-  useEffect(() => {
+  const checkAllowRedirectionConditions = () => {
     const isValidBusiness = captainData?.customRole?.some(
       (role) => role.businessId?._id === selectedBiz?.businessId?._id
     );
-
-    if (accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness) {
+    if(accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType !== "HOTEL"){
       navigate(`/${selectedBiz?.businessId?._id}/alerts`);
+    }else if(accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType === "HOTEL"){
+      navigate(`hotel/${selectedBiz?.businessId?._id}/`);
     }
+  }
+
+  useEffect(() => {
+    checkAllowRedirectionConditions();
   }, []);
 
   useEffect(() => {
@@ -184,6 +190,9 @@ function App() {
     enabled: !!businessId,
     refetchInterval: isSlow ? 29000 : 23000,
   });
+
+  // hotel alerts api
+  useRoomAlerts();
 
   return (
     <main className="relative">

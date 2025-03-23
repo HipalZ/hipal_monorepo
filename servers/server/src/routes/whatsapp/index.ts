@@ -5,6 +5,8 @@ import {
   CouponLink,
   Couponz,
   GroupModel,
+  HotelRoom,
+  HotelRoomSession,
   RecentCampaign,
   Subscriber,
   UrlModel,
@@ -2016,6 +2018,7 @@ const whatsappRouter = new Hono()
           let longUrl = "";
           let shortUrlType = "";
           let urlObj;
+          let updateLongUrl;
 
           if (userText) {
             if (userText.trim().toLowerCase() === "stop") {
@@ -2068,25 +2071,49 @@ const whatsappRouter = new Hono()
               await deleteBlockedUser(userPhone.toString().slice(2));
             }
           }
-
+          let userObj;
+          if (userPhone) {
+            userPhone = userPhone.toString().slice(2);
+            if (userPhone.length === 10) {
+              const userData = await User.findOneAndUpdate(
+                {
+                  phone: userPhone,
+                },
+                {
+                  name: userName,
+                  role: [
+                    "HIPAL_CUSTOMER",
+                    "OWNER",
+                    "MANAGER",
+                    "CAPTAIN",
+                    "CO_OWNER",
+                  ],
+                },
+                {
+                  upsert: true,
+                },
+              );
+              userObj = userData;
+            }
+          }
           if (userText) {
             const tableCode = userText.slice(-5);
 
             const findLongUrl = await UrlModel.findOne({
               urlCode: tableCode,
-            }).select("longUrl shortUrl shortUrlType");
+            }).select("longUrl shortUrl shortUrlType urlCode");
 
             longUrl = `${findLongUrl?.shortUrl}?q=wa`;
             shortUrlType = findLongUrl?.shortUrlType || "";
             urlObj = findLongUrl;
-          }
-
-          if (userPhone) {
-            userPhone = userPhone.toString().slice(2);
+            updateLongUrl = `${
+              findLongUrl?.longUrl
+            }&&id=${userObj?._id.toString()}`;
           }
 
           if (phon_no_id && from && urlObj) {
             if (shortUrlType === "COUPON") {
+              console.log("incoupon");
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
@@ -2094,27 +2121,126 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: `🍨 Welcome to  ${bName?.name}!
-Hey there! Thanks for stopping by to enjoy our delicious ice creams 🎉
+                    body: `Welcome to ${bName?.name} 🌿
+              
+              Hey there! Thanks for stopping by at the Lala Land Flea Market! 🎉
+              
+              We’re excited to introduce Urban Nemo – where great coffee, delicious food, and a peaceful ambiance come together. Here's a special treat just for you!
+              
+              🎁 Grab Coupon: ${longUrl}
+              
+              ✅ Enjoy Flat 20% OFF  
+              👉 At our stall in the flea market  
+              👉 At Urban Nemo Garden Cafe near Jubilee Hills Checkpost  
+              
+              📍 Find us here: https://g.co/kgs/9dszAqh  
+              📸 Follow us for more perks: https://www.instagram.com/urbannemocafehyd  
+              
+              Show this message to claim your discount! Looking forward to serving you! ☕`,
+                  },
+                },
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
+            } else if (shortUrlType === "ROOM") {
+              const user = await User.findOne({
+                phone: userPhone,
+              }).select("_id name phone");
+              const authCode = nanoid(4).toUpperCase();
+              const room = await HotelRoom.findOne({
+                slug: urlObj?.urlCode,
+              });
 
-We're excited to introduce Smaakenzzo – where 100% pure milk-based ice creams, mouth-watering desserts, and a stunning ambiance come together.
+              if (room && room.userIds.length === 0) {
+                const a = await HotelRoom.findOneAndUpdate(
+                  {
+                    slug: urlObj?.urlCode,
+                  },
+                  {
+                    $addToSet: {
+                      userIds: user?._id,
+                    },
+                    roomStatus: "OCCUPIED",
+                  },
+                );
 
-Here's a special treat just for you! 🎁
+                const roomSession = await HotelRoomSession.findOne({
+                  roomId: a?._id.toString(),
+                });
 
-🎟 Grab Your Coupon:
-${longUrl}
+                if (!roomSession) {
+                  const roomSession = await HotelRoomSession.create({
+                    roomId: a?._id,
+                    name: room?.name,
+                    userIds: [user?._id],
+                    date: Date.now(),
+                    checkIn: Date.now(),
+                    authCode,
+                  });
 
-🍦 Enjoy a Free Ice Cream
-👉 Only at Smaakenzzo Cafe, Preston Prime Mall, Gachibowli
+                  await HotelRoom.findOneAndUpdate(
+                    {
+                      _id: a?._id,
+                    },
+                    {
+                      authCode: roomSession.authCode,
+                    },
+                  );
+                }
 
-📍 Find us here:
-https://g.co/kgs/GG2rkoR
+                const res = await axios.post(
+                  `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
+                  {
+                    messaging_product: "whatsapp",
+                    to: user?.phone?.toString(),
+                    type: "template",
+                    template: {
+                      name: "authcode_template",
+                      language: { code: "en" },
+                      components: [
+                        {
+                          type: "body",
+                          parameters: [
+                            {
+                              type: "text",
+                              text: user?.name,
+                            },
 
-📸 Follow us for more perks:
-https://www.instagram.com/smaakenzzo
+                            {
+                              type: "text",
+                              text: authCode,
+                            },
 
-📲 Show this message to claim your discount!
-We’re looking forward to serving you! `,
+                            {
+                              type: "text",
+                              text: room?.name,
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${config.token}`,
+                    },
+                  },
+                );
+              }
+
+              await axios({
+                method: "POST",
+                url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
+                data: {
+                  messaging_product: "whatsapp",
+                  to: from,
+                  text: {
+                    body: `**🏨 Welcome to ${bName?.name}! 🏨**
+              We are delighted to provide you with a **comfortable and luxurious stay**. 🛏️✨
+              🔑 **Explore service In Room **: ${updateLongUrl}
+              🏡 **Discover our beautifully designed rooms and premium amenities.**
+              Enjoy **a seamless check-in experience** and **relax in comfort** with us. 🌟😊`,
                   },
                 },
                 headers: {
@@ -2122,6 +2248,7 @@ We’re looking forward to serving you! `,
                 },
               });
             } else {
+              console.log("intablescan");
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
@@ -2172,27 +2299,6 @@ We’re looking forward to serving you! `,
                 { new: true },
               );
             }
-          }
-
-          if (userPhone.length === 10) {
-            await User.findOneAndUpdate(
-              {
-                phone: userPhone,
-              },
-              {
-                name: userName,
-                role: [
-                  "HIPAL_CUSTOMER",
-                  "OWNER",
-                  "MANAGER",
-                  "CAPTAIN",
-                  "CO_OWNER",
-                ],
-              },
-              {
-                upsert: true,
-              },
-            );
           }
 
           return c.json({

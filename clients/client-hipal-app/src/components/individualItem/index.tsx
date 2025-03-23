@@ -54,7 +54,7 @@ const IndividualItemPage = ({ dishData }: IndividualItemPageProps) => {
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent(
-      `Hi, I am interested in this item. Can I know more details?\n\n*Product Name:* ${dishData.name}\n*Dish ID:* ${dishData._id}\n*See the product:* ${BUSINESS_KEYID}${customLink}/${dishData._id}`,
+      `Hi, I am interested in this item. Can I know more details?\n\n*Product Name:* ${dishData.name}\n*Dish ID:* ${dishData._id}\n*See the product:* ${BUSINESS_KEYID}${customLink}/dish/${dishData._id}`,
     );
 
     // WhatsApp URL for a specific number

@@ -29,7 +29,7 @@ const TableSelectionPopup: React.FC<TableSelectionPopupProps> = ({
     } else {
       setSelectedTableIds(allTables?.map((table) => table._id))
     }
-  },[selectedTableIds])
+  }, [selectedTableIds])
 
   const filteredTables = allTables.filter((table) =>
     table.name.toLowerCase().includes(searchTerm.toLowerCase()) && table?.tableLink
@@ -73,7 +73,7 @@ const TableSelectionPopup: React.FC<TableSelectionPopupProps> = ({
             ))}
           </div>
         </ScrollArea>
-      
+
         <AdvancedBottomButton
           fixed={true}
           maxWidth="30rem"
@@ -85,14 +85,14 @@ const TableSelectionPopup: React.FC<TableSelectionPopupProps> = ({
               className: "rounded-md pl-3",
             },
             {
-              text:  `Select ${selectedTableIds.length === allTables.length ? "None" : "All"}`,
+              text: `Select ${selectedTableIds.length === allTables.length ? "None" : "All"}`,
               onClick: selectAllTheTables,
-              className: "rounded-md",
+              className: "rounded-md w-full",
             },
             {
               text: "Download Selected",
               onClick: handleDownloadAll,
-              className: "rounded-md px-4",
+              className: "rounded-md px-4 w-full",
               disable: selectedTableIds.length === 0,
             },
           ]}

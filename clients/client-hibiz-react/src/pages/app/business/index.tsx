@@ -3,7 +3,7 @@ import hipalHandLogo from "@/assets/login/hand.png";
 import Header from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import type { IBusinessData } from "@/components/types/businessData";
+import type { IBusinessData, IOutletInfo } from "@/components/types/businessData";
 import { PAGE_TYPES, routePathsWithId } from "@/components/utils/routes";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
@@ -16,8 +16,10 @@ import { TbHomePlus } from "react-icons/tb";
 import useBusinessCtrl from "@/components/store/useBusinessCtrl";
 import type { LoyaltyType } from "@hi/db-models/src/validators";
 import { useCategoryStore } from "@/components/store/useCategoryStore";
-///
+import { useExploreStore } from "@/components/store/useExploreStore";
+
 const Business = () => {
+  const setBanners = useExploreStore((s) => s.setBanners);
   const setBusinessData = useBusinessData((s) => s.setBusinessData);
   const setExistingLoyalty = useBusinessData((s) => s.setExistingLoyalty);
   const { reset } = useBusinessCtrl();
@@ -46,18 +48,27 @@ const Business = () => {
         businessId: id,
       },
     });
-    const response = (await res.json()).data;
+    const response = (await res.json())
+    const outletInfo = response.data as IOutletInfo
     if (res.status === 200 || res.status === 201) {
-      useBusinessData.getState().setOutletInfo(response);
+      useBusinessData.getState().setOutletInfo(outletInfo);
+
+      if (["MENU", "FOOD", "OTHER"].includes(outletInfo?.outLetType)) {
+        return navigate(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](id));
+      }
+
+      if (outletInfo?.outLetType === "HOTEL") {
+        return navigate(`/app/hotel/${id}`);
+      }
     }
   };
 
   const handleRoute = async (business: IBusinessData) => {
     setBusinessData(business);
     getLoyaltyData(business);
-    getBusinessInfo(business._id);
     useCategoryStore.persist.clearStorage();
-    navigate(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](business._id));
+    setBanners([]);
+    getBusinessInfo(business._id);
   };
 
   function addBusiness() {
@@ -109,11 +120,10 @@ const Business = () => {
             type="button"
             onClick={() => handleRoute(ele)}
             key={ele._id}
-            className={`${
-              ele?.status || ele.isActive
-                ? "pointer-events-auto"
-                : "pointer-events-none opacity-90"
-            } child_business_card`}
+            className={`${ele?.status || ele.isActive
+              ? "pointer-events-auto"
+              : "pointer-events-none opacity-90"
+              } child_business_card`}
           >
             <div className="text-xl capitalize">
               {!ele?.status && (

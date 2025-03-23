@@ -28,14 +28,12 @@ const BusinessesMemo = memo(() => {
       },
     });
     const response = (await res.json()).data;
-    console.log(response);
     if (res.status === 200 || res.status === 201) {
       useBusinessData.getState().setOutletInfo(response);
     }
   };
 
   const exploreBusiness = (biz: CustomRole) => {
-    console.log(biz);
     setSelectedBiz(biz);
     setTriggerSound(true);
     getBusinessInfo(biz?.businessId?._id);

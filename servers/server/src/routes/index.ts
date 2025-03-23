@@ -7,9 +7,11 @@ import categoryRouter from "./categories";
 import couponAnalytics from "./coupon-analytics";
 import couponzRouter from "./couponz";
 import dishesRouter from "./dishes";
+import downloadRouter from "./download";
 import duesRouter from "./dues";
 import groupRouter from "./groups";
 import hipalzRouter from "./hipalz";
+import hotelRouter from "./hotel";
 import iconRouter from "./icon";
 import kotRouter from "./kot";
 import menuBannerRouter from "./menu-banner";
@@ -18,6 +20,7 @@ import paymentsRouter from "./payments";
 import permissionRouter from "./permission";
 import posRouter from "./pos";
 import googleReview from "./reviews";
+import scriptRouter from "./script";
 import settingsRouter from "./settings";
 import subsCriberRouter from "./subscribers";
 import surlRouter from "./surl";
@@ -65,6 +68,9 @@ export const routes = app
   .route("/npc", npcRouter)
   .route("/permission", permissionRouter)
   .route("/tax", taxRouter)
-  .route("/whatsapp_flow", whatsAppFlowRouter);
+  .route("/whatsapp_flow", whatsAppFlowRouter)
+  .route("/script", scriptRouter)
+  .route("/hotel", hotelRouter)
+  .route("/download", downloadRouter);
 
 export type AppType = typeof routes;

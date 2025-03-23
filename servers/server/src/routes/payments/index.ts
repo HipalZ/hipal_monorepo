@@ -49,6 +49,7 @@ import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
 import { z } from "zod";
+import Papa from "papaparse";
 import {
   ClientRoles,
   requireAuthorization,
@@ -56,6 +57,7 @@ import {
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { getMerchantConfig } from "../../utils/cacheHelper";
+import { posApiPaths } from "../../utils/posConfig/petPooja";
 import {
   type MerchantConfig,
   razorpayWrapper,
@@ -464,7 +466,7 @@ const paymentsRouter = new Hono()
         const { merchantId } = c.req.param();
         const uniqueOrderId = nanoid(15);
 
-        const userSession = await UserSession.findOne({
+        const tableSession = await UserSession.findOne({
           businessId,
           tableName,
         });
@@ -480,14 +482,14 @@ const paymentsRouter = new Hono()
             {
               total,
               currency,
-              billValue: userSession?.initialTotal || billValue,
+              billValue: tableSession?.initialTotal || billValue,
               businessId,
               receipt: uniqueOrderId,
               userId,
-              claimedCoins: userSession?.claimedCoins || claimedCoins,
+              claimedCoins: tableSession?.claimedCoins || claimedCoins,
               tableName,
               order_id: response.id,
-              tips: userSession?.tips || tips,
+              tips: tableSession?.tips || tips,
               couponId,
               channelId,
               cashbackAvailable,
@@ -534,7 +536,6 @@ const paymentsRouter = new Hono()
             tableName,
             claimedCoins = 0,
             tips = 0,
-            total = 0,
             couponId,
             removeCoins,
             removeTips,
@@ -674,7 +675,7 @@ const paymentsRouter = new Hono()
         } = requestData;
         const uniqueOrderId = nanoid(15);
 
-        const findTempTable = await UserSession.findOne({
+        const tableSession = await UserSession.findOne({
           tableName,
           businessId,
         });
@@ -702,10 +703,10 @@ const paymentsRouter = new Hono()
               currency,
               receipt: uniqueOrderId,
               userId,
-              claimedCoins: findTempTable?.claimedCoins || claimedCoins,
+              claimedCoins: tableSession?.claimedCoins || claimedCoins,
               tableName,
-              tips: findTempTable?.tips || tips,
-              billValue: findTempTable?.initialTotal || billValue,
+              tips: tableSession?.tips || tips,
+              billValue: tableSession?.initialTotal || billValue,
               businessId,
               order_id: uniqueOrderId,
               couponId,
@@ -719,11 +720,11 @@ const paymentsRouter = new Hono()
         );
         if (!saveOrder) return respond(c, "Order not created", true, 400, {});
         let posDiscount = 0;
-        if (Number(claimedCoins) > 0) {
+        if (Number(tableSession?.claimedCoins || claimedCoins) > 0) {
           posDiscount = await calculateDiscount(
             businessId,
             Number(billValue),
-            Number(claimedCoins),
+            Number(tableSession?.claimedCoins || claimedCoins),
           );
         }
         await PaymentAlert.create(
@@ -736,12 +737,12 @@ const paymentsRouter = new Hono()
               status: "SUCCESS",
               tableName: tableName,
               coinsApplied: !!(
-                findTempTable?.claimedCoins && findTempTable.claimedCoins > 0
+                tableSession?.claimedCoins && tableSession.claimedCoins > 0
               ),
               message: `Paid ${total}`,
               date: Date.now(),
               posDiscount: posDiscount,
-              posBillRequestId: findTempTable?.billRequestId,
+              posBillRequestId: tableSession?.billRequestId,
               mode: "OFFLINE",
             },
           ],
@@ -757,8 +758,8 @@ const paymentsRouter = new Hono()
               const pushMessage = {
                 token: obj.token, // or use 'topic' if you're sending to a topic
                 notification: {
-                  title: "Confirm Payment !!",
-                  body: `T-${tableName?.slice(-2)} requested to settle bill`,
+                  title: "Confirm Payment  !!",
+                  body: `${tableName} requested to settle bill`,
                 },
                 android: {
                   notification: {
@@ -1121,7 +1122,6 @@ const paymentsRouter = new Hono()
       const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
 
       if (!bodyResult.success) {
-        console.log("Invalid body");
         return respond(c, "Invalid body", true, 200, {});
       }
 
@@ -1131,7 +1131,7 @@ const paymentsRouter = new Hono()
       const getOrder = await Order.findOne({
         order_id: payload.payment.entity.order_id,
       });
-      const tempTable = await UserSession.findOne({
+      const tableSession = await UserSession.findOne({
         businessId: getOrder?.businessId,
         tableName: getOrder?.tableName,
       });
@@ -1155,7 +1155,7 @@ const paymentsRouter = new Hono()
                 userId: getOrder?.userId,
                 status: "FAIL",
                 tableName: getOrder?.tableName,
-                coinsApplied: tempTable?.claimedCoins || claimCoins > 0,
+                coinsApplied: tableSession?.claimedCoins || claimCoins > 0,
                 isAccepted: false,
                 date: Date.now(),
                 message: `Fail ${getOrder?.total}`,
@@ -1167,7 +1167,7 @@ const paymentsRouter = new Hono()
           );
 
           QrBill.findOneAndUpdate(
-            { requestBillId: tempTable?.billRequestId },
+            { requestBillId: tableSession?.billRequestId },
             { status: "FAILED" },
             { session },
           );
@@ -1194,7 +1194,7 @@ const paymentsRouter = new Hono()
           let posDiscount = 0;
           if (claimCoins > 0) {
             posDiscount = await calculateDiscount(
-              getOrder.businessId.toString(),
+              getOrder?.businessId.toString() || "",
               Number(getOrder?.billValue),
               claimCoins,
             );
@@ -1206,7 +1206,7 @@ const paymentsRouter = new Hono()
             if (claimCoins > 0) {
               await removeCoins(
                 claimCoins,
-                getOrder?.tableName,
+                getOrder.tableName,
                 payload.payment.entity.notes.loyaltyId || "",
                 getOrder?._id.toString() || "",
                 getOrder?.userId.toString() || "",
@@ -1215,7 +1215,7 @@ const paymentsRouter = new Hono()
             }
 
             let cashBack = await calculatedCashbackCoins(
-              getOrder?.businessId.toString() || "",
+              getOrder?.businessId.toString(),
               getOrder?.billValue || 0,
               claimCoins,
             );
@@ -1229,7 +1229,7 @@ const paymentsRouter = new Hono()
               getOrder?.userId.toString() || "",
               getOrder?._id.toString() || "",
 
-              getOrder?.tableName || "",
+              getOrder?.tableName,
               getOrder?.businessId.toString() || "",
               payload.payment.entity.notes.loyaltyId || "",
 
@@ -1260,16 +1260,16 @@ const paymentsRouter = new Hono()
                 channelId: getOrder?.channelId,
                 earnCoins: getCashBack,
                 date: Date.now(),
-                tax: tempTable?.finalTax,
-                serviceCharge: tempTable?.serviceCharge,
-                posBillRequestId: tempTable?.billRequestId,
-                posBillId: tempTable?.billInvoiceId,
-                settleType: tempTable?.settleType || "PAYMENT_GATEWAY",
-                initialSubTotal: tempTable?.initialSubTotal,
-                initialTax: tempTable?.initialTax,
-                initialTotal: tempTable?.initialTotal,
-                finalSubTotal: tempTable?.finalSubTotal,
-                discount: tempTable?.discount,
+                tax: tableSession?.finalTax,
+                serviceCharge: tableSession?.serviceCharge,
+                posBillRequestId: tableSession?.billRequestId,
+                posBillId: tableSession?.billInvoiceId,
+                settleType: tableSession?.settleType || "PAYMENT_GATEWAY",
+                initialSubTotal: tableSession?.initialSubTotal,
+                initialTax: tableSession?.initialTax,
+                initialTotal: tableSession?.initialTotal,
+                finalSubTotal: tableSession?.finalSubTotal,
+                discount: tableSession?.discount,
               },
             ],
             { session },
@@ -1755,6 +1755,14 @@ const paymentsRouter = new Hono()
 
             const paymentMode = await UpiMode.findById(settleModes[0]._id);
 
+            if (!paymentMode) {
+              return c.json({
+                message: "Payment mode not found",
+                err: true,
+                data: {},
+              });
+            }
+
             if (
               paymentMode?.name !== "complementary" &&
               paymentMode?.name !== "npc"
@@ -1806,9 +1814,9 @@ const paymentsRouter = new Hono()
 
               const isHavePos = await BusinessPosConfig.findOne({
                 businessId: order.businessId,
-              }).populate("posId");
+              });
 
-              const tempTable = await UserSession.findOne({
+              const tableSession = await UserSession.findOne({
                 businessId: order.businessId,
                 tableName: order.tableName,
               });
@@ -1870,32 +1878,32 @@ const paymentsRouter = new Hono()
                     razorpayPaymentId: nanoid(15),
                     couponId: order?.couponId,
                     channelId: order?.channelId,
-                    posBillId: tempTable?.billInvoiceId,
+                    posBillId: tableSession?.billInvoiceId,
                     tax:
                       paymentMode?.name === "npc" ||
                       paymentMode?.name === "complementary"
                         ? 0
-                        : tempTable?.finalTax,
+                        : tableSession?.finalTax,
                     serviceCgarge:
                       paymentMode?.name === "npc" ||
                       paymentMode?.name === "complementary"
                         ? 0
-                        : tempTable?.serviceCharge,
-                    posBillRequestId: tempTable?.billRequestId,
+                        : tableSession?.serviceCharge,
+                    posBillRequestId: tableSession?.billRequestId,
                     splitModes: settleModes,
                     waiterName,
                     date: Date.now(),
-                    initialSubTotal: tempTable?.initialSubTotal,
-                    initialTax: tempTable?.initialTax,
-                    initialTotal: tempTable?.initialTotal,
-                    finalSubTotal: tempTable?.finalSubTotal,
+                    initialSubTotal: tableSession?.initialSubTotal,
+                    initialTax: tableSession?.initialTax,
+                    initialTotal: tableSession?.initialTotal,
+                    finalSubTotal: tableSession?.finalSubTotal,
                   },
                 ],
                 { session },
               );
 
               if (duesUserId && paymentMode?.name === "dues") {
-                const createPaymentDues = await PendingDues.create(
+                await PendingDues.create(
                   [
                     {
                       billId: createPayment[0]._id,
@@ -1934,56 +1942,19 @@ const paymentsRouter = new Hono()
               }
 
               if (isHavePos) {
-                const res = await axios.post(
-                  "http://api.petpooja.com/V1/captainorders/success_payment/",
-                  {
-                    app_key: isHavePos?.posId?.accessKey,
-                    app_secret: isHavePos?.posId?.secretKey,
-                    access_token: isHavePos?.posId?.authToken,
-                    restID: isHavePos?.posId?.restId,
-                    bill_request_id: tempTable?.billRequestId,
-                    amount_paid: modifyTotal,
-                    pin: tempTable?.pin,
-                  },
-                );
+                const res = await axios.post(posApiPaths.settleTable, {
+                  app_key: isHavePos.accessKey,
+                  app_secret: isHavePos?.secretKey,
+                  access_token: isHavePos.authToken,
+                  restID: isHavePos?.restId,
+                  bill_request_id: tableSession?.billRequestId,
+                  amount_paid: modifyTotal,
+                  pin: tableSession?.pin,
+                });
 
                 if (res.data.success === "0") {
                   throw new Error("payment failed in pos");
                 }
-
-                const tableData = await Table.findOne({
-                  businessId: order.businessId,
-                  name: order.tableName,
-                });
-
-                await UserSession.findOneAndUpdate(
-                  {
-                    businessId: order.businessId,
-                    transferTableFrom: tableData?._id.toString(),
-                  },
-                  {
-                    $set: {
-                      transferTableFrom: "",
-                    },
-                  },
-                  {
-                    session,
-                  },
-                );
-
-                await TempTableSettle.create(
-                  [
-                    {
-                      businessId: order.businessId,
-                      tableName: order.tableName,
-                      settleBy: order.userId?.name,
-                      hiCode: tempTable?.hiCode,
-                    },
-                  ],
-                  {
-                    session,
-                  },
-                );
 
                 await KotOrder.updateMany(
                   {
@@ -2022,7 +1993,7 @@ const paymentsRouter = new Hono()
                 );
                 await QrBill.findOneAndUpdate(
                   {
-                    requestBillId: tempTable?.billRequestId,
+                    requestBillId: tableSession?.billRequestId,
                   },
                   {
                     $set: {
@@ -2314,24 +2285,7 @@ const paymentsRouter = new Hono()
         appliedFilter.length > 0
       ) {
         const modeFilter = appliedFilter.find((f) => f.key === "mode");
-        // if (modeFilter && Array.isArray(modeFilter.value)) {
-        //   const modeValues = modeFilter.value.map(v => v.toLowerCase());
-        //   const includesOnline = modeValues.includes('online');
-        //   const offlineModes = modeValues.filter(value => value !== 'online');
 
-        //   if (includesOnline && offlineModes.length > 0) {
-        //     filterConditions.push({
-        //       $or: [
-        //         { paymentMode: 'online' },
-        //         { paymentMode: { $in: offlineModes } }
-        //       ]
-        //     });
-        //   } else if (includesOnline) {
-        //     filterConditions.push({ paymentMode: 'online' });
-        //   } else if (offlineModes.length > 0) {
-        //     filterConditions.push({ paymentMode: { $in: offlineModes } });
-        //   }
-        // }
         if (modeFilter && Array.isArray(modeFilter.value)) {
           const modeValues = modeFilter.value.map((v) => v.toLowerCase());
           const includesOnline = modeValues.includes("online");
@@ -2413,6 +2367,196 @@ const paymentsRouter = new Hono()
         },
         message: "existing payment",
       });
+    },
+  )
+
+  .get(
+    "/:id/bills_csv",
+    // authTokenValidator,
+    // requireAuthorization([
+    //   ClientRoles.OWNER,
+    //   ClientRoles.HIPAL_CUSTOMER,
+    //   ClientRoles.CAPTAIN,
+    // ]),
+    zValidator("query", paramsSchema),
+    async (c) => {
+      let { appliedFilter } = c.req.query();
+      const { businessId, from, to } = c.req.query();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
+
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
+      const filterConditions = [
+        { businessId },
+        { date: { $gte: fromDate, $lte: toDate } },
+      ];
+
+      if (typeof appliedFilter === "string") {
+        try {
+          appliedFilter = JSON.parse(appliedFilter);
+        } catch (err) {
+          console.error("Failed to parse appliedFilter", err);
+          appliedFilter = [];
+        }
+      }
+
+      if (
+        appliedFilter &&
+        Array.isArray(appliedFilter) &&
+        appliedFilter.length > 0
+      ) {
+        const modeFilter = appliedFilter.find((f) => f.key === "mode");
+        if (modeFilter && Array.isArray(modeFilter.value)) {
+          const modeValues = modeFilter.value.map((v) => v.toLowerCase());
+          const includesOnline = modeValues.includes("online");
+          const offlineModes = modeValues.filter((value) => value !== "online");
+
+          const combinedModes = [
+            ...(includesOnline ? ["online"] : []),
+            ...offlineModes,
+          ];
+
+          if (combinedModes.length > 0) {
+            filterConditions.push({ paymentMode: { $in: combinedModes } });
+          }
+        }
+
+        const typeFilter = appliedFilter.find((f) => f.key === "type");
+        if (typeFilter && Array.isArray(typeFilter.value)) {
+          const typeMapping = {
+            Coinz: "COINZ",
+            Couponz: "COUPONZ",
+            "No Rewardz": "NO_REWARDZ",
+            Disscount: "DISCOUNT",
+          };
+          const types = typeFilter.value.map((v) => typeMapping[v] || v);
+          filterConditions.push({ discountType: { $in: types } });
+        }
+
+        const warningsFilter = appliedFilter.find((f) => f.key === "warnings");
+        if (
+          warningsFilter &&
+          Array.isArray(warningsFilter.value) &&
+          !warningsFilter.value.includes("All")
+        ) {
+          const warningsMapping = {
+            "Force Settle": "FORCE_SETTLE",
+            "Free Tables": "FREE_SETTLE",
+          };
+          const warnings = warningsFilter.value.map(
+            (v) => warningsMapping[v] || v,
+          );
+          filterConditions.push({ settleType: { $in: warnings } });
+        }
+      }
+
+      const queryObject = { $and: filterConditions };
+
+      const existingPayments = await Payment.find(queryObject)
+        .sort({ _id: -1 })
+        .populate({ path: "order_id" })
+        .populate({ path: "userId", select: "name phone" });
+
+      let totalSubtotal = 0;
+      let totalDiscount = 0;
+      let totalTax = 0;
+      let totalServiceCharge = 0;
+      let totalAmount = 0;
+
+      const rows = existingPayments.map((payment: any) => {
+        const {
+          _id,
+          date,
+          orderType,
+          userId,
+          tableName,
+          initialSubTotal,
+          discount,
+          discountPercentage,
+          tax,
+          serviceCharge,
+          total,
+          mode,
+          splitModes = [],
+        } = payment;
+
+        let paymentModeField = mode;
+        if (mode === "split" && Array.isArray(splitModes)) {
+          // Combine each split mode into a single string
+          const splittedInfo = splitModes
+            .map((m: any) => `${m.name}=${m.amount}`)
+            .join(", ");
+          paymentModeField = `SPLIT: ${splittedInfo}`;
+        }
+
+        totalSubtotal += initialSubTotal ?? 0;
+        totalDiscount += discount ?? 0;
+        totalTax += tax ?? 0;
+        totalServiceCharge += serviceCharge ?? 0;
+        totalAmount += total ?? 0;
+
+        return {
+          PAYMENT_ID: _id.toString(), // Uppercase headings for minimal emphasis
+          DATE: new Date(date).toLocaleString(),
+          USER_NAME: userId?.name ?? "",
+          USER_PHONE: userId?.phone ?? "",
+          TABLE_NAME: tableName || "",
+          SUBTOTAL: initialSubTotal ?? 0,
+          DISCOUNT: discount ?? 0,
+          DISCOUNT_PERCENTAGE: discountPercentage ?? 0,
+          TAX: tax ?? 0,
+          SERVICE_CHARGE: serviceCharge ?? 0,
+          TOTAL: total ?? 0,
+          PAYMENT_MODE: paymentModeField,
+        };
+      });
+      rows.push({
+        PAYMENT_ID: "TOTALS (DO NOT EDIT THIS ROW)", // This can be "-----" or something else to indicate a summary row
+        DATE: "",
+        USER_NAME: "",
+        USER_PHONE: "",
+        TABLE_NAME: "",
+        SUBTOTAL: `"=${totalSubtotal}"`,
+        DISCOUNT: `"=${totalDiscount}"`,
+        DISCOUNT_PERCENTAGE: "",
+        TAX: `"=${totalTax}"`,
+        SERVICE_CHARGE: `"=${totalServiceCharge}"`,
+        TOTAL: `"=${totalAmount}"`,
+        PAYMENT_MODE: "",
+      });
+
+      const csvString = Papa.unparse(rows, {
+        header: true,
+        quotes: true,
+        skipEmptyLines: true,
+      });
+
+      const formatDate = (timestamp: number) => {
+        const d = new Date(timestamp);
+        // Example: "2023-03-19"
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+          2,
+          "0",
+        )}-${String(d.getDate()).padStart(2, "0")}`;
+      };
+
+      const fromStr = formatDate(fromDate);
+      const toStr = formatDate(toDate);
+      const fileName = `payments_${fromStr}_to_${toStr}.csv`;
+
+      // Set response headers
+      c.header("Content-Type", "text/csv");
+      c.header("Content-Disposition", `attachment; filename="${fileName}"`);
+
+      // Return the CSV directly
+      return c.body(csvString);
     },
   )
 
@@ -3039,15 +3183,15 @@ const paymentsRouter = new Hono()
 
       if (event === "payment.captured") {
         if (getOrder) {
-          const activeTable = await UserSession.findOne({
+          const tableSession = await UserSession.findOne({
             tableName: getOrder.tableName,
             businessId: getOrder.businessId,
           });
           const alreadyTableSettle = await TempTableSettle.findOne({
             businessId: getOrder.businessId,
             tableName: getOrder.tableName,
-            hiCode: activeTable?.hiCode,
-            pin: activeTable?.pin,
+            hiCode: tableSession?.hiCode,
+            pin: tableSession?.pin,
           });
 
           if (!alreadyTableSettle) {
@@ -3056,46 +3200,29 @@ const paymentsRouter = new Hono()
               name: getOrder.tableName,
             });
 
-            await UserSession.findOneAndUpdate(
-              {
-                businessId: getOrder.businessId,
-                transferTableFrom: table?._id.toString(),
-              },
-              {
-                $set: {
-                  transferTableFrom: "",
-                },
-              },
-              {
-                session,
-              },
-            );
-
             const pos = await BusinessPosConfig.findOne({
               businessId: getOrder.businessId,
-            }).populate("posId");
+            });
 
             if (pos) {
-              const res = await axios.post(
-                "http://api.petpooja.com/V1/captainorders/success_payment/",
-                {
-                  app_key: pos?.posId.accessKey,
-                  app_secret: pos?.posId.secretKey,
-                  access_token: pos?.posId.authToken,
-                  restID: pos?.posId.restId,
-                  bill_request_id: activeTable?.billRequestId,
-                  amount_paid: getOrder.total,
-                  pin: activeTable?.pin,
-                },
-              );
+              const res = await axios.post(posApiPaths.settleTable, {
+                app_key: pos.accessKey,
+                app_secret: pos.secretKey,
+                access_token: pos.authToken,
+                restID: pos.restId,
+                bill_request_id: tableSession?.billRequestId,
+                amount_paid: getOrder.total,
+                pin: tableSession?.pin,
+              });
+
               await TempTableSettle.create(
                 [
                   {
                     businessId: getOrder.businessId,
                     tableName: getOrder.tableName,
                     settleBy: getOrder.userId?.name,
-                    hiCode: activeTable?.hiCode,
-                    pin: activeTable?.pin,
+                    hiCode: tableSession?.hiCode,
+                    pin: tableSession?.pin,
                   },
                 ],
                 {
@@ -3104,7 +3231,7 @@ const paymentsRouter = new Hono()
               );
               await QrBill.findOneAndUpdate(
                 {
-                  requestBillId: activeTable?.billRequestId,
+                  requestBillId: tableSession?.billRequestId,
                 },
                 {
                   $set: {

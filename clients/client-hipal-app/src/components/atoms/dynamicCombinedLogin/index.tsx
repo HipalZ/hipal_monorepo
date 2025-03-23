@@ -12,7 +12,7 @@ const SignUpBonus = dynamic(() => import('@/components/organisms/explore/signupb
 
 const MemoDynamicCombinedLogin = () => {
     const { goNext } = useGoNext();
-    const { setCheckLogin, checkLogin, openBlastModal, coinz, setOpenBlastModal } = usePaymentStore();
+    const { setCheckLogin, checkLogin, openBlastModal, setOpenBlastModal } = usePaymentStore();
     const { setSubscribeModal } = useLogin();
     const handleNext = useCallback(() => {
         setOpenBlastModal(false);
