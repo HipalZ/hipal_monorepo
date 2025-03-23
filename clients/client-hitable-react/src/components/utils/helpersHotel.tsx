@@ -3,7 +3,7 @@ import { MdOutlineHistory, MdOutlineNotificationsActive } from "react-icons/md";
 import { NavItemsHotelEnum, type NavItemHotelTypes } from "../types/hotelData";
 import { LuHotel } from "react-icons/lu";
 import { useCallback } from "react";
-import { AlertTriangle, CheckCheck, CheckCircle, Clock, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCheck, CheckCircle, Clock, ShieldAlert, XCircle } from "lucide-react";
 import { format } from "date-fns"
 
 export function hotelNavItems(): Array<{
@@ -13,6 +13,7 @@ export function hotelNavItems(): Array<{
     const navItems = [
         { type: NavItemsHotelEnum.Rooms, icon: LuHotel },
         { type: NavItemsHotelEnum.Alerts, icon: MdOutlineNotificationsActive },
+        { type: NavItemsHotelEnum.Escalation, icon: ShieldAlert as IconType },
         { type: NavItemsHotelEnum.History, icon: MdOutlineHistory },
     ];
     return navItems;
@@ -53,14 +54,14 @@ export const useAlertsColors = () => {
 
     // border color
     const borderColor = useCallback((progress: string) => {
-        const a:Record<string,string>= {
+        const a: Record<string, string> = {
             CREATED: "#10b981",
             ACCEPTED: "#1E88E5",
             REJECTED: "#ef4444",
             DELIVERED: "#3b82f6",
             WARNING: "#FFA500",
-            ESCALATION:"#FEE12B",
-            NOT_DELIVERED:"#FF0000"
+            ESCALATION: "#FEE12B",
+            NOT_DELIVERED: "#FF0000"
         }
 
         return a[progress] || "#d1d5db"
@@ -131,7 +132,7 @@ export const useAlertsColors = () => {
     return { statusOptions, getStatusColor, getStatusIcon, borderColor, getStatusStyles, getSortLabel }
 }
 
-export const useFormatTimes = ()=>{
+export const useFormatTimes = () => {
     const formatTimestamp = (timestamp: number) => {
         return format(new Date(timestamp), "MMM d, h:mm a")
     }
@@ -152,18 +153,18 @@ export enum ActionType {
     Delivered = "Delivered",
     ESCALATION = "Escalation",
     WARNING = "WARNING",
-  }
-  
-  export const actionOptions = [
+}
+
+export const actionOptions = [
     { id: "review", text: ActionType.ReviewAndThanks },
-  ];
-  
-  export const reviewOptions = [
+];
+
+export const reviewOptions = [
     { id: "bad", text: "😞", value: 1 },
     { id: "good", text: "😊", value: 3 },
     { id: "great", text: "😍", value: 5 },
-  ]
-  
-  export const formatHotelTime = (timestamp: number) => {
+]
+
+export const formatHotelTime = (timestamp: number) => {
     return format(new Date(timestamp), "h:mm a");
-  };
+};

@@ -15,7 +15,7 @@ import { useAlertsColors } from "../utils/helpersHotel"
 import { useCallback } from "react";
 import toast from "react-hot-toast";
 
-interface AlertCardProps {
+export interface AlertCardProps {
   alert: Alert
 }
 
@@ -53,7 +53,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
   return (
     <Card
-      className={`${alert?.alertProgress ==="NOT_DELIVERED" ? "animation-blink" : ""} border border-l-4 overflow-hidden hover:shadow-md transition-all duration-200`}
+      className={`${alert?.alertProgress === "NOT_DELIVERED" ? "animation-blink" : ""} border border-l-4 overflow-hidden hover:shadow-md transition-all duration-200`}
       style={{
         borderLeftColor: borderColor(alert?.alertProgress),
       }}

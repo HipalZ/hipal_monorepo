@@ -1,9 +1,10 @@
-export type NavItemHotelTypes = "Alerts" | "History" | "Sales" | "Rooms";
+export type NavItemHotelTypes = "Alerts" | "History" | "Sales" | "Rooms" | "Escalation";
 export enum NavItemsHotelEnum {
     Alerts = "Alerts",
     History = "History",
     Sales = "Sales",
     Rooms = "Rooms",
+    Escalation = "Escalation",
 }
 
 export interface guestData {
