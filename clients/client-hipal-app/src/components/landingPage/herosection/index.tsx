@@ -6,6 +6,7 @@ import menu from "@/assets/topsection/menu.svg";
 import Pie from "@/assets/topsection/pie.svg";
 import Services from "@/assets/topsection/set.svg";
 import Image from "next/image";
+import Logo from "@/assets/topsection/logo.svg";
 
 function HeroSection() {
   useEffect(() => {
@@ -39,7 +40,15 @@ function HeroSection() {
         <Image width={900} src={Lines} alt="" />
       </div>
       <center>
-        <h1 className="title">HipalZ</h1>
+        <h1 className="inline-flex title">
+          <Image
+            src={Logo}
+            alt="Logo"
+            className="mr-4"
+            sizes="h-full w-full"
+          />
+          HipalZ
+        </h1>
         <h3 className="!mt-8 title_description">
           Everything your restaurant needz to create a great experience with
           your customers

@@ -16,28 +16,19 @@ export default function Home() {
     router.push("/biz");
   };
 
+  const handleRedirection = () => {
+    const message = encodeURIComponent(
+      "Hi, I am interested to know about HipalZ. Can you provide me more details?",
+    );
+    // WhatsApp URL for a specific number
+    const whatsappUrl = `https://wa.me/+917702605494?text=${message}`;
+
+    window.open(whatsappUrl, "_blank");
+  }
+
   return (
-    <section className="bg-black">
-      <center
-        onKeyDown={goToAllBusiness}
-        onClick={goToAllBusiness}
-      >
-        <Image
-          className="nav_bar_logo_mobile show_mobile"
-          width={30}
-          height={30}
-          src={Logo}
-          alt="Logo"
-        />
-      </center>
-      <Image
-        className="nav_bar hide_mobile"
-        width={60}
-        height={60}
-        src={Logo}
-        alt="Logo"
-      />
-      <button type="button" className="nav_btn hide_mobile">
+    <section className="bg-black pt-16">
+      <button onClick={handleRedirection} type="button" className="nav_btn hide_mobile">
         Contact us
       </button>
       <section style={{ position: "relative" }}>
