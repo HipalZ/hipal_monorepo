@@ -545,6 +545,10 @@ const roomRouter = new Hono()
         { new: true, session },
       );
 
+      const userData = await User.findById(updatedRoom?.userIds)
+        .select("phone name")
+        .lean();
+
       if (!updatedRoom) {
         throw new Error("Error checking out");
       }
@@ -556,6 +560,55 @@ const roomRouter = new Hono()
 
       if (!removeSession) {
         throw new Error("Error removing room session");
+      }
+
+      const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+        businessId: updatedRoom.businessId,
+      }).populate("businessId");
+
+      if (whatsAppConfig) {
+        const res = await axios.post(
+          `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+          {
+            messaging_product: "whatsapp",
+            to: userData?.phone?.toString(),
+            type: "template",
+            template: {
+              name: "checkout_template",
+              language: { code: "en" },
+              components: [
+                {
+                  type: "body",
+                  parameters: [
+                    {
+                      type: "text",
+                      text: userData?.name,
+                    },
+
+                    {
+                      type: "text",
+                      text: whatsAppConfig?.businessId?.name,
+                    },
+
+                    {
+                      type: "text",
+                      text: "https:google.com",
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${whatsAppConfig.token}`,
+            },
+          },
+        );
+
+        if (res.status !== 200) {
+          throw new Error("Error sending message");
+        }
       }
 
       const registrationToken = await DeviceToken.find({
