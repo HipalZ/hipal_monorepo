@@ -2025,6 +2025,7 @@ const whatsappRouter = new Hono()
           let longUrl = "";
           let shortUrlType = "";
           let urlObj;
+          let updateLongUrl;
 
           if (userText) {
             if (userText.trim().toLowerCase() === "stop") {
@@ -2112,18 +2113,9 @@ const whatsappRouter = new Hono()
             longUrl = `${findLongUrl?.shortUrl}?q=wa`;
             shortUrlType = findLongUrl?.shortUrlType || "";
             urlObj = findLongUrl;
-            const existingUrl = new URL(findLongUrl?.longUrl || "");
-            if (!existingUrl.searchParams.has("id")) {
-              existingUrl.searchParams.append("id", userObj?._id.toString());
-              await UrlModel.findOneAndUpdate(
-                {
-                  urlCode: tableCode,
-                },
-                {
-                  longUrl: existingUrl.toString(),
-                },
-              );
-            }
+            updateLongUrl = `${
+              findLongUrl?.longUrl
+            }&&id=${userObj?._id.toString()}`;
           }
 
           if (phon_no_id && from && urlObj) {
@@ -2242,6 +2234,8 @@ const whatsappRouter = new Hono()
                     },
                   },
                 );
+
+                // console.log("res", res.data);
               }
 
               await axios({
@@ -2253,7 +2247,7 @@ const whatsappRouter = new Hono()
                   text: {
                     body: `**🏨 Welcome to ${bName?.name}! 🏨**
               We are delighted to provide you with a **comfortable and luxurious stay**. 🛏️✨
-              🔑 **Explore service In Room **: ${longUrl}
+              🔑 **Explore service In Room **: ${updateLongUrl}
               🏡 **Discover our beautifully designed rooms and premium amenities.**
               Enjoy **a seamless check-in experience** and **relax in comfort** with us. 🌟😊`,
                   },
