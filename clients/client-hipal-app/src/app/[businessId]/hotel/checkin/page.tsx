@@ -4,6 +4,9 @@ import ServiceCategoriesSection from "@/components/hotels/room/ServiceCategories
 import type { BusinessDetails } from "@/components/types/businessData"
 import dynamic from "next/dynamic"
 
+export const dynamics = "force-dynamic"
+export const fetchCache = "force-no-store"
+
 export async function generateMetadata({
   params,
   searchParams,
