@@ -15,7 +15,7 @@ module.exports = {
       },
       colors: {
         primary: {
-          DEFAULT: "var(--p)", 
+          DEFAULT: "var(--p)",
           foreground: "hsl(var(--pf))",
         },
         "h-primary": {
@@ -43,7 +43,7 @@ module.exports = {
           DEFAULT: "var(--h-n)",
           content: "var(--h-nc)",
         },
-        "base-100": "hsl(var(--b1))",
+        "base-100": "var(--b1)",
         "primary-content": "var(--pc)",
         secondary: {
           DEFAULT: "var(--s)_",

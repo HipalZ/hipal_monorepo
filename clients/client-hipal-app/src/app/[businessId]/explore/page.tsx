@@ -194,11 +194,11 @@ export default async function Explore({
               </section>
             )}
 
-          {data?.uniquelyDishes && data?.uniquelyDishes.length > 0 ? (
+          {/* {data?.uniquelyDishes && data?.uniquelyDishes.length > 0 ? (
             <div className="mt-8 overflow-auto">
               <UniquelyDishes uniquelyDishes={data?.uniquelyDishes} />
             </div>
-          ) : null}
+          ) : null} */}
 
           <Footer
             themes={data?.settings || defaultThemes}
