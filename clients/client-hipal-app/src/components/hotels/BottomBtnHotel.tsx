@@ -3,9 +3,11 @@
 import { BookmarkPlus } from "lucide-react"
 import CommonBottomButton from "../atoms/bottomButton"
 import { useParams, useRouter } from "next/navigation"
-import { useCallback } from "react"
+import { useCallback, useEffect } from "react"
+import type { IThemes } from "../types/businessData"
+import { updateTheme } from "../utils/themes"
 
-export function BottomBtnHotel() {
+export function BottomBtnHotel({ themeData }: { themeData: IThemes }) {
     const router = useRouter()
     const params = useParams()
     const customLink = params?.businessId || ""
@@ -16,6 +18,10 @@ export function BottomBtnHotel() {
         }
     }, [customLink, router])
 
+    useEffect(() => {
+        updateTheme(themeData);
+    }, [themeData]);
+
     return (
         <div>
             <CommonBottomButton
@@ -24,7 +30,7 @@ export function BottomBtnHotel() {
                 buttons={[
                     {
                         text: "Book Now",
-                        className: "w-full !text-white !bg-[#DC4C35]",
+                        className: "w-full",
                         icon: <BookmarkPlus />,
                         onClick: navigateToRooms,
                     },
@@ -55,7 +61,7 @@ export const BottomBtnRoom = () => {
                     },
                     {
                         text: "Book Now",
-                        className: "w-full rounded-md !text-white !bg-[#DC4C35]",
+                        className: "w-full rounded-md",
                         icon: <BookmarkPlus />,
                         onClick: goBack,
                     },

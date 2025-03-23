@@ -66,8 +66,7 @@ body {
 /* Or create a specific class to use the font */
 
 :root {
-
-	--h-p: #000000;  
+  --h-p: #000000;  
   --h-pf: #ffffff;
   --h-s: #7c3aed;  
   --h-sf: #ffffff;

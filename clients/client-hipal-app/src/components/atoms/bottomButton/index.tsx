@@ -191,7 +191,7 @@ const MemoCommonBottomButton = (props: MemoBottomButtonProps) => {
                                 style={{
                                     backgroundColor: button.disable
                                         ? "#cccccc"
-                                        : button.color ?? "#000000",
+                                        : button.color ?? "var(--p)",
                                     color: button.textColor ?? "#ffffff",
                                 }}
                                 onClick={!button.disable ? button.onClick : undefined}

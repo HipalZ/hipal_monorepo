@@ -2,7 +2,7 @@ import type { BusinessDetails, IBanner, IBusinessData } from "@/components/types
 import { apiRpc } from "@hi/common"
 import type { ILoyaltySetting } from "@/components/store/useLoyaltyData"
 import { getBusinessData } from "../commonApis"
-import type { IRoomProps, Room } from "@/components/types/hotelTypes"
+import { updateTheme } from "@/components/utils/themes"
 
 export const getInfoForHotel = async (businessIdOrCustomLink: string): Promise<IBusinessData> => {
   try {
@@ -51,5 +51,16 @@ export const getRoomTypes = async (businessIdOrCustomLink: string) => {
     console.error("Error in getRoomTypes:", err)
     throw err
   }
+}
+
+export const getThemeSettings = async (businessIdOrCustomLink: string) => {
+  const settingsResponse = await apiRpc.businesses.themes[":businessId"].$get({
+    param: {
+      businessId: businessIdOrCustomLink,
+    },
+  });
+  const settings = await settingsResponse.json();
+  const theme = settings?.data?.theme || {};
+  return theme;
 }
 

@@ -83,7 +83,7 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                                 <section className="flex flex-row justify-around gap-2 pb-12 -ml-2">
                                     <Button
                                         onClick={callTheOwner}
-                                        className="px-3 py-4 transition-colors rounded-full text-white bg-[#DC4C35]"
+                                        className="px-3 py-4 text-white transition-colors rounded-full bg-primary"
                                         type="button"
                                         aria-label="Call"
                                     >
@@ -92,7 +92,7 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                                     </Button>
                                     <Button
                                         onClick={whatsappOwner}
-                                        className="px-3 py-4 transition-colors rounded-full text-white bg-[#DC4C35]"
+                                        className="px-3 py-4 text-white transition-colors rounded-full bg-secondary"
                                         type="button"
                                         aria-label="WhatsApp"
                                     >
@@ -100,7 +100,7 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                                     </Button>
                                     <Button
                                         onClick={goToLocation}
-                                        className="px-3 py-4 transition-colors rounded-full text-white bg-[#DC4C35]"
+                                        className="px-3 py-4 text-white transition-colors rounded-full bg-secondary"
                                         type="button"
                                         aria-label="Location"
                                     >
@@ -118,7 +118,7 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                     <section className="flex flex-row justify-around pt-12 pb-2">
                         <Button
                             onClick={callTheOwner}
-                            className="p-4 transition-colors rounded-full text-white bg-[#DC4C35]"
+                            className="p-4 text-white transition-colors rounded-full bg-primary"
                             type="button"
                             aria-label="Call"
                         >
@@ -127,7 +127,7 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                         </Button>
                         <Button
                             onClick={whatsappOwner}
-                            className="p-4 transition-colors rounded-full text-white bg-[#DC4C35]"
+                            className="p-4 text-white transition-colors rounded-full bg-primary"
                             type="button"
                             aria-label="WhatsApp"
                         >
@@ -135,7 +135,7 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                         </Button>
                         <Button
                             onClick={goToLocation}
-                            className="p-4 transition-colors rounded-full text-white bg-[#DC4C35]"
+                            className="p-4 text-white transition-colors rounded-full bg-primary"
                             type="button"
                             aria-label="Location"
                         >

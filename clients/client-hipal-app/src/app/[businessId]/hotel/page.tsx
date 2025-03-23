@@ -1,7 +1,7 @@
 import dynamic from "next/dynamic"
 import type { BusinessDetails, IBusinessData } from "@/components/types/businessData"
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader"
-import { getInfoForHotel } from "@/apis/hotel"
+import { getInfoForHotel, getThemeSettings } from "@/apis/hotel"
 import { getBusinessData } from "@/apis/commonApis"
 import { NavBarHotel } from "@/components/hotels/NavBarHotel"
 // import {BottomBtnHotel} from "@/components/hotels/BottomBtnHotel"
@@ -107,6 +107,8 @@ const Hotel = async ({
 
   const data = await getHotelData(params.businessId) as IBusinessData
   const { business, banners } = data
+  const themeData = await getThemeSettings(business?.businessId)
+  // console.log("themeData", themeData)
 
   return (
     <HotelBackgroundContainer >
@@ -121,7 +123,7 @@ const Hotel = async ({
 
         <BannerSectionHotels banners={banners} />
 
-        <BottomBtnHotel />
+        <BottomBtnHotel themeData={themeData} />
 
       </ViewPortContainer>
     </HotelBackgroundContainer>
