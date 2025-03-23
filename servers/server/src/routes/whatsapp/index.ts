@@ -2234,8 +2234,6 @@ const whatsappRouter = new Hono()
                     },
                   },
                 );
-
-                // console.log("res", res.data);
               }
 
               await axios({
