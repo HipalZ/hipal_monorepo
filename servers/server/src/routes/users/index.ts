@@ -1592,7 +1592,7 @@ const usersRouter = new Hono()
     async (c) => {
       const { userId } = c.req.param();
 
-      const existingUser = await User.findById(userId);
+      const existingUser = await User.findById(userId).lean();
 
       if (!existingUser) {
         return respond(c, "User not found", true, 404, {});

@@ -6,15 +6,14 @@ import Welcome from "@/assets/hotel/HotelWelcome.json"
 import { useCheckRoomStatus } from "@/components/hooks/useAuthForHotel"
 import BottomPopUp from "@/components/atoms/bottomPopUp"
 import CommonBottomButton from "@/components/atoms/bottomButton"
-import { KeyRound, MessageSquare, AlertCircle, Utensils, Bell, Wifi, Coffee } from "lucide-react";
 import { useMutation } from "@tanstack/react-query"
 import { apiRpc } from "@hi/common"
 import LoadingSpinnerCircle from "@/components/atoms/loader"
 import { toast } from "react-toastify"
-import Image from "next/image"
-import { Card, CardContent } from "@/components/ui/card"
+
 import { useUserToken } from "@hi/common/src/useUserToken";
-import { motion } from "framer-motion"
+import CheckInPopup from "./CheckInPopup";
+import AutoLogin from "./AutoLogin";
 
 export interface HotelWelcomeCardProps {
     hotelName: string
@@ -23,6 +22,7 @@ export interface HotelWelcomeCardProps {
     className?: string
     businessId?: string
     customLink?: string
+    userID?: string
 }
 
 export default function HotelWelcomeCard({
@@ -32,6 +32,7 @@ export default function HotelWelcomeCard({
     className,
     room,
     businessId,
+    userID,
 }: HotelWelcomeCardProps) {
     const [showPopup, setShowPopup] = useState(false)
     const [verificationCode, setVerificationCode] = useState("")
@@ -41,7 +42,7 @@ export default function HotelWelcomeCard({
     const { checkRoom } = useCheckRoomStatus(businessId || "", room || "", customLink)
 
     useEffect(() => {
-        if (accessToken !=="" && (checkRoom?.status === 400 || checkRoom?.status === 401 ||
+        if (accessToken !== "" && (checkRoom?.status === 400 || checkRoom?.status === 401 ||
             checkRoom?.status === 403)) {
             setShowPopup(true)
         }
@@ -110,82 +111,24 @@ export default function HotelWelcomeCard({
                     </p>
                 </div>
             </div>
+            {
+                accessToken === "" && userID && (
+                  <AutoLogin userID={userID} />
+                )
+            }
 
             {showPopup && (
                 <BottomPopUp hide show={showPopup} onClose={handleClosePopup}>
                     {
                         isPending ? <LoadingSpinnerCircle /> :
-                            <Card className="mx-auto">
-                                <CardContent className="p-0">
-                                    {/* Logo and Welcome Section */}
-                                    <div className="bg-gradient-to-b from-blue-50 to-white pt-6 pb-4 px-6 rounded-t-lg">
-                                        <div className="flex justify-center mb-4">
-                                            <Image src={logo || ""} alt={`${hotelName} Logo`} width={120} height={120} className="object-contain" />
-                                        </div>
+                            <CheckInPopup
+                                codeError={codeError}
+                                handleCodeChange={handleCodeChange}
+                                hotelName={hotelName}
+                                logo={logo}
+                                verificationCode={verificationCode}
+                            />
 
-                                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                                            <h2 className="text-2xl font-bold text-center text-blue-800 mb-2">Welcome to {hotelName}</h2>
-                                            <p className="text-center text-blue-600 mb-4">We're delighted to have you as our guest</p>
-                                        </motion.div>
-                                    </div>
-
-                                    {/* Services Preview */}
-                                    <div className="px-6 py-4 bg-white border-y border-gray-100">
-                                        <h3 className="text-lg font-semibold text-gray-800 mb-3">Your stay includes:</h3>
-
-                                        <div className="grid grid-cols-2 gap-3 mb-4">
-                                            <div className="flex items-center gap-2 text-gray-700">
-                                                <Wifi className="w-4 h-4 text-blue-500" />
-                                                <span className="text-sm">High-Speed WiFi</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-gray-700">
-                                                <Utensils className="w-4 h-4 text-blue-500" />
-                                                <span className="text-sm">Room Service</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-gray-700">
-                                                <Bell className="w-4 h-4 text-blue-500" />
-                                                <span className="text-sm">24/7 Assistance</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-gray-700">
-                                                <Coffee className="w-4 h-4 text-blue-500" />
-                                                <span className="text-sm">Breakfast</span>
-                                            </div>
-                                        </div>
-
-                                        <p className="text-sm italic text-center">
-                                            Verify your room to unlock all services and amenities
-                                        </p>
-                                    </div>
-
-                                    {/* Verification Section */}
-                                    <div className="p-6">
-                                        <div className="flex items-center justify-center gap-2 mb-6 text-sm text-gray-500 bg-gray-50 p-3 rounded-lg">
-                                            <MessageSquare className="w-4 h-4 flex-shrink-0" />
-                                            <p>The code was sent to you via WhatsApp. If you haven't received it, please contact the reception.</p>
-                                        </div>
-
-                                        <div className="mb-6">
-                                            <div className="relative">
-                                                <KeyRound className="absolute text-gray-400 transform -translate-y-1/2 left-4 top-1/2" />
-                                                <input
-                                                    type="text"
-                                                    value={verificationCode}
-                                                    onChange={handleCodeChange}
-                                                    placeholder="Enter 4-digit code"
-                                                    className="w-full p-3 pl-12 text-xl text-black font-bold tracking-widest text-center border-2 border-gray-300 rounded-md focus:border-blue-500 focus:outline-none"
-                                                    maxLength={4}
-                                                />
-                                            </div>
-                                            {codeError && (
-                                                <p className="flex items-center justify-center gap-1 mt-2 text-sm text-red-500">
-                                                    <AlertCircle className="w-4 h-4" />
-                                                    {codeError}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
                     }
                     <CommonBottomButton
                         fixed={true}

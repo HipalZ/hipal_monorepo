@@ -92,13 +92,14 @@ const page = async ({
 }) => {
   const businessData = (await getBusinessData(params.businessId)) as BusinessDetails
   const room = typeof searchParams.room === "string" ? searchParams.room : "hipalz"
+ const userId = typeof searchParams.id === "string" ? searchParams.id : ""
   return (
     <HotelBackgroundContainer overlayOpacity={50}>
       <ViewPortContainer className="relative mx-auto max-w-[30rem] pb-[10rem]">
         <NavBarHotel text={room || "Room Number"} centerText showBackButton={false} />
 
         <ResponsiveImage imageUrl={businessData.endBannerUrl || ""} alt="Room Top Section" />
-
+      
         <section className="p-6">
           <RoomCard roomNumber={room} />
         </section>
@@ -109,6 +110,7 @@ const page = async ({
           room={room}
           businessId={businessData.businessId}
           customLink={params.businessId}
+          userID={userId || ""}
         />
 
         <ChatHotel
