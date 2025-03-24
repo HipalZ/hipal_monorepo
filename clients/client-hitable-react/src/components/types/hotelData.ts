@@ -1,3 +1,5 @@
+import type { FOOD_TYPES } from "../atoms/dishType";
+
 export type NavItemHotelTypes = "Alerts" | "History" | "Sales" | "Rooms" | "Escalation";
 export enum NavItemsHotelEnum {
     Alerts = "Alerts",
@@ -110,7 +112,28 @@ export interface RoomChatReply {
   complainIds: any[];
 }
 
+export interface Cart {
+  id: string
+  portion: string | null
+  extras: any[]
+  quantity: number
+  dish: {
+    types: FOOD_TYPES[];
+    _id: string
+    name: string
+    categoryIds: string[]
+    price: number
+    visibility: boolean
+    availability: true
+    dishTypes: string[]
+    images: string[]
+    portions: any[]
+    description: string
+  }
+}
+
 export interface RoomChat {
+  cart: Cart[];
   _id: string;
   userId: User;
   roomId: string;

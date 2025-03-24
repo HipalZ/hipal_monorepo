@@ -2,9 +2,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ShoppingCart } from "lucide-react";
 import { actionOptions, ActionType, formatHotelTime, reviewOptions } from "../utils/helpersHotel";
-import type { ChatHeaderProps, ChatMessageHotelProps, ChatReplyMessageProps, RoomChatReply, Service } from "../types/hotelData";
+import type { Cart, ChatHeaderProps, ChatMessageHotelProps, ChatReplyMessageProps, RoomChatReply, Service } from "../types/hotelData";
+import FoodType from "../atoms/dishType";
 
 export const ChatHeader = ({ hotelName, logo, room, onClose }: ChatHeaderProps) => (
     <section className="flex items-center p-4 border-b bg-white text-black fixed w-[30rem] top-16 z-10 shadow-sm">
@@ -60,6 +61,9 @@ export const ChatMessageHotel = ({ chat, userResponses, handleActionClick, openR
                 />
             ))}
         </article>
+        {chat?.cart?.length > 0 ? <article>
+            <ChatCartComponent cart={chat?.cart} />
+        </article> : null}
     </section>
 );
 
@@ -103,3 +107,73 @@ const ChatReplyMessage = ({ reply, userResponses, handleActionClick, openReview,
         </section>
     </section>
 )
+
+const ChatCartComponent = ({ cart }:{cart:Cart[]}) => {
+    const totalPrice = cart.reduce((sum, item) => sum + item.dish.price * item.quantity, 0)
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm"
+        >
+            {/* Header */}
+            <div
+                className="bg-blue-500 text-white px-4 py-3 flex items-center gap-2"
+            >
+                <ShoppingCart className="h-4 w-4" />
+                <span className="font-medium">Order Details</span>
+            </div>
+
+            {/* Cart Items */}
+            <div className="px-4 py-2">
+                {cart?.map((item) => (
+                    <div key={item?.id} className="py-2 border-b last:border-b-0 border-gray-100">
+                        <div className="flex justify-between items-start mb-1">
+                            <div className="flex-1">
+                                <div className="font-medium flex items-center gap-2">
+                                    {item?.dish?.name}
+                                    <FoodType types={item?.dish?.types} />
+                                </div>
+                                {item?.dish?.description && (
+                                    <div className="text-xs text-gray-500">
+                                        {item?.dish?.description}
+                                    </div>
+                                )}
+                                {item?.portion && (
+                                    <div className={"text-xs text-gray-500"}>
+                                        Portion: {item?.portion}
+                                    </div>
+                                )}
+                                {item?.extras && item?.extras.length > 0 && (
+                                    <div className={"text-xs mt-1 text-gray-500"}>
+                                        Extras: {item?.extras.join(", ")}
+                                    </div>
+                                )}
+                            </div>
+                            <div className={"text-right text-gray-900"}>
+                                ₹{(item?.dish?.price * item?.quantity)}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-1">
+                            <div className="flex items-center">
+                                <span className={"text-xs text-gray-500"}>
+                                    ₹{(item?.dish?.price)} × {item?.quantity}
+                                </span>
+                            </div>
+                            <span className="text-sm font-medium">Qty: {item?.quantity}</span>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Footer with Total */}
+            <div className={"px-4 py-3 bg-blue-500 text-white"}>
+                <div className="flex justify-between items-center">
+                    <span className="font-medium">Total</span>
+                    <span>₹{(totalPrice)}</span>
+                </div>
+            </div>
+        </motion.div>
+    )
+}

@@ -1,3 +1,4 @@
+import type { FOOD_TYPES } from "../atoms/foodType";
 import type { BusinessDetails } from "./businessData";
 
 export interface User {
@@ -57,7 +58,28 @@ interface Alert {
   serviceIds: Service[];
 }
 
+export interface Cart {
+  id: string
+  portion: string | null
+  extras: any[]
+  quantity: number
+  dish: {
+    types: FOOD_TYPES[];
+    _id: string
+    name: string
+    categoryIds: string[]
+    price: number
+    visibility: boolean
+    availability: true
+    dishTypes: string[]
+    images: string[]
+    portions: any[]
+    description: string
+  }
+}
+
 export interface RoomChat {
+  cart: any;
   _id: string;
   userId: User;
   roomId: string;
