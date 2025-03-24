@@ -48,7 +48,7 @@ function getButtonInnerContent(button: ButtonConfig) {
         content = <LoadingSpinnerCircle />;
     } else {
         content = (
-            <div className="flex items-center justify-center gap-2 truncate">
+            <div className="flex items-center justify-center gap-2 truncate w-full">
                 {Icon && <h3 className="inline-flex items-center">{Icon}</h3>}
                 <h3 className="truncate">{text}</h3>
             </div>
@@ -178,7 +178,7 @@ const MemoCommonBottomButton = (props: MemoBottomButtonProps) => {
                             <motion.button
                                 key={button.text}
                                 className={cn(
-                                    "rounded-full text-center py-3 transition-all duration-300 relative overflow-hidden",
+                                    "w-full px-4 rounded-full text-center py-3 transition-all duration-300 relative overflow-hidden",
                                     button.className,
                                     button?.isLoading ? "pointer-events-none" : "",
                                     {

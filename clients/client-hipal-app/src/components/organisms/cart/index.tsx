@@ -327,7 +327,6 @@ const Cart = () => {
               text: "Share Cart",
               onClick: placeOrder,
               type: "button" as const,
-              highlight: true,
             },
           ]
           : [
