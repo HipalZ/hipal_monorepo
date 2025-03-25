@@ -99,13 +99,15 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
           )}
         </div>
         {/* Logo */}
-        <div className="absolute z-20 aspect-square top-4 left-4">
+        <div className="absolute z-20 rounded-full aspect-square top-4 left-4">
           <ShimmerImage
             src={data.business?.logoUrl || img.src}
             alt="Logo"
             width={64}
             height={64}
             className="object-cover rounded-full aspect-square"
+            hide
+
           />
         </div>
 

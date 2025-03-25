@@ -49,7 +49,7 @@ const MemoShimmerImage: FC<ShimmerImageProps> = ({
   return (
     <div className={cn(
       !hide ? "relative" : "",
-      isLoading ? "overflow-hidden" : "",
+      "overflow-hidden",
       className
     )}>
       {isLoading && (

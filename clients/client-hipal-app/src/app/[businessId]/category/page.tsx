@@ -7,9 +7,9 @@ import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import type { BusinessDetails } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 
-// export const dynamic = "force-dynamic";
-// export const fetchCache = "force-no-store";
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+// export const revalidate = 300;
 
 const CategorySkeleton = dynamics(
   () => import("@/components/atoms/progressBar/categoryLoader"),

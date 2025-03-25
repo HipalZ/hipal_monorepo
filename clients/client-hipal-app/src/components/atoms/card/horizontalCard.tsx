@@ -17,6 +17,7 @@ import CommonBottomButton from "../bottomButton";
 import { useCart } from "@/components/store/useCart";
 import MemoReadMore from "../readMore";
 import useTableData from "@/components/store/useTableData";
+import { cn } from "@/lib/utils";
 
 const MemoHorizontalCard = ({
   dishData,
@@ -77,7 +78,7 @@ const MemoHorizontalCard = ({
   ${dishData.availability ? "mx-3" : "opacity-80 px-4"}
 `}
     >
-      <div className="flex flex-row items-center py-4 prose">
+      <div className="flex flex-row items-center py-4 ">
         <div className="flex flex-col py-1 mr-auto space-y-1">
           <div className="flex space-x-2 ">
             {dishData?.dishTypes && outletInfo?.outLetType !== "OTHER" && (
@@ -126,17 +127,16 @@ const MemoHorizontalCard = ({
           <div>
             {dishData?.images?.[0] ? (
               <div
-                className="relative w-[6rem] h-[6rem] overflow-hidden "
+                className="relative w-[8rem] h-[8rem] "
                 onClick={() => openModal(dishData)}
               >
                 <ShimmerImage
-                  src={dishData?.images[0]}
+                  src={dishData?.images?.[0]}
                   alt="dish"
                   quality={95}
-                  width={96}
-                  height={96}
-                  className={`object-cover on_active_bounce overflow-hidden rounded-2xl m-0 ${dishData.availability ? "" : "grayscale"
-                    }`}
+                  width={128}
+                  height={128}
+                  className={cn("object-cover w-full h-full rounded-lg", !dishData.availability && "grayscale")}
                 />
                 {!dishData.availability && (
                   <>
