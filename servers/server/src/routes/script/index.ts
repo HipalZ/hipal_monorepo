@@ -7,7 +7,6 @@ import {
   HotelServiceCategory,
   HotelStaffRole,
   Menu,
-  OutLetInfo,
   Pos,
   Zone,
 } from "@hi/db-models";
@@ -371,15 +370,6 @@ const scriptRouter = new Hono()
         });
 
         await menu.save();
-        await OutLetInfo.findOneAndUpdate(
-          { businessId: businessData._id },
-          {
-            $set: {
-              menuId: menu._id,
-            },
-          },
-          { new: true },
-        );
 
         await Dish.updateMany(
           { businessId: businessData._id },
