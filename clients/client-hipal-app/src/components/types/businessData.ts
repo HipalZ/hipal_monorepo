@@ -132,6 +132,8 @@ export interface IOutlet {
   _id: string;
   businessId: string;
   __v: number;
+  email: string;
+  registeredName: string;
   address: string;
   avgRating: number;
   amenities: string[];

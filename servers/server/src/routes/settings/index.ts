@@ -1,5 +1,5 @@
 // books.ts
-import { Banner, BusinessSettings } from "@hi/db-models";
+import { Banner, BusinessSettings, OutLetInfo } from "@hi/db-models";
 import {
   BusinessSettingsSchema,
   bannerSchema,
@@ -145,6 +145,14 @@ const settingsRouter = new Hono()
         if (!updateSetting) {
           return respond(c, "Error in updating setting", true, 400, {});
         }
+
+        await OutLetInfo.findOneAndUpdate(
+          { businessId: updateSetting.businessId },
+          {
+            registeredName: requestData.registerName,
+          },
+          { new: true },
+        );
 
         if (
           requestData.razorpayKeyId &&

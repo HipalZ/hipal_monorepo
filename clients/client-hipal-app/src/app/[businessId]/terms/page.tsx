@@ -1,58 +1,25 @@
-"use client";
-import Logo from "@/assets/hipalNewLogo.svg";
-import { isEmpty } from "lodash-es";
-import { useParams, useRouter } from "next/navigation";
-import { HiChevronLeft } from "react-icons/hi";
-import PlaceholderImg from "@/components/atoms/placeholder";
-import ShimmerImage from "@/components/atoms/imageshimmer";
 import { termsApi } from "@/apis/terms";
-import { useQuery } from "@tanstack/react-query";
+import TermsLogoSection from "@/components/atoms/termsLogoSection";
+
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
-const Terms = () => {
-  const router = useRouter();
-  const params = useParams();
-  const businessId = params.businessId;
-  const onBack = () => {
-    router.back();
-  };
 
-  const getOutletInfo = async () => {
-    const data = await termsApi.all(businessId);
-    return data.business;
-  };
+export default async function Explore({
+  params,
+}: {
+  params: { businessId: string };
+}) {
+  const { businessId } = params;
+  const data = await termsApi.all(businessId);
+  const businessDetails = data?.outletInfo;
 
-  const { data: businessDetails } = useQuery({
-    queryKey: ["getOutletInfo", businessId],
-    queryFn: getOutletInfo,
-    enabled: !!businessId,
-  });
   return (
     <main className="p-6 text-white bg-black">
-      <div className="relative">
-        <HiChevronLeft className="mt-6 ml-2 text-3xl" onClick={onBack} />
-      </div>
-      <div className="flex items-center justify-center w-1/2 mx-auto mt-6 mb-12">
-        {!isEmpty(businessDetails?.logoUrl) ? (
-          <ShimmerImage
-            src={businessDetails?.logoUrl ? businessDetails?.logoUrl : Logo}
-            height={100}
-            width={100}
-            quality={95}
-            objectFit="contain"
-            alt="logo-business"
-            className="object-center w-1/3 border rounded-lg shadow-sm aspect-square"
-          />
-        ) : (
-          <PlaceholderImg />
-        )}
-      </div>
-      <h1 className="heading">
-        <b>
-          <b>{businessDetails?.name}</b>
-        </b>{" "}
-        - Terms of Use
-      </h1>
+      <TermsLogoSection logoUrl={businessDetails?.logoUrl} />
+      <center className="heading">
+        <b>{businessDetails?.name}</b>
+        <h1 className="mt-2 text-lg font-normal">Terms of Use</h1>
+      </center>
       <h3 className="subheading">1. Introduction</h3>
       <p className="paragraph">
         Welcome to{" "}
@@ -471,6 +438,6 @@ const Terms = () => {
       &nbsp; &nbsp;
     </main>
   );
-};
+}
 
-export default Terms;
+
