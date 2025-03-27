@@ -173,6 +173,7 @@ const addonRouter = new Hono()
       z.object({
         businessId: z.string(),
         menu: z.string().optional(),
+        menuId: z.string().optional(),
       }),
     ),
 

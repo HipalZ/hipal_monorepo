@@ -48,7 +48,11 @@ const categoriesRouter = new Hono()
           subCategoryIds = [],
           parentCategoryIds = [],
           dishIds = [],
+          menuId,
         } = requestData;
+        const business = await Business.findOne({ businessId });
+
+        if (!business) return respond(c, "Business not found", true, 404, {});
 
         const existingCategory = await Category.findOne({
           name: requestData.name,
@@ -57,10 +61,6 @@ const categoriesRouter = new Hono()
         }).select("_id");
         if (existingCategory)
           return respond(c, "Already exists", true, 409, {});
-
-        const menuType = await Business.findOne({ businessId });
-        console.log("menuType", menuType);
-        if (!menuType) return respond(c, "Business not found", true, 404, {});
 
         const creatingCategory = await Category.create(
           [
@@ -74,6 +74,7 @@ const categoriesRouter = new Hono()
               parentCategoryIds: parentCategoryIds || [],
               dishIds: dishIds || [],
               subCategoryIds: subCategoryIds || [],
+              menuId: menuId,
             },
           ],
           {
@@ -291,10 +292,11 @@ const categoriesRouter = new Hono()
         child: z.string().optional(),
         dishes: z.string().optional(),
         tableName: z.string().optional(),
+        menuId: z.string().optional(),
       }),
     ),
     async (c) => {
-      const { businessId, menu, child, parent, dishes, tableName } =
+      const { businessId, menu, child, parent, dishes, tableName, menuId } =
         c.req.query();
 
       if (menu) {

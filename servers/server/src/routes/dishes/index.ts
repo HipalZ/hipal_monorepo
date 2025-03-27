@@ -37,10 +37,11 @@ const dishesRouter = new Hono()
         businessId: z.string(),
         UniquelyYours: z.string().optional(),
         menu: z.string().optional(),
+        menuId: z.string().optional(),
       }),
     ),
     async (c) => {
-      const { businessId, UniquelyYours, menu } = c.req.query();
+      const { businessId, UniquelyYours, menu, menuId } = c.req.query();
       if (UniquelyYours) {
         const isHasPos = await Pos.findOne({
           businessId,

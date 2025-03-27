@@ -179,7 +179,7 @@ export const dishSchema = z.object({
   delayTime: z.coerce.number().optional().default(0),
   availability: z.boolean().default(true).optional(),
   isDeleted: z.boolean().default(false).optional(),
-  menuId: ObjectIdSchema.optional(),
+  menuId: ObjectIdSchema,
 });
 
 export const updateDishSchema = z.object({
