@@ -229,6 +229,10 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: Boolean,
     default: false,
   },
+  registeredName: {
+    type: String,
+    required: false,
+  },
 });
 
 //middlewares
