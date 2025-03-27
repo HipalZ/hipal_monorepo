@@ -1493,7 +1493,7 @@ const usersRouter = new Hono()
       );
 
       return c.json({
-        message: "Token saved successfully    ",
+        message: "Token saved successfully",
         err: false,
         data: updateDeviceToken,
       });
@@ -1502,19 +1502,29 @@ const usersRouter = new Hono()
   .put(
     "/updateUserInfo/:userId",
     zValidator("param", z.object({ userId: z.string() })),
-    zValidator("json", z.object({ dob: z.number() })),
+    zValidator(
+      "json",
+      z.object({
+        dob: z.number(),
+        birthdayTriggerCount: z.number().optional(),
+      }),
+    ),
 
     async (c) => {
-      const { dob } = await c.req.json();
+      const { dob, birthdayTriggerCount } = await c.req.json();
       const { userId } = c.req.param();
 
-      const user = await User.findByIdAndUpdate(userId, { dob }, { new: true });
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { dob, birthdayTriggerCount },
+        { new: true },
+      );
 
       if (!user) {
         return respond(c, "User not found", true, 404, {});
       }
 
-      return respond(c, "User updated successfully", false, 200, user);
+      return respond(c, "User data updated successfully", false, 200, user);
     },
   )
 

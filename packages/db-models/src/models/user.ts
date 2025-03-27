@@ -79,6 +79,11 @@ const userSchema = new mongoose.Schema<UserType>(
       type: Boolean,
       default: false,
     },
+    birthdayTriggerCount: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   },
   {
     timestamps: true,

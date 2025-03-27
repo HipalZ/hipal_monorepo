@@ -225,6 +225,10 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     ref: "hotelamenitie",
     required: false,
   },
+  birthdayCampaign: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 //middlewares
@@ -232,15 +236,18 @@ outLetInfoSchema.post("save", async (doc) => {
   const business = await Business.findById(doc._id);
 
   if (business) {
-    await OutLetInfo.findByIdAndUpdate(doc._id, {
-      $set: {
-        outLetType: business.businessType,
+    await OutLetInfo.findByIdAndUpdate(
+      doc._id,
+      {
+        $set: {
+          outLetType: business.businessType,
+        },
       },
-
-
-    }, {
-      new: true, upsert: true
-    });
+      {
+        new: true,
+        upsert: true,
+      },
+    );
   }
 });
 
