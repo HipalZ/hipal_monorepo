@@ -30,6 +30,7 @@ export * from "./hotel";
 export * from "./kotOrder";
 export * from "./loyaltyCoinsInfo";
 export * from "./loyaltySetting";
+export * from "./menu";
 export * from "./menuBanner";
 export * from "./note";
 export * from "./npcUser";

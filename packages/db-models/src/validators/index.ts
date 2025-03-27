@@ -48,6 +48,7 @@ export * from "./group";
 export * from "./groupAnalytics";
 export * from "./hotel";
 export * from "./kotOrder";
+export * from "./menu";
 export * from "./menuBanner";
 export * from "./note";
 export * from "./npcUser";

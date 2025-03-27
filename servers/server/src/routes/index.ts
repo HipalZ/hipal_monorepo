@@ -15,6 +15,7 @@ import hotelRouter from "./hotel";
 import iconRouter from "./icon";
 import kotRouter from "./kot";
 import menuBannerRouter from "./menu-banner";
+import menuRouter from "./menu/menu";
 import npcRouter from "./npc";
 import paymentsRouter from "./payments";
 import permissionRouter from "./permission";
@@ -71,6 +72,7 @@ export const routes = app
   .route("/whatsapp_flow", whatsAppFlowRouter)
   .route("/script", scriptRouter)
   .route("/hotel", hotelRouter)
-  .route("/download", downloadRouter);
+  .route("/download", downloadRouter)
+  .route("/menu", menuRouter);
 
 export type AppType = typeof routes;

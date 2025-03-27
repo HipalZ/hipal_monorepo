@@ -118,6 +118,7 @@ export const outLetInfoSchema = z.object({
   newAmenities: z.array(ObjectIdSchema).optional(),
   birthdayCampaign: ObjectIdSchema.optional(),
   registeredName: z.string().min(3).max(100).optional(),
+  menuId: ObjectIdSchema.optional(),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;

@@ -233,6 +233,11 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: String,
     required: false,
   },
+  menuId: {
+    type: ObjectId,
+    required: false,
+    ref: "menu",
+  },
 });
 
 //middlewares

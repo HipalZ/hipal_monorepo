@@ -1,10 +1,15 @@
 import {
   Business,
   BusinessPosConfig,
+  Category,
+  Dish,
   HotelService,
   HotelServiceCategory,
   HotelStaffRole,
+  Menu,
+  OutLetInfo,
   Pos,
+  Zone,
 } from "@hi/db-models";
 import { Hono } from "hono";
 //
@@ -333,6 +338,74 @@ const scriptRouter = new Hono()
         message: "Hotel Roles added successfully",
         err: false,
         data: roleData,
+      },
+      200,
+    );
+  })
+
+  .get("/add_zone_and_menu", async (c) => {
+    const business = await Business.find();
+    for (const businessData of business) {
+      const zone = await Zone.findOne({
+        businessId: businessData._id,
+      });
+
+      if (!zone) {
+        const newZone = new Zone({
+          name: "Default",
+          businessId: businessData._id,
+          isActive: true,
+        });
+        await newZone.save();
+
+        const menu = new Menu({
+          name: "Default",
+          businessId: businessData._id,
+          zoneIds: [newZone._id],
+          menuType: 1,
+          days: [1, 2, 3, 4, 5, 6, 7],
+          startTime: 0,
+          endTime: 86400000,
+          isActive: true,
+          isDeleted: false,
+        });
+
+        await menu.save();
+        await OutLetInfo.findOneAndUpdate(
+          { businessId: businessData._id },
+          {
+            $set: {
+              menuId: menu._id,
+            },
+          },
+          { new: true },
+        );
+
+        await Dish.updateMany(
+          { businessId: businessData._id },
+          {
+            $set: {
+              menuId: menu._id,
+            },
+          },
+        );
+
+        await Category.updateMany(
+          { businessId: businessData._id },
+          {
+            $set: {
+              menuId: menu._id,
+            },
+          },
+        );
+      }
+    }
+
+    return c.json(
+      {
+        message: "Zone and Menu added successfully",
+        err: false,
+        data: {},
       },
       200,
     );
