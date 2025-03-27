@@ -13,6 +13,8 @@ export interface IUserData {
   reward?: number;
   count?: number;
   _id: string;
+  dob: number;
+  birthdayTriggerCount?: number;
 }
 interface IRole {
   role: string;
@@ -69,6 +71,8 @@ export const useLogin = create(
         role: [],
         userDescription: "",
         _id: "",
+        dob: 0,
+        birthdayTriggerCount: 0,
       },
       isLogin: false,
       showLogin: false,

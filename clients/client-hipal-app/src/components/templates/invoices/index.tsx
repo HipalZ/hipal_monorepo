@@ -1,9 +1,6 @@
 "use client";
-import { memo, useCallback, useMemo, useRef } from "react";
+import { memo, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
-import { BsDownload } from "react-icons/bs";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 import Image from "next/image";
 import Logo from "@/assets/hipalz_blue.png";
 import Invoice from "@/assets/invoice.png";
@@ -280,43 +277,6 @@ const MemoInovices = () => {
     );
   }, [businessClient]);
 
-  const handleDownloadInvoice = useCallback(async () => {
-    const element = printRef?.current;
-    if (!element) return;
-
-    if (typeof window === "undefined") return; // Ensure this runs on the client-side
-
-    // Get the window width
-    const windowWidth = window.innerWidth;
-
-    // Capture the element using html2canvas
-    const canvas = await html2canvas(element, {
-      scale: 2, // Dynamically adjust the scale,
-      width: windowWidth, // Set the width of the canvas
-      allowTaint: true, // Allows tainted images
-    });
-
-    // Determine the canvas dimensions
-    const canvasWidth = canvas.width > 1000 ? 1000 : canvas.width; // Use 1000px max width
-    const canvasHeight = (canvas.height * canvasWidth) / canvas.width; // Maintain aspect ratio
-
-    // Convert canvas to image data
-    const imgData = canvas.toDataURL("image/png");
-
-    // Create the PDF
-    const pdf = new jsPDF({
-      orientation: "p",
-      unit: "px",
-      format: [canvasWidth, canvasHeight],
-    });
-
-    // Add the image to the PDF
-    pdf.addImage(imgData, "PNG", 0, 0, canvasWidth, canvasHeight);
-
-    // Save the generated PDF
-    pdf.save(`invoice_${business.name}.pdf`);
-  }, [business.name]);
-
   return (
     <section ref={printRef} className="max-w-4xl p-4 mx-auto bg-white sm:p-8">
       {/* Header */}
@@ -324,20 +284,6 @@ const MemoInovices = () => {
         <article className="flex items-center gap-2 mb-4 sm:gap-4 sm:mb-0">
           <Image src={Logo} alt="logo" width={40} height={40} />
           <span className="text-xl sm:text-2xl text-[#838383]">Hipalz</span>
-        </article>
-        <article className="flex items-center gap-2 cursor-pointer md:gap-4 on_active_bounce">
-          <p
-            onKeyDown={handleDownloadInvoice}
-            onClick={handleDownloadInvoice}
-            style={{ cursor: "pointer" }}
-            className="my-2 text-xs md:text-base"
-          >
-            Download Invoice
-          </p>
-          <BsDownload
-            onClick={handleDownloadInvoice}
-            className="text-xs md:text-xl"
-          />
         </article>
         <article className="text-center sm:text-right">
           <p className="text-xl sm:text-2xl md:text-3xl text-[#838383]">

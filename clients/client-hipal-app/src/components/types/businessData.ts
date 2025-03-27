@@ -167,6 +167,7 @@ export interface IOutlet {
   outLetType: string;
   isPosEnabled: boolean;
   shareCart?: boolean;
+  birthdayCampaign?: boolean;
 }
 
 export interface TimingType {
@@ -386,6 +387,7 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   __v: number;
+  birthdayTriggerCount?: number;
 }
 
 export interface CustomRole {

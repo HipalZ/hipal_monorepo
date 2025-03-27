@@ -115,7 +115,7 @@ const MemoCongratulationz = () => {
       <button
         type="button"
         onClick={handleSeeAllCouponz}
-        className="bg-black bottom_btn"
+        className="bg-black bottom_btn py-2"
       >
         See All Couponz
       </button>

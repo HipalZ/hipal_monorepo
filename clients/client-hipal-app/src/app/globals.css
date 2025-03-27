@@ -28,6 +28,13 @@ body {
 	font-style: normal;
   }
 
+  .dotgothic16-regular {
+	font-family: "DotGothic16", sans-serif;
+	font-weight: 400;
+	font-style: normal;
+  }
+  
+
 .space-grotesk-700 {
 	font-family: "Space Grotesk", sans-serif;
 	font-optical-sizing: auto;

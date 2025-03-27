@@ -1,13 +1,13 @@
 "use client"
-import { useParams } from 'next/navigation'
 import { usePaymentStore } from '@/components/store/usePaymentStore'
 import BottomPopUp from '../bottomPopUp'
-import CombinedLogin from '@/components/templates/posPayment/CombinedLogin'
 import dynamic from 'next/dynamic'
-import React, { memo, useCallback } from 'react'
+import { memo, useCallback } from 'react';
 import { useGoNext } from '@/utils/helper'
 import { useLogin } from '@/components/store/useLogin'
 
+const CombinedLogin = dynamic(() => import('@/components/templates/posPayment/CombinedLogin'))
+const BirthdayPromptTimer = dynamic(() => import('../birthdayPromptTimer'))
 const SignUpBonus = dynamic(() => import('@/components/organisms/explore/signupbonus'))
 
 const MemoDynamicCombinedLogin = () => {
@@ -33,6 +33,9 @@ const MemoDynamicCombinedLogin = () => {
             {openBlastModal ?
                 <SignUpBonus goNext={handleNext} />
                 : null}
+
+            {/* if the birthday campaign is true and the modal is open or the user details dob is present, show the birthday prompt */}
+            <BirthdayPromptTimer />
         </>
     )
 }

@@ -1,5 +1,5 @@
-import { Alert } from "@material-tailwind/react"
-import { memo } from "react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { memo } from "react";
 
 function Icon() {
 	return (
@@ -7,7 +7,7 @@ function Icon() {
 			xmlns="http://www.w3.org/2000/svg"
 			viewBox="0 0 24 24"
 			fill="currentColor"
-			className="h-6 w-6"
+			className="h-5 w-5 text-primary"
 		>
 			<path
 				fillRule="evenodd"
@@ -15,23 +15,20 @@ function Icon() {
 				clipRule="evenodd"
 			/>
 		</svg>
-	)
+	);
 }
 
-const AlertVariant = () =>{
+const AlertVariant = () => {
 	return (
-		<Alert
-			icon={<Icon />}
-			animate={{
-				mount: { scale: 1, y: 0 },
-				unmount: { scale: 0, y: 0 },
-			}}
-			className="rounded-none border-l-4 border-primary bg-base-200 font-medium text-primary text-sm"
-		>
-			Oops! Please deselect one option before adding another.
+		<Alert className="flex items-center gap-2 border-l-4 border-primary bg-base-200 text-sm font-medium text-primary">
+			<Icon />
+			<div>
+				<AlertTitle>Oops!</AlertTitle>
+				<AlertDescription>Please deselect one option before adding another.</AlertDescription>
+			</div>
 		</Alert>
-	)
-}
+	);
+};
 
-const MemoAlertVariant = memo(AlertVariant)
-export default MemoAlertVariant
+const MemoAlertVariant = memo(AlertVariant);
+export default MemoAlertVariant;
