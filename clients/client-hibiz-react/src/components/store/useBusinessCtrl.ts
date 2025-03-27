@@ -8,14 +8,25 @@ export type bussinessControlPages =
   | "SETTING"
   | "CONGRATULATION";
 export type businessType =
-"FOOD"
-| "OTHER" 
-| "HOTEL" 
-| "CLINIC" 
-| "RESTAURENT" 
-| "E-COMMERCE" 
-| "FASHION_AND_JEWELRY" 
-| "MENU"
+  | "FOOD"
+  | "OTHER"
+  | "HOTEL"
+  | "CLINIC"
+  | "RESTAURENT"
+  | "E-COMMERCE"
+  | "FASHION_AND_JEWELRY"
+  | "MENU";
+
+export enum EnumBusinessType {
+  FOOD = "FOOD",
+  OTHER = "OTHER",
+  HOTEL = "HOTEL",
+  CLINIC = "CLINIC",
+  RESTAURENT = "RESTAURENT",
+  ECOMMERCE = "E-COMMERCE",
+  FASHION_AND_JEWELRY = "FASHION_AND_JEWELRY",
+  MENU = "MENU",
+}
 
 export type MenuLayout = "MAIN_CATEGORY" | "MAIN_AND_SUB_CATEGORY";
 export type exploreLayout = "BUTTER" | "SUNFLOWER";
@@ -34,7 +45,6 @@ interface BusinessCtrl {
   setTermsAccepted: (value: boolean) => void;
   showOtp: boolean;
   setShowOtp: (value: boolean) => void;
-
 
   exploreLayout: exploreLayout;
   menuLayout: MenuLayout;
@@ -102,9 +112,10 @@ const useBusinessCtrl = create<BusinessCtrl>((set) => {
     termsAccepted: false,
     setTermsAccepted: (value: boolean) => set({ termsAccepted: value }),
     showOtp: false,
-    setShowOtp: (value: boolean) => set({
-      showOtp: value
-    }),
+    setShowOtp: (value: boolean) =>
+      set({
+        showOtp: value,
+      }),
 
     exploreLayout: "BUTTER",
     setExploreLayout: (layout: exploreLayout) => set({ exploreLayout: layout }),
