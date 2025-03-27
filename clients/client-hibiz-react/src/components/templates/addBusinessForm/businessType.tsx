@@ -1,5 +1,5 @@
 import BottomButton from "@/components/atom/bottomButton"
-import useBusinessCtrl, { type businessType } from "@/components/store/useBusinessCtrl"
+import useBusinessCtrl, { EnumBusinessType, type businessType } from "@/components/store/useBusinessCtrl"
 import { memo, useCallback } from "react"
 import toast from "react-hot-toast"
 
@@ -11,7 +11,7 @@ export const businessTypeArray = [
     tags: ["Online Menu", "Table Reservations", "Order Management", "Customer Reviews", "Loyalty Program"],
     tagColor: "#FF6B6B",
     gradient: "linear-gradient(135deg, #FFD3A550 0%, #FD658550 100%)",
-    type: "RESTAURANT" as businessType,
+    type: EnumBusinessType.RESTAURENT,
   },
   {
     title: "🏨 Hotel",
@@ -19,7 +19,7 @@ export const businessTypeArray = [
     tags: ["Room Booking", "Virtual Tours", "Concierge Services", "Guest Feedback", "Loyalty Rewards"],
     tagColor: "#4ECDC4",
     gradient: "linear-gradient(135deg, #C4E0E550 0%, #4CA1AF50 100%)",
-    type: "HOTEL" as businessType,
+    type: EnumBusinessType.HOTEL,
   },
   {
     title: "🛒 E-commerce",
@@ -33,7 +33,7 @@ export const businessTypeArray = [
     ],
     tagColor: "#FF8C00",
     gradient: "linear-gradient(135deg, #FFE98550 0%, #FA742B50 100%)",
-    type: "E-COMMERCE" as businessType,
+    type: EnumBusinessType.ECOMMERCE,
   },
   {
     title: "🏥 Clinics",
@@ -41,7 +41,7 @@ export const businessTypeArray = [
     tags: ["Appointment Scheduling", "Patient Records", "Telemedicine", "Prescription Management", "Health Analytics"],
     tagColor: "#45B649",
     gradient: "linear-gradient(135deg, #DCE35B50 0%, #45B64950 100%)",
-    type: "CLINIC" as businessType,
+    type: EnumBusinessType.CLINIC,
   },
   {
     title: "💍 Fashion & Jewelry",
@@ -49,7 +49,7 @@ export const businessTypeArray = [
     tags: ["Virtual Try-On", "Custom Orders", "Look Books", "VIP Customer Service", "Event Invitations"],
     tagColor: "#A239CA",
     gradient: "linear-gradient(135deg, #E8CBC050 0%, #636FA450 100%)",
-    type: "FASHION_AND_JEWELRY" as businessType,
+    type: EnumBusinessType.FASHION_AND_JEWELRY,
   },
   // {
   //   title: "👤 Personal Brand",
@@ -72,7 +72,7 @@ export const businessTypeArray = [
     tags: ["Web page", "E.Menu", "Rewardz & Loyalty", "Payments", "CRM", "Messaging"],
     tagColor: "#9775F8",
     gradient: "linear-gradient(1.7deg, #D9CCFF -11.95%, #F2F2F2 112.46%)",
-    type: "FOOD" as businessType,
+    type: EnumBusinessType.FOOD,
   },
   {
     title: "✨ Others",
@@ -81,7 +81,7 @@ export const businessTypeArray = [
     tags: ["Web page", "E.Catalog", "Rewardz & Loyalty", "Payments", "CRM", "Messaging"],
     tagColor: "#000000",
     gradient: "linear-gradient(7.04deg, #FFF3A6 -60.02%, #F0DDE7 93.33%)",
-    type: "OTHER" as businessType,
+    type: EnumBusinessType.OTHER,
   },
 ]
 
@@ -146,11 +146,11 @@ const BusinessType = () => {
       <BottomButton
         fixed
         buttons={[
-          { 
-            text: "Next", 
+          {
+            text: "Next",
             onClick: goNext,
             disable: businessType === "",
-           },
+          },
         ]}
       />
 
