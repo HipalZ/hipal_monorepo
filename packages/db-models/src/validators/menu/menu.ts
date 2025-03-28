@@ -75,7 +75,6 @@ export const MenuSchema = z
     copyCompleteMenu: z.boolean().optional().default(false),
     primaryColor: z.string().min(1).max(7),
     secondaryColor: z.string().min(1).max(7),
-    tertiaryColor: z.string().min(1).max(7),
   })
   .refine(
     (data) => {
@@ -125,7 +124,6 @@ export const UpdateMenuSchema = z.object({
   menuId: objectIdSchema,
   primaryColor: z.string().min(1).max(7).optional(),
   secondaryColor: z.string().min(1).max(7).optional(),
-  tertiaryColor: z.string().min(1).max(7).optional(),
 });
 
 // Export the inferred Menu type

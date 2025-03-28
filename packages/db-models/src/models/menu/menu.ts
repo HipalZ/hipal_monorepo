@@ -79,6 +79,16 @@ const menuSchema = new mongoose.Schema<MenuTypeValidator>({
     required: false,
     default: 0,
   },
+  primaryColor: {
+    type: String,
+    required: true,
+    default: "#000000",
+  },
+  secondaryColor: {
+    type: String,
+    required: true,
+    default: "#000000",
+  },
 });
 
 const Menu: Model<MenuTypeValidator> = mongoose.model<MenuTypeValidator>(
