@@ -1,4 +1,4 @@
-import { Category, Dish, Menu, OutLetInfo } from "@hi/db-models";
+import { BusinessPosConfig, Category, Dish, Menu, Table } from "@hi/db-models";
 import { MenuSchema, UpdateMenuSchema } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
@@ -178,6 +178,38 @@ const menuRouter = new Hono()
     },
   )
 
+  .get(
+    "/fetch_table_menu",
+    zValidator(
+      "query",
+      z.object({
+        tableName: z.string().min(1).max(30),
+        businessId: z.string().min(1).max(36),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const { tableName, businessId } = c.req.query();
+        const tableData = await Table.findOne({
+          name: tableName,
+          businessId,
+        }).lean();
+        if (!tableData) {
+          return respond(c, "Table not found", true, 404);
+        }
+
+        const menu = await Menu.findOne({
+          zoneIds: tableData.internalZoneId,
+        }).lean();
+        if (!menu) {
+          return respond(c, "Menu not found", true, 404);
+        }
+        return respond(c, "Menu fetched successfully", false, 200, menu);
+      });
+    },
+  )
+
   .post("/add_menu", zValidator("json", MenuSchema), async (c) => {
     //@ts-ignore
     return runInTransaction(async (session) => {
@@ -193,7 +225,18 @@ const menuRouter = new Hono()
         sourceMenuId,
       } = requestData;
 
-      // Duplicate check by name and businessId
+      if (
+        (sourceMenuId || dishIds || categoryIds || copyCompleteMenu) &&
+        (await BusinessPosConfig.exists({ businessId }))
+      ) {
+        return respond(
+          c,
+          "You cannot create a menu with sourceMenuId, dishIds, categoryIds or copyCompleteMenu as this business has POS",
+          true,
+          400,
+        );
+      }
+
       const existingMenu = await Menu.exists({ name, businessId });
       if (existingMenu) {
         return respond(c, "Menu already exists", true, 409);
@@ -243,16 +286,6 @@ const menuRouter = new Hono()
       if (!menu) {
         throw new Error("Menu not created");
       }
-
-      await OutLetInfo.findByIdAndUpdate(
-        businessId,
-        {
-          $set: {
-            menuId: menu._id,
-          },
-        },
-        { session },
-      );
 
       return respond(c, "Menu created successfully", false, 201, {
         _id: menu._id,
