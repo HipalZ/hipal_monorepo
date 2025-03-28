@@ -8,6 +8,8 @@ import {
   HotelStaffRole,
   Menu,
   Pos,
+  Table,
+  UrlModel,
   Zone,
 } from "@hi/db-models";
 import { Hono } from "hono";
@@ -349,7 +351,15 @@ const scriptRouter = new Hono()
         businessId: businessData._id,
       });
 
-      if (!zone) {
+      const isHavePos = await BusinessPosConfig.findOne({
+        businessId: businessData._id,
+      });
+
+      if (!zone && !isHavePos) {
+        const urlS = await UrlModel.find({
+          businessId: businessData._id,
+        });
+
         const newZone = new Zone({
           name: "Default",
           businessId: businessData._id,
@@ -367,6 +377,8 @@ const scriptRouter = new Hono()
           endTime: 86400000,
           isActive: true,
           isDeleted: false,
+          categoryLayout: 1,
+          cardLayout: 1,
         });
 
         await menu.save();
@@ -388,6 +400,70 @@ const scriptRouter = new Hono()
             },
           },
         );
+
+        for (const url of urlS) {
+          const longUrl = url.longUrl;
+          const parsedUrl = new URL(longUrl);
+          const tableName = parsedUrl.searchParams.get("tableName");
+
+          const createTable = await Table.create({
+            name: tableName,
+            businessId: businessData._id,
+            zoneId: newZone._id,
+            internalZoneId: newZone._id,
+            isActive: true,
+            isDeleted: false,
+            tableLink: url.shortUrl,
+          });
+
+          const updateZone = await Zone.findByIdAndUpdate(
+            newZone._id,
+            {
+              $push: {
+                tableIds: createTable._id,
+              },
+            },
+            { new: true },
+          );
+        }
+      }
+    }
+
+    return c.json(
+      {
+        message: "Zone and Menu added successfully",
+        err: false,
+        data: {},
+      },
+      200,
+    );
+  })
+
+  .get("/add_zone_and_menu_for_pos", async (c) => {
+    const business = await Business.find();
+    for (const businessData of business) {
+      const isHavePos = await BusinessPosConfig.findOne({
+        businessId: businessData._id,
+      });
+      if (isHavePos) {
+        const zone = await Zone.find({
+          businessId: businessData._id,
+        });
+
+        const zoneIds = zone.map((zone) => zone._id);
+        const createMenu = await Menu.create({
+          name: "Default",
+          businessId: businessData._id,
+          zoneIds: zoneIds,
+          menuType: 1,
+          days: [1, 2, 3, 4, 5, 6, 7],
+          startTime: 0,
+          endTime: 86400000,
+          isActive: true,
+          isDeleted: false,
+          categoryLayout: 1,
+          cardLayout: 1,
+        });
       }
     }
 

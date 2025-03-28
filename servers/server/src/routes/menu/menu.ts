@@ -1,4 +1,11 @@
-import { BusinessPosConfig, Category, Dish, Menu, Table } from "@hi/db-models";
+import {
+  BusinessPosConfig,
+  Category,
+  Dish,
+  Menu,
+  Table,
+  Zone,
+} from "@hi/db-models";
 import { MenuSchema, UpdateMenuSchema } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
@@ -199,8 +206,23 @@ const menuRouter = new Hono()
           return respond(c, "Table not found", true, 404);
         }
 
+        const zone = await Zone.findOne({
+          $or: [
+            {
+              _id: tableData.internalZoneId,
+              businessId,
+            },
+            {
+              zoneId: tableData.zoneId,
+              businessId,
+            },
+          ],
+        });
+
         const menu = await Menu.findOne({
-          zoneIds: tableData.internalZoneId,
+          zoneIds: zone?._id,
+          businessId,
+          isActive: true,
         }).lean();
         if (!menu) {
           return respond(c, "Menu not found", true, 404);
