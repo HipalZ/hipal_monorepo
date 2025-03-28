@@ -4,7 +4,9 @@ import {
   BusinessPosConfig,
   Category,
   Dish,
+  Menu,
   Table,
+  Zone,
 } from "@hi/db-models";
 
 import {
@@ -364,16 +366,6 @@ const categoriesRouter = new Hono()
       }
 
       if (dishes) {
-        const existingCategories = await Category.find({
-          businessId,
-          isDeleted: false,
-          hierarchy: "CHILD",
-        }).populate({
-          path: "dishIds",
-          match: { businessId: businessId, isDeleted: false, visibility: true },
-          populate: { path: "addOnIds" },
-        });
-
         const isHasPos = await BusinessPosConfig.findOne({
           businessId,
         });
@@ -417,6 +409,47 @@ const categoriesRouter = new Hono()
             200,
           );
         }
+
+        const tableData = await Table.findOne({
+          name: tableName,
+          businessId,
+        }).lean();
+        if (!tableData) {
+          return respond(c, "Table not found", true, 404);
+        }
+
+        const zone = await Zone.findOne({
+          $or: [
+            {
+              _id: tableData.internalZoneId,
+              businessId,
+            },
+            {
+              zoneId: tableData.zoneId,
+              businessId,
+            },
+          ],
+        });
+
+        const menu = await Menu.findOne({
+          zoneIds: zone?._id,
+          businessId,
+          isActive: true,
+        }).lean();
+        if (!menu) {
+          return respond(c, "Menu not found", true, 404);
+        }
+
+        const existingCategories = await Category.find({
+          businessId,
+          isDeleted: false,
+          hierarchy: "CHILD",
+          // menuId: menu._id,
+        }).populate({
+          path: "dishIds",
+          match: { businessId: businessId, isDeleted: false, visibility: true },
+          populate: { path: "addOnIds" },
+        });
 
         return respond(
           c,
