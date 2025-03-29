@@ -74,11 +74,7 @@ const menuSchema = new mongoose.Schema<MenuTypeValidator>({
     enum: CARD_LAYOUT_TYPES,
     default: CARD_LAYOUT_TYPES.GRID,
   },
-  extendTime: {
-    type: Number,
-    required: false,
-    default: 0,
-  },
+
   primaryColor: {
     type: String,
     required: true,

@@ -410,35 +410,40 @@ const categoriesRouter = new Hono()
           );
         }
 
+        // Find the table by name and businessId
         const tableData = await Table.findOne({
           name: tableName,
           businessId,
         }).lean();
-        if (!tableData) {
-          return respond(c, "Table not found", true, 404);
-        }
+        if (!tableData) return respond(c, "Table not found", true, 404);
 
+        // Find the associated zone using either internalZoneId or zoneId
         const zone = await Zone.findOne({
           $or: [
-            {
-              _id: tableData.internalZoneId,
-              businessId,
-            },
-            {
-              zoneId: tableData.zoneId,
-              businessId,
-            },
+            { _id: tableData.internalZoneId, businessId },
+            { zoneId: tableData.zoneId, businessId },
           ],
         });
 
+        const indianDate = new Date(
+          new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
+        );
+
+        let currentDay = indianDate.getDay();
+        currentDay = currentDay === 0 ? 7 : currentDay;
+
+        const currentTimeInMinutes =
+          indianDate.getHours() * 60 + indianDate.getMinutes();
+
+        // Find the active menu for the zone and business
         const menu = await Menu.findOne({
           zoneIds: zone?._id,
           businessId,
           isActive: true,
+          days: { $in: [currentDay] },
+          startTime: { $lte: currentTimeInMinutes },
+          endTime: { $gte: currentTimeInMinutes },
         }).lean();
-        if (!menu) {
-          return respond(c, "Menu not found", true, 404);
-        }
 
         const existingCategories = await Category.find({
           businessId,

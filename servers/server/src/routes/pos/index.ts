@@ -898,6 +898,7 @@ const posRouter = new Hono()
             },
           );
           await userSession.save();
+
           await saveKotOrder(
             tableName,
             businessId,

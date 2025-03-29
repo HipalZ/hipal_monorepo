@@ -118,7 +118,6 @@ export const UpdateMenuSchema = z.object({
   cardLayout: z.nativeEnum(CARD_LAYOUT_TYPES).optional(),
   startTime: z.coerce.number().optional(),
   endTime: z.coerce.number().optional(),
-  extendTime: z.coerce.number().optional(),
   isActive: z.boolean().optional().default(false),
   isDeleted: z.boolean().optional().default(false),
   menuId: objectIdSchema,
