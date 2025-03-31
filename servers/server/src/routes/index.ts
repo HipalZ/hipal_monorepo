@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import addonRouter from "./addons";
 import adminRouter from "./admin";
+import bucketRouter from "./bucket";
 import businessRouter from "./businesses";
 import cartRouter from "./cart";
 import categoryRouter from "./categories";
@@ -73,6 +74,7 @@ export const routes = app
   .route("/script", scriptRouter)
   .route("/hotel", hotelRouter)
   .route("/download", downloadRouter)
-  .route("/menu", menuRouter);
+  .route("/menu", menuRouter)
+  .route("/bucket", bucketRouter);
 
 export type AppType = typeof routes;

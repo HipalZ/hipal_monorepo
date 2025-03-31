@@ -10,6 +10,7 @@ export * from "./kitchen";
 
 export * from "./admin";
 export * from "./billShortUrl";
+export * from "./buckets";
 export * from "./businessPosConfig";
 export * from "./businessSubscriber";
 export * from "./campaign";
