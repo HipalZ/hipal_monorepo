@@ -105,6 +105,73 @@ export const sendPushNotification = async (
   }
 };
 
+const saveOrder = async (
+  tableName: string,
+  businessId: string,
+  customerName: string,
+  customerPhone: string,
+  internalCart: unknown[],
+  userId: string,
+  accepted: boolean,
+  tableId: string,
+  edited: boolean,
+  editedBy: string,
+  petpoojaCart: unknown,
+  hiCode: string,
+  session: ClientSession,
+) => {
+  const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
+  if (saveKot.data.success === "0") {
+    throw new Error("kot not saved in pos");
+  }
+  await saveKotOrder(
+    tableName,
+    businessId,
+    customerName,
+    customerPhone,
+    internalCart,
+    userId,
+    true,
+    tableId,
+    false,
+    null,
+    session,
+  );
+  const totalBill = calculateCartBill(internalCart);
+  await Table.findOneAndUpdate(
+    {
+      businessId: businessId,
+      name: tableName,
+    },
+    {
+      $inc: {
+        totalItemCount: internalCart.length,
+        currentTableAmount: totalBill,
+      },
+      $set: {
+        status: "ACTIVE",
+        hiCode: hiCode,
+        date: Date.now(),
+      },
+    },
+    {
+      new: true,
+      session,
+    },
+  );
+
+  return {
+    message: "Data fetched successfully",
+    err: false,
+    data: {
+      success: true,
+      hiCode: hiCode,
+      name: customerName,
+      phone: customerPhone,
+    },
+  };
+};
+
 const posRouter = new Hono()
   .get("/all_pos", async (c) => {
     const allPos = await BusinessPosConfig.find().select("posName");
@@ -898,6 +965,37 @@ const posRouter = new Hono()
             },
           );
           await userSession.save();
+          if (posConfigData.orderVerificationType === "USER") {
+            const petpoojaCart = convertToPetpoojaCart(
+              internalCart,
+              posConfigData.restId,
+              customerName,
+              tenDigitCode,
+              tableName,
+              posConfigData.accessKey,
+              posConfigData.secretKey,
+
+              posConfigData.authToken,
+            );
+
+            const result = await saveOrder(
+              tableName,
+              businessId,
+              customerName,
+              customerPhone,
+              internalCart,
+              userData._id,
+              true,
+              tableData?._id.toString(),
+              false,
+              null,
+              petpoojaCart,
+              hiCode,
+              session,
+            );
+
+            return c.json(result, 200);
+          }
 
           await saveKotOrder(
             tableName,
@@ -926,6 +1024,37 @@ const posRouter = new Hono()
             },
             200,
           );
+        }
+
+        if (posConfigData.orderVerificationType === "USER") {
+          const petpoojaCart = convertToPetpoojaCart(
+            internalCart,
+            posConfigData.restId,
+            customerName,
+            userTableSession.pin,
+            tableName,
+            posConfigData.accessKey,
+            posConfigData.secretKey,
+
+            posConfigData.authToken,
+          );
+
+          const result = await saveOrder(
+            tableName,
+            businessId,
+            customerName,
+            customerPhone,
+            internalCart,
+            userData._id,
+            true,
+            tableData._id.toString(),
+            false,
+            null,
+            petpoojaCart,
+            userTableSession.hiCode,
+            session,
+          );
+          return c.json(result, 200);
         }
 
         await saveKotOrder(
