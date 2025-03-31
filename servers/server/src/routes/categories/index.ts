@@ -302,11 +302,15 @@ const categoriesRouter = new Hono()
         c.req.query();
 
       if (menu) {
-        const existingCategories = await Category.find({
+        let query = {
           businessId,
           isDeleted: false,
-          menuId: menuId,
-        }).select(
+        };
+
+        if (menuId) {
+          query["menuId"] = menuId;
+        }
+        const existingCategories = await Category.find(query).select(
           "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage",
         );
 
@@ -320,12 +324,16 @@ const categoriesRouter = new Hono()
       }
 
       if (child) {
-        const existingCategories = await Category.find({
+        let query = {
           businessId,
           hierarchy: "CHILD",
           isDeleted: false,
-          menuId: menuId,
-        })
+        };
+
+        if (menuId) {
+          query["menuId"] = menuId;
+        }
+        const existingCategories = await Category.find(query)
           .select(
             "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId",
           )
@@ -340,11 +348,16 @@ const categoriesRouter = new Hono()
         );
       }
       if (parent) {
-        const existingCategories = await Category.find({
+        let query = {
           businessId,
-          isDeleted: false,
           hierarchy: "PARENT",
-        })
+          isDeleted: false,
+        };
+
+        if (menuId) {
+          query["menuId"] = menuId;
+        }
+        const existingCategories = await Category.find(query)
           .sort({ sequence: 1 })
           .select(
             "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence",
@@ -451,12 +464,17 @@ const categoriesRouter = new Hono()
           return respond(c, "Menu not found", true, 404);
         }
 
-        const existingCategories = await Category.find({
+        let query = {
           businessId,
-          isDeleted: false,
           hierarchy: "CHILD",
-          menuId: menu._id,
-        }).populate({
+          isDeleted: false,
+        };
+
+        if (menuId) {
+          query["menuId"] = menuId;
+        }
+
+        const existingCategories = await Category.find(query).populate({
           path: "dishIds",
           match: { businessId: businessId, isDeleted: false, visibility: true },
           populate: { path: "addOnIds" },
@@ -471,10 +489,16 @@ const categoriesRouter = new Hono()
         );
       }
 
-      const existingCategories = await Category.find({
+      let query = {
         businessId,
         isDeleted: false,
-      });
+      };
+
+      if (menuId) {
+        query["menuId"] = menuId;
+      }
+
+      const existingCategories = await Category.find(query);
 
       return respond(c, "fetched successfully", false, 200, existingCategories);
     },
@@ -485,16 +509,22 @@ const categoriesRouter = new Hono()
       "query",
       z.object({
         businessId: z.string(),
+        menuId: z.string().optional(),
       }),
     ),
     async (c) => {
-      const { businessId } = c.req.query();
+      const { businessId, menuId } = c.req.query();
 
-      const existingCategories = await Category.find({
+      let query = {
         businessId,
         isDeleted: false,
         hierarchy: "CHILD",
-      }).populate("dishIds");
+      };
+      if (menuId) {
+        query["menuId"] = menuId;
+      }
+
+      const existingCategories = await Category.find(query).populate("dishIds");
 
       return respond(c, "fetched successfully", false, 200, existingCategories);
     },

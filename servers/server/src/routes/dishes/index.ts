@@ -82,30 +82,47 @@ const dishesRouter = new Hono()
           return respond(c, "unable to fetch dishes", false, 400, {});
         }
 
-        const existingDishes = await Dish.find({
+        let query = {
           businessId,
           "categoryIds.0": { $exists: true },
-          menuId: menuId,
           isDeleted: false,
-        }).select("_id name images dishTypes");
+        };
+
+        if (menuId) {
+          query["menuId"] = menuId;
+        }
+
+        const existingDishes = await Dish.find(query).select(
+          "_id name images dishTypes",
+        );
         return respond(c, "Fetched successfully", false, 200, existingDishes);
       }
 
       if (menu) {
-        const existingDishes = await Dish.find({
+        let query = {
           businessId,
           isDeleted: false,
-          menuId: menuId,
-        }).select(
+        };
+
+        if (menuId) {
+          query["menuId"] = menuId;
+        }
+        const existingDishes = await Dish.find(query).select(
           " _id businessId name images availability tags dishTypes visibility price categoryIds addOnIds recommendationIds",
         );
         return respond(c, "Fetched successfully", false, 200, existingDishes);
       }
 
-      const existingDishes = await Dish.find({
+      let query = {
         businessId,
         isDeleted: false,
-      });
+      };
+
+      if (menuId) {
+        query["menuId"] = menuId;
+      }
+
+      const existingDishes = await Dish.find(query);
 
       return respond(c, "Fetched successfully", false, 200, existingDishes);
     },
