@@ -570,23 +570,6 @@ const posRouter = new Hono()
         // ! this is work if qr code is not generated for the table before this business
         // ! if qr code is generated for the table then we need to use script not this api
 
-        const ifAlreadyQrGenerated = await UrlModel.findOne({
-          businessId,
-        });
-
-        if (ifAlreadyQrGenerated) {
-          return c.json(
-            {
-              message: "QR code already generated",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            409,
-          );
-        }
-
         const business =
           await Business.findById(businessId).select("customLink");
         const fetchAreaAndTable = await axios.post(

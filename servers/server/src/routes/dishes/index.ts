@@ -85,6 +85,8 @@ const dishesRouter = new Hono()
         const existingDishes = await Dish.find({
           businessId,
           "categoryIds.0": { $exists: true },
+          menuId: menuId,
+          isDeleted: false,
         }).select("_id name images dishTypes");
         return respond(c, "Fetched successfully", false, 200, existingDishes);
       }
@@ -93,6 +95,7 @@ const dishesRouter = new Hono()
         const existingDishes = await Dish.find({
           businessId,
           isDeleted: false,
+          menuId: menuId,
         }).select(
           " _id businessId name images availability tags dishTypes visibility price categoryIds addOnIds recommendationIds",
         );

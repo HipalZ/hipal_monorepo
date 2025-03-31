@@ -305,6 +305,7 @@ const categoriesRouter = new Hono()
         const existingCategories = await Category.find({
           businessId,
           isDeleted: false,
+          menuId: menuId,
         }).select(
           "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage",
         );
@@ -323,6 +324,7 @@ const categoriesRouter = new Hono()
           businessId,
           hierarchy: "CHILD",
           isDeleted: false,
+          menuId: menuId,
         })
           .select(
             "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId",
@@ -445,11 +447,15 @@ const categoriesRouter = new Hono()
           endTime: { $gte: currentTimeInMinutes },
         }).lean();
 
+        if (!menu) {
+          return respond(c, "Menu not found", true, 404);
+        }
+
         const existingCategories = await Category.find({
           businessId,
           isDeleted: false,
           hierarchy: "CHILD",
-          // menuId: menu._id,
+          menuId: menu._id,
         }).populate({
           path: "dishIds",
           match: { businessId: businessId, isDeleted: false, visibility: true },
