@@ -1,19 +1,23 @@
-"use client"
+"use client";
 
-import { apiRpc } from "@hi/common"
-import { useQuery } from "@tanstack/react-query"
-import { useRouter } from "next/navigation"
-import { useLogin } from "../store/useLogin"
-import { useEffect } from "react"
+import { apiRpc } from "@hi/common";
+import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { useLogin } from "../store/useLogin";
+import { useEffect } from "react";
 
-export const useCheckRoomStatus = (businessId: string, room: string, customLink: string) => {
-  const userId = useLogin((s) => s.userDetails?._id)
-  const router = useRouter()
+export const useCheckRoomStatus = (
+  businessId: string,
+  room: string,
+  customLink: string,
+  userID?: string
+) => {
+  const router = useRouter();
+  const fallBackUserId = useLogin((s) => s.userDetails._id);
 
   const checkRoomStatus = async () => {
-    // Only make the API call if we have a userId
-    if (!userId) {
-      return { status: 401, message: "User not logged in" }
+    if (!userID && !fallBackUserId) {
+      return { status: 401, message: "User not logged in" };
     }
 
     try {
@@ -21,32 +25,36 @@ export const useCheckRoomStatus = (businessId: string, room: string, customLink:
         query: {
           businessId: businessId,
           room: room,
-          userId,
+          userId: userID || fallBackUserId,
         },
-      })
-      return response
+      });
+      return response;
     } catch (error) {
-      console.error("Error checking room status:", error)
-      return { status: 500, message: "Error checking room status" }
+      console.error("Error checking room status:", error);
+      return { status: 500, message: "Error checking room status" };
     }
-  }
+  };
 
   const {
     isLoading: checkingIn,
     data: checkRoom,
     error,
   } = useQuery({
-    queryKey: ["checkRoomStatus", businessId, room, userId],
+    queryKey: ["checkRoomStatus", businessId, room, userID, fallBackUserId],
     queryFn: checkRoomStatus,
-    enabled: !!businessId && !!room && !!userId,
-  })
+    enabled: !!businessId && !!room && (!!userID || !!fallBackUserId),
+  });
 
   useEffect(() => {
-    if (businessId && room && userId && checkRoom?.status === 404) {
-      router.push(`/${customLink}/hotel`)
+    if (
+      businessId &&
+      room &&
+      (userID || fallBackUserId) &&
+      checkRoom?.status === 404
+    ) {
+      router.push(`/${customLink}/hotel`);
     }
-  }, [checkRoom, customLink, router, businessId, room, userId])
+  }, [checkRoom, customLink, router, businessId, room, userID, fallBackUserId]);
 
-  return { checkingIn, checkRoom, error }
-}
-
+  return { checkingIn, checkRoom, error };
+};
