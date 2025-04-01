@@ -70,6 +70,7 @@ export const AddOnsAttrs = z.object({
   visibility: z.boolean().default(true),
   isDeleted: z.boolean().default(true).optional(),
   removeDishIds: z.array(ObjectIdSchema).optional().default([]),
+  menuId: ObjectIdSchema,
 });
 
 const UpdateChoices = z.object({
