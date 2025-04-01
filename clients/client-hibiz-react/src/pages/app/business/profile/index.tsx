@@ -42,12 +42,6 @@ const MemoizedProfile = () => {
         if (data.type === "WA_EMBEDDED_SIGNUP") {
           if (data.event === "FINISH") {
             const { phone_number_id, waba_id } = data.data;
-            console.log(
-              "Phone number ID: ",
-              phone_number_id,
-              " WhatsApp business account ID: ",
-              waba_id
-            );
             saveToDatabase({ phone_number_id, waba_id });
           } else if (data.event === "CANCEL") {
             console.warn("User canceled at step: ", data.data.current_step);
@@ -57,7 +51,7 @@ const MemoizedProfile = () => {
         }
         setSessionInfo(data);
       } catch (error) {
-        console.log("Non JSON response received: ", event.data);
+        console.log("Non JSON response received: ");
       }
     };
 
@@ -68,8 +62,6 @@ const MemoizedProfile = () => {
   const fbLoginCallback = (response) => {
     if (response.authResponse) {
       const code = response.authResponse.code;
-      console.log("Facebook Auth Code: ", code);
-
       // Send code to the backend to exchange for an access token
       fetch("/api/save-fb-token", {
         method: "POST",
@@ -107,8 +99,7 @@ const MemoizedProfile = () => {
         },
         body: JSON.stringify(data),
       });
-      const result = await response.json();
-      console.log("Data saved to database:", result);
+      await response.json();
     } catch (error) {
       console.error("Error saving to database:", error);
     }
@@ -149,11 +140,7 @@ const MemoizedProfile = () => {
 
           </div>
         </section>
-        <p>Session info response:</p>
-        <pre>{JSON.stringify(sessionInfo, null, 2)}</pre>
-
-        <p>SDK response:</p>
-        <pre>{JSON.stringify(sdkResponse, null, 2)}</pre>
+        {sdkResponse ? <pre>Your application is submitted. our team will review and will inform you after activation</pre> : null}
       </center>
     </main>
   );
