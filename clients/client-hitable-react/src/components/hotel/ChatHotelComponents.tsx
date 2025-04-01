@@ -8,7 +8,7 @@ import type { Cart, ChatHeaderProps, ChatMessageHotelProps, ChatReplyMessageProp
 import FoodType from "../atoms/dishType";
 
 export const ChatHeader = ({ hotelName, logo, room, onClose }: ChatHeaderProps) => (
-    <section className="flex items-center p-4 border-b bg-white text-black fixed w-[30rem] top-16 z-10 shadow-sm">
+    <section className="flex items-center p-4 border-b bg-white text-black fixed w-full max-w-[30rem] top-16 z-10 shadow-sm">
         <Button variant="ghost" size="icon" onClick={onClose} className="mr-2">
             <ChevronLeft className="h-5 w-5" />
         </Button>
@@ -108,7 +108,7 @@ const ChatReplyMessage = ({ reply, userResponses, handleActionClick, openReview,
     </section>
 )
 
-const ChatCartComponent = ({ cart }:{cart:Cart[]}) => {
+const ChatCartComponent = ({ cart }: { cart: Cart[] }) => {
     const totalPrice = cart.reduce((sum, item) => sum + item.dish.price * item.quantity, 0)
     return (
         <motion.div
