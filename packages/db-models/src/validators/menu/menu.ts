@@ -73,6 +73,8 @@ export const MenuSchema = z
     dishIds: z.array(objectIdSchema).optional().default([]),
     categoryIds: z.array(objectIdSchema).optional().default([]),
     copyCompleteMenu: z.boolean().optional().default(false),
+    primaryColor: z.string().min(1).max(7),
+    secondaryColor: z.string().min(1).max(7),
   })
   .refine(
     (data) => {
@@ -116,10 +118,11 @@ export const UpdateMenuSchema = z.object({
   cardLayout: z.nativeEnum(CARD_LAYOUT_TYPES).optional(),
   startTime: z.coerce.number().optional(),
   endTime: z.coerce.number().optional(),
-  extendTime: z.coerce.number().optional(),
   isActive: z.boolean().optional().default(false),
   isDeleted: z.boolean().optional().default(false),
   menuId: objectIdSchema,
+  primaryColor: z.string().min(1).max(7).optional(),
+  secondaryColor: z.string().min(1).max(7).optional(),
 });
 
 // Export the inferred Menu type

@@ -37,10 +37,11 @@ const dishesRouter = new Hono()
         businessId: z.string(),
         UniquelyYours: z.string().optional(),
         menu: z.string().optional(),
+        menuId: z.string().optional(),
       }),
     ),
     async (c) => {
-      const { businessId, UniquelyYours, menu } = c.req.query();
+      const { businessId, UniquelyYours, menu, menuId } = c.req.query();
       if (UniquelyYours) {
         const isHasPos = await Pos.findOne({
           businessId,
@@ -81,27 +82,47 @@ const dishesRouter = new Hono()
           return respond(c, "unable to fetch dishes", false, 400, {});
         }
 
-        const existingDishes = await Dish.find({
+        let query = {
           businessId,
           "categoryIds.0": { $exists: true },
-        }).select("_id name images dishTypes");
+          isDeleted: false,
+        };
+
+        if (menuId) {
+          query["menuId"] = menuId;
+        }
+
+        const existingDishes = await Dish.find(query).select(
+          "_id name images dishTypes",
+        );
         return respond(c, "Fetched successfully", false, 200, existingDishes);
       }
 
       if (menu) {
-        const existingDishes = await Dish.find({
+        let query = {
           businessId,
           isDeleted: false,
-        }).select(
+        };
+
+        if (menuId) {
+          query["menuId"] = menuId;
+        }
+        const existingDishes = await Dish.find(query).select(
           " _id businessId name images availability tags dishTypes visibility price categoryIds addOnIds recommendationIds",
         );
         return respond(c, "Fetched successfully", false, 200, existingDishes);
       }
 
-      const existingDishes = await Dish.find({
+      let query = {
         businessId,
         isDeleted: false,
-      });
+      };
+
+      if (menuId) {
+        query["menuId"] = menuId;
+      }
+
+      const existingDishes = await Dish.find(query);
 
       return respond(c, "Fetched successfully", false, 200, existingDishes);
     },

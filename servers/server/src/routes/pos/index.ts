@@ -4,7 +4,6 @@ import {
   DeviceToken,
   KotOrder,
   MenuBanner,
-  OutLetInfo,
   Pos,
   PosBill,
   Table,
@@ -29,7 +28,7 @@ import {
   convertToPetpoojaCart,
   transformItemsToSimpleArray,
 } from "../../utils/helper";
-import { posApiPaths } from "../../utils/posConfig/petPooja";
+import { petpoojaPosConfig, posApiPaths } from "../../utils/posConfig/petPooja";
 const admin = require("firebase-admin");
 export const generateTenDigitCode = (): string => {
   const min = 1000000000; // Minimum 10-digit number
@@ -104,6 +103,73 @@ export const sendPushNotification = async (
   } catch (error) {
     console.error("Error sending FCM message:", error);
   }
+};
+
+const saveOrder = async (
+  tableName: string,
+  businessId: string,
+  customerName: string,
+  customerPhone: string,
+  internalCart: unknown[],
+  userId: string,
+  accepted: boolean,
+  tableId: string,
+  edited: boolean,
+  editedBy: string,
+  petpoojaCart: unknown,
+  hiCode: string,
+  session: ClientSession,
+) => {
+  const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
+  if (saveKot.data.success === "0") {
+    throw new Error("kot not saved in pos");
+  }
+  await saveKotOrder(
+    tableName,
+    businessId,
+    customerName,
+    customerPhone,
+    internalCart,
+    userId,
+    true,
+    tableId,
+    false,
+    null,
+    session,
+  );
+  const totalBill = calculateCartBill(internalCart);
+  await Table.findOneAndUpdate(
+    {
+      businessId: businessId,
+      name: tableName,
+    },
+    {
+      $inc: {
+        totalItemCount: internalCart.length,
+        currentTableAmount: totalBill,
+      },
+      $set: {
+        status: "ACTIVE",
+        hiCode: hiCode,
+        date: Date.now(),
+      },
+    },
+    {
+      new: true,
+      session,
+    },
+  );
+
+  return {
+    message: "Data fetched successfully",
+    err: false,
+    data: {
+      success: true,
+      hiCode: hiCode,
+      name: customerName,
+      phone: customerPhone,
+    },
+  };
 };
 
 const posRouter = new Hono()
@@ -489,7 +555,13 @@ const posRouter = new Hono()
   .post(
     "/setup_pos_config_data",
 
-    zValidator("json", businessPosConfigSchema),
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(1).max(50),
+        restId: z.string().min(1).max(50),
+      }),
+    ),
 
     async (c) => {
       //@ts-ignore
@@ -498,52 +570,21 @@ const posRouter = new Hono()
         // ! this is work if qr code is not generated for the table before this business
         // ! if qr code is generated for the table then we need to use script not this api
 
-        const ifAlreadyQrGenerated = await UrlModel.findOne({
-          businessId,
-        });
-
-        if (ifAlreadyQrGenerated) {
-          return c.json(
-            {
-              message: "QR code already generated",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            409,
-          );
-        }
-
-        const posConfig = await BusinessPosConfig.findOne({
-          businessId,
-        });
-
-        if (!posConfig) {
-          return c.json(
-            {
-              message: "POS Config not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
-        }
-
         const business =
           await Business.findById(businessId).select("customLink");
         const fetchAreaAndTable = await axios.post(
           posApiPaths.fetchAreaAndTables,
           {
-            "app-key": posConfig.accessKey,
-            "app-secret": posConfig.secretKey,
-            "access-token": posConfig.authToken,
+            "app-key": petpoojaPosConfig.accessKey,
+            "app-secret": petpoojaPosConfig.secretKey,
+            "access-token": petpoojaPosConfig.authToken,
             restID: restId,
             tableNo: "",
           },
         );
+        if (fetchAreaAndTable.data.success === "0") {
+          throw new Error("area and table not fetched");
+        }
 
         if (fetchAreaAndTable.data.success === "0") {
           throw new Error("area and table not fetched");
@@ -551,10 +592,18 @@ const posRouter = new Hono()
 
         if (fetchAreaAndTable.data.success === "1") {
           // areas or zones
-          const areas = fetchAreaAndTable.data.areas;
+          const areas = fetchAreaAndTable.data.areas.filter(
+            (area: {
+              active: string;
+            }) => area.active === "1",
+          );
           // tables
-          const tables = fetchAreaAndTable.data.tables;
-          // save areas and tables
+          const tables = fetchAreaAndTable.data.tables.filter(
+            (table: {
+              active: string;
+            }) => table.active === "1",
+          );
+          let zone = null;
           for (const area of areas) {
             // to find exact zone from zoneId
             const zoneId = area.restaurantareaid;
@@ -562,7 +611,7 @@ const posRouter = new Hono()
             const active = area.active;
             const rank = area.rank;
 
-            await Zone.findOneAndUpdate(
+            zone = await Zone.findOneAndUpdate(
               {
                 zoneId,
               },
@@ -599,6 +648,7 @@ const posRouter = new Hono()
                 active,
                 rank,
                 tableId,
+                internalZoneId: zone?._id,
               },
               {
                 upsert: true,
@@ -613,13 +663,13 @@ const posRouter = new Hono()
 
             const alreadyExists = await UrlModel.findOne({
               businessId: businessId,
-              longUrl: `https://hipal-test.hipalz.com/${business?.customLink}/explore?tableName=${creatingTable.name}`,
+              longUrl: `https://test-hipal.hipalz.com/${business?.customLink}/explore?tableName=${creatingTable.name}`,
             });
 
             if (!alreadyExists) {
               const createShortUrl = await UrlModel.create({
                 businessId: businessId,
-                longUrl: `https://hipal-test.hipalz.com/${business?.customLink}/explore?tableName=${creatingTable.name}`,
+                longUrl: `https://test-hipal.hipalz.com/${business?.customLink}/explore?tableName=${creatingTable.name}`,
                 shortUrl: `https://api.test.hipalz.com/surl/${uniqueOrderId}`,
                 urlCode: uniqueOrderId,
               });
@@ -639,20 +689,20 @@ const posRouter = new Hono()
             }
           }
 
-          // update outlet info
-          await OutLetInfo.findOneAndUpdate(
-            {
-              businessId,
-            },
-            {
-              isPosEnabled: true,
-            },
-            {
-              new: true,
-              upsert: true,
-              session,
-            },
-          );
+          // // update outlet info
+          // await OutLetInfo.findOneAndUpdate(
+          //   {
+          //     businessId,
+          //   },
+          //   {
+          //     isPosEnabled: true,
+          //   },
+          //   {
+          //     new: true,
+          //     upsert: true,
+          //     session,
+          //   },
+          // );
 
           // update uniquely yours
           await UniquelyYours.findOneAndUpdate(
@@ -680,28 +730,17 @@ const posRouter = new Hono()
               session,
             },
           );
-
-          return c.json(
-            {
-              message: "Data fetched successfully",
-              err: false,
-              data: {
-                success: true,
-              },
-            },
-            200,
-          );
         }
 
         return c.json(
           {
-            message: "Error fetching data",
-            err: true,
+            message: "POS Config saved successfully",
+            err: false,
             data: {
-              success: false,
+              success: true,
             },
           },
-          400,
+          201,
         );
       });
     },
@@ -909,6 +948,38 @@ const posRouter = new Hono()
             },
           );
           await userSession.save();
+          if (posConfigData.orderVerificationType === "USER") {
+            const petpoojaCart = convertToPetpoojaCart(
+              internalCart,
+              posConfigData.restId,
+              customerName,
+              tenDigitCode,
+              tableName,
+              posConfigData.accessKey,
+              posConfigData.secretKey,
+
+              posConfigData.authToken,
+            );
+
+            const result = await saveOrder(
+              tableName,
+              businessId,
+              customerName,
+              customerPhone,
+              internalCart,
+              userData._id,
+              true,
+              tableData?._id.toString(),
+              false,
+              null,
+              petpoojaCart,
+              hiCode,
+              session,
+            );
+
+            return c.json(result, 200);
+          }
+
           await saveKotOrder(
             tableName,
             businessId,
@@ -936,6 +1007,37 @@ const posRouter = new Hono()
             },
             200,
           );
+        }
+
+        if (posConfigData.orderVerificationType === "USER") {
+          const petpoojaCart = convertToPetpoojaCart(
+            internalCart,
+            posConfigData.restId,
+            customerName,
+            userTableSession.pin,
+            tableName,
+            posConfigData.accessKey,
+            posConfigData.secretKey,
+
+            posConfigData.authToken,
+          );
+
+          const result = await saveOrder(
+            tableName,
+            businessId,
+            customerName,
+            customerPhone,
+            internalCart,
+            userData._id,
+            true,
+            tableData._id.toString(),
+            false,
+            null,
+            petpoojaCart,
+            userTableSession.hiCode,
+            session,
+          );
+          return c.json(result, 200);
         }
 
         await saveKotOrder(
