@@ -27,9 +27,34 @@ const CheckInPopup = ({codeError,handleCodeChange,hotelName,logo,verificationCod
                 <p className="mb-4 text-center text-blue-600">We're delighted to have you as our guest</p>
             </motion.div>
         </div>
+        <div className="px-6">
+            <div className="flex items-center justify-center gap-2 p-3 mb-6 text-sm text-gray-500 rounded-lg bg-gray-50">
+                <MessageSquare className="flex-shrink-0 w-4 h-4" />
+                <p className="font-semibold opacity-80">The code was sent to you via WhatsApp. If you haven't received it, please contact the reception.</p>
+            </div>
 
+            <div className="mb-6">
+                <div className="relative">
+                    <KeyRound className="absolute text-gray-400 transform -translate-y-1/2 left-4 top-1/2" />
+                    <input
+                        type="text"
+                        value={verificationCode}
+                        onChange={handleCodeChange}
+                        placeholder="Enter 4-digit code"
+                        className="w-full p-3 pl-12 text-xl font-bold tracking-widest text-center text-black border-2 border-gray-300 rounded-md focus:border-blue-500 focus:outline-none"
+                        maxLength={4}
+                    />
+                </div>
+                {codeError && (
+                    <p className="flex items-center justify-center gap-1 mt-2 text-sm text-red-500">
+                        <AlertCircle className="w-4 h-4" />
+                        {codeError}
+                    </p>
+                )}
+            </div>
+        </div>
         {/* Services Preview */}
-        <div className="px-6 py-4 bg-white border-gray-100 border-y">
+        <div className="px-6 pb-4 bg-base-100">
             <h3 className="mb-3 text-lg font-semibold text-gray-800">Your stay includes:</h3>
 
             <div className="grid grid-cols-2 gap-3 mb-4">
@@ -57,32 +82,7 @@ const CheckInPopup = ({codeError,handleCodeChange,hotelName,logo,verificationCod
         </div>
 
         {/* Verification Section */}
-        <div className="p-6">
-            <div className="flex items-center justify-center gap-2 p-3 mb-6 text-sm text-gray-500 rounded-lg bg-gray-50">
-                <MessageSquare className="flex-shrink-0 w-4 h-4" />
-                <p>The code was sent to you via WhatsApp. If you haven't received it, please contact the reception.</p>
-            </div>
-
-            <div className="mb-6">
-                <div className="relative">
-                    <KeyRound className="absolute text-gray-400 transform -translate-y-1/2 left-4 top-1/2" />
-                    <input
-                        type="text"
-                        value={verificationCode}
-                        onChange={handleCodeChange}
-                        placeholder="Enter 4-digit code"
-                        className="w-full p-3 pl-12 text-xl font-bold tracking-widest text-center text-black border-2 border-gray-300 rounded-md focus:border-blue-500 focus:outline-none"
-                        maxLength={4}
-                    />
-                </div>
-                {codeError && (
-                    <p className="flex items-center justify-center gap-1 mt-2 text-sm text-red-500">
-                        <AlertCircle className="w-4 h-4" />
-                        {codeError}
-                    </p>
-                )}
-            </div>
-        </div>
+       
     </CardContent>
 </Card>
   )
