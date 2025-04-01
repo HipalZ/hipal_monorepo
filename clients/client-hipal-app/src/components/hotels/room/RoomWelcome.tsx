@@ -14,6 +14,8 @@ import { toast } from "react-toastify"
 import { useUserToken } from "@hi/common/src/useUserToken";
 import CheckInPopup from "./CheckInPopup";
 import AutoLogin from "./AutoLogin";
+import type { IThemes } from "@/components/types/businessData";
+import { updateTheme } from "@/components/utils/themes";
 
 export interface HotelWelcomeCardProps {
     hotelName: string
@@ -23,6 +25,7 @@ export interface HotelWelcomeCardProps {
     businessId?: string
     customLink?: string
     userID?: string
+    themeData?: IThemes
 }
 
 export default function HotelWelcomeCard({
@@ -33,14 +36,17 @@ export default function HotelWelcomeCard({
     room,
     businessId,
     userID,
+    themeData,
 }: HotelWelcomeCardProps) {
     const [showPopup, setShowPopup] = useState(false)
     const [verificationCode, setVerificationCode] = useState("")
     const [codeError, setCodeError] = useState("")
     const accessToken = useUserToken.getState().accessToken;
-    const { checkRoom } = useCheckRoomStatus(businessId || "", room || "", customLink)
+    const { checkRoom } = useCheckRoomStatus(businessId || "", room || "", customLink,userID)
+    console.log("checkRoom", userID)
 
     useEffect(() => {
+        updateTheme(themeData)
         if (accessToken !== "" && (checkRoom?.status === 400 || checkRoom?.status === 401 ||
             checkRoom?.status === 403)) {
             setShowPopup(true)
@@ -133,7 +139,6 @@ export default function HotelWelcomeCard({
                     <CommonBottomButton
                         fixed={true}
                         buttons={[
-
                             {
                                 text: "Check In",
                                 onClick: handleCheckIn,
