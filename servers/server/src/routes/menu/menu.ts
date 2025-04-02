@@ -265,10 +265,22 @@ const menuRouter = new Hono()
           zoneIds: zone?._id,
           businessId,
           isActive: true,
-          days: { $in: [currentDay] },
-          startTime: { $lte: currentTimeInMinutes },
-          endTime: { $gte: currentTimeInMinutes },
-        }).lean();
+          $or: [
+            {
+              days: { $in: [currentDay] },
+              startTime: { $lte: currentTimeInMinutes },
+              endTime: { $gte: currentTimeInMinutes },
+            },
+            {
+              days: { $in: [currentDay] },
+              $expr: { $eq: ["$startTime", { $add: ["$endTime", 1] }] },
+            },
+          ],
+        })
+          .lean()
+          .select(
+            "menuType categoryLayout cardLayout primaryColor secondaryColor",
+          );
 
         if (!menu) return respond(c, "Menu not found", true, 404);
 
