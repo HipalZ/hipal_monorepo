@@ -40,81 +40,47 @@ export const CARD_LAYOUT_TYPES = {
 export type CardLayout =
   (typeof CARD_LAYOUT_TYPES)[keyof typeof CARD_LAYOUT_TYPES];
 
-export const MenuSchema = z
-  .object({
-    name: z.string().min(1).max(50),
-    businessId: objectIdSchema,
-    zoneIds: z
-      .array(objectIdSchema)
-      .nonempty({ message: "zoneIds cannot be empty" }),
-    menuType: z.nativeEnum(MENU_TYPES).default(MENU_TYPES.MAIN_SUB_DISH),
-    days: z
-      .nativeEnum(MENU_DAYS)
-      .array()
-      .default([
-        MENU_DAYS.SUNDAY,
-        MENU_DAYS.MONDAY,
-        MENU_DAYS.TUESDAY,
-        MENU_DAYS.WEDNESDAY,
-        MENU_DAYS.THURSDAY,
-        MENU_DAYS.FRIDAY,
-        MENU_DAYS.SATURDAY,
-      ]),
-    categoryLayout: z
-      .nativeEnum(CATEGORY_LAYOUT_TYPES)
-      .default(CATEGORY_LAYOUT_TYPES.EDGE),
-    cardLayout: z.nativeEnum(CARD_LAYOUT_TYPES).default(CARD_LAYOUT_TYPES.GRID),
-    startTime: z.coerce.number().optional(),
-    endTime: z.coerce.number().optional(),
-    extendTime: z.coerce.number().optional(),
-    sourceMenuId: objectIdSchema.optional(),
-    isActive: z.boolean().optional().default(false),
-    isDeleted: z.boolean().optional().default(false),
-    dishIds: z.array(objectIdSchema).optional().default([]),
-    categoryIds: z.array(objectIdSchema).optional().default([]),
-    copyCompleteMenu: z.boolean().optional().default(false),
-    primaryColor: z.string().min(1).max(7),
-    secondaryColor: z.string().min(1).max(7),
-  })
-  .refine(
-    (data) => {
-      const dishCount = data.dishIds.length;
-      const categoryCount = data.categoryIds.length;
-      const hasDish = dishCount > 0;
-      const hasCategory = categoryCount > 0;
-      const hasSource =
-        data.sourceMenuId !== undefined && data.sourceMenuId !== null;
-
-      if (hasDish && hasCategory) return false;
-
-      if (data.copyCompleteMenu) {
-        if (hasDish || hasCategory) return false;
-        if (!hasSource) return false;
-      }
-
-      if ((hasDish || hasCategory) && !hasSource) return false;
-
-      if (!hasSource) {
-        if (hasDish || hasCategory) return false;
-        if (data.copyCompleteMenu === true) return false;
-      }
-      return true;
-    },
-    {
-      message:
-        "Invalid combination: Provide either dishIds or categoryIds exclusively with a required sourceMenuId; if copyCompleteMenu is true, dishIds and categoryIds must be empty and sourceMenuId must be provided; if sourceMenuId is undefined, then one of dishIds or categoryIds must be empty and copyCompleteMenu must be false.",
-      path: ["dishIds", "categoryIds", "sourceMenuId", "copyCompleteMenu"],
-    },
-  );
+export const MenuSchema = z.object({
+  name: z.string().min(1).max(50),
+  businessId: objectIdSchema,
+  zoneIds: z
+    .array(objectIdSchema)
+    .nonempty({ message: "zoneIds cannot be empty" }),
+  menuType: z.nativeEnum(MENU_TYPES).default(MENU_TYPES.MAIN_SUB_DISH),
+  days: z
+    .nativeEnum(MENU_DAYS)
+    .array()
+    .default([
+      MENU_DAYS.SUNDAY,
+      MENU_DAYS.MONDAY,
+      MENU_DAYS.TUESDAY,
+      MENU_DAYS.WEDNESDAY,
+      MENU_DAYS.THURSDAY,
+      MENU_DAYS.FRIDAY,
+      MENU_DAYS.SATURDAY,
+    ]),
+  categoryLayout: z
+    .nativeEnum(CATEGORY_LAYOUT_TYPES)
+    .default(CATEGORY_LAYOUT_TYPES.EDGE),
+  cardLayout: z.nativeEnum(CARD_LAYOUT_TYPES).default(CARD_LAYOUT_TYPES.GRID),
+  startTime: z.coerce.number().optional(),
+  endTime: z.coerce.number().optional(),
+  extendTime: z.coerce.number().optional(),
+  sourceMenuId: objectIdSchema.optional(),
+  isActive: z.boolean().optional().default(false),
+  isDeleted: z.boolean().optional().default(false),
+  dishIds: z.array(objectIdSchema).optional().default([]),
+  categoryIds: z.array(objectIdSchema).optional().default([]),
+  primaryColor: z.string().min(1).max(7),
+  secondaryColor: z.string().min(1).max(7),
+});
 
 export const UpdateMenuSchema = z.object({
   name: z.string().min(1).max(50).optional(),
   zoneIds: z.array(objectIdSchema).optional(),
-
   menuType: z.nativeEnum(MENU_TYPES).optional(),
   days: z.nativeEnum(MENU_DAYS).array().optional(),
   categoryLayout: z.nativeEnum(CATEGORY_LAYOUT_TYPES).optional(),
-
   cardLayout: z.nativeEnum(CARD_LAYOUT_TYPES).optional(),
   startTime: z.coerce.number().optional(),
   endTime: z.coerce.number().optional(),

@@ -40,107 +40,77 @@ async function validateActiveMenus(
   }
   return true;
 }
-async function processCategories(
-  categoryIds: string[],
-  menuId: string,
-  sourceMenuId: string,
-  session: ClientSession,
-) {
-  const newCategoryIds = [];
-  const categories = await Category.find({
-    _id: { $in: categoryIds, menuId: sourceMenuId },
-  }).lean();
-
-  for (const category of categories) {
-    const relatedDishes = await Dish.find({
-      _id: { $in: category.dishIds },
-    }).lean();
-
-    const newCategory = new Category({
-      ...category,
-      menuId: menuId,
-      dishIds: [],
-    });
-
-    const newDishIds = [];
-
-    for (const dish of relatedDishes) {
-      const newDish = new Dish({
-        ...dish,
-      });
-
-      newDish.categoryIds = newDish?.categoryIds?.map((catId) =>
-        String(catId) === String(category._id) ? newCategory._id : catId,
-      );
-
-      await newDish.save({ session });
-      newDishIds.push(newDish._id);
-    }
-
-    newCategory.dishIds = newDishIds;
-    await newCategory.save({ session });
-    newCategoryIds.push(newCategory._id);
-  }
-
-  return newCategoryIds;
-}
-
-async function processDishes(
-  dishIds: string[],
-  sourceMenuId: string,
-  session: ClientSession,
-) {
-  const newDishIds = [];
-  const dishes = await Dish.find({
-    _id: { $in: dishIds },
-    menuId: sourceMenuId,
-  }).lean();
-  for (const dish of dishes) {
-    const newDish = new Dish({
-      ...dish,
-    });
-    await newDish.save({ session });
-    newDishIds.push(newDish._id);
-  }
-  return newDishIds;
-}
 
 async function processCompleteMenu(
   sourceMenuId: string,
   menuId: string,
   session: ClientSession,
 ) {
-  const newCategoryIds = [];
-  const sourceCategories = await Category.find({
-    menuId: sourceMenuId,
-  }).lean();
+  const newCategoryIdsMap = new Map();
+  const newCategoryDocs = new Map();
+
+  const sourceCategories = await Category.find({ menuId: sourceMenuId }).lean();
+
+  // First pass: create all category stubs (without subCategoryIds or dishIds)
   for (const category of sourceCategories) {
+    const newCategoryId = new mongoose.Types.ObjectId();
+    const newCategory = new Category({
+      ...category,
+      _id: newCategoryId,
+      menuId,
+      dishIds: [],
+      subCategoryIds: [],
+    });
+    await newCategory.save({ session });
+    newCategoryIdsMap.set(String(category._id), newCategoryId);
+    newCategoryDocs.set(String(category._id), newCategory);
+  }
+
+  // Second pass: process dishes and update dishIds
+  for (const category of sourceCategories) {
+    const newCategoryId = newCategoryIdsMap.get(String(category._id));
+    const newCategory = newCategoryDocs.get(String(category._id));
+
     const sourceDishes = await Dish.find({
       _id: { $in: category.dishIds },
     }).lean();
-    const newCategory = new Category({
-      ...category,
-      _id: new mongoose.Types.ObjectId(),
-      menuId: menuId,
-    });
-    await newCategory.save({ session });
-    newCategoryIds.push(newCategory._id);
-
     const newDishIds = [];
+
     for (const dish of sourceDishes) {
       const newDish = new Dish({
         ...dish,
+        _id: new mongoose.Types.ObjectId(),
+        categoryIds: dish?.categoryIds?.map((catId) =>
+          String(catId) === String(category._id)
+            ? newCategoryId
+            : newCategoryIdsMap.get(String(catId)) || catId,
+        ),
       });
-      newDish.categoryIds = newDish?.categoryIds?.map((catId) =>
-        String(catId) === String(category._id) ? newCategory._id : catId,
-      );
       await newDish.save({ session });
       newDishIds.push(newDish._id);
     }
+
     newCategory.dishIds = newDishIds;
     await newCategory.save({ session });
   }
-  return newCategoryIds;
+
+  // Third pass: update hierarchy links
+  for (const category of sourceCategories) {
+    const newCategory = newCategoryDocs.get(String(category._id));
+    if (category.hierarchy === "PARENT") {
+      newCategory.subCategoryIds = category.subCategoryIds.map(
+        (subCatId) => newCategoryIdsMap.get(String(subCatId)) || subCatId,
+      );
+      await newCategory.save({ session });
+    } else if (category.parentCategoryIds?.length) {
+      newCategory.parentCategoryIds = category.parentCategoryIds.map(
+        (parentId) => newCategoryIdsMap.get(String(parentId)) || parentId,
+      );
+      await newCategory.save({ session });
+    }
+  }
+
+  return true;
 }
 
 const menuRouter = new Hono()
@@ -250,19 +220,14 @@ const menuRouter = new Hono()
         businessId,
         zoneIds,
         days,
-        categoryIds,
-        dishIds,
-        copyCompleteMenu,
+
         sourceMenuId,
       } = requestData;
 
-      if (
-        (sourceMenuId || dishIds || categoryIds || copyCompleteMenu) &&
-        (await BusinessPosConfig.exists({ businessId }))
-      ) {
+      if (sourceMenuId && (await BusinessPosConfig.exists({ businessId }))) {
         return respond(
           c,
-          "You cannot create a menu with sourceMenuId, dishIds, categoryIds or copyCompleteMenu as this business has POS",
+          "You cannot create a menu with sourceMenuId as this business has POS",
           true,
           400,
         );
@@ -290,27 +255,20 @@ const menuRouter = new Hono()
 
       const menu = new Menu({ ...requestData });
 
-      if (Array.isArray(categoryIds) && categoryIds.length > 0) {
-        menu.categoryIds = await processCategories(
-          categoryIds,
-          menu._id.toString(),
-          sourceMenuId,
-          session,
-        );
-      }
-
-      // Process dishIds if provided (and categoryIds are not)
-      if (Array.isArray(dishIds) && dishIds.length > 0) {
-        menu.dishIds = await processDishes(dishIds, sourceMenuId, session);
-      }
-
-      // Process complete menu copy if required
-      if (copyCompleteMenu === true) {
-        menu.categoryIds = await processCompleteMenu(
+      if (sourceMenuId) {
+        const sourceMenu = await Menu.findById(sourceMenuId);
+        if (!sourceMenu) {
+          return respond(c, "Source menu not found", true, 404);
+        }
+        const createMenu = await processCompleteMenu(
           sourceMenuId,
           menu._id.toString(),
           session,
         );
+
+        if (!createMenu) {
+          return respond(c, "Failed to create menu", true, 400);
+        }
       }
 
       await menu.save({ session });
