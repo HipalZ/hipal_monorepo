@@ -56,10 +56,8 @@ async function processCompleteMenu(
   const allDishIds = sourceCategories
     .flatMap((c) => c.dishIds || [])
     .map((id) => String(id)); // Normalize to string
-  console.log("allDishIds", allDishIds);
 
   const sourceDishes = await Dish.find({ _id: { $in: allDishIds } }).lean();
-  console.log("sourceDishes", sourceDishes);
 
   const dishById = new Map(sourceDishes.map((d) => [String(d._id), d]));
 
@@ -90,6 +88,7 @@ async function processCompleteMenu(
 
       const newDish = new Dish({
         ...dish,
+        menuId,
         _id: new mongoose.Types.ObjectId(),
         categoryIds: (dish.categoryIds || []).map((catId) => {
           const catIdStr = String(catId);
