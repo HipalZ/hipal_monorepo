@@ -518,8 +518,11 @@ const categoriesRouter = new Hono()
           businessId,
           hierarchy: "CHILD",
           isDeleted: false,
-          menuId: menu._id,
         };
+
+        if (menuId || tableName) {
+          query["menuId"] = menu?._id;
+        }
 
         const existingCategories = await Category.find(query).populate({
           path: "dishIds",
