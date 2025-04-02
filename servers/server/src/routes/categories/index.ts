@@ -353,13 +353,12 @@ const categoriesRouter = new Hono()
           name: tableName,
           businessId,
         }).lean();
-        if (!tableData) return respond(c, "Table not found", true, 404);
 
         // Find the associated zone using either internalZoneId or zoneId
         const zone = await Zone.findOne({
           $or: [
-            { _id: tableData.internalZoneId, businessId },
-            { zoneId: tableData.zoneId, businessId },
+            { _id: tableData?.internalZoneId, businessId },
+            { zoneId: tableData?.zoneId, businessId },
           ],
         });
 
@@ -472,13 +471,12 @@ const categoriesRouter = new Hono()
           name: tableName,
           businessId,
         }).lean();
-        if (!tableData) return respond(c, "Table not found", true, 404);
 
         // Find the associated zone using either internalZoneId or zoneId
         const zone = await Zone.findOne({
           $or: [
-            { _id: tableData.internalZoneId, businessId },
-            { zoneId: tableData.zoneId, businessId },
+            { _id: tableData?.internalZoneId, businessId },
+            { zoneId: tableData?.zoneId, businessId },
           ],
         });
 
