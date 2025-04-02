@@ -70,6 +70,7 @@ export const MenuSchema = z.object({
   isDeleted: z.boolean().optional().default(false),
   primaryColor: z.string().min(1).max(7),
   secondaryColor: z.string().min(1).max(7),
+  default: z.boolean().optional().default(false),
 });
 
 export const UpdateMenuSchema = z.object({

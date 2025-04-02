@@ -85,6 +85,10 @@ const menuSchema = new mongoose.Schema<MenuTypeValidator>({
     required: true,
     default: "#000000",
   },
+  default: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Menu: Model<MenuTypeValidator> = mongoose.model<MenuTypeValidator>(

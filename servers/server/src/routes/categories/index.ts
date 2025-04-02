@@ -520,7 +520,7 @@ const categoriesRouter = new Hono()
           isDeleted: false,
         };
 
-        if (menuId || tableName) {
+        if (tableName) {
           query["menuId"] = menu?._id;
         }
 

@@ -379,6 +379,9 @@ const scriptRouter = new Hono()
           isDeleted: false,
           categoryLayout: 1,
           cardLayout: 1,
+          default: true,
+          primaryColor: "#000000",
+          secondaryColor: "#FFFFFF",
         });
 
         await menu.save();
