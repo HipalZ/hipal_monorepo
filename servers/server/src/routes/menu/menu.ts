@@ -46,15 +46,21 @@ async function processCompleteMenu(
   menuId: string,
   session: ClientSession,
 ) {
-  const newCategoryIdsMap = new Map();
-  const newCategoryDocs = new Map();
-  const newDishes = [];
+  const newCategoryIdsMap = new Map<string, mongoose.Types.ObjectId>();
+  const newCategoryDocs = new Map<string, InstanceType<typeof Category>>();
+  const newDishes: InstanceType<typeof Dish>[] = [];
 
   // Step 1: Fetch everything upfront
   const sourceCategories = await Category.find({ menuId: sourceMenuId }).lean();
 
-  const allDishIds = sourceCategories.flatMap((c) => c.dishIds || []);
+  const allDishIds = sourceCategories
+    .flatMap((c) => c.dishIds || [])
+    .map((id) => String(id)); // Normalize to string
+  console.log("allDishIds", allDishIds);
+
   const sourceDishes = await Dish.find({ _id: { $in: allDishIds } }).lean();
+  console.log("sourceDishes", sourceDishes);
+
   const dishById = new Map(sourceDishes.map((d) => [String(d._id), d]));
 
   // Step 2: Create all new category stubs (in memory only)
@@ -74,8 +80,9 @@ async function processCompleteMenu(
 
   // Step 3: Create all new dishes and map them to new categories
   for (const category of sourceCategories) {
-    const newCategoryId = newCategoryIdsMap.get(String(category._id));
-    const newDishIds = [];
+    const originalCategoryId = String(category._id);
+    const newCategoryId = newCategoryIdsMap.get(originalCategoryId)!;
+    const newDishIds: mongoose.Types.ObjectId[] = [];
 
     for (const dishId of category.dishIds || []) {
       const dish = dishById.get(String(dishId));
@@ -84,11 +91,12 @@ async function processCompleteMenu(
       const newDish = new Dish({
         ...dish,
         _id: new mongoose.Types.ObjectId(),
-        categoryIds: dish?.categoryIds?.map((catId) =>
-          String(catId) === String(category._id)
+        categoryIds: (dish.categoryIds || []).map((catId) => {
+          const catIdStr = String(catId);
+          return catIdStr === originalCategoryId
             ? newCategoryId
-            : newCategoryIdsMap.get(String(catId)) || catId,
-        ),
+            : newCategoryIdsMap.get(catIdStr) || catId;
+        }),
       });
 
       newDishes.push(newDish);
@@ -96,16 +104,17 @@ async function processCompleteMenu(
     }
 
     // Update dishIds for new category (still in memory)
-    const newCategory = newCategoryDocs.get(String(category._id));
+    const newCategory = newCategoryDocs.get(originalCategoryId)!;
     newCategory.dishIds = newDishIds;
   }
 
   // Step 4: Update hierarchy links
   for (const category of sourceCategories) {
-    const newCategory = newCategoryDocs.get(String(category._id));
+    const originalCategoryId = String(category._id);
+    const newCategory = newCategoryDocs.get(originalCategoryId)!;
 
     if (category.hierarchy === "PARENT") {
-      newCategory.subCategoryIds = category.subCategoryIds.map(
+      newCategory.subCategoryIds = (category.subCategoryIds || []).map(
         (subCatId) => newCategoryIdsMap.get(String(subCatId)) || subCatId,
       );
     } else if (category.parentCategoryIds?.length) {
