@@ -65,12 +65,9 @@ export const MenuSchema = z.object({
   cardLayout: z.nativeEnum(CARD_LAYOUT_TYPES).default(CARD_LAYOUT_TYPES.GRID),
   startTime: z.coerce.number().optional(),
   endTime: z.coerce.number().optional(),
-  extendTime: z.coerce.number().optional(),
   sourceMenuId: objectIdSchema.optional(),
   isActive: z.boolean().optional().default(false),
   isDeleted: z.boolean().optional().default(false),
-  dishIds: z.array(objectIdSchema).optional().default([]),
-  categoryIds: z.array(objectIdSchema).optional().default([]),
   primaryColor: z.string().min(1).max(7),
   secondaryColor: z.string().min(1).max(7),
 });
