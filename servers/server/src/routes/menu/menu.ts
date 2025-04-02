@@ -48,10 +48,16 @@ async function processCompleteMenu(
 ) {
   const newCategoryIdsMap = new Map();
   const newCategoryDocs = new Map();
+  const newDishes = [];
 
+  // Step 1: Fetch everything upfront
   const sourceCategories = await Category.find({ menuId: sourceMenuId }).lean();
 
-  // First pass: create all category stubs (without subCategoryIds or dishIds)
+  const allDishIds = sourceCategories.flatMap((c) => c.dishIds || []);
+  const sourceDishes = await Dish.find({ _id: { $in: allDishIds } }).lean();
+  const dishById = new Map(sourceDishes.map((d) => [String(d._id), d]));
+
+  // Step 2: Create all new category stubs (in memory only)
   for (const category of sourceCategories) {
     const newCategoryId = new mongoose.Types.ObjectId();
     const newCategory = new Category({
@@ -61,22 +67,20 @@ async function processCompleteMenu(
       dishIds: [],
       subCategoryIds: [],
     });
-    await newCategory.save({ session });
+
     newCategoryIdsMap.set(String(category._id), newCategoryId);
     newCategoryDocs.set(String(category._id), newCategory);
   }
 
-  // Second pass: process dishes and update dishIds
+  // Step 3: Create all new dishes and map them to new categories
   for (const category of sourceCategories) {
     const newCategoryId = newCategoryIdsMap.get(String(category._id));
-    const newCategory = newCategoryDocs.get(String(category._id));
-
-    const sourceDishes = await Dish.find({
-      _id: { $in: category.dishIds },
-    }).lean();
     const newDishIds = [];
 
-    for (const dish of sourceDishes) {
+    for (const dishId of category.dishIds || []) {
+      const dish = dishById.get(String(dishId));
+      if (!dish) continue;
+
       const newDish = new Dish({
         ...dish,
         _id: new mongoose.Types.ObjectId(),
@@ -86,28 +90,38 @@ async function processCompleteMenu(
             : newCategoryIdsMap.get(String(catId)) || catId,
         ),
       });
-      await newDish.save({ session });
+
+      newDishes.push(newDish);
       newDishIds.push(newDish._id);
     }
 
+    // Update dishIds for new category (still in memory)
+    const newCategory = newCategoryDocs.get(String(category._id));
     newCategory.dishIds = newDishIds;
-    await newCategory.save({ session });
   }
 
-  // Third pass: update hierarchy links
+  // Step 4: Update hierarchy links
   for (const category of sourceCategories) {
     const newCategory = newCategoryDocs.get(String(category._id));
+
     if (category.hierarchy === "PARENT") {
       newCategory.subCategoryIds = category.subCategoryIds.map(
         (subCatId) => newCategoryIdsMap.get(String(subCatId)) || subCatId,
       );
-      await newCategory.save({ session });
     } else if (category.parentCategoryIds?.length) {
       newCategory.parentCategoryIds = category.parentCategoryIds.map(
         (parentId) => newCategoryIdsMap.get(String(parentId)) || parentId,
       );
-      await newCategory.save({ session });
     }
+  }
+
+  // Step 5: Save everything with session
+  for (const newCategory of Array.from(newCategoryDocs.values())) {
+    await newCategory.save({ session });
+  }
+
+  for (const newDish of newDishes) {
+    await newDish.save({ session });
   }
 
   return true;
