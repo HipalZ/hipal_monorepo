@@ -23,7 +23,7 @@ import BottomButton from "@/components/atom/bottomButton";
 import { RiLinkUnlink } from "react-icons/ri";
 
 const MemoServiceStepOne = () => {
-  const { businessId } = useParams<{ businessId?: string }>();
+  const { businessId ,menuId} = useParams<{ businessId?: string ;menuId?:string}>();
   const [displayedPrice, setDisplayedPrice] = useState("");
   const queryClient = useQueryClient();
   const errorToasts = useErrorToasts();
@@ -150,6 +150,7 @@ const MemoServiceStepOne = () => {
     );
     const payload: DishType = {
       businessId: Object(businessId),
+      menuId: Object(menuId),
       name: dishName,
       price: dishPrice,
       visibility: visibility,
@@ -171,7 +172,7 @@ const MemoServiceStepOne = () => {
       resetDishStore();
       setIsLoading(false);
       setOpenMenu(false);
-      queryClient.invalidateQueries({ queryKey: ["getAlldishes"] });
+      queryClient.invalidateQueries({ queryKey: ["getAllDishes"] });
       return toast.success("Created successfully");
     }
     setIsLoading(false);

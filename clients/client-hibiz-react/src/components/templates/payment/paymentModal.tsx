@@ -255,7 +255,6 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
       <AdvancedBottomButton
         fixed={true}
         maxWidth="30rem"
-        gap={2}
         buttons={[
           {
             text: "",
@@ -266,18 +265,18 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
           {
             text: "prev",
             onClick: goToPrevious,
-            className: "rounded-md w-[15%]",
+            className: "rounded-md !flex-none w-[4rem]",
           },
           {
             text: "next",
             onClick: goToNext,
-            className: "rounded-md w-[15%]",
+            className: "rounded-md !flex-none w-[4rem]",
           },
           {
-            text: "Download Invoice",
+            text: "Invoice",
             onClick: () => mutateAsync(salesData?._id),
             icon: <Download />,
-            className: "rounded-md w-1/2",
+            className: "rounded-md px-2",
             disable: isPending,
             isLoading: isPending,
           },

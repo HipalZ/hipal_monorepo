@@ -7,25 +7,33 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
 import { parse } from "papaparse";
+import { useParams } from "react-router-dom";
 
 export const useParentCategories = () => {
   const businessData = useBusinessData((state) => state.businessData);
+  const menuId = useParams<{ menuId: string }>().menuId;
   const { setCategories } = useCategoryStore((state) => ({
     setCategories: state.setCategories,
   }));
 
+  const updatedQuery = menuId ? {
+    menuId: menuId,
+    businessId: businessData?._id,
+    parent: "true",
+  } : {
+    businessId: businessData?._id,
+    parent: "true",
+  }
+
   const getAllParentCategory = useCallback(async () => {
     if (!businessData?._id) return [];
     const res = await apiRpc.categories.$get({
-      query: {
-        businessId: businessData._id,
-        parent: "true",
-      },
+      query: updatedQuery
     });
     const data = (await res.json()).data as CategoryType[];
     setCategories(data);
     return data;
-  }, [businessData?._id]);
+  }, [businessData?._id,menuId]);
 
   const { data: categories, isLoading } = useQuery({
     queryKey: ["getAllParentCategory", businessData?._id],
@@ -38,17 +46,24 @@ export const useParentCategories = () => {
 
 export const useChildCategories = () => {
   const businessData = useBusinessData((state) => state.businessData);
+  const menuId = useParams<{ menuId: string }>().menuId;
   const { setSubCategories } = useCategoryStore((state) => ({
     setSubCategories: state.setSubCategories,
   }));
 
+  const updatedQuery = menuId ? {
+    menuId: menuId,
+    businessId: businessData?._id,
+    child: "true",
+  } : {
+    businessId: businessData?._id,
+    child: "true",
+  }
+
   const getAllChildCategory = useCallback(async () => {
     if (!businessData?._id) return [];
     const res = await apiRpc.categories.$get({
-      query: {
-        businessId: businessData._id,
-        child: "true",
-      },
+      query: updatedQuery
     });
     const data = (await res.json()).data as CategoryType[];
     setSubCategories(data);

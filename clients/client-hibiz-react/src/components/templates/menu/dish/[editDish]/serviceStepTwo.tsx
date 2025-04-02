@@ -18,8 +18,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import BottomButton from "@/components/atom/bottomButton";
 
 const MemoServiceStepTwo = () => {
-  const { businessId } = useParams<{ businessId?: string }>();
-
+  const { businessId ,menuId} = useParams<{ businessId?: string ;menuId?:string}>();
   const {
     setDishStep,
     dishDescription,
@@ -130,6 +129,7 @@ const MemoServiceStepTwo = () => {
     const payload: DishType = {
       _id: editDish?._id,
       businessId: Object(businessId),
+      menuId: Object(menuId),
       name: dishName,
       price: dishPrice,
       visibility: visibility,
@@ -157,7 +157,7 @@ const MemoServiceStepTwo = () => {
       resetDishStore();
       setEditOpenMenu(false);
       setIsLoading(false);
-      queryClient.invalidateQueries({ queryKey: ["getAlldishes"] });
+      queryClient.invalidateQueries({ queryKey: ["getAllDishes"] });
       toast.success("Updated successfully");
       return;
     }

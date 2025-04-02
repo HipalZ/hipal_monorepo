@@ -5,6 +5,13 @@ export const routeToCustomerz = (businessId: string) =>
   `/app/business/${businessId}/customerz`;
 export const routeToItems = (businessId: string) =>
   `/app/business/${businessId}/items?tab=items`;
+
+export const routeToMenu = (businessId: string) =>
+  `/app/business/${businessId}/select-menu`;
+
+export const routeToMenuLayout = (businessId: string,menuId:string) =>
+  `/app/business/${businessId}/select-menu/${menuId}`;
+
 export const PAGE_TYPES = {
   DASHBOARD: "dashboard",
   LOGIN: "login",

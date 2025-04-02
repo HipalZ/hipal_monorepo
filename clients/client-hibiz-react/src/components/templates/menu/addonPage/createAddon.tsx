@@ -12,9 +12,9 @@ import { FaAngleDown } from "react-icons/fa";
 import { RiLinkUnlink } from "react-icons/ri";
 import EditChoice from "./editChoice";
 import { useSaveAddOn } from "@/hooks/useAddOn";
-import useBusinessData from "@/components/store/useBusinessData";
 import BottomButton from "@/components/atom/bottomButton";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
+import { useParams } from "react-router-dom";
 
 const count = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
@@ -49,7 +49,7 @@ const MemoCreateAddon = () => {
     resetChoiceFields: s.resetChoiceFields,
   }));
 
-  const businessData = useBusinessData((s) => s.businessData);
+  const { businessId,menuId } = useParams<{ businessId?: string; menuId: string }>();
 
   const { isPending, mutate: saveAddOn } = useSaveAddOn();
 
@@ -99,10 +99,10 @@ const MemoCreateAddon = () => {
       choiceType: addOnChoice,
       addOnMaxQuantity: maxChoices,
       compulsory: minChoices,
-      businessId: businessData?._id.toString() || "",
+      businessId: businessId || "",
+      menuId: menuId,
       dishIds: recommendationIds,
     };
-
     saveAddOn(payload);
   }, [
     addOnName,
@@ -110,7 +110,8 @@ const MemoCreateAddon = () => {
     addOnChoice,
     maxChoices,
     minChoices,
-    businessData?._id,
+    menuId,
+    businessId,
   ]);
   if (isPending) {
     return (

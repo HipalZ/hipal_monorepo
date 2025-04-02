@@ -11,7 +11,7 @@ import useMenuPageStore from "@/components/store/useMenuStorage";
 import { useDishesStore } from "@/components/store/useDishesStore";
 
 export const useChildCategories = (dishStep: string) => {
-  const { businessId } = useParams<{ businessId?: string }>();
+  const { businessId } = useParams<{ businessId: string }>();
 
   const getAllChildCategoryData = async (
     businessId: string,
@@ -40,16 +40,27 @@ export const useChildCategories = (dishStep: string) => {
 };
 
 export const useDishes = () => {
-  const { businessId } = useParams<{ businessId?: string }>();
+  const params = useParams<{ businessId: string, menuId?: string }>();
   const { setDishes } = useDishesStore((s) => ({
     setDishes: s.setDishes,
   }));
 
-  const getAllDishes = async (businessId: string): Promise<DishType[]> => {
+  const businessId = params.businessId;
+  const menuId = params.menuId;
+
+  const updatedQuery = menuId
+    ? {
+      menuId: menuId,
+      businessId: businessId,
+    }
+    : {
+      businessId: businessId,
+    };
+
+  const getAllDishes = async (): Promise<DishType[]> => {
+    if (!businessId) return []
     const dishResponse = await apiRpc.dishes.$get({
-      query: {
-        businessId: businessId,
-      },
+      query: updatedQuery,
     });
     const data = await dishResponse.json();
     setDishes(data?.data as DishType[]);
@@ -57,28 +68,38 @@ export const useDishes = () => {
   };
 
   const { data, isLoading, isError, refetch } = useQuery<DishType[]>({
-    queryKey: ["getAlldishes", businessId],
-    queryFn: () => getAllDishes(businessId ?? ""),
+    queryKey: ["getAllDishes", businessId],
+    queryFn: getAllDishes,
     enabled: !!businessId,
   });
 
   return { data, isLoading, isError, refetch };
 };
 
+
+
 export const useLinkedDishes = () => {
-  const { businessId } = useParams<{ businessId?: string }>();
+  const params = useParams<{ businessId?: string, menuId?: string }>();
   const { setLinkedDishes, linkedDishes } = useMenuPageStore((s) => ({
     linkedDishes: s.linkedDishes,
     setLinkedDishes: s.setLinkedDishes,
   }));
 
-  const getAllLinkedDishes = async (
-    businessId: string,
-  ): Promise<CategoryType[]> => {
+  const businessId = params.businessId;
+  const menuId = params.menuId;
+
+  const updatedQuery = menuId
+    ? {
+      menuId: menuId,
+      businessId: businessId,
+    }
+    : {
+      businessId: businessId,
+    };
+
+  const getAllLinkedDishes = async (): Promise<CategoryType[]> => {
     const categoryResponse = await apiRpc.categories.menu.$get({
-      query: {
-        businessId: businessId,
-      },
+      query: updatedQuery
     });
     const data = await categoryResponse.json();
     setLinkedDishes(data?.data as CategoryType[]);
@@ -92,8 +113,8 @@ export const useLinkedDishes = () => {
     refetch: refetchLinked,
   } = useQuery<CategoryType[]>({
     queryKey: ["linkedDishes", businessId],
-    queryFn: () => getAllLinkedDishes(businessId ?? ""),
-    enabled: !!businessId && linkedDishes.length === 0,
+    queryFn: getAllLinkedDishes,
+    enabled: !!businessId,
   });
   return { data, isLoading, isError, refetchLinked };
 };

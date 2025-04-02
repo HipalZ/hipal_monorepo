@@ -3,7 +3,6 @@ import useBusinessData from "@/components/store/useBusinessData";
 import { memo, useCallback, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Hi from "@/assets/svg/hi.svg";
-import { FaArrowLeft } from "react-icons/fa";
 import useMenuPageStore, {
   type MenuPageType,
 } from "@/components/store/useMenuStorage";
@@ -134,8 +133,6 @@ const MemoizeServicesPage = () => {
           <MemoizedHeader
             title={dynamicHeading()}
             onBack={handleBack}
-            leftIcon={<FaArrowLeft />}
-            rightImage={Hi}
           />
         </article>
         <section className="absolute w-full px-4 space-x-4 text-sm mobile-only">
