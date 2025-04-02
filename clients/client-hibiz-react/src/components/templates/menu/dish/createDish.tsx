@@ -1,6 +1,5 @@
 import MemoizedHeader from "@/components/molecules/header";
 import { FaArrowLeft } from "react-icons/fa";
-import Hi from "@/assets/svg/hi.svg";
 import DishStepOne from "./dishStepOne";
 import { memo, useCallback } from "react";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
@@ -110,9 +109,6 @@ const MemoCreateDish = () => {
         <MemoizedHeader
           title={handleHeader()}
           onBack={goBack}
-          leftIcon={<FaArrowLeft />}
-          rightImage={Hi}
-          isIconBusinessShow={false}
         />
       </header>
       {dishStep === "DISH_STEP_1" && <DishStepOne />}

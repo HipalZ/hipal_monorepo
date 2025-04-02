@@ -1,4 +1,3 @@
-import useBusinessData from "@/components/store/useBusinessData";
 import { useCategoryStore } from "@/components/store/useCategoryStore";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import { apiRpc } from "@hi/common";
@@ -6,29 +5,32 @@ import type { AddOnType } from "@hi/db-models/src/validators";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
+import { useParams } from "react-router-dom";
 
 export const useAddOnList = () => {
-  const businessData = useBusinessData((state) => state.businessData);
+   const { businessId,menuId } = useParams<{ businessId?: string; menuId: string }>();
+  
   const { setAddOnTypes } = useCategoryStore((state) => ({
     setAddOnTypes: state.setAddOnTypes,
   }));
 
   const getAllAddOn = useCallback(async () => {
-    if (!businessData?._id) return [];
+    if (!businessId && !menuId) return [];
     const res = await apiRpc.addons.$get({
       query: {
-        businessId: businessData._id,
+        businessId,
+        menuId
       },
     });
     const data = (await res.json()).data as AddOnType[];
     setAddOnTypes(data);
     return data;
-  }, [businessData?._id]);
+  }, []);
 
   const { data: addOns, isLoading } = useQuery({
-    queryKey: ["getAllAddOn", businessData?._id],
+    queryKey: ["getAllAddOn", businessId,menuId],
     queryFn: getAllAddOn,
-    enabled: !!businessData?._id,
+    enabled: !!businessId && !!menuId,
   });
 
   return { addOns, isLoading };
@@ -37,10 +39,9 @@ export const useAddOnList = () => {
 export const useSaveAddOn = () => {
   const queryClient = useQueryClient();
 
-  const { setOpenMenu, resetStore, setIsLoading } = useMenuPageStore((s) => ({
+  const { setOpenMenu, resetStore } = useMenuPageStore((s) => ({
     setOpenMenu: s.setOpenMenu,
     resetStore: s.resetStore,
-    setIsLoading: s.setIsLoading,
   }));
 
   const handleApiResponse = useCallback((res) => {
@@ -67,6 +68,7 @@ export const useSaveAddOn = () => {
           choiceType: data.choiceType,
           addOnMaxQuantity: data.addOnMaxQuantity,
           compulsory: data.compulsory,
+          menuId: data.menuId,
         },
       });
 
@@ -114,6 +116,7 @@ export const useUpdateAddon = () => {
           compulsory: data.compulsory,
           addOnMaxQuantity: data.addOnMaxQuantity,
           removeDishIds: data.removeDishIds,
+          menuId: data.menuId,
         },
         param: {
           id: data._id,

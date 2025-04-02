@@ -122,7 +122,6 @@ const MemoListOfChildCategory = () => {
         },
         json: sequenceCategories,
       });
-      console.log(sequenceCategories);
       return response.json();
     },
     onSuccess: (data) => {
@@ -219,7 +218,7 @@ const MemoListOfChildCategory = () => {
       {filteredCategories ? filteredCategories?.map((category, index) => (
         <div onKeyDown={() => (sequenceMode ? handleSwap(category) : null)} onClick={() => (sequenceMode ? handleSwap(category) : null)} key={category.name} className="relative w-full max-w-[28rem]">
           {sequenceMode && (
-            <div className="absolute inset-0 bg-black/25 rounded-2xl z-10 flex items-center justify-center">
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/25 rounded-2xl">
               <span className="text-4xl font-bold text-white">{category.sequence || index + 1}</span>
             </div>
           )}
@@ -246,7 +245,7 @@ const MemoListOfChildCategory = () => {
               <article className="flex flex-col items-start">
                 <h3 className="mb-2 -mt-1 font-semibold">{category.name}</h3>
                 {sequenceMode && (
-                  <span className="text-gray-500 text-xs">
+                  <span className="text-xs text-gray-500">
                     Position: {category.sequence || index + 1}
                   </span>
                 )}

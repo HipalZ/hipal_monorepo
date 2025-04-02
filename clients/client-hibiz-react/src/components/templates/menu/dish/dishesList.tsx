@@ -40,7 +40,7 @@ const MemoListOfDishes = () => {
 
   // applying filters and using memo to avoid re-render
   const filteredDishes = useMemo(() => {
-    let filtered = dishes.slice() || [];
+    let filtered = dishes?.slice() || [];
     if (search) {
       filtered = fuse.search(search).map((result) => result.item);
     }
@@ -83,7 +83,7 @@ const MemoListOfDishes = () => {
         {outLetType === "OTHER" ? "Services" : "Dishes"} (
         {filteredDishes?.length})
       </h3>
-      {filteredDishes
+      {filteredDishes.length >0 && filteredDishes
         ? filteredDishes.map((dish) => (
           <button
             onClick={() => handleEditDish(dish)}

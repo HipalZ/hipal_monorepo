@@ -245,7 +245,7 @@ const value = useRef();
 ```tsx
 import { useQuery } from '@tanstack/react-query';
 const { data, isLoading, isError, refetch } = useQuery<Dish[]>(['dishes'], () =>
-  getAllDIshes(activeBusiness?._id as string)
+  getAllDishes(activeBusiness?._id as string)
     .then((res) => res.data.data)
     .catch((e) => console.error(e)),
 );

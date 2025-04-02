@@ -69,7 +69,7 @@ export const getButtons = (
             image: MenuImage,
             text: "Menu",
             description: "Manage your menu",
-            navigateTo: "menu",
+            navigateTo: "select-menu",
           },
         ]
       : [

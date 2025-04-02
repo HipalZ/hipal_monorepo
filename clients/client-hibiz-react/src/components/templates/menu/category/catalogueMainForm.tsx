@@ -1,43 +1,37 @@
 import { memo, useCallback } from "react";
-import { cn } from "@hi/common/src/error-handler";
-import { RiGitBranchLine, RiLinkUnlink } from "react-icons/ri";
-import { TbCircuitSwitchClosed } from "react-icons/tb";
+import { RiLinkUnlink } from "react-icons/ri";
 import useMenuPageStore, {
   type CategoryTypeToggle,
 } from "@/components/store/useMenuStorage";
 import Background from "@/components/atom/feildBackground";
-import useBusinessData from "@/components/store/useBusinessData";
 import toast from "react-hot-toast";
 import { useSaveCategory } from "@/hooks/useCategory";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import BottomButton from "@/components/atom/bottomButton";
+import { useParams } from "react-router-dom";
 
 const CatalogueMainForm = memo(() => {
   const {
     selectedCategory,
-    setSelectedCategory,
     categoryStep,
     categoryName,
     setCategoryName,
     setCategoryStep,
-    resetStore,
     selectIds,
     recommendationIds,
     selectSingleParentCat,
   } = useMenuPageStore((s) => ({
     selectedCategory: s.selectedCategory,
-    setSelectedCategory: s.setSelectedCategory,
     categoryName: s.categoryName,
     setCategoryName: s.setCategoryName,
     setCategoryStep: s.setCategoryStep,
-    resetStore: s.resetStore,
     selectIds: s.selectedIds,
     categoryStep: s.categoryStep,
     recommendationIds: s.recommendationIds,
     selectSingleParentCat: s.selectSingleParentCat,
   }));
 
-  const businessData = useBusinessData((s) => s.businessData);
+  const { businessId,menuId } = useParams<{ businessId: string; menuId: string }>()
   const { mutate: createCategory, isPending } = useSaveCategory();
 
   const handleSaveCategory = useCallback(() => {
@@ -48,7 +42,8 @@ const CatalogueMainForm = memo(() => {
 
     const commonPayload = {
       name: categoryName,
-      businessId: businessData?._id.toString() || "",
+      businessId: businessId || "",
+      menuId: menuId,
     };
 
     const payload =
@@ -66,7 +61,7 @@ const CatalogueMainForm = memo(() => {
     selectedCategory,
     categoryName,
     selectIds,
-    businessData?._id,
+    businessId,
     recommendationIds,
     selectSingleParentCat,
   ]);

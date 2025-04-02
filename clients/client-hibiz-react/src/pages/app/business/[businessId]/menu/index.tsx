@@ -2,14 +2,22 @@ import MemoizedHeader from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { routeToDashboard } from "@/components/utils/routes";
 import { memo } from "react";
-import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import Hi from "@/assets/svg/hi.svg";
 import DishAndCat from "@/assets/dishAdbcat.png";
 import Manager from "@/assets/menuManager.png";
 import Card from "@/assets/cards/card62.png";
+import MenuLayouts from "@/assets/menulayouts.jpg"
+import MenuCard from "@/components/atom/menulayouts/MenuCards";
 
 const menuArray = [
+  {
+    id: 0,
+    title: "Menu Layouts",
+    subTitle:
+      "Choose from a variety of menu layouts to suit your restaurant's style and needs",
+    navigate: "select-menu",
+    image: MenuLayouts,
+  },
   {
     id: 1,
     title: "Dishes and categories",
@@ -48,42 +56,13 @@ const MemoMenu = () => {
         <MemoizedHeader
           title="Menu"
           onBack={handleBack}
-          leftIcon={<FaArrowLeft />}
-          rightImage={Hi}
         />
       </div>
       <section>
         <div className="flex flex-wrap">
-          {menuArray.map((menu) => {
-            return (
-              <button
-                type="button"
-                key={menu.id}
-                className="w-[90%] md:w-[45%] lg:w-[30%] m-4 bg-white shadow-md rounded-lg text-left"
-                onClick={() =>
-                  navigate(
-                    `/app/business/${businessData?._id}/${menu.navigate}`,
-                  )
-                }
-              >
-                <img
-                  src={menu.image}
-                  alt={menu.title}
-                  className="w-full h-[200px] object-cover object-center rounded-t-lg"
-                />
-                <div className="p-4">
-                  <h2 className="text-xl font-bold">{menu.title}</h2>
-                  <p className="text-sm text-gray-500">{menu.subTitle}</p>
-                  <button
-                    type="button"
-                    className="px-4 py-2 mt-2 text-white bg-black rounded-lg"
-                  >
-                    Go to {menu.title}
-                  </button>
-                </div>
-              </button>
-            );
-          })}
+          {menuArray.map((menu) => (
+            <MenuCard key={menu.id} menu={menu} businessId={businessData?._id || ""} />
+          ))}
         </div>
       </section>
     </main>
