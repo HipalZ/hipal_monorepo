@@ -1,4 +1,5 @@
 import {
+  AddOn,
   BusinessPosConfig,
   Category,
   Dish,
@@ -49,19 +50,28 @@ async function processCompleteMenu(
   const newCategoryIdsMap = new Map<string, mongoose.Types.ObjectId>();
   const newCategoryDocs = new Map<string, InstanceType<typeof Category>>();
   const newDishes: InstanceType<typeof Dish>[] = [];
+  const newAddOns: InstanceType<typeof AddOn>[] = [];
 
-  // Step 1: Fetch everything upfront
+  // Step 1: Fetch categories and dishes
   const sourceCategories = await Category.find({ menuId: sourceMenuId }).lean();
-
   const allDishIds = sourceCategories
     .flatMap((c) => c.dishIds || [])
-    .map((id) => String(id)); // Normalize to string
+    .map((id) => String(id));
 
   const sourceDishes = await Dish.find({ _id: { $in: allDishIds } }).lean();
-
   const dishById = new Map(sourceDishes.map((d) => [String(d._id), d]));
 
-  // Step 2: Create all new category stubs (in memory only)
+  // Step 2: Fetch related add-ons
+  const allAddOnIds = sourceDishes
+    .flatMap((dish) => dish.addOnIds || [])
+    .map((id) => String(id));
+
+  const sourceAddOns = await AddOn.find({ _id: { $in: allAddOnIds } }).lean();
+  const addOnById = new Map(sourceAddOns.map((a) => [String(a._id), a]));
+
+  const newAddOnIdsMap = new Map<string, mongoose.Types.ObjectId>();
+
+  // Step 3: Create new category stubs
   for (const category of sourceCategories) {
     const newCategoryId = new mongoose.Types.ObjectId();
     const newCategory = new Category({
@@ -76,7 +86,9 @@ async function processCompleteMenu(
     newCategoryDocs.set(String(category._id), newCategory);
   }
 
-  // Step 3: Create all new dishes and map them to new categories
+  // Step 4: Clone dishes and prepare to map new addOnIds
+  const dishIdMap = new Map<string, mongoose.Types.ObjectId>();
+
   for (const category of sourceCategories) {
     const originalCategoryId = String(category._id);
     const newCategoryId = newCategoryIdsMap.get(originalCategoryId)!;
@@ -86,46 +98,78 @@ async function processCompleteMenu(
       const dish = dishById.get(String(dishId));
       if (!dish) continue;
 
+      const newDishId = new mongoose.Types.ObjectId();
+      dishIdMap.set(String(dish._id), newDishId);
+
       const newDish = new Dish({
         ...dish,
+        _id: newDishId,
         menuId,
-        _id: new mongoose.Types.ObjectId(),
         categoryIds: (dish.categoryIds || []).map((catId) => {
           const catIdStr = String(catId);
           return catIdStr === originalCategoryId
             ? newCategoryId
             : newCategoryIdsMap.get(catIdStr) || catId;
         }),
+        addOnIds: [], // will fill later
       });
 
       newDishes.push(newDish);
-      newDishIds.push(newDish._id);
+      newDishIds.push(newDishId);
     }
 
-    // Update dishIds for new category (still in memory)
     const newCategory = newCategoryDocs.get(originalCategoryId)!;
     newCategory.dishIds = newDishIds;
   }
 
-  // Step 4: Update hierarchy links
-  for (const category of sourceCategories) {
-    const originalCategoryId = String(category._id);
-    const newCategory = newCategoryDocs.get(originalCategoryId)!;
+  // Step 5: Clone add-ons
+  for (const addOn of sourceAddOns) {
+    const newAddOnId = new mongoose.Types.ObjectId();
+    newAddOnIdsMap.set(String(addOn._id), newAddOnId);
 
-    if (category.hierarchy === "PARENT") {
-      newCategory.subCategoryIds = (category.subCategoryIds || []).map(
-        (subCatId) => newCategoryIdsMap.get(String(subCatId)) || subCatId,
-      );
-    } else if (category.parentCategoryIds?.length) {
-      newCategory.parentCategoryIds = category.parentCategoryIds.map(
-        (parentId) => newCategoryIdsMap.get(String(parentId)) || parentId,
-      );
-    }
+    const updatedDishIds = (addOn.dishIds || []).map(
+      (dId) => dishIdMap.get(String(dId)) || dId,
+    );
+
+    const newAddOn = new AddOn({
+      ...addOn,
+      menuId,
+      _id: newAddOnId,
+      businessId: addOn.businessId,
+      dishIds: updatedDishIds,
+    });
+
+    newAddOns.push(newAddOn);
   }
 
-  // Step 5: Save everything with session
+  // Step 6: Update cloned dishes with new addOnIds
+  for (const newDish of newDishes) {
+    let originalDishId: string | undefined;
+
+    for (const [key, val] of Array.from(dishIdMap.entries())) {
+      if (String(val) === String(newDish._id)) {
+        originalDishId = key;
+        break;
+      }
+    }
+
+    if (!originalDishId) continue;
+
+    const originalDish = dishById.get(originalDishId);
+    if (!originalDish) continue;
+
+    newDish.addOnIds = (originalDish.addOnIds || []).map(
+      (addOnId) => newAddOnIdsMap.get(String(addOnId)) || addOnId,
+    );
+  }
+
+  // Step 7: Save everything in the session
   for (const newCategory of Array.from(newCategoryDocs.values())) {
     await newCategory.save({ session });
+  }
+
+  for (const newAddOn of newAddOns) {
+    await newAddOn.save({ session });
   }
 
   for (const newDish of newDishes) {
