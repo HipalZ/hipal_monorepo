@@ -184,7 +184,7 @@ export default function BottomButton({
           {showBack && (
             <MenuItem
               icon={PiArrowBendUpLeftBold}
-              href={`/${customLink}/explore`}
+              onClick={() => router.back()}
               isSelected={false}
               label="Back"
             />
@@ -215,8 +215,8 @@ export default function BottomButton({
           {!showBack && (
             <MenuItem
               icon={MdMenuBook}
-              label={outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
-              href={`/${customLink}/category`}
+              label="Menu"
+              href={`/${customLink}/category?${tableName ? `tableName=${tableName}` : ""}`}
               isSelected={selectedBtn === "menu" || selectedBtn === "catalogue"}
             />
           )}

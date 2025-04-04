@@ -7,16 +7,19 @@ import { cn } from "@hi/common";
 import { InView } from "react-intersection-observer";
 import SubTypes from "@/components/molecules/categoryTypes/subTypes";
 import { useSearch } from "@/components/store/useSearch";
-import type { TimingType } from "@/components/types/businessData";
+import type { IMenuLayout, TimingType } from "@/components/types/businessData";
 import { useDishesStore } from "@/components/store/useDishesStore";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import OtherOutletCard from "@/components/atoms/card/otherOutletCard";
 import Header from "@/components/molecules/header";
+import EdgeFlow from "./EdgeFlow";
+import GridDishCard from "@/components/atoms/card/GridDishCard";
 
 interface IDishesProps {
   childCategory: CategoryType[];
   parentCategory: CategoryType[];
   timings: TimingType;
+  menuLayout: IMenuLayout
 }
 
 const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
@@ -43,7 +46,7 @@ const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
 };
 
 const DishesList: FC<IDishesProps> = (props) => {
-  const { childCategory, parentCategory, timings } = props;
+  const { childCategory, parentCategory, timings, menuLayout } = props;
   const { setDishes } = useDishesStore();
   const { isSearchActive } = useSearch();
   const {
@@ -55,6 +58,11 @@ const DishesList: FC<IDishesProps> = (props) => {
     setActiveChildCategory,
     setObserverActive,
   } = useActiveClass();
+
+  const primaryColor = menuLayout?.primaryColor || "#000000";
+  const secondaryColor = menuLayout?.secondaryColor || "#f5f5f5";
+  const isClassicLayout = menuLayout?.categoryLayout === 2;
+  const isHorizontalCard = menuLayout?.cardLayout === 2;
 
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const subTypes = useMemo(() => {
@@ -87,7 +95,7 @@ const DishesList: FC<IDishesProps> = (props) => {
 
       return orderedSubTypes.filter(hasVisibleDishes);
     } else {
-      return childCategory.filter(hasVisibleDishes);
+      return childCategory?.filter(hasVisibleDishes);
     }
   }, [childCategory, parentCategory]);
 
@@ -169,85 +177,122 @@ const DishesList: FC<IDishesProps> = (props) => {
     <>
       <section className={cn("sticky z-50 text-[#000000] bg-white top-0")}>
         <Header categories={childCategory} />
-        {!isSearchActive && (
-          <SubTypes childCategory={subTypes} parentCategory={mainTypes} />
-        )}
       </section>
+      {isClassicLayout ?
+        <>
+          {!isSearchActive && (
+            <SubTypes
+              childCategory={subTypes}
+              parentCategory={mainTypes}
+              primaryColor={primaryColor}
+              secondaryColor={secondaryColor}
+              isClassicLayout={isClassicLayout}
+            />
+          )}
 
-      {subTypes.map((category: CategoryType, index) => {
-        const visibleDishes = category.dishIds.filter(
-          (dish: DishType) => dish.visibility,
-        );
-        const dishesToRender = filterDishes(visibleDishes, isActiveDishType);
+          {subTypes.map((category: CategoryType, index) => {
+            const visibleDishes = category.dishIds.filter(
+              (dish: DishType) => dish.visibility,
+            );
+            const dishesToRender = filterDishes(visibleDishes, isActiveDishType);
 
-        if (dishesToRender.length === 0) return null;
+            if (dishesToRender.length === 0) return null;
 
-        return (
-          <section
-            key={`${category._id}${index}`}
-            className={cn("w-full pb-4 bg-[#ffffff] overflow-hidden")}
-            id={category._id?.toString()}
-          >
-            <InView
-              rootMargin="-150px 0px 0px 0px"
-              threshold={0.75}
-              onChange={(inView, entry) => {
-                const categoryId = category._id?.toString();
-                if (categoryId) {
-                  if (inView) {
-                    visibleCategoriesRef.current[categoryId] = Math.abs(
-                      entry.boundingClientRect.top - 300,
-                    );
-                  } else {
-                    delete visibleCategoriesRef.current[categoryId];
-                  }
-                  updateActiveCategory();
-                }
-              }}
-            >
-              {({ ref }) => (
-                <div
-                  ref={ref}
-                  className={cn(
-                    {
-                      "border-t-2 border-[#000000]":
-                        category.dishIds?.length !== 0,
-                    },
-                    "z-40 flex items-center space-x-4 justify-between h-[4rem] px-2 font-bold prose bg-[#cacaca50]",
-                  )}
+            return (
+              <section
+                key={`${category._id}${index}`}
+                className={cn("w-full pb-4 bg-[#ffffff] overflow-hidden")}
+                id={category._id?.toString()}
+              >
+                <InView
+                  rootMargin="-150px 0px 0px 0px"
+                  threshold={0.75}
+                  onChange={(inView, entry) => {
+                    const categoryId = category._id?.toString();
+                    if (categoryId) {
+                      if (inView) {
+                        visibleCategoriesRef.current[categoryId] = Math.abs(
+                          entry.boundingClientRect.top - 300,
+                        );
+                      } else {
+                        delete visibleCategoriesRef.current[categoryId];
+                      }
+                      updateActiveCategory();
+                    }
+                  }}
                 >
-                  <center
-                    className="!text-2xl w-full truncate font-medium capitalize space-grotesk-700 text-black"
-                    title={category.name || "Unnamed Category"}
-                  >
-                    {category.name || "Unnamed Category"}
-                  </center>
+                  {({ ref }) => (
+                    <div
+                      ref={ref}
+                      className={cn(
+                        {
+                          "border-t-2 border-[#000000]":
+                            category.dishIds?.length !== 0,
+                        },
+                        "z-40 flex items-center space-x-4 justify-between h-[4rem] px-2 font-bold prose bg-[#cacaca50]",
+                      )}
+                    >
+                      <center
+                        className="!text-2xl w-full truncate font-medium capitalize space-grotesk-700 text-black"
+                        title={category.name || "Unnamed Category"}
+                      >
+                        {category.name || "Unnamed Category"}
+                      </center>
+                    </div>
+                  )}
+                </InView>
+                <div className="flex flex-col divide-y divide-gray-100">
+                  {dishesToRender.length > 0 &&
+                    outletInfo?.outLetType !== "OTHER" ? <>
+
+                    {!isHorizontalCard ? (
+                      <div className="grid grid-cols-2 gap-2 p-2">
+                        {dishesToRender.map((dishData: DishType, dishIndex) => (
+                          <GridDishCard
+                            key={`${dishData._id}-${dishIndex}`}
+                            dishData={dishData}
+                            primaryColor={primaryColor}
+                            secondaryColor={secondaryColor}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex flex-col divide-y divide-gray-100">
+                        {dishesToRender.map((dishData: DishType, dishIndex) => (
+                          <HorizontalCard
+                            key={`${dishData._id}-${dishIndex}`}
+                            dishData={dishData}
+                            primaryColor={primaryColor}
+                            secondaryColor={secondaryColor}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </> : (
+                    <section className="grid gap-4 px-4 mt-4">
+                      {dishesToRender.map((dishData: DishType, dishIndex) => (
+                        <OtherOutletCard
+                          dishData={dishData}
+                          key={`${dishData._id}-${dishIndex}`}
+                        />
+                      ))}
+                    </section>
+                  )}
                 </div>
-              )}
-            </InView>
-            <div className="flex flex-col divide-y divide-gray-100">
-              {dishesToRender.length > 0 &&
-                outletInfo?.outLetType !== "OTHER" ? (
-                dishesToRender.map((dishData: DishType, dishIndex) => (
-                  <HorizontalCard
-                    dishData={dishData}
-                    key={`${dishData._id}-${dishIndex}`}
-                  />
-                ))
-              ) : (
-                <section className="grid gap-4 px-4 mt-4">
-                  {dishesToRender.map((dishData: DishType, dishIndex) => (
-                    <OtherOutletCard
-                      dishData={dishData}
-                      key={`${dishData._id}-${dishIndex}`}
-                    />
-                  ))}
-                </section>
-              )}
-            </div>
-          </section>
-        );
-      })}
+              </section>
+            );
+          })}
+
+        </> : (
+          <EdgeFlow
+            childCategory={subTypes}
+            parentCategory={mainTypes}
+            isHorizontalCard={!isHorizontalCard}
+            primaryColor={primaryColor}
+            secondaryColor={secondaryColor}
+          />
+        )
+      }
     </>
   );
 };

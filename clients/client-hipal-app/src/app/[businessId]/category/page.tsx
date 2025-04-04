@@ -79,8 +79,8 @@ const TopBackground = dynamics(
   },
 );
 
-async function fetchData(businessId: string) {
-  const data = await categoryApis.all(businessId);
+async function fetchData(businessId: string, tableName?: string) {
+  const data = await categoryApis.all(businessId, tableName);
   return data;
 }
 
@@ -143,11 +143,20 @@ export async function generateMetadata({
 
 export default async function Page({
   params,
-}: { params: { businessId: string } }) {
-  const data = await fetchData(params.businessId);
+  searchParams,
+}: {
+  params: { businessId: string }
+  searchParams: { tableName?: string };
+}) {
+  const { businessId } = params;
+  const { tableName } = searchParams;
+
+  // Call fetchData with both parameters
+  const data = await fetchData(businessId, tableName);
+  console.log("category data", data);
   return (
     <main>
-      <div className="relative flex flex-col w-full pb-14">
+      <div className="relative flex flex-col w-full">
         {/* <TopSectionVideo /> */}
         <TopBackground specialBanner={data?.business?.specialBannerUrl || ""} />
         <MenuBannerPage
@@ -159,20 +168,17 @@ export default async function Page({
             parentCategory={data?.parentCategories || []}
             childCategory={data?.childCategories || []}
             timings={data?.timings}
+            menuLayout={data?.menuData}
           />
         </div>
-        <section className="pt-6 bg-[#ffffff]">
-          <Footer
-            themes={data?.settings || defaultThemes}
-            socialMediaLinks={data?.business?.socialMediaLinks}
-            footerDescription={data?.business?.footerDescription}
-          />
-        </section>
-        <PageName />
+
+        {/* <PageName /> */}
       </div>
       <MainTypes
         parentCategory={data?.parentCategories || []}
         childCategory={data?.childCategories || []}
+        primaryColor={data?.menuData?.primaryColor || "#ec4899"}
+        secondaryColor={data?.menuData?.secondaryColor || "#fce7f3"}
       />
 
       <LiveCart />

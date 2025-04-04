@@ -346,7 +346,7 @@ const MemoSelectMenu = () => {
                                     "relative overflow-hidden rounded-xl shadow-lg transition-all duration-300 hover:shadow-xl",
                                     "border border-gray-100",
                                     "transform hover:-translate-y-1 cursor-pointer",
-                                    !isActive && "opacity-75",
+                                    !isActive && "opacity-75 grayscale",
                                 )}
                                 style={{
                                     background: `linear-gradient(90deg, ${primaryColor}40, ${primaryColor}10)`,

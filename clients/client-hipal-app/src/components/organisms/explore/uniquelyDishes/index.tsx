@@ -8,6 +8,7 @@ import ShimmerImage from "@/components/atoms/imageshimmer";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import ExploreItemDescription from "@/components/atoms/dishPopup/exploreItemDescription";
+import useTableData from "@/components/store/useTableData";
 
 interface Props {
   uniquelyDishes: IUniquelyDishes[] | undefined;
@@ -34,12 +35,13 @@ const DynamicImageGrid = ({ images }: { images: IUniquelyDishes[] }) => {
   const router = useRouter();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const tableName = useTableData((s) => s.tableName);
   const handleRecommendedDishClick = (item: IUniquelyDishes) => {
     if (outletInfo?.outLetType !== "OTHER") {
       setActiveChildCategory(item?.dishId);
       setActiveCategory(item?.dishId);
       setObserverActive(false);
-      router.push(`/${customLink}/category`);
+      router.push(`/${customLink}/category?${tableName ? `tableName=${tableName}` : ""}`);
     } else {
       setSelectedDish(item);
       setIsModalOpen(true);

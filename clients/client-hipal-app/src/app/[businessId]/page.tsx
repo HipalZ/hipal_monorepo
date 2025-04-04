@@ -1,17 +1,78 @@
 import { redirect } from "next/navigation";
 import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
 import { getBusinessData } from "@/apis/commonApis";
+import { apiRpc } from "@hi/common";
+import type { BusinessDetails } from "@/components/types/businessData";
 
-export const revalidate = 300;
+// export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+export async function generateMetadata({
+  params,
+}: {
+  params: { businessId: string };
+}) {
+  const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+  const { businessId } = params;
+
+  if (!objectIdRegex.test(businessId)) {
+    const res = await apiRpc.businesses.n[":customLink"].$get({
+      param: { customLink: businessId },
+    });
+    const response = (await res.json()) as {
+      data: BusinessDetails;
+      message: string;
+      error: boolean;
+    };
+
+    const businessData = response?.data;
+    if (!businessData) {
+      return {
+        title: "Explore",
+        description: "Explore page for businesses",
+      };
+    }
+
+    const { name, description, logoUrl } = businessData;
+    const metaDescription = description || "Explore our business offerings!";
+
+    return {
+      title: name,
+      description: metaDescription,
+      icons: {
+        icon: logoUrl,
+      },
+      openGraph: {
+        title: name,
+        description: metaDescription,
+        images: [
+          {
+            url: logoUrl || "https://example.com/fallback-image.jpg",
+            width: 1200,
+            height: 630,
+            alt: name,
+          },
+        ],
+        type: "website",
+      },
+    };
+  }
+
+  return {
+    title: "Explore",
+    description: "Explore page for businesses",
+  };
+}
 
 const Page = async ({ params, searchParams }: {
   params: { businessId: string };
   searchParams: { [key: string]: string | string[] | undefined };
 }) => {
   const businessData = await getBusinessData(params?.businessId);
+  console.log("businessData", businessData);
 
   // Handle redirects based on outlet type
-  if (["MENU", "FOOD", "OTHER"].includes(businessData?.outLetType)) {
+  if (["MENU", "FOOD"].includes(businessData?.outLetType)) {
     const queryString = new URLSearchParams()
     Object.entries(searchParams).forEach(([key, value]) => {
       if (Array.isArray(value)) {
@@ -25,6 +86,10 @@ const Page = async ({ params, searchParams }: {
       }`;
 
     redirect(redirectUrl);
+  }
+  if(businessData?.outLetType === "OTHER"){
+    const reDirectUrl = `/${params.businessId}/o`;
+    redirect(reDirectUrl);
   }
   
   if(businessData?.outLetType === 'HOTEL'){

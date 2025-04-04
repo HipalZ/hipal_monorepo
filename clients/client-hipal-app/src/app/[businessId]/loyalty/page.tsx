@@ -1,6 +1,6 @@
 import { loyaltyApis } from "@/apis/loyalty";
 import LoyaltyCardPage from "@/components/templates/loyalty";
-import type { BussinessDetails } from "@/components/types/businessData";
+import type { BusinessDetails, BussinessDetails } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 
 // export const dynamic = "force-dynamic";

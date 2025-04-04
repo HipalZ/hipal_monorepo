@@ -48,7 +48,7 @@ function getButtonInnerContent(button: ButtonConfig) {
         content = <LoadingSpinnerCircle />;
     } else {
         content = (
-            <div className="flex items-center justify-center gap-2 truncate w-full">
+            <div className="flex items-center justify-center w-full gap-2 truncate">
                 {Icon && <h3 className="inline-flex items-center">{Icon}</h3>}
                 <h3 className="truncate">{text}</h3>
             </div>
@@ -191,7 +191,7 @@ const MemoCommonBottomButton = (props: MemoBottomButtonProps) => {
                                 style={{
                                     backgroundColor: button.disable
                                         ? "#cccccc"
-                                        : button.color ?? "var(--p)",
+                                        : button.color ?? "#000000",
                                     color: button.textColor ?? "#ffffff",
                                 }}
                                 onClick={!button.disable ? button.onClick : undefined}

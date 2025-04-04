@@ -11,6 +11,9 @@ import { _useAllBusiness } from "@/components/store/useAllBusiness";
 interface ISubTypes {
   parentCategory: CategoryType[];
   childCategory: CategoryType[];
+  primaryColor?: string;
+  secondaryColor?: string;
+  isClassicLayout?: boolean;
 }
 
 const filterDishesByType = (
@@ -45,7 +48,13 @@ const filterDishesByType = (
 };
 
 const MemoSubTypes = (props: ISubTypes) => {
-  const { childCategory, parentCategory } = props;
+  const {
+    childCategory,
+    parentCategory,
+    primaryColor = "#000000",
+    secondaryColor = "#f5f5f5",
+    isClassicLayout = true
+  } = props;
   const {
     isActiveCategory,
     isActiveDishType,
@@ -58,7 +67,7 @@ const MemoSubTypes = (props: ISubTypes) => {
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   const subTypes = useMemo(() => {
-    return childCategory.filter((category) =>
+    return childCategory?.filter((category) =>
       filterDishesByType(category, isActiveDishType),
     );
   }, [childCategory, isActiveDishType]);
@@ -103,8 +112,8 @@ const MemoSubTypes = (props: ISubTypes) => {
 
   return (
     <>
-      {outletInfo?.outLetType === "OTHER" ? (
-        <section className="overflow-x-auto no-scrollbar -mt-4 bg-[#ffffff] text-[#000000]">
+      {outletInfo?.outLetType !== "OTHER" ? (
+        <section className="overflow-x-auto no-scrollbar -mt-4 bg-[#ffffff]" style={{ color: primaryColor }}>
           {subTypes.length > 0 && (
             <Splide
               ref={splideRef}
@@ -129,7 +138,7 @@ const MemoSubTypes = (props: ISubTypes) => {
                     <article
                       className={cn(
                         isActiveCategory === item._id?.toString()
-                          ? " underline underline-offset-[0.75rem] font-semibold"
+                          ? "underline underline-offset-[0.75rem] font-semibold"
                           : "",
                         "flex flex-col items-center justify-center transition-all duration-200 ease-in-out",
                       )}
@@ -147,7 +156,10 @@ const MemoSubTypes = (props: ISubTypes) => {
                           />
                         </figure>
                       ) : (
-                        <figure className="flex-shrink-0 w-[3.25rem] h-[3.25rem] mb-1 overflow-hidden rounded-full aspect-square">
+                        <figure
+                          className="flex-shrink-0 w-[3.25rem] h-[3.25rem] mb-1 overflow-hidden rounded-full aspect-square"
+                          style={{ backgroundColor: secondaryColor }}
+                        >
                           <PlaceholderImg className="rounded-full" />
                         </figure>
                       )}
@@ -162,7 +174,13 @@ const MemoSubTypes = (props: ISubTypes) => {
           )}
         </section>
       ) : (
-        <section className="overflow-x-auto border-b pt-3 -mt-2 border-b-[#000000] no-scrollbar bg-[#ffffff] text-[#000000]">
+        <section
+          className={`overflow-x-auto border-b pt-3 -mt-2 no-scrollbar bg-[#ffffff]`}
+          style={{
+            color: primaryColor,
+            borderBottomColor: primaryColor
+          }}
+        >
           {subTypes.length > 0 && parentCategory?.length > 0 && (
             <Splide
               ref={splideRef}
@@ -181,33 +199,35 @@ const MemoSubTypes = (props: ISubTypes) => {
                   <button
                     type="button"
                     id={item._id?.toString() + index.toString()}
-                    className="relative h-[2.75rem] px-2 pb-3 snap-center"
+                    className="relative flex flex-col items-center px-2 py-3 snap-center"
                     onClick={() => setActiveCategories(item)}
                   >
                     <article
                       className={cn(
                         isActiveCategory === item._id?.toString()
-                          ? "bg-[#000000] text-[#ffffff]"
-                          : "text-[#000000]",
-                        "flex border border-[#000000] rounded-full items-center justify-center pl-1 pr-2 !py-1 transition-all duration-200 ease-in-out",
-                        "h-[2rem]",
+                          ? "underline underline-offset-[0.75rem] font-semibold"
+                          : "",
+                        "flex flex-col items-center justify-center transition-all duration-200 ease-in-out",
                       )}
                     >
                       {item?.coverImage ? (
-                        <figure className="flex-shrink-0 w-6 h-6 mr-2 overflow-hidden rounded-full aspect-square">
+                        <figure className="flex-shrink-0 h-[3.25rem] mb-1 overflow-hidden rounded-md w-[3.25rem] aspect-square">
                           <Image
                             src={item.coverImage || ""}
                             alt="dish"
                             quality={95}
-                            width={35}
-                            height={35}
+                            width={52}
+                            height={52}
                             blurDataURL={getRandomBlurImg(50, 50)}
-                            className="object-cover rounded-full aspect-square"
+                            className="object-cover rounded-md aspect-square"
                           />
                         </figure>
                       ) : (
-                        <figure className="flex-shrink-0 w-6 h-6 overflow-hidden rounded-full aspect-square">
-                          <PlaceholderImg className="mr-2 rounded-full" />
+                        <figure
+                          className="flex-shrink-0 w-[3.25rem] h-[3.25rem] mb-1 overflow-hidden rounded-full aspect-square"
+                          style={{ backgroundColor: secondaryColor }}
+                        >
+                          <PlaceholderImg className="rounded-full" />
                         </figure>
                       )}
                       <h6 className="w-full text-sm text-center">
