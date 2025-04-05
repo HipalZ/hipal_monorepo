@@ -351,6 +351,11 @@ const scriptRouter = new Hono()
         businessId: businessData._id,
       });
 
+      const parentCat = await Category.exists({
+        businessId: businessData._id,
+        hierarchy: "PARENT",
+      });
+
       const isHavePos = await BusinessPosConfig.findOne({
         businessId: businessData._id,
       });
@@ -371,17 +376,17 @@ const scriptRouter = new Hono()
           name: "Default",
           businessId: businessData._id,
           zoneIds: [newZone._id],
-          menuType: 1,
+          menuType: parentCat ? 1 : 2,
           days: [1, 2, 3, 4, 5, 6, 7],
-          startTime: 0,
-          endTime: 86400000,
+          startTime: 240,
+          endTime: 240,
           isActive: true,
           isDeleted: false,
-          categoryLayout: 1,
-          cardLayout: 1,
+          categoryLayout: 2,
+          cardLayout: 2,
           default: true,
-          primaryColor: "#000000",
-          secondaryColor: "#FFFFFF",
+          primaryColor: "#ec4899",
+          secondaryColor: "#fce7f3",
         });
 
         await menu.save();
@@ -448,24 +453,31 @@ const scriptRouter = new Hono()
       const isHavePos = await BusinessPosConfig.findOne({
         businessId: businessData._id,
       });
+
+      const parentCat = await Category.exists({
+        businessId: businessData._id,
+        hierarchy: "PARENT",
+      });
       if (isHavePos) {
         const zone = await Zone.find({
           businessId: businessData._id,
         });
 
-        const zoneIds = zone.map((zone) => zone._id);
+        const zoneIds = zone.map((zone) => zone._id.toString());
         const createMenu = await Menu.create({
           name: "Default",
           businessId: businessData._id,
           zoneIds: zoneIds,
-          menuType: 1,
+          menuType: parentCat ? 1 : 2,
           days: [1, 2, 3, 4, 5, 6, 7],
-          startTime: 0,
-          endTime: 86400000,
+          startTime: 240,
+          endTime: 240,
           isActive: true,
           isDeleted: false,
-          categoryLayout: 1,
-          cardLayout: 1,
+          categoryLayout: 2,
+          cardLayout: 2,
+          primaryColor: "#ec4899",
+          secondaryColor: "#fce7f3",
         });
       }
     }

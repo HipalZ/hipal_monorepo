@@ -71,7 +71,6 @@ async function processCompleteMenu(
 
   const newAddOnIdsMap = new Map<string, mongoose.Types.ObjectId>();
 
-  // Step 3: Create new category stubs
   for (const category of sourceCategories) {
     const newCategoryId = new mongoose.Types.ObjectId();
     const newCategory = new Category({
@@ -86,7 +85,29 @@ async function processCompleteMenu(
     newCategoryDocs.set(String(category._id), newCategory);
   }
 
-  // Step 4: Clone dishes and prepare to map new addOnIds
+  for (const category of sourceCategories) {
+    const originalCategoryId = String(category._id);
+    const newCategory = newCategoryDocs.get(originalCategoryId)!;
+
+    if (category.hierarchy === "CHILD") {
+      newCategory.parentCategoryIds = (category.parentCategoryIds || []).map(
+        (parentId) => {
+          return newCategoryIdsMap.get(String(parentId)) || parentId;
+        },
+      );
+
+      for (const parentId of category.parentCategoryIds || []) {
+        const newParentId = newCategoryIdsMap.get(String(parentId));
+        if (newParentId) {
+          const parentDoc = newCategoryDocs.get(String(parentId));
+          if (parentDoc) {
+            parentDoc.subCategoryIds.push(newCategory._id);
+          }
+        }
+      }
+    }
+  }
+
   const dishIdMap = new Map<string, mongoose.Types.ObjectId>();
 
   for (const category of sourceCategories) {
@@ -281,6 +302,8 @@ const menuRouter = new Hono()
           .select(
             "menuType categoryLayout cardLayout primaryColor secondaryColor",
           );
+
+        console.log("");
 
         if (!menu) return respond(c, "Menu not found", true, 404);
 

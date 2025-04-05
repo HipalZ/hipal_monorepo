@@ -134,16 +134,6 @@ const categoriesRouter = new Hono()
           removeParentCategoryIds = [],
         } = requestData;
 
-        const existingCategory = await Category.findOne({
-          name: requestData.name,
-          businessId: requestData.businessId,
-          _id: { $ne: id },
-          isDeleted: false,
-        }).select("_id");
-
-        if (existingCategory)
-          return respond(c, "Already exists", true, 409, {});
-
         const updatedCategory = await Category.findByIdAndUpdate(
           id,
           {
@@ -509,8 +499,10 @@ const categoriesRouter = new Hono()
           ],
         }).lean();
 
+        console.log("menuallla", menu);
+
         if (!menu) {
-          return respond(c, "Menu not found", true, 404);
+          return respond(c, "Menu not found", true, 404, []);
         }
 
         let query = {

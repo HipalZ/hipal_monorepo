@@ -16,13 +16,13 @@ export const MENU_TYPES = { MAIN_SUB_DISH: 1, SUB_DISH: 2 } as const;
 export type MenuType = (typeof MENU_TYPES)[keyof typeof MENU_TYPES];
 
 export const MENU_DAYS = {
-  SUNDAY: 1,
-  MONDAY: 2,
-  TUESDAY: 3,
-  WEDNESDAY: 4,
-  THURSDAY: 5,
-  FRIDAY: 6,
-  SATURDAY: 7,
+  MONDAY: 1,
+  TUESDAY: 2,
+  WEDNESDAY: 3,
+  THURSDAY: 4,
+  FRIDAY: 5,
+  SATURDAY: 6,
+  SUNDAY: 7,
 } as const;
 export type MenuDay = (typeof MENU_DAYS)[keyof typeof MENU_DAYS];
 
