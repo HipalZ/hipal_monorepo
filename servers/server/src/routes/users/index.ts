@@ -381,7 +381,6 @@ const usersRouter = new Hono()
           password,
           existingUser?.password || "",
         );
-        console.log("comparePass", comparePass);
 
         if (!comparePass) {
           return c.json(
@@ -398,6 +397,8 @@ const usersRouter = new Hono()
           existingUser?._id || "",
           "OWNER",
         );
+
+        console.log("comparePass", comparePass);
 
         return c.json({
           message: "Owner Logged in Successfully",
@@ -442,6 +443,19 @@ const usersRouter = new Hono()
           user?._id.toString() || "",
           "OWNER",
         );
+
+        const token = jwt.sign(
+          {
+            id: user._id,
+            role: "OWNER",
+          },
+          Bun.env.JWT_SECRET as string,
+        );
+
+        setCookie(c, "token", token, {
+          httpOnly: false,
+          secure: false,
+        });
 
         return respond(c, "Owner Logged in Successfully", false, 200, {
           user,
@@ -571,6 +585,19 @@ const usersRouter = new Hono()
       staff?._id.toString() || "",
       "CAPTAIN",
     );
+
+    const token = jwt.sign(
+      {
+        id: staff._id,
+        role: "CAPTAIN",
+      },
+      Bun.env.JWT_SECRET as string,
+    );
+
+    setCookie(c, "token", token, {
+      httpOnly: false,
+      secure: false,
+    });
 
     return c.json({
       message: "Staff Logged in Successfully",
@@ -1213,6 +1240,19 @@ const usersRouter = new Hono()
         existingUser._id?.toString() || "",
         "HIPAL_CUSTOMER",
       );
+
+      const token = jwt.sign(
+        {
+          id: existingUser._id,
+          role: "HIPAL_CUSTOMER",
+        },
+        Bun.env.JWT_SECRET as string,
+      );
+
+      setCookie(c, "token", token, {
+        httpOnly: false,
+        secure: false,
+      });
 
       return respond(c, "User logged in successfully", false, 200, {
         user: existingUser,

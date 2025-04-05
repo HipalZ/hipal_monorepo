@@ -324,15 +324,16 @@ const categoriesRouter = new Hono()
       }
 
       if (child) {
+        if (!menuId) {
+          return respond(c, "MenuId is required", true, 400, {});
+        }
         let query = {
           businessId,
           hierarchy: "CHILD",
           isDeleted: false,
+          menuId: menuId,
         };
 
-        if (menuId) {
-          query["menuId"] = menuId;
-        }
         const existingCategories = await Category.find(query)
           .select(
             "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId",
