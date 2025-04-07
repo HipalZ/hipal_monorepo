@@ -5,6 +5,7 @@ import type { MenuBannerType } from "@hi/db-models/src/validators";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
+import { useParams } from "react-router-dom";
 
 export const useGetAllTimings = () => {
   const businessData = useBusinessData((state) => state.businessData);
@@ -32,20 +33,26 @@ export const useGetAllTimings = () => {
 };
 
 export const useGetAllCategoryDataWithDishes = () => {
-  const businessData = useBusinessData((state) => state.businessData);
-  const businessId = businessData?._id;
+ 
+   const {businessId,menuId} = useParams<{ menuId: string; businessId:string }>();
 
-  const getAllCategoryData = useCallback(async () => {
+  const updatedQuery = menuId ? {
+    menuId: menuId,
+    businessId: businessId,
+    dishes: "true",
+  } : {
+    businessId: businessId,
+    dishes: "true",
+  }
+
+  const getAllCategoryData = async () => {
     if (!businessId) return;
     const response = await apiRpc.categories.$get({
-      query: {
-        businessId,
-        dishes: "true",
-      },
+      query: updatedQuery
     });
     const categoryData = await response.json();
     return categoryData.data;
-  }, [businessId]);
+  };
 
   const {
     data: categoryData,

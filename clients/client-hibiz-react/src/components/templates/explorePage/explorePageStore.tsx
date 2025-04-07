@@ -99,10 +99,16 @@ export const combineAllDishes = async (categories: ICategory[]) => {
 
 //
 export const getAllCategoryData = async (businessId: string) => {
+   const {menuId} = useParams<{ menuId: string; businessId:string }>();
+  
+  const updatedQuery = menuId ? {
+    menuId: menuId,
+    businessId: businessId,
+  } : {
+    businessId: businessId,
+  }
   const categoryResponse = await apiRpc.categories.$get({
-    query: {
-      businessId: businessId,
-    },
+    query: updatedQuery,
   });
   const data = await categoryResponse.json();
   const categories = data?.data;

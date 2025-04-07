@@ -11,16 +11,21 @@ import useMenuPageStore from "@/components/store/useMenuStorage";
 import { useDishesStore } from "@/components/store/useDishesStore";
 
 export const useChildCategories = (dishStep: string) => {
-  const { businessId } = useParams<{ businessId: string }>();
+  const { businessId ,menuId} = useParams<{ businessId: string;menuId:string }>();
 
+  const updatedQuery = menuId ?{
+    menuId: menuId,
+    businessId: businessId,
+    child: "true",
+  } : {
+    businessId: businessId,
+    child: "true",
+  }
   const getAllChildCategoryData = async (
     businessId: string,
   ): Promise<ICategory[]> => {
     const categoryResponse = await apiRpc.categories.$get({
-      query: {
-        businessId: businessId,
-        child: "true",
-      },
+      query:updatedQuery
     });
     const data = await categoryResponse.json();
     return data?.data as ICategory[];

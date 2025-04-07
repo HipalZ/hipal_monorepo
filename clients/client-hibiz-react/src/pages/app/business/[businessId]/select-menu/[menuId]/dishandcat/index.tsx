@@ -185,40 +185,7 @@ const MemoizeDishAndCat = () => {
           <MemoizedHeader title={dynamicHeading()} leftIcon={<FaArrowLeft />} onBack={handleBack} />
         </article>
 
-        <div className="px-4 py-2 font-semibold bg-white border-b border-gray-200">
-          <UIBreadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to={`/app/business/${businessId}/select-menu`}>Menu Layouts</Link>
-                </BreadcrumbLink>
-              </BreadcrumbItem>
 
-              {menuLayout?.data?.name && (
-                <>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbLink asChild>
-                      <Link
-                        to={`/app/business/${businessId}/select-menu/${menuId}`}
-                        className="max-w-[150px] truncate"
-                        title={menuLayout.data.name}
-                      >
-                        {menuLayout.data.name}
-                      </Link>
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                </>
-              )}
-
-              <BreadcrumbSeparator />
-
-              <BreadcrumbItem>
-                <BreadcrumbPage>{dynamicHeading()}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </UIBreadcrumb>
-        </div>
 
 
         {/* Mobile navigation */}
@@ -243,6 +210,40 @@ const MemoizeDishAndCat = () => {
           <Filter />
           <Search />
         </section>
+      </div>
+      <div className="px-4 py-4 font-semibold bg-white">
+        <UIBreadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to={`/app/business/${businessId}/select-menu`}>Menu Layouts</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+
+            {menuLayout?.data?.name && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link
+                      to={`/app/business/${businessId}/select-menu/${menuId}`}
+                      className="max-w-[150px] truncate"
+                      title={menuLayout.data.name}
+                    >
+                      {menuLayout.data.name}
+                    </Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+              </>
+            )}
+
+            <BreadcrumbSeparator />
+
+            <BreadcrumbItem>
+              <BreadcrumbPage>{dynamicHeading()}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </UIBreadcrumb>
       </div>
 
       {/* Sidebar for desktop */}
