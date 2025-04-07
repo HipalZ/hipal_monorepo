@@ -6,6 +6,12 @@ import { useCartStore } from "@/components/store/useCartStore"
 import { useActiveClass } from "@/components/store/useActiveClass"
 import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton"
 import MemoFoodType from "../foodType"
+import { ImageOff } from "lucide-react"
+import ItemDescriptionPopup from "../dishDescription/itemDescription"
+import MemoDishPopup from "../dishPopup"
+import CommonBottomButton from "../bottomButton"
+import MemoRecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes"
+import { useCart } from "@/components/store/useCart"
 
 interface GridDishCardProps {
     dishData: DishType
@@ -16,7 +22,8 @@ interface GridDishCardProps {
 const GridDishCard = ({ dishData, primaryColor = "#000000", secondaryColor = "#f5f5f5" }: GridDishCardProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const { addToCart, cart } = useCartStore()
-    const { setSelectedDish } = useActiveClass()
+    const { setSelectedDish,isSelectedDish } = useActiveClass()
+     const { setCartPage, setShowCart } = useCart()
 
     // Check if dish is in cart
     // Open dish details modal
@@ -24,6 +31,22 @@ const GridDishCard = ({ dishData, primaryColor = "#000000", secondaryColor = "#f
         setSelectedDish(dishData)
         setIsModalOpen(true)
     }, [dishData, setSelectedDish])
+
+    const closeModal = useCallback(() => {
+        setSelectedDish({} as DishType)
+        setIsModalOpen(false)
+      }, [setSelectedDish])
+
+      const openCart = useCallback(() => {
+        setSelectedDish(null)
+        setCartPage("cart")
+        setShowCart(true)
+      }, [setShowCart, setCartPage, setSelectedDish])
+
+    const cartItems = cart.filter((item) => item.dish?._id === dishData._id)
+    const isDishInCart = cartItems.length > 0
+    const recommendations = isDishInCart ? dishData.recommendationIds || [] : []
+  
 
     return (
         <div className="flex flex-col relative pb-[5rem] overflow-hidden border border-gray-200 rounded-lg">
@@ -37,9 +60,7 @@ const GridDishCard = ({ dishData, primaryColor = "#000000", secondaryColor = "#f
                     />
                 ) : (
                     <div className="flex items-center justify-center w-full h-full" style={{ backgroundColor: secondaryColor }}>
-                        <span className="text-3xl" style={{ color: primaryColor }}>
-                            🍽️
-                        </span>
+                        <ImageOff color={primaryColor} size={40} />
                     </div>
                 )}
                 {!dishData.availability && (
@@ -69,7 +90,7 @@ const GridDishCard = ({ dishData, primaryColor = "#000000", secondaryColor = "#f
                 <section className="absolute flex flex-col items-center justify-center w-full bottom-4">
 
                     <DishQuantityButton primaryColor={primaryColor} secondaryColor={secondaryColor} className="w-[90%]" dishData={dishData} />
-                    <div className="text-xs opacity-50 bg-white text-[#000000] absolute -bottom-0.5 z-50">
+                    <div className="text-xs opacity-50 bg-white text-[#000000] absolute -bottom-0.5 z-10">
                         {(dishData?.addOnIds?.length ||
                             dishData?.portions?.length) > 0
                             ? "customizable"
@@ -80,6 +101,27 @@ const GridDishCard = ({ dishData, primaryColor = "#000000", secondaryColor = "#f
                 : (
                     <div className="px-3 py-1 mt-2 text-xs text-center text-gray-500 bg-gray-200 rounded-md">Not Available</div>
                 )}
+            {isModalOpen && (
+                <ItemDescriptionPopup show={isModalOpen} onClose={closeModal}>
+                    <MemoDishPopup dishData={isSelectedDish} />
+                    <CommonBottomButton
+                        buttons={[
+                            {
+                                text: "Go to cart",
+                                onClick: openCart,
+                                highlight: true,
+                            },
+                        ]}
+                    />
+                </ItemDescriptionPopup>
+            )}
+
+            {/* Recommended dishes section */}
+            {isDishInCart && (
+                <div>
+                    <MemoRecommendedDishes recommendations={recommendations} openModal={openDishDetails} />
+                </div>
+            )}
         </div>
     )
 }

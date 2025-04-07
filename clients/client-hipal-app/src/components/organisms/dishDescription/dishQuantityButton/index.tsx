@@ -168,7 +168,7 @@ const MemoDishQuantityButton = ({
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
-                className="font-medium text-black"
+                className="text-base font-medium text-black"
               >
                 {totalQuantity}
               </motion.span>

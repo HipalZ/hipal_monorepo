@@ -1,11 +1,9 @@
 import { categoryApis } from "@/apis/category";
 import dynamics from "next/dynamic";
-import { defaultThemes } from "@/components/utils/helpers";
-import MainTypes from "@/components/molecules/categoryTypes/mainTypes";
-import TopSectionVideo from "@/components/organisms/menuBanner/topSectionVideo";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import type { BusinessDetails } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
+import LoadingSpinnerCircle from "@/components/atoms/loader";
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -15,7 +13,7 @@ const CategorySkeleton = dynamics(
   () => import("@/components/atoms/progressBar/categoryLoader"),
   {
     ssr: false,
-    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
   },
 );
 
@@ -36,7 +34,7 @@ const CategoryPageBtn = dynamics(
   () => import("@/components/molecules/bottomButton/categoryPageBtn"),
   {
     ssr: false,
-    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
   },
 );
 
@@ -44,7 +42,7 @@ const LiveCart = dynamics(
   () => import("@/components/molecules/bottomButton/livecart"),
   {
     ssr: false,
-    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
   },
 );
 
@@ -52,22 +50,15 @@ const CategoryHeader = dynamics(
   () => import("@/components/organisms/category/categoryHeader"),
   {
     ssr: false,
-    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
   },
 );
-const PageName = dynamics(() => import("@/components/molecules/pageName"), {
-  ssr: false,
-  loading: () => <CategorySkeleton />,
-});
-const Footer = dynamics(() => import("@/components/molecules/footer"), {
-  ssr: true,
-  loading: () => <CategorySkeleton />,
-});
+
 const DishesList = dynamics(
   () => import("@/components/organisms/category/dishesList"),
   {
     ssr: false,
-    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
   },
 );
 
@@ -75,7 +66,7 @@ const TopBackground = dynamics(
   () => import("@/components/molecules/topBackground"),
   {
     ssr: true,
-    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
   },
 );
 
@@ -153,7 +144,6 @@ export default async function Page({
 
   // Call fetchData with both parameters
   const data = await fetchData(businessId, tableName);
-  console.log("category data", data);
   return (
     <main>
       <div className="relative flex flex-col w-full">
@@ -171,16 +161,7 @@ export default async function Page({
             menuLayout={data?.menuData}
           />
         </div>
-
-        {/* <PageName /> */}
       </div>
-      <MainTypes
-        parentCategory={data?.parentCategories || []}
-        childCategory={data?.childCategories || []}
-        primaryColor={data?.menuData?.primaryColor || "#ec4899"}
-        secondaryColor={data?.menuData?.secondaryColor || "#fce7f3"}
-      />
-
       <LiveCart />
       <CategoryPageBtn />
     </main>

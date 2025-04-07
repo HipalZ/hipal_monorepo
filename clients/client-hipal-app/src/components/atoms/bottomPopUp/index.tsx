@@ -73,9 +73,9 @@ const MemoBottomPopUp = ({
           onClick={onClose}
         >
           <animated.div
-            style={{ ...styles, height: height || "100dvh" }}
+            style={{ ...styles, height: height }}
             className={cn(
-              "relative w-full max-w-md shadow-md",
+              "relative w-full max-w-md shadow-md h-[100dvh]",
               !hide && "rounded-t-[1rem]",
               linearGradTheme ? "background-gradient" : "bg-[#ffffff]",
             )}

@@ -104,16 +104,7 @@ const MemoLiveCart = () => {
         )}
       </AnimatePresence>
 
-      {isSearchActive && (
-        <button
-          onClick={() => setIsSearchActive(false)}
-          className="fixed bottom-0 transform z-[105] left-1/2 -translate-x-1/2 p-3 -translate-y-[30%] bg-gray-300 rounded-full
-           text-black"
-          type="button"
-        >
-          <HiX size={24} />
-        </button>
-      )}
+      
       {showCart && tableName ? (
         <BottomPopUp show={showCart} onClose={() => setShowCart(false)} hide>
           <MemoCart />

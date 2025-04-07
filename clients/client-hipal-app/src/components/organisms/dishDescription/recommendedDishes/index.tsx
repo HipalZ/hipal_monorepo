@@ -1,3 +1,4 @@
+"use client";
 import React, { memo, useMemo } from "react";
 import FoodType, { type FOOD_TYPES } from "@/components/atoms/foodType";
 import Section from "@/components/molecules/section";

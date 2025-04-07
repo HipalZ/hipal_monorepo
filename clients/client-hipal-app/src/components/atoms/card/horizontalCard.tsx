@@ -62,7 +62,7 @@ const HorizontalCard = ({
 
   return (
     <div className={cn("flex relative items-center justify-between border-b border-gray-100", compactLayout ? "p-2" : "p-4")}>
-      <div className={cn("flex-1 w-[60%]", compactLayout ? "pr-2" : "pr-4")}>
+      <div className={cn("flex-1 ", compactLayout ? "pr-2 w-[60%]" : "pr-4 w-[70%]")}>
         {dishData?.dishTypes && outletInfo?.outLetType !== "OTHER" && (
           <div className="my-auto">
             <MemoFoodType types={dishData?.dishTypes} />
@@ -93,7 +93,9 @@ const HorizontalCard = ({
         </button>
       </div>
 
-      <div className="relative flex flex-col items-center">
+      <div className={cn("relative w-[40%] flex flex-col items-center",
+        compactLayout ? "w-[40%]" : "w-[30%]"
+      )}>
         <div className={cn("overflow-hidden rounded-md", compactLayout ? "w-16 h-16" : "w-32 h-32")}>
           {dishData.images && dishData.images.length > 0 ? (
             <ShimmerImage
@@ -104,27 +106,31 @@ const HorizontalCard = ({
               height={128}
               className={cn("object-cover w-full h-full rounded-lg", !dishData.availability && "grayscale")}
             />
-          ) : (
-            <div
-              className="flex items-center justify-center w-full h-full"
-              style={{
-                backgroundColor: "#ffffff",
-                borderRadius: "0.5rem",
-                border: `2px solid ${secondaryColor}`,
-              }}
-              onClick={openDishDetails}
-            >
-              <span className="text-xl" style={{ color: primaryColor }}>
-                {dishData.name.charAt(0).toUpperCase()}
-              </span>
-            </div>
-          )}
+          ) :
+            //  (
+            //   <div
+            //     className="flex items-center justify-center w-full h-full"
+            //     style={{
+            //       backgroundColor: "#ffffff",
+            //       borderRadius: "0.5rem",
+            //       border: `2px solid ${secondaryColor}`,
+            //     }}
+            //     onClick={openDishDetails}
+            //   >
+            //     <span className="text-xl" style={{ color: primaryColor }}>
+            //       {dishData.name.charAt(0).toUpperCase()}
+            //     </span>
+            //   </div>
+            // )
+            null
+          }
         </div>
-        <section className="absolute right-0 flex flex-col items-center justify-center w-full -bottom-4">
+        <section className={cn("absolute right-0 flex flex-col items-center justify-center w-full",
+          dishData.images && dishData.images.length > 0 ? "-bottom-4" : "bottom-8"
+        )}>
           {dishData.availability ? (
             <DishQuantityButton
               dishData={dishData}
-              className={compactLayout ? "mt-1 scale-90" : "mt-2"}
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}
             />
@@ -136,7 +142,7 @@ const HorizontalCard = ({
         {/* Modal for dish details */}
       </div>
       {isModalOpen && (
-        <ItemDescriptionPopup show={isModalOpen} onClose={closeModal}>
+        <ItemDescriptionPopup  show={isModalOpen} onClose={closeModal}>
           <DishPopup dishData={isSelectedDish} />
           <CommonBottomButton
             buttons={[

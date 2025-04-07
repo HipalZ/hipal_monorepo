@@ -1,18 +1,15 @@
 "use client"
-import { type FC, memo, useEffect, useMemo, useRef } from "react"
+import { type FC, memo,  useRef } from "react"
 import { useActiveClass } from "@/components/store/useActiveClass"
 import type { CategoryType, DishType } from "@hi/db-models/src/validators"
 import { cn } from "@hi/common"
 import { InView } from "react-intersection-observer"
-import { useSearch } from "@/components/store/useSearch"
-import { useDishesStore } from "@/components/store/useDishesStore"
 import { _useAllBusiness } from "@/components/store/useAllBusiness"
 import GridDishCard from "@/components/atoms/card/GridDishCard"
 import HorizontalCard from "@/components/atoms/card/horizontalCard"
 
 interface EdgeFlowProps {
   childCategory: CategoryType[]
-  parentCategory: CategoryType[]
   primaryColor?: string
   secondaryColor?: string
   isHorizontalCard?: boolean
@@ -41,57 +38,22 @@ const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
 
 const EdgeFlow: FC<EdgeFlowProps> = ({
   childCategory,
-  parentCategory,
   primaryColor = "#000000",
   secondaryColor = "#f5f5f5",
-  isHorizontalCard =false,
+  isHorizontalCard = false,
 }) => {
-  const { setDishes } = useDishesStore()
-  const { isSearchActive } = useSearch()
+  // const { setDishes } = useDishesStore()
   const {
     isActiveDishType,
     isActiveCategory,
     setActiveCategory,
     observerActive,
-    isActiveChildCategory,
-    setActiveChildCategory,
     setObserverActive,
   } = useActiveClass()
 
 
 
-  const menuLayout = useMemo(() => {
-    // Get menu layout from context or props
-    // This is a placeholder - replace with actual implementation
-    return { cardLayout: 1 } // 1 for grid, 2 for horizontal
-  }, [])
-
   const isGridLayout = isHorizontalCard
-
-  const subTypes = useMemo(() => {
-    const hasVisibleDishes = (category: CategoryType): boolean => {
-      return category.hierarchy === "CHILD" && category.dishIds && category.dishIds.length > 0
-    }
-
-    if (parentCategory && parentCategory.length > 0) {
-      const allSubCategoryIds = parentCategory.reduce((acc: string[], parentCat: CategoryType) => {
-        if (parentCat.subCategoryIds && parentCat.subCategoryIds.length > 0) {
-          return acc.concat(parentCat.subCategoryIds)
-        } else {
-          return acc
-        }
-      }, [] as string[])
-      const orderedSubTypes = allSubCategoryIds
-        .map((subCatId: string) => {
-          return childCategory.find((childCat: CategoryType) => childCat._id === subCatId)
-        })
-        .filter((cat): cat is CategoryType => Boolean(cat))
-
-      return orderedSubTypes.filter(hasVisibleDishes)
-    } else {
-      return childCategory?.filter(hasVisibleDishes)
-    }
-  }, [childCategory, parentCategory])
 
   const visibleCategoriesRef = useRef<{ [key: string]: number }>({})
   const updateActiveCategory = () => {
@@ -115,51 +77,13 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
     }
   }
 
-  useEffect(() => {
-    const handleHashChange = () => {
-      if (isActiveChildCategory !== "") {
-        const element = document.getElementById(isActiveChildCategory)
-        if (element) {
-          element.style.scrollMarginTop = "300px"
-          element.scrollIntoView({
-            behavior: "smooth",
-            block: "start",
-          })
-        }
-        setTimeout(() => {
-          setObserverActive(true)
-        }, 3000)
-        setActiveChildCategory("")
-      }
-      const active = observerActive ? "" : isActiveCategory
-      const element = document.getElementById(active)
-      if (element) {
-        element.style.scrollMarginTop = "300px"
-        element.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        })
-      }
-    }
-    handleHashChange()
-    window.addEventListener("hashchange", handleHashChange)
-    return () => window.removeEventListener("hashchange", handleHashChange)
-  }, [isActiveCategory, isActiveChildCategory, observerActive, setActiveChildCategory, setObserverActive])
-
-  useMemo(() => {
-    const allDishes = subTypes.reduce((acc: DishType[], category: CategoryType) => {
-      return acc.concat(category.dishIds.filter((dish: DishType) => dish.visibility && !dish.isDeleted))
-    }, [])
-    setDishes(allDishes)
-    return allDishes
-  }, [subTypes, isActiveDishType, setDishes])
-
   return (
-    <div className="flex h-[calc(100vh-10rem)]">
+    <div className="flex h-[calc(100dvh-11rem)]">
       {/* Left sidebar for categories - Edge layout style */}
-      <div className="w-[20%] h-full overflow-y-auto sticky top-[10rem] max-h-[calc(100vh-10rem)] border-r border-gray-200 bg-gray-50 hide-scrollbar">
-        {subTypes.map((category: CategoryType) => (
+      <div className="w-[20%] h-full overflow-y-auto sticky top-[10rem] max-h-[calc(100vh-10rem)] hide-scrollbar">
+        {childCategory.map((category: CategoryType) => (
           <button
+            type="button"
             key={category._id}
             className={cn("w-full mb-2 p-2 text-xs font-medium flex flex-col items-center transition-colors")}
             style={{
@@ -200,14 +124,14 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
                 {category.name.charAt(0)}
               </div>
             )}
-            <span className="w-full text-center truncate">{category.name}</span>
+            <span className="w-full text-center ">{category.name}</span>
           </button>
         ))}
       </div>
 
       {/* Right content area for dishes */}
       <div className="w-[80%] overflow-y-auto bg-white pb-[5rem] hide-scrollbar">
-        {subTypes.map((category: CategoryType, index) => {
+        {childCategory.map((category: CategoryType, index) => {
           const visibleDishes = category.dishIds.filter((dish: DishType) => dish.visibility)
           const dishesToRender = filterDishes(visibleDishes, isActiveDishType)
 
@@ -239,12 +163,12 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
                     ref={ref}
                     className={cn("z-40 flex items-center space-x-4 justify-between h-[4rem] px-4 font-bold prose")}
                     style={{
-                      backgroundColor: `${secondaryColor}50`,
-                      borderBottom: `1px solid ${primaryColor}20`,
+                      backgroundColor: `${secondaryColor}`,
+                      borderBottom: `1px solid ${primaryColor}`,
                     }}
                   >
                     <h2
-                      className="w-full text-xl font-medium capitalize truncate"
+                      className="w-full text-2xl font-medium text-center capitalize truncate font-play"
                       style={{ color: primaryColor }}
                       title={category.name || "Unnamed Category"}
                     >
