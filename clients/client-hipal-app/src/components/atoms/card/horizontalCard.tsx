@@ -61,88 +61,79 @@ const HorizontalCard = ({
   const compactLayout = isEdgeLayout
 
   return (
-    <div className={cn("flex relative items-center justify-between border-b border-gray-100", compactLayout ? "p-2" : "p-4")}>
-      <div className={cn("flex-1 ", compactLayout ? "pr-2 w-[60%]" : "pr-4 w-[70%]")}>
-        {dishData?.dishTypes && outletInfo?.outLetType !== "OTHER" && (
-          <div className="my-auto">
-            <MemoFoodType types={dishData?.dishTypes} />
-          </div>
-        )}
-        <h3
-          className={cn("font-semibold truncate", compactLayout ? "text-sm" : "text-base")}
-          style={{ color: primaryColor }}
-        >
-          {dishData.name}
-        </h3>
+    <>
 
-        <p className="text-sm font-medium" style={{ color: primaryColor }}>
-          ₹{dishData.price.toFixed(2)}
-        </p>
-        {dishData.description && (
-          <p className={cn("text-gray-500 line-clamp-2", compactLayout ? "text-xs mt-0.5" : "text-xs mt-1")}>
-            {dishData.description}
-          </p>
-        )}
-        <button
-          type="button"
-          onClick={openDishDetails}
-          className={cn("flex items-center gap-2 text-xs underline", compactLayout ? "mt-1" : "mt-2")}
-          style={{ color: primaryColor }}
-        >
-          Read more
-        </button>
-      </div>
-
-      <div className={cn("relative w-[40%] flex flex-col items-center",
-        compactLayout ? "w-[40%]" : "w-[30%]"
-      )}>
-        <div className={cn("overflow-hidden rounded-md", compactLayout ? "w-16 h-16" : "w-32 h-32")}>
-          {dishData.images && dishData.images.length > 0 ? (
-            <ShimmerImage
-              src={dishData?.images?.[0]}
-              alt="dish"
-              quality={95}
-              width={128}
-              height={128}
-              className={cn("object-cover w-full h-full rounded-lg", !dishData.availability && "grayscale")}
-            />
-          ) :
-            //  (
-            //   <div
-            //     className="flex items-center justify-center w-full h-full"
-            //     style={{
-            //       backgroundColor: "#ffffff",
-            //       borderRadius: "0.5rem",
-            //       border: `2px solid ${secondaryColor}`,
-            //     }}
-            //     onClick={openDishDetails}
-            //   >
-            //     <span className="text-xl" style={{ color: primaryColor }}>
-            //       {dishData.name.charAt(0).toUpperCase()}
-            //     </span>
-            //   </div>
-            // )
-            null
-          }
-        </div>
-        <section className={cn("absolute right-0 flex flex-col items-center justify-center w-full",
-          dishData.images && dishData.images.length > 0 ? "-bottom-4" : "bottom-8"
-        )}>
-          {dishData.availability ? (
-            <DishQuantityButton
-              dishData={dishData}
-              primaryColor={primaryColor}
-              secondaryColor={secondaryColor}
-            />
-          ) : (
-            <div className="px-3 py-1 mt-2 text-xs text-gray-500 bg-gray-200 rounded-md">Not Available</div>
+      <div className={cn("flex relative items-center justify-between border-b border-gray-100", compactLayout ? "p-2" : "p-4")}>
+        <div className={cn("flex-1 ", compactLayout ? "pr-2 pb-2 w-[60%]" : "pr-4 w-[70%]")}>
+          {dishData?.dishTypes && outletInfo?.outLetType !== "OTHER" && (
+            <div className="my-auto mb-1">
+              <MemoFoodType types={dishData?.dishTypes} />
+            </div>
           )}
+          <h3
+            className={cn("font-semibold line-clamp-2 leading-4 max-h-10 font-play", compactLayout ? "text-sm" : "text-base")}
+            style={{ color: primaryColor }}
+          >
+            {dishData.name}
+          </h3>
 
-        </section>
-        {/* Modal for dish details */}
+          <p className="mt-1 text-base font-medium" style={{ color: primaryColor }}>
+            ₹{dishData.price.toFixed(2)}
+          </p>
+          {dishData.description && (
+            <p className={cn("text-gray-500 line-clamp-2", compactLayout ? "text-xs mt-0.5" : "text-xs mt-1")}>
+              {dishData.description}
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={openDishDetails}
+            className={cn("flex items-center gap-2 text-xs underline", compactLayout ? "mt-1" : "mt-2")}
+            style={{ color: primaryColor }}
+          >
+            Read more
+          </button>
+        </div>
+
+        <div className={cn("relative w-[40%] flex flex-col items-center",
+          compactLayout ? "w-[40%]" : "w-[30%]"
+        )}>
+          <div className={cn("overflow-hidden rounded-md", compactLayout ? "w-28 h-28" : "w-32 h-32")}>
+            {dishData.images && dishData.images.length > 0 ? (
+              <ShimmerImage
+                src={dishData?.images?.[0]}
+                alt="dish"
+                quality={95}
+                width={128}
+                height={128}
+                onClick={openDishDetails}
+                className={cn("object-cover w-full h-full rounded-lg", !dishData.availability && "grayscale")}
+              />
+            ) :
+              null
+            }
+          </div>
+          <section className={cn("absolute right-0 flex flex-col items-center justify-center w-full",
+            dishData.images && dishData.images.length > 0 ? "-bottom-4" : "bottom-8"
+          )}>
+            {dishData.availability ? (
+              <DishQuantityButton
+                dishData={dishData}
+                primaryColor={primaryColor}
+                secondaryColor={secondaryColor}
+              />
+            ) : (
+              <div className="px-3 py-1 mt-2 text-xs text-gray-500 bg-gray-200 rounded-md">Not Available</div>
+            )}
+
+          </section>
+          {/* Modal for dish details */}
+        </div>
+
+        {/* Recommended dishes section */}
       </div>
       {isModalOpen && (
-        <ItemDescriptionPopup  show={isModalOpen} onClose={closeModal}>
+        <ItemDescriptionPopup show={isModalOpen} onClose={closeModal}>
           <DishPopup dishData={isSelectedDish} />
           <CommonBottomButton
             buttons={[
@@ -155,14 +146,16 @@ const HorizontalCard = ({
           />
         </ItemDescriptionPopup>
       )}
-
-      {/* Recommended dishes section */}
       {isDishInCart && (
         <div>
-          <MemoRecommendedDishes recommendations={recommendations} openModal={openDishDetails} />
+          <MemoRecommendedDishes
+            primaryColor={primaryColor}
+            secondaryColor={secondaryColor}
+           recommendations={recommendations} 
+           openModal={openDishDetails} />
         </div>
       )}
-    </div>
+    </>
   )
 }
 

@@ -1,5 +1,5 @@
 "use client"
-import { type FC, memo,  useRef } from "react"
+import { type FC, memo, useRef } from "react"
 import { useActiveClass } from "@/components/store/useActiveClass"
 import type { CategoryType, DishType } from "@hi/db-models/src/validators"
 import { cn } from "@hi/common"
@@ -7,6 +7,7 @@ import { InView } from "react-intersection-observer"
 import { _useAllBusiness } from "@/components/store/useAllBusiness"
 import GridDishCard from "@/components/atoms/card/GridDishCard"
 import HorizontalCard from "@/components/atoms/card/horizontalCard"
+import Image from "next/image"
 
 interface EdgeFlowProps {
   childCategory: CategoryType[]
@@ -107,9 +108,11 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
           >
             {category.coverImage ? (
               <div className="w-8 h-8 mb-1 overflow-hidden rounded-full">
-                <img
+                <Image
                   src={category.coverImage || "/placeholder.svg"}
                   alt={category.name}
+                  width={32}
+                  height={32}
                   className="object-cover w-full h-full"
                 />
               </div>
@@ -140,7 +143,7 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
           return (
             <section
               key={`${category._id}${index}`}
-              className={cn("w-full pb-4 overflow-hidden")}
+              className={cn("w-full overflow-hidden")}
               id={category._id?.toString()}
             >
               <InView
@@ -190,13 +193,14 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col divide-y divide-gray-100">
+                <div className="flex flex-col">
                   {dishesToRender.map((dishData: DishType, dishIndex) => (
                     <HorizontalCard
                       key={`${dishData._id}-${dishIndex}`}
                       dishData={dishData}
                       primaryColor={primaryColor}
                       secondaryColor={secondaryColor}
+                      isEdgeLayout={true}
                     />
                   ))}
                 </div>
