@@ -9,6 +9,7 @@ export * from "./dish";
 export * from "./kitchen";
 
 export * from "./admin";
+export * from "./bookingz"
 export * from "./billShortUrl";
 export * from "./buckets";
 export * from "./businessPosConfig";

@@ -2,7 +2,7 @@ name: Build and Push server-test to DigitalOcean Container Registry
 
 on:
   push:
-    branches: ['test']
+    branches: ['xyz']
     paths:
       - 'Dockerfile'
       - 'bun.lockb'

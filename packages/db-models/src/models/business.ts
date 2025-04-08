@@ -94,6 +94,11 @@ const businessSchema = new mongoose.Schema<BusinessType>(
       required: false,
       default: Date.now(),
     },
+     capacity: { // relevant for bookingz
+      type: Number,
+      required: true,
+      default: 50,
+    },
   },
   {
     timestamps: true,

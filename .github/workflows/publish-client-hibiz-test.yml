@@ -2,7 +2,7 @@ name: Build and Push client-hibiz-test Server Image
 
 on:
   push:
-    branches: ['test']
+    branches: ['xyz']
     paths:
       - 'Dockerfile'
       - 'bun.lockb'
