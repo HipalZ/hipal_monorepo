@@ -89,9 +89,6 @@ const MemoListOfDishes = () => {
     );
   }
 
-  console.log("filteredDishes", filteredDishes);
-
-
   return (
     <section className="flex relative flex-wrap justify-center mt-[7rem] gap-4 mx-4 lg:mt-[5rem]">
       <h3 className="absolute left-0 text-xl -top-[2.5rem] lg:-top-[3.5rem] font-semibold">

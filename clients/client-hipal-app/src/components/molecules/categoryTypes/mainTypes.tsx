@@ -176,7 +176,7 @@ const MemoMainTypes = (props: IMainTypes) => {
         }
         }
         className={cn(
-          "sticky flex items-center rounded-r-xl justify-between px-4 py-3 max-w-[30rem] z-50 left-0",
+          "fixed lg:sticky flex items-center rounded-r-xl justify-between px-4 py-3 z-50 left-0",
           cart.length > 0 ? "bottom-[8.5rem]" : "bottom-[5.25rem]",
         )}
         style={{

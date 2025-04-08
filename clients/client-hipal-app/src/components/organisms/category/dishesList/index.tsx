@@ -82,12 +82,12 @@ const DishesList: FC<IDishesProps> = (props) => {
           secondaryColor={secondaryColor}
         />
       )}
-      <MainTypes
+       <MainTypes
         parentCategory={parentCategory || []}
         childCategory={subTypes || []}
         primaryColor={primaryColor || "#ec4899"}
         secondaryColor={secondaryColor || "#fce7f3"}
-      />
+      /> 
     </>
   )
 }

@@ -78,9 +78,9 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
   }
 
   return (
-    <div className="flex h-[calc(100dvh-11rem)]">
+    <div className="flex h-[calc(100dvh-5rem)]">
       {/* Left sidebar for categories - Edge layout style */}
-      <div className="w-[20%] h-full overflow-y-auto sticky top-[10rem] max-h-[calc(100vh-10rem)] hide-scrollbar">
+      <div className="w-[20%] h-full overflow-y-auto sticky top-[4rem] border border-r-2 max-h-[calc(100vh-8rem)] hide-scrollbar">
         {childCategory.map((category: CategoryType) => (
           <button
             type="button"
@@ -130,7 +130,7 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
       </div>
 
       {/* Right content area for dishes */}
-      <div className="w-[80%] overflow-y-auto bg-white pb-[5rem] hide-scrollbar">
+      <div className="w-[80%] overflow-y-auto bg-white pb-[5rem] hide-scrollbar scroll-pt-12">
         {childCategory.map((category: CategoryType, index) => {
           const visibleDishes = category.dishIds.filter((dish: DishType) => dish.visibility)
           const dishesToRender = filterDishes(visibleDishes, isActiveDishType)

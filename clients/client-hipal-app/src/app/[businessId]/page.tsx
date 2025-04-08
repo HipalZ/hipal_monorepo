@@ -69,7 +69,6 @@ const Page = async ({ params, searchParams }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) => {
   const businessData = await getBusinessData(params?.businessId);
-  console.log("businessData", businessData);
 
   // Handle redirects based on outlet type
   if (["MENU", "FOOD"].includes(businessData?.outLetType)) {
