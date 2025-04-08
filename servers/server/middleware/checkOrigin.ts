@@ -12,6 +12,12 @@ export const checkOrigin = () => {
       "http://localhost:5173",
       "http://localhost:3001",
       "http://localhost:3000",
+      "https://www.hipalz.com",
+      "https://www.hipal-test.hipalz.com",
+      "https://www.biz.test.hipalz.com",
+      "https://www.hibiz.hipalz.com",
+      "https://www.table.test.hipalz.com",
+      "https://www.hiclient.hipalz.com",
     ];
 
     const headerData = c.req.header();
