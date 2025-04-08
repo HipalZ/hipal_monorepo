@@ -173,7 +173,7 @@ const addonRouter = new Hono()
       z.object({
         businessId: z.string(),
         menu: z.string().optional(),
-        menuId: z.string().optional(),
+        menuId: z.string(),
       }),
     ),
 
@@ -181,28 +181,23 @@ const addonRouter = new Hono()
       const { businessId, menu, menuId } = c.req.query();
 
       if (menu) {
-        let query = {
+        const query = {
           businessId,
           isDeleted: false,
+          menuId: menuId,
         };
 
-        if (menuId) {
-          query["menuId"] = menuId;
-        }
         const addon = await AddOn.find(query).select(
           "_id name choices availability visibility ",
         );
         return respond(c, "success", false, 200, addon);
       }
 
-      let query = {
+      const query = {
         businessId,
         isDeleted: false,
+        menuId: menuId,
       };
-
-      if (menuId) {
-        query["menuId"] = menuId;
-      }
 
       const addon = await AddOn.find(query);
 
