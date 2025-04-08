@@ -3,7 +3,6 @@ import Fuse from "fuse.js";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useMenuPageStore, {
   type AddonChoice,
-  type Choice,
 } from "@/components/store/useMenuStorage";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useCategoryStore } from "@/components/store/useCategoryStore";

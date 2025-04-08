@@ -8,27 +8,33 @@ import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 
 export const useAddOnList = () => {
-   const { businessId,menuId } = useParams<{ businessId?: string; menuId: string }>();
-  
+  const { businessId, menuId } = useParams<{ businessId?: string; menuId: string }>();
+
   const { setAddOnTypes } = useCategoryStore((state) => ({
     setAddOnTypes: state.setAddOnTypes,
   }));
 
-  const getAllAddOn = useCallback(async () => {
+  const updatedQuery = menuId
+    ? {
+      menuId: menuId,
+      businessId: businessId,
+    }
+    : {
+      businessId: businessId,
+    };
+
+  const getAllAddOn = async () => {
     if (!businessId && !menuId) return [];
     const res = await apiRpc.addons.$get({
-      query: {
-        businessId,
-        menuId
-      },
+      query: updatedQuery
     });
     const data = (await res.json()).data as AddOnType[];
     setAddOnTypes(data);
     return data;
-  }, []);
+  };
 
   const { data: addOns, isLoading } = useQuery({
-    queryKey: ["getAllAddOn", businessId,menuId],
+    queryKey: ["getAllAddOn", businessId, menuId],
     queryFn: getAllAddOn,
     enabled: !!businessId && !!menuId,
   });
