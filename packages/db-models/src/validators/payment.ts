@@ -159,6 +159,12 @@ export const PaymentSchema = z.object({
   finalSubTotal: z.coerce.number().default(0).optional(),
   discountType: z.enum(["COINZ", "COUPONZ"]).optional().default("COINZ"),
   downloadUrl: z.string().min(3).max(200).optional(),
+  isDeleted: z
+    .boolean({
+      required_error: "isDeleted must be a boolean",
+      invalid_type_error: "isDeleted must be a boolean",
+    })
+    .default(false),
 });
 
 export type PaymentType = z.infer<typeof PaymentSchema>;

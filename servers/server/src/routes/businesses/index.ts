@@ -187,6 +187,7 @@ const businessesRouter = new Hono()
           if (rewards) {
             const loyaltySettings = await LoyaltySettings.findOne({
               businessId: parentOutLetId,
+              isActive: true,
             }).lean();
             if (!loyaltySettings)
               return respond(c, "loyaltySettings not found", true, 404, {});
@@ -653,8 +654,7 @@ const businessesRouter = new Hono()
         {
           data: exitingSettings,
           message: "loyalty settings found",
-          status: 200,
-          error: false,
+          err: false,
         },
         200,
       );
@@ -766,6 +766,7 @@ const businessesRouter = new Hono()
 
       const existingSettings = await LoyaltySettings.findOne({
         businessId: businessId,
+        isActive: true,
       });
 
       if (existingSettings) {

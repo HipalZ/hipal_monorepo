@@ -48,8 +48,8 @@ import { ObjectId } from "bson";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
-import { z } from "zod";
 import Papa from "papaparse";
+import { z } from "zod";
 import {
   ClientRoles,
   requireAuthorization,
@@ -121,7 +121,7 @@ const calculateDiscount = async (
   const discount = Math.round(
     Math.abs(
       finalBillValue / (1 + gstPercentage + serviceChargePercentage) -
-      estimatedSubTotal,
+        estimatedSubTotal,
     ),
   );
 
@@ -262,6 +262,7 @@ const addCoins = async (
 
   const existingLoyalty = await LoyaltySettings.findOne({
     businessId: businessId,
+    isActive: true,
   }).select("rewardLimit");
   if (existingUser && existingLoyalty) {
     const coinsCalculated = await calculateReward(
@@ -301,9 +302,10 @@ const calculatedCashbackCoins = async (
   billValue: number,
   claimedCoins: number,
 ) => {
-  const LoyaltySetting = await LoyaltySettings.findOne({ businessId }).select(
-    "rewardLimit setCashBackPercentage",
-  );
+  const LoyaltySetting = await LoyaltySettings.findOne({
+    businessId,
+    isActive: true,
+  }).select("rewardLimit setCashBackPercentage");
 
   if (!LoyaltySetting) {
     console.error("LoyaltySetting not found or setReward is not a number");
@@ -343,6 +345,7 @@ const fetchData = async (
 ) => {
   const existingPayments = await Payment.find({
     businessId,
+    isDeleted: false,
     date: {
       $gte: fromDate,
       $lte: toDate,
@@ -574,9 +577,9 @@ const paymentsRouter = new Hono()
           // Step 4: Calculate finalTotal
           const finalTotal = Math.round(
             finalSubTotal +
-            finalTax +
-            (removeTips ? 0 : tips || tempTable.tips) +
-            tempTable.serviceCharge,
+              finalTax +
+              (removeTips ? 0 : tips || tempTable.tips) +
+              tempTable.serviceCharge,
           );
 
           await UserSession.findOneAndUpdate(
@@ -1131,7 +1134,6 @@ const paymentsRouter = new Hono()
       const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
 
       if (!bodyResult.success) {
-        console.log("Invalid body", bodyResult.error);
         return respond(c, "Invalid body", true, 200, {});
       }
 
@@ -1186,7 +1188,6 @@ const paymentsRouter = new Hono()
       }
 
       if (event === "payment.captured") {
-        console.log("Payment captured");
         const paymentAlreadyExist = await Payment.findOne({
           razorpayEventId: razorpayEventId,
         });
@@ -1389,6 +1390,7 @@ const paymentsRouter = new Hono()
 
             const existingLoyalty = await LoyaltySettings.findOne({
               businessId: getOrder.businessId,
+              isActive: true,
             }).select("rewardLimit");
 
             const coinsCalculated = await calculateReward(
@@ -1701,12 +1703,12 @@ const paymentsRouter = new Hono()
         200,
         existingPaymentAlerts.length === 0
           ? [
-            {
-              v: appInfo?.v,
-              appUrl: appInfo?.appUrl,
-              updateFeature: appInfo?.updateFeature,
-            },
-          ]
+              {
+                v: appInfo?.v,
+                appUrl: appInfo?.appUrl,
+                updateFeature: appInfo?.updateFeature,
+              },
+            ]
           : existingPaymentAlerts,
       );
     },
@@ -1749,6 +1751,7 @@ const paymentsRouter = new Hono()
 
         const existingLoyalty = await LoyaltySettings.findOne({
           businessId: alert.businessId,
+          isActive: true,
         }).select("loyaltyId");
 
         if (alert.alertType !== "OFFLINE") {
@@ -1781,26 +1784,6 @@ const paymentsRouter = new Hono()
               });
             }
 
-            if (
-              paymentMode?.name !== "complementary" &&
-              paymentMode?.name !== "npc"
-            ) {
-              if (order?.claimedCoins && order?.claimedCoins > 0) {
-                const existingLoyalty = await LoyaltySettings.findOne({
-                  businessId: alert.businessId,
-                }).select("loyaltyId");
-
-                await removeCoins(
-                  Number(order?.claimedCoins),
-                  order.tableName || "",
-                  existingLoyalty?.loyaltyId.toString() || "",
-                  order._id.toString(),
-                  order.userId._id.toString(),
-                  session,
-                );
-              }
-            }
-
             if (order) {
               let finalCashBack = 0;
               if (
@@ -1813,25 +1796,36 @@ const paymentsRouter = new Hono()
                   Number(order.claimedCoins),
                 );
 
-                if (order.cashbackAvailable === false) {
-                  cashBack = 0;
+                if (existingLoyalty?.loyaltyId && order.claimedCoins > 0) {
+                  await removeCoins(
+                    Number(order?.claimedCoins),
+                    order.tableName,
+                    existingLoyalty?.loyaltyId?.toString() || "",
+                    order._id.toString(),
+                    order.userId._id.toString(),
+                    session,
+                  );
+                  if (order.cashbackAvailable === false) {
+                    cashBack = 0;
+                  }
+
+                  finalCashBack = await addCoins(
+                    cashBack,
+                    order.userId._id.toString(),
+                    order._id.toString(),
+                    order.tableName || "",
+                    order.businessId.toString(),
+
+                    existingLoyalty?.loyaltyId.toString() || "",
+
+                    session,
+                  );
                 }
-
-                finalCashBack = await addCoins(
-                  cashBack,
-                  order.userId._id.toString(),
-                  order._id.toString(),
-                  order.tableName || "",
-                  order.businessId.toString(),
-
-                  existingLoyalty?.loyaltyId.toString() || "",
-
-                  session,
-                );
               }
 
               const isHavePos = await BusinessPosConfig.findOne({
                 businessId: order.businessId,
+                isDeleted: false,
               });
 
               const tableSession = await UserSession.findOne({
@@ -1867,7 +1861,7 @@ const paymentsRouter = new Hono()
                     order_id: order?._id,
                     total:
                       paymentMode?.name === "npc" ||
-                        paymentMode?.name === "complementary"
+                      paymentMode?.name === "complementary"
                         ? 0
                         : order?.total,
                     mode: settleModes.length > 1 ? "split" : paymentMode?.name,
@@ -1880,7 +1874,7 @@ const paymentsRouter = new Hono()
                         : order?.userId,
                     claimedCoins:
                       paymentMode?.name === "npc" ||
-                        paymentMode?.name === "complementary"
+                      paymentMode?.name === "complementary"
                         ? 0
                         : order?.claimedCoins,
                     billValue: order?.billValue,
@@ -1888,7 +1882,7 @@ const paymentsRouter = new Hono()
                     tableName: order?.tableName,
                     earnCoins:
                       paymentMode?.name === "npc" ||
-                        paymentMode?.name === "complementary"
+                      paymentMode?.name === "complementary"
                         ? 0
                         : finalCashBack,
                     razorpayEventId: nanoid(15),
@@ -1899,12 +1893,12 @@ const paymentsRouter = new Hono()
                     posBillId: tableSession?.billInvoiceId,
                     tax:
                       paymentMode?.name === "npc" ||
-                        paymentMode?.name === "complementary"
+                      paymentMode?.name === "complementary"
                         ? 0
                         : tableSession?.finalTax,
                     serviceCgarge:
                       paymentMode?.name === "npc" ||
-                        paymentMode?.name === "complementary"
+                      paymentMode?.name === "complementary"
                         ? 0
                         : tableSession?.serviceCharge,
                     posBillRequestId: tableSession?.billRequestId,
@@ -2196,6 +2190,7 @@ const paymentsRouter = new Hono()
 
       const payments = await Payment.find({
         businessId,
+        isDeleted: false,
         date: { $gte: fromDate, $lte: toDate },
       });
 
@@ -2349,7 +2344,7 @@ const paymentsRouter = new Hono()
         }
       }
 
-      const queryObject = { $and: filterConditions };
+      const queryObject = { $and: filterConditions, isDeleted: false };
 
       const existingPayments = await Payment.find(queryObject)
         .sort({ _id: -1 })
@@ -2403,7 +2398,6 @@ const paymentsRouter = new Hono()
       const { businessId, from, to } = c.req.query();
       const fromDate = from ? Number(from) : startOfToday.getTime();
       const toDate = to ? Number(to) : endOfToday.getTime();
-
 
       if (fromDate > toDate) {
         return c.json({
@@ -2477,7 +2471,7 @@ const paymentsRouter = new Hono()
         }
       }
 
-      const queryObject = { $and: filterConditions };
+      const queryObject = { $and: filterConditions, isDeleted: false };
 
       const existingPayments = await Payment.find(queryObject)
         .sort({ _id: -1 })
@@ -2516,11 +2510,11 @@ const paymentsRouter = new Hono()
           paymentModeField = `SPLIT: ${splittedInfo}`;
         }
 
-        totalSubtotal += (initialSubTotal ?? 0);
-        totalDiscount += (discount ?? 0);
-        totalTax += (tax ?? 0);
-        totalServiceCharge += (serviceCharge ?? 0);
-        totalAmount += (total ?? 0);
+        totalSubtotal += initialSubTotal ?? 0;
+        totalDiscount += discount ?? 0;
+        totalTax += tax ?? 0;
+        totalServiceCharge += serviceCharge ?? 0;
+        totalAmount += total ?? 0;
 
         return {
           PAYMENT_ID: _id.toString(), // Uppercase headings for minimal emphasis
@@ -2538,7 +2532,7 @@ const paymentsRouter = new Hono()
         };
       });
       rows.push({
-        PAYMENT_ID: "TOTALS (DO NOT EDIT THIS ROW)",  // This can be "-----" or something else to indicate a summary row
+        PAYMENT_ID: "TOTALS (DO NOT EDIT THIS ROW)", // This can be "-----" or something else to indicate a summary row
         DATE: "",
         USER_NAME: "",
         USER_PHONE: "",
@@ -2555,13 +2549,16 @@ const paymentsRouter = new Hono()
       const csvString = Papa.unparse(rows, {
         header: true,
         quotes: true,
-        skipEmptyLines: true
+        skipEmptyLines: true,
       });
 
       const formatDate = (timestamp: number) => {
         const d = new Date(timestamp);
         // Example: "2023-03-19"
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+          2,
+          "0",
+        )}-${String(d.getDate()).padStart(2, "0")}`;
       };
 
       const fromStr = formatDate(fromDate);
@@ -2574,10 +2571,8 @@ const paymentsRouter = new Hono()
 
       // Return the CSV directly
       return c.body(csvString);
-
-    }
+    },
   )
-
 
   .put(
     "updateAll/payments",
@@ -2867,6 +2862,7 @@ const paymentsRouter = new Hono()
       const existingPayments = await Payment.find({
         userId,
         businessId,
+        isDeleted: false,
       })
         .sort({ _id: -1 })
         .skip(skip)
@@ -3226,6 +3222,7 @@ const paymentsRouter = new Hono()
 
             const pos = await BusinessPosConfig.findOne({
               businessId: getOrder.businessId,
+              isDeleted: false,
             });
 
             if (pos) {
@@ -3354,6 +3351,7 @@ const paymentsRouter = new Hono()
 
       const payments = await Payment.find({
         businessId,
+        isDeleted: false,
         date: { $gte: fromDate, $lte: toDate },
       });
 
@@ -3458,6 +3456,7 @@ const paymentsRouter = new Hono()
 
       const payments = await Payment.find({
         businessId,
+        isDeleted: false,
         date: { $gte: fromDate, $lte: toDate },
       });
 

@@ -253,6 +253,7 @@ const tableRouter = new Hono()
 
         const pos = await BusinessPosConfig.findOne({
           businessId: table?.businessId,
+          isDeleted: false,
         });
 
         if (!pos) {
@@ -558,6 +559,7 @@ const tableRouter = new Hono()
         }
         const pos = await BusinessPosConfig.findOne({
           businessId: table?.businessId,
+          isDeleted: false,
         });
         if (!pos) {
           return c.json(
@@ -820,6 +822,7 @@ const tableRouter = new Hono()
         }
         const pos = await BusinessPosConfig.findOne({
           businessId: table?.businessId,
+          isDeleted: false,
         });
         if (!pos) {
           return c.json(
@@ -1082,6 +1085,7 @@ const tableRouter = new Hono()
 
       const posConfigData = await BusinessPosConfig.findOne({
         businessId,
+        isDeleted: false,
       });
 
       if (!posConfigData) {

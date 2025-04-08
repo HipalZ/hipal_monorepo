@@ -14,6 +14,7 @@ export const categoryBucketSchema = z.object({
   description: z.string().optional(),
   isActive: z.boolean().default(true),
   isDeleted: z.boolean().default(false),
+  businessId: ObjectIdSchema.optional(),
 });
 
 export const updateCategoryBucketSchema = z.object({

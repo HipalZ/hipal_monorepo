@@ -488,6 +488,7 @@ const reviewRouter = new Hono()
 
       const loyaltySetting = await LoyaltySettings.findOne({
         businessId,
+        isActive: true,
       }).select("rewardLimit");
 
       if (!loyaltySetting) {
@@ -588,6 +589,7 @@ const reviewRouter = new Hono()
 
           const loyaltySetting = await LoyaltySettings.findOne({
             businessId,
+            isActive: true,
           }).select("rewardLimit");
 
           if (!loyaltySetting) {
@@ -792,7 +794,8 @@ const reviewRouter = new Hono()
         return respond(c, " successfully", false, 200, {});
       });
     },
-  ).post(
+  )
+  .post(
     "/googleRatings",
     zValidator(
       "json",
@@ -822,11 +825,11 @@ const reviewRouter = new Hono()
         { businessId },
         {
           avgRating,
-        }
+        },
       );
 
       return respond(c, "rating fetched successfully", false, 200, {});
-   },
-  )
+    },
+  );
 
 export default reviewRouter;

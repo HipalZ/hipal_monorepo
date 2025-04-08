@@ -26,6 +26,7 @@ const businessSettingSchema = new mongoose.Schema<BusinessSettingsType>({
   razorpayKeyId: { type: String, required: false },
   razorpayKeySecret: { type: String, required: false },
   razorpayWebhookSecret: { type: String, required: false },
+  isActive: { type: Boolean, default: true },
 });
 
 const BusinessSettings: Model<BusinessSettingsType> =

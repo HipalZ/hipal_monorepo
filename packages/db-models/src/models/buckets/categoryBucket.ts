@@ -21,6 +21,10 @@ const categoryBucketSchema = new mongoose.Schema<CategoryBucketType>(
       type: Boolean,
       default: false,
     },
+    businessId: {
+      type: ObjectId,
+      ref: "Business",
+    },
   },
   { timestamps: true },
 );

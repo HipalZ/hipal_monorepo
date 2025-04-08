@@ -34,6 +34,10 @@ const imagesSchema = new mongoose.Schema<ImagesType>(
       required: true,
       unique: true,
     },
+    businessId: {
+      type: ObjectId,
+      ref: "Business",
+    },
   },
   { timestamps: true },
 );

@@ -202,7 +202,10 @@ const posRouter = new Hono()
         const { businessId, tableName, generatedBy } = c.req.query();
 
         // Fetch POS config for the business
-        const pos = await BusinessPosConfig.findOne({ businessId });
+        const pos = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+        });
         if (!pos) {
           return c.json(
             {
@@ -445,6 +448,7 @@ const posRouter = new Hono()
 
         const posConfigAlreadyExists = await BusinessPosConfig.findOne({
           businessId,
+          isDeleted: false,
         });
 
         if (posConfigAlreadyExists) {
@@ -688,22 +692,6 @@ const posRouter = new Hono()
               );
             }
           }
-
-          // // update outlet info
-          // await OutLetInfo.findOneAndUpdate(
-          //   {
-          //     businessId,
-          //   },
-          //   {
-          //     isPosEnabled: true,
-          //   },
-          //   {
-          //     new: true,
-          //     upsert: true,
-          //     session,
-          //   },
-          // );
-
           // update uniquely yours
           await UniquelyYours.findOneAndUpdate(
             {
@@ -807,6 +795,7 @@ const posRouter = new Hono()
 
         const posConfigData = await BusinessPosConfig.findOne({
           businessId: businessId,
+          isDeleted: false,
         });
 
         if (!posConfigData) {
@@ -1226,6 +1215,7 @@ const posRouter = new Hono()
         // find posconfig for a place order
         const pos = await BusinessPosConfig.findOne({
           businessId: businessId,
+          isDeleted: false,
         });
 
         if (!pos) {

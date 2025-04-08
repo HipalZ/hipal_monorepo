@@ -17,6 +17,7 @@ export const imagesSchema = z.object({
   categoryBucketId: ObjectIdSchema,
   isDeleted: z.boolean().default(false),
   imageUrl: z.string().min(1).max(200).url(),
+  businessId: ObjectIdSchema.optional(),
 });
 
 export const updateImagesSchema = z.object({

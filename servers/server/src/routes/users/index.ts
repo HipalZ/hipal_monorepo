@@ -269,7 +269,6 @@ const usersRouter = new Hono()
         };
 
         const response = await axios(options);
-        console.log("responsesss", response.data.message);
 
         if (
           response?.data?.message === "Mobile no. not found" ||
@@ -285,7 +284,14 @@ const usersRouter = new Hono()
           );
         }
 
-        const user = await User.create({ name, phone, role: roles });
+        const hashedPassword = await hashPassword("6344");
+
+        const user = await User.create({
+          name,
+          phone,
+          role: roles,
+          password: hashedPassword,
+        });
 
         const accessToken = createAccessToken(user._id, "OWNER");
         const refreshToken = createRefreshToken(user._id, "OWNER");
@@ -621,6 +627,7 @@ const usersRouter = new Hono()
         permissionGroupIds = [],
         password,
       } = requestData as AddStaffValidatorType;
+      const hashPass = await hashPassword(password);
 
       const existingUser = await User.findOne({
         phone,
@@ -642,13 +649,12 @@ const usersRouter = new Hono()
           permissionIds,
         };
 
-        console.log("customRole", customRole);
-
         const updateUser = await User.findOneAndUpdate(
           { phone },
           {
             $addToSet: {
               customRole: customRole,
+              password: hashPass,
             },
           },
           { new: true },
@@ -660,8 +666,6 @@ const usersRouter = new Hono()
           err: false,
         });
       }
-
-      const hashPass = await hashPassword(password);
 
       const perObj = await createPermissionObject(
         permissionIds,
