@@ -87,7 +87,7 @@ const DishesList: FC<IDishesProps> = (props) => {
       ) : (
         <EdgeFlow
           childCategory={subTypes}
-          isHorizontalCard={!isHorizontalCard}
+          isHorizontalCard={isHorizontalCard}
           primaryColor={primaryColor}
           secondaryColor={secondaryColor}
         />
