@@ -46,9 +46,9 @@ export async function fetchCommonData(
 }
 
 export const getBusinessData = async (customLink: string) => {
-
-  if (!customLink) {
-    return redirect("/");
+   
+  if(!customLink){
+    return  redirect("/");
   }
   try {
     const res = await apiRpc.businesses.n[":customLink"].$get({
