@@ -21,6 +21,7 @@ import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
+import { nanoid } from "nanoid";
 import { z } from "zod";
 import { cache } from "../../utils/cacheHelper";
 import { petpoojaPosConfig } from "../../utils/posConfig/petPooja";
@@ -429,7 +430,7 @@ const scriptRouter = new Hono()
           const tableName = parsedUrl.searchParams.get("tableName");
 
           const createTable = await Table.create({
-            name: tableName,
+            name: tableName || nanoid(5),
             businessId: businessData._id,
             zoneId: newZone._id,
             internalZoneId: newZone._id,
