@@ -328,7 +328,7 @@ const menuRouter = new Hono()
 
         if (!menu) return respond(c, "Menu not found", true, 404);
 
-        return respond(c, "Menu fetched successfully", false, 200, menu);
+        return respond(c, "Menu fetched successfully", false, 200, {});
       });
     },
   )

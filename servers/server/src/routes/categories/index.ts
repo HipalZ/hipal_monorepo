@@ -297,9 +297,9 @@ const categoriesRouter = new Hono()
           isDeleted: false,
         };
 
-        if (menuId) {
-          query["menuId"] = menuId;
-        }
+        // if (menuId) {
+        //   query["menuId"] = menuId;
+        // }
         const existingCategories = await Category.find(query).select(
           "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage",
         );
@@ -404,9 +404,9 @@ const categoriesRouter = new Hono()
           isDeleted: false,
         };
 
-        if (menuId || tableName) {
-          query["menuId"] = menuId || menu?._id;
-        }
+        // if (menuId || tableName) {
+        //   query["menuId"] = menuId || menu?._id;
+        // }
         const existingCategories = await Category.find(query)
           .sort({ sequence: 1 })
           .select(
@@ -502,44 +502,44 @@ const categoriesRouter = new Hono()
           indianDate.getHours() * 60 + indianDate.getMinutes();
 
         // Find the active menu for the zone and business
-        let menu = await Menu.findOne({
-          zoneIds: zone?._id,
-          businessId,
-          isActive: true,
-          $or: [
-            {
-              days: { $in: [currentDay] },
-              startTime: { $lte: currentTimeInMinutes },
-              endTime: { $gte: currentTimeInMinutes },
-            },
-            {
-              days: { $in: [currentDay] },
-              $expr: { $eq: ["$startTime", { $add: ["$endTime", 1] }] },
-            },
-          ],
-        }).lean();
+        // let menu = await Menu.findOne({
+        //   zoneIds: zone?._id,
+        //   businessId,
+        //   isActive: true,
+        //   $or: [
+        //     {
+        //       days: { $in: [currentDay] },
+        //       startTime: { $lte: currentTimeInMinutes },
+        //       endTime: { $gte: currentTimeInMinutes },
+        //     },
+        //     {
+        //       days: { $in: [currentDay] },
+        //       $expr: { $eq: ["$startTime", { $add: ["$endTime", 1] }] },
+        //     },
+        //   ],
+        // }).lean();
 
-        if (!menu) {
-          menu = await Menu.findOne({
-            businessId,
-            isActive: true,
-            $or: [
-              {
-                days: { $in: [currentDay] },
-                startTime: { $lte: currentTimeInMinutes },
-                endTime: { $gte: currentTimeInMinutes },
-              },
-              {
-                days: { $in: [currentDay] },
-                $expr: { $eq: ["$startTime", { $add: ["$endTime", 1] }] },
-              },
-            ],
-          }).lean();
-        }
+        // if (!menu) {
+        //   menu = await Menu.findOne({
+        //     businessId,
+        //     isActive: true,
+        //     $or: [
+        //       {
+        //         days: { $in: [currentDay] },
+        //         startTime: { $lte: currentTimeInMinutes },
+        //         endTime: { $gte: currentTimeInMinutes },
+        //       },
+        //       {
+        //         days: { $in: [currentDay] },
+        //         $expr: { $eq: ["$startTime", { $add: ["$endTime", 1] }] },
+        //       },
+        //     ],
+        //   }).lean();
+        // }
 
-        if (!menu) {
-          return respond(c, "Menu not found", true, 404, []);
-        }
+        // if (!menu) {
+        //   return respond(c, "Menu not found", true, 404, []);
+        // }
 
         let query = {
           businessId,
@@ -547,9 +547,9 @@ const categoriesRouter = new Hono()
           isDeleted: false,
         };
 
-        if (tableName) {
-          query["menuId"] = menu?._id;
-        }
+        // if (tableName) {
+        //   query["menuId"] = menu?._id;
+        // }
 
         const existingCategories = await Category.find(query).populate({
           path: "dishIds",
@@ -572,9 +572,9 @@ const categoriesRouter = new Hono()
         isDeleted: false,
       };
 
-      if (menuId) {
-        query["menuId"] = menuId;
-      }
+      // if (menuId) {
+      //   query["menuId"] = menuId;
+      // }
 
       const existingCategories = await Category.find(query);
 
@@ -598,9 +598,9 @@ const categoriesRouter = new Hono()
         isDeleted: false,
         hierarchy: "CHILD",
       };
-      if (menuId) {
-        query["menuId"] = menuId;
-      }
+      // if (menuId) {
+      //   query["menuId"] = menuId;
+      // }
 
       const existingCategories = await Category.find(query).populate("dishIds");
 
