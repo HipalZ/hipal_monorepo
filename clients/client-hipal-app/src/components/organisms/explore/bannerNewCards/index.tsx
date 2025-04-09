@@ -17,6 +17,7 @@ import { cn } from "@hi/common";
 import { useParams, useRouter } from "next/navigation";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import ShimmerImage from "@/components/atoms/imageshimmer";
+import useTableData from "@/components/store/useTableData";
 
 interface Props {
   redirectionId?: string;
@@ -59,6 +60,7 @@ const MemoBannersLayout = (props: Props) => {
     setActiveChildCategory: s.setActiveChildCategory,
     setObserverActive: s.setObserverActive,
   }));
+  const tableName = useTableData((s) => s.tableName);
 
   const buttonStyleTags = {
     backgroundColor:
@@ -98,7 +100,7 @@ const MemoBannersLayout = (props: Props) => {
       setActiveChildCategory(id);
       setActiveCategory(id);
       setObserverActive(false);
-      router.push(`/${customLink}/category`);
+      router.push(`/${customLink}/category?${tableName ? `tableName=${tableName}` : ""}`);
     }
   };
 

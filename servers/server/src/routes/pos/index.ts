@@ -202,7 +202,10 @@ const posRouter = new Hono()
         const { businessId, tableName, generatedBy } = c.req.query();
 
         // Fetch POS config for the business
-        const pos = await BusinessPosConfig.findOne({ businessId });
+        const pos = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+        });
         if (!pos) {
           return c.json(
             {
@@ -445,6 +448,7 @@ const posRouter = new Hono()
 
         const posConfigAlreadyExists = await BusinessPosConfig.findOne({
           businessId,
+          isDeleted: false,
         });
 
         if (posConfigAlreadyExists) {
@@ -570,23 +574,6 @@ const posRouter = new Hono()
         // ! this is work if qr code is not generated for the table before this business
         // ! if qr code is generated for the table then we need to use script not this api
 
-        const ifAlreadyQrGenerated = await UrlModel.findOne({
-          businessId,
-        });
-
-        if (ifAlreadyQrGenerated) {
-          return c.json(
-            {
-              message: "QR code already generated",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            409,
-          );
-        }
-
         const business =
           await Business.findById(businessId).select("customLink");
         const fetchAreaAndTable = await axios.post(
@@ -610,13 +597,17 @@ const posRouter = new Hono()
         if (fetchAreaAndTable.data.success === "1") {
           // areas or zones
           const areas = fetchAreaAndTable.data.areas.filter(
-            (area: any) => area.active === "1",
+            (area: {
+              active: string;
+            }) => area.active === "1",
           );
           // tables
           const tables = fetchAreaAndTable.data.tables.filter(
-            (table: any) => table.active === "1",
+            (table: {
+              active: string;
+            }) => table.active === "1",
           );
-          // save areas and tables
+          let zone = null;
           for (const area of areas) {
             // to find exact zone from zoneId
             const zoneId = area.restaurantareaid;
@@ -624,7 +615,7 @@ const posRouter = new Hono()
             const active = area.active;
             const rank = area.rank;
 
-            await Zone.findOneAndUpdate(
+            zone = await Zone.findOneAndUpdate(
               {
                 zoneId,
               },
@@ -661,6 +652,7 @@ const posRouter = new Hono()
                 active,
                 rank,
                 tableId,
+                internalZoneId: zone?._id,
               },
               {
                 upsert: true,
@@ -819,6 +811,7 @@ const posRouter = new Hono()
 
         const posConfigData = await BusinessPosConfig.findOne({
           businessId: businessId,
+          isDeleted: false,
         });
 
         if (!posConfigData) {
@@ -1238,6 +1231,7 @@ const posRouter = new Hono()
         // find posconfig for a place order
         const pos = await BusinessPosConfig.findOne({
           businessId: businessId,
+          isDeleted: false,
         });
 
         if (!pos) {

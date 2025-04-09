@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect, useMemo } from "react"
 import LoadingSpinner from "@/components/atom/loadingSpinner"
 import BottomButton from "@/components/atom/bottomButton"

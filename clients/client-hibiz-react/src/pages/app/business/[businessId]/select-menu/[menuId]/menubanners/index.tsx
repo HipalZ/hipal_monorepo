@@ -1,21 +1,28 @@
 import MemoizedHeader from "@/components/molecules/header";
 import { FaArrowLeft } from "react-icons/fa";
-import Hi from "@/assets/svg/hi.svg";
 import MenuBannerPreview from "@/components/templates/menuBanner/MenuBannerPreview";
 import { useMenuBanner } from "@/components/store/useMenuBanners";
 import AddDishesToMenuBanner from "@/components/templates/menuBanner/addDishesToMenuBanner";
 import { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
 import LinkDishes from "@/components/templates/menuBanner/linkDishes";
 import EmblaCarouselPreview from "@/components/templates/embla/emblaCarouselForPreviw";
 import type { EmblaOptionsType } from "embla-carousel";
+import {
+  Breadcrumb as UIBreadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { Link, useParams } from "react-router-dom"
+import { useGetMenuLayout } from "@/hooks/useMenuLayout";
 
 const OPTIONS: EmblaOptionsType = { dragFree: true, loop: true };
 
 const MenuManager = () => {
   const {
     menuBannerType,
-    setMenuBannerType,
     searchItem,
     setSearchItem,
     selectedDishes,
@@ -30,21 +37,9 @@ const MenuManager = () => {
     selectedDishes: s.selectedDishes,
     headerTitle: s.headerTitle,
   }));
+  const { menuId, businessId } = useParams<{ menuId: string , businessId:string }>();
+  const { menuLayout } = useGetMenuLayout(menuId as string);
 
-  const navigate = useNavigate();
-
-  const goBack = useCallback(() => {
-    switch (menuBannerType) {
-      case "LIVE":
-        return setMenuBannerType("CREATE");
-      case "LINK_DISHES":
-        return setMenuBannerType("CREATE");
-      case "CREATE":
-        return setMenuBannerType("PREVIEW");
-      case "PREVIEW":
-        return navigate(-1);
-    }
-  }, [menuBannerType]);
 
   const dynamicHeaderTitle = useCallback(() => {
     switch (menuBannerType) {
@@ -65,8 +60,6 @@ const MenuManager = () => {
         <MemoizedHeader
           title={dynamicHeaderTitle()}
           leftIcon={<FaArrowLeft />}
-          rightImage={Hi}
-          onBack={goBack}
           rightButton={
             menuBannerType === "LINK_DISHES" ? (
               <h3 className="text-xl font-bold">
@@ -75,6 +68,40 @@ const MenuManager = () => {
             ) : undefined
           }
         />
+        <div className="px-4 py-2 font-semibold bg-white border-b border-gray-200">
+          <UIBreadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to={`/app/business/${businessId}/select-menu`}>Menu Layouts</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+
+              {menuLayout?.data?.name && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link
+                        to={`/app/business/${businessId}/select-menu/${menuId}`}
+                        className="max-w-[150px] truncate"
+                        title={menuLayout.data.name}
+                      >
+                        {menuLayout.data.name}
+                      </Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                </>
+              )}
+
+              <BreadcrumbSeparator />
+
+              <BreadcrumbItem>
+                <BreadcrumbPage>Menu Banner</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </UIBreadcrumb>
+        </div>
         {menuBannerType === "LINK_DISHES" && (
           <section className="flex items-center justify-between gap-4 pb-2 mx-4">
             <input

@@ -101,11 +101,19 @@ const MemoRedirectionPopUp = (props: IProps) => {
       return allDishes || [];
     }
 
+    const {menuId} = useParams<{ menuId: string; businessId:string }>();
+
+    const updatedQuery = menuId ? {
+      menuId: menuId,
+      businessId: businessId,
+      dishes: "true",
+    } : {
+      businessId: businessId,
+      dishes: "true",
+    }
+
     const categoryResponse = await apiRpc.categories.$get({
-      query: {
-        businessId: businessId,
-        dishes: "true",
-      },
+      query: updatedQuery
     });
     const data = (await categoryResponse.json()) as {
       data: ICategory[];
@@ -167,7 +175,7 @@ const MemoRedirectionPopUp = (props: IProps) => {
         </button>
         <center className="mb-4 -mt-8 text-2xl">Add Redirection</center>
       {selectedLink === "" ? (
-        <article className="md:mx-10 px-4">
+        <article className="px-4 md:mx-10">
           <SubHeader text="Link Action Button" />
           {outLetType !== "HOTEL" ? <article className="p-4 mt-6 mb-4 space-y-10 bg-white rounded-2xl">
             <button
@@ -276,7 +284,7 @@ const MemoRedirectionPopUp = (props: IProps) => {
             {selectedLink === RedirectionType.LINK && (
               <>
                 <span className="ml-4 text-xl">External Link</span>
-                <h6 className="ml-4 text-gray-500 text-sm">Add your custom link to redirect</h6>
+                <h6 className="ml-4 text-sm text-gray-500">Add your custom link to redirect</h6>
                 <section className="flex items-center gap-4 p-4 bg-white">
                   <label className="flex items-center w-full gap-4 cursor-pointer">
                     <input

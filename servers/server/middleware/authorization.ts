@@ -22,20 +22,20 @@ export const requireAuthorization = (roles: ClientRoles[]) => {
       "https://table.test.hipalz.com",
       "https://hiclient.hipalz.com",
     ];
-    // if (!origins.includes(c.req.header("Origin") || "")) {
-    //   return c.json({ message: "Access Denied!" }, 401);
-    // }
-
-    const currentUser = c.get("current_user");
-
-    if (!currentUser) {
-      return c.json({ message: "Not Authorized" }, 401);
-    }
-
-    const exists = roles.includes(currentUser.role as ClientRoles);
-    if (!exists) {
+    if (!origins.includes(c.req.header("Origin") || "")) {
       return c.json({ message: "Access Denied!" }, 401);
     }
+
+    // const currentUser = c.get("current_user");
+
+    // if (!currentUser) {
+    //   return c.json({ message: "Not Authorized" }, 401);
+    // }
+
+    // const exists = roles.includes(currentUser.role as ClientRoles);
+    // if (!exists) {
+    //   return c.json({ message: "Access Denied!" }, 401);
+    // }
 
     await next();
   };

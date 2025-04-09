@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useRef, useEffect, type FC } from "react"
 import { useDrag } from "@use-gesture/react"
 import { useQr } from "@/components/store/useQr"

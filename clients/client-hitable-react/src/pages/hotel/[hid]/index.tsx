@@ -4,6 +4,7 @@ import { useHotelStore } from "@/components/store/useHotelStore";
 import SpinnerMemo from "@/components/atoms/loadingSpinner"
 import PopUp from "@/components/atoms/popUp";
 
+const EscalationAlerts = lazy(() => import("@/components/hotel/EscalationAlerts"));
 const AlertHotel = lazy(() => import("@/components/hotel/alertHotel"));
 const HistoryHotel = lazy(() => import("@/components/hotel/historyHotel"));
 const NavItemsHotel = lazy(() => import("@/components/atoms/navItemsHotel"));
@@ -25,6 +26,11 @@ const MemoHotel = () => {
             {selectedNavItem === NavItemsHotelEnum.Alerts && (
                 <Suspense fallback={<SpinnerMemo />}>
                     <AlertHotel />
+                </Suspense>
+            )}
+            {selectedNavItem === NavItemsHotelEnum.Escalation &&(
+                <Suspense fallback={<SpinnerMemo />}>
+                    <EscalationAlerts />
                 </Suspense>
             )}
             {

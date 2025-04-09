@@ -1,12 +1,32 @@
 import {
   Business,
   BusinessPosConfig,
+  BusinessSettings,
+  Category,
+  Dish,
   HotelService,
   HotelServiceCategory,
   HotelStaffRole,
+  LoyaltySettings,
+  Menu,
+  OutLetInfo,
+  Payment,
+  PaymentAlert,
   Pos,
+  Table,
+  UrlModel,
+  Zone,
 } from "@hi/db-models";
+import { runInTransaction } from "@hi/utils";
+import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import type { ClientSession } from "mongoose";
+import { z } from "zod";
+import { cache } from "../../utils/cacheHelper";
+import { petpoojaPosConfig } from "../../utils/posConfig/petPooja";
+import { razorpayWrapper } from "../../utils/razorpay-wrapper";
+import { respond } from "../../utils/response";
+
 //
 const scriptRouter = new Hono()
   .get("/pos_to_businessposconfig", async (c) => {
@@ -336,6 +356,541 @@ const scriptRouter = new Hono()
       },
       200,
     );
-  });
+  })
+
+  .get("/add_zone_and_menu", async (c) => {
+    const business = await Business.find();
+    for (const businessData of business) {
+      const zone = await Zone.findOne({
+        businessId: businessData._id,
+      });
+
+      const parentCat = await Category.exists({
+        businessId: businessData._id,
+        hierarchy: "PARENT",
+      });
+
+      const isHavePos = await BusinessPosConfig.findOne({
+        businessId: businessData._id,
+      });
+
+      if (!zone && !isHavePos) {
+        const urlS = await UrlModel.find({
+          businessId: businessData._id,
+        });
+
+        const newZone = new Zone({
+          name: "Default",
+          businessId: businessData._id,
+          isActive: true,
+        });
+        await newZone.save();
+
+        const menu = new Menu({
+          name: "Default",
+          businessId: businessData._id,
+          zoneIds: [newZone._id],
+          menuType: parentCat ? 1 : 2,
+          days: [1, 2, 3, 4, 5, 6, 7],
+          startTime: 240,
+          endTime: 240,
+          isActive: true,
+          isDeleted: false,
+          categoryLayout: 2,
+          cardLayout: 2,
+          default: true,
+          primaryColor: "#ec4899",
+          secondaryColor: "#fce7f3",
+        });
+
+        await menu.save();
+
+        await Dish.updateMany(
+          { businessId: businessData._id },
+          {
+            $set: {
+              menuId: menu._id,
+            },
+          },
+        );
+
+        await Category.updateMany(
+          { businessId: businessData._id },
+          {
+            $set: {
+              menuId: menu._id,
+            },
+          },
+        );
+
+        for (const url of urlS) {
+          const longUrl = url.longUrl;
+          const parsedUrl = new URL(longUrl);
+          const tableName = parsedUrl.searchParams.get("tableName");
+
+          const createTable = await Table.create({
+            name: tableName,
+            businessId: businessData._id,
+            zoneId: newZone._id,
+            internalZoneId: newZone._id,
+            isActive: true,
+            isDeleted: false,
+            tableLink: url.shortUrl,
+          });
+
+          const updateZone = await Zone.findByIdAndUpdate(
+            newZone._id,
+            {
+              $push: {
+                tableIds: createTable._id,
+              },
+            },
+            { new: true },
+          );
+        }
+      }
+    }
+
+    return c.json(
+      {
+        message: "Zone and Menu added successfully",
+        err: false,
+        data: {},
+      },
+      200,
+    );
+  })
+
+  .get("/add_zone_and_menu_for_pos", async (c) => {
+    const business = await Business.find();
+    for (const businessData of business) {
+      const isHavePos = await BusinessPosConfig.findOne({
+        businessId: businessData._id,
+      });
+
+      const parentCat = await Category.exists({
+        businessId: businessData._id,
+        hierarchy: "PARENT",
+      });
+      if (isHavePos) {
+        const zone = await Zone.find({
+          businessId: businessData._id,
+        });
+
+        const zoneIds = zone.map((zone) => zone._id.toString());
+        const createMenu = await Menu.create({
+          name: "Default",
+          businessId: businessData._id,
+          zoneIds: zoneIds,
+          menuType: parentCat ? 1 : 2,
+          days: [1, 2, 3, 4, 5, 6, 7],
+          startTime: 240,
+          endTime: 240,
+          isActive: true,
+          isDeleted: false,
+          categoryLayout: 2,
+          cardLayout: 2,
+          primaryColor: "#ec4899",
+          secondaryColor: "#fce7f3",
+        });
+      }
+    }
+
+    return c.json(
+      {
+        message: "Zone and Menu added successfully",
+        err: false,
+        data: {},
+      },
+      200,
+    );
+  })
+
+  .post(
+    "/loyalty_on_off",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        isActive: z.boolean(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { businessId, isActive } = requestData;
+        const business = await Business.exists({
+          _id: businessId,
+        });
+        if (!business) {
+          return respond(c, "Business not found", true, 404, {});
+        }
+
+        const loyaltySetting = await LoyaltySettings.findOneAndUpdate(
+          { businessId },
+          {
+            $set: {
+              isActive: isActive,
+            },
+          },
+          { session, new: true },
+        );
+
+        if (!loyaltySetting) {
+          return respond(c, "Loyalty setting not found", true, 404, {});
+        }
+        return respond(
+          c,
+          "Loyalty setting updated successfully",
+          false,
+          200,
+          {},
+        );
+      });
+    },
+  )
+
+  .post(
+    "/change_razorpay_credential",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        razorpayKeyId: z.string().optional(),
+        razorpayKeySecret: z.string().optional(),
+        razorpayMerchantId: z.string().optional(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { businessId } = requestData;
+
+        const businessSettings = await BusinessSettings.findOne({
+          businessId,
+        });
+
+        if (!businessSettings) {
+          return respond(c, "Business not found", true, 404, {});
+        }
+
+        if (
+          requestData.razorpayKeyId &&
+          requestData.razorpayKeySecret &&
+          requestData.razorpayMerchantId
+        ) {
+          const deletes = cache.delete(businessId as string);
+
+          await BusinessSettings.findByIdAndUpdate(businessSettings._id, {
+            razorpayKeyId: requestData.razorpayKeyId,
+            razorpayKeySecret: requestData.razorpayKeySecret,
+            razorpayMerchantId: requestData.razorpayMerchantId,
+          });
+
+          try {
+            await razorpayWrapper.create(requestData.razorpayMerchantId);
+            console.log(
+              "Razorpay instance created successfully",
+              requestData.razorpayMerchantId,
+            );
+          } catch (err) {
+            return respond(
+              c,
+              "Error in creating Razorpay instance",
+              true,
+              400,
+              {},
+            );
+          }
+        }
+      });
+    },
+  )
+
+  .post(
+    "/razorpay_on_off",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        isActive: z.boolean(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { businessId, isActive } = requestData;
+
+        const business = await Business.exists({
+          _id: businessId,
+        });
+
+        if (!business) {
+          return respond(c, "Business not found", true, 404, {});
+        }
+
+        if (isActive === false) {
+          const deletes = cache.delete(businessId as string);
+          const businessSettings = await BusinessSettings.findOneAndUpdate(
+            { businessId },
+            {
+              $set: {
+                isActive: isActive,
+              },
+            },
+            { session, new: true },
+          );
+
+          if (!businessSettings) {
+            return respond(c, "Business not found", true, 404, {});
+          }
+
+          return respond(
+            c,
+            "Business setting updated successfully",
+            false,
+            200,
+            {},
+          );
+        }
+
+        const businessSettings = await BusinessSettings.findOneAndUpdate(
+          { businessId },
+          {
+            $set: {
+              isActive: isActive,
+            },
+          },
+          { session, new: true },
+        );
+
+        if (!businessSettings) {
+          return respond(c, "Business not found", true, 404, {});
+        }
+
+        return respond(
+          c,
+          "Business setting updated successfully",
+          false,
+          200,
+          {},
+        );
+      });
+    },
+  )
+  .post(
+    "/payment_deletion",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        from: z.number(),
+        to: z.number(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { businessId, from, to } = requestData;
+
+        const updatePayment = await Payment.updateMany(
+          {
+            businessId,
+            date: {
+              $gte: from,
+              $lte: to,
+            },
+          },
+
+          {
+            $set: {
+              isDeleted: true,
+            },
+          },
+          { session },
+        );
+
+        if (!updatePayment) {
+          return respond(c, "Payment not found", true, 404, {});
+        }
+
+        const updatePaymentAlert = await PaymentAlert.updateMany(
+          {
+            businessId,
+            date: {
+              $gte: from,
+              $lte: to,
+            },
+          },
+          {
+            $set: {
+              isRejected: true,
+            },
+          },
+          { session },
+        );
+        if (!updatePaymentAlert) {
+          return respond(c, "Payment alert not found", true, 404, {});
+        }
+
+        return respond(
+          c,
+          "Payment setting updated successfully",
+          false,
+          200,
+          {},
+        );
+      });
+    },
+  )
+
+  .post(
+    "/pos_on_off",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        isActive: z.boolean(),
+        restId: z.string(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { businessId, isActive, restId } = requestData;
+
+        const business = await Business.findById(businessId).lean();
+        if (!business) {
+          return respond(c, "Business not found", true, 404, {});
+        }
+
+        if (isActive === false) {
+          const updateBusinessPosConfig =
+            await BusinessPosConfig.findOneAndUpdate(
+              {
+                businessId,
+              },
+              {
+                $set: {
+                  isDeleted: true,
+                },
+              },
+              { session },
+            );
+
+          if (!updateBusinessPosConfig) {
+            return respond(c, "Business not found", true, 404, {});
+          }
+
+          const updateOutlet = await OutLetInfo.findOneAndUpdate(
+            {
+              businessId,
+            },
+            {
+              $set: {
+                isPosEnabled: false,
+              },
+            },
+            { session },
+          );
+
+          if (!updateOutlet) {
+            return respond(c, "Outlet not found", true, 404, {});
+          }
+
+          return respond(c, "pos setting updated successfully", false, 200, {});
+        }
+
+        const updateBusinessPosConfig =
+          await BusinessPosConfig.findOneAndUpdate(
+            {
+              businessId,
+            },
+            {
+              $set: {
+                isDeleted: false,
+                accessKey: petpoojaPosConfig.accessKey,
+                secretKey: petpoojaPosConfig.secretKey,
+                authToken: petpoojaPosConfig.authToken,
+                branchId: businessId,
+                businessId,
+                posName: "PETPOOJA",
+                date: Date.now(),
+                orderMode: "WITH_ORDER",
+                orderVerificationType: "CAPTAIN",
+                restName: business.name,
+                restId: restId,
+              },
+            },
+            { session, upsert: true, new: true },
+          );
+        if (!updateBusinessPosConfig) {
+          return respond(c, "Business not found", true, 404, {});
+        }
+        const updateOutlet = await OutLetInfo.findOneAndUpdate(
+          {
+            businessId,
+          },
+          {
+            $set: {
+              isPosEnabled: true,
+            },
+          },
+          { session },
+        );
+        if (!updateOutlet) {
+          return respond(c, "Outlet not found", true, 404, {});
+        }
+        return respond(c, "pos setting updated successfully", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/kot_order_flow",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        flow: z.enum(["USER", "CAPTAIN"]),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { businessId, flow } = requestData;
+
+        const updateBusinessPosConfig =
+          await BusinessPosConfig.findOneAndUpdate(
+            {
+              businessId,
+            },
+            {
+              $set: {
+                orderVerificationType: flow,
+              },
+            },
+            { session, new: true },
+          );
+        if (!updateBusinessPosConfig) {
+          return respond(c, "Business not found", true, 404, {});
+        }
+
+        return respond(c, "pos setting updated successfully", false, 200, {});
+      });
+    },
+  );
 
 export default scriptRouter;

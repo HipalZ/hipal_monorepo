@@ -2,12 +2,12 @@ import { memo, useCallback, useMemo, useState } from "react";
 import Fuse from "fuse.js";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
-import { useDishesStore } from "@/components/store/useDishesStore";
 import type { DishType } from "@hi/db-models/src/validators";
-import { useDishes, useLinkedDishes } from "@/hooks/useDish";
 import DishButton from "./dishesManagerCard";
 import MiddlePopUp from "@/components/atom/middlePopUp";
 import { IoMdArrowDropdown, IoMdArrowDropup } from "react-icons/io";
+import { useDishes, useLinkedDishes } from "@/hooks/useDish";
+import { useDishesStore } from "@/components/store/useDishesStore";
 
 const MemoDishesManager = () => {
   const [showPopUp, setShowPopUp] = useState(false);
@@ -18,7 +18,6 @@ const MemoDishesManager = () => {
     sortOrder,
     setEditDish,
     setDishStep,
-    dishStep,
     setEditOpenMenu,
     setEditDishFunction,
   } = useMenuPageStore((state) => ({
@@ -26,18 +25,18 @@ const MemoDishesManager = () => {
     visibilityFilter: state.visibilityFilter,
     sortOrder: state.sortOrder,
     setEditDish: state.setEditDish,
-    dishStep: state.dishStep,
     setDishStep: state.setDishStep,
     setEditOpenMenu: state.setEditOpenMenu,
     setEditDishFunction: state.setEditDishFunction,
   }));
 
-  const { dishes } = useDishesStore((s) => ({
-    dishes: s.dishes,
-  }));
-
   const { isLoading } = useDishes();
   const { data: linkedCategories } = useLinkedDishes();
+  console.log("linkedCategories", linkedCategories);
+
+   const { dishes } = useDishesStore((s) => ({
+      dishes: s.dishes,
+    }));
 
   const allDishes = useMemo(() => {
     const linkedDishes =
@@ -131,6 +130,8 @@ const MemoDishesManager = () => {
       <LoadingSpinner />
     );
   }
+
+  console.log("filteredLinkedCategories", filteredLinkedCategories);
 
   return (
     <section className="relative">

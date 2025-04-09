@@ -64,6 +64,11 @@ const categorySchema = new mongoose.Schema<CategoryType>(
       required: false,
       default: 0,
     },
+    menuId: {
+      type: ObjectId,
+      required: false,
+      ref: "menu",
+    },
   },
   {
     timestamps: true,

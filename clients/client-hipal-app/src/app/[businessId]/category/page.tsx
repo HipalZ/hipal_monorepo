@@ -1,21 +1,19 @@
 import { categoryApis } from "@/apis/category";
 import dynamics from "next/dynamic";
-import { defaultThemes } from "@/components/utils/helpers";
-import MainTypes from "@/components/molecules/categoryTypes/mainTypes";
-import TopSectionVideo from "@/components/organisms/menuBanner/topSectionVideo";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import type { BusinessDetails } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
+import LoadingSpinnerCircle from "@/components/atoms/loader";
 
-// export const dynamic = "force-dynamic";
-// export const fetchCache = "force-no-store";
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+// export const revalidate = 300;
 
 const CategorySkeleton = dynamics(
   () => import("@/components/atoms/progressBar/categoryLoader"),
   {
     ssr: false,
-    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
   },
 );
 
@@ -36,7 +34,7 @@ const CategoryPageBtn = dynamics(
   () => import("@/components/molecules/bottomButton/categoryPageBtn"),
   {
     ssr: false,
-    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
   },
 );
 
@@ -44,7 +42,7 @@ const LiveCart = dynamics(
   () => import("@/components/molecules/bottomButton/livecart"),
   {
     ssr: false,
-    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
   },
 );
 
@@ -52,22 +50,15 @@ const CategoryHeader = dynamics(
   () => import("@/components/organisms/category/categoryHeader"),
   {
     ssr: false,
-    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
   },
 );
-const PageName = dynamics(() => import("@/components/molecules/pageName"), {
-  ssr: false,
-  loading: () => <CategorySkeleton />,
-});
-const Footer = dynamics(() => import("@/components/molecules/footer"), {
-  ssr: true,
-  loading: () => <CategorySkeleton />,
-});
+
 const DishesList = dynamics(
   () => import("@/components/organisms/category/dishesList"),
   {
     ssr: false,
-    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
   },
 );
 
@@ -75,12 +66,12 @@ const TopBackground = dynamics(
   () => import("@/components/molecules/topBackground"),
   {
     ssr: true,
-    loading: () => <div className="h-16 text-black"> Loading .....</div>,
+    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
   },
 );
 
-async function fetchData(businessId: string) {
-  const data = await categoryApis.all(businessId);
+async function fetchData(businessId: string, tableName?: string) {
+  const data = await categoryApis.all(businessId, tableName);
   return data;
 }
 
@@ -143,11 +134,19 @@ export async function generateMetadata({
 
 export default async function Page({
   params,
-}: { params: { businessId: string } }) {
-  const data = await fetchData(params.businessId);
+  searchParams,
+}: {
+  params: { businessId: string }
+  searchParams: { tableName?: string };
+}) {
+  const { businessId } = params;
+  const { tableName } = searchParams;
+
+  // Call fetchData with both parameters
+  const data = await fetchData(businessId, tableName);
   return (
     <main>
-      <div className="relative flex flex-col w-full pb-14">
+      <div className="relative flex flex-col w-full">
         {/* <TopSectionVideo /> */}
         <TopBackground specialBanner={data?.business?.specialBannerUrl || ""} />
         <MenuBannerPage
@@ -159,22 +158,10 @@ export default async function Page({
             parentCategory={data?.parentCategories || []}
             childCategory={data?.childCategories || []}
             timings={data?.timings}
+            menuLayout={data?.menuData}
           />
         </div>
-        <section className="pt-6 bg-[#ffffff]">
-          <Footer
-            themes={data?.settings || defaultThemes}
-            socialMediaLinks={data?.business?.socialMediaLinks}
-            footerDescription={data?.business?.footerDescription}
-          />
-        </section>
-        <PageName />
       </div>
-      <MainTypes
-        parentCategory={data?.parentCategories || []}
-        childCategory={data?.childCategories || []}
-      />
-
       <LiveCart />
       <CategoryPageBtn />
     </main>

@@ -1,4 +1,6 @@
+import MiddlePopUp from "@/components/atom/middlePopUp";
 import MemoizedHeader from "@/components/molecules/header";
+import { useExchangeToken } from "@/hooks/useWhatsappFlows";
 import { memo, useCallback, useEffect, useState } from "react";
 import { FaArrowLeft, FaFacebookSquare } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
@@ -6,6 +8,8 @@ import { useNavigate } from "react-router-dom";
 const MemoizedProfile = () => {
   const [sessionInfo, setSessionInfo] = useState(null);
   const [sdkResponse, setSdkResponse] = useState(null);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const { exchangeToken } = useExchangeToken();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,29 +35,40 @@ const MemoizedProfile = () => {
 
     // Listen for messages from Facebook's embedded signup
     const handleMessage = (event) => {
+      console.log("Received message from Facebook: ", event.data);
+      console.log('event', typeof event)
+      // Validate origin
       if (
         event.origin !== "https://www.facebook.com" &&
         event.origin !== "https://web.facebook.com"
       ) {
         return;
       }
+
+      // Check if data is JSON or query string
+      let parsedData = null;
       try {
-        const data = JSON.parse(event.data);
-        if (data.type === "WA_EMBEDDED_SIGNUP") {
-          if (data.event === "FINISH") {
-            const { phone_number_id, waba_id } = data.data;
-            saveToDatabase({ phone_number_id, waba_id });
-          } else if (data.event === "CANCEL") {
-            console.warn("User canceled at step: ", data.data.current_step);
-          } else if (data.event === "ERROR") {
-            console.error("Error: ", data.data.error_message);
-          }
-        }
-        setSessionInfo(data);
+        parsedData = JSON.parse(event.data);
       } catch (error) {
-        console.log("Non JSON response received: ");
+        console.warn("Message was not JSON, skipping:", event.data);
+        return;
+      }
+
+      // If parsed successfully, continue
+      if (parsedData?.type === "WA_EMBEDDED_SIGNUP") {
+        if (parsedData.event === "FINISH") {
+          const { phone_number_id, waba_id } = parsedData.data;
+          saveToDatabase({ phone_number_id, waba_id });
+          setIsSubmitted(true);
+        } else if (parsedData.event === "CANCEL") {
+          console.warn("User canceled at step: ", parsedData.data.current_step);
+        } else if (parsedData.event === "ERROR") {
+          console.error("Error: ", parsedData.data.error_message);
+        }
+        setSessionInfo(parsedData);
       }
     };
+
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
@@ -62,19 +77,14 @@ const MemoizedProfile = () => {
   const fbLoginCallback = (response) => {
     if (response.authResponse) {
       const code = response.authResponse.code;
-      // Send code to the backend to exchange for an access token
-      fetch("/api/save-fb-token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ code }),
-      })
-        .then((res) => res.json())
-        .then((data) => console.log("Token saved:", data))
-        .catch((error) => console.error("Error saving token:", error));
+      exchangeToken(code)
+        .then((res) => {
+          console.log("Access token:", res.access_token);
+          setIsSubmitted(true); // Move inside the .then block
+          setSdkResponse(response); // Move inside the .then block
+        })
+        .catch((err) => console.error("Token exchange error:", err.message));
     }
-    setSdkResponse(response);
   };
 
   const launchWhatsAppSignup = () => {
@@ -104,7 +114,6 @@ const MemoizedProfile = () => {
       console.error("Error saving to database:", error);
     }
   };
-
 
   const handleBack = useCallback(() => {
     navigate("/app/business/");
@@ -140,7 +149,11 @@ const MemoizedProfile = () => {
 
           </div>
         </section>
-        {sdkResponse ? <pre>Your application is submitted. our team will review and will inform you after activation</pre> : null}
+        {isSubmitted && <MiddlePopUp show={isSubmitted} onClose={() => setIsSubmitted(false)}>
+          <section className="text-green-800 rounded-md m-6 h-[100px] flex items-center text-center">
+            ✅ Your business has been submitted for verification. We’ll notify you once it's activated.
+          </section>
+        </MiddlePopUp>}
       </center>
     </main>
   );

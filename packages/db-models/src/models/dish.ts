@@ -120,6 +120,11 @@ const dishSchema = new mongoose.Schema<DishType>(
       default: [],
       ref: "Dish",
     },
+    menuId: {
+      type: ObjectId,
+      required: false,
+      ref: "menu",
+    },
   },
   {
     timestamps: true,

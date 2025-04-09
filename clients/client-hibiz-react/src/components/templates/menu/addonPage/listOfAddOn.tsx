@@ -3,7 +3,6 @@ import Fuse from "fuse.js";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import useMenuPageStore, {
   type AddonChoice,
-  type Choice,
 } from "@/components/store/useMenuStorage";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { useCategoryStore } from "@/components/store/useCategoryStore";
@@ -103,10 +102,11 @@ const MemoListOfAddon = () => {
   return (
     <section className="flex flex-wrap justify-start mt-[7rem] gap-4 mx-4 lg:mt-[5rem]">
       {filteredAddOns.map((addon) => (
-        <button
-          type="button"
+        <div
           key={addon.name}
           onClick={() => editAddOn(addon)}
+          role="button"
+          onKeyDown={() => editAddOn(addon)}
           className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow max-w-[28rem] md:max-w-[19rem] lg:max-w-[21.5rem]"
         >
           <h3 className="mb-2 text-lg font-semibold">{addon.name}</h3>
@@ -127,7 +127,7 @@ const MemoListOfAddon = () => {
               <BiSolidEditAlt />
             </button>
           </article>
-        </button>
+        </div>
       ))}
     </section>
   );

@@ -3,7 +3,7 @@
 import { useLogin } from "@/components/store/useLogin";
 import useUserReward from "@/components/store/useUserReward";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { memo, useEffect, useState } from "react";
 import MainLoyalty from "@/components/atoms/mainLoyalty";
 import DishData from "@/components/atoms/dishDescription";
@@ -12,7 +12,6 @@ import type { IBusinessData } from "@/components/types/businessData";
 import BottomButton from "@/components/molecules/bottomButton";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
-import Link from "next/link";
 import { apiRpc } from "@hi/common";
 import { RiArrowLeftLine } from "react-icons/ri";
 import CardSection from "@/components/atoms/cardSection";
@@ -21,6 +20,7 @@ import dynamic from "next/dynamic";
 import { useErrorHandling } from "@/utils/helper";
 import { toast } from "react-toastify";
 import { BottomBarSkeleton } from "@/components/atoms/paymentPageLoader";
+import { Link } from "lucide-react";
 const Avatar = dynamic(() => import("@/components/atoms/avatar"), {
   loading: () => <BottomBarSkeleton />,
 });
@@ -37,6 +37,7 @@ const RefferalCouponz = dynamic(() => import("../newPayment/refferalCouponz"), {
 
 function LoyaltyCardPage({ data }: { data: IBusinessData }) {
   const { errorText } = useErrorHandling();
+  const router = useRouter()
   const userName = useLogin((s) => s.userDetails.name);
   const [HiCode, setHiCode] = useState();
   const { userDetails, setUserCoinZ } = useLogin((s) => ({
@@ -141,6 +142,9 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
     queryFn: getUserTotalRewards,
     enabled: !!loyaltySetting?.loyaltyId && !!userDetails?._id,
   });
+  const goBack = () => {
+    return router.back();
+  }
 
   return (
     <main
@@ -151,15 +155,14 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
     >
       {/* top section */}
       <section className="sticky top-0 z-50 flex items-center justify-between w-full p-4 backdrop-blur-xl">
-        <Link href={`/${customLink}/explore`} className="flex items-center">
           <button
             type="button"
+            onClick={goBack}
             className="inline-block px-3 py-1 bg-white rounded-full"
           >
             <RiArrowLeftLine className="text-black" />
           </button>
           <h3 className="ml-2">{data?.business?.name}</h3>
-        </Link>
 
         <Link href={`/${customLink}/loyalty/${loyaltySetting?.loyaltyId}`}>
           <button

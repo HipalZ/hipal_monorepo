@@ -22,19 +22,7 @@ export interface MerChantDetails {
   razorpayKeyId: string;
 }
 const settingsRouter = new Hono()
-  // .get(
-  //   '/',
 
-  //   zValidator('query', paramsSchema),
-  //   async (c) => {
-  //     console.log('settingsRouter');
-  //     const { businessId } = c.req.query();
-  //     const existingSettings = await Settings.find({
-  //       businessId,
-  //     }).populate('explore.popular');
-  //     return respond(c, 'Settings fetched successfully', false, 200, existingSettings);
-  //   },
-  // )
   .post(
     "/banner",
     authTokenValidator,
@@ -153,38 +141,6 @@ const settingsRouter = new Hono()
           },
           { new: true },
         );
-
-        if (
-          requestData.razorpayKeyId &&
-          requestData.razorpayKeySecret &&
-          requestData.razorpayMerchantId &&
-          requestData.razorpayWebhookSecret
-        ) {
-          const deletes = cache.delete(requestData.businessId as string);
-
-          await BusinessSettings.findByIdAndUpdate(settingsId, {
-            razorpayKeyId: requestData.razorpayKeyId,
-            razorpayKeySecret: requestData.razorpayKeySecret,
-            razorpayMerchantId: requestData.razorpayMerchantId,
-            razorpayWebhookSecret: requestData.razorpayWebhookSecret,
-          });
-
-          try {
-            await razorpayWrapper.create(requestData.razorpayMerchantId);
-            console.log(
-              "Razorpay instance created successfully",
-              requestData.razorpayMerchantId,
-            );
-          } catch (err) {
-            return respond(
-              c,
-              "Error in creating Razorpay instance",
-              true,
-              400,
-              {},
-            );
-          }
-        }
 
         return respond(
           c,
@@ -364,9 +320,14 @@ const settingsRouter = new Hono()
       if (!merchant) {
         merchant = await BusinessSettings.findOne({
           businessId,
+          isActive: true,
         })
           .select("razorpayMerchantId razorpayKeyId businessId")
           .lean();
+
+        if (!merchant?.razorpayMerchantId) {
+          return respond(c, "Merchant not found", false, 200, {});
+        }
         await cache.set(businessId as string, merchant as MerChantDetails);
       }
 

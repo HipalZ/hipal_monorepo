@@ -6,6 +6,7 @@ import HorizontalCard from "@/components/atoms/card/horizontalCard";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import { FaChevronDown } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
+import CommonBottomButton from "@/components/atoms/bottomButton";
 
 const MemoSearchPanelCom = ({ allDishes }) => {
   const { searchText, setSearchText, setIsSearchActive, isSearchActive } =
@@ -131,12 +132,27 @@ const MemoSearchPanelCom = ({ allDishes }) => {
                 className="py-2 border-b cursor-pointer"
                 variants={itemVariants}
               >
-                <HorizontalCard hide dishData={dish} />
+                <HorizontalCard dishData={dish} />
               </motion.div>
             ))}
           </motion.div>
         </motion.div>
       )}
+      <CommonBottomButton
+        fixed={true}
+        maxWidth="30rem"
+        align="bottom"
+        position="mid"
+        buttons={
+          [
+            {
+              text: "Back",
+              onClick: handleBack,
+              className: "bg-[#00000080] text-white text-base",
+            },
+          ]
+        }
+      />
     </AnimatePresence>
   );
 };

@@ -28,6 +28,13 @@ body {
 	font-style: normal;
   }
 
+  .dotgothic16-regular {
+	font-family: "DotGothic16", sans-serif;
+	font-weight: 400;
+	font-style: normal;
+  }
+  
+
 .space-grotesk-700 {
 	font-family: "Space Grotesk", sans-serif;
 	font-optical-sizing: auto;
@@ -95,7 +102,6 @@ body {
     );
 	--font-family-darker-grotesque: 'Darker Grotesque', sans-serif;
 	--gradient-background: linear-gradient(to right, #C53293 -4.88%, #4990FB 90.05%);
-	/* background-color: #010818; */
 	color: #fff;
 	--radius: 0.75rem;
   }

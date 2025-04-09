@@ -66,6 +66,11 @@ const extraSchema = new mongoose.Schema<AddOnType>(
       required: false,
       ref: "Dish",
     },
+    menuId: {
+      type: ObjectId,
+      required: false,
+      ref: "menu",
+    },
   },
   {
     timestamps: true,

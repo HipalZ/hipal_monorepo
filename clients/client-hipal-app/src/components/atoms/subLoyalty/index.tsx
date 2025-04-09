@@ -42,11 +42,11 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
   const { setCheckLogin } = usePaymentStore();
   const openModal = useCallback(() => {
     setTimeout(() => setIsModalOpen(true), 5000);
-  }, [isModalOpen]);
+  }, []);
 
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
-  }, [isModalOpen]);
+  }, []);
 
   const srcColor = useMemo(
     () => createSrcColor(loyaltySetting),
@@ -80,7 +80,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
 
   return (
     <div className="bg-base-100">
-      <section className="py-5 h-[25rem] !mt-0 bg-base-100">
+      <section className="py-5 h-[24rem] !mt-0 bg-base-100">
         <center>
           <h4 className="pb-4 text-2xl font-bold text-primary">REWARDZ</h4>
         </center>

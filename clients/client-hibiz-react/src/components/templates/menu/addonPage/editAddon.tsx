@@ -13,11 +13,11 @@ import { FaAngleDown } from "react-icons/fa";
 import EditChoice from "./editChoice";
 import toast from "react-hot-toast";
 import { useDeleteAddon, useUpdateAddon } from "@/hooks/useAddOn";
-import useBusinessData from "@/components/store/useBusinessData";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import BottomButton from "@/components/atom/bottomButton";
 import { RiLinkUnlink } from "react-icons/ri";
 import { MdDelete } from "react-icons/md";
+import { useParams } from "react-router-dom";
 
 const count = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
@@ -69,7 +69,7 @@ const MemoEditAddon = () => {
 
   const [maxValueError, setMaxValueError] = useState<boolean>(false);
 
-  const businessData = useBusinessData((s) => s.businessData);
+   const { businessId,menuId } = useParams<{ businessId?: string; menuId: string }>();
 
   const { isPending, mutate: updateAddon } = useUpdateAddon();
 
@@ -118,7 +118,8 @@ const MemoEditAddon = () => {
 
     const data = {
       _id: addOnId,
-      businessId: businessData?._id,
+      businessId: businessId || "",
+      menuId: menuId,
       name: addOnName,
       choices: choices,
       choiceType: addOnChoice,
@@ -139,7 +140,8 @@ const MemoEditAddon = () => {
     minChoices,
     maxChoices,
     addOnId,
-    businessData,
+    businessId,
+    menuId,
     recommendationIds,
     removeRecommendationIds,
   ]);

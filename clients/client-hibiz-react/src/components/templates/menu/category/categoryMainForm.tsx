@@ -6,11 +6,11 @@ import useMenuPageStore, {
   type CategoryTypeToggle,
 } from "@/components/store/useMenuStorage";
 import Background from "@/components/atom/feildBackground";
-import useBusinessData from "@/components/store/useBusinessData";
 import toast from "react-hot-toast";
 import { useSaveCategory } from "@/hooks/useCategory";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import BottomButton from "@/components/atom/bottomButton";
+import { useParams } from "react-router-dom";
 
 const CategoryMainForm = memo(() => {
   const {
@@ -37,7 +37,7 @@ const CategoryMainForm = memo(() => {
     selectSingleParentCat: s.selectSingleParentCat,
   }));
 
-  const businessData = useBusinessData((s) => s.businessData);
+  const { businessId,menuId } = useParams<{ businessId: string; menuId: string }>();
   const { mutate: createCategory, isPending } = useSaveCategory();
 
   const categoryChange = useCallback((type: CategoryTypeToggle) => {
@@ -55,7 +55,8 @@ const CategoryMainForm = memo(() => {
    
     const commonPayload = {
       name: categoryName,
-      businessId: businessData?._id.toString() || "",
+      businessId: businessId?.toString() || "",
+      menuId: menuId,
     };
 
     const payload =
@@ -73,7 +74,7 @@ const CategoryMainForm = memo(() => {
     selectedCategory,
     categoryName,
     selectIds,
-    businessData?._id,
+    businessId,
     recommendationIds,
     selectSingleParentCat,
   ]);

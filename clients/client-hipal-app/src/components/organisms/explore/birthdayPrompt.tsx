@@ -16,12 +16,11 @@ import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 function MemoBirthdayPrompt() {
     const userId = useLogin((s) => s.userDetails?._id);
+    const birthdayTriggerCount = useLogin((s) => s.userDetails?.birthdayTriggerCount);
     const params = useParams()
     const customLink = params.businessId
     const { validateDate } = useValidateDate()
     const [openBlast, setOpenBlast] = useState(false)
-    const outletInfo = _useAllBusiness((s) => s.data?.outletInfo);
-    const birthdayTriggerCount = outletInfo?.birthdayTriggerCount
     const {
         isOpen,
         setIsOpen,
@@ -70,7 +69,7 @@ function MemoBirthdayPrompt() {
     const closePrompt = () => {
         setIsOpen(false)
         setOpenModal(false)
-        mutateAsync({ timestamp: 0, userId, birthdayTriggerCount: birthdayTriggerCount + 1 });
+        mutateAsync({ timestamp: 0, userId, birthdayTriggerCount: (birthdayTriggerCount ?? 0) + 1 });
     }
 
     return (

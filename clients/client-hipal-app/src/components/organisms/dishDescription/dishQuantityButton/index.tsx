@@ -1,27 +1,40 @@
-import { memo, useCallback } from "react";
-import type { DishType } from "@hi/db-models/src/validators";
-import CommonBottomButton from "@/components/atoms/bottomButton";
-import { useCartStore } from "@/components/store/useCartStore";
+"use client"
+
+import { memo, useCallback } from "react"
+import type { DishType } from "@hi/db-models/src/validators"
+import CommonBottomButton from "@/components/atoms/bottomButton"
+import { useCartStore } from "@/components/store/useCartStore"
 import { motion, AnimatePresence } from "framer-motion"
-import { Minus, Plus } from 'lucide-react'
-import MemoChoosePortions from "@/components/molecules/choosePortions";
-import ExtraWithDishWithSelect from "@/components/organisms/dishDescription/extras";
-import BottomPopUp from "@/components/atoms/bottomPopUp";
-import { useCart } from "@/components/store/useCart";
-import { useBottomPanel } from "@/components/store/useBottomPanel";
-import MemoAlertVariant from "@/components/atoms/alertVariant";
-import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
+import { Minus, Plus } from "lucide-react"
+import MemoChoosePortions from "@/components/molecules/choosePortions"
+import ExtraWithDishWithSelect from "@/components/organisms/dishDescription/extras"
+import { useCart } from "@/components/store/useCart"
+import { useBottomPanel } from "@/components/store/useBottomPanel"
+import MemoAlertVariant from "@/components/atoms/alertVariant"
+import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription"
+import { cn } from "@/lib/utils"
 
 function generateCartItemId(dishId, portionId, extras) {
   const sortedExtras = [...extras]
     .sort((a, b) => a.id.localeCompare(b.id))
     .map((e) => `${e.id}:${e.quantity}`)
-    .join("|");
-  return `${dishId}_${portionId || "no_portion"}_${sortedExtras || "no_extras"
-    }`;
+    .join("|")
+  return `${dishId}_${portionId || "no_portion"}_${sortedExtras || "no_extras"}`
 }
 
-const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
+interface DishQuantityButtonProps {
+  dishData: DishType
+  className?: string
+  primaryColor?: string
+  secondaryColor?: string
+}
+
+const MemoDishQuantityButton = ({
+  dishData,
+  className,
+  primaryColor = "#000000",
+  secondaryColor = "#FFFFFF",
+}: DishQuantityButtonProps) => {
   const {
     openBottomPanel,
     setOpenBottomPanel,
@@ -36,28 +49,28 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
     cart,
     resetSelections,
     updateCartItem,
-  } = useCartStore();
-  const { setShowCart, setCartPage } = useCart();
+  } = useCartStore()
+  const { setShowCart, setCartPage } = useCart()
 
   const handleOpenModal = useCallback(() => {
-    setOpenBottomPanel(true);
-  }, [setOpenBottomPanel]);
+    setOpenBottomPanel(true)
+  }, [setOpenBottomPanel])
   const { displayAlert } = useBottomPanel((s) => ({
     displayAlert: s.displayAlert,
-  }));
+  }))
 
   const closeModal = useCallback(() => {
-    setOpenBottomPanel(false);
-    resetSelections();
-  }, [setOpenBottomPanel]);
+    setOpenBottomPanel(false)
+    resetSelections()
+  }, [setOpenBottomPanel])
 
   const handleClick = useCallback(
     (addDish: DishType) => {
-      setSelectedDish(addDish);
+      setSelectedDish(addDish)
       if (addDish?.portions?.length > 0 || addDish?.addOnIds?.length > 0) {
-        setCartPopup("BOTTOM_PANEL");
-        handleOpenModal();
-        return;
+        setCartPopup("BOTTOM_PANEL")
+        handleOpenModal()
+        return
       }
       const item = {
         id: generateCartItemId(addDish._id, null, []),
@@ -65,15 +78,15 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
         portion: null,
         extras: [],
         quantity: 1,
-      };
-      addToCart(item);
-      resetSelections();
+      }
+      addToCart(item)
+      resetSelections()
     },
     [setSelectedDish, setCartPopup, handleOpenModal],
-  );
+  )
 
   const handleAddToCart = useCallback(() => {
-    const filteredChoices = selectedChoices?.filter(choice => choice?.quantity > 0);
+    const filteredChoices = selectedChoices?.filter((choice) => choice?.quantity > 0)
     const item = {
       id: generateCartItemId(
         selectedDish._id,
@@ -87,59 +100,48 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
       portion: selectedPortion,
       extras: filteredChoices,
       quantity: 1,
-    };
-    addToCart(item);
-    closeModal();
-  }, [selectedDish, selectedPortion, selectedChoices, addToCart, closeModal]);
+    }
+    addToCart(item)
+    closeModal()
+  }, [selectedDish, selectedPortion, selectedChoices, addToCart, closeModal])
 
-  const cartItemsForDish = cart.filter(
-    (item) => item.dish._id === dishData._id,
-  );
+  const cartItemsForDish = cart.filter((item) => item.dish._id === dishData._id)
 
-  const totalQuantity = cartItemsForDish.reduce(
-    (sum, item) => sum + item.quantity,
-    0,
-  );
+  const totalQuantity = cartItemsForDish.reduce((sum, item) => sum + item.quantity, 0)
 
   const handleIncreaseQuantity = useCallback(() => {
     if (cartItemsForDish.length > 0) {
-      const item = cartItemsForDish[0];
-      setSelectedDish(item.dish);
-      if (
-        item?.dish?.portions?.length > 0 ||
-        item?.dish?.addOnIds?.length > 0
-      ) {
-        setCartPopup("BOTTOM_PANEL");
-        handleOpenModal();
-        return;
+      const item = cartItemsForDish[0]
+      setSelectedDish(item.dish)
+      if (item?.dish?.portions?.length > 0 || item?.dish?.addOnIds?.length > 0) {
+        setCartPopup("BOTTOM_PANEL")
+        handleOpenModal()
+        return
       }
-      updateCartItem({ ...item, quantity: item.quantity + 1 });
+      updateCartItem({ ...item, quantity: item.quantity + 1 })
     }
-  }, [cartItemsForDish, updateCartItem]);
+  }, [cartItemsForDish, updateCartItem])
 
   const handleDecreaseQuantity = useCallback(() => {
     if (cartItemsForDish.length > 0) {
-      const item = cartItemsForDish[0];
-      setSelectedDish(item.dish);
-      if (
-        item?.dish?.portions?.length > 0 ||
-        item?.dish?.addOnIds?.length > 0
-      ) {
-        setCartPage("cart");
-        setShowCart(true);
-        return;
+      const item = cartItemsForDish[0]
+      setSelectedDish(item.dish)
+      if (item?.dish?.portions?.length > 0 || item?.dish?.addOnIds?.length > 0) {
+        setCartPage("cart")
+        setShowCart(true)
+        return
       }
       if (item.quantity > 1) {
-        updateCartItem({ ...item, quantity: item.quantity - 1 });
+        updateCartItem({ ...item, quantity: item.quantity - 1 })
       } else {
-        removeFromCart(item.id);
+        removeFromCart(item.id)
       }
     }
-  }, [cartItemsForDish, updateCartItem, removeFromCart]);
+  }, [cartItemsForDish, updateCartItem, removeFromCart])
+
   return (
     <>
-
-      <div className="relative w-24 h-10">
+      <div className={cn("relative w-24 h-10", className)}>
         <AnimatePresence initial={false}>
           {totalQuantity > 0 ? (
             <motion.div
@@ -153,7 +155,11 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={handleDecreaseQuantity}
-                className="flex items-center justify-center w-8 h-full transition-colors bg-gray-100 text-black hover:bg-gray-200"
+                style={{
+                  backgroundColor: secondaryColor,
+                  color: primaryColor,
+                }}
+                className="flex items-center justify-center w-[33%] h-full text-black transition-colors bg-gray-100 hover:bg-gray-200"
               >
                 <Minus className="w-4 h-4" />
               </motion.button>
@@ -162,14 +168,18 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
-                className="font-medium text-black"
+                className="text-base font-medium text-black"
               >
                 {totalQuantity}
               </motion.span>
               <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={handleIncreaseQuantity}
-                className="flex items-center justify-center w-8 h-full transition-colors bg-gray-100 hover:bg-gray-200 text-black"
+                style={{
+                  backgroundColor: secondaryColor,
+                  color: primaryColor,
+                }}
+                className="flex items-center justify-center w-[33%] h-full text-black transition-colors bg-gray-100 hover:bg-gray-200"
               >
                 <Plus className="w-4 h-4" />
               </motion.button>
@@ -183,10 +193,15 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
               transition={{ duration: 0.2 }}
               className="absolute inset-0"
             >
-              <button type="button"
+              <button
+                type="button"
                 onClick={() => handleClick(dishData)}
-                className="relative z-10 bg-[#ffffff] btn-sm text-[#000000] active:bg-[#ffffff] border border-[#000000] min-w-[6.044rem] min-h-[2.241rem] !px-6 rounded-xl font-medium text-[0.969rem] normal-case"
-
+                className="relative z-10 w-full h-full text-sm font-medium normal-case rounded-md"
+                style={{
+                  backgroundColor: secondaryColor,
+                  color: primaryColor,
+                  border: `1px solid ${primaryColor}20`,
+                }}
               >
                 Add
               </button>
@@ -196,11 +211,7 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
       </div>
 
       {openBottomPanel && selectedDish._id === dishData._id && (
-        <ItemDescriptionPopup
-          show={openBottomPanel}
-          onClose={closeModal}
-          heading="Select Variants"
-        >
+        <ItemDescriptionPopup show={openBottomPanel} onClose={closeModal} heading="Select Variants">
           {cartPopup === "BOTTOM_PANEL" && (
             <div className="relative pb-12 max-h-[90dvh] mt-4 overflow-auto">
               <div className="flex flex-col divide-y-2 divide-[#ffffff] text-[#000000]">
@@ -216,21 +227,18 @@ const MemoDishQuantityButton = ({ dishData }: { dishData: DishType }) => {
                     onClick: handleAddToCart,
                     type: "button" as const,
                     highlight: true,
-                    disable:
-                      selectedDish?.price === 0 &&
-                      selectedDish.portions?.length > 0 &&
-                      selectedPortion === null,
+                    disable: selectedDish?.price === 0 && selectedDish.portions?.length > 0 && selectedPortion === null,
                   },
                 ]}
               />
             </div>
           )}
-
         </ItemDescriptionPopup>
       )}
     </>
-  );
-};
+  )
+}
 
-const DishQuantityButton = memo(MemoDishQuantityButton);
-export default DishQuantityButton;
+const DishQuantityButton = memo(MemoDishQuantityButton)
+export default DishQuantityButton
+

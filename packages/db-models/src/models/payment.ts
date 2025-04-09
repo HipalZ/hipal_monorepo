@@ -201,6 +201,11 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: String,
       required: false,
     },
+    isDeleted: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
 
   { timestamps: true },

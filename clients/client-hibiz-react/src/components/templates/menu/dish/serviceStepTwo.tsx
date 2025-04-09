@@ -17,7 +17,8 @@ import SectionLoader from "@/components/atom/sectionLoader";
 import { useQueryClient } from "@tanstack/react-query";
 
 const MemoServiceSepTwo = () => {
-  const { businessId } = useParams<{ businessId?: string }>();
+  const { businessId ,menuId} = useParams<{ businessId?: string ;menuId?:string}>();
+
 
   const {
     setDishStep,
@@ -111,6 +112,7 @@ const MemoServiceSepTwo = () => {
 
     const payload: DishType = {
       businessId: Object(businessId),
+      menuId: Object(menuId),
       name: dishName,
       price: dishPrice,
       visibility: visibility,
@@ -132,7 +134,7 @@ const MemoServiceSepTwo = () => {
       resetDishStore();
       setIsLoading(false);
       setOpenMenu(false);
-      queryClient.invalidateQueries({ queryKey: ["getAlldishes"] });
+      queryClient.invalidateQueries({ queryKey: ["getAllDishes"] });
       return toast.success("Created successfully");
     }
     setIsLoading(false);

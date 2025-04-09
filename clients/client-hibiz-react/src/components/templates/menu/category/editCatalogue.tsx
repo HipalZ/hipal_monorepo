@@ -1,7 +1,6 @@
 import BottomButton from "@/components/atom/bottomButton";
 import Background from "@/components/atom/feildBackground";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
-import useBusinessData from "@/components/store/useBusinessData";
 import useMenuPageStore from "@/components/store/useMenuStorage";
 import { storeImageAfterSave } from "@/components/utils/helper";
 import { useDeleteCategory, useUpdateCategory } from "@/hooks/useCategory";
@@ -10,6 +9,7 @@ import { Switch } from "@headlessui/react";
 import { memo, useCallback, type ChangeEvent } from "react";
 import { BiImageAdd } from "react-icons/bi";
 import LinkingCatalogueComp from "./linkingCatalogue";
+import { useParams } from "react-router-dom";
 
 const MAX_WIDTH = 500;
 const MAX_HEIGHT = 500;
@@ -65,7 +65,7 @@ const MemoEditCatalogue = () => {
 
   const { isPending: deletePending, mutate: deleteCat } = useDeleteCategory();
 
-  const businessData = useBusinessData((s) => s.businessData);
+  const { businessId,menuId } = useParams<{ businessId: string; menuId: string }>();
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -167,7 +167,8 @@ const MemoEditCatalogue = () => {
     );
     const commonPayload = {
       name: categoryName,
-      businessId: businessData?._id.toString() || "",
+      businessId: businessId.toString() || "",
+      menuId: menuId,
       coverImage: imageUrl,
       visibility: visibility,
       _id: catId,

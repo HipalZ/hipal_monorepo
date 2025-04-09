@@ -1,5 +1,5 @@
 import type { ICart } from "@/components/store/useCart";
-import type { CategoryType } from "@hi/db-models/src/validators";
+import { MenuLayout, type CategoryType } from "@hi/db-models/src/validators";
 import type { ILoyaltySetting } from "../store/useLoyaltyData";
 import { Room } from "./hotelTypes";
 
@@ -169,6 +169,7 @@ export interface IOutlet {
   outLetType: string;
   isPosEnabled: boolean;
   shareCart?: boolean;
+  birthdayCampaign?: boolean;
 }
 
 export interface TimingType {
@@ -180,11 +181,36 @@ export interface TimingType {
   dishIds: IDish[];
 }
 
+export enum MenuType {
+  MAIN_SUB_DISH = 1,
+  SUB_DISH = 2,
+}
+
+export enum CategoryLayout {
+  EDGE = 1,
+  CLASSIC = 2,
+}
+
+export enum CardLayout {
+  GRID = 1,
+  HORIZONTAL = 2,
+}
+
+export interface IMenuLayout {
+  _id: string;
+  menuType: MenuType;
+  categoryLayout: CategoryLayout;
+  cardLayout: CardLayout;
+  primaryColor: string;
+  secondaryColor: string;
+}
+
 export interface IBusinessData {
   couponz: Coupon[];
   outletInfo: IOutlet;
   businessId: string;
   banners: IBannerPayload[];
+  menuData:IMenuLayout
   _id: string;
   settings?: IStyles;
   business?: BusinessDetails;
@@ -388,6 +414,7 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   __v: number;
+  birthdayTriggerCount?: number;
 }
 
 export interface CustomRole {

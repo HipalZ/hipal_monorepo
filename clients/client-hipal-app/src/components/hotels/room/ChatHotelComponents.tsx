@@ -1,13 +1,14 @@
-import type { ChatHeaderProps, ChatMessageHotelProps, RoomChatReply, Service, ChatReplyMessageProps } from "@/components/types/hotelTypes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ActionType, actionOptions, reviewOptions, formatHotelTime } from "@/components/utils/helpersHotel";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, ShoppingCart } from "lucide-react";
+import { actionOptions, ActionType, formatHotelTime, reviewOptions } from "@/components/utils/helpersHotel";
+import type { Cart, ChatHeaderProps, ChatMessageHotelProps, ChatReplyMessageProps, RoomChatReply, Service } from "@/components/types/hotelTypes";
+import MemoFoodType from "@/components/atoms/foodType";
 
 export const ChatHeader = ({ hotelName, logo, room, onClose }: ChatHeaderProps) => (
-    <section className="flex items-center p-4 border-b bg-white text-black sticky top-0 z-10 shadow-sm">
+    <section className="flex items-center p-4 border-b bg-white text-black fixed w-full max-w-[30rem] top-16 z-10 shadow-sm">
         <Button variant="ghost" size="icon" onClick={onClose} className="mr-2">
             <ChevronLeft className="h-5 w-5" />
         </Button>
@@ -25,25 +26,25 @@ export const ChatHeader = ({ hotelName, logo, room, onClose }: ChatHeaderProps) 
 );
 
 export const ChatMessageHotel = ({ chat, userResponses, handleActionClick, openReview, selectedReplyId, handleReviewSubmit }: ChatMessageHotelProps) => (
-    <section className="space-y-4">
+    <section className="space-y-4 mt-20">
         <article className="flex flex-col items-center justify-center my-4">
             <div className="bg-white px-4 py-1.5 rounded-full shadow-sm text-xs text-gray-500 mb-2">
-                {format(new Date(chat.date), "MMMM d, yyyy")}
+                {format(new Date(chat?.date), "MMMM d, yyyy")}
             </div>
         </article>
-        <article className="flex justify-end mb-2">
+        <article className="flex justify-start mb-2">
             <Avatar className="h-8 w-8 mr-2 mt-1">
-                <AvatarFallback className="bg-gray-200 text-gray-600">{chat.userId.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback className="bg-gray-200 text-gray-600">{chat?.userId?.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col max-w-[75%]">
-                <span className="text-xs text-gray-500 mb-1 ml-1">{chat.userId.name}</span>
+                <span className="text-xs text-gray-500 mb-1 ml-1">{chat?.userId?.name}</span>
                 <div className="rounded-2xl px-3 pt-3 pb-1 bg-blue-600 text-white rounded-br-none">
                     {chat.alertId.serviceIds.map((service: Service) => (
-                        <p key={service._id} className="text-sm">
-                            {service.name}
+                        <p key={service?._id} className="text-sm">
+                            {service?.name}
                         </p>
                     ))}
-                    <span className="text-[0.65rem] text-gray-300 mt-1 float-right">{formatHotelTime(chat.date)}</span>
+                    <span className="text-[0.65rem] text-gray-300 mt-1 float-right">{formatHotelTime(chat?.date)}</span>
                 </div>
             </div>
         </article>
@@ -60,19 +61,21 @@ export const ChatMessageHotel = ({ chat, userResponses, handleActionClick, openR
                 />
             ))}
         </article>
+        {chat?.cart?.length > 0 ? <article>
+            <ChatCartComponent cart={chat?.cart} />
+        </article> : null}
     </section>
 );
 
 const ChatReplyMessage = ({ reply, userResponses, handleActionClick, openReview, selectedReplyId, handleReviewSubmit }: ChatReplyMessageProps) => (
-    <section className="flex justify-start">
+    <section className="flex justify-end">
         <Avatar className="h-8 w-8 mr-2 mt-1">
-            <AvatarFallback className="bg-gray-200 text-gray-600">{reply.userId.name.charAt(0)}</AvatarFallback>
+            <AvatarFallback className="bg-gray-200 text-gray-600">{reply?.userId?.name?.charAt(0)}</AvatarFallback>
         </Avatar>
         <section className="flex flex-col max-w-[75%]">
-            <span className="text-xs text-gray-500 mb-1 ml-1">{reply.userId.name}</span>
             <article className={`${reply?.status === ActionType.WARNING ? 'bg-red-100' : 'bg-white'} rounded-2xl rounded-bl-none px-3 pt-3 pb-1 shadow-sm`}>
-                <p className="text-sm">{reply.description}</p>
-                {reply.action && !userResponses[reply._id] && (
+                <p className="text-sm">{reply?.description}</p>
+                {reply?.action && !userResponses[reply._id] && (
                     <article className={`${reply?.status === ActionType.WARNING ? 'bg-red-100' : 'bg-white'} p-3 rounded-2xl rounded-bl-none flex flex-col gap-2 w-full`}>
                         <p className="text-sm text-gray-600 ml-1 mb-1">Please choose an option:</p>
                         {actionOptions.map((option) => (
@@ -92,11 +95,11 @@ const ChatReplyMessage = ({ reply, userResponses, handleActionClick, openReview,
                         ))}
                     </article>
                 )}
-                <span className="text-[0.65rem] text-gray-400 mt-1 float-right">{formatHotelTime(reply.date)}</span>
-                {openReview && reply._id === selectedReplyId && (
+                <span className="text-[0.65rem] text-gray-400 mt-1 float-right">{formatHotelTime(reply?.date)}</span>
+                {openReview && reply?._id === selectedReplyId && (
                     <article className="flex justify-around mt-2">
                         {reviewOptions?.map((option) => (
-                            <span onKeyDown={() => handleReviewSubmit(reply.userId._id, option?.value)} key={option?.id} onClick={() => handleReviewSubmit(reply.userId._id, option?.value)} role="img" aria-label={option?.id} className="hover:scale-110 text-3xl cursor-pointer">{option?.text}</span>
+                            <span onKeyDown={() => handleReviewSubmit(reply?.userId?._id, option?.value)} key={option?.id} onClick={() => handleReviewSubmit(reply.userId._id, option?.value)} role="img" aria-label={option?.id} className="hover:scale-110 text-3xl cursor-pointer">{option?.text}</span>
                         ))}
                     </article>
                 )}
@@ -104,3 +107,73 @@ const ChatReplyMessage = ({ reply, userResponses, handleActionClick, openReview,
         </section>
     </section>
 )
+
+const ChatCartComponent = ({ cart }: { cart: Cart[] }) => {
+    const totalPrice = cart.reduce((sum, item) => sum + item.dish.price * item.quantity, 0)
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm"
+        >
+            {/* Header */}
+            <div
+                className="bg-blue-500 text-white px-4 py-3 flex items-center gap-2"
+            >
+                <ShoppingCart className="h-4 w-4" />
+                <span className="font-medium">Order Details</span>
+            </div>
+
+            {/* Cart Items */}
+            <div className="px-4 py-2">
+                {cart?.map((item) => (
+                    <div key={item?.id} className="py-2 border-b last:border-b-0 border-gray-100">
+                        <div className="flex justify-between items-start mb-1">
+                            <div className="flex-1">
+                                <div className="font-medium flex items-center gap-2">
+                                    {item?.dish?.name}
+                                    <MemoFoodType types={item?.dish?.types} />
+                                </div>
+                                {item?.dish?.description && (
+                                    <div className="text-xs text-gray-500">
+                                        {item?.dish?.description}
+                                    </div>
+                                )}
+                                {item?.portion && (
+                                    <div className={"text-xs text-gray-500"}>
+                                        Portion: {item?.portion}
+                                    </div>
+                                )}
+                                {item?.extras && item?.extras.length > 0 && (
+                                    <div className={"text-xs mt-1 text-gray-500"}>
+                                        Extras: {item?.extras.join(", ")}
+                                    </div>
+                                )}
+                            </div>
+                            <div className={"text-right text-gray-900"}>
+                                ₹{(item?.dish?.price * item?.quantity)}
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-1">
+                            <div className="flex items-center">
+                                <span className={"text-xs text-gray-500"}>
+                                    ₹{(item?.dish?.price)} × {item?.quantity}
+                                </span>
+                            </div>
+                            <span className="text-sm font-medium">Qty: {item?.quantity}</span>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Footer with Total */}
+            <div className={"px-4 py-3 bg-blue-500 text-white"}>
+                <div className="flex justify-between items-center">
+                    <span className="font-medium">Total</span>
+                    <span>₹{(totalPrice)}</span>
+                </div>
+            </div>
+        </motion.div>
+    )
+}

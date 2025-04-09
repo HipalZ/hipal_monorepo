@@ -33,7 +33,7 @@ export async function fetchCommonData(
   if (!bizId) {
     redirect("/");
   }
-  
+
   const settingsResponse = await apiRpc.businesses.themes[":businessId"].$get({
     param: {
       businessId: bizId,
@@ -46,34 +46,52 @@ export async function fetchCommonData(
 }
 
 export const getBusinessData = async (customLink: string) => {
-  
-  if(!customLink){
-    return  redirect("/");
+
+  if (!customLink) {
+    return redirect("/");
   }
-    try {
-      const res = await apiRpc.businesses.n[":customLink"].$get({
-        param: { customLink },
-      });
-      
-      const response = await res.json() as unknown as {
-        data: BusinessDetails;
-        message: string;
-        error?: boolean;
-        err?: boolean;
-      };
-  
-      if (response.error || !response.data) {
-        throw new Error("Failed to fetch business data");
-      }
-  
-      if(response.err){
-        console.error("Error fetching business data:", response);
-        redirect("/");
-      }
-  
-      return response.data;
-    } catch (error) {
-      console.error("Error fetching business data:", error);
+  try {
+    const res = await apiRpc.businesses.n[":customLink"].$get({
+      param: { customLink },
+    });
+
+    const response = await res.json() as unknown as {
+      data: BusinessDetails;
+      message: string;
+      error?: boolean;
+      err?: boolean;
+    };
+
+    if (response.error || !response.data) {
+      throw new Error("Failed to fetch business data");
+    }
+
+    if (response.err) {
+      console.error("Error fetching business data:", response);
       redirect("/");
     }
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching business data:", error);
+    redirect("/");
   }
+}
+
+export const getMenuData = async (tableName: string, businessId: string) => {
+  const response = await apiRpc.menu.fetch_table_menu.$get({
+    query: {
+      tableName: tableName,
+      businessId:businessId,
+    },
+  })
+  const menuData = await response.json();
+  if (response.status === 400) {
+    console.error("Error fetching menu data:", menuData);
+    // redirect("/");
+  }
+  if (response.status === 200) {
+    return menuData.data;
+  }
+  return null;
+}

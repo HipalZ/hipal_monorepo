@@ -579,7 +579,12 @@ const businessesRouter = new Hono()
     }).select("_id");
     const outLetInfo = await OutLetInfo.findOne({
       businessId: getBusiness?._id,
-    }).populate("newAmenities");
+    })
+      .populate("newAmenities")
+      .populate({
+        path: "menuId",
+        select: "menuType categoryLayout cardLayout -_id",
+      });
 
     if (!outLetInfo) return respond(c, "business not found", true, 404, {});
     return respond(c, "business found", false, 200, outLetInfo);
@@ -614,8 +619,7 @@ const businessesRouter = new Hono()
         {
           data: exitingSettings,
           message: "loyalty settings found",
-          status: 200,
-          error: false,
+          err: false,
         },
         200,
       );
@@ -727,6 +731,7 @@ const businessesRouter = new Hono()
 
       const existingSettings = await LoyaltySettings.findOne({
         businessId: businessId,
+        isActive: true,
       });
 
       if (existingSettings) {

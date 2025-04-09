@@ -108,7 +108,6 @@ const Hotel = async ({
   const data = await getHotelData(params.businessId) as IBusinessData
   const { business, banners } = data
   const themeData = await getThemeSettings(business?.businessId)
-  // console.log("themeData", themeData)
 
   return (
     <HotelBackgroundContainer >

@@ -37,7 +37,6 @@ const CartPage = () => {
     if (res.err) {
       throw new Error(res.message || "Failed to fetch cart");
     }
-    console.log("Cart Data:", res.data);
     return res.data || {};
   };
 

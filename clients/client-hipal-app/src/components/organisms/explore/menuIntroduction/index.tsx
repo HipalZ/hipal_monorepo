@@ -14,6 +14,7 @@ import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { BiSolidChevronRight } from "react-icons/bi";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import useTableData from "@/components/store/useTableData";
 
 const images = [Burger, Cola, Loaf, Pizza, Sandwhich];
 
@@ -59,6 +60,7 @@ function MenuIntroduction() {
   const [page, setPage] = useState(0);
   const customLink = useParams()?.businessId || "";
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
+  const tableName = useTableData((s) => s.tableName);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -91,7 +93,7 @@ function MenuIntroduction() {
             className="absolute -top-2 bg-base-100  w-full max-w-[30rem] h-[1rem]"
           />
           <Link
-            href={`/${customLink}/category`}
+            href={`/${customLink}/category?${tableName ? `tableName=${tableName}` : ""}`}
             className="relative flex items-center justify-center w-full h-[22rem] overflow-hidden mt-9 rounded-xl pb-12"
           >
             <AnimatePresence initial={false}>
@@ -134,7 +136,7 @@ function MenuIntroduction() {
             </AnimatePresence>
           </Link>
           <Link
-            href={`/${customLink}/category`}
+            href={`/${customLink}/category?${tableName ? `tableName=${tableName}` : ""}`}
             className="flex items-center justify-center w-full"
           >
             <button

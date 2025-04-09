@@ -488,6 +488,7 @@ const reviewRouter = new Hono()
 
       const loyaltySetting = await LoyaltySettings.findOne({
         businessId,
+        isActive: true,
       }).select("rewardLimit");
 
       if (!loyaltySetting) {
@@ -588,6 +589,7 @@ const reviewRouter = new Hono()
 
           const loyaltySetting = await LoyaltySettings.findOne({
             businessId,
+            isActive: true,
           }).select("rewardLimit");
 
           if (!loyaltySetting) {

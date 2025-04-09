@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import addonRouter from "./addons";
 import adminRouter from "./admin";
+import bucketRouter from "./bucket";
 import businessRouter from "./businesses";
 import cartRouter from "./cart";
 import categoryRouter from "./categories";
@@ -9,12 +10,14 @@ import couponzRouter from "./couponz";
 import dishesRouter from "./dishes";
 import downloadRouter from "./download";
 import duesRouter from "./dues";
+import eventRouter from "./event";
 import groupRouter from "./groups";
 import hipalzRouter from "./hipalz";
 import hotelRouter from "./hotel";
 import iconRouter from "./icon";
 import kotRouter from "./kot";
 import menuBannerRouter from "./menu-banner";
+import menuRouter from "./menu/menu";
 import npcRouter from "./npc";
 import paymentsRouter from "./payments";
 import permissionRouter from "./permission";
@@ -71,6 +74,9 @@ export const routes = app
   .route("/whatsapp_flow", whatsAppFlowRouter)
   .route("/script", scriptRouter)
   .route("/hotel", hotelRouter)
-  .route("/download", downloadRouter);
+  .route("/download", downloadRouter)
+  .route("/menu", menuRouter)
+  .route("/bucket", bucketRouter)
+  .route("/event", eventRouter);
 
 export type AppType = typeof routes;

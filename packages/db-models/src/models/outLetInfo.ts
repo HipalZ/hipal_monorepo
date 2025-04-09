@@ -166,7 +166,7 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: String,
     enum: BusinessEnumType,
     required: false,
-    default: "FOOD",
+    default: "MENU",
   },
   hideDishPrice: {
     type: Boolean,

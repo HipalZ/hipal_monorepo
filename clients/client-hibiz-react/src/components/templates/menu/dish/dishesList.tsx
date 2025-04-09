@@ -40,16 +40,28 @@ const MemoListOfDishes = () => {
 
   // applying filters and using memo to avoid re-render
   const filteredDishes = useMemo(() => {
-    let filtered = dishes.slice() || [];
+    // 1) Start with a copy of all dishes
+    let filtered = dishes?.slice() || [];
+
+    // 2) If user typed something, run Fuse
     if (search) {
-      filtered = fuse.search(search).map((result) => result.item);
+      const fuseResults = fuse.search(search).map((r) => r.item);
+
+      // De-duplicate items by _id
+      const uniqueById = new Map();
+      fuseResults.forEach((item) => uniqueById.set(item._id, item));
+
+      filtered = Array.from(uniqueById.values());
     }
+
+    // 3) Visibility filter
     if (visibilityFilter !== "all") {
       filtered = filtered.filter(
-        (c) => c.visibility === (visibilityFilter === "visible"),
+        (d) => d.visibility === (visibilityFilter === "visible")
       );
     }
-    if (filtered.length === 0) return [];
+
+    // 4) Sorting
     switch (sortOrder) {
       case "asc":
         return filtered.slice().sort((a, b) => a.name.localeCompare(b.name));
@@ -83,12 +95,12 @@ const MemoListOfDishes = () => {
         {outLetType === "OTHER" ? "Services" : "Dishes"} (
         {filteredDishes?.length})
       </h3>
-      {filteredDishes
+      {filteredDishes.length > 0 && filteredDishes
         ? filteredDishes.map((dish) => (
           <button
             onClick={() => handleEditDish(dish)}
             type="button"
-            key={dish.name}
+            key={dish._id}
             className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow md:max-w-[21rem] lg:max-w-[20rem] xl:max-w-[20rem] 2xl:max-w-[21.5rem]"
           >
             <h3

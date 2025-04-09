@@ -163,6 +163,8 @@ const MemoAdvancedBottomButton = (props: MemoBottomButtonProps) => {
                 className={cn("flex", {
                     "justify-between": buttons.length === 2,
                     "justify-center": buttons.length !== 2,
+                    "gap-2": buttons.length > 3,
+                    "gap-4": buttons.length <= 3,
                 })}
             >
                 {buttons.map((button, index) =>
@@ -185,7 +187,7 @@ const MemoAdvancedBottomButton = (props: MemoBottomButtonProps) => {
                                         "opacity-50 cursor-not-allowed": button.disable,
                                         "flex-1": buttons.length > 1 && !button.isBackButton,
                                         "w-[54px]": button.isBackButton && index === 0,
-                                        "ml-4": index > 0 && !button.isBackButton,
+                                        // "ml-4": index > 0 && !button.isBackButton,
                                     }
                                 )}
                                 style={{

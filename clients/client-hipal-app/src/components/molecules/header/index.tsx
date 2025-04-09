@@ -9,7 +9,11 @@ import useTableData from "@/components/store/useTableData";
 import Table from "@/assets/cart/Table.png";
 import Image from "next/image";
 
-function Header({ categories }: { categories: CategoryType[] }) {
+function Header({ categories, primaryColor, secondaryColor }: {
+  categories: CategoryType[];
+  primaryColor: string;
+  secondaryColor: string;
+}) {
   const { isSearchActive, showHeader } = useSearch();
   const { hiCode } = useTableData();
 
@@ -39,7 +43,11 @@ function Header({ categories }: { categories: CategoryType[] }) {
 
   return (
     <motion.div
-      className="sticky top-0 z-0 bg-[] flex flex-col space-y-2 text-4xl py-2 text-black overflow-hidden"
+      style={{
+        // background: `linear-gradient(180deg, ${primaryColor} 0%, ${secondaryColor} 100%)`,
+        backgroundColor: `${secondaryColor}`,
+      }}
+      className="sticky top-0 z-[1000] flex flex-col space-y-2 text-4xl py-2 text-black overflow-hidden"
       initial={{ opacity: 0, y: -100 }}
       animate={{
         opacity: showHeader ? 1 : 0,
@@ -49,7 +57,6 @@ function Header({ categories }: { categories: CategoryType[] }) {
     >
       <div className="relative flex flex-col items-start justify-between w-full overflow-hidden">
         <h3 className="flex items-center justify-between w-full px-2 text-3xl">
-          {outletInfo?.outLetType === "OTHER" ? "Catalogue" : "Menu"}
           {hiCode && (
             <h5 className="flex items-center gap-2 text-xl font-semibold opacity-80">
               <Image src={Table} width={36} height={36} alt="Table" />

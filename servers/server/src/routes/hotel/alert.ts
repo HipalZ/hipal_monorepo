@@ -611,11 +611,11 @@ const hotelAlertRouter = new Hono()
                       },
                       {
                         type: "text",
-                        text: "https://www.google.com",
+                        text: "https://staehotels.com/",
                       },
                       {
                         type: "text",
-                        text: "https://www.google.com",
+                        text: "https://staehotels.com/",
                       },
                     ],
                   },

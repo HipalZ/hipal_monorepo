@@ -7,8 +7,8 @@ import { apiRpc } from "@hi/common"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import toast from "react-hot-toast"
 interface IHotelRoomData {
-  businessId: string;
-  roomName: string;
+    businessId: string;
+    roomName: string;
 }
 
 export const useGetAllRooms = () => {
@@ -89,7 +89,7 @@ export const useRoomAlerts = () => {
     const businessId = useBusinessData((s) => s.outletInfo?.businessId)
     const userId = useHiClientZ((s) => s.captainData._id)
     const { setAlerts } = useAlertsStore()
-    const {setHotelAlertsCount} = useHotelStore()
+    const { setHotelAlertsCount } = useHotelStore()
     const roomAlerts = async () => {
         const response = await apiRpc.hotel.alert.fetch_room_alerts.$get({
             query: {
@@ -109,7 +109,7 @@ export const useRoomAlerts = () => {
         queryKey: ["roomAlerts", businessId, userId],
         queryFn: roomAlerts,
         enabled: !!businessId && !!userId,
-        refetchInterval: 5000,
+        refetchInterval: 11000,
     })
 
     return { alerts, isPending }
@@ -185,72 +185,98 @@ export const useHistoryAlerts = () => {
     return { historyData, isPending }
 }
 
-export const useGetAllChats = (payload:IHotelRoomData) => {
+export const useGetAllChats = (payload: IHotelRoomData) => {
     const getChats = async () => {
-      const roomResponse = await apiRpc.hotel.rooms.fetch_room.$get({
-        query: payload,
-      });
-      if(!roomResponse.ok) return []
-      const roomData = await roomResponse.json();
-      const response = await apiRpc.hotel.alert.room_chat.$get({
-        query: {
-          roomId:roomData?.data?._id,
-        },
-      });
-      const res = await response.json();
-      return res.data;
+        const roomResponse = await apiRpc.hotel.rooms.fetch_room.$get({
+            query: payload,
+        });
+        if (!roomResponse.ok) return []
+        const roomData = await roomResponse.json();
+        const response = await apiRpc.hotel.alert.room_chat.$get({
+            query: {
+                roomId: roomData?.data?._id,
+            },
+        });
+        const res = await response.json();
+        return res.data;
     };
-  
-    const {data:chatData} = useQuery({
-      queryKey: ["getChats", payload],
-      queryFn: getChats,
-      enabled: !!payload.roomName,
-      refetchInterval: 10000,
-    }) 
-  
-    return  { chatData }
-  };
-  
-  export const useSendChat = () => {
+
+    const { data: chatData } = useQuery({
+        queryKey: ["getChats", payload],
+        queryFn: getChats,
+        enabled: !!payload.roomName,
+        refetchInterval: 5000,
+    })
+
+    return { chatData }
+};
+
+export const useSendChat = () => {
     const queryClient = useQueryClient();
     const { mutateAsync: sendChat, isPending: sendingChat } = useMutation({
-      mutationFn: async (payload: any) => {
-        const response = await apiRpc.hotel.alert.chat_complain.$post({
-          json: payload,
-        });
-        return response.json();
-      },
-      onSuccess: (data) => {
-        queryClient.invalidateQueries({
-          queryKey:["getChats"]
-        });
-      },
-      onError: (error) => {
-        console.error("Error sending chat:", error);
-      },
+        mutationFn: async (payload: any) => {
+            const response = await apiRpc.hotel.alert.chat_complain.$post({
+                json: payload,
+            });
+            return response.json();
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({
+                queryKey: ["getChats"]
+            });
+        },
+        onError: (error) => {
+            console.error("Error sending chat:", error);
+        },
     });
-  
+
     return { sendChat, sendingChat };
-  }
-  
-  export const useReviewChat = () => {
+}
+
+export const useReviewChat = () => {
     const queryClient = useQueryClient();
     const { mutateAsync: reviewChat, isPending: reviewingChat } = useMutation({
-      mutationFn: async (payload: any) => {
-        const response = await apiRpc.hotel.rooms.reviews.$post({
-          json: payload,
-        });
-        return response.json();
-      },
-      onSuccess: (data) => {
-        queryClient.invalidateQueries({
-          queryKey:["getChats"]
-        });
-      },
-      onError: (error) => {
-        console.error("Error reviewing chat:", error);
-      },
+        mutationFn: async (payload: any) => {
+            const response = await apiRpc.hotel.rooms.reviews.$post({
+                json: payload,
+            });
+            return response.json();
+        },
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({
+                queryKey: ["getChats"]
+            });
+        },
+        onError: (error) => {
+            console.error("Error reviewing chat:", error);
+        },
     });
-  
+
     return { reviewChat, reviewingChat };
-  }
+}
+
+export const useEscalatedAlerts = () => {
+    const userId = useHiClientZ((s) => s.captainData._id)
+    const businessId = useBusinessData((s) => s.outletInfo?.businessId)
+    const escalatedAlerts = async () => {
+        const response = await apiRpc.hotel.alert.fetch_escalation_alerts.$get({
+            query: {
+                businessId,
+                userId,
+            }
+        })
+        const res = await response.json()
+        if (response.status === 200 || response.status === 201) {
+            return res.data
+        }
+    }
+
+    const { data: escalatedData, isPending } = useQuery({
+        queryKey: ["escalatedAlerts", businessId, userId],
+        queryFn: escalatedAlerts,
+        enabled: !!businessId && !!userId,
+        refetchInterval: 13000,
+    })
+
+    return { escalatedData, isPending }
+}

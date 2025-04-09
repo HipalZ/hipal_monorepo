@@ -283,7 +283,14 @@ const usersRouter = new Hono()
           );
         }
 
-        const user = await User.create({ name, phone, role: roles });
+        const hashedPassword = await hashPassword("6344");
+
+        const user = await User.create({
+          name,
+          phone,
+          role: roles,
+          password: hashedPassword,
+        });
 
         const accessToken = createAccessToken(user._id, "OWNER");
         const refreshToken = createRefreshToken(user._id, "OWNER");
@@ -396,6 +403,8 @@ const usersRouter = new Hono()
           "OWNER",
         );
 
+        console.log("comparePass", comparePass);
+
         return c.json({
           message: "Owner Logged in Successfully",
           data: { user: existingUser, accessToken, refreshToken },
@@ -439,6 +448,19 @@ const usersRouter = new Hono()
           user?._id.toString() || "",
           "OWNER",
         );
+
+        const token = jwt.sign(
+          {
+            id: user._id,
+            role: "OWNER",
+          },
+          Bun.env.JWT_SECRET as string,
+        );
+
+        setCookie(c, "token", token, {
+          httpOnly: false,
+          secure: false,
+        });
 
         return respond(c, "Owner Logged in Successfully", false, 200, {
           user,
@@ -569,6 +591,19 @@ const usersRouter = new Hono()
       "CAPTAIN",
     );
 
+    const token = jwt.sign(
+      {
+        id: staff._id,
+        role: "CAPTAIN",
+      },
+      Bun.env.JWT_SECRET as string,
+    );
+
+    setCookie(c, "token", token, {
+      httpOnly: false,
+      secure: false,
+    });
+
     return c.json({
       message: "Staff Logged in Successfully",
       data: { user: staff, accessToken, refreshToken },
@@ -591,6 +626,7 @@ const usersRouter = new Hono()
         permissionGroupIds = [],
         password,
       } = requestData as AddStaffValidatorType;
+      const hashPass = await hashPassword(password);
 
       const existingUser = await User.findOne({
         phone,
@@ -617,6 +653,7 @@ const usersRouter = new Hono()
           {
             $addToSet: {
               customRole: customRole,
+              password: hashPass,
             },
           },
           { new: true },
@@ -628,8 +665,6 @@ const usersRouter = new Hono()
           err: false,
         });
       }
-
-      const hashPass = await hashPassword(password);
 
       const perObj = await createPermissionObject(
         permissionIds,
@@ -1208,6 +1243,19 @@ const usersRouter = new Hono()
         "HIPAL_CUSTOMER",
       );
 
+      const token = jwt.sign(
+        {
+          id: existingUser._id,
+          role: "HIPAL_CUSTOMER",
+        },
+        Bun.env.JWT_SECRET as string,
+      );
+
+      setCookie(c, "token", token, {
+        httpOnly: false,
+        secure: false,
+      });
+
       return respond(c, "User logged in successfully", false, 200, {
         user: existingUser,
         accessToken,
@@ -1495,19 +1543,29 @@ const usersRouter = new Hono()
   .put(
     "/updateUserInfo/:userId",
     zValidator("param", z.object({ userId: z.string() })),
-    zValidator("json", z.object({ dob: z.number() })),
+    zValidator(
+      "json",
+      z.object({
+        dob: z.number(),
+        birthdayTriggerCount: z.number().optional(),
+      }),
+    ),
 
     async (c) => {
-      const { dob } = await c.req.json();
+      const { dob, birthdayTriggerCount } = await c.req.json();
       const { userId } = c.req.param();
 
-      const user = await User.findByIdAndUpdate(userId, { dob }, { new: true });
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { dob, birthdayTriggerCount },
+        { new: true },
+      );
 
       if (!user) {
         return respond(c, "User not found", true, 404, {});
       }
 
-      return respond(c, "User updated successfully", false, 200, user);
+      return respond(c, "User data updated successfully", false, 200, user);
     },
   )
 

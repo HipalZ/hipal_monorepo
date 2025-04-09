@@ -67,6 +67,7 @@ export const categorySchema = z.object({
 
   availability: z.boolean().default(true).optional(),
   sequence: z.number().optional(),
+  menuId: ObjectIdSchema,
 });
 
 export const updateCategorySchema = z.object({

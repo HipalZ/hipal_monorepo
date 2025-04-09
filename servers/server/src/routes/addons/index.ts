@@ -173,20 +173,33 @@ const addonRouter = new Hono()
       z.object({
         businessId: z.string(),
         menu: z.string().optional(),
+        menuId: z.string(),
       }),
     ),
 
     async (c) => {
-      const { businessId, menu } = c.req.query();
+      const { businessId, menu, menuId } = c.req.query();
 
       if (menu) {
-        const addon = await AddOn.find({ businessId, isDeleted: false }).select(
+        const query = {
+          businessId,
+          isDeleted: false,
+          menuId: menuId,
+        };
+
+        const addon = await AddOn.find(query).select(
           "_id name choices availability visibility ",
         );
         return respond(c, "success", false, 200, addon);
       }
 
-      const addon = await AddOn.find({ businessId, isDeleted: false });
+      const query = {
+        businessId,
+        isDeleted: false,
+        menuId: menuId,
+      };
+
+      const addon = await AddOn.find(query);
 
       return respond(c, "success", false, 200, addon);
     },

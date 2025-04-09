@@ -14,7 +14,7 @@ export const MenuLayout = ["MAIN_CATEGORY", "MAIN_AND_SUB_CATEGORY"] as const;
 export const BusinessEnumType = [
   "FOOD",
   "OTHER",
-  "RESTAURENT",
+  "RESTAURANT",
   "HOTEL",
   "E-COMMERCE",
   "CLINIC",

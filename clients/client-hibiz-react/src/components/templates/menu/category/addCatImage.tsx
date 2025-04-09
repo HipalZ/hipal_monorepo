@@ -7,6 +7,7 @@ import { storeImageAfterSave } from "@/components/utils/helper";
 import { useSaveCategory } from "@/hooks/useCategory";
 import { memo, type ChangeEvent } from "react";
 import { BiImageAdd } from "react-icons/bi";
+import { useParams } from "react-router-dom";
 
 const MAX_WIDTH = 500;
 const MAX_HEIGHT = 500;
@@ -45,7 +46,7 @@ const MemoAddCatImage = () => {
 
   const { mutate: createCategory, isPending } = useSaveCategory();
 
-  const businessData = useBusinessData((s) => s.businessData);
+  const { businessId,menuId } = useParams<{ businessId: string; menuId: string }>();
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -137,7 +138,8 @@ const MemoAddCatImage = () => {
     }
     const commonPayload = {
       name: categoryName,
-      businessId: Object(businessData?._id) || "",
+      businessId: Object(businessId) || "",
+      menuId: menuId,
     };
     if (imageUrl) {
       commonPayload.coverImage = imageUrl;

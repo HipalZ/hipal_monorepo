@@ -16,7 +16,7 @@ module.exports = {
       colors: {
         primary: {
           DEFAULT: "var(--p)",
-          foreground: "hsl(var(--pf))",
+          foreground: "var(--pf)",
         },
         "h-primary": {
           DEFAULT: "var(--h-p)",
@@ -52,7 +52,7 @@ module.exports = {
         "secondary-content": "var(--sc)",
         accent: {
           DEFAULT: "var(--a)",
-          foreground: "hsl(var(--accent-foreground))",
+          foreground: "var(--accent-foreground)",
         },
         "accent-content": "var(--ac)",
         neutral: "var(--n)",
@@ -104,11 +104,6 @@ module.exports = {
             "offset-distance": "100%",
           },
         },
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
       },
     },
   },

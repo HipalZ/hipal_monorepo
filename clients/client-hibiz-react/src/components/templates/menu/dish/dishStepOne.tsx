@@ -27,7 +27,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 
 const MemoDishForm = () => {
-  const { businessId } = useParams<{ businessId?: string }>();
+  const { businessId,menuId } = useParams<{ businessId?: string; menuId: string }>();
   const [displayedPrice, setDisplayedPrice] = useState("");
   const queryClient = useQueryClient();
   const errorToasts = useErrorToasts();
@@ -168,6 +168,7 @@ const MemoDishForm = () => {
     );
     const payload: DishType = {
       businessId: Object(businessId),
+      menuId: Object(menuId),
       name: dishName,
       price: dishPrice,
       visibility: visibility,
@@ -189,7 +190,7 @@ const MemoDishForm = () => {
       resetDishStore();
       setIsLoading(false);
       setOpenMenu(false);
-      queryClient.invalidateQueries({ queryKey: ["getAlldishes"] });
+      queryClient.invalidateQueries({ queryKey: ["getAllDishes"]});
       return toast.success(data?.message);
     }
     setIsLoading(false);

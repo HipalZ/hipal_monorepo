@@ -20,6 +20,8 @@ const app = new Hono({
   strict: true,
 });
 
+// app.use(checkOrigin());
+
 const limiter = rateLimiter({
   windowMs: 15 * 60 * 1000,
   limit: 10000,

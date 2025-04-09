@@ -115,7 +115,6 @@ export const outLetInfoSchema = z.object({
     })
     .optional(),
   helpPhoneNumber: z.string().min(10).max(10).optional(),
-
   newAmenities: z.array(ObjectIdSchema).optional(),
   birthdayCampaign: ObjectIdSchema.optional(),
   registeredName: z.string().min(3).max(100).optional(),

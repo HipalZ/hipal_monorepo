@@ -25,10 +25,11 @@ import {
   calculateReward,
 } from "../utils/helpers";
 import { useSearchParams } from "next/navigation";
-import useCouponTemp from "../store/useCouponTemp";
+import { useError } from "../store/useError";
 
 export const usePayments = () => {
   const { businessDetails } = useBusinessDetails();
+  const { setOpenErrorModal, setError } = useError();
   const pathName = usePathname();
   const { errorText } = useErrorHandling();
   const { loyaltySetting } = useLoyaltyData();
@@ -458,7 +459,9 @@ export const usePayments = () => {
     };
     if (res.status === 400) {
       setIsLoading(false);
-      return toast.error(response?.message || "Something went wrong");
+      setOpenErrorModal(true);
+      setError(response.message);
+      return;
     }
     if (response?.data?.order_id) {
       let finalReward = 0;
