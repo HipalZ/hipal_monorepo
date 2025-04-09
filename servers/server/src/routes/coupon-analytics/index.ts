@@ -152,11 +152,11 @@ const couponAnalyticsRouter = new Hono()
       } = await c.req.json();
 
       if (removeChannelIds.length > 0) {
-        CouponLink.deleteMany({
-          businessId: businessId,
-          couponId: couponId,
-          channelId: { $in: removeChannelIds },
-        });
+        // CouponLink.deleteMany({
+        //   businessId: businessId,
+        //   couponId: couponId,
+        //   channelId: { $in: removeChannelIds },
+        // });
 
         await CouponChannel.updateMany(
           {

@@ -158,10 +158,10 @@ const tagRouter = new Hono()
         },
         { isDeleted: true },
       );
-      await UserTags.deleteMany({
-        tagId,
-        userId,
-      });
+      // await UserTags.deleteMany({
+      //   tagId,
+      //   userId,
+      // });
       return c.json(
         {
           message: "tag delete successfully",

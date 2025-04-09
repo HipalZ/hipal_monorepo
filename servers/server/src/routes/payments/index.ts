@@ -2970,10 +2970,10 @@ const paymentsRouter = new Hono()
           },
         );
 
-        await UserTags.deleteMany({
-          userId,
-          tagId: { $in: removeTagIds },
-        });
+        // await UserTags.deleteMany({
+        //   userId,
+        //   tagId: { $in: removeTagIds },
+        // });
       }
 
       const payment = await Payment.findByIdAndUpdate(
