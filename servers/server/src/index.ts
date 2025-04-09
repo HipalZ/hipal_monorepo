@@ -14,13 +14,14 @@ import { catchErrorHandler } from "../middleware/catchErrorHandler";
 import { routes } from "./routes";
 import { customTimeoutException } from "./utils";
 
+import { checkOrigin } from "../middleware/checkOrigin";
 import "./utils/env";
 /////
 const app = new Hono({
   strict: true,
 });
 
-// app.use(checkOrigin());
+app.use(checkOrigin());
 
 const limiter = rateLimiter({
   windowMs: 15 * 60 * 1000,
