@@ -110,7 +110,7 @@ const couponCreated = async (
     businessId: createCoupon[0].businessId,
   }).select("_id");
   // Generate short URL
-  const longUrl = `https://api.test.hipalz.com/coupon-analytics/social/${createCoupon[0].businessId}/${createCoupon[0]._id}/${channelId?._id}`;
+  const longUrl = `https://api.hipalz.com/coupon-analytics/social/${createCoupon[0].businessId}/${createCoupon[0]._id}/${channelId?._id}`;
   const uniqueOrderId = nanoid(6);
   let createShortUrl = await UrlModel.findOne({ longUrl });
 
@@ -119,7 +119,7 @@ const couponCreated = async (
       [
         {
           longUrl: longUrl,
-          shortUrl: `https://api.test.hipalz.com/hipalz/${uniqueOrderId}`,
+          shortUrl: `https://api.hipalz.com/hipalz/${uniqueOrderId}`,
           urlCode: uniqueOrderId,
         },
       ],
