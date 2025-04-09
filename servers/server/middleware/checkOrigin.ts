@@ -22,10 +22,7 @@ export const checkOrigin = () => {
 
     const headerData = c.req.header();
 
-    if (
-      headerData?.host === "localhost:4500" &&
-      headerData?.temp_access_token === "78GGDFD22#$#$155MNNNNN"
-    ) {
+    if (headerData?.host === "localhost:4500") {
       return await next();
     }
 
