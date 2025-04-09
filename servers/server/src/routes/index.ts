@@ -10,6 +10,7 @@ import couponzRouter from "./couponz";
 import dishesRouter from "./dishes";
 import downloadRouter from "./download";
 import duesRouter from "./dues";
+import eventRouter from "./event";
 import groupRouter from "./groups";
 import hipalzRouter from "./hipalz";
 import hotelRouter from "./hotel";
@@ -75,6 +76,7 @@ export const routes = app
   .route("/hotel", hotelRouter)
   .route("/download", downloadRouter)
   .route("/menu", menuRouter)
-  .route("/bucket", bucketRouter);
+  .route("/bucket", bucketRouter)
+  .route("/event", eventRouter);
 
 export type AppType = typeof routes;

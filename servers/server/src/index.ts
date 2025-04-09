@@ -44,6 +44,7 @@ app.use(
   cors({
     origin: [
       "https://table.test.hipalz.com",
+      "https://2418-2401-4900-1cb4-8ea0-f802-33e4-64bd-3ab9.ngrok-free.app",
       "http://localhost:5173",
       "http://localhost:3001",
       "http://localhost:3000",

@@ -13,6 +13,7 @@ import Analytics from "@/assets/services/analytics.png";
 import Review from "@/assets/services/review.png";
 import POS from "@/assets/services/POS.png";
 import Zones from "@/assets/services/zones.png";
+import Events from "@/assets/services/events.jpg";
 
 export interface ILiteVersionCardButton {
   image: string;
@@ -48,6 +49,12 @@ export const getButtons = (
       text: "Payments",
       description: "All payment related stuff",
       navigateTo: "payments",
+    },
+    {
+      image: Events,
+      text: "Events",
+      description: "All events related stuff",
+      navigateTo: "events",
     },
   ],
   services: [
