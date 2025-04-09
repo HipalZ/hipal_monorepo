@@ -27,7 +27,7 @@ export default function Home() {
   }
 
   return (
-    <section className="bg-black pt-16">
+    <section className="pt-16 bg-black">
       <button onClick={handleRedirection} type="button" className="nav_btn hide_mobile">
         Contact us
       </button>
@@ -80,19 +80,7 @@ export default function Home() {
           </span>
         </center>
         <center>
-          <video
-            style={{
-              margin: "3rem 0",
-            }}
-            width="250"
-            height="500"
-            loop
-            muted
-            autoPlay
-          >
-            <source src="/fin.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
+         
         </center>
         <center
           style={{

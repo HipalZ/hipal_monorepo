@@ -79,19 +79,7 @@ const Restaurant = () => {
       <center>
         <div className="container">
           <motion.div className="first">
-            <video
-              style={{
-                marginTop: "1rem",
-              }}
-              width="380"
-              height="500"
-              loop
-              muted
-              autoPlay
-            >
-              <source src="/fin.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
+          
             <Image
               style={{
                 marginTop: "1rem",
