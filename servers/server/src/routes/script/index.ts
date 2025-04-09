@@ -358,7 +358,7 @@ const scriptRouter = new Hono()
     );
   })
 
-  .get("/add_zone_and_menu", async (c) => {
+  .get("/add_zone_and_menu/all", async (c) => {
     const business = await Business.find();
     for (const businessData of business) {
       const zone = await Zone.findOne({
@@ -461,7 +461,7 @@ const scriptRouter = new Hono()
     );
   })
 
-  .get("/add_zone_and_menu_for_pos", async (c) => {
+  .get("/add_zone_and_menu_for_pos/all", async (c) => {
     const business = await Business.find();
     for (const businessData of business) {
       const isHavePos = await BusinessPosConfig.findOne({
