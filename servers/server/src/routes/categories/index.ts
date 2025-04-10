@@ -365,9 +365,10 @@ const categoriesRouter = new Hono()
 
         // Find the active menu for the zone and business
         const menu = await Menu.findOne({
-          zoneIds: zone?._id,
+          zoneIds: tableName ? zone?._id : undefined,
           businessId,
           isActive: true,
+          ...(tableName ? {} : { default: true }),
           $or: [
             {
               days: { $in: [currentDay] },
@@ -485,9 +486,10 @@ const categoriesRouter = new Hono()
 
         // Find the active menu for the zone and business
         const menu = await Menu.findOne({
-          zoneIds: zone?._id,
+          zoneIds: tableName ? zone?._id : undefined,
           businessId,
           isActive: true,
+          ...(tableName ? {} : { default: true }),
           $or: [
             {
               days: { $in: [currentDay] },
@@ -501,21 +503,16 @@ const categoriesRouter = new Hono()
           ],
         }).lean();
 
-        console.log("menuallla", menu);
-
         if (!menu) {
           return respond(c, "Menu not found", true, 404, []);
         }
 
-        let query = {
+        const query = {
           businessId,
           hierarchy: "CHILD",
           isDeleted: false,
+          menuId: menuId || menu?._id,
         };
-
-        if (tableName) {
-          query["menuId"] = menu?._id;
-        }
 
         const existingCategories = await Category.find(query).populate({
           path: "dishIds",
