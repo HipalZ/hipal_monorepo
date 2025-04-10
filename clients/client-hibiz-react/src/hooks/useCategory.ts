@@ -185,7 +185,7 @@ export const normalizeAndMapKeys = (
 
 export const useBulkUploadDishes = () => {
   const queryClient = useQueryClient();
-  const businessData = useBusinessData((state) => state.businessData);
+  const {businessId,menuId} = useParams<{ businessId: string; menuId: string }>();
   const { setOpenMenu, resetStore } = useMenuPageStore((s) => ({
     setOpenMenu: s.setOpenMenu,
     resetStore: s.resetStore,
@@ -199,14 +199,14 @@ export const useBulkUploadDishes = () => {
         toast.success("Dishes uploaded successfully");
         setOpenMenu(false);
         queryClient.invalidateQueries({
-          queryKey: ["getAllDishes", businessData?._id],
+          queryKey: ["getAllDishes", businessId],
         });
         resetStore();
       } else {
         toast.error("An unexpected error occurred");
       }
     },
-    [queryClient, setOpenMenu, resetStore, businessData?._id],
+    [queryClient, setOpenMenu, resetStore, businessId],
   );
 
   const { mutateAsync, isPending } = useMutation({
@@ -234,7 +234,8 @@ export const useBulkUploadDishes = () => {
               .map((item: DishType) => ({
                 ...item,
                 dishTypes: [item.dishTypes],
-                businessId: businessData?._id,
+                businessId: businessId,
+                menuId: menuId,
                 name: item.name,
                 description: item.description?.slice(0, 190),
               }));
@@ -247,7 +248,7 @@ export const useBulkUploadDishes = () => {
             try {
               const res = await apiRpc.dishes[":businessId"].bulkUpload.$post({
                 param: {
-                  businessId: businessData?._id,
+                  businessId: businessId,
                 },
                 json: dishes,
               });

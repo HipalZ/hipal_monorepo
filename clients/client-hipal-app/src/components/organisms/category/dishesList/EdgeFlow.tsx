@@ -107,7 +107,7 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
             }}
           >
             {category.coverImage ? (
-              <div className="w-8 h-8 mb-1 overflow-hidden rounded-full">
+              <div className="w-12 h-12 mb-1 overflow-hidden rounded-full">
                 <Image
                   src={category.coverImage || "/placeholder.svg"}
                   alt={category.name}
@@ -181,7 +181,7 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
                 )}
               </InView>
 
-              {isGridLayout ? (
+              {!isGridLayout ? (
                 <div className="grid grid-cols-2 gap-2 p-2">
                   {dishesToRender.map((dishData: DishType, dishIndex) => (
                     <GridDishCard
