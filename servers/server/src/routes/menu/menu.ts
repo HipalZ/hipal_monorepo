@@ -261,13 +261,41 @@ const menuRouter = new Hono()
           name: tableName,
           businessId,
         }).lean();
-        if (!tableData) return respond(c, "Table not found", true, 404);
+
+        if (!tableData) {
+          const findDefaultZone = await Zone.findOne({
+            businessId,
+            name: "Default",
+          });
+
+          const createTable = new Table({
+            name: tableName,
+            businessId,
+            zoneId: findDefaultZone?._id,
+            internalZoneId: findDefaultZone?._id,
+            status: "EMPTY",
+            date: Date.now(),
+            visibility: true,
+          });
+
+          await createTable.save({ session });
+
+          const updateZone = await Zone.findByIdAndUpdate(
+            findDefaultZone?._id,
+            {
+              $push: {
+                tableIds: createTable._id,
+              },
+            },
+            { session },
+          );
+        }
 
         // Find the associated zone using either internalZoneId or zoneId
         const zone = await Zone.findOne({
           $or: [
-            { _id: tableData.internalZoneId, businessId },
-            { zoneId: tableData.zoneId, businessId },
+            { _id: tableData?.internalZoneId, businessId },
+            { zoneId: tableData?.zoneId, businessId },
           ],
         });
 
@@ -303,6 +331,7 @@ const menuRouter = new Hono()
             "menuType categoryLayout cardLayout primaryColor secondaryColor",
           );
 
+<<<<<<< HEAD
         if (!menu) {
           menu = await Menu.findOne({
             zoneIds: zone?._id,
@@ -326,6 +355,8 @@ const menuRouter = new Hono()
             );
         }
 
+=======
+>>>>>>> aa784517 (merge test to prod)
         if (!menu) return respond(c, "Menu not found", true, 404);
 
         return respond(c, "Menu fetched successfully", false, 200, {});

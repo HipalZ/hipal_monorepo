@@ -363,11 +363,11 @@ const categoriesRouter = new Hono()
         const currentTimeInMinutes =
           indianDate.getHours() * 60 + indianDate.getMinutes();
 
-        // Find the active menu for the zone and business
-        let menu = await Menu.findOne({
-          zoneIds: zone?._id,
+        const menu = await Menu.findOne({
+          zoneIds: tableName ? zone?._id : undefined,
           businessId,
           isActive: true,
+          ...(tableName ? {} : { default: true }),
           $or: [
             {
               days: { $in: [currentDay] },
@@ -381,32 +381,15 @@ const categoriesRouter = new Hono()
           ],
         }).lean();
 
-        if (!menu) {
-          menu = await Menu.findOne({
-            businessId,
-            isActive: true,
-            $or: [
-              {
-                days: { $in: [currentDay] },
-                startTime: { $lte: currentTimeInMinutes },
-                endTime: { $gte: currentTimeInMinutes },
-              },
-              {
-                days: { $in: [currentDay] },
-                $expr: { $eq: ["$startTime", { $add: ["$endTime", 1] }] },
-              },
-            ],
-          }).lean();
-        }
         let query = {
           businessId,
           hierarchy: "PARENT",
           isDeleted: false,
         };
 
-        // if (menuId || tableName) {
-        //   query["menuId"] = menuId || menu?._id;
-        // }
+        if (menuId || tableName) {
+          query["menuId"] = menuId || menu?._id;
+        }
         const existingCategories = await Category.find(query)
           .sort({ sequence: 1 })
           .select(
@@ -502,54 +485,34 @@ const categoriesRouter = new Hono()
           indianDate.getHours() * 60 + indianDate.getMinutes();
 
         // Find the active menu for the zone and business
-        // let menu = await Menu.findOne({
-        //   zoneIds: zone?._id,
-        //   businessId,
-        //   isActive: true,
-        //   $or: [
-        //     {
-        //       days: { $in: [currentDay] },
-        //       startTime: { $lte: currentTimeInMinutes },
-        //       endTime: { $gte: currentTimeInMinutes },
-        //     },
-        //     {
-        //       days: { $in: [currentDay] },
-        //       $expr: { $eq: ["$startTime", { $add: ["$endTime", 1] }] },
-        //     },
-        //   ],
-        // }).lean();
+        const menu = await Menu.findOne({
+          zoneIds: tableName ? zone?._id : undefined,
+          businessId,
+          isActive: true,
+          ...(tableName ? {} : { default: true }),
+          $or: [
+            {
+              days: { $in: [currentDay] },
+              startTime: { $lte: currentTimeInMinutes },
+              endTime: { $gte: currentTimeInMinutes },
+            },
+            {
+              days: { $in: [currentDay] },
+              $expr: { $eq: ["$startTime", { $add: ["$endTime", 1] }] },
+            },
+          ],
+        }).lean();
 
-        // if (!menu) {
-        //   menu = await Menu.findOne({
-        //     businessId,
-        //     isActive: true,
-        //     $or: [
-        //       {
-        //         days: { $in: [currentDay] },
-        //         startTime: { $lte: currentTimeInMinutes },
-        //         endTime: { $gte: currentTimeInMinutes },
-        //       },
-        //       {
-        //         days: { $in: [currentDay] },
-        //         $expr: { $eq: ["$startTime", { $add: ["$endTime", 1] }] },
-        //       },
-        //     ],
-        //   }).lean();
-        // }
+        if (!menu) {
+          return respond(c, "Menu not found", true, 404, []);
+        }
 
-        // if (!menu) {
-        //   return respond(c, "Menu not found", true, 404, []);
-        // }
-
-        let query = {
+        const query = {
           businessId,
           hierarchy: "CHILD",
           isDeleted: false,
+          menuId: menuId || menu?._id,
         };
-
-        // if (tableName) {
-        //   query["menuId"] = menu?._id;
-        // }
 
         const existingCategories = await Category.find(query).populate({
           path: "dishIds",
