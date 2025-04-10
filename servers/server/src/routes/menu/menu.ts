@@ -331,35 +331,9 @@ const menuRouter = new Hono()
             "menuType categoryLayout cardLayout primaryColor secondaryColor",
           );
 
-<<<<<<< HEAD
-        if (!menu) {
-          menu = await Menu.findOne({
-            zoneIds: zone?._id,
-            businessId,
-            isActive: true,
-            $or: [
-              {
-                days: { $in: [currentDay] },
-                startTime: { $lte: currentTimeInMinutes },
-                endTime: { $gte: currentTimeInMinutes },
-              },
-              {
-                days: { $in: [currentDay] },
-                $expr: { $eq: ["$startTime", { $add: ["$endTime", 1] }] },
-              },
-            ],
-          })
-            .lean()
-            .select(
-              "menuType categoryLayout cardLayout primaryColor secondaryColor",
-            );
-        }
-
-=======
->>>>>>> aa784517 (merge test to prod)
         if (!menu) return respond(c, "Menu not found", true, 404);
 
-        return respond(c, "Menu fetched successfully", false, 200, {});
+        return respond(c, "Menu fetched successfully", false, 200, menu);
       });
     },
   )
