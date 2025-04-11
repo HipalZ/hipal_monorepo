@@ -181,7 +181,7 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
                 )}
               </InView>
 
-              {!isGridLayout ? (
+              {isGridLayout ? (
                 <div className="grid grid-cols-2 gap-2 p-2">
                   {dishesToRender.map((dishData: DishType, dishIndex) => (
                     <GridDishCard

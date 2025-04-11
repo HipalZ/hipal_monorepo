@@ -71,7 +71,7 @@ const HorizontalCard = ({
             </div>
           )}
           <h3
-            className={cn("font-semibold line-clamp-2 leading-4 max-h-10 font-play", compactLayout ? "text-sm" : "text-base")}
+            className={cn("font-semibold line-clamp-2 leading-[1.25rem] max-h-[3.125rem] font-play", compactLayout ? "text-sm" : "text-base")}
             style={{ color: primaryColor }}
           >
             {dishData.name}
