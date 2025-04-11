@@ -486,7 +486,7 @@ const categoriesRouter = new Hono()
 
         // Find the active menu for the zone and business
         const menu = await Menu.findOne({
-          zoneIds: tableName ? zone?._id : undefined,
+          ...(tableName ? { zoneIds: zone?._id } : {}),
           businessId,
           isActive: true,
           ...(tableName ? {} : { default: true }),
