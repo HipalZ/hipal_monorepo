@@ -218,10 +218,10 @@ const MemoMainTypes = (props: IMainTypes) => {
                 />
 
                 {/* Icon or fallback initial (above line) */}
-                {parent.coverImage ? (
+                {parent?.coverImage ? (
                   <div className="relative z-10 w-5 h-5 mr-2 overflow-hidden rounded-full">
                     <Image
-                      src={parent.coverImage || "/placeholder.svg"}
+                      src={parent?.coverImage}
                       alt={parent.name}
                       className="object-cover w-full h-full"
                       width={20}
@@ -299,7 +299,7 @@ const MemoMainTypes = (props: IMainTypes) => {
                     <div className="w-16 h-16 mb-1 overflow-hidden bg-gray-100 rounded-full shadow-sm">
                       {category.coverImage ? (
                         <Image
-                          src={category.coverImage || "/placeholder.svg"}
+                          src={category?.coverImage}
                           alt={category.name}
                           className="object-cover w-full h-full"
                           width={64}
