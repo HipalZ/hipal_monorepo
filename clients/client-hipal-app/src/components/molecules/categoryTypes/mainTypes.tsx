@@ -274,7 +274,7 @@ const MemoMainTypes = (props: IMainTypes) => {
                     </div>
                     <span style={{
                       color: primaryColor,
-                    }} className="max-w-full text-base font-medium capitalize font-play line-clamp-2">{category.name}</span>
+                    }} className="max-w-full text-base font-medium capitalize proper-case font-play line-clamp-3">{category.name}</span>
                   </motion.button>
                 ))}
               </div>
@@ -282,9 +282,9 @@ const MemoMainTypes = (props: IMainTypes) => {
           ))}
 
           {standaloneCategories.length > 0 && (
-            <div className="mb-4">
-              <div className="flex items-center gap-2 px-4 py-2" style={{ color: primaryColor }}>
-                <span className="text-lg font-medium font-play">Categories</span>
+            <div className="h-screen mb-4">
+              <div className="flex px-4 py-2 items-centergap-2" style={{ color: primaryColor }}>
+                <span className="w-full p-4 text-2xl font-medium text-center font-play">Categories</span>
               </div>
 
               <div className="grid grid-cols-3 gap-3 px-4 py-2">
@@ -315,9 +315,13 @@ const MemoMainTypes = (props: IMainTypes) => {
                         </div>
                       )}
                     </div>
-                    <span style={{
+                    <span 
+                    style={{
                       color: primaryColor,
-                    }} className="max-w-full text-base font-semibold line-clamp-2 opacity-70 font-play">{category.name}</span>
+                    }} 
+                    className="max-w-full text-base font-medium proper-case line-clamp-3 font-play">
+                      {category.name}
+                    </span>
                   </motion.button>
                 ))}
               </div>

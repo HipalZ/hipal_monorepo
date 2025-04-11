@@ -1,5 +1,6 @@
 import { useLogin } from "@/components/store/useLogin";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import useTableData from "@/components/store/useTableData";
 import { PAGE_TYPES, routePaths } from "@/components/utils/routes";
 import { useParams } from "next/navigation";
 import { useCallback } from "react";
@@ -39,6 +40,7 @@ export const useErrorHandling = () => {
 export const useGoNext = () => {
   const customLink = useParams()?.businessId as string;
   const { direction, isPayment, invoiceUrl, urlFrom } = useLogin();
+  const  tableName = useTableData(s=>s.tableName);
 
   const goNext = useCallback(() => {
     let newUrl = `/${customLink}/explore?pay=${isPayment}`;
@@ -51,7 +53,7 @@ export const useGoNext = () => {
           newUrl = `/${customLink}/loyalty`;
           break;
         case "category":
-          newUrl = `/${customLink}/category?pay=${isPayment}`;
+          newUrl = `/${customLink}/category?pay=${isPayment}&tableName=${tableName}`;
           break;
         case "explore":
           newUrl = `/${customLink}/explore?pay=${isPayment}`;

@@ -24,7 +24,7 @@ const DishesList: FC<IDishesProps> = (props) => {
   const primaryColor = menuLayout?.primaryColor || "#ec4899"
   const secondaryColor = menuLayout?.secondaryColor || "#fce7f3"
   const isClassicLayout = menuLayout?.categoryLayout === 2
-  const isHorizontalCard = menuLayout?.cardLayout === 2
+  const isHorizontalCard = menuLayout?.cardLayout === 1
   const { setDishes } = useDishesStore()
 
   const subTypes = useMemo(() => {
@@ -80,14 +80,14 @@ const DishesList: FC<IDishesProps> = (props) => {
               childCategory={subTypes}
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}
-              isHorizontalCard={isHorizontalCard}
+              isHorizontalCard={!isHorizontalCard}
             />
           )}
         </>
       ) : (
         <EdgeFlow
           childCategory={subTypes}
-          isHorizontalCard={isHorizontalCard}
+          isHorizontalCard={!isHorizontalCard}
           primaryColor={primaryColor}
           secondaryColor={secondaryColor}
         />
