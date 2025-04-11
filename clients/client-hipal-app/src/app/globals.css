@@ -2637,3 +2637,9 @@ input[type='password'] {
   }
 }
 
+.proper-case {
+	text-transform: lowercase;
+  }
+  .proper-case::first-letter {
+	text-transform: uppercase;
+  }

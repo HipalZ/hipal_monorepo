@@ -191,7 +191,7 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
                   transition={{ duration: 0.2 }}
                   title={category.name} 
                 >
-                  {category.name} sankaleshashokharak
+                  {category.name}
                 </motion.span>
               </button>
             )
