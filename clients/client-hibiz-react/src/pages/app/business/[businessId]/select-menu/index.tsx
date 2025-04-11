@@ -15,7 +15,7 @@ import MemoizedHeader from "@/components/molecules/header"
 import LoadingSpinner from "@/components/atom/loadingSpinner"
 import { type Dish, useMenuCreationStore, type MenuLayout } from "@/components/store/useMenuCreationStore"
 import NavigationButtons from "@/components/menu-creation/navigation-buttons"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import useBusinessData from "@/components/store/useBusinessData"
 import StepIndicatior from "@/components/hotel/HotelStaff/StepIndicatior"
 import {
@@ -34,7 +34,6 @@ import ZoneAvailabilitySummary from "@/components/menu-creation/zone-availabilit
 
 // Import new modal components
 import CopyLayoutModal from "@/components/menu-creation/copy-layout-modal"
-import CopyMenuConfirmModal from "@/components/menu-creation/copy-menu-confirm-modal"
 import { useGetAllZones } from "@/hooks/useZone"
 
 // Lazy load step components for better performance
@@ -48,7 +47,8 @@ const Step7DaySelection = lazy(() => import("@/components/menu-creation/step7-da
 const Step8TimeSelection = lazy(() => import("@/components/menu-creation/step8-time-selection"))
 
 const MemoSelectMenu = () => {
-    const businessId = useBusinessData((s) => s.businessData?._id)
+    const outletInfo = useBusinessData((s) => s.outletInfo)
+    const { businessId } = useParams<{ businessId: string }>()
     const { isLoading, allMenuLayouts, refetch } = useGetAllLayouts(businessId as string)
     const { updatetingMenuLoader, updateMenuLayout } = useUpdateMenuLayout()
     const { createMenuLoader, createMenuLayout } = useCreateMenuLayout()
@@ -66,7 +66,7 @@ const MemoSelectMenu = () => {
         setShowCreationFlow,
         setCopyMenuLayoutId,
         setSourceMenuName,
-        
+
     } = useMenuCreationStore((state) => ({
         currentStep: state.currentStep,
         resetStore: state.resetStore,
@@ -227,7 +227,7 @@ const MemoSelectMenu = () => {
         ],
     )
 
-   
+
 
     // Render the current step
     const renderStep = useCallback(() => {
@@ -326,7 +326,7 @@ const MemoSelectMenu = () => {
             />
 
             {/* Copy Menu Confirm Modal */}
-           
+
 
             <div className="px-4 py-6 mx-auto">
                 {/* Zone Availability Summary */}
@@ -438,17 +438,21 @@ const MemoSelectMenu = () => {
                                     </div>
 
                                     <div className="flex flex-wrap gap-4 mt-6">
-                                        <Button
-                                            variant="secondary"
-                                            className="transition-transform hover:scale-105"
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                goToEditMenu(layout._id)
-                                            }}
-                                        >
-                                            <Boxes className="w-4 h-4 mr-2" />
-                                            Go to Menu
-                                        </Button>
+                                        {
+                                            !outletInfo?.isPosEnabled ? (
+                                                <Button
+                                                    variant="secondary"
+                                                    className="transition-transform hover:scale-105"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation()
+                                                        goToEditMenu(layout._id)
+                                                    }}
+                                                >
+                                                    <Boxes className="w-4 h-4 mr-2" />
+                                                    Go to Menu
+                                                </Button>
+                                            ):null
+                                        }
                                         <Button
                                             onClick={(e) => {
                                                 e.stopPropagation()
@@ -482,26 +486,29 @@ const MemoSelectMenu = () => {
                     })}
                 </div>
             </div>
-            <AdvancedBottomButton
-                fixed={true}
-                maxWidth="30rem"
-                buttons={[
-                    {
-                        text: "Copy Existing Layout",
-                        icon: <FaCopy />,
-                        onClick: () => setShowCopyLayoutModal(true),
-                        className: "pl-3 rounded-md w-full",
-                        disable: isLoading,
-                    },
-                    {
-                        text: "Create New Menu Layout",
-                        icon: <FaPlus />,
-                        onClick: handleCreateNew,
-                        className: "pl-3 rounded-md w-full",
-                        disable: isLoading,
-                    },
-                ]}
-            />
+            {
+                outletInfo?.isPosEnabled ? null :
+                    <AdvancedBottomButton
+                        fixed={true}
+                        maxWidth="30rem"
+                        buttons={[
+                            {
+                                text: "Copy Existing Layout",
+                                icon: <FaCopy />,
+                                onClick: () => setShowCopyLayoutModal(true),
+                                className: "pl-3 rounded-md w-full",
+                                disable: isLoading,
+                            },
+                            {
+                                text: "Create New Menu Layout",
+                                icon: <FaPlus />,
+                                onClick: handleCreateNew,
+                                className: "pl-3 rounded-md w-full",
+                                disable: isLoading,
+                            },
+                        ]}
+                    />
+            }
         </main>
     )
 }

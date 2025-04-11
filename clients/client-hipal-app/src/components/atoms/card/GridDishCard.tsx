@@ -50,12 +50,12 @@ const GridDishCard = ({ dishData, primaryColor = "#000000", secondaryColor = "#f
   return (
     <div className="flex flex-col">
       {/* Main dish card with fixed height */}
-      <div className="flex flex-col pb-[3.5rem] relative items-start overflow-hidden">
+      <div className="flex flex-col h-[26.5rem] pb-[3.5rem] relative items-start overflow-hidden">
         {/* Image section */}
         <div className="w-full cursor-pointer aspect-square " onClick={openDishDetails}>
           {dishData.images && dishData.images.length > 0 ? (
             <Image
-              src={dishData.images[0] || "/placeholder.svg"}
+              src={dishData?.images?.[0]}
               alt={dishData.name}
               width={300}
               height={300}

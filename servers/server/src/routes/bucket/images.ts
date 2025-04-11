@@ -4,7 +4,7 @@ import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { respond } from "../../utils/response";
-const admin = require("firebase-admin");
+import { z } from "zod";
 
 const imageBucketRouter = new Hono()
   .post("add_images", zValidator("json", imagesSchema), async (c) => {
@@ -56,6 +56,7 @@ const imageBucketRouter = new Hono()
   })
 
   .get("fetch_images", async (c) => {
+
     const categoryBuckets = await CategoryBucket.find().lean();
 
     if (!categoryBuckets || categoryBuckets.length === 0) {
@@ -84,6 +85,45 @@ const imageBucketRouter = new Hono()
       200,
       response,
     );
+  })
+
+  .get("fetch_Bucket_images", 
+    zValidator("query", z.object({ categoryId: z.string() })),
+    async (c) => {
+    const { categoryId } = c.req.query();
+    if (!categoryId) {
+      return respond(c, "Category ID is required", true, 400);
+    }
+
+    const category = await CategoryBucket.findById(categoryId).lean();
+    if (!category) {
+      return respond(c, "Category not found", true, 404);
+    }
+
+    const images = await Image.find({
+      categoryBucketId: category._id,
+    }).lean();
+
+    if (!images || images.length === 0) {
+      return respond(c, "No images found for this category", true, 404);
+    }
+
+    const response = {
+      categoryName: category.name,
+      images: images.map((image) => ({
+        name: image.name,
+        imageUrl: image.imageUrl,
+      })),
+    };
+
+    return respond(
+      c,
+      "Images fetched successfully",
+      false,
+      200,
+      response,
+    );
   });
+
 
 export default imageBucketRouter;

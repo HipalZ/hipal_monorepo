@@ -20,6 +20,8 @@ export async function storeImageAfterSave(
 ) {
   if (!image || !imagePreview) return;
 
+  console.log("imagePreview", imagePreview, image);
+
   const imageId = crypto.randomUUID();
   setIsLoading?.(true);
   try {

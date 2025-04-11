@@ -63,7 +63,7 @@ const HorizontalCard = ({
   return (
     <>
 
-      <div className={cn("flex relative items-center justify-between border-b border-gray-100", compactLayout ? "p-2" : "p-4")}>
+      <div className={cn("flex relative min-h-[11rem] items-center justify-between border-b border-gray-100", compactLayout ? "p-2" : "p-4")}>
         <div className={cn("flex-1 ", compactLayout ? "pr-2 pb-2 w-[60%]" : "pr-4 w-[70%]")}>
           {dishData?.dishTypes && outletInfo?.outLetType !== "OTHER" && (
             <div className="my-auto mb-1">
@@ -71,7 +71,7 @@ const HorizontalCard = ({
             </div>
           )}
           <h3
-            className={cn("font-semibold line-clamp-2 leading-4 max-h-10 font-play", compactLayout ? "text-sm" : "text-base")}
+            className={cn("font-semibold line-clamp-2 leading-[1.25rem] max-h-[3.125rem] font-play", compactLayout ? "text-sm" : "text-base")}
             style={{ color: primaryColor }}
           >
             {dishData.name}
@@ -99,7 +99,7 @@ const HorizontalCard = ({
           compactLayout ? "w-[40%]" : "w-[30%]"
         )}>
           <div className={cn("overflow-hidden rounded-md", compactLayout ? "w-28 h-28" : "w-32 h-32")}>
-            {dishData.images && dishData.images.length > 0 ? (
+            {dishData?.images && dishData?.images.length > 0 ? (
               <ShimmerImage
                 src={dishData?.images?.[0]}
                 alt="dish"
