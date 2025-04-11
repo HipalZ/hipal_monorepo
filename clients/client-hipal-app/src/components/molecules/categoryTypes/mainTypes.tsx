@@ -282,7 +282,7 @@ const MemoMainTypes = (props: IMainTypes) => {
           ))}
 
           {standaloneCategories.length > 0 && (
-            <div className="h-screen mb-4">
+            <div className="min-h-screen mb-4">
               <div className="flex px-4 py-2 items-centergap-2" style={{ color: primaryColor }}>
                 <span className="w-full p-4 text-2xl font-medium text-center font-play">Categories</span>
               </div>
