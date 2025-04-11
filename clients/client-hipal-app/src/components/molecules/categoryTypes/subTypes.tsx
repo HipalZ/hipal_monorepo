@@ -201,7 +201,7 @@ function MemoSubTypes({
                   type="button"
                   onClick={() => handleCategoryClick(cat)}
                   className={cn(
-                    "relative flex flex-col items-center px-2 py-2 m-2",
+                    "relative flex flex-col items-center px-2 py-2 mx-2",
                     active ? "" : "hover:bg-gray-50"
                   )}
                   whileTap={{ scale: 0.95 }}
@@ -255,7 +255,7 @@ function MemoSubTypes({
 
       {/* 2) Main content with vertical sections */}
       <div
-        className="w-full pt-4 pb-8 overflow-y-auto scroll-pt-48"
+        className="w-full pt-4 pb-8 overflow-y-auto scroll-pt-32"
         style={{ backgroundColor: `${secondaryColor}50` }}
       >
         {childCategory.map((cat: CategoryType, index) => {

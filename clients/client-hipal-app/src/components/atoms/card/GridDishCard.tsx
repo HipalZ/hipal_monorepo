@@ -18,9 +18,10 @@ interface GridDishCardProps {
   dishData: DishType
   primaryColor?: string
   secondaryColor?: string
+  isEdgeLayout?: boolean
 }
 
-const GridDishCard = ({ dishData, primaryColor = "#000000", secondaryColor = "#f5f5f5" }: GridDishCardProps) => {
+const GridDishCard = ({ dishData, primaryColor = "#000000", secondaryColor = "#f5f5f5", isEdgeLayout }: GridDishCardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { addToCart, cart } = useCartStore()
   const { setSelectedDish, isSelectedDish } = useActiveClass()
@@ -50,7 +51,8 @@ const GridDishCard = ({ dishData, primaryColor = "#000000", secondaryColor = "#f
   return (
     <div className="flex flex-col">
       {/* Main dish card with fixed height */}
-      <div className="flex flex-col h-[26.5rem] pb-[3.5rem] relative items-start overflow-hidden">
+      <div className={cn("flex flex-col min-h-[23.5rem] max-h-[26rem] pb-[3.5rem] relative items-start overflow-hidden"
+      )}>
         {/* Image section */}
         <div className="w-full cursor-pointer aspect-square " onClick={openDishDetails}>
           {dishData.images && dishData.images.length > 0 ? (
@@ -79,15 +81,15 @@ const GridDishCard = ({ dishData, primaryColor = "#000000", secondaryColor = "#f
             <MemoFoodType types={dishData?.dishTypes} />
           </div>
           <h3
-            className=" text-base font-semibold leading-5 text-black h-[3.75rem] line-clamp-3"
+            className="text-lg font-semibold font-play leading-[1.25rem] text-black h-[3.75rem] line-clamp-3"
             onClick={openDishDetails}
           >
-            {dishData.name} 
+            {dishData.name}
           </h3>
 
           <p className="mt-2 font-semibold text-black opacity-60">₹{dishData.price.toFixed(2)}</p>
 
-          {dishData.description && <p className="mt-1 text-xs text-gray-500 line-clamp-3">{dishData.description}</p>}
+          {dishData.description && <p className="mt-1 text-xs text-gray-500 line-clamp-3 h-[3rem]">{dishData.description}</p>}
         </div>
 
         {/* Add to cart button section - fixed at bottom */}

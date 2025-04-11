@@ -44,7 +44,7 @@ function RecommendedDishes({
   if (!processedDishes || processedDishes.length === 0) return null
 
   return (
-    <div className="p-4" style={{ backgroundColor: `${secondaryColor}10` }}>
+    <div className="py-4" style={{ backgroundColor: `${secondaryColor}10` }}>
       <Section title="" tag="h3">
         <div>
           <div className="flex flex-row items-center gap-4 mb-4">
