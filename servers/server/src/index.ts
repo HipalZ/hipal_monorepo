@@ -16,17 +16,16 @@ import { customTimeoutException } from "./utils";
 
 import "./utils/env";
 
-// Collect default metrics (Node.js, process, etc.)
+// Collect default metrics
 client.collectDefaultMetrics();
 
-// Create a counter for HTTP requests.
+// Define custom metrics
 const httpRequestsTotal = new client.Counter({
   name: "http_requests_total",
   help: "Total number of HTTP requests received by the application",
   labelNames: ["method", "route", "status_code"],
 });
 
-// Create a histogram for HTTP request durations (in seconds).
 const httpRequestDurationSeconds = new client.Histogram({
   name: "http_request_duration_seconds",
   help: "Duration of HTTP requests in seconds",
@@ -34,10 +33,7 @@ const httpRequestDurationSeconds = new client.Histogram({
   buckets: [0.1, 0.3, 0.5, 1, 2, 5],
 });
 
-// Create the Hono app.
-const app = new Hono({
-  strict: true,
-});
+const app = new Hono({ strict: true });
 
 // Rate limiting middleware
 const limiter = rateLimiter({
@@ -48,25 +44,16 @@ const limiter = rateLimiter({
 });
 app.use(limiter);
 
-// Custom middleware: Measure each request's duration and update custom metrics.
+// Custom middleware to record metrics
 app.use("*", async (c, next) => {
-  // Start timer using process.hrtime
   const start = process.hrtime();
-
-  // Process the request
   await next();
-
-  // When the response is finished, record metrics.
   const diff = process.hrtime(start);
   const durationSeconds = diff[0] + diff[1] / 1e9;
-
-  // Use the request URL as "route". For a more robust solution, you could extract a defined route.
   const route = c.req.url;
   const method = c.req.method;
-  // Use c.res.status if available; default to 200 if not set.
   const status_code = c.res.status || 200;
 
-  // Increment the counter and record the duration in the histogram.
   httpRequestsTotal.inc({ method, route, status_code });
   httpRequestDurationSeconds.observe(
     { method, route, status_code },
@@ -74,13 +61,13 @@ app.use("*", async (c, next) => {
   );
 });
 
-// Expose the metrics endpoint using the default registry from prom-client.
+// Expose /metrics endpoint using the default prom-client registry
 app.get("/metrics", async (c) => {
   c.header("Content-Type", client.register.contentType);
   return c.text(await client.register.metrics());
 });
 
-// --- Other middlewares and configuration ---
+// Other middlewares
 app.use(timeout(+Bun.env.TIMEOUT, customTimeoutException));
 app.use(secureHeaders());
 app.use(prettyJSON());
@@ -119,9 +106,7 @@ app.route("/", routes);
 app.get("/", async (c) => {
   return c.json({
     message: `Hipalz Backend RPC Server with Environment:${Bun.env.NODE_ENV}`,
-    data: {
-      pid: process.pid,
-    },
+    data: { pid: process.pid },
   });
 });
 
@@ -129,7 +114,6 @@ export default {
   port: Bun.env.PORT,
   fetch: app.fetch,
 };
-
 //@ts-ignore
 app.use(catchErrorHandler(app));
 
