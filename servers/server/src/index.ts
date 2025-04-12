@@ -16,14 +16,16 @@ import { customTimeoutException } from "./utils";
 
 import "./utils/env";
 
-// Collect default metrics
-client.collectDefaultMetrics();
+// Create a registry and collect default metrics
+const registry = new client.Registry();
+client.collectDefaultMetrics({ register: registry });
 
-// Define custom metrics
+// Create custom metrics, explicitly adding them to the registry
 const httpRequestsTotal = new client.Counter({
   name: "http_requests_total",
   help: "Total number of HTTP requests received by the application",
   labelNames: ["method", "route", "status_code"],
+  registers: [registry],
 });
 
 const httpRequestDurationSeconds = new client.Histogram({
@@ -31,6 +33,7 @@ const httpRequestDurationSeconds = new client.Histogram({
   help: "Duration of HTTP requests in seconds",
   labelNames: ["method", "route", "status_code"],
   buckets: [0.1, 0.3, 0.5, 1, 2, 5],
+  registers: [registry],
 });
 
 const app = new Hono({ strict: true });
@@ -44,7 +47,7 @@ const limiter = rateLimiter({
 });
 app.use(limiter);
 
-// Custom middleware to record metrics
+// Custom middleware to record metrics for each request
 app.use("*", async (c, next) => {
   const start = process.hrtime();
   await next();
@@ -54,6 +57,9 @@ app.use("*", async (c, next) => {
   const method = c.req.method;
   const status_code = c.res.status || 200;
 
+  // For debugging, you can log:
+  // console.log(`Recording metrics for ${method} ${route}: ${durationSeconds}s`);
+
   httpRequestsTotal.inc({ method, route, status_code });
   httpRequestDurationSeconds.observe(
     { method, route, status_code },
@@ -61,13 +67,13 @@ app.use("*", async (c, next) => {
   );
 });
 
-// Expose /metrics endpoint using the default prom-client registry
+// Expose the metrics endpoint using our registry
 app.get("/metrics", async (c) => {
-  c.header("Content-Type", client.register.contentType);
-  return c.text(await client.register.metrics());
+  c.header("Content-Type", registry.contentType);
+  return c.text(await registry.metrics());
 });
 
-// Other middlewares
+// Other middlewares and routes
 app.use(timeout(+Bun.env.TIMEOUT, customTimeoutException));
 app.use(secureHeaders());
 app.use(prettyJSON());
