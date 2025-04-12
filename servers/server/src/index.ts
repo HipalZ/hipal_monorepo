@@ -10,32 +10,70 @@ import { logger } from "hono/logger";
 import { prettyJSON } from "hono/pretty-json";
 import { secureHeaders } from "hono/secure-headers";
 import { timeout } from "hono/timeout";
+import * as client from "prom-client"; // Import prom-client for custom metrics
 import { catchErrorHandler } from "../middleware/catchErrorHandler";
 import { routes } from "./routes";
 import { customTimeoutException } from "./utils";
 
 import "./utils/env";
-/////
+
+client.collectDefaultMetrics();
+
+const httpRequestsTotal = new client.Counter({
+  name: "http_requests_total",
+  help: "Total number of HTTP requests received by the application",
+  labelNames: ["method", "route", "status_code"],
+});
+
+const httpRequestDurationSeconds = new client.Histogram({
+  name: "http_request_duration_seconds",
+  help: "Duration of HTTP requests in seconds",
+  labelNames: ["method", "route", "status_code"],
+  buckets: [0.1, 0.3, 0.5, 1, 2, 5],
+});
+
 const app = new Hono({
   strict: true,
 });
 
-// app.use(checkOrigin());
-
+// Rate limiting middleware
 const limiter = rateLimiter({
   windowMs: 15 * 60 * 1000,
   limit: 10000,
   standardHeaders: "draft-6",
   keyGenerator: (c) => c.req.header("authorization") ?? "new-user",
-  // store: new RedisStore({ client: redisClient }),
 });
-// // Apply the rate limiting middleware to all requests.
 app.use(limiter);
 
-const { printMetrics, registerMetrics } = prometheus();
+app.use("*", async (c, next) => {
+  // Start timer using process.hrtime
+  const start = process.hrtime();
 
+  // Continue processing the request
+  await next();
+
+  // When the response is finished, record metrics.
+  const diff = process.hrtime(start);
+  const durationSeconds = diff[0] + diff[1] / 1e9;
+
+  const route = c.req.url;
+  const method = c.req.method;
+  // Use c.res.status if available; default to 200 if not set
+  const status_code = c.res.status || 200;
+
+  // Increment the counter and record the duration in the histogram
+  httpRequestsTotal.inc({ method, route, status_code });
+  httpRequestDurationSeconds.observe(
+    { method, route, status_code },
+    durationSeconds,
+  );
+});
+
+const { printMetrics, registerMetrics } = prometheus();
 app.use("*", registerMetrics);
 app.get("/metrics", printMetrics);
+
+// Other middlewares
 app.use(timeout(+Bun.env.TIMEOUT, customTimeoutException));
 app.use(secureHeaders());
 app.use(prettyJSON());
@@ -54,8 +92,8 @@ app.use(
       "https://hipalz.com",
       "https://hibiz.hipalz.com",
       "https://hiclient.hipalz.com",
-    ], // Update this with your frontend URL
-    credentials: true, // Allow sending cookies
+    ],
+    credentials: true,
     allowHeaders: ["Authorization", "Content-Type", "x-refresh-token"],
   }),
 );
@@ -68,7 +106,6 @@ app.notFound((c) => c.json({ message: "Not Found", ok: false }, 404));
 (async () => {
   await connectDB();
 })();
-/////
 
 app.route("/", routes);
 
