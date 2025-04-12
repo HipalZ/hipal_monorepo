@@ -210,7 +210,7 @@ export interface IBusinessData {
   outletInfo: IOutlet;
   businessId: string;
   banners: IBannerPayload[];
-  menuData:IMenuLayout
+  menuData: IMenuLayout;
   _id: string;
   settings?: IStyles;
   business?: BusinessDetails;
@@ -225,6 +225,7 @@ export interface IBusinessData {
   coupon?: Coupon;
   timings: TimingType;
   kot: KotOrder;
+  events: birthdayEvents[];
 }
 
 export interface ICategories extends ICategory {
@@ -672,4 +673,13 @@ export interface OptionalPropsData {
   coinz?: number;
   tips?: number;
   couponId?: string;
+}
+
+export interface birthdayEvents {
+  _id: string;
+  isActive: boolean;
+  title: string;
+  heading: string;
+  description: string;
+  image: string;
 }
