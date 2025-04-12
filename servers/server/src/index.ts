@@ -1,5 +1,4 @@
 import { connectDB } from "@hi/utils";
-import { prometheus } from "@hono/prometheus";
 import { swaggerUI } from "@hono/swagger-ui";
 import { Hono } from "hono";
 import { rateLimiter } from "hono-rate-limiter";
@@ -17,14 +16,17 @@ import { customTimeoutException } from "./utils";
 
 import "./utils/env";
 
+// Collect default metrics (Node.js, process, etc.)
 client.collectDefaultMetrics();
 
+// Create a counter for HTTP requests.
 const httpRequestsTotal = new client.Counter({
   name: "http_requests_total",
   help: "Total number of HTTP requests received by the application",
   labelNames: ["method", "route", "status_code"],
 });
 
+// Create a histogram for HTTP request durations (in seconds).
 const httpRequestDurationSeconds = new client.Histogram({
   name: "http_request_duration_seconds",
   help: "Duration of HTTP requests in seconds",
@@ -32,6 +34,7 @@ const httpRequestDurationSeconds = new client.Histogram({
   buckets: [0.1, 0.3, 0.5, 1, 2, 5],
 });
 
+// Create the Hono app.
 const app = new Hono({
   strict: true,
 });
@@ -45,23 +48,25 @@ const limiter = rateLimiter({
 });
 app.use(limiter);
 
+// Custom middleware: Measure each request's duration and update custom metrics.
 app.use("*", async (c, next) => {
   // Start timer using process.hrtime
   const start = process.hrtime();
 
-  // Continue processing the request
+  // Process the request
   await next();
 
   // When the response is finished, record metrics.
   const diff = process.hrtime(start);
   const durationSeconds = diff[0] + diff[1] / 1e9;
 
+  // Use the request URL as "route". For a more robust solution, you could extract a defined route.
   const route = c.req.url;
   const method = c.req.method;
-  // Use c.res.status if available; default to 200 if not set
+  // Use c.res.status if available; default to 200 if not set.
   const status_code = c.res.status || 200;
 
-  // Increment the counter and record the duration in the histogram
+  // Increment the counter and record the duration in the histogram.
   httpRequestsTotal.inc({ method, route, status_code });
   httpRequestDurationSeconds.observe(
     { method, route, status_code },
@@ -69,11 +74,13 @@ app.use("*", async (c, next) => {
   );
 });
 
-const { printMetrics, registerMetrics } = prometheus();
-app.use("*", registerMetrics);
-app.get("/metrics", printMetrics);
+// Expose the metrics endpoint using the default registry from prom-client.
+app.get("/metrics", async (c) => {
+  c.header("Content-Type", client.register.contentType);
+  return c.text(await client.register.metrics());
+});
 
-// Other middlewares
+// --- Other middlewares and configuration ---
 app.use(timeout(+Bun.env.TIMEOUT, customTimeoutException));
 app.use(secureHeaders());
 app.use(prettyJSON());
