@@ -199,7 +199,7 @@ export default async function Explore({
             </div>
           )}
 
-          <BusinessImages businessId={data.business?._id} />
+          <BusinessImages businessId={data.business?.businessId} />
 
           <Footer
             themes={data?.settings || defaultThemes}
