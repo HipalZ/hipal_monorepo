@@ -21,9 +21,9 @@ interface GridDishCardProps {
   isEdgeLayout?: boolean
 }
 
-const GridDishCard = ({ dishData, primaryColor = "#000000", secondaryColor = "#f5f5f5", isEdgeLayout }: GridDishCardProps) => {
+const GridDishCard = ({ dishData, primaryColor = "#ec4899", secondaryColor = "#fce7f3", isEdgeLayout }: GridDishCardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const { addToCart, cart } = useCartStore()
+  const {  cart } = useCartStore()
   const { setSelectedDish, isSelectedDish } = useActiveClass()
   const { setCartPage, setShowCart } = useCart()
 
@@ -86,7 +86,7 @@ const GridDishCard = ({ dishData, primaryColor = "#000000", secondaryColor = "#f
           >
             {dishData.name}
           </h3>
-
+         
           <p className="mt-2 font-semibold text-black opacity-60">₹{dishData.price.toFixed(2)}</p>
 
           {dishData.description && <p className="mt-1 text-xs text-gray-500 line-clamp-3 h-[3rem]">{dishData.description}</p>}

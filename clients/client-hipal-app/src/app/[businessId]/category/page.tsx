@@ -5,9 +5,9 @@ import type { BusinessDetails } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
-// export const revalidate = 300;
+// export const dynamic = "force-dynamic";
+// export const fetchCache = "force-no-store";
+export const revalidate = 300;
 
 const CategorySkeleton = dynamics(
   () => import("@/components/atoms/progressBar/categoryLoader"),
@@ -163,7 +163,7 @@ export default async function Page({
         </div>
       </div>
       <LiveCart />
-      <CategoryPageBtn />
+      <CategoryPageBtn menuLayout={data?.menuData} />
     </main>
   );
 }

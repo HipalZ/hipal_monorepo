@@ -70,6 +70,7 @@ const imageBucketRouter = new Hono()
         }).lean();
         return {
           categoryName: category.name,
+          categoryId: category._id,
           images: images.map((image) => ({
             name: image.name,
             imageUrl: image.imageUrl,
@@ -123,7 +124,50 @@ const imageBucketRouter = new Hono()
       200,
       response,
     );
-  });
+  })
+
+  .get("fetch_bucket_by_business",
+    zValidator("query", z.object({ businessId: z.string() })),
+    async (c) => {
+      const { businessId } = c.req.query();
+      if (!businessId) {
+        return respond(c, "Business ID is required", true, 400);
+      }
+      console.log("businessId", businessId);
+      const categoryBuckets = await CategoryBucket.find({
+        businessId
+      }).lean();
+
+      if (!categoryBuckets || categoryBuckets.length === 0) {
+        return respond(c, "No categories found for this business", true, 404,[]);
+      }
+      
+    const response = await Promise.all(
+      categoryBuckets.map(async (category) => {
+        const images = await Image.find({
+          categoryBucketId: category._id,
+        }).lean();
+        return {
+          categoryName: category.name,
+          categoryId: category._id,
+          images: images.map((image) => ({
+            name: image.name,
+            imageUrl: image.imageUrl,
+          })),
+        };
+      }),
+    );
+
+      return respond(
+        c,
+        "Categories fetched successfully",
+        false,
+        200,
+        response,
+      );
+    },
+
+  )
 
 
 export default imageBucketRouter;
