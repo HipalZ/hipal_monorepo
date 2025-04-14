@@ -122,6 +122,13 @@ const AvailableCoinz = () => {
     setIsModalOpen(false);
   }, [setIsModalOpen]);
 
+  const checkAvailableCoinz = useMemo(() => {
+    if (claimedCoins) {
+      return userCoinz - claimedCoins;
+    }
+    return userCoinz;
+  }, [claimedCoins, userCoinz]);
+
   return (
     <>
       {showAlert ? (
@@ -163,7 +170,7 @@ const AvailableCoinz = () => {
           <div className="h-[15rem] p-4 bg-white text-black overflow-hidden rounded-t-2xl">
             <h1 className="text-xl font-semibold">
               Available Coins :{" "}
-              {claimedCoins ? userCoinz - claimedCoins : userCoinz}
+              {claimCouponz ? userCoinz : checkAvailableCoinz}
             </h1>
             <br />
             <input

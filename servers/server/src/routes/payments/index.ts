@@ -535,7 +535,7 @@ const paymentsRouter = new Hono()
       return runInTransaction(async (session) => {
         try {
           const requestData = await c.req.json();
-          const {
+          let {
             tableName,
             claimedCoins = 0,
             tips = 0,
@@ -544,13 +544,29 @@ const paymentsRouter = new Hono()
             removeTips,
           } = requestData;
           const { businessId } = c.req.param();
-
           const tempTable = await UserSession.findOne({
             businessId,
             tableName,
           });
           if (!tempTable) {
             return respond(c, "Table not found", true, 400, {});
+          }
+          const coupon = await Couponz.findOne({
+            _id: couponId,
+            businessId,
+            isDeleted: false,
+          });
+          if (coupon) {
+            const couponType = coupon?.config?.discountType;
+            const initialSubTotal = tempTable?.initialSubTotal;
+            if (couponType === "PERCENTAGE") {
+              claimedCoins = Math.min(
+                Math.round(initialSubTotal * (coupon?.config?.value / 100)),
+                coupon?.config?.upto || Number.POSITIVE_INFINITY,
+              );
+            } else {
+              claimedCoins = coupon?.config?.value as number;
+            }
           }
 
           const effectiveClaimedCoins = claimedCoins || tempTable.claimedCoins;
