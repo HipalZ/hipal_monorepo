@@ -64,14 +64,12 @@ const MemoApplyCouponz = () => {
     setClaimCouponz,
     claimedCoins,
     setClaimedCoins,
-    claimCouponz,
     billData
   } = usePaymentStore((s) => ({
     billValue: s.billValue,
     claimedCoins: s.claimedCoins,
     setClaimedCoins: s.setClaimedCoins,
     setClaimCouponz: s.setClaimCouponz,
-    claimCouponz: s.claimCouponz,
     billData: s.billData,
   }));
 

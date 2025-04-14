@@ -36,7 +36,7 @@ const MemoPaymentCard = () => {
     <>
       {outletInfo?.isPosEnabled ? <section className="relative">
         <center className="relative mx-4 text-xl py-6 bg-[#F4E9FD] rounded-2xl">
-          <h4 className="mt-1 text-4xl font-bold text-[#200866]">₹ {(Number(billData?.subTotal ?? 0) - Number(billData?.claimedCoins ?? 0)) || 0}</h4>
+          <h4 className="mt-1 text-4xl font-bold text-[#200866]">₹ {Math.abs(Number(billData?.subTotal ?? 0) - Number(billData?.claimedCoins ?? 0)) || 0}</h4>
         </center>
         {Math.abs(billData?.subTotal - billData?.claimedCoins) > 0 ? <article className="absolute text-center left-1/2 bottom-2 -translate-x-1/2 w-28 py-1 px-4 bg-[#6732F9] rounded-full">
           <button onClick={handleRedirection} type="button" className="text-base montserrat-400">View Bill</button>
