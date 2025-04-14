@@ -404,7 +404,6 @@ const usersRouter = new Hono()
           "OWNER",
         );
 
-        console.log("comparePass", comparePass);
 
         return c.json({
           message: "Owner Logged in Successfully",
@@ -452,7 +451,7 @@ const usersRouter = new Hono()
 
         const token = jwt.sign(
           {
-            id: user._id,
+            _id: user._id,
             role: "OWNER",
           },
           Bun.env.JWT_SECRET as string,
@@ -592,18 +591,18 @@ const usersRouter = new Hono()
       "CAPTAIN",
     );
 
-    const token = jwt.sign(
-      {
-        id: staff._id,
-        role: "CAPTAIN",
-      },
-      Bun.env.JWT_SECRET as string,
-    );
+    // const token = jwt.sign(
+    //   {
+    //     id: staff._id,
+    //     role: "CAPTAIN",
+    //   },
+    //   Bun.env.JWT_SECRET as string,
+    // );
 
-    setCookie(c, "token", token, {
-      httpOnly: false,
-      secure: false,
-    });
+    // setCookie(c, "token", token, {
+    //   httpOnly: false,
+    //   secure: false,
+    // });
 
     return c.json({
       message: "Staff Logged in Successfully",
@@ -1247,7 +1246,7 @@ const usersRouter = new Hono()
 
       const token = jwt.sign(
         {
-          id: existingUser._id,
+          _id: existingUser._id,
           role: "HIPAL_CUSTOMER",
         },
         Bun.env.JWT_SECRET as string,
@@ -1621,17 +1620,88 @@ const usersRouter = new Hono()
 
       const permissionToken = jwt.sign(
         {
-          id: existingUser._id,
+          _id: existingUser._id,
           permissions: Array.isArray(existingUser?.customRole?.[0]?.permissions)
             ? {}
             : existingUser?.customRole?.[0]?.permissions || {},
+          role: existingUser?.customRole?.[0]?.role || "CAPTAIN",
+          businessId: existingUser?.customRole?.[0]?.businessId || "",
         },
         Bun.env.JWT_SECRET as string,
       );
 
       setCookie(c, "token", permissionToken, {
-        httpOnly: true,
-        secure: true,
+        httpOnly: false,
+        secure: false,
+      });
+
+      return respond(c, "Session set successfully", false, 200, {});
+    },
+  )
+
+
+  .post(
+    "/seT_owner_session",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string(),
+        userId: z.string(),
+        bookMark: z.boolean().optional(),
+      }),
+    ),
+    async (c) => {
+      const requestData = await c.req.json();
+      const { businessId, userId, bookMark } = requestData;
+
+      const existingUser = await User.findOne(
+        {
+          _id: userId,
+          "customRole.businessId": businessId,
+        },
+        {
+          name: 1,
+          email: 1,
+          phone: 1,
+          customRole: {
+            $elemMatch: { businessId: businessId },
+          },
+        },
+      );
+
+      if (!existingUser) {
+        return respond(c, "User not found", true, 404, {});
+      }
+
+      if (bookMark) {
+        await User.findOneAndUpdate(
+          {
+            _id: userId,
+            "customRole.businessId": businessId,
+          },
+          {
+            $set: {
+              "customRole.$.bookMark": bookMark,
+            },
+          },
+        );
+      }
+
+      const permissionToken = jwt.sign(
+        {
+          _id: existingUser._id,
+          permissions: Array.isArray(existingUser?.customRole?.[0]?.permissions)
+            ? {}
+            : existingUser?.customRole?.[0]?.permissions || {},
+          role: existingUser?.customRole?.[0]?.role || "CAPTAIN",
+          businessId: existingUser?.customRole?.[0]?.businessId || "",
+        },
+        Bun.env.JWT_SECRET as string,
+      );
+
+      setCookie(c, "token", permissionToken, {
+        httpOnly: false,
+        secure: false,
       });
 
       return respond(c, "Session set successfully", false, 200, {});

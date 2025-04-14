@@ -1,4 +1,5 @@
 import type { Context, Next } from "hono";
+import { getCookie } from "hono/cookie";
 
 import type { JwtPayload } from "jsonwebtoken";
 //@ts-ignore
@@ -9,47 +10,27 @@ interface DecodedToken extends JwtPayload {
 }
 
 export const authTokenValidator = async (c: Context, next: Next) => {
-  const authHeader = c.req.header("Authorization");
-  const accessToken = authHeader ? authHeader.split(" ")[1] : null;
-  const refreshToken = c.req.header("x-refresh-token");
-
-  if (!accessToken && !refreshToken) {
-    return c.json(
-      { status: false, error: true, message: "Invalid Token!" },
-      401,
-    );
-  }
+  const token = getCookie(c, "token");
 
   let decodedToken: DecodedToken | undefined;
 
-  jwt.verify(
-    accessToken || "randomtoken",
-    Bun.env.JWT_SECRET,
-    (err: Error, decoded: JwtPayload) => {
-      if (err && refreshToken) {
-        try {
-          decodedToken = jwt.verify(
-            refreshToken,
-            Bun.env.JWT_SECRET,
-          ) as DecodedToken;
-        } catch (refreshErr) {
-          return c.json(
-            { status: false, error: true, message: "Invalid Token!" },
-            401,
-          );
-        }
-      } else if (!err) {
-        decodedToken = decoded as DecodedToken;
-      }
-    },
-  );
-
-  if (!decodedToken) {
-    return c.json(
-      { status: false, error: true, message: "Invalid Token!" },
-      401,
-    );
+  try {
+    if (!token) {
+      return c.json({ message: "Not Authorized" }, 401);
+    }
+    decodedToken = jwt.verify(
+      token,
+      Bun.env.JWT_SECRET as string,
+    ) as unknown as DecodedToken;
+  } catch (error) {
+    console.log("Error verifying token", error);
+    return c.json({ message: "Not Authorized" }, 401);
   }
+  if (!decodedToken) {
+    return c.json({ message: "Not Authorized" }, 401);
+  }
+
+  console.log("decodedToken", decodedToken);
 
   c.set("current_user", decodedToken);
 
