@@ -22,9 +22,9 @@ export const requireAuthorization = (roles: ClientRoles[]) => {
       "https://table.test.hipalz.com",
       "https://hiclient.hipalz.com",
     ];
-    if (!origins.includes(c.req.header("Origin") || "")) {
-      return c.json({ message: "Access Denied!" }, 401);
-    }
+    // if (!origins.includes(c.req.header("Origin") || "")) {
+    //   return c.json({ message: "Access Denied!" }, 401);
+    // }
 
     // const currentUser = c.get("current_user");
 
