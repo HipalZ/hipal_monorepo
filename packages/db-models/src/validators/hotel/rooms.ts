@@ -74,6 +74,7 @@ export const hotelRoomSession = z.object({
   checkOut: z.number().optional(),
   authCode: z.string().min(4).max(4).optional(),
   isAuthCodeVerified: z.boolean().optional().default(false),
+  source:z.string().optional(),
 });
 
 export const updateHotelRoom = z.object({

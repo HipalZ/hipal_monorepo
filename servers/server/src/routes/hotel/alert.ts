@@ -11,8 +11,10 @@ import {
 } from "@hi/db-models";
 import {
   type AcceptHotelAlertType,
+  type UpdateAlertCartType,
   acceptHotelAlert,
   hotelAlert,
+  updateAlertCart,
   updateRoomChat,
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
@@ -53,6 +55,8 @@ const scheduleAlertUpdate = (
   avgTime: number,
   checkStatus: string,
   newProgress: string,
+  businessId: string,
+  roomName: string,
 ) => {
   if (avgTime > 0) {
     // Calculate the run time: current time + avgTime minutes
@@ -74,6 +78,16 @@ const scheduleAlertUpdate = (
         ) {
           const alertData = await HotelAlert.findByIdAndUpdate(alertId, {
             alertProgress: newProgress,
+          });
+
+          const registrationTokens = await DeviceToken.find({
+            businessId: businessId,
+          });
+
+          registrationTokens.map(async (obj) => {
+            if (obj.notification) {
+              await sendPushNotification(obj.token, roomName);
+            }
           });
         }
       },
@@ -383,8 +397,8 @@ const hotelAlertRouter = new Hono()
 
         const serviceData = await HotelService.findById(serviceId);
         const avgCompletionTime = serviceData?.avgCompletionTime || 0;
-        const avgAcceptanceTime = serviceData?.avgAcceptanceTime || 0;
-        const avgDeliveryTime = serviceData?.avgDeliveryTime || 0;
+        // const avgAcceptanceTime = serviceData?.avgAcceptanceTime || 0;
+        // const avgDeliveryTime = serviceData?.avgDeliveryTime || 0;
 
         if (avgCompletionTime > 0) {
           // Schedule updates based on average times
@@ -393,18 +407,8 @@ const hotelAlertRouter = new Hono()
             avgCompletionTime,
             "DELIVERED",
             "ESCALATION",
-          );
-          scheduleAlertUpdate(
-            alert._id.toString(),
-            avgAcceptanceTime,
-            "ACCEPTED",
-            "WARNING",
-          );
-          scheduleAlertUpdate(
-            alert._id.toString(),
-            avgDeliveryTime,
-            "DELIVERED",
-            "WARNING",
+            requestData.businessId,
+            roomData.name,
           );
         }
       }
@@ -762,6 +766,34 @@ const hotelAlertRouter = new Hono()
 
       return respond(c, "Room chat complain created successfully", false, 200, {
         _id: newChatComplaint._id,
+      });
+    });
+  })
+
+  .put("/edit_alert_cart", zValidator("json", updateAlertCart), async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session) => {
+      const requestData = await c.req.json();
+      const { alertId, cart } = requestData as UpdateAlertCartType;
+
+      const alert = await HotelAlert.findById(alertId);
+
+      if (!alert) {
+        return respond(c, "Alert not found", true, 404, {});
+      }
+
+      const updatedAlert = await HotelAlert.findByIdAndUpdate(
+        alertId,
+        { cart: cart },
+        { session, new: true },
+      );
+
+      if (!updatedAlert) {
+        throw new Error("Failed to update alert");
+      }
+
+      return respond(c, "Alert cart updated successfully", false, 200, {
+        _id: updatedAlert._id,
       });
     });
   });

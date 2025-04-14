@@ -1,6 +1,7 @@
 import {
   Business,
   DeviceToken,
+  HotelAlert,
   HotelRoom,
   HotelRoomChat,
   HotelRoomChatReply,
@@ -587,6 +588,21 @@ const roomRouter = new Hono()
         }
       }
 
+      const alert = new HotelAlert({
+        businessId: roomExists.businessId,
+        userId: roomExists.userIds[0],
+        roomId: roomExists._id,
+        message: `Room ${roomExists.name} has been checked out`,
+        createdAt: Date.now(),
+        createdBy: roomExists.userIds[0],
+      });
+
+      await alert.save({ session });
+
+      if (!alert) {
+        throw new Error("Error creating alert");
+      }
+
       const updatedRoom = await HotelRoom.findByIdAndUpdate(
         roomId,
         {
@@ -752,6 +768,41 @@ const roomRouter = new Hono()
 
         return respond(c, "Review created successfully", false, 201, {
           _id: createReview._id,
+        });
+      });
+    },
+  )
+
+  .post(
+    "/update_room_session",
+    zValidator(
+      "json",
+      z.object({
+        roomId: z.string().min(2).max(50),
+        source: z.string().min(2).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
+        const { roomId, source } = requestData;
+
+        const roomSession = await HotelRoomSession.findOneAndUpdate(
+          {
+            roomId,
+          },
+          {
+            source,
+          },
+        );
+
+        if (!roomSession) {
+          return respond(c, "Room session not found", true, 404, {});
+        }
+
+        return respond(c, "update ", false, 200, {
+          _id: roomSession._id,
         });
       });
     },

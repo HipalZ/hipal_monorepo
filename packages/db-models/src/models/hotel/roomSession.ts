@@ -44,6 +44,11 @@ const hotelRoomsSessionSchema = new mongoose.Schema<HotelRoomSessionType>({
     required: false,
     default: false,
   },
+  source: {
+    type: String,
+    required: false,
+  },
+  
 });
 
 const HotelRoomSession: Model<HotelRoomSessionType> =
