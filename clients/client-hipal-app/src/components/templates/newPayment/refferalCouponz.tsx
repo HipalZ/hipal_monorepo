@@ -1,16 +1,22 @@
 import Image from "next/image";
-import React, { memo } from "react";
+import React, { memo, useRef } from "react";
 import birthdayCoupon from "@/assets/img/birthdayCouponComing.png";
 import referFriend from "@/assets/img/referFriend.png";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import BirthdayCardClaim from "@/components/atoms/subLoyalty/birthdayCardClaim";
+import { useInView } from "framer-motion";
 
 const MemoRefferalCouponz = () => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
+  const outletInfo = _useAllBusiness((s) => s.data?.outletInfo);
   return (
     <>
       <center className="my-2 text-xl text-black poppins-regular">
         Rewardz
       </center>
       <section className="flex items-center justify-around mt-6 poppins-regular">
-        <article className="coupon-card-responsive text-center bg-[#AF92FF] h-[15rem] rounded-2xl relative">
+        {outletInfo?.birthdayCampaign ? <BirthdayCardClaim ref={ref} isInView={isInView} /> : <article className="coupon-card-responsive text-center bg-[#AF92FF] h-[16.5rem] max-w-[190px] rounded-2xl relative">
           <Image
             src={birthdayCoupon}
             alt="birthdayCoupon"
@@ -28,9 +34,9 @@ const MemoRefferalCouponz = () => {
           >
             Coming soon
           </button>
-        </article>
-        <article className="coupon-card-responsive text-center bg-[#F6D13C] h-[15rem] rounded-2xl relative">
-          <center className="text-[#000000] text-lg font-semibold mt-12">
+        </article>}
+        <article className="coupon-card-responsive text-center bg-[#F6D13C] h-[16.5rem] max-w-[190px] rounded-2xl relative">
+          <center className="text-[#000000] text-lg font-semibold p-2">
             Refer a friend
           </center>
           <center className="text-[#000000] text-xs font-semibold">

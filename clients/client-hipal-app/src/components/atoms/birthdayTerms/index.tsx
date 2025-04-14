@@ -12,12 +12,13 @@ import type { birthdayEvents } from "@/components/types/businessData";
 import { useBirthday } from "@/components/store/useBirthday";
 import Link from "next/link";
 import { formatDate } from "@/components/utils/helpers";
+import { useParams } from "next/navigation";
 
 const MemoBirthdayTerm = ({ events }: { events: birthdayEvents[] }) => {
     const { setOpenModal } = useBirthday()
     const userDetails = useLogin((s) => s.userDetails)
     const logoUrl = useBusinessDetails((s) => s.businessDetails?.logoUrl)
-
+    const customLink = useParams()?.businessId as string;
     const shareYourDob = useCallback(() => {
         setOpenModal(true)
     }, [setOpenModal])
@@ -26,7 +27,7 @@ const MemoBirthdayTerm = ({ events }: { events: birthdayEvents[] }) => {
         <main className="min-h-screen pb-[5rem]">
             <center className="relative w-full h-full overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-[#9E725575] to-[#9E725550] z-10 pointer-events-none" />
-                <Link href="/explore" className="px-3 py-1 absolute left-4 top-4 bg-white rounded-lg z-20">
+                <Link href={`/${customLink}/explore`} className="px-3 py-1 absolute left-4 top-4 bg-white rounded-lg z-20">
                     <ArrowLeft size={16} color="black" />
                 </Link>
                 <center className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
@@ -41,9 +42,9 @@ const MemoBirthdayTerm = ({ events }: { events: birthdayEvents[] }) => {
                 <center style={{ transform: "rotate(-6deg)" }} className="flex items-center justify-center w-full absolute bottom-20 z-20">
                     <span className="text-center text-4xl dotgothic16-regular text-[#F51BAD]">{userDetails?.name}</span>
                 </center>
-                <center className="flex items-center justify-center w-full absolute bottom-8 z-20">
+                {userDetails?.dob ? <center className="flex items-center justify-center w-full absolute bottom-8 z-20">
                     <span className="text-center text-md text-[#F51BAD]">{formatDate(userDetails?.dob)}</span>
-                </center>
+                </center> : null}
             </center>
             <div className="bg-white">
                 {/* Banner */}
