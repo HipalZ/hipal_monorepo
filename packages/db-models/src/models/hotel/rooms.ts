@@ -100,6 +100,7 @@ const hotelRoomsSchema = new mongoose.Schema<HotelRoomType>({
   source: {
     type: String,
     required: false,
+    default: "",
   },
 });
 

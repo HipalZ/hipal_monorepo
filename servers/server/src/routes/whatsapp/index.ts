@@ -2167,6 +2167,7 @@ const whatsappRouter = new Hono()
                   {
                     $addToSet: {
                       userIds: user?._id,
+                      source: "",
                     },
                     roomStatus: "OCCUPIED",
                   },
