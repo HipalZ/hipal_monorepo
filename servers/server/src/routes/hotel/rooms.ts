@@ -591,21 +591,6 @@ const roomRouter = new Hono()
         }
       }
 
-      const alert = new HotelAlert({
-        businessId: roomExists.businessId,
-        userId: roomExists.userIds[0],
-        roomId: roomExists._id,
-        message: `Room ${roomExists.name} has been checked out`,
-        createdAt: Date.now(),
-        createdBy: roomExists.userIds[0],
-      });
-
-      await alert.save({ session });
-
-      if (!alert) {
-        throw new Error("Error creating alert");
-      }
-
       const updatedRoom = await HotelRoom.findByIdAndUpdate(
         roomId,
         {
