@@ -396,7 +396,7 @@ const hotelAlertRouter = new Hono()
         }
 
         const serviceData = await HotelService.findById(serviceId);
-        const avgCompletionTime = serviceData?.avgCompletionTime || 0;
+        const avgCompletionTime = serviceData?.avgCompletionTime || 2;
         // const avgAcceptanceTime = serviceData?.avgAcceptanceTime || 0;
         // const avgDeliveryTime = serviceData?.avgDeliveryTime || 0;
 
@@ -404,7 +404,7 @@ const hotelAlertRouter = new Hono()
           // Schedule updates based on average times
           scheduleAlertUpdate(
             alert._id.toString(),
-            avgCompletionTime,
+            2,
             "DELIVERED",
             "ESCALATION",
             requestData.businessId,
