@@ -99,6 +99,8 @@ const businessSchema = new mongoose.Schema<BusinessType>(
       required: true,
       default: 50,
     },
+    isBookingActive:{ type:Boolean, default:false },
+
   },
   {
     timestamps: true,

@@ -1,75 +1,72 @@
-import mongoose, { Schema, model, Types, HydratedDocument } from 'mongoose';
-import { z } from 'zod';
-import {
-  dateSchema,
-  requiredObjectIdString,
-} from './utils/common-schemas';
+import { Schema, model, Document, Types } from "mongoose";
+import { z } from "zod";
+import { dateSchema, requiredObjectIdString } from "./utils";
 
-const couponRemainingZod = z.object({
-  couponId: requiredObjectIdString('couponId'),
-  remaining: z.number().int().nonnegative(),
+// Zod schema for a coupon remaining item
+const couponRemainingZodSchema = z.object({
+  couponId: requiredObjectIdString("Coupon ID"),
+  remaining: z.number({ required_error: "Remaining is required" }),
+  versionId: z.string({ required_error: "Version ID is required" }),
 });
 
-const bookingBusinessZod = z.object({
-  businessId: requiredObjectIdString('businessId'),
-  date: dateSchema,
-  period: z.number().int().min(0).max(3),
-  slot: z.string().regex(/^([0-2]?\d):([0-5]\d)$/, { message: 'Invalid slot format' }),
-  remainingCapacity: z.number().int().nonnegative(),
-  couponsRemaining: z.array(couponRemainingZod).optional().default([]),
-  bookingsInThisSlot: z.array(requiredObjectIdString('bookingId')).optional().default([]),
-  archived_at: z.union([dateSchema, z.null()]).optional(),
-});
+// Zod schema for BookingBusiness
+export const bookingBusinessZodSchema = z
+  .object({
+    businessId: requiredObjectIdString("Business ID"),
+    date: dateSchema,
+    period: z.number({ required_error: "Period is required" }),
+    couponsRemaining: z.array(couponRemainingZodSchema).default([]),
+    explicitlyEdited: z.boolean().default(false),
+    archived_at: z.date().nullable().default(null),
+  })
+  .strict();
 
-type BookingBusinessType = z.infer<typeof bookingBusinessZod>;
-
-interface BookingBusinessDoc extends Omit<BookingBusinessType, 'businessId' | 'couponsRemaining' | 'bookingsInThisSlot'> {
+// TypeScript interface for a BookingBusiness document
+export interface IBookingBusiness extends Document {
   businessId: Types.ObjectId;
-  couponsRemaining?: { couponId: Types.ObjectId; remaining: number }[];
-  bookingsInThisSlot?: Types.ObjectId[];
-  archived_at?: Date | null;
+  date: Date;
+  period: number;
+  couponsRemaining: {
+    couponId: Types.ObjectId;
+    remaining: number;
+    versionId: string;
+  }[];
+  explicitlyEdited: boolean;
+  archived_at: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const BookingBusinessSchema = new Schema<BookingBusinessDoc>(
+const bookingBusinessSchema = new Schema<IBookingBusiness>(
   {
-    businessId: { type: Schema.Types.ObjectId, ref: 'Business', required: true },
+    businessId: {
+      type: Schema.Types.ObjectId,
+      ref: "Business",
+      required: true,
+    },
     date: { type: Date, required: true },
     period: { type: Number, required: true },
-    slot: { type: String, required: true },
-    remainingCapacity: { type: Number, required: true },
-    couponsRemaining: [{
-      couponId: { type: Schema.Types.ObjectId, ref: 'Coupon', required: true },
-      remaining: { type: Number, required: true },
-    }],
-    bookingsInThisSlot: [{ type: Schema.Types.ObjectId, ref: 'Booking' }],
+    couponsRemaining: {
+      type: [
+        {
+          couponId: {
+            type: Schema.Types.ObjectId,
+            ref: "COUPONZ",
+            required: true,
+          },
+          remaining: { type: Number, required: true },
+          versionId: { type: String, required: true },
+        },
+      ],
+      default: [],
+    },
+    explicitlyEdited: { type: Boolean, default: false },
     archived_at: { type: Date, default: null },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-BookingBusinessSchema.pre('save', function (next) {
-  const doc = this as HydratedDocument<BookingBusinessDoc>;
-  try {
-    bookingBusinessZod.parse({
-      businessId: doc.businessId.toString(),
-      date: doc.date,
-      period: doc.period,
-      slot: doc.slot,
-      remainingCapacity: doc.remainingCapacity,
-      couponsRemaining: (doc.couponsRemaining ?? []).map(c => ({
-        couponId: c.couponId.toString(),
-        remaining: c.remaining,
-      })),
-      bookingsInThisSlot: (doc.bookingsInThisSlot ?? []).map(id => id.toString()),
-      archived_at: doc.archived_at ?? null,
-    });
-    next();
-  } catch (err: any) {
-    next(err);
-  }
-});
-
-export const BookingBusinessModel = model<BookingBusinessDoc>(
-  'BookingBusiness',
-  BookingBusinessSchema
+export const BookingBusinessModel = model<IBookingBusiness>(
+  "BookingBusiness",
+  bookingBusinessSchema,
 );

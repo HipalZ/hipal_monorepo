@@ -9,7 +9,7 @@ const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
     })
     .transform((val) => new mongoose.Types.ObjectId(val)),
 );
-export const COUPONZ_TYPES = ["FIX", "RANDOM", "LIMITED"] as const;
+export const COUPONZ_TYPES = ["FIX", "RANDOM", "LIMITED", "BOOKINGS"] as const;
 export const DISCOUNT_TYPES = ["PERCENTAGE", "AMOUNT"] as const;
 export const AVAILABILITY = [
   "allthetime",
@@ -89,6 +89,12 @@ export const availabilitySchema = z.object({
   endTime: positiveNumber("endTime"),
 });
 
+export const bookingMetaSchema = z.object({
+  baseCharge: positiveNumber("baseCharge").optional(),
+  redeemableCoverCharge: positiveNumber("redeemableCoverCharge").optional(),
+  minGuests: positiveNumber("minGuests").optional(),
+});
+
 export const limitSchema = z.union([
   z
     .object({
@@ -165,6 +171,7 @@ export const couponSchema = z.object({
   promoteOnBill: z.boolean().default(false),
   businessId: ObjectIdSchema,
   config: couponConfigSchema,
+  bookingMeta: bookingMetaSchema.optional(),
   isActive: z.boolean().default(false),
   bgColour: z.string().optional(),
   isPublish: z.boolean().default(true),

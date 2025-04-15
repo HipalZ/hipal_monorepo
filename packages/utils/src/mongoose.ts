@@ -1,8 +1,8 @@
 import mongoose, { type ClientSession } from "mongoose";
 
-type TransactionCallback = (session: ClientSession) => Promise<void>;
+type TransactionCallback<T = void> = (session: ClientSession) => Promise<T>;
 
-export const runInTransaction = async (callback: TransactionCallback) => {
+export const runInTransaction = async <T = void>(callback: TransactionCallback<T>): Promise<T> => {
   const session: ClientSession = await mongoose.startSession();
   session.startTransaction();
   try {

@@ -2,6 +2,11 @@ import { Types } from 'mongoose';
 import { z } from 'zod';
 
 
+export const mongoIdZod = z.string().regex(/^[0-9a-fA-F]{24}$/, { message: 'Invalid ID format' });
+export const zodIdSchema = z.object({
+  _id: mongoIdZod,
+});
+
 export const dateSchema = z.preprocess((arg) => {
   if (typeof arg === 'string') {
     // Check if the string is in YYYY-MM-DD format (HTML date input)
@@ -36,3 +41,5 @@ export const requiredObjectIdString = (fieldName: string) =>
     .refine((val) => Types.ObjectId.isValid(val), {
       message: `Invalid ${fieldName}`,
     });
+
+export const halfHourTimeRegex = /^(0\d|1\d|2[0-3]):(00|30)$/;

@@ -12,6 +12,15 @@ const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const { Schema } = mongoose;
 
+const bookingMetaSchema = new Schema(
+  {
+    baseCharge: { type: Number, required: false },
+    redeemableCoverCharge: { type: Number, required: false },
+    minGuests: { type: Number, required: false },
+  },
+  { _id: false } // prevent creation of an _id for the subdocument
+);
+
 const couponConfigSchema = new Schema({
   value: {
     type: Number,
@@ -88,6 +97,7 @@ const couponSchema = new mongoose.Schema<CouponzType>({
     ref: "Business",
   },
   config: couponConfigSchema,
+  bookingMeta: bookingMetaSchema,
   isActive: {
     type: Boolean,
     default: true,

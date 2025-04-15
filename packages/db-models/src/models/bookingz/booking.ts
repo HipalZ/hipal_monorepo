@@ -1,93 +1,98 @@
-import mongoose, { Schema, model, Types, HydratedDocument } from 'mongoose';
+import { Schema, model, Document, Types } from 'mongoose';
 import { z } from 'zod';
-import {
-  dateSchema,
-  objectIdString,
-  requiredObjectIdString,
-} from './utils/common-schemas';
+import { dateSchema, halfHourTimeRegex, requiredObjectIdString } from './utils';
 
-const bookingStatus = ['pending', 'booking-paid', 'cancelled', 'check-in', 'billed', 'expired'] as const
-const bookingZod = z.object({
-  userId: objectIdString('userId'),
-  createdByUserId: requiredObjectIdString('createdByUserId'),
-  businessId: requiredObjectIdString('businessId'),
+
+// Zod schema for Booking with half‑hour validation for the "slot" field
+export const bookingZodSchema = z.object({
+  customerId: z.string().nullable(), // Optional; can be further validated as ObjectId if needed
+  createdByUserId: requiredObjectIdString('Created By User ID'),
+  businessId: requiredObjectIdString('Business ID'),
   bookingDate: dateSchema,
-  slot: z.string().regex(/^([0-2]?\d):([0-5]\d)$/, { message: 'Invalid slot format' }), // eg. "27:45"
-  period: z.number().min(0).max(3),
-  numberOfGuests: z.number().min(1),
-  couponId: objectIdString('couponId').optional(),
-  coverChargeTotal: z.number().min(0),
-  status: z.enum(bookingStatus),
-  holdExpiresAt: dateSchema.optional(),
-  walkInName: z.string().optional().nullable(),
-  walkInPhone: z.string().optional().nullable(),
-  walkInEmail: z.string().optional().nullable(),
-  qrCode: z.string().optional().nullable(),
-  checkInCount: z.number().optional().default(0),
-  archived_at: z.union([dateSchema, z.null()]).optional(),
-});
+  slot: z.string()
+    .min(1, { message: 'Slot is required' })
+    .regex(halfHourTimeRegex, { message: 'Slot must be in half-hour format (e.g. "09:00", "19:30")' }),
+  period: z.number({ required_error: 'Period is required' }),
+  numberOfGuests: z.number({ required_error: 'Number of guests is required' }),
+  coupon: z.any().optional(), // Snapshot of coupon details
+  bookingBill: z.number({ required_error: 'Booking bill is required' }),
+  redeemableCoverCharge: z.number().default(0),
+  status: z.enum(['pending', 'paid', 'cancelled', 'check-in', 'check-in-late', 'billed', 'expired']),
+  holdExpiresAt: z.date().optional(),
+  walkInName: z.string().optional(),
+  walkInPhone: z.string().optional(),
+  walkInEmail: z.string().optional(),
+  qrCode: z.string().optional(),
+  uniqueCode: z.string().optional(),
+  bookingPaymentId: z.string().optional(),
+  checkInCount: z.number().default(0),
+  minCheckInTime: z.date(),
+  maxCheckInTime: z.date(),
+  note: z.string().default(''),
+  archived_at: z.date().nullable().default(null),
+}).strict();
 
-type BookingType = z.infer<typeof bookingZod>;
-
-interface BookingDoc extends Omit<BookingType, 'userId' | 'createdByUserId' | 'businessId' | 'couponId'> {
-  userId?: Types.ObjectId | null;
+// TypeScript interface for a Booking document
+export interface IBooking extends Document {
+  customerId: Types.ObjectId | null;
   createdByUserId: Types.ObjectId;
   businessId: Types.ObjectId;
-  couponId?: Types.ObjectId;
   bookingDate: Date;
+  slot: string;
+  period: number;
+  numberOfGuests: number;
+  coupon?: any;
+  bookingBill: number;
+  redeemableCoverCharge: number;
+  status: 'pending' | 'paid' | 'cancelled' | 'check-in' | 'check-in-late' | 'billed' | 'expired';
   holdExpiresAt?: Date;
-  archived_at?: Date | null;
+  walkInName?: string;
+  walkInPhone?: string;
+  walkInEmail?: string;
+  qrCode?: string;
+  uniqueCode?: string;
+  bookingPaymentId?: string;
+  checkInCount: number;
+  minCheckInTime: Date;
+  maxCheckInTime: Date;
+  note: string;
+  archived_at: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const BookingSchema = new Schema<BookingDoc>(
+// Mongoose schema for Booking
+const bookingSchema = new Schema<IBooking>(
   {
-    userId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+    customerId: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     createdByUserId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     businessId: { type: Schema.Types.ObjectId, ref: 'Business', required: true },
     bookingDate: { type: Date, required: true },
     slot: { type: String, required: true },
     period: { type: Number, required: true },
     numberOfGuests: { type: Number, required: true },
-    couponId: { type: Schema.Types.ObjectId, ref: 'Coupon' },
-    coverChargeTotal: { type: Number, required: true },
-    status: { type: String, enum: bookingStatus, required: true },
+    coupon: { type: Schema.Types.Mixed },
+    bookingBill: { type: Number, required: true },
+    redeemableCoverCharge: { type: Number, default: 0 },
+    status: {
+      type: String,
+      enum: ['pending', 'paid', 'cancelled', 'check-in', 'check-in-late', 'billed', 'expired'],
+      required: true,
+    },
     holdExpiresAt: { type: Date },
-    walkInName: { type: String, default: null },
-    walkInPhone: { type: String, default: null },
-    walkInEmail: { type: String, default: null },
-    qrCode: { type: String, default: null },
+    walkInName: { type: String },
+    walkInPhone: { type: String },
+    walkInEmail: { type: String },
+    qrCode: { type: String },
+    uniqueCode: { type: String },
+    bookingPaymentId: { type: String },
     checkInCount: { type: Number, default: 0 },
+    minCheckInTime: { type: Date, required: true },
+    maxCheckInTime: { type: Date, required: true },
+    note: { type: String, default: '' },
     archived_at: { type: Date, default: null },
   },
   { timestamps: true }
 );
 
-BookingSchema.pre('save', function (next) {
-  const doc = this as HydratedDocument<BookingDoc>;
-  try {
-    bookingZod.parse({
-      userId: doc.userId?.toString() ?? null,
-      createdByUserId: doc.createdByUserId.toString(),
-      businessId: doc.businessId.toString(),
-      bookingDate: doc.bookingDate,
-      slot: doc.slot,
-      period: doc.period,
-      numberOfGuests: doc.numberOfGuests,
-      couponId: doc.couponId?.toString() ?? null,
-      coverChargeTotal: doc.coverChargeTotal,
-      status: doc.status,
-      holdExpiresAt: doc.holdExpiresAt,
-      walkInName: doc.walkInName,
-      walkInPhone: doc.walkInPhone,
-      walkInEmail: doc.walkInEmail,
-      qrCode: doc.qrCode,
-      checkInCount: doc.checkInCount,
-      archived_at: doc.archived_at ?? null,
-    });
-    next();
-  } catch (err: any) {
-    next(err);
-  }
-});
-
-export const BookingModel = model<BookingDoc>('Booking', BookingSchema);
+export const BookingModel = model<IBooking>('Booking', bookingSchema);

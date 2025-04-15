@@ -42,7 +42,8 @@ export const BusinessSchema = z.object({
   restaurantIds: z.array(ObjectIdSchema).optional(),
   hotelIds: z.array(ObjectIdSchema).optional(),
   expiry: z.number().optional(),
-  capacity: z.number().default(50)
+  capacity: z.number().default(50),
+  isBookingActive: z.boolean().default(false),
 });
 
 export const BranchSchema = z.object({

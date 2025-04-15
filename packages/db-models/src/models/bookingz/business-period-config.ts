@@ -1,62 +1,78 @@
-import { Schema, model, Types, HydratedDocument } from 'mongoose';
-import { z } from 'zod';
-import { requiredObjectIdString, dateSchema } from './utils/common-schemas';
+import { Schema, model, Document, Types } from "mongoose";
+import { z } from "zod";
+import { requiredObjectIdString } from "./utils";
 
-const couponAllocationZod = z.object({
-  couponId: requiredObjectIdString('couponId'),
-  quantity: z.number().int().positive(),
+// Zod schema for a coupon allocation item
+const couponAllocationZodSchema = z.object({
+  couponId: requiredObjectIdString("Coupon ID"),
+  remaining: z.number({ required_error: "Remaining is required" }),
 });
 
-const businessPeriodConfigZod = z.object({
-  businessDayConfigId: requiredObjectIdString('businessDayConfigId'),
-  period: z.number().int().min(0).max(3),
-  coverCharge: z.number().min(0),
-  couponAllocations: z.array(couponAllocationZod).optional().default([]),
-  archived_at: z.union([dateSchema, z.null()]).optional(),
-});
+// Zod schema for BusinessPeriodConfig
+export const businessPeriodConfigZodSchema = z
+  .object({
+    businessDayConfigId: requiredObjectIdString("Business Day Config ID"),
+    period: z.number({ required_error: "Period is required" }),
+    baseCharge: z.number().default(0),
+    redeemableCoverCharge: z.number().default(0),
+    couponAllocations: z.array(couponAllocationZodSchema).default([]),
+    isOpen: z.boolean().default(false),
+    archived_at: z.date().nullable().default(null),
+  })
+  .strict();
 
-type BusinessPeriodConfigType = z.infer<typeof businessPeriodConfigZod>;
+export const upsertPeriodPayloadSchema = businessPeriodConfigZodSchema
+  .pick({
+    baseCharge: true,
+    redeemableCoverCharge: true,
+    isOpen: true,
+    couponAllocations: true,
+  })
+  .partial();
 
-interface BusinessPeriodConfigDoc extends Omit<BusinessPeriodConfigType, 'businessDayConfigId' | 'couponAllocations'> {
+// TypeScript interface for a BusinessPeriodConfig document
+export interface IBusinessPeriodConfig extends Document {
   businessDayConfigId: Types.ObjectId;
-  couponAllocations?: { couponId: Types.ObjectId; quantity: number }[];
-  archived_at?: Date | null;
+  period: number;
+  baseCharge: number;
+  redeemableCoverCharge: number;
+  couponAllocations: { couponId: Types.ObjectId; remaining: number }[];
+  isOpen: boolean;
+  archived_at: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const BusinessPeriodConfigSchema = new Schema<BusinessPeriodConfigDoc>(
+const businessPeriodConfigSchema = new Schema<IBusinessPeriodConfig>(
   {
-    businessDayConfigId: { type: Schema.Types.ObjectId, ref: 'BusinessDayConfig', required: true },
+    businessDayConfigId: {
+      type: Schema.Types.ObjectId,
+      ref: "BusinessDayConfig",
+      required: true,
+    },
     period: { type: Number, required: true },
-    coverCharge: { type: Number, required: true },
-    couponAllocations: [{
-      couponId: { type: Schema.Types.ObjectId, ref: 'Coupon', required: true },
-      quantity: { type: Number, required: true },
-    }],
+    baseCharge: { type: Number, default: 0 },
+    redeemableCoverCharge: { type: Number, default: 0 },
+    couponAllocations: {
+      type: [
+        {
+          couponId: {
+            type: Schema.Types.ObjectId,
+            ref: "COUPONZ",
+            required: true,
+          },
+          remaining: { type: Number, required: true },
+        },
+      ],
+      default: [],
+    },
+    isOpen: { type: Boolean, default: false },
     archived_at: { type: Date, default: null },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-BusinessPeriodConfigSchema.pre('save', function (next) {
-  const doc = this as HydratedDocument<BusinessPeriodConfigDoc>;
-  try {
-    businessPeriodConfigZod.parse({
-      businessDayConfigId: doc.businessDayConfigId.toString(),
-      period: doc.period,
-      coverCharge: doc.coverCharge,
-      couponAllocations: (doc.couponAllocations ?? []).map(c => ({
-        couponId: c.couponId.toString(),
-        quantity: c.quantity,
-      })),
-      archived_at: doc.archived_at ?? null,
-    });
-    next();
-  } catch (err: any) {
-    next(err);
-  }
-});
-
-export const BusinessPeriodConfigModel = model<BusinessPeriodConfigDoc>(
-  'BusinessPeriodConfig',
-  BusinessPeriodConfigSchema
+export const BusinessPeriodConfigModel = model<IBusinessPeriodConfig>(
+  "BusinessPeriodConfig",
+  businessPeriodConfigSchema,
 );
