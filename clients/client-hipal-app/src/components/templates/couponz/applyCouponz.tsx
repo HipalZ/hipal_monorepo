@@ -1,17 +1,10 @@
-"use client";
-import React, { memo, useCallback, useEffect, useState } from "react";
-import { BiArrowBack } from "react-icons/bi";
+"use client"
+import { memo, useCallback, useEffect, useState } from "react";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import { useCouponz } from "@/components/store/useCouponz";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import {
-  calculateDiscount,
-  cn,
-  formatDate,
-  formatDiscount,
-  ICouponPage,
-} from "@/components/utils/helpers";
+import { calculateDiscount, ICouponPage } from "@/components/utils/helpers";
 import { toast } from "react-toastify";
 import confetti from "canvas-confetti";
 import { apiRpc } from "@hi/common";
@@ -22,14 +15,13 @@ import { IoCheckmark } from "react-icons/io5";
 import { RxCross2 } from "react-icons/rx";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
-import ShimmerImage from "@/components/atoms/imageshimmer";
 import { useErrorHandling } from "@/utils/helper";
 import { useUpdateBill } from "@/components/hooks/usePayments";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
-const AvailableDays = dynamic(() => import("./availableDays"), {
-  loading: () => <SkeletonLoader height={20} />,
+const ApplyCouponzComponent = dynamic(() => import("./applyCouponzComponent"), {
+  loading: () => <SkeletonLoader height={200} />,
 });
 
 const AlertToRemove = dynamic(
@@ -54,9 +46,8 @@ const MemoApplyCouponz = () => {
     showAlert: s.showAlert,
     setShowAlert: s.setShowAlert,
   }));
-  const { businessId, logoUrl } = useBusinessDetails((s) => ({
+  const { businessId } = useBusinessDetails((s) => ({
     businessId: s.businessDetails?.businessId,
-    logoUrl: s.businessDetails?.logoUrl,
   }));
 
   const { userDetails } = useLogin((s) => ({
@@ -73,14 +64,12 @@ const MemoApplyCouponz = () => {
     setClaimCouponz,
     claimedCoins,
     setClaimedCoins,
-    claimCouponz,
     billData
   } = usePaymentStore((s) => ({
     billValue: s.billValue,
     claimedCoins: s.claimedCoins,
     setClaimedCoins: s.setClaimedCoins,
     setClaimCouponz: s.setClaimCouponz,
-    claimCouponz: s.claimCouponz,
     billData: s.billData,
   }));
 
@@ -120,9 +109,8 @@ const MemoApplyCouponz = () => {
   })
 
   const [selectedCoupon, setSelectedCouponState] = useState(null);
-  const { applyCouponz, setApplyCouponz, setIsLoading } = useCouponTemp(
+  const { setApplyCouponz, setIsLoading } = useCouponTemp(
     (s) => ({
-      applyCouponz: s.applyCouponz,
       setApplyCouponz: s.setApplyCouponz,
       setIsLoading: s.setIsLoading,
     }),
@@ -134,42 +122,6 @@ const MemoApplyCouponz = () => {
 
   const applyCoupon = useCallback(
     async (coupon) => {
-      console.log("coupon", coupon?.conditions?.availability?.startTime);
-      // if (
-      //   coupon?.conditions?.availability?.startTime > 0 &&
-      //   coupon?.conditions?.availability?.endTime > 0
-      // ) {
-      //   const currentTime = new Date();
-      //   const currentHours = currentTime.getHours();
-      //   const currentMinutes = currentTime.getMinutes();
-      //   const [startHours, startMinutes] =
-      //     coupon.conditions.availability.startTime.split(".");
-      //   const [endHours, endMinutes] =
-      //     coupon.conditions.availability.endTime.split(".");
-      //   console.log(
-      //     "currentHours",
-      //     currentHours,
-      //     "currentMinutes",
-      //     currentMinutes,
-      //     "startHours",
-      //     startHours,
-      //     "startMinutes",
-      //     startMinutes,
-      //     "endHours",
-      //     endHours,
-      //     "endMinutes",
-      //     endMinutes,
-      //   );
-      //   const isWithinTimeRange =
-      //     (currentHours > startHours ||
-      //       (currentHours === startHours && currentMinutes >= startMinutes)) &&
-      //     (currentHours < endHours ||
-      //       (currentHours === endHours && currentMinutes <= endMinutes));
-      //   console.log("isWithinTimeRange", isWithinTimeRange);
-      //   if (!isWithinTimeRange) {
-      //     return toast.info("Coupon is not applicable at this time");
-      //   }
-      // }
       // Check if bill value is less than coupon value
       if (coupon?.conditions?.availability?.customDays?.length > 0) {
         const day = new Date().toLocaleString("en-US", { weekday: "long" });
@@ -289,10 +241,13 @@ const MemoApplyCouponz = () => {
   const removeCoupon = useCallback(() => {
     setAvailedCoupon({});
     setClaimCouponz(0);
-  }, [availedCoupon, claimCouponz]);
+    mutateAsync({
+      coinz: 0,
+    })
+    setApplyCouponz(false);
+  }, [mutateAsync, setClaimCouponz, setAvailedCoupon, setApplyCouponz]);
 
   // if availedCoupon from the apply couponz then calculate the discount
-
   useEffect(() => {
     if (availedCoupon?._id) {
       const { discountValue, resetClaimedCoins } = calculateDiscount(
@@ -352,9 +307,8 @@ const MemoApplyCouponz = () => {
         // Check bill value to classify as `greatDeals` or `missingOut`
         if (billValue >= conditions.billValue) {
           greatDeals.push(coupon);
-        } else {
-          missingOut.push(coupon);
         }
+        missingOut.push(coupon);
       });
 
       // Update state
@@ -375,246 +329,20 @@ const MemoApplyCouponz = () => {
     enabled: !!businessId && !!userDetails._id,
   });
 
-  const ApplyCouponzz = () => {
-    return (
-      <section className="bg-[#F1F0F5] overflow-y-auto h-full py-4 relative inter hide-scrollbar">
-        <section className="fixed top-0 z-20 flex justify-between w-full gap-4 p-2 bg-white">
-          <article className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={closeCouponz}
-              className="py-2 rounded-full z-[60] px-4 text-black bg-[#ffffff70] border"
-            >
-              <BiArrowBack />
-            </button>
-            <article>
-              <h1 className="text-lg text-black">Apply Couponz</h1>
-              <p className="text-[10px] text-[#676769]">
-                Bill Amount: ₹ {billValue}
-              </p>
-            </article>
-          </article>
-          <picture className="mr-6">
-            <ShimmerImage src={logoUrl} alt="logoUrl" width={44} height={44} />
-          </picture>
-        </section>
-        <br />
-        <br />
-        <h1 className="mx-4 mt-6 text-xs font-bold text-black">
-          Great deals you get on this billing
-        </h1>
-        {greatDeals?.length > 0 ? (
-          greatDeals?.map((coupon) => (
-            <section
-              key={coupon?._id}
-              className="flex mx-4 my-4 rounded-2xl inter"
-            >
-              <article className="w-full px-2 py-4 text-black bg-white shadow-2xl rounded-2xl">
-                <div
-                  className={cn(
-                    (availedCoupon?._id || billData?.couponId) === coupon?._id
-                      ? "bg-[#00C37E]"
-                      : "bg-[#9268EC]",
-                    "h-4 -mx-2 -my-4 overflow-hidden rounded-t-2xl mb-2",
-                  )}
-                />
-                <article className="flex items-center justify-between">
-                  <h1 className="p-1 mt-1 text-sm font-bold leading-none">
-                    {coupon?.name}
-                    <AvailableDays coupon={coupon} />
-                  </h1>
-                  {(availedCoupon?._id || billData?.couponId) === coupon?._id ? (
-                    <button
-                      type="button"
-                      className="text-[#f13f8a] text-sm mt-1 font-bold"
-                      onClick={removeCoupon}
-                    >
-                      Remove
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => applyCoupon(coupon)}
-                      className={cn(
-                        "on_active_bounce text-[#9268EC] text-sm mt-1 font-bold",
-                      )}
-                    >
-                      APPLY
-                    </button>
-                  )}
-                </article>
-                <div className="relative z-10 gap-2 px-1 mt-2">
-                  <div className="flex flex-col items-start space-y-1">
-                    <p className="text-xs font-semibold text-[#00C37E]">
-                      Get{" "}
-                      {formatDiscount(
-                        coupon?.config?.value,
-                        coupon?.config?.discountType,
-                      )}{" "}
-                      off on this bill
-                    </p>
-                  </div>
-                  <hr
-                    className="w-full col-span-2 my-3 -mx-2"
-                    style={{
-                      backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='1' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
-                        "#000000",
-                      )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='10' stroke-linecap='square'/%3e%3c/svg%3e\")`,
-                      backgroundRepeat: "no-repeat",
-                      backgroundPosition: "center",
-                      height: "3px",
-                      border: "none",
-                    }}
-                  />
-                  <div className="flex flex-col items-start space-y-1">
-                    <h3 className="text-xs text-[#858585]">
-                      Use this coupon & get{" "}
-                      {formatDiscount(
-                        coupon?.config?.value,
-                        coupon?.config?.discountType,
-                      )}{" "}
-                      off on bill above ₹ {coupon?.conditions?.billValue}.
-                      Maximum discount: {coupon?.config?.upto}
-                    </h3>
-                  </div>
-                </div>
-              </article>
-            </section>
-          ))
-        ) : (
-          <center className="mt-6 text-xs text-black">
-            No Eligible Couponz
-          </center>
-        )}
-        {missingOut?.length > 0 && (
-          <>
-            <h1 className="mx-4 mt-8 text-xs font-bold text-black">
-              Coupons you are missing out
-            </h1>
-            {missingOut.map((coupon) => (
-              <section
-                key={coupon?._id}
-                className="flex mx-4 my-4 rounded-2xl inter"
-              >
-                <article className="w-full px-2 py-4 text-black bg-white shadow-2xl rounded-2xl">
-                  <div className="h-4 bg-[#858585] -mx-2 -my-4 overflow-hidden rounded-t-2xl mb-2" />
-                  <article className="flex items-center justify-between">
-                    <h1 className="text-[#858585] p-1 mt-1 text-sm font-bold leading-none">
-                      {coupon?.name}
-                      <AvailableDays coupon={coupon} />
-                    </h1>
-                    <button
-                      type="button"
-                      className="text-[#858585] mt-1 text-sm font-bold"
-                      disabled
-                    >
-                      APPLY
-                    </button>
-                  </article>
-                  <div className="relative z-10 gap-2 px-1 mt-2">
-                    <div className="flex flex-col items-start space-y-1">
-                      <p className="text-xs font-semibold text-[#f13f8a]">
-                        Add ₹ {coupon?.conditions?.billValue - billValue} more
-                        to get{" "}
-                        {formatDiscount(
-                          coupon?.config?.value,
-                          coupon?.config?.discountType,
-                        )}{" "}
-                        off on this bill
-                      </p>
-                    </div>
-                    <hr
-                      className="w-full col-span-2 my-3 -mx-2"
-                      style={{
-                        backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='1' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
-                          "#000000",
-                        )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='10' stroke-linecap='square'/%3e%3c/svg%3e\")`,
-                        backgroundRepeat: "no-repeat",
-                        backgroundPosition: "center",
-                        height: "3px",
-                        border: "none",
-                      }}
-                    />
-                    <div className="flex flex-col items-start space-y-1">
-                      <h3 className="text-xs text-[#858585]">
-                        Use this coupon & get{" "}
-                        {formatDiscount(
-                          coupon?.config?.value,
-                          coupon?.config?.discountType,
-                        )}{" "}
-                        off on bill above ₹ {coupon?.conditions?.billValue}.
-                        Maximum discount: {coupon?.config?.upto}
-                      </h3>
-                    </div>
-                  </div>
-                </article>
-              </section>
-            ))}
-          </>
-        )}
-        {upcomingCouponz?.length > 0 && (
-          <>
-            <h1 className="mx-4 mt-8 text-xs font-bold text-black">
-              Upcoming Couponz
-            </h1>
-            {upcomingCouponz?.map((coupon) => (
-              <section
-                key={coupon?._id}
-                className="flex mx-4 my-4 rounded-2xl inter"
-              >
-                <article className="w-full px-2 py-4 text-black bg-white shadow-2xl rounded-2xl">
-                  <div className="h-4 bg-[#858585] -mx-2 -my-4 overflow-hidden rounded-t-2xl mb-2" />
-                  <article className="flex items-center justify-between">
-                    <h1 className="text-[#858585] p-1 mt-1 text-sm font-bold leading-none">
-                      {coupon?.name}
-                      <AvailableDays coupon={coupon} />
-                    </h1>
-                    <button
-                      type="button"
-                      className="text-[#858585] mt-1 text-xs font-bold"
-                      disabled
-                    >
-                      Available From{" "}
-                      {formatDate(coupon?.conditions?.couponStartDate)}
-                    </button>
-                  </article>
-                  <div className="relative z-10 gap-2 px-1 mt-2">
-                    <hr
-                      className="w-full col-span-2 my-3 -mx-2"
-                      style={{
-                        backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='1' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
-                          "#000000",
-                        )}' stroke-width='4' stroke-dasharray='6%2c 14' stroke-dashoffset='10' stroke-linecap='square'/%3e%3c/svg%3e\")`,
-                        backgroundRepeat: "no-repeat",
-                        backgroundPosition: "center",
-                        height: "3px",
-                        border: "none",
-                      }}
-                    />
-                    <div className="flex flex-col items-start space-y-1">
-                      <h3 className="text-xs text-[#858585]">
-                        Use this coupon & get{" "}
-                        {formatDiscount(
-                          coupon?.config?.value,
-                          coupon?.config?.discountType,
-                        )}{" "}
-                        off on bill above ₹ {coupon?.conditions?.billValue}.
-                        Maximum discount: {coupon?.config?.upto}
-                      </h3>
-                    </div>
-                  </div>
-                </article>
-              </section>
-            ))}
-          </>
-        )}
-      </section>
-    );
-  };
-
   return (
     <>
-      {showPopup ? <ApplyCouponDatePopup /> : <ApplyCouponzz />}
+      {showPopup ? <ApplyCouponDatePopup /> :
+        <ApplyCouponzComponent
+          closeCouponz={closeCouponz}
+          greatDeals={greatDeals}
+          missingOut={missingOut}
+          upcomingCouponz={upcomingCouponz}
+          removeCoupon={removeCoupon}
+          applyCoupon={applyCoupon}
+          billData={billData}
+          billValue={billValue}
+          availedCoupon={availedCoupon}
+        />}
       {showAlert ? (
         <AlertToRemove onClose={() => setShowAlert(false)} show>
           <DialogTitle

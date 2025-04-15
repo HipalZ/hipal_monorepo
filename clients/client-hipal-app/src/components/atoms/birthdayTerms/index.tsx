@@ -1,66 +1,35 @@
-"use client"
-import { useRouter } from "next/navigation";
-import { memo } from "react"
+"use client";
+import { memo, useCallback } from "react"
 import { motion } from "framer-motion"
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image"
 import foodImage from "@/assets/birthday/foodImage.png"
 import spark from "@/assets/birthday/spark.png"
 import HappyBirthday from "@/assets/birthday/happyBirthday.png"
-import complimentary from "@/assets/birthday/complimentary.png"
-import decoration from "@/assets/birthday/decoration.png"
-import exclusiveWins from "@/assets/birthday/exclusiveWins.png"
-import games from "@/assets/birthday/games.png"
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { useLogin } from "@/components/store/useLogin"
-import BottomButton from "@/components/molecules/bottomButton";
+import type { birthdayEvents } from "@/components/types/businessData";
+import { useBirthday } from "@/components/store/useBirthday";
+import Link from "next/link";
+import { formatDate } from "@/components/utils/helpers";
+import { useParams } from "next/navigation";
 
-const MemoBirthdayTerm = () => {
-    const router = useRouter()
+const MemoBirthdayTerm = ({ events }: { events: birthdayEvents[] }) => {
+    const { setOpenModal } = useBirthday()
     const userDetails = useLogin((s) => s.userDetails)
     const logoUrl = useBusinessDetails((s) => s.businessDetails?.logoUrl)
-    const onBack = () => {
-        router.back()
-    }
-
-    const offers = [
-        {
-            title: "Exclusive Wins",
-            heading: "x 3 Times on birthday month",
-            description: "Monday to Sunday with great offerz",
-            image: exclusiveWins
-        },
-        {
-            title: "Complimentary",
-            heading: "Complimentary Food & Beverages",
-            description: "Monday to Sunday with great offerz",
-            image: complimentary
-        },
-        {
-            title: "Decoration",
-            heading: "Decoration from us",
-            description: "Get 3 times more points on your birthday month",
-            image: decoration
-        },
-        {
-            title: "Games & Fun",
-            heading: "Games & Fun",
-            description: "Play & Earn more points on your birthday month",
-            image: games
-        }
-    ]
+    const customLink = useParams()?.businessId as string;
+    const shareYourDob = useCallback(() => {
+        setOpenModal(true)
+    }, [setOpenModal])
 
     return (
         <main className="min-h-screen pb-[5rem]">
             <center className="relative w-full h-full overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-[#9E725575] to-[#9E725550] z-10 pointer-events-none" />
-                <button
-                    onClick={onBack}
-                    type="button"
-                    className="px-3 py-1 absolute left-4 top-4 bg-white rounded-lg z-20"
-                >
+                <Link href={`/${customLink}/explore`} className="px-3 py-1 absolute left-4 top-4 bg-white rounded-lg z-20">
                     <ArrowLeft size={16} color="black" />
-                </button>
+                </Link>
                 <center className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
                     <Image src={logoUrl} alt="logoUrl" width={132} height={132} className="rounded-full" />
                 </center>
@@ -73,10 +42,13 @@ const MemoBirthdayTerm = () => {
                 <center style={{ transform: "rotate(-6deg)" }} className="flex items-center justify-center w-full absolute bottom-20 z-20">
                     <span className="text-center text-4xl dotgothic16-regular text-[#F51BAD]">{userDetails?.name}</span>
                 </center>
+                {userDetails?.dob ? <center className="flex items-center justify-center w-full absolute bottom-8 z-20">
+                    <span className="text-center text-md text-[#F51BAD]">{formatDate(userDetails?.dob)}</span>
+                </center> : null}
             </center>
             <div className="bg-white">
                 {/* Banner */}
-                {offers.map((offer, index) => (
+                {events?.map((offer, index) => (
                     <motion.div
                         key={index?.toString()}
                         initial={{ opacity: 0, y: 20 }}
@@ -95,11 +67,11 @@ const MemoBirthdayTerm = () => {
                     </motion.div>
                 ))}
             </div>
-            <article className="text-center transform -translate-x-1/2 -translate-y-1/2 left-1/2 fixed bottom-0 bg-[#5117CD] text-white w-[85%] rounded-full px-3 py-2">
+            {!userDetails?.dob ? <article onClick={shareYourDob} className="z-50 text-center transform -translate-x-1/2 -translate-y-1/2 left-1/2 fixed bottom-0 bg-[#5117CD] text-white w-[85%] rounded-full px-3 py-2">
                 <button type="button">
                     Share Your DOB
                 </button>
-            </article>
+            </article> : null}
         </main >
     )
 }

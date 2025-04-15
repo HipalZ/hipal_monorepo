@@ -41,7 +41,7 @@ const MemoOtherOutletCard = ({
           )}
           <h3 className="mb-1 text-lg font-semibold text-[#000000]">{dishData.name}</h3>
           {Number(price) > 1 && (
-            <p className="text-sm text-muted-foreground">₹ {Number(price).toLocaleString("en-IN")}</p>
+            <p className="text-sm text-primary">₹ {Number(price).toLocaleString("en-IN")}</p>
           )}
           {dishData?.description && (
             <div className="mt-2 text-xs leading-3 text-[#000000]">

@@ -51,3 +51,15 @@ export interface BulkPreviewProps {
   selectedStaffIds: string[]
 }
 
+export interface ImageData {
+  id: string
+  file: File
+  preview: string
+  name: string
+  description: string
+  imageUrl?: string
+  status: "pending" | "uploading" | "uploaded" | "saving" | "saved" | "error"
+  error?: string
+}
+
+

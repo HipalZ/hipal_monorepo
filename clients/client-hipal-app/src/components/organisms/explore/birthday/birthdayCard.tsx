@@ -1,4 +1,4 @@
-"use client";
+"use client"
 import Lottie from 'lottie-react'
 import { memo } from 'react';
 import lottieBirthday from "@/assets/lottie/birthday.json";

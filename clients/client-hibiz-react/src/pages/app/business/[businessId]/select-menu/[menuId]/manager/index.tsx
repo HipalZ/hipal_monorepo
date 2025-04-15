@@ -133,7 +133,39 @@ const MemoiseManager = () => {
           <MemoizedHeader  title={pageTitle} leftIcon={<FaArrowLeft />} />
         </article>
 
-        <div className="px-4 py-2 font-semibold bg-white border-b border-gray-200">
+     
+
+        {/* Mobile navigation */}
+        <section className="absolute flex w-full px-4 space-x-4 overflow-auto text-sm text-nowrap flex-nowrap hide-scrollbar mobile-only">
+          {sidebarItems.map((item) => (
+            <button
+              className={cn(
+                "pb-3 pt-4",
+                isPageSelected(selectedPage, item.text) ? "border-b-2 border-black transition-all" : "",
+              )}
+              key={item.text}
+              type="button"
+              onClick={item.onClick}
+            >
+              {item.text}
+            </button>
+          ))}
+        </section>
+
+        {/* Search and filter (except for Quick Menu) */}
+        {selectedPage !== "QUICK_MENU" && (
+          <>
+            <Filter />
+            <Search />
+          </>
+        )}
+      </div>
+     
+
+      {/* Sidebar for desktop */}
+      <Sidebar items={sidebarItems} />
+
+      <div className="px-4 py-4 font-semibold bg-white">
           <UIBreadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -167,35 +199,6 @@ const MemoiseManager = () => {
             </BreadcrumbList>
           </UIBreadcrumb>
         </div>
-
-        {/* Mobile navigation */}
-        <section className="absolute flex w-full px-4 space-x-4 overflow-auto text-sm text-nowrap flex-nowrap hide-scrollbar mobile-only">
-          {sidebarItems.map((item) => (
-            <button
-              className={cn(
-                "pb-3 pt-4",
-                isPageSelected(selectedPage, item.text) ? "border-b-2 border-black transition-all" : "",
-              )}
-              key={item.text}
-              type="button"
-              onClick={item.onClick}
-            >
-              {item.text}
-            </button>
-          ))}
-        </section>
-
-        {/* Search and filter (except for Quick Menu) */}
-        {selectedPage !== "QUICK_MENU" && (
-          <>
-            <Filter />
-            <Search />
-          </>
-        )}
-      </div>
-
-      {/* Sidebar for desktop */}
-      <Sidebar items={sidebarItems} />
 
       {/* Main content area */}
       <section className="min-h-[100dvh]">

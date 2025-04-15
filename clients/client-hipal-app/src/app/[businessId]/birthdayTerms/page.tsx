@@ -3,6 +3,7 @@ import type { IBusinessData, IOutlet } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import { Suspense } from "react";
 import BirthdayTerm from "@/components/atoms/birthdayTerms";
+import { eventsApis } from "@/apis/birthdayTerms";
 
 export const revalidate = 300;
 
@@ -79,10 +80,16 @@ export async function generateMetadata({
     }
 }
 
-export default async function BirthdayTerms() {
+export default async function BirthdayTerms({
+    params,
+}: {
+    params: { businessId: string };
+}) {
+
+    const data = (await eventsApis.all(params.businessId)) as IBusinessData;
     return (
         <Suspense fallback={<SkeletonLoader height={200} />}>
-            <BirthdayTerm />
+            <BirthdayTerm events={data?.events} />
         </Suspense>
     );
 }

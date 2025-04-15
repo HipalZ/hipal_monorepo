@@ -13,6 +13,8 @@ import Analytics from "@/assets/services/analytics.png";
 import Review from "@/assets/services/review.png";
 import POS from "@/assets/services/POS.png";
 import Zones from "@/assets/services/zones.png";
+import Events from "@/assets/services/events.jpg";
+import ImageGrid from "@/assets/services/ImageGrid.png"
 
 export interface ILiteVersionCardButton {
   image: string;
@@ -49,11 +51,17 @@ export const getButtons = (
       description: "All payment related stuff",
       navigateTo: "payments",
     },
+    {
+      image: Events,
+      text: "Events",
+      description: "All events related stuff",
+      navigateTo: "events",
+    },
   ],
   services: [
     {
       image: HibizImage,
-      text: "Hi site",
+      text: "Explore Page",
       description: "Make your website more beautiful",
       navigateTo: "explorePage",
     },
@@ -63,33 +71,37 @@ export const getButtons = (
       description: "Manage your Zones and Tables",
       navigateTo: "zones",
     },
+
     ...(outletType === "MENU"
       ? [
-          {
-            image: MenuImage,
-            text: "Menu",
-            description: "Manage your menu",
-            navigateTo: "select-menu",
-          },
-        ]
+        {
+          image: MenuImage,
+          text: "Menu",
+          description: "Manage your menu",
+          navigateTo: "select-menu",
+        },
+        {
+          image: POS,
+          text: "POS",
+          description: "Manage your POS",
+          navigateTo: "pos",
+        },
+      ]
       : [
-          {
-            image: Services,
-            text: "Services",
-            description: "Manage your services",
-            navigateTo: "services",
-          },
-        ]),
-    ...(outletType === "MENU"
-      ? [
-          {
-            image: POS,
-            text: "POS",
-            description: "Manage your POS",
-            navigateTo: "pos",
-          },
-        ]
-      : []),
+        {
+          image: Services,
+          text: "Services",
+          description: "Manage your services",
+          navigateTo: "services",
+        },
+
+      ]),
+    {
+      image: ImageGrid,
+      text: "Thumbnail strip",
+      description: "Show case about yourself more",
+      navigateTo: "thumbnail",
+    },
   ],
   Coupon_And_Loyalty: [
     {

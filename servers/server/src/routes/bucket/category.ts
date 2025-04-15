@@ -14,19 +14,21 @@ const categoryBucketRouter = new Hono()
     //@ts-ignore
     return runInTransaction(async (session) => {
       const requestData = await c.req.json();
-      const { name, description, isActive } = requestData;
+      const { name, description, isActive, businessId } = requestData;
 
       const bucketAlreadyExists = await CategoryBucket.findOne({
         name: name.trim().toLowerCase(),
+        businessId: businessId,
       });
 
       if (bucketAlreadyExists) {
-        return respond(c, "Bucket already exists", true, 409, {});
+        return respond(c, "Bucket with the same name and business ID already exists", true, 409, {});
       }
       const newCategoryBucket = new CategoryBucket({
         name: name.trim().toLowerCase(),
         description,
         isActive,
+        businessId,
       });
 
       await newCategoryBucket.save({ session });
@@ -44,14 +46,15 @@ const categoryBucketRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session) => {
         const requestData = await c.req.json();
-        const { name, description, isActive } = requestData;
+        const { name, description, isActive, businessId } = requestData;
         const { categoryBucketId } = requestData;
         const bucketAlreadyExists = await CategoryBucket.findOne({
           name: name.trim().toLowerCase(),
+          businessId: businessId,
           _id: { $ne: categoryBucketId },
         });
         if (bucketAlreadyExists) {
-          return respond(c, "Bucket already exists", true, 409, {});
+          return respond(c, "Bucket with the same name and business ID already exists", true, 409, {});
         }
         const updatedCategoryBucket = await CategoryBucket.findByIdAndUpdate(
           categoryBucketId,
@@ -76,11 +79,12 @@ const categoryBucketRouter = new Hono()
 
   .get(
     "fetch_categories",
-
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
-        const categoryBuckets = await CategoryBucket.find({})
+        const categoryBuckets = await CategoryBucket.find({
+          businessId: { $exists: false }
+        })
           .select("name")
           .lean();
 

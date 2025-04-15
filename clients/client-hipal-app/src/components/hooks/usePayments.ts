@@ -127,7 +127,10 @@ export const usePayments = () => {
       const orderId = data?.data as string;
       const coinsObtained =
         finalAmount * (loyaltySetting?.setCashBackPercentage / 100);
+      console.log("coinsObtained", coinsObtained);
+      console.log("claimedCoins", claimedCoins);
       const existingCoins = claimedCoins ? userCoinz - claimedCoins : userCoinz;
+      console.log("existingCoins", existingCoins);
       let finalReward = 0;
       if (
         outletInfo?.isPosEnabled &&
@@ -137,6 +140,11 @@ export const usePayments = () => {
       ) {
         finalReward =
           billData?.subTotal * (loyaltySetting?.setCashBackPercentage / 100);
+        finalReward = calculateReward(
+          existingCoins,
+          coinsObtained,
+          loyaltySetting?.rewardLimit,
+        )?.finalReward;
       } else if (
         (availedCoupon?.cashbackAvailable && claimCouponz > 0) ||
         claimedCoins > 0 ||
@@ -148,7 +156,7 @@ export const usePayments = () => {
           loyaltySetting?.rewardLimit,
         )?.finalReward;
       }
-
+      console.log("finalReward", finalReward);
       if (res.status === 200) {
         toast.success("Payment successful");
         setRazorPaySignature("");

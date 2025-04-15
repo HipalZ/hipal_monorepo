@@ -20,7 +20,7 @@ import dynamic from "next/dynamic";
 import { useErrorHandling } from "@/utils/helper";
 import { toast } from "react-toastify";
 import { BottomBarSkeleton } from "@/components/atoms/paymentPageLoader";
-import { Link } from "lucide-react";
+import Link from "next/link";
 const Avatar = dynamic(() => import("@/components/atoms/avatar"), {
   loading: () => <BottomBarSkeleton />,
 });
@@ -155,14 +155,14 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
     >
       {/* top section */}
       <section className="sticky top-0 z-50 flex items-center justify-between w-full p-4 backdrop-blur-xl">
-          <button
-            type="button"
-            onClick={goBack}
-            className="inline-block px-3 py-1 bg-white rounded-full"
-          >
-            <RiArrowLeftLine className="text-black" />
-          </button>
-          <h3 className="ml-2">{data?.business?.name}</h3>
+        <button
+          type="button"
+          onClick={goBack}
+          className="inline-block px-3 py-1 bg-white rounded-full"
+        >
+          <RiArrowLeftLine className="text-black" />
+        </button>
+        <h3 className="ml-2">{data?.business?.name}</h3>
 
         <Link href={`/${customLink}/loyalty/${loyaltySetting?.loyaltyId}`}>
           <button

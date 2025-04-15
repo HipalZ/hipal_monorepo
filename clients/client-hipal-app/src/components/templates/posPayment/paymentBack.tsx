@@ -6,11 +6,11 @@ import useBusinessDetails from '@/components/store/useBusinessDetails';
 import { useCart } from '@/components/store/useCart';
 import useLoyaltyData from '@/components/store/useLoyaltyData';
 import { usePaymentStore } from '@/components/store/usePaymentStore';
+import useTableData from '@/components/store/useTableData';
 import type { IBusinessData } from '@/components/types/businessData';
 import { cn } from '@/components/utils/helpers';
-import { PAGE_TYPES, routePaths } from '@/components/utils/routes';
 import { useParams, usePathname, useRouter } from 'next/navigation';
-import React, { memo, useCallback, useEffect } from 'react'
+import { memo, useCallback, useEffect } from 'react';
 import { BiArrowBack } from 'react-icons/bi'
 
 const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
@@ -24,6 +24,7 @@ const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
     const { setBusinessDetails } = useBusinessDetails();
     const router = useRouter();
     const customLink = useParams()?.businessId as string;
+    const tableName = useTableData((s) => s.tableName)
     const { setLoyaltySetting } = useLoyaltyData();
     const { billValue, setEditBillModal } = usePaymentStore();
     const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
@@ -57,7 +58,7 @@ const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
             case "OFFLINE":
                 return setSelectedMode("INVOICE");
             case "INVOICE":
-                router.push(`${routePaths[PAGE_TYPES.CATEGORY](customLink || "")}`);
+                router.push(`/${customLink}/category?tableName=${tableName}`);
                 break;
             default:
                 break;

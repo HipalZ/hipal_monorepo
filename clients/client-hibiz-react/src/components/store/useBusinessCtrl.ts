@@ -12,7 +12,7 @@ export type businessType =
   | "OTHER"
   | "HOTEL"
   | "CLINIC"
-  | "RESTAURENT"
+  | "RESTAURANT"
   | "E-COMMERCE"
   | "FASHION_AND_JEWELRY"
   | "MENU";
@@ -22,7 +22,7 @@ export enum EnumBusinessType {
   OTHER = "OTHER",
   HOTEL = "HOTEL",
   CLINIC = "CLINIC",
-  RESTAURENT = "RESTAURENT",
+  RESTAURANT = "MENU",
   ECOMMERCE = "E-COMMERCE",
   FASHION_AND_JEWELRY = "FASHION_AND_JEWELRY",
   MENU = "MENU",

@@ -134,7 +134,7 @@ const BusinessInfo = memo(function BusinessInfo({
         }
         {businessDescription && (
           <p className="mt-1 text-sm md:text-base text-white/70 line-clamp-2 text-shadow">
-            {businessDescription} sankalesh ashok harak sir
+            {businessDescription}
           </p>
         )}
       </div>

@@ -8,6 +8,7 @@ import type { IMenuLayout, TimingType } from "@/components/types/businessData"
 import Header from "@/components/molecules/header"
 import EdgeFlow from "./EdgeFlow"
 import MainTypes from "@/components/molecules/categoryTypes/mainTypes"
+import { useDishesStore } from "@/components/store/useDishesStore"
 
 interface IDishesProps {
   childCategory: CategoryType[]
@@ -20,10 +21,11 @@ const DishesList: FC<IDishesProps> = (props) => {
   const { childCategory, parentCategory, menuLayout } = props
   const { isSearchActive } = useSearch()
 
-  const primaryColor = menuLayout?.primaryColor || "#000000"
-  const secondaryColor = menuLayout?.secondaryColor || "#f5f5f5"
+  const primaryColor = menuLayout?.primaryColor || "#ec4899"
+  const secondaryColor = menuLayout?.secondaryColor || "#fce7f3"
   const isClassicLayout = menuLayout?.categoryLayout === 2
-  const isHorizontalCard = menuLayout?.cardLayout === 2
+  const isHorizontalCard = menuLayout?.cardLayout === 1
+  const { setDishes } = useDishesStore()
 
   const subTypes = useMemo(() => {
     const hasVisibleDishes = (category: CategoryType): boolean => {
@@ -51,6 +53,14 @@ const DishesList: FC<IDishesProps> = (props) => {
     }
   }, [childCategory, parentCategory])
 
+  useMemo(() => {
+    const allDishes = childCategory
+      .filter((category) => category.dishIds && category.dishIds.length > 0)
+      .flatMap((category) => category.dishIds || [])
+
+    setDishes(allDishes)
+  }, [childCategory, setDishes])
+
 
 
   return (
@@ -70,7 +80,7 @@ const DishesList: FC<IDishesProps> = (props) => {
               childCategory={subTypes}
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}
-              isHorizontalCard={isHorizontalCard}
+              isHorizontalCard={!isHorizontalCard}
             />
           )}
         </>
@@ -82,12 +92,12 @@ const DishesList: FC<IDishesProps> = (props) => {
           secondaryColor={secondaryColor}
         />
       )}
-       <MainTypes
+      <MainTypes
         parentCategory={parentCategory || []}
         childCategory={subTypes || []}
         primaryColor={primaryColor || "#ec4899"}
         secondaryColor={secondaryColor || "#fce7f3"}
-      /> 
+      />
     </>
   )
 }

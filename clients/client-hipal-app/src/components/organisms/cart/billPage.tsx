@@ -175,6 +175,12 @@ const MemoBillPage = () => {
                                 <span>Subtotal</span>
                                 <span>₹{billData?.subTotal}</span>
                             </div> : null}
+                            {billData?.claimedCoins > 0 && (
+                                <div className="flex justify-between text-green-600">
+                                    <span>Coins/Couponz</span>
+                                    <span>-₹{billData?.claimedCoins}</span>
+                                </div>
+                            )}
                             <div className="flex justify-between text-black">
                                 <span>Service Charge</span>
                                 <span>₹{billData?.serviceCharge}</span>

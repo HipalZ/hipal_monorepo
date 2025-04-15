@@ -1,19 +1,26 @@
 "use client"
-import { type FC, memo,  useRef } from "react"
+import { type FC, memo, useEffect, useMemo, useRef } from "react"
 import { useActiveClass } from "@/components/store/useActiveClass"
 import type { CategoryType, DishType } from "@hi/db-models/src/validators"
 import { cn } from "@hi/common"
 import { InView } from "react-intersection-observer"
+import { useSearch } from "@/components/store/useSearch"
+import { useDishesStore } from "@/components/store/useDishesStore"
 import { _useAllBusiness } from "@/components/store/useAllBusiness"
-import GridDishCard from "@/components/atoms/card/GridDishCard"
+// Import motion from framer-motion at the top of the file
+import { motion } from "framer-motion"
+import Image from "next/image"
 import HorizontalCard from "@/components/atoms/card/horizontalCard"
+import GridDishCard from "@/components/atoms/card/GridDishCard"
 
 interface EdgeFlowProps {
   childCategory: CategoryType[]
+  isHorizontalCard: boolean
   primaryColor?: string
   secondaryColor?: string
-  isHorizontalCard?: boolean
 }
+
+// function DishRenderer({
 
 const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
   const typeMap: Record<string, string[]> = {
@@ -38,22 +45,20 @@ const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
 
 const EdgeFlow: FC<EdgeFlowProps> = ({
   childCategory,
-  primaryColor = "#000000",
-  secondaryColor = "#f5f5f5",
-  isHorizontalCard = false,
+  isHorizontalCard = true,
+  primaryColor = "#ec4899",
+  secondaryColor = "#fce7f3",
 }) => {
-  // const { setDishes } = useDishesStore()
+  const { setDishes } = useDishesStore()
   const {
     isActiveDishType,
     isActiveCategory,
     setActiveCategory,
     observerActive,
+    isActiveChildCategory,
+    setActiveChildCategory,
     setObserverActive,
   } = useActiveClass()
-
-
-
-  const isGridLayout = isHorizontalCard
 
   const visibleCategoriesRef = useRef<{ [key: string]: number }>({})
   const updateActiveCategory = () => {
@@ -77,60 +82,128 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
     }
   }
 
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (isActiveChildCategory !== "") {
+        const element = document.getElementById(isActiveChildCategory)
+        if (element) {
+          element.style.scrollMarginTop = "300px"
+          element.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          })
+        }
+        setTimeout(() => {
+          setObserverActive(true)
+        }, 3000)
+        setActiveChildCategory("")
+      }
+      const active = observerActive ? "" : isActiveCategory
+      const element = document.getElementById(active)
+      if (element) {
+        element.style.scrollMarginTop = "300px"
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        })
+      }
+    }
+    handleHashChange()
+    window.addEventListener("hashchange", handleHashChange)
+    return () => window.removeEventListener("hashchange", handleHashChange)
+  }, [isActiveCategory, isActiveChildCategory, observerActive, setActiveChildCategory, setObserverActive])
+
+  useMemo(() => {
+    const allDishes = childCategory.reduce((acc: DishType[], category: CategoryType) => {
+      return acc.concat(category.dishIds.filter((dish: DishType) => dish.visibility && !dish.isDeleted))
+    }, [])
+    setDishes(allDishes)
+    return allDishes
+  }, [childCategory, isActiveDishType, setDishes])
+
   return (
-    <div className="flex h-[calc(100dvh-5rem)]">
+    <div className="flex h-[calc(100vh-5rem)]">
       {/* Left sidebar for categories - Edge layout style */}
-      <div className="w-[20%] h-full overflow-y-auto sticky top-[4rem] border border-r-2 max-h-[calc(100vh-8rem)] hide-scrollbar">
-        {childCategory.map((category: CategoryType) => (
-          <button
-            type="button"
-            key={category._id}
-            className={cn("w-full mb-2 p-2 text-xs font-medium flex flex-col items-center transition-colors")}
-            style={{
-              color: category._id === isActiveCategory ? primaryColor : "black",
-              borderColor: category._id === isActiveCategory ? primaryColor : "transparent",
-              borderStyle: "solid",
-              borderWidth: "0 4px 0 0",
-            }}
-            onClick={() => {
-              setObserverActive(false)
-              setActiveCategory(category._id?.toString() || "")
-              const element = document.getElementById(category._id?.toString() || "")
-              if (element) {
-                element.style.scrollMarginTop = "110px"
-                element.scrollIntoView({ behavior: "smooth" })
-              }
-              setTimeout(() => {
-                setObserverActive(true)
-              }, 1000)
-            }}
-          >
-            {category.coverImage ? (
-              <div className="w-8 h-8 mb-1 overflow-hidden rounded-full">
-                <img
-                  src={category.coverImage || "/placeholder.svg"}
-                  alt={category.name}
-                  className="object-cover w-full h-full"
-                />
-              </div>
-            ) : (
-              <div
-                className="flex items-center justify-center w-8 h-8 mb-1 rounded-full"
+      <div
+        className="w-[20%] h-full overflow-y-auto sticky pb-[5rem] top-[3rem] max-h-[calc(100vh-8rem)] border-r border-gray-200 hide-scrollbar"
+        id="category-sidebar"
+      >
+        {/* Add a container div that will ensure content fills the entire scrollable area */}
+        <div className="flex flex-col min-h-full pb-20">
+          {childCategory.map((category: CategoryType) => {
+            const isActive = category._id === isActiveCategory
+
+            return (
+              <button
+                id={`sidebar-category-${category._id}`}
+                key={category._id}
+                className={cn("w-full mb-2 p-2 text-xs font-medium flex flex-col items-center transition-colors")}
                 style={{
-                  backgroundColor: category._id === isActiveCategory ? "white" : secondaryColor,
-                  color: category._id === isActiveCategory ? primaryColor : "gray",
+                  color: isActive ? primaryColor : "black",
+                  borderColor: isActive ? primaryColor : "transparent",
+                  borderStyle: "solid",
+                  borderWidth: "0 4px 0 0",
+                }}
+                onClick={() => {
+                  setObserverActive(false)
+                  setActiveCategory(category._id?.toString() || "")
+                  const element = document.getElementById(category._id?.toString() || "")
+                  if (element) {
+                    element.style.scrollMarginTop = "110px"
+                    element.scrollIntoView({ behavior: "smooth" })
+                  }
+                  setTimeout(() => {
+                    setObserverActive(true)
+                  }, 1000)
                 }}
               >
-                {category.name.charAt(0)}
-              </div>
-            )}
-            <span className="w-full text-center ">{category.name}</span>
-          </button>
-        ))}
+                {category.coverImage ? (
+                  <div
+                    className="w-12 h-12 mb-1 overflow-hidden transition-colors border-2 rounded-full"
+                    style={{ borderColor: isActive ? primaryColor : "transparent" }}
+                  >
+                    <Image
+                      src={category.coverImage || "/placeholder.svg"}
+                      alt={category.name}
+                      width={32}
+                      height={32}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="flex items-center justify-center w-8 h-8 mb-1 transition-colors rounded-full"
+                    style={{
+                      backgroundColor: isActive ? "white" : secondaryColor,
+                      color: isActive ? primaryColor : "gray",
+                      borderWidth: "2px",
+                      borderStyle: "solid",
+                      borderColor: isActive ? primaryColor : "transparent",
+                    }}
+                  >
+                    {category.name.charAt(0)}
+                  </div>
+                )}
+                <motion.span
+                  className="w-full text-center line-clamp-3"
+                  animate={{
+                    fontWeight: isActive ? 600 : 400,
+                  }}
+                  transition={{ duration: 0.2 }}
+                  title={category.name} 
+                >
+                  {category.name}
+                </motion.span>
+              </button>
+            )
+          })}
+          {/* Add a spacer div at the end to prevent clicking on empty space */}
+          <div className="flex-grow pointer-events-none" />
+        </div>
       </div>
 
       {/* Right content area for dishes */}
-      <div className="w-[80%] overflow-y-auto bg-white pb-[5rem] hide-scrollbar scroll-pt-12">
+      <div className="w-[80%] overflow-y-auto bg-white pb-[5rem] hide-scrollbar scroll-pt-16">
         {childCategory.map((category: CategoryType, index) => {
           const visibleDishes = category.dishIds.filter((dish: DishType) => dish.visibility)
           const dishesToRender = filterDishes(visibleDishes, isActiveDishType)
@@ -163,12 +236,12 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
                     ref={ref}
                     className={cn("z-40 flex items-center space-x-4 justify-between h-[4rem] px-4 font-bold prose")}
                     style={{
-                      backgroundColor: `${secondaryColor}`,
-                      borderBottom: `1px solid ${primaryColor}`,
+                      backgroundColor: `${secondaryColor}50`,
+                      borderBottom: `1px solid ${primaryColor}20`,
                     }}
                   >
                     <h2
-                      className="w-full text-2xl font-medium text-center capitalize truncate font-play"
+                      className="w-full text-xl font-medium capitalize truncate"
                       style={{ color: primaryColor }}
                       title={category.name || "Unnamed Category"}
                     >
@@ -178,18 +251,7 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
                 )}
               </InView>
 
-              {isGridLayout ? (
-                <div className="grid grid-cols-2 gap-2 p-2">
-                  {dishesToRender.map((dishData: DishType, dishIndex) => (
-                    <GridDishCard
-                      key={`${dishData._id}-${dishIndex}`}
-                      dishData={dishData}
-                      primaryColor={primaryColor}
-                      secondaryColor={secondaryColor}
-                    />
-                  ))}
-                </div>
-              ) : (
+              {isHorizontalCard ? (
                 <div className="flex flex-col divide-y divide-gray-100">
                   {dishesToRender.map((dishData: DishType, dishIndex) => (
                     <HorizontalCard
@@ -197,6 +259,19 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
                       dishData={dishData}
                       primaryColor={primaryColor}
                       secondaryColor={secondaryColor}
+                      isEdgeLayout={true}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 p-2">
+                  {dishesToRender.map((dishData: DishType, dishIndex) => (
+                    <GridDishCard
+                      key={`${dishData._id}-${dishIndex}`}
+                      dishData={dishData}
+                      primaryColor={primaryColor}
+                      secondaryColor={secondaryColor}
+                      isEdgeLayout={true}
                     />
                   ))}
                 </div>
@@ -210,4 +285,3 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
 }
 
 export default memo(EdgeFlow)
-

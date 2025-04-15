@@ -125,16 +125,23 @@ export const useLinkedDishes = () => {
 };
 
 export const useAddons = (dishStep: string) => {
-  const { businessId } = useParams<{ businessId?: string }>();
+  const { businessId,menuId } = useParams<{ businessId?: string;menuId }>();
   const { setAddons } = useMenuPageStore((s) => ({
     setAddons: s.setAddons,
   }));
 
+  const updatedQuery = menuId
+    ? {
+      menuId: menuId,
+      businessId: businessId,
+    }
+    : {
+      businessId: businessId,
+    };
+
   const getAllAddons = async (businessId: string): Promise<AddOnType[]> => {
     const addonResponse = await apiRpc.addons.$get({
-      query: {
-        businessId: businessId,
-      },
+      query: updatedQuery
     });
     const data = await addonResponse.json();
     setAddons(data?.data as AddOnType[]);

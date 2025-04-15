@@ -24,6 +24,7 @@ export * from "./couponView";
 export * from "./couponz";
 export * from "./deviceToken";
 export * from "./duesUser";
+export * from "./event";
 export * from "./googleAuthUsers";
 export * from "./googleReviews";
 export * from "./group";
