@@ -309,8 +309,9 @@ const MemoApplyCouponz = () => {
         // Check bill value to classify as `greatDeals` or `missingOut`
         if (billValue >= conditions.billValue) {
           greatDeals.push(coupon);
+        } else {
+          missingOut.push(coupon);
         }
-        missingOut.push(coupon);
       });
 
       // Update state
