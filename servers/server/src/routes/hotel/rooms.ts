@@ -650,6 +650,16 @@ const roomRouter = new Hono()
         if (!roomExists) {
           return respond(c, "Room not found", true, 404, {});
         }
+
+        const business = await Business.findById(roomExists.businessId);
+
+        if (!business) {
+          return respond(c, "Business not found", true, 404, {});
+        }
+
+        const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+          businessId: roomExists.businessId,
+        });
         const userData = await User.findById(userId)
           .select("phone name")
           .lean();
@@ -671,6 +681,51 @@ const roomRouter = new Hono()
 
         if (!alert) {
           throw new Error("Error creating alert");
+        }
+
+        if (whatsAppConfig) {
+          const res = await axios.post(
+            `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+            {
+              messaging_product: "whatsapp",
+              to: userData?.phone?.toString(),
+              type: "template",
+              template: {
+                name: "checkout_msg_template",
+                language: { code: "en" },
+                components: [
+                  {
+                    type: "body",
+                    parameters: [
+                      {
+                        type: "text",
+                        text: userData?.name,
+                      },
+
+                      {
+                        type: "text",
+                        text: roomExists?.name,
+                      },
+
+                      {
+                        type: "text",
+                        text: business?.name,
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${whatsAppConfig.token}`,
+              },
+            },
+          );
+
+          if (res.status !== 200) {
+            throw new Error("Error sending message");
+          }
         }
 
         return respond(c, "request send successfully", false, 200, {
