@@ -67,6 +67,11 @@ export const hotelRoomCheckOut = z.object({
   userIds: z.array(ObjectIdSchema).optional().default([]),
 });
 
+export const hotelRoomCheckOutRequest = z.object({
+  roomId: ObjectIdSchema,
+  userId: ObjectIdSchema,
+});
+
 export const hotelRoomSession = z.object({
   roomId: ObjectIdSchema,
   name: z.string().min(1).max(50),

@@ -18,6 +18,7 @@ import {
   hotelRoom,
   hotelRoomCheckIn,
   hotelRoomCheckOut,
+  hotelRoomCheckOutRequest,
   updateHotelRoom,
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
@@ -647,6 +648,49 @@ const roomRouter = new Hono()
       });
     });
   })
+
+  .post(
+    "/check_out_request",
+    zValidator("json", hotelRoomCheckOutRequest),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
+        const { roomId, userId } = requestData;
+
+        const roomExists = await HotelRoom.findOne({ _id: roomId });
+        if (!roomExists) {
+          return respond(c, "Room not found", true, 404, {});
+        }
+        const userData = await User.findById(userId)
+          .select("phone name")
+          .lean();
+
+        if (!userData) {
+          return respond(c, "User not found", true, 404, {});
+        }
+
+        const alert = new HotelAlert({
+          businessId: roomExists.businessId,
+          userId: userData._id,
+          roomId: roomExists._id,
+          message: `Customer ${userData.name} has requested to check out of room ${roomExists.name}`,
+          createdAt: Date.now(),
+          createdBy: userId,
+        });
+
+        await alert.save({ session });
+
+        if (!alert) {
+          throw new Error("Error creating alert");
+        }
+
+        return respond(c, "request send successfully", false, 200, {
+          _id: alert._id,
+        });
+      });
+    },
+  )
 
   .post(
     "/verify_authcode",
