@@ -465,6 +465,7 @@ const roomRouter = new Hono()
             date: Date.now(),
             checkIn: Date.now(),
             authCode,
+            source: requestData.source,
           },
         ],
         { session },
