@@ -1,5 +1,5 @@
 import { runInTransaction } from "@hi/utils";
-import { Context } from "hono";
+import type { Context } from "hono";
 import { setBusinessBookingActive } from "../../services/bookingz/business-toggle.service";
 import { updateBusinessCapacity } from "@/services/bookingz/ capacity.service";
 
@@ -10,7 +10,11 @@ export const activateBookings = async (c: Context) => {
     return setBusinessBookingActive(businessId, true, session);
   });
   // Cast result as any (or your expected type)
-  return c.json({ status: 200, data: result as any, message: 'Bookings activated successfully.' });
+  return c.json({
+    status: 200,
+    data: result as any,
+    message: "Bookings activated successfully.",
+  });
 };
 
 export const deactivateBookings = async (c: Context) => {
@@ -18,7 +22,11 @@ export const deactivateBookings = async (c: Context) => {
   const result = await runInTransaction(async (session) => {
     return setBusinessBookingActive(businessId, false, session);
   });
-  return c.json({ status: 200, data: result as any, message: 'Bookings deactivated successfully.' });
+  return c.json({
+    status: 200,
+    data: result as any,
+    message: "Bookings deactivated successfully.",
+  });
 };
 
 export const updateBookingBusinessCapacity = async (c: Context) => {
@@ -33,6 +41,6 @@ export const updateBookingBusinessCapacity = async (c: Context) => {
   return c.json({
     status: 200,
     data: updatedBusiness,
-    message: 'Business capacity updated successfully.',
+    message: "Business capacity updated successfully.",
   });
 };

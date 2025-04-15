@@ -1,4 +1,4 @@
-import { ClientSession } from "mongoose";
+import type { ClientSession } from "mongoose";
 
 import { ensureBookingBusiness } from "./booking-business.service";
 import { updatePeriodConfigsForDay } from "./day-period.service";

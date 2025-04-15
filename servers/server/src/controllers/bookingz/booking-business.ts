@@ -1,6 +1,6 @@
 import { explicitUpsertBookingBusinessService } from "@/services/bookingz/booking-business.service";
 import { runInTransaction } from "@hi/utils";
-import { Context } from "hono";
+import type { Context } from "hono";
 
 export const upsertExplicitBookingBusinessController = async (c: Context) => {
   const { businessId, date, period } = c.req.param();

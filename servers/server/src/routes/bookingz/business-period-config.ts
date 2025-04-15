@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { fn } from "./util";
 import { mongoIdZod, zJsonValidator, zParamsValidator } from "@hi/db-models";
 import { z } from "zod";
 import {

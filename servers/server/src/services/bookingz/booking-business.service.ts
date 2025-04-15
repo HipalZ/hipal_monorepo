@@ -1,4 +1,5 @@
-import { ClientSession, Types } from "mongoose";
+import type { ClientSession, Types } from "mongoose";
+import { Types as mongooseTypes } from "mongoose";
 import dayjs from "dayjs";
 import { isEqual } from "lodash";
 import {
@@ -28,7 +29,7 @@ export type CouponAllocInput = {
 
 /* Utility: generateUniqueVersionId returns a new unique version id */
 const generateUniqueVersionId = (): string =>
-  new Types.ObjectId().toHexString();
+  new mongooseTypes.ObjectId().toHexString();
 
 /**
  * upsertBookingBusiness
@@ -68,7 +69,7 @@ export const upsertBookingBusiness = async (
   row.couponsRemaining = alloc
     .filter((a) => a && a.couponId)
     .map((a) => ({
-      couponId: new Types.ObjectId(a.couponId.toString()),
+      couponId: new mongooseTypes.ObjectId(a.couponId.toString()),
       remaining: a.remaining,
       versionId: generateUniqueVersionId(),
     }));
@@ -306,7 +307,7 @@ export const ensureBookingBusiness = async (
         const prev = prevMap.get(a.couponId);
         const keepOld = prev && prev.remaining === a.remaining;
         return {
-          couponId: new Types.ObjectId(a.couponId),
+          couponId: new mongooseTypes.ObjectId(a.couponId),
           remaining: a.remaining,
           versionId: keepOld ? prev!.versionId : generateUniqueVersionId(),
         };

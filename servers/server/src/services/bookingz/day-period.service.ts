@@ -1,4 +1,5 @@
-import { ClientSession, Types } from "mongoose";
+import type { ClientSession, Types } from "mongoose";
+import { Types as mongooseTypes } from "mongoose";
 import {
   BusinessDayConfigModel,
   BusinessPeriodConfigModel,
@@ -31,7 +32,7 @@ export const upsertDayConfig = async (
   isOpen = true,
   session: ClientSession,
 ) => {
-  let dayCfg =
+  const dayCfg =
     (await BusinessDayConfigModel.findOne({
       businessId,
       dayOfWeek: dow,
@@ -218,7 +219,7 @@ export const upsertPeriodConfigService = async (
 
   if (payload.couponAllocations !== undefined) {
     pCfg.couponAllocations = payload.couponAllocations.map((c) => ({
-      couponId: new Types.ObjectId(c.couponId),
+      couponId: new mongooseTypes.ObjectId(c.couponId),
       remaining: c.remaining,
     }));
   }

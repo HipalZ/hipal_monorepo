@@ -1,5 +1,4 @@
 import {
-  toggleAllPeriodsForBusinessDay,
   toggleAllPeriodsForBusinessDayByBusinessAndDow,
   toggleSinglePeriod,
 } from "@/services/bookingz/business-toggle.service";
@@ -8,7 +7,7 @@ import {
   upsertPeriodConfigService,
 } from "@/services/bookingz/day-period.service";
 import { runInTransaction } from "@hi/utils";
-import { Context } from "hono";
+import type { Context } from "hono";
 
 export const getPeriodsForDayController = async (c: Context) => {
   // Extract businessId and dayOfWeek from URL parameters

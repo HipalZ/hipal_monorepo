@@ -1,4 +1,5 @@
-import { Schema, model, Document, Types } from "mongoose";
+import type { Document, Types } from "mongoose";
+import { Schema, model } from "mongoose";
 import { z } from "zod";
 import { dateSchema, requiredObjectIdString } from "./utils";
 

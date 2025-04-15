@@ -7,7 +7,7 @@ import {
   upsertDayConfig,
 } from "@/services/bookingz/day-period.service";
 import { runInTransaction } from "@hi/utils";
-import { Context } from "hono";
+import type { Context } from "hono";
 
 export const upsertBusinessDayConfigController = async (c: Context) => {
   // Extract the businessId from route parameters.

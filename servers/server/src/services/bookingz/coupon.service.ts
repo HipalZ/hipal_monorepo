@@ -1,11 +1,11 @@
-import { Couponz } from '@hi/db-models';
-import { ClientSession } from 'mongoose';
+import { Couponz } from "@hi/db-models";
+import type { ClientSession } from "mongoose";
 
 /* createBookingCoupon */
 export const createBookingCoupon = async (
   businessId: string,
   name: string,
-  discountType: 'PERCENTAGE' | 'AMOUNT',
+  discountType: "PERCENTAGE" | "AMOUNT",
   value: number,
   upto: number | undefined,
   meta: any,
@@ -16,7 +16,7 @@ export const createBookingCoupon = async (
       {
         businessId,
         name,
-        type: 'BOOKINGS',
+        type: "BOOKINGS",
         config: { value, discountType, upto },
         bookingMeta: meta,
       },
@@ -32,16 +32,20 @@ export const updateBookingCoupon = async (
   fields: Record<string, any>,
   session: ClientSession,
 ) => {
-  const coupon = await Couponz.findOne({ _id: couponId, isDeleted: false }).session(session);
-  if (!coupon) throw new Error('Coupon not found');
-  if (coupon.type !== 'BOOKINGS') throw new Error('Only BOOKINGS coupons can be updated');
+  const coupon = await Couponz.findOne({
+    _id: couponId,
+    isDeleted: false,
+  }).session(session);
+  if (!coupon) throw new Error("Coupon not found");
+  if (coupon.type !== "BOOKINGS")
+    throw new Error("Only BOOKINGS coupons can be updated");
 
   const map: Record<string, string> = {
-    name: 'name',
-    discountType: 'config.discountType',
-    value: 'config.value',
-    upto: 'config.upto',
-    bookingMeta: 'bookingMeta',
+    name: "name",
+    discountType: "config.discountType",
+    value: "config.value",
+    upto: "config.upto",
+    bookingMeta: "bookingMeta",
   };
 
   for (const [k, v] of Object.entries(map)) {
@@ -54,10 +58,17 @@ export const updateBookingCoupon = async (
 };
 
 /* archiveBookingCoupon */
-export const archiveBookingCoupon = async (couponId: string, session: ClientSession) => {
-  const coupon = await Couponz.findOne({ _id: couponId, isDeleted: false }).session(session);
-  if (!coupon) throw new Error('Coupon not found');
-  if (coupon.type !== 'BOOKINGS') throw new Error('Only BOOKINGS coupons can be archived');
+export const archiveBookingCoupon = async (
+  couponId: string,
+  session: ClientSession,
+) => {
+  const coupon = await Couponz.findOne({
+    _id: couponId,
+    isDeleted: false,
+  }).session(session);
+  if (!coupon) throw new Error("Coupon not found");
+  if (coupon.type !== "BOOKINGS")
+    throw new Error("Only BOOKINGS coupons can be archived");
   coupon.isDeleted = true;
   await coupon.save({ session });
   return coupon;
