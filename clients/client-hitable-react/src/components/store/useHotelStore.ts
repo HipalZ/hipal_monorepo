@@ -1,5 +1,9 @@
 import { create } from "zustand";
-import { NavItemsHotelEnum, type RoomData } from "../types/hotelData";
+import {
+  type Cart,
+  NavItemsHotelEnum,
+  type RoomData,
+} from "../types/hotelData";
 import type { SortOption } from "../utils/helpersHotel";
 
 interface IHotelStore {
@@ -41,6 +45,15 @@ interface IHotelStore {
 
   isOpenChat: boolean;
   setIsOpenChat: (value: boolean) => void;
+
+  selectedSource: string;
+  setSelectedSource: (value: string) => void;
+
+  cartData: Cart[];
+  setCartData: (value: Cart[]) => void;
+
+  openCartModal: boolean;
+  setOpenCartModal: (value: boolean) => void;
 }
 
 export const useHotelStore = create<IHotelStore>((set) => ({
@@ -100,4 +113,13 @@ export const useHotelStore = create<IHotelStore>((set) => ({
 
   isOpenChat: false,
   setIsOpenChat: (value) => set({ isOpenChat: value }),
+
+  selectedSource: "",
+  setSelectedSource: (value) => set({ selectedSource: value }),
+
+  cartData: [],
+  setCartData: (value) => set({ cartData: value }),
+
+  openCartModal: false,
+  setOpenCartModal: (value) => set({ openCartModal: value }),
 }));

@@ -19,7 +19,7 @@ interface ButtonConfig {
     highlight?: boolean;
     borderClasses?: string;
     swipe?: boolean;
-    icon?: React.ReactNode; 
+    icon?: React.ReactNode;
 }
 
 interface MemoBottomButtonProps {
@@ -104,8 +104,8 @@ function SwipeButton({
                 }
             )}
             style={{
-                backgroundColor: button.disable ? "#cccccc" : button.color ?? "#000000",
-                color: button.textColor ?? "#ffffff",
+                backgroundColor: button.disable ? "#cccccc" : button.color ?? "var(--p)",
+                color: button.textColor ?? "var(--s)",
             }}
         >
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -113,7 +113,7 @@ function SwipeButton({
             </div>
 
             <motion.div
-                className="absolute flex items-center justify-center w-10 h-10 bg-green-500 rounded-full shadow-md left-1 top-1 cursor-grab active:cursor-grabbing"
+                className="absolute left-1 top-1 w-10 h-10 bg-green-500 rounded-full shadow-md flex items-center justify-center cursor-grab active:cursor-grabbing z-10"
                 drag="x"
                 dragConstraints={{ left: 0, right: 200 }}
                 dragElastic={0}
@@ -191,8 +191,8 @@ const MemoCommonBottomButton = (props: MemoBottomButtonProps) => {
                                 style={{
                                     backgroundColor: button.disable
                                         ? "#cccccc"
-                                        : button.color ?? "#000000",
-                                    color: button.textColor ?? "#ffffff",
+                                        : button.color ?? "var(--p)",
+                                    color: button.textColor ?? "var(--s)",
                                 }}
                                 onClick={!button.disable ? button.onClick : undefined}
                                 type={button.type ?? "button"}

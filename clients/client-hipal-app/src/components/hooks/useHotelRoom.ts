@@ -85,30 +85,30 @@ export const useGetAllLinkRestautants = (businessId: string) => {
   return { fetchingRestaurants, restaurantData };
 };
 
-export const useGetAllChats = (payload:IHotelRoomData) => {
+export const useGetAllChats = (payload: IHotelRoomData) => {
   const getChats = async () => {
     const roomResponse = await apiRpc.hotel.rooms.fetch_room.$get({
       query: payload,
     });
-    if(!roomResponse.ok) return []
+    if (!roomResponse.ok) return [];
     const roomData = await roomResponse.json();
     const response = await apiRpc.hotel.alert.room_chat.$get({
       query: {
-        roomId:roomData?.data?._id,
+        roomId: roomData?.data?._id,
       },
     });
     const res = await response.json();
     return res.data;
   };
 
-  const {data:chatData} = useQuery({
+  const { data: chatData } = useQuery({
     queryKey: ["getChats", payload],
     queryFn: getChats,
     enabled: !!payload.roomName,
     refetchInterval: 10000,
-  }) 
+  });
 
-  return  { chatData }
+  return { chatData };
 };
 
 export const useSendChat = () => {
@@ -122,7 +122,7 @@ export const useSendChat = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({
-        queryKey:["getChats"]
+        queryKey: ["getChats"],
       });
     },
     onError: (error) => {
@@ -131,7 +131,7 @@ export const useSendChat = () => {
   });
 
   return { sendChat, sendingChat };
-}
+};
 
 export const useReviewChat = () => {
   const queryClient = useQueryClient();
@@ -144,7 +144,7 @@ export const useReviewChat = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({
-        queryKey:["getChats"]
+        queryKey: ["getChats"],
       });
     },
     onError: (error) => {
@@ -153,4 +153,4 @@ export const useReviewChat = () => {
   });
 
   return { reviewChat, reviewingChat };
-}
+};

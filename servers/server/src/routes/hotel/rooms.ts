@@ -76,6 +76,9 @@ const roomRouter = new Hono()
         businessId,
         $or: [{ _id: roomId }, { name: roomName }],
         isDeleted: false,
+      }).populate({
+        path: "userIds",
+        select: "name phone",
       });
 
       return room
@@ -805,7 +808,7 @@ const roomRouter = new Hono()
     },
   )
 
-  .post(
+  .put(
     "/update_room_source",
     zValidator(
       "json",

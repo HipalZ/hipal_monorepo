@@ -1,31 +1,30 @@
 import { useState, useMemo, memo } from "react"
-import {
-  Clock,
-  Package,
-  Search,
-  User,
-  Home,
-  ChevronDown,
-  ChevronUp,
-  Calendar,
-  ArrowDownAZ,
-  ArrowUpAZ,
-  Filter,
-} from "lucide-react";
+import { Clock, Package, Search, User, Home, ChevronDown, ChevronUp, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { useAlertsColors, type SortOption, useFormatTimes } from "../utils/helpersHotel";
 import { useHistoryAlerts } from "@/hooks/useHotelApis"
+import { useHotelStore } from "../store/useHotelStore";
 
 const MemoHistoryHotel = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState<SortOption>("newest")
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
   const { historyData } = useHistoryAlerts()
-  const {getSortLabel} = useAlertsColors()
-  const {formatTimestamp, formatDate} = useFormatTimes()
+  const { getSortLabel } = useAlertsColors()
+  const { formatTimestamp, formatDate } = useFormatTimes()
+  const { setCartData, setOpenCartModal } = useHotelStore()
+
+  const serviceTags = [
+    "Room Service",
+    "Cleaning",
+    "Laundry",
+    "Food Delivery",
+    "Maintenance"
+  ];
+
 
   // Toggle accordion item
   const toggleItem = (id: string) => {
@@ -90,6 +89,11 @@ const MemoHistoryHotel = () => {
     return `${diffMins} minute${diffMins > 1 ? "s" : ""}`
   }
 
+  const viewCart = (cart) => {
+    setCartData(cart)
+    setOpenCartModal(true)
+  }
+
   return (
     <div className="mx-auto px-4 py-6">
       {/* Header with search and filters */}
@@ -113,52 +117,19 @@ const MemoHistoryHotel = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-1 border-blue-200">
                   <Filter className="h-4 w-4" />
-                  <span className="hidden sm:inline">Sort</span>
+                  <span className="hidden sm:inline">Service Type</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => setSortBy("newest")}
-                  className={sortBy === "newest" ? "bg-blue-50" : ""}
-                >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Newest First
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setSortBy("oldest")}
-                  className={sortBy === "oldest" ? "bg-blue-50" : ""}
-                >
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Oldest First
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setSortBy("roomAsc")}
-                  className={sortBy === "roomAsc" ? "bg-blue-50" : ""}
-                >
-                  <ArrowDownAZ className="h-4 w-4 mr-2" />
-                  Room (A-Z)
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setSortBy("roomDesc")}
-                  className={sortBy === "roomDesc" ? "bg-blue-50" : ""}
-                >
-                  <ArrowUpAZ className="h-4 w-4 mr-2" />
-                  Room (Z-A)
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setSortBy("fastest")}
-                  className={sortBy === "fastest" ? "bg-blue-50" : ""}
-                >
-                  <Clock className="h-4 w-4 mr-2" />
-                  Fastest Completion
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setSortBy("slowest")}
-                  className={sortBy === "slowest" ? "bg-blue-50" : ""}
-                >
-                  <Clock className="h-4 w-4 mr-2" />
-                  Slowest Completion
-                </DropdownMenuItem>
+                {serviceTags.map((tag) => (
+                  <DropdownMenuItem
+                    key={tag}
+                    onClick={() => setSortBy(tag)}
+                    className={sortBy === tag ? "bg-blue-50" : ""}
+                  >
+                    {tag}
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -197,7 +168,7 @@ const MemoHistoryHotel = () => {
               </article>
 
               <article className="flex items-center gap-2">
-              <h1 className="font-medium">{item?.serviceIds[0].name}</h1>
+                <h1 className="font-medium">{item?.serviceIds[0].name}</h1>
                 {expandedItems.has(item._id) ? (
                   <ChevronUp className="h-5 w-5 text-gray-500" />
                 ) : (
@@ -208,23 +179,27 @@ const MemoHistoryHotel = () => {
 
             {/* Accordion content */}
             <div
-              className={`overflow-hidden transition-all duration-300 ${
-                expandedItems.has(item._id) ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
-              }`}
+              className={`overflow-hidden transition-all duration-300 ${expandedItems.has(item._id) ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+                }`}
             >
               <div className="p-4 border-t">
                 {/* Service */}
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 text-white">
-                    <Package className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <div className="font-medium">{item?.serviceIds.map((service) => service?.name).join(", ")}</div>
-                    <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                      <User className="h-3.5 w-3.5" />
-                      Requested by {item?.createdBy?.name}
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-indigo-400 to-purple-500 text-white">
+                      <Package className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h1>{item?.serviceIds.map((service) => service?.name).join(", ")}</h1>
+                      <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
+                        <User className="h-3.5 w-3.5" />
+                        Requested by {item?.createdBy?.name}
+                      </div>
                     </div>
                   </div>
+                  <Button onClick={() => viewCart(item?.cart)} variant="outline" className="text-sm mt-1">
+                    View Cart
+                  </Button>
                 </div>
 
                 {/* Timeline */}
