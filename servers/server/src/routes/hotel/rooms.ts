@@ -793,7 +793,7 @@ const roomRouter = new Hono()
 
         const roomSource = await HotelRoom.findOneAndUpdate(
           {
-            roomId,
+            _id: roomId,
           },
           {
             source,
