@@ -15,6 +15,7 @@ import { routes } from "./routes";
 import { customTimeoutException } from "./utils";
 
 import "./utils/env";
+import { errorHandler } from "../middleware/errorMiddlewares";
 /////
 const app = new Hono({
   strict: true,
@@ -87,5 +88,10 @@ export default {
 
 //@ts-ignore
 app.use(catchErrorHandler(app));
+
+// app.onError((err, c) => {
+//   const error = errorHandler(c);
+//   return error;
+// });
 
 export { type AppType } from "./routes";

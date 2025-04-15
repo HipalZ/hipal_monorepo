@@ -34,6 +34,7 @@ import usersRouter from "./users";
 import whatsappRouter from "./whatsapp";
 import whatsAppFlowRouter from "./whatsappflow";
 import zonesAndTablesRouter from "./zonesAndTables";
+import { bookingsRouter } from "./bookingz";
 
 ////
 const app = new Hono();
@@ -75,6 +76,7 @@ export const routes = app
   .route("/hotel", hotelRouter)
   .route("/download", downloadRouter)
   .route("/menu", menuRouter)
-  .route("/bucket", bucketRouter);
+  .route("/bucket", bucketRouter)
+  .route("/bookings", bookingsRouter);
 
 export type AppType = typeof routes;
