@@ -448,6 +448,7 @@ const roomRouter = new Hono()
           roomStatus: "OCCUPIED",
           userIds: [user._id],
           authCode,
+          source: requestData.source,
         },
         { new: true, session },
       );
@@ -610,6 +611,7 @@ const roomRouter = new Hono()
           roomStatus: "AVAILABLE",
           userIds: [],
           authCode: "",
+          source: "",
         },
         { new: true, session },
       );
@@ -775,7 +777,7 @@ const roomRouter = new Hono()
   )
 
   .post(
-    "/update_room_session",
+    "/update_room_source",
     zValidator(
       "json",
       z.object({
@@ -789,7 +791,7 @@ const roomRouter = new Hono()
         const requestData = await c.req.json();
         const { roomId, source } = requestData;
 
-        const roomSession = await HotelRoomSession.findOneAndUpdate(
+        const roomSource = await HotelRoom.findOneAndUpdate(
           {
             roomId,
           },
@@ -798,12 +800,12 @@ const roomRouter = new Hono()
           },
         );
 
-        if (!roomSession) {
+        if (!roomSource) {
           return respond(c, "Room session not found", true, 404, {});
         }
 
         return respond(c, "update ", false, 200, {
-          _id: roomSession._id,
+          _id: roomSource._id,
         });
       });
     },

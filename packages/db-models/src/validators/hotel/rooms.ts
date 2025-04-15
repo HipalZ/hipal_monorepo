@@ -52,6 +52,7 @@ export const hotelRoom = z.object({
   slug: z.string().min(1).max(50).optional(),
   roomTypeId: ObjectIdSchema,
   isDeleted: z.boolean().optional().default(false),
+  source: z.string().min(1).max(50).optional(),
 });
 
 export const hotelRoomCheckIn = z.object({
