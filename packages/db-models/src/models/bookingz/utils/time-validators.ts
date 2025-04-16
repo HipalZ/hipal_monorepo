@@ -42,3 +42,11 @@ export const parseTimeToMinutes = (timeStr: string): number => {
   const [hours, minutes] = timeStr.split(":").map(Number);
   return hours * 60 + minutes;
 };
+
+export const normalizeTime = (time: string): string => {
+  // Split the time string by ":" and trim any extra spaces.
+  const [rawHour, rawMinute] = time.split(":");
+  const hour = rawHour.trim().padStart(2, "0");
+  const minute = rawMinute.trim().padStart(2, "0");
+  return `${hour}:${minute}`;
+};

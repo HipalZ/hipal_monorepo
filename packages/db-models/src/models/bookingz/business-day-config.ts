@@ -3,6 +3,7 @@ import { Schema, model } from "mongoose";
 import { z } from "zod";
 import {
   endTimeValidator,
+  normalizeTime,
   parseTimeToMinutes,
   requiredObjectIdString,
   startTimeValidator,
@@ -74,23 +75,73 @@ const businessDayConfigSchema = new Schema<IBusinessDayConfig>(
 
 // Pre-save hook: merge overlapping closed intervals
 businessDayConfigSchema.pre("save", function (next) {
+  // Normalize day's startTime and endTime.
+  if (this.startTime) {
+    this.startTime = normalizeTime(this.startTime);
+  }
+  if (this.endTime) {
+    this.endTime = normalizeTime(this.endTime);
+  }
+
+  const dayStart = parseTimeToMinutes(this.startTime);
+  const dayEnd = parseTimeToMinutes(this.endTime);
+
+  // Check 1: Day's startTime must be less than endTime.
+  if (dayStart >= dayEnd) {
+    return next(new Error("The day’s startTime must be less than its endTime"));
+  }
+
+  // Validate and normalize each closed interval.
   if (this.closedIntervals && this.closedIntervals.length > 0) {
-    // Sort intervals by start time
+    for (const ci of this.closedIntervals) {
+      // Normalize times.
+      ci.startTime = normalizeTime(ci.startTime);
+      ci.endTime = normalizeTime(ci.endTime);
+
+      const ciStart = parseTimeToMinutes(ci.startTime);
+      const ciEnd = parseTimeToMinutes(ci.endTime);
+
+      // Check 2: Closed interval startTime must be within day's boundaries.
+      if (ciStart < dayStart || ciStart > dayEnd) {
+        return next(
+          new Error(
+            "Each closed interval’s startTime must be within the day’s startTime and endTime",
+          ),
+        );
+      }
+      // Check 3: Closed interval endTime must be within day's boundaries.
+      if (ciEnd < dayStart || ciEnd > dayEnd) {
+        return next(
+          new Error(
+            "Each closed interval’s endTime must be within the day’s startTime and endTime",
+          ),
+        );
+      }
+      // Check 4: Within each closed interval, startTime must be less than endTime.
+      if (ciStart >= ciEnd) {
+        return next(
+          new Error(
+            "Each closed interval must have a startTime that is less than its endTime",
+          ),
+        );
+      }
+    }
+
+    // Sort and merge overlapping closed intervals.
+    const parseMinutes = (time: string): number => {
+      const [h, m] = time.split(":").map(Number);
+      return h * 60 + m;
+    };
+
     this.closedIntervals.sort(
-      (a, b) =>
-        parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime),
+      (a, b) => parseMinutes(a.startTime) - parseMinutes(b.startTime),
     );
-    // Merge intervals
     this.closedIntervals = this.closedIntervals.reduce(
       (acc: any[], curr: any) => {
         if (acc.length === 0) return [curr];
         const last = acc[acc.length - 1];
-        if (
-          parseTimeToMinutes(curr.startTime) <= parseTimeToMinutes(last.endTime)
-        ) {
-          if (
-            parseTimeToMinutes(curr.endTime) > parseTimeToMinutes(last.endTime)
-          ) {
+        if (parseMinutes(curr.startTime) <= parseMinutes(last.endTime)) {
+          if (parseMinutes(curr.endTime) > parseMinutes(last.endTime)) {
             last.endTime = curr.endTime;
           }
         } else {

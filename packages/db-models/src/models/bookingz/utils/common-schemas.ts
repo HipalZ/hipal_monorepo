@@ -45,32 +45,53 @@ export const requiredObjectIdString = (fieldName: string) =>
 
 export const halfHourTimeRegex = /^(0\d|1\d|2[0-3]):(00|30)$/;
 
+const coerceToHHMM = (val: string): string => {
+  const [hours, minutes] = val.split(":").map((part) => part.trim());
+  // Zero-pad hours and minutes to 2 digits
+  return `${hours.padStart(2, "0")}:${minutes.padStart(2, "0")}`;
+};
+
 export const startTimeValidator = z
-  .string()
-  .nonempty({ message: "Field is required" })
+  .preprocess(
+    (arg) => {
+      if (typeof arg === "string") {
+        // First, trim and normalize the string.
+        return coerceToHHMM(arg);
+      }
+      return arg;
+    },
+    z.string().nonempty({ message: "Field is required" }),
+  )
   .refine(
     (val) => {
-      const match = /^(\d{1,2}):([0-5]\d)$/.exec(val);
-      if (!match) return false;
       const minutes = parseTimeToMinutes(val);
+      // Allowed range: from 04:00 (240) to 27:30 (1650) and in half-hour increments
       return minutes >= 240 && minutes <= 1650 && minutes % 30 === 0;
     },
     {
-      message: 'Field in half-hour format between "04:00" and "27:30"',
+      message: 'Field must be in half-hour format between "04:00" and "27:30"',
     },
-  );
+  )
+  .transform((val) => coerceToHHMM(val)); // ensures the returned value is padded
 
 export const endTimeValidator = z
-  .string()
-  .nonempty({ message: "Field is required" })
+  .preprocess(
+    (arg) => {
+      if (typeof arg === "string") {
+        return coerceToHHMM(arg);
+      }
+      return arg;
+    },
+    z.string().nonempty({ message: "Field is required" }),
+  )
   .refine(
     (val) => {
-      const match = /^(\d{1,2}):([0-5]\d)$/.exec(val);
-      if (!match) return false;
       const minutes = parseTimeToMinutes(val);
+      // Allowed range for end time: from 04:30 (270) to 28:00 (1680)
       return minutes >= 270 && minutes <= 1680 && minutes % 30 === 0;
     },
     {
       message: 'Field must be in half-hour format between "04:30" and "28:00"',
     },
-  );
+  )
+  .transform((val) => coerceToHHMM(val));
