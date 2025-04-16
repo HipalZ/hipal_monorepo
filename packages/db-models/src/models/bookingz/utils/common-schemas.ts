@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
 import { z } from "zod";
+import { parseTimeToMinutes } from "./time-validators";
 
 export const mongoIdZod = z
   .string()
@@ -43,11 +44,6 @@ export const requiredObjectIdString = (fieldName: string) =>
     });
 
 export const halfHourTimeRegex = /^(0\d|1\d|2[0-3]):(00|30)$/;
-
-export const parseTimeToMinutes = (timeStr: string): number => {
-  const [hours, minutes] = timeStr.split(":").map(Number);
-  return hours * 60 + minutes;
-};
 
 export const startTimeValidator = z
   .string()
