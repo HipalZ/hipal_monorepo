@@ -674,6 +674,7 @@ const roomRouter = new Hono()
           roomId: roomExists._id,
           message: `Customer ${userData.name} has requested to check out of room ${roomExists.name}`,
           createdAt: Date.now(),
+          alertProgress: "MESSAGE",
           createdBy: userId,
         });
 

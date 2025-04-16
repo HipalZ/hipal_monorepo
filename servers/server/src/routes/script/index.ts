@@ -83,32 +83,32 @@ const scriptRouter = new Hono()
       const categoryServices = [
         {
           name: "Laundry",
-          image: "https://assets.hipalz.com/laundry_service.png",
+          image: "https://assets.hipalz.com/laundry.png",
           businessId,
         },
         {
           name: "Room Cleaning",
-          image: "https://assets.hipalz.com/clean_room.png",
+          image: "https://assets.hipalz.com/room%20cleaning.png",
           businessId,
         },
         {
           name: "Order Food",
-          image: "https://assets.hipalz.com/order_food.png",
+          image: "https://assets.hipalz.com/order%20food.png",
           businessId,
         },
         {
           name: "Bathroom",
-          image: "https://assets.hipalz.com/bathroom_service.png",
+          image: "https://assets.hipalz.com/bathroom.png",
           businessId,
         },
         {
           name: "Other",
-          image: "https://assets.hipalz.com/other_service.png",
+          image: "https://assets.hipalz.com/water%20bottle.png",
           businessId,
         },
         {
           name: "Electrician",
-          image: "https://assets.hipalz.com/other_service.png",
+          image: "https://assets.hipalz.com/electrician.png",
           businessId,
         },
         {

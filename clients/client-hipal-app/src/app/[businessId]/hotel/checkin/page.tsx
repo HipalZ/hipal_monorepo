@@ -135,7 +135,7 @@ const page = async ({
             businessId={businessData.businessId}
           />
         </section>
-        <CheckOutRequest />
+        <CheckOutRequest businessId={businessData.businessId} />
       </ViewPortContainer>
     </HotelBackgroundContainer>
   )

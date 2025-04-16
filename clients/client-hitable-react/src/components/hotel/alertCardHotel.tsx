@@ -135,6 +135,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
               {service?.name}
             </Badge>
           ))}
+          <h1 className="text-sm">{alert?.message}</h1>
         </div>
 
         {/* Order details button */}
@@ -297,6 +298,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
               {
                 text: 'Update',
                 onClick: () => updateCart(alert?._id),
+                hide: alert?.alertProgress === "MESSAGE",
                 className: 'rounded-lg shadow-md text-white',
                 disable: isPending,
               },

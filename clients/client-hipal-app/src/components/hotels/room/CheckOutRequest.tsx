@@ -10,7 +10,7 @@ import { useMutation } from "@tanstack/react-query"
 import { useLogin } from "@/components/store/useLogin"
 import { useHotelTemp } from "@/components/store/useHotelTemp"
 
-const MemoCheckOutRequest = () => {
+const MemoCheckOutRequest = ({ businessId }: { businessId: string }) => {
 
     const userDetails = useLogin((s) => s.userDetails)
     const { isSubmitting, setIsSubmitting, showConfirmation, setShowConfirmation } = useHotelTemp();
@@ -28,6 +28,7 @@ const MemoCheckOutRequest = () => {
         setIsSubmitting(true);
         mutateAsync({
             userId: userDetails?._id,
+            businessId: businessId,
         });
     };
 

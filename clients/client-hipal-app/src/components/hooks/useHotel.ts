@@ -1,10 +1,9 @@
 import { apiRpc } from "@hi/common";
-import useBusinessDetails from "../store/useBusinessDetails";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
-import { useHotelBusinessData } from "../store/useHotelBusinessData";
-import { useHotelTemp } from "../store/useHotelTemp";
 import { toast } from "react-toastify";
+import useBusinessDetails from "../store/useBusinessDetails";
+import { useHotelTemp } from "../store/useHotelTemp";
 
 export const useGetAllRooms = () => {
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
@@ -29,16 +28,15 @@ export const useGetAllRooms = () => {
 };
 
 export const useCheckoutRequest = () => {
-  const businessId = useHotelBusinessData((s) => s.hotelData.businessId);
   const room = useSearchParams()?.get("room");
   const { setShowConfirmation, setIsSubmitting } = useHotelTemp();
   const triggerCheckoutRequest = async (payload: {
     userId: string;
+    businessId: string;
   }) => {
-    console.log("userId", payload.userId);
     const roomResponse = await apiRpc.hotel.rooms.fetch_room.$get({
       query: {
-        businessId,
+        businessId: payload.businessId,
         roomName: room,
       },
     });

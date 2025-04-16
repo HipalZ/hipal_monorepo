@@ -2159,19 +2159,26 @@ const whatsappRouter = new Hono()
                 slug: urlObj?.urlCode,
               });
 
+              console.log("room", room);
+
               if (room && room.userIds.length === 0) {
+                console.log("yaha");
                 const a = await HotelRoom.findOneAndUpdate(
                   {
+                    businessId: config?.businessId,
+                    name: room?.name,
                     slug: urlObj?.urlCode,
                   },
                   {
                     $addToSet: {
                       userIds: user?._id,
-                      source: "",
                     },
+                    source: "",
                     roomStatus: "OCCUPIED",
                   },
                 );
+
+                console.log("a", a);
 
                 const roomSession = await HotelRoomSession.findOne({
                   roomId: a?._id.toString(),

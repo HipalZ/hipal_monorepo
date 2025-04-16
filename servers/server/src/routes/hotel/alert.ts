@@ -99,6 +99,47 @@ const scheduleAlertUpdate = (
   }
 };
 
+const scheduleAlert = (
+  intervals: number[], // Array of intervals in seconds
+  businessId: string,
+  roomName: string,
+  alertId: string,
+) => {
+  for (const interval of intervals) {
+    if (interval > 0) {
+      // Calculate the run time: current time + interval seconds
+      const runTime = new Date(Date.now() + interval * 1000);
+      const cronExpression = `${runTime.getSeconds()} ${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${
+        runTime.getMonth() + 1
+      } *`;
+
+      schedule(
+        cronExpression,
+        async () => {
+          const alert = await HotelAlert.findById(alertId);
+
+          if (alert?.alertProgress === "CREATED") {
+            const registrationTokens = await DeviceToken.find({
+              businessId: businessId,
+            });
+
+            for (const obj of registrationTokens) {
+              if (obj.notification) {
+                await sendPushNotification(obj.token, roomName);
+              }
+            }
+          }
+        },
+        // Uncomment and configure timezone if needed
+        {
+          scheduled: true,
+          timezone: "Asia/Kolkata",
+        },
+      );
+    }
+  }
+};
+
 const hotelAlertRouter = new Hono()
   .get(
     "/fetch_room_alerts",
@@ -136,7 +177,8 @@ const hotelAlertRouter = new Hono()
           $in: [
             "CREATED",
             "ACCEPTED",
-
+            "ESCALATION",
+            "MESSAGE",
             "WARNING",
             "NOT_DELIVERED",
           ],
@@ -396,9 +438,9 @@ const hotelAlertRouter = new Hono()
         }
 
         const serviceData = await HotelService.findById(serviceId);
-        const avgCompletionTime = serviceData?.avgCompletionTime || 2;
-        // const avgAcceptanceTime = serviceData?.avgAcceptanceTime || 0;
-        // const avgDeliveryTime = serviceData?.avgDeliveryTime || 0;
+        const avgCompletionTime = serviceData?.avgCompletionTime || 0;
+        const avgAcceptanceTime = serviceData?.avgAcceptanceTime || 0;
+        const avgDeliveryTime = serviceData?.avgDeliveryTime || 0;
 
         if (avgCompletionTime > 0) {
           // Schedule updates based on average times
@@ -410,7 +452,31 @@ const hotelAlertRouter = new Hono()
             requestData.businessId,
             roomData.name,
           );
+
+          scheduleAlertUpdate(
+            alert._id.toString(),
+            avgAcceptanceTime,
+            "ACCEPTED",
+            "WARNING",
+            requestData.businessId,
+            roomData.name,
+          );
+          scheduleAlertUpdate(
+            alert._id.toString(),
+            avgDeliveryTime,
+            "DELIVERED",
+            "WARNING",
+            requestData.businessId,
+            roomData.name,
+          );
         }
+
+        scheduleAlert(
+          [60, 120],
+          requestData.businessId,
+          roomData.name,
+          alert._id.toString(),
+        );
       }
 
       const registrationTokens = await DeviceToken.find({
@@ -423,6 +489,8 @@ const hotelAlertRouter = new Hono()
           }
         }),
       );
+
+      // Example usage:
 
       return respond(c, "Alert created successfully", false, 201, {});
     });
