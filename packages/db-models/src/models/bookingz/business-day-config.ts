@@ -1,22 +1,17 @@
 import type { Document, Types } from "mongoose";
 import { Schema, model } from "mongoose";
 import { z } from "zod";
-import { halfHourTimeRegex, requiredObjectIdString } from "./utils";
+import {
+  endTimeValidator,
+  parseTimeToMinutes,
+  requiredObjectIdString,
+  startTimeValidator,
+} from "./utils";
 
 // Zod for closed intervals with half‑hour validation
 const closedIntervalZodSchema = z.object({
-  startTime: z
-    .string()
-    .nonempty({ message: "Start time is required" })
-    .regex(halfHourTimeRegex, {
-      message: 'Start time must be in half-hour format (e.g. "09:00", "19:30")',
-    }),
-  endTime: z
-    .string()
-    .nonempty({ message: "End time is required" })
-    .regex(halfHourTimeRegex, {
-      message: 'End time must be in half-hour format (e.g. "09:00", "19:30")',
-    }),
+  startTime: startTimeValidator,
+  endTime: endTimeValidator,
 });
 
 // Zod schema for BusinessDayConfig with half‑hour validation on time fields
@@ -24,19 +19,8 @@ export const businessDayConfigZodSchema = z
   .object({
     businessId: requiredObjectIdString("Business ID"),
     dayOfWeek: z.number({ required_error: "Day of week is required" }),
-    startTime: z
-      .string()
-      .nonempty({ message: "Start time is required" })
-      .regex(halfHourTimeRegex, {
-        message:
-          'Start time must be in half-hour format (e.g. "09:00", "19:30")',
-      }),
-    endTime: z
-      .string()
-      .nonempty({ message: "End time is required" })
-      .regex(halfHourTimeRegex, {
-        message: 'End time must be in half-hour format (e.g. "09:00", "19:30")',
-      }),
+    startTime: startTimeValidator,
+    endTime: endTimeValidator,
     isOpen: z.boolean().default(true),
     closedIntervals: z.array(closedIntervalZodSchema).default([]),
     archived_at: z.date().nullable().default(null),
@@ -91,22 +75,22 @@ const businessDayConfigSchema = new Schema<IBusinessDayConfig>(
 // Pre-save hook: merge overlapping closed intervals
 businessDayConfigSchema.pre("save", function (next) {
   if (this.closedIntervals && this.closedIntervals.length > 0) {
-    const parseToMinutes = (time: string): number => {
-      const [hours, minutes] = time.split(":").map(Number);
-      return hours * 60 + minutes;
-    };
-
     // Sort intervals by start time
     this.closedIntervals.sort(
-      (a, b) => parseToMinutes(a.startTime) - parseToMinutes(b.startTime),
+      (a, b) =>
+        parseTimeToMinutes(a.startTime) - parseTimeToMinutes(b.startTime),
     );
     // Merge intervals
     this.closedIntervals = this.closedIntervals.reduce(
       (acc: any[], curr: any) => {
         if (acc.length === 0) return [curr];
         const last = acc[acc.length - 1];
-        if (parseToMinutes(curr.startTime) <= parseToMinutes(last.endTime)) {
-          if (parseToMinutes(curr.endTime) > parseToMinutes(last.endTime)) {
+        if (
+          parseTimeToMinutes(curr.startTime) <= parseTimeToMinutes(last.endTime)
+        ) {
+          if (
+            parseTimeToMinutes(curr.endTime) > parseTimeToMinutes(last.endTime)
+          ) {
             last.endTime = curr.endTime;
           }
         } else {

@@ -1,7 +1,12 @@
 import type { Document, Types } from "mongoose";
 import { Schema, model } from "mongoose";
 import { z } from "zod";
-import { dateSchema, halfHourTimeRegex, requiredObjectIdString } from "./utils";
+import {
+  dateSchema,
+  halfHourTimeRegex,
+  requiredObjectIdString,
+  startTimeValidator,
+} from "./utils";
 
 // Zod schema for Booking with half‑hour validation for the "slot" field
 export const bookingZodSchema = z
@@ -10,12 +15,7 @@ export const bookingZodSchema = z
     createdByUserId: requiredObjectIdString("Created By User ID"),
     businessId: requiredObjectIdString("Business ID"),
     bookingDate: dateSchema,
-    slot: z
-      .string()
-      .min(1, { message: "Slot is required" })
-      .regex(halfHourTimeRegex, {
-        message: 'Slot must be in half-hour format (e.g. "09:00", "19:30")',
-      }),
+    slot: startTimeValidator,
     period: z.number({ required_error: "Period is required" }),
     numberOfGuests: z.number({
       required_error: "Number of guests is required",
