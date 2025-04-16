@@ -3,7 +3,8 @@ import { Schema, model } from "mongoose";
 import { z } from "zod";
 import {
   dateSchema,
-  halfHourTimeRegex,
+  normalizeTime,
+  parseTimeToMinutes,
   requiredObjectIdString,
   startTimeValidator,
 } from "./utils";
@@ -132,5 +133,21 @@ const bookingSchema = new Schema<IBooking>(
   },
   { timestamps: true },
 );
+
+bookingSchema.pre("save", function (next) {
+  if (this.slot && typeof this.slot === "string") {
+    const normalizedSlot = normalizeTime(this.slot);
+    const minutes = parseTimeToMinutes(normalizedSlot);
+    if (minutes < 240 || minutes > 1650 || minutes % 30 !== 0) {
+      return next(
+        new Error(
+          'Slot must be in half-hour format between "04:00" and "27:30"',
+        ),
+      );
+    }
+    this.slot = normalizedSlot;
+  }
+  next();
+});
 
 export const BookingModel = model<IBooking>("Booking", bookingSchema);
