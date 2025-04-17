@@ -53,9 +53,8 @@ const ServiceItem = memo(
   }) => (
     <Card
       key={service._id}
-      className={`flex items-center p-3 transition-colors border rounded-lg cursor-pointer ${
-        selected ? "border-h-primary bg-h-primary/5" : "border-gray-200"
-      }`}
+      className={`flex items-center p-3 transition-colors border rounded-lg cursor-pointer ${selected ? "border-h-primary bg-h-primary/5" : "border-gray-200"
+        }`}
       onClick={() => {
         if (service.availability !== false) {
           onToggle()
@@ -141,7 +140,7 @@ export default function ServiceCategoryCard({ category, className = "", business
   const closeServicePopup = useCallback(() => {
     setServicePopup(false)
     setCartEmpty()
-  }, [ setCartEmpty])
+  }, [setCartEmpty])
 
   const handleServiceToggle = useCallback((serviceId: string) => {
     setSelectedServices((prev) => {
@@ -221,7 +220,7 @@ export default function ServiceCategoryCard({ category, className = "", business
             }}
             sizes="(max-width: 30rem) 100vw, 30rem"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#00000030] via-[#00000010] to-transparent opacity-70" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
         </div>
 
         <div className="absolute bottom-0 left-0 w-full p-4">
@@ -245,7 +244,7 @@ export default function ServiceCategoryCard({ category, className = "", business
               {isLoading ? (
                 <LoadingSpinnerCircle />
               ) : (
-                <div className="p-4">
+                <div className="p-4 relative max-h-[90dvh] overflow-auto hide-scrollbar">
                   <h2 className="mb-4 text-xl font-bold text-h-primary">{category.name} Services</h2>
 
                   {alertStatus === "success" ? (
