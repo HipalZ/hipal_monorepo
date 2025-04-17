@@ -851,6 +851,15 @@ const hotelAlertRouter = new Hono()
         throw new Error("Failed to update alert");
       }
 
+      const updateRoomChat = await HotelRoomChat.findOneAndUpdate(
+        { alertId: alertId },
+        { cart: cart },
+        { session, new: true },
+      );
+      if (!updateRoomChat) {
+        throw new Error("Failed to update room chat");
+      }
+
       return respond(c, "Alert cart updated successfully", false, 200, {
         _id: updatedAlert._id,
       });
