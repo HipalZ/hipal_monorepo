@@ -845,6 +845,13 @@ const hotelAlertRouter = new Hono()
 
       const alert = await HotelAlert.findById(alertId);
 
+      const roomChat = await HotelRoomChat.findOne({
+        alertId: alertId,
+      });
+      if (!roomChat) {
+        return respond(c, "Room chat not found", true, 404, {});
+      }
+
       if (!alert) {
         return respond(c, "Alert not found", true, 404, {});
       }
@@ -867,6 +874,29 @@ const hotelAlertRouter = new Hono()
       if (!updateRoomChat) {
         throw new Error("Failed to update room chat");
       }
+
+      const roomChatReply = new HotelRoomChatReply({
+        action: false,
+        description: "your cart is updated",
+        roomChatId: roomChat._id,
+        userId: alert.userId,
+        status: "NORMAL",
+        date: Date.now(),
+      });
+
+      await roomChatReply.save({ session });
+
+      if (!roomChatReply) {
+        throw new Error("Failed to create room chat reply");
+      }
+
+      await HotelRoomChat.findByIdAndUpdate(
+        roomChat._id,
+        {
+          $addToSet: { roomChatReplyIds: roomChatReply._id },
+        },
+        { session },
+      );
 
       return respond(c, "Alert cart updated successfully", false, 200, {
         _id: updatedAlert._id,
