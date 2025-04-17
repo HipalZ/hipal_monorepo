@@ -437,7 +437,7 @@ const hotelAlertRouter = new Hono()
           // Schedule updates based on average times
           scheduleAlertUpdate(
             alert._id.toString(),
-            2,
+            avgCompletionTime,
             "DELIVERED",
             "ESCALATION",
             requestData.businessId,
