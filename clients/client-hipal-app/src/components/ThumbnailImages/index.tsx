@@ -10,6 +10,7 @@ import SkeletonLoader from "@/components/atoms/loader/skeletonLoader"
 import { useGetBucketByBusinessId } from "../hooks/useImages"
 import { motion, AnimatePresence, useMotionValue, type PanInfo } from "framer-motion"
 import type { Image as ImageType, IBuckets } from "../hooks/useImages"
+import { cn } from "@/lib/utils"
 
 // Types
 interface BusinessImagesProps {
@@ -120,10 +121,10 @@ const GridItem = memo(
     return (
       <motion.div
         key={`${categoryId}-${index}`}
-        className={`
-        overflow-hidden rounded-xl cursor-pointer
-        ${index === 0 ? "col-span-2 row-span-2" : "col-span-1 row-span-1"}
-      `}
+        className={cn(
+          "overflow-hidden rounded-xl cursor-pointer ",
+          index === 0 ? "col-span-2 row-span-2 h-[13rem]" : "col-span-1 row-span-1 h-[6rem]"
+        )}
         onClick={onClick}
         variants={gridItemVariants}
         initial="hidden"
@@ -133,7 +134,7 @@ const GridItem = memo(
         layoutId={`image-${categoryId}-${index}`}
       >
         <Image
-          src={image.imageUrl || "/placeholder.svg"}
+          src={image.imageUrl}
           alt={image.name || "Gallery image"}
           width={index === 0 ? 600 : 300}
           height={index === 0 ? 600 : 300}

@@ -121,7 +121,7 @@ const calculateDiscount = async (
   const discount = Math.round(
     Math.abs(
       finalBillValue / (1 + gstPercentage + serviceChargePercentage) -
-        estimatedSubTotal,
+      estimatedSubTotal,
     ),
   );
 
@@ -593,9 +593,9 @@ const paymentsRouter = new Hono()
           // Step 4: Calculate finalTotal
           const finalTotal = Math.round(
             finalSubTotal +
-              finalTax +
-              (removeTips ? 0 : tips || tempTable.tips) +
-              tempTable.serviceCharge,
+            finalTax +
+            (removeTips ? 0 : tips || tempTable.tips) +
+            tempTable.serviceCharge,
           );
 
           await UserSession.findOneAndUpdate(
@@ -1719,12 +1719,12 @@ const paymentsRouter = new Hono()
         200,
         existingPaymentAlerts.length === 0
           ? [
-              {
-                v: appInfo?.v,
-                appUrl: appInfo?.appUrl,
-                updateFeature: appInfo?.updateFeature,
-              },
-            ]
+            {
+              v: appInfo?.v,
+              appUrl: appInfo?.appUrl,
+              updateFeature: appInfo?.updateFeature,
+            },
+          ]
           : existingPaymentAlerts,
       );
     },
@@ -1877,7 +1877,7 @@ const paymentsRouter = new Hono()
                     order_id: order?._id,
                     total:
                       paymentMode?.name === "npc" ||
-                      paymentMode?.name === "complementary"
+                        paymentMode?.name === "complementary"
                         ? 0
                         : order?.total,
                     mode: settleModes.length > 1 ? "split" : paymentMode?.name,
@@ -1890,7 +1890,7 @@ const paymentsRouter = new Hono()
                         : order?.userId,
                     claimedCoins:
                       paymentMode?.name === "npc" ||
-                      paymentMode?.name === "complementary"
+                        paymentMode?.name === "complementary"
                         ? 0
                         : order?.claimedCoins,
                     billValue: order?.billValue,
@@ -1898,7 +1898,7 @@ const paymentsRouter = new Hono()
                     tableName: order?.tableName,
                     earnCoins:
                       paymentMode?.name === "npc" ||
-                      paymentMode?.name === "complementary"
+                        paymentMode?.name === "complementary"
                         ? 0
                         : finalCashBack,
                     razorpayEventId: nanoid(15),
@@ -1909,12 +1909,12 @@ const paymentsRouter = new Hono()
                     posBillId: tableSession?.billInvoiceId,
                     tax:
                       paymentMode?.name === "npc" ||
-                      paymentMode?.name === "complementary"
+                        paymentMode?.name === "complementary"
                         ? 0
                         : tableSession?.finalTax,
                     serviceCgarge:
                       paymentMode?.name === "npc" ||
-                      paymentMode?.name === "complementary"
+                        paymentMode?.name === "complementary"
                         ? 0
                         : tableSession?.serviceCharge,
                     posBillRequestId: tableSession?.billRequestId,
@@ -2489,77 +2489,135 @@ const paymentsRouter = new Hono()
 
       const queryObject = { $and: filterConditions, isDeleted: false };
 
+
       const existingPayments = await Payment.find(queryObject)
         .sort({ _id: -1 })
         .populate({ path: "order_id" })
         .populate({ path: "userId", select: "name phone" });
 
-      let totalSubtotal = 0;
-      let totalDiscount = 0;
+      // initialize all totals
+      let totalBillValue = 0;
+      let totalInitialSubTotal = 0;
+      let totalInitialTax = 0;
+      let totalInitialTotal = 0;
+      let totalFinalSubTotal = 0;
       let totalTax = 0;
       let totalServiceCharge = 0;
       let totalAmount = 0;
+      let totalTips = 0;
+      let totalClaimedCoins = 0;
+      let totalEarnCoins = 0;
+      let totalDiscount = 0;
 
       const rows = existingPayments.map((payment: any) => {
         const {
           _id,
           date,
-          orderType,
           userId,
           tableName,
-          initialSubTotal,
-          discount,
-          discountPercentage,
-          tax,
-          serviceCharge,
-          total,
           mode,
+          paymentMode,
+          billValue = 0,
+          tips = 0,
+          claimedCoins = 0,
+          earnCoins = 0,
+          discount = 0,
+          discountType,
+          initialSubTotal = 0,
+          initialTax = 0,
+          initialTotal = 0,
+          finalSubTotal = 0,
+          tax = 0,
+          serviceCharge = 0,
+          total: finalTotal = 0,
+          order_id,
+          waiterName,
+          posBillId,
+          posBillRequestId,
+          settleType,
+          comment,
           splitModes = [],
         } = payment;
 
-        let paymentModeField = mode;
-        if (mode === "split" && Array.isArray(splitModes)) {
-          // Combine each split mode into a single string
-          const splittedInfo = splitModes
-            .map((m: any) => `${m.name}=${m.amount}`)
-            .join(", ");
-          paymentModeField = `SPLIT: ${splittedInfo}`;
-        }
+        // aggregate totals
+        totalBillValue += billValue;
+        totalInitialSubTotal += initialSubTotal;
+        totalInitialTax += initialTax;
+        totalInitialTotal += initialTotal;
+        totalFinalSubTotal += finalSubTotal;
+        totalTax += tax;
+        totalServiceCharge += serviceCharge;
+        totalAmount += finalTotal;
+        totalTips += tips;
+        totalClaimedCoins += claimedCoins;
+        totalEarnCoins += earnCoins;
+        totalDiscount += discount;
 
-        totalSubtotal += initialSubTotal ?? 0;
-        totalDiscount += discount ?? 0;
-        totalTax += tax ?? 0;
-        totalServiceCharge += serviceCharge ?? 0;
-        totalAmount += total ?? 0;
+        // flatten splitModes
+        const splitInfo = Array.isArray(splitModes)
+          ? splitModes.map((m: any) => `${m.name}=${m.amount}`).join("; ")
+          : "";
 
         return {
-          PAYMENT_ID: _id.toString(), // Uppercase headings for minimal emphasis
+          PAYMENT_ID: _id.toString(),
           DATE: new Date(date).toLocaleString(),
           USER_NAME: userId?.name ?? "",
           USER_PHONE: userId?.phone ?? "",
           TABLE_NAME: tableName || "",
-          SUBTOTAL: initialSubTotal ?? 0,
-          DISCOUNT: discount ?? 0,
-          DISCOUNT_PERCENTAGE: discountPercentage ?? 0,
-          TAX: tax ?? 0,
-          SERVICE_CHARGE: serviceCharge ?? 0,
-          TOTAL: total ?? 0,
-          PAYMENT_MODE: paymentModeField,
+          MODE: mode,
+          PAYMENT_MODE: paymentMode,
+          BILL_VALUE: billValue,
+          INITIAL_SUBTOTAL: initialSubTotal,
+          INITIAL_TAX: initialTax,
+          INITIAL_TOTAL: initialTotal,
+          FINAL_SUBTOTAL: finalSubTotal,
+          TAX: tax,
+          SERVICE_CHARGE: serviceCharge,
+          TOTAL: finalTotal,
+          TIPS: tips,
+          CLAIMED_COINS: claimedCoins,
+          EARNED_COINS: earnCoins,
+          DISCOUNT: discount,
+          DISCOUNT_TYPE: discountType,
+          MODES: splitInfo,
+          SETTLE_TYPE: settleType,
+          COMMENT: comment,
+          WAITER_NAME: waiterName,
+          POS_BILL_ID: posBillId,
+          POS_BILL_REQUEST_ID: posBillRequestId,
+          ORDER_ID: order_id?._id.toString() ?? "",
         };
       });
+
+      // push totals row
       rows.push({
-        PAYMENT_ID: "TOTALS (DO NOT EDIT THIS ROW)", // This can be "-----" or something else to indicate a summary row
+        PAYMENT_ID: "TOTALS (DO NOT EDIT THIS ROW)",
         DATE: "",
         USER_NAME: "",
         USER_PHONE: "",
         TABLE_NAME: "",
-        SUBTOTAL: `"=${totalSubtotal}"`,
-        DISCOUNT: `"=${totalDiscount}"`,
-        DISCOUNT_PERCENTAGE: "",
-        TAX: `"=${totalTax}"`,
-        SERVICE_CHARGE: `"=${totalServiceCharge}"`,
-        TOTAL: `"=${totalAmount}"`,
+        MODE: "",
         PAYMENT_MODE: "",
+        BILL_VALUE: `="${totalBillValue.toFixed(2)}"`,
+        INITIAL_SUBTOTAL: `="${totalInitialSubTotal.toFixed(2)}"`,
+        INITIAL_TAX: `="${totalInitialTax.toFixed(2)}"`,
+        INITIAL_TOTAL: `="${totalInitialTotal.toFixed(2)}"`,
+        FINAL_SUBTOTAL: `="${totalFinalSubTotal.toFixed(2)}"`,
+        TAX: `="${totalTax.toFixed(2)}"`,
+        SERVICE_CHARGE: `="${totalServiceCharge.toFixed(2)}"`,
+        TOTAL: `="${totalAmount.toFixed(2)}"`,
+        TIPS: `="${totalTips.toFixed(2)}"`,
+        CLAIMED_COINS: `="${totalClaimedCoins.toFixed(2)}"`,
+        EARNED_COINS: `="${totalEarnCoins.toFixed(2)}"`,
+        DISCOUNT: `="${totalDiscount.toFixed(2)}"`,
+        DISCOUNT_TYPE: "",
+        MODES: "",
+        SETTLE_TYPE: "",
+        COMMENT: "",
+        WAITER_NAME: "",
+        POS_BILL_ID: "",
+        POS_BILL_REQUEST_ID: "",
+        ORDER_ID: "",
       });
 
       const csvString = Papa.unparse(rows, {
