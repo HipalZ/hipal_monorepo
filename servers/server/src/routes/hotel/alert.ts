@@ -113,6 +113,8 @@ const scheduleAlert = (
         runTime.getMonth() + 1
       } *`;
 
+      console.log("cronExpression", cronExpression);
+
       schedule(
         cronExpression,
         async () => {
@@ -130,11 +132,11 @@ const scheduleAlert = (
             }
           }
         },
-        // Uncomment and configure timezone if needed
-        {
-          scheduled: true,
-          timezone: "Asia/Kolkata",
-        },
+        // // Uncomment and configure timezone if needed
+        // {
+        //   scheduled: true,
+        //   timezone: "Asia/Kolkata",
+        // },
       );
     }
   }
