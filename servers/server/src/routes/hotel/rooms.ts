@@ -137,7 +137,10 @@ const roomRouter = new Hono()
       }
 
       // Check if the provided userId exists in roomData.userIds by comparing with the _id field
-      if (!roomData.userIds.some((user) => user._id.toString() === userId)) {
+      if (
+        roomData?.userIds?.length > 0 &&
+        !roomData.userIds.some((user) => user._id.toString() === userId)
+      ) {
         return respond(
           c,
           `Room already Occupied by ${roomData.userIds[0].name}`,
