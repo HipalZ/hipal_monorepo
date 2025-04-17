@@ -45,9 +45,7 @@ const sendPushNotification = async (token: string, hotelNo: string) => {
   try {
     const response = await admin.messaging().send(pushMessage);
     return { success: true, response };
-  } catch (error) {
-    console.error("Error sending FCM message:", error);
-  }
+  } catch (error) {}
 };
 
 const scheduleAlertUpdate = (
