@@ -2570,7 +2570,7 @@ const paymentsRouter = new Hono()
           INITIAL_SUBTOTAL: initialSubTotal,
           INITIAL_TAX: initialTax,
           INITIAL_TOTAL: initialTotal,
-          FINAL_SUBTOTAL: finalSubTotal,
+          FINAL_SUBTOTAL: finalSubTotal === 0 ? initialSubTotal : finalSubTotal,
           TAX: tax,
           SERVICE_CHARGE: serviceCharge,
           TOTAL: finalTotal,
