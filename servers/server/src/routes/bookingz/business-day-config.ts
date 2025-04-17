@@ -1,5 +1,10 @@
 import { Hono } from "hono";
-import { mongoIdZod, zJsonValidator, zParamsValidator } from "@hi/db-models";
+import {
+  mongoIdZod,
+  zDayRange,
+  zJsonValidator,
+  zParamsValidator,
+} from "@hi/db-models";
 import { z } from "zod";
 import { upsertDayConfigBodySchema } from "@hi/db-models/src/models/bookingz/business-day-config";
 import {
@@ -35,9 +40,7 @@ businessDayConfigRouter.patch(
   zParamsValidator(
     z.object({
       businessId: mongoIdZod,
-      dayOfWeek: z
-        .string()
-        .regex(/^[0-6]$/, "dayOfWeek must be a digit between 0 and 6"),
+      dayOfWeek: zDayRange,
     }),
   ),
   toggleDayConfigController,

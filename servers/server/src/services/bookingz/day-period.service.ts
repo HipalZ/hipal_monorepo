@@ -3,6 +3,7 @@ import { Types as mongooseTypes } from "mongoose";
 import {
   BusinessDayConfigModel,
   BusinessPeriodConfigModel,
+  Couponz,
 } from "@hi/db-models";
 import { ensureBookingBusiness } from "./booking-business.service";
 
@@ -212,12 +213,46 @@ export const upsertPeriodConfigService = async (
     });
 
   /* ── 3. apply incoming fields (only if provided) ──────────── */
-  if (payload.baseCharge !== undefined) pCfg.baseCharge = payload.baseCharge;
-  if (payload.redeemableCoverCharge !== undefined)
+  if (payload.baseCharge !== undefined) {
+    pCfg.baseCharge = payload.baseCharge;
+  }
+  if (payload.redeemableCoverCharge !== undefined) {
     pCfg.redeemableCoverCharge = payload.redeemableCoverCharge;
-  if (payload.isOpen !== undefined) pCfg.isOpen = payload.isOpen;
+  }
+  if (payload.isOpen !== undefined) {
+    pCfg.isOpen = payload.isOpen;
+  }
 
   if (payload.couponAllocations !== undefined) {
+    // Extract all couponIds from payload
+    const couponIds = payload.couponAllocations.map(
+      (c) => new mongooseTypes.ObjectId(c.couponId),
+    );
+
+    // Fetch all matching coupons that are active BOOKINGS type
+    const validCoupons = await Couponz.find({
+      _id: { $in: couponIds },
+      isDeleted: false,
+      type: "BOOKINGS",
+    })
+      .session(session)
+      .select("_id");
+
+    // If any couponId is missing or not of the right type, reject
+    if (validCoupons.length !== couponIds.length) {
+      // figure out which ones are invalid
+      const validIdStrings = new Set(validCoupons.map((c) => c._id.toString()));
+      const invalid = couponIds
+        .map((id) => id.toString())
+        .filter((id) => !validIdStrings.has(id));
+      throw new Error(
+        `Invalid coupon allocations: the following couponIds are either deleted or not of type BOOKINGS: ${invalid.join(
+          ", ",
+        )}`,
+      );
+    }
+
+    // All good — map into the schema
     pCfg.couponAllocations = payload.couponAllocations.map((c) => ({
       couponId: new mongooseTypes.ObjectId(c.couponId),
       remaining: c.remaining,
@@ -227,22 +262,13 @@ export const upsertPeriodConfigService = async (
   await pCfg.save({ session });
 
   /* ── 4. trigger ledger refresh for this (dow, period) ─────── */
-  console.log("this ran with", {
-    businessId,
-    dayOfWeek,
-    period,
-    newAlloc: pCfg.couponAllocations.map((x: any) => ({
-      couponId: x.couponId.toString(),
-      remaining: x.remaining,
-    })),
-  });
   await ensureBookingBusiness(
     businessId,
     [
       {
         dayOfWeek,
         period,
-        newAlloc: pCfg.couponAllocations.map((x: any) => ({
+        newAlloc: pCfg.couponAllocations.map((x) => ({
           couponId: x.couponId.toString(),
           remaining: x.remaining,
         })),
@@ -250,6 +276,37 @@ export const upsertPeriodConfigService = async (
     ],
     session,
   );
+
+  return pCfg;
+};
+
+export const getSinglePeriodService = async (
+  businessId: string,
+  dayOfWeek: number,
+  period: number,
+  session: ClientSession,
+) => {
+  // 1) ensure that the BusinessDayConfig exists
+  const dayCfg = await BusinessDayConfigModel.findOne({
+    businessId,
+    dayOfWeek,
+  }).session(session);
+  if (!dayCfg) {
+    throw new Error(
+      `No day‑config for business ${businessId} on dayOfWeek=${dayOfWeek}`,
+    );
+  }
+
+  // 2) fetch the specific period
+  const pCfg = await BusinessPeriodConfigModel.findOne({
+    businessDayConfigId: dayCfg._id,
+    period,
+  }).session(session);
+  if (!pCfg) {
+    throw new Error(
+      `No period‑config for businessDayConfig ${dayCfg._id} period=${period}`,
+    );
+  }
 
   return pCfg;
 };

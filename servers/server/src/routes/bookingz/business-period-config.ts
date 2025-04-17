@@ -1,8 +1,15 @@
 import { Hono } from "hono";
-import { mongoIdZod, zJsonValidator, zParamsValidator } from "@hi/db-models";
+import {
+  mongoIdZod,
+  zDayRange,
+  zJsonValidator,
+  zParamsValidator,
+  zPeriodRange,
+} from "@hi/db-models";
 import { z } from "zod";
 import {
   getPeriodsForDayController,
+  getSinglePeriodController,
   toggleAllPeriodsForBusinessDayController,
   toggleSinglePeriodController,
   upsertPeriodConfigController,
@@ -17,12 +24,23 @@ businessPeriodConfigRouter.get(
   zParamsValidator(
     z.object({
       businessId: mongoIdZod,
-      dayOfWeek: z
-        .string()
-        .regex(/^[0-6]$/, "dayOfWeek must be a digit between 0 and 6"),
+      dayOfWeek: zDayRange,
     }),
   ),
   getPeriodsForDayController,
+);
+
+// — GET one period’s details
+businessPeriodConfigRouter.get(
+  "/period/:businessId/:dayOfWeek/:period",
+  zParamsValidator(
+    z.object({
+      businessId: mongoIdZod,
+      dayOfWeek: zDayRange,
+      period: zPeriodRange,
+    }),
+  ),
+  getSinglePeriodController,
 );
 
 // update a single period
@@ -31,8 +49,8 @@ businessPeriodConfigRouter.patch(
   zParamsValidator(
     z.object({
       businessId: mongoIdZod,
-      dayOfWeek: z.string().regex(/^[0-6]$/, "dayOfWeek must be 0‑6"),
-      period: z.string().regex(/^[0-3]$/, "period must be 0‑3"),
+      dayOfWeek: zDayRange,
+      period: zPeriodRange,
     }),
   ),
   zJsonValidator(upsertPeriodPayloadSchema),
@@ -43,10 +61,8 @@ businessPeriodConfigRouter.patch(
   "/toggle-all-periods/:businessId/:dayOfWeek",
   zParamsValidator(
     z.object({
-      businessId: mongoIdZod, // Validate that businessId is a valid Mongo ID
-      dayOfWeek: z
-        .string()
-        .regex(/^[0-6]$/, "dayOfWeek must be a digit between 0 and 6"),
+      businessId: mongoIdZod,
+      dayOfWeek: zDayRange,
     }),
   ),
   toggleAllPeriodsForBusinessDayController,
@@ -57,8 +73,8 @@ businessPeriodConfigRouter.patch(
   zParamsValidator(
     z.object({
       businessId: mongoIdZod,
-      dayOfWeek: z.string().regex(/^[0-6]$/, "dayOfWeek must be 0-6"),
-      period: z.string().regex(/^[0-3]$/, "period must be 0-3"),
+      dayOfWeek: zDayRange,
+      period: zPeriodRange,
     }),
   ),
   toggleSinglePeriodController,

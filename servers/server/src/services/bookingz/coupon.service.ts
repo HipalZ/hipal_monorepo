@@ -1,75 +1,117 @@
-import { Couponz } from "@hi/db-models";
-import type { ClientSession } from "mongoose";
+import {
+  type BookingCouponCreateType,
+  type BookingCouponUpdateType,
+  Couponz,
+} from "@hi/db-models";
+import { Types, type ClientSession } from "mongoose";
 
-/* createBookingCoupon */
-export const createBookingCoupon = async (
+export const createBookingCouponService = async (
   businessId: string,
-  name: string,
-  discountType: "PERCENTAGE" | "AMOUNT",
-  value: number,
-  upto: number | undefined,
-  meta: any,
+  payload: BookingCouponCreateType,
   session: ClientSession,
 ) => {
-  const coupon = await Couponz.create(
-    [
-      {
-        businessId,
-        name,
-        type: "BOOKINGS",
-        config: { value, discountType, upto },
-        bookingMeta: meta,
-      },
-    ],
-    { session },
-  );
-  return coupon[0];
+  const doc = new Couponz({
+    name: payload.name,
+    type: "BOOKINGS",
+    businessId: new Types.ObjectId(businessId),
+    isDeleted: false,
+    config: {
+      value: payload?.config?.value,
+      discountType: payload?.config?.discountType,
+      ...(payload?.config?.upto !== undefined && {
+        upto: payload?.config?.upto,
+      }),
+    },
+    bookingMeta: {
+      baseCharge: payload?.bookingMeta?.baseCharge,
+      ...(payload.bookingMeta?.redeemableCoverCharge !== undefined && {
+        redeemableCoverCharge: payload?.bookingMeta?.redeemableCoverCharge,
+      }),
+      ...(payload?.bookingMeta?.minGuests !== undefined && {
+        minGuests: payload?.bookingMeta?.minGuests,
+      }),
+    },
+  });
+  await doc.save({ session });
+  return doc;
 };
 
-/* updateBookingCoupon */
-export const updateBookingCoupon = async (
+export const updateBookingCouponService = async (
   couponId: string,
-  fields: Record<string, any>,
+  payload: BookingCouponUpdateType,
   session: ClientSession,
 ) => {
-  const coupon = await Couponz.findOne({
+  const existing = await Couponz.findOne({
     _id: couponId,
+    type: "BOOKINGS",
     isDeleted: false,
   }).session(session);
-  if (!coupon) throw new Error("Coupon not found");
-  if (coupon.type !== "BOOKINGS")
-    throw new Error("Only BOOKINGS coupons can be updated");
-
-  const map: Record<string, string> = {
-    name: "name",
-    discountType: "config.discountType",
-    value: "config.value",
-    upto: "config.upto",
-    bookingMeta: "bookingMeta",
-  };
-
-  for (const [k, v] of Object.entries(map)) {
-    if (fields[k] !== undefined) {
-      coupon.set(v, fields[k]);
-    }
+  if (!existing) throw new Error("Coupon not found or not of type BOOKINGS");
+  if (!existing.config) {
+    existing.config = { value: 0, discountType: "AMOUNT" };
   }
-  await coupon.save({ session });
-  return coupon;
+  if (!existing.bookingMeta) {
+    existing.bookingMeta = {
+      baseCharge: 0,
+      redeemableCoverCharge: 0,
+      minGuests: 0,
+    };
+  }
+
+  if (payload.name !== undefined) {
+    existing.name = payload.name;
+  }
+
+  if (payload.config !== undefined) {
+    const { value, discountType, upto } = payload.config;
+    existing.config.value = value;
+    existing.config.discountType = discountType;
+    if (discountType === "PERCENTAGE") {
+      if (upto !== undefined) {
+        existing.config.upto = upto;
+      }
+    } else {
+      existing.set("config.upto", undefined);
+      existing.markModified("config.upto");
+    }
+    existing.markModified("config");
+  }
+
+  if (payload.bookingMeta !== undefined) {
+    const { baseCharge, redeemableCoverCharge, minGuests } =
+      payload.bookingMeta;
+    if (baseCharge !== undefined) {
+      existing.bookingMeta.baseCharge = baseCharge;
+    }
+    if (redeemableCoverCharge !== undefined) {
+      existing.bookingMeta.redeemableCoverCharge = redeemableCoverCharge;
+    }
+    if (minGuests !== undefined) {
+      existing.bookingMeta.minGuests = minGuests;
+    }
+    existing.markModified("bookingMeta");
+  }
+
+  await existing.save({ session });
+  return existing;
 };
 
-/* archiveBookingCoupon */
-export const archiveBookingCoupon = async (
-  couponId: string,
-  session: ClientSession,
-) => {
+/** Fetch all non‑deleted BOOKINGS coupons for a business */
+export const getBusinessBookingCouponsService = async (businessId: string) => {
+  return Couponz.find({
+    businessId,
+    type: "BOOKINGS",
+    isDeleted: false,
+  });
+};
+
+/** Fetch one by _id */
+export const getBookingCouponByIdService = async (couponId: string) => {
   const coupon = await Couponz.findOne({
     _id: couponId,
+    type: "BOOKINGS",
     isDeleted: false,
-  }).session(session);
+  });
   if (!coupon) throw new Error("Coupon not found");
-  if (coupon.type !== "BOOKINGS")
-    throw new Error("Only BOOKINGS coupons can be archived");
-  coupon.isDeleted = true;
-  await coupon.save({ session });
   return coupon;
 };

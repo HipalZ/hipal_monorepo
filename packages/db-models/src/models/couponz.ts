@@ -8,6 +8,7 @@ import {
   DAYS,
   DISCOUNT_TYPES,
 } from "../validators/couponz";
+import { z } from "zod";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const { Schema } = mongoose;
@@ -18,7 +19,7 @@ const bookingMetaSchema = new Schema(
     redeemableCoverCharge: { type: Number, required: false },
     minGuests: { type: Number, required: false },
   },
-  { _id: false } // prevent creation of an _id for the subdocument
+  { _id: false },
 );
 
 const couponConfigSchema = new Schema({
@@ -219,3 +220,42 @@ const Couponz: Model<CouponzType> = mongoose.model<CouponzType>(
 );
 
 export { Couponz };
+
+// for bookings
+// for create
+export const bookingCouponCreateSchema = z.object({
+  name: z.string().min(1, { message: "Name is required" }),
+  config: z
+    .object({
+      value: z.number({ required_error: "Value is required" }).nonnegative(),
+      discountType: z.enum(["PERCENTAGE", "AMOUNT"]),
+      upto: z.number().nonnegative().optional(),
+    })
+    .refine(
+      (data) =>
+        data.discountType === "AMOUNT" ? data.upto === undefined : true,
+      {
+        message: "“upto” only allowed when discountType is PERCENTAGE",
+      },
+    ),
+  bookingMeta: z
+    .object({
+      baseCharge: z
+        .number({ required_error: "Base charge is required" })
+        .nonnegative(),
+      redeemableCoverCharge: z.number().nonnegative().optional(),
+      minGuests: z.number().int().nonnegative().optional(),
+    })
+    .refine(
+      (meta) =>
+        meta.redeemableCoverCharge === undefined ||
+        meta.redeemableCoverCharge <= meta.baseCharge,
+      {
+        message: "redeemableCoverCharge must be ≤ baseCharge",
+      },
+    ),
+});
+
+export const bookingCouponUpdateSchema = bookingCouponCreateSchema.partial();
+export type BookingCouponCreateType = z.infer<typeof bookingCouponCreateSchema>;
+export type BookingCouponUpdateType = z.infer<typeof bookingCouponUpdateSchema>;

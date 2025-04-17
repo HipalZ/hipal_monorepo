@@ -4,6 +4,7 @@ import {
 } from "@/services/bookingz/business-toggle.service";
 import {
   getPeriodsForDayService,
+  getSinglePeriodService,
   upsertPeriodConfigService,
 } from "@/services/bookingz/day-period.service";
 import { runInTransaction } from "@hi/utils";
@@ -23,6 +24,22 @@ export const getPeriodsForDayController = async (c: Context) => {
     status: 200,
     data: periods,
     message: "Periods fetched successfully.",
+  });
+};
+
+export const getSinglePeriodController = async (c: Context) => {
+  const { businessId, dayOfWeek, period } = c.req.param();
+  const dow = parseInt(dayOfWeek, 10);
+  const prd = parseInt(period, 10);
+
+  const periodCfg = await runInTransaction((session) =>
+    getSinglePeriodService(businessId, dow, prd, session),
+  );
+
+  return c.json({
+    status: 200,
+    data: periodCfg,
+    message: "Period configuration fetched successfully.",
   });
 };
 
