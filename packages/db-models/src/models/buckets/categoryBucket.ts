@@ -7,7 +7,6 @@ const categoryBucketSchema = new mongoose.Schema<CategoryBucketType>(
     name: {
       type: String,
       required: true,
-      unique: true,
     },
     description: {
       type: String,

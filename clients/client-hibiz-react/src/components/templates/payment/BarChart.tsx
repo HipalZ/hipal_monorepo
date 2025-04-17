@@ -1,4 +1,3 @@
-import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { Card, CardContent } from "@/components/ui/card"
 import { useCallback } from "react";
 
@@ -29,7 +28,9 @@ export const BarChart: React.FC<BarChartProps> = ({ data }) => {
                     <Card key={index} className="w-full bg-white sm:w-auto">
                         <CardContent className="p-4">
                             <div className="text-sm font-semibold capitalize opacity-70">{rectifyNames(item.name)}</div>
-                            <div className="mt-2 text-2xl font-bold">₹ {item.value}</div>
+                            <div className="mt-2 text-2xl font-bold">
+                                {item?.name?.toLowerCase().includes("count") ? item.value : `₹ ${item.value}`}
+                            </div>
                         </CardContent>
                     </Card>
                 ))}

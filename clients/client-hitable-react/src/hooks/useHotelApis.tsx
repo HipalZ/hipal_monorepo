@@ -2,7 +2,7 @@ import { useAlertsStore } from "@/components/store/useAlertStore"
 import useBusinessData from "@/components/store/useBusinessData"
 import { useHiClientZ } from "@/components/store/useHiClientzData"
 import { useHotelStore } from "@/components/store/useHotelStore"
-import type { Alert, AlertProgress } from "@/components/types/hotelData"
+import type { Alert, AlertProgress, Cart } from "@/components/types/hotelData"
 import { apiRpc } from "@hi/common"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import toast from "react-hot-toast"
@@ -25,23 +25,42 @@ export const useGetAllRooms = () => {
         return []
     }
 
-    const { isLoading, data: allRooms } = useQuery({
+    const { isLoading, data: allRooms, refetch: refetchRoomsData } = useQuery({
         queryKey: ["allRooms", businessId],
         queryFn: getRooms,
         enabled: !!businessId,
     })
-    return { isLoading, allRooms }
+    return { isLoading, allRooms, refetchRoomsData }
+}
+
+export const useGetRoom = (roomId: string) => {
+    const { setGuestName, setPhoneNumber, setRoomData } = useHotelStore();
+    const businessId = useBusinessData((s) => s.outletInfo?.businessId)
+    const getRoom = async () => {
+        const response = await apiRpc.hotel.rooms.fetch_room.$get({
+            query: { businessId, roomId },
+        })
+        const res = await response.json()
+        if (response.status === 200 || response.status === 201) {
+            setGuestName(res?.data?.userIds?.[0]?.name || "")
+            setPhoneNumber(res?.data?.userIds?.[0]?.phone || "")
+            setRoomData(res?.data || {})
+            return res.data
+        }
+    }
+    return { getRoom }
 }
 
 export const useCheckIn = () => {
     const queryClient = useQueryClient()
-    const { roomData, setOpenRoomModal, guestName, phoneNumber, setGuestName, setPhoneNumber } = useHotelStore();
+    const { roomData, setOpenRoomModal, guestName, phoneNumber, setGuestName, setPhoneNumber, selectedSource, setSelectedSource } = useHotelStore();
     const checkIn = async () => {
         const response = await apiRpc.hotel.rooms.check_in.$post({
             json: {
                 roomId: roomData._id,
                 name: guestName,
                 phone: phoneNumber,
+                source: selectedSource
             }
         })
         const res = await response.json()
@@ -52,6 +71,7 @@ export const useCheckIn = () => {
             toast.success("Guest registered successfully")
             setGuestName("")
             setPhoneNumber("")
+            setSelectedSource("")
             setOpenRoomModal(false)
             return res.data
         }
@@ -139,27 +159,37 @@ export const useAllServices = () => {
 }
 
 export const useRespondAlerts = () => {
-    const queryClient = useQueryClient()
-    const userId = useHiClientZ((s) => s.captainData._id)
-    const respondAlert = async ({ alertId, action }: { alertId: string, action: AlertProgress }) => {
-        const response = await apiRpc.hotel.alert.accept_alert.$post({
-            json: {
-                alertId,
-                userId,
-                action,
+    const queryClient = useQueryClient();
+    const userId = useHiClientZ((s) => s.captainData._id);
+
+    const { mutateAsync: respondAlert } = useMutation({
+        mutationFn: async ({ alertId, action, reasonOfRejection }: { alertId: string, action: AlertProgress, reasonOfRejection: string }) => {
+            const response = await apiRpc.hotel.alert.accept_alert.$post({
+                json: {
+                    alertId,
+                    userId,
+                    action,
+                    reasonOfRejection,
+                },
+            });
+            if (response.status !== 200 && response.status !== 201) {
+                throw new Error("Failed to respond to alert");
             }
-        })
-        const res = await response.json()
-        if (response.status === 200 || response.status === 201) {
+            return response.json();
+        },
+        onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ["roomAlerts"],
-            })
-            return res.data
-        }
-    }
+            });
+            toast.success("Alert responded successfully");
+        },
+        onError: () => {
+            toast.error("Failed to respond to alert");
+        },
+    });
 
-    return { respondAlert }
-}
+    return { respondAlert };
+};
 
 export const useHistoryAlerts = () => {
     const businessId = useBusinessData((s) => s.outletInfo?.businessId)
@@ -279,4 +309,59 @@ export const useEscalatedAlerts = () => {
     })
 
     return { escalatedData, isPending }
+}
+
+type UpdateSourcePayload = {
+    source: string,
+    roomId: string,
+}
+export const useUpdateSource = () => {
+    const queryClient = useQueryClient();
+    const { mutateAsync: updateSource } = useMutation({
+        mutationFn: async (payload: UpdateSourcePayload) => {
+            const response = await apiRpc.hotel.rooms.update_room_source.$put({
+                json: payload,
+            });
+            if (response.status !== 200 && response.status !== 201) {
+                throw new Error("Failed to update source")
+            }
+            return response.json();
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ["allRooms"]
+            });
+            toast.success("Source updated successfully")
+        },
+        onError: () => {
+            toast.error("Failed to update source")
+        },
+    });
+
+    return { updateSource };
+}
+
+type EditAlertCartPayload = {
+    alertId: string,
+    cart: Cart[],
+}
+
+export const useEditAlertCart = () => {
+    const editAlertCart = async (payload: EditAlertCartPayload) => {
+        const response = await apiRpc.hotel.alert.edit_alert_cart.$put({
+            json: payload,
+        });
+        return response.json();
+    }
+    const { mutateAsync: editCart, isPending: editingCart } = useMutation({
+        mutationFn: editAlertCart,
+        onSuccess: () => {
+            toast.success("cart edited successfully")
+        },
+        onError: () => {
+            toast.error("Failed to edit alert cart")
+        },
+    });
+
+    return { editCart, editingCart };
 }

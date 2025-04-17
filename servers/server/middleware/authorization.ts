@@ -26,6 +26,17 @@ export const requireAuthorization = (roles: ClientRoles[]) => {
     //   return c.json({ message: "Access Denied!" }, 401);
     // }
 
+    // const currentUser = c.get("current_user");
+
+    // if (!currentUser) {
+    //   return c.json({ message: "Not Authorized" }, 401);
+    // }
+
+    // const exists = roles.includes(currentUser.role as ClientRoles);
+    // if (!exists) {
+    //   return c.json({ message: "Access Denied!" }, 401);
+    // }
+
     const currentUser = c.get("current_user");
 
     if (!currentUser) {

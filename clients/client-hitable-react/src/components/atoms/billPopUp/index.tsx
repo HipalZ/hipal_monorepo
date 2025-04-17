@@ -158,14 +158,14 @@ const BillPopUpMemo = () => {
               <h1>Discount Coinz used</h1>
               <p>: {viewData?.order_id?.claimedCoins}</p>
             </div>
-            <div className="grid grid-cols-2 mx-6 mb-2">
+            {/* <div className="grid grid-cols-2 mx-6 mb-2">
               <h1>Bill after discount</h1>
               <p>
                 : ₹{" "}
                 {viewData?.order_id?.billValue -
                   viewData?.order_id?.claimedCoins}{" "}
               </p>
-            </div>
+            </div> */}
             <div className="grid grid-cols-2 mx-6 mb-2">
               <h1>Tips</h1>
               <p>: ₹ {viewData?.order_id?.tips} </p>

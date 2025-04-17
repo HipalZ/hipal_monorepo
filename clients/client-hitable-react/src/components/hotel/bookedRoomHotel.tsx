@@ -1,13 +1,17 @@
 import { Badge } from "@/components/ui/badge"
-import { BedDouble, BedSingle, User, Key, Star, MessageCircleMore, ArrowRight } from "lucide-react";
+import { BedDouble, BedSingle, Key, Star, MessageCircleMore, ArrowRight } from "lucide-react";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCheckOut } from '@/hooks/useHotelApis';
+import { useCheckOut, useUpdateSource } from '@/hooks/useHotelApis';
 import { useHotelStore } from '../store/useHotelStore';
 import { useMutation } from '@tanstack/react-query';
 import CommonBottomButton from '../atoms/bottomButton';
-import { memo, lazy, useCallback } from "react";
+import { memo, lazy, useCallback, useState } from "react";
 import useBusinessData from "../store/useBusinessData";
+import { Button } from "../ui/button";
+import { sources } from "./availableRoomHotel";
+import { Input } from "../ui/input";
 
+const GuestInformation = lazy(() => import("./guestInformation"));
 const ChatHotel = lazy(() => import("./ChatHotel"));
 const ReviewUsersHotel = lazy(() => import("./reviewUsersHotel"));
 
@@ -15,15 +19,55 @@ const MemoBookedRoomHotel = () => {
     const outletInfo = useBusinessData((s) => s.outletInfo);
     const { setOpenRoomModal, roomData, setIsOpenChat, isOpenChat } = useHotelStore();
     const { checkOut } = useCheckOut();
-    const { mutateAsync, isPending } = useMutation({
+    const { updateSource } = useUpdateSource()
+    const [selectedSource, setSelectedSource] = useState("");
+    const [customSource, setCustomSource] = useState("");
+    const [isCustomSource, setIsCustomSource] = useState(false);
+
+    const handleSourceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value;
+        setSelectedSource(value);
+        setIsCustomSource(value === "Other");
+    };
+
+    const handleCustomSourceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setCustomSource(value);
+        setSelectedSource(value); // custom source becomes the actual selected value
+    };
+
+    const { mutateAsync: checkOutMutation, isPending } = useMutation({
         mutationFn: checkOut,
-    })
+    });
+    const updateSourceMutation = useMutation({
+        mutationFn: updateSource,
+    }).mutateAsync;
+
     const handleCheckOut = async () => {
-        mutateAsync()
-    }
+        try {
+            await checkOutMutation();
+        } catch (error) {
+            console.error("Check-out failed:", error);
+        }
+    };
+
+    const handleUpdateSource = useCallback(
+        async () => {
+            try {
+                await updateSourceMutation({
+                    source: selectedSource,
+                    roomId: roomData?._id,
+                });
+            } catch (error) {
+                console.error("Update source failed:", error);
+            }
+        },
+        [roomData?._id, updateSourceMutation, selectedSource]
+    );
+
     const handleChat = useCallback(() => {
         setIsOpenChat(!isOpenChat)
-    },[ isOpenChat, setIsOpenChat])
+    }, [isOpenChat, setIsOpenChat])
 
     return (
         <section className="w-full">
@@ -65,24 +109,44 @@ const MemoBookedRoomHotel = () => {
                     <ArrowRight className="h-4 w-4" />
                 </article>
                 {/* Guest Information */}
-                <CardContent className="pb-2 -mx-2">
-                    <div className="space-y-3 border p-3 rounded-lg bg-white">
-                        <h1 className="text-sm font-medium text-black">
-                            <span className="inline-flex items-center"><User className="h-4 w-4 mr-1" />Guest Information</span>
-                        </h1>
-                        {roomData?.userIds?.map((user) => (
-                            <div key={user?._id} className="pl-1 space-y-1">
-                                <div className="flex justify-between">
-                                    <span className="text-sm text-black">Name:</span>
-                                    <span className="font-medium">{user.name}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-sm text-black">Phone:</span>
-                                    <span className="font-medium">{user.phone}</span>
-                                </div>
-                            </div>
+                <CardContent>
+                    <label className="text-sm font-medium text-gray-700">Source of Booking</label>
+                    <select
+                        value={isCustomSource ? "Other" : selectedSource}
+                        onChange={handleSourceChange}
+                        className="w-full border border-black rounded-md p-2 mt-1"
+                    >
+                        <option value="" disabled>Select Source</option>
+                        {sources.map((src) => (
+                            <option key={src} value={src}>
+                                {src}
+                            </option>
                         ))}
-                    </div>
+                    </select>
+                    {isCustomSource && (
+                        <Input
+                            className="mt-2"
+                            placeholder="Enter custom source"
+                            value={customSource}
+                            onChange={handleCustomSourceChange}
+                        />
+                    )}
+                </CardContent>
+                <CardContent className="flex items-center gap-2 w-full">
+                    <span className="text-sm font-medium truncate w-full">
+                        {selectedSource || "No source selected"}
+                    </span>
+                    <Button
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={handleUpdateSource}
+                        disabled={!selectedSource}
+                    >
+                        Update
+                    </Button>
+                </CardContent>
+                <CardContent className="pb-2 -mx-2">
+                    <GuestInformation guests={roomData?.userIds} />
                 </CardContent>
                 <ReviewUsersHotel />
                 <CommonBottomButton

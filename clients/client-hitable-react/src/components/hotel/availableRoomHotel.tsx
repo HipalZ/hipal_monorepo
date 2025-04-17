@@ -1,17 +1,32 @@
 import { CardContent, CardHeader, CardTitle } from "../ui/card";
+import { FaGlobe } from "react-icons/fa";
 import { Input } from "../ui/input"
 import { memo, useCallback, useState } from "react";
 import { Phone, User, BedDouble } from "lucide-react";
-import { useCheckIn } from "@/hooks/useHotelApis";
+import { useCheckIn, useGetRoom } from "@/hooks/useHotelApis";
 import { useHotelStore } from "../store/useHotelStore"
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import CommonBottomButton from "../atoms/bottomButton"
-import toast from "react-hot-toast"
 import QRCode from "react-qr-code";
+import toast from "react-hot-toast"
+import { Button } from "../ui/button";
+import useBusinessData from "../store/useBusinessData";
 
+export const sources = [
+    "Corporate",
+    "Online Travel Agent",
+    "Hotel Website",
+    "Free Individual Traveler",
+    "Other"
+]
 const MemoAvailableRoomHotel = () => {
-    const { roomData, setOpenRoomModal, guestName, setGuestName, phoneNumber, setPhoneNumber } = useHotelStore();
+    const { roomData, setOpenRoomModal, guestName, setGuestName, phoneNumber, setPhoneNumber, selectedSource, setSelectedSource } = useHotelStore();
+    const [customSource, setCustomSource] = useState("");
+    const businessId = useBusinessData((s) => s.outletInfo?.businessId)
+    const [isCustomSource, setIsCustomSource] = useState(false);
+    const [loadingStatus, setLoadingStatus] = useState(false);
     const { checkIn } = useCheckIn();
+    const { getRoom } = useGetRoom(roomData?._id)
     const queryClient = useQueryClient()
     const [isSubmitting, setIsSubmitting] = useState(false)
     // Simple validation
@@ -51,10 +66,39 @@ const MemoAvailableRoomHotel = () => {
         queryClient.invalidateQueries({
             queryKey: ["allRooms"],
         })
-    },[setOpenRoomModal, queryClient])
+    }, [setOpenRoomModal, queryClient])
+
+    const handleSources = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+        const value = e.target.value;
+        if (value === "Other") {
+            setIsCustomSource(true);
+            setSelectedSource(customSource || "");
+        } else {
+            setIsCustomSource(false);
+            setSelectedSource(value);
+            setCustomSource("");
+        }
+    }, [customSource, setSelectedSource]);
+
+    const handleCustomSourceChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setCustomSource(value);
+        setSelectedSource(value);
+    }, [setSelectedSource]);
+
+    const handleShowStatus = useCallback(() => {
+        setLoadingStatus(!loadingStatus);
+    }, [loadingStatus]);
+
+    useQuery({
+        queryKey: ["roomData", roomData?._id],
+        queryFn: getRoom,
+        enabled: !!businessId && !!roomData?._id && loadingStatus,
+        refetchInterval: 10000,
+    })
 
     return (
-        <section className="w-full mx-auto bg-white min-h-[90dvh]">
+        <section className="w-full mx-auto bg-white min-h-[90dvh] pb-20">
             <CardHeader className="space-y-4">
                 <CardTitle className="text-2xl">
                     <header className="text-center flex items-center justify-center gap-2">
@@ -95,11 +139,51 @@ const MemoAvailableRoomHotel = () => {
                     />
                     {phoneNumber && !isValidPhone && <p className="text-xs text-red-500">Please enter a valid phone number</p>}
                 </div>
-                <center className="space-y-">
-                    <span>(or)</span>
+                <article>
+                    <h1 className="flex items-center gap-2">
+                        <FaGlobe className="h-4 w-4" />
+                        Source of Booking
+                    </h1>
+                    <p className="text-sm text-gray-500">Select the source of booking for this guest</p>
+                </article>
+                <select
+                    value={isCustomSource ? "Other" : selectedSource}
+                    onChange={handleSources}
+                    className="w-full border border-black rounded-md p-2"
+                    aria-label="Select Source"
+                >
+                    <option value="" disabled>Select Source</option>
+                    {sources.map((source) => (
+                        <option key={source} value={source}>
+                            {source}
+                        </option>
+                    ))}
+                </select>
+                {isCustomSource && (
+                    <Input
+                        className="mt-2 border-black"
+                        placeholder="Enter custom source"
+                        value={customSource}
+                        maxLength={30}
+                        onChange={handleCustomSourceChange}
+                    />
+                )}
+                <center className="space-y-2 relative">
+                    <h1>(or)</h1>
                     <h1 className="text-center text-gray-700 text-lg font-medium mb-2">Scan QR to check-in</h1>
-                    <QRCode value={roomData?.downLoadLink || ""} size={180} />
+
+                    <div className="relative inline-block">
+                        <QRCode value={roomData?.downLoadLink || ""} size={180} />
+                        {loadingStatus && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/70 rounded">
+                                <div className="h-6 w-6 border-2 border-gray-300 border-t-black rounded-full animate-spin" />
+                            </div>
+                        )}
+                    </div>
                     <p className="text-gray-700 text-sm mt-2">Powered by Hipalz</p>
+                    <Button size="sm" onClick={handleShowStatus} className="flex items-center mb-4">
+                        {loadingStatus ? "Hide Status" : "Show Status"}
+                    </Button>
                 </center>
             </CardContent>
             <CommonBottomButton

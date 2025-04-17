@@ -315,11 +315,11 @@ const MemoMainTypes = (props: IMainTypes) => {
                         </div>
                       )}
                     </div>
-                    <span 
-                    style={{
-                      color: primaryColor,
-                    }} 
-                    className="max-w-full text-base font-medium proper-case line-clamp-3 font-play">
+                    <span
+                      style={{
+                        color: primaryColor,
+                      }}
+                      className="max-w-full text-base font-medium proper-case line-clamp-3 font-play">
                       {category.name}
                     </span>
                   </motion.button>

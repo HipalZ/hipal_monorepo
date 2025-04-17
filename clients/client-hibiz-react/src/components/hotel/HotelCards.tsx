@@ -54,14 +54,14 @@ const essentialCards = [
         href: "add-restaurant",
     },
     {
-        title:"Themes",
-        description:"Customize the look and feel of your hotel website",
-        icon:(
+        title: "Themes",
+        description: "Customize the look and feel of your hotel website",
+        icon: (
             <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-blue-400 to-blue-600 hover:scale-105">
                 <Palette className="w-8 h-8 text-white drop-shadow-md" />
             </div>
         ),
-        href:"add-themes"
+        href: "add-themes"
     }
 ]
 
@@ -71,7 +71,7 @@ const HotelCards = () => {
             <h2 className="px-4 mt-6 mb-6 text-3xl font-bold xl:px-0">Essentials</h2>
             <div className="grid grid-cols-1 gap-4 px-4 xl:px-0 md:grid-cols-2 lg:grid-cols-3 pb-[3rem]">
                 {essentialCards.map((card, index) => (
-                    <Link to={`${card.href}`} key={index} className="block h-full">
+                    <Link to={`${card.href}`} key={index?.toString()} className="block h-full">
                         <Card className="relative h-full transition-all hover:shadow-md hover:border-primary/50">
                             <CardHeader className="pb-2 h-[7rem]">
                                 <CardTitle className="absolute top-4 left-4">{card.icon}</CardTitle>

@@ -2108,12 +2108,11 @@ const whatsappRouter = new Hono()
             urlObj = findLongUrl;
             updateLongUrl = `${
               findLongUrl?.longUrl
-            }&&id=${userObj?._id.toString()}`;
+            }&id=${userObj?._id.toString()}`;
           }
 
           if (phon_no_id && from && urlObj) {
             if (shortUrlType === "COUPON") {
-              console.log("incoupon");
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
@@ -2152,15 +2151,21 @@ const whatsappRouter = new Hono()
                 slug: urlObj?.urlCode,
               });
 
+              console.log("room", room);
+
               if (room && room.userIds.length === 0) {
+                console.log("yaha");
                 const a = await HotelRoom.findOneAndUpdate(
                   {
+                    businessId: config?.businessId,
+                    name: room?.name,
                     slug: urlObj?.urlCode,
                   },
                   {
                     $addToSet: {
                       userIds: user?._id,
                     },
+                    source: "",
                     roomStatus: "OCCUPIED",
                   },
                 );

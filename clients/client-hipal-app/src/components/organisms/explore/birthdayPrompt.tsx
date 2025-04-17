@@ -75,7 +75,7 @@ function MemoBirthdayPrompt() {
     return (
         <div
             id="my_modal_1"
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-2"
+            className="fixed inset-0 !z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-2"
         >
             <Baloons />
             {/* Card */}
@@ -104,20 +104,20 @@ function MemoBirthdayPrompt() {
                                     cursor: "pointer",
                                 }}
                             />
-                            <center className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-300 to-yellow-300 tracking-tight">
+                            <center className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-300 to-yellow-300">
                                 Congratulations!! <br /><span className="text-lg">You won 50 Coinz</span>
                             </center>
                         </article>
-                    </motion.div> : <div className="p-4 relative z-10 space-y-5">
-                        <div className="flex justify-between items-start">
+                    </motion.div> : <div className="relative z-10 p-4 space-y-5">
+                        <div className="flex items-start justify-between">
                             <motion.div initial={{ x: 0, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
                                 <article>
-                                    <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-300 to-yellow-300 tracking-tight">
+                                    <h2 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-300 to-yellow-300">
                                         Claim Birthday & Earn Rewards!
                                     </h2>
-                                    <button onClick={closePrompt} type="button" className="absolute text-white p-2 underline underline-offset-1 top-0 right-0">Skip</button>
+                                    <button onClick={closePrompt} type="button" className="absolute top-0 right-0 p-2 text-white underline underline-offset-1">Skip</button>
                                 </article>
-                                <p className="text-purple-200 mt-1">It's time to celebrate YOU!</p>
+                                <p className="mt-1 text-purple-200">It's time to celebrate YOU!</p>
                             </motion.div>
 
                             <motion.div
@@ -125,7 +125,7 @@ function MemoBirthdayPrompt() {
                                 animate={{ rotate: 0, scale: 1 }}
                                 transition={{ delay: 0.3, type: "spring" }}
                             >
-                                <PartyPopper className="h-10 w-10 text-yellow-300 mt-10" />
+                                <PartyPopper className="w-10 h-10 mt-10 text-yellow-300" />
                             </motion.div>
                         </div>
 
@@ -137,7 +137,7 @@ function MemoBirthdayPrompt() {
                             transition={{ delay: 0.4 }}
                         >
                             <div className="flex items-center gap-2 text-purple-200">
-                                <Calendar className="h-5 w-5" />
+                                <Calendar className="w-5 h-5" />
                                 <h3 className="font-medium">When's your birthday?</h3>
                             </div>
 
@@ -158,7 +158,7 @@ function MemoBirthdayPrompt() {
                                             setDay(value)
                                             setIsValid(true)
                                         }}
-                                        className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-all"
+                                        className="w-full px-4 py-3 text-white transition-all border bg-white/10 border-white/20 rounded-xl placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
                                     />
                                 </div>
 
@@ -168,11 +168,11 @@ function MemoBirthdayPrompt() {
                                         Month
                                     </label>
                                     <div
-                                        className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white flex items-center justify-between cursor-pointer"
+                                        className="flex items-center justify-between w-full px-4 py-3 text-white border cursor-pointer bg-white/10 border-white/20 rounded-xl"
                                         onClick={() => setMonthOpen(!monthOpen)}
                                     >
                                         <span className={month ? "text-white" : "text-white/50"}>{month || "Month"}</span>
-                                        <ChevronDown className="h-4 w-4 text-white/70" />
+                                        <ChevronDown className="w-4 h-4 text-white/70" />
                                     </div>
 
                                     {monthOpen && (
@@ -180,7 +180,7 @@ function MemoBirthdayPrompt() {
                                             {months.map((m) => (
                                                 <div
                                                     key={m}
-                                                    className="p-2 hover:bg-indigo-700 cursor-pointer flex items-center justify-between"
+                                                    className="flex items-center justify-between p-2 cursor-pointer hover:bg-indigo-700"
                                                     onClick={() => {
                                                         setMonth(m)
                                                         setMonthOpen(false)
@@ -188,7 +188,7 @@ function MemoBirthdayPrompt() {
                                                     }}
                                                 >
                                                     <span className="text-white">{m}</span>
-                                                    {month === m && <Check className="h-4 w-4 text-green-400" />}
+                                                    {month === m && <Check className="w-4 h-4 text-green-400" />}
                                                 </div>
                                             ))}
                                         </div>
@@ -211,7 +211,7 @@ function MemoBirthdayPrompt() {
                                             setYear(value)
                                             setIsValid(true)
                                         }}
-                                        className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-all"
+                                        className="w-full px-4 py-3 text-white transition-all border bg-white/10 border-white/20 rounded-xl placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
                                     />
                                 </div>
                             </div>
@@ -219,7 +219,7 @@ function MemoBirthdayPrompt() {
                             {/* Error message */}
                             {!isValid && (
                                 <motion.p
-                                    className="text-red-300 text-sm"
+                                    className="text-sm text-red-300"
                                     initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                 >
@@ -230,7 +230,7 @@ function MemoBirthdayPrompt() {
 
                         {/* Button */}
                         <motion.button
-                            className="w-full py-4 px-6 bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white font-bold rounded-xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-pink-500/25 relative overflow-hidden group"
+                            className="relative w-full px-6 py-4 overflow-hidden font-bold text-white transition-all duration-300 transform shadow-lg bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 rounded-xl hover:scale-105 hover:shadow-pink-500/25 group"
                             onClick={handleCelebrate}
                             initial={{ y: 50, opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
@@ -239,9 +239,9 @@ function MemoBirthdayPrompt() {
                         >
                             <span className="relative z-10 flex items-center justify-center gap-2">
                                 <span>CLAIM NOW</span>
-                                <PartyPopper className="h-5 w-5" />
+                                <PartyPopper className="w-5 h-5" />
                             </span>
-                            <span className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur" />
+                            <span className="absolute inset-0 transition-opacity duration-300 opacity-0 bg-gradient-to-r from-yellow-400 to-pink-500 group-hover:opacity-100 blur" />
                         </motion.button>
 
                         <p className="text-xs text-center text-purple-200/70">

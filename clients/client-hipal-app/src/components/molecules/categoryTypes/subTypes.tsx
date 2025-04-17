@@ -87,8 +87,8 @@ interface ISubTypes {
 
 function MemoSubTypes({
   childCategory,
-  primaryColor = "#000000",
-  secondaryColor = "#f5f5f5",
+  primaryColor = "#ec4899",
+  secondaryColor = "#fce7f3",
   isHorizontalCard = false,
 }: ISubTypes) {
   const {

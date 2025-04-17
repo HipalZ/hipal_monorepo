@@ -20,6 +20,8 @@ interface EdgeFlowProps {
   secondaryColor?: string
 }
 
+// function DishRenderer({
+
 const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
   const typeMap: Record<string, string[]> = {
     all: [],
@@ -44,11 +46,10 @@ const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
 const EdgeFlow: FC<EdgeFlowProps> = ({
   childCategory,
   isHorizontalCard = true,
-  primaryColor = "#000000",
-  secondaryColor = "#f5f5f5",
+  primaryColor = "#ec4899",
+  secondaryColor = "#fce7f3",
 }) => {
   const { setDishes } = useDishesStore()
-  const { isSearchActive } = useSearch()
   const {
     isActiveDishType,
     isActiveCategory,
@@ -189,7 +190,7 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
                     fontWeight: isActive ? 600 : 400,
                   }}
                   transition={{ duration: 0.2 }}
-                  title={category.name} 
+                  title={category.name}
                 >
                   {category.name}
                 </motion.span>
@@ -202,7 +203,7 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
       </div>
 
       {/* Right content area for dishes */}
-      <div className="w-[80%] overflow-y-auto bg-white pb-[5rem] hide-scrollbar scroll-pt-12">
+      <div className="w-[80%] overflow-y-auto bg-white pb-[5rem] hide-scrollbar scroll-pt-16">
         {childCategory.map((category: CategoryType, index) => {
           const visibleDishes = category.dishIds.filter((dish: DishType) => dish.visibility)
           const dishesToRender = filterDishes(visibleDishes, isActiveDishType)

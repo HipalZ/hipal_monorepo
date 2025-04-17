@@ -1,4 +1,4 @@
-import { memo, useCallback, useState,lazy,Suspense } from "react"
+import { memo, useCallback, useState, lazy, Suspense } from "react"
 import { FaArrowLeft } from "react-icons/fa"
 import MemoizedHeader from "@/components/molecules/header"
 import { useNavigate } from "react-router-dom"
@@ -9,13 +9,23 @@ import LoadingSpinner from "@/components/atom/loadingSpinner"
 import HotelActions from "@/components/hotel/Actions"
 
 const HotelCards = lazy(() => import("@/components/hotel/HotelCards"))
+const Integrations = lazy(() => import("@/components/hotel/Integrations"))
+
+enum HotelInfoTabs {
+    Essentials = "essentials",
+    Integrations = "integrations",
+    Actions = "actions",
+}
 
 const navItems = [
     {
-        text: "Essentials",
+        text: HotelInfoTabs.Essentials,
     },
     {
-        text: "Actions"
+        text: HotelInfoTabs.Actions,
+    },
+    {
+        text: HotelInfoTabs.Integrations,
     }
 ]
 
@@ -24,10 +34,10 @@ const MemoHotelInfoMain = () => {
 
     const navigate = useNavigate();
     const businessData = useBusinessData((s) => s.businessData);
-    const [selectedTab, setSelectedTab] = useState<"essentials" | "integrations" | "actions">("essentials");
+    const [selectedTab, setSelectedTab] = useState<HotelInfoTabs>(HotelInfoTabs.Essentials);
 
     const changeLayout = (text: string) => {
-        setSelectedTab(text.toLowerCase() as "essentials" | "integrations" | "actions");
+        setSelectedTab(text as HotelInfoTabs);
     };
 
     const handleBack = useCallback(() => {
@@ -47,8 +57,8 @@ const MemoHotelInfoMain = () => {
                 {navItems.map((item) => (
                     <button
                         className={cn(
-                            "pb-3 pt-4 bg-white ",
-                            selectedTab?.toLowerCase() === item.text.toLowerCase()
+                            "pb-3 pt-4 bg-white capitalize",
+                            selectedTab === item.text
                                 ? "border-b-2 border-[#8162e6] transition-all text-[#8162e6] font-semibold text-lg"
                                 : "",
                         )}
@@ -72,14 +82,14 @@ const MemoHotelInfoMain = () => {
                 }
                 {
                     selectedTab === "integrations" &&
-                    <div>Integrations</div>
+                    <Integrations />
                 }
                 {
                     selectedTab === "actions" &&
                     <HotelActions />
                 }
             </Suspense>
-           
+
         </main>
     )
 }

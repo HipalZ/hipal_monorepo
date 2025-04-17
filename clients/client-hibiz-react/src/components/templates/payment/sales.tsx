@@ -109,6 +109,8 @@ const MemoPaymentSales = () => {
     [selectedFilters],
   )
 
+  console.log("Payment Sales", historyData, totalSales, selectedFilters)
+
   return (
     <main className="relative h-[100dvh]">
       {isLoading ? (
@@ -194,7 +196,7 @@ const MemoPaymentSales = () => {
           </section>
         </>
       )}
-      <Pagination />
+      <Pagination dataLength={historyData?.length || 1} />
       {open && (
         <PopUp height="h-[100dvh] lg:h-[80dvh]" hide width="w-[30rem]" onClose={closeModel} show={open}>
           <PaymentModal

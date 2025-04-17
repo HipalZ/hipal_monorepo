@@ -19,6 +19,7 @@ export const alertProgressEnum = [
   "ESCALATION",
   "NOT_DELIVERED",
   "RESOLVED",
+  "MESSAGE",
 ] as const;
 
 export type HotelAlertProgressEnumType = (typeof alertProgressEnum)[number];
@@ -51,6 +52,7 @@ export const hotelAlert = z.object({
   roomId: ObjectIdSchema,
   cart: z.array(z.object({})).optional(),
   roomChatComplainId: ObjectIdSchema.optional(),
+  message: z.string().optional(),
 });
 
 export const acceptHotelAlert = z.object({
@@ -59,5 +61,11 @@ export const acceptHotelAlert = z.object({
   action: z.enum(alertProgressEnum),
 });
 
+export const updateAlertCart = z.object({
+  alertId: ObjectIdSchema,
+  cart: z.array(z.object({})),
+});
+
 export type HotelAlertType = z.infer<typeof hotelAlert>;
 export type AcceptHotelAlertType = z.infer<typeof acceptHotelAlert>;
+export type UpdateAlertCartType = z.infer<typeof updateAlertCart>;

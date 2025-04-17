@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Building2, Bed, Check, ToggleLeft, ToggleRight, Percent } from "lucide-react"
 import useFloorFormStore from "@/components/store/hotel/useFloorStore"
+import { useRoomStore } from "@/components/store/hotel/useRoomStore"
 
 const ThirdStep: React.FC = () => {
   const { floorInfo, selectedRooms, isEditMode } = useFloorFormStore((state) => ({
@@ -10,6 +11,13 @@ const ThirdStep: React.FC = () => {
     selectedRooms: state.selectedRooms,
     isEditMode: state.isEditMode,
   }))
+  const roomType = useRoomStore(s=>s.roomType)
+
+  const getRoomTypeById = (roomTypeId: string) => {
+    const type = roomType.find((type) => type._id === roomTypeId)
+    console.log("type", type?.roomType)
+    return type?.roomType ? type?.roomType : "Unknown"
+  }
 
   return (
     <div className="space-y-5">
@@ -88,7 +96,7 @@ const ThirdStep: React.FC = () => {
                       <Check className="h-3.5 w-3.5 text-primary" />
                       <span className="font-medium">{room.name}</span>
                       <Badge variant="outline" className="text-xs">
-                        {room.roomType.replace(/_/g, " ")}
+                      {getRoomTypeById(room?.roomTypeId || "")?.replace(/_/g, " ")}
                       </Badge>
                     </div>
                     {room.pricePerNight > 0 && <span className="text-sm">₹{room.pricePerNight}/night</span>}

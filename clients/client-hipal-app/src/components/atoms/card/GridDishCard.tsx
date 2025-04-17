@@ -21,9 +21,9 @@ interface GridDishCardProps {
   isEdgeLayout?: boolean
 }
 
-const GridDishCard = ({ dishData, primaryColor = "#000000", secondaryColor = "#f5f5f5", isEdgeLayout }: GridDishCardProps) => {
+const GridDishCard = ({ dishData, primaryColor = "#ec4899", secondaryColor = "#fce7f3", isEdgeLayout }: GridDishCardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const { addToCart, cart } = useCartStore()
+  const { cart } = useCartStore()
   const { setSelectedDish, isSelectedDish } = useActiveClass()
   const { setCartPage, setShowCart } = useCart()
 

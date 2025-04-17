@@ -16,12 +16,12 @@ const MemoUniquelyYoursPopUp = () => {
   const businessId = useParams()?.businessId;
   const { getUniquelyDishes } = useUniquelyYours();
 
-  const { setDishes, dishes } = useExploreTemp((s) => ({
+  const { setDishes, dishes, originalDishes } = useExploreTemp((s) => ({
     setDishes: s.setDishes,
     dishes: s.dishes,
+    originalDishes: s.originalDishes,
   }));
   const {
-    originalDishes,
     searchQuery,
     setSearchQuery,
     uniquelyDishes,
@@ -29,7 +29,6 @@ const MemoUniquelyYoursPopUp = () => {
     showUniquePopUp,
     setShowUniquePopUp,
   } = useExploreStore((s) => ({
-    originalDishes: s.originalDishes,
     searchQuery: s.searchQuery,
     setSearchQuery: s.setSearchQuery,
     uniquelyDishes: s.uniquelyDishes,

@@ -1,6 +1,7 @@
 import {
   Business,
   DeviceToken,
+  HotelAlert,
   HotelRoom,
   HotelRoomChat,
   HotelRoomChatReply,
@@ -17,6 +18,7 @@ import {
   hotelRoom,
   hotelRoomCheckIn,
   hotelRoomCheckOut,
+  hotelRoomCheckOutRequest,
   updateHotelRoom,
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
@@ -74,6 +76,9 @@ const roomRouter = new Hono()
         businessId,
         $or: [{ _id: roomId }, { name: roomName }],
         isDeleted: false,
+      }).populate({
+        path: "userIds",
+        select: "name phone",
       });
 
       return room
@@ -132,7 +137,10 @@ const roomRouter = new Hono()
       }
 
       // Check if the provided userId exists in roomData.userIds by comparing with the _id field
-      if (!roomData.userIds.some((user) => user._id.toString() === userId)) {
+      if (
+        roomData?.userIds?.length > 0 &&
+        !roomData.userIds.some((user) => user._id.toString() === userId)
+      ) {
         return respond(
           c,
           `Room already Occupied by ${roomData.userIds[0].name}`,
@@ -447,6 +455,7 @@ const roomRouter = new Hono()
           roomStatus: "OCCUPIED",
           userIds: [user._id],
           authCode,
+          source: requestData.source,
         },
         { new: true, session },
       );
@@ -464,6 +473,7 @@ const roomRouter = new Hono()
             date: Date.now(),
             checkIn: Date.now(),
             authCode,
+            source: requestData.source,
           },
         ],
         { session },
@@ -593,6 +603,7 @@ const roomRouter = new Hono()
           roomStatus: "AVAILABLE",
           userIds: [],
           authCode: "",
+          source: "",
         },
         { new: true, session },
       );
@@ -628,6 +639,105 @@ const roomRouter = new Hono()
       });
     });
   })
+
+  .post(
+    "/check_out_request",
+    zValidator("json", hotelRoomCheckOutRequest),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
+        const { roomId, userId } = requestData;
+
+        const roomExists = await HotelRoom.findOne({ _id: roomId });
+        if (!roomExists) {
+          return respond(c, "Room not found", true, 404, {});
+        }
+
+        const business = await Business.findById(roomExists.businessId);
+
+        if (!business) {
+          return respond(c, "Business not found", true, 404, {});
+        }
+
+        const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+          businessId: roomExists.businessId,
+        });
+        const userData = await User.findById(userId)
+          .select("phone name")
+          .lean();
+
+        if (!userData) {
+          return respond(c, "User not found", true, 404, {});
+        }
+
+        const alert = new HotelAlert({
+          businessId: roomExists.businessId,
+          userId: userData._id,
+          roomId: roomExists._id,
+          message: `Customer ${userData.name} has requested to check out of room ${roomExists.name}`,
+          createdAt: Date.now(),
+          alertProgress: "MESSAGE",
+          createdBy: userId,
+        });
+
+        await alert.save({ session });
+
+        if (!alert) {
+          throw new Error("Error creating alert");
+        }
+
+        if (whatsAppConfig) {
+          const res = await axios.post(
+            `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+            {
+              messaging_product: "whatsapp",
+              to: userData?.phone?.toString(),
+              type: "template",
+              template: {
+                name: "checkout_msg_template",
+                language: { code: "en" },
+                components: [
+                  {
+                    type: "body",
+                    parameters: [
+                      {
+                        type: "text",
+                        text: userData?.name,
+                      },
+
+                      {
+                        type: "text",
+                        text: roomExists?.name,
+                      },
+
+                      {
+                        type: "text",
+                        text: business?.name,
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${whatsAppConfig.token}`,
+              },
+            },
+          );
+
+          if (res.status !== 200) {
+            throw new Error("Error sending message");
+          }
+        }
+
+        return respond(c, "request send successfully", false, 200, {
+          _id: alert._id,
+        });
+      });
+    },
+  )
 
   .post(
     "/verify_authcode",
@@ -752,6 +862,41 @@ const roomRouter = new Hono()
 
         return respond(c, "Review created successfully", false, 201, {
           _id: createReview._id,
+        });
+      });
+    },
+  )
+
+  .put(
+    "/update_room_source",
+    zValidator(
+      "json",
+      z.object({
+        roomId: z.string().min(2).max(50),
+        source: z.string().min(2).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
+        const { roomId, source } = requestData;
+
+        const roomSource = await HotelRoom.findOneAndUpdate(
+          {
+            _id: roomId,
+          },
+          {
+            source,
+          },
+        );
+
+        if (!roomSource) {
+          return respond(c, "Room session not found", true, 404, {});
+        }
+
+        return respond(c, "update ", false, 200, {
+          _id: roomSource._id,
         });
       });
     },

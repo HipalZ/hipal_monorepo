@@ -23,8 +23,8 @@ interface HorizontalDishCardProps {
 
 const HorizontalCard = ({
   dishData,
-  primaryColor = "#000000",
-  secondaryColor = "#f5f5f5",
+  primaryColor = "#ec4899",
+  secondaryColor = "#fce7f3",
   isEdgeLayout = false,
 }: HorizontalDishCardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false)

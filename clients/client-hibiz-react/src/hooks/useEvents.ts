@@ -2,6 +2,7 @@ import useBusinessData from "@/components/store/useBusinessData";
 import type { CampaignSection } from "@/components/templates/events/birthdayCampaignPreview";
 import { apiRpc } from "@hi/common";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 export const useGetEvents = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
@@ -36,10 +37,17 @@ export const usePutEvents = () => {
         },
       });
       const res = await response.json();
+      if (!response.ok) {
+        throw new Error(res.message);
+      }
       return res.data;
     },
     onSuccess: () => {
+      toast.success("Event updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
     },
   });
 };
@@ -62,10 +70,17 @@ export const usePostEvents = () => {
         },
       });
       const res = await response.json();
+      if (!response.ok) {
+        throw new Error(res.message);
+      }
       return res.data;
     },
     onSuccess: () => {
+      toast.success("Event added successfully!");
       queryClient.invalidateQueries({ queryKey: ["events"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
     },
   });
 };

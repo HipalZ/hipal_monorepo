@@ -486,10 +486,10 @@ const categoriesRouter = new Hono()
 
         // Find the active menu for the zone and business
         const menu = await Menu.findOne({
-          ...(tableName ? { zoneIds: zone?._id } : {}),
+          ...(tableName ? { zoneIds: zone?._id } : {}), // Conditionally include zoneIds
           businessId,
           isActive: true,
-          ...(tableName ? {} : { default: true }),
+          ...(tableName ? {} : { default: true }), // Conditionally include default
           $or: [
             {
               days: { $in: [currentDay] },

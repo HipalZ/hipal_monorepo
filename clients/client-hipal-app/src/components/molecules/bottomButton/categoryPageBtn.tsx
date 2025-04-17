@@ -4,7 +4,7 @@ import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { BsHandIndexThumb } from "react-icons/bs";
 import { FiSearch } from "react-icons/fi";
 import { GiCookingPot } from "react-icons/gi";
-import { memo, useCallback, useState } from "react";
+import { FC, memo, useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
 import { useCart } from "@/components/store/useCart";
@@ -26,10 +26,18 @@ import { useAuthTableUser } from "../../hooks/usePayments";
 import HiCodeValidate from "@/components/organisms/cart/hicodeValidate";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import { cn } from "@/components/utils/helpers";
+import { IMenuLayout } from "@/components/types/businessData";
 
-const MemoCategoryPageBtn = () => {
+interface CategoryPageBtnProps {
+  menuLayout: IMenuLayout
+}
+
+const MemoCategoryPageBtn:FC<CategoryPageBtnProps> = (props) => {
+  const {menuLayout} = props
   const accessToken = useUserToken.getState().accessToken;
   const { userDetails } = useLogin()
+  const primaryColor = menuLayout?.primaryColor || "#ec4899"
+  const secondaryColor = menuLayout?.secondaryColor || "#fce7f3"
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const { isSearchActive, setIsSearchActive, setShowHeader } =
     useSearch();
@@ -176,14 +184,18 @@ const MemoCategoryPageBtn = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="px-2 sticky z-50 bottom-0 w-full max-w-[30rem] bg-[#FCFCFC] shadow-lg overflow-hidden py-4 text-black flex gap-2 justify-evenly"
-              style={{ boxShadow: "4px 4px 4px #00000040" }}
+              className="px-2 sticky z-50 bottom-0 w-full max-w-[30rem] bg-[#FCFCFC] shadow-lg overflow-hidden py-2 text-black flex gap-2 justify-evenly"
+              style={{ boxShadow: "4px 4px 4px #00000040",
+                backgroundColor: secondaryColor,
+                color: primaryColor,
+               }}
             >
               {/* Explore Button */}
               <motion.div variants={itemVariants}>
                 <Link href={`/${customLink}/explore`} className="">
                   <motion.section
-                    className="border border-[#B0B0B0] p-2 rounded-md"
+                    className="p-2 border rounded-md"
+                    style={{ borderColor: primaryColor }}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -197,6 +209,7 @@ const MemoCategoryPageBtn = () => {
                 <motion.button
                   type="button"
                   onClick={openSearchModal}
+                  style={{ borderColor: primaryColor }}
                   className="border border-[#B0B0B0] p-2 rounded-md"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -208,6 +221,7 @@ const MemoCategoryPageBtn = () => {
               {/* Call Captain Button */}
               <motion.div
                 variants={itemVariants}
+                style={{ borderColor: primaryColor }}
                 className={cn(
                   tableName?.length === 0 ? "flex-1 w-full" : "gap-1 flex items-center",
                   "border border-[#B0B0B0] p-2 rounded-md"
