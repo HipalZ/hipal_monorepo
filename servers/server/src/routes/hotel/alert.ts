@@ -65,8 +65,12 @@ const scheduleAlertUpdate = (
       runTime.getMonth() + 1
     } *`;
 
+    console.log("cronExpression", cronExpression);
+
     const data = schedule(cronExpression, async () => {
       const alertData = await HotelAlert.findById(alertId);
+
+      console.log("alertDatabaher", alertData);
 
       if (
         (alertData &&
@@ -77,6 +81,8 @@ const scheduleAlertUpdate = (
         const alertData = await HotelAlert.findByIdAndUpdate(alertId, {
           alertProgress: newProgress,
         });
+
+        console.log("alertDataandr", alertData);
 
         const registrationTokens = await DeviceToken.find({
           businessId: businessId,
@@ -432,6 +438,8 @@ const hotelAlertRouter = new Hono()
         const avgCompletionTime = serviceData?.avgCompletionTime || 0;
         const avgAcceptanceTime = serviceData?.avgAcceptanceTime || 0;
         const avgDeliveryTime = serviceData?.avgDeliveryTime || 0;
+
+        console.log("avgCompletionTime", avgCompletionTime);
 
         if (avgCompletionTime > 0) {
           // Schedule updates based on average times
