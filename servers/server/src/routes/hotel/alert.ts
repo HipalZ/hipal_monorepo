@@ -69,12 +69,7 @@ const scheduleAlertUpdate = (
       console.log("checkStatus", checkStatus);
       console.log("newProgress", newProgress);
 
-      if (
-        (alertData &&
-          alertData.alertProgress !== checkStatus &&
-          alertData.alertProgress !== "DELIVERED") ||
-        alertData?.alertProgress !== "REJECTED"
-      ) {
+      if (alertData && alertData?.alertProgress !== "REJECTED") {
         const alertData = await HotelAlert.findByIdAndUpdate(alertId, {
           alertProgress: newProgress,
         });

@@ -3511,6 +3511,41 @@ const paymentsRouter = new Hono()
         },
       });
     },
+  )
+
+  .put(
+    "/update_payment",
+
+    zValidator("json", z.object({ paymentId: z.string(), mode: z.string() })),
+
+    async (c) => {
+      const { paymentId, mode } = await c.req.json();
+
+      const updatedPayment = await Payment.findByIdAndUpdate(
+        paymentId,
+        {
+          $set: {
+            mode,
+            paymentMode: mode,
+          },
+        },
+        { new: true },
+      );
+
+      if (!updatedPayment) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "Payment not found",
+        });
+      }
+
+      return c.json({
+        err: false,
+        data: { _id: updatedPayment._id },
+        message: "Payment updated successfully",
+      });
+    },
   );
 
 export default paymentsRouter;
