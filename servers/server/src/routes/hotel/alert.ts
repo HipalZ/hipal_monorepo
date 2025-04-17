@@ -63,12 +63,11 @@ const scheduleAlertUpdate = (
       runTime.getMonth() + 1
     } *`;
 
-    console.log("cronExpression", cronExpression);
-
     const data = schedule(cronExpression, async () => {
       const alertData = await HotelAlert.findById(alertId);
-
-      console.log("alertDatabaher", alertData);
+      console.log("alertData.alertProgress", alertData?.alertProgress);
+      console.log("checkStatus", checkStatus);
+      console.log("newProgress", newProgress);
 
       if (
         (alertData &&
