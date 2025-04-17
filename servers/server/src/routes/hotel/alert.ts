@@ -65,16 +65,11 @@ const scheduleAlertUpdate = (
 
     const data = schedule(cronExpression, async () => {
       const alertData = await HotelAlert.findById(alertId);
-      console.log("alertData.alertProgress", alertData?.alertProgress);
-      console.log("checkStatus", checkStatus);
-      console.log("newProgress", newProgress);
 
       if (alertData && alertData?.alertProgress !== "REJECTED") {
         const alertData = await HotelAlert.findByIdAndUpdate(alertId, {
           alertProgress: newProgress,
         });
-
-        console.log("alertDataandr", alertData);
 
         const registrationTokens = await DeviceToken.find({
           businessId: businessId,
