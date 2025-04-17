@@ -1,6 +1,6 @@
 {
   "name": "client-hipal-app",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "scripts": {
     "dev": "dotenv -e ./.env.local next --host ",
     "dev:test": "dotenv -e ./.env.test next --host",

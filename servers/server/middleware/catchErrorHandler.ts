@@ -1,5 +1,5 @@
 import { Hono, Context } from "hono";
-import { CustomError } from "./CustomError"; // adjust import as needed
+import { CustomError } from "./customError"; // adjust import as needed
 import { ApiError } from "@/utils/ApiError";
 import { ZodError } from "zod";
 

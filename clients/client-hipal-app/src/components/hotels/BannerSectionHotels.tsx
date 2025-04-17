@@ -3,7 +3,6 @@ import EmblaCarousel2 from "@/components/atoms/emblaCarousel/emblaCarousel2"
 import BannerLayouts from "@/components/organisms/explore/bannerNewCards"
 import { cn } from "@/lib/utils"
 
-
 const BannerSectionHotels = ({banners}:{
     banners: IBannerPayload[]
 }) => {

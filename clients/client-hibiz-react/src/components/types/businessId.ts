@@ -15,7 +15,7 @@ import POS from "@/assets/services/POS.png";
 import Zones from "@/assets/services/zones.png";
 import Events from "@/assets/services/events.jpg";
 import ImageGrid from "@/assets/services/ImageGrid.png"
-
+import Booking from "@/assets/bookings/booking_dashboard.png";
 export interface ILiteVersionCardButton {
   image: string;
   text: string;
@@ -56,6 +56,12 @@ export const getButtons = (
       text: "Events",
       description: "All events related stuff",
       navigateTo: "events",
+    },
+    {
+      image: Booking,
+      text: "Bookings",
+      description: "Manage your bookings",
+      navigateTo: "bookings",
     },
   ],
   services: [
