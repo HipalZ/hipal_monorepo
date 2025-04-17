@@ -118,15 +118,15 @@ const scheduleAlert = (
         async () => {
           const alert = await HotelAlert.findById(alertId);
 
-          if (alert?.alertProgress === "CREATED") {
-            const registrationTokens = await DeviceToken.find({
-              businessId: businessId,
-            });
+          const registrationTokens = await DeviceToken.find({
+            businessId: businessId,
+          });
 
-            for (const obj of registrationTokens) {
-              if (obj.notification) {
-                await sendPushNotification(obj.token, roomName);
-              }
+          console.log("teenbar");
+
+          for (const obj of registrationTokens) {
+            if (obj.notification) {
+              await sendPushNotification(obj.token, roomName);
             }
           }
         },
