@@ -65,37 +65,30 @@ const scheduleAlertUpdate = (
       runTime.getMonth() + 1
     } *`;
 
-    const data = schedule(
-      cronExpression,
-      async () => {
-        const alertData = await HotelAlert.findById(alertId);
+    const data = schedule(cronExpression, async () => {
+      const alertData = await HotelAlert.findById(alertId);
 
-        if (
-          (alertData &&
-            alertData.alertProgress !== checkStatus &&
-            alertData.alertProgress !== "DELIVERED") ||
-          alertData?.alertProgress !== "REJECTED"
-        ) {
-          const alertData = await HotelAlert.findByIdAndUpdate(alertId, {
-            alertProgress: newProgress,
-          });
+      if (
+        (alertData &&
+          alertData.alertProgress !== checkStatus &&
+          alertData.alertProgress !== "DELIVERED") ||
+        alertData?.alertProgress !== "REJECTED"
+      ) {
+        const alertData = await HotelAlert.findByIdAndUpdate(alertId, {
+          alertProgress: newProgress,
+        });
 
-          const registrationTokens = await DeviceToken.find({
-            businessId: businessId,
-          });
+        const registrationTokens = await DeviceToken.find({
+          businessId: businessId,
+        });
 
-          registrationTokens.map(async (obj) => {
-            if (obj.notification) {
-              await sendPushNotification(obj.token, roomName);
-            }
-          });
-        }
-      },
-      {
-        scheduled: true,
-        timezone: "Asia/Kolkata",
-      },
-    );
+        registrationTokens.map(async (obj) => {
+          if (obj.notification) {
+            await sendPushNotification(obj.token, roomName);
+          }
+        });
+      }
+    });
   }
 };
 
@@ -113,8 +106,6 @@ const scheduleAlert = (
         runTime.getMonth() + 1
       } *`;
 
-      console.log("cronExpression", cronExpression);
-
       schedule(
         cronExpression,
         async () => {
@@ -123,8 +114,6 @@ const scheduleAlert = (
           const registrationTokens = await DeviceToken.find({
             businessId: businessId,
           });
-
-          console.log("teenbar");
 
           for (const obj of registrationTokens) {
             if (obj.notification) {
