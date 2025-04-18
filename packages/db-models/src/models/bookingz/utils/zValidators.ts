@@ -15,3 +15,11 @@ export function zParamsValidator(schema: any) {
     }
   });
 }
+
+export function zQueryValidator(schema: any) {
+  return zValidator("query", schema, (result, c) => {
+    if (!result.success) {
+      throw result.error;
+    }
+  });
+}

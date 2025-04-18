@@ -1,13 +1,14 @@
 import type { Document, Types } from "mongoose";
 import { Schema, model } from "mongoose";
 import { z } from "zod";
-import { requiredObjectIdString } from "./utils";
+import { requiredObjectIdString, zDayRange, zPeriodRange } from "./utils";
 
 // Zod schema for a coupon allocation item
 const couponAllocationZodSchema = z.object({
   couponId: requiredObjectIdString("Coupon ID"),
   remaining: z.number({ required_error: "Remaining is required" }),
 });
+export type CouponAllocInput = z.infer<typeof couponAllocationZodSchema>;
 
 // Zod schema for BusinessPeriodConfig
 export const businessPeriodConfigZodSchema = z
@@ -21,6 +22,57 @@ export const businessPeriodConfigZodSchema = z
     archived_at: z.date().nullable().default(null),
   })
   .strict();
+
+function parseList(val: unknown): unknown {
+  if (Array.isArray(val)) return val;
+  if (typeof val === "string") {
+    if (val.startsWith("[")) {
+      try {
+        return JSON.parse(val);
+      } catch {}
+    }
+    return val.split(",").map((s) => s.trim());
+  }
+  return val;
+}
+
+export const filterQuerySchema = z
+  .object({
+    days: z.preprocess(
+      parseList,
+      z
+        .array(zDayRange)
+        .max(7)
+        .refine((a) => new Set(a).size === a.length, {
+          message: "no duplicates",
+        })
+        .optional(),
+    ),
+    periods: z.preprocess(
+      parseList,
+      z
+        .array(zPeriodRange)
+        .max(4)
+        .refine((a) => new Set(a).size === a.length, {
+          message: "no duplicates",
+        })
+        .optional(),
+    ),
+  })
+  .strict();
+
+export const bulkUpdatePeriodsBodySchema = z.array(
+  z.object({
+    dayOfWeek: zDayRange,
+    period: zPeriodRange,
+    baseCharge: z.number().optional(),
+    redeemableCoverCharge: z.number().optional(),
+    isOpen: z.boolean().optional(),
+    couponAllocations: z.array(couponAllocationZodSchema).optional(),
+  }),
+);
+
+export type BulkPeriodUpdate = z.infer<typeof bulkUpdatePeriodsBodySchema>;
 
 export const upsertPeriodPayloadSchema = businessPeriodConfigZodSchema
   .pick({

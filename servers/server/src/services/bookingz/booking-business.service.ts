@@ -9,6 +9,7 @@ import {
 } from "@hi/db-models";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import type { CouponAllocInput } from "@hi/db-models/src/models/bookingz/business-period-config";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -17,15 +18,6 @@ dayjs.extend(timezone);
  * deepEqual helper to compare two values using lodash.
  */
 export const deepEqual = (a: any, b: any): boolean => isEqual(a, b);
-
-/**
- * CouponAllocInput defines the shape of the input for a coupon allocation.
- * It includes a couponId (as a string or an ObjectId) and a numeric remaining value.
- */
-export type CouponAllocInput = {
-  couponId: string | Types.ObjectId;
-  remaining: number;
-};
 
 /* Utility: generateUniqueVersionId returns a new unique version id */
 const generateUniqueVersionId = (): string =>

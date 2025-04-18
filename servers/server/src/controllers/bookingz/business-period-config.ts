@@ -3,10 +3,13 @@ import {
   toggleSinglePeriod,
 } from "@/services/bookingz/business-toggle.service";
 import {
+  bulkUpdatePeriodsService,
+  getFilteredPeriodConfigsService,
   getPeriodsForDayService,
   getSinglePeriodService,
   upsertPeriodConfigService,
 } from "@/services/bookingz/day-period.service";
+import type { BulkPeriodUpdate } from "@hi/db-models/src/models/bookingz/business-period-config";
 import { runInTransaction } from "@hi/utils";
 import type { Context } from "hono";
 
@@ -24,6 +27,23 @@ export const getPeriodsForDayController = async (c: Context) => {
     status: 200,
     data: periods,
     message: "Periods fetched successfully.",
+  });
+};
+
+export const getFilteredPeriodConfigsController = async (c: Context) => {
+  const { businessId } = c.req.param();
+  // after zQueryValidator the parsed query is here:
+  const { days, periods } = c.req.valid("query") as {
+    days?: number[];
+    periods?: number[];
+  };
+  const data = await runInTransaction((session) =>
+    getFilteredPeriodConfigsService(businessId, days, periods, session),
+  );
+  return c.json({
+    status: 200,
+    data,
+    message: "Filtered period configurations fetched successfully.",
   });
 };
 
@@ -58,6 +78,19 @@ export const upsertPeriodConfigController = async (c: Context) => {
     status: 200,
     data: result,
     message: "Period configuration upserted successfully.",
+  });
+};
+
+export const bulkUpdatePeriodsController = async (c: Context) => {
+  const { businessId } = c.req.param();
+  const items = (await c.req.json()) as BulkPeriodUpdate[];
+  const updated = await runInTransaction((session) =>
+    bulkUpdatePeriodsService(businessId, items, session),
+  );
+  return c.json({
+    status: 200,
+    data: updated,
+    message: "Periods updated successfully.",
   });
 };
 

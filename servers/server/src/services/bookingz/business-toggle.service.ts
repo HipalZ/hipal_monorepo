@@ -21,7 +21,7 @@ export const setBusinessBookingActive = async (
   // Retrieve the business using the session
   const biz = await Business.findById(bizId).session(session);
   if (!biz) throw new Error("Business not found");
-  if (biz.isBookingActive === flag) return biz;
+  // if (biz.isBookingActive === flag) return biz;
 
   // Use findByIdAndUpdate to update the field, bypassing document save hooks.
   const updatedBiz = await Business.findByIdAndUpdate(

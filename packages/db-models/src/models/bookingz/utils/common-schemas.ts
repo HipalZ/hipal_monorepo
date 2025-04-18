@@ -96,13 +96,14 @@ export const endTimeValidator = z
   )
   .transform((val) => coerceToHHMM(val));
 
-const zDigitRange = (min: number, max: number) =>
-  z
-    .string()
-    .regex(
-      new RegExp(`^[${min}-${max}]$`),
-      `must be a digit between ${min} and ${max}`,
-    );
+// const zDigitRange = (min: number, max: number) =>
+//   z
+//     .string()
+//     .regex(/^\d$/, "must be a single digit")
+//     .transform((val) => parseInt(val, 10))
+//     .refine((num) => num >= min && num <= max, {
+//       message: `must be a digit between ${min} and ${max}`,
+//     });
 
-export const zDayRange = zDigitRange(0, 6);
-export const zPeriodRange = zDigitRange(0, 3);
+export const zDayRange = z.coerce.number().int().min(0).max(6);
+export const zPeriodRange = z.coerce.number().int().min(0).max(3);

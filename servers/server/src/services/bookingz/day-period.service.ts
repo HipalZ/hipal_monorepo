@@ -6,6 +6,10 @@ import {
   Couponz,
 } from "@hi/db-models";
 import { ensureBookingBusiness } from "./booking-business.service";
+import type {
+  BulkPeriodUpdate,
+  CouponAllocInput,
+} from "@hi/db-models/src/models/bookingz/business-period-config";
 
 /* Helper: default period range */
 const defaultPeriodRange = (p: number) => {
@@ -178,6 +182,77 @@ export const getPeriodsForDayService = async (
   return periods;
 };
 
+type PeriodDoc = {
+  businessDayConfigId: mongooseTypes.ObjectId;
+  dayOfWeek: number;
+  period: number;
+  baseCharge: number;
+  redeemableCoverCharge: number;
+  isOpen: boolean;
+  archived_at: Date | null;
+  couponAllocations: any[];
+  createdAt: Date;
+  updatedAt: Date;
+  [key: string]: any;
+};
+
+export const getFilteredPeriodConfigsService = async (
+  businessId: string,
+  days: number[] | undefined,
+  periods: number[] | undefined,
+  session: ClientSession,
+) => {
+  const bizId = new mongooseTypes.ObjectId(businessId);
+
+  // 1. fetch day configs, filter by days if provided
+  const dayFilter: any = { businessId: bizId };
+  if (Array.isArray(days) && days.length) dayFilter.dayOfWeek = { $in: days };
+  const dayCfgs = await BusinessDayConfigModel.find(dayFilter)
+    .session(session)
+    .select("_id dayOfWeek")
+    .lean<{ _id: mongooseTypes.ObjectId; dayOfWeek: number }[]>();
+
+  if (!dayCfgs.length) {
+    return { dayWise: {}, periodWise: {} };
+  }
+
+  // build a map: dayConfigId → dayOfWeek
+  const dayOfWeekMap = new Map<string, number>();
+  for (const d of dayCfgs) {
+    dayOfWeekMap.set(d._id.toString(), d.dayOfWeek);
+  }
+
+  // 2. fetch period configs under those dayCfg IDs, filter by periods if provided
+  const perFilter: any = {
+    businessDayConfigId: { $in: dayCfgs.map((d) => d._id) },
+  };
+  if (Array.isArray(periods) && periods.length) {
+    perFilter.period = { $in: periods };
+  }
+  const configs = await BusinessPeriodConfigModel.find(perFilter)
+    .session(session)
+    .lean<PeriodDoc[]>();
+
+  // 3. reshape into dayWise and periodWise
+  const dayWise: Record<number, Record<number, PeriodDoc>> = {};
+  const periodWise: Record<number, Record<number, PeriodDoc>> = {};
+
+  for (const cfg of configs) {
+    const key = cfg.businessDayConfigId.toString();
+    const d = dayOfWeekMap.get(key);
+    if (d === undefined) continue; // shouldn't happen
+
+    const p = cfg.period;
+
+    if (!dayWise[d]) dayWise[d] = {};
+    dayWise[d][p] = cfg;
+
+    if (!periodWise[p]) periodWise[p] = {};
+    periodWise[p][d] = cfg;
+  }
+
+  return { dayWise, periodWise };
+};
 // upsertPeriodConfig
 
 type UpsertPayload = {
@@ -278,6 +353,177 @@ export const upsertPeriodConfigService = async (
   );
 
   return pCfg;
+};
+
+export const bulkUpdatePeriodsService = async (
+  businessId: string,
+  items: BulkPeriodUpdate[],
+  session: ClientSession,
+) => {
+  console.log("bulkUpdatePeriodsService ▶ start", {
+    businessId,
+    itemsCount: items.length,
+  });
+  const couponCache = new Map<string, boolean>();
+  const impacted: {
+    dayOfWeek: number;
+    period: number;
+    newAlloc: CouponAllocInput[];
+  }[] = [];
+  const result: any[] = [];
+
+  for (const it of items) {
+    console.log("→ processing item", it);
+    const dayCfg = await BusinessDayConfigModel.findOne({
+      businessId,
+      dayOfWeek: it.dayOfWeek,
+    }).session(session);
+    if (!dayCfg) {
+      console.error("! day config not found for", it.dayOfWeek);
+      throw new Error(`Day ${it.dayOfWeek} not found`);
+    }
+
+    const pCfg =
+      (await BusinessPeriodConfigModel.findOne({
+        businessDayConfigId: dayCfg._id,
+        period: it.period,
+      }).session(session)) ||
+      new BusinessPeriodConfigModel({
+        businessDayConfigId: dayCfg._id,
+        period: it.period,
+      });
+
+    let changedMeta = false;
+    let changedAlloc = false;
+
+    // 1) meta fields
+    if (it.baseCharge !== undefined && pCfg.baseCharge !== it.baseCharge) {
+      console.log(
+        "  • baseCharge changed:",
+        pCfg.baseCharge,
+        "→",
+        it.baseCharge,
+      );
+      pCfg.baseCharge = it.baseCharge;
+      changedMeta = true;
+    }
+    if (
+      it.redeemableCoverCharge !== undefined &&
+      pCfg.redeemableCoverCharge !== it.redeemableCoverCharge
+    ) {
+      console.log(
+        "  • redeemableCoverCharge changed:",
+        pCfg.redeemableCoverCharge,
+        "→",
+        it.redeemableCoverCharge,
+      );
+      pCfg.redeemableCoverCharge = it.redeemableCoverCharge;
+      changedMeta = true;
+    }
+    if (it.isOpen !== undefined && pCfg.isOpen !== it.isOpen) {
+      console.log("  • isOpen changed:", pCfg.isOpen, "→", it.isOpen);
+      pCfg.isOpen = it.isOpen;
+      changedMeta = true;
+    }
+
+    // 2) couponAllocations
+    if (it.couponAllocations) {
+      console.log("  • checking couponAllocations", it.couponAllocations);
+      const desired: { couponId: Types.ObjectId; remaining: number }[] = [];
+      for (const a of it.couponAllocations) {
+        const id = a.couponId;
+        if (!couponCache.has(id)) {
+          const exists = await Couponz.exists({
+            _id: new mongooseTypes.ObjectId(id),
+            type: "BOOKINGS",
+            isDeleted: false,
+            businessId,
+          }).session(session);
+          couponCache.set(id, Boolean(exists));
+        }
+        if (!couponCache.get(id)) {
+          console.error("!! invalid coupon", id);
+          throw new Error(`Invalid coupon ${id}`);
+        }
+        console.log("    ✓ coupon valid", id);
+        desired.push({
+          couponId: new mongooseTypes.ObjectId(id),
+          remaining: a.remaining,
+        });
+      }
+
+      console.log(
+        "    • existing allocations:",
+        pCfg.couponAllocations.map((e) => ({
+          id: e.couponId.toString(),
+          remaining: e.remaining,
+        })),
+      );
+      console.log(
+        "    • desired allocations:",
+        desired.map((d) => ({
+          id: d.couponId.toString(),
+          remaining: d.remaining,
+        })),
+      );
+
+      const same =
+        pCfg.couponAllocations.length === desired.length &&
+        desired.every((d) => {
+          const e = pCfg.couponAllocations.find((x) =>
+            x.couponId.equals(d.couponId),
+          );
+          return !!e && e.remaining === d.remaining;
+        });
+
+      if (!same) {
+        console.log("    • allocations differ → updating");
+        pCfg.couponAllocations = desired;
+        changedAlloc = true;
+      } else {
+        console.log("    • allocations identical → no change");
+      }
+    }
+
+    // 3) save if anything changed
+    if (changedMeta || changedAlloc) {
+      console.log("  → saving updated period config", {
+        dayOfWeek: it.dayOfWeek,
+        period: it.period,
+      });
+      await pCfg.save({ session });
+      result.push(pCfg);
+    } else {
+      console.log("  → no changes detected for", {
+        dayOfWeek: it.dayOfWeek,
+        period: it.period,
+      });
+    }
+
+    // 4) only periods whose *allocations* changed get fed into ensureBookingBusiness
+    if (changedAlloc) {
+      impacted.push({
+        dayOfWeek: it.dayOfWeek,
+        period: it.period,
+        newAlloc: pCfg.couponAllocations.map((x) => ({
+          couponId: x.couponId.toString(),
+          remaining: x.remaining,
+        })),
+      });
+    }
+  }
+
+  if (impacted.length) {
+    console.log("→ running ensureBookingBusiness with impacted:", impacted);
+    await ensureBookingBusiness(businessId, impacted, session);
+  } else {
+    console.log("→ no coupon-alloc changes → skipping ensureBookingBusiness");
+  }
+
+  console.log("bulkUpdatePeriodsService ◀ done", {
+    updatedCount: result.length,
+  });
+  return result;
 };
 
 export const getSinglePeriodService = async (
