@@ -123,7 +123,7 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                             aria-label="Call"
                         >
                             <MdOutlineCall size="24" />
-                            Direction
+                            Call
                         </Button>
                         <Button
                             onClick={whatsappOwner}

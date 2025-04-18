@@ -48,7 +48,7 @@ const MemoGetBill = () => {
                 message: "Server timeout occurred",
             });
         }
-        if(response.status === 403 || response.status === 401) {
+        if (response.status === 403 || response.status === 401) {
             setOpenErrorModal(true);
             setError("You are not authorized to perform this action");
             return
@@ -202,7 +202,7 @@ const MemoGetBill = () => {
                         </div>
                         <div className="flex justify-between text-lg font-bold">
                             <p>Total</p>
-                            <p>₹{data?.total.toFixed(2)}</p>
+                            <p>₹{data?.total}</p>
                         </div>
                     </CardContent>
                 </Card>

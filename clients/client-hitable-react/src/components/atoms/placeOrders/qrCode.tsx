@@ -218,7 +218,7 @@ const MemoQrCode = ({ data, qrBillId, toggleQr }: { data: IBillData; qrBillId: s
                 <div className="flex items-center justify-center mt-6 space-x-2">
                     <CreditCard className="w-6 h-6 text-green-500" />
                     <h3 className="text-2xl font-bold text-gray-800">
-                        Total: ₹{data?.total.toFixed(2)}
+                        Total: ₹{data?.total}
                     </h3>
                 </div>
 
