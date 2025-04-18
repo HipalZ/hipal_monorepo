@@ -2158,10 +2158,7 @@ const whatsappRouter = new Hono()
                 slug: urlObj?.urlCode,
               });
 
-              console.log("room", room);
-
               if (room && room.userIds.length === 0) {
-                console.log("yaha");
                 const a = await HotelRoom.findOneAndUpdate(
                   {
                     businessId: config?.businessId,
@@ -2208,7 +2205,7 @@ const whatsappRouter = new Hono()
                     to: user?.phone?.toString(),
                     type: "template",
                     template: {
-                      name: "authcode_template",
+                      name: "test_thankyou_template",
                       language: { code: "en" },
                       components: [
                         {
@@ -2241,24 +2238,39 @@ const whatsappRouter = new Hono()
                 );
               }
 
-              await axios({
-                method: "POST",
-                url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
-                data: {
+              const res = await axios.post(
+                `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
+                {
                   messaging_product: "whatsapp",
                   to: from,
-                  text: {
-                    body: `**🏨 Welcome to ${bName?.name}! 🏨**
-              We are delighted to provide you with a **comfortable and luxurious stay**. 🛏️✨
-              🔑 **Explore service In Room **: ${updateLongUrl}
-              🏡 **Discover our beautifully designed rooms and premium amenities.**
-              Enjoy **a seamless check-in experience** and **relax in comfort** with us. 🌟😊`,
+                  type: "template",
+                  template: {
+                    name: "test_welcome_message",
+                    language: { code: "en" },
+                    components: [
+                      {
+                        type: "body",
+                        parameters: [
+                          {
+                            type: "text",
+                            text: bName?.name,
+                          },
+
+                          {
+                            type: "text",
+                            text: updateLongUrl,
+                          },
+                        ],
+                      },
+                    ],
                   },
                 },
-                headers: {
-                  "Content-Type": "application/json",
+                {
+                  headers: {
+                    Authorization: `Bearer ${config.token}`,
+                  },
                 },
-              });
+              );
             } else {
               console.log("intablescan");
               await axios({
