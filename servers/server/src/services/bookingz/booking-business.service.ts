@@ -1,7 +1,6 @@
-import type { ClientSession, Types } from "mongoose";
+import type { ClientSession } from "mongoose";
 import { Types as mongooseTypes } from "mongoose";
 import dayjs from "dayjs";
-import { isEqual } from "lodash";
 import {
   BookingBusinessModel,
   BusinessDayConfigModel,
@@ -10,30 +9,13 @@ import {
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import type { CouponAllocInput } from "@hi/db-models/src/models/bookingz/business-period-config";
+import { generateUniqueVersionId } from "./booking.utils";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-/**
- * deepEqual helper to compare two values using lodash.
- */
-export const deepEqual = (a: any, b: any): boolean => isEqual(a, b);
 
-/* Utility: generateUniqueVersionId returns a new unique version id */
-const generateUniqueVersionId = (): string =>
-  new mongooseTypes.ObjectId().toHexString();
 
-/**
- * upsertBookingBusiness
- *
- * - Finds an existing BookingBusiness record (for a given business, date, and period) or creates a new one.
- * - Maps each allocation from the provided array:
- *    - For each allocation in `alloc`, it converts couponId to a Types.ObjectId.
- *    - It always generates a new versionId for each allocation in this function.
- *      (Note: the preservation of versionId when no changes occur is handled in innerUpsert.)
- * - If the flag `edited` is true, it marks the record as explicitly edited.
- * - Finally, it saves the record and returns it.
- */
 export const upsertBookingBusiness = async (
   businessId: string,
   date: Date,
@@ -42,7 +24,6 @@ export const upsertBookingBusiness = async (
   edited: boolean,
   session: ClientSession,
 ) => {
-  // Normalize date to midnight local timezone (Asia/Kolkata)
   const normalizedDate = dayjs.tz(date, "Asia/Kolkata").startOf("day").toDate();
 
   const row =
@@ -93,14 +74,6 @@ export const explicitUpsertBookingBusinessService = async (
   );
 };
 
-/**
- * fetchOrUpsertBookingBusiness
- *
- * - Retrieves the current desired allocation for the given business, date, and period
- *   by reading the BusinessPeriodConfig.
- * - Maps the stored coupon allocations into CouponAllocInput shape (couponId as a string, remaining).
- * - Calls upsertBookingBusiness with that data.
- */
 export const fetchOrUpsertBookingBusiness = async (
   businessId: string,
   date: Date,
@@ -134,27 +107,7 @@ export const fetchOrUpsertBookingBusiness = async (
   );
 };
 
-/**
- * ensureBookingBusiness synchronizes the 60-day ledger.
- *
- * It works in two modes:
- * 1. Full seed mode, when the impacted array is empty:
- *    - Iterates over every day in the next 60 days.
- *    - For each day that is open (found via BusinessDayConfig), updates all four periods.
- * 2. Targeted mode, when the impacted array is provided:
- *    - For each impacted object, where the impacted object has at least a dayOfWeek,
- *      if period is provided, update that period for every matching day; if not provided, update all periods.
- *
- * innerUpsert:
- * - Finds an existing BookingBusiness record for the given date and period.
- * - Normalizes the stored coupon allocations (couponId as a string, remaining).
- * - Merges the new allocation array with the stored one:
- *    - For each allocation in the new allocation array (newAlloc):
- *       - If the record exists, finds if there is a matching allocation (by couponId).
- *       - If found and the remaining count is the same, preserves the existing versionId.
- *       - Otherwise, generates a new versionId.
- * - If there is no record, creates a new one.
- */
+
 export const ensureBookingBusiness = async (
   businessId: string,
   impacted: {

@@ -9,23 +9,10 @@ import { ensureBookingBusiness } from "./booking-business.service";
 import type {
   BulkPeriodUpdate,
   CouponAllocInput,
+  UpsertPayload,
 } from "@hi/db-models/src/models/bookingz/business-period-config";
+import { defaultPeriodRange } from "./booking.utils";
 
-/* Helper: default period range */
-const defaultPeriodRange = (p: number) => {
-  switch (p) {
-    case 0:
-      return { start: "04:00", end: "12:00" };
-    case 1:
-      return { start: "12:00", end: "16:00" };
-    case 2:
-      return { start: "16:00", end: "19:00" };
-    case 3:
-      return { start: "19:00", end: "28:00" };
-    default:
-      throw new Error("Invalid period");
-  }
-};
 
 /* upsertDayConfig */
 export const upsertDayConfig = async (
@@ -182,19 +169,7 @@ export const getPeriodsForDayService = async (
   return periods;
 };
 
-type PeriodDoc = {
-  businessDayConfigId: mongooseTypes.ObjectId;
-  dayOfWeek: number;
-  period: number;
-  baseCharge: number;
-  redeemableCoverCharge: number;
-  isOpen: boolean;
-  archived_at: Date | null;
-  couponAllocations: any[];
-  createdAt: Date;
-  updatedAt: Date;
-  [key: string]: any;
-};
+
 
 export const getFilteredPeriodConfigsService = async (
   businessId: string,
@@ -233,6 +208,20 @@ export const getFilteredPeriodConfigsService = async (
     .session(session)
     .lean<PeriodDoc[]>();
 
+
+    type PeriodDoc = {
+    businessDayConfigId: mongooseTypes.ObjectId;
+    dayOfWeek: number;
+    period: number;
+    baseCharge: number;
+    redeemableCoverCharge: number;
+    isOpen: boolean;
+    archived_at: Date | null;
+    couponAllocations: any[];
+    createdAt: Date;
+    updatedAt: Date;
+    [key: string]: any;
+};
   // 3. reshape into dayWise and periodWise
   const dayWise: Record<number, Record<number, PeriodDoc>> = {};
   const periodWise: Record<number, Record<number, PeriodDoc>> = {};
@@ -254,13 +243,6 @@ export const getFilteredPeriodConfigsService = async (
   return { dayWise, periodWise };
 };
 // upsertPeriodConfig
-
-type UpsertPayload = {
-  baseCharge?: number;
-  redeemableCoverCharge?: number;
-  couponAllocations?: { couponId: string; remaining: number }[];
-  isOpen?: boolean;
-};
 
 export const upsertPeriodConfigService = async (
   businessId: string,

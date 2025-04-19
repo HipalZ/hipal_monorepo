@@ -47,3 +47,18 @@ export const generateUniqueCode = (bookingId: string) =>
 
 /** ─────────── Deep‑equal (for ledger diff) ─────────── */
 export const deepEqual = isEqual;
+
+export const defaultPeriodRange = (p: number) => {
+  switch (p) {
+    case 0:
+      return { start: "04:00", end: "12:00" };
+    case 1:
+      return { start: "12:00", end: "16:00" };
+    case 2:
+      return { start: "16:00", end: "19:00" };
+    case 3:
+      return { start: "19:00", end: "28:00" };
+    default:
+      throw new Error("Invalid period");
+  }
+};

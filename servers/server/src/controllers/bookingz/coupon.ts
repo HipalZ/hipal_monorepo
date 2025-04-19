@@ -1,6 +1,8 @@
 import {
+  archiveBookingCouponsService,
   createBookingCouponService,
   getBookingCouponByIdService,
+  getBookingCouponReportService,
   getBusinessBookingCouponsService,
   updateBookingCouponService,
 } from "@/services/bookingz/coupon.service";
@@ -31,12 +33,41 @@ export const updateBookingCouponController = async (c: Context) => {
 
 export const getBusinessBookingCouponsController = async (c: Context) => {
   const { businessId } = c.req.param();
-  const coupons = await getBusinessBookingCouponsService(businessId);
-  return c.json({ status: 200, data: coupons, message: "Coupons fetched" });
+  // after zQueryValidator, `includeArchived` is already coerced to boolean
+  const { includeArchived } = c.req.valid("query") as { includeArchived?: boolean };
+  const coupons = await getBusinessBookingCouponsService(businessId, includeArchived);
+  return c.json({
+    status: 200,
+    data: coupons,
+    message: "Coupons fetched",
+  });
 };
 
 export const getBookingCouponByIdController = async (c: Context) => {
   const { couponId } = c.req.param();
   const coupon = await getBookingCouponByIdService(couponId);
   return c.json({ status: 200, data: coupon, message: "Coupon fetched" });
+};
+
+export const archiveBookingCouponsController = async (c: Context) => {
+  const { couponIds } = (await c.req.json()) as { couponIds: string[] };
+  const archived = await runInTransaction((session) =>
+    archiveBookingCouponsService(couponIds, session)
+  );
+  return c.json({
+    status: 200,
+    data: archived,
+    message: "Coupons archived and booking‑configs resynchronized.",
+  });
+};
+
+// get booking coupon report
+export const getBookingCouponReportController = async (c: Context) => {
+  const { couponId } = c.req.param();
+  const report = await getBookingCouponReportService(couponId);
+  return c.json({
+    status: 200,
+    data: report,
+    message: "Coupon report generated successfully.",
+  });
 };

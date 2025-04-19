@@ -83,6 +83,8 @@ export const upsertPeriodPayloadSchema = businessPeriodConfigZodSchema
   })
   .partial();
 
+  export type UpsertPayload = z.infer<typeof upsertPeriodPayloadSchema>;
+
 // TypeScript interface for a BusinessPeriodConfig document
 export interface IBusinessPeriodConfig extends Document {
   businessDayConfigId: Types.ObjectId;
