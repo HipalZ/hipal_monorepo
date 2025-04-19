@@ -491,7 +491,7 @@ const roomRouter = new Hono()
             to: user?.phone?.toString(),
             type: "template",
             template: {
-              name: "authcode_template",
+              name: "test_checkin_template",
               language: { code: "en" },
               components: [
                 {
@@ -560,7 +560,7 @@ const roomRouter = new Hono()
             to: userData?.phone?.toString(),
             type: "template",
             template: {
-              name: "checkout_template",
+              name: "test_thankyou_template",
               language: { code: "en" },
               components: [
                 {
@@ -569,11 +569,6 @@ const roomRouter = new Hono()
                     {
                       type: "text",
                       text: userData?.name,
-                    },
-
-                    {
-                      type: "text",
-                      text: whatsAppConfig?.businessId?.name,
                     },
 
                     {
@@ -695,7 +690,7 @@ const roomRouter = new Hono()
               to: userData?.phone?.toString(),
               type: "template",
               template: {
-                name: "checkout_msg_template",
+                name: "test_checkout_template",
                 language: { code: "en" },
                 components: [
                   {

@@ -67,9 +67,68 @@ const scheduleAlertUpdate = (
       const alertData = await HotelAlert.findById(alertId);
 
       if (alertData && alertData?.alertProgress !== "REJECTED") {
-        const alertData = await HotelAlert.findByIdAndUpdate(alertId, {
-          alertProgress: newProgress,
+        const alertData = await HotelAlert.findByIdAndUpdate(
+          alertId,
+          {
+            alertProgress: newProgress,
+          },
+          { new: true },
+        ).populate({
+          path: "serviceIds",
+          select: "name",
         });
+
+        if (alertData?.alertProgress === "ESCALATION") {
+          const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+            businessId: alertData?.businessId,
+          });
+          if (whatsAppConfig) {
+            const managers = await User.find({
+              "customRole.businessId": alertData?.businessId,
+              "customRole.role": "MANAGER",
+            }).lean();
+
+            for (const manager of managers) {
+              const res = await axios.post(
+                `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+                {
+                  messaging_product: "whatsapp",
+                  to: manager?.phone?.toString(),
+                  type: "template",
+                  template: {
+                    name: "test_escalation_template ",
+                    language: { code: "en" },
+                    components: [
+                      {
+                        type: "body",
+                        parameters: [
+                          {
+                            type: "text",
+                            text: manager?.name,
+                          },
+
+                          {
+                            type: "text",
+                            text: alertData?.serviceIds[0]?.name || "other",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${whatsAppConfig.token}`,
+                  },
+                },
+              );
+
+              if (res.status !== 200) {
+                throw new Error("Error sending message");
+              }
+            }
+          }
+        }
 
         const registrationTokens = await DeviceToken.find({
           businessId: businessId,
@@ -488,6 +547,10 @@ const hotelAlertRouter = new Hono()
       const requestData = await c.req.json();
       const { alertId, userId, action } = requestData as AcceptHotelAlertType;
 
+      const roomChat = await HotelRoomChat.findOne({
+        alertId: alertId,
+      });
+
       const alert = await HotelAlert.findById(alertId).populate({
         path: "serviceIds",
         select: "name",
@@ -643,7 +706,7 @@ const hotelAlertRouter = new Hono()
               to: userData?.phone?.toString(),
               type: "template",
               template: {
-                name: "chat_delivered_template",
+                name: "test_delivered_message",
                 language: { code: "en" },
                 components: [
                   {
@@ -732,6 +795,30 @@ const hotelAlertRouter = new Hono()
         await HotelRoomChat.findByIdAndUpdate(
           roomChat._id,
           { $addToSet: { roomChatReplyIds: newChatReply._id } },
+          { session },
+        );
+      }
+      if (action === "REJECTED") {
+        const roomChatReply = new HotelRoomChatReply({
+          action: false,
+          description: "your cart is rejected",
+          roomChatId: roomChat?._id,
+          userId: alert.userId,
+          status: "NORMAL",
+          date: Date.now(),
+        });
+
+        await roomChatReply.save({ session });
+
+        if (!roomChatReply) {
+          throw new Error("Failed to create room chat reply");
+        }
+
+        await HotelRoomChat.findByIdAndUpdate(
+          roomChat?._id,
+          {
+            $addToSet: { roomChatReplyIds: roomChatReply._id },
+          },
           { session },
         );
       }
