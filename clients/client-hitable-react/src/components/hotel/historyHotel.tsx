@@ -168,7 +168,7 @@ const MemoHistoryHotel = () => {
               </article>
 
               <article className="flex items-center gap-2">
-                <h1 className="font-medium">{item?.serviceIds[0].name}</h1>
+                <h1 className="font-medium">{item?.serviceIds[0]?.name}</h1>
                 {expandedItems.has(item._id) ? (
                   <ChevronUp className="h-5 w-5 text-gray-500" />
                 ) : (
