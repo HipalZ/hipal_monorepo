@@ -114,7 +114,6 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
     onSuccess: () => {
       toast.success("Payment mode updated!");
       queryClient.invalidateQueries({ queryKey: ["allSalesDataByGet"] })
-      setOpen(false)
     },
     onError: () => {
       toast.error("Failed to update mode.");
@@ -221,7 +220,7 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
                       onClick={() => updateMode(selectedMode)}
                       disabled={isUpdatingMode}
                     >
-                      {isUpdatingMode ? "Updating..." : "Update"}
+                      Update
                     </Button>
                   </div>
                 ) : (
