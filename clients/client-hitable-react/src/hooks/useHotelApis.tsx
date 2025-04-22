@@ -2,7 +2,7 @@ import { useAlertsStore } from "@/components/store/useAlertStore"
 import useBusinessData from "@/components/store/useBusinessData"
 import { useHiClientZ } from "@/components/store/useHiClientzData"
 import { useHotelStore } from "@/components/store/useHotelStore"
-import type { Alert, AlertProgress, Cart } from "@/components/types/hotelData"
+import type { Alert, Cart } from "@/components/types/hotelData";
 import { apiRpc } from "@hi/common"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import toast from "react-hot-toast"
@@ -286,22 +286,30 @@ export const useReviewChat = () => {
 }
 
 export const useEscalatedAlerts = () => {
-    const { setHotelEscalationCount } = useHotelStore()
-    const userId = useHiClientZ((s) => s.captainData._id)
+    const { setHotelEscalationCount, setEscalatedData } = useHotelStore()
+    const captainData = useHiClientZ((s) => s.captainData)
     const businessId = useBusinessData((s) => s.outletInfo?.businessId)
     const escalatedAlerts = async () => {
         const response = await apiRpc.hotel.alert.fetch_escalation_alerts.$get({
             query: {
                 businessId,
-                userId,
+                userId: captainData?._id,
             }
         })
         const res = await response.json()
         if (response.status === 200 || response.status === 201) {
+            setEscalatedData(res.data)
             setHotelEscalationCount(res.data.length)
             return res.data
         }
+
     }
+    useQuery(({
+        queryKey: ["escalatedAlerts"],
+        queryFn: escalatedAlerts,
+        enabled: captainData?.customRole[0]?.role === "FRONT_OFFICE" || captainData?.customRole[0]?.role === "MANAGER",
+        refetchInterval: 13000,
+    }))
     return { escalatedAlerts }
 }
 

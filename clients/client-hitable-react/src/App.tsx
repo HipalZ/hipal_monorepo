@@ -15,7 +15,6 @@ import { apiRpc } from "@hi/common";
 import { useErrorHandling } from "./components/utils/helpers";
 import useBusinessData from "./components/store/useBusinessData";
 import { useEscalatedAlerts, useRoomAlerts } from "@/hooks/useHotelApis";
-import { useHotelStore } from "./components/store/useHotelStore";
 const ErrorPopup = lazy(() => import("./components/ErrorPopup"));
 const InternetConnection = lazy(() => import("./components/atoms/internet"));
 const UpdateApp = lazy(() => import("./components/atoms/updateApp"));
@@ -54,11 +53,6 @@ function App() {
       captainData: s.captainData,
     }),
   );
-
-  const setHotelEscalationCount = useHotelStore((s) => s.setHotelEscalationCount);
-  const setEscalatedData = useHotelStore((s) => s.setEscalatedData);
-
-  const { escalatedAlerts } = useEscalatedAlerts()
 
   const pushNotify = async () => {
     try {
@@ -115,15 +109,6 @@ function App() {
     return data;
   };
 
-  const handleEscalatedAlerts = async () => {
-    if (!businessId) return;
-    const data: Alert[] = await escalatedAlerts();
-    console.log('escalated alerts', data);
-    setEscalatedData(data);
-    setHotelEscalationCount(data.length);
-    return data;
-  };
-
   const getAllCarts = async () => {
     if (!businessId) return;
 
@@ -166,13 +151,6 @@ function App() {
     refetchInterval: isSlow ? 31000 : 17000,
   });
 
-  useQuery(({
-    queryKey: ["escalatedAlerts", businessId, selectedBiz],
-    queryFn: handleEscalatedAlerts,
-    enabled: !!businessId && !!selectedBiz && (captainData?.customRole[0]?.role === "FRONT_OFFICE" || captainData?.customRole[0]?.role === "MANAGER"),
-    refetchInterval: isSlow ? 29000 : 19000,
-  }))
-
   useQuery({
     queryKey: ["offlineAlerts", businessId, selectedBiz],
     queryFn: handleOfflineAlerts,
@@ -189,6 +167,8 @@ function App() {
 
   // hotel alerts api
   useRoomAlerts();
+  // hotel escalated alerts api
+  useEscalatedAlerts();
 
   return (
     <main className="relative">
