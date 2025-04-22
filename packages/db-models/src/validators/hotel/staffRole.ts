@@ -16,7 +16,7 @@ export const hotelStaffRoleEnum = [
   "HOUSEKEEPING",
   "MAINTENANCE",
   "SECURITY",
-  "HELP_DESK",
+  "FRONT_OFFICE",
   "CLEANER",
   "WAITER",
   "LAUNDRY",

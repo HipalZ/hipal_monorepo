@@ -67,9 +67,9 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
     [mutateAsync, setIsLoading],
   )
 
-  const handleReject = () => {
+  const handleReject = useCallback(() => {
     setShowRejectPopup(true)
-  }
+  }, [])
 
   const submitRejection = () => {
     const finalReason =

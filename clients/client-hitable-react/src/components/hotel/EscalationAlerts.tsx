@@ -1,13 +1,13 @@
 import { AlertCardHotel } from "./alertCardHotel"
 import { memo, Suspense } from "react"
-import { useEscalatedAlerts } from "@/hooks/useHotelApis"
 import type { Alert } from "../types/hotelData"
+import { useHotelStore } from "../store/useHotelStore"
 
 const MemoEscalationAlerts = () => {
-  const { escalatedData } = useEscalatedAlerts()
+  const { escalatedData } = useHotelStore()
   return (
     <div className="p-4">
-      {escalatedData?.length > 0 ? (
+      {escalatedData && escalatedData?.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pb-20">
           {escalatedData?.map((alert: Alert) => (
             <Suspense key={alert?._id} fallback={<div>Loading...</div>}>

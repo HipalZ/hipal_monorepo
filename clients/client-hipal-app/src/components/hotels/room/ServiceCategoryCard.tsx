@@ -67,19 +67,20 @@ const ServiceItem = memo(
 
       <Label htmlFor={service._id} className="flex-grow font-medium cursor-pointer text-h-primary">
         {service.name}
-        {service.availability !== undefined && (
-          <span className={`ml-2 text-sm ${service.availability ? "text-green-600" : "text-red-500"}`}>
-            {service.availability ? "(Available)" : "(Unavailable)"}
-          </span>
-        )}
       </Label>
-
       <Checkbox
         id={service._id}
         checked={selected}
-        onCheckedChange={onToggle}
+        onCheckedChange={() => {
+          if (service.availability !== false) {
+            onToggle()
+          }
+        }}
         disabled={service.availability === false}
         className="w-5 h-5"
+        onClick={(e) => {
+          e.stopPropagation()
+        }}
       />
     </Card>
   ),
@@ -289,7 +290,6 @@ export default function ServiceCategoryCard({ category, className = "", business
                     className: "w-full rounded-md",
                     disable: selectedServices.length === 0 || alertStatus === "loading",
                     swipe: selectedServices.length !== 0 && alertStatus === "idle",
-                    highlight: selectedServices.length !== 0 || alertStatus === "success",
                   },
                 ]}
               />

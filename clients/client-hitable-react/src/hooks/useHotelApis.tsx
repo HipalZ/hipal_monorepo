@@ -173,13 +173,13 @@ export const useRespondAlerts = () => {
                 },
             });
             const res = await response.json();
-            if (res.status !== 200 && res.status !== 201) {
+            if (response.status !== 200 && response.status !== 201) {
                 throw new Error(res.message);
             }
             if (res.status === 200 || res.status === 201) {
                 toast.success(res.message);
             }
-            return response.json();
+            return res;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({
@@ -250,7 +250,7 @@ export const useSendChat = () => {
             });
             return response.json();
         },
-        onSuccess: (data) => {
+        onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ["getChats"]
             });
@@ -272,7 +272,7 @@ export const useReviewChat = () => {
             });
             return response.json();
         },
-        onSuccess: (data) => {
+        onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ["getChats"]
             });
@@ -302,15 +302,7 @@ export const useEscalatedAlerts = () => {
             return res.data
         }
     }
-
-    const { data: escalatedData, isPending } = useQuery({
-        queryKey: ["escalatedAlerts", businessId, userId],
-        queryFn: escalatedAlerts,
-        enabled: !!businessId && !!userId,
-        refetchInterval: 13000,
-    })
-
-    return { escalatedData, isPending }
+    return { escalatedAlerts }
 }
 
 type UpdateSourcePayload = {

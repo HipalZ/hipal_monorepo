@@ -165,8 +165,7 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
                         text: orderStatus === "success" ? "Back to room" : "Place Orders",
                         onClick: orderStatus === "success" ? onClose : handlePlaceOrder,
                         className: "w-full rounded-md",
-                        disable: isLoading || (!selectedRestaurant && orderStatus !== "success"),
-                        highlight: selectedRestaurant !== null || orderStatus === "success",
+                        disable: isLoading || cart?.length === 0 || (!selectedRestaurant && orderStatus !== "success"),
                     },
                 ]}
             />

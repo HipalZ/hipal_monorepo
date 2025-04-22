@@ -197,9 +197,9 @@ const MemoHistoryHotel = () => {
                       </div>
                     </div>
                   </div>
-                  <Button onClick={() => viewCart(item?.cart)} variant="outline" className="text-sm mt-1">
+                  {item?.cart && item?.cart?.length > 0 && <Button onClick={() => viewCart(item?.cart)} variant="outline" className="text-sm mt-1">
                     View Cart
-                  </Button>
+                  </Button>}
                 </div>
 
                 {/* Timeline */}

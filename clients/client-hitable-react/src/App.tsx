@@ -14,7 +14,8 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import { useErrorHandling } from "./components/utils/helpers";
 import useBusinessData from "./components/store/useBusinessData";
-import { useRoomAlerts } from "@/hooks/useHotelApis";
+import { useEscalatedAlerts, useRoomAlerts } from "@/hooks/useHotelApis";
+import { useHotelStore } from "./components/store/useHotelStore";
 const ErrorPopup = lazy(() => import("./components/ErrorPopup"));
 const InternetConnection = lazy(() => import("./components/atoms/internet"));
 const UpdateApp = lazy(() => import("./components/atoms/updateApp"));
@@ -30,14 +31,11 @@ function App() {
   const version = import.meta.env.VITE_APP_VERSION;
   const { errorText } = useErrorHandling();
   const {
-    offlineCount,
-    onlineCount,
     setOnlineCount,
     setOfflineCount,
     setOnlineAlertData,
     setOfflineAlertData,
     loading,
-    triggerSound,
     notificationStatus,
     setNotificationStatus,
     setCartData,
@@ -49,14 +47,18 @@ function App() {
   } = useLiteStore();
   const { initializePushNotifications, initializedRef } =
     usePushNotifications();
-  const { selectedBiz, platform, pushToken, captainData } = useHiClientZ(
+  const { selectedBiz, pushToken, captainData } = useHiClientZ(
     (s) => ({
       selectedBiz: s.selectedBiz,
-      platform: s.platform,
       pushToken: s.pushToken,
       captainData: s.captainData,
     }),
   );
+
+  const setHotelEscalationCount = useHotelStore((s) => s.setHotelEscalationCount);
+  const setEscalatedData = useHotelStore((s) => s.setEscalatedData);
+
+  const { escalatedAlerts } = useEscalatedAlerts()
 
   const pushNotify = async () => {
     try {
@@ -95,17 +97,6 @@ function App() {
     const data: Alert[] = await fetchAlerts(businessId, "ONLINE");
     setOnlineAlertData(data);
     setOnlineCount(data.length);
-    if (data && data?.length > onlineCount && platform === "web") {
-      const sound = new Howl({
-        src: ["/sounds/order.mp3"],
-        autoplay: triggerSound,
-        loop: true,
-      });
-      sound.play();
-      setTimeout(() => {
-        sound.pause();
-      }, 3000);
-    }
     return data;
   };
 
@@ -121,17 +112,15 @@ function App() {
       setUpdateFeature(data[0]?.updateFeature);
     }
     setOfflineCount(data.length);
-    if (data && data.length > offlineCount && platform === "web") {
-      const sound = new Howl({
-        src: ["/sounds/order.mp3"],
-        autoplay: triggerSound,
-        loop: true,
-      });
-      sound.play();
-      setTimeout(() => {
-        sound.pause();
-      }, 3000);
-    }
+    return data;
+  };
+
+  const handleEscalatedAlerts = async () => {
+    if (!businessId) return;
+    const data: Alert[] = await escalatedAlerts();
+    console.log('escalated alerts', data);
+    setEscalatedData(data);
+    setHotelEscalationCount(data.length);
     return data;
   };
 
@@ -177,9 +166,12 @@ function App() {
     refetchInterval: isSlow ? 31000 : 17000,
   });
 
-  // useQuery(({
-  //   queryKey:["escalatedAlerts", businessId, selectedBiz],
-  // }))
+  useQuery(({
+    queryKey: ["escalatedAlerts", businessId, selectedBiz],
+    queryFn: handleEscalatedAlerts,
+    enabled: !!businessId && !!selectedBiz && (captainData?.customRole[0]?.role === "FRONT_OFFICE" || captainData?.customRole[0]?.role === "MANAGER"),
+    refetchInterval: isSlow ? 29000 : 19000,
+  }))
 
   useQuery({
     queryKey: ["offlineAlerts", businessId, selectedBiz],
