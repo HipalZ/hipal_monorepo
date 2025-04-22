@@ -212,6 +212,7 @@ const hotelAlertRouter = new Hono()
       if (!customRole) {
         return respond(c, "Role not found for this business", true, 404, {});
       }
+      //
 
       const { role, serviceIds } = customRole;
 
