@@ -206,6 +206,16 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       required: false,
       default: false,
     },
+    updatedAt: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    updatedBy: {
+      type: ObjectId,
+      required: false,
+      ref: "User",
+    },
   },
 
   { timestamps: true },

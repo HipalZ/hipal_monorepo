@@ -121,7 +121,7 @@ const calculateDiscount = async (
   const discount = Math.round(
     Math.abs(
       finalBillValue / (1 + gstPercentage + serviceChargePercentage) -
-      estimatedSubTotal,
+        estimatedSubTotal,
     ),
   );
 
@@ -593,9 +593,9 @@ const paymentsRouter = new Hono()
           // Step 4: Calculate finalTotal
           const finalTotal = Math.round(
             finalSubTotal +
-            finalTax +
-            (removeTips ? 0 : tips || tempTable.tips) +
-            tempTable.serviceCharge,
+              finalTax +
+              (removeTips ? 0 : tips || tempTable.tips) +
+              tempTable.serviceCharge,
           );
 
           await UserSession.findOneAndUpdate(
@@ -1719,12 +1719,12 @@ const paymentsRouter = new Hono()
         200,
         existingPaymentAlerts.length === 0
           ? [
-            {
-              v: appInfo?.v,
-              appUrl: appInfo?.appUrl,
-              updateFeature: appInfo?.updateFeature,
-            },
-          ]
+              {
+                v: appInfo?.v,
+                appUrl: appInfo?.appUrl,
+                updateFeature: appInfo?.updateFeature,
+              },
+            ]
           : existingPaymentAlerts,
       );
     },
@@ -1877,7 +1877,7 @@ const paymentsRouter = new Hono()
                     order_id: order?._id,
                     total:
                       paymentMode?.name === "npc" ||
-                        paymentMode?.name === "complementary"
+                      paymentMode?.name === "complementary"
                         ? 0
                         : order?.total,
                     mode: settleModes.length > 1 ? "split" : paymentMode?.name,
@@ -1890,7 +1890,7 @@ const paymentsRouter = new Hono()
                         : order?.userId,
                     claimedCoins:
                       paymentMode?.name === "npc" ||
-                        paymentMode?.name === "complementary"
+                      paymentMode?.name === "complementary"
                         ? 0
                         : order?.claimedCoins,
                     billValue: order?.billValue,
@@ -1898,7 +1898,7 @@ const paymentsRouter = new Hono()
                     tableName: order?.tableName,
                     earnCoins:
                       paymentMode?.name === "npc" ||
-                        paymentMode?.name === "complementary"
+                      paymentMode?.name === "complementary"
                         ? 0
                         : finalCashBack,
                     razorpayEventId: nanoid(15),
@@ -1909,12 +1909,12 @@ const paymentsRouter = new Hono()
                     posBillId: tableSession?.billInvoiceId,
                     tax:
                       paymentMode?.name === "npc" ||
-                        paymentMode?.name === "complementary"
+                      paymentMode?.name === "complementary"
                         ? 0
                         : tableSession?.finalTax,
                     serviceCgarge:
                       paymentMode?.name === "npc" ||
-                        paymentMode?.name === "complementary"
+                      paymentMode?.name === "complementary"
                         ? 0
                         : tableSession?.serviceCharge,
                     posBillRequestId: tableSession?.billRequestId,
@@ -2488,7 +2488,6 @@ const paymentsRouter = new Hono()
       }
 
       const queryObject = { $and: filterConditions, isDeleted: false };
-
 
       const existingPayments = await Payment.find(queryObject)
         .sort({ _id: -1 })
@@ -3572,20 +3571,48 @@ const paymentsRouter = new Hono()
   )
 
   .put(
-    "/update_payment",
+    "/update_mode",
 
-    zValidator("json", z.object({ paymentId: z.string(), mode: z.string() })),
+    zValidator(
+      "json",
+      z.object({
+        paymentId: z.string(),
+        mode: z.string(),
+        updatedBy: z.string(),
+      }),
+    ),
 
     async (c) => {
-      const { paymentId, mode } = await c.req.json();
+      const { paymentId, mode, updatedBy } = await c.req.json();
+
+      const paymentData = await Payment.findById(paymentId);
+
+      if (!paymentData) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "Payment not found",
+        });
+      }
+      if (
+        (paymentData?.splitModes?.length ?? 0) > 1 ||
+        ["complementary", "dues", "npc", "split"].includes(paymentData.mode)
+      ) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "Payment already settled or cannot update mode",
+        });
+      }
 
       const updatedPayment = await Payment.findByIdAndUpdate(
         paymentId,
         {
-          $set: {
-            mode,
-            paymentMode: mode,
-          },
+          mode,
+          paymentMode: mode,
+          splitModes: [],
+          updatedBy: updatedBy,
+          updatedAt: Date.now(),
         },
         { new: true },
       );
@@ -3594,14 +3621,12 @@ const paymentsRouter = new Hono()
         return c.json({
           err: true,
           data: {},
-          message: "Payment not found",
+          message: "Failed to update payment",
         });
       }
 
-      return c.json({
-        err: false,
-        data: { _id: updatedPayment._id },
-        message: "Payment updated successfully",
+      return respond(c, "Payment mode updated successfully", false, 200, {
+        _id: updatedPayment._id,
       });
     },
   );

@@ -165,6 +165,8 @@ export const PaymentSchema = z.object({
       invalid_type_error: "isDeleted must be a boolean",
     })
     .default(false),
+  updatedAt: z.number().optional(),
+  updatedBy: ObjectIdSchema.optional(),
 });
 
 export type PaymentType = z.infer<typeof PaymentSchema>;
