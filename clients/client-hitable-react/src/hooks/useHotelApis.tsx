@@ -163,7 +163,7 @@ export const useRespondAlerts = () => {
     const userId = useHiClientZ((s) => s.captainData._id);
 
     const { mutateAsync: respondAlert } = useMutation({
-        mutationFn: async ({ alertId, action, reasonOfRejection }: { alertId: string, action: AlertProgress, reasonOfRejection: string }) => {
+        mutationFn: async ({ alertId, action, reasonOfRejection }: { alertId: string, action: string, reasonOfRejection: string }) => {
             const response = await apiRpc.hotel.alert.accept_alert.$post({
                 json: {
                     alertId,
@@ -172,8 +172,12 @@ export const useRespondAlerts = () => {
                     reasonOfRejection,
                 },
             });
-            if (response.status !== 200 && response.status !== 201) {
-                throw new Error("Failed to respond to alert");
+            const res = await response.json();
+            if (res.status !== 200 && res.status !== 201) {
+                throw new Error(res.message);
+            }
+            if (res.status === 200 || res.status === 201) {
+                toast.success(res.message);
             }
             return response.json();
         },
@@ -181,10 +185,6 @@ export const useRespondAlerts = () => {
             queryClient.invalidateQueries({
                 queryKey: ["roomAlerts"],
             });
-            toast.success("Alert responded successfully");
-        },
-        onError: () => {
-            toast.error("Failed to respond to alert");
         },
     });
 
@@ -286,6 +286,7 @@ export const useReviewChat = () => {
 }
 
 export const useEscalatedAlerts = () => {
+    const { setHotelEscalationCount } = useHotelStore()
     const userId = useHiClientZ((s) => s.captainData._id)
     const businessId = useBusinessData((s) => s.outletInfo?.businessId)
     const escalatedAlerts = async () => {
@@ -297,6 +298,7 @@ export const useEscalatedAlerts = () => {
         })
         const res = await response.json()
         if (response.status === 200 || response.status === 201) {
+            setHotelEscalationCount(res.data.length)
             return res.data
         }
     }

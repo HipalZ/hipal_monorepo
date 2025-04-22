@@ -1,98 +1,118 @@
 import type { FOOD_TYPES } from "../atoms/dishType";
 
-export type NavItemHotelTypes = "Alerts" | "History" | "Sales" | "Rooms" | "Escalation";
+export type NavItemHotelTypes =
+  | "Alerts"
+  | "History"
+  | "Sales"
+  | "Rooms"
+  | "Escalation";
 export enum NavItemsHotelEnum {
-    Alerts = "Alerts",
-    History = "History",
-    Sales = "Sales",
-    Rooms = "Rooms",
-    Escalation = "Escalation",
+  Alerts = "Alerts",
+  History = "History",
+  Sales = "Sales",
+  Rooms = "Rooms",
+  Escalation = "Escalation",
 }
 
 export interface guestData {
-    _id: string;
-    name: string;
-    phone: string;
+  _id: string;
+  name: string;
+  phone: string;
 }
 
 export interface RoomData {
-    amenities: string[];
-    authCode: string;
-    businessId: string;
-    capacity: number;
-    downLoadLink: string;
-    images: string[];
-    name: string;
-    pricePerNight: number;
-    rating: number;
-    roomStatus: string;
-    roomType: string;
-    staffIds: string[];
-    userIds: guestData[];
-    zoneId: string;
-    _id: string;
+  amenities: string[];
+  authCode: string;
+  businessId: string;
+  capacity: number;
+  downLoadLink: string;
+  images: string[];
+  name: string;
+  pricePerNight: number;
+  rating: number;
+  roomStatus: string;
+  roomType: string;
+  staffIds: string[];
+  userIds: guestData[];
+  zoneId: string;
+  _id: string;
 }
 
 export interface Service {
-    _id: string;
-    name: string;
+  _id: string;
+  name: string;
 }
 
 interface CreatedBy {
-    _id: string;
-    name: string;
-    phone: string;
+  _id: string;
+  name: string;
+  phone: string;
 }
 
-interface AcceptedBy{
-    _id: string;
-    name: string;
-    phone: string;
+interface AcceptedBy {
+  _id: string;
+  name: string;
+  phone: string;
 }
 
 export interface Room {
-    _id: string;
-    businessId: string;
-    amenities: string[];
-    availability: boolean;
-    name: string;
-    tax: number;
-    zoneId: string;
-    roomType: string;
-    pricePerNight: number;
-    capacity: number;
-    roomStatus: string;
-    staffIds: string[];
-    authCode: string;
-    rating: number;
-    size: string;
-    description: string;
-    images: string[];
-    userIds: User[];
-    slug: string;
-    __v: number;
-    downLoadLink: string;
-  }
+  _id: string;
+  businessId: string;
+  amenities: string[];
+  availability: boolean;
+  name: string;
+  tax: number;
+  zoneId: string;
+  roomType: string;
+  pricePerNight: number;
+  capacity: number;
+  roomStatus: string;
+  staffIds: string[];
+  authCode: string;
+  rating: number;
+  size: string;
+  description: string;
+  images: string[];
+  userIds: User[];
+  slug: string;
+  __v: number;
+  downLoadLink: string;
+}
 export interface Alert {
-    name: string;
-    _id: string;
-    alertProgress: "CREATED" | "ACCEPTED" | "REJECTED" | "DELIVERED" | "WARNING" | "ESCALATION" | "NOT_DELIVERED";
-    serviceIds: Service[];
-    businessId: string;
-    userId: string;
-    createdAt: number;
-    createdBy: CreatedBy;
-    acceptedBy: AcceptedBy;
-    roomId: Room;
-    cart: string[];
-    __v: number;
-    acceptedAt: number;
-    deliveredAt: number;
-    deliveredBy: AcceptedBy;
+  message: string;
+  name: string;
+  _id: string;
+  alertProgress:
+    | "CREATED"
+    | "ACCEPTED"
+    | "REJECTED"
+    | "DELIVERED"
+    | "WARNING"
+    | "ESCALATION"
+    | "NOT_DELIVERED";
+  serviceIds: Service[];
+  businessId: string;
+  userId: string;
+  createdAt: number;
+  createdBy: CreatedBy;
+  acceptedBy: AcceptedBy;
+  roomId: Room;
+  cart: string[];
+  __v: number;
+  acceptedAt: number;
+  deliveredAt: number;
+  deliveredBy: AcceptedBy;
 }
 
 export interface AlertProgress {
-    alertProgress: "CREATED" | "ACCEPTED" | "REJECTED" | "DELIVERED" | "WARNING" | "ESCALATION" | "NOT_DELIVERED";
+  alertProgress:
+    | "CREATED"
+    | "ACCEPTED"
+    | "REJECTED"
+    | "DELIVERED"
+    | "WARNING"
+    | "ESCALATION"
+    | "NOT_DELIVERED";
 }
 
 export interface User {
@@ -113,23 +133,23 @@ export interface RoomChatReply {
 }
 
 export interface Cart {
-  id: string
-  portion: string | null
-  extras: any[]
-  quantity: number
+  id: string;
+  portion: string | null;
+  extras: any[];
+  quantity: number;
   dish: {
     types: FOOD_TYPES[];
-    _id: string
-    name: string
-    categoryIds: string[]
-    price: number
-    visibility: boolean
-    availability: true
-    dishTypes: string[]
-    images: string[]
-    portions: any[]
-    description: string
-  }
+    _id: string;
+    name: string;
+    categoryIds: string[];
+    price: number;
+    visibility: boolean;
+    availability: true;
+    dishTypes: string[];
+    images: string[];
+    portions: any[];
+    description: string;
+  };
 }
 
 export interface RoomChat {

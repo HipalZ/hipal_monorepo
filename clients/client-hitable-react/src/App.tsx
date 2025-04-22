@@ -74,9 +74,9 @@ function App() {
     const isValidBusiness = captainData?.customRole?.some(
       (role) => role.businessId?._id === selectedBiz?.businessId?._id
     );
-    if(accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType !== "HOTEL"){
+    if (accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType !== "HOTEL") {
       navigate(`/${selectedBiz?.businessId?._id}/alerts`);
-    }else if(accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType === "HOTEL"){
+    } else if (accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType === "HOTEL") {
       navigate(`hotel/${selectedBiz?.businessId?._id}/`);
     }
   }
@@ -176,6 +176,10 @@ function App() {
     enabled: !!businessId && !!selectedBiz,
     refetchInterval: isSlow ? 31000 : 17000,
   });
+
+  // useQuery(({
+  //   queryKey:["escalatedAlerts", businessId, selectedBiz],
+  // }))
 
   useQuery({
     queryKey: ["offlineAlerts", businessId, selectedBiz],

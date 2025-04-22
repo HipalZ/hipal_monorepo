@@ -54,6 +54,9 @@ interface IHotelStore {
 
   openCartModal: boolean;
   setOpenCartModal: (value: boolean) => void;
+
+  hotelEscalationCount: number;
+  setHotelEscalationCount: (value: number) => void;
 }
 
 export const useHotelStore = create<IHotelStore>((set) => ({
@@ -122,4 +125,7 @@ export const useHotelStore = create<IHotelStore>((set) => ({
 
   openCartModal: false,
   setOpenCartModal: (value) => set({ openCartModal: value }),
+
+  hotelEscalationCount: 0,
+  setHotelEscalationCount: (value) => set({ hoteEscalationCount: value }),
 }));

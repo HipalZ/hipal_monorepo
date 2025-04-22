@@ -2197,45 +2197,48 @@ const whatsappRouter = new Hono()
                     },
                   );
                 }
+                try {
+                  const res = await axios.post(
+                    `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
+                    {
+                      messaging_product: "whatsapp",
+                      to: user?.phone?.toString(),
+                      type: "template",
+                      template: {
+                        name: "test_checkin_template",
+                        language: { code: "en" },
+                        components: [
+                          {
+                            type: "body",
+                            parameters: [
+                              {
+                                type: "text",
+                                text: user?.name,
+                              },
 
-                const res = await axios.post(
-                  `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
-                  {
-                    messaging_product: "whatsapp",
-                    to: user?.phone?.toString(),
-                    type: "template",
-                    template: {
-                      name: "test_thankyou_template",
-                      language: { code: "en" },
-                      components: [
-                        {
-                          type: "body",
-                          parameters: [
-                            {
-                              type: "text",
-                              text: user?.name,
-                            },
+                              {
+                                type: "text",
+                                text: authCode,
+                              },
 
-                            {
-                              type: "text",
-                              text: authCode,
-                            },
-
-                            {
-                              type: "text",
-                              text: room?.name,
-                            },
-                          ],
-                        },
-                      ],
+                              {
+                                type: "text",
+                                text: room?.name,
+                              },
+                            ],
+                          },
+                        ],
+                      },
                     },
-                  },
-                  {
-                    headers: {
-                      Authorization: `Bearer ${config.token}`,
+                    {
+                      headers: {
+                        Authorization: `Bearer ${config.token}`,
+                      },
                     },
-                  },
-                );
+                  );
+                } catch (error) {
+                  console.log("error", error);
+                }
               }
 
               const res = await axios.post(
@@ -2245,7 +2248,7 @@ const whatsappRouter = new Hono()
                   to: from,
                   type: "template",
                   template: {
-                    name: "test_welcome_message",
+                    name: "test_welcome_template2",
                     language: { code: "en" },
                     components: [
                       {
