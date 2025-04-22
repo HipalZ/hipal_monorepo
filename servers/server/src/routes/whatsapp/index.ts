@@ -2252,6 +2252,17 @@ const whatsappRouter = new Hono()
                     language: { code: "en" },
                     components: [
                       {
+                        type: "header",
+                        parameters: [
+                          {
+                            type: "image",
+                            image: {
+                              link: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/589185485.jpg?k=4f3001e657d6f119e0d732a2ae688f21e76ca70bff1d82f45ae9d47e3ca2d343&o=&hp=1",
+                            },
+                          },
+                        ],
+                      },
+                      {
                         type: "body",
                         parameters: [
                           {
