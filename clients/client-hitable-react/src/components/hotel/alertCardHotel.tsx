@@ -191,7 +191,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
         {/* Action buttons */}
         <div className="flex gap-2">
-          {alertProgress[alert?.alertProgress] && alert?.alertProgress !== "ESCALATION" && (
+          {alertProgress[alert?.alertProgress] && (
             <>
               <Button
                 variant="outline"
@@ -236,7 +236,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
             </Button>
           )}
 
-          {(alert.alertProgress === "NOT_DELIVERED" || alert.alertProgress === "ESCALATION") && (
+          {(alert.alertProgress === "NOT_DELIVERED") && (
             <Button
               className="w-full bg-red-600 hover:bg-red-700 text-white"
               onClick={() => handleAction(alert?._id, "RESOLVED")}
