@@ -230,7 +230,7 @@ const hotelAlertRouter = new Hono()
         staffIds: { $in: [userId] },
       };
 
-      if (role !== "HELP_DESK") {
+      if (role !== "FRONT_OFFICE") {
         if (!serviceIds || serviceIds.length === 0) {
           return respond(
             c,
