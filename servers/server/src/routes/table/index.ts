@@ -104,6 +104,14 @@ const tableRouter = new Hono()
         businessId,
         status: "EMPTY",
         active: "1",
+        $or: [
+          {
+            internalZoneId: { $exists: true },
+          },
+          {
+            zoneId: { $lte: "0" },
+          },
+        ],
       });
 
       return c.json(
