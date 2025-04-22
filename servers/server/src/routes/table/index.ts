@@ -109,7 +109,7 @@ const tableRouter = new Hono()
             internalZoneId: { $exists: true },
           },
           {
-            zoneId: { $lte: "0" },
+            zoneId: { $ne: "0" },
           },
         ],
       });
