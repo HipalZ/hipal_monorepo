@@ -121,7 +121,7 @@ export default function ServiceCategoryCard({ category, className = "", business
   const { setCartEmpty } = useCartStore();
 
   // Check if this is the food order category
-  const isFoodOrderCategory = category.name.toLowerCase() === "order food"
+  const isFoodOrderCategory = category.name.toLowerCase() === "food"
 
   // Memoized handlers
   const openServicePopup = useCallback(
