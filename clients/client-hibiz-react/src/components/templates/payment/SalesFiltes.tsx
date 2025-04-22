@@ -29,7 +29,7 @@ const SalesFilters = () => {
     selectedFilters: s.selectedFilters,
   }))
 
-  const { data: modesData, isLoading } = useAllModes()
+  const { data: modesData } = useAllModes()
 
   const toggleSelection = useCallback(
     (value: string, selected: string[], setSelected: (selected: string[]) => void) => {

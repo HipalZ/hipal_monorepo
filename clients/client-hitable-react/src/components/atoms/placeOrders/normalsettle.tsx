@@ -98,7 +98,7 @@ const MemoNormalSettle = ({
                 toast.error(data.message);
                 return;
             }
-            if(!data?.err) {
+            if (!data?.err) {
                 toast.success("Table settled successfully!");
                 setSettleModes([]);
                 closeNormalSettle();
@@ -109,7 +109,7 @@ const MemoNormalSettle = ({
                 setSaveDueUser(null)
                 navigate(`/${businessId}/alerts`);
             }
-           
+
         },
         onError: (error: any) => {
             toast.error(error?.message || "Something went wrong.");
@@ -151,11 +151,11 @@ const MemoNormalSettle = ({
             }
         },
         onSuccess: (data) => {
-            if(data?.err) {
+            if (data?.err) {
                 toast.error(data.message);
                 return
             }
-           
+
         },
         onError: (error: any) => {
             toast.error(error?.message || "Something went wrong.");
@@ -283,7 +283,7 @@ const MemoNormalSettle = ({
                 !openDues ? (
                     <CommonBottomButton
                         fixed={true}
-                        maxWidth="30rem"
+                        maxWidth="48rem"
                         buttons={[
                             {
                                 text: "Back",

@@ -4,16 +4,17 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import type { IExistingPayments } from "@/components/types/businessData"
 import { timestampToDateTime } from "@/components/utils/helper"
 import { apiRpc } from "@hi/common"
-import { useMutation, useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import LoadingSpinner from "@/components/atom/loadingSpinner"
 import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton"
-import { Download, ChevronLeft, ChevronRight } from "lucide-react"
+import { Download, EditIcon } from "lucide-react";
 import { motion, useAnimation } from "framer-motion"
 import toast from "react-hot-toast"
+import { useAllModes } from "@/hooks/useMode"
+import { useSalesStore } from "@/components/store/useSalesStore"
 
 export interface Extra {
   name: string
@@ -55,7 +56,12 @@ const hideMiddleNumbers = (phone: string) => {
 }
 
 const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNavigate }: PaymentModalProps) => {
+  const [isEditingMode, setIsEditingMode] = useState(false);
+  const [selectedMode, setSelectedMode] = useState(salesData?.mode || "");
+  const queryClient = useQueryClient();
+  const { data: modes } = useAllModes();
   const controls = useAnimation()
+  const setOpen = useSalesStore((s) => s.setOpen)
   const [dragDirection, setDragDirection] = useState<number>(0)
 
   const getBillItems = async (): Promise<BillItem[]> => {
@@ -91,6 +97,27 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
     },
     onError: (error) => {
       console.log(error)
+    },
+  })
+
+  const { mutateAsync: updateMode, isPending: isUpdatingMode } = useMutation({
+    mutationFn: async (newMode: string) => {
+      const res = await apiRpc.payments.update_mode.$put({
+        json: {
+          paymentId: salesData?._id,
+          mode: newMode,
+          updatedBy: salesData?.userId?._id,
+        },
+      });
+      return res;
+    },
+    onSuccess: () => {
+      toast.success("Payment mode updated!");
+      queryClient.invalidateQueries({ queryKey: ["allSalesDataByGet"] })
+      setOpen(false)
+    },
+    onError: () => {
+      toast.error("Failed to update mode.");
     },
   })
 
@@ -148,59 +175,104 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
           <Badge className="text-xl font-semibold text-white bg-black">{salesData?.mode}</Badge>
         </section>
 
-        <CardContent>
-          <ScrollArea className="h-[85vh]">
-            <div className="space-y-4 mb-[12rem]">
-              {/* Bill navigation indicator */}
-              <div className="flex items-center justify-center mb-2">
-                <span className="text-sm text-muted-foreground">
-                  Bill {currentIndex + 1} of {allSalesData.length}
-                </span>
-              </div>
+        <CardContent className="overflow-y-auto max-h-[90vh]">
+          <div className="space-y-4 mb-[12rem]">
+            {/* Bill navigation indicator */}
+            <div className="flex items-center justify-center mb-2">
+              <span className="text-sm text-muted-foreground">
+                Bill {currentIndex + 1} of {allSalesData.length}
+              </span>
+            </div>
 
-              {/* Sales Data Information */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">{timestampToDateTime(salesData?.date || 0)}</span>
-                <span className="text-sm font-medium">Order ID: {salesData?._id.slice(-5)}</span>
-              </div>
+            {/* Sales Data Information */}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">{timestampToDateTime(salesData?.date || 0)}</span>
+              <span className="text-sm font-medium">Order ID: {salesData?._id.slice(-5)}</span>
+            </div>
 
-              <div className="">
-                <InfoRow label="Paid Amount" value={`₹ ${salesData?.order_id?.total}`} />
-                <InfoRow label="Bill Value Entered" value={`₹ ${salesData?.order_id?.billValue}`} />
-                <InfoRow label="Including Tips" value={`₹ ${salesData?.order_id?.tips}`} />
-                <InfoRow label="Discount" value={`${salesData?.order_id?.claimedCoins} Coins used`} />
-                <InfoRow label="Payment Mode" value={salesData?.mode} />
-                <InfoRow label="Mode of Settle" value={salesData?.settleType} />
-                {salesData?.settleType === "FORCE_SETTLE" && (
-                  <InfoRow label="Force Settle Reason" value={salesData?.comment || ""} />
+            <div className="">
+              <InfoRow label="Paid Amount" value={`₹ ${salesData?.order_id?.total}`} />
+              <InfoRow label="Bill Value Entered" value={`₹ ${salesData?.order_id?.billValue}`} />
+              <InfoRow label="Including Tips" value={`₹ ${salesData?.order_id?.tips}`} />
+              <InfoRow label="Discount" value={`${salesData?.order_id?.claimedCoins} Coins used`} />
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm text-gray-600">Payment Mode</span>
+                {isEditingMode ? (
+                  <div className="flex items-center gap-2">
+                    <select
+                      className="border px-2 py-1 text-sm rounded"
+                      value={selectedMode}
+                      onChange={(e) => setSelectedMode(e.target.value)}
+                    >
+                      {Array.isArray(modes) && modes.length > 0 ? (
+                        modes.map((mode) => (
+                          <option disabled={["npc", "complimentary", "dues", "split"].includes(mode?.name?.toLowerCase())} key={mode?._id} value={mode?.name}>
+                            {mode?.name}
+                          </option>
+                        ))
+                      ) : (
+                        <option disabled>Loading...</option>
+                      )}
+
+                    </select>
+                    <Button
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => updateMode(selectedMode)}
+                      disabled={isUpdatingMode}
+                    >
+                      {isUpdatingMode ? "Updating..." : "Update"}
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <span className="font-medium">{salesData?.mode}</span>
+                    {!["npc", "complimentary", "dues", "split"].includes(salesData?.mode?.toLowerCase() || "") && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs"
+                        onClick={() => setIsEditingMode(true)}
+                      >
+                        <EditIcon className="h-6 w-6 text-red-500" />
+                      </Button>
+                    )}
+                  </div>
                 )}
               </div>
 
-              <Separator />
+              <InfoRow label="Mode of Settle" value={salesData?.settleType} />
+              {salesData?.settleType === "FORCE_SETTLE" && (
+                <InfoRow label="Force Settle Reason" value={salesData?.comment || ""} />
+              )}
+            </div>
 
-              {/* User and Table Information */}
-              <div className="">
-                <InfoRow label="User" value={salesData?.userId?.name} />
-                <InfoRow label="Table" value={salesData?.order_id?.tableName} />
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm text-gray-600">Number</span>
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium">
-                      {salesData?.userId?.phone ? hideMiddleNumbers(salesData?.userId?.phone) : ""}
-                    </span>
-                    <Button variant="outline" size="sm" className="flex items-center space-x-1" asChild>
-                      <a href={`tel:+91${salesData?.userId?.phone}`}>
-                        <MdOutlineCall size={16} />
-                        <span className="text-sm">Call</span>
-                      </a>
-                    </Button>
-                  </div>
+            <Separator />
+
+            {/* User and Table Information */}
+            <div className="">
+              <InfoRow label="User" value={salesData?.userId?.name} />
+              <InfoRow label="Table" value={salesData?.order_id?.tableName} />
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm text-gray-600">Number</span>
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium">
+                    {salesData?.userId?.phone ? hideMiddleNumbers(salesData?.userId?.phone) : ""}
+                  </span>
+                  <Button variant="outline" size="sm" className="flex items-center space-x-1" asChild>
+                    <a href={`tel:+91${salesData?.userId?.phone}`}>
+                      <MdOutlineCall size={16} />
+                      <span className="text-sm">Call</span>
+                    </a>
+                  </Button>
                 </div>
               </div>
-              {/* Items List */}
-              {
-                isLoading ? <LoadingSpinner /> :
-                  <div className="">
+            </div>
+            {/* Items List */}
+            {
+              isLoading ? <LoadingSpinner /> :
+                <>
+                  {itemsData && itemsData?.length > 0 && <div className="">
                     <h2 className="font-semibold">Bill Items</h2>
                     <Card>
                       <CardContent className="p-4 space-y-2">
@@ -232,24 +304,24 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
                         ))}
                       </CardContent>
                     </Card>
-                  </div>
-              }
+                  </div>}
+                </>
+            }
 
 
 
-              {/* Optional Sections */}
-              {salesData?.comment && (
-                <div className="space-y-2">
-                  <h2 className="font-semibold">Added Comment</h2>
-                  <Card>
-                    <CardContent className="p-4">
-                      <p className="text-sm">{salesData?.comment}</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
+            {/* Optional Sections */}
+            {salesData?.comment && (
+              <div className="space-y-2">
+                <h2 className="font-semibold">Added Comment</h2>
+                <Card>
+                  <CardContent className="p-4">
+                    <p className="text-sm">{salesData?.comment}</p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
         </CardContent>
       </motion.div>
       <AdvancedBottomButton
