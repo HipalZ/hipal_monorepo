@@ -1,4 +1,5 @@
 import {
+  Business,
   DeviceToken,
   HotelAlert,
   HotelRoom,
@@ -571,6 +572,11 @@ const hotelAlertRouter = new Hono()
         return respond(c, "User not found", true, 404, {});
       }
 
+      const businessData = await Business.findById(alert.businessId);
+      if (!businessData) {
+        return respond(c, "Business not found", true, 404, {});
+      }
+
       const roomData = await HotelRoom.findById(alert.roomId);
 
       if (!roomData) {
@@ -580,7 +586,7 @@ const hotelAlertRouter = new Hono()
       const validTransitions: Record<string, string[]> = {
         ACCEPTED: ["CREATED", "WARNING", "ESCALATION"],
         DELIVERED: ["ACCEPTED"],
-        REJECTED: ["CREATED"],
+        REJECTED: ["CREATED", "WARNING"],
         RESOLVED: ["NOT_DELIVERED"],
       };
 
@@ -732,7 +738,7 @@ const hotelAlertRouter = new Hono()
                       },
                       {
                         type: "text",
-                        text: "https://staehotels.com/",
+                        text: `http://localhost:3000/${businessData.customLink}/hotel/chat?room=${roomData.name}&id=${userData._id}`,
                       },
                       {
                         type: "text",
