@@ -588,7 +588,7 @@ const hotelAlertRouter = new Hono()
         ACCEPTED: ["CREATED", "WARNING", "ESCALATION"],
         DELIVERED: ["ACCEPTED"],
         REJECTED: ["CREATED", "WARNING"],
-        RESOLVED: ["NOT_DELIVERED"],
+        RESOLVED: ["NOT_DELIVERED", "ESCALATION"],
       };
 
       const updateFields: Record<string, object> = {
