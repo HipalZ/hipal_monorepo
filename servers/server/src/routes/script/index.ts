@@ -668,7 +668,7 @@ const scriptRouter = new Hono()
     const role = [
       {
         _id: "67cec233a57ca03d9353d468",
-        role: "HELP_DESK",
+        role: "FRONT_OFFICE",
       },
       {
         _id: "67cec240a57ca03d9353d46c",
