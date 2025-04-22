@@ -206,7 +206,7 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
                     >
                       {Array.isArray(modes) && modes.length > 0 ? (
                         modes.map((mode) => (
-                          <option disabled={["npc", "complimentary", "dues", "split"].includes(mode?.name?.toLowerCase())} key={mode?._id} value={mode?.name}>
+                          <option disabled={["npc", "complementary", "dues", "split"].includes(mode?.name?.toLowerCase())} key={mode?._id} value={mode?.name}>
                             {mode?.name}
                           </option>
                         ))
@@ -227,7 +227,7 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
                 ) : (
                   <div className="flex items-center">
                     <span className="font-medium">{salesData?.mode}</span>
-                    {!["npc", "complimentary", "dues", "split"].includes(salesData?.mode?.toLowerCase() || "") && (
+                    {!["npc", "complementary", "dues", "split"].includes(salesData?.mode?.toLowerCase() || "") && (
                       <Button
                         variant="ghost"
                         size="sm"
