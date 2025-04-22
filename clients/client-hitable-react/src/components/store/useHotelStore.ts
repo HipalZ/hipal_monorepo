@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import {
+  type Alert,
   type Cart,
   NavItemsHotelEnum,
   type RoomData,
@@ -54,6 +55,12 @@ interface IHotelStore {
 
   openCartModal: boolean;
   setOpenCartModal: (value: boolean) => void;
+
+  hotelEscalationCount: number;
+  setHotelEscalationCount: (value: number) => void;
+
+  escalatedData: Alert[];
+  setEscalatedData: (value: Alert[]) => void;
 }
 
 export const useHotelStore = create<IHotelStore>((set) => ({
@@ -122,4 +129,10 @@ export const useHotelStore = create<IHotelStore>((set) => ({
 
   openCartModal: false,
   setOpenCartModal: (value) => set({ openCartModal: value }),
+
+  hotelEscalationCount: 0,
+  setHotelEscalationCount: (value) => set({ hotelEscalationCount: value }),
+
+  escalatedData: [],
+  setEscalatedData: (value) => set({ escalatedData: value }),
 }));

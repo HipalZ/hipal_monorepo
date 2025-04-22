@@ -32,7 +32,7 @@ export const ChatMessageHotel = ({ chat, userResponses, handleActionClick, openR
                 {format(new Date(chat?.date), "MMMM d, yyyy")}
             </div>
         </article>
-        <article className="flex justify-start mb-2">
+        <article className="flex justify-end mb-2">
             <Avatar className="h-8 w-8 mr-2 mt-1">
                 <AvatarFallback className="bg-gray-200 text-gray-600">{chat?.userId?.name.charAt(0)}</AvatarFallback>
             </Avatar>
@@ -49,6 +49,9 @@ export const ChatMessageHotel = ({ chat, userResponses, handleActionClick, openR
             </div>
         </article>
         <article className="space-y-4">
+            {chat?.cart?.length > 0 ? <article>
+                <ChatCartComponent cart={chat?.cart} />
+            </article> : null}
             {chat?.roomChatReplyIds.map((reply: RoomChatReply) => (
                 <ChatReplyMessage
                     key={reply._id}
@@ -61,14 +64,11 @@ export const ChatMessageHotel = ({ chat, userResponses, handleActionClick, openR
                 />
             ))}
         </article>
-        {chat?.cart?.length > 0 ? <article>
-            <ChatCartComponent cart={chat?.cart} />
-        </article> : null}
     </section>
 );
 
 const ChatReplyMessage = ({ reply, userResponses, handleActionClick, openReview, selectedReplyId, handleReviewSubmit }: ChatReplyMessageProps) => (
-    <section className="flex justify-end">
+    <section className="flex justify-start">
         <Avatar className="h-8 w-8 mr-2 mt-1">
             <AvatarFallback className="bg-gray-200 text-gray-600">{reply?.userId?.name?.charAt(0)}</AvatarFallback>
         </Avatar>

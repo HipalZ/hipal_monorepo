@@ -16,13 +16,14 @@ export const hotelStaffRoleEnum = [
   "HOUSEKEEPING",
   "MAINTENANCE",
   "SECURITY",
-  "HELP_DESK",
+  "FRONT_OFFICE",
   "CLEANER",
   "WAITER",
   "LAUNDRY",
   "KITCHEN",
   "ELECTRICIAN",
   "PLUMBER",
+  "FRONT_OFFICE",
 ] as const;
 
 export type HotelStaffRoleEnumType = (typeof hotelStaffRoleEnum)[number];

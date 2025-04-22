@@ -2,7 +2,7 @@ import { useAlertsStore } from "@/components/store/useAlertStore"
 import useBusinessData from "@/components/store/useBusinessData"
 import { useHiClientZ } from "@/components/store/useHiClientzData"
 import { useHotelStore } from "@/components/store/useHotelStore"
-import type { Alert, AlertProgress, Cart } from "@/components/types/hotelData"
+import type { Alert, Cart } from "@/components/types/hotelData";
 import { apiRpc } from "@hi/common"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import toast from "react-hot-toast"
@@ -163,7 +163,7 @@ export const useRespondAlerts = () => {
     const userId = useHiClientZ((s) => s.captainData._id);
 
     const { mutateAsync: respondAlert } = useMutation({
-        mutationFn: async ({ alertId, action, reasonOfRejection }: { alertId: string, action: AlertProgress, reasonOfRejection: string }) => {
+        mutationFn: async ({ alertId, action, reasonOfRejection }: { alertId: string, action: string, reasonOfRejection: string }) => {
             const response = await apiRpc.hotel.alert.accept_alert.$post({
                 json: {
                     alertId,
@@ -172,19 +172,19 @@ export const useRespondAlerts = () => {
                     reasonOfRejection,
                 },
             });
+            const res = await response.json();
             if (response.status !== 200 && response.status !== 201) {
-                throw new Error("Failed to respond to alert");
+                throw new Error(res.message);
             }
-            return response.json();
+            if (res.status === 200 || res.status === 201) {
+                toast.success(res.message);
+            }
+            return res;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ["roomAlerts"],
             });
-            toast.success("Alert responded successfully");
-        },
-        onError: () => {
-            toast.error("Failed to respond to alert");
         },
     });
 
@@ -250,7 +250,7 @@ export const useSendChat = () => {
             });
             return response.json();
         },
-        onSuccess: (data) => {
+        onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ["getChats"]
             });
@@ -272,7 +272,7 @@ export const useReviewChat = () => {
             });
             return response.json();
         },
-        onSuccess: (data) => {
+        onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: ["getChats"]
             });
@@ -286,29 +286,31 @@ export const useReviewChat = () => {
 }
 
 export const useEscalatedAlerts = () => {
-    const userId = useHiClientZ((s) => s.captainData._id)
+    const { setHotelEscalationCount, setEscalatedData } = useHotelStore()
+    const captainData = useHiClientZ((s) => s.captainData)
     const businessId = useBusinessData((s) => s.outletInfo?.businessId)
     const escalatedAlerts = async () => {
         const response = await apiRpc.hotel.alert.fetch_escalation_alerts.$get({
             query: {
                 businessId,
-                userId,
+                userId: captainData?._id,
             }
         })
         const res = await response.json()
         if (response.status === 200 || response.status === 201) {
+            setEscalatedData(res.data)
+            setHotelEscalationCount(res.data.length)
             return res.data
         }
+
     }
-
-    const { data: escalatedData, isPending } = useQuery({
-        queryKey: ["escalatedAlerts", businessId, userId],
+    useQuery(({
+        queryKey: ["escalatedAlerts"],
         queryFn: escalatedAlerts,
-        enabled: !!businessId && !!userId,
+        enabled: captainData?.customRole[0]?.role === "FRONT_OFFICE" || captainData?.customRole[0]?.role === "MANAGER",
         refetchInterval: 13000,
-    })
-
-    return { escalatedData, isPending }
+    }))
+    return { escalatedAlerts }
 }
 
 type UpdateSourcePayload = {

@@ -42,8 +42,7 @@ export default function HotelWelcomeCard({
     const [verificationCode, setVerificationCode] = useState("")
     const [codeError, setCodeError] = useState("")
     const accessToken = useUserToken.getState().accessToken;
-    const { checkRoom } = useCheckRoomStatus(businessId || "", room || "", customLink,userID)
-    console.log("checkRoom", userID)
+    const { checkRoom } = useCheckRoomStatus(businessId || "", room || "", customLink, userID)
 
     useEffect(() => {
         updateTheme(themeData)

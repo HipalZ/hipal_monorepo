@@ -98,14 +98,13 @@ const scriptRouter = new Hono()
           businessId,
         },
         {
-          name: "Wi-Fi",
-          image:
-            "https://assets.hipalz.com/pngtree-wifi-internet-in-hotel-room-available-free-for-all-customer-png-image_4704873.png",
+          name: "WIFI",
+          image: "https://assets.hipalz.com/wifi%20router.png",
           businessId,
         },
         {
-          name: "WATER_BOTTLE",
-          image: "https://assets.hipalz.com/water%20bottle.png",
+          name: "WATERBOTTLE",
+          image: "https://assets.hipalz.com/waterbottle.jpg",
           businessId,
         },
         {
@@ -147,7 +146,7 @@ const scriptRouter = new Hono()
         {
           name: "WATER BOTTLE",
           businessId,
-          categoryId: categoryMap["WATER_BOTTLE"],
+          categoryId: categoryMap["WATERBOTTLE"],
           avgCompletionTime: 8,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
@@ -314,7 +313,7 @@ const scriptRouter = new Hono()
         {
           name: "Wifi not working",
           businessId,
-          categoryId: categoryMap["Wi-Fi"],
+          categoryId: categoryMap["WIFI"],
           avgCompletionTime: 15,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
@@ -322,7 +321,7 @@ const scriptRouter = new Hono()
         {
           name: "infrom to vendor",
           businessId,
-          categoryId: categoryMap["Wi-Fi"],
+          categoryId: categoryMap["WIFI"],
           avgCompletionTime: 15,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
@@ -330,7 +329,7 @@ const scriptRouter = new Hono()
         {
           name: "PRI Line issues - inform vendor",
           businessId,
-          categoryId: categoryMap["Wi-Fi"],
+          categoryId: categoryMap["WIFI"],
           avgCompletionTime: 15,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
@@ -617,6 +616,14 @@ const scriptRouter = new Hono()
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
         },
+        {
+          name: "Food Delivery",
+          businessId,
+          categoryId: categoryMap["FOOD"],
+          avgCompletionTime: 35,
+          avgAcceptanceTime: 2,
+          avgDeliveryTime: 30,
+        },
       ];
 
       // **5. Insert Sub-Services**
@@ -662,7 +669,7 @@ const scriptRouter = new Hono()
     const role = [
       {
         _id: "67cec233a57ca03d9353d468",
-        role: "HELP_DESK",
+        role: "FRONT_OFFICE",
       },
       {
         _id: "67cec240a57ca03d9353d46c",

@@ -56,7 +56,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
         toast.success(`Alert ${action?.toLowerCase()} successfully`)
         setShowRejectPopup(false)
       } catch (error) {
-        toast.error("Failed to perform action")
+        toast.error(error?.message || "Something went wrong")
       } finally {
         setIsLoading(null)
         setIsSubmitting(false)
@@ -67,9 +67,9 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
     [mutateAsync, setIsLoading],
   )
 
-  const handleReject = () => {
+  const handleReject = useCallback(() => {
     setShowRejectPopup(true)
-  }
+  }, [])
 
   const submitRejection = () => {
     const finalReason =
@@ -126,7 +126,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
           <h3 className="text-lg font-bold flex items-center">Room {alert?.roomId?.name}</h3>
           <div className="text-xs text-gray-500">{timeAgo}</div>
         </div>
-
+        <h1 className="my-2">{alert?.alertProgress}</h1>
         {/* Services */}
         <div className="flex flex-wrap gap-2 mb-3">
           {alert?.serviceIds.map((service) => (
@@ -181,7 +181,6 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
                     <div className="flex items-center text-green-600">
                       <User className="h-3.5 w-3.5 mr-1" />
                       <span className="font-medium">{alert?.acceptedBy?.name}</span>
-                      {/* <span className="ml-auto">{acceptedTime}</span> */}
                     </div>
                   </div>
                 )}
@@ -237,7 +236,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
             </Button>
           )}
 
-          {alert.alertProgress === "NOT_DELIVERED" && (
+          {(alert.alertProgress === "NOT_DELIVERED") && (
             <Button
               className="w-full bg-red-600 hover:bg-red-700 text-white"
               onClick={() => handleAction(alert?._id, "RESOLVED")}

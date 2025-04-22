@@ -9,10 +9,12 @@ const MemoNavItemsHotel = () => {
     selectedNavItem,
     setSelectedNavItem,
     hotelAlertsCount,
+    hotelEscalationCount
   } = useHotelStore((s) => ({
     selectedNavItem: s.selectedNavItem,
     setSelectedNavItem: s.setSelectedNavItem,
     hotelAlertsCount: s.hotelAlertsCount,
+    hotelEscalationCount: s.hotelEscalationCount,
   }));
 
   const handleNavItemClick = useCallback(
@@ -27,9 +29,12 @@ const MemoNavItemsHotel = () => {
       if (type === NavItemsHotelEnum.Alerts && hotelAlertsCount > 0) {
         return hotelAlertsCount;
       }
+      if (type === NavItemsHotelEnum.Escalation && hotelEscalationCount > 0) {
+        return hotelEscalationCount;
+      }
       return null;
     },
-    [hotelAlertsCount],
+    [hotelAlertsCount, hotelEscalationCount],
   );
 
   const navItems = hotelNavItems();

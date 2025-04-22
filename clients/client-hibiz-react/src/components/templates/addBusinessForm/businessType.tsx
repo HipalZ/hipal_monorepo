@@ -11,7 +11,7 @@ export const businessTypeArray = [
     tags: ["Online Menu", "Table Reservations", "Order Management", "Customer Reviews", "Loyalty Program"],
     tagColor: "#FF6B6B",
     gradient: "linear-gradient(135deg, #FFD3A550 0%, #FD658550 100%)",
-    type: EnumBusinessType.RESTAURENT,
+    type: EnumBusinessType.MENU,
   },
   {
     title: "🏨 Hotel",
