@@ -305,8 +305,11 @@ export const useEscalatedAlerts = () => {
 
     }
     const isEnabled = Boolean(
-        captainData?._id &&
-        (captainData?.customRole?.[0]?.role === "FRONT_OFFICE" || captainData?.customRole?.[0]?.role === "MANAGER")
+        captainData &&
+        captainData._id &&
+        Array.isArray(captainData.customRole) &&
+        captainData.customRole.length > 0 &&
+        ["FRONT_OFFICE", "MANAGER"].includes(captainData.customRole[0]?.role)
     );
 
     useQuery({
