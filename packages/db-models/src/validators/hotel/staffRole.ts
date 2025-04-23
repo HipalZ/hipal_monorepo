@@ -24,6 +24,7 @@ export const hotelStaffRoleEnum = [
   "ELECTRICIAN",
   "PLUMBER",
   "FRONT_OFFICE",
+  "ENGINEERING",
 ] as const;
 
 export type HotelStaffRoleEnumType = (typeof hotelStaffRoleEnum)[number];
