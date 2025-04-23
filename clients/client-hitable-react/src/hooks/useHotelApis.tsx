@@ -304,12 +304,17 @@ export const useEscalatedAlerts = () => {
         }
 
     }
-    useQuery(({
+    const isEnabled = Boolean(
+        captainData?._id &&
+        (captainData?.customRole?.[0]?.role === "FRONT_OFFICE" || captainData?.customRole?.[0]?.role === "MANAGER")
+    );
+
+    useQuery({
         queryKey: ["escalatedAlerts"],
         queryFn: escalatedAlerts,
-        enabled: captainData?.customRole[0]?.role === "FRONT_OFFICE" || captainData?.customRole[0]?.role === "MANAGER",
+        enabled: isEnabled,
         refetchInterval: 13000,
-    }))
+    });
     return { escalatedAlerts }
 }
 
