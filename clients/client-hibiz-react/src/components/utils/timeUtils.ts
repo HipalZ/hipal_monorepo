@@ -204,3 +204,33 @@ export const calculateTimePosition = (time: string, dayStart: string, dayEnd: st
 
   return ((timeMinutes - startMinutes) / totalMinutes) * 100
 }
+
+/**
+ * Determine which period a time slot belongs to
+ * @param time Time in HH:MM format
+ * @returns Period number (0-3)
+ */
+export const determinePeriod = (time: string): number => {
+  const minutes = timeToMinutes(time)
+
+  // Period 0: Morning (04:00-12:00) = 240-720 minutes
+  // Period 1: Afternoon (12:00-16:00) = 720-960 minutes
+  // Period 2: Evening (16:00-19:00) = 960-1140 minutes
+  // Period 3: Night (19:00-28:00) = 1140-1680 minutes
+
+  if (minutes >= 240 && minutes < 720) return 0
+  if (minutes >= 720 && minutes < 960) return 1
+  if (minutes >= 960 && minutes < 1140) return 2
+  if (minutes >= 1140 && minutes <= 1680) return 3
+
+  // Default to morning if outside ranges
+  return 0
+}
+
+/**
+ * Get period name from period number
+ */
+export const getPeriodName = (period: number): string => {
+  const periods = ["Morning", "Afternoon", "Evening", "Night"]
+  return periods[period] || "Unknown"
+}

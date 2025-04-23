@@ -84,6 +84,8 @@ export interface IBusinessData {
   updatedAt: string;
   isActive: boolean;
   themeApplied: boolean;
+  capacity: number;
+  isBookingActive: boolean;
   parentOutLetId: {
     name: string;
   };

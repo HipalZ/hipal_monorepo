@@ -1,6 +1,6 @@
 import type { BusinessDayConfig, UpdateBusinessDayConfigPayload } from '@/components/types/business-day-config';
 import DayConfigCard from './DayConfigCard';
-import { memo } from 'react';
+import  { type FC, memo } from 'react';
 
 /**
  * Props for the DayConfigList component
@@ -15,7 +15,7 @@ type DayConfigListProps = {
 /**
  * Component for displaying a list of day configurations
  */
-const DayConfigList: React.FC<DayConfigListProps> = ({
+const DayConfigList: FC<DayConfigListProps> = ({
   configs,
   businessId,
   onToggleDay,

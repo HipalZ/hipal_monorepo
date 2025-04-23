@@ -1,7 +1,6 @@
-
-import { memo, useCallback } from "react"
+import  {type FC, memo, useCallback } from "react"
+import { generateTimeOptions, timeToMinutes, determinePeriod, getPeriodName } from "@/components/utils/timeUtils"
 import { Clock, AlertCircle } from "lucide-react"
-import { generateTimeOptions } from "../utils/timeUtils"
 
 /**
  * Props for the TimeRangeSelector component
@@ -17,7 +16,7 @@ type TimeRangeSelectorProps = {
 /**
  * Component for selecting a time range (start and end time)
  */
-const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({
+const TimeRangeSelector: FC<TimeRangeSelectorProps> = ({
   startTime,
   endTime,
   onStartTimeChange,
@@ -75,7 +74,7 @@ const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({
                 </option>
               ))}
             </select>
-           
+       
           </div>
         </div>
 
@@ -98,10 +97,41 @@ const TimeRangeSelector: React.FC<TimeRangeSelectorProps> = ({
                 </option>
               ))}
             </select>
-            
+        
           </div>
         </div>
       </div>
+      {startTime && endTime && (
+        <div className="p-3 mt-3 rounded-md bg-blue-50">
+          <h4 className="mb-1 text-xs font-medium text-blue-700">Slot Information</h4>
+          <div className="text-sm text-blue-600">
+            {(() => {
+              // Calculate total slots
+              const startMinutes = timeToMinutes(startTime)
+              const endMinutes = timeToMinutes(endTime)
+              const totalMinutes = endMinutes - startMinutes
+              const totalSlots = Math.floor(totalMinutes / 30)
+
+              // Determine periods covered
+              const startPeriod = determinePeriod(startTime)
+              const endPeriod = determinePeriod(endTime)
+
+              return (
+                <>
+                  <p>
+                    Total time: {Math.floor(totalMinutes / 60)} hours {totalMinutes % 60} minutes
+                  </p>
+                  <p>Available slots: {totalSlots} (30-minute intervals)</p>
+                  <p>
+                    Periods: {getPeriodName(startPeriod)}
+                    {startPeriod !== endPeriod ? ` to ${getPeriodName(endPeriod)}` : ""}
+                  </p>
+                </>
+              )
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

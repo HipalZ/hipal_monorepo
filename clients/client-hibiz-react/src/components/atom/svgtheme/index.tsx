@@ -1,3 +1,4 @@
+import  type { FC } from "react";
 interface CustomSvgProps {
   width?: number;
   height?: number;
@@ -6,7 +7,7 @@ interface CustomSvgProps {
   category?: number;
 }
 
-export const IphoneExplore: React.FC<CustomSvgProps> = ({
+export const IphoneExplore: FC<CustomSvgProps> = ({
   width,
   height,
   primary,

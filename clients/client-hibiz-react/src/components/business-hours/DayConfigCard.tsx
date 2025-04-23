@@ -1,11 +1,11 @@
-import  { memo, useCallback, useState } from "react"
-import type { BusinessDayConfig, UpdateBusinessDayConfigPayload } from "../types/business-day-config"
+import  { type FC, memo, useCallback, useState } from "react"
 import TimeRangeSelector from "./TimeRangeSelector"
 import ClosedIntervalList from "./ClosedIntervalList"
 import { Clock, ChevronDown, ChevronUp, Edit2, Save, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useBusinessDayConfigUIStore } from "../store/booking/businessDayConfigStore"
-import {  getDayName } from "../utils/timeUtils"
+import type { BusinessDayConfig, ClosedInterval, UpdateBusinessDayConfigPayload } from "../types/business-day-config"
+import {  getDayName, timeToMinutes } from "@/components/utils/timeUtils"
 
 /**
  * Props for the DayConfigCard component
@@ -20,7 +20,7 @@ type DayConfigCardProps = {
 /**
  * Component for displaying and editing a single day configuration
  */
-const DayConfigCard: React.FC<DayConfigCardProps> = ({ config, businessId, onToggleDay, onUpdateConfig }) => {
+const DayConfigCard: FC<DayConfigCardProps> = ({ config, businessId, onToggleDay, onUpdateConfig }) => {
   // Local state for expanded view
   const [isExpanded, setIsExpanded] = useState(false)
 
@@ -129,8 +129,86 @@ const DayConfigCard: React.FC<DayConfigCardProps> = ({ config, businessId, onTog
   // Get day name abbreviation
   const dayAbbr = getDayName(config.dayOfWeek).substring(0, 3)
 
-  // Add this component to render a visual timeline
 
+  /**
+   * Calculate the number of available slots for a given time range and closed intervals
+   * @param startTime Business start time (HH:MM)
+   * @param endTime Business end time (HH:MM)
+   * @param closedIntervals Array of closed intervals
+   * @param intervalMinutes Duration of each slot in minutes (default: 30)
+   * @returns Object with period information and slot counts
+   */
+  const calculateAvailableSlots = useCallback(
+    (startTime: string, endTime: string, closedIntervals: ClosedInterval[], intervalMinutes = 30) => {
+      // Convert times to minutes for easier calculation
+      const startMinutes = timeToMinutes(startTime)
+      const endMinutes = timeToMinutes(endTime)
+      const totalMinutes = endMinutes - startMinutes
+
+      // Calculate total slots without considering closed intervals
+      const totalSlots = Math.floor(totalMinutes / intervalMinutes)
+
+      // Calculate minutes blocked by closed intervals
+      let blockedMinutes = 0
+      closedIntervals.forEach((interval) => {
+        const intervalStart = timeToMinutes(interval.startTime)
+        const intervalEnd = timeToMinutes(interval.endTime)
+        blockedMinutes += intervalEnd - intervalStart
+      })
+
+      const blockedSlots = Math.ceil(blockedMinutes / intervalMinutes)
+      const availableSlots = totalSlots - blockedSlots
+
+      const periodRanges = [
+        { id: 0, name: "Morning", start: 240, end: 720 },
+        { id: 1, name: "Afternoon", start: 720, end: 960 },
+        { id: 2, name: "Evening", start: 960, end: 1140 },
+        { id: 3, name: "Night", start: 1140, end: 1680 },
+      ]
+
+      // Calculate slots per period
+      const periodSlots = periodRanges.map((period) => {
+        // Check if this period overlaps with the business hours
+        const periodStart = Math.max(period.start, startMinutes)
+        const periodEnd = Math.min(period.end, endMinutes)
+
+        if (periodStart >= periodEnd) {
+          // This period is not covered by business hours
+          return { ...period, slots: 0, available: false }
+        }
+
+        // Calculate total slots for this period
+        const periodTotalMinutes = periodEnd - periodStart
+        const periodTotalSlots = Math.floor(periodTotalMinutes / intervalMinutes)
+
+        // Calculate blocked slots for this period
+        let periodBlockedMinutes = 0
+        closedIntervals.forEach((interval) => {
+          const intervalStart = Math.max(timeToMinutes(interval.startTime), periodStart)
+          const intervalEnd = Math.min(timeToMinutes(interval.endTime), periodEnd)
+          if (intervalStart < intervalEnd) {
+            periodBlockedMinutes += intervalEnd - intervalStart
+          }
+        })
+
+        const periodBlockedSlots = Math.ceil(periodBlockedMinutes / intervalMinutes)
+        const periodAvailableSlots = periodTotalSlots - periodBlockedSlots
+
+        return {
+          ...period,
+          slots: periodAvailableSlots,
+          available: periodAvailableSlots > 0,
+        }
+      })
+
+      return {
+        totalSlots,
+        availableSlots,
+        periodSlots,
+      }
+    },
+    [],
+  )
 
   return (
     <motion.div
@@ -226,6 +304,38 @@ const DayConfigCard: React.FC<DayConfigCardProps> = ({ config, businessId, onTog
                         Edit
                       </button>
                     </div>
+                    {!isEditing && (
+                      <div className="mt-3 mb-4">
+                        <h4 className="mb-2 text-sm font-medium text-gray-500">Available Periods With Slots</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          {calculateAvailableSlots(
+                            config.startTime,
+                            config.endTime,
+                            config.closedIntervals,
+                          ).periodSlots.map((period) => (
+                            <div
+                              key={period.id}
+                              className={`rounded-md p-2 ${
+                                period.available
+                                  ? "bg-green-50 border border-green-100"
+                                  : "bg-gray-50 border border-gray-100"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium">{period.name}</span>
+                                <span
+                                  className={`text-xs font-semibold ${
+                                    period.available ? "text-green-600" : "text-gray-400"
+                                  }}`}
+                                >
+                                  {period.slots} slots
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Display closed intervals if any */}
                     {config.closedIntervals.length > 0 && (

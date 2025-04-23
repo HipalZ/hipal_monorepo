@@ -1,4 +1,4 @@
-
+import type { FC } from "react"
 import { memo, useCallback } from "react"
 import { Trash2 } from "lucide-react"
 import type { ClosedInterval } from "../types/business-day-config"
@@ -19,7 +19,7 @@ type ClosedIntervalItemProps = {
 /**
  * Component for displaying and editing a single closed interval
  */
-const ClosedIntervalItem: React.FC<ClosedIntervalItemProps> = ({
+const ClosedIntervalItem: FC<ClosedIntervalItemProps> = ({
   interval,
   index,
   dayStartTime,

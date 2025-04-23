@@ -1,3 +1,5 @@
+import type { FC } from "react";
+
 interface ButtonProps {
     text: string;
     onClick: () => void;
@@ -8,7 +10,7 @@ interface MultipleBottomButtonsProps {
     buttons: ButtonProps[];
 }
 
-const MultipleBottomButtons: React.FC<MultipleBottomButtonsProps> = ({ buttons }) => {
+const MultipleBottomButtons: FC<MultipleBottomButtonsProps> = ({ buttons }) => {
     return (
         <section className="fixed flex w-[90%] gap-6 justify-between mt-4 max-w-[30rem] bottom-4">
             {buttons.map((button) => (
