@@ -101,7 +101,9 @@ const staffRouter = new Hono()
       const { role, name, phone, businessId, password, nickName, serviceIds } =
         requestData as AddHotelStaffType;
 
-      const existingStaff = await User.exists({ phone });
+      const existingStaff = await User.exists({
+        customRole: { $elemMatch: { businessId } },
+      });
 
       const customRole = {
         businessId,
