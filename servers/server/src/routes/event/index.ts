@@ -1,9 +1,9 @@
+import { Event } from "@hi/db-models";
 import { eventSchema, updatedEventSchema } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { Event } from "@hi/db-models";
 import { z } from "zod";
-
+//
 const eventRouter = new Hono()
   .post(
     "/createDefaults",
