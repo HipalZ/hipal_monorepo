@@ -101,7 +101,11 @@ const staffRouter = new Hono()
       const { role, name, phone, businessId, password, nickName, serviceIds } =
         requestData as AddHotelStaffType;
 
-      const existingStaff = await User.exists({ phone });
+      const existingStaff = await User.findOne({
+        customRole: { $elemMatch: { businessId } },
+      });
+
+      console.log("existingStaff", existingStaff);
 
       const customRole = {
         businessId,
@@ -117,7 +121,6 @@ const staffRouter = new Hono()
         const updatedStaff = await User.findOneAndUpdate(
           {
             phone,
-            "customRole.businessId": { $eq: businessId },
           },
           {
             $addToSet: { customRole },
@@ -125,6 +128,8 @@ const staffRouter = new Hono()
           },
           { new: true, session },
         );
+
+        console.log("updatedStaffannn", updatedStaff);
 
         if (!updatedStaff) {
           return respond(c, "Staff role exist", false, 409, {});
