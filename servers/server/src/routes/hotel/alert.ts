@@ -67,12 +67,7 @@ const scheduleAlertUpdate = (
     const data = schedule(cronExpression, async () => {
       const alertData = await HotelAlert.findById(alertId);
 
-      if (
-        (alertData &&
-          alertData.alertProgress !== checkStatus &&
-          alertData.alertProgress !== "DELIVERED") ||
-        alertData?.alertProgress !== "REJECTED"
-      ) {
+      if (alertData && alertData?.alertProgress !== "REJECTED") {
         const alertData = await HotelAlert.findByIdAndUpdate(
           alertId,
           {
@@ -591,7 +586,7 @@ const hotelAlertRouter = new Hono()
 
       const validTransitions: Record<string, string[]> = {
         ACCEPTED: ["CREATED", "WARNING", "ESCALATION"],
-        DELIVERED: ["ACCEPTED"],
+        DELIVERED: ["ACCEPTED", "WARNING", "ESCALATION"],
         REJECTED: ["CREATED", "WARNING", "ESCALATION"],
         RESOLVED: ["NOT_DELIVERED"],
       };
