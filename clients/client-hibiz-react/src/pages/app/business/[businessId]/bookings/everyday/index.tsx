@@ -1,93 +1,182 @@
-import { useState, useCallback,type FC } from "react"
-import { useParams } from "react-router-dom"
-import MemoizedHeader from "@/components/molecules/header"
-import DayConfigList from "@/components/business-hours/DayConfigList"
-import { Calendar, Clock, AlertTriangle, CalendarDays, ClockIcon } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { useState, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import MemoizedHeader from "@/components/molecules/header";
+import DayConfigList from "@/components/business-hours/DayConfigList";
+import {
+  Calendar,
+  CalendarDays,
+  PhoneIcon as WhatsappIcon,
+  Ticket,
+  LayoutGrid,
+  Users,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   useGetBusinessDayConfigs,
   useToggleAllDays,
   useToggleDay,
   useUpdateBusinessDayConfig,
-} from "@/hooks/useBusinessDayConfig"
-import type { UpdateBusinessDayConfigPayload } from "@/components/types/business-day-config"
-import useBusinessData from "@/components/store/useBusinessData"
-import CapacityManager from "@/components/business-hours/CapacityManager"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+} from "@/hooks/useBusinessDayConfig";
+import type { UpdateBusinessDayConfigPayload } from "@/components/types/business-day-config";
+import useBusinessData from "@/components/store/useBusinessData";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import CapacityManager from "@/components/business-hours/CapacityManager";
 
-// 3D Icon component
-const Icon3D = ({ icon: Icon, color = "primary", size = 20 }: { icon: any; color?: string; size?: number }) => {
+// Replace the GradientIcon component with this updated version using pink gradient
+const GradientIcon = ({
+  icon: Icon,
+  color = "primary",
+  size = 18,
+}: { icon: any; color?: string; size?: number }) => {
   return (
-    <div className="relative z-0 text-primary">
-      <Icon size={size} strokeWidth={2} />
-    </div >
-  )
-}
+    <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-pink-400 to-pink-600 hover:scale-105">
+      <Icon className="w-8 h-8 text-white drop-shadow-md" />
+    </div>
+  );
+};
 
-/**
- * Main page component for Everyday Booking configuration
- */
+// Update the NavCard component to use the pink gradient
+const NavCard = ({
+  icon: Icon,
+  title,
+  onClick,
+  disabled = false,
+}: {
+  icon: any;
+  title: string;
+  onClick?: () => void;
+  disabled?: boolean;
+}) => {
+  return (
+    <Card
+      className={cn(
+        "text-center cursor-pointer transition-all hover:shadow-md",
+        disabled ? "opacity-50 cursor-not-allowed" : "",
+      )}
+      onClick={disabled ? undefined : onClick}
+    >
+      <CardContent className="pt-6 pb-4 px-4 flex flex-col items-center">
+        <div className="mb-3">
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }}>
+            <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-pink-400 to-pink-600 hover:scale-105">
+              <Icon className="w-8 h-8 text-white drop-shadow-md" />
+            </div>
+          </motion.div>
+        </div>
+        <h3 className="font-bold text-sm">{title}</h3>
+      </CardContent>
+    </Card>
+  );
+};
+
 const Everyday = () => {
   // Get businessId from URL params
-  const { businessId } = useParams<{ businessId: string }>()
-  const businessData = useBusinessData((state) => state.businessData)
+  const { businessId } = useParams<{ businessId: string }>();
+  const businessData = useBusinessData((state) => state.businessData);
+  const navigate = useNavigate();
 
-  // Local UI state for showing a loading overlay during updates
-  const [isActionInProgress, setIsActionInProgress] = useState(false)
+  // Local UI state
+  const [isActionInProgress, setIsActionInProgress] = useState(false);
+  const [isCapacityModalOpen, setIsCapacityModalOpen] = useState(false);
+  const [capacityValue, setCapacityValue] = useState(
+    businessData?.capacity || 1,
+  );
 
   // Use the business day config hooks for API calls
-  const { data: businessDayConfigs, isLoading: isLoadingConfigs } = useGetBusinessDayConfigs(businessId)
-  const { toggleAllDays, isToggling: isTogglingAllDays } = useToggleAllDays()
-  const { toggleDay, isToggling: isTogglingDay } = useToggleDay()
-  const { updateBusinessDayConfig, isUpdating } = useUpdateBusinessDayConfig()
+  const { data: businessDayConfigs, isLoading: isLoadingConfigs } =
+    useGetBusinessDayConfigs(businessId);
+  const { toggleAllDays, isToggling: isTogglingAllDays } = useToggleAllDays();
+  const { toggleDay, isToggling: isTogglingDay } = useToggleDay();
+  const { updateBusinessDayConfig, isUpdating } = useUpdateBusinessDayConfig();
 
   const handleToggleAllDays = useCallback(async () => {
     if (businessId) {
-      setIsActionInProgress(true)
+      setIsActionInProgress(true);
       try {
-        await toggleAllDays(businessId)
+        await toggleAllDays(businessId);
       } finally {
-        setIsActionInProgress(false)
+        setIsActionInProgress(false);
       }
     }
-  }, [businessId, toggleAllDays])
+  }, [businessId, toggleAllDays]);
 
   const handleToggleDay = useCallback(
     async (businessId: string, dayOfWeek: number) => {
-      setIsActionInProgress(true)
+      setIsActionInProgress(true);
       try {
-        await toggleDay({ businessId, dayOfWeek })
+        await toggleDay({ businessId, dayOfWeek });
       } finally {
-        setIsActionInProgress(false)
+        setIsActionInProgress(false);
       }
     },
     [toggleDay],
-  )
+  );
 
   /**
    * Update a day configuration
    */
   const handleUpdateConfig = useCallback(
     async (businessId: string, payload: UpdateBusinessDayConfigPayload) => {
-      setIsActionInProgress(true)
+      setIsActionInProgress(true);
       try {
-        await updateBusinessDayConfig({ businessId, payload })
+        await updateBusinessDayConfig({ businessId, payload });
       } finally {
-        setIsActionInProgress(false)
+        setIsActionInProgress(false);
       }
     },
     [updateBusinessDayConfig],
-  )
+  );
 
   // Check if any day is open
-  const anyDayOpen = businessDayConfigs.some((config) => config.isOpen)
+  const anyDayOpen = businessDayConfigs.some((config) => config.isOpen);
+
+  // Update the navigateTo function to use the correct path structure
+  const navigateTo = useCallback((path: string) => {
+    navigate(`${path}`);
+  }, []);
+
+  // Navigate to day detail page
+  const navigateToDayDetail = useCallback(
+    (dayOfWeek: number) => {
+      navigate(`/business/${businessId}/day/${dayOfWeek}`);
+    },
+    [navigate, businessId],
+  );
+
+  // Handle capacity update
+  const handleCapacityUpdate = useCallback(async () => {
+    if (businessId && businessData) {
+      setIsActionInProgress(true);
+      try {
+        setIsCapacityModalOpen(false);
+      } finally {
+        setIsActionInProgress(false);
+      }
+    }
+  }, [businessId, businessData]);
 
   // Determine if any loading state is active
-  const showLoading = isLoadingConfigs || isTogglingAllDays || isTogglingDay || isUpdating || isActionInProgress
+  const showLoading =
+    isLoadingConfigs ||
+    isTogglingAllDays ||
+    isTogglingDay ||
+    isUpdating ||
+    isActionInProgress;
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-[10rem]">
+    <main className="min-h-screen pb-[10rem]">
       {/* Header */}
       <header className="linear_gradient_background">
         <MemoizedHeader title="Everyday Booking" />
@@ -95,38 +184,37 @@ const Everyday = () => {
 
       {/* Main content */}
       <div className="container px-4 py-8 mx-auto">
-        {/* Page header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-3">
-            <motion.div
-              className="flex items-center justify-center shadow-lg w-14 h-14 rounded-xl bg-primary/10"
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                perspective: "1000px",
-                transformStyle: "preserve-3d",
-              }}
-            >
-              <motion.div
-                initial={{ rotateY: 0 }}
-                animate={{ rotateY: [0, 15, 0, -15, 0] }}
-                transition={{
-                  repeat: Number.POSITIVE_INFINITY,
-                  duration: 6,
-                  ease: "easeInOut",
-                }}
-              >
-                <Icon3D icon={CalendarDays} size={24} />
-              </motion.div>
-            </motion.div>
-            <div>
-              <h1 className="mb-1 text-2xl font-bold text-gray-900">Business Hours</h1>
-              <p className="max-w-2xl text-gray-600">
-                Configure your business hours and closed intervals. Customers will only be able to book appointments
-                during your open hours.
-              </p>
-            </div>
-          </div>
+        {/* Navigation Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card
+            className="items-start overflow-hidden shadow-md cursor-pointer hover:shadow-lg transition-all"
+            onClick={() => setIsCapacityModalOpen(true)}
+          >
+            <CardContent className="pt-6 pb-4 px-4 flex flex-col items-center">
+              <div className="mb-3 flex flex-col items-center">
+                <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center mb-2">
+                  <span className="font-bold text-primary text-2xl">
+                    {businessData?.capacity || 0}
+                  </span>
+                </div>
+                <h3 className="font-bold text-sm">Capacity</h3>
+              </div>
+            </CardContent>
+          </Card>
+
+          <NavCard
+            icon={Ticket}
+            title="Coupons"
+            onClick={() => navigateTo("coupons")}
+          />
+
+          <NavCard
+            icon={LayoutGrid}
+            title="All Periods & Slots"
+            onClick={() => navigateTo("period")}
+          />
+
+          <NavCard icon={WhatsappIcon} title="WhatsApp" disabled={true} />
         </div>
 
         {/* Loading indicator */}
@@ -144,80 +232,18 @@ const Everyday = () => {
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="flex items-center gap-4 p-6 bg-white shadow-xl rounded-xl"
               >
-                <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin"></div>
-                <p className="font-medium text-gray-700">Updating business hours...</p>
+                <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin" />
+                <p className="font-medium text-gray-700">
+                  Updating business hours...
+                </p>
               </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
 
+        {/* Update the section with the capacity card to remove the business schedule card */}
         <section className="flex flex-col gap-4 mb-6 md:flex-row">
-
-          {/* Action bar */}
-          <Card className="items-start flex-1 overflow-hidden shadow-md">
-            <CardContent className="p-0">
-              <div className="flex flex-col justify-between gap-4 px-5 pt-4 pb-4 lg:pb-0">
-                <div className="flex items-center gap-3">
-                  <motion.div
-                    className="flex items-center justify-center flex-shrink-0 w-12 h-12 shadow-md rounded-xl bg-primary/10"
-                    whileHover={{ scale: 1.05, rotate: 5 }}
-                    whileTap={{ scale: 0.95 }}
-                    style={{
-                      perspective: "1000px",
-                      transformStyle: "preserve-3d",
-                    }}
-                  >
-                    <motion.div
-                      initial={{ rotateY: 0 }}
-                      animate={{ rotateY: [0, 10, 0, -10, 0] }}
-                      transition={{
-                        repeat: Number.POSITIVE_INFINITY,
-                        duration: 5,
-                        ease: "easeInOut",
-                      }}
-                    >
-                      <Icon3D icon={ClockIcon} size={22} />
-                    </motion.div>
-                  </motion.div>
-                  <div>
-                    <h3 className="text-base font-medium text-gray-800">Business Schedule</h3>
-                    <p className="text-sm text-gray-500">
-                      {anyDayOpen
-                        ? `Your business is open ${businessDayConfigs.filter((c) => c.isOpen).length} days a week`
-                        : "Your business is currently closed all days"}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  variant={anyDayOpen ? "destructive" : "default"}
-                  size="lg"
-                  onClick={handleToggleAllDays}
-                  disabled={showLoading}
-                  className="h-12 px-5 shadow-md rounded-xl"
-                >
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-2">
-                    {anyDayOpen ? (
-                      <>
-                        <Icon3D icon={AlertTriangle} color="red-600" />
-                        <span className="ml-1">Close All Days</span>
-                      </>
-                    ) : (
-                      <>
-                        <Icon3D icon={Clock} />
-                        <span className="ml-1">Open All Days</span>
-                      </>
-                    )}
-                  </motion.div>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Capacity manager */}
-          <div className="items-start flex-1">
-
-          {businessData && <CapacityManager businessId={businessId} currentCapacity={businessData.capacity || 0} />}
-          </div>
+          {/* Capacity Card */}
         </section>
 
         {/* Day configuration list */}
@@ -244,18 +270,50 @@ const Everyday = () => {
                   ease: "easeInOut",
                 }}
               >
-                <Icon3D icon={Calendar} size={30} />
+                <Calendar size={30} className="text-gray-900" />
               </motion.div>
-              <h3 className="mb-2 text-lg font-medium text-gray-900">No business hours configured</h3>
+              <h3 className="mb-2 text-lg font-medium text-gray-900">
+                No business hours configured
+              </h3>
               <p className="max-w-md mx-auto text-gray-500">
-                No business day configurations found. Please contact support to set up your initial configuration.
+                No business day configurations found. Please contact support to
+                set up your initial configuration.
               </p>
             </CardContent>
           </Card>
         ) : null}
       </div>
-    </main>
-  )
-}
 
-export default Everyday
+      {/* Capacity Modal */}
+      <Dialog open={isCapacityModalOpen} onOpenChange={setIsCapacityModalOpen}>
+        <DialogContent className="sm:max-w-[425px] p-2">
+          <CapacityManager
+            businessId={businessId}
+            currentCapacity={businessData?.capacity || 1}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Bottom Navigation */}
+      <AdvancedBottomButton
+        fixed={true}
+        maxWidth="30rem"
+        buttons={[
+          {
+            text: anyDayOpen ? "Close All Days" : "Open All Days",
+            onClick: () => handleToggleAllDays(),
+            disabled: showLoading,
+            className: `w-full h-12 ${
+              anyDayOpen
+                ? "bg-red-600 hover:bg-red-700"
+                : "bg-green-600 hover:bg-green-700"
+            }`,
+            swipe: true,
+          },
+        ]}
+      />
+    </main>
+  );
+};
+
+export default Everyday;

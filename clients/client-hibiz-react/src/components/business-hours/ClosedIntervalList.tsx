@@ -23,7 +23,7 @@ type ClosedIntervalListProps = {
 /**
  * Component for managing a list of closed intervals
  */
-const ClosedIntervalList: FC<ClosedIntervalListProps> = ({
+const ClosedIntervalList = ({
     intervals,
     dayStartTime,
     dayEndTime,
@@ -31,7 +31,7 @@ const ClosedIntervalList: FC<ClosedIntervalListProps> = ({
     onUpdateInterval,
     onRemoveInterval,
     error,
-}) => {
+}:ClosedIntervalListProps) => {
     // Handle add interval button click
     const handleAddInterval = useCallback(() => {
         const defaultInterval = createDefaultClosedInterval(dayStartTime, dayEndTime, intervals)

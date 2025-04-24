@@ -19,14 +19,14 @@ type ClosedIntervalItemProps = {
 /**
  * Component for displaying and editing a single closed interval
  */
-const ClosedIntervalItem: FC<ClosedIntervalItemProps> = ({
+const ClosedIntervalItem = ({
   interval,
   index,
   dayStartTime,
   dayEndTime,
   onUpdate,
   onRemove,
-}) => {
+}:ClosedIntervalItemProps) => {
   // Generate time options for the dropdowns
   const timeOptions = generateTimeOptions(4, 28)
 

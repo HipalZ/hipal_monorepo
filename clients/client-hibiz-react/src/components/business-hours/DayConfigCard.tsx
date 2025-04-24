@@ -1,28 +1,41 @@
-import  { type FC, memo, useCallback, useState } from "react"
-import TimeRangeSelector from "./TimeRangeSelector"
-import ClosedIntervalList from "./ClosedIntervalList"
-import { Clock, ChevronDown, ChevronUp, Edit2, Save, X } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { useBusinessDayConfigUIStore } from "../store/booking/businessDayConfigStore"
-import type { BusinessDayConfig, ClosedInterval, UpdateBusinessDayConfigPayload } from "../types/business-day-config"
-import {  getDayName, timeToMinutes } from "@/components/utils/timeUtils"
+import { memo, useCallback, useState } from "react";
+import TimeRangeSelector from "./TimeRangeSelector";
+import ClosedIntervalList from "./ClosedIntervalList";
+import { Clock, ChevronDown, ChevronUp, Edit2, Save, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useBusinessDayConfigUIStore } from "../store/booking/businessDayConfigStore";
+import type {
+  BusinessDayConfig,
+  ClosedInterval,
+  UpdateBusinessDayConfigPayload,
+} from "../types/business-day-config";
+import { getDayName, timeToMinutes } from "@/components/utils/timeUtils";
+import { cn } from "@/lib/utils";
 
 /**
  * Props for the DayConfigCard component
  */
 type DayConfigCardProps = {
-  config: BusinessDayConfig
-  businessId: string
-  onToggleDay: (businessId: string, dayOfWeek: number) => Promise<void>
-  onUpdateConfig: (businessId: string, payload: UpdateBusinessDayConfigPayload) => Promise<void>
-}
+  config: BusinessDayConfig;
+  businessId: string;
+  onToggleDay: (businessId: string, dayOfWeek: number) => Promise<void>;
+  onUpdateConfig: (
+    businessId: string,
+    payload: UpdateBusinessDayConfigPayload,
+  ) => Promise<void>;
+};
 
 /**
  * Component for displaying and editing a single day configuration
  */
-const DayConfigCard: FC<DayConfigCardProps> = ({ config, businessId, onToggleDay, onUpdateConfig }) => {
+const DayConfigCard = ({
+  config,
+  businessId,
+  onToggleDay,
+  onUpdateConfig,
+}: DayConfigCardProps) => {
   // Local state for expanded view
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Get UI state and actions from store
   const {
@@ -37,10 +50,10 @@ const DayConfigCard: FC<DayConfigCardProps> = ({ config, businessId, onToggleDay
     addClosedInterval,
     updateClosedInterval,
     removeClosedInterval,
-  } = useBusinessDayConfigUIStore()
+  } = useBusinessDayConfigUIStore();
 
   // Check if this card is being edited
-  const isEditing = editingDayId === config._id
+  const isEditing = editingDayId === config._id;
 
   /**
    * Start editing this day configuration
@@ -52,52 +65,52 @@ const DayConfigCard: FC<DayConfigCardProps> = ({ config, businessId, onToggleDay
       endTime: config.endTime,
       closedIntervals: [...config.closedIntervals],
       isOpen: config.isOpen,
-    })
-    setIsExpanded(true)
-  }, [config, startEditing])
+    });
+    setIsExpanded(true);
+  }, [config, startEditing]);
 
   /**
    * Toggle day open/closed
    */
   const handleToggleDay = useCallback(() => {
-    onToggleDay(businessId, config.dayOfWeek)
-  }, [businessId, config.dayOfWeek, onToggleDay])
+    onToggleDay(businessId, config.dayOfWeek);
+  }, [businessId, config.dayOfWeek, onToggleDay]);
 
   /**
    * Handle start time change
    */
   const handleStartTimeChange = useCallback(
     (newStartTime: string) => {
-      updateStartTime(newStartTime)
+      updateStartTime(newStartTime);
     },
     [updateStartTime],
-  )
+  );
 
   /**
    * Handle end time change
    */
   const handleEndTimeChange = useCallback(
     (newEndTime: string) => {
-      updateEndTime(newEndTime)
+      updateEndTime(newEndTime);
     },
     [updateEndTime],
-  )
+  );
 
   /**
    * Add a new closed interval
    */
   const handleAddClosedInterval = useCallback(
     (startTime: string, endTime: string) => {
-      addClosedInterval(startTime, endTime)
+      addClosedInterval(startTime, endTime);
     },
     [addClosedInterval],
-  )
+  );
 
   /**
    * Save changes to the day configuration
    */
   const handleSave = useCallback(async () => {
-    if (!editState) return
+    if (!editState) return;
 
     const payload: UpdateBusinessDayConfigPayload = {
       dayOfWeek: editState.dayOfWeek,
@@ -105,30 +118,29 @@ const DayConfigCard: FC<DayConfigCardProps> = ({ config, businessId, onToggleDay
       endTime: editState.endTime,
       closedIntervals: editState.closedIntervals,
       isOpen: editState.isOpen,
-    }
+    };
 
     try {
-      await onUpdateConfig(businessId, payload)
+      await onUpdateConfig(businessId, payload);
     } catch (error) {
-      console.error("Error saving day config:", error)
+      console.error("Error saving day config:", error);
     }
-  }, [editState, businessId, onUpdateConfig])
+  }, [editState, businessId, onUpdateConfig]);
 
   /**
    * Toggle expanded view
    */
   const toggleExpanded = useCallback(() => {
     if (!isEditing) {
-      setIsExpanded((prev) => !prev)
+      setIsExpanded((prev) => !prev);
     }
-  }, [isEditing])
+  }, [isEditing]);
 
   // Check if there are any validation errors
-  const hasErrors = timeRangeError || intervalError
+  const hasErrors = timeRangeError || intervalError;
 
   // Get day name abbreviation
-  const dayAbbr = getDayName(config.dayOfWeek).substring(0, 3)
-
+  const dayAbbr = getDayName(config.dayOfWeek).substring(0, 3);
 
   /**
    * Calculate the number of available slots for a given time range and closed intervals
@@ -139,76 +151,91 @@ const DayConfigCard: FC<DayConfigCardProps> = ({ config, businessId, onToggleDay
    * @returns Object with period information and slot counts
    */
   const calculateAvailableSlots = useCallback(
-    (startTime: string, endTime: string, closedIntervals: ClosedInterval[], intervalMinutes = 30) => {
+    (
+      startTime: string,
+      endTime: string,
+      closedIntervals: ClosedInterval[],
+      intervalMinutes = 30,
+    ) => {
       // Convert times to minutes for easier calculation
-      const startMinutes = timeToMinutes(startTime)
-      const endMinutes = timeToMinutes(endTime)
-      const totalMinutes = endMinutes - startMinutes
+      const startMinutes = timeToMinutes(startTime);
+      const endMinutes = timeToMinutes(endTime);
+      const totalMinutes = endMinutes - startMinutes;
 
       // Calculate total slots without considering closed intervals
-      const totalSlots = Math.floor(totalMinutes / intervalMinutes)
+      const totalSlots = Math.floor(totalMinutes / intervalMinutes);
 
       // Calculate minutes blocked by closed intervals
-      let blockedMinutes = 0
+      let blockedMinutes = 0;
       closedIntervals.forEach((interval) => {
-        const intervalStart = timeToMinutes(interval.startTime)
-        const intervalEnd = timeToMinutes(interval.endTime)
-        blockedMinutes += intervalEnd - intervalStart
-      })
+        const intervalStart = timeToMinutes(interval.startTime);
+        const intervalEnd = timeToMinutes(interval.endTime);
+        blockedMinutes += intervalEnd - intervalStart;
+      });
 
-      const blockedSlots = Math.ceil(blockedMinutes / intervalMinutes)
-      const availableSlots = totalSlots - blockedSlots
+      const blockedSlots = Math.ceil(blockedMinutes / intervalMinutes);
+      const availableSlots = totalSlots - blockedSlots;
 
       const periodRanges = [
         { id: 0, name: "Morning", start: 240, end: 720 },
         { id: 1, name: "Afternoon", start: 720, end: 960 },
         { id: 2, name: "Evening", start: 960, end: 1140 },
         { id: 3, name: "Night", start: 1140, end: 1680 },
-      ]
+      ];
 
       // Calculate slots per period
       const periodSlots = periodRanges.map((period) => {
         // Check if this period overlaps with the business hours
-        const periodStart = Math.max(period.start, startMinutes)
-        const periodEnd = Math.min(period.end, endMinutes)
+        const periodStart = Math.max(period.start, startMinutes);
+        const periodEnd = Math.min(period.end, endMinutes);
 
         if (periodStart >= periodEnd) {
           // This period is not covered by business hours
-          return { ...period, slots: 0, available: false }
+          return { ...period, slots: 0, available: false };
         }
 
         // Calculate total slots for this period
-        const periodTotalMinutes = periodEnd - periodStart
-        const periodTotalSlots = Math.floor(periodTotalMinutes / intervalMinutes)
+        const periodTotalMinutes = periodEnd - periodStart;
+        const periodTotalSlots = Math.floor(
+          periodTotalMinutes / intervalMinutes,
+        );
 
         // Calculate blocked slots for this period
-        let periodBlockedMinutes = 0
+        let periodBlockedMinutes = 0;
         closedIntervals.forEach((interval) => {
-          const intervalStart = Math.max(timeToMinutes(interval.startTime), periodStart)
-          const intervalEnd = Math.min(timeToMinutes(interval.endTime), periodEnd)
+          const intervalStart = Math.max(
+            timeToMinutes(interval.startTime),
+            periodStart,
+          );
+          const intervalEnd = Math.min(
+            timeToMinutes(interval.endTime),
+            periodEnd,
+          );
           if (intervalStart < intervalEnd) {
-            periodBlockedMinutes += intervalEnd - intervalStart
+            periodBlockedMinutes += intervalEnd - intervalStart;
           }
-        })
+        });
 
-        const periodBlockedSlots = Math.ceil(periodBlockedMinutes / intervalMinutes)
-        const periodAvailableSlots = periodTotalSlots - periodBlockedSlots
+        const periodBlockedSlots = Math.ceil(
+          periodBlockedMinutes / intervalMinutes,
+        );
+        const periodAvailableSlots = periodTotalSlots - periodBlockedSlots;
 
         return {
           ...period,
           slots: periodAvailableSlots,
           available: periodAvailableSlots > 0,
-        }
-      })
+        };
+      });
 
       return {
         totalSlots,
         availableSlots,
         periodSlots,
-      }
+      };
     },
     [],
-  )
+  );
 
   return (
     <motion.div
@@ -216,31 +243,50 @@ const DayConfigCard: FC<DayConfigCardProps> = ({ config, businessId, onToggleDay
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
       className={`overflow-hidden rounded-xl shadow-sm transition-all duration-300 ${
-        isEditing ? "shadow-md ring-2 ring-primary/20" : ""
+        isEditing ? "shadow-md ring-2 ring-primary" : ""
       } ${config.isOpen ? "bg-white" : "bg-gray-50"}`}
     >
       {/* Card header */}
       <div
         className={`flex items-center justify-between p-4 ${
-          config.isOpen ? "bg-gradient-to-r from-primary-50 to-white" : "bg-gray-50"
+          config.isOpen
+            ? "bg-gradient-to-r from-primary-50 to-white"
+            : "bg-gray-50"
         }`}
       >
         <div className="flex items-center gap-3">
           {/* Day indicator */}
           <div
-            className={`flex h-10 w-10 items-center justify-center rounded-full ${
-              config.isOpen ? "bg-primary text-white" : "bg-gray-200 text-gray-500"
-            }`}
+            className={cn(
+              "flex h-10 w-10 items-center justify-center rounded-full",
+              config.isOpen
+                ? "bg-primary text-white"
+                : "bg-gray-200 text-gray-500",
+            )}
           >
             <span className="text-sm font-medium">{dayAbbr}</span>
           </div>
 
           {/* Day name and status */}
           <div>
-            <h3 className="text-base font-semibold text-gray-900">{getDayName(config.dayOfWeek)}</h3>
+            <h3 className="text-base font-semibold text-gray-900">
+              {getDayName(config.dayOfWeek)}
+            </h3>
             <div className="flex items-center gap-1.5">
-              <span className={`h-2 w-2 rounded-full ${config.isOpen ? "bg-green-500" : "bg-gray-400"}`}></span>
-              <span className="text-xs text-gray-500">{config.isOpen ? "Open" : "Closed"}</span>
+              <span
+                className={cn(
+                  "h-2 w-2 rounded-full",
+                  config.isOpen ? "bg-green-500" : "bg-gray-400",
+                )}
+              />
+              <span
+                className={cn(
+                  "text-xs",
+                  config.isOpen ? "text-gray-500" : "text-gray-400",
+                )}
+              >
+                {config.isOpen ? "Open" : "Closed"}
+              </span>
             </div>
           </div>
         </div>
@@ -261,7 +307,7 @@ const DayConfigCard: FC<DayConfigCardProps> = ({ config, businessId, onToggleDay
           {/* Expand/collapse button */}
           {config.isOpen && !isEditing && (
             <button
-            type="button"
+              type="button"
               onClick={toggleExpanded}
               className="ml-1 rounded-full p-1.5 text-gray-500 hover:bg-gray-100"
               aria-label={isExpanded ? "Collapse" : "Expand"}
@@ -283,14 +329,16 @@ const DayConfigCard: FC<DayConfigCardProps> = ({ config, businessId, onToggleDay
               transition={{ duration: 0.3 }}
               className="overflow-hidden"
             >
-              <div className="p-4 border-t border-gray-100">
+              <div className="p-4 border-t border-gray-200">
                 {/* View mode */}
                 {!isEditing ? (
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2">
                         <Clock size={16} className="text-primary" />
-                        <span className="text-sm font-medium text-gray-700">Business Hours:</span>
+                        <span className="text-sm font-medium text-gray-700">
+                          Business Hours:
+                        </span>
                         <span className="text-sm font-semibold">
                           {config.startTime} - {config.endTime}
                         </span>
@@ -306,7 +354,9 @@ const DayConfigCard: FC<DayConfigCardProps> = ({ config, businessId, onToggleDay
                     </div>
                     {!isEditing && (
                       <div className="mt-3 mb-4">
-                        <h4 className="mb-2 text-sm font-medium text-gray-500">Available Periods With Slots</h4>
+                        <h4 className="mb-2 text-sm font-medium text-gray-500">
+                          Available Periods With Slots
+                        </h4>
                         <div className="grid grid-cols-2 gap-2">
                           {calculateAvailableSlots(
                             config.startTime,
@@ -322,10 +372,14 @@ const DayConfigCard: FC<DayConfigCardProps> = ({ config, businessId, onToggleDay
                               }`}
                             >
                               <div className="flex items-center justify-between">
-                                <span className="text-xs font-medium">{period.name}</span>
+                                <span className="text-xs font-medium">
+                                  {period.name}
+                                </span>
                                 <span
                                   className={`text-xs font-semibold ${
-                                    period.available ? "text-green-600" : "text-gray-400"
+                                    period.available
+                                      ? "text-green-600"
+                                      : "text-gray-400"
                                   }}`}
                                 >
                                   {period.slots} slots
@@ -340,10 +394,15 @@ const DayConfigCard: FC<DayConfigCardProps> = ({ config, businessId, onToggleDay
                     {/* Display closed intervals if any */}
                     {config.closedIntervals.length > 0 && (
                       <div className="mt-3">
-                        <h4 className="mb-2 text-xs font-medium text-gray-500 uppercase">Closed Intervals</h4>
+                        <h4 className="mb-2 text-xs font-medium text-gray-500 uppercase">
+                          Closed Intervals
+                        </h4>
                         <div className="space-y-2">
                           {config.closedIntervals.map((interval, index) => (
-                            <div key={index} className="flex items-center gap-2 rounded-md bg-gray-50 p-2.5 text-sm">
+                            <div
+                              key={index}
+                              className="flex items-center gap-2 rounded-md bg-gray-50 p-2.5 text-sm"
+                            >
                               <div className="h-1.5 w-1.5 rounded-full bg-red-500"></div>
                               <span className="font-medium text-gray-700">
                                 {interval.startTime} - {interval.endTime}
@@ -409,7 +468,7 @@ const DayConfigCard: FC<DayConfigCardProps> = ({ config, businessId, onToggleDay
         </AnimatePresence>
       )}
     </motion.div>
-  )
-}
+  );
+};
 
-export default memo(DayConfigCard)
+export default memo(DayConfigCard);
