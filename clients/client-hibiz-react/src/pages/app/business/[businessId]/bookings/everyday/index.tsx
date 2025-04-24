@@ -4,11 +4,9 @@ import MemoizedHeader from "@/components/molecules/header";
 import DayConfigList from "@/components/business-hours/DayConfigList";
 import {
   Calendar,
-  CalendarDays,
   PhoneIcon as WhatsappIcon,
   Ticket,
   LayoutGrid,
-  Users,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -20,32 +18,15 @@ import {
 import type { UpdateBusinessDayConfigPayload } from "@/components/types/business-day-config";
 import useBusinessData from "@/components/store/useBusinessData";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import CapacityManager from "@/components/business-hours/CapacityManager";
 
-// Replace the GradientIcon component with this updated version using pink gradient
-const GradientIcon = ({
-  icon: Icon,
-  color = "primary",
-  size = 18,
-}: { icon: any; color?: string; size?: number }) => {
-  return (
-    <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-pink-400 to-pink-600 hover:scale-105">
-      <Icon className="w-8 h-8 text-white drop-shadow-md" />
-    </div>
-  );
-};
+
 
 // Update the NavCard component to use the pink gradient
 const NavCard = ({
@@ -90,13 +71,10 @@ const Everyday = () => {
   // Local UI state
   const [isActionInProgress, setIsActionInProgress] = useState(false);
   const [isCapacityModalOpen, setIsCapacityModalOpen] = useState(false);
-  const [capacityValue, setCapacityValue] = useState(
-    businessData?.capacity || 1,
-  );
+
 
   // Use the business day config hooks for API calls
-  const { data: businessDayConfigs, isLoading: isLoadingConfigs } =
-    useGetBusinessDayConfigs(businessId);
+  const { data: businessDayConfigs, isLoading: isLoadingConfigs } = useGetBusinessDayConfigs(businessId as string || "");
   const { toggleAllDays, isToggling: isTogglingAllDays } = useToggleAllDays();
   const { toggleDay, isToggling: isTogglingDay } = useToggleDay();
   const { updateBusinessDayConfig, isUpdating } = useUpdateBusinessDayConfig();
@@ -146,26 +124,6 @@ const Everyday = () => {
   const navigateTo = useCallback((path: string) => {
     navigate(`${path}`);
   }, []);
-
-  // Navigate to day detail page
-  const navigateToDayDetail = useCallback(
-    (dayOfWeek: number) => {
-      navigate(`/business/${businessId}/day/${dayOfWeek}`);
-    },
-    [navigate, businessId],
-  );
-
-  // Handle capacity update
-  const handleCapacityUpdate = useCallback(async () => {
-    if (businessId && businessData) {
-      setIsActionInProgress(true);
-      try {
-        setIsCapacityModalOpen(false);
-      } finally {
-        setIsActionInProgress(false);
-      }
-    }
-  }, [businessId, businessData]);
 
   // Determine if any loading state is active
   const showLoading =
@@ -250,7 +208,7 @@ const Everyday = () => {
         {businessDayConfigs.length > 0 ? (
           <DayConfigList
             configs={businessDayConfigs}
-            businessId={businessId}
+            businessId={businessId || ""}
             onToggleDay={handleToggleDay}
             onUpdateConfig={handleUpdateConfig}
           />
@@ -288,7 +246,7 @@ const Everyday = () => {
       <Dialog open={isCapacityModalOpen} onOpenChange={setIsCapacityModalOpen}>
         <DialogContent className="sm:max-w-[425px] p-2">
           <CapacityManager
-            businessId={businessId}
+            businessId={businessId || ""}
             currentCapacity={businessData?.capacity || 1}
           />
         </DialogContent>
@@ -302,12 +260,11 @@ const Everyday = () => {
           {
             text: anyDayOpen ? "Close All Days" : "Open All Days",
             onClick: () => handleToggleAllDays(),
-            disabled: showLoading,
-            className: `w-full h-12 ${
-              anyDayOpen
+            disable: showLoading,
+            className: `w-full h-12 ${anyDayOpen
                 ? "bg-red-600 hover:bg-red-700"
                 : "bg-green-600 hover:bg-green-700"
-            }`,
+              }`,
             swipe: true,
           },
         ]}

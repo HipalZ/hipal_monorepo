@@ -410,50 +410,14 @@ const PeriodManagement = () => {
   const showLoading = isLoading || isActionInProgress;
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-[10rem]">
+    <main className="min-h-screen pb-[10rem]">
       {/* Header */}
       <header className="linear_gradient_background">
         <MemoizedHeader title="Period Management" />
       </header>
 
       {/* Main content */}
-      <div className="container px-4 py-8 mx-auto">
-        {/* Page header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-3">
-            <motion.div
-              className="flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 shadow-lg"
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                perspective: "1000px",
-                transformStyle: "preserve-3d",
-              }}
-            >
-              <motion.div
-                initial={{ rotateY: 0 }}
-                animate={{ rotateY: [0, 15, 0, -15, 0] }}
-                transition={{
-                  repeat: Number.POSITIVE_INFINITY,
-                  duration: 6,
-                  ease: "easeInOut",
-                }}
-              >
-                <Icon3D icon={Clock} size={24} />
-              </motion.div>
-            </motion.div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                Period Configuration
-              </h1>
-              <p className="text-gray-600 max-w-2xl">
-                Manage your business periods across all days. Configure pricing,
-                availability, and coupon allocations for each period.
-              </p>
-            </div>
-          </div>
-        </div>
-
+      <div className="container p-4 mx-auto">
         {/* Loading indicator */}
         <AnimatePresence>
           {showLoading && (

@@ -1,4 +1,3 @@
-import type { FC } from "react"
 import { memo, useCallback } from "react"
 import { Trash2 } from "lucide-react"
 import type { ClosedInterval } from "../types/business-day-config"
@@ -26,7 +25,7 @@ const ClosedIntervalItem = ({
   dayEndTime,
   onUpdate,
   onRemove,
-}:ClosedIntervalItemProps) => {
+}: ClosedIntervalItemProps) => {
   // Generate time options for the dropdowns
   const timeOptions = generateTimeOptions(4, 28)
 
@@ -53,7 +52,7 @@ const ClosedIntervalItem = ({
 
   return (
     <div className="flex items-center gap-2 p-3 border border-red-100 rounded-md bg-red-50">
-      <div className="flex-shrink-0 w-2 h-2 bg-red-500 rounded-full"></div>
+      <div className="flex-shrink-0 w-2 h-2 bg-red-500 rounded-full" />
 
       <div className="flex items-center flex-1 gap-2">
         {/* Start time selector */}
@@ -74,7 +73,7 @@ const ClosedIntervalItem = ({
                 </option>
               ))}
             </select>
-           
+
           </div>
         </div>
 
@@ -100,7 +99,7 @@ const ClosedIntervalItem = ({
                 </option>
               ))}
             </select>
-           
+
           </div>
         </div>
       </div>

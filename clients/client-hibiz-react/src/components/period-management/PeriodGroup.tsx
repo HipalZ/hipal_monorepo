@@ -60,27 +60,25 @@ const PeriodGroup = ({
       className="shadow-sm overflow-hidden rounded-xl border"
     >
       <CardHeader
-        className={`pb-2 pt-3 px-4 bg-gradient-to-r ${
-          periodIndex === 0
-            ? "from-amber-50 to-white"
-            : periodIndex === 1
-              ? "from-blue-50 to-white"
-              : periodIndex === 2
-                ? "from-orange-50 to-white"
-                : "from-indigo-50 to-white"
-        }`}
+        className={`pb-2 pt-3 px-4 bg-gradient-to-r ${periodIndex === 0
+          ? "from-amber-50 to-white"
+          : periodIndex === 1
+            ? "from-blue-50 to-white"
+            : periodIndex === 2
+              ? "from-orange-50 to-white"
+              : "from-indigo-50 to-white"
+          }`}
       >
         <div className="flex items-center gap-2">
           <div
-            className={`flex h-8 w-8 items-center justify-center rounded-full ${
-              periodIndex === 0
-                ? "bg-amber-500"
-                : periodIndex === 1
-                  ? "bg-blue-500"
-                  : periodIndex === 2
-                    ? "bg-orange-500"
-                    : "bg-indigo-500"
-            } text-white`}
+            className={`flex h-8 w-8 items-center justify-center rounded-full ${periodIndex === 0
+              ? "bg-amber-500"
+              : periodIndex === 1
+                ? "bg-blue-500"
+                : periodIndex === 2
+                  ? "bg-orange-500"
+                  : "bg-indigo-500"
+              } text-white`}
           >
             <PeriodIcon size={16} />
           </div>

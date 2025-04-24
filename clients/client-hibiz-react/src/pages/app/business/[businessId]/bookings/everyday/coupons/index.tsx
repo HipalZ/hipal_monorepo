@@ -50,7 +50,7 @@ const CouponManagement = () => {
   const coupons = couponsResponse?.data || []
 
   return (
-    <main className="min-h-screen bg-gray-50 pb-[10rem]">
+    <main className="min-h-screen pb-[10rem]">
       {/* Header */}
       <header className="linear_gradient_background">
         <MemoizedHeader title="Coupon Management" />

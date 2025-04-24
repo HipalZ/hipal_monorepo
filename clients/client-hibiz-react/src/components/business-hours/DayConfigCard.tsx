@@ -242,17 +242,15 @@ const DayConfigCard = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`overflow-hidden rounded-xl shadow-sm transition-all duration-300 ${
-        isEditing ? "shadow-md ring-2 ring-primary" : ""
-      } ${config.isOpen ? "bg-white" : "bg-gray-50"}`}
+      className={`overflow-hidden rounded-xl shadow-sm transition-all duration-300 ${isEditing ? "shadow-md ring-2 ring-primary" : ""
+        } ${config.isOpen ? "bg-white" : "bg-gray-50"}`}
     >
       {/* Card header */}
       <div
-        className={`flex items-center justify-between p-4 ${
-          config.isOpen
+        className={`flex items-center justify-between p-4 ${config.isOpen
             ? "bg-gradient-to-r from-primary-50 to-white"
             : "bg-gray-50"
-        }`}
+          }`}
       >
         <div className="flex items-center gap-3">
           {/* Day indicator */}
@@ -301,7 +299,7 @@ const DayConfigCard = ({
               onChange={handleToggleDay}
               disabled={isEditing}
             />
-            <div className="h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 peer-disabled:opacity-70"></div>
+            <div className="h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 peer-disabled:opacity-70" />
           </label>
 
           {/* Expand/collapse button */}
@@ -365,22 +363,20 @@ const DayConfigCard = ({
                           ).periodSlots.map((period) => (
                             <div
                               key={period.id}
-                              className={`rounded-md p-2 ${
-                                period.available
+                              className={`rounded-md p-2 ${period.available
                                   ? "bg-green-50 border border-green-100"
                                   : "bg-gray-50 border border-gray-100"
-                              }`}
+                                }`}
                             >
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-medium">
                                   {period.name}
                                 </span>
                                 <span
-                                  className={`text-xs font-semibold ${
-                                    period.available
+                                  className={`text-xs font-semibold ${period.available
                                       ? "text-green-600"
                                       : "text-gray-400"
-                                  }}`}
+                                    }}`}
                                 >
                                   {period.slots} slots
                                 </span>
@@ -403,7 +399,7 @@ const DayConfigCard = ({
                               key={index}
                               className="flex items-center gap-2 rounded-md bg-gray-50 p-2.5 text-sm"
                             >
-                              <div className="h-1.5 w-1.5 rounded-full bg-red-500"></div>
+                              <div className="h-1.5 w-1.5 rounded-full bg-red-500" />
                               <span className="font-medium text-gray-700">
                                 {interval.startTime} - {interval.endTime}
                               </span>

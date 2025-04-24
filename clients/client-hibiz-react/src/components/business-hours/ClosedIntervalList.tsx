@@ -1,5 +1,5 @@
 
-import  { type FC, memo, useCallback } from "react"
+import { memo, useCallback } from "react"
 import type { ClosedInterval } from "../types/business-day-config"
 import ClosedIntervalItem from "./ClosedIntervalItem"
 import { Plus, AlertCircle, Clock } from "lucide-react"
@@ -31,7 +31,7 @@ const ClosedIntervalList = ({
     onUpdateInterval,
     onRemoveInterval,
     error,
-}:ClosedIntervalListProps) => {
+}: ClosedIntervalListProps) => {
     // Handle add interval button click
     const handleAddInterval = useCallback(() => {
         const defaultInterval = createDefaultClosedInterval(dayStartTime, dayEndTime, intervals)
@@ -58,7 +58,7 @@ const ClosedIntervalList = ({
                 <Button
                     type="button"
                     onClick={handleAddInterval}
-                    variant="secondary"   
+                    variant="secondary"
                     size="sm"             >
                     <Plus size={14} />
                     Add Interval

@@ -141,13 +141,12 @@ const PeriodCard = ({
     <motion.div
       whileHover={{ scale: 1.01 }}
       transition={{ duration: 0.2 }}
-      className={`p-4 rounded-lg border ${
-        periodConfig.isOpen
+      className={`p-4 rounded-lg border ${periodConfig.isOpen
           ? periodConfig.couponAllocations?.length
             ? "bg-white border-purple-200 shadow-sm"
             : "bg-white border-gray-200 shadow-sm"
           : "bg-gray-50 border-gray-100"
-      }`}
+        }`}
     >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -173,7 +172,7 @@ const PeriodCard = ({
             </>
           )}
           <Badge
-            variant={periodConfig.isOpen ? "default" : "secondary"}
+            variant={periodConfig.isOpen ? "default" : "destructive"}
             className="ml-1"
           >
             {periodConfig.isOpen ? "Open" : "Closed"}
@@ -222,7 +221,7 @@ const PeriodCard = ({
           </div>
 
           {periodConfig.couponAllocations &&
-          periodConfig.couponAllocations.length > 0 ? (
+            periodConfig.couponAllocations.length > 0 ? (
             <div className="bg-purple-50 p-3 rounded-md">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-purple-700 flex items-center gap-1.5">
@@ -302,11 +301,10 @@ const PeriodCard = ({
             <div className="space-y-4 py-2">
               <div className="flex items-center gap-3">
                 <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    selectedCoupon.config.discountType === "PERCENTAGE"
+                  className={`w-12 h-12 rounded-full flex items-center justify-center ${selectedCoupon.config.discountType === "PERCENTAGE"
                       ? "bg-green-100 text-green-600"
                       : "bg-blue-100 text-blue-600"
-                  }`}
+                    }`}
                 >
                   {selectedCoupon.config.discountType === "PERCENTAGE" ? (
                     <Percent size={24} />
@@ -374,15 +372,15 @@ const PeriodCard = ({
                   {periodConfig.couponAllocations.find(
                     (c) => c.couponId === selectedCoupon._id,
                   ) && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Available Quantity:</span>
-                      <Badge variant="secondary" className="font-bold">
-                        {periodConfig.couponAllocations.find(
-                          (c) => c.couponId === selectedCoupon._id,
-                        )?.remaining || 0}
-                      </Badge>
-                    </div>
-                  )}
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Available Quantity:</span>
+                        <Badge variant="secondary" className="font-bold">
+                          {periodConfig.couponAllocations.find(
+                            (c) => c.couponId === selectedCoupon._id,
+                          )?.remaining || 0}
+                        </Badge>
+                      </div>
+                    )}
                 </div>
               </div>
             </div>
