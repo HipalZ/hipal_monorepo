@@ -86,6 +86,9 @@ const ChatHotel = dynamic(() => import("@/components/hotels/room/ChatHotel"), {
   loading: () => <SkeletonLoader height={200} />,
 })
 
+const CheckOutRequest = dynamic(() => import("@/components/hotels/room/CheckOutRequest"), {
+  loading: () => <SkeletonLoader height={200} />,
+})
 
 const page = async ({
   params,
@@ -132,6 +135,7 @@ const page = async ({
             businessId={businessData.businessId}
           />
         </section>
+        <CheckOutRequest businessId={businessData.businessId} />
       </ViewPortContainer>
     </HotelBackgroundContainer>
   )

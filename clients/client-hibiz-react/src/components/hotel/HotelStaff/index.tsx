@@ -13,7 +13,7 @@ import useStaffStore, { type IStaffMember } from "@/components/store/hotel/useHo
 const roleBadgeColors: Record<string, string> = {
   // Management roles
   MANAGER: "bg-purple-100 text-purple-800 hover:bg-purple-100",
-  HELP_DESK: "bg-blue-100 text-blue-800 hover:bg-blue-100",
+  FRONT_OFFICE: "bg-blue-100 text-blue-800 hover:bg-blue-100",
   RECEPTIONIST: "bg-amber-100 text-amber-800 hover:bg-amber-100",
 
   // Maintenance roles

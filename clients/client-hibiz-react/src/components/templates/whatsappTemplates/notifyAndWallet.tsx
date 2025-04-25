@@ -65,7 +65,7 @@ const MemoNotifyAndWallet = () => {
       >
         <BsWallet2 className="text-lg" />
         <span className="font-semibold">
-          {walletBalance?.toLocaleString("en-IN")}
+          {walletBalance?.toLocaleString("en-IN") || 0}
         </span>
       </div>
     </div>

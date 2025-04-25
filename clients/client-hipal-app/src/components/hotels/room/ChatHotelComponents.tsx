@@ -8,7 +8,7 @@ import type { Cart, ChatHeaderProps, ChatMessageHotelProps, ChatReplyMessageProp
 import MemoFoodType from "@/components/atoms/foodType";
 
 export const ChatHeader = ({ hotelName, logo, room, onClose }: ChatHeaderProps) => (
-    <section className="flex items-center p-4 border-b bg-white text-black fixed w-full max-w-[30rem] top-16 z-10 shadow-sm">
+    <section className="flex items-center p-4 border-b bg-white text-black fixed w-full max-w-[30rem] top-0 z-10 shadow-sm">
         <Button variant="ghost" size="icon" onClick={onClose} className="mr-2">
             <ChevronLeft className="h-5 w-5" />
         </Button>
@@ -32,7 +32,7 @@ export const ChatMessageHotel = ({ chat, userResponses, handleActionClick, openR
                 {format(new Date(chat?.date), "MMMM d, yyyy")}
             </div>
         </article>
-        <article className="flex justify-start mb-2">
+        <article className="flex justify-end mb-2">
             <Avatar className="h-8 w-8 mr-2 mt-1">
                 <AvatarFallback className="bg-gray-200 text-gray-600">{chat?.userId?.name.charAt(0)}</AvatarFallback>
             </Avatar>
@@ -49,6 +49,9 @@ export const ChatMessageHotel = ({ chat, userResponses, handleActionClick, openR
             </div>
         </article>
         <article className="space-y-4">
+            {chat?.cart?.length > 0 ? <article>
+                <ChatCartComponent cart={chat?.cart} />
+            </article> : null}
             {chat?.roomChatReplyIds.map((reply: RoomChatReply) => (
                 <ChatReplyMessage
                     key={reply._id}
@@ -61,14 +64,11 @@ export const ChatMessageHotel = ({ chat, userResponses, handleActionClick, openR
                 />
             ))}
         </article>
-        {chat?.cart?.length > 0 ? <article>
-            <ChatCartComponent cart={chat?.cart} />
-        </article> : null}
     </section>
 );
 
 const ChatReplyMessage = ({ reply, userResponses, handleActionClick, openReview, selectedReplyId, handleReviewSubmit }: ChatReplyMessageProps) => (
-    <section className="flex justify-end">
+    <section className="flex justify-start">
         <Avatar className="h-8 w-8 mr-2 mt-1">
             <AvatarFallback className="bg-gray-200 text-gray-600">{reply?.userId?.name?.charAt(0)}</AvatarFallback>
         </Avatar>
@@ -134,19 +134,20 @@ const ChatCartComponent = ({ cart }: { cart: Cart[] }) => {
                                     {item?.dish?.name}
                                     <MemoFoodType types={item?.dish?.types} />
                                 </div>
-                                {item?.dish?.description && (
-                                    <div className="text-xs text-gray-500">
-                                        {item?.dish?.description}
-                                    </div>
-                                )}
                                 {item?.portion && (
                                     <div className={"text-xs text-gray-500"}>
                                         Portion: {item?.portion}
                                     </div>
                                 )}
                                 {item?.extras && item?.extras.length > 0 && (
-                                    <div className={"text-xs mt-1 text-gray-500"}>
-                                        Extras: {item?.extras.join(", ")}
+                                    <div className="text-xs mt-1 text-gray-500">
+                                        Extras:{" "}
+                                        {item.extras.map((extra, index) => (
+                                            <span key={extra.id}>
+                                                {extra.name} {extra.quantity > 1 ? `× ${extra.quantity}` : ""}
+                                                {index !== item.extras.length - 1 && ", "}
+                                            </span>
+                                        ))}
                                     </div>
                                 )}
                             </div>

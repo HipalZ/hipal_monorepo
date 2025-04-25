@@ -3,17 +3,20 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { CheckCircle, XCircle, Package, User, Phone, CheckCheck, Loader2, ShoppingCart } from "lucide-react"
-import { FaArrowLeft } from "react-icons/fa"
+import { CheckCircle, XCircle, Package, User, Phone, CheckCheck, Loader2, ShoppingCart, ChevronLeft } from "lucide-react"
 import { useAlertsStore } from "../store/useAlertStore"
-import type { Alert } from "../types/hotelData";
-import BottomPopUp from "../atoms/universalPopup";
-import CartDetailsHotel from "./cartDetailsHotel";
-import { useMutation } from "@tanstack/react-query";
-import { useRespondAlerts } from "@/hooks/useHotelApis";
+import type { Alert, Cart } from "../types/hotelData"
+import BottomPopUp from "../atoms/universalPopup"
+import CartDetailsHotel from "./cartDetailsHotel"
+import { useMutation } from "@tanstack/react-query"
+import { useEditAlertCart, useRespondAlerts } from "@/hooks/useHotelApis"
 import { useAlertsColors } from "../utils/helpersHotel"
-import { useCallback } from "react";
-import toast from "react-hot-toast";
+import { useCallback, useState } from "react"
+import toast from "react-hot-toast"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import CommonBottomButton from "../atoms/bottomButton"
 
 export interface AlertCardProps {
   alert: Alert
@@ -26,20 +29,78 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   const { mutateAsync } = useMutation({
     mutationFn: respondAlert,
   })
+
+  // State for rejection popup
+  const [showRejectPopup, setShowRejectPopup] = useState(false)
+  const [rejectionReason, setRejectionReason] = useState("")
+  const [customReason, setCustomReason] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [localCart, setLocalCart] = useState<Cart[]>(alert?.cart || [])
+  const { editCart } = useEditAlertCart()
+
+  const rejectionReasons = [
+    { id: "out_of_stock", label: "Item out of stock" },
+    { id: "unavailable_service", label: "Service temporarily unavailable" },
+    { id: "staff_unavailable", label: "Staff unavailable at the moment" },
+    { id: "invalid_request", label: "Invalid or unclear request" },
+    { id: "maintenance_issue", label: "Maintenance issue" },
+    { id: "other", label: "Other reason" },
+  ]
+
   const handleAction = useCallback(
-    async (alertId: string, action) => {
+    async (alertId: string, action: string, reasonOfRejection?: string) => {
       setIsLoading(action)
+      setIsSubmitting(true)
       try {
-        await mutateAsync({ alertId, action })
+        await mutateAsync({ alertId, action, reasonOfRejection })
         toast.success(`Alert ${action?.toLowerCase()} successfully`)
+        setShowRejectPopup(false)
       } catch (error) {
-        toast.error("Failed to perform action")
+        toast.error(error?.message || "Something went wrong")
       } finally {
         setIsLoading(null)
+        setIsSubmitting(false)
+        setRejectionReason("")
+        setCustomReason("")
       }
     },
     [mutateAsync, setIsLoading],
   )
+
+  const handleReject = useCallback(() => {
+    setShowRejectPopup(true)
+  }, [])
+
+  const submitRejection = () => {
+    const finalReason =
+      rejectionReason === "other"
+        ? customReason.trim()
+        : rejectionReasons.find((r) => r.id === rejectionReason)?.label || ""
+
+    if (rejectionReason === "other" && !customReason.trim()) {
+      toast.error("Please provide a reason for rejection")
+      return
+    }
+
+    handleAction(alert?._id, "REJECTED", finalReason)
+  }
+
+  // API mutation for updating the cart
+  const { isPending } = useMutation({
+    mutationFn: editCart
+  })
+
+  const updateCart = (alertId: string) => {
+    editCart({
+      alertId: alertId,
+      cart: localCart,
+    })
+  }
+
+  const cancelChanges = () => {
+    setLocalCart(alert?.cart)
+    setShowOrderDetails(null)
+  }
 
   const hasCart = alert?.cart && alert?.cart?.length > 0
   const timeAgo = formatDistanceToNow(new Date(alert?.createdAt), { addSuffix: true })
@@ -65,7 +126,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
           <h3 className="text-lg font-bold flex items-center">Room {alert?.roomId?.name}</h3>
           <div className="text-xs text-gray-500">{timeAgo}</div>
         </div>
-
+        <h1 className="my-2">{alert?.alertProgress}</h1>
         {/* Services */}
         <div className="flex flex-wrap gap-2 mb-3">
           {alert?.serviceIds.map((service) => (
@@ -74,6 +135,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
               {service?.name}
             </Badge>
           ))}
+          <h1 className="text-sm">{alert?.message}</h1>
         </div>
 
         {/* Order details button */}
@@ -119,7 +181,6 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
                     <div className="flex items-center text-green-600">
                       <User className="h-3.5 w-3.5 mr-1" />
                       <span className="font-medium">{alert?.acceptedBy?.name}</span>
-                      {/* <span className="ml-auto">{acceptedTime}</span> */}
                     </div>
                   </div>
                 )}
@@ -130,12 +191,12 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
         {/* Action buttons */}
         <div className="flex gap-2">
-          {alertProgress[alert?.alertProgress] && (
+          {alertProgress[alert?.alertProgress] && !alert?.acceptedBy && (
             <>
               <Button
                 variant="outline"
                 className="flex-1 border-red-200 text-red-700 hover:bg-red-50"
-                onClick={() => handleAction(alert?._id, "REJECTED")}
+                onClick={handleReject}
                 disabled={isLoading !== null}
               >
                 {isLoading === "REJECTED" ? (
@@ -160,7 +221,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
             </>
           )}
 
-          {alert.alertProgress === "ACCEPTED" && (
+          {!!alert?.acceptedBy && (alert.alertProgress !== "NOT_DELIVERED") && (
             <Button
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               onClick={() => handleAction(alert?._id, "DELIVERED")}
@@ -175,7 +236,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
             </Button>
           )}
 
-          {alert.alertProgress === "NOT_DELIVERED" && (
+          {(alert.alertProgress === "NOT_DELIVERED") && (
             <Button
               className="w-full bg-red-600 hover:bg-red-700 text-white"
               onClick={() => handleAction(alert?._id, "RESOLVED")}
@@ -190,7 +251,6 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
             </Button>
           )}
 
-
           {(alert?.alertProgress === "REJECTED" || alert?.alertProgress === "DELIVERED") && (
             <div className="w-full text-center text-sm text-gray-500 py-2 bg-gray-50 rounded-md">
               No action required
@@ -202,21 +262,20 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
       {/* Order details popup */}
       {showOrderDetails === alert?._id && (
         <BottomPopUp hide show={true} onClose={() => setShowOrderDetails(null)}>
-          <div className="pt-4">
+          <div className="p-4">
             <div className="flex items-center gap-4">
-              <button
-                type="button"
-                onClick={() => setShowOrderDetails(null)}
-                className="px-2 ml-4 rounded-xl bg-[#000000] text-[#ffffff] on_active_bounce"
-              >
-                <FaArrowLeft size={28} className="p-2 rounded-full cursor-pointer text-[#ffffff]" />
-              </button>
+              <Button size="icon" onClick={() => setShowOrderDetails(null)} className="mr-2">
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
               <h2 className="text-lg font-semibold">Order Details - Room {alert?.roomId?.name}</h2>
             </div>
 
             {hasCart ? (
               <div className="space-y-3 p-4">
-                <CartDetailsHotel cart={alert?.cart} />
+                <CartDetailsHotel
+                  localCart={localCart}
+                  setLocalCart={setLocalCart}
+                  readOnly={false} />
               </div>
             ) : (
               <div className="text-center py-6">
@@ -224,9 +283,87 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
               </div>
             )}
           </div>
+          <CommonBottomButton
+            maxWidth="48rem"
+            position="mid"
+            fixed
+            shadow
+            buttons={[
+              {
+                text: 'Cancel',
+                onClick: cancelChanges,
+                className: 'rounded-lg pl-3',
+              },
+              {
+                text: 'Update',
+                onClick: () => updateCart(alert?._id),
+                hide: alert?.alertProgress === "MESSAGE",
+                className: 'rounded-lg shadow-md text-white',
+                disable: isPending,
+              },
+            ]}
+          />
+        </BottomPopUp>
+      )}
+
+      {/* Rejection Reason Popup */}
+      {showRejectPopup && (
+        <BottomPopUp hide show={true} onClose={() => !isSubmitting && setShowRejectPopup(false)}>
+          <div className="pt-4 pb-6 px-4">
+            <div className="flex items-center gap-4 mb-4">
+              <Button variant="outline" disabled={isSubmitting} size="icon" onClick={() => !isSubmitting && setShowRejectPopup(false)} className="mr-2">
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <h2 className="text-lg font-semibold">Reason for Rejection</h2>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-sm text-gray-500">
+                Please select a reason for rejecting this request from Room {alert?.roomId?.name}
+              </p>
+
+              <RadioGroup value={rejectionReason} onValueChange={setRejectionReason} className="gap-3">
+                {rejectionReasons.map((reason) => (
+                  <div key={reason.id} className="flex items-center space-x-2 border p-3 rounded-md">
+                    <RadioGroupItem value={reason.id} id={reason.id} />
+                    <Label htmlFor={reason.id} className="flex-1 cursor-pointer">
+                      {reason.label}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+
+              {rejectionReason === "other" && (
+                <div className="space-y-2">
+                  <Label htmlFor="custom-reason">Please specify (max 120 characters)</Label>
+                  <Textarea
+                    id="custom-reason"
+                    placeholder="Enter reason for rejection..."
+                    value={customReason}
+                    onChange={(e) => setCustomReason(e.target.value.slice(0, 120))}
+                    maxLength={120}
+                    className="resize-none"
+                  />
+                  <div className="text-xs text-right text-gray-500">{customReason.length}/120 characters</div>
+                </div>
+              )}
+
+              <Button
+                className="w-full bg-red-600 hover:bg-red-700 text-white"
+                onClick={submitRejection}
+                disabled={!rejectionReason || (rejectionReason === "other" && !customReason.trim()) || isSubmitting}
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <XCircle className="h-4 w-4 mr-2" />
+                )}
+                Confirm Rejection
+              </Button>
+            </div>
+          </div>
         </BottomPopUp>
       )}
     </Card>
   )
 }
-

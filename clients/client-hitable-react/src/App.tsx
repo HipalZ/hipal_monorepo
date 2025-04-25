@@ -14,7 +14,7 @@ import { useUserToken } from "@hi/common/src/useUserToken";
 import { apiRpc } from "@hi/common";
 import { useErrorHandling } from "./components/utils/helpers";
 import useBusinessData from "./components/store/useBusinessData";
-import { useRoomAlerts } from "@/hooks/useHotelApis";
+import { useEscalatedAlerts, useRoomAlerts } from "@/hooks/useHotelApis";
 const ErrorPopup = lazy(() => import("./components/ErrorPopup"));
 const InternetConnection = lazy(() => import("./components/atoms/internet"));
 const UpdateApp = lazy(() => import("./components/atoms/updateApp"));
@@ -30,14 +30,11 @@ function App() {
   const version = import.meta.env.VITE_APP_VERSION;
   const { errorText } = useErrorHandling();
   const {
-    offlineCount,
-    onlineCount,
     setOnlineCount,
     setOfflineCount,
     setOnlineAlertData,
     setOfflineAlertData,
     loading,
-    triggerSound,
     notificationStatus,
     setNotificationStatus,
     setCartData,
@@ -49,10 +46,9 @@ function App() {
   } = useLiteStore();
   const { initializePushNotifications, initializedRef } =
     usePushNotifications();
-  const { selectedBiz, platform, pushToken, captainData } = useHiClientZ(
+  const { selectedBiz, pushToken, captainData } = useHiClientZ(
     (s) => ({
       selectedBiz: s.selectedBiz,
-      platform: s.platform,
       pushToken: s.pushToken,
       captainData: s.captainData,
     }),
@@ -74,9 +70,9 @@ function App() {
     const isValidBusiness = captainData?.customRole?.some(
       (role) => role.businessId?._id === selectedBiz?.businessId?._id
     );
-    if(accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType !== "HOTEL"){
+    if (accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType !== "HOTEL") {
       navigate(`/${selectedBiz?.businessId?._id}/alerts`);
-    }else if(accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType === "HOTEL"){
+    } else if (accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType === "HOTEL") {
       navigate(`hotel/${selectedBiz?.businessId?._id}/`);
     }
   }
@@ -95,17 +91,6 @@ function App() {
     const data: Alert[] = await fetchAlerts(businessId, "ONLINE");
     setOnlineAlertData(data);
     setOnlineCount(data.length);
-    if (data && data?.length > onlineCount && platform === "web") {
-      const sound = new Howl({
-        src: ["/sounds/order.mp3"],
-        autoplay: triggerSound,
-        loop: true,
-      });
-      sound.play();
-      setTimeout(() => {
-        sound.pause();
-      }, 3000);
-    }
     return data;
   };
 
@@ -121,17 +106,6 @@ function App() {
       setUpdateFeature(data[0]?.updateFeature);
     }
     setOfflineCount(data.length);
-    if (data && data.length > offlineCount && platform === "web") {
-      const sound = new Howl({
-        src: ["/sounds/order.mp3"],
-        autoplay: triggerSound,
-        loop: true,
-      });
-      sound.play();
-      setTimeout(() => {
-        sound.pause();
-      }, 3000);
-    }
     return data;
   };
 
@@ -193,6 +167,8 @@ function App() {
 
   // hotel alerts api
   useRoomAlerts();
+  // hotel escalated alerts api
+  useEscalatedAlerts();
 
   return (
     <main className="relative">

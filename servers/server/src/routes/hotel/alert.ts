@@ -1,4 +1,5 @@
 import {
+  Business,
   DeviceToken,
   HotelAlert,
   HotelRoom,
@@ -11,8 +12,10 @@ import {
 } from "@hi/db-models";
 import {
   type AcceptHotelAlertType,
+  type UpdateAlertCartType,
   acceptHotelAlert,
   hotelAlert,
+  updateAlertCart,
   updateRoomChat,
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
@@ -43,9 +46,7 @@ const sendPushNotification = async (token: string, hotelNo: string) => {
   try {
     const response = await admin.messaging().send(pushMessage);
     return { success: true, response };
-  } catch (error) {
-    console.error("Error sending FCM message:", error);
-  }
+  } catch (error) {}
 };
 
 const scheduleAlertUpdate = (
@@ -53,6 +54,8 @@ const scheduleAlertUpdate = (
   avgTime: number,
   checkStatus: string,
   newProgress: string,
+  businessId: string,
+  roomName: string,
 ) => {
   if (avgTime > 0) {
     // Calculate the run time: current time + avgTime minutes
@@ -61,27 +64,128 @@ const scheduleAlertUpdate = (
       runTime.getMonth() + 1
     } *`;
 
-    const data = schedule(
-      cronExpression,
-      async () => {
-        const alertData = await HotelAlert.findById(alertId);
+    const data = schedule(cronExpression, async () => {
+      const alertData = await HotelAlert.findById(alertId);
 
-        if (
-          (alertData &&
-            alertData.alertProgress !== checkStatus &&
-            alertData.alertProgress !== "DELIVERED") ||
-          alertData?.alertProgress !== "REJECTED"
-        ) {
-          const alertData = await HotelAlert.findByIdAndUpdate(alertId, {
+      if (
+        (alertData &&
+          alertData.alertProgress !== checkStatus &&
+          alertData.alertProgress !== "DELIVERED") ||
+        alertData?.alertProgress !== "REJECTED"
+      ) {
+        const alertData = await HotelAlert.findByIdAndUpdate(
+          alertId,
+          {
             alertProgress: newProgress,
+          },
+          { new: true },
+        ).populate({
+          path: "serviceIds",
+          select: "name",
+        });
+
+        if (alertData?.alertProgress === "ESCALATION") {
+          const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+            businessId: alertData?.businessId,
           });
+          if (whatsAppConfig) {
+            const managers = await User.find({
+              "customRole.businessId": alertData?.businessId,
+              "customRole.role": "MANAGER",
+            }).lean();
+
+            for (const manager of managers) {
+              const res = await axios.post(
+                `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+                {
+                  messaging_product: "whatsapp",
+                  to: manager?.phone?.toString(),
+                  type: "template",
+                  template: {
+                    name: "test_escalation_template ",
+                    language: { code: "en" },
+                    components: [
+                      {
+                        type: "body",
+                        parameters: [
+                          {
+                            type: "text",
+                            text: manager?.name,
+                          },
+
+                          {
+                            type: "text",
+                            text: alertData?.serviceIds[0]?.name || "other",
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${whatsAppConfig.token}`,
+                  },
+                },
+              );
+
+              if (res.status !== 200) {
+                throw new Error("Error sending message");
+              }
+            }
+          }
         }
-      },
-      {
-        scheduled: true,
-        timezone: "Asia/Kolkata",
-      },
-    );
+
+        const registrationTokens = await DeviceToken.find({
+          businessId: businessId,
+        });
+
+        registrationTokens.map(async (obj) => {
+          if (obj.notification) {
+            await sendPushNotification(obj.token, roomName);
+          }
+        });
+      }
+    });
+  }
+};
+
+const scheduleAlert = (
+  intervals: number[], // Array of intervals in seconds
+  businessId: string,
+  roomName: string,
+  alertId: string,
+) => {
+  for (const interval of intervals) {
+    if (interval > 0) {
+      // Calculate the run time: current time + interval seconds
+      const runTime = new Date(Date.now() + interval * 1000);
+      const cronExpression = `${runTime.getSeconds()} ${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${
+        runTime.getMonth() + 1
+      } *`;
+
+      schedule(
+        cronExpression,
+        async () => {
+          const alert = await HotelAlert.findById(alertId);
+
+          const registrationTokens = await DeviceToken.find({
+            businessId: businessId,
+          });
+
+          for (const obj of registrationTokens) {
+            if (obj.notification) {
+              await sendPushNotification(obj.token, roomName);
+            }
+          }
+        },
+        // // Uncomment and configure timezone if needed
+        // {
+        //   scheduled: true,
+        //   timezone: "Asia/Kolkata",
+        // },
+      );
+    }
   }
 };
 
@@ -113,6 +217,7 @@ const hotelAlertRouter = new Hono()
       if (!customRole) {
         return respond(c, "Role not found for this business", true, 404, {});
       }
+      //
 
       const { role, serviceIds } = customRole;
 
@@ -122,7 +227,8 @@ const hotelAlertRouter = new Hono()
           $in: [
             "CREATED",
             "ACCEPTED",
-
+            "ESCALATION",
+            "MESSAGE",
             "WARNING",
             "NOT_DELIVERED",
           ],
@@ -130,7 +236,7 @@ const hotelAlertRouter = new Hono()
         staffIds: { $in: [userId] },
       };
 
-      if (role !== "HELP_DESK") {
+      if (role !== "FRONT_OFFICE") {
         if (!serviceIds || serviceIds.length === 0) {
           return respond(
             c,
@@ -237,7 +343,7 @@ const hotelAlertRouter = new Hono()
         staffIds: { $in: [userId] },
       };
 
-      if (role !== "HELP_DESK") {
+      if (role !== "FRONT_OFFICE") {
         if (!serviceIds || serviceIds.length === 0) {
           return respond(
             c,
@@ -386,6 +492,8 @@ const hotelAlertRouter = new Hono()
         const avgAcceptanceTime = serviceData?.avgAcceptanceTime || 0;
         const avgDeliveryTime = serviceData?.avgDeliveryTime || 0;
 
+        console.log("avgCompletionTime", avgCompletionTime);
+
         if (avgCompletionTime > 0) {
           // Schedule updates based on average times
           scheduleAlertUpdate(
@@ -393,20 +501,34 @@ const hotelAlertRouter = new Hono()
             avgCompletionTime,
             "DELIVERED",
             "ESCALATION",
+            requestData.businessId,
+            roomData.name,
           );
+
           scheduleAlertUpdate(
             alert._id.toString(),
             avgAcceptanceTime,
             "ACCEPTED",
             "WARNING",
+            requestData.businessId,
+            roomData.name,
           );
           scheduleAlertUpdate(
             alert._id.toString(),
             avgDeliveryTime,
             "DELIVERED",
             "WARNING",
+            requestData.businessId,
+            roomData.name,
           );
         }
+
+        scheduleAlert(
+          [60, 120],
+          requestData.businessId,
+          roomData.name,
+          alert._id.toString(),
+        );
       }
 
       const registrationTokens = await DeviceToken.find({
@@ -420,6 +542,8 @@ const hotelAlertRouter = new Hono()
         }),
       );
 
+      // Example usage:
+
       return respond(c, "Alert created successfully", false, 201, {});
     });
   })
@@ -429,6 +553,10 @@ const hotelAlertRouter = new Hono()
     return runInTransaction(async (session) => {
       const requestData = await c.req.json();
       const { alertId, userId, action } = requestData as AcceptHotelAlertType;
+
+      const roomChat = await HotelRoomChat.findOne({
+        alertId: alertId,
+      });
 
       const alert = await HotelAlert.findById(alertId).populate({
         path: "serviceIds",
@@ -450,6 +578,11 @@ const hotelAlertRouter = new Hono()
         return respond(c, "User not found", true, 404, {});
       }
 
+      const businessData = await Business.findById(alert.businessId);
+      if (!businessData) {
+        return respond(c, "Business not found", true, 404, {});
+      }
+
       const roomData = await HotelRoom.findById(alert.roomId);
 
       if (!roomData) {
@@ -459,7 +592,7 @@ const hotelAlertRouter = new Hono()
       const validTransitions: Record<string, string[]> = {
         ACCEPTED: ["CREATED", "WARNING", "ESCALATION"],
         DELIVERED: ["ACCEPTED"],
-        REJECTED: ["CREATED"],
+        REJECTED: ["CREATED", "WARNING", "ESCALATION"],
         RESOLVED: ["NOT_DELIVERED"],
       };
 
@@ -585,7 +718,7 @@ const hotelAlertRouter = new Hono()
               to: userData?.phone?.toString(),
               type: "template",
               template: {
-                name: "chat_delivered_template",
+                name: "test_delivered_message",
                 language: { code: "en" },
                 components: [
                   {
@@ -611,7 +744,7 @@ const hotelAlertRouter = new Hono()
                       },
                       {
                         type: "text",
-                        text: "https://staehotels.com/",
+                        text: `http://localhost:3000/${businessData.customLink}/hotel/chat?room=${roomData.name}&id=${userData._id}`,
                       },
                       {
                         type: "text",
@@ -674,6 +807,30 @@ const hotelAlertRouter = new Hono()
         await HotelRoomChat.findByIdAndUpdate(
           roomChat._id,
           { $addToSet: { roomChatReplyIds: newChatReply._id } },
+          { session },
+        );
+      }
+      if (action === "REJECTED") {
+        const roomChatReply = new HotelRoomChatReply({
+          action: false,
+          description: "your cart is rejected",
+          roomChatId: roomChat?._id,
+          userId: alert.userId,
+          status: "NORMAL",
+          date: Date.now(),
+        });
+
+        await roomChatReply.save({ session });
+
+        if (!roomChatReply) {
+          throw new Error("Failed to create room chat reply");
+        }
+
+        await HotelRoomChat.findByIdAndUpdate(
+          roomChat?._id,
+          {
+            $addToSet: { roomChatReplyIds: roomChatReply._id },
+          },
           { session },
         );
       }
@@ -762,6 +919,73 @@ const hotelAlertRouter = new Hono()
 
       return respond(c, "Room chat complain created successfully", false, 200, {
         _id: newChatComplaint._id,
+      });
+    });
+  })
+
+  .put("/edit_alert_cart", zValidator("json", updateAlertCart), async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session) => {
+      const requestData = await c.req.json();
+      const { alertId, cart } = requestData as UpdateAlertCartType;
+
+      const alert = await HotelAlert.findById(alertId);
+
+      const roomChat = await HotelRoomChat.findOne({
+        alertId: alertId,
+      });
+      if (!roomChat) {
+        return respond(c, "Room chat not found", true, 404, {});
+      }
+
+      if (!alert) {
+        return respond(c, "Alert not found", true, 404, {});
+      }
+
+      const updatedAlert = await HotelAlert.findByIdAndUpdate(
+        alertId,
+        { cart: cart },
+        { session, new: true },
+      );
+
+      if (!updatedAlert) {
+        throw new Error("Failed to update alert");
+      }
+
+      const updateRoomChat = await HotelRoomChat.findOneAndUpdate(
+        { alertId: alertId },
+        { cart: cart },
+        { session, new: true },
+      );
+      if (!updateRoomChat) {
+        throw new Error("Failed to update room chat");
+      }
+
+      const roomChatReply = new HotelRoomChatReply({
+        action: false,
+        description: "your cart is updated",
+        roomChatId: roomChat._id,
+        userId: alert.userId,
+        status: "NORMAL",
+        date: Date.now(),
+      });
+
+      await roomChatReply.save({ session });
+
+      if (!roomChatReply) {
+        throw new Error("Failed to create room chat reply");
+      }
+
+      await HotelRoomChat.findByIdAndUpdate(
+        roomChat._id,
+        {
+          $addToSet: { roomChatReplyIds: roomChatReply._id },
+        },
+        { session },
+      );
+
+      return respond(c, "Alert cart updated successfully", false, 200, {
+        _id: updatedAlert._id,
       });
     });
   });

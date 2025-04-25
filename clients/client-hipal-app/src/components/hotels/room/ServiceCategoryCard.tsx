@@ -53,9 +53,8 @@ const ServiceItem = memo(
   }) => (
     <Card
       key={service._id}
-      className={`flex items-center p-3 transition-colors border rounded-lg cursor-pointer ${
-        selected ? "border-h-primary bg-h-primary/5" : "border-gray-200"
-      }`}
+      className={`flex items-center p-3 transition-colors border rounded-lg cursor-pointer ${selected ? "border-h-primary bg-h-primary/5" : "border-gray-200"
+        }`}
       onClick={() => {
         if (service.availability !== false) {
           onToggle()
@@ -68,19 +67,20 @@ const ServiceItem = memo(
 
       <Label htmlFor={service._id} className="flex-grow font-medium cursor-pointer text-h-primary">
         {service.name}
-        {service.availability !== undefined && (
-          <span className={`ml-2 text-sm ${service.availability ? "text-green-600" : "text-red-500"}`}>
-            {service.availability ? "(Available)" : "(Unavailable)"}
-          </span>
-        )}
       </Label>
-
       <Checkbox
         id={service._id}
         checked={selected}
-        onCheckedChange={onToggle}
+        onCheckedChange={() => {
+          if (service.availability !== false) {
+            onToggle()
+          }
+        }}
         disabled={service.availability === false}
         className="w-5 h-5"
+        onClick={(e) => {
+          e.stopPropagation()
+        }}
       />
     </Card>
   ),
@@ -122,7 +122,7 @@ export default function ServiceCategoryCard({ category, className = "", business
   const { setCartEmpty } = useCartStore();
 
   // Check if this is the food order category
-  const isFoodOrderCategory = category.name.toLowerCase() === "order food"
+  const isFoodOrderCategory = category.name.toLowerCase() === "food"
 
   // Memoized handlers
   const openServicePopup = useCallback(
@@ -141,7 +141,7 @@ export default function ServiceCategoryCard({ category, className = "", business
   const closeServicePopup = useCallback(() => {
     setServicePopup(false)
     setCartEmpty()
-  }, [ setCartEmpty])
+  }, [setCartEmpty])
 
   const handleServiceToggle = useCallback((serviceId: string) => {
     setSelectedServices((prev) => {
@@ -221,7 +221,7 @@ export default function ServiceCategoryCard({ category, className = "", business
             }}
             sizes="(max-width: 30rem) 100vw, 30rem"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#00000030] via-[#00000010] to-transparent opacity-70" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60" />
         </div>
 
         <div className="absolute bottom-0 left-0 w-full p-4">
@@ -245,7 +245,7 @@ export default function ServiceCategoryCard({ category, className = "", business
               {isLoading ? (
                 <LoadingSpinnerCircle />
               ) : (
-                <div className="p-4">
+                <div className="p-4 relative max-h-[90dvh] overflow-auto hide-scrollbar">
                   <h2 className="mb-4 text-xl font-bold text-h-primary">{category.name} Services</h2>
 
                   {alertStatus === "success" ? (
@@ -290,7 +290,6 @@ export default function ServiceCategoryCard({ category, className = "", business
                     className: "w-full rounded-md",
                     disable: selectedServices.length === 0 || alertStatus === "loading",
                     swipe: selectedServices.length !== 0 && alertStatus === "idle",
-                    highlight: selectedServices.length !== 0 || alertStatus === "success",
                   },
                 ]}
               />

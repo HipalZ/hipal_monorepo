@@ -2494,72 +2494,129 @@ const paymentsRouter = new Hono()
         .populate({ path: "order_id" })
         .populate({ path: "userId", select: "name phone" });
 
-      let totalSubtotal = 0;
-      let totalDiscount = 0;
+      // initialize all totals
+      let totalBillValue = 0;
+      let totalInitialSubTotal = 0;
+      let totalInitialTax = 0;
+      let totalInitialTotal = 0;
+      let totalFinalSubTotal = 0;
       let totalTax = 0;
       let totalServiceCharge = 0;
       let totalAmount = 0;
+      let totalTips = 0;
+      let totalClaimedCoins = 0;
+      let totalEarnCoins = 0;
+      let totalDiscount = 0;
 
       const rows = existingPayments.map((payment: any) => {
         const {
           _id,
           date,
-          orderType,
           userId,
           tableName,
-          initialSubTotal,
-          discount,
-          discountPercentage,
-          tax,
-          serviceCharge,
-          total,
           mode,
+          paymentMode,
+          billValue = 0,
+          tips = 0,
+          claimedCoins = 0,
+          earnCoins = 0,
+          discount = 0,
+          discountType,
+          initialSubTotal = 0,
+          initialTax = 0,
+          initialTotal = 0,
+          finalSubTotal = 0,
+          tax = 0,
+          serviceCharge = 0,
+          total: finalTotal = 0,
+          order_id,
+          waiterName,
+          posBillId,
+          posBillRequestId,
+          settleType,
+          comment,
           splitModes = [],
         } = payment;
 
-        let paymentModeField = mode;
-        if (mode === "split" && Array.isArray(splitModes)) {
-          // Combine each split mode into a single string
-          const splittedInfo = splitModes
-            .map((m: any) => `${m.name}=${m.amount}`)
-            .join(", ");
-          paymentModeField = `SPLIT: ${splittedInfo}`;
-        }
+        // aggregate totals
+        totalBillValue += billValue;
+        totalInitialSubTotal += initialSubTotal;
+        totalInitialTax += initialTax;
+        totalInitialTotal += initialTotal;
+        totalFinalSubTotal += finalSubTotal;
+        totalTax += tax;
+        totalServiceCharge += serviceCharge;
+        totalAmount += finalTotal;
+        totalTips += tips;
+        totalClaimedCoins += claimedCoins;
+        totalEarnCoins += earnCoins;
+        totalDiscount += discount;
 
-        totalSubtotal += initialSubTotal ?? 0;
-        totalDiscount += discount ?? 0;
-        totalTax += tax ?? 0;
-        totalServiceCharge += serviceCharge ?? 0;
-        totalAmount += total ?? 0;
+        // flatten splitModes
+        const splitInfo = Array.isArray(splitModes)
+          ? splitModes.map((m: any) => `${m.name}=${m.amount}`).join("; ")
+          : "";
 
         return {
-          PAYMENT_ID: _id.toString(), // Uppercase headings for minimal emphasis
+          PAYMENT_ID: _id.toString(),
           DATE: new Date(date).toLocaleString(),
           USER_NAME: userId?.name ?? "",
           USER_PHONE: userId?.phone ?? "",
           TABLE_NAME: tableName || "",
-          SUBTOTAL: initialSubTotal ?? 0,
-          DISCOUNT: discount ?? 0,
-          DISCOUNT_PERCENTAGE: discountPercentage ?? 0,
-          TAX: tax ?? 0,
-          SERVICE_CHARGE: serviceCharge ?? 0,
-          TOTAL: total ?? 0,
-          PAYMENT_MODE: paymentModeField,
+          MODE: mode,
+          PAYMENT_MODE: paymentMode,
+          BILL_VALUE: billValue,
+          INITIAL_SUBTOTAL: initialSubTotal,
+          INITIAL_TAX: initialTax,
+          INITIAL_TOTAL: initialTotal,
+          SUBTOTAL: finalSubTotal === 0 ? initialSubTotal : finalSubTotal,
+          CLAIMED_COINS: claimedCoins,
+          EARNED_COINS: earnCoins,
+          DISCOUNT: discount,
+          DISCOUNT_TYPE: discountType,
+          TAX: tax,
+          SERVICE_CHARGE: serviceCharge,
+          TIPS: tips,
+          TOTAL: finalTotal,
+          MODES: splitInfo,
+          SETTLE_TYPE: settleType,
+          COMMENT: comment,
+          WAITER_NAME: waiterName,
+          POS_BILL_ID: posBillId,
+          POS_BILL_REQUEST_ID: posBillRequestId,
+          ORDER_ID: order_id?._id.toString() ?? "",
         };
       });
+
+      // push totals row
       rows.push({
-        PAYMENT_ID: "TOTALS (DO NOT EDIT THIS ROW)", // This can be "-----" or something else to indicate a summary row
+        PAYMENT_ID: "TOTALS (DO NOT EDIT THIS ROW)",
         DATE: "",
         USER_NAME: "",
         USER_PHONE: "",
         TABLE_NAME: "",
-        SUBTOTAL: `"=${totalSubtotal}"`,
-        DISCOUNT: `"=${totalDiscount}"`,
-        DISCOUNT_PERCENTAGE: "",
-        TAX: `"=${totalTax}"`,
-        SERVICE_CHARGE: `"=${totalServiceCharge}"`,
-        TOTAL: `"=${totalAmount}"`,
+        MODE: "",
         PAYMENT_MODE: "",
+        BILL_VALUE: `="${totalBillValue.toFixed(2)}"`,
+        INITIAL_SUBTOTAL: `="${totalInitialSubTotal.toFixed(2)}"`,
+        INITIAL_TAX: `="${totalInitialTax.toFixed(2)}"`,
+        INITIAL_TOTAL: `="${totalInitialTotal.toFixed(2)}"`,
+        SUBTOTAL: `="${totalFinalSubTotal.toFixed(2)}"`,
+        CLAIMED_COINS: `="${totalClaimedCoins.toFixed(2)}"`,
+        EARNED_COINS: `="${totalEarnCoins.toFixed(2)}"`,
+        DISCOUNT: `="${totalDiscount.toFixed(2)}"`,
+        DISCOUNT_TYPE: "",
+        TAX: `="${totalTax.toFixed(2)}"`,
+        SERVICE_CHARGE: `="${totalServiceCharge.toFixed(2)}"`,
+        TIPS: `="${totalTips.toFixed(2)}"`,
+        TOTAL: `="${totalAmount.toFixed(2)}"`,
+        MODES: "",
+        SETTLE_TYPE: "",
+        COMMENT: "",
+        WAITER_NAME: "",
+        POS_BILL_ID: "",
+        POS_BILL_REQUEST_ID: "",
+        ORDER_ID: "",
       });
 
       const csvString = Papa.unparse(rows, {
@@ -3509,6 +3566,67 @@ const paymentsRouter = new Hono()
             totalFreeSettle,
           },
         },
+      });
+    },
+  )
+
+  .put(
+    "/update_mode",
+
+    zValidator(
+      "json",
+      z.object({
+        paymentId: z.string(),
+        mode: z.string(),
+        updatedBy: z.string(),
+      }),
+    ),
+
+    async (c) => {
+      const { paymentId, mode, updatedBy } = await c.req.json();
+
+      const paymentData = await Payment.findById(paymentId);
+
+      if (!paymentData) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "Payment not found",
+        });
+      }
+      if (
+        (paymentData?.splitModes?.length ?? 0) > 1 ||
+        ["complementary", "dues", "npc", "split"].includes(paymentData.mode)
+      ) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "Payment already settled or cannot update mode",
+        });
+      }
+
+      const updatedPayment = await Payment.findByIdAndUpdate(
+        paymentId,
+        {
+          mode,
+          paymentMode: mode,
+          splitModes: [],
+          updatedBy: updatedBy,
+          updatedAt: Date.now(),
+        },
+        { new: true },
+      );
+
+      if (!updatedPayment) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "Failed to update payment",
+        });
+      }
+
+      return respond(c, "Payment mode updated successfully", false, 200, {
+        _id: updatedPayment._id,
       });
     },
   );

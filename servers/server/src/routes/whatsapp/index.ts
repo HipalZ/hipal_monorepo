@@ -2115,12 +2115,11 @@ const whatsappRouter = new Hono()
             urlObj = findLongUrl;
             updateLongUrl = `${
               findLongUrl?.longUrl
-            }&&id=${userObj?._id.toString()}`;
+            }&id=${userObj?._id.toString()}`;
           }
 
           if (phon_no_id && from && urlObj) {
             if (shortUrlType === "COUPON") {
-              console.log("incoupon");
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
@@ -2162,12 +2161,15 @@ const whatsappRouter = new Hono()
               if (room && room.userIds.length === 0) {
                 const a = await HotelRoom.findOneAndUpdate(
                   {
+                    businessId: config?.businessId,
+                    name: room?.name,
                     slug: urlObj?.urlCode,
                   },
                   {
                     $addToSet: {
                       userIds: user?._id,
                     },
+                    source: "",
                     roomStatus: "OCCUPIED",
                   },
                 );
@@ -2195,65 +2197,94 @@ const whatsappRouter = new Hono()
                     },
                   );
                 }
+                try {
+                  const res = await axios.post(
+                    `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
+                    {
+                      messaging_product: "whatsapp",
+                      to: user?.phone?.toString(),
+                      type: "template",
+                      template: {
+                        name: "test_checkin_template",
+                        language: { code: "en" },
+                        components: [
+                          {
+                            type: "body",
+                            parameters: [
+                              {
+                                type: "text",
+                                text: user?.name,
+                              },
 
-                const res = await axios.post(
-                  `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
-                  {
-                    messaging_product: "whatsapp",
-                    to: user?.phone?.toString(),
-                    type: "template",
-                    template: {
-                      name: "authcode_template",
-                      language: { code: "en" },
-                      components: [
-                        {
-                          type: "body",
-                          parameters: [
-                            {
-                              type: "text",
-                              text: user?.name,
-                            },
+                              {
+                                type: "text",
+                                text: authCode,
+                              },
 
-                            {
-                              type: "text",
-                              text: authCode,
-                            },
-
-                            {
-                              type: "text",
-                              text: room?.name,
-                            },
-                          ],
-                        },
-                      ],
+                              {
+                                type: "text",
+                                text: room?.name,
+                              },
+                            ],
+                          },
+                        ],
+                      },
                     },
-                  },
-                  {
-                    headers: {
-                      Authorization: `Bearer ${config.token}`,
+                    {
+                      headers: {
+                        Authorization: `Bearer ${config.token}`,
+                      },
                     },
-                  },
-                );
+                  );
+                } catch (error) {
+                  console.log("error", error);
+                }
               }
 
-              await axios({
-                method: "POST",
-                url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
-                data: {
+              const res = await axios.post(
+                `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
+                {
                   messaging_product: "whatsapp",
                   to: from,
-                  text: {
-                    body: `**🏨 Welcome to ${bName?.name}! 🏨**
-              We are delighted to provide you with a **comfortable and luxurious stay**. 🛏️✨
-              🔑 **Explore service In Room **: ${updateLongUrl}
-              🏡 **Discover our beautifully designed rooms and premium amenities.**
-              Enjoy **a seamless check-in experience** and **relax in comfort** with us. 🌟😊`,
+                  type: "template",
+                  template: {
+                    name: "test_welcome_template3",
+                    language: { code: "en" },
+                    components: [
+                      {
+                        type: "header",
+                        parameters: [
+                          {
+                            type: "image",
+                            image: {
+                              link: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/589185485.jpg?k=4f3001e657d6f119e0d732a2ae688f21e76ca70bff1d82f45ae9d47e3ca2d343&o=&hp=1",
+                            },
+                          },
+                        ],
+                      },
+                      {
+                        type: "body",
+                        parameters: [
+                          {
+                            type: "text",
+                            text: bName?.name,
+                          },
+
+                          {
+                            type: "text",
+                            text: updateLongUrl,
+                          },
+                        ],
+                      },
+                    ],
                   },
                 },
-                headers: {
-                  "Content-Type": "application/json",
+                {
+                  headers: {
+                    Authorization: `Bearer ${config.token}`,
+                  },
                 },
-              });
+              );
             } else {
               console.log("intablescan");
               await axios({

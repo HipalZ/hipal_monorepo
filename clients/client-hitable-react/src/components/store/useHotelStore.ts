@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import { NavItemsHotelEnum, type RoomData } from "../types/hotelData";
+import {
+  type Alert,
+  type Cart,
+  NavItemsHotelEnum,
+  type RoomData,
+} from "../types/hotelData";
 import type { SortOption } from "../utils/helpersHotel";
 
 interface IHotelStore {
@@ -41,6 +46,21 @@ interface IHotelStore {
 
   isOpenChat: boolean;
   setIsOpenChat: (value: boolean) => void;
+
+  selectedSource: string;
+  setSelectedSource: (value: string) => void;
+
+  cartData: Cart[];
+  setCartData: (value: Cart[]) => void;
+
+  openCartModal: boolean;
+  setOpenCartModal: (value: boolean) => void;
+
+  hotelEscalationCount: number;
+  setHotelEscalationCount: (value: number) => void;
+
+  escalatedData: Alert[];
+  setEscalatedData: (value: Alert[]) => void;
 }
 
 export const useHotelStore = create<IHotelStore>((set) => ({
@@ -100,4 +120,19 @@ export const useHotelStore = create<IHotelStore>((set) => ({
 
   isOpenChat: false,
   setIsOpenChat: (value) => set({ isOpenChat: value }),
+
+  selectedSource: "",
+  setSelectedSource: (value) => set({ selectedSource: value }),
+
+  cartData: [],
+  setCartData: (value) => set({ cartData: value }),
+
+  openCartModal: false,
+  setOpenCartModal: (value) => set({ openCartModal: value }),
+
+  hotelEscalationCount: 0,
+  setHotelEscalationCount: (value) => set({ hotelEscalationCount: value }),
+
+  escalatedData: [],
+  setEscalatedData: (value) => set({ escalatedData: value }),
 }));

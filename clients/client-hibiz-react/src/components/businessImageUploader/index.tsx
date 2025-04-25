@@ -2,10 +2,13 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { ImageIcon, ArrowLeftIcon, PlusIcon, RefreshCwIcon, ImageOffIcon, Loader2Icon } from "lucide-react"
-import BusinessImageUploaderContainer from "./businessImageUploaderContainer"
+import { Checkbox } from "@/components/ui/checkbox"
+import { ImageIcon, ArrowLeftIcon, PlusIcon, RefreshCwIcon, ImageOffIcon, Loader2Icon, Trash2Icon } from "lucide-react"
 import { useGetBucketByBusinessId } from "@/hooks/useAdminUpload"
 import { useNavigate, useParams } from "react-router-dom"
+import toast from "react-hot-toast"
+import { apiRpc } from "@hi/common"
+import BusinessImageUploaderContainer from "./businessImageUploaderContainer"
 
 const container = {
   hidden: { opacity: 0 },
@@ -26,12 +29,14 @@ interface BusinessCategoryImagesProps {
   categoryId: string
 }
 
-export function BusinessCategoryImages({  categoryId }: BusinessCategoryImagesProps) {
+export function BusinessCategoryImages({ categoryId }: BusinessCategoryImagesProps) {
   const navigate = useNavigate()
   const businessId = useParams().businessId as string
-    const [showUploader, setShowUploader] = useState(false)
-  const { buckets, isLoading, isError } = useGetBucketByBusinessId(businessId)
+  const [showUploader, setShowUploader] = useState(false)
+  const { buckets, isLoading, isError, getBuckets } = useGetBucketByBusinessId(businessId)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [selectedImageIds, setSelectedImageIds] = useState<string[]>([])
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Find the current category
   const currentCategory = buckets.find((bucket) => bucket.categoryId === categoryId)
@@ -43,6 +48,63 @@ export function BusinessCategoryImages({  categoryId }: BusinessCategoryImagesPr
     navigate(`/app/business/${businessId}/thumbnail`, { replace: true })
   }
 
+  // Handle image selection
+  const toggleImageSelection = (e: React.MouseEvent, imageId: string) => {
+    e.stopPropagation() // Prevent opening the image preview
+
+    setSelectedImageIds((prev) => {
+      if (prev.includes(imageId)) {
+        return prev.filter((id) => id !== imageId)
+      } else {
+        return [...prev, imageId]
+      }
+    })
+  }
+
+  // Handle select all images
+  const handleSelectAll = () => {
+    if (selectedImageIds.length === images.length) {
+      // If all are selected, deselect all
+      setSelectedImageIds([])
+    } else {
+      // Otherwise, select all images that have an ID
+      const allImageIds = images
+        .filter((img) => img._id) // Only include images that have an ID
+        .map((img) => img._id as string)
+      setSelectedImageIds(allImageIds)
+    }
+  }
+
+  // Handle delete selected images
+  const handleDeleteSelected = async () => {
+    if (selectedImageIds.length === 0) return
+
+    if (!confirm(`Are you sure you want to delete ${selectedImageIds.length} selected image(s)?`)) {
+      return
+    }
+
+    setIsDeleting(true)
+
+    try {
+      const response = await apiRpc.bucket.images.delete_images.$delete({
+        json: { imageIds: selectedImageIds },
+      })
+
+      if (response.status === 200) {
+        toast.success(`${selectedImageIds.length} image(s) deleted successfully`)
+        setSelectedImageIds([])
+        getBuckets() 
+      } else {
+        toast.error(response.message || "Failed to delete images")
+      }
+    } catch (error) {
+      console.error("Error deleting images:", error)
+      toast.error("An error occurred while deleting images")
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   if (showUploader) {
     return (
       <BusinessImageUploaderContainer
@@ -51,6 +113,7 @@ export function BusinessCategoryImages({  categoryId }: BusinessCategoryImagesPr
         onBack={() => setShowUploader(false)}
         onComplete={() => {
           setShowUploader(false)
+          // getBuckets() // Use getBuckets instead of refetch
         }}
       />
     )
@@ -73,20 +136,47 @@ export function BusinessCategoryImages({  categoryId }: BusinessCategoryImagesPr
             </p>
           </motion.div>
         </div>
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ x: 20, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-        >
-          <Button
-            onClick={() => setShowUploader(true)}
-            className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
-          >
-            <PlusIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">Add Images</span>
-            <span className="sm:hidden">Add</span>
-          </Button>
+        <motion.div className="flex gap-2" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
+          {images.length > 0 && (
+            <>
+              <Button variant="outline" size="sm" onClick={handleSelectAll} className="hidden sm:flex">
+                {selectedImageIds.length === images.length ? "Deselect All" : "Select All"}
+              </Button>
+
+              {selectedImageIds.length > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleDeleteSelected}
+                  disabled={isDeleting}
+                  className="gap-1"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2Icon className="w-4 h-4 animate-spin" />
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2Icon className="w-4 h-4" />
+                      <span>Delete ({selectedImageIds.length})</span>
+                    </>
+                  )}
+                </Button>
+              )}
+            </>
+          )}
+
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              onClick={() => setShowUploader(true)}
+              className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
+            >
+              <PlusIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">Add Images</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+          </motion.div>
         </motion.div>
       </div>
 
@@ -143,7 +233,7 @@ export function BusinessCategoryImages({  categoryId }: BusinessCategoryImagesPr
             </motion.div>
             <p className="mt-4 text-red-500">Failed to load images. Please try again.</p>
             <motion.div className="mt-4" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => getBuckets()}>
                 <RefreshCwIcon className="w-4 h-4 mr-2" />
                 Retry
               </Button>
@@ -229,6 +319,20 @@ export function BusinessCategoryImages({  categoryId }: BusinessCategoryImagesPr
                           <ImageIcon className="w-8 h-8 text-gray-400" />
                         </div>
                       )}
+
+                      {/* Selection checkbox */}
+                      {image._id && (
+                        <div
+                          className="absolute z-10 top-2 left-2"
+                          onClick={(e) => toggleImageSelection(e, image._id as string)}
+                        >
+                          <Checkbox
+                            checked={selectedImageIds.includes(image._id as string)}
+                            className="h-5 w-5 border-2 border-white bg-black/30 data-[state=checked]:bg-green-500 data-[state=checked]:text-white"
+                          />
+                        </div>
+                      )}
+
                       {image.imageUrl && (
                         <div className="absolute inset-0 flex items-center justify-center transition-all duration-300 opacity-0 bg-black/0 group-hover:bg-black/20 group-hover:opacity-100">
                           <motion.div
@@ -246,7 +350,6 @@ export function BusinessCategoryImages({  categoryId }: BusinessCategoryImagesPr
               </motion.div>
             ))}
           </motion.div>
-          
         )}
       </AnimatePresence>
 
@@ -260,13 +363,13 @@ export function BusinessCategoryImages({  categoryId }: BusinessCategoryImagesPr
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="max-w-4xl max-h-[90vh] relative"
+            className="relative max-w-4xl max-h-[90vh]"
             onClick={(e) => e.stopPropagation()}
           >
             <img
               src={selectedImage || "/placeholder.svg"}
               alt="Preview"
-              className="max-w-full max-h-[90vh] object-contain rounded-lg"
+              className="object-contain rounded-lg max-w-full max-h-[90vh]"
             />
             <Button
               className="absolute h-auto p-2 rounded-full top-2 right-2 bg-black/50 hover:bg-black/70"

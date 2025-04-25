@@ -99,6 +99,7 @@ export function useAdminUploadHook(): UseCategoriesResult {
 }
 
 export interface Image {
+  _id: string
   name: string
   imageUrl: string
 }

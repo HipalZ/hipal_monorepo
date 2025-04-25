@@ -119,11 +119,11 @@ const MemoWhatzapp = () => {
             console.log("createEditFlow", createEditFlow);
           }
           else {
-            navigate(`/app/business/${businessData?._id}/`);
+            navigate(-1);
           }
           break;
         default:
-          navigate(`/app/business/${businessData?._id}/`);
+          navigate(-1);
           break;
       }
     }
@@ -138,6 +138,7 @@ const MemoWhatzapp = () => {
     setOpenAnalytics,
     createEditFlow,
     setCreateEditFlow,
+    navigate,
   ]);
 
   const { isLoading } = useQuery({

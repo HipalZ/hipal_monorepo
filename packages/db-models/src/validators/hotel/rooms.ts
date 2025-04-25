@@ -52,17 +52,24 @@ export const hotelRoom = z.object({
   slug: z.string().min(1).max(50).optional(),
   roomTypeId: ObjectIdSchema,
   isDeleted: z.boolean().optional().default(false),
+  source: z.string().min(1).max(50).optional(),
 });
 
 export const hotelRoomCheckIn = z.object({
   roomId: ObjectIdSchema,
   name: z.string().min(1).max(50),
   phone: z.string().min(10).max(10),
+  source: z.string().min(1).max(50).optional(),
 });
 
 export const hotelRoomCheckOut = z.object({
   roomId: ObjectIdSchema,
   userIds: z.array(ObjectIdSchema).optional().default([]),
+});
+
+export const hotelRoomCheckOutRequest = z.object({
+  roomId: ObjectIdSchema,
+  userId: ObjectIdSchema,
 });
 
 export const hotelRoomSession = z.object({
@@ -74,6 +81,7 @@ export const hotelRoomSession = z.object({
   checkOut: z.number().optional(),
   authCode: z.string().min(4).max(4).optional(),
   isAuthCodeVerified: z.boolean().optional().default(false),
+  source: z.string().optional(),
 });
 
 export const updateHotelRoom = z.object({

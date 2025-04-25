@@ -12,7 +12,7 @@ const hotelAlertSchema = new mongoose.Schema<HotelAlertType>({
 
   serviceIds: {
     type: [ObjectId],
-    required: true,
+    required: false,
     ref: "hotelservice",
   },
 
@@ -86,6 +86,10 @@ const hotelAlertSchema = new mongoose.Schema<HotelAlertType>({
     required: false,
     ref: "hotelroomchatcomplain",
     default: null,
+  },
+  message: {
+    type: String,
+    required: false,
   },
 });
 

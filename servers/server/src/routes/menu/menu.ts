@@ -268,27 +268,29 @@ const menuRouter = new Hono()
             name: "Default",
           });
 
-          const createTable = new Table({
-            name: tableName,
-            businessId,
-            zoneId: findDefaultZone?._id,
-            internalZoneId: findDefaultZone?._id,
-            status: "EMPTY",
-            date: Date.now(),
-            visibility: true,
-          });
+          if (findDefaultZone) {
+            const createTable = new Table({
+              name: tableName,
+              businessId,
+              zoneId: findDefaultZone?._id,
+              internalZoneId: findDefaultZone?._id,
+              status: "EMPTY",
+              date: Date.now(),
+              visibility: true,
+            });
 
-          await createTable.save({ session });
+            await createTable.save({ session });
 
-          const updateZone = await Zone.findByIdAndUpdate(
-            findDefaultZone?._id,
-            {
-              $push: {
-                tableIds: createTable._id,
+            const updateZone = await Zone.findByIdAndUpdate(
+              findDefaultZone?._id,
+              {
+                $push: {
+                  tableIds: createTable._id,
+                },
               },
-            },
-            { session },
-          );
+              { session },
+            );
+          }
         }
 
         // Find the associated zone using either internalZoneId or zoneId
@@ -380,7 +382,7 @@ const menuRouter = new Hono()
         );
       }
 
-      const menu = new Menu({ ...requestData });
+      const menu = new Menu({ ...requestData, default: true });
 
       if (sourceMenuId) {
         const sourceMenu = await Menu.findById(sourceMenuId);

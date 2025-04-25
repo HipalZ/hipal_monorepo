@@ -151,6 +151,7 @@ const imageBucketRouter = new Hono()
           categoryName: category.name,
           categoryId: category._id,
           images: images.map((image) => ({
+            _id: image._id,
             name: image.name,
             imageUrl: image.imageUrl,
           })),
@@ -168,6 +169,27 @@ const imageBucketRouter = new Hono()
     },
 
   )
+
+  .delete("delete_images", async (c) => {
+    const { imageIds } = await c.req.json();
+
+    if (!Array.isArray(imageIds) || imageIds.length === 0) {
+      return respond(c, "Image IDs are required", true, 400);
+    }
+
+    const deletedImages = await Image.deleteMany({ _id: { $in: imageIds } });
+    
+    if (deletedImages.deletedCount === 0) {
+      return respond(c, "No images found to delete", true, 404);
+    }
+
+    return respond(
+      c,
+      `${deletedImages.deletedCount} images deleted successfully`,
+      false,
+      200,
+    );
+  });
 
 
 export default imageBucketRouter;

@@ -134,11 +134,6 @@ const ChatCartComponent = ({ cart }: { cart: Cart[] }) => {
                                     {item?.dish?.name}
                                     <FoodType types={item?.dish?.types} />
                                 </div>
-                                {item?.dish?.description && (
-                                    <div className="text-xs text-gray-500">
-                                        {item?.dish?.description}
-                                    </div>
-                                )}
                                 {item?.portion && (
                                     <div className={"text-xs text-gray-500"}>
                                         Portion: {item?.portion}

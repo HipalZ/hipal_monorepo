@@ -54,7 +54,7 @@ const DynamicImageGrid = ({ images }: { images: IUniquelyDishes[] }) => {
 
   return (
     <figure className={cn(figureClass, "px-4")}>
-      {images.map((item, index) => (
+      {images?.map((item, index) => (
         <button
           type="button"
           style={{ position: "relative" }}

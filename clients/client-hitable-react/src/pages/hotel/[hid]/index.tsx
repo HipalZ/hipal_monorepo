@@ -3,7 +3,9 @@ import { NavItemsHotelEnum } from "@/components/types/hotelData";
 import { useHotelStore } from "@/components/store/useHotelStore";
 import SpinnerMemo from "@/components/atoms/loadingSpinner"
 import PopUp from "@/components/atoms/popUp";
+import CommonBottomButton from "@/components/atoms/bottomButton";
 
+const ViewCart = lazy(() => import("@/components/hotel/ViewCart"));
 const EscalationAlerts = lazy(() => import("@/components/hotel/EscalationAlerts"));
 const AlertHotel = lazy(() => import("@/components/hotel/alertHotel"));
 const HistoryHotel = lazy(() => import("@/components/hotel/historyHotel"));
@@ -14,7 +16,10 @@ const BookedRoomHotel = lazy(() => import("@/components/hotel/bookedRoomHotel"))
 const RoomsHotel = lazy(() => import("@/components/hotel/roomsHotel"));
 
 const MemoHotel = () => {
-    const { selectedNavItem, openRoomModal, setOpenRoomModal, roomData } = useHotelStore()
+    const { selectedNavItem, openRoomModal, setOpenRoomModal, roomData, openCartModal, setOpenCartModal } = useHotelStore()
+    const handleBack = () => {
+        setOpenCartModal(false);
+    }
     return (
         <>
             <NavbarHotel />
@@ -28,7 +33,7 @@ const MemoHotel = () => {
                     <AlertHotel />
                 </Suspense>
             )}
-            {selectedNavItem === NavItemsHotelEnum.Escalation &&(
+            {selectedNavItem === NavItemsHotelEnum.Escalation && (
                 <Suspense fallback={<SpinnerMemo />}>
                     <EscalationAlerts />
                 </Suspense>
@@ -58,6 +63,23 @@ const MemoHotel = () => {
                     </section>
                 </PopUp>
             )}
+            {openCartModal && (
+                <PopUp width="w-[30rem]" onClose={() => setOpenCartModal(false)} show={openCartModal} hide>
+                    <section className="overflow-y-scroll h-[90vh] bg-gray-50">
+                        <Suspense fallback={<SpinnerMemo />}>
+                            <ViewCart />
+                            <CommonBottomButton
+                                maxWidth="30rem"
+                                position="mid"
+                                shadow
+                                buttons={[
+                                    { text: "Back", onClick: handleBack, className: 'w-full rounded-md' },
+                                ]} />
+                        </Suspense>
+                    </section>
+                </PopUp>
+            )}
+
         </>
     )
 }
