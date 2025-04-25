@@ -3,6 +3,7 @@ import hotelALertRouter from "./alert";
 import hotelAmenitiesRouter from "./amenities";
 import roomBookRouter from "./book";
 import roomTypeRouter from "./hotelRoomType";
+import reportRouter from "./report";
 import restaurantRouter from "./restaurant";
 import roomRouter from "./rooms";
 import serviceRouter from "./service";
@@ -18,6 +19,7 @@ const hotelRouter = new Hono()
   .route("/book", roomBookRouter)
   .route("/amenities", hotelAmenitiesRouter)
   .route("/alert", hotelALertRouter)
-  .route("/room_type", roomTypeRouter);
+  .route("/room_type", roomTypeRouter)
+  .route("/report", reportRouter);
 
 export default hotelRouter;

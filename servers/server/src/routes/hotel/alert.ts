@@ -85,6 +85,13 @@ const scheduleAlertUpdate = (
         });
 
         if (alertData?.alertProgress === "ESCALATION") {
+          await HotelAlert.findByIdAndUpdate(
+            alertId,
+            {
+              isEscalated: true,
+            },
+            { new: true },
+          );
           const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
             businessId: alertData?.businessId,
           });
