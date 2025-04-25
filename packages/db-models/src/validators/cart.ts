@@ -1,16 +1,13 @@
-import mongoose from "mongoose";
 import { z } from "zod";
 import { dishSchema, portionSchema } from "./dish";
 
 // Define a custom ObjectId validator for mongoose
-const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
-  z
-    .string()
-    .refine((val) => mongoose.isValidObjectId(val), {
-      message: "Invalid ObjectId",
-    })
-    .transform((val) => new mongoose.Types.ObjectId(val)),
-);
+const ObjectIdSchema = z
+  .string()
+  .length(24, { message: "ObjectId must be 24 characters" })
+  .regex(/^[0-9a-fA-F]{24}$/, { message: "Invalid hex string" });
+
+
 
 // Define the cart item schema
 const CartItemSchema = z.object({

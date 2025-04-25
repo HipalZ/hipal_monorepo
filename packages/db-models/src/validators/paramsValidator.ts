@@ -1,18 +1,21 @@
-import mongoose from 'mongoose';
 import { z } from 'zod';
-import { UniquelyYours } from '../models';
 
-const objectIdValidation = (value: string) => mongoose.Schema.Types.ObjectId;
 
-const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid ID format');
+
+const ObjectIdSchema = z
+  .string()
+  .length(24, { message: "ObjectId must be 24 characters" })
+  .regex(/^[0-9a-fA-F]{24}$/, { message: "Invalid hex string" });
+
+
 
 export const paramsSchema = z
   .object({
-    id: objectIdSchema.optional(),
-    businessId: objectIdSchema.optional(),
-    tableId: objectIdSchema.optional(),
-    zoneId: objectIdSchema.optional(),
-    orderId: objectIdSchema.optional(),
+    id: ObjectIdSchema.optional(),
+    businessId: ObjectIdSchema.optional(),
+    tableId: ObjectIdSchema.optional(),
+    zoneId: ObjectIdSchema.optional(),
+    orderId: ObjectIdSchema.optional(),
     alertId: z.string().optional(),
     pageNumber: z.string().optional(),
     alertType: z.enum(['ONLINE', 'OFFLINE', 'WAITER', 'ALL']).optional(),
@@ -45,7 +48,7 @@ export const paramsSchema = z
   .refine(
     (data) => {
       const keys = Object.keys(data) as (keyof typeof data)[];
-      return keys.every((key) => !data[key] || objectIdValidation(data[key] as string));
+      return keys.every((key) => !data[key]);
     },
     {
       message: 'Invalid ID format',

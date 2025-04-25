@@ -1,17 +1,9 @@
-import mongoose from "mongoose";
 import { z } from "zod";
 
-// Optimized ObjectId schema using a union of a valid instance and a valid string
-export const objectIdSchema = z.union([
-  z.instanceof(mongoose.Types.ObjectId),
-  z
-    .string()
-    .refine((val) => mongoose.Types.ObjectId.isValid(val), {
-      message: "Invalid ObjectId",
-    })
-    .transform((val) => new mongoose.Types.ObjectId(val)),
-]);
-
+export const ObjectIdSchema = z
+  .string()
+  .length(24, { message: "ObjectId must be 24 characters" })
+  .regex(/^[0-9a-fA-F]{24}$/, { message: "Invalid hex string" });
 export const MENU_TYPES = { MAIN_SUB_DISH: 1, SUB_DISH: 2 } as const;
 export type MenuType = (typeof MENU_TYPES)[keyof typeof MENU_TYPES];
 
@@ -42,9 +34,9 @@ export type CardLayout =
 
 export const MenuSchema = z.object({
   name: z.string().min(1).max(50),
-  businessId: objectIdSchema,
+  businessId: ObjectIdSchema,
   zoneIds: z
-    .array(objectIdSchema)
+    .array(ObjectIdSchema)
     .nonempty({ message: "zoneIds cannot be empty" }),
   menuType: z.nativeEnum(MENU_TYPES).default(MENU_TYPES.MAIN_SUB_DISH),
   days: z
@@ -65,7 +57,7 @@ export const MenuSchema = z.object({
   cardLayout: z.nativeEnum(CARD_LAYOUT_TYPES).default(CARD_LAYOUT_TYPES.GRID),
   startTime: z.coerce.number().optional(),
   endTime: z.coerce.number().optional(),
-  sourceMenuId: objectIdSchema.optional(),
+  sourceMenuId: ObjectIdSchema.optional(),
   isActive: z.boolean().optional().default(false),
   isDeleted: z.boolean().optional().default(false),
   primaryColor: z.string().min(1).max(7),
@@ -75,7 +67,7 @@ export const MenuSchema = z.object({
 
 export const UpdateMenuSchema = z.object({
   name: z.string().min(1).max(50).optional(),
-  zoneIds: z.array(objectIdSchema).optional(),
+  zoneIds: z.array(ObjectIdSchema).optional(),
   menuType: z.nativeEnum(MENU_TYPES).optional(),
   days: z.nativeEnum(MENU_DAYS).array().optional(),
   categoryLayout: z.nativeEnum(CATEGORY_LAYOUT_TYPES).optional(),
@@ -84,7 +76,7 @@ export const UpdateMenuSchema = z.object({
   endTime: z.coerce.number().optional(),
   isActive: z.boolean().optional().default(false),
   isDeleted: z.boolean().optional().default(false),
-  menuId: objectIdSchema,
+  menuId: ObjectIdSchema,
   primaryColor: z.string().min(1).max(7).optional(),
   secondaryColor: z.string().min(1).max(7).optional(),
 });
