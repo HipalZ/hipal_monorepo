@@ -1,7 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Sun, Coffee, Sunset, Moon } from "lucide-react";
+import {  Sun, Coffee, Sunset, Moon } from "lucide-react";
 import { toast } from "react-hot-toast";
 import MemoizedHeader from "@/components/molecules/header";
 import { Card } from "@/components/ui/card";
@@ -13,26 +13,13 @@ import {
   useTogglePeriod,
   useToggleAllPeriodsForDay,
 } from "@/hooks/useBusinessPeriodConfig";
-import { useCreateCoupon } from "@/hooks/useBusinessCoupons";
+import { type CouponCreatePayload, useCreateCoupon } from "@/hooks/useBusinessCoupons";
 import { useQueryClient } from "@tanstack/react-query";
 
 // Import components
 import FilterBar from "@/components/period-management/FilterBar";
 import DayCard from "@/components/period-management/DayCard";
 import PeriodGroup from "@/components/period-management/PeriodGroup";
-
-// 3D Icon component
-const Icon3D = ({
-  icon: Icon,
-  color = "primary",
-  size = 18,
-}: { icon: any; color?: string; size?: number }) => {
-  return (
-    <div className="relative z-0 text-primary">
-      <Icon size={size} strokeWidth={2} />
-    </div>
-  );
-};
 
 // Period icons mapping
 const periodIcons = [
@@ -44,13 +31,13 @@ const periodIcons = [
 
 // Day colors for visual distinction
 const dayColors = [
-  "bg-red-50 border-red-100", // Sunday
-  "bg-blue-50 border-blue-100", // Monday
-  "bg-green-50 border-green-100", // Tuesday
-  "bg-purple-50 border-purple-100", // Wednesday
-  "bg-yellow-50 border-yellow-100", // Thursday
-  "bg-pink-50 border-pink-100", // Friday
-  "bg-teal-50 border-teal-100", // Saturday
+  "bg-white border-red-100", // Sunday
+  "bg-gray-50 border-blue-100", // Monday
+  "bg-white border-green-100", // Tuesday
+  "bg-gray-50 border-purple-100", // Wednesday
+  "bg-white border-yellow-100", // Thursday
+  "bg-gray-50 border-pink-100", // Friday
+  "bg-white border-teal-100", // Saturday
 ];
 
 /**
@@ -148,7 +135,7 @@ const PeriodManagement = () => {
 
   // Handle create coupon
   const handleCreateCoupon = useCallback(
-    async (payload: any) => {
+    async (payload: CouponCreatePayload) => {
       setIsActionInProgress(true);
       try {
         await createCoupon({ businessId, payload });

@@ -2,8 +2,6 @@ import { memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { cn } from "@hi/common";
-import useBusinessData from "@/components/store/useBusinessData";
-
 interface HeaderProps {
   leftIcon?: JSX.Element;
   centerImage?: string;
@@ -75,10 +73,10 @@ const Header: React.FC<HeaderProps> = memo(
                   : "absolute transform -translate-x-1/2 left-1/2 top-6",
                 "text-2xl font-medium truncate",
                 headingColor && `text-[${headingColor}]`,
-                "max-w-[16ch]",
+                "max-w-[15rem] lg:max-w-[20rem] xl:max-w-[25rem] 2xl:max-w-[30rem]",
               )}
             >
-              {title}
+              {title} 
             </span>
           </div>
           <div className="absolute text-sm right-6">{rightButton}</div>

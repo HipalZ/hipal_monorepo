@@ -1,10 +1,11 @@
-import { useCallback,memo} from "react"
+import { useCallback, memo } from "react"
 import { motion } from "framer-motion"
 import { ToggleLeft, ToggleRight } from "lucide-react"
 import { CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import PeriodCard from "./PeriodCard"
 import type { PeriodConfig } from "@/hooks/useBusinessPeriodConfig"
+import { CouponCreatePayload } from "@/hooks/useBusinessCoupons"
 
 type DayCardProps = {
   dayOfWeek: string
@@ -26,11 +27,11 @@ type DayCardProps = {
     baseCharge: number,
     redeemableCoverCharge: number,
     isOpen: boolean,
-    couponAllocations?: any[],
+    couponAllocations?: string[],
   ) => Promise<void>
   isActionInProgress: boolean
   businessId: string
-  onCreateCoupon: (payload: any) => Promise<void>
+  onCreateCoupon: (payload: CouponCreatePayload) => Promise<void>
   isCreatingCoupon: boolean
 }
 
@@ -49,7 +50,7 @@ const DayCard = ({
   businessId,
   onCreateCoupon,
   isCreatingCoupon,
-}:DayCardProps) => {
+}: DayCardProps) => {
   const handleToggleAllPeriodsForDay = useCallback(() => {
     onToggleAllPeriodsForDay(dayIndex)
   }, [dayIndex, onToggleAllPeriodsForDay])
@@ -64,33 +65,33 @@ const DayCard = ({
       <CardHeader className="pb-2 pt-3 px-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className={`flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white`}>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
               <span className="text-xs font-medium">{dayName.substring(0, 3)}</span>
             </div>
             <CardTitle className="text-lg">{dayName}</CardTitle>
+            <Button
+              variant={isAnyPeriodOpen ? "outline" : "default"}
+              size="sm"
+              onClick={handleToggleAllPeriodsForDay}
+              disabled={isActionInProgress}
+              className="rounded-lg shadow-sm h-8 text-xs"
+            >
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1">
+                {isAnyPeriodOpen ? (
+                  <>
+                    <ToggleLeft size={14} />
+                    <span>Close All Periods</span>
+                  </>
+                ) : (
+                  <>
+                    <ToggleRight size={14} />
+                    <span>Open All Periods</span>
+                  </>
+                )}
+              </motion.div>
+            </Button>
           </div>
 
-          <Button
-            variant={isAnyPeriodOpen ? "outline" : "default"}
-            size="sm"
-            onClick={handleToggleAllPeriodsForDay}
-            disabled={isActionInProgress}
-            className="rounded-lg shadow-sm h-8 text-xs"
-          >
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1">
-              {isAnyPeriodOpen ? (
-                <>
-                  <ToggleLeft size={14} />
-                  <span>Close All Periods</span>
-                </>
-              ) : (
-                <>
-                  <ToggleRight size={14} />
-                  <span>Open All Periods</span>
-                </>
-              )}
-            </motion.div>
-          </Button>
         </div>
       </CardHeader>
 
