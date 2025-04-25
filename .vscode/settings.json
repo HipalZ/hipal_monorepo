@@ -20,7 +20,7 @@
     "editor.defaultFormatter": "biomejs.biome"
   },
   "[typescript]": {
-    "editor.defaultFormatter": "biomejs.biome"
+    "editor.defaultFormatter": "vscode.typescript-language-features"
   },
   "diffEditor.ignoreTrimWhitespace": false,
   "cSpell.userWords": [
@@ -52,5 +52,5 @@
   "editor.formatOnSave": true,
   "workbench.settings.applyToAllProfiles": [],
   "cSpell.words": ["Sandwhich"],
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "../node_modules/typescript/lib"
 }
