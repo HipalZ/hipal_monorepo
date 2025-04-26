@@ -17,12 +17,6 @@ export const posSchema = z.object({
       message: "name must be atmost 100 characters long",
     }),
 
-  secretKey: z.string().min(3).max(200),
-  accessKey: z.string().min(3).max(200),
-  authToken: z.string().min(3).max(200),
-  restId: z.string().min(3).max(200),
-  businessId: ObjectIdSchema,
-
   isDeleted: z.boolean().default(false).optional(),
 });
 
