@@ -118,6 +118,10 @@ const KotOrderSchema = new Schema<KotOrderType>(
       type: Boolean,
       default: false,
     },
+    message: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,
