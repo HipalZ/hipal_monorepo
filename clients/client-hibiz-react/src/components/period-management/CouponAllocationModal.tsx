@@ -260,18 +260,18 @@ const CouponAllocationModal = ({
             maxWidth="30rem"
             buttons={[
               {
-                text: "Cancel",
+                text: "",
                 onClick: () => onOpenChange(false),
-                disabled: isLoading,
+                disable: isLoading,
                 isBackButton: true,
-                className:"pl-3 rounded-md"
+                className:"pl-3 rounded-md w-full"
               },
               {
                 text: isLoading ? "Saving..." : "Save Allocations",
                 onClick: handleSave,
                 isLoading: isLoading,
                 swipe: true,
-                className:"rounded-md w-full"
+                className:"rounded-md w-full !ml-0"
               },
             ]}
           />

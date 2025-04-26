@@ -14,23 +14,16 @@
   "typescript.updateImportsOnFileMove.enabled": "always",
   "javascript.updateImportsOnFileMove.enabled": "always",
   "[typescriptreact]": {
-    "editor.defaultFormatter": "vscode.typescript-language-features"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[javascript]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
   "[typescript]": {
-    "editor.defaultFormatter": "vscode.typescript-language-features"
+    "editor.defaultFormatter": "biomejs.biome"
   },
   "diffEditor.ignoreTrimWhitespace": false,
-  "cSpell.userWords": [
-    "Dataurl",
-    "Defence",
-    "Hipal",
-    "signup",
-    "splide",
-    "splidejs"
-  ],
+  "cSpell.userWords": ["Dataurl", "Defence", "Hipal", "signup", "splide", "splidejs"],
   "[json]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
@@ -38,7 +31,7 @@
   "github.copilot.editor.enableAutoCompletions": true,
   "remote.autoForwardPortsSource": "hybrid",
   "[jsonc]": {
-    "editor.defaultFormatter": "biomejs.biome"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[css]": {
     "editor.defaultFormatter": "biomejs.biome"
@@ -48,7 +41,7 @@
   "editor.fontLigatures": true,
   "settingsSync.keybindingsPerPlatform": false,
   "workbench.iconTheme": "material-icon-theme",
-  "workbench.colorTheme": "Dracula",
+  "workbench.colorTheme": "Default Dark Modern",
   "editor.formatOnSave": true,
   "workbench.settings.applyToAllProfiles": [],
   "cSpell.words": ["Sandwhich"],

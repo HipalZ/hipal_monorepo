@@ -404,7 +404,7 @@ const PeriodManagement = () => {
       </header>
 
       {/* Main content */}
-      <div className="container p-4 mx-auto">
+      <div className="container py-4 mx-auto">
         {/* Loading indicator */}
         <AnimatePresence>
           {showLoading && (

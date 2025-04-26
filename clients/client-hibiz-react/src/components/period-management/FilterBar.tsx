@@ -1,33 +1,157 @@
-import { memo, useState } from "react"
-import { Filter, Calendar, Clock, CheckCircle, XCircle, Tag, ChevronUp } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { getDayName } from "@/components/utils/timeUtils"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getDayName } from '@/components/utils/timeUtils';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Calendar, CheckCircle, ChevronUp, Clock, Filter, Tag, X, XCircle } from 'lucide-react';
+import { memo, useCallback, useState } from 'react';
 
 type FilterBarProps = {
-  activeTab: string
-  selectedDays: string[]
-  selectedPeriods: string[]
+  activeTab: string;
+  selectedDays: string[];
+  selectedPeriods: string[];
   periodIcons: Array<{
-    icon: any
-    label: string
-    color: string
-  }>
-  onTabChange: (value: string) => void
-  onDayChange: (value: string) => void
-  onPeriodChange: (value: string) => void
-  isMobile: boolean
-  statusFilter?: "all" | "open" | "closed"
-  onStatusFilterChange?: (status: "all" | "open" | "closed") => void
-  couponFilter?: "all" | "with" | "without"
-  onCouponFilterChange?: (status: "all" | "with" | "without") => void
+    icon: any;
+    label: string;
+    color: string;
+  }>;
+  onTabChange: (value: string) => void;
+  onDayChange: (value: string) => void;
+  onPeriodChange: (value: string) => void;
+  isMobile: boolean;
+  statusFilter?: 'all' | 'open' | 'closed';
+  onStatusFilterChange?: (status: 'all' | 'open' | 'closed') => void;
+  couponFilter?: 'all' | 'with' | 'without';
+  onCouponFilterChange?: (status: 'all' | 'with' | 'without') => void;
+};
+
+// Add a helper function to count active filters at the top of the component
+const countActiveFilters = (selectedDays: string[], selectedPeriods: string[], statusFilter: string, couponFilter: string) => {
+  let count = 0;
+
+  // Count day filters if not "all"
+  if (!selectedDays.includes('all')) {
+    count += selectedDays.length;
+  }
+
+  // Count period filters if not "all"
+  if (!selectedPeriods.includes('all')) {
+    count += selectedPeriods.length;
+  }
+
+  // Count status filter if not "all"
+  if (statusFilter !== 'all') {
+    count += 1;
+  }
+
+  // Count coupon filter if not "all"
+  if (couponFilter !== 'all') {
+    count += 1;
+  }
+
+  return count;
+};
+
+interface ActiveFiltersProps {
+  selectedDays: string[];
+  selectedPeriods: string[];
+  statusFilter: string;
+  couponFilter: string;
+  onDayChange: (day: string) => void;
+  onPeriodChange: (period: string) => void;
+  onStatusFilterChange: (status: string) => void;
+  onCouponFilterChange: (status: string) => void;
+  periodIcons: Array<{
+    icon: any;
+    label: string;
+    color: string;
+  }>;
 }
+
+// Add a component to display active filters
+const ActiveFilters = ({
+  selectedDays,
+  selectedPeriods,
+  statusFilter,
+  couponFilter,
+  onDayChange,
+  onPeriodChange,
+  onStatusFilterChange,
+  onCouponFilterChange,
+  periodIcons,
+}: ActiveFiltersProps) => {
+  const hasActiveFilters = !selectedDays.includes('all') || !selectedPeriods.includes('all') || statusFilter !== 'all' || couponFilter !== 'all';
+
+  if (!hasActiveFilters) return null;
+
+  const clearAllBtn = useCallback(() => {
+    onDayChange('all');
+    onPeriodChange('all');
+    onStatusFilterChange('all');
+    onCouponFilterChange('all');
+  }, []);
+
+  return (
+    <div className="md:hide-scrollbar flex flex-nowrap gap-2 overflow-x-auto !text-nowrap px-4 py-2 md:px-0">
+      {/* Day filters */}
+      {!selectedDays.includes('all') &&
+        selectedDays.map((day) => (
+          <div key={`day-${day}`} className="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-2 py-1 text-xs">
+            <span>{getDayName(Number(day))}</span>
+            <button type="button" onClick={() => onDayChange(day)} className="hover:bg-primary/20 rounded-full p-0.5">
+              <X size={14} />
+            </button>
+          </div>
+        ))}
+
+      {/* Period filters */}
+      {!selectedPeriods.includes('all') &&
+        selectedPeriods.map((period) => {
+          const periodInfo = periodIcons[Number(period)];
+          const PeriodIcon = periodInfo?.icon;
+          return (
+            <div key={`period-${period}`} className="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-2 py-1 text-xs">
+              {PeriodIcon && <PeriodIcon size={10} className={periodInfo.color} />}
+              <span>{periodInfo?.label || `Period ${period}`}</span>
+              <button type="button" onClick={() => onPeriodChange(period)} className="hover:bg-primary/20 rounded-full p-0.5">
+                <X size={14} />
+              </button>
+            </div>
+          );
+        })}
+
+      {/* Status filter */}
+      {statusFilter !== 'all' && (
+        <div className="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-2 py-1 text-xs">
+          <span>{statusFilter === 'open' ? 'Open Only' : 'Closed Only'}</span>
+          <button type="button" onClick={() => onStatusFilterChange('all')} className="hover:bg-primary/20 rounded-full p-0.5">
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Coupon filter */}
+      {couponFilter !== 'all' && (
+        <div className="bg-primary/10 text-primary flex items-center gap-1 rounded-full px-2 py-1 text-xs">
+          <span>{couponFilter === 'with' ? 'With Coupons' : 'Without Coupons'}</span>
+          <button type="button" onClick={() => onCouponFilterChange('all')} className="hover:bg-primary/20 rounded-full p-0.5">
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Clear all button */}
+      <Button size="sm" type="button" onClick={clearAllBtn} variant="outline">
+        Clear all
+        <X />
+      </Button>
+    </div>
+  );
+};
 
 const FilterBar = ({
   activeTab,
@@ -38,98 +162,110 @@ const FilterBar = ({
   onDayChange,
   onPeriodChange,
   isMobile,
-  statusFilter = "all",
-  onStatusFilterChange = () => { },
-  couponFilter = "all",
-  onCouponFilterChange = () => { },
+  statusFilter = 'all',
+  onStatusFilterChange = () => {},
+  couponFilter = 'all',
+  onCouponFilterChange = () => {},
 }: FilterBarProps) => {
   // For desktop view, make it sticky and collapsible
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const renderFilterContent = () => (
     <Tabs defaultValue="by-day" value={activeTab} onValueChange={onTabChange}>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <section>
-          <Label className="text-xs font-semibold text-gray-700 mb-2 -mt-4 block">Filter by Day or Period</Label>
-          <TabsList className="grid w-full h-auto grid-cols-2 p-1 sm:w-auto">
-            <TabsTrigger
-              value="by-day"
-              className="flex items-center gap-1 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-white"
-            >
-              <Calendar size={14} />
-              <span>By Day</span>
-            </TabsTrigger>
-            <TabsTrigger
-              value="by-period"
-              className="flex items-center gap-1 py-1.5 text-xs data-[state=active]:bg-primary data-[state=active]:text-white"
-            >
-              <Clock size={14} />
-              <span>By Period</span>
-            </TabsTrigger>
-          </TabsList>
-
-        </section>
-        {/* Status filter (open/closed) */}
-        <div className="mb-4">
-          <Label className="text-xs font-semibold text-gray-700 mb-2 block">Filter by Status</Label>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant={statusFilter === "all" ? "default" : "outline"}
-              onClick={() => onStatusFilterChange("all")}
-              className="text-xs h-8"
-            >
-              All Periods
-            </Button>
-            <Button
-              size="sm"
-              variant={statusFilter === "open" ? "default" : "outline"}
-              onClick={() => onStatusFilterChange("open")}
-              className="text-xs h-8 flex items-center gap-1"
-            >
-              <CheckCircle size={12} className="text-green-500" />
-              Open Only
-            </Button>
-            <Button
-              size="sm"
-              variant={statusFilter === "closed" ? "default" : "outline"}
-              onClick={() => onStatusFilterChange("closed")}
-              className="text-xs h-8 flex items-center gap-1"
-            >
-              <XCircle size={12} className="text-red-500" />
-              Closed Only
-            </Button>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2">
+          <motion.div
+            className="bg-primary/10 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg shadow-sm"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <div className="text-primary relative z-10">
+              <Filter size={18} strokeWidth={2} />
+            </div>
+          </motion.div>
+          <div>
+            <h3 className="text-sm font-medium text-gray-800">View Options</h3>
+            <p className="text-xs text-gray-500">Choose how to organize and filter</p>
           </div>
         </div>
+
+        <TabsList className="grid h-auto w-full grid-cols-2 p-1 sm:w-auto">
+          <TabsTrigger
+            value="by-day"
+            className="data-[state=active]:bg-primary flex items-center gap-1 py-1.5 text-xs data-[state=active]:text-white"
+          >
+            <Calendar size={14} />
+            <span>By Day</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="by-period"
+            className="data-[state=active]:bg-primary flex items-center gap-1 py-1.5 text-xs data-[state=active]:text-white"
+          >
+            <Clock size={14} />
+            <span>By Period</span>
+          </TabsTrigger>
+        </TabsList>
       </div>
 
-
-      {/* Coupon filter (with/without coupons) */}
-      <div className="mb-2">
-        <Label className="text-xs font-semibold text-gray-700 mb-2 block">Filter by Coupons</Label>
+      {/* Status filter (open/closed) */}
+      <div className="mb-4">
+        <Label className="mb-2 block text-xs font-medium text-gray-700">Filter by Status</Label>
         <div className="flex flex-wrap gap-2">
           <Button
             size="sm"
-            variant={couponFilter === "all" ? "default" : "outline"}
-            onClick={() => onCouponFilterChange("all")}
-            className="text-xs h-8"
+            variant={statusFilter === 'all' ? 'default' : 'outline'}
+            onClick={() => onStatusFilterChange('all')}
+            className="h-8 text-xs"
           >
             All Periods
           </Button>
           <Button
             size="sm"
-            variant={couponFilter === "with" ? "default" : "outline"}
-            onClick={() => onCouponFilterChange("with")}
-            className="text-xs h-8 flex items-center gap-1"
+            variant={statusFilter === 'open' ? 'default' : 'outline'}
+            onClick={() => onStatusFilterChange('open')}
+            className="flex h-8 items-center gap-1 text-xs"
+          >
+            <CheckCircle size={12} className="text-green-500" />
+            Open Only
+          </Button>
+          <Button
+            size="sm"
+            variant={statusFilter === 'closed' ? 'default' : 'outline'}
+            onClick={() => onStatusFilterChange('closed')}
+            className="flex h-8 items-center gap-1 text-xs"
+          >
+            <XCircle size={12} className="text-red-500" />
+            Closed Only
+          </Button>
+        </div>
+      </div>
+
+      {/* Coupon filter (with/without coupons) */}
+      <div className="mb-4">
+        <Label className="mb-2 block text-xs font-medium text-gray-700">Filter by Coupons</Label>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant={couponFilter === 'all' ? 'default' : 'outline'}
+            onClick={() => onCouponFilterChange('all')}
+            className="h-8 text-xs"
+          >
+            All Periods
+          </Button>
+          <Button
+            size="sm"
+            variant={couponFilter === 'with' ? 'default' : 'outline'}
+            onClick={() => onCouponFilterChange('with')}
+            className="flex h-8 items-center gap-1 text-xs"
           >
             <Tag size={12} className="text-purple-500" />
             With Coupons
           </Button>
           <Button
             size="sm"
-            variant={couponFilter === "without" ? "default" : "outline"}
-            onClick={() => onCouponFilterChange("without")}
-            className="text-xs h-8 flex items-center gap-1"
+            variant={couponFilter === 'without' ? 'default' : 'outline'}
+            onClick={() => onCouponFilterChange('without')}
+            className="flex h-8 items-center gap-1 text-xs"
           >
             <Tag size={12} className="text-gray-400" />
             Without Coupons
@@ -137,16 +273,12 @@ const FilterBar = ({
         </div>
       </div>
 
-      {activeTab === "by-day" ? (
+      {activeTab === 'by-day' ? (
         <div className="space-y-3">
-          <Label className="text-xs font-semibold text-gray-700">Filter by Days</Label>
+          <Label className="text-xs font-medium text-gray-700">Filter by Days</Label>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <div className="flex items-center space-x-2">
-              <Checkbox
-                id="all-days"
-                checked={selectedDays.includes("all")}
-                onCheckedChange={() => onDayChange("all")}
-              />
+              <Checkbox id="all-days" checked={selectedDays.includes('all')} onCheckedChange={() => onDayChange('all')} />
               <Label htmlFor="all-days" className="text-xs">
                 All Days
               </Label>
@@ -170,17 +302,13 @@ const FilterBar = ({
           <Label className="text-xs font-medium text-gray-700">Filter by Periods</Label>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <div className="flex items-center space-x-2">
-              <Checkbox
-                id="all-periods"
-                checked={selectedPeriods.includes("all")}
-                onCheckedChange={() => onPeriodChange("all")}
-              />
+              <Checkbox id="all-periods" checked={selectedPeriods.includes('all')} onCheckedChange={() => onPeriodChange('all')} />
               <Label htmlFor="all-periods" className="text-xs">
                 All Periods
               </Label>
             </div>
             {periodIcons.map((period, index) => {
-              const PeriodIcon = period.icon
+              const PeriodIcon = period.icon;
               return (
                 <div key={index} className="flex items-center space-x-2">
                   <Checkbox
@@ -193,66 +321,91 @@ const FilterBar = ({
                     {period.label}
                   </Label>
                 </div>
-              )
+              );
             })}
           </div>
         </div>
       )}
     </Tabs>
-  )
+  );
 
   if (isMobile) {
     return (
       <>
-        {/* Fixed bottom filter button for mobile */}
-        <div className="fixed z-40 bottom-4 right-4 sm:hidden">
+        <div className="fixed bottom-20 right-4 z-50 sm:hidden">
           <Sheet>
             <SheetTrigger asChild>
-              <Button size="icon" className="w-12 h-12 rounded-full shadow-lg bg-primary hover:bg-primary/90">
-                <Filter size={20} />
-              </Button>
+              <div className="relative">
+                <Button size="icon" className="bg-primary hover:bg-primary/90 h-12 w-12 rounded-full shadow-lg">
+                  <Filter size={20} />
+                </Button>
+                {countActiveFilters(selectedDays, selectedPeriods, statusFilter, couponFilter) > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                    {countActiveFilters(selectedDays, selectedPeriods, statusFilter, couponFilter)}
+                  </span>
+                )}
+              </div>
             </SheetTrigger>
-            <SheetContent side="bottom" className="h-[80vh] rounded-t-xl pt-4 overflow-hidden">
-              <div className="flex flex-col h-full">
+            <SheetContent side="bottom" className="h-[80vh] overflow-hidden rounded-t-xl pt-4">
+              <div className="flex h-full flex-col">
                 <div className="px-1 pb-2 text-sm font-medium">Filters</div>
-                <ScrollArea className="flex-1 pr-4 -mr-4 pb-16">{renderFilterContent()}</ScrollArea>
-                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+                <ScrollArea className="-mr-4 flex-1 pb-16 pr-4">{renderFilterContent()}</ScrollArea>
+                <div className="from-background pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t to-transparent" />
               </div>
             </SheetContent>
           </Sheet>
-        </div>
 
-        {/* Hidden on mobile, visible on desktop */}
+          {/* Mobile active filters indicator */}
+          {countActiveFilters(selectedDays, selectedPeriods, statusFilter, couponFilter) > 0 && (
+            <div className="animate-in fade-in slide-in-from-bottom fixed bottom-4 left-4 right-4 z-30 rounded-lg bg-white p-2 shadow-lg duration-300">
+              <ActiveFilters
+                selectedDays={selectedDays}
+                selectedPeriods={selectedPeriods}
+                statusFilter={statusFilter}
+                couponFilter={couponFilter}
+                onDayChange={onDayChange}
+                onPeriodChange={onPeriodChange}
+                onStatusFilterChange={onStatusFilterChange}
+                onCouponFilterChange={onCouponFilterChange}
+                periodIcons={periodIcons}
+              />
+            </div>
+          )}
+        </div>
         <div className="hidden sm:block">
           <Card className="mb-5 shadow-sm">
             <CardContent className="p-4">{renderFilterContent()}</CardContent>
           </Card>
         </div>
       </>
-    )
+    );
   }
 
   return (
-    <div className="sticky top-[4.8rem] rounded-2xl z-50 p-2 mb-4 bg-[#00000010] backdrop-blur-xl">
-      <Card className="shadow-sm overflow-hidden">
+    <div className="sticky top-[5rem] p-2 bg-[#00000010] backdrop-blur-md rounded-xl z-30 mb-5">
+      <Card className="overflow-hidden shadow-sm">
         <div
-          className="flex items-center justify-between p-3 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
+          className="flex cursor-pointer items-center justify-between bg-gray-50 p-3 transition-colors hover:bg-gray-100"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              setIsCollapsed(!isCollapsed)
-            }
-          }}
+          onKeyDown={() => setIsCollapsed(!isCollapsed)}
+          role="button"
         >
           <div className="flex items-center gap-2">
             <motion.div
-              className="flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10"
+              className="bg-primary/10 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <Filter size={16} className="text-primary" />
             </motion.div>
-            <h3 className="text-sm font-medium text-gray-800">Filters & View Options</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-medium text-gray-800">Filters & View Options</h3>
+              {countActiveFilters(selectedDays, selectedPeriods, statusFilter, couponFilter) > 0 && (
+                <span className="bg-primary rounded-full px-2 py-0.5 text-xs text-white">
+                  {countActiveFilters(selectedDays, selectedPeriods, statusFilter, couponFilter)}
+                </span>
+              )}
+            </div>
           </div>
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
             <motion.div animate={{ rotate: isCollapsed ? 180 : 0 }} transition={{ duration: 0.3 }}>
@@ -265,17 +418,34 @@ const FilterBar = ({
           {!isCollapsed && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
+              animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <CardContent className="p-4 border-t border-gray-100">{renderFilterContent()}</CardContent>
+              <CardContent className="border-t border-gray-100 p-4">{renderFilterContent()}</CardContent>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Show active filters when collapsed */}
+        {isCollapsed && countActiveFilters(selectedDays, selectedPeriods, statusFilter, couponFilter) > 0 && (
+          <div className="border-t border-gray-100 px-4 py-2">
+            <ActiveFilters
+              selectedDays={selectedDays}
+              selectedPeriods={selectedPeriods}
+              statusFilter={statusFilter}
+              couponFilter={couponFilter}
+              onDayChange={onDayChange}
+              onPeriodChange={onPeriodChange}
+              onStatusFilterChange={onStatusFilterChange}
+              onCouponFilterChange={onCouponFilterChange}
+              periodIcons={periodIcons}
+            />
+          </div>
+        )}
       </Card>
     </div>
-  )
-}
+  );
+};
 
-export default memo(FilterBar)
+export default memo(FilterBar);

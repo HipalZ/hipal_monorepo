@@ -57,7 +57,7 @@ const CouponManagement = () => {
       </header>
 
       {/* Main content */}
-      <div className="container px-4 py-8 mx-auto">
+      <div className="container p-4 mx-auto">
         {/* Loading indicator */}
         <AnimatePresence>
           {(isLoading || isActionInProgress || isCreating || isUpdating) && (

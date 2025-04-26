@@ -57,41 +57,40 @@ const DayCard = ({
 
   return (
     <motion.div
-      className={`shadow-sm overflow-hidden border rounded-xl ${dayColors[dayIndex]}`}
+      className={`shadow-sm overflow-hidden border lg:rounded-xl ${dayColors[dayIndex]}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       <CardHeader className="pb-2 pt-3 px-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-2">
+          <section className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
               <span className="text-xs font-medium">{dayName.substring(0, 3)}</span>
             </div>
             <CardTitle className="text-lg">{dayName}</CardTitle>
-            <Button
-              variant={isAnyPeriodOpen ? "outline" : "default"}
-              size="sm"
-              onClick={handleToggleAllPeriodsForDay}
-              disabled={isActionInProgress}
-              className="rounded-lg shadow-sm h-8 text-xs"
-            >
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1">
-                {isAnyPeriodOpen ? (
-                  <>
-                    <ToggleLeft size={14} />
-                    <span>Close All Periods</span>
-                  </>
-                ) : (
-                  <>
-                    <ToggleRight size={14} />
-                    <span>Open All Periods</span>
-                  </>
-                )}
-              </motion.div>
-            </Button>
-          </div>
-
+          </section>
+          <Button
+            variant={isAnyPeriodOpen ? "outline" : "default"}
+            size="sm"
+            onClick={handleToggleAllPeriodsForDay}
+            disabled={isActionInProgress}
+            className="rounded-lg shadow-sm h-8 text-xs"
+          >
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="flex items-center gap-1">
+              {isAnyPeriodOpen ? (
+                <>
+                  <ToggleLeft size={14} />
+                  <span>Close All Periods</span>
+                </>
+              ) : (
+                <>
+                  <ToggleRight size={14} />
+                  <span>Open All Periods</span>
+                </>
+              )}
+            </motion.div>
+          </Button>
         </div>
       </CardHeader>
 
