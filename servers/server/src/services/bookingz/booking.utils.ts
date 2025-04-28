@@ -62,3 +62,16 @@ export const defaultPeriodRange = (p: number) => {
       throw new Error("Invalid period");
   }
 };
+
+
+/** ─────────── Build slots ─────────── */
+export const buildSlots = (start: string, end: string) => {
+  const slots: string[] = [];
+  let m = parseTimeToMinutes(start);
+  const endM = parseTimeToMinutes(end);
+  while (m < endM) {
+    slots.push(formatMinutes(m));
+    m += 30;
+  }
+  return slots;
+}

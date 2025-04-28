@@ -1,5 +1,6 @@
+// packages/db-models/src/models/bookingz/booking.ts
 import type { Document, Types } from "mongoose";
-import { Schema, model } from "mongoose";
+import mongoose, { Schema, model } from "mongoose";
 import { z } from "zod";
 import {
   dateSchema,
@@ -9,19 +10,19 @@ import {
   startTimeValidator,
 } from "./utils";
 
-// Zod schema for Booking with half‑hour validation for the "slot" field
 export const bookingZodSchema = z
   .object({
-    customerId: z.string().nullable(), // Optional; can be further validated as ObjectId if needed
+    customerId: z.string().nullable(),
     createdByUserId: requiredObjectIdString("Created By User ID"),
     businessId: requiredObjectIdString("Business ID"),
     bookingDate: dateSchema,
     slot: startTimeValidator,
     period: z.number({ required_error: "Period is required" }),
-    numberOfGuests: z.number({
-      required_error: "Number of guests is required",
-    }),
-    coupon: z.any().optional(), // Snapshot of coupon details
+    numberOfGuests: z.number({ required_error: "Number of guests is required" }),
+    coupon: z.any().optional(),
+    bookingBillPerPerson: z
+      .number({ required_error: "Booking bill per person is required" }),
+    redeemableCoverChargePerPerson: z.number().default(0),
     bookingBill: z.number({ required_error: "Booking bill is required" }),
     redeemableCoverCharge: z.number().default(0),
     status: z.enum([
@@ -40,6 +41,7 @@ export const bookingZodSchema = z
     qrCode: z.string().optional(),
     uniqueCode: z.string().optional(),
     bookingPaymentId: z.string().optional(),
+   isPaid: z.boolean().default(false),
     checkInCount: z.number().default(0),
     minCheckInTime: z.date(),
     maxCheckInTime: z.date(),
@@ -48,7 +50,6 @@ export const bookingZodSchema = z
   })
   .strict();
 
-// TypeScript interface for a Booking document
 export interface IBooking extends Document {
   customerId: Types.ObjectId | null;
   createdByUserId: Types.ObjectId;
@@ -58,6 +59,8 @@ export interface IBooking extends Document {
   period: number;
   numberOfGuests: number;
   coupon?: any;
+  bookingBillPerPerson: number;
+  redeemableCoverChargePerPerson: number;
   bookingBill: number;
   redeemableCoverCharge: number;
   status:
@@ -75,6 +78,7 @@ export interface IBooking extends Document {
   qrCode?: string;
   uniqueCode?: string;
   bookingPaymentId?: string;
+ isPaid: boolean;
   checkInCount: number;
   minCheckInTime: Date;
   maxCheckInTime: Date;
@@ -84,7 +88,6 @@ export interface IBooking extends Document {
   updatedAt: Date;
 }
 
-// Mongoose schema for Booking
 const bookingSchema = new Schema<IBooking>(
   {
     customerId: { type: Schema.Types.ObjectId, ref: "User", default: null },
@@ -103,6 +106,8 @@ const bookingSchema = new Schema<IBooking>(
     period: { type: Number, required: true },
     numberOfGuests: { type: Number, required: true },
     coupon: { type: Schema.Types.Mixed },
+    bookingBillPerPerson: { type: Number, required: true },
+    redeemableCoverChargePerPerson: { type: Number, default: 0 },
     bookingBill: { type: Number, required: true },
     redeemableCoverCharge: { type: Number, default: 0 },
     status: {
@@ -125,6 +130,7 @@ const bookingSchema = new Schema<IBooking>(
     qrCode: { type: String },
     uniqueCode: { type: String },
     bookingPaymentId: { type: String },
+   isPaid: { type: Boolean, default: false },
     checkInCount: { type: Number, default: 0 },
     minCheckInTime: { type: Date, required: true },
     maxCheckInTime: { type: Date, required: true },

@@ -8,11 +8,13 @@ import { fn } from "./util";
 import {
   activateBookings,
   deactivateBookings,
+  getBookingByIdController,
   updateBookingBusinessCapacity,
 } from "@/controllers/bookingz/base";
 import { mongoIdZod, zJsonValidator, zParamsValidator } from "@hi/db-models";
 import { z } from "zod";
 import { bookingBusinessRouter } from "./booking-business";
+import { calendarRouter } from "./calendar";
 
 export const bookingsRouter = new Hono();
 
@@ -36,6 +38,12 @@ bookingsRouter.post(
   deactivateBookings,
 );
 
+bookingsRouter.get(
+  "details/:bookingId",
+  zParamsValidator(z.object({ bookingId: mongoIdZod })),
+  getBookingByIdController
+);
+
 bookingsRouter.patch(
   "/booking-business/:businessId/capacity",
   zParamsValidator(z.object({ businessId: mongoIdZod })),
@@ -49,6 +57,7 @@ bookingsRouter.patch(
 bookingsRouter.route("/business-day-config", businessDayConfigRouter);
 bookingsRouter.route("/business-period-config", businessPeriodConfigRouter);
 bookingsRouter.route("/booking-business", bookingBusinessRouter);
+bookingsRouter.route("/calendar", calendarRouter);
 bookingsRouter.route("/coupon", couponRouter);
 bookingsRouter.route("/native", bookingsNativeRouter);
 bookingsRouter.get("/ui/slots/:businessId/:date/:numGuests", fn); // [manager, customer]

@@ -1,28 +1,30 @@
+
 import type { Document, Types } from "mongoose";
 import { Schema, model } from "mongoose";
 import { z } from "zod";
-import { dateSchema, requiredObjectIdString } from "./utils";
+import {
+  dateSchema,
+  requiredObjectIdString,
+} from "./utils/common-schemas";              
 
-// Zod schema for a coupon remaining item
 const couponRemainingZodSchema = z.object({
   couponId: requiredObjectIdString("Coupon ID"),
   remaining: z.number({ required_error: "Remaining is required" }),
   versionId: z.string({ required_error: "Version ID is required" }),
 });
 
-// Zod schema for BookingBusiness
 export const bookingBusinessZodSchema = z
   .object({
     businessId: requiredObjectIdString("Business ID"),
     date: dateSchema,
     period: z.number({ required_error: "Period is required" }),
     couponsRemaining: z.array(couponRemainingZodSchema).default([]),
+    isOpen: z.boolean().default(true),                  
     explicitlyEdited: z.boolean().default(false),
     archived_at: z.date().nullable().default(null),
   })
   .strict();
 
-// TypeScript interface for a BookingBusiness document
 export interface IBookingBusiness extends Document {
   businessId: Types.ObjectId;
   date: Date;
@@ -32,6 +34,7 @@ export interface IBookingBusiness extends Document {
     remaining: number;
     versionId: string;
   }[];
+  isOpen: boolean;                                      
   explicitlyEdited: boolean;
   archived_at: Date | null;
   createdAt: Date;
@@ -61,6 +64,7 @@ const bookingBusinessSchema = new Schema<IBookingBusiness>(
       ],
       default: [],
     },
+    isOpen: { type: Boolean, default: true },           
     explicitlyEdited: { type: Boolean, default: false },
     archived_at: { type: Date, default: null },
   },

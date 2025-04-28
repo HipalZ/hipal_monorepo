@@ -15,16 +15,54 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 
+export const explicitUpsertBookingBusinessService = async (
+  businessId: string,
+  dateParam: Date, // midnight local
+  period: number,
+  { alloc, isOpen }: { alloc?: CouponAllocInput[]; isOpen?: boolean },
+  session: ClientSession,
+) => {
+  const year = dateParam.getFullYear();
+  const month = String(dateParam.getMonth() + 1).padStart(2, "0");
+  const day = String(dateParam.getDate()).padStart(2, "0");
+
+  // EXACTLY this UTC timestamp every time:
+  const storedDate = new Date(`${year}-${month}-${day}T18:30:00.000Z`);
+
+  const row =
+    (await BookingBusinessModel.findOne({
+      businessId,
+      date: storedDate,
+      period,
+    }).session(session)) ||
+    new BookingBusinessModel({ businessId, date: storedDate, period });
+
+  if (alloc !== undefined) {
+    row.couponsRemaining = alloc.map((a) => ({
+      couponId: a.couponId,
+      remaining: a.remaining,
+      versionId: generateUniqueVersionId(),
+    }));
+    row.explicitlyEdited = true;
+  }
+
+  if (typeof isOpen === "boolean") {
+    row.isOpen = isOpen;
+    row.explicitlyEdited = true;
+  }
+
+  await row.save({ session });
+  return row;
+};
 
 export const upsertBookingBusiness = async (
   businessId: string,
   date: Date,
   period: number,
-  alloc: CouponAllocInput[] = [],
-  edited: boolean,
+  { alloc, isOpen }: { alloc?: CouponAllocInput[]; isOpen?: boolean },
   session: ClientSession,
 ) => {
-  const normalizedDate = dayjs.tz(date, "Asia/Kolkata").startOf("day").toDate();
+  const normalizedDate = date; // no further adjustments
 
   const row =
     (await BookingBusinessModel.findOne({
@@ -32,46 +70,24 @@ export const upsertBookingBusiness = async (
       date: normalizedDate,
       period,
     }).session(session)) ||
-    new BookingBusinessModel({
-      businessId,
-      date: normalizedDate,
-      period,
-      couponsRemaining: [],
-    });
+    new BookingBusinessModel({ businessId, date: normalizedDate, period });
 
-  row.couponsRemaining = alloc
-    .filter((a) => a && a.couponId)
-    .map((a) => ({
-      couponId: new mongooseTypes.ObjectId(a.couponId.toString()),
+  if (alloc !== undefined) {
+    row.couponsRemaining = alloc.map((a) => ({
+      couponId: a.couponId,
       remaining: a.remaining,
       versionId: generateUniqueVersionId(),
     }));
+    row.explicitlyEdited = true;
+  }
 
-  if (edited) row.explicitlyEdited = true;
+  if (typeof isOpen === "boolean") {
+    row.isOpen = isOpen;
+    row.explicitlyEdited = true;
+  }
 
   await row.save({ session });
-
   return row;
-};
-
-export const explicitUpsertBookingBusinessService = async (
-  businessId: string,
-  dateStr: string,
-  period: number,
-  alloc: CouponAllocInput[],
-  session: ClientSession,
-) => {
-  const date = dayjs.utc(dateStr, "YYYY-MM-DD").startOf("day").toDate();
-
-  // Call your existing function with `edited` flag set to true.
-  return upsertBookingBusiness(
-    businessId,
-    date,
-    period,
-    alloc,
-    true, // explicitly edited
-    session,
-  );
 };
 
 export const fetchOrUpsertBookingBusiness = async (
@@ -80,33 +96,39 @@ export const fetchOrUpsertBookingBusiness = async (
   period: number,
   session: ClientSession,
 ) => {
+  // 1) find the day-config
   const dayCfg = await BusinessDayConfigModel.findOne({
     businessId,
     dayOfWeek: dayjs(date).day(),
   }).session(session);
   if (!dayCfg) throw new Error("Day config not found");
 
+  // 2) fetch period-config
   const perCfg = await BusinessPeriodConfigModel.findOne({
     businessDayConfigId: dayCfg._id,
     period,
   }).session(session);
 
+  // 3) prepare desired allocations
   const desired: CouponAllocInput[] = perCfg
     ? perCfg.couponAllocations.map((x: any) => ({
         couponId: x.couponId.toString(),
         remaining: x.remaining,
       }))
     : [];
+
+  // 4) normalize to YYYY-MM-DD, then to 18:30Z
+  const isoDate = date.toISOString().slice(0, 10); // "2025-04-27"
+  const normalizedDate = new Date(`${isoDate}T18:30:00.000Z`);
+
   return upsertBookingBusiness(
     businessId,
-    date,
+    normalizedDate,
     period,
-    desired,
-    false,
+    { alloc: desired },
     session,
   );
 };
-
 
 export const ensureBookingBusiness = async (
   businessId: string,
@@ -266,7 +288,7 @@ export const ensureBookingBusiness = async (
             period: p,
             explicitlyEdited: false,
           },
-          update: { $set: { couponsRemaining: merged } },
+          update: { $set: { couponsRemaining: merged }, $setOnInsert: { isOpen: true } },
           upsert: true,
         },
       });

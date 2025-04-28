@@ -2,6 +2,7 @@ import { runInTransaction } from "@hi/utils";
 import type { Context } from "hono";
 import { setBusinessBookingActive } from "../../services/bookingz/business-toggle.service";
 import { updateBusinessCapacity } from "@/services/bookingz/ capacity.service";
+import { getBookingByIdService } from "@/services/bookingz/booking.service";
 
 export const activateBookings = async (c: Context) => {
   console.log("running activateBookings");
@@ -27,6 +28,14 @@ export const deactivateBookings = async (c: Context) => {
     data: result as any,
     message: "Bookings deactivated successfully.",
   });
+};
+
+export const getBookingByIdController = async (c: Context) => {
+  const { bookingId } = c.req.valid("param") as { bookingId: string };
+  const booking = await runInTransaction(session =>
+    getBookingByIdService(bookingId, session)
+  );
+  return c.json({ status: 200, data: booking, message: "Booking fetched." });
 };
 
 export const updateBookingBusinessCapacity = async (c: Context) => {

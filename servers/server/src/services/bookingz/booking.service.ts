@@ -18,6 +18,19 @@ import {
 } from "@hi/db-models";
 import { calculateRemainingCapacity } from "./slot.service";
 
+// getBookingById
+export async function getBookingByIdService(
+  bookingId: string,
+  session: ClientSession
+) {
+  const booking = await BookingModel.findById(bookingId).session(session);
+  if (!booking) {
+    throw new Error("Booking not found");
+  }
+  return booking;
+}
+
+
 /* createCustomerBooking / createManagerBooking */
 export const createCustomerBooking = async (
   bizId: string,
@@ -49,79 +62,109 @@ export const commonCreateBooking = async (
   session: ClientSession,
 ) => {
   const { bookingDate, slot, numberOfGuests, couponId, walkIn } = input;
-
+  // 0) no past-date & valid guests
+  if (dayjs(bookingDate).isBefore(dayjs().startOf("day"))) {
+    throw new Error("Cannot book for past dates");
+  }
+  if (!Number.isInteger(numberOfGuests) || numberOfGuests < 1) {
+    throw new Error("Number of guests must be at least 1");
+  }
+  // 1) Business‐level
   const biz = await Business.findById(bizId).session(session);
-  if (!biz || !biz.isBookingActive) throw new Error("Bookings disabled");
-
+  if (!biz || !biz.isBookingActive) {
+    throw new Error("Bookings disabled");
+  }
+  // 2) Day‐config + closed‐interval
   const dow = dayjs(bookingDate).day();
   const dayCfg = await BusinessDayConfigModel.findOne({
     businessId: bizId,
     dayOfWeek: dow,
     isOpen: true,
   }).session(session);
-  if (!dayCfg) throw new Error("Day closed");
-  if (inClosedInterval(dayCfg, slot)) throw new Error("Closed interval");
-
+  if (!dayCfg) {
+    throw new Error("Day closed");
+  }
+  if (inClosedInterval(dayCfg, slot)) {
+    throw new Error("Closed interval");
+  }
+  // 3) Period‐config
   const period = derivePeriod(slot);
   const perCfg = await BusinessPeriodConfigModel.findOne({
     businessDayConfigId: dayCfg._id,
     period,
     isOpen: true,
   }).session(session);
-  if (!perCfg) throw new Error("Period closed");
-
-  if (
-    (await calculateRemainingCapacity(bizId, bookingDate, slot)) <
-    numberOfGuests
-  )
+  if (!perCfg) {
+    throw new Error("Period closed");
+  }
+  // 4) Capacity
+  const remaining = await calculateRemainingCapacity(
+    bizId,
+    bookingDate,
+    slot,
+  );
+  if (remaining < numberOfGuests) {
     throw new Error("Capacity exceeded");
-
-  /* Coupon logic */
-  let couponSnap = null as any;
+  }
+  // 5) Ledger row + isOpen
+  const bbRow = await fetchOrUpsertBookingBusiness(
+    bizId,
+    bookingDate,
+    period,
+    session,
+  );
+  if (!bbRow.isOpen) {
+    throw new Error("Bookings are disabled for this date & period");
+  }
+  // 6) Coupon logic
+  let couponSnap: any = null;
   if (couponId) {
     const coupon = await Couponz.findOne({
       _id: couponId,
       isDeleted: false,
     }).session(session);
-    if (!coupon || coupon.type !== "BOOKINGS")
+    if (!coupon || coupon.type !== "BOOKINGS") {
       throw new Error("Invalid coupon");
+    }
     if (
       coupon.bookingMeta?.minGuests &&
       numberOfGuests < coupon.bookingMeta.minGuests
-    )
+    ) {
       throw new Error("Guest count below coupon minimum");
-
-    const bb = await fetchOrUpsertBookingBusiness(
-      bizId,
-      bookingDate,
-      period,
-      session,
+    }
+    const entry = bbRow.couponsRemaining.find((e) =>
+      e.couponId.equals(couponId),
     );
-    const cEntry = bb.couponsRemaining.find((e) => e.couponId.equals(couponId));
-    if (!cEntry || cEntry.remaining < 1) throw new Error("No coupon inventory");
-    cEntry.remaining -= 1;
-    await bb.save({ session });
-
+    if (!entry || entry.remaining < 1) {
+      throw new Error("No coupon inventory");
+    }
+    entry.remaining -= 1;
+    await bbRow.save({ session });
     couponSnap = {
       couponId,
-      versionId: cEntry.versionId,
+      versionId: entry.versionId,
       name: coupon.name,
       config: coupon.config,
       bookingMeta: coupon.bookingMeta,
     };
   }
-
-  const finalBase = couponSnap?.bookingMeta?.baseCharge ?? perCfg.baseCharge;
+  // 7) Compute per-person + totals
+  const finalBase =
+    couponSnap?.bookingMeta?.baseCharge ?? perCfg.baseCharge;
   const finalRedeem =
     couponSnap?.bookingMeta?.redeemableCoverCharge ??
     perCfg.redeemableCoverCharge;
-
-  const bookingBill = finalBase;
-  const status: any = bookingBill > 0 ? "pending" : "paid";
+  const bookingBillPerPerson = finalBase;
+  const redeemableCoverChargePerPerson = finalRedeem;
+  const bookingBill = bookingBillPerPerson * numberOfGuests;
+  const redeemableCoverCharge =
+    redeemableCoverChargePerPerson * numberOfGuests;
+  const status = bookingBill > 0 ? "pending" : "paid";
+  const isPaid = status === "paid";
   const holdExpiry =
     bookingBill > 0 ? dayjs().add(15, "minute").toDate() : null;
-
-  const newBooking = await BookingModel.create(
+  // 8) Create booking
+  const [newBooking] = await BookingModel.create(
     [
       {
         customerId,
@@ -132,9 +175,12 @@ export const commonCreateBooking = async (
         period,
         numberOfGuests,
         coupon: couponSnap,
+        bookingBillPerPerson,
+        redeemableCoverChargePerPerson,
         bookingBill,
-        redeemableCoverCharge: finalRedeem,
+        redeemableCoverCharge,
         status,
+       isPaid,
         holdExpiresAt: holdExpiry,
         walkInName: walkIn?.name ?? null,
         walkInPhone: walkIn?.phone ?? null,
@@ -147,12 +193,15 @@ export const commonCreateBooking = async (
         maxCheckInTime: dayjs(`${bookingDate} ${slot}`)
           .add(90, "minute")
           .toDate(),
+        note: "",
+        archived_at: null,
       },
     ],
     { session },
   );
-  return newBooking[0];
+  return newBooking;
 };
+
 
 /* finalizePayment */
 export const finalizePayment = async (
@@ -163,18 +212,17 @@ export const finalizePayment = async (
   if (!payment.success) return;
   const b = await BookingModel.findById(bookingId).session(session);
   if (!b) throw new Error("Booking not found");
-
   if (b.status === "pending") {
     b.status = "paid";
     b.qrCode = generateQRCode(bookingId);
     b.uniqueCode = generateUniqueCode(bookingId);
     b.bookingPaymentId = payment.paymentId;
   } else if (b.status === "cancelled") {
-    // TODO: trigger refund webhook
     b.note += ` | refund ${payment.paymentId}`;
   } else {
     b.note += ` | extra payment ${payment.paymentId}`;
   }
+   b.isPaid = true;
   await b.save({ session });
   return b;
 };
