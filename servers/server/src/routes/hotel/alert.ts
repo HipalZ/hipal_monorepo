@@ -1,5 +1,6 @@
 import {
   Business,
+  Cart,
   DeviceToken,
   HotelAlert,
   HotelRoom,
@@ -464,6 +465,11 @@ const hotelAlertRouter = new Hono()
         return respond(c, "Room not found", true, 404, {});
       }
 
+      const userData = await User.findById(requestData.userId);
+      if (!userData) {
+        return respond(c, "User not found", true, 404, {});
+      }
+
       const serviceIds = requestData.serviceIds || [];
 
       for (const serviceId of serviceIds) {
@@ -494,12 +500,25 @@ const hotelAlertRouter = new Hono()
           throw new Error("Failed to create room chat");
         }
 
+        const createItemAnalytics = new Cart({
+          businessId: requestData.businessId,
+          userId: requestData.userId,
+          cart: requestData.cart,
+          name: userData.name,
+          phone: userData.phone,
+          createdAt: Date.now(),
+          date: Date.now(),
+          tableName: roomData.name,
+        });
+        await createItemAnalytics.save({ session });
+        if (!createItemAnalytics) {
+          throw new Error("Failed to create cart");
+        }
+
         const serviceData = await HotelService.findById(serviceId);
         const avgCompletionTime = serviceData?.avgCompletionTime || 0;
         const avgAcceptanceTime = serviceData?.avgAcceptanceTime || 0;
         const avgDeliveryTime = serviceData?.avgDeliveryTime || 0;
-
-        console.log("avgCompletionTime", avgCompletionTime);
 
         if (avgCompletionTime > 0) {
           // Schedule updates based on average times
@@ -548,8 +567,6 @@ const hotelAlertRouter = new Hono()
           }
         }),
       );
-
-      // Example usage:
 
       return respond(c, "Alert created successfully", false, 201, {});
     });
