@@ -11,26 +11,32 @@ import { Types, type ClientSession } from 'mongoose';
 import { ensureBookingBusiness } from './booking-business.service';
 import dayjs from 'dayjs';
 
-export const createBookingCouponService = async (businessId: string, payload: BookingCouponCreateType, session: ClientSession) => {
+export const createBookingCouponService = async (
+  businessId: string,
+  payload: BookingCouponCreateType,
+  session: ClientSession
+) => {
+  const { value, discountType, upto } = payload.config;
+  if (discountType === "PERCENTAGE" && (value < 0 || value > 100)) {
+    throw new Error("Percentage discount value must be between 0 and 100");
+  }
   const doc = new Couponz({
     name: payload.name,
-    type: 'BOOKINGS',
+    type: "BOOKINGS",
     businessId: new Types.ObjectId(businessId),
     isDeleted: false,
     config: {
-      value: payload?.config?.value,
-      discountType: payload?.config?.discountType,
-      ...(payload?.config?.upto !== undefined && {
-        upto: payload?.config?.upto,
-      }),
+      value,
+      discountType,
+      ...(upto !== undefined && { upto }),
     },
     bookingMeta: {
-      baseCharge: payload?.bookingMeta?.baseCharge,
-      ...(payload.bookingMeta?.redeemableCoverCharge !== undefined && {
-        redeemableCoverCharge: payload?.bookingMeta?.redeemableCoverCharge,
+      baseCharge: payload.bookingMeta.baseCharge,
+      ...(payload.bookingMeta.redeemableCoverCharge !== undefined && {
+        redeemableCoverCharge: payload.bookingMeta.redeemableCoverCharge,
       }),
-      ...(payload?.bookingMeta?.minGuests !== undefined && {
-        minGuests: payload?.bookingMeta?.minGuests,
+      ...(payload.bookingMeta.minGuests !== undefined && {
+        minGuests: payload.bookingMeta.minGuests,
       }),
     },
   });
@@ -38,16 +44,23 @@ export const createBookingCouponService = async (businessId: string, payload: Bo
   return doc;
 };
 
-export const updateBookingCouponService = async (couponId: string, payload: BookingCouponUpdateType, session: ClientSession) => {
+export const updateBookingCouponService = async (
+  couponId: string,
+  payload: BookingCouponUpdateType,
+  session: ClientSession
+) => {
   const existing = await Couponz.findOne({
     _id: couponId,
-    type: 'BOOKINGS',
+    type: "BOOKINGS",
     isDeleted: false,
   }).session(session);
-  if (!existing) throw new Error('Coupon not found or not of type BOOKINGS');
+  if (!existing) throw new Error("Coupon not found or not of type BOOKINGS");
+
+  // Ensure config object exists
   if (!existing.config) {
-    existing.config = { value: 0, discountType: 'AMOUNT' };
+    existing.config = { value: 0, discountType: "AMOUNT" };
   }
+  // Ensure bookingMeta exists
   if (!existing.bookingMeta) {
     existing.bookingMeta = {
       baseCharge: 0,
@@ -56,27 +69,39 @@ export const updateBookingCouponService = async (couponId: string, payload: Book
     };
   }
 
+  // 1) Name
   if (payload.name !== undefined) {
     existing.name = payload.name;
   }
 
+  // 2) Config
   if (payload.config !== undefined) {
-    const { value, discountType, upto } = payload.config;
-    existing.config.value = value;
-    existing.config.discountType = discountType;
-    if (discountType === 'PERCENTAGE') {
-      if (upto !== undefined) {
-        existing.config.upto = upto;
-      }
-    } else {
-      existing.set('config.upto', undefined);
-      existing.markModified('config.upto');
-    }
-    existing.markModified('config');
+  const { value, discountType, upto } = payload.config;
+  if (discountType === "PERCENTAGE" && (value < 0 || value > 100)) {
+    throw new Error("Percentage discount value must be between 0 and 100");
   }
+  existing.config.value = value;
+  existing.config.discountType = discountType;
+  if (discountType === "PERCENTAGE") {
+    if (upto === null) {
+      // client wants to remove it
+      existing.set("config.upto", undefined);
+      existing.markModified("config.upto");
+    } else if (upto !== undefined) {
+      existing.config.upto = upto;
+    }
+  } else {
+    // AMOUNT always clears it
+    existing.set("config.upto", undefined);
+    existing.markModified("config.upto");
+  }
+  existing.markModified("config");
+}
 
+  // 3) bookingMeta
   if (payload.bookingMeta !== undefined) {
-    const { baseCharge, redeemableCoverCharge, minGuests } = payload.bookingMeta;
+    const { baseCharge, redeemableCoverCharge, minGuests } =
+      payload.bookingMeta;
     if (baseCharge !== undefined) {
       existing.bookingMeta.baseCharge = baseCharge;
     }
@@ -86,7 +111,7 @@ export const updateBookingCouponService = async (couponId: string, payload: Book
     if (minGuests !== undefined) {
       existing.bookingMeta.minGuests = minGuests;
     }
-    existing.markModified('bookingMeta');
+    existing.markModified("bookingMeta");
   }
 
   await existing.save({ session });

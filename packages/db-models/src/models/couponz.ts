@@ -229,7 +229,7 @@ export const bookingCouponCreateSchema = z.object({
     .object({
       value: z.number({ required_error: "Value is required" }).nonnegative(),
       discountType: z.enum(["PERCENTAGE", "AMOUNT"]),
-      upto: z.number().nonnegative().optional(),
+      upto: z.number().nonnegative().optional().nullable(),
     })
     .refine(
       (data) =>
