@@ -500,19 +500,21 @@ const hotelAlertRouter = new Hono()
           throw new Error("Failed to create room chat");
         }
 
-        const createItemAnalytics = new Cart({
-          businessId: requestData.businessId,
-          userId: requestData.userId,
-          cart: requestData.cart,
-          name: userData.name,
-          phone: userData.phone,
-          createdAt: Date.now(),
-          date: Date.now(),
-          tableName: roomData.name,
-        });
-        await createItemAnalytics.save({ session });
-        if (!createItemAnalytics) {
-          throw new Error("Failed to create cart");
+        if (requestData?.cart?.length !== 0) {
+          const createItemAnalytics = new Cart({
+            businessId: requestData.businessId,
+            userId: requestData.userId,
+            cart: requestData.cart,
+            name: userData.name,
+            phone: userData.phone,
+            createdAt: Date.now(),
+            date: Date.now(),
+            tableName: roomData.name,
+          });
+          await createItemAnalytics.save({ session });
+          if (!createItemAnalytics) {
+            throw new Error("Failed to create cart");
+          }
         }
 
         const serviceData = await HotelService.findById(serviceId);
