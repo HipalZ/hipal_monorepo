@@ -8,6 +8,7 @@ import UniversalNav from "@/components/templates/menu/sideNavbaar/universelSiden
 import LoadingSpinner from "@/components/atom/loadingSpinner"
 import HotelActions from "@/components/hotel/Actions"
 
+const AnalyticsCards = lazy(() => import("@/components/hotel/Analytics"))
 const HotelCards = lazy(() => import("@/components/hotel/HotelCards"))
 const Integrations = lazy(() => import("@/components/hotel/Integrations"))
 
@@ -15,6 +16,7 @@ enum HotelInfoTabs {
     Essentials = "essentials",
     Integrations = "integrations",
     Actions = "actions",
+    Analytics = "analytics",
 }
 
 const navItems = [
@@ -26,6 +28,8 @@ const navItems = [
     },
     {
         text: HotelInfoTabs.Integrations,
+    }, {
+        text: HotelInfoTabs.Analytics,
     }
 ]
 
@@ -87,6 +91,10 @@ const MemoHotelInfoMain = () => {
                 {
                     selectedTab === "actions" &&
                     <HotelActions />
+                }
+                {
+                    selectedTab === "analytics" &&
+                    <AnalyticsCards />
                 }
             </Suspense>
 
