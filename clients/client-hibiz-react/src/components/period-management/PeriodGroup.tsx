@@ -20,7 +20,6 @@ type PeriodGroupProps = {
     label: string;
     color: string;
   };
-  dayColors: string[];
   onTogglePeriod: (dayOfWeek: number, period: number) => Promise<void>;
   onSavePeriod: (
     dayOfWeek: number,
@@ -41,7 +40,6 @@ const PeriodGroup = ({
   periodIndex,
   days,
   periodInfo,
-  dayColors,
   onTogglePeriod,
   onSavePeriod,
   isActionInProgress,

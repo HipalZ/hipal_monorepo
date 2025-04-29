@@ -52,7 +52,8 @@ export const useToggleAllDays = () => {
       const response = await apiRpc.bookings["business-day-config"]["toggle-all-days"][':businessId'].$patch({
         param: {
           businessId
-        }
+        },
+        json: {}
       });
       return response;
     },
@@ -87,7 +88,8 @@ export const useToggleDay = () => {
         param: {
           businessId,
           dayOfWeek: dayOfWeek.toString()
-        }
+        },
+        json:{}
       });
       return response;
     },

@@ -199,11 +199,6 @@ const Everyday = () => {
           )}
         </AnimatePresence>
 
-        {/* Update the section with the capacity card to remove the business schedule card */}
-        <section className="flex flex-col gap-4 mb-6 md:flex-row">
-          {/* Capacity Card */}
-        </section>
-
         {/* Day configuration list */}
         {businessDayConfigs.length > 0 ? (
           <DayConfigList

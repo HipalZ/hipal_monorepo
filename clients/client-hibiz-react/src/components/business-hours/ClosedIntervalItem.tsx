@@ -1,7 +1,7 @@
 import { memo, useCallback } from "react"
 import { Trash2 } from "lucide-react"
-import type { ClosedInterval } from "../types/business-day-config"
-import { generateTimeOptions } from "../utils/timeUtils"
+import type { ClosedInterval } from "../types/business-day-config.ts"
+import { generateTimeOptions } from "../utils/timeUtils.ts"
 
 /**
  * Props for the ClosedIntervalItem component
@@ -32,7 +32,23 @@ const ClosedIntervalItem = ({
   // Handle start time change
   const handleStartTimeChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
-      onUpdate(index, { ...interval, startTime: e.target.value })
+      const newStartTime = e.target.value
+
+      // If the new start time is after the current end time,
+      // update both start and end time (end time = start time + 30min)
+      if (newStartTime >= interval.endTime) {
+        // Calculate new end time (start time + 30 min)
+        const startMinutes =
+          Number.parseInt(newStartTime.split(":")[0]) * 60 + Number.parseInt(newStartTime.split(":")[1])
+        const endMinutes = startMinutes + 30
+        const newEndTime = `${Math.floor(endMinutes / 60)
+          .toString()
+          .padStart(2, "0")}:${(endMinutes % 60).toString().padStart(2, "0")}`
+
+        onUpdate(index, { startTime: newStartTime, endTime: newEndTime })
+      } else {
+        onUpdate(index, { ...interval, startTime: newStartTime })
+      }
     },
     [index, interval, onUpdate],
   )
@@ -63,17 +79,17 @@ const ClosedIntervalItem = ({
               onChange={handleStartTimeChange}
               className="w-full appearance-none rounded-md border border-red-200 bg-white px-3 py-1.5 pr-8 text-sm shadow-sm transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             >
-              {timeOptions.map((option) => (
-                <option
-                  key={`start-${option.value}`}
-                  value={option.value}
-                  disabled={option.value < dayStartTime || option.value >= interval.endTime}
-                >
-                  {option.label}
-                </option>
-              ))}
+              {timeOptions.map((option) => {
+                // Only disable options outside of business hours
+                const isDisabled = option.value < dayStartTime || option.value > dayEndTime
+                return (
+                  <option key={`start-${option.value}`} value={option.value} disabled={isDisabled}>
+                    {option.label}
+                  </option>
+                )
+              })}
             </select>
-
+           
           </div>
         </div>
 
@@ -89,17 +105,18 @@ const ClosedIntervalItem = ({
               onChange={handleEndTimeChange}
               className="w-full appearance-none rounded-md border border-red-200 bg-white px-3 py-1.5 pr-8 text-sm shadow-sm transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             >
-              {timeOptions.map((option) => (
-                <option
-                  key={`end-${option.value}`}
-                  value={option.value}
-                  disabled={option.value <= interval.startTime || option.value > dayEndTime}
-                >
-                  {option.label}
-                </option>
-              ))}
+              {timeOptions.map((option) => {
+                // Only disable options that are before start time or outside business hours
+                const isDisabled =
+                  option.value <= interval.startTime || option.value < dayStartTime || option.value > dayEndTime
+                return (
+                  <option key={`end-${option.value}`} value={option.value} disabled={isDisabled}>
+                    {option.label}
+                  </option>
+                )
+              })}
             </select>
-
+           
           </div>
         </div>
       </div>

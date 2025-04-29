@@ -1,111 +1,101 @@
-
-import { memo, useCallback } from "react"
-import type { ClosedInterval } from "../types/business-day-config"
+import { memo, useCallback, useState } from "react"
+import { Plus } from "lucide-react"
 import ClosedIntervalItem from "./ClosedIntervalItem"
-import { Plus, AlertCircle, Clock } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { createDefaultClosedInterval } from "../utils/timeUtils"
-import { Button } from "../ui/button"
+import type { ClosedInterval } from "../types/business-day-config.ts"
+import { createDefaultClosedInterval } from "../utils/timeUtils.ts"
 
 /**
  * Props for the ClosedIntervalList component
  */
 type ClosedIntervalListProps = {
-    intervals: ClosedInterval[]
-    dayStartTime: string
-    dayEndTime: string
-    onAddInterval: (startTime: string, endTime: string) => void
-    onUpdateInterval: (index: number, updatedInterval: ClosedInterval) => void
-    onRemoveInterval: (index: number) => void
-    error?: string | null
+  intervals: ClosedInterval[]
+  dayStartTime: string
+  dayEndTime: string
+  onAddInterval: (startTime: string, endTime: string) => boolean
+  onUpdateInterval: (index: number, updatedInterval: ClosedInterval) => boolean
+  onRemoveInterval: (index: number) => void
+  error?: string | null
 }
 
 /**
- * Component for managing a list of closed intervals
+ * Component for displaying and managing a list of closed intervals
  */
 const ClosedIntervalList = ({
-    intervals,
-    dayStartTime,
-    dayEndTime,
-    onAddInterval,
-    onUpdateInterval,
-    onRemoveInterval,
-    error,
+  intervals,
+  dayStartTime,
+  dayEndTime,
+  onAddInterval,
+  onUpdateInterval,
+  onRemoveInterval,
+  error,
 }: ClosedIntervalListProps) => {
-    // Handle add interval button click
-    const handleAddInterval = useCallback(() => {
-        const defaultInterval = createDefaultClosedInterval(dayStartTime, dayEndTime, intervals)
+  // Local state for new interval
+  const [isAddingInterval, setIsAddingInterval] = useState(false)
 
-        if (defaultInterval) {
-            onAddInterval(defaultInterval.startTime, defaultInterval.endTime)
-        } else {
-            // No available slot found
-            alert(
-                "No available time slot for a new closed interval. All time slots are already covered or remaining gaps are less than 30 minutes.",
-            )
-        }
-    }, [dayStartTime, dayEndTime, intervals, onAddInterval])
+  /**
+   * Handle add interval button click
+   */
+  const handleAddInterval = useCallback(() => {
+    // Create a default interval
+    const defaultInterval = createDefaultClosedInterval(dayStartTime, dayEndTime, intervals)
 
-    return (
-        <div className="mt-5">
-            <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-1.5">
-                    <Clock size={16} className="text-red-500" />
-                    <label className="text-sm font-medium text-gray-700">Closed Intervals</label>
-                </div>
+    if (defaultInterval) {
+      // Try to add the interval
+      const success = onAddInterval(defaultInterval.startTime, defaultInterval.endTime)
+      if (success) {
+        setIsAddingInterval(false)
+      }
+    } else {
+      // If no default interval could be created, use the day start time + 30 min
+      // This gives the user a starting point to modify
+      const startMinutes =
+        Number.parseInt(dayStartTime.split(":")[0]) * 60 + Number.parseInt(dayStartTime.split(":")[1])
+      const endMinutes = startMinutes + 30
+      const endTime = `${Math.floor(endMinutes / 60)
+        .toString()
+        .padStart(2, "0")}:${(endMinutes % 60).toString().padStart(2, "0")}`
 
-                {/* Add interval button */}
-                <Button
-                    type="button"
-                    onClick={handleAddInterval}
-                    variant="secondary"
-                    size="sm"             >
-                    <Plus size={14} />
-                    Add Interval
-                </Button>
-            </div>
+      onAddInterval(dayStartTime, endTime)
+    }
+  }, [dayStartTime, dayEndTime, intervals, onAddInterval])
 
-            {/* Error message */}
-            {error && (
-                <div className="mb-3 flex items-start gap-2 rounded-md bg-red-50 p-2.5 text-sm text-red-600">
-                    <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
-                    <span>{error}</span>
-                </div>
-            )}
+  return (
+    <div className="mt-4">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-medium text-gray-700">Closed Intervals</h3>
+        <button
+          type="button"
+          onClick={handleAddInterval}
+          className="inline-flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-600 transition-colors hover:bg-red-100"
+        >
+          <Plus size={14} />
+          Add Interval
+        </button>
+      </div>
 
-            {/* List of intervals */}
-            <div className="mt-2 space-y-2">
-                <AnimatePresence initial={false}>
-                    {intervals.map((interval, index) => (
-                        <motion.div
-                            key={index}
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            <ClosedIntervalItem
-                                interval={interval}
-                                index={index}
-                                dayStartTime={dayStartTime}
-                                dayEndTime={dayEndTime}
-                                onUpdate={onUpdateInterval}
-                                onRemove={onRemoveInterval}
-                            />
-                        </motion.div>
-                    ))}
-                </AnimatePresence>
+      {/* Error message */}
+      {error && <p className="mb-2 text-xs text-red-500">{error}</p>}
 
-                {intervals.length === 0 && (
-                    <div className="flex items-center justify-center p-4 border border-gray-300 border-dashed rounded-md bg-gray-50">
-                        <p className="text-sm text-gray-500">
-                            No closed intervals. Add intervals to block off specific times when you're not accepting bookings.
-                        </p>
-                    </div>
-                )}
-            </div>
-        </div>
-    )
+      {/* Intervals list */}
+      <div className="space-y-2 mt-2">
+        {intervals.length > 0 ? (
+          intervals.map((interval, index) => (
+            <ClosedIntervalItem
+              key={index}
+              interval={interval}
+              index={index}
+              dayStartTime={dayStartTime}
+              dayEndTime={dayEndTime}
+              onUpdate={onUpdateInterval}
+              onRemove={onRemoveInterval}
+            />
+          ))
+        ) : (
+          <p className="text-xs text-gray-500 italic">No closed intervals defined.</p>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export default memo(ClosedIntervalList)

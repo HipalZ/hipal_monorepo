@@ -131,7 +131,7 @@ const CouponAllocationModal = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="flex-1 overflow-x-hidden overflow-y-auto h-[90dvh] pb-[10rem]"
+              className="flex-1 overflow-x-hidden overflow-y-auto h-[90dvh] pb-[20rem]"
             >
               <div className="mb-4">
                 <Button
@@ -189,7 +189,7 @@ const CouponAllocationModal = ({
                     </Button>
                   </div>
 
-                  <ScrollArea className="min-h-[300px] max-h-[100dvh] lg:max-h-[80dvh] pr-4 -mr-4 ">
+                  <ScrollArea className="h-[100dvh] lg:max-h-[80dvh] pr-4 -mr-4 ">
                     <div className="space-y-3 pb-[10rem]">
                       {coupons.map((coupon) => {
                         const isSelected = allocations.has(coupon._id)
@@ -270,7 +270,6 @@ const CouponAllocationModal = ({
                 text: isLoading ? "Saving..." : "Save Allocations",
                 onClick: handleSave,
                 isLoading: isLoading,
-                swipe: true,
                 className:"rounded-md w-full !ml-0"
               },
             ]}
