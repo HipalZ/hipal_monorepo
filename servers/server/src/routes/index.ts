@@ -22,6 +22,7 @@ import npcRouter from "./npc";
 import paymentsRouter from "./payments";
 import permissionRouter from "./permission";
 import posRouter from "./pos";
+import posConfigurationRouter from "./posConfiguration";
 import googleReview from "./reviews";
 import scriptRouter from "./script";
 import settingsRouter from "./settings";
@@ -77,6 +78,7 @@ export const routes = app
   .route("/download", downloadRouter)
   .route("/menu", menuRouter)
   .route("/bucket", bucketRouter)
-  .route("/event", eventRouter);
+  .route("/event", eventRouter)
+  .route("/pos_configuration", posConfigurationRouter);
 
 export type AppType = typeof routes;

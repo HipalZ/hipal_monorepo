@@ -59,6 +59,7 @@ export * from "./permission";
 export * from "./permissionGroup";
 export * from "./pos";
 export * from "./posBill";
+export * from "./posConfiguration";
 export * from "./recentCampaign";
 export * from "./schedularManager";
 export * from "./settleTable";

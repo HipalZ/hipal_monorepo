@@ -1824,19 +1824,18 @@ const paymentsRouter = new Hono()
                   if (order.cashbackAvailable === false) {
                     cashBack = 0;
                   }
-
-                  finalCashBack = await addCoins(
-                    cashBack,
-                    order.userId._id.toString(),
-                    order._id.toString(),
-                    order.tableName || "",
-                    order.businessId.toString(),
-
-                    existingLoyalty?.loyaltyId.toString() || "",
-
-                    session,
-                  );
                 }
+                finalCashBack = await addCoins(
+                  cashBack,
+                  order.userId._id.toString(),
+                  order._id.toString(),
+                  order.tableName || "",
+                  order.businessId.toString(),
+
+                  existingLoyalty?.loyaltyId.toString() || "",
+
+                  session,
+                );
               }
 
               const isHavePos = await BusinessPosConfig.findOne({

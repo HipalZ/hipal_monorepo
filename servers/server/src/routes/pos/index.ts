@@ -613,6 +613,37 @@ const posRouter = new Hono()
     },
   )
 
+  .get(
+    "/dish_config",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(3).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId } = c.req.query();
+
+        const dishConfig = await Pos.findOne({}, { businessId: businessId });
+
+        if (!dishConfig) {
+          return c.json(
+            {
+              message: "POS not found",
+              err: true,
+              data: { success: false },
+            },
+            404,
+          );
+        }
+
+        return respond(c, "Data fetch", false, 200, dishConfig);
+      });
+    },
+  )
+
   .post(
     "/configure",
 

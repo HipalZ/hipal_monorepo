@@ -45,6 +45,7 @@ export * from "./permission";
 export * from "./permissionGroup";
 export * from "./pos";
 export * from "./posBill";
+export * from "./posConfiguration";
 export * from "./qrBill";
 export * from "./recentCampaign";
 export * from "./reviews";
