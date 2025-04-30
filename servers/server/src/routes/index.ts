@@ -16,6 +16,7 @@ import hipalzRouter from "./hipalz";
 import hotelRouter from "./hotel";
 import iconRouter from "./icon";
 import kotRouter from "./kot";
+import loyaltyRouter from "./loyalty";
 import menuBannerRouter from "./menu-banner";
 import menuRouter from "./menu/menu";
 import npcRouter from "./npc";
@@ -79,6 +80,7 @@ export const routes = app
   .route("/menu", menuRouter)
   .route("/bucket", bucketRouter)
   .route("/event", eventRouter)
-  .route("/pos_configuration", posConfigurationRouter);
+  .route("/pos_configuration", posConfigurationRouter)
+  .route("/loyalty", loyaltyRouter);
 
 export type AppType = typeof routes;

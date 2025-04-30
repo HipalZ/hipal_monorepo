@@ -15,6 +15,8 @@ import {
   Pos,
   Table,
   UrlModel,
+  User,
+  WhatsAppBusinessConfig,
   Zone,
 } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
@@ -26,6 +28,7 @@ import { cache } from "../../utils/cacheHelper";
 import { petpoojaPosConfig } from "../../utils/posConfig/petPooja";
 import { razorpayWrapper } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
+import { whatsAppConfig } from "../../utils/whatAppTemplate";
 
 //
 const scriptRouter = new Hono()
@@ -1242,6 +1245,96 @@ const scriptRouter = new Hono()
             { session, new: true },
           );
         if (!updateBusinessPosConfig) {
+          return respond(c, "Business not found", true, 404, {});
+        }
+
+        return respond(c, "pos setting updated successfully", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/whatsapp_config",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        menuRedirection: z.enum(["WA", "MENU"]),
+        phoneId: z.string(),
+        whatsAppPhone: z.number(),
+        whatsAppAccountId: z.string(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+
+        const updateWhatsappConfig =
+          await WhatsAppBusinessConfig.findOneAndUpdate(
+            {
+              businessId: requestData.businessId,
+            },
+            {
+              $set: {
+                menuRedirection: requestData.menuRedirection,
+                phoneId: requestData.phoneId,
+                whatsAppPhone: requestData.whatsAppPhone,
+                whatsAppAccountId: requestData.whatsAppAccountId,
+                token: whatsAppConfig.token,
+                version: whatsAppConfig.version,
+              },
+            },
+            { session, new: true },
+          );
+
+        if (!updateWhatsappConfig) {
+          throw new Error("Business not found");
+        }
+
+        return respond(c, "pos setting updated successfully", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/change_business_owner",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        phone: z.string(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { businessId, phone } = requestData;
+
+        const business = await Business.findById(businessId).lean();
+        if (!business) {
+          return respond(c, "Business not found", true, 404, {});
+        }
+        const user = await User.findOne({
+          phone: phone,
+        }).lean();
+        if (!user) {
+          return respond(c, "User not found", true, 404, {});
+        }
+
+        const updateBusiness = await Business.findByIdAndUpdate(
+          businessId,
+          {
+            $set: {
+              staffIds: user._id,
+            },
+          },
+          { session, new: true },
+        );
+        if (!updateBusiness) {
           return respond(c, "Business not found", true, 404, {});
         }
 

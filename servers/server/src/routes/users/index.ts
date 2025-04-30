@@ -2,7 +2,6 @@
 import {
   Business,
   DeviceToken,
-  LoyaltyCoinsInfo,
   StaffPermission,
   StaffPermissionGroup,
   Subscriber,
@@ -79,14 +78,6 @@ export const addSignUpBonus = async (
       password: Math.floor(Math.random() * 9000) + 10000,
       scanCount: 1,
     });
-    await LoyaltyCoinsInfo.findOneAndUpdate(
-      { businessId: loyaltyId },
-      {
-        $inc: {
-          coinzIssued: bonus,
-        },
-      },
-    );
 
     await newReward.save();
     const data = new UserRewardHistory({
@@ -538,11 +529,12 @@ const usersRouter = new Hono()
           authkey: "387796AmyGlDBq63b2d75aP1",
         },
       };
-      const response = await axios(options);
+
+      const userData = await User.findOne({ phone });
 
       return c.json({
         message: "OTP sent successfully",
-        data: response.data,
+        data: userData ? userData : {},
         err: false,
       });
     },
