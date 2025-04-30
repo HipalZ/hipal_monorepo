@@ -14,7 +14,6 @@ import { generateUniqueVersionId } from "./booking.utils";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-
 export const explicitUpsertBookingBusinessService = async (
   businessId: string,
   dateParam: Date, // midnight local
@@ -135,60 +134,60 @@ export const ensureBookingBusiness = async (
   impacted: {
     dayOfWeek: number; // 0–6
     period?: number; // 0–3 (required if newAlloc is present)
-    newAlloc?: CouponAllocInput[]; // Only allowed when period is specified.
+    newAlloc?: CouponAllocInput[];
   }[] = [],
   session: ClientSession,
 ) => {
-  // Validate impacted array.
+  // 0) Validate impacted array
   for (const it of impacted) {
-    const periodGiven = typeof it.period === "number";
-    const allocGiven = Array.isArray(it.newAlloc);
-    if (allocGiven && !periodGiven)
+    const hasPeriod = typeof it.period === "number";
+    const hasAlloc = Array.isArray(it.newAlloc);
+    if (hasAlloc && !hasPeriod) {
       throw new Error("If newAlloc is supplied, period must be specified");
-    if (!allocGiven && periodGiven)
+    }
+    if (!hasAlloc && hasPeriod) {
       throw new Error("If period is supplied, newAlloc must be supplied");
+    }
   }
 
-  // Define the 60-day window.
+  // 1) Define the 60-day window
   const start = dayjs().startOf("day");
   const end = start.clone().add(60, "day");
 
-  /* ── 1. Build target map ───────────────────────────────── */
-  // The targets map uses a key of "dayOfWeek-period" and holds an object with the period and optional alloc.
+  // 2) Build targets map
   const targets = new Map<
     string,
     { period: 0 | 1 | 2 | 3; alloc?: CouponAllocInput[] }
   >();
-
   if (impacted.length === 0) {
-    // Full seed – update all 7 days and 4 periods.
-    for (let d = 0 as 0 | 1 | 2 | 3 | 4 | 5 | 6; d < 7; d++)
-      for (let p = 0 as 0 | 1 | 2 | 3; p < 4; p++)
+    for (let d = 0 as 0 | 1 | 2 | 3 | 4 | 5 | 6; d < 7; d++) {
+      for (let p = 0 as 0 | 1 | 2 | 3; p < 4; p++) {
         targets.set(`${d}-${p}`, { period: p });
+      }
+    }
   } else {
     for (const it of impacted) {
       if (it.newAlloc) {
-        // Specific period update.
         targets.set(`${it.dayOfWeek}-${it.period}`, {
           period: it.period as 0 | 1 | 2 | 3,
           alloc: it.newAlloc,
         });
       } else {
-        // Day-wide resync (no custom alloc) – apply to all periods for that day.
-        for (let p = 0 as 0 | 1 | 2 | 3; p < 4; p++)
+        for (let p = 0 as 0 | 1 | 2 | 3; p < 4; p++) {
           targets.set(`${it.dayOfWeek}-${p}`, { period: p });
+        }
       }
     }
   }
 
-  const targetDows = [
-    ...new Set([...targets.keys()].map((k) => +k.split("-")[0])),
-  ];
-  const targetPeriods = [
-    ...new Set([...targets.values()].map((v) => v.period)),
-  ];
+  const targetDows = Array.from(
+    new Set([...targets.keys()].map((k) => +k.split("-")[0])),
+  );
+  const targetPeriods = Array.from(
+    new Set([...targets.values()].map((v) => v.period)),
+  );
 
-  /* ── 2. Bulk reads ───────────────────────────────────────── */
+  // 3) Read configs
   const dayCfgs = await BusinessDayConfigModel.find({
     businessId,
     dayOfWeek: { $in: targetDows },
@@ -201,12 +200,12 @@ export const ensureBookingBusiness = async (
     isOpen: true,
   }).session(session);
 
-  // Build a lookup map for period configs.
   const perCfgByDayPeriod = new Map<string, any>();
-  for (const pc of perCfgs)
+  for (const pc of perCfgs) {
     perCfgByDayPeriod.set(`${pc.businessDayConfigId}-${pc.period}`, pc);
+  }
 
-  // Fetch existing booking ledger rows (that are not explicitly edited).
+  // 4) Fetch existing ledger rows
   const existingRows = await BookingBusinessModel.find({
     businessId,
     explicitlyEdited: false,
@@ -214,33 +213,29 @@ export const ensureBookingBusiness = async (
     period: { $in: targetPeriods },
   }).session(session);
 
-  // Build a lookup using UTC-formatted date to avoid timezone issues.
-  const existingByDatePeriod = new Map<string, any>();
-  for (const row of existingRows)
-    existingByDatePeriod.set(
-      `${dayjs(row.date).utc().format("YYYY-MM-DD")}-${row.period}`,
-      row,
-    );
+  // 5) Build lookup by exact ISO timestamp + period
+  const existingByKey = new Map<string, any>();
+  for (const row of existingRows) {
+    const iso = row.date.toISOString(); // e.g. "2025-05-06T18:30:00.000Z"
+    existingByKey.set(`${iso}-${row.period}`, row);
+  }
 
-  /* ── 3. Build bulkWrite operations ───────────────────────── */
+  // 6) Prepare bulkWrite operations
   const upserts: any[] = [];
-
-  // Loop over the 60-day window.
   for (let d = start.clone(); d.isBefore(end); d = d.add(1, "day")) {
     const dow = d.day();
-    // Find the corresponding day config. Skip if not open.
     const dayCfg = dayCfgs.find((dc) => dc.dayOfWeek === dow);
-    if (!dayCfg) continue; // day is closed.
+    if (!dayCfg) continue; // closed day
 
     for (let p = 0 as 0 | 1 | 2 | 3; p < 4; p++) {
-      const key = `${dow}-${p}`;
-      if (!targets.has(key)) continue; // This day-period pair isn’t impacted.
+      const tgt = targets.get(`${dow}-${p}`);
+      if (!tgt) continue;
 
-      const tgt = targets.get(key)!;
+      const isoDate = d.format("YYYY-MM-DD");
+      const isoString = `${isoDate}T18:30:00.000Z`;
+      const rowKey = `${isoString}-${p}`;
+      const prevRow = existingByKey.get(rowKey);
 
-      // Desired allocation:
-      // If an explicit allocation was provided, use it.
-      // Otherwise, fall back on the period config's allocations.
       const desired: CouponAllocInput[] =
         tgt.alloc ??
         (perCfgByDayPeriod
@@ -250,10 +245,6 @@ export const ensureBookingBusiness = async (
             remaining: x.remaining,
           })) ||
           []);
-
-      // Build a key for existing row lookup using UTC to match the above.
-      const rowKey = `${d.utc().format("YYYY-MM-DD")}-${p}`;
-      const prevRow = existingByDatePeriod.get(rowKey);
 
       const prevMap = new Map<
         string,
@@ -268,15 +259,13 @@ export const ensureBookingBusiness = async (
         }
       }
 
-      // Merge desired allocation with the previous row.
-      // Keep old versionId if coupon exists and 'remaining' remains the same; otherwise, generate a new versionId.
       const merged = desired.map((a) => {
         const prev = prevMap.get(a.couponId);
-        const keepOld = prev && prev.remaining === a.remaining;
+        const keep = prev && prev.remaining === a.remaining;
         return {
           couponId: new mongooseTypes.ObjectId(a.couponId),
           remaining: a.remaining,
-          versionId: keepOld ? prev!.versionId : generateUniqueVersionId(),
+          versionId: keep ? prev!.versionId : generateUniqueVersionId(),
         };
       });
 
@@ -284,18 +273,21 @@ export const ensureBookingBusiness = async (
         updateOne: {
           filter: {
             businessId,
-            date: d.startOf("day").toDate(), // store with local midnight (or adjust to UTC as needed)
+            date: new Date(isoString),
             period: p,
             explicitlyEdited: false,
           },
-          update: { $set: { couponsRemaining: merged }, $setOnInsert: { isOpen: true } },
+          update: {
+            $set: { couponsRemaining: merged },
+            $setOnInsert: { isOpen: true },
+          },
           upsert: true,
         },
       });
     }
   }
 
-  /* ── 4. Apply updates in a single bulkWrite ─────────────── */
+  // 7) Execute bulkWrite if needed
   if (upserts.length) {
     await BookingBusinessModel.bulkWrite(upserts, { session });
   }

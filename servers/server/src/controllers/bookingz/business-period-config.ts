@@ -16,7 +16,7 @@ import type { Context } from "hono";
 export const getPeriodsForDayController = async (c: Context) => {
   // Extract businessId and dayOfWeek from URL parameters
   const { businessId, dayOfWeek } = c.req.param();
-  const dow = parseInt(dayOfWeek, 10);
+  const dow = Number.parseInt(dayOfWeek, 10);
 
   // Execute the service call inside a transaction using your runInTransaction helper
   const periods = await runInTransaction(async (session) => {
@@ -49,8 +49,8 @@ export const getFilteredPeriodConfigsController = async (c: Context) => {
 
 export const getSinglePeriodController = async (c: Context) => {
   const { businessId, dayOfWeek, period } = c.req.param();
-  const dow = parseInt(dayOfWeek, 10);
-  const prd = parseInt(period, 10);
+  const dow = Number.parseInt(dayOfWeek, 10);
+  const prd = Number.parseInt(period, 10);
 
   const periodCfg = await runInTransaction((session) =>
     getSinglePeriodService(businessId, dow, prd, session),
@@ -65,8 +65,8 @@ export const getSinglePeriodController = async (c: Context) => {
 
 export const upsertPeriodConfigController = async (c: Context) => {
   const { businessId, dayOfWeek, period } = c.req.param();
-  const dow = parseInt(dayOfWeek, 10);
-  const prd = parseInt(period, 10);
+  const dow = Number.parseInt(dayOfWeek, 10);
+  const prd = Number.parseInt(period, 10);
 
   const payload = await c.req.json(); // validated in the route
 
@@ -96,7 +96,7 @@ export const bulkUpdatePeriodsController = async (c: Context) => {
 
 export const toggleAllPeriodsForBusinessDayController = async (c: Context) => {
   const { businessId, dayOfWeek } = c.req.param();
-  const dow = parseInt(dayOfWeek, 10);
+  const dow = Number.parseInt(dayOfWeek, 10);
 
   const result = await runInTransaction(async (session) => {
     return toggleAllPeriodsForBusinessDayByBusinessAndDow(
@@ -116,8 +116,8 @@ export const toggleAllPeriodsForBusinessDayController = async (c: Context) => {
 export const toggleSinglePeriodController = async (c: Context) => {
   const { businessId, dayOfWeek, period } = c.req.param();
 
-  const dow = parseInt(dayOfWeek, 10);
-  const periodNum = parseInt(period, 10);
+  const dow = Number.parseInt(dayOfWeek, 10);
+  const periodNum = Number.parseInt(period, 10);
 
   const result = await runInTransaction(async (session) => {
     return toggleSinglePeriod(businessId, dow, periodNum, session);
