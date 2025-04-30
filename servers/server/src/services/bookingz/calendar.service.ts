@@ -1,12 +1,18 @@
 import type { ClientSession } from "mongoose";
 import dayjs from "dayjs";
-import { BookingModel, BookingBusinessModel, BusinessDayConfigModel, parseTimeToMinutes } from "@hi/db-models";
+import {
+  BookingModel,
+  BookingBusinessModel,
+  BusinessDayConfigModel,
+  parseTimeToMinutes,
+  Couponz,
+} from "@hi/db-models";
 import { buildSlots, defaultPeriodRange, derivePeriod } from "./booking.utils";
 
 // all future 60 days info
 export async function getCalendarService(
   businessId: string,
-  session: ClientSession
+  session: ClientSession,
 ) {
   const start = dayjs().startOf("day");
   const out: {
@@ -22,14 +28,19 @@ export async function getCalendarService(
     const numOfBookings = await BookingModel.countDocuments({
       businessId,
       bookingDate: dt,
-      archived_at: null
+      archived_at: null,
     }).session(session);
     const edited = await BookingBusinessModel.exists({
       businessId,
       date: dt,
-      explicitlyEdited: true
+      explicitlyEdited: true,
     }).session(session);
-    out.push({ date: iso, day: d.day(), numOfBookings, explicitlyEdited: Boolean(edited) });
+    out.push({
+      date: iso,
+      day: d.day(),
+      numOfBookings,
+      explicitlyEdited: Boolean(edited),
+    });
   }
   return out;
 }
@@ -38,18 +49,29 @@ export async function getCalendarService(
 export async function getDateInfoService(
   businessId: string,
   date: Date,
-  session: ClientSession
+  session: ClientSession,
 ) {
   const dateStr = dayjs(date).format("YYYY-MM-DD");
   const dayStart = dayjs(dateStr).startOf("day");
   const dayEnd = dayStart.add(1, "day");
   const ledgerDate = new Date(`${dateStr}T18:30:00.000Z`);
 
-  const ledgers = await BookingBusinessModel.find({ businessId, date: ledgerDate }).session(session);
+  // 1) Fetch ledger rows AND populate coupon details
+  const ledgers = await BookingBusinessModel.find({
+    businessId,
+    date: ledgerDate,
+  })
+    .session(session)
+    .populate({
+      path: "couponsRemaining.couponId",
+      model: Couponz, // refers to the 'COUPONZ' model
+    });
+
   const dow = dayStart.day();
   const detailed: any[] = [];
 
   for (const row of ledgers) {
+    // a) count bookings
     const numOfBookings = await BookingModel.countDocuments({
       businessId: row.businessId,
       period: row.period,
@@ -57,14 +79,20 @@ export async function getDateInfoService(
       status: { $nin: ["cancelled", "expired"] },
     }).session(session);
 
+    // b) fetch day config
     const dayCfg = await BusinessDayConfigModel.findOne({
       businessId: row.businessId,
       dayOfWeek: dow,
     })
       .session(session)
       .select("startTime endTime closedIntervals")
-      .lean<{ startTime: string; endTime: string; closedIntervals: { startTime: string; endTime: string }[] }>();
+      .lean<{
+        startTime: string;
+        endTime: string;
+        closedIntervals: { startTime: string; endTime: string }[];
+      }>();
 
+    // c) clamp period window
     let { start: pStart, end: pEnd } = defaultPeriodRange(row.period);
     if (dayCfg) {
       if (parseTimeToMinutes(dayCfg.startTime) > parseTimeToMinutes(pStart)) {
@@ -75,28 +103,28 @@ export async function getDateInfoService(
       }
     }
 
-    const allowedSlots = (() => {
-      const base = buildSlots(pStart, pEnd);
-      if (!dayCfg?.closedIntervals?.length) {
-        return base;
-      }
-      return base.filter(s => {
-        const sm = parseTimeToMinutes(s);
-        return !dayCfg.closedIntervals.some(ci => {
-          const ciStart = parseTimeToMinutes(ci.startTime);
-          const ciEnd = parseTimeToMinutes(ci.endTime);
-          return sm >= ciStart && sm < ciEnd;
-        });
-      });
-    })();
+    // d) build allowed slots
+    const baseSlots = buildSlots(pStart, pEnd);
+    const allowedSlots = dayCfg?.closedIntervals?.length
+      ? baseSlots.filter((s) => {
+          const sm = parseTimeToMinutes(s);
+          return !dayCfg.closedIntervals.some((ci) => {
+            const ciStart = parseTimeToMinutes(ci.startTime);
+            const ciEnd = parseTimeToMinutes(ci.endTime);
+            return sm >= ciStart && sm < ciEnd;
+          });
+        })
+      : baseSlots;
 
+    // e) aggregate actual bookings by slot
     const agg = await BookingModel.aggregate([
-      { $match: {
+      {
+        $match: {
           businessId: row.businessId,
           period: row.period,
           bookingDate: { $gte: dayStart.toDate(), $lt: dayEnd.toDate() },
           status: { $nin: ["cancelled", "expired"] },
-        }
+        },
       },
       { $group: { _id: "$slot", count: { $sum: 1 } } },
     ]).session(session);
@@ -108,15 +136,18 @@ export async function getDateInfoService(
       bookedSlots.push(_id);
     }
 
+    // f) union allowed + booked slots
     const slotSet = new Set<string>([...allowedSlots, ...bookedSlots]);
-    const slots = Array.from(slotSet).sort((a, b) =>
-      parseTimeToMinutes(a) - parseTimeToMinutes(b)
+    const slots = Array.from(slotSet).sort(
+      (a, b) => parseTimeToMinutes(a) - parseTimeToMinutes(b),
     );
 
     detailed.push({
-      bookingBusiness: row,
+      bookingBusiness: {
+        ...row.toObject(), // now includes populated couponsRemaining[i].couponId as a full doc
+      },
       numOfBookings,
-      slots: slots.map(s => ({
+      slots: slots.map((s) => ({
         slot: s,
         count: slotCounts[s] ?? 0,
         isInOperatableRange: allowedSlots.includes(s),
@@ -124,6 +155,7 @@ export async function getDateInfoService(
     });
   }
 
+  // 2) day-wide summary
   const allBookings = await BookingModel.find({
     businessId,
     bookingDate: { $gte: dayStart.toDate(), $lt: dayEnd.toDate() },
@@ -133,9 +165,14 @@ export async function getDateInfoService(
     .sort({ createdAt: -1 })
     .lean();
 
-  const dayBookings: Record<0|1|2|3, any[]> = { 0: [], 1: [], 2: [], 3: [] };
+  const dayBookings: Record<0 | 1 | 2 | 3, any[]> = {
+    0: [],
+    1: [],
+    2: [],
+    3: [],
+  };
   for (const b of allBookings) {
-    dayBookings[b.period as 0|1|2|3].push(b);
+    dayBookings[b.period as 0 | 1 | 2 | 3].push(b);
   }
 
   return {
@@ -152,10 +189,10 @@ export async function getBookingsService(
   businessId: string,
   date: Date,
   slot: string,
-  session: ClientSession
+  session: ClientSession,
 ) {
   // 1) figure out the period number from the slot
-  const period = derivePeriod(slot); 
+  const period = derivePeriod(slot);
 
   // 2) load day config to clamp
   const dateStr = dayjs(date).format("YYYY-MM-DD");
@@ -190,7 +227,7 @@ export async function getBookingsService(
   const inRange =
     sm >= parseTimeToMinutes(pStart) &&
     sm < parseTimeToMinutes(pEnd) &&
-    !dayCfg?.closedIntervals.some(ci => {
+    !dayCfg?.closedIntervals.some((ci) => {
       const ciStart = parseTimeToMinutes(ci.startTime);
       const ciEnd = parseTimeToMinutes(ci.endTime);
       return sm >= ciStart && sm < ciEnd;
@@ -214,7 +251,6 @@ export async function getBookingsService(
     bookings,
   };
 }
-
 
 // Lean type for a booking document
 interface BookingLean {
@@ -244,7 +280,7 @@ export interface BookingHistorySummary {
 export async function getBookingHistoryService(
   startDate: Date,
   endDate: Date,
-  session: ClientSession
+  session: ClientSession,
 ): Promise<{
   daily: BookingHistoryEntry[];
   summary: BookingHistorySummary;
@@ -271,21 +307,17 @@ export async function getBookingHistoryService(
 
   // 3) Build the daily array, one entry per day in the span
   const daily: BookingHistoryEntry[] = [];
-  for (
-    let d = spanStart.clone();
-    d.isBefore(spanEnd);
-    d = d.add(1, "day")
-  ) {
+  for (let d = spanStart.clone(); d.isBefore(spanEnd); d = d.add(1, "day")) {
     const key = d.format("YYYY-MM-DD");
     const bookings = byDate.get(key) ?? [];
 
     const numberOfGuests = bookings.reduce(
       (sum: number, b: BookingLean): number => sum + b.numberOfGuests,
-      0
+      0,
     );
     const totalBaseChange = bookings.reduce(
       (sum: number, b: BookingLean): number => sum + b.bookingBill,
-      0
+      0,
     );
 
     const couponUsage: Record<string, number> = {};
@@ -308,11 +340,11 @@ export async function getBookingHistoryService(
   // 4) Compute the overall summary
   const summaryNumberOfGuests = all.reduce(
     (sum: number, b: BookingLean): number => sum + b.numberOfGuests,
-    0
+    0,
   );
   const summaryTotalBaseChange = all.reduce(
     (sum: number, b: BookingLean): number => sum + b.bookingBill,
-    0
+    0,
   );
   const summaryCouponUsage: Record<string, number> = {};
   for (const b of all) {
