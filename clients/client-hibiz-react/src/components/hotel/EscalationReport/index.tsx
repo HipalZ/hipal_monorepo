@@ -1,159 +1,112 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PieChart, Pie, Legend, ResponsiveContainer, Cell, Tooltip } from "recharts";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { PieChartIcon, TableIcon } from "lucide-react";
-import useBusinessData from "@/components/store/useBusinessData";
-import { useFetchEscalatedReports } from "@/components/store/hotel/useHotelServices";
-import DateRangePicker from "@/components/molecules/dateRangePicker";
-import useTimings from "@/components/store/useTimings";
-import usePaginationStore from "@/components/store/usePaginationStore";
-import { useMemo } from "react";
+import { useState, useMemo, lazy } from "react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { PieChartIcon, TableIcon } from "lucide-react"
+import useTimings from "@/components/store/useTimings"
+import usePaginationStore from "@/components/store/usePaginationStore"
+import useBusinessData from "@/components/store/useBusinessData"
+import { useFetchEscalatedReports } from "@/components/store/hotel/useHotelServices"
+import { exportToCSV, extractRoomNames, extractServiceNames, processEscalationData } from "@/components/utils/escalation"
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
-
-const formatDate = (timestamp: number) => format(new Date(timestamp), "MMM dd, yyyy HH:mm");
+const DashboardHeader = lazy(() => import("./DashboardHeader"))
+const FilterIndicator = lazy(() => import("./FilterIndicator"))
+const SummaryCards = lazy(() => import("./SummaryCards"))
+const EscalationPieChart = lazy(() => import("./EscalationPieChart"))
+const EscalationTable = lazy(() => import("./EscalationTable"))
 
 export default function EscalationReport() {
-    const { timeStampStart, timeStampEnd } = useTimings();
-    const pageNumber = usePaginationStore((s) => s.pageNumber);
-    const businessId = useBusinessData((s) => s.businessData?._id) || "";
+    const { timeStampStart, timeStampEnd } = useTimings()
+    const pageNumber = usePaginationStore((s) => s.pageNumber)
+    const setPageNumber = usePaginationStore((s) => s.setPageNumber)
+    const businessId = useBusinessData((s) => s.businessData?._id) || ""
 
-    const { escalationData = [] } = useFetchEscalatedReports({
+    // Separate state for service and room filters
+    const [activeServiceFilter, setActiveServiceFilter] = useState<string | null>(null)
+    const [activeRoomFilter, setActiveRoomFilter] = useState<string | null>(null)
+
+    const { escalationData = [], escalatedReportsLoading } = useFetchEscalatedReports({
         businessId,
         pageNumber,
         timeStampStart,
         timeStampEnd,
-    });
+    })
+    // Extract service and room names for filtering
+    const serviceNames = useMemo(() => extractServiceNames(escalationData), [escalationData])
+    const roomNames = useMemo(() => extractRoomNames(escalationData), [escalationData])
 
-    const { serviceData } = useMemo(() => {
-        const serviceCount: Record<string, number> = {};
-        const roomsSet = new Set<string>();
-        const usersSet = new Set<string>();
+    // Process data with useMemo for performance, now with both filters
+    const { serviceData, rooms, users, totalEscalations, filteredData } = useMemo(
+        () => processEscalationData(escalationData, activeServiceFilter, activeRoomFilter),
+        [escalationData, activeServiceFilter, activeRoomFilter],
+    )
 
-        escalationData.forEach(({ serviceIds, roomId, userId }) => {
-            serviceIds.forEach(({ name }) => {
-                serviceCount[name] = (serviceCount[name] || 0) + 1;
-            });
-            if (roomId?._id) roomsSet.add(roomId._id);
-            if (userId?._id) usersSet.add(userId._id);
-        });
-
-        return {
-            serviceData: Object.entries(serviceCount).map(([name, count]) => ({ name, count })),
-            rooms: roomsSet,
-            users: usersSet,
-        };
-    }, [escalationData]);
-
-    const renderEmpty = (message: string) => (
-        <span className="flex items-center justify-center h-full py-10 text-muted-foreground">{message}</span>
-    );
+    // Handle export
+    const handleExport = () => exportToCSV(filteredData)
 
     return (
-        <div className="container mx-auto py-8 px-4">
-            <div className="flex flex-col gap-6">
-                <DateRangePicker />
-                <Tabs defaultValue="pie-chart">
-                    <TabsList className="grid grid-cols-2 mb-4">
-                        {[
-                            { value: "pie-chart", icon: PieChartIcon, label: "Pie Chart" },
-                            { value: "table", icon: TableIcon, label: "Detailed Data" },
-                        ].map(({ value, icon: Icon, label }) => (
-                            <TabsTrigger key={value} value={value} className="flex items-center gap-2">
-                                <Icon className="h-4 w-4" />
-                                <span>{label}</span>
-                            </TabsTrigger>
-                        ))}
-                    </TabsList>
+        <div className="container mx-auto py-6 px-4 space-y-8">
+            {/* Header with title and actions */}
+            <DashboardHeader
+                isLoading={escalatedReportsLoading}
+                onExport={handleExport}
+                serviceNames={serviceNames}
+                roomNames={roomNames}
+                filters={{
+                    activeServiceFilter,
+                    setActiveServiceFilter,
+                    activeRoomFilter,
+                    setActiveRoomFilter,
+                }}
+                hasData={filteredData.length > 0}
+            />
 
-                    {/* Pie Chart Tab */}
-                    <TabsContent value="pie-chart">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Service Request Distribution</CardTitle>
-                                <CardDescription>Percentage breakdown of escalations by service type</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="h-[400px]">
-                                    {serviceData.length > 0 ? (
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <PieChart>
-                                                <Pie
-                                                    data={serviceData}
-                                                    cx="50%"
-                                                    cy="50%"
-                                                    labelLine
-                                                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                                                    outerRadius={150}
-                                                    fill="#8884d8"
-                                                    dataKey="count"
-                                                    nameKey="name"
-                                                >
-                                                    {serviceData.map((_, index) => (
-                                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                                    ))}
-                                                </Pie>
-                                                <Tooltip />
-                                                <Legend />
-                                            </PieChart>
-                                        </ResponsiveContainer>
-                                    ) : (
-                                        renderEmpty("No data found")
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
+            {/* Active filter indicators */}
+            <FilterIndicator
+                filters={{
+                    activeServiceFilter,
+                    setActiveServiceFilter,
+                    activeRoomFilter,
+                    setActiveRoomFilter,
+                }}
+            />
 
-                    {/* Table Tab */}
-                    <TabsContent value="table">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Escalation Details</CardTitle>
-                                <CardDescription>Complete list of all escalation records</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="rounded-md border overflow-x-auto">
-                                    {escalationData.length > 0 ? (
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    {["#", "Date", "Service", "User", "Room", "Status"].map((head) => (
-                                                        <TableHead key={head}>{head}</TableHead>
-                                                    ))}
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {escalationData.map((item, index) => (
-                                                    <TableRow key={item._id}>
-                                                        <TableCell>{index + 1}</TableCell>
-                                                        <TableCell>{formatDate(item.createdAt)}</TableCell>
-                                                        <TableCell className="flex flex-wrap gap-1">
-                                                            {item.serviceIds.map((service) => (
-                                                                <Badge key={service._id} variant="outline">{service.name}</Badge>
-                                                            ))}
-                                                        </TableCell>
-                                                        <TableCell>{item.userId?.name || "-"}</TableCell>
-                                                        <TableCell>{item.roomId?.name || "-"}</TableCell>
-                                                        <TableCell>
-                                                            <Badge variant="destructive">{item.alertProgress}</Badge>
-                                                        </TableCell>
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    ) : (
-                                        renderEmpty("No data found")
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </TabsContent>
-                </Tabs>
-            </div>
+            {/* Summary Cards */}
+            <SummaryCards
+                isLoading={escalatedReportsLoading}
+                totalEscalations={totalEscalations}
+                uniqueRooms={rooms.size}
+                uniqueUsers={users.size}
+            />
+
+            {/* Charts and Table */}
+            <Tabs defaultValue="pie-chart">
+                <TabsList className="grid grid-cols-2 mb-4">
+                    {[
+                        { value: "pie-chart", icon: PieChartIcon, label: "Pie Chart" },
+                        { value: "table", icon: TableIcon, label: "Detailed Data" },
+                    ].map(({ value, icon: Icon, label }) => (
+                        <TabsTrigger key={value} value={value} className="flex items-center gap-2">
+                            <Icon className="h-4 w-4" />
+                            <span>{label}</span>
+                        </TabsTrigger>
+                    ))}
+                </TabsList>
+
+                {/* Pie Chart Tab */}
+                <TabsContent value="pie-chart">
+                    <EscalationPieChart isLoading={escalatedReportsLoading} serviceData={serviceData} />
+                </TabsContent>
+
+                {/* Table Tab */}
+                <TabsContent value="table">
+                    <EscalationTable
+                        isLoading={escalatedReportsLoading}
+                        data={filteredData}
+                        pageNumber={pageNumber}
+                        setPageNumber={setPageNumber}
+                        onExport={handleExport}
+                    />
+                </TabsContent>
+            </Tabs>
         </div>
-    );
+    )
 }

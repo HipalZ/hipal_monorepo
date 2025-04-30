@@ -1,5 +1,8 @@
+import { lazy } from "react"
+
+const ItemsHotelReports = lazy(() => import("@/components/hotel/EscalationReport/ItemReports"))
+import DateRangePicker from "@/components/molecules/dateRangePicker"
 import MemoizedHeader from "@/components/molecules/header"
-import Items from "@/components/templates/analytics/items"
 import { memo } from "react"
 import { FaArrowLeft } from "react-icons/fa"
 
@@ -9,7 +12,8 @@ const MemoItemReports = () => {
             <header className="linear_gradient_background">
                 <MemoizedHeader title="Item Reports" leftIcon={<FaArrowLeft />} />
             </header>
-            <Items />
+            <DateRangePicker />
+            <ItemsHotelReports />
         </main>
     )
 }

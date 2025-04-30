@@ -77,13 +77,17 @@ const hotelReportRouter = new Hono()
     async (c) => {
       const requestData = await c.req.json();
       const { businessId, page, limit, from, to } = requestData;
-      const carts = await Cart.find({
-        businessId,
-        date: {
-          $gte: from ? from : 0,
-          $lte: to ? to : Date.now(),
-        },
-      })
+
+      // Validate and construct the query
+      const query: any = { businessId };
+      if (from || to) {
+        query.date = {};
+        if (from) query.date.$gte = from;
+        if (to) query.date.$lte = to;
+      }
+
+      // Fetch carts with pagination
+      const carts = await Cart.find(query)
         .sort({ _id: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
@@ -98,13 +102,14 @@ const hotelReportRouter = new Hono()
         Map<string, { id: string; name: string; count: number }>
       >();
 
+      // Initialize time period data
       for (const period of timePeriods) {
         timePeriodData.set(period.name, new Map());
       }
 
       // Process carts to populate dishCounts and timePeriodData
       for (const cart of carts) {
-        if (cart.date === undefined) continue;
+        if (!cart.date) continue;
         const timePeriod = getTimePeriod(cart.date);
         if (!timePeriod) continue;
 
@@ -117,20 +122,20 @@ const hotelReportRouter = new Hono()
             if (!dishCounts.has(dishId)) {
               dishCounts.set(dishId, { id: dishId, name: dishName, count: 0 });
             }
-            dishCounts.get(dishId)!.count += 1;
+            dishCounts.get(dishId)!.count += item.quantity || 1;
 
             // Count dishes per time period
             const periodData = timePeriodData.get(timePeriod)!;
             if (!periodData.has(dishId)) {
               periodData.set(dishId, { id: dishId, name: dishName, count: 0 });
             }
-            periodData.get(dishId)!.count += 1;
+            periodData.get(dishId)!.count += item.quantity || 1;
           }
         }
       }
 
       // Get top 10 dishes globally
-      const topDishes = Object.values(dishCounts)
+      const topDishes = Array.from(dishCounts.values())
         .sort((a, b) => b.count - a.count)
         .slice(0, 6);
 
@@ -151,6 +156,7 @@ const hotelReportRouter = new Hono()
         topDishes,
         timeBasedAnalytics,
       };
+
       return respond(
         c,
         "Top selling dishes retrieved successfully",

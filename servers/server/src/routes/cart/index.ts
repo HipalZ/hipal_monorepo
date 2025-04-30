@@ -169,7 +169,7 @@ const cartRouter = new Hono()
     },
   )
   .get(
-    ":businessId/analytics",
+    "/:businessId/analytics",
     zValidator(
       "param",
       z.object({
