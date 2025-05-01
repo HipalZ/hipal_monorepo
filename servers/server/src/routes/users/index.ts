@@ -653,8 +653,8 @@ const usersRouter = new Hono()
           {
             $addToSet: {
               customRole: customRole,
-              password: hashPass,
             },
+            password: hashPass,
           },
           { new: true },
         );
