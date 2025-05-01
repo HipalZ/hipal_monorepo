@@ -155,6 +155,13 @@ export const getDayName = (dayOfWeek: number): string => {
   return days[dayOfWeek]
 }
 
+export const updatedGetDayName = (dayOfWeek: number): string => {
+  // Ensure the day number is within valid range (0-6)
+  const normalizedDay = ((dayOfWeek % 7) + 7) % 7
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+  return days[normalizedDay]
+}
+
 /**
  * Validate if new day bounds would invalidate any closed intervals
  */
@@ -347,3 +354,4 @@ const PERIODS = [
 export const getPeriodInfo = (periodId: number) => {
   return PERIODS.find((period) => period.id === periodId) || PERIODS[0]
 }
+

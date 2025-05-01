@@ -1,144 +1,35 @@
 import type { BusinessDayConfig, ClosedInterval, UpdateBusinessDayConfigPayload } from '@/components/types/business-day-config';
 import { getDayName, timeToMinutes } from '@/components/utils/timeUtils';
 import { cn } from '@/lib/utils';
-import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowUpRight, Calendar, CheckCircle2, ChevronDown, ChevronUp, Clock, Clock8, Edit2, Save, X, XCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowUpRight, Calendar, CheckCircle2, Clock8, XCircle } from 'lucide-react';
 import { memo, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBusinessDayConfigUIStore } from '../store/booking/businessDayConfigStore';
-import ClosedIntervalList from './ClosedIntervalList';
-import TimeRangeSelector from './TimeRangeSelector';
 
-/**
- * Props for the DayConfigCard component
- */
 type DayConfigCardProps = {
   config: BusinessDayConfig;
   businessId: string;
   onToggleDay: (businessId: string, dayOfWeek: number) => Promise<void>;
   onUpdateConfig: (businessId: string, payload: UpdateBusinessDayConfigPayload) => Promise<void>;
-  onDayClick?: (dayOfWeek: number) => void; // Add this prop for navigation
+  onDayClick?: (dayOfWeek: number) => void;
 };
 
 /**
  * Component for displaying and editing a single day configuration
  */
-const DayConfigCard: React.FC<DayConfigCardProps> = ({ config, businessId, onToggleDay, onUpdateConfig, onDayClick }) => {
+const DayConfigCard = ({ config}:DayConfigCardProps) => {
   // Local state for expanded view
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
 
   // Get UI state and actions from store
-  const {
-    editingDayId,
-    editState,
-    timeRangeError,
-    intervalError,
-    startEditing,
-    cancelEditing,
-    updateStartTime,
-    updateEndTime,
-    addClosedInterval,
-    updateClosedInterval,
-    removeClosedInterval,
-  } = useBusinessDayConfigUIStore();
+  const { editingDayId } = useBusinessDayConfigUIStore((state) => ({
+    editingDayId: state.editingDayId,
+  }));
 
   // Check if this card is being edited
   const isEditing = editingDayId === config._id;
-
-  /**
-   * Start editing this day configuration
-   */
-  const handleStartEditing = useCallback(() => {
-    startEditing(config._id, {
-      dayOfWeek: config.dayOfWeek,
-      startTime: config.startTime,
-      endTime: config.endTime,
-      closedIntervals: [...config.closedIntervals],
-      isOpen: config.isOpen,
-    });
-    setIsExpanded(true);
-  }, [config, startEditing]);
-
-  /**
-   * Toggle day open/closed
-   */
-  const handleToggleDay = useCallback(() => {
-    onToggleDay(businessId, config.dayOfWeek);
-  }, [businessId, config.dayOfWeek, onToggleDay]);
-
-  /**
-   * Handle start time change
-   */
-  const handleStartTimeChange = useCallback(
-    (newStartTime: string) => {
-      updateStartTime(newStartTime);
-    },
-    [updateStartTime],
-  );
-
-  /**
-   * Handle end time change
-   */
-  const handleEndTimeChange = useCallback(
-    (newEndTime: string) => {
-      updateEndTime(newEndTime);
-    },
-    [updateEndTime],
-  );
-
-  /**
-   * Add a new closed interval
-   */
-  const handleAddClosedInterval = useCallback(
-    (startTime: string, endTime: string) => {
-      addClosedInterval(startTime, endTime);
-    },
-    [addClosedInterval],
-  );
-
-  /**
-   * Save changes to the day configuration
-   */
-  const handleSave = useCallback(async () => {
-    if (!editState) return;
-
-    const payload: UpdateBusinessDayConfigPayload = {
-      dayOfWeek: editState.dayOfWeek,
-      startTime: editState.startTime,
-      endTime: editState.endTime,
-      closedIntervals: editState.closedIntervals,
-      isOpen: editState.isOpen,
-    };
-
-    try {
-      await onUpdateConfig(businessId, payload);
-    } catch (error) {
-      console.error('Error saving day config:', error);
-    }
-  }, [editState, businessId, onUpdateConfig]);
-
-  /**
-   * Toggle expanded view
-   */
-  const toggleExpanded = useCallback(() => {
-    if (!isEditing) {
-      setIsExpanded((prev) => !prev);
-    }
-  }, [isEditing]);
-
-  /**
-   * Navigate to day detail page
-   */
-  const handleDayClick = useCallback(() => {
-    if (onDayClick && config.isOpen) {
-      onDayClick(config.dayOfWeek);
-    }
-  }, [onDayClick, config.dayOfWeek, config.isOpen]);
-
-  // Check if there are any validation errors
-  const hasErrors = timeRangeError || intervalError;
 
   // Get day name abbreviation
   const dayAbbr = getDayName(config.dayOfWeek).substring(0, 3);
@@ -236,7 +127,8 @@ const DayConfigCard: React.FC<DayConfigCardProps> = ({ config, businessId, onTog
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={config.isOpen && !isEditing ? handleDayClick : undefined}
+      onClick={() => navigate(`${config.dayOfWeek}`)}
+      onKeyDown={(e) => e.key === 'Enter' && navigate(`${config.dayOfWeek}`)}
     >
       {/* Card header */}
       <div
@@ -258,15 +150,13 @@ const DayConfigCard: React.FC<DayConfigCardProps> = ({ config, businessId, onTog
               config.isOpen ? 'text-white' : 'text-gray-500',
             )}
           >
-            <Calendar className="h-5 w-5" />
+            <Calendar className="h-5 w-5 mb-4" />
             <span className="absolute mt-5 text-xs font-bold">{dayAbbr}</span>
           </div>
 
           {/* Day name and status */}
           <div>
             <h3
-              onClick={() => navigate(`${config.dayOfWeek}`)}
-              onKeyDown={(e) => e.key === 'Enter' && navigate(`${config.dayOfWeek}`)}
               className="text-base font-semibold text-gray-900"
             >
               {dayName}
@@ -280,56 +170,12 @@ const DayConfigCard: React.FC<DayConfigCardProps> = ({ config, businessId, onTog
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Toggle switch */}
-          <label className="relative inline-flex cursor-pointer items-center">
-            <input
-              type="checkbox"
-              className="peer sr-only"
-              checked={config.isOpen}
-              onChange={handleToggleDay}
-              disabled={isEditing}
-              onClick={(e) => e.stopPropagation()}
-            />
-            <div className="peer-checked:bg-primary peer-focus:ring-primary/30 h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-disabled:opacity-70"></div>
-          </label>
-
-          {/* Navigation arrow button */}
-          {config.isOpen && !isEditing && onDayClick && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDayClick(config.dayOfWeek);
-              }}
-              className="text-primary hover:bg-primary/10 ml-1 rounded-full p-1.5 transition-colors"
-              aria-label="View day details"
-            >
-              <div className="transform rounded-full bg-gradient-to-br from-pink-400 to-pink-600 p-1.5 shadow-md transition-transform hover:scale-110">
-                <ArrowUpRight size={16} className="text-white" />
-              </div>
-            </button>
-          )}
-
-          {/* Expand/collapse button */}
-          {config.isOpen && !isEditing && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleExpanded();
-              }}
-              className="ml-1 rounded-full p-1.5 text-gray-500 hover:bg-gray-100"
-              aria-label={isExpanded ? 'Collapse' : 'Expand'}
-            >
-              {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-            </button>
-          )}
+        <div className="flex items-center gap-2 p-4">
+          <ArrowUpRight size={20} />
         </div>
       </div>
-
       {/* Quick info bar - only show if day is open and not expanded */}
-      {config.isOpen && !isExpanded && !isEditing && (
+      {config.isOpen && !isEditing && (
         <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50 px-4 py-2">
           <div className="flex items-center gap-2">
             <Clock8 size={14} className="text-primary" />
@@ -345,139 +191,11 @@ const DayConfigCard: React.FC<DayConfigCardProps> = ({ config, businessId, onTog
                   availabilityPercentage > 70 ? 'bg-green-500' : availabilityPercentage > 30 ? 'bg-amber-500' : 'bg-red-500',
                 )}
                 style={{ width: `${availabilityPercentage}%` }}
-              ></div>
+              />
             </div>
             <span className="text-xs font-medium text-gray-600">{availableSlots} slots</span>
           </div>
         </div>
-      )}
-
-      {/* Card content - only show if day is open */}
-      {config.isOpen && (
-        <AnimatePresence>
-          {(isExpanded || isEditing) && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="overflow-hidden"
-            >
-              <div className="border-t border-gray-100 p-4">
-                {/* View mode */}
-                {!isEditing ? (
-                  <div>
-                    <div className="mb-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Clock size={16} className="text-primary" />
-                        <span className="text-sm font-medium text-gray-700">Business Hours:</span>
-                        <span className="text-sm font-semibold">
-                          {config.startTime} - {config.endTime}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleStartEditing();
-                        }}
-                        className="bg-primary-50 text-primary hover:bg-primary-100 inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
-                      >
-                        <Edit2 size={14} />
-                        Edit
-                      </button>
-                    </div>
-
-                    {/* Available periods with slots */}
-                    <div className="mb-4 mt-3">
-                      <h4 className="mb-2 text-sm font-medium text-gray-500">Available Periods With Slots</h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        {calculateAvailableSlots(config.startTime, config.endTime, config.closedIntervals).periodSlots.map((period) => (
-                          <div
-                            key={period.id}
-                            className={cn('rounded-md border p-2', period.available ? 'border-green-100 bg-green-50' : 'border-gray-100 bg-gray-50')}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-medium">{period.name}</span>
-                              <span className={cn('text-xs font-semibold', period.available ? 'text-green-600' : 'text-gray-400')}>
-                                {period.slots} slots
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Display closed intervals if any */}
-                    {config.closedIntervals.length > 0 && (
-                      <div className="mt-3">
-                        <h4 className="mb-2 text-xs font-medium uppercase text-gray-500">Closed Intervals</h4>
-                        <div className="space-y-2">
-                          {config.closedIntervals.map((interval, index) => (
-                            <div key={index} className="flex items-center gap-2 rounded-md bg-gray-50 p-2.5 text-sm">
-                              <div className="h-1.5 w-1.5 rounded-full bg-red-500"></div>
-                              <span className="font-medium text-gray-700">
-                                {interval.startTime} - {interval.endTime}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  /* Edit mode */
-                  <div onClick={(e) => e.stopPropagation()}>
-                    {/* Time range selector */}
-                    {editState && (
-                      <>
-                        <TimeRangeSelector
-                          startTime={editState.startTime}
-                          endTime={editState.endTime}
-                          onStartTimeChange={handleStartTimeChange}
-                          onEndTimeChange={handleEndTimeChange}
-                          error={timeRangeError}
-                        />
-
-                        {/* Closed intervals list */}
-                        <ClosedIntervalList
-                          intervals={editState.closedIntervals}
-                          dayStartTime={editState.startTime}
-                          dayEndTime={editState.endTime}
-                          onAddInterval={handleAddClosedInterval}
-                          onUpdateInterval={updateClosedInterval}
-                          onRemoveInterval={removeClosedInterval}
-                          error={intervalError}
-                        />
-                      </>
-                    )}
-
-                    {/* Action buttons */}
-                    <div className="mt-5 flex justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={cancelEditing}
-                        className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm transition-colors hover:bg-gray-50"
-                      >
-                        <X size={14} />
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleSave}
-                        className="bg-primary hover:bg-primary-600 disabled:bg-primary-300 inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-colors"
-                        disabled={!!hasErrors}
-                      >
-                        <Save size={14} />
-                        Save
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       )}
     </motion.div>
   );

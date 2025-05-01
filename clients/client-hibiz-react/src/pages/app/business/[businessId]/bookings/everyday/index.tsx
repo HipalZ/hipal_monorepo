@@ -1,62 +1,34 @@
-import { useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import MemoizedHeader from "@/components/molecules/header";
-import DayConfigList from "@/components/business-hours/DayConfigList";
-import {
-  Calendar,
-  PhoneIcon as WhatsappIcon,
-  Ticket,
-  LayoutGrid,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  useGetBusinessDayConfigs,
-  useToggleAllDays,
-  useToggleDay,
-  useUpdateBusinessDayConfig,
-} from "@/hooks/useBusinessDayConfig";
-import type { UpdateBusinessDayConfigPayload } from "@/components/types/business-day-config";
-import useBusinessData from "@/components/store/useBusinessData";
-import { Card, CardContent } from "@/components/ui/card";
-import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
-import CapacityManager from "@/components/business-hours/CapacityManager";
-
-
+import AdvancedBottomButton from '@/components/atom/bottomButton/advancedBottomButton';
+import CapacityManager from '@/components/business-hours/CapacityManager';
+import DayConfigList from '@/components/business-hours/DayConfigList';
+import MemoizedHeader from '@/components/molecules/header';
+import useBusinessData from '@/components/store/useBusinessData';
+import type { UpdateBusinessDayConfigPayload } from '@/components/types/business-day-config';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { useGetBusinessDayConfigs, useToggleAllDays, useToggleDay, useUpdateBusinessDayConfig } from '@/hooks/useBusinessDayConfig';
+import { cn } from '@/lib/utils';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Calendar, LayoutGrid, Ticket, PhoneIcon as WhatsappIcon } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 // Update the NavCard component to use the pink gradient
-const NavCard = ({
-  icon: Icon,
-  title,
-  onClick,
-  disabled = false,
-}: {
-  icon: any;
-  title: string;
-  onClick?: () => void;
-  disabled?: boolean;
-}) => {
+const NavCard = ({ icon: Icon, title, onClick, disabled = false }: { icon: any; title: string; onClick?: () => void; disabled?: boolean }) => {
   return (
     <Card
-      className={cn(
-        "text-center cursor-pointer transition-all hover:shadow-md",
-        disabled ? "opacity-50 cursor-not-allowed" : "",
-      )}
+      className={cn('cursor-pointer text-center transition-all hover:shadow-md', disabled ? 'cursor-not-allowed opacity-50' : '')}
       onClick={disabled ? undefined : onClick}
     >
-      <CardContent className="pt-6 pb-4 px-4 flex flex-col items-center">
+      <CardContent className="flex flex-col items-center px-4 pb-4 pt-6">
         <div className="mb-3">
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.9 }}>
-            <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-pink-400 to-pink-600 hover:scale-105">
-              <Icon className="w-8 h-8 text-white drop-shadow-md" />
+            <div className="transform rounded-full bg-gradient-to-br from-pink-400 to-pink-600 p-3 shadow-lg transition-transform hover:scale-105">
+              <Icon className="h-8 w-8 text-white drop-shadow-md" />
             </div>
           </motion.div>
         </div>
-        <h3 className="font-bold text-sm">{title}</h3>
+        <h3 className="text-sm font-bold">{title}</h3>
       </CardContent>
     </Card>
   );
@@ -72,9 +44,8 @@ const Everyday = () => {
   const [isActionInProgress, setIsActionInProgress] = useState(false);
   const [isCapacityModalOpen, setIsCapacityModalOpen] = useState(false);
 
-
   // Use the business day config hooks for API calls
-  const { data: businessDayConfigs, isLoading: isLoadingConfigs } = useGetBusinessDayConfigs(businessId as string || "");
+  const { data: businessDayConfigs, isLoading: isLoadingConfigs } = useGetBusinessDayConfigs((businessId as string) || '');
   const { toggleAllDays, isToggling: isTogglingAllDays } = useToggleAllDays();
   const { toggleDay, isToggling: isTogglingDay } = useToggleDay();
   const { updateBusinessDayConfig, isUpdating } = useUpdateBusinessDayConfig();
@@ -126,12 +97,7 @@ const Everyday = () => {
   }, []);
 
   // Determine if any loading state is active
-  const showLoading =
-    isLoadingConfigs ||
-    isTogglingAllDays ||
-    isTogglingDay ||
-    isUpdating ||
-    isActionInProgress;
+  const showLoading = isLoadingConfigs || isTogglingAllDays || isTogglingDay || isUpdating || isActionInProgress;
 
   return (
     <main className="min-h-screen pb-[10rem]">
@@ -141,38 +107,30 @@ const Everyday = () => {
       </header>
 
       {/* Main content */}
-      <div className="container px-4 py-8 mx-auto">
+      <div className="container mx-auto px-4 py-8">
         {/* Navigation Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
           <Card
-            className="items-start overflow-hidden shadow-md cursor-pointer hover:shadow-lg transition-all"
+            className="cursor-pointer items-start overflow-hidden shadow-md transition-all hover:shadow-lg"
             onClick={() => setIsCapacityModalOpen(true)}
           >
-            <CardContent className="pt-6 pb-4 px-4 flex flex-col items-center">
+            <CardContent className="flex flex-col items-center px-4 pb-4 pt-6">
               <div className="mb-3 flex flex-col items-center">
-                <div className="h-16 w-16 rounded-full bg-primary/20 flex items-center justify-center mb-2">
-                  <span className="font-bold text-primary text-2xl">
-                    {businessData?.capacity || 0}
-                  </span>
+                <div className="bg-primary/20 mb-2 flex h-16 w-16 items-center justify-center rounded-full">
+                  <span className="text-primary text-2xl font-bold">{businessData?.capacity || 0}</span>
                 </div>
-                <h3 className="font-bold text-sm">Capacity</h3>
+                <h3 className="text-sm font-bold">Capacity</h3>
               </div>
             </CardContent>
           </Card>
 
-          <NavCard
-            icon={Ticket}
-            title="Coupons"
-            onClick={() => navigateTo("coupons")}
-          />
+          <NavCard icon={Ticket} title="Coupons" onClick={() => navigateTo('coupons')} />
 
-          <NavCard
-            icon={LayoutGrid}
-            title="All Periods & Slots"
-            onClick={() => navigateTo("period")}
-          />
+          <NavCard icon={LayoutGrid} title="All Periods & Slots" onClick={() => navigateTo('period')} />
 
-          <NavCard icon={WhatsappIcon} title="WhatsApp" disabled={true} />
+          <NavCard icon={Calendar} title="Calendar" onClick={() => navigateTo('calendar')} />
+
+          {/* <NavCard icon={WhatsappIcon} title="WhatsApp" disabled={true} /> */}
         </div>
 
         {/* Loading indicator */}
@@ -182,18 +140,16 @@ const Everyday = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/5 backdrop-blur-[1px] z-50 flex items-center justify-center"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/5 backdrop-blur-[1px]"
             >
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="flex items-center gap-4 p-6 bg-white shadow-xl rounded-xl"
+                className="flex items-center gap-4 rounded-xl bg-white p-6 shadow-xl"
               >
-                <div className="w-8 h-8 border-4 rounded-full border-primary border-t-transparent animate-spin" />
-                <p className="font-medium text-gray-700">
-                  Updating business hours...
-                </p>
+                <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
+                <p className="font-medium text-gray-700">Updating business hours...</p>
               </motion.div>
             </motion.div>
           )}
@@ -203,7 +159,7 @@ const Everyday = () => {
         {businessDayConfigs.length > 0 ? (
           <DayConfigList
             configs={businessDayConfigs}
-            businessId={businessId || ""}
+            businessId={businessId || ''}
             onToggleDay={handleToggleDay}
             onUpdateConfig={handleUpdateConfig}
           />
@@ -211,7 +167,7 @@ const Everyday = () => {
           <Card className="overflow-hidden shadow-md">
             <CardContent className="p-8 text-center">
               <motion.div
-                className="flex items-center justify-center w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full"
+                className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-100"
                 whileHover={{ scale: 1.05, rotate: 5 }}
                 animate={{
                   y: [0, -10, 0],
@@ -220,17 +176,14 @@ const Everyday = () => {
                 transition={{
                   repeat: Number.POSITIVE_INFINITY,
                   duration: 5,
-                  ease: "easeInOut",
+                  ease: 'easeInOut',
                 }}
               >
                 <Calendar size={30} className="text-gray-900" />
               </motion.div>
-              <h3 className="mb-2 text-lg font-medium text-gray-900">
-                No business hours configured
-              </h3>
-              <p className="max-w-md mx-auto text-gray-500">
-                No business day configurations found. Please contact support to
-                set up your initial configuration.
+              <h3 className="mb-2 text-lg font-medium text-gray-900">No business hours configured</h3>
+              <p className="mx-auto max-w-md text-gray-500">
+                No business day configurations found. Please contact support to set up your initial configuration.
               </p>
             </CardContent>
           </Card>
@@ -239,11 +192,8 @@ const Everyday = () => {
 
       {/* Capacity Modal */}
       <Dialog open={isCapacityModalOpen} onOpenChange={setIsCapacityModalOpen}>
-        <DialogContent className="sm:max-w-[425px] p-2">
-          <CapacityManager
-            businessId={businessId || ""}
-            currentCapacity={businessData?.capacity || 1}
-          />
+        <DialogContent className="p-2 sm:max-w-[425px]">
+          <CapacityManager businessId={businessId || ''} currentCapacity={businessData?.capacity || 1} />
         </DialogContent>
       </Dialog>
 
@@ -253,13 +203,10 @@ const Everyday = () => {
         maxWidth="30rem"
         buttons={[
           {
-            text: anyDayOpen ? "Close All Days" : "Open All Days",
+            text: anyDayOpen ? 'Close All Days' : 'Open All Days',
             onClick: () => handleToggleAllDays(),
             disable: showLoading,
-            className: `w-full h-12 ${anyDayOpen
-                ? "bg-red-600 hover:bg-red-700"
-                : "bg-green-600 hover:bg-green-700"
-              }`,
+            className: `w-full h-12 ${anyDayOpen ? 'bg-red-600 hover:bg-red-700' : 'bg-green-600 hover:bg-green-700'}`,
             swipe: true,
           },
         ]}

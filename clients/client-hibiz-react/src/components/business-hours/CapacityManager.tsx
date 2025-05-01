@@ -200,7 +200,7 @@ const CapacityManager = ({
                         className="flex items-center"
                       >
                         {isUpdating ? (
-                          <div className="w-5 h-5 mr-2 border-2 border-white rounded-full sm:w-4 sm:h-4 border-t-transparent animate-spin"></div>
+                          <div className="w-5 h-5 mr-2 border-2 border-white rounded-full sm:w-4 sm:h-4 border-t-transparent animate-spin"/>
                         ) : (
                           <Icon3D icon={Save} size={18} />
                         )}

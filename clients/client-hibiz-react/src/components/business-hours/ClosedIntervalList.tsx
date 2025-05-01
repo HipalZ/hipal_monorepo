@@ -75,7 +75,7 @@ const ClosedIntervalList = ({
 
       {/* Error message */}
       {error && <p className="mb-2 text-xs text-red-500">{error}</p>}
-
+      
       {/* Intervals list */}
       <div className="space-y-2 mt-2">
         {intervals.length > 0 ? (
