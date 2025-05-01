@@ -46,7 +46,7 @@ export const SuccessView = ({ restaurant }: SuccessViewProps) => {
             damping: 17,
           }}
         >
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Success! Your order is sent</h1>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">Success! Your order is placed</h1>
 
           {restaurant && (
             <p className="text-lg text-gray-700 font-medium">

@@ -16,12 +16,14 @@ import hipalzRouter from "./hipalz";
 import hotelRouter from "./hotel";
 import iconRouter from "./icon";
 import kotRouter from "./kot";
+import loyaltyRouter from "./loyalty";
 import menuBannerRouter from "./menu-banner";
 import menuRouter from "./menu/menu";
 import npcRouter from "./npc";
 import paymentsRouter from "./payments";
 import permissionRouter from "./permission";
 import posRouter from "./pos";
+import posConfigurationRouter from "./posConfiguration";
 import googleReview from "./reviews";
 import scriptRouter from "./script";
 import settingsRouter from "./settings";
@@ -77,6 +79,8 @@ export const routes = app
   .route("/download", downloadRouter)
   .route("/menu", menuRouter)
   .route("/bucket", bucketRouter)
-  .route("/event", eventRouter);
+  .route("/event", eventRouter)
+  .route("/pos_configuration", posConfigurationRouter)
+  .route("/loyalty", loyaltyRouter);
 
 export type AppType = typeof routes;

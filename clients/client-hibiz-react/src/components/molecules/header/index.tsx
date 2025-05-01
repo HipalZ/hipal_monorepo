@@ -2,7 +2,6 @@ import { memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaArrowLeft } from "react-icons/fa";
 import { cn } from "@hi/common";
-import useBusinessData from "@/components/store/useBusinessData";
 
 interface HeaderProps {
   leftIcon?: JSX.Element;

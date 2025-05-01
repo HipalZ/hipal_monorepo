@@ -1,20 +1,23 @@
 import {
+  AddOn,
   Business,
   BusinessPosConfig,
+  Category,
   DeviceToken,
+  Dish,
+  Kitchen,
   KotOrder,
   MenuBanner,
   Pos,
   PosBill,
   Table,
+  Tax,
   UniquelyYours,
   UrlModel,
   User,
   UserSession,
-  WhatsAppBusinessConfig,
   Zone,
 } from "@hi/db-models";
-import { businessPosConfigSchema } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
@@ -29,6 +32,7 @@ import {
   transformItemsToSimpleArray,
 } from "../../utils/helper";
 import { petpoojaPosConfig, posApiPaths } from "../../utils/posConfig/petPooja";
+import { respond } from "../../utils/response";
 const admin = require("firebase-admin");
 export const generateTenDigitCode = (): string => {
   const min = 1000000000; // Minimum 10-digit number
@@ -174,7 +178,7 @@ const saveOrder = async (
 
 const posRouter = new Hono()
   .get("/all_pos", async (c) => {
-    const allPos = await BusinessPosConfig.find().select("posName");
+    const allPos = await Pos.find({}).select("name");
 
     return c.json(
       {
@@ -432,138 +436,223 @@ const posRouter = new Hono()
     },
   )
 
-  .post(
-    "/setup_pos_config",
-
-    zValidator("json", businessPosConfigSchema),
-
+  .get(
+    "/fetch_pos_config",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(3).max(200),
+      }),
+    ),
     async (c) => {
       //@ts-ignore
-      return runInTransaction(async (session) => {
-        const { businessId, userId } = await c.req.json();
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId } = c.req.query();
 
-        const user = await User.findById(userId);
+        const posConfig = await BusinessPosConfig.findOne({
+          businessId: businessId,
+          isDeleted: false,
+        });
+        if (!posConfig) {
+          return c.json(
+            {
+              message: "POS not found",
+              err: true,
+              data: { success: false },
+            },
+            404,
+          );
+        }
 
-        const body = await c.req.json();
+        return respond(c, "Data fetch", false, 200, posConfig);
+      });
+    },
+  )
 
-        const posConfigAlreadyExists = await BusinessPosConfig.findOne({
-          businessId,
+  .get(
+    "/dishes",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        menuId: z.string().min(3).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, menuId } = c.req.query();
+
+        const dishes = await Dish.find({
+          businessId: businessId,
+          menuId: menuId,
           isDeleted: false,
         });
 
-        if (posConfigAlreadyExists) {
-          return c.json(
-            {
-              message: "POS Config already exists",
-              err: true,
-              data: {
-                exist: true,
-              },
-            },
-            409,
-          );
-        }
+        return respond(c, "Data fetch", false, 200, dishes);
+      });
+    },
+  )
+  .get(
+    "/sub_categories",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        menuId: z.string().min(3).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, menuId } = c.req.query();
 
-        const savePosConfig = await BusinessPosConfig.create({
-          ...body,
-          date: Date.now(),
-        });
-
-        if (!savePosConfig) {
-          return c.json(
-            {
-              message: "Error saving POS Config",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            400,
-          );
-        }
-
-        const config = await WhatsAppBusinessConfig.findOne({
+        const categories = await Category.find({
           businessId: businessId,
+          menuId: menuId,
+          isDeleted: false,
+          hierarchy: "CHILD",
         });
 
-        const phoneNumberArray = [
-          "9588413799",
-          "7702605494",
-          "8668229890",
-          "9177914130",
-        ];
+        return respond(c, "Data fetch", false, 200, categories);
+      });
+    },
+  )
+  .get(
+    "/main_categories",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        menuId: z.string().min(3).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, menuId } = c.req.query();
 
-        // for (let i = 0; i < phoneNumberArray.length; i++) {
-        //   const phoneNumber = phoneNumberArray[i];
-        //   try {
-        //     const res = await axios.post(
-        //       `https://graph.facebook.com/${config?.version}/${config?.phoneId}/messages`,
-        //       {
-        //         messaging_product: "whatsapp",
-        //         to: phoneNumber,
-        //         type: "template",
-        //         template: {
-        //           name: "pos_integration_request",
-        //           language: { code: "en_GB" },
-        //           components: [
-        //             {
-        //               type: "HEADER",
-        //               text: "Hello",
-        //             },
-        //             {
-        //               type: "BODY",
-        //               parameters: [
-        //                 {
-        //                   type: "text",
-        //                   text: user?.name || "User",
-        //                 },
-        //               ],
-        //             },
-        //             {
-        //               type: "FOOTER",
-        //               text: "Powered by tester",
-        //             },
-        //           ],
-        //         },
-        //       },
-        //       {
-        //         headers: {
-        //           Authorization: `Bearer ${config?.token}`,
-        //         },
-        //       },
-        //     );
-        //     console.log("Res", res.data);
-        //   } catch (error) {
-        //     if (axios.isAxiosError(error)) {
-        //       console.error("Axios error:", error.response?.data);
-        //     } else {
-        //       console.error("Unexpected error:", error);
-        //     }
-        //   }
-        // }
+        const categories = await Category.find({
+          businessId: businessId,
+          menuId: menuId,
+          isDeleted: false,
+          hierarchy: "PARENT",
+        });
 
-        return c.json(
-          {
-            message: "POS Config saved successfully",
-            err: false,
-            data: {
-              success: true,
+        return respond(c, "Data fetch", false, 200, categories);
+      });
+    },
+  )
+  .get(
+    "/addons",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        menuId: z.string().min(3).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, menuId } = c.req.query();
+        const addons = await AddOn.find({
+          businessId: businessId,
+          menuId: menuId,
+          isDeleted: false,
+        });
+
+        return respond(c, "Data fetch", false, 200, addons);
+      });
+    },
+  )
+  .get(
+    "/kitchens",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        menuId: z.string().min(3).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, menuId } = c.req.query();
+        const kitchens = await Kitchen.find({
+          businessId: businessId,
+          menuId: menuId,
+          isDeleted: false,
+        });
+
+        return respond(c, "Data fetch", false, 200, kitchens);
+      });
+    },
+  )
+  .get(
+    "/taxes",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        menuId: z.string().min(3).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, menuId } = c.req.query();
+        const taxes = await Tax.find({
+          businessId: businessId,
+          menuId: menuId,
+          isDeleted: false,
+        });
+
+        return respond(c, "Data fetch", false, 200, taxes);
+      });
+    },
+  )
+
+  .get(
+    "/dish_config",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(3).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId } = c.req.query();
+
+        const dishConfig = await Pos.findOne({}, { businessId: businessId });
+
+        if (!dishConfig) {
+          return c.json(
+            {
+              message: "POS not found",
+              err: true,
+              data: { success: false },
             },
-          },
-          201,
-        );
+            404,
+          );
+        }
+
+        return respond(c, "Data fetch", false, 200, dishConfig);
       });
     },
   )
 
   .post(
-    "/setup_pos_config_data",
+    "/configure",
 
     zValidator(
       "json",
       z.object({
         businessId: z.string().min(1).max(50),
         restId: z.string().min(1).max(50),
+        posId: z.string().min(1).max(50),
       }),
     ),
 
@@ -601,6 +690,7 @@ const posRouter = new Hono()
               active: string;
             }) => area.active === "1",
           );
+
           // tables
           const tables = fetchAreaAndTable.data.tables.filter(
             (table: {
@@ -608,6 +698,16 @@ const posRouter = new Hono()
             }) => table.active === "1",
           );
           let zone = null;
+          if (areas.length === 0) {
+            zone = await Zone.create({
+              businessId: businessId,
+              name: "POS",
+              zoneId: "POS",
+              active: "1",
+              tableIds: [],
+              visibility: true,
+            });
+          }
           for (const area of areas) {
             // to find exact zone from zoneId
             const zoneId = area.restaurantareaid;
@@ -661,7 +761,22 @@ const posRouter = new Hono()
               },
             );
 
-            // create table short url
+            // update tableIds in zone
+
+            Zone.findOneAndUpdate(
+              {
+                zoneId,
+              },
+              {
+                $addToSet: {
+                  tableIds: creatingTable._id,
+                },
+              },
+              {
+                new: true,
+                session,
+              },
+            );
 
             const uniqueOrderId = nanoid(5);
 
@@ -744,7 +859,7 @@ const posRouter = new Hono()
               success: true,
             },
           },
-          201,
+          200,
         );
       });
     },
@@ -1426,67 +1541,6 @@ const posRouter = new Hono()
           200,
         );
       });
-    },
-  )
-
-  .post(
-    "/save_pos_credentials",
-
-    zValidator(
-      "json",
-      z.object({
-        secretKey: z.string().min(3).max(200),
-        accessKey: z.string().min(3).max(200),
-        authToken: z.string().min(3).max(200),
-        restId: z.string().min(3).max(200),
-        name: z.string().min(1).max(100),
-      }),
-    ),
-
-    async (c) => {
-      const { secretKey, accessKey, authToken, restId, name } =
-        await c.req.json();
-
-      const pos = await Pos.findOneAndUpdate(
-        {
-          name,
-        },
-        {
-          secretKey,
-          accessKey,
-          authToken,
-          restId,
-          name,
-        },
-        {
-          upsert: true,
-          new: true,
-        },
-      );
-
-      if (!pos) {
-        return c.json(
-          {
-            message: "Error saving POS credentials",
-            err: true,
-            data: {
-              success: false,
-            },
-          },
-          400,
-        );
-      }
-
-      return c.json(
-        {
-          message: "POS credentials saved successfully",
-          err: false,
-          data: {
-            success: true,
-          },
-        },
-        201,
-      );
     },
   )
 

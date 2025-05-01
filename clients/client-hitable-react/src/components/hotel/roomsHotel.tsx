@@ -14,6 +14,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAlertsColors } from "../utils/helpersHotel";
+import { useHiClientZ } from "../store/useHiClientzData";
 
 function MemoRoomsHotel() {
     const { allRooms, isLoading } = useGetAllRooms()
@@ -21,11 +22,13 @@ function MemoRoomsHotel() {
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilters, setStatusFilters] = useState<string[]>([])
     const { getStatusStyles } = useAlertsColors()
-
+    const captainRole = useHiClientZ((s) => s.captainData?.customRole[0]?.role)
     const handleRoom = useCallback((room: RoomData) => {
-        setRoomData(room)
-        setOpenRoomModal(true)
-    }, [setRoomData, setOpenRoomModal])
+        if (captainRole === "FRONT_OFFICE" || captainRole === "MANAGER") {
+            setRoomData(room)
+            setOpenRoomModal(true)
+        }
+    }, [setRoomData, setOpenRoomModal, captainRole])
 
     const toggleStatusFilter = useCallback((status: string) => {
         setStatusFilters((prev) => (prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]))

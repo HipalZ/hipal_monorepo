@@ -127,8 +127,6 @@ const staffRouter = new Hono()
           { new: true, session },
         );
 
-        console.log("updatedStaffannn", updatedStaff);
-
         if (!updatedStaff) {
           return respond(c, "Staff role exist", false, 409, {});
         }
