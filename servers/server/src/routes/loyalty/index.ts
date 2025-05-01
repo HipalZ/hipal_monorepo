@@ -1,8 +1,8 @@
 import {
+  Couponz,
   LoyaltySettings,
   Subscriber,
   User,
-  UserCouponGrabb,
   UserReward,
 } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
@@ -101,9 +101,12 @@ const loyaltyRouter = new Hono().post(
         loyaltyId: loyaltySetting.loyaltyId,
         userId: userData._id,
       }),
-      UserCouponGrabb.find({
-        userId: userData._id,
+      Couponz.find({
         businessId,
+        "conditions.eligibleUser.allUsers": true,
+        isActive: true,
+        isDeleted: false,
+        "conditions.eligibleUser.userIds": userData._id,
       })
         .select("couponId")
         .populate("couponId"),
