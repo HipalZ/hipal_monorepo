@@ -529,6 +529,8 @@ const usersRouter = new Hono()
         },
       };
 
+      await axios(options);
+
       const userData = await User.findOne({ phone });
 
       return c.json({
