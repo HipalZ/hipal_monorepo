@@ -15,20 +15,33 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAlertsColors } from "../utils/helpersHotel";
 import { useHiClientZ } from "../store/useHiClientzData";
+import { useParams } from "react-router-dom";
 
 function MemoRoomsHotel() {
+    const { hid: urlBusinessId } = useParams();
     const { allRooms, isLoading } = useGetAllRooms()
     const { setRoomData, setOpenRoomModal } = useHotelStore()
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilters, setStatusFilters] = useState<string[]>([])
     const { getStatusStyles } = useAlertsColors()
-    const captainRole = useHiClientZ((s) => s.captainData?.customRole[0]?.role)
-    const handleRoom = useCallback((room: RoomData) => {
-        if (captainRole === "FRONT_OFFICE" || captainRole === "MANAGER") {
-            setRoomData(room)
-            setOpenRoomModal(true)
-        }
-    }, [setRoomData, setOpenRoomModal, captainRole])
+    const captainData = useHiClientZ((s) => s.captainData);
+    const handleRoom = useCallback(
+        (room: RoomData) => {
+            // Check if any customRole matches the businessId and has the required role
+            const hasAccess = captainData?.customRole?.some(
+                (roleEntry) =>
+                    roleEntry.businessId?._id === urlBusinessId &&
+                    (roleEntry.role === "FRONT_OFFICE" || roleEntry.role === "HELP_DESK" || roleEntry.role === "MANAGER")
+            );
+            if (hasAccess) {
+                setRoomData(room);
+                setOpenRoomModal(true);
+            } else {
+                console.error("Access denied: Invalid role or business ID mismatch");
+            }
+        },
+        [captainData, urlBusinessId, setRoomData, setOpenRoomModal]
+    );
 
     const toggleStatusFilter = useCallback((status: string) => {
         setStatusFilters((prev) => (prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]))
