@@ -529,7 +529,7 @@ const usersRouter = new Hono()
           authkey: "387796AmyGlDBq63b2d75aP1",
         },
       };
-
+      await axios(options);
       const userData = await User.findOne({ phone });
 
       return c.json({
