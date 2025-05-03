@@ -77,7 +77,7 @@ export default function EscalationTable({
                                 {data.map((item, index) => (
                                     <TableRow key={item._id} className="hover:bg-muted/50 transition-colors">
                                         <TableCell className="font-medium">{index + 1}</TableCell>
-                                        <TableCell>{formatDate(item.createdAt)}</TableCell>
+                                        <TableCell>{formatDate(item?.createdAt)}</TableCell>
                                         <TableCell className="flex flex-wrap gap-1 max-w-[200px]">
                                             {item.serviceIds.map((service) => (
                                                 <Badge key={service._id} variant="outline" className="whitespace-nowrap text-xs">
@@ -92,7 +92,7 @@ export default function EscalationTable({
                                                 {item.alertProgress}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell>{formatDate(item.deliveredAt) || "-"}</TableCell>
+                                        {item?.deliveredAt && <TableCell>{formatDate(item?.deliveredAt) || "-"}</TableCell>}
                                     </TableRow>
                                 ))}
                             </TableBody>
