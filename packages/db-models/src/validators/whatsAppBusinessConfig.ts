@@ -24,6 +24,7 @@ export const whatsAppBusinessConfigSchema = z.object({
   ownerId: ObjectIdSchema.optional(),
   marketingTemplateCost: z.number().default(0.89),
   utilityTemplateCost: z.number().default(0.2),
+  sendBillSummaryTemplate: z.boolean().default(false),
 });
 
 export type WhatsAppBusinessConfigType = z.infer<

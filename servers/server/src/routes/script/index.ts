@@ -13,6 +13,7 @@ import {
   Payment,
   PaymentAlert,
   Pos,
+  Reviews,
   Table,
   UrlModel,
   User,
@@ -21,16 +22,33 @@ import {
 } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
+import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
+import { schedule } from "node-cron";
 import { z } from "zod";
 import { cache } from "../../utils/cacheHelper";
 import { petpoojaPosConfig } from "../../utils/posConfig/petPooja";
 import { razorpayWrapper } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 import { whatsAppConfig } from "../../utils/whatAppTemplate";
+import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
 
 //
+
+const startOfToday = new Date();
+startOfToday.setHours(0, 0, 0, 0);
+
+const endOfToday = new Date();
+endOfToday.setHours(23, 59, 59, 999);
+
+const getCurrentDate = (): string => {
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, "0"); // Ensure 2-digit day
+  const month = String(today.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+  const year = today.getFullYear();
+  return `${day}-${month}-${year}`; // Format: DD-MM-YYYY
+};
 const scriptRouter = new Hono()
   .get("/pos_to_businessposconfig", async (c) => {
     const businesses = await Business.find();
@@ -1339,6 +1357,288 @@ const scriptRouter = new Hono()
         }
 
         return respond(c, "pos setting updated successfully", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/create_bill_summary_template",
+    zValidator(
+      "json",
+      z.object({
+        active: z.boolean().default(false),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+
+        const cronExpression = "30 19 * * *";
+
+        // Schedule the task
+        schedule(
+          cronExpression,
+          async () => {
+            const whatsAppBusinessConfig = await WhatsAppBusinessConfig.find({
+              sendBillSummaryTemplate: true,
+            });
+
+            for (const config of whatsAppBusinessConfig) {
+              const businessId = config.businessId;
+              const business = await Business.findById(businessId);
+              const ownerData = await User.findById(business?.staffIds[0]);
+
+              const fromDate = startOfToday.getTime();
+              const toDate = endOfToday.getTime();
+
+              const payments = await Payment.find({
+                businessId,
+                isDeleted: false,
+                date: { $gte: fromDate, $lte: toDate },
+              });
+
+              const reviewsCount = await Reviews.countDocuments({
+                businessId,
+                isDeleted: false,
+                date: { $gte: fromDate, $lte: toDate },
+              });
+
+              let totalServiceCharge = 0;
+              let totalTax = 0;
+              let totalForceSettle = 0;
+              let totalDiscount = 0;
+              let totalCoinGiven = 0;
+              let totalCoinClaimed = 0;
+              let totalCouponUsed = 0;
+              let totalComplementary = 0;
+
+              let overAllAmount = 0;
+              let totalOnlineSale = 0;
+              const offlineSales: Record<string, number> = {};
+
+              for (const payment of payments) {
+                const { total = 0, paymentMode, mode, splitModes } = payment;
+                totalServiceCharge += payment.serviceCharge ?? 0;
+                totalTax += payment.tax ?? 0;
+                totalForceSettle +=
+                  payment.settleType === "FORCE_SETTLE" ? total : 0;
+                totalDiscount += payment.claimedCoins ?? 0;
+                totalCoinGiven += payment.earnCoins ?? 0;
+                totalCoinClaimed += payment.claimedCoins ?? 0;
+                totalCouponUsed += payment.couponId ? 1 : 0;
+                totalComplementary +=
+                  payment.mode === "complementary" ? payment.billValue : 0;
+
+                if (mode === "split" && Array.isArray(splitModes)) {
+                  let splitTotal = 0;
+
+                  for (const settle of splitModes) {
+                    if (settle.name !== "complementary") {
+                      splitTotal += settle.amount ?? 0;
+                      offlineSales[settle.name] =
+                        (offlineSales[settle.name] || 0) + (settle.amount ?? 0);
+                    }
+                  }
+
+                  overAllAmount += splitTotal; // Only add non-complementary split values
+                } else if (!["dues", "npc", "complementary"].includes(mode)) {
+                  overAllAmount += total; // Add total if it's not dues, npc, or complementary
+                }
+
+                if (paymentMode === "online") {
+                  totalOnlineSale += total;
+                } else if (
+                  !["dues", "npc", "complementary"].includes(paymentMode)
+                ) {
+                  offlineSales[mode] = (offlineSales[mode] || 0) + total;
+                }
+              }
+
+              const totalOfflinesales = Object.values(offlineSales).reduce(
+                (acc, value) => acc + value,
+                0,
+              );
+
+              const billSummary = {
+                businessId,
+                totalSales: overAllAmount,
+                totalOnlineSales: totalOnlineSale,
+
+                totalServiceCharge,
+                totalTax,
+                totalForceSettle,
+                totalDiscount,
+                upiMachine: offlineSales["(upi)machine"] || 0,
+                cash: offlineSales["cash"] || 0,
+                card: offlineSales["(card)machine"] || 0,
+                swiggyPay: offlineSales["swiggypay"] || 0,
+                zomato: offlineSales["zomatopay"] || 0,
+                magicPin: offlineSales["magicpin"] || 0,
+                totalCoinGiven,
+                totalCoinClaimed,
+                totalCouponUsed,
+                totalComplementary,
+                reviewsCount,
+              };
+
+              const currentDate = getCurrentDate();
+
+              if (config) {
+                try {
+                  const res = await axios.post(
+                    `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
+                    {
+                      messaging_product: "whatsapp",
+                      to: ownerData?.phone?.toString(),
+                      type: "template",
+                      template: {
+                        name: "sales_report_template",
+                        language: { code: "en" },
+                        components: [
+                          {
+                            type: "body",
+                            parameters: [
+                              {
+                                type: "text",
+                                text: business?.name,
+                              },
+                              {
+                                type: "text",
+                                text: currentDate,
+                              },
+                              {
+                                type: "text",
+                                text: overAllAmount,
+                              },
+
+                              {
+                                type: "text",
+                                text: totalOnlineSale,
+                              },
+                              {
+                                type: "text",
+                                text: totalOfflinesales,
+                              },
+                              {
+                                type: "text",
+                                text: totalServiceCharge.toFixed(2),
+                              },
+                              {
+                                type: "text",
+                                text: totalTax.toFixed(2),
+                              },
+                              {
+                                type: "text",
+                                text: totalForceSettle,
+                              },
+                              {
+                                type: "text",
+                                text: totalDiscount.toFixed(2),
+                              },
+                              {
+                                type: "text",
+                                text: billSummary.upiMachine,
+                              },
+                              {
+                                type: "text",
+                                text: billSummary.cash,
+                              },
+                              {
+                                type: "text",
+                                text: billSummary.card,
+                              },
+                              {
+                                type: "text",
+                                text: billSummary.swiggyPay,
+                              },
+                              {
+                                type: "text",
+                                text: billSummary.zomato,
+                              },
+                              {
+                                type: "text",
+                                text: billSummary.magicPin,
+                              },
+                              {
+                                type: "text",
+                                text: billSummary.totalCoinGiven,
+                              },
+                              {
+                                type: "text",
+                                text: billSummary.totalCoinClaimed,
+                              },
+                              {
+                                type: "text",
+                                text: billSummary.totalCouponUsed,
+                              },
+                              {
+                                type: "text",
+                                text: billSummary.totalComplementary,
+                              },
+                              {
+                                type: "text",
+                                text: reviewsCount,
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      headers: {
+                        Authorization: `Bearer ${config.token}`,
+                      },
+                    },
+                  );
+                } catch (error) {
+                  console.log("Error sending WhatsApp message:", error);
+                }
+              }
+            }
+          },
+          {
+            scheduled: true,
+            timezone: "Asia/Kolkata", // Ensure the timezone is set to IST
+          },
+        );
+
+        return respond(c, "Scheduler set to run at 1 AM IST", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/upload_special_banner",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        specialBannerUrl: z.string().url(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+
+        const { businessId, specialBannerUrl } = requestData;
+
+        const business = await OutLetInfo.findOneAndUpdate(
+          {
+            businessId,
+          },
+          {
+            $set: {
+              specialBannerUrl,
+            },
+          },
+          { session, new: true },
+        );
+
+        return respond(c, "Scheduler set to run at 1 AM IST", false, 200, {});
       });
     },
   );

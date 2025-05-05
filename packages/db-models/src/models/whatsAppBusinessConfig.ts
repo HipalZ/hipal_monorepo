@@ -69,6 +69,11 @@ const whatsAppBusinessConfigSchema =
         required: false,
         default: 0.2,
       },
+      sendBillSummaryTemplate: {
+        type: Boolean,
+        required: false,
+        default: false,
+      },
     },
     {
       timestamps: true,
