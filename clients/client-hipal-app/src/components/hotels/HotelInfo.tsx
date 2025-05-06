@@ -83,16 +83,22 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                                 <section className="flex flex-row justify-around gap-2 pb-12 -ml-2">
                                     <Button
                                         onClick={callTheOwner}
-                                        className="px-3 py-4 transition-colors rounded-full text-secondary bg-primary"
+                                        style={{
+                                            color: 'var(--s)'
+                                        }}
+                                        className="px-3 py-4 transition-colors rounded-full bg-primary"
                                         type="button"
                                         aria-label="Call"
                                     >
                                         <MdOutlineCall size="24" />
-                                        Direction
+                                        Call
                                     </Button>
                                     <Button
                                         onClick={whatsappOwner}
-                                        className="px-3 py-4 transition-colors rounded-full text-secondary bg-primary"
+                                        style={{
+                                            color: 'var(--s)'
+                                        }}
+                                        className="px-3 py-4 transition-colors rounded-full bg-primary"
                                         type="button"
                                         aria-label="WhatsApp"
                                     >
@@ -100,7 +106,10 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                                     </Button>
                                     <Button
                                         onClick={goToLocation}
-                                        className="px-3 py-4 transition-colors rounded-full text-secondary bg-primary"
+                                        style={{
+                                            color: 'var(--s)'
+                                        }}
+                                        className="px-3 py-4 transition-colors rounded-full bg-primary"
                                         type="button"
                                         aria-label="Location"
                                     >
@@ -118,6 +127,9 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                     <section className="flex flex-row justify-around pt-12 pb-2">
                         <Button
                             onClick={callTheOwner}
+                            style={{
+                                color: 'var(--s)'
+                            }}
                             className="p-4 transition-colors rounded-full text-secondary bg-primary"
                             type="button"
                             aria-label="Call"
@@ -126,6 +138,9 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                             Call
                         </Button>
                         <Button
+                            style={{
+                                color: 'var(--s)'
+                            }}
                             onClick={whatsappOwner}
                             className="p-4 transition-colors rounded-full text-secondary bg-primary"
                             type="button"
@@ -134,6 +149,9 @@ export const HotelInfoSection = memo(function HotelInfoSection({ business, class
                             <FaWhatsapp size="24" /> Whatsapp
                         </Button>
                         <Button
+                            style={{
+                                color: 'var(--s)'
+                            }}
                             onClick={goToLocation}
                             className="p-4 transition-colors rounded-full text-secondary bg-primary"
                             type="button"

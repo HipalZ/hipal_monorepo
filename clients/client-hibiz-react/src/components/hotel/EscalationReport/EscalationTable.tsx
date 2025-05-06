@@ -68,7 +68,7 @@ export default function EscalationTable({
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    {["#", "Date", "Service", "User", "Room", "Status", "Delivery Time"].map((head) => (
+                                    {["#", "Date", "Service", "User", "Room", "Delivery Time"].map((head) => (
                                         <TableHead key={head}>{head}</TableHead>
                                     ))}
                                 </TableRow>
@@ -87,11 +87,6 @@ export default function EscalationTable({
                                         </TableCell>
                                         <TableCell>{item.userId?.name || "-"}</TableCell>
                                         <TableCell>{item.roomId?.name || "-"}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="destructive" className="whitespace-nowrap">
-                                                {item.alertProgress}
-                                            </Badge>
-                                        </TableCell>
                                         {item?.deliveredAt && <TableCell>{formatDate(item?.deliveredAt) || "-"}</TableCell>}
                                     </TableRow>
                                 ))}
