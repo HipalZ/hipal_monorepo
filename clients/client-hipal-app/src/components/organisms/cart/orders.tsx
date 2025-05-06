@@ -151,15 +151,21 @@ const MemoOrders = () => {
                         <h4 className="text-base font-medium text-gray-900 truncate">
                           {item?.dish?.name}
                         </h4>
-                        {item.portion && (
-                          <p className="italic mt-0.5 text-sm text-gray-500">
-                            {item?.portion?.name}
-                          </p>
+                        {item?.portion && (
+                          <div className={"text-xs text-gray-500"}>
+                            Portion: {item?.portion?.name}
+                          </div>
                         )}
-                        {item.extras.length > 0 && (
-                          <p className="italic mt-1 text-sm text-gray-500">
-                            Extra: {item.extras.map(e => e.name).join(", ")}
-                          </p>
+                        {item?.extras && item?.extras.length > 0 && (
+                          <div className="text-xs mt-1 text-gray-500">
+                            Extras:{" "}
+                            {item.extras.map((extra, index) => (
+                              <span key={extra.id}>
+                                {extra.name} {extra.quantity > 1 ? `× ${extra.quantity}` : ""}
+                                {index !== item.extras.length - 1 && ", "}
+                              </span>
+                            ))}
+                          </div>
                         )}
                         {item?.dish?.instruction?.length > 0 &&
                           <p className="inline-flex italic mt-1 gap-1 text-sm text-gray-500">
