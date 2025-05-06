@@ -484,6 +484,9 @@ const roomRouter = new Hono()
       }
 
       if (whatsAppConfig) {
+        const business = await Business.findById(roomExists.businessId).select(
+          "name",
+        );
         const res = await axios.post(
           `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
           {
@@ -526,6 +529,62 @@ const roomRouter = new Hono()
         if (res.status !== 200) {
           throw new Error("Error sending message");
         }
+
+        const shortUrlObj = await UrlModel.findOne({
+          urlCode: updatedRoom.slug,
+        });
+
+        const updateLongUrl = `${
+          shortUrlObj?.longUrl
+        }&id=${user?._id.toString()}`;
+
+        const response = await axios.post(
+          `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+          {
+            messaging_product: "whatsapp",
+            to: user?.phone?.toString(),
+            type: "template",
+            template: {
+              name: "test_welcome_template3",
+              language: { code: "en" },
+              components: [
+                {
+                  type: "header",
+                  parameters: [
+                    {
+                      type: "image",
+                      image: {
+                        link: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/589185485.jpg?k=4f3001e657d6f119e0d732a2ae688f21e76ca70bff1d82f45ae9d47e3ca2d343&o=&hp=1",
+                      },
+                    },
+                  ],
+                },
+                {
+                  type: "body",
+                  parameters: [
+                    {
+                      type: "text",
+                      text: business?.name,
+                    },
+
+                    {
+                      type: "text",
+                      text: updateLongUrl,
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${whatsAppConfig.token}`,
+            },
+          },
+        );
+        if (response.status !== 200) {
+          throw new Error("Error sending message");
+        }
       }
 
       return respond(c, "Checked in successfully", false, 200, {
@@ -544,51 +603,53 @@ const roomRouter = new Hono()
       if (!roomExists) {
         return respond(c, "Room not found", true, 404, {});
       }
-      const userData = await User.findById(roomExists?.userIds[0])
-        .select("phone name")
-        .lean();
 
       const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
         businessId: roomExists.businessId,
       }).populate("businessId");
 
       if (whatsAppConfig) {
-        const res = await axios.post(
-          `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
-          {
-            messaging_product: "whatsapp",
-            to: userData?.phone?.toString(),
-            type: "template",
-            template: {
-              name: "test_thankyou_template",
-              language: { code: "en" },
-              components: [
-                {
-                  type: "body",
-                  parameters: [
-                    {
-                      type: "text",
-                      text: userData?.name,
-                    },
+        for (const userId of requestData.userIds) {
+          const userData = await User.findById(userId)
+            .select("phone name")
+            .lean();
+          const res = await axios.post(
+            `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+            {
+              messaging_product: "whatsapp",
+              to: userData?.phone?.toString(),
+              type: "template",
+              template: {
+                name: "test_thankyou_template",
+                language: { code: "en" },
+                components: [
+                  {
+                    type: "body",
+                    parameters: [
+                      {
+                        type: "text",
+                        text: userData?.name,
+                      },
 
-                    {
-                      type: "text",
-                      text: "https:google.com",
-                    },
-                  ],
-                },
-              ],
+                      {
+                        type: "text",
+                        text: "https:google.com",
+                      },
+                    ],
+                  },
+                ],
+              },
             },
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${whatsAppConfig.token}`,
+            {
+              headers: {
+                Authorization: `Bearer ${whatsAppConfig.token}`,
+              },
             },
-          },
-        );
+          );
 
-        if (res.status !== 200) {
-          throw new Error("Error sending message");
+          if (res.status !== 200) {
+            throw new Error("Error sending message");
+          }
         }
       }
 
@@ -614,6 +675,15 @@ const roomRouter = new Hono()
 
       if (!removeSession) {
         throw new Error("Error removing room session");
+      }
+
+      const deleteRoomChat = await HotelRoomChat.updateMany(
+        { roomId },
+        { $set: { isDeleted: true } },
+        { session },
+      );
+      if (!deleteRoomChat) {
+        throw new Error("Error deleting room chat");
       }
 
       const registrationToken = await DeviceToken.find({
