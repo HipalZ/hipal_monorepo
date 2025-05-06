@@ -7,6 +7,7 @@ import {
   Dish,
   Kitchen,
   KotOrder,
+  Menu,
   MenuBanner,
   Pos,
   PosBill,
@@ -663,6 +664,10 @@ const posRouter = new Hono()
         // ! this is work if qr code is not generated for the table before this business
         // ! if qr code is generated for the table then we need to use script not this api
 
+        await Menu.deleteMany({
+          businessId: businessId,
+        });
+
         const business =
           await Business.findById(businessId).select("customLink");
         const fetchAreaAndTable = await axios.post(
@@ -834,6 +839,34 @@ const posRouter = new Hono()
             },
           );
         }
+
+        const zone = await Zone.find({
+          businessId: businessId,
+        });
+
+        const zoneIds = zone.map((zone) => zone._id.toString());
+        const createMenu = await Menu.create(
+          [
+            {
+              name: "Default",
+              businessId: businessId,
+              zoneIds: zoneIds,
+              menuType: 2,
+              days: [1, 2, 3, 4, 5, 6, 7],
+              startTime: 240,
+              endTime: 239,
+              isActive: true,
+              isDeleted: false,
+              categoryLayout: 2,
+              cardLayout: 2,
+              primaryColor: "#ec4899",
+              secondaryColor: "#fce7f3",
+            },
+          ],
+          {
+            session,
+          },
+        );
 
         return c.json(
           {

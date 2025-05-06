@@ -104,22 +104,22 @@ const scriptRouter = new Hono()
       const categoryServices = [
         {
           name: "TV",
-          image: "https://assets.hipalz.com/Tv-removebg-preview.png",
+          image: "https://assets.hipalz.com/tv.png",
           businessId,
         },
         {
           name: "AC",
-          image: "https://assets.hipalz.com/AC_Service-removebg-preview.png",
+          image: "https://assets.hipalz.com/ac%20repair.png",
           businessId,
         },
         {
           name: "PLUMBING",
-          image: "https://assets.hipalz.com/Plumber-removebg-preview.png",
+          image: "https://assets.hipalz.com/plumber.png",
           businessId,
         },
         {
           name: "WIFI",
-          image: "https://assets.hipalz.com/wifi%20router.png",
+          image: "https://assets.hipalz.com/wifi.png",
           businessId,
         },
         {
@@ -129,27 +129,27 @@ const scriptRouter = new Hono()
         },
         {
           name: "CARPENTER",
-          image: "https://assets.hipalz.com/Carpenter-removebg-preview.png",
+          image: "https://assets.hipalz.com/carpenter.png",
           businessId,
         },
         {
           name: "PAINT",
-          image: "https://assets.hipalz.com/Painter-removebg-preview.png",
+          image: "https://assets.hipalz.com/painter.png",
           businessId,
         },
         {
           name: "LIFT",
-          image: "https://assets.hipalz.com/Lift-removebg-preview.png",
+          image: "https://assets.hipalz.com/lift%20repair.png",
           businessId,
         },
         {
           name: "FOOD",
-          image: "https://assets.hipalz.com/food.png",
+          image: "https://assets.hipalz.com/foodimage.png",
           businessId,
         },
         {
           name: "HOUSE_KEEPING",
-          image: "https://assets.hipalz.com/room%20cleaming.png",
+          image: "https://assets.hipalz.com/house%20keeping.png",
           businessId,
         },
       ];
@@ -863,7 +863,7 @@ const scriptRouter = new Hono()
           menuType: parentCat ? 1 : 2,
           days: [1, 2, 3, 4, 5, 6, 7],
           startTime: 240,
-          endTime: 240,
+          endTime: 239,
           isActive: true,
           isDeleted: false,
           categoryLayout: 2,
@@ -1637,6 +1637,9 @@ const scriptRouter = new Hono()
           },
           { session, new: true },
         );
+        if (!business) {
+          return respond(c, "Business not found", true, 404, {});
+        }
 
         return respond(c, "Scheduler set to run at 1 AM IST", false, 200, {});
       });
