@@ -132,11 +132,11 @@ const ChatCartComponent = ({ cart }: { cart: Cart[] }) => {
                             <div className="flex-1">
                                 <div className="font-medium flex items-center gap-2">
                                     {item?.dish?.name}
-                                    <MemoFoodType types={item?.dish?.types} />
+                                    <MemoFoodType types={item?.dish?.dishTypes} />
                                 </div>
                                 {item?.portion && (
                                     <div className={"text-xs text-gray-500"}>
-                                        Portion: {item?.portion}
+                                        Portion: {item?.portion?.name}
                                     </div>
                                 )}
                                 {item?.extras && item?.extras.length > 0 && (
