@@ -140,8 +140,14 @@ const ChatCartComponent = ({ cart }: { cart: Cart[] }) => {
                                     </div>
                                 )}
                                 {item?.extras && item?.extras.length > 0 && (
-                                    <div className={"text-xs mt-1 text-gray-500"}>
-                                        Extras: {item?.extras.join(", ")}
+                                    <div className="text-xs mt-1 text-gray-500">
+                                        Extras:{" "}
+                                        {item.extras.map((extra, index) => (
+                                            <span key={extra.id}>
+                                                {extra.name} {extra.quantity > 1 ? `× ${extra.quantity}` : ""}
+                                                {index !== item.extras.length - 1 && ", "}
+                                            </span>
+                                        ))}
                                     </div>
                                 )}
                             </div>
