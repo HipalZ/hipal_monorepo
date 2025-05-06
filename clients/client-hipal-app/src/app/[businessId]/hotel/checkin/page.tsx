@@ -1,6 +1,7 @@
 import { getBusinessData } from "@/apis/commonApis"
 import { getThemeSettings } from "@/apis/hotel"
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader"
+import CheckInNavbar from "@/components/hotels/room/CheckInNavbar"
 import ServiceCategoriesSection from "@/components/hotels/room/ServiceCategoriesSection"
 import type { BusinessDetails } from "@/components/types/businessData"
 import dynamic from "next/dynamic"
@@ -66,9 +67,6 @@ const ViewPortContainer = dynamic(
   },
 )
 
-const NavBarHotel = dynamic(() => import("@/components/hotels/NavBarHotel").then((mod) => mod.NavBarHotel), {
-  loading: () => <SkeletonLoader height={200} />,
-})
 
 const ResponsiveImage = dynamic(() => import("@/components/hotels/room/RoomTopSection"), {
   loading: () => <SkeletonLoader height={200} />,
@@ -101,11 +99,12 @@ const page = async ({
   const room = typeof searchParams.room === "string" ? searchParams.room : "hipalz"
   const userId = typeof searchParams.id === "string" ? searchParams.id : ""
   const themeData = await getThemeSettings(businessData?.businessId)
+
   console.log("userId", userId)
   return (
     <HotelBackgroundContainer overlayOpacity={50}>
       <ViewPortContainer className="relative mx-auto max-w-[30rem] pb-[10rem]">
-        <NavBarHotel text={room || "Room Number"} centerText showBackButton={false} />
+        <CheckInNavbar room={room} />
 
         <ResponsiveImage imageUrl={businessData.endBannerUrl || ""} alt="Room Top Section" />
 

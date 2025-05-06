@@ -1,12 +1,12 @@
 import Image from "next/image"
-import RoomImage from "@/assets/hotel/roomImage.png"
+import RoomImage from "@/assets/hotel/roomImage.jpeg"
 
 interface RoomCardProps {
   roomNumber: string | number
   className?: string
 }
 
-export default function RoomCard({ roomNumber,  className }: RoomCardProps) {
+export default function RoomCard({ roomNumber, className }: RoomCardProps) {
   return (
     <div
       className={`relative w-full max-w-[30rem] h-[180px] rounded-lg overflow-hidden flex ${className || ""}`}
