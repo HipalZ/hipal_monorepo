@@ -1,5 +1,59 @@
 const transformData = (data) => {
+  const nowIST = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
+  );
+  // helper: map JS getDay() to your schedule_day strings
+  const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const today = dayMap[nowIST.getDay()];
+
+  // parse the categorytimings JSON or return empty array
+  const safeParseTimings = (raw) => {
+    if (!raw) return [];
+    try {
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) {
+      console.warn("Failed to parse timings:", e);
+      return [];
+    }
+  };
+
+  // check if a category is active right now
+  const isActiveNow = (timings) => {
+    for (const schedule of timings) {
+      // match either today’s day or “All”
+      if (schedule.schedule_day !== "All" && schedule.schedule_day !== today)
+        continue;
+      for (const slot of schedule.schedule_time_slots || []) {
+        const [sh, sm] = slot.start_time.split(":").map(Number);
+        const [eh, em] = slot.end_time.split(":").map(Number);
+
+        // build Date objects for this slot on IST
+        const start = new Date(nowIST);
+        start.setHours(sh, sm, 0, 0);
+        const end = new Date(nowIST);
+        end.setHours(eh, em, 0, 0);
+
+        // handle overnight spans (e.g. 22:00–06:00)
+        if (end <= start) {
+          // if now ≥ start OR now ≤ end (past midnight)
+          if (nowIST >= start || nowIST <= end) return true;
+        } else {
+          if (nowIST >= start && nowIST <= end) return true;
+        }
+      }
+    }
+    return false;
+  };
+
   const transformedCategories = data.categories.map((category) => {
+    // Parse and check timings
+    const timings = safeParseTimings(category.categorytimings);
+    if (timings.length > 0 && !isActiveNow(timings)) {
+      return null; // exclude this category
+    }
+
+    // Filter items belonging to this category
     const items = data.items.filter(
       (item) => item.item_categoryid === category.categoryid,
     );
