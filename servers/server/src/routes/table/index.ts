@@ -342,7 +342,10 @@ const tableRouter = new Hono()
                   : settleAmount,
               currency: "INR",
               receipt: uniqueOrderId,
-              userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
+              userId:
+                paymentMode?.name === "npc"
+                  ? npcUser?.userId
+                  : tableSession?.customerIds?.[0] || captainId,
               claimedCoins: tableSession?.claimedCoins || 0,
               tableName: table?.name,
               tips: tableSession?.tips || 0,
@@ -369,7 +372,7 @@ const tableRouter = new Hono()
               mode: settleModes.length > 1 ? "split" : paymentMode?.name,
               status: "SUCCESS",
               paymentMode: settleModes.length > 1 ? "split" : paymentMode?.name,
-              userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
+              userId: saveOrder[0].userId,
               claimedCoins: saveOrder[0].claimedCoins,
               billValue: saveOrder[0].billValue,
               tips: saveOrder[0].tips,
@@ -622,7 +625,10 @@ const tableRouter = new Hono()
                   : tableSession?.finalTotal || 0,
               currency: "INR",
               receipt: uniqueOrderId,
-              userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
+              userId:
+                paymentMode?.name === "npc"
+                  ? npcUser?.userId
+                  : tableSession?.customerIds?.[0] || captainId,
               claimedCoins: tableSession?.claimedCoins || 0,
               tableName: table?.name,
               tips: tableSession?.tips || 0,
@@ -645,7 +651,7 @@ const tableRouter = new Hono()
               mode: settleModes.length > 1 ? "split" : paymentMode?.name,
               status: "SUCCESS",
               paymentMode: settleModes.length > 1 ? "split" : paymentMode?.name,
-              userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
+              userId: saveOrder[0].userId,
               claimedCoins: saveOrder[0].claimedCoins,
               billValue: saveOrder[0].billValue,
               tips: saveOrder[0].tips,

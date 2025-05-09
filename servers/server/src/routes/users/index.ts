@@ -530,7 +530,7 @@ const usersRouter = new Hono()
         },
       };
       await axios(options);
-      const userData = await User.findOne({ phone });
+      const userData = await User.findOne({ phone }).select("name phone");
 
       return c.json({
         message: "OTP sent successfully",

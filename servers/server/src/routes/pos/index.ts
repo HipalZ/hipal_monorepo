@@ -292,8 +292,10 @@ const posRouter = new Hono()
               discount: orderData.discount,
               tax: tableSession.finalTax,
               total: tableSession.finalTotal,
-              customerPhone: orderData.customer_phone,
-              customerName: orderData.customer_name,
+              customerPhone:
+                tableSession.phoneNumbers[0] || orderData.customer_phone,
+              customerName:
+                tableSession.customerName || orderData.customer_name,
               tableName: orderData.table_no,
               billRequestId: tableSession.billRequestId,
               items: simpleArray,
@@ -407,8 +409,9 @@ const posRouter = new Hono()
             discount: orderData.discount,
             tax: updateSession?.finalTax,
             total: updateSession?.finalTotal,
-            customerPhone: orderData.customer_phone,
-            customerName: orderData.customer_name,
+            customerPhone:
+              tableSession.phoneNumbers[0] || orderData.customer_phone,
+            customerName: tableSession.customerName || orderData.customer_name,
             tableName: orderData.table_no,
             billRequestId: bill_request_id,
             items: simpleArray,
@@ -1764,6 +1767,105 @@ const posRouter = new Hono()
         },
         200,
       );
+    },
+  )
+
+  .put(
+    "/link_user_to_bill",
+
+    zValidator(
+      "json",
+      z.object({
+        name: z.string().min(1).max(200),
+        phone: z.string().min(10).max(10),
+        billRequestId: z.string().min(1).max(200),
+        otp: z.string().min(4).max(4),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { phone, name, billRequestId, otp } = await c.req.json();
+
+        // Verify OTP
+        const otpResponse = await axios({
+          method: "GET",
+          url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
+          headers: {
+            accept: "application/json",
+            authkey: "387796AmyGlDBq63b2d75aP1",
+          },
+        });
+
+        const invalidOtpMessages = [
+          "Mobile no. not found",
+          "OTP not match",
+          "OTP expired",
+          "Otp empty or not numeric",
+          "Max limit reached for this otp verification",
+        ];
+
+        if (invalidOtpMessages.includes(otpResponse?.data?.message)) {
+          return respond(c, "Please enter valid Otp !!", true, 400, {});
+        }
+
+        const userData = await User.findOne({ phone: phone }).session(session);
+        if (!userData) {
+          const newUser = new User({
+            phone: phone,
+            name: name,
+          });
+
+          await newUser.save({ session });
+
+          const userSession = await UserSession.findOneAndUpdate(
+            {
+              billRequestId: billRequestId,
+            },
+            {
+              $addToSet: {
+                customerIds: newUser._id,
+                phoneNumbers: phone,
+              },
+              customerName: name,
+            },
+
+            {
+              session,
+              new: true,
+            },
+          );
+          return c.json(
+            {
+              message: "User linked successfully",
+              err: false,
+              data: {
+                success: true,
+              },
+            },
+            200,
+          );
+        }
+
+        const userSession = await UserSession.findOneAndUpdate(
+          {
+            billRequestId: billRequestId,
+          },
+          {
+            $addToSet: {
+              phoneNumbers: phone,
+              customerIds: userData?._id,
+            },
+            customerName: name,
+          },
+
+          {
+            session,
+            new: true,
+          },
+        );
+      });
     },
   );
 
