@@ -1843,11 +1843,18 @@ const posRouter = new Hono()
             },
           );
 
-          const updateTableData = await Table.findByIdAndUpdate(tableId, {
-            $addToSet: {
-              userIds: newUser._id,
+          const updateTableData = await Table.findByIdAndUpdate(
+            tableId,
+            {
+              $addToSet: {
+                userIds: newUser._id,
+              },
             },
-          });
+            {
+              session,
+            },
+          );
+
           return c.json(
             {
               message: "User linked successfully",
@@ -1879,11 +1886,17 @@ const posRouter = new Hono()
           },
         );
 
-        const updateTableData = await Table.findByIdAndUpdate(tableId, {
-          $addToSet: {
-            userIds: userData._id,
+        const updateTableData = await Table.findByIdAndUpdate(
+          tableId,
+          {
+            $addToSet: {
+              userIds: userData._id,
+            },
           },
-        });
+          {
+            session,
+          },
+        );
       });
     },
   );

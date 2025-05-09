@@ -2,10 +2,12 @@ import type { Model } from "mongoose";
 import mongoose from "mongoose";
 import type { AnalyticsType } from "../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
+
 const analyticSchema = new mongoose.Schema<AnalyticsType>({
   businessId: {
     type: ObjectId,
     required: true,
+    ref: "Business",
   },
   userId: {
     type: ObjectId,
