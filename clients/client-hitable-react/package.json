@@ -45,6 +45,7 @@
     "firebase": "^10.13.0",
     "framer-motion": "^11.11.17",
     "howler": "^2.2.4",
+    "input-otp": "^1.4.2",
     "lodash": "^4.17.21",
     "lucide-react": "^0.469.0",
     "react": "^18.2.0",

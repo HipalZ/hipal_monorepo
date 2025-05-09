@@ -1925,6 +1925,14 @@ const posRouter = new Hono()
             session,
           },
         );
+        return c.json(
+          {
+            message: "User linked successfully",
+            err: false,
+            data: { success: true },
+          },
+          200
+        );
       });
     },
   );
