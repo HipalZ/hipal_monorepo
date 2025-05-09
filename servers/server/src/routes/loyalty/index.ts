@@ -106,15 +106,13 @@ const loyaltyRouter = new Hono().post(
         "conditions.eligibleUser.allUsers": true,
         isActive: true,
         isDeleted: false,
-        "conditions.eligibleUser.userIds": userData._id,
-      })
-        .select("couponId")
-        .populate("couponId"),
+      }),
     ]);
 
     const userDataResponse = {
       coins: userCoins?.rewards || 0,
       coupons: userGrabbedCoupons,
+      userData: userData,
     };
 
     return respond(c, "loyalty", false, 200, userDataResponse);

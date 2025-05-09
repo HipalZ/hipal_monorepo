@@ -8,7 +8,7 @@ export const campaignSchema = z.object({
   bulkCustomers: z
     .array(
       z.object({
-        name: z.string().min(3).max(100),
+        name: z.string().min(1).max(100),
         phone: z.string().min(3).max(100),
       }),
     )

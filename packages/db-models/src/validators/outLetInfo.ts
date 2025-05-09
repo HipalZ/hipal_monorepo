@@ -110,6 +110,14 @@ export const outLetInfoSchema = z.object({
   birthdayCampaign: ObjectIdSchema.optional(),
   registeredName: z.string().min(3).max(100).optional(),
   menuId: ObjectIdSchema.optional(),
+  veg: z.boolean().optional().default(true),
+  nonVeg: z.boolean().optional().default(true),
+  egg: z.boolean().optional().default(true),
+  vegan: z.boolean().optional().default(true),
+  alcohol: z.boolean().optional().default(true),
+  nonAlcohol: z.boolean().optional().default(true),
+  noAddButton: z.boolean().optional().default(false),
+  noPlaceOrderButton: z.boolean().optional().default(false),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;

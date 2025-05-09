@@ -238,6 +238,38 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     required: false,
     ref: "menu",
   },
+  veg: {
+    type: Boolean,
+    default: true,
+  },
+  nonVeg: {
+    type: Boolean,
+    default: true,
+  },
+  egg: {
+    type: Boolean,
+    default: true,
+  },
+  vegan: {
+    type: Boolean,
+    default: true,
+  },
+  alcohol: {
+    type: Boolean,
+    default: true,
+  },
+  nonAlcohol: {
+    type: Boolean,
+    default: true,
+  },
+  noAddButton: {
+    type: Boolean,
+    default: false,
+  },
+  noPlaceOrderButton: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 //middlewares
