@@ -1644,6 +1644,50 @@ const scriptRouter = new Hono()
         return respond(c, "Scheduler set to run at 1 AM IST", false, 200, {});
       });
     },
+  )
+
+  .post(
+    "/upload_customers",
+    zValidator(
+      "json",
+      z.object({
+        users: z.array(
+          z.object({
+            name: z.string().min(2).max(50),
+            phone: z.string().min(10).max(10),
+            dob: z.number(),
+          }),
+        ),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { users } = requestData;
+
+        for (const user of users) {
+          const { phone, name, dob } = user;
+
+          const userExist = await User.exists({
+            phone: phone,
+          });
+
+          if (userExist) {
+            const createUser = new User({
+              phone,
+              dob,
+              name,
+            });
+
+            await createUser.save();
+          }
+        }
+
+        return respond(c, "Customers uploaded successfully", false, 200, {});
+      });
+    },
   );
 
 export default scriptRouter;

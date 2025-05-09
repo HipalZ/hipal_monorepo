@@ -1,8 +1,14 @@
 // books.ts
-import { Banner, BusinessSettings, OutLetInfo } from "@hi/db-models";
+import {
+  Banner,
+  BusinessSettings,
+  OutLetInfo,
+  TermAndCondition,
+} from "@hi/db-models";
 import {
   BusinessSettingsSchema,
   bannerSchema,
+  termsAndConditionSchema,
 } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
@@ -94,6 +100,36 @@ const settingsRouter = new Hono()
         201,
         createSetting,
       );
+    },
+  )
+  .post(
+    "/terms_and_condition",
+    authTokenValidator,
+    requireAuthorization([
+      ClientRoles.OWNER,
+      ClientRoles.HIPAL_CUSTOMER,
+      ClientRoles.CAPTAIN,
+    ]),
+
+    zValidator("json", termsAndConditionSchema),
+
+    async (c) => {
+      const requestData = await c.req.json();
+
+      const { businessId, termsAndConditions } = requestData;
+
+      const saveAndUpdateTermsAndConditions =
+        await TermAndCondition.findOneAndUpdate(
+          {
+            businessId: businessId,
+          },
+          {
+            termsAndConditions: termsAndConditions,
+          },
+          { upsert: true },
+        );
+
+      return respond(c, "update", false, 200);
     },
   )
   .put(

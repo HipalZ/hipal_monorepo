@@ -2192,8 +2192,13 @@ const paymentsRouter = new Hono()
     zValidator("query", paramsSchema),
     async (c) => {
       const { businessId, from, to } = c.req.query();
-      const fromDate = from ? Number(from) : startOfToday.getTime();
-      const toDate = to ? Number(to) : endOfToday.getTime();
+      const fourHoursTimestamp = 14400000;
+      const fromDate = from
+        ? Number(from) + fourHoursTimestamp
+        : startOfToday.getTime() + fourHoursTimestamp;
+      const toDate = to
+        ? Number(to) + fourHoursTimestamp
+        : endOfToday.getTime() + fourHoursTimestamp;
 
       if (fromDate > toDate) {
         return c.json({
@@ -2279,8 +2284,13 @@ const paymentsRouter = new Hono()
     async (c) => {
       let { appliedFilter } = c.req.query();
       const { businessId, from, to } = c.req.query();
-      const fromDate = from ? Number(from) : startOfToday.getTime();
-      const toDate = to ? Number(to) : endOfToday.getTime();
+      const fourHoursTimestamp = 14400000;
+      const fromDate = from
+        ? Number(from) + fourHoursTimestamp
+        : startOfToday.getTime() + fourHoursTimestamp;
+      const toDate = to
+        ? Number(to) + fourHoursTimestamp
+        : endOfToday.getTime() + fourHoursTimestamp;
 
       if (fromDate > toDate) {
         return c.json({
@@ -3410,8 +3420,13 @@ const paymentsRouter = new Hono()
     ),
     async (c) => {
       const { businessId, from, to } = c.req.query();
-      const fromDate = from ? Number(from) : startOfToday.getTime();
-      const toDate = to ? Number(to) : endOfToday.getTime();
+      const fourHoursTimestamp = 14400000;
+      const fromDate = from
+        ? Number(from) + fourHoursTimestamp
+        : startOfToday.getTime() + fourHoursTimestamp;
+      const toDate = to
+        ? Number(to) + fourHoursTimestamp
+        : endOfToday.getTime() + fourHoursTimestamp;
 
       if (fromDate > toDate) {
         return c.json({
@@ -3515,8 +3530,13 @@ const paymentsRouter = new Hono()
     ),
     async (c) => {
       const { businessId, from, to } = c.req.query();
-      const fromDate = from ? Number(from) : startOfToday.getTime();
-      const toDate = to ? Number(to) : endOfToday.getTime();
+      const fourHoursTimestamp = 14400000;
+      const fromDate = from
+        ? Number(from) + fourHoursTimestamp
+        : startOfToday.getTime() + fourHoursTimestamp;
+      const toDate = to
+        ? Number(to) + fourHoursTimestamp
+        : endOfToday.getTime() + fourHoursTimestamp;
 
       if (fromDate > toDate) {
         return c.json({
