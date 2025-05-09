@@ -1,16 +1,8 @@
-import mongoose from "mongoose";
 import { z } from "zod";
+import { ObjectIdSchema } from "./common";
 import { dishSchema, portionSchema } from "./dish";
 
 // Define a custom ObjectId validator for mongoose
-const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
-  z
-    .string()
-    .refine((val) => mongoose.isValidObjectId(val), {
-      message: "Invalid ObjectId",
-    })
-    .transform((val) => new mongoose.Types.ObjectId(val)),
-);
 
 // Define the cart item schema
 const CartItemSchema = z.object({

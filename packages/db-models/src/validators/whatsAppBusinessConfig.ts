@@ -1,14 +1,6 @@
-import mongoose from "mongoose";
 import { z } from "zod";
+import { ObjectIdSchema } from "./common";
 
-const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
-  z
-    .string()
-    .refine((val) => mongoose.Schema.Types.ObjectId, {
-      message: "Invalid ObjectId",
-    })
-    .transform((val) => new mongoose.Types.ObjectId(val)),
-);
 export const whatsAppBusinessConfigSchema = z.object({
   businessId: ObjectIdSchema,
   token: z.string().min(3).max(400),
