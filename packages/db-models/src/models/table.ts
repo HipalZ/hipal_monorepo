@@ -11,6 +11,7 @@ const tableSchema = new mongoose.Schema<TableType>(
     businessId: {
       type: ObjectId,
       required: true,
+      ref: "Business",
     },
     zoneId: {
       type: String,

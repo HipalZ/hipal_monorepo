@@ -1778,15 +1778,20 @@ const posRouter = new Hono()
       z.object({
         name: z.string().min(1).max(200),
         phone: z.string().min(10).max(10),
-        billRequestId: z.string().min(1).max(200),
         otp: z.string().min(4).max(4),
+        tableId: z.string().min(22).max(50),
       }),
     ),
 
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { phone, name, billRequestId, otp } = await c.req.json();
+        const { phone, name, tableId, otp } = await c.req.json();
+
+        const tableData = await Table.findById(tableId);
+        if (!tableData) {
+          return respond(c, "table not found", true, 404, {});
+        }
 
         // Verify OTP
         const otpResponse = await axios({
@@ -1821,7 +1826,8 @@ const posRouter = new Hono()
 
           const userSession = await UserSession.findOneAndUpdate(
             {
-              billRequestId: billRequestId,
+              tableName: tableData.name,
+              businessId: tableData.businessId,
             },
             {
               $addToSet: {
@@ -1836,6 +1842,12 @@ const posRouter = new Hono()
               new: true,
             },
           );
+
+          const updateTableData = await Table.findByIdAndUpdate(tableId, {
+            $addToSet: {
+              userIds: newUser._id,
+            },
+          });
           return c.json(
             {
               message: "User linked successfully",
@@ -1850,7 +1862,8 @@ const posRouter = new Hono()
 
         const userSession = await UserSession.findOneAndUpdate(
           {
-            billRequestId: billRequestId,
+            tableName: tableData.name,
+            businessId: tableData.businessId,
           },
           {
             $addToSet: {
@@ -1865,6 +1878,12 @@ const posRouter = new Hono()
             new: true,
           },
         );
+
+        const updateTableData = await Table.findByIdAndUpdate(tableId, {
+          $addToSet: {
+            userIds: userData._id,
+          },
+        });
       });
     },
   );
