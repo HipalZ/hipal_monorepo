@@ -188,7 +188,7 @@ const QuickFilter = () => {
 
     if (index !== -1 && splideRef.current) {
       // Use go with smooth transition but don't force position
-      splideRef.current.go(index, false);
+      splideRef.current.go(index - 1);
     }
   }, [isActiveDishType]);
 
