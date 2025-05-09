@@ -5,7 +5,7 @@ import { memo, useCallback, useRef, useEffect } from "react";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import Image from "next/image";
 import veg from "@/assets/veg.png";
-import nonVeg from "@/assets/nonVeg.png";
+import nonVeg from "@/assets/nonveg.png";
 import egg from "@/assets/egg.png";
 import vegan from "@/assets/vegan.png";
 import Alcohol from "@/assets/alcohol.png";
