@@ -604,7 +604,14 @@ const businessesRouter = new Hono()
     },
   )
 
-  .get("/n/:customLink", zValidator("param", paramsSchema), async (c) => {
+  .get("/n/:customLink",
+    zValidator(
+      "param",
+      z.object({
+        customLink: z.string().min(1).max(50),
+      
+      }))
+    , async (c) => {
     let { customLink } = c.req.param();
 
     customLink = customLink.trim();
@@ -612,6 +619,8 @@ const businessesRouter = new Hono()
     const getBusiness = await Business.findOne({
       customLink: customLink,
     }).select("_id");
+
+    console.log("getBusiness", getBusiness);
     const outLetInfo = await OutLetInfo.findOne({
       businessId: getBusiness?._id,
     })

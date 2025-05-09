@@ -7,8 +7,6 @@ const ObjectIdSchema = z
   .length(24, { message: "ObjectId must be 24 characters" })
   .regex(/^[0-9a-fA-F]{24}$/, { message: "Invalid hex string" });
 
-
-
 export const paramsSchema = z
   .object({
     id: ObjectIdSchema.optional(),
@@ -45,13 +43,4 @@ export const paramsSchema = z
     UniquelyYours: z.string().optional(),
     download: z.string().optional(),
   })
-  .refine(
-    (data) => {
-      const keys = Object.keys(data) as (keyof typeof data)[];
-      return keys.every((key) => !data[key]);
-    },
-    {
-      message: 'Invalid ID format',
-      path: [], // Path is left empty to indicate the error can be for any of the fields
-    },
-  );
+

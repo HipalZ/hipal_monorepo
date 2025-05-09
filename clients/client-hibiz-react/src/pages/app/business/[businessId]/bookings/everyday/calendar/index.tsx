@@ -310,7 +310,7 @@ const Calendar = () => {
                       className={cn(
                         isSmallScreen ? "text-base" : "text-xl",
                         "font-semibold",
-                        day.isToday && "rounded-full bg-purple-500 px-1 py-0.5 text-white",
+                        day.isToday && "rounded-full bg-purple-500 w-6 h-6 md:w-8 md:h-8 flex items-center justify-center py-0.5 text-white",
                       )}
                     >
                       {format(day.date, "d")}
@@ -464,6 +464,7 @@ const Calendar = () => {
     </main>
   )
 }
+
 
 Calendar.displayName = "Calendar"
 

@@ -62,7 +62,6 @@ const CouponAllocationSection = ({ coupons, allocations, onAllocationsChange }: 
         }
         return allocation
       })
-
       onAllocationsChange(newAllocations)
     },
     [allocations, onAllocationsChange],

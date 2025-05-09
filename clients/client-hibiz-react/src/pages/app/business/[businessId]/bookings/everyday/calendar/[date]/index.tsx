@@ -1,22 +1,172 @@
-import CouponCard from "@/components/calendar/coupon-card.tsx"
-import MemoizedHeader from "@/components/molecules/header/index.tsx"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getPeriodName } from "@/components/utils/timeUtils"
-import { useGetIndividualDateInfo } from "@/hooks/useBookingCalendar"
-import { format, parseISO } from "date-fns"
-import { Clock, Ticket, Users } from "lucide-react"
-import { useParams } from "react-router-dom"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { memo, useCallback, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import LoadingSpinner from '@/components/atom/loadingSpinner/index.tsx';
+import AddCouponDialog from '@/components/calendar/add-coupon-dialog';
+import PeriodCard from '@/components/calendar/period-card';
+import MemoizedHeader from '@/components/molecules/header/index.tsx';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getPeriodName } from '@/components/utils/timeUtils';
+import {
+  useGetIndividualDateInfo,
+  useUpdateExplicitBooking,
+  type ExplicitBookingUpdatePayload,
+  type IBookingBusinessDetails,
+} from '@/hooks/useBookingCalendar';
+import { useGetBusinessCoupons } from '@/hooks/useBusinessCoupons.ts';
+import { format, parseISO } from 'date-fns';
+import { Clock, Users } from 'lucide-react';
+
+// Define types for component props
+interface DateInfoSummaryProps {
+  totalBookings: number;
+  periodCount: number;
+}
+
+// Summary cards component
+const DateInfoSummary = memo(({ totalBookings, periodCount }: DateInfoSummaryProps) => {
+  return (
+    <div className="my-6 grid grid-cols-2 gap-4 px-4">
+      <Card>
+        <CardContent className="p-2">
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-purple-100 p-3">
+              <Users className="h-6 w-6 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Total Bookings</p>
+              <h3 className="text-2xl font-bold">{totalBookings}</h3>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-2">
+          <div className="flex items-center gap-3">
+            <div className="rounded-full bg-purple-100 p-3">
+              <Clock className="h-6 w-6 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500">Periods</p>
+              <h3 className="text-2xl font-bold">{periodCount}</h3>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+});
+
+DateInfoSummary.displayName = 'DateInfoSummary';
 
 const IndividualDateInfo = () => {
-  const { businessId, date } = useParams<{ businessId: string; date: string }>()
-  const { dateInfo, gettingDateInfo } = useGetIndividualDateInfo(businessId as string, date as string)
+  const { businessId, date } = useParams<{ businessId: string; date: string }>();
+  const { dateInfo, gettingDateInfo } = useGetIndividualDateInfo(businessId as string, date as string);
+  const { data: allCouponsData, isLoading: loadingCoupons } = useGetBusinessCoupons(businessId as string);
+  const { updateExplicitBooking, isUpdating } = useUpdateExplicitBooking();
+
+  // State for editing
+  const [editingPeriod, setEditingPeriod] = useState<number | null>(null);
+  const [isOpenState, setIsOpenState] = useState<boolean>(true);
+  const [editedCoupons, setEditedCoupons] = useState<{ couponId: string; remaining: number }[]>([]);
+  const [showAddCouponDialog, setShowAddCouponDialog] = useState(false);
+
+  // Get all coupons from the response
+  const allCoupons = useMemo(() => allCouponsData?.data || [], [allCouponsData]);
 
   // Calculate total bookings across all periods
-  const totalBookings = dateInfo?.summary?.totalBookingsOfDay || 0
+  const totalBookings = useMemo(() => dateInfo?.summary?.totalBookingsOfDay || 0, [dateInfo]);
+
+  // Start editing a period
+  const startEditing = useCallback((periodData: IBookingBusinessDetails) => {
+    setEditingPeriod(periodData.bookingBusiness.period);
+    setIsOpenState(periodData.bookingBusiness.isOpen);
+
+    // Initialize edited coupons with current values
+    const currentCoupons = periodData.bookingBusiness.couponsRemaining.map((coupon) => ({
+      couponId: coupon.couponId._id,
+      remaining: coupon.remaining,
+    }));
+    setEditedCoupons(currentCoupons);
+  }, []);
+
+  // Cancel editing
+  const cancelEditing = useCallback(() => {
+    setEditingPeriod(null);
+    setEditedCoupons([]);
+  }, []);
+
+  // Save changes
+  const saveChanges = useCallback(
+    (periodData: IBookingBusinessDetails) => {
+      const payload: ExplicitBookingUpdatePayload = {};
+
+      // Only include isOpen if it changed
+      if (isOpenState !== periodData.bookingBusiness.isOpen) {
+        payload.isOpen = isOpenState;
+      }
+
+      // Only include coupons if they changed
+      if (editedCoupons.length > 0) {
+        payload.couponsRemaining = editedCoupons;
+      }
+
+      // Only make API call if there are changes
+      if (Object.keys(payload).length > 0) {
+        updateExplicitBooking({
+          businessId: businessId as string,
+          date: date as string,
+          period: periodData.bookingBusiness.period,
+          payload,
+        });
+      }
+
+      setEditingPeriod(null);
+    },
+    [businessId, date, editedCoupons, isOpenState, updateExplicitBooking],
+  );
+
+  // Update coupon count
+  const updateCouponCount = useCallback((couponId: string, change: number) => {
+    setEditedCoupons((prev) => {
+      const couponIndex = prev.findIndex((c) => c.couponId === couponId);
+      if (couponIndex === -1) return prev;
+
+      const newCoupons = [...prev];
+      const newCount = Math.max(0, newCoupons[couponIndex].remaining + change);
+      newCoupons[couponIndex] = { ...newCoupons[couponIndex], remaining: newCount };
+      return newCoupons;
+    });
+  }, []);
+
+  // Add new coupons
+  const addNewCoupons = useCallback((selectedCoupons: Array<{ couponId: string; remaining: number }>) => {
+    setEditedCoupons((prev) => {
+      const newCoupons = [...prev];
+
+      // Process each selected coupon
+      selectedCoupons.forEach((selectedCoupon) => {
+        const existingIndex = newCoupons.findIndex((c) => c.couponId === selectedCoupon.couponId);
+
+        if (existingIndex !== -1) {
+          // Update existing coupon
+          newCoupons[existingIndex].remaining += selectedCoupon.remaining;
+        } else {
+          // Add new coupon
+          newCoupons.push(selectedCoupon);
+        }
+      });
+
+      return newCoupons;
+    });
+  }, []);
+
+  // Show add coupon dialog
+  const handleShowAddCouponDialog = useCallback(() => {
+    setShowAddCouponDialog(true);
+  }, []);
 
   if (gettingDateInfo) {
     return (
@@ -38,12 +188,12 @@ const IndividualDateInfo = () => {
 
         <Skeleton className="h-64 w-full" />
       </main>
-    )
+    );
   }
 
   if (!dateInfo) {
     return (
-      <div>
+      <main>
         <header className="linear_gradient_background">
           <MemoizedHeader title={date} />
         </header>
@@ -53,46 +203,25 @@ const IndividualDateInfo = () => {
             <p className="text-gray-500">Could not load booking information for this date. Please try again later.</p>
           </CardContent>
         </Card>
-      </div>
-    )
+      </main>
+    );
   }
+
+  if (isUpdating) {
+    return <LoadingSpinner />;
+  }
+
+  // Format the date for display
+  const formattedDate = date ? format(parseISO(date as string), 'EEEE, MMMM d, yyyy') : '';
 
   return (
     <main className="pb-[5rem]">
       <header className="linear_gradient_background">
-        <MemoizedHeader title={date} />
+        <MemoizedHeader title={formattedDate} />
       </header>
 
       {/* Summary Cards */}
-      <div className="my-6 grid grid-cols-2 gap-4 px-4 ">
-        <Card>
-          <CardContent className="p-2">
-            <div className="flex items-center gap-3">
-              <div className="rounded-full bg-purple-100 p-3">
-                <Users className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Total Bookings</p>
-                <h3 className="text-2xl font-bold">{totalBookings}</h3>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-2">
-            <div className="flex items-center gap-3">
-              <div className="rounded-full bg-purple-100 p-3">
-                <Clock className="h-6 w-6 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-500">Periods</p>
-                <h3 className="text-2xl font-bold">{dateInfo.bookingBusinessDetails.length}</h3>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <DateInfoSummary totalBookings={totalBookings} periodCount={dateInfo.bookingBusinessDetails.length} />
 
       {/* Period Tabs */}
       <Tabs defaultValue="all">
@@ -109,72 +238,20 @@ const IndividualDateInfo = () => {
         <TabsContent value="all">
           <div className="space-y-6">
             {dateInfo.bookingBusinessDetails.map((periodData) => (
-              <Card className="rounded-none shadow-none lg:mx-4 lg:rounded-xl border-none" key={periodData.bookingBusiness.period}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center justify-between text-lg">
-                    <span className="flex items-center gap-2">
-                      {getPeriodName(periodData.bookingBusiness.period)}
-                      <Badge variant={periodData.bookingBusiness.isOpen ? "default" : "destructive"}>
-                        {periodData.bookingBusiness.isOpen ? "Open" : "Closed"}
-                      </Badge>
-                    </span>
-                    <Badge variant="outline" className="ml-auto">
-                      {periodData.numOfBookings} {periodData.numOfBookings === 1 ? "booking" : "bookings"}
-                    </Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {/* Coupons Section */}
-                  {periodData.bookingBusiness.couponsRemaining &&
-                    periodData.bookingBusiness.couponsRemaining.length > 0 && (
-                      <div className="mb-4">
-                        <Accordion type="single" collapsible className="w-full">
-                          <AccordionItem value="coupons" className="border-b-0">
-                            <AccordionTrigger className="py-2">
-                              <h3 className="flex items-center gap-1 text-sm font-medium text-gray-700">
-                                <Ticket className="h-4 w-4 text-purple-500" />
-                                Available Coupons ({periodData.bookingBusiness.couponsRemaining.length})
-                              </h3>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 pt-2">
-                                {periodData.bookingBusiness.couponsRemaining.map((coupon) => (
-                                  <CouponCard key={coupon._id} coupon={coupon} />
-                                ))}
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        </Accordion>
-                      </div>
-                    )}
-
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                    {periodData.slots.map((slot) => (
-                      <div
-                        key={slot.slot}
-                        className={`rounded-md border p-3 ${
-                          !slot.isInOperatableRange
-                            ? "border-gray-200 bg-gray-100"
-                            : slot.count > 0
-                              ? "border-purple-200 bg-purple-50"
-                              : "border-gray-200 bg-white"
-                        }`}
-                      >
-                        <p className="text-sm font-medium">{slot.slot}</p>
-                        <div className="mt-1 flex items-center justify-between">
-                          <span className="text-xs text-gray-500">Bookings:</span>
-                          <Badge
-                            variant="outline"
-                            className={`text-xs ${slot.count > 0 ? "bg-purple-100 text-purple-700" : "bg-gray-50 text-gray-500"}`}
-                          >
-                            {slot.count}
-                          </Badge>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <PeriodCard
+                key={periodData.bookingBusiness.period}
+                periodData={periodData}
+                editingPeriod={editingPeriod}
+                isOpenState={isOpenState}
+                editedCoupons={editedCoupons}
+                allCoupons={allCoupons}
+                isUpdating={isUpdating}
+                onStartEditing={startEditing}
+                onCancelEditing={cancelEditing}
+                onSaveChanges={saveChanges}
+                onUpdateCouponCount={updateCouponCount}
+                onShowAddCouponDialog={handleShowAddCouponDialog}
+              />
             ))}
           </div>
         </TabsContent>
@@ -182,99 +259,35 @@ const IndividualDateInfo = () => {
         {/* Individual Period Content */}
         {dateInfo.bookingBusinessDetails.map((periodData) => (
           <TabsContent key={periodData.bookingBusiness.period} value={periodData.bookingBusiness.period.toString()}>
-            <Card className="rounded-none shadow-none lg:mx-4 lg:rounded-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    {getPeriodName(periodData.bookingBusiness.period)}
-                    <Badge variant={periodData.bookingBusiness.isOpen ? "default" : "destructive"}>
-                      {periodData.bookingBusiness.isOpen ? "Open" : "Closed"}
-                    </Badge>
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-4">
-                  <h3 className="mb-2 text-sm font-medium text-gray-700">Period Details</h3>
-                  <div className="grid grid-cols-1 gap-4 rounded-md bg-gray-50 p-4 md:grid-cols-2">
-                    <div>
-                      <p className="text-sm text-gray-500">Status</p>
-                      <p className="font-medium">{periodData.bookingBusiness.isOpen ? "Open" : "Closed"}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Total Bookings</p>
-                      <p className="font-medium">{periodData.numOfBookings}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Coupons Available</p>
-                      <p className="font-medium">{periodData.bookingBusiness.couponsRemaining?.length || 0}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Last Updated</p>
-                      <p className="font-medium">
-                        {format(parseISO(periodData.bookingBusiness.updatedAt), "MMM d, yyyy h:mm a")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Coupons Section */}
-                {periodData.bookingBusiness.couponsRemaining &&
-                  periodData.bookingBusiness.couponsRemaining.length > 0 && (
-                    <div className="mb-6">
-                      <Accordion type="single" collapsible className="w-full">
-                        <AccordionItem value="coupons" className="border-b-0">
-                          <AccordionTrigger className="py-2">
-                            <h3 className="flex items-center gap-1 text-sm font-medium text-gray-700">
-                              <Ticket className="h-4 w-4 text-purple-500" />
-                              Available Coupons ({periodData.bookingBusiness.couponsRemaining.length})
-                            </h3>
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 pt-2">
-                              {periodData.bookingBusiness.couponsRemaining.map((coupon) => (
-                                <CouponCard key={coupon._id} coupon={coupon} />
-                              ))}
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Accordion>
-                    </div>
-                  )}
-
-                <h3 className="mb-2 text-sm font-medium text-gray-700">Time Slots</h3>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                  {periodData.slots.map((slot) => (
-                    <div
-                      key={slot.slot}
-                      className={`rounded-md border p-3 ${
-                        !slot.isInOperatableRange
-                          ? "border-gray-200 bg-gray-100"
-                          : slot.count > 0
-                            ? "border-purple-200 bg-purple-50"
-                            : "border-gray-200 bg-white"
-                      }`}
-                    >
-                      <p className="text-sm font-medium">{slot.slot}</p>
-                      <div className="mt-1 flex items-center justify-between">
-                        <span className="text-xs text-gray-500">Bookings:</span>
-                        <Badge
-                          variant="outline"
-                          className={`text-xs ${slot.count > 0 ? "bg-purple-100 text-purple-700" : "bg-gray-50 text-gray-500"}`}
-                        >
-                          {slot.count}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <PeriodCard
+              periodData={periodData}
+              editingPeriod={editingPeriod}
+              isOpenState={isOpenState}
+              editedCoupons={editedCoupons}
+              allCoupons={allCoupons}
+              isUpdating={isUpdating}
+              onStartEditing={startEditing}
+              onCancelEditing={cancelEditing}
+              onSaveChanges={saveChanges}
+              onUpdateCouponCount={updateCouponCount}
+              onShowAddCouponDialog={handleShowAddCouponDialog}
+              isDetailView={true}
+            />
           </TabsContent>
         ))}
       </Tabs>
-    </main>
-  )
-}
 
-export default IndividualDateInfo
+      {/* Add Coupon Dialog */}
+      <AddCouponDialog
+        open={showAddCouponDialog}
+        onOpenChange={setShowAddCouponDialog}
+        allCoupons={allCoupons}
+        editedCoupons={editedCoupons}
+        onAddCoupons={addNewCoupons}
+        isLoading={loadingCoupons}
+      />
+    </main>
+  );
+};
+
+export default IndividualDateInfo;

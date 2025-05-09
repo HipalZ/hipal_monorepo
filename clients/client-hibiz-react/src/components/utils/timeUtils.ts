@@ -3,9 +3,18 @@ import type { ClosedInterval } from "../types/business-day-config"
 /**
  * Convert time string (HH:MM) to minutes for easier comparison
  */
-export const timeToMinutes = (time: string): number => {
-  const [hours, minutes] = time.split(":").map(Number)
+export const timeToMinutes = (time: string) => {
+  const updatedTime = time.toString()
+  const [hours, minutes] = updatedTime.split(":").map(Number)
   return hours * 60 + minutes
+}
+
+export const timeToMinutesSTring = (time: string) => {
+  const updatedTime = Number(time)
+  const hours = Math.floor(updatedTime / 60)
+  const minutes = updatedTime % 60
+  console.log("hours", hours)
+  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`
 }
 
 /**
@@ -354,4 +363,23 @@ const PERIODS = [
 export const getPeriodInfo = (periodId: number) => {
   return PERIODS.find((period) => period.id === periodId) || PERIODS[0]
 }
+
+/**
+ * Formats minutes to a human-readable time (e.g., "9:30 AM")
+ */
+export const formatMinutesToTime = (minutes: number): string => {
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  const period = hours >= 12 ? "PM" : "AM"
+  const displayHours = hours % 12 || 12 // Convert 0 to 12 for 12 AM
+  return `${displayHours}:${mins.toString().padStart(2, "0")} ${period}`
+}
+
+/**
+ * Formats a time string to a human-readable time (e.g., "9:30 AM")
+ */
+export const formatTimeString = (time: string): string => {
+  return formatMinutesToTime(timeToMinutes(time))
+}
+
 

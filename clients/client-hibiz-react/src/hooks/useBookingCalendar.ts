@@ -1,6 +1,7 @@
 import { apiRpc } from "@hi/common"
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Coupon } from "./useBusinessCoupons.ts";
+import toast from "react-hot-toast";
 
 export interface IBookingCalendar {
     date: string,
@@ -98,7 +99,7 @@ export interface IBookingSlot {
     }
   
     const { isLoading: gettingDateInfo, data: dateInfo } = useQuery({
-      queryKey: ["bookingCalendar", businessId, date],
+      queryKey: ["IndividualDateInfo", businessId, date],
       queryFn: () => getTheDateInfo(businessId, date),
       enabled: !!businessId && !!date,
       staleTime: 1000 * 60 * 5,
@@ -109,3 +110,59 @@ export interface IBookingSlot {
     }
   }
   
+  // New type for explicit booking update payload
+export interface ExplicitBookingUpdatePayload {
+  isOpen?: boolean
+  couponsRemaining?: {
+    couponId: string
+    remaining: number
+  }[]
+}
+
+// New hook for updating explicit booking details
+export const useUpdateExplicitBooking = () => {
+  const queryClient = useQueryClient()
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async ({
+      businessId,
+      date,
+      period,
+      payload,
+    }: {
+      businessId: string
+      date: string
+      period: number
+      payload: ExplicitBookingUpdatePayload
+    }) => {
+      const response = await apiRpc.bookings["booking-business"]["explicit-booking"][":businessId"][":date"][
+        ":period"
+      ].$patch({
+        param: {
+          businessId,
+          date:date.toString(),
+          period:period.toString(),
+        },
+        json: payload,
+      })
+      return response.json()
+    },
+    onSuccess: (data, variables) => {
+      if (data.status === 200 || data.status === 201) {
+        toast.success("Booking details updated successfully")
+        // Invalidate queries to refresh data
+        queryClient.invalidateQueries({ queryKey: ["IndividualDateInfo", variables.businessId, variables.date] })
+      } else {
+        toast.error("Failed to update booking details")
+      }
+    },
+    onError: () => {
+      toast.error("Failed to update booking details")
+    },
+  })
+
+  return {
+    updateExplicitBooking: mutate,
+    isUpdating: isPending,
+  }
+}

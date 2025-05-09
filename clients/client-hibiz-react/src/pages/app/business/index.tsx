@@ -3,7 +3,10 @@ import hipalHandLogo from "@/assets/login/hand.png";
 import Header from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import type { IBusinessData, IOutletInfo } from "@/components/types/businessData";
+import type {
+  IBusinessData,
+  IOutletInfo,
+} from "@/components/types/businessData";
 import { PAGE_TYPES, routePathsWithId } from "@/components/utils/routes";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
@@ -25,6 +28,17 @@ const Business = () => {
   const { reset } = useBusinessCtrl();
   const user = useOwnerLogin((s) => s.user);
   const navigate = useNavigate();
+
+  const startTheSession = async (businessId: string) => {
+    const response = await apiRpc.users.set_owner_session.$post({
+      json: {
+        userId: user._id,
+        businessId: businessId,
+      },
+    });
+
+    return response;
+  };
 
   const getLoyaltyData = async (business: IBusinessData) => {
     const response = await apiRpc.businesses[":businessId"].loyalty.$get({
@@ -48,8 +62,8 @@ const Business = () => {
         businessId: id,
       },
     });
-    const response = (await res.json())
-    const outletInfo = response.data as IOutletInfo
+    const response = await res.json();
+    const outletInfo = response.data as IOutletInfo;
     if (res.status === 200 || res.status === 201) {
       useBusinessData.getState().setOutletInfo(outletInfo);
 
@@ -66,6 +80,7 @@ const Business = () => {
   const handleRoute = async (business: IBusinessData) => {
     setBusinessData(business);
     getLoyaltyData(business);
+    startTheSession(business._id);
     useCategoryStore.persist.clearStorage();
     setBanners([]);
     getBusinessInfo(business._id);
@@ -120,10 +135,11 @@ const Business = () => {
             type="button"
             onClick={() => handleRoute(ele)}
             key={ele._id}
-            className={`${ele?.status || ele.isActive
-              ? "pointer-events-auto"
-              : "pointer-events-none opacity-90"
-              } child_business_card`}
+            className={`${
+              ele?.status || ele.isActive
+                ? "pointer-events-auto"
+                : "pointer-events-none opacity-90"
+            } child_business_card`}
           >
             <div className="text-xl capitalize">
               {!ele?.status && (

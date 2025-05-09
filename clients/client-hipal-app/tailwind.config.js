@@ -19,8 +19,8 @@ module.exports = {
           foreground: "var(--pf)",
         },
         "h-primary": {
-          DEFAULT: "var(--h-p)",
-          foreground: "var(--h-pf)",
+          DEFAULT: "var(--p)",
+          foreground: "var(--pf)",
           content: "var(--h-pc)",
         },
         "h-base": {
@@ -30,9 +30,9 @@ module.exports = {
           content: "var(--h-bc)",
         },
         "h-secondary": {
-          DEFAULT: "var(--h-s)",
-          foreground: "var(--h-sf)",
-          content: "var(--h-sc)",
+          DEFAULT: "var(--s)",
+          foreground: "var(--sf)",
+          content: "var(--sc)",
         },
         "h-accent": {
           DEFAULT: "var(--h-a)",
@@ -46,8 +46,8 @@ module.exports = {
         "base-100": "var(--b1)",
         "primary-content": "var(--pc)",
         secondary: {
-          DEFAULT: "var(--s)_",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "var(--s)",
+          foreground: "var(--secondary-foreground)",
         },
         "secondary-content": "var(--sc)",
         accent: {

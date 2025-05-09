@@ -75,11 +75,11 @@ export const useGetBusinessPeriodConfigs = (businessId: string) => {
         ":businessId"
       ].$get({
         param: { businessId },
+        json: {},
       });
       return result.json() as PeriodConfigsData;
     },
     enabled: !!businessId,
-    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
 
@@ -87,7 +87,6 @@ export const useGetIndividualDayPeriodConfigs = (
   businessId: string,
   dayOfWeek: number,
 ) => {
-  console.log("businessId", businessId, "dayOfWeek", dayOfWeek);
   const day = dayOfWeek.toString();
   const queryKey = ["IndividualDayPeriodConfigs", businessId, day];
   const {
@@ -100,11 +99,10 @@ export const useGetIndividualDayPeriodConfigs = (
       const result = await apiRpc.bookings["business-period-config"].periods[
         ":businessId"
       ][":dayOfWeek"].$get({
-        param: { businessId, dayOfWeek:day },
+        param: { businessId, dayOfWeek: day },
         json: {},
       });
       const data = await result.json();
-      console.log("IndividualDayData rgwr err h", data);
       return data.data as IndividualDayPeriodConfigs[];
     },
     enabled: !!businessId && !!day,
@@ -167,7 +165,7 @@ export const useUpdatePeriodConfig = () => {
       }
       if (data.status === 200 || data.status === 201) {
         queryClient.invalidateQueries({
-          queryKey: ["businessPeriodConfigs", variables.businessId],
+          queryKey: ["IndividualDayPeriodConfigs", variables.businessId,variables.dayOfWeek],
         });
         return toast.success("Period configuration updated successfully");
       }
@@ -203,9 +201,10 @@ export const useTogglePeriod = () => {
       ][":businessId"][":dayOfWeek"][":period"].$patch({
         param: {
           businessId,
-          dayOfWeek,
-          period,
+          dayOfWeek: dayOfWeek.toString(),
+          period: period.toString(),
         },
+        json: {},
       });
       return response.json();
     },
@@ -219,7 +218,7 @@ export const useTogglePeriod = () => {
         queryClient.invalidateQueries({
           queryKey: ["businessPeriodConfigs", variables.businessId],
         });
-        return toast.success("Period toggled successfully");
+        return;
       }
     },
     onError: (error) => {
@@ -251,8 +250,9 @@ export const useToggleAllPeriodsForDay = () => {
       ][":businessId"][":dayOfWeek"].$patch({
         param: {
           businessId,
-          dayOfWeek,
+          dayOfWeek: dayOfWeek.toString(),
         },
+        json: {},
       });
       return response.json();
     },

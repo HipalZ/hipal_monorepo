@@ -9,36 +9,31 @@ import toast from "react-hot-toast";
  * Hook to fetch all business day configurations for a business
  */
 export const useGetBusinessDayConfigs = (businessId: string) => {
-  if (!businessId) return { data: [], isLoading: false };
-
   const { setBusinessDayConfigs } = useBusinessDayConfigUIStore();
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const {
+    data = [],
+    isLoading,
+    error,
+    refetch:getBusinessDay,
+  } = useQuery<BusinessDayConfig[]>({
     queryKey: ["businessDayConfigs", businessId],
     queryFn: async () => {
-      const response = await apiRpc.bookings["business-day-config"].days[':businessId'].$get({
-        param: {
-          businessId
-        }
-      });
+      const response = await apiRpc.bookings["business-day-config"]
+        .days[businessId]
+        .$get({ param: { businessId } });
       const result = await response.json();
 
       if (result.status === 200) {
         setBusinessDayConfigs(result.data);
         return result.data as BusinessDayConfig[];
       }
-
       return [];
     },
-    enabled: !!businessId
-  });
-
-  return {
-    data: data || [],
-    isLoading,
-    error,
-    refetch
-  };
+    enabled: !!businessId,
+  })
+    
+  return { data, isLoading, error, getBusinessDay};
 };
 
 /**

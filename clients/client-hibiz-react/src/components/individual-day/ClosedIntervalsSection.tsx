@@ -5,18 +5,18 @@ import { Clock, Edit, Plus } from 'lucide-react';
 import { memo } from 'react';
 
 type ClosedIntervalsSectionProps = {
-  dayConfig: BusinessDayConfig;
+  dayConfig: BusinessDayConfig | null;
   onEditDay: () => void;
 };
 
 const ClosedIntervalsSection = ({ dayConfig, onEditDay }: ClosedIntervalsSectionProps) => {
-  const hasClosedIntervals = dayConfig.closedIntervals && dayConfig.closedIntervals.length > 0;
+  const hasClosedIntervals = dayConfig?.closedIntervals && dayConfig?.closedIntervals?.length > 0;
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base">Closed Intervals</CardTitle>
-        <Button variant="outline" size="sm" onClick={onEditDay}>
+        <Button variant="secondary" size="sm" onClick={onEditDay}>
           <Plus className="mr-1 h-3.5 w-3.5" />
           Add Interval
         </Button>
@@ -39,9 +39,9 @@ const ClosedIntervalsSection = ({ dayConfig, onEditDay }: ClosedIntervalsSection
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                 
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-blue-500" onClick={onEditDay}>
-                    <Edit className="h-4 w-4" />
+                  <Button variant='outline' size="icon" className='w-full px-4' onClick={onEditDay}>
+                    <Edit />
+                    Edit
                   </Button>
                 </div>
               </div>

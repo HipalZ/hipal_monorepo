@@ -3,9 +3,9 @@ import { motion } from "framer-motion"
 import { ToggleLeft, ToggleRight } from "lucide-react"
 import { CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import PeriodCard from "./PeriodCard"
+import PeriodCardManagement from "./PeriodCard"
 import type { PeriodConfig } from "@/hooks/useBusinessPeriodConfig"
-import { CouponCreatePayload } from "@/hooks/useBusinessCoupons"
+import type { CouponCreatePayload } from "@/hooks/useBusinessCoupons"
 
 type DayCardProps = {
   dayOfWeek: string
@@ -95,13 +95,13 @@ const DayCard = ({
       </CardHeader>
 
       <CardContent className="pt-0 pb-4 px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
           {Object.entries(periods).map(([periodKey, periodConfig]) => {
             const periodIndex = Number.parseInt(periodKey)
             const periodInfo = periodIcons[periodIndex]
 
             return (
-              <PeriodCard
+              <PeriodCardManagement
                 key={`${dayOfWeek}-${periodKey}`}
                 periodConfig={periodConfig}
                 periodIndex={periodIndex}

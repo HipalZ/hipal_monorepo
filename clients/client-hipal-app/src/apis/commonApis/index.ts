@@ -13,6 +13,8 @@ export async function fetchCommonData(
   let bizId = businessId;
   const data = {} as IBusinessData;
 
+  console.log("businessId", businessId);
+
   if (!objectIdRegex.test(businessId)) {
     const res = await apiRpc.businesses.n[":customLink"].$get({
       param: { customLink: businessId },
@@ -22,6 +24,7 @@ export async function fetchCommonData(
       message: string;
       error: boolean;
     };
+    console.log("response", response.data)
     if (response.data !== null) {
       data["business"] = response.data as unknown as BusinessDetails;
       bizId = response.data.businessId;

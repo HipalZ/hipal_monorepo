@@ -6,7 +6,7 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import PeriodCard from "./PeriodCard";
+import PeriodCardManagement from "./PeriodCard";
 import { getDayName } from "@/components/utils/timeUtils";
 import type { PeriodConfig } from "@/hooks/useBusinessPeriodConfig";
 import { memo } from "react";
@@ -97,13 +97,13 @@ const PeriodGroup = ({
 
       <CardContent className="pt-3 pb-4 px-4">
         <ScrollArea className="h-[450px] pr-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-start">
+          <div className="grid grid-cols-1 sm:grid-cols-2  gap-3 items-start">
             {Object.entries(days).map(([dayOfWeek, periodConfig]) => {
               const dayIndex = Number.parseInt(dayOfWeek);
               const dayName = getDayName(dayIndex);
 
               return (
-                <PeriodCard
+                <PeriodCardManagement
                   key={`${periodKey}-${dayOfWeek}`}
                   periodConfig={periodConfig}
                   periodIndex={periodIndex}

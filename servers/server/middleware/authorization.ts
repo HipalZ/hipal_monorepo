@@ -21,6 +21,10 @@ export const requireAuthorization = (roles: ClientRoles[]) => {
       "https://hibiz.hipalz.com",
       "https://table.test.hipalz.com",
       "https://hiclient.hipalz.com",
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "http://localhost:3002",
+      "http://localhost:3001",
     ];
     // if (!origins.includes(c.req.header("Origin") || "")) {
     //   return c.json({ message: "Access Denied!" }, 401);

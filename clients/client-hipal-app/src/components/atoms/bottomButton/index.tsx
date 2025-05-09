@@ -1,3 +1,4 @@
+"use client";
 import { memo } from "react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { cn } from "@hi/common";

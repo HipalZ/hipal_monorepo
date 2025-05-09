@@ -195,11 +195,12 @@ const PeriodManagement = () => {
     async (dayOfWeek: number, period: number) => {
       setIsActionInProgress(true);
       try {
-        await togglePeriod({
+        const config = await togglePeriod({
           businessId,
           dayOfWeek,
           period,
         });
+        console.log("Toggled period config:", config);
         const periodName = periodIcons[period].label;
         const dayName = getDayName(dayOfWeek);
         toast.success(

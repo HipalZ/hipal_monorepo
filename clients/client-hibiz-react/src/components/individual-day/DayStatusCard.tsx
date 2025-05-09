@@ -86,7 +86,7 @@ const DayStatusCard = ({ dayConfig, onToggleDay, onEditDay }: DayStatusCardProps
 
             {/* Right section with edit button */}
             <div className="flex items-center justify-center border-t bg-gray-50 p-6 md:w-48 md:border-l md:border-t-0">
-              <Button onClick={onEditDay}>
+              <Button className='w-full' onClick={onEditDay}>
                 <Edit className="mr-2 h-4 w-4" />
                 Edit Settings
               </Button>

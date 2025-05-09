@@ -404,6 +404,19 @@ const usersRouter = new Hono()
           "OWNER",
         );
 
+        const token = jwt.sign(
+          {
+            _id: existingUser._id,
+            role: "OWNER",
+          },
+          Bun.env.JWT_SECRET as string,
+        );
+
+        setCookie(c, "token", token, {
+          httpOnly: false,
+          secure: false,
+        });
+
 
         return c.json({
           message: "Owner Logged in Successfully",
@@ -1641,7 +1654,7 @@ const usersRouter = new Hono()
 
 
   .post(
-    "/seT_owner_session",
+    "/set_owner_session",
     zValidator(
       "json",
       z.object({
@@ -1657,44 +1670,22 @@ const usersRouter = new Hono()
       const existingUser = await User.findOne(
         {
           _id: userId,
-          "customRole.businessId": businessId,
         },
-        {
-          name: 1,
-          email: 1,
-          phone: 1,
-          customRole: {
-            $elemMatch: { businessId: businessId },
-          },
-        },
+       
       );
 
       if (!existingUser) {
         return respond(c, "User not found", true, 404, {});
       }
 
-      if (bookMark) {
-        await User.findOneAndUpdate(
-          {
-            _id: userId,
-            "customRole.businessId": businessId,
-          },
-          {
-            $set: {
-              "customRole.$.bookMark": bookMark,
-            },
-          },
-        );
-      }
+     
 
       const permissionToken = jwt.sign(
         {
           _id: existingUser._id,
-          permissions: Array.isArray(existingUser?.customRole?.[0]?.permissions)
-            ? {}
-            : existingUser?.customRole?.[0]?.permissions || {},
-          role: existingUser?.customRole?.[0]?.role || "CAPTAIN",
-          businessId: existingUser?.customRole?.[0]?.businessId || "",
+          businessId: businessId,
+          role: "OWNER",
+          
         },
         Bun.env.JWT_SECRET as string,
       );

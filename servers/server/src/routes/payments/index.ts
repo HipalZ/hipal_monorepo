@@ -2189,7 +2189,7 @@ const paymentsRouter = new Hono()
       ClientRoles.HIPAL_CUSTOMER,
       ClientRoles.CAPTAIN,
     ]),
-    ubacMiddleware("sale_summary"),
+    // ubacMiddleware("sale_summary"),
     zValidator("query", paramsSchema),
     async (c) => {
       const { businessId, from, to } = c.req.query();

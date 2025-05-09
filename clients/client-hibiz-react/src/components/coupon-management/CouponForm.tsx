@@ -94,7 +94,7 @@ const CouponForm = ({ onSubmit, onCancel, isSubmitting, initialValues }: CouponF
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Coupon Name</FormLabel>
+              <FormLabel className="font-semibold">Coupon Name</FormLabel>
               <FormControl>
                 <Input placeholder="Weekend Special" {...field} />
               </FormControl>
@@ -109,7 +109,7 @@ const CouponForm = ({ onSubmit, onCancel, isSubmitting, initialValues }: CouponF
           name="config.discountType"
           render={({ field }) => (
             <FormItem className="space-y-3">
-              <FormLabel>Discount Type</FormLabel>
+              <FormLabel className="font-semibold">Discount Type</FormLabel>
               <FormControl>
                 <RadioGroup
                   onValueChange={field.onChange}
@@ -143,7 +143,7 @@ const CouponForm = ({ onSubmit, onCancel, isSubmitting, initialValues }: CouponF
           name="config.value"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{discountType === "PERCENTAGE" ? "Discount Percentage" : "Discount Amount (₹)"}</FormLabel>
+              <FormLabel className="font-semibold">{discountType === "PERCENTAGE" ? "Discount Percentage" : "Discount Amount (₹)"}</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -165,7 +165,7 @@ const CouponForm = ({ onSubmit, onCancel, isSubmitting, initialValues }: CouponF
             name="config.upto"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Maximum Discount Amount (₹)</FormLabel>
+                <FormLabel className="font-semibold">Maximum Discount Amount (₹)</FormLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -187,7 +187,7 @@ const CouponForm = ({ onSubmit, onCancel, isSubmitting, initialValues }: CouponF
           name="bookingMeta.baseCharge"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Base Charge (₹)</FormLabel>
+              <FormLabel className="font-semibold">Base Charge (₹)</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -208,7 +208,7 @@ const CouponForm = ({ onSubmit, onCancel, isSubmitting, initialValues }: CouponF
           name="bookingMeta.redeemableCoverCharge"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Redeemable Cover Charge (₹) (Optional)</FormLabel>
+              <FormLabel className="font-semibold">Redeemable Cover Charge (₹) (Optional)</FormLabel>
               <FormControl>
                 <Input
                   type="number"
@@ -229,7 +229,7 @@ const CouponForm = ({ onSubmit, onCancel, isSubmitting, initialValues }: CouponF
           name="bookingMeta.minGuests"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="flex items-center gap-1.5">
+              <FormLabel className="flex items-center gap-1.5 font-semibold">
                 <Users size={16} className="text-purple-500" />
                 Minimum Guests (Optional)
               </FormLabel>

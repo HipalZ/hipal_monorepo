@@ -1,18 +1,18 @@
-import AdvancedBottomButton from '@/components/atom/bottomButton/advancedBottomButton';
+
 import ClosedIntervalList from '@/components/business-hours/ClosedIntervalList';
 import TimeRangeSelector from '@/components/business-hours/TimeRangeSelector';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Clock } from 'lucide-react';
 import { memo } from 'react';
-import type { ClosedInterval } from '../types/business-day-config.ts';
+import type { BusinessDayConfig, ClosedInterval } from '../types/business-day-config.ts';
 import { Button } from '../ui/button.tsx';
 
 type EditDayModalProps = {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  dayConfig: any;
+  dayConfig: BusinessDayConfig | null;
   editState: any;
   timeRangeError: string | null;
   intervalError: string | null;

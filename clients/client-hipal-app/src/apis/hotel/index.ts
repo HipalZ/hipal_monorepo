@@ -33,6 +33,7 @@ export const getInfoForHotel = async (businessIdOrCustomLink: string): Promise<I
   }
 }
 
+
 export const getRoomTypes = async (businessIdOrCustomLink: string) => {
   try {
     const businessData = (await getBusinessData(businessIdOrCustomLink)) as BusinessDetails

@@ -10,11 +10,17 @@
     }
   ],
   "liveServer.settings.donotShowInfoMsg": true,
+  "eslint.experimental.useFlatConfig": false,
+  "eslint.runtime": "bun", // Bun-specific runtime
+  "eslint.packageManager": "bun",
+  "eslint.options": {
+    "overrideConfigFile": ".eslintrc.js"
+  },
   "playwright.reuseBrowser": true,
   "typescript.updateImportsOnFileMove.enabled": "always",
   "javascript.updateImportsOnFileMove.enabled": "always",
   "[typescriptreact]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "biomejs.biome"
   },
   "[javascript]": {
     "editor.defaultFormatter": "biomejs.biome"
@@ -23,7 +29,14 @@
     "editor.defaultFormatter": "biomejs.biome"
   },
   "diffEditor.ignoreTrimWhitespace": false,
-  "cSpell.userWords": ["Dataurl", "Defence", "Hipal", "signup", "splide", "splidejs"],
+  "cSpell.userWords": [
+    "Dataurl",
+    "Defence",
+    "Hipal",
+    "signup",
+    "splide",
+    "splidejs"
+  ],
   "[json]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
@@ -31,7 +44,7 @@
   "github.copilot.editor.enableAutoCompletions": true,
   "remote.autoForwardPortsSource": "hybrid",
   "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "biomejs.biome"
   },
   "[css]": {
     "editor.defaultFormatter": "biomejs.biome"
@@ -45,5 +58,5 @@
   "editor.formatOnSave": true,
   "workbench.settings.applyToAllProfiles": [],
   "cSpell.words": ["Sandwhich"],
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "../node_modules/typescript/lib"
 }

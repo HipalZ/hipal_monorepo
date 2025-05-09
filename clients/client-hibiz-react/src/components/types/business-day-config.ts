@@ -40,7 +40,7 @@ export type ClosedInterval = {
     startTime: string;
     endTime: string;
     closedIntervals: ClosedInterval[];
-    isOpen: boolean;
+    isOpen?: boolean;
   };
   
   /**
@@ -52,4 +52,29 @@ export type ClosedInterval = {
     endTime: string;
     closedIntervals: ClosedInterval[];
     isOpen: boolean;
+  }
+
+
+  export interface CouponAllocation {
+    couponId: string;
+    remaining: number;
+    _id: string;
+  }
+  
+  export interface DayPeriodConfig {
+    _id: string;
+    businessDayConfigId: string;
+    period: number;
+    baseCharge: number;
+    redeemableCoverCharge: number;
+    isOpen: boolean;
+    archived_at: string | null;
+    couponAllocations: CouponAllocation[];
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+  }
+  
+  export interface DayPeriodConfigs {
+    [key: number]: DayPeriodConfig;
   }
