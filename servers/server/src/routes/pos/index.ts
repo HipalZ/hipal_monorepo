@@ -16,6 +16,7 @@ import {
   UniquelyYours,
   UrlModel,
   User,
+  UserAnalytic,
   UserSession,
   Zone,
 } from "@hi/db-models";
@@ -1854,6 +1855,33 @@ const posRouter = new Hono()
               session,
             },
           );
+
+          const userAnalytics = await UserAnalytic.findOneAndUpdate({
+            userId: newUser._id,
+            businessId: tableData.businessId,
+          });
+
+          if (!userAnalytics) {
+            const createAnalytics = new UserAnalytic({
+              avgSpend: 0,
+              totalSpend: 0,
+              totalOrders: 0,
+              userId: newUser._id,
+              businessId: tableData.businessId,
+              totalItemCount: 0,
+              totalBillCount: 0,
+              visitCount: 0,
+              lastVisit: Date.now(),
+              coinzIssued: 0,
+              coinzUsed: 0,
+              couponCount: 0,
+              currentCoins: 0,
+              dateOfJoining: Date.now(),
+              tableName: tableData.name,
+            });
+
+            await createAnalytics.save({ session });
+          }
 
           return c.json(
             {
