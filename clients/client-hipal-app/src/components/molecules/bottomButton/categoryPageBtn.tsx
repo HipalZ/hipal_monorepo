@@ -26,22 +26,21 @@ import { useAuthTableUser } from "../../hooks/usePayments";
 import HiCodeValidate from "@/components/organisms/cart/hicodeValidate";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import { cn } from "@/components/utils/helpers";
-import { IMenuLayout } from "@/components/types/businessData";
+import type { IMenuLayout } from "@/components/types/businessData";
 
 interface CategoryPageBtnProps {
-  menuLayout: IMenuLayout
+  menuLayout: IMenuLayout;
 }
 
-const MemoCategoryPageBtn:FC<CategoryPageBtnProps> = (props) => {
-  const {menuLayout} = props
+const MemoCategoryPageBtn: FC<CategoryPageBtnProps> = (props) => {
+  const { menuLayout } = props;
   const accessToken = useUserToken.getState().accessToken;
-  const { userDetails } = useLogin()
-  const primaryColor = menuLayout?.primaryColor || "#ec4899"
-  const secondaryColor = menuLayout?.secondaryColor || "#fce7f3"
+  const { userDetails } = useLogin();
+  const primaryColor = menuLayout?.primaryColor || "#ec4899";
+  const secondaryColor = menuLayout?.secondaryColor || "#fce7f3";
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
-  const { isSearchActive, setIsSearchActive, setShowHeader } =
-    useSearch();
-  const { authTableUser } = useAuthTableUser()
+  const { isSearchActive, setIsSearchActive, setShowHeader } = useSearch();
+  const { authTableUser } = useAuthTableUser();
   const customLink = useParams()?.businessId as string;
   const tableName = useTableData((s) => s.tableName);
   const setDirection = useLogin((s) => s.setDirection);
@@ -55,7 +54,8 @@ const MemoCategoryPageBtn:FC<CategoryPageBtnProps> = (props) => {
     setCallWaiterModal,
     orderPlaced,
     setOrderPlaced,
-    hiCodePopupBeforeBill, setHiCodePopupBeforeBill,
+    hiCodePopupBeforeBill,
+    setHiCodePopupBeforeBill,
   } = useCart();
   const [tempInstruction, setTempInstruction] = useState("");
   const {
@@ -85,11 +85,19 @@ const MemoCategoryPageBtn:FC<CategoryPageBtnProps> = (props) => {
       return;
     }
     if (outletInfo?.isPosEnabled) {
-      authTableUser()
+      authTableUser();
       return;
     }
     setInputModal(true);
-  }, [setDirection, accessToken, setCheckLogin, outletInfo?.isPosEnabled, authTableUser, userDetails?._id, setInputModal]);
+  }, [
+    setDirection,
+    accessToken,
+    setCheckLogin,
+    outletInfo?.isPosEnabled,
+    authTableUser,
+    userDetails?._id,
+    setInputModal,
+  ]);
 
   const triggerCallWaiter = useCallback(() => {
     setDirection("category");
@@ -148,14 +156,11 @@ const MemoCategoryPageBtn:FC<CategoryPageBtnProps> = (props) => {
     exit: { y: 20, opacity: 0 },
   };
 
-  const handleInstructionText = useCallback(
-    (e) => {
-      const value = e.target.value;
-      const sanitizedValue = value.replace(/\s+/g, ' ')
-      setTempInstruction(sanitizedValue);
-    },
-    []
-  );
+  const handleInstructionText = useCallback((e) => {
+    const value = e.target.value;
+    const sanitizedValue = value.replace(/\s+/g, " ");
+    setTempInstruction(sanitizedValue);
+  }, []);
 
   const handleSaveInstruction = useCallback(() => {
     addInstructionToDish(tempInstruction);
@@ -170,7 +175,7 @@ const MemoCategoryPageBtn:FC<CategoryPageBtnProps> = (props) => {
   ]);
 
   const handleCloseInstructionModal = useCallback(() => {
-    setOpenInstructionModal(false)
+    setOpenInstructionModal(false);
     setTempInstruction("");
   }, [setOpenInstructionModal]);
 
@@ -184,11 +189,11 @@ const MemoCategoryPageBtn:FC<CategoryPageBtnProps> = (props) => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="px-2 sticky z-50 bottom-0 w-full max-w-[30rem] bg-[#FCFCFC] shadow-lg overflow-hidden py-2 text-black flex gap-2 justify-evenly"
-              style={{ boxShadow: "4px 4px 4px #00000040",
+              className="px-2 sticky z-50 bottom-0 w-full max-w-[30rem] bg-[#FCFCFC] overflow-hidden py-2 text-black flex gap-2 justify-evenly"
+              style={{
                 backgroundColor: secondaryColor,
                 color: primaryColor,
-               }}
+              }}
             >
               {/* Explore Button */}
               <motion.div variants={itemVariants}>
@@ -223,16 +228,20 @@ const MemoCategoryPageBtn:FC<CategoryPageBtnProps> = (props) => {
                 variants={itemVariants}
                 style={{ borderColor: primaryColor }}
                 className={cn(
-                  tableName?.length === 0 ? "flex-1 w-full" : "gap-1 flex items-center",
-                  "border border-[#B0B0B0] p-2 rounded-md"
+                  tableName?.length === 0
+                    ? "flex-1 w-full"
+                    : "gap-1 flex items-center",
+                  "border border-[#B0B0B0] p-2 rounded-md",
                 )}
               >
                 <motion.button
                   type="button"
                   onClick={triggerCallWaiter}
                   className={cn(
-                    tableName?.length === 0 ? "w-full flex justify-center items-center" : "flex items-center",
-                    "text-sm gap-1"
+                    tableName?.length === 0
+                      ? "w-full flex justify-center items-center"
+                      : "flex items-center",
+                    "text-sm gap-1",
                   )}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -249,19 +258,19 @@ const MemoCategoryPageBtn:FC<CategoryPageBtnProps> = (props) => {
                 </motion.div>
               )}
             </motion.section>
-
           )}
         </AnimatePresence>
       ) : (
         <BottomButton selected={"catalogue"} showBack />
       )}
-      {
-        hiCodePopupBeforeBill && (
-          <ItemDescriptionPopup show={hiCodePopupBeforeBill} onClose={() => setHiCodePopupBeforeBill(false)}>
-            <HiCodeValidate isOpenMyOrders={true} />
-          </ItemDescriptionPopup>
-        )
-      }
+      {hiCodePopupBeforeBill && (
+        <ItemDescriptionPopup
+          show={hiCodePopupBeforeBill}
+          onClose={() => setHiCodePopupBeforeBill(false)}
+        >
+          <HiCodeValidate isOpenMyOrders={true} />
+        </ItemDescriptionPopup>
+      )}
       <AnimatePresence>
         {inputModal && (
           <motion.div
@@ -291,12 +300,15 @@ const MemoCategoryPageBtn:FC<CategoryPageBtnProps> = (props) => {
             {/* Header */}
             <header className="flex items-center gap-2 mb-4">
               <GiCookingPot className="w-8 h-8 text-orange-500" />
-              <h2 className="text-2xl font-semibold text-black">Cooking Instructions</h2>
+              <h2 className="text-2xl font-semibold text-black">
+                Cooking Instructions
+              </h2>
             </header>
 
             {/* Description */}
             <p className="mb-6 text-gray-600">
-              Add any special cooking instructions, like less spicy, extra cheese, or no onions.
+              Add any special cooking instructions, like less spicy, extra
+              cheese, or no onions.
             </p>
 
             {/* Textarea Container */}

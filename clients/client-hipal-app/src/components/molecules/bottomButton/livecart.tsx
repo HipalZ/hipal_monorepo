@@ -1,6 +1,6 @@
 "use client";
 import { useCartStore } from "@/components/store/useCartStore";
-import React, { memo, useCallback } from "react";
+import { memo, useCallback } from "react";
 import { BiPlus } from "react-icons/bi";
 import { FaArrowRightLong } from "react-icons/fa6";
 import { PiShoppingCartDuotone } from "react-icons/pi";
@@ -12,7 +12,6 @@ import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescrip
 import TableNameMissing from "./tableNameMissing";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { useSearch } from "@/components/store/useSearch";
-import { HiX } from "react-icons/hi";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const MemoLiveCart = () => {
@@ -44,12 +43,7 @@ const MemoLiveCart = () => {
     setSelectedDish(null);
     setCartPage("cart");
     setShowCart(true);
-  }, [
-    setShowCart,
-    setCartPage,
-    tableNameMissing,
-    setTableNameMissing,
-  ]);
+  }, [setShowCart, setCartPage, tableNameMissing, setTableNameMissing]);
 
   return (
     <>
@@ -80,10 +74,7 @@ const MemoLiveCart = () => {
                 background: "var(--shine-effect)",
               }}
             />
-            <button
-              type="button"
-              className="flex items-center gap-2"
-            >
+            <button type="button" className="flex items-center gap-2">
               <PiShoppingCartDuotone size={24} />
               <span className="flex items-center text-base font-semibold">
                 <BiPlus strokeWidth={1.5} />
@@ -91,10 +82,7 @@ const MemoLiveCart = () => {
               </span>
               <span>Items</span>
             </button>
-            <button
-              type="button"
-              className="flex items-center gap-2"
-            >
+            <button type="button" className="flex items-center gap-2">
               <span>
                 {outletInfo?.shareCart ? "Proceed to order" : "Continue"}
               </span>
@@ -104,7 +92,6 @@ const MemoLiveCart = () => {
         )}
       </AnimatePresence>
 
-      
       {showCart && tableName ? (
         <BottomPopUp show={showCart} onClose={() => setShowCart(false)} hide>
           <MemoCart />
