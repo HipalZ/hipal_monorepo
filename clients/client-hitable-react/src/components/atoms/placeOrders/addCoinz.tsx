@@ -207,6 +207,9 @@ const MemoAddCoinz = (props) => {
             setPhoneNumber={setPhoneNumber}
             sendOtp={sendOtp}
             setStep={setStep}
+            setAvailableCoinz={setAvailableCoinz}
+            setUserData={setUserData}
+            setCouponz={setCouponz}
           />
         );
 
@@ -229,7 +232,7 @@ const MemoAddCoinz = (props) => {
             applyCoinz={applyCoinz}
             handleCloseModal={handleCloseModal}
             handleApplyCoinz={handleApplyCoinz}
-            handleApplyCoupon={applyCoupon}
+            applyCoupon={applyCoupon}
             removeApplyCoinz={removeApplyCoinz}
             removeCoupon={removeCoupon}
             getCouponDiscountAmount={getCouponDiscountAmount}
@@ -245,6 +248,9 @@ const MemoAddCoinz = (props) => {
     <Card className="border-none shadow-none">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-xl">Add Coinz</CardTitle>
+        <CardTitle className="text-2xl cursor-pointer">
+          <span>{billValue}</span>
+        </CardTitle>
       </CardHeader>
       <CardContent>{renderContent()}</CardContent>
     </Card>

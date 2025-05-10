@@ -228,39 +228,42 @@ const MemoGetBill = () => {
             </CardTitle>
             <Separator className="my-4" />
             <div className="mb-4 space-y-3">
-              {Object.entries(data).map(([key, value]) => {
-                if (
-                  (typeof value === "number" && value === 0) ||
-                  [
-                    "customerName",
-                    "customerPhone",
-                    "tableName",
-                    "total",
-                    "billRequestId",
-                    "billing_user_name",
-                    "items",
-                    "couponId",
-                  ].includes(key)
-                ) {
-                  return null;
-                }
-
-                return (
-                  <div key={key} className="flex justify-between text-sm">
-                    <p className="text-gray-700 capitalize">
-                      {key?.replace(/([A-Z])/g, " $1")}
-                    </p>
-                    <p className="font-medium text-gray-900">
-                      ₹{Number(value)?.toFixed(2)}
-                    </p>
-                  </div>
-                );
-              })}
+              {[
+                ["subTotal", data.subTotal],
+                ["serviceCharge", data.serviceCharge],
+                ["tips", data.tips],
+                ["discount", data.discount],
+                ["tax", data.tax],
+                ["initialTotal", data.initialTotal],
+                ["claimedCoins", data.claimedCoins],
+              ]
+                .filter(([_, value]) => typeof value === "number" && value > 0)
+                .map(([key, value]) => {
+                  const isDeduction =
+                    key === "claimedCoins" || key === "discount";
+                  return (
+                    <div key={key} className="flex justify-between text-sm">
+                      <p className="text-gray-700 capitalize">
+                        {key.replace(/([A-Z])/g, " $1")}
+                      </p>
+                      <p
+                        className={`font-medium ${
+                          isDeduction ? "text-green-600" : "text-gray-900"
+                        }`}
+                      >
+                        {isDeduction
+                          ? `-₹${Number(value).toFixed(2)}`
+                          : `₹${Number(value).toFixed(2)}`}
+                      </p>
+                    </div>
+                  );
+                })}
+              <div className="flex justify-between font-semibold text-base border-t pt-2">
+                <p className="text-black">Total</p>
+                <p className="text-black">₹{Number(data.total).toFixed(2)}</p>
+              </div>
             </div>
-            <div className="flex justify-between text-lg font-bold">
-              <p>Total</p>
-              <p>₹{data?.total.toFixed(2)}</p>
-            </div>
+            <Separator className="my-4" />
           </CardContent>
         </Card>
       )}

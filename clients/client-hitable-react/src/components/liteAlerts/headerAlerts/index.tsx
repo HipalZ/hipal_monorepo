@@ -49,16 +49,16 @@ const HeaderAlerts = ({
       json: {
         businessId: selectedBiz.businessId._id,
         userId: captainData._id,
-      }
-    })
-    return response
-  }
+      },
+    });
+    return response;
+  };
 
   useQuery({
     queryKey: ["session", selectedBiz.businessId._id, captainData._id],
     queryFn: sessionStart,
-    enabled: !!captainData._id
-  })
+    enabled: !!captainData._id,
+  });
 
   const navigateToBiz = () => {
     navigate(`/${selectedBiz.businessId._id}/navigate`);
@@ -99,12 +99,13 @@ const HeaderAlerts = ({
           <HiOutlineRefresh
             onClick={refetchData}
             size={24}
-            className={`cursor-pointer text-green-500 transition-transform duration-300 ${loading ? "animate-spin" : "hover:rotate-180"
-              }`}
+            className={`cursor-pointer text-green-500 transition-transform duration-300 ${
+              loading ? "animate-spin" : "hover:rotate-180"
+            }`}
           />
         ) : null}
         <motion.button
-          className="p-4 text-white bg-black rounded-full shadow-lg "
+          className="p-3 text-white bg-black rounded-full shadow-lg "
           whileTap={{ scale: 0.9 }}
           onClick={() => setIsFilterOpen(true)}
         >

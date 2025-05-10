@@ -22,6 +22,7 @@ const LoyaltySuccess = (props) => {
   const formatDiscount = (value: number, discountType: string) => {
     return discountType === "PERCENTAGE" ? `${value}%` : `₹${value}`;
   };
+
   return (
     <div className="space-y-2">
       <div>
@@ -112,7 +113,7 @@ const LoyaltySuccess = (props) => {
       )}
       <div className="space-y-2">
         <h4 className="font-medium text-gray-700">Available Coupons</h4>
-        <div className="max-h-[400px] overflow-y-auto pr-1">
+        <div className="max-h-[400px] overflow-y-auto pr-1 pb-32">
           {couponz?.map((coupon) => {
             if (!coupon) return null;
             return (

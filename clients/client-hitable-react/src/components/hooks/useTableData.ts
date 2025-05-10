@@ -214,14 +214,14 @@ export const useCustomerLogin = () => {
     otp,
   }: {
     phone: string;
-    otp: string;
+    otp?: string;
   }) => {
     const response = await apiRpc.loyalty.verify_otp.$post({
       json: {
         phone,
         otp,
         businessId,
-        name: customerName,
+        ...(customerName && { name: customerName }),
       },
     });
 

@@ -423,6 +423,9 @@ export interface ICustomerInformation {
 }
 
 export interface IBillData {
+  tips: number;
+  initialTotal: number;
+  claimedCoins: number;
   billing_user_name: string;
   serviceCharge: number;
   discount: number;

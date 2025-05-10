@@ -14,8 +14,8 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { useSendOtp, useVerifyOtp } from "@/hooks/useAddCustomer.tsx";
-import SpinnerMemo from "../loadingSpinner/index.tsx";
+import { useSendOtp, useVerifyOtp } from "@/hooks/useAddCustomer";
+import SpinnerMemo from "@/components/atoms/loadingSpinner";
 
 interface AddCustomerModalProps {
   isOpen: boolean;
@@ -138,9 +138,7 @@ export default function AddCustomerModal({
     <Dialog
       open={isOpen}
       onOpenChange={(open) => {
-        // Only allow closing through the close button, not by clicking outside
         if (open === false) {
-          // Do nothing when trying to close by clicking outside
           return;
         }
       }}
