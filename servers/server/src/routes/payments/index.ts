@@ -99,7 +99,7 @@ startOfToday.setHours(0, 0, 0, 0);
 const endOfToday = new Date();
 endOfToday.setHours(23, 59, 59, 999);
 
-const calculateDiscount = async (
+export const calculateDiscount = async (
   businessId: string,
   totalBill: number,
   appliedCoins: number,
@@ -144,7 +144,7 @@ interface AggregatedData {
   modeObj: { [key: string]: number };
 }
 
-const calculateReward = async (
+export const calculateReward = async (
   exist: number,
   reward: number,
   limit: number,
@@ -158,7 +158,7 @@ const calculateReward = async (
 
 //
 
-const addRewardHistory = async (
+export const addRewardHistory = async (
   status: string,
   tableName: string,
   loyaltyId: string,
@@ -185,7 +185,7 @@ const addRewardHistory = async (
   return data;
 };
 //
-const removeRewardHistory = async (
+export const removeRewardHistory = async (
   status: string,
   tableName: string,
   loyaltyId: string,
@@ -212,7 +212,7 @@ const removeRewardHistory = async (
   return data;
 };
 
-const removeCoins = async (
+export const removeCoins = async (
   claimedCoins: number,
   tableName: string,
   loyaltyId: string,
@@ -245,7 +245,7 @@ const removeCoins = async (
   return null;
 };
 
-const addCoins = async (
+export const addCoins = async (
   coins: number,
   userId: string,
   order_id: string,
@@ -297,7 +297,7 @@ const addCoins = async (
   return 0;
 };
 
-const calculatedCashbackCoins = async (
+export const calculatedCashbackCoins = async (
   businessId: string,
   billValue: number,
   claimedCoins: number,

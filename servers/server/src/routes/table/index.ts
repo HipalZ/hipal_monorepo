@@ -4,6 +4,7 @@ import {
   BusinessPosConfig,
   DuesUser,
   KotOrder,
+  LoyaltySettings,
   NpcUser,
   Order,
   Payment,
@@ -33,6 +34,7 @@ import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { calculateCartBill } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
+import { addCoins, calculatedCashbackCoins, removeCoins } from "../payments";
 import { generateTenDigitCode } from "../pos";
 //
 const tableRouter = new Hono()
@@ -568,6 +570,9 @@ const tableRouter = new Hono()
             404,
           );
         }
+        const businessLoyalty = await LoyaltySettings.findOne({
+          businessId: table?.businessId,
+        });
         const pos = await BusinessPosConfig.findOne({
           businessId: table?.businessId,
           isDeleted: false,
@@ -791,6 +796,41 @@ const tableRouter = new Hono()
           ],
           { session },
         );
+
+        if (saveOrder[0]?.claimedCoins > 0) {
+          let finalCashBack = 0;
+          if (
+            paymentMode?.name !== "complementary" &&
+            paymentMode?.name !== "npc"
+          ) {
+            let cashBack = await calculatedCashbackCoins(
+              saveOrder[0].businessId.toString(),
+              Number(saveOrder[0].billValue),
+              Number(saveOrder[0].claimedCoins),
+            );
+
+            await removeCoins(
+              Number(saveOrder[0]?.claimedCoins),
+              saveOrder[0].tableName,
+              businessLoyalty?.loyaltyId?.toString() || "",
+              saveOrder[0]._id.toString(),
+              saveOrder[0].userId.toString(),
+              session,
+            );
+
+            finalCashBack = await addCoins(
+              cashBack,
+              saveOrder[0].userId.toString(),
+              saveOrder[0]._id.toString(),
+              saveOrder[0].tableName || "",
+              saveOrder[0].businessId.toString(),
+
+              businessLoyalty?.loyaltyId.toString() || "",
+
+              session,
+            );
+          }
+        }
 
         return c.json(
           {
