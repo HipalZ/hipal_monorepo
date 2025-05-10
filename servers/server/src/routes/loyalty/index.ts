@@ -19,7 +19,7 @@ const loyaltyRouter = new Hono().post(
     z.object({
       phone: z.string().min(10).max(10),
       otp: z.string().min(4).max(4).optional(),
-      name: z.string().min(2).max(50),
+      name: z.string().min(2).max(50).optional(),
       businessId: z.string().min(1).max(50),
     }),
   ),
