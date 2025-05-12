@@ -57,6 +57,7 @@ import {
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { getMerchantConfig } from "../../utils/cacheHelper";
+import getDefault4AMToNext4AM from "../../utils/defaultBillingTime";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 import {
   type MerchantConfig,
@@ -2213,13 +2214,12 @@ const paymentsRouter = new Hono()
     zValidator("query", paramsSchema),
     async (c) => {
       const { businessId, from, to } = c.req.query();
-      const fourHoursTimestamp = 14400000;
-      const fromDate = from
-        ? Number(from) + fourHoursTimestamp
-        : startOfToday.getTime() + fourHoursTimestamp;
+      const { fromDate: defaultFromDate, toDate: defaultToDate } =
+        getDefault4AMToNext4AM();
+      const fromDate = from ? Number(from) : defaultFromDate;
       const toDate = to
-        ? Number(to) + fourHoursTimestamp
-        : endOfToday.getTime() + fourHoursTimestamp;
+        ? Number(to) // Add 24 hours in milliseconds
+        : defaultToDate;
 
       if (fromDate > toDate) {
         return c.json({
@@ -2305,13 +2305,10 @@ const paymentsRouter = new Hono()
     async (c) => {
       let { appliedFilter } = c.req.query();
       const { businessId, from, to } = c.req.query();
-      const fourHoursTimestamp = 14400000;
-      const fromDate = from
-        ? Number(from) + fourHoursTimestamp
-        : startOfToday.getTime() + fourHoursTimestamp;
-      const toDate = to
-        ? Number(to) + fourHoursTimestamp
-        : endOfToday.getTime() + fourHoursTimestamp;
+      const { fromDate: defaultFromDate, toDate: defaultToDate } =
+        getDefault4AMToNext4AM();
+      const fromDate = from ? Number(from) : defaultFromDate;
+      const toDate = to ? Number(to) : defaultToDate;
 
       if (fromDate > toDate) {
         return c.json({
@@ -3441,13 +3438,10 @@ const paymentsRouter = new Hono()
     ),
     async (c) => {
       const { businessId, from, to } = c.req.query();
-      const fourHoursTimestamp = 14400000;
-      const fromDate = from
-        ? Number(from) + fourHoursTimestamp
-        : startOfToday.getTime() + fourHoursTimestamp;
-      const toDate = to
-        ? Number(to) + fourHoursTimestamp
-        : endOfToday.getTime() + fourHoursTimestamp;
+      const { fromDate: defaultFromDate, toDate: defaultToDate } =
+        getDefault4AMToNext4AM();
+      const fromDate = from ? Number(from) : defaultFromDate;
+      const toDate = to ? Number(to) : defaultToDate;
 
       if (fromDate > toDate) {
         return c.json({
@@ -3551,13 +3545,10 @@ const paymentsRouter = new Hono()
     ),
     async (c) => {
       const { businessId, from, to } = c.req.query();
-      const fourHoursTimestamp = 14400000;
-      const fromDate = from
-        ? Number(from) + fourHoursTimestamp
-        : startOfToday.getTime() + fourHoursTimestamp;
-      const toDate = to
-        ? Number(to) + fourHoursTimestamp
-        : endOfToday.getTime() + fourHoursTimestamp;
+      const { fromDate: defaultFromDate, toDate: defaultToDate } =
+        getDefault4AMToNext4AM();
+      const fromDate = from ? Number(from) : defaultFromDate;
+      const toDate = to ? Number(to) : defaultToDate;
 
       if (fromDate > toDate) {
         return c.json({
