@@ -262,13 +262,13 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: Boolean,
     default: true,
   },
-  noAddButton: {
+  addButton: {
     type: Boolean,
-    default: false,
+    default: true,
   },
-  noPlaceOrderButton: {
+  placeOrderButton: {
     type: Boolean,
-    default: false,
+    default: true,
   },
 });
 

@@ -116,8 +116,8 @@ export const outLetInfoSchema = z.object({
   vegan: z.boolean().optional().default(true),
   alcohol: z.boolean().optional().default(true),
   nonAlcohol: z.boolean().optional().default(true),
-  noAddButton: z.boolean().optional().default(false),
-  noPlaceOrderButton: z.boolean().optional().default(false),
+  addButton: z.boolean().optional().default(true),
+  placeOrderButton: z.boolean().optional().default(true),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;
