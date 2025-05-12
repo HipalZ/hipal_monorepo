@@ -98,6 +98,9 @@ interface OrderState {
   addSettleMode: (mode: ISettleMode) => void;
   updateSettleMode: (mode: ISettleMode) => void;
   removeSettleMode: (modeId: string) => void;
+
+  openAddCoinz: boolean;
+  setOpenAddCoinz: (open: boolean) => void;
 }
 
 export const useOrderStore = create<OrderState>((set, get) => ({
@@ -193,4 +196,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   showOrderError: false,
   setShowOrderError: (show) => set({ showOrderError: show }),
+
+  openAddCoinz: false,
+  setOpenAddCoinz: (open) => set({ openAddCoinz: open }),
 }));

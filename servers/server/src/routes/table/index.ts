@@ -4,6 +4,7 @@ import {
   BusinessPosConfig,
   DuesUser,
   KotOrder,
+  LoyaltySettings,
   NpcUser,
   Order,
   Payment,
@@ -33,6 +34,7 @@ import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { calculateCartBill } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
+import { addCoins, calculatedCashbackCoins, removeCoins } from "../payments";
 import { generateTenDigitCode } from "../pos";
 //
 const tableRouter = new Hono()
@@ -342,7 +344,10 @@ const tableRouter = new Hono()
                   : settleAmount,
               currency: "INR",
               receipt: uniqueOrderId,
-              userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
+              userId:
+                paymentMode?.name === "npc"
+                  ? npcUser?.userId
+                  : tableSession?.customerIds?.[0] || captainId,
               claimedCoins: tableSession?.claimedCoins || 0,
               tableName: table?.name,
               tips: tableSession?.tips || 0,
@@ -369,7 +374,7 @@ const tableRouter = new Hono()
               mode: settleModes.length > 1 ? "split" : paymentMode?.name,
               status: "SUCCESS",
               paymentMode: settleModes.length > 1 ? "split" : paymentMode?.name,
-              userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
+              userId: saveOrder[0].userId,
               claimedCoins: saveOrder[0].claimedCoins,
               billValue: saveOrder[0].billValue,
               tips: saveOrder[0].tips,
@@ -565,6 +570,9 @@ const tableRouter = new Hono()
             404,
           );
         }
+        const businessLoyalty = await LoyaltySettings.findOne({
+          businessId: table?.businessId,
+        });
         const pos = await BusinessPosConfig.findOne({
           businessId: table?.businessId,
           isDeleted: false,
@@ -622,7 +630,10 @@ const tableRouter = new Hono()
                   : tableSession?.finalTotal || 0,
               currency: "INR",
               receipt: uniqueOrderId,
-              userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
+              userId:
+                paymentMode?.name === "npc"
+                  ? npcUser?.userId
+                  : tableSession?.customerIds?.[0] || captainId,
               claimedCoins: tableSession?.claimedCoins || 0,
               tableName: table?.name,
               tips: tableSession?.tips || 0,
@@ -636,6 +647,41 @@ const tableRouter = new Hono()
           { session },
         );
 
+        let finalCashBack = 0;
+        if (saveOrder[0]?.claimedCoins > 0) {
+          if (
+            paymentMode?.name !== "complementary" &&
+            paymentMode?.name !== "npc"
+          ) {
+            let cashBack = await calculatedCashbackCoins(
+              saveOrder[0].businessId.toString(),
+              Number(saveOrder[0].billValue),
+              Number(saveOrder[0].claimedCoins),
+            );
+
+            await removeCoins(
+              Number(saveOrder[0]?.claimedCoins),
+              saveOrder[0].tableName,
+              businessLoyalty?.loyaltyId?.toString() || "",
+              saveOrder[0]._id.toString(),
+              saveOrder[0].userId.toString(),
+              session,
+            );
+
+            finalCashBack = await addCoins(
+              cashBack,
+              saveOrder[0].userId.toString(),
+              saveOrder[0]._id.toString(),
+              saveOrder[0].tableName || "",
+              saveOrder[0].businessId.toString(),
+
+              businessLoyalty?.loyaltyId.toString() || "",
+
+              session,
+            );
+          }
+        }
+
         const createPayment = await Payment.create(
           [
             {
@@ -645,12 +691,12 @@ const tableRouter = new Hono()
               mode: settleModes.length > 1 ? "split" : paymentMode?.name,
               status: "SUCCESS",
               paymentMode: settleModes.length > 1 ? "split" : paymentMode?.name,
-              userId: paymentMode?.name === "npc" ? npcUser?.userId : captainId,
+              userId: saveOrder[0].userId,
               claimedCoins: saveOrder[0].claimedCoins,
               billValue: saveOrder[0].billValue,
               tips: saveOrder[0].tips,
               tableName: saveOrder[0].tableName,
-              earnCoins: 0,
+              earnCoins: finalCashBack,
               razorpayEventId: nanoid(15),
               razorpayOrderId: nanoid(15),
               razorpayPaymentId: nanoid(15),

@@ -6,7 +6,7 @@ import type { IMenuLayout } from "@/components/types/businessData";
 async function fetchCategoryPageData(customLink: string, tableName: string) {
   // common api has business and settings data
   const { data, bizId } = await fetchCommonData(customLink);
-  const menuData = await getMenuData(tableName, bizId)
+  const menuData = await getMenuData(tableName, bizId);
 
   let parentCategories = { data: [] };
   if (menuData?.menuType === 1) {
@@ -36,11 +36,16 @@ async function fetchCategoryPageData(customLink: string, tableName: string) {
   const timingData = await response.json();
 
   const childCategories = await childCategoriesResponse.json();
-  data["parentCategories"] = parentCategories?.data as unknown as CategoryType[];
-  data["childCategories"] = childCategories?.data ?? [] as unknown as CategoryType[];
+  console.log("childCategories", childCategories);
+  data["parentCategories"] =
+    parentCategories?.data as unknown as CategoryType[];
+  data["childCategories"] =
+    Array.isArray(childCategories?.data) && childCategories?.data.length > 0
+      ? childCategories?.data
+      : ([] as unknown as CategoryType[]);
   data["timings"] = timingData?.data;
-  data["menuData"] = menuData ?? {} as unknown as IMenuLayout // Include menu data in the response
-  
+  data["menuData"] = menuData ?? ({} as unknown as IMenuLayout); // Include menu data in the response
+
   return data;
 }
 

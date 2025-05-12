@@ -1,15 +1,6 @@
-import mongoose from "mongoose";
 import { z } from "zod";
 import { BusinessEnumType } from "./business";
-
-const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
-  z
-    .string()
-    .refine((val) => mongoose.Schema.Types.ObjectId, {
-      message: "Invalid ObjectId",
-    })
-    .transform((val) => new mongoose.Types.ObjectId(val)),
-);
+import { ObjectIdSchema } from "./common";
 
 export const Amenities = [
   "SMOKING SECTION",
@@ -118,6 +109,15 @@ export const outLetInfoSchema = z.object({
   newAmenities: z.array(ObjectIdSchema).optional(),
   birthdayCampaign: ObjectIdSchema.optional(),
   registeredName: z.string().min(3).max(100).optional(),
+  menuId: ObjectIdSchema.optional(),
+  veg: z.boolean().optional().default(true),
+  nonVeg: z.boolean().optional().default(true),
+  egg: z.boolean().optional().default(true),
+  vegan: z.boolean().optional().default(true),
+  alcohol: z.boolean().optional().default(true),
+  nonAlcohol: z.boolean().optional().default(true),
+  addButton: z.boolean().optional().default(true),
+  placeOrderButton: z.boolean().optional().default(true),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;

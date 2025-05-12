@@ -4,7 +4,7 @@ import { cn } from "@/components/utils/helpers";
 import { FaArrowLeft } from "react-icons/fa";
 import { MdOutlineShoppingCart } from "react-icons/md";
 import { memo, useCallback, useMemo, useState } from "react";
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
 import { toast } from "react-toastify";
 import { useCallTheCaptain } from "@/components/hooks/useCartHook";
@@ -19,14 +19,23 @@ import glassTable from "@/assets/cart/glassTable.png";
 import Image from "next/image";
 import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import useTableData, { resetTableData, type HiCodeUser } from "@/components/store/useTableData";
+import useTableData, {
+  resetTableData,
+  type HiCodeUser,
+} from "@/components/store/useTableData";
+import { BsHandIndexThumb } from "react-icons/bs";
 
-const ConfirmPayment = dynamic(() => import("./confirmPayment"), { ssr: false });
+const ConfirmPayment = dynamic(() => import("./confirmPayment"), {
+  ssr: false,
+});
 const EmptyCart = dynamic(() => import("./emptyCart"), { ssr: false });
 const PaymentAlert = dynamic(() => import("./paymentAlert"), { ssr: false });
 const CartPayment = dynamic(() => import("./cartPayment"), { ssr: false });
 const SwipeToPlaceOrder = dynamic(() => import("./swipeToPlaceOrder"));
-const CartItem = dynamic(() => import("./cartItem"), { ssr: false, loading: () => <LoadingSpinner /> });
+const CartItem = dynamic(() => import("./cartItem"), {
+  ssr: false,
+  loading: () => <LoadingSpinner />,
+});
 const CommonBottomButton = dynamic(
   () => import("@/components/atoms/bottomButton"),
   { ssr: false },
@@ -43,14 +52,25 @@ const ItemDescriptionPopup = dynamic(
 const HiCodeValidate = dynamic(() => import("./hicodeValidate"), {
   ssr: false,
 });
-const Orders = dynamic(() => import("./orders"), { ssr: false, loading: () => <LoadingSpinner /> });
+const Orders = dynamic(() => import("./orders"), {
+  ssr: false,
+  loading: () => <LoadingSpinner />,
+});
 
 const Cart = () => {
   const { cart, cartHistory } = useCartStore();
   const { mutate, isPending } = useCallTheCaptain();
   const outLetInfo = _useAllBusiness((state) => state.data.outletInfo);
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
-  const { setShowCart, cartPage, setCartPage, setInputModal, setOrderPlaced, setHiCodePopupBeforeBill, hiCodePopupBeforeBill } = useCart();
+  const {
+    setShowCart,
+    cartPage,
+    setCartPage,
+    setInputModal,
+    setOrderPlaced,
+    setHiCodePopupBeforeBill,
+    hiCodePopupBeforeBill,
+  } = useCart();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const [showPayAlert, setShowPayAlert] = useState<boolean>(false);
   const {
@@ -62,7 +82,7 @@ const Cart = () => {
     setHiCodeUser,
     setTableName,
   } = useTableData();
-  const { setCheckLogin } = usePaymentStore()
+  const { setCheckLogin } = usePaymentStore();
   const accessToken = useUserToken.getState().accessToken;
   const userDetails = useLogin((state) => state.userDetails);
   const router = useRouter();
@@ -110,15 +130,12 @@ const Cart = () => {
       setShowCart(false);
       useCartStore.setState({ cart: [] });
     }, 5000);
-  }, [
-    setOrderPlaced,
-    setShowCart,
-  ]);
+  }, [setOrderPlaced, setShowCart]);
 
   const placeOrder = useCallback(async () => {
     if (!accessToken) {
       setCheckLogin(true);
-      return
+      return;
     }
     const handleUnauthenticatedUser = () => {
       setDirection("category");
@@ -146,12 +163,14 @@ const Cart = () => {
           triggerModal();
           setHiCode(res?.data?.hiCode || null);
           return true;
-        } if (response.status === 401) {
+        }
+        if (response.status === 401) {
           resetTableData();
-        } if (response.status === 409) {
-          toast.error(res?.message)
-          setTableName(res?.data?.data?.tableName)
-          setHiCode(res?.data?.data?.hiCode)
+        }
+        if (response.status === 409) {
+          toast.error(res?.message);
+          setTableName(res?.data?.data?.tableName);
+          setHiCode(res?.data?.data?.hiCode);
         }
         if (response.status === 403) {
           setHiCodeUser(res?.data as HiCodeUser);
@@ -188,11 +207,7 @@ const Cart = () => {
             hiCode: hiCode || "",
           },
         });
-        await handleApiResponse(
-          response,
-          "",
-          "Failed to place order",
-        );
+        await handleApiResponse(response, "", "Failed to place order");
       } catch (error) {
         console.error("Error placing POS order:", error);
       }
@@ -233,7 +248,7 @@ const Cart = () => {
     setHiCodePopup,
     triggerModal,
     setCheckLogin,
-    hiCode
+    hiCode,
   ]);
 
   const payBill = useCallback(() => {
@@ -268,19 +283,19 @@ const Cart = () => {
     if (cartPage === "order") {
       return cartHistory && cartHistory.length > 0
         ? [
-          {
-            text: "Pay Bill",
-            onClick: payBill,
-            type: "button" as const,
-          },
-        ]
+            {
+              text: "Pay Bill",
+              onClick: payBill,
+              type: "button" as const,
+            },
+          ]
         : [
-          {
-            text: "Order more",
-            onClick: () => setShowCart(false),
-            type: "button" as const,
-          },
-        ];
+            {
+              text: "Order more",
+              onClick: () => setShowCart(false),
+              type: "button" as const,
+            },
+          ];
     }
 
     if (cartPage === "history") {
@@ -323,26 +338,26 @@ const Cart = () => {
       if (cart.length > 0) {
         return outLetInfo?.shareCart
           ? [
-            {
-              text: "Share Cart",
-              onClick: placeOrder,
-              type: "button" as const,
-            },
-          ]
+              {
+                text: "Share Cart",
+                onClick: placeOrder,
+                type: "button" as const,
+              },
+            ]
           : [
-            {
-              text: "Back to Order",
-              onClick: () => setShowCart(false),
-              type: "button" as const,
-              isLoading: isPending,
-            },
-            {
-              text: "Need Help?",
-              onClick: triggerCallWaiter,
-              type: "button" as const,
-              isLoading: isPending,
-            },
-          ];
+              {
+                text: "Back to Menu",
+                onClick: () => setShowCart(false),
+                type: "button" as const,
+                isLoading: isPending,
+              },
+              {
+                text: "Need Help?",
+                onClick: triggerCallWaiter,
+                type: "button" as const,
+                isLoading: isPending,
+              },
+            ];
       }
       return [
         {
@@ -398,22 +413,28 @@ const Cart = () => {
   }, [cartPage, setShowCart, setCartPage]);
 
   return (
-    <div className={cn("overflow-y-auto h-[100dvh] hide-scrollbar text-[#000000] bg-[#ffffff] relative")}>
-      {cartPage === "cart" &&
+    <div
+      className={cn(
+        "overflow-y-auto h-[100dvh] hide-scrollbar text-[#000000] bg-[#ffffff] relative",
+      )}
+    >
+      {cartPage === "cart" && (
         <section className="relative h-[calc(91dvh+5px)]">
           <div className="bg-white z-[500] sticky top-0 flex items-center justify-between px-4 py-3 border-b border-gray-200">
             <article className="flex items-center gap-2">
-              {outletInfo?.outLetType === "OTHER" || outletInfo?.shareCart ? <button
-                type="button"
-                onClick={() => setShowCart(false)}
-                className="px-2 rounded-xl bg-[#000000] text-[#ffffff] on_active_bounce"
-              >
-                <FaArrowLeft
-                  size={28}
-                  className="p-2 rounded-full cursor-pointer text-[#ffffff]"
-                />
-              </button> : null}
-              <h2 className="text-2xl font-medium">Live cart</h2>
+              {outletInfo?.outLetType === "OTHER" || outletInfo?.shareCart ? (
+                <button
+                  type="button"
+                  onClick={() => setShowCart(false)}
+                  className="px-2 rounded-xl bg-[#000000] text-[#ffffff] on_active_bounce"
+                >
+                  <FaArrowLeft
+                    size={28}
+                    className="p-2 rounded-full cursor-pointer text-[#ffffff]"
+                  />
+                </button>
+              ) : null}
+              <h2 className="text-lg font-medium">Live cart</h2>
             </article>
             {hiCode && (
               <div className="!text-sm text-black inline-flex items-center gap-2">
@@ -423,54 +444,80 @@ const Cart = () => {
             )}
             <article className="flex items-center text-black">
               <MdOutlineShoppingCart size={24} />
-              <span className="text-sm">
-                {cart?.length} items
-              </span>
+              <span className="text-sm">{cart?.length} items</span>
             </article>
           </div>
           <div className="flex flex-col h-full overflow-y-auto">
             <div className="flex-1 divide-y divide-gray-100">
-              {cart?.length > 0 ? cart?.map((cartItem) => (
-                <CartItem key={cartItem.id} cartItem={cartItem} />
-              )) : <EmptyCart />}
+              {cart?.length > 0 ? (
+                cart?.map((cartItem) => (
+                  <CartItem key={cartItem.id} cartItem={cartItem} />
+                ))
+              ) : (
+                <EmptyCart />
+              )}
             </div>
             <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-              {!outletInfo?.isPosEnabled ? null : <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="w-full p-2 mt-auto mb-2 text-sm text-center text-rose-600 bg-rose-50"
-              >
-                Orders once placed, cannot be cancelled!
-              </motion.div>}
+              {outletInfo?.isPosEnabled && outletInfo?.placeOrderButton ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="w-full p-2 mt-auto mb-2 text-sm text-center text-rose-600 bg-rose-50"
+                >
+                  Orders once placed, cannot be cancelled!
+                </motion.div>
+              ) : null}
               {/* Cart Info */}
-              {outletInfo?.isPosEnabled ?
-                <div className="flex items-center justify-between gap-3 px-2">
-                  <button onClick={handleBack} type="button" className="h-12 px-4 py-1 border border-[#CACACA] rounded-lg text-center">
+              {outletInfo?.isPosEnabled ? (
+                <div className="flex items-center gap-3 px-2">
+                  <button
+                    onClick={handleBack}
+                    type="button"
+                    className="h-12 w-16 px-4 py-1 border border-[#CACACA] rounded-lg text-center"
+                  >
                     <PiArrowBendUpLeftBold size={24} />
                   </button>
-                  <SwipeToPlaceOrder placeOrder={placeOrder} disabled={cart?.length === 0} />
+
+                  {!outletInfo?.placeOrderButton ? (
+                    <motion.button
+                      type="button"
+                      className={cn(
+                        "w-full flex justify-center items-center gap-2 py-3 rounded-lg border border-gray-300", // ensure full width & good spacing
+                        "text-sm font-medium text-white bg-black shadow-sm",
+                      )}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={triggerCallWaiter}
+                    >
+                      <BsHandIndexThumb size={20} />
+                      <span>Call Captain</span>
+                    </motion.button>
+                  ) : (
+                    <SwipeToPlaceOrder
+                      placeOrder={placeOrder}
+                      disabled={cart?.length === 0}
+                    />
+                  )}
                 </div>
-                : <CommonBottomButton
+              ) : (
+                <CommonBottomButton
                   fixed
                   buttons={
                     outletInfo?.isPosEnabled
                       ? getBottomButtons ?? []
                       : getButtonForPopcorn ?? []
                   }
-                />}
+                />
+              )}
             </div>
           </div>
         </section>
-      }
-      {cartPage === "order" && (
-        <Orders />
       )}
+      {cartPage === "order" && <Orders />}
 
       {cartPage === "payment" && <CartPayment />}
 
-      {cartPage === "confirmPayment" &&
-        <ConfirmPayment />
-      }
+      {cartPage === "confirmPayment" && <ConfirmPayment />}
 
       {outletInfo?.outLetType !== "OTHER" && <CartWarning />}
 
@@ -496,17 +543,18 @@ const Cart = () => {
         </ItemDescriptionPopup>
       )}
 
-      {tableName && outletInfo?.outLetType !== "OTHER" && cartPage === "history" && (
-        <CommonBottomButton
-          fixed
-          buttons={
-            outletInfo?.isPosEnabled
-              ? getBottomButtons ?? []
-              : getButtonForPopcorn ?? []
-          }
-        />
-      )}
-
+      {tableName &&
+        outletInfo?.outLetType !== "OTHER" &&
+        cartPage === "history" && (
+          <CommonBottomButton
+            fixed
+            buttons={
+              outletInfo?.isPosEnabled
+                ? getBottomButtons ?? []
+                : getButtonForPopcorn ?? []
+            }
+          />
+        )}
     </div>
   );
 };

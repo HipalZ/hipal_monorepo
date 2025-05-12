@@ -1,13 +1,6 @@
-import mongoose from "mongoose";
 import { z } from "zod";
-const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
-  z
-    .string()
-    .refine((val) => mongoose.Schema.Types.ObjectId, {
-      message: "Invalid ObjectId",
-    })
-    .transform((val) => new mongoose.Types.ObjectId(val)),
-);
+import { ObjectIdSchema } from "./common";
+
 export const OrderModeEnum = ["WITH_ORDER", "WITHOUT_ORDER"] as const;
 export const OrderVerificationTypeEnum = ["USER", "CAPTAIN"] as const;
 

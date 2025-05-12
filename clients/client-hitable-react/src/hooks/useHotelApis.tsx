@@ -6,6 +6,7 @@ import type { Alert, Cart } from "@/components/types/hotelData";
 import { apiRpc } from "@hi/common"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import toast from "react-hot-toast"
+import { useParams } from "react-router-dom";
 interface IHotelRoomData {
     businessId: string;
     roomName: string;
@@ -106,34 +107,35 @@ export const useCheckOut = () => {
 }
 
 export const useRoomAlerts = () => {
-    const businessId = useBusinessData((s) => s.outletInfo?.businessId)
-    const userId = useHiClientZ((s) => s.captainData._id)
-    const { setAlerts } = useAlertsStore()
-    const { setHotelAlertsCount } = useHotelStore()
+    const businessId = useBusinessData((s) => s.outletInfo?.businessId);
+    const { tableId } = useParams();
+    const userId = useHiClientZ((s) => s.captainData._id);
+    const { setAlerts } = useAlertsStore();
+    const { setHotelAlertsCount } = useHotelStore();
+  
     const roomAlerts = async () => {
-        const response = await apiRpc.hotel.alert.fetch_room_alerts.$get({
-            query: {
-                businessId,
-                userId,
-            }
-        })
-        const res = await response.json()
-        if (response.status === 200 || response.status === 201) {
-            setAlerts(res.data)
-            setHotelAlertsCount(res.data.length)
-            return res.data
-        }
-    }
-
+      const response = await apiRpc.hotel.alert.fetch_room_alerts.$get({
+        query: { businessId, userId },
+      });
+      const res = await response.json();
+      if (response.status === 200 || response.status === 201) {
+        setAlerts(res.data);
+        setHotelAlertsCount(res.data.length);
+        return res.data;
+      }
+      return [];
+    };
+  
+    const enabled = Boolean(businessId && userId && !tableId);
+  
     const { data: alerts, isPending } = useQuery({
-        queryKey: ["roomAlerts", businessId, userId],
-        queryFn: roomAlerts,
-        enabled: !!businessId && !!userId,
-        refetchInterval: 11000,
-    })
-
-    return { alerts, isPending }
-}
+      queryKey: ["roomAlerts", businessId, userId],
+      queryFn: roomAlerts,
+      enabled,
+    });
+  
+    return { alerts, isPending };
+  };
 
 export const useAllServices = () => {
     const businessId = useBusinessData((s) => s.outletInfo?.businessId)

@@ -1,70 +1,89 @@
-"use client"
-import { memo, useState, useCallback } from "react"
-import type { DishType } from "@hi/db-models/src/validators"
-import { cn } from "@hi/common"
-import { useCartStore } from "@/components/store/useCartStore"
-import { useActiveClass } from "@/components/store/useActiveClass"
-import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton"
-import MemoFoodType from "../foodType"
-import { ImageOff } from "lucide-react"
-import ItemDescriptionPopup from "../dishDescription/itemDescription"
-import MemoDishPopup from "../dishPopup"
-import CommonBottomButton from "../bottomButton"
-import MemoRecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes"
-import { useCart } from "@/components/store/useCart"
-import Image from "next/image"
+"use client";
+import { memo, useState, useCallback } from "react";
+import type { DishType } from "@hi/db-models/src/validators";
+import { cn } from "@hi/common";
+import { useCartStore } from "@/components/store/useCartStore";
+import { useActiveClass } from "@/components/store/useActiveClass";
+import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton";
+import MemoFoodType from "../foodType";
+import { ImageOff } from "lucide-react";
+import ItemDescriptionPopup from "../dishDescription/itemDescription";
+import MemoDishPopup from "../dishPopup";
+import CommonBottomButton from "../bottomButton";
+import MemoRecommendedDishes from "@/components/organisms/dishDescription/recommendedDishes";
+import { useCart } from "@/components/store/useCart";
+import Image from "next/image";
+import foodImage from "@/assets/food.png";
 
 interface GridDishCardProps {
-  dishData: DishType
-  primaryColor?: string
-  secondaryColor?: string
-  isEdgeLayout?: boolean
+  dishData: DishType;
+  primaryColor?: string;
+  secondaryColor?: string;
+  isEdgeLayout?: boolean;
 }
 
-const GridDishCard = ({ dishData, primaryColor = "#ec4899", secondaryColor = "#fce7f3", isEdgeLayout }: GridDishCardProps) => {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const { cart } = useCartStore()
-  const { setSelectedDish, isSelectedDish } = useActiveClass()
-  const { setCartPage, setShowCart } = useCart()
+const GridDishCard = ({
+  dishData,
+  primaryColor = "#ec4899",
+  secondaryColor = "#fce7f3",
+  isEdgeLayout,
+}: GridDishCardProps) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { cart } = useCartStore();
+  const { setSelectedDish, isSelectedDish } = useActiveClass();
+  const { setCartPage, setShowCart } = useCart();
 
   // Open dish details modal
   const openDishDetails = useCallback(() => {
-    setSelectedDish(dishData)
-    setIsModalOpen(true)
-  }, [dishData, setSelectedDish])
+    setSelectedDish(dishData);
+    setIsModalOpen(true);
+  }, [dishData, setSelectedDish]);
 
   const closeModal = useCallback(() => {
-    setSelectedDish({} as DishType)
-    setIsModalOpen(false)
-  }, [setSelectedDish])
+    setSelectedDish({} as DishType);
+    setIsModalOpen(false);
+  }, [setSelectedDish]);
 
   const openCart = useCallback(() => {
-    setSelectedDish(null)
-    setCartPage("cart")
-    setShowCart(true)
-  }, [setShowCart, setCartPage, setSelectedDish])
+    setSelectedDish(null);
+    setCartPage("cart");
+    setShowCart(true);
+  }, [setShowCart, setCartPage, setSelectedDish]);
 
-  const cartItems = cart.filter((item) => item.dish?._id === dishData._id)
-  const isDishInCart = cartItems.length > 0
-  const recommendations = isDishInCart ? dishData.recommendationIds || [] : []
+  const cartItems = cart.filter((item) => item.dish?._id === dishData._id);
+  const isDishInCart = cartItems.length > 0;
+  const recommendations = isDishInCart ? dishData.recommendationIds || [] : [];
 
   return (
     <div className="flex flex-col">
       {/* Main dish card with fixed height */}
-      <div className={cn("flex flex-col min-h-[23.5rem] max-h-[26rem] pb-[3.5rem] relative items-start overflow-hidden"
-      )}>
+      <div
+        className={cn(
+          "flex flex-col min-h-[23.5rem] max-h-[26rem] pb-[3.5rem] relative items-start overflow-hidden",
+        )}
+      >
         {/* Image section */}
-        <div className="w-full cursor-pointer aspect-square " onClick={openDishDetails}>
-          {dishData.images && dishData.images.length > 0 ? (
+        <div
+          className="w-full cursor-pointer aspect-square "
+          onClick={openDishDetails}
+        >
+          {dishData.images &&
+          (dishData?.images.length > 0 || dishData?.images?.[0] === "") ? (
             <Image
-              src={dishData?.images?.[0]}
+              src={dishData?.images?.[0] || foodImage}
               alt={dishData.name}
               width={300}
               height={300}
-              className={cn("object-cover w-full h-full rounded-md", !dishData.availability && "grayscale")}
+              className={cn(
+                "object-cover w-full h-full rounded-md",
+                !dishData.availability && "grayscale",
+              )}
             />
           ) : (
-            <div className="flex items-center justify-center w-full h-full" style={{ backgroundColor: secondaryColor }}>
+            <div
+              className="flex items-center justify-center w-full h-full"
+              style={{ backgroundColor: secondaryColor }}
+            >
               <ImageOff color={primaryColor} size={40} />
             </div>
           )}
@@ -87,9 +106,15 @@ const GridDishCard = ({ dishData, primaryColor = "#ec4899", secondaryColor = "#f
             {dishData.name}
           </h3>
 
-          <p className="mt-2 font-semibold text-black opacity-60">₹{dishData.price.toFixed(2)}</p>
+          <p className="mt-2 font-semibold text-black opacity-60">
+            ₹{dishData.price.toFixed(2)}
+          </p>
 
-          {dishData.description && <p className="mt-1 text-xs text-gray-500 line-clamp-3 h-[3rem]">{dishData.description}</p>}
+          {dishData.description && (
+            <p className="mt-1 text-xs text-gray-500 line-clamp-3 h-[3rem]">
+              {dishData.description}
+            </p>
+          )}
         </div>
 
         {/* Add to cart button section - fixed at bottom */}
@@ -102,12 +127,16 @@ const GridDishCard = ({ dishData, primaryColor = "#ec4899", secondaryColor = "#f
               dishData={dishData}
             />
             <div className="text-xs opacity-50 bg-white text-[#000000] absolute -bottom-0.5 z-10">
-              {(dishData?.addOnIds?.length || dishData?.portions?.length) > 0 ? "customizable" : null}
+              {(dishData?.addOnIds?.length || dishData?.portions?.length) > 0
+                ? "customizable"
+                : null}
             </div>
           </section>
         ) : (
           <div className="absolute flex justify-center w-full bottom-4">
-            <div className="px-3 py-1 text-xs text-center text-gray-500 bg-gray-200 rounded-md">Not Available</div>
+            <div className="px-3 py-1 text-xs text-center text-gray-500 bg-gray-200 rounded-md">
+              Not Available
+            </div>
           </div>
         )}
       </div>
@@ -140,7 +169,7 @@ const GridDishCard = ({ dishData, primaryColor = "#ec4899", secondaryColor = "#f
         </ItemDescriptionPopup>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default memo(GridDishCard)
+export default memo(GridDishCard);

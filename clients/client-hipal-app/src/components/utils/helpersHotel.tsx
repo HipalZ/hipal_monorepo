@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useHotelTemp } from "../store/useHotelTemp";
 import { _useAllBusiness } from "../store/useAllBusiness";
 import { format } from "date-fns";
+import { useHotelBusinessData } from "../store/useHotelBusinessData";
 
 export const useImageNextPrev = () => {
   const { nextImage: nextImageStore, prevImage: prevImageStore } = useHotelTemp();
@@ -31,13 +32,13 @@ export const useImageNextPrev = () => {
 
 export const useShareRoom = () => {
   const [shareState, setShareState] = useState({ showOptions: false, url: "" });
-  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
+  const phone = useHotelBusinessData((state) => state.hotelData.phone);
   const shareCart = async (content: string) => {
     const message = encodeURIComponent(
       `Hi, I am interested in booking this room. Can I know more details?\n\n${content}`,
     )
 
-    const whatsappUrl = `https://wa.me/+91${outletInfo?.phone}?text=${message}`
+    const whatsappUrl = `https://wa.me/+91${phone}?text=${message}`
 
     // Open WhatsApp in a new tab
     window.open(whatsappUrl, "_blank")

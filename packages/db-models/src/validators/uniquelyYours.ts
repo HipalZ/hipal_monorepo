@@ -1,14 +1,6 @@
-import mongoose from "mongoose";
 import { z } from "zod";
 import { DishTypeEnum } from "../validators/dish";
-const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
-  z
-    .string()
-    .refine((val) => mongoose.Schema.Types.ObjectId, {
-      message: "Invalid ObjectId",
-    })
-    .transform((val) => new mongoose.Types.ObjectId(val)),
-);
+import { ObjectIdSchema } from "./common";
 
 export const DishTypeUnique = ["VEG", "NON_VEG", "EGG", "VEGAN"] as const;
 export const uniquelyYoursSchema = z.object({

@@ -129,6 +129,14 @@ export interface IStyles {
 }
 
 export interface IOutlet {
+  addButton: boolean;
+  placeOrderButton: boolean;
+  alcohol: boolean;
+  nonAlcohol: boolean;
+  vegan: boolean;
+  egg: boolean;
+  nonVeg: boolean;
+  veg: boolean;
   _id: string;
   businessId: string;
   __v: number;

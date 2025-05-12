@@ -57,6 +57,7 @@ import {
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { getMerchantConfig } from "../../utils/cacheHelper";
+import getDefault4AMToNext4AM from "../../utils/defaultBillingTime";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 import {
   type MerchantConfig,
@@ -99,7 +100,7 @@ startOfToday.setHours(0, 0, 0, 0);
 const endOfToday = new Date();
 endOfToday.setHours(23, 59, 59, 999);
 
-const calculateDiscount = async (
+export const calculateDiscount = async (
   businessId: string,
   totalBill: number,
   appliedCoins: number,
@@ -144,7 +145,7 @@ interface AggregatedData {
   modeObj: { [key: string]: number };
 }
 
-const calculateReward = async (
+export const calculateReward = async (
   exist: number,
   reward: number,
   limit: number,
@@ -158,7 +159,7 @@ const calculateReward = async (
 
 //
 
-const addRewardHistory = async (
+export const addRewardHistory = async (
   status: string,
   tableName: string,
   loyaltyId: string,
@@ -185,7 +186,7 @@ const addRewardHistory = async (
   return data;
 };
 //
-const removeRewardHistory = async (
+export const removeRewardHistory = async (
   status: string,
   tableName: string,
   loyaltyId: string,
@@ -212,7 +213,7 @@ const removeRewardHistory = async (
   return data;
 };
 
-const removeCoins = async (
+export const removeCoins = async (
   claimedCoins: number,
   tableName: string,
   loyaltyId: string,
@@ -245,7 +246,7 @@ const removeCoins = async (
   return null;
 };
 
-const addCoins = async (
+export const addCoins = async (
   coins: number,
   userId: string,
   order_id: string,
@@ -297,7 +298,7 @@ const addCoins = async (
   return 0;
 };
 
-const calculatedCashbackCoins = async (
+export const calculatedCashbackCoins = async (
   businessId: string,
   billValue: number,
   claimedCoins: number,
@@ -526,6 +527,7 @@ const paymentsRouter = new Hono()
         couponId: z.string().optional(),
         removeCoins: z.boolean().optional(),
         removeTips: z.boolean().optional(),
+        userId: z.string().min(1).max(50).optional(),
       }),
     ),
     zValidator("param", z.object({ businessId: z.string().min(1).max(50) })),
@@ -542,8 +544,25 @@ const paymentsRouter = new Hono()
             couponId,
             removeCoins,
             removeTips,
+            userId,
           } = requestData;
           const { businessId } = c.req.param();
+
+          const isUserCoinsAllocatedToOtherTable = await UserSession.findOne({
+            businessId,
+            tableName: { $ne: tableName },
+            coinsAppliedUserId: userId ? userId : { $ne: null },
+          });
+
+          if (isUserCoinsAllocatedToOtherTable) {
+            return respond(
+              c,
+              `You have already applied coins in  table  ${isUserCoinsAllocatedToOtherTable.tableName}`,
+              true,
+              400,
+              {},
+            );
+          }
           const tempTable = await UserSession.findOne({
             businessId,
             tableName,
@@ -601,7 +620,10 @@ const paymentsRouter = new Hono()
               couponId: couponId || null,
               finalTax: finalTax.toFixed(2),
               tips: removeTips ? 0 : tips || tempTable.tips,
-              claimedCoins: removeCoins ? 0 : effectiveClaimedCoins,
+              claimedCoins: removeCoins
+                ? 0
+                : Math.min(effectiveClaimedCoins, tempTable.initialTotal),
+              coinsAppliedUserId: userId ? userId : null,
             },
             { session, new: true },
           );
@@ -2174,8 +2196,12 @@ const paymentsRouter = new Hono()
     zValidator("query", paramsSchema),
     async (c) => {
       const { businessId, from, to } = c.req.query();
-      const fromDate = from ? Number(from) : startOfToday.getTime();
-      const toDate = to ? Number(to) : endOfToday.getTime();
+      const { fromDate: defaultFromDate, toDate: defaultToDate } =
+        getDefault4AMToNext4AM();
+      const fromDate = from ? Number(from) : defaultFromDate;
+      const toDate = to
+        ? Number(to) // Add 24 hours in milliseconds
+        : defaultToDate;
 
       if (fromDate > toDate) {
         return c.json({
@@ -2261,8 +2287,10 @@ const paymentsRouter = new Hono()
     async (c) => {
       let { appliedFilter } = c.req.query();
       const { businessId, from, to } = c.req.query();
-      const fromDate = from ? Number(from) : startOfToday.getTime();
-      const toDate = to ? Number(to) : endOfToday.getTime();
+      const { fromDate: defaultFromDate, toDate: defaultToDate } =
+        getDefault4AMToNext4AM();
+      const fromDate = from ? Number(from) : defaultFromDate;
+      const toDate = to ? Number(to) : defaultToDate;
 
       if (fromDate > toDate) {
         return c.json({
@@ -3387,8 +3415,10 @@ const paymentsRouter = new Hono()
     ),
     async (c) => {
       const { businessId, from, to } = c.req.query();
-      const fromDate = from ? Number(from) : startOfToday.getTime();
-      const toDate = to ? Number(to) : endOfToday.getTime();
+      const { fromDate: defaultFromDate, toDate: defaultToDate } =
+        getDefault4AMToNext4AM();
+      const fromDate = from ? Number(from) : defaultFromDate;
+      const toDate = to ? Number(to) : defaultToDate;
 
       if (fromDate > toDate) {
         return c.json({
@@ -3492,8 +3522,10 @@ const paymentsRouter = new Hono()
     ),
     async (c) => {
       const { businessId, from, to } = c.req.query();
-      const fromDate = from ? Number(from) : startOfToday.getTime();
-      const toDate = to ? Number(to) : endOfToday.getTime();
+      const { fromDate: defaultFromDate, toDate: defaultToDate } =
+        getDefault4AMToNext4AM();
+      const fromDate = from ? Number(from) : defaultFromDate;
+      const toDate = to ? Number(to) : defaultToDate;
 
       if (fromDate > toDate) {
         return c.json({

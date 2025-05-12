@@ -923,6 +923,7 @@ export const useUpdateBill = () => {
   const { loyaltySetting } = useLoyaltyData();
   const { billData } = usePaymentStore();
   const { tableName } = useTableData();
+  const userId = useLogin((s) => s.userDetails?._id);
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const updateBill = async (data: OptionalPropsData) => {
     const { coinz, tips, couponId } = data;
@@ -940,6 +941,7 @@ export const useUpdateBill = () => {
         ...(tips && { tips: tips }),
         ...(tips === 0 && { removeTips: true }),
         ...(couponId && { couponId }),
+        userId,
       },
     });
     const res = await response.json();

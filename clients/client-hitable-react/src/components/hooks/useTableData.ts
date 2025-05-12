@@ -1,5 +1,5 @@
 import { apiRpc } from "@hi/common";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -76,18 +76,18 @@ export const useTableTransfer = (businessId: string) => {
       const response = await apiRpc.table.transfer_table.$post({
         json: payload,
       });
-      return  response;
+      return response;
     },
     onSuccess: (data) => {
-      if(!data?.ok){
+      if (!data?.ok) {
         setOpenErrorModal(true);
         setError("Bill already fetched");
       }
-      if(data?.ok){
-      toast.success("Transferred successfully");
-      closeTransferModal();
-      setOpenOrderModal(false);
-      navigate(`/${businessId}/alerts`);
+      if (data?.ok) {
+        toast.success("Transferred successfully");
+        closeTransferModal();
+        setOpenOrderModal(false);
+        navigate(`/${businessId}/alerts`);
       }
     },
     onError: () => {
@@ -164,4 +164,116 @@ export const useGetAllModes = (
     isLoading,
     paymentMode,
   };
+};
+
+export const useCheckLoyalty = () => {
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
+  const checkLoyalty = async () => {
+    const response = await apiRpc.businesses[":businessId"].loyalty.$get({
+      param: {
+        businessId,
+      },
+    });
+    const res = await response.json();
+    return res?.data || false;
+  };
+
+  const { isLoading, data: loyaltyData } = useQuery({
+    queryKey: ["checkLoyalty", businessId],
+    queryFn: checkLoyalty,
+    enabled: !!businessId,
+  });
+
+  return {
+    isLoading,
+    loyaltyData,
+  };
+};
+
+export const useCustomerLogin = () => {
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
+  const [customerName, setCustomerName] = useState<string>("");
+
+  const customerLogin = async (phone: string) => {
+    const response = await apiRpc.users.resendOtp.$post({ json: { phone } });
+    const res = await response.json();
+
+    if (!response.ok) {
+      throw new Error("Failed to send OTP");
+    }
+
+    if (response.status === 400) return toast.error("Invalid phone number");
+    if (response.status === 200) toast.success("check your phone for OTP");
+
+    if (res?.data?.name) setCustomerName(res?.data.name);
+    return { ...res, phone };
+  };
+
+  const customerVerify = async ({
+    phone,
+    otp,
+  }: {
+    phone: string;
+    otp?: string;
+  }) => {
+    const response = await apiRpc.loyalty.verify_otp.$post({
+      json: {
+        phone,
+        otp,
+        businessId,
+        ...(customerName && { name: customerName }),
+      },
+    });
+
+    const res = await response.json();
+
+    if (!response.ok) {
+      throw new Error("OTP verification failed");
+    }
+
+    return res;
+  };
+
+  const { mutateAsync: sendOtp } = useMutation({
+    mutationFn: customerLogin,
+    onError: (err: any) => toast.error(err.message || "Failed to send OTP"),
+  });
+
+  const { mutateAsync: verifyOtp } = useMutation({
+    mutationFn: customerVerify,
+  });
+
+  return { sendOtp, verifyOtp };
+};
+
+export const useUpdateBill = () => {
+  const queryClient = useQueryClient();
+  const updateBill = async (data) => {
+    const { coinz, couponId, tableName, total, businessId, userId } = data;
+    const response = await apiRpc.payments.fetch_update_bill[
+      ":businessId"
+    ].$post({
+      param: {
+        businessId,
+      },
+      json: {
+        tableName: tableName,
+        total: total,
+        ...(coinz && { claimedCoins: coinz }),
+        ...(coinz === 0 && { removeCoins: true }),
+        ...(couponId && { couponId }),
+        ...(userId && { userId }),
+      },
+    });
+    const res = await response.json();
+    if (response.status === 200 || response.status === 201) {
+      toast.success("Bill updated successfully");
+      queryClient.invalidateQueries({
+        queryKey: ["getTableBill"],
+      });
+    }
+    return res;
+  };
+
+  return { updateBill };
 };

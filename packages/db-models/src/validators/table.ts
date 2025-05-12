@@ -1,15 +1,5 @@
-import mongoose from "mongoose";
 import { z } from "zod";
-const ObjectIdSchema = z.instanceof(mongoose.Types.ObjectId).or(
-  z
-    .string({
-      message: "Invalid ObjectId",
-    })
-    .refine((val) => mongoose.Schema.Types.ObjectId, {
-      message: "Invalid ObjectId",
-    })
-    .transform((val) => new mongoose.Types.ObjectId(val)),
-);
+import { ObjectIdSchema } from "./common";
 
 export const TableStatusEnum = ["ACTIVE", "EMPTY", "BILL"] as const;
 export const tableSchema = z.object({

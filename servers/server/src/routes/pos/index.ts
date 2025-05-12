@@ -7,6 +7,7 @@ import {
   Dish,
   Kitchen,
   KotOrder,
+  Menu,
   MenuBanner,
   Pos,
   PosBill,
@@ -15,6 +16,7 @@ import {
   UniquelyYours,
   UrlModel,
   User,
+  UserAnalytic,
   UserSession,
   Zone,
 } from "@hi/db-models";
@@ -291,8 +293,10 @@ const posRouter = new Hono()
               discount: orderData.discount,
               tax: tableSession.finalTax,
               total: tableSession.finalTotal,
-              customerPhone: orderData.customer_phone,
-              customerName: orderData.customer_name,
+              customerPhone:
+                tableSession.phoneNumbers[0] || orderData.customer_phone,
+              customerName:
+                tableSession.customerName || orderData.customer_name,
               tableName: orderData.table_no,
               billRequestId: tableSession.billRequestId,
               items: simpleArray,
@@ -406,8 +410,9 @@ const posRouter = new Hono()
             discount: orderData.discount,
             tax: updateSession?.finalTax,
             total: updateSession?.finalTotal,
-            customerPhone: orderData.customer_phone,
-            customerName: orderData.customer_name,
+            customerPhone:
+              tableSession.phoneNumbers[0] || orderData.customer_phone,
+            customerName: tableSession.customerName || orderData.customer_name,
             tableName: orderData.table_no,
             billRequestId: bill_request_id,
             items: simpleArray,
@@ -663,6 +668,10 @@ const posRouter = new Hono()
         // ! this is work if qr code is not generated for the table before this business
         // ! if qr code is generated for the table then we need to use script not this api
 
+        await Menu.deleteMany({
+          businessId: businessId,
+        });
+
         const business =
           await Business.findById(businessId).select("customLink");
         const fetchAreaAndTable = await axios.post(
@@ -850,6 +859,34 @@ const posRouter = new Hono()
             },
           );
         }
+
+        const zone = await Zone.find({
+          businessId: businessId,
+        });
+
+        const zoneIds = zone.map((zone) => zone._id.toString());
+        const createMenu = await Menu.create(
+          [
+            {
+              name: "Default",
+              businessId: businessId,
+              zoneIds: zoneIds,
+              menuType: 2,
+              days: [1, 2, 3, 4, 5, 6, 7],
+              startTime: 240,
+              endTime: 239,
+              isActive: true,
+              isDeleted: false,
+              categoryLayout: 2,
+              cardLayout: 2,
+              primaryColor: "#ec4899",
+              secondaryColor: "#fce7f3",
+            },
+          ],
+          {
+            session,
+          },
+        );
 
         return c.json(
           {
@@ -1747,6 +1784,172 @@ const posRouter = new Hono()
         },
         200,
       );
+    },
+  )
+
+  .put(
+    "/link_user_to_bill",
+
+    zValidator(
+      "json",
+      z.object({
+        name: z.string().min(1).max(200),
+        phone: z.string().min(10).max(10),
+        otp: z.string().min(4).max(4),
+        tableId: z.string().min(22).max(50),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { phone, name, tableId, otp } = await c.req.json();
+
+        const tableData = await Table.findById(tableId);
+        if (!tableData) {
+          return respond(c, "table not found", true, 404, {});
+        }
+
+        // Verify OTP
+        const otpResponse = await axios({
+          method: "GET",
+          url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
+          headers: {
+            accept: "application/json",
+            authkey: "387796AmyGlDBq63b2d75aP1",
+          },
+        });
+
+        const invalidOtpMessages = [
+          "Mobile no. not found",
+          "OTP not match",
+          "OTP expired",
+          "Otp empty or not numeric",
+          "Max limit reached for this otp verification",
+        ];
+
+        if (invalidOtpMessages.includes(otpResponse?.data?.message)) {
+          return respond(c, "Please enter valid Otp !!", true, 400, {});
+        }
+
+        const userData = await User.findOne({ phone: phone }).session(session);
+        if (!userData) {
+          const newUser = new User({
+            phone: phone,
+            name: name,
+          });
+
+          await newUser.save({ session });
+
+          const userSession = await UserSession.findOneAndUpdate(
+            {
+              tableName: tableData.name,
+              businessId: tableData.businessId,
+            },
+            {
+              $addToSet: {
+                customerIds: newUser._id,
+                phoneNumbers: phone,
+              },
+              customerName: name,
+            },
+
+            {
+              session,
+              new: true,
+            },
+          );
+
+          const updateTableData = await Table.findByIdAndUpdate(
+            tableId,
+            {
+              $addToSet: {
+                userIds: newUser._id,
+              },
+            },
+            {
+              session,
+            },
+          );
+
+          const userAnalytics = await UserAnalytic.findOneAndUpdate({
+            userId: newUser._id,
+            businessId: tableData.businessId,
+          });
+
+          if (!userAnalytics) {
+            const createAnalytics = new UserAnalytic({
+              avgSpend: 0,
+              totalSpend: 0,
+              totalOrders: 0,
+              userId: newUser._id,
+              businessId: tableData.businessId,
+              totalItemCount: 0,
+              totalBillCount: 0,
+              visitCount: 0,
+              lastVisit: Date.now(),
+              coinzIssued: 0,
+              coinzUsed: 0,
+              couponCount: 0,
+              currentCoins: 0,
+              dateOfJoining: Date.now(),
+              tableName: tableData.name,
+            });
+
+            await createAnalytics.save({ session });
+          }
+
+          return c.json(
+            {
+              message: "User linked successfully",
+              err: false,
+              data: {
+                success: true,
+              },
+            },
+            200,
+          );
+        }
+
+        const userSession = await UserSession.findOneAndUpdate(
+          {
+            tableName: tableData.name,
+            businessId: tableData.businessId,
+          },
+          {
+            $addToSet: {
+              phoneNumbers: phone,
+              customerIds: userData?._id,
+            },
+            customerName: name,
+          },
+
+          {
+            session,
+            new: true,
+          },
+        );
+
+        const updateTableData = await Table.findByIdAndUpdate(
+          tableId,
+          {
+            $addToSet: {
+              userIds: userData._id,
+            },
+          },
+          {
+            session,
+          },
+        );
+        return c.json(
+          {
+            message: "User linked successfully",
+            err: false,
+            data: { success: true },
+          },
+          200
+        );
+      });
     },
   );
 

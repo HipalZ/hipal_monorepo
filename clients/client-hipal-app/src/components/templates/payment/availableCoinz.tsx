@@ -31,11 +31,11 @@ const AvailableCoinz = () => {
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   // getBill
-  const { updateBill } = useUpdateBill()
+  const { updateBill } = useUpdateBill();
   const { loyaltySetting } = useLoyaltyData();
   const { mutateAsync } = useMutation({
     mutationFn: updateBill,
-  })
+  });
 
   const handleApplyCoinz = (finalValue: number) => {
     setClaimedCoins(finalValue);
@@ -43,31 +43,34 @@ const AvailableCoinz = () => {
     if (outletInfo?.isPosEnabled) {
       mutateAsync({
         coinz: finalValue,
-        couponId: ""
+        couponId: "",
       });
     }
   };
 
-  const handleCoins = useCallback(async (claimedCoins: number) => {
-    // if has claim coinz then celebrate
-    setIsModalOpen(false);
-    if (claimedCoins !== null && claimedCoins > 0) {
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-      });
-      let audio: HTMLAudioElement;
-      audio = new Audio("/sounds/Money.mp3");
-      audio.play();
-      return () => {
-        if (audio) {
-          audio.pause();
-          audio.currentTime = 0;
-        }
-      };
-    }
-  }, [setIsModalOpen]);
+  const handleCoins = useCallback(
+    async (claimedCoins: number) => {
+      // if has claim coinz then celebrate
+      setIsModalOpen(false);
+      if (claimedCoins !== null && claimedCoins > 0) {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+        let audio: HTMLAudioElement;
+        audio = new Audio("/sounds/Money.mp3");
+        audio.play();
+        return () => {
+          if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+          }
+        };
+      }
+    },
+    [setIsModalOpen],
+  );
 
   const { setAvailedCoupon } = useCouponz((s) => ({
     setAvailedCoupon: s.setAvailedCoupon,
@@ -77,18 +80,27 @@ const AvailableCoinz = () => {
     showAlert: s.showAlert,
     setShowAlert: s.setShowAlert,
   }));
-  const [tempClaimedCoins, setTempClaimedCoins] = useState<number | null>(claimedCoins || null);
+  const [tempClaimedCoins, setTempClaimedCoins] = useState<number | null>(
+    claimedCoins || null,
+  );
 
   const maxClaim = useMemo(() => {
-    const canClaimCoinz = Math.round((billData?.subTotal || billValue) * (loyaltySetting?.setClaimedPercentage / 100) || 0);
+    const canClaimCoinz = Math.round(
+      (billData?.subTotal || billValue) *
+        (loyaltySetting?.setClaimedPercentage / 100) || 0,
+    );
     return canClaimCoinz < userCoinz ? canClaimCoinz : userCoinz;
-  }, [billData?.subTotal, billValue, loyaltySetting?.setClaimedPercentage, userCoinz]);
+  }, [
+    billData?.subTotal,
+    billValue,
+    loyaltySetting?.setClaimedPercentage,
+    userCoinz,
+  ]);
 
-  const handleChange = (
-    event: ChangeEvent<HTMLInputElement>,
-  ) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     const userEnteredValue = Number(event.target.value.replace(/[^0-9.]/g, ""));
     if (userEnteredValue > maxClaim) {
+      toast.error(`You can use up to ${maxClaim} Coinz only.`);
       setTempClaimedCoins(maxClaim);
     } else {
       setTempClaimedCoins(userEnteredValue);
@@ -169,8 +181,7 @@ const AvailableCoinz = () => {
         <BottomPopUp height="40dvh" show={isModalOpen} onClose={closeModal}>
           <div className="h-[15rem] p-4 bg-white text-black overflow-hidden rounded-t-2xl">
             <h1 className="text-xl font-semibold">
-              Available Coins :{" "}
-              {claimCouponz ? userCoinz : checkAvailableCoinz}
+              Available Coins : {claimCouponz ? userCoinz : checkAvailableCoinz}
             </h1>
             <br />
             <input
@@ -186,13 +197,17 @@ const AvailableCoinz = () => {
             <p className="my-2 text-sm text-center text-gray-600">
               Earn exciting rewards with every transaction!
             </p>
-            {outletInfo?.isPosEnabled ? <p className="text-xs text-center text-gray-600">
-              *Note:- coinz can be applied only on bill subtotal amount upto {maxClaim}, tips will not be considered.
-            </p>
-              : <p className="text-xs text-center text-gray-600">
-                *Note:- coinz can be applied upto {maxClaim}, tips will not be considered.
+            {outletInfo?.isPosEnabled ? (
+              <p className="text-xs text-center text-gray-600">
+                *Note:- coinz can be applied only on bill subtotal amount upto{" "}
+                {maxClaim}, tips will not be considered.
               </p>
-            }
+            ) : (
+              <p className="text-xs text-center text-gray-600">
+                *Note:- coinz can be applied upto {maxClaim}, tips will not be
+                considered.
+              </p>
+            )}
           </div>
           <CommonBottomButton
             fixed

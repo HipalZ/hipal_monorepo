@@ -1,34 +1,40 @@
-import { memo, useState } from 'react'
-import { useOrderStore } from '@/components/store/useOrderData'
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
-import { ArrowRight } from 'lucide-react'
-import { motion, useMotionValue, useTransform } from 'framer-motion'
+import { memo, useState } from "react";
+import { useOrderStore } from "@/components/store/useOrderData";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { ArrowRight } from "lucide-react";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 
 const MemoBillWarning = () => {
-  const { selectedTable, setPaymentSteps } = useOrderStore()
-  const [isDragging, setIsDragging] = useState(false)
-  const x = useMotionValue(0)
-  const xInput = [0, 300]
+  const { selectedTable, setPaymentSteps } = useOrderStore();
+  const [isDragging, setIsDragging] = useState(false);
+  const x = useMotionValue(0);
+  const xInput = [0, 300];
   const background = useTransform(x, xInput, [
     "linear-gradient(90deg, #FF0000 0%, #FF0000 0%, #e5e7eb 0%, #e5e7eb 100%)",
-    "linear-gradient(90deg, #FF000010 0%, #22c55e 100%, #e5e7eb 100%, #e5e7eb 100%)"
-  ])
+    "linear-gradient(90deg, #FF000010 0%, #22c55e 100%, #e5e7eb 100%, #e5e7eb 100%)",
+  ]);
 
-  const guideX = useMotionValue(0)
-  const guideOpacity = useTransform(x, [0, 10], [0.5, 0])
+  const guideX = useMotionValue(0);
+  const guideOpacity = useTransform(x, [0, 10], [0.5, 0]);
 
   const handleDragEnd = () => {
-    setIsDragging(false)
+    setIsDragging(false);
     if (x.get() > 200) {
-      setPaymentSteps(1)
-      x.set(0)
+      setPaymentSteps(1);
+      x.set(0);
     } else {
-      x.set(0)
+      x.set(0);
     }
-  }
+  };
 
   return (
-    <section className='py-[5rem] min-h-[90dvh] flex items-center justify-center md:py-[8rem] px-4 max-w-md mx-auto'>
+    <section className="py-[5rem] min-h-[90dvh] flex items-center justify-center md:py-[8rem] px-4 max-w-md mx-auto">
       <Card className="w-full border-none shadow-none">
         <CardHeader className="pb-2">
           <CardTitle className="text-2xl font-semibold text-gray-800">
@@ -65,7 +71,7 @@ const MemoBillWarning = () => {
                     animate={{ opacity: [0.3, 1, 0.3] }}
                     transition={{
                       duration: 1,
-                      repeat: Infinity,
+                      repeat: Number.POSITIVE_INFINITY,
                       delay: i * 0.2,
                     }}
                   />
@@ -92,7 +98,11 @@ const MemoBillWarning = () => {
               </div>
             </motion.div>
             <div className="absolute top-0 left-0 flex items-center justify-center w-full h-full pointer-events-none">
-              <span className={`text-sm font-medium text-gray-600 transition-opacity ${isDragging ? 'opacity-0' : 'opacity-100'}`}>
+              <span
+                className={`text-sm font-medium text-gray-600 transition-opacity ${
+                  isDragging ? "opacity-0" : "opacity-100"
+                }`}
+              >
                 Slide to fetch bill
               </span>
             </div>
@@ -105,8 +115,8 @@ const MemoBillWarning = () => {
         </CardFooter>
       </Card>
     </section>
-  )
-}
+  );
+};
 
-const BillWarning = memo(MemoBillWarning)
-export default BillWarning
+const BillWarning = memo(MemoBillWarning);
+export default BillWarning;

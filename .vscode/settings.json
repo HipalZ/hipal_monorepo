@@ -10,11 +10,17 @@
     }
   ],
   "liveServer.settings.donotShowInfoMsg": true,
+  "eslint.experimental.useFlatConfig": false,
+  "eslint.runtime": "bun", // Bun-specific runtime
+  "eslint.packageManager": "bun",
+  "eslint.options": {
+    "overrideConfigFile": ".eslintrc.js"
+  },
   "playwright.reuseBrowser": true,
   "typescript.updateImportsOnFileMove.enabled": "always",
   "javascript.updateImportsOnFileMove.enabled": "always",
   "[typescriptreact]": {
-    "editor.defaultFormatter": "vscode.typescript-language-features"
+    "editor.defaultFormatter": "biomejs.biome"
   },
   "[javascript]": {
     "editor.defaultFormatter": "biomejs.biome"
@@ -48,8 +54,9 @@
   "editor.fontLigatures": true,
   "settingsSync.keybindingsPerPlatform": false,
   "workbench.iconTheme": "material-icon-theme",
-  "workbench.colorTheme": "Dracula",
+  "workbench.colorTheme": "Default Dark Modern",
   "editor.formatOnSave": true,
   "workbench.settings.applyToAllProfiles": [],
-  "cSpell.words": ["Sandwhich"]
+  "cSpell.words": ["Sandwhich"],
+  "typescript.tsdk": "../node_modules/typescript/lib"
 }
