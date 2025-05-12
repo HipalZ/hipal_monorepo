@@ -647,6 +647,41 @@ const tableRouter = new Hono()
           { session },
         );
 
+        let finalCashBack = 0;
+        if (saveOrder[0]?.claimedCoins > 0) {
+          if (
+            paymentMode?.name !== "complementary" &&
+            paymentMode?.name !== "npc"
+          ) {
+            let cashBack = await calculatedCashbackCoins(
+              saveOrder[0].businessId.toString(),
+              Number(saveOrder[0].billValue),
+              Number(saveOrder[0].claimedCoins),
+            );
+
+            await removeCoins(
+              Number(saveOrder[0]?.claimedCoins),
+              saveOrder[0].tableName,
+              businessLoyalty?.loyaltyId?.toString() || "",
+              saveOrder[0]._id.toString(),
+              saveOrder[0].userId.toString(),
+              session,
+            );
+
+            finalCashBack = await addCoins(
+              cashBack,
+              saveOrder[0].userId.toString(),
+              saveOrder[0]._id.toString(),
+              saveOrder[0].tableName || "",
+              saveOrder[0].businessId.toString(),
+
+              businessLoyalty?.loyaltyId.toString() || "",
+
+              session,
+            );
+          }
+        }
+
         const createPayment = await Payment.create(
           [
             {
@@ -661,7 +696,7 @@ const tableRouter = new Hono()
               billValue: saveOrder[0].billValue,
               tips: saveOrder[0].tips,
               tableName: saveOrder[0].tableName,
-              earnCoins: 0,
+              earnCoins: finalCashBack,
               razorpayEventId: nanoid(15),
               razorpayOrderId: nanoid(15),
               razorpayPaymentId: nanoid(15),
@@ -796,41 +831,6 @@ const tableRouter = new Hono()
           ],
           { session },
         );
-
-        if (saveOrder[0]?.claimedCoins > 0) {
-          let finalCashBack = 0;
-          if (
-            paymentMode?.name !== "complementary" &&
-            paymentMode?.name !== "npc"
-          ) {
-            let cashBack = await calculatedCashbackCoins(
-              saveOrder[0].businessId.toString(),
-              Number(saveOrder[0].billValue),
-              Number(saveOrder[0].claimedCoins),
-            );
-
-            await removeCoins(
-              Number(saveOrder[0]?.claimedCoins),
-              saveOrder[0].tableName,
-              businessLoyalty?.loyaltyId?.toString() || "",
-              saveOrder[0]._id.toString(),
-              saveOrder[0].userId.toString(),
-              session,
-            );
-
-            finalCashBack = await addCoins(
-              cashBack,
-              saveOrder[0].userId.toString(),
-              saveOrder[0]._id.toString(),
-              saveOrder[0].tableName || "",
-              saveOrder[0].businessId.toString(),
-
-              businessLoyalty?.loyaltyId.toString() || "",
-
-              session,
-            );
-          }
-        }
 
         return c.json(
           {

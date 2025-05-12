@@ -554,7 +554,10 @@ const paymentsRouter = new Hono()
 
           const isUserCoinsAllocatedToOtherTable = await UserSession.findOne({
             businessId,
-            tableName: { $ne: tableName },
+            $and: [
+              { tableName: { $ne: tableName } },
+              { tableName: { $ne: null } },
+            ],
             coinsAppliedUserId: userId,
           });
 
