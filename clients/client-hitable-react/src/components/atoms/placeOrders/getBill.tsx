@@ -122,6 +122,10 @@ const MemoGetBill = () => {
   });
 
   const removeClaimedCoins = () => {
+    const confirmReplace = window.confirm(
+      "Applying this will remove your Coinz/Coupon. Continue?",
+    );
+    if (!confirmReplace) return;
     updateBill({
       tableName: data?.tableName,
       coinz: 0,

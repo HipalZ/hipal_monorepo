@@ -252,9 +252,9 @@ const MemoAddCoinz = (props) => {
   return (
     <Card className="border-none shadow-none">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-xl">Sub Total</CardTitle>
+        <CardTitle className="text-xl">Total</CardTitle>
         <CardTitle className="text-2xl cursor-pointer">
-          <span>₹{data?.subTotal}</span>
+          <span>₹{billValue}</span>
         </CardTitle>
       </CardHeader>
       <CardContent>{renderContent()}</CardContent>
