@@ -258,7 +258,6 @@ const MemoGetBill = () => {
                 ["tips", data.tips],
                 ["discount", data.discount],
                 ["tax", data.tax],
-                ["initialTotal", data.initialTotal],
                 ["claimedCoins", data.claimedCoins],
               ]
                 .filter(([_, value]) => typeof value === "number" && value > 0)
