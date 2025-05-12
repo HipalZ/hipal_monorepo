@@ -249,7 +249,7 @@ export const useCustomerLogin = () => {
 export const useUpdateBill = () => {
   const queryClient = useQueryClient();
   const updateBill = async (data) => {
-    const { coinz, couponId, tableName, total, businessId } = data;
+    const { coinz, couponId, tableName, total, businessId, userId } = data;
     const response = await apiRpc.payments.fetch_update_bill[
       ":businessId"
     ].$post({
@@ -262,6 +262,7 @@ export const useUpdateBill = () => {
         ...(coinz && { claimedCoins: coinz }),
         ...(coinz === 0 && { removeCoins: true }),
         ...(couponId && { couponId }),
+        ...(userId && { userId }),
       },
     });
     const res = await response.json();
