@@ -246,7 +246,14 @@ const MemoGetBill = () => {
             <Separator className="my-4" />
             <div className="mb-4 space-y-3">
               {[
-                ["subTotal", data.subTotal],
+                [
+                  "subTotal",
+                  Math.max(
+                    0,
+                    Number(data?.subTotal ?? 0) -
+                      Number(data?.claimedCoins ?? 0),
+                  ),
+                ],
                 ["serviceCharge", data.serviceCharge],
                 ["tips", data.tips],
                 ["discount", data.discount],
