@@ -60,10 +60,6 @@ const PhoneNumber = (props) => {
               <div className="flex justify-between text-sm font-semibold">
                 {customer.userId.name}
               </div>
-              <div className="flex justify-between mt-1 text-xs gap-3 text-gray-600">
-                <span>Coins: {customer.currentCoins || 0}</span>
-                <span>Coupons: {customer.couponCount || 0}</span>
-              </div>
             </div>
             <ArrowRight className="w-4 h-4 text-black" />
           </div>

@@ -24,6 +24,8 @@ import QrCodePreview from "./qrCode";
 import Normalsettle from "./normalsettle";
 import { useError } from "@/components/store/useError";
 import AddCoinz from "./addCoinz";
+import { IoClose } from "react-icons/io5";
+import { useUpdateBill } from "@/components/hooks/useTableData";
 
 const MemoGetBill = () => {
   const { businessId } = useParams();
@@ -38,6 +40,7 @@ const MemoGetBill = () => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [forceSettle, setForceSettle] = useState<boolean>(false);
   const [normalSettle, setNormalSettle] = useState<boolean>(false);
+  const { updateBill } = useUpdateBill();
 
   const closeOrderModalHandler = useCallback(() => {
     setOpenOrderModal(false);
@@ -117,6 +120,16 @@ const MemoGetBill = () => {
       return response.json();
     },
   });
+
+  const removeClaimedCoins = () => {
+    updateBill({
+      tableName: data?.tableName,
+      coinz: 0,
+      total: data?.total,
+      couponId: null,
+      businessId,
+    });
+  };
 
   if (isLoading) {
     return <SpinnerMemo />;
@@ -242,19 +255,33 @@ const MemoGetBill = () => {
                   const isDeduction =
                     key === "claimedCoins" || key === "discount";
                   return (
-                    <div key={key} className="flex justify-between text-sm">
+                    <div
+                      key={key}
+                      className="flex justify-between items-center text-sm"
+                    >
                       <p className="text-gray-700 capitalize">
                         {key.replace(/([A-Z])/g, " $1")}
                       </p>
-                      <p
-                        className={`font-medium ${
-                          isDeduction ? "text-green-600" : "text-gray-900"
-                        }`}
-                      >
-                        {isDeduction
-                          ? `-₹${Number(value).toFixed(2)}`
-                          : `₹${Number(value).toFixed(2)}`}
-                      </p>
+                      <div className="flex items-center space-x-2">
+                        <p
+                          className={`font-medium ${
+                            isDeduction ? "text-green-600" : "text-gray-900"
+                          }`}
+                        >
+                          {isDeduction
+                            ? `-₹${Number(value).toFixed(2)}`
+                            : `₹${Number(value).toFixed(2)}`}
+                        </p>
+                        {key === "claimedCoins" && (
+                          <button
+                            type="button"
+                            onClick={removeClaimedCoins}
+                            className="text-red-600 text-2xl hover:underline"
+                          >
+                            <IoClose />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -263,6 +290,7 @@ const MemoGetBill = () => {
                 <p className="text-black">₹{Number(data.total).toFixed(2)}</p>
               </div>
             </div>
+
             <Separator className="my-4" />
           </CardContent>
         </Card>

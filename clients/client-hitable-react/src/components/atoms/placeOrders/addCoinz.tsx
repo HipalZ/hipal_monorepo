@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOrderStore } from "@/components/store/useOrderData";
 import {
@@ -25,8 +25,8 @@ const MemoAddCoinz = (props) => {
   const [availedCoupon, setAvailedCoupon] = useState<any>(null);
   const [couponz, setCouponz] = useState();
   const [availableCoinz, setAvailableCoinz] = useState(0);
-  const [coinzAdded, setCoinzAdded] = useState(0);
-  const [applyCoinz, setApplyCoinz] = useState(0);
+  const [coinzAdded, setCoinzAdded] = useState(data?.claimedCoins);
+  const [applyCoinz, setApplyCoinz] = useState(data?.claimedCoins);
   const { updateBill } = useUpdateBill();
   const handleCloseModal = () => {
     setOpenAddCoinz(false);
@@ -49,26 +49,13 @@ const MemoAddCoinz = (props) => {
 
   const removeCoupon = () => {
     setAvailedCoupon(null);
-  };
-
-  const getMaxCoinzAllowed = () => {
-    if (
-      !loyaltyData?.setClaimedPercentage ||
-      billValue <= 0 ||
-      availableCoinz <= 0
-    ) {
-      console.warn("Loyalty % not available or bill/coinz are 0");
-      return 0;
-    }
-
-    const percentageLimit = Math.floor(
-      (loyaltyData.setClaimedPercentage * billValue) / 100,
-    );
-    const maxCoinz = Math.min(availableCoinz, billValue, percentageLimit, 4999);
-
-    console.log({ billValue, availableCoinz, percentageLimit, maxCoinz });
-
-    return maxCoinz;
+    updateBill({
+      tableName: data.tableName,
+      coinz: 0,
+      total: data.total,
+      couponId: null,
+      businessId,
+    });
   };
 
   const getCouponDiscountAmount = (coupon) => {
@@ -129,7 +116,7 @@ const MemoAddCoinz = (props) => {
     toast.success(`Coupon "${coupon.name}" applied: ₹${discountValue} off`);
     updateBill({
       tableName: data.tableName,
-      coinz: applyCoinz,
+      coinz: discountValue,
       total: data.total,
       couponId: coupon?._id || null,
       businessId,
@@ -153,21 +140,31 @@ const MemoAddCoinz = (props) => {
     return { discountValue: discount, resetClaimedCoins };
   };
 
-  const handleApplyCoinz = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value.replace(/\D/g, "");
-    const enteredValue = Number.parseInt(rawValue || "0", 10);
-    const maxAllowed = getMaxCoinzAllowed();
+  const maxClaim = useMemo(() => {
+    const canClaimCoinz = Math.round(
+      (data?.subTotal || billValue) *
+        (loyaltyData?.setClaimedPercentage / 100) || 0,
+    );
+    return canClaimCoinz < availableCoinz ? canClaimCoinz : availableCoinz;
+  }, [
+    data?.subTotal,
+    billValue,
+    loyaltyData?.setClaimedPercentage,
+    availableCoinz,
+  ]);
 
+  const handleApplyCoinz = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const userEnteredValue = Number(event.target.value.replace(/[^0-9.]/g, ""));
     if (availedCoupon) {
       toast.error("You can't apply Coinz when a coupon is already applied.");
       return;
     }
 
-    if (enteredValue > maxAllowed) {
-      toast.error(`You can use up to ${maxAllowed} Coinz only.`);
-      setCoinzAdded(maxAllowed);
+    if (userEnteredValue > maxClaim) {
+      toast.error(`You can use up to ${maxClaim} Coinz only.`);
+      setCoinzAdded(maxClaim);
     } else {
-      setCoinzAdded(enteredValue);
+      setCoinzAdded(userEnteredValue);
     }
   };
 
@@ -188,6 +185,13 @@ const MemoAddCoinz = (props) => {
   const removeApplyCoinz = () => {
     setApplyCoinz(0);
     setCoinzAdded(0);
+    updateBill({
+      tableName: data.tableName,
+      coinz: 0,
+      total: data.total,
+      couponId: null,
+      businessId,
+    });
     toast.success("Removed Coinz from this bill.");
   };
 
@@ -239,6 +243,7 @@ const MemoAddCoinz = (props) => {
             couponz={couponz}
             availedCoupon={availedCoupon}
             confirmApplyCoinz={confirmApplyCoinz}
+            coinzAdded={coinzAdded}
           />
         );
     }
@@ -247,9 +252,9 @@ const MemoAddCoinz = (props) => {
   return (
     <Card className="border-none shadow-none">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-xl">Add Coinz</CardTitle>
+        <CardTitle className="text-xl">Sub Total</CardTitle>
         <CardTitle className="text-2xl cursor-pointer">
-          <span>{billValue}</span>
+          <span>₹{data?.subTotal}</span>
         </CardTitle>
       </CardHeader>
       <CardContent>{renderContent()}</CardContent>

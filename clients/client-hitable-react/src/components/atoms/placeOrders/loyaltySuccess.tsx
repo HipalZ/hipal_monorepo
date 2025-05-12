@@ -39,7 +39,7 @@ const LoyaltySuccess = (props) => {
               <p className="text-sm text-black font-medium">{userData.phone}</p>
             </>
           )}
-          {userData?.dob && (
+          {userData?.dob > 0 && (
             <>
               <p className="text-sm text-gray-500 font-medium">Birthday</p>
               <p className="text-sm text-black font-medium">
@@ -106,14 +106,25 @@ const LoyaltySuccess = (props) => {
         </p>
       ) : null}
       {availedCoupon && (
-        <p className="text-sm text-green-600">
-          Coupon "<strong>{availedCoupon?.name}</strong>" applied — Discount: ₹
-          {getCouponDiscountAmount(availedCoupon)}
-        </p>
+        <article className="flex items-center justify-between p-2 mt-4 bg-gray-50 rounded-lg">
+          <p className="text-sm text-green-600">
+            Coupon "<strong>{availedCoupon?.name}</strong>" applied — Discount:
+            ₹{getCouponDiscountAmount(availedCoupon)}
+          </p>
+          <Button
+            variant="outline"
+            className="text-red-500 bg-white"
+            onClick={removeCoupon}
+          >
+            Remove
+          </Button>
+        </article>
       )}
       <div className="space-y-2">
-        <h4 className="font-medium text-gray-700">Available Coupons</h4>
-        <div className="max-h-[400px] overflow-y-auto pr-1 pb-32">
+        <h4 className="font-medium text-gray-700 bg-gray-200 px-3 py-1 rounded-lg">
+          Available Coupons
+        </h4>
+        <div className="max-h-[400px] overflow-y-auto pr-1 pb-40">
           {couponz?.map((coupon) => {
             if (!coupon) return null;
             return (

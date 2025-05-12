@@ -434,7 +434,7 @@ const Cart = () => {
                   />
                 </button>
               ) : null}
-              <h2 className="text-2xl font-medium">Live cart</h2>
+              <h2 className="text-lg font-medium">Live cart</h2>
             </article>
             {hiCode && (
               <div className="!text-sm text-black inline-flex items-center gap-2">
