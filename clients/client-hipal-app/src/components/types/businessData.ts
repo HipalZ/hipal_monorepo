@@ -681,6 +681,7 @@ export interface OptionalPropsData {
   coinz?: number;
   tips?: number;
   couponId?: string;
+  userId?: string;
 }
 
 export interface birthdayEvents {

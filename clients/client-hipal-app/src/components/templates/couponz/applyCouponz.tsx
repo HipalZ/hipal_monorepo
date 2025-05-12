@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { memo, useCallback, useEffect, useState } from "react";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useCouponTemp from "@/components/store/useCouponTemp";
@@ -64,7 +64,7 @@ const MemoApplyCouponz = () => {
     setClaimCouponz,
     claimedCoins,
     setClaimedCoins,
-    billData
+    billData,
   } = usePaymentStore((s) => ({
     billValue: s.billValue,
     claimedCoins: s.claimedCoins,
@@ -102,19 +102,16 @@ const MemoApplyCouponz = () => {
     upcomingCouponz: s.upcomingCouponz,
     setUpcomingCouponz: s.setUpcomingCouponz,
   }));
-
-  const { updateBill } = useUpdateBill()
+  const { updateBill } = useUpdateBill();
   const { mutateAsync } = useMutation({
     mutationFn: updateBill,
-  })
+  });
 
   const [selectedCoupon, setSelectedCouponState] = useState(null);
-  const { setApplyCouponz, setIsLoading } = useCouponTemp(
-    (s) => ({
-      setApplyCouponz: s.setApplyCouponz,
-      setIsLoading: s.setIsLoading,
-    }),
-  );
+  const { setApplyCouponz, setIsLoading } = useCouponTemp((s) => ({
+    setApplyCouponz: s.setApplyCouponz,
+    setIsLoading: s.setIsLoading,
+  }));
 
   const closeCouponz = useCallback(() => {
     setApplyCouponz(false);
@@ -202,7 +199,8 @@ const MemoApplyCouponz = () => {
         mutateAsync({
           coinz: discountValue,
           couponId: coupon?._id,
-        })
+          userId: userDetails?._id,
+        });
       }
       setClaimCouponz(discountValue);
       if (resetClaimedCoins) {
@@ -243,7 +241,7 @@ const MemoApplyCouponz = () => {
     setClaimCouponz(0);
     mutateAsync({
       coinz: 0,
-    })
+    });
     setApplyCouponz(false);
   }, [mutateAsync, setClaimCouponz, setAvailedCoupon, setApplyCouponz]);
 
@@ -332,7 +330,9 @@ const MemoApplyCouponz = () => {
 
   return (
     <>
-      {showPopup ? <ApplyCouponDatePopup /> :
+      {showPopup ? (
+        <ApplyCouponDatePopup />
+      ) : (
         <ApplyCouponzComponent
           closeCouponz={closeCouponz}
           greatDeals={greatDeals}
@@ -343,7 +343,8 @@ const MemoApplyCouponz = () => {
           billData={billData}
           billValue={billValue}
           availedCoupon={availedCoupon}
-        />}
+        />
+      )}
       {showAlert ? (
         <AlertToRemove onClose={() => setShowAlert(false)} show>
           <DialogTitle

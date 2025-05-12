@@ -923,10 +923,9 @@ export const useUpdateBill = () => {
   const { loyaltySetting } = useLoyaltyData();
   const { billData } = usePaymentStore();
   const { tableName } = useTableData();
-  const userId = useLogin((s) => s.userDetails?._id);
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const updateBill = async (data: OptionalPropsData) => {
-    const { coinz, tips, couponId } = data;
+    const { coinz, tips, couponId, userId } = data;
     const response = await apiRpc.payments.fetch_update_bill[
       ":businessId"
     ].$post({
@@ -941,7 +940,7 @@ export const useUpdateBill = () => {
         ...(tips && { tips: tips }),
         ...(tips === 0 && { removeTips: true }),
         ...(couponId && { couponId }),
-        userId,
+        ...(userId && { userId }),
       },
     });
     const res = await response.json();
