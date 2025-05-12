@@ -627,7 +627,7 @@ const paymentsRouter = new Hono()
               claimedCoins: removeCoins
                 ? 0
                 : Math.min(effectiveClaimedCoins, tempTable.initialTotal),
-              userId: removeCoins ? null : userId,
+              coinsAppliedUserId: userId ? userId : null,
             },
             { session, new: true },
           );
