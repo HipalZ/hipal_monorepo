@@ -152,6 +152,12 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     type: String,
     required: false,
   },
+  coinsAppliedUserId: {
+    type: ObjectId,
+    required: false,
+    ref: "User",
+    default: null,
+  },
 });
 
 userSessionSchema.index({ businessId: 1, tableName: 1 }, { unique: true });

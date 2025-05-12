@@ -531,6 +531,7 @@ const paymentsRouter = new Hono()
         couponId: z.string().optional(),
         removeCoins: z.boolean().optional(),
         removeTips: z.boolean().optional(),
+        userId: z.string().min(1).max(50).optional(),
       }),
     ),
     zValidator("param", z.object({ businessId: z.string().min(1).max(50) })),
@@ -547,8 +548,25 @@ const paymentsRouter = new Hono()
             couponId,
             removeCoins,
             removeTips,
+            userId,
           } = requestData;
           const { businessId } = c.req.param();
+
+          const isUserCoinsAllocatedToOtherTable = await UserSession.findOne({
+            businessId,
+            tableName: { $ne: tableName },
+            coinsAppliedUserId: userId,
+          });
+
+          if (isUserCoinsAllocatedToOtherTable) {
+            return respond(
+              c,
+              `You have already applied coins in  table  ${isUserCoinsAllocatedToOtherTable.tableName}`,
+              true,
+              400,
+              {},
+            );
+          }
           const tempTable = await UserSession.findOne({
             businessId,
             tableName,
@@ -607,6 +625,7 @@ const paymentsRouter = new Hono()
               finalTax: finalTax.toFixed(2),
               tips: removeTips ? 0 : tips || tempTable.tips,
               claimedCoins: removeCoins ? 0 : effectiveClaimedCoins,
+              userId: removeCoins ? null : userId,
             },
             { session, new: true },
           );
