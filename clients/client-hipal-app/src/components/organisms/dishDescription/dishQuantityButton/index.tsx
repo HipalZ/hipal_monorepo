@@ -200,7 +200,7 @@ const MemoDishQuantityButton = ({
                 <Plus className="w-4 h-4" />
               </motion.button>
             </motion.div>
-          ) : outletInfo?.noAddButton ? null : (
+          ) : !outletInfo?.addButton ? null : (
             <motion.div
               key="add"
               initial={{ opacity: 0, scale: 0.8 }}

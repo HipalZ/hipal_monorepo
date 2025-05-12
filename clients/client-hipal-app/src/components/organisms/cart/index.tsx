@@ -458,7 +458,7 @@ const Cart = () => {
               )}
             </div>
             <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-              {outletInfo?.isPosEnabled && outletInfo?.noPlaceOrderButton ? (
+              {outletInfo?.isPosEnabled && outletInfo?.placeOrderButton ? (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -478,7 +478,7 @@ const Cart = () => {
                     <PiArrowBendUpLeftBold size={24} />
                   </button>
 
-                  {!outletInfo?.noPlaceOrderButton ? (
+                  {!outletInfo?.placeOrderButton ? (
                     <motion.button
                       type="button"
                       className={cn(

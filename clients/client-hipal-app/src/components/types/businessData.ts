@@ -129,8 +129,8 @@ export interface IStyles {
 }
 
 export interface IOutlet {
-  noAddButton: boolean;
-  noPlaceOrderButton: boolean;
+  addButton: boolean;
+  placeOrderButton: boolean;
   alcohol: boolean;
   nonAlcohol: boolean;
   vegan: boolean;
