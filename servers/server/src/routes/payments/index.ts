@@ -624,7 +624,9 @@ const paymentsRouter = new Hono()
               couponId: couponId || null,
               finalTax: finalTax.toFixed(2),
               tips: removeTips ? 0 : tips || tempTable.tips,
-              claimedCoins: removeCoins ? 0 : effectiveClaimedCoins,
+              claimedCoins: removeCoins
+                ? 0
+                : Math.min(effectiveClaimedCoins, tempTable.initialTotal),
               userId: removeCoins ? null : userId,
             },
             { session, new: true },
