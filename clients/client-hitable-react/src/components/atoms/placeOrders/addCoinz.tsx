@@ -55,7 +55,6 @@ const MemoAddCoinz = (props) => {
       total: data.total,
       couponId: null,
       businessId,
-      userId: userData?._id,
     });
   };
 
@@ -194,7 +193,6 @@ const MemoAddCoinz = (props) => {
       total: data.total,
       couponId: null,
       businessId,
-      userId: userData?._id,
     });
     toast.success("Removed Coinz from this bill.");
   };

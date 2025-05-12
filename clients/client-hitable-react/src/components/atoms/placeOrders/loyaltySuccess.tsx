@@ -85,7 +85,7 @@ const LoyaltySuccess = (props) => {
       </div>
       <div className="flex gap-2">
         <Input
-          disabled={availedCoupon !== null}
+          disabled={availedCoupon !== null || applyCoinz > 0}
           value={coinzAdded}
           onChange={handleApplyCoinz}
           placeholder="Enter Coinz"
