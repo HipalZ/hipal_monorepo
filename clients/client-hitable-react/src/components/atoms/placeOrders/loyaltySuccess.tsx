@@ -208,11 +208,11 @@ const LoyaltySuccess = (props) => {
             );
           })}
         </div>
-      </div>
-      <div className="pt-2 fixed bottom-2 mx-4 left-0 right-0 z-10 bg-white border-t">
-        <Button onClick={handleCloseModal} className="w-full">
-          Done
-        </Button>
+        <div className="max-w-[30rem] pt-2 fixed bottom-2 p-2 left-1/2 -translate-x-1/2 w-full z-10 bg-white border-t">
+          <Button onClick={handleCloseModal} className="w-full">
+            Done
+          </Button>
+        </div>
       </div>
     </div>
   );

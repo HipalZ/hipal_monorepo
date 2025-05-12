@@ -5,6 +5,7 @@ import { useUpdateBill } from "@/components/hooks/usePayments";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import { useCouponz } from "@/components/store/useCouponz";
+import { useLogin } from "@/components/store/useLogin";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { DialogTitle } from "@headlessui/react";
@@ -36,7 +37,7 @@ const AvailableCoinz = () => {
   const { mutateAsync } = useMutation({
     mutationFn: updateBill,
   });
-
+  const userDetails = useLogin((s) => s.userDetails);
   const handleApplyCoinz = (finalValue: number) => {
     setClaimedCoins(finalValue);
     handleCoins(finalValue);
@@ -44,6 +45,7 @@ const AvailableCoinz = () => {
       mutateAsync({
         coinz: finalValue,
         couponId: "",
+        ...(finalValue !== 0 && { userId: userDetails?._id }),
       });
     }
   };
