@@ -200,9 +200,14 @@ const couponzRouter = new Hono()
     ),
     async (c) => {
       const { couponId } = c.req.param();
-      const coupon = await Couponz.findByIdAndUpdate(couponId, {
-        isDeleted: true,
-      });
+      const coupon = await Couponz.findOneAndUpdate(
+        {
+          _id: couponId,
+        },
+        {
+          isDeleted: true,
+        },
+      );
       if (!coupon) {
         return respond(c, "Coupon not found", true, 404, {});
       }
