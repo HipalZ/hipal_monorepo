@@ -46,136 +46,138 @@ const transformData = (data) => {
     return false;
   };
 
-  const transformedCategories = data.categories.map((category) => {
-    // Parse and check timings
-    const timings = safeParseTimings(category.categorytimings);
-    if (timings.length > 0 && !isActiveNow(timings)) {
-      return null; // exclude this category
-    }
+  const transformedCategories = data.categories
+    .map((category) => {
+      // Parse and check timings
+      const timings = safeParseTimings(category.categorytimings);
+      if (timings.length > 0 && !isActiveNow(timings)) {
+        return null; // exclude this category
+      }
 
-    // Filter items belonging to this category
-    const items = data.items.filter(
-      (item) => item.item_categoryid === category.categoryid,
-    );
+      // Filter items belonging to this category
+      const items = data.items.filter(
+        (item) => item.item_categoryid === category.categoryid,
+      );
 
-    const transformedItems =
-      items?.map((item) => {
-        let addOnIds =
-          item?.addon?.map((addOn) => {
-            const addOnGroup = data?.addongroups?.find(
-              (group) => group?.addongroupid === addOn?.addon_group_id,
-            );
-            return {
-              _id: addOn?.addon_group_id,
-              name: addOnGroup?.addongroup_name,
-              addon_item_selection: addOn?.addon_item_selection,
-              compulsory: 0,
-              addOnMaxQuantity: Number(addOn?.addon_item_selection_max),
-              choiceType: "NUMBER",
-              addon_item_selection_min: addOn?.addon_item_selection_min,
-              addon_item_selection_max: addOn?.addon_item_selection_max,
-              choices:
-                addOnGroup?.addongroupitems?.map((choice) => ({
-                  name: choice?.addonitem_name,
-                  price: Number(choice?.addonitem_price),
-                  visibility: true,
-                  availability: true,
-                  choiceMaxQuantity: 2,
-                  choiceDishType: ["VEG"],
-                  uuid: choice?.addonitemid,
-                  _id: choice?.addonitemid,
-                })) || [],
-            };
-          }) || [];
+      const transformedItems =
+        items?.map((item) => {
+          let addOnIds =
+            item?.addon?.map((addOn) => {
+              const addOnGroup = data?.addongroups?.find(
+                (group) => group?.addongroupid === addOn?.addon_group_id,
+              );
+              return {
+                _id: addOn?.addon_group_id,
+                name: addOnGroup?.addongroup_name,
+                addon_item_selection: addOn?.addon_item_selection,
+                compulsory: 0,
+                addOnMaxQuantity: Number(addOn?.addon_item_selection_max),
+                choiceType: "NUMBER",
+                addon_item_selection_min: addOn?.addon_item_selection_min,
+                addon_item_selection_max: addOn?.addon_item_selection_max,
+                choices:
+                  addOnGroup?.addongroupitems?.map((choice) => ({
+                    name: choice?.addonitem_name,
+                    price: Number(choice?.addonitem_price),
+                    visibility: true,
+                    availability: true,
+                    choiceMaxQuantity: 2,
+                    choiceDishType: ["VEG"],
+                    uuid: choice?.addonitemid,
+                    _id: choice?.addonitemid,
+                  })) || [],
+              };
+            }) || [];
 
-        const portions =
-          item?.variation?.map((variation) => ({
-            name: variation?.name,
-            price: Number(variation?.price),
-            default: variation?.name === "Medium",
-            portionTypes: ["VEG"],
-            _id: variation?.id,
-          })) || [];
+          const portions =
+            item?.variation?.map((variation) => ({
+              name: variation?.name,
+              price: Number(variation?.price),
+              default: variation?.name === "Medium",
+              portionTypes: ["VEG"],
+              _id: variation?.id,
+            })) || [];
 
-        for (let i = 0; i < item?.variation?.length; i++) {
-          const variation = item?.variation[i];
+          for (let i = 0; i < item?.variation?.length; i++) {
+            const variation = item?.variation[i];
 
-          if (
-            variation?.variationallowaddon === "1" &&
-            variation?.addon?.length > 0
-          ) {
-            addOnIds =
-              variation?.addon?.map((addOn) => {
-                const addOnGroup = data?.addongroups?.find(
-                  (group) => group?.addongroupid === addOn?.addon_group_id,
-                );
-                return {
-                  _id: addOn?.addon_group_id,
-                  name: addOnGroup?.addongroup_name,
-                  addon_item_selection: addOn?.addon_item_selection,
-                  compulsory: 0,
-                  addOnMaxQuantity: Number(addOn?.addon_item_selection_max),
-                  choiceType: "NUMBER",
-                  addon_item_selection_min: addOn?.addon_item_selection_min,
-                  addon_item_selection_max: addOn?.addon_item_selection_max,
-                  choices:
-                    addOnGroup?.addongroupitems?.map((choice) => ({
-                      name: choice?.addonitem_name,
-                      price: Number(choice?.addonitem_price),
-                      visibility: true,
-                      availability: true,
-                      choiceMaxQuantity: 2,
-                      choiceDishType: ["VEG"],
-                      uuid: choice?.addonitemid,
-                      _id: choice?.addonitemid,
-                    })) || [],
-                };
-              }) || [];
+            if (
+              variation?.variationallowaddon === "1" &&
+              variation?.addon?.length > 0
+            ) {
+              addOnIds =
+                variation?.addon?.map((addOn) => {
+                  const addOnGroup = data?.addongroups?.find(
+                    (group) => group?.addongroupid === addOn?.addon_group_id,
+                  );
+                  return {
+                    _id: addOn?.addon_group_id,
+                    name: addOnGroup?.addongroup_name,
+                    addon_item_selection: addOn?.addon_item_selection,
+                    compulsory: 0,
+                    addOnMaxQuantity: Number(addOn?.addon_item_selection_max),
+                    choiceType: "NUMBER",
+                    addon_item_selection_min: addOn?.addon_item_selection_min,
+                    addon_item_selection_max: addOn?.addon_item_selection_max,
+                    choices:
+                      addOnGroup?.addongroupitems?.map((choice) => ({
+                        name: choice?.addonitem_name,
+                        price: Number(choice?.addonitem_price),
+                        visibility: true,
+                        availability: true,
+                        choiceMaxQuantity: 2,
+                        choiceDishType: ["VEG"],
+                        uuid: choice?.addonitemid,
+                        _id: choice?.addonitemid,
+                      })) || [],
+                  };
+                }) || [];
+            }
           }
-        }
 
-        const returnItemType = (item) => {
-          if (item?.item_attributeid === "1") {
-            return ["VEG"];
-          }
-          if (item?.item_attributeid === "2") {
-            return ["NON_VEG"];
-          }
-          if (item?.item_attributeid === "24") {
-            return ["EGG"];
-          }
-        };
+          const returnItemType = (item) => {
+            if (item?.item_attributeid === "1") {
+              return ["VEG"];
+            }
+            if (item?.item_attributeid === "2") {
+              return ["NON_VEG"];
+            }
+            if (item?.item_attributeid === "24") {
+              return ["EGG"];
+            }
+          };
 
-        return {
-          _id: item?.itemid,
-          name: item?.itemname,
-          categoryIds: [item?.item_categoryid],
-          price: Number(item?.price),
-          visibility: true,
-          availability: true,
-          dishTypes: returnItemType(item),
-          addOnIds: addOnIds,
-          images: [item.item_image_url],
-          portions: portions,
-          description: item?.itemdescription,
-        };
-      }) || [];
+          return {
+            _id: item?.itemid,
+            name: item?.itemname,
+            categoryIds: [item?.item_categoryid],
+            price: Number(item?.price),
+            visibility: true,
+            availability: true,
+            dishTypes: returnItemType(item),
+            addOnIds: addOnIds,
+            images: [item.item_image_url],
+            portions: portions,
+            description: item?.itemdescription,
+          };
+        }) || [];
 
-    return {
-      _id: category?.categoryid,
-      name: category?.categoryname,
-      active: category?.active,
-      categoryrank: category?.categoryrank,
-      visibility: true,
-      businessId: category?.restarant_ids,
-      hierarchy: "CHILD",
-      category_image_url: category?.category_image_url,
-      parentCategoryIds: [],
-      subCategoryIds: [],
-      coverImage: "",
-      dishIds: transformedItems,
-    };
-  });
+      return {
+        _id: category?.categoryid,
+        name: category?.categoryname,
+        active: category?.active,
+        categoryrank: category?.categoryrank,
+        visibility: true,
+        businessId: category?.restarant_ids,
+        hierarchy: "CHILD",
+        category_image_url: category?.category_image_url,
+        parentCategoryIds: [],
+        subCategoryIds: [],
+        coverImage: "",
+        dishIds: transformedItems,
+      };
+    })
+    .filter((category) => category !== null);
 
   return transformedCategories;
 };
