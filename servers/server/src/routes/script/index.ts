@@ -18,6 +18,7 @@ import {
   UrlModel,
   User,
   WhatsAppBusinessConfig,
+  WhatsAppWABA,
   Zone,
 } from "@hi/db-models";
 import { runInTransaction } from "@hi/utils";
@@ -1304,10 +1305,30 @@ const scriptRouter = new Hono()
                 version: whatsAppConfig.version,
               },
             },
-            { session, new: true },
+            { session, new: true, upsert: true },
           );
 
         if (!updateWhatsappConfig) {
+          throw new Error("Business not found");
+        }
+
+        const updateWaba = await WhatsAppWABA.findOneAndUpdate(
+          {
+            businessId: requestData.businessId,
+          },
+          {
+            $set: {
+              businessId: requestData.businessId,
+              displayName: "wa",
+              displayNumber: "9588413799",
+              status: true,
+              date: Date.now(),
+            },
+          },
+          { session, new: true, upsert: true },
+        );
+
+        if (!updateWaba) {
           throw new Error("Business not found");
         }
 
@@ -1641,7 +1662,7 @@ const scriptRouter = new Hono()
           return respond(c, "Business not found", true, 404, {});
         }
 
-        return respond(c, "Scheduler set to run at 1 AM IST", false, 200, {});
+        return respond(c, "uploaded", false, 200, {});
       });
     },
   )
@@ -1674,7 +1695,7 @@ const scriptRouter = new Hono()
             phone: phone,
           });
 
-          if (userExist) {
+          if (!userExist) {
             const createUser = new User({
               phone,
               dob,
@@ -1686,6 +1707,99 @@ const scriptRouter = new Hono()
         }
 
         return respond(c, "Customers uploaded successfully", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/enable_bill_summary_template",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        sendBillSummaryTemplate: z.boolean(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { businessId, sendBillSummaryTemplate } = requestData;
+
+        const updateWhatsappConfig =
+          await WhatsAppBusinessConfig.findOneAndUpdate(
+            {
+              businessId: businessId,
+            },
+            {
+              $set: {
+                sendBillSummaryTemplate: sendBillSummaryTemplate,
+              },
+            },
+            { session, new: true },
+          );
+
+        return respond(c, "done", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/change_outlet_type",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        businessType: z.enum([
+          "FOOD",
+          "OTHER",
+          "RESTAURANT",
+          "HOTEL",
+          "E-COMMERCE",
+          "CLINIC",
+          "FASHION_AND_JEWELRY",
+          "MENU",
+        ]),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { businessId, businessType } = requestData;
+
+        const businessOutLet = await OutLetInfo.findOneAndUpdate(
+          {
+            businessId,
+          },
+          {
+            $set: {
+              outLetType: businessType,
+            },
+          },
+          { session, new: true },
+        );
+
+        if (!businessOutLet) {
+          return respond(c, "Business not found", true, 404, {});
+        }
+        const business = await Business.findByIdAndUpdate(
+          businessId,
+          {
+            $set: {
+              businessType: businessType,
+            },
+          },
+          { session, new: true },
+        );
+
+        if (!business) {
+          return respond(c, "Business not found", true, 404, {});
+        }
+
+        return respond(c, "done", false, 200, {});
       });
     },
   );
