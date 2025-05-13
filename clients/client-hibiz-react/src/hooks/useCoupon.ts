@@ -76,6 +76,9 @@ export const useDeleteCoupon = () => {
         param: {
           couponId,
         },
+        json: {
+          couponId,
+        },
       });
       return res.json();
     },
@@ -257,9 +260,7 @@ export interface IAnalytics {
 
 export const useIndividualCouponAnalytics = (to: number) => {
   const couponId = useCouponsStore((state) => state.couponId);
-  const {
-    timeStampStart,
-  } = useTimings((s) => ({
+  const { timeStampStart } = useTimings((s) => ({
     timeStampStart: s.timeStampStart,
   }));
   const getIndividualAnalytics = useCallback(async () => {

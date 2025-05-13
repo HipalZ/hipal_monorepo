@@ -191,15 +191,18 @@ const couponzRouter = new Hono()
   .delete(
     "/:couponId",
     zValidator(
-      "param",
+      "json",
       z.object({
         couponId: z.string({
           message: "CouponId should be a string",
         }),
       }),
     ),
+
     async (c) => {
       const { couponId } = c.req.param();
+
+      // Find and update the coupon
       const coupon = await Couponz.findOneAndUpdate(
         {
           _id: couponId,
@@ -208,9 +211,12 @@ const couponzRouter = new Hono()
           isDeleted: true,
         },
       );
+
       if (!coupon) {
         return respond(c, "Coupon not found", true, 404, {});
       }
+
+      // Update all related UserCouponGrabb records
       const updateAllUserGrabb = await UserCouponGrabb.updateMany(
         {
           couponId: couponId,
@@ -219,9 +225,11 @@ const couponzRouter = new Hono()
           isDeleted: true,
         },
       );
+
       if (!updateAllUserGrabb) {
         return respond(c, "Coupon not found", true, 404, {});
       }
+
       return respond(c, "Coupon deleted successfully", false, 200, {});
     },
   )
