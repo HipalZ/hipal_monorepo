@@ -2135,6 +2135,7 @@ const whatsappRouter = new Hono()
           console.log("phon_no_id", phon_no_id);
           console.log("from", from);
           console.log("urlObj", urlObj);
+          console.log("shortUrlType", shortUrlType);
 
           if (phon_no_id && from && urlObj) {
             if (shortUrlType === "COUPON") {
