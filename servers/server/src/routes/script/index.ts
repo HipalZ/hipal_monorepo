@@ -14,9 +14,11 @@ import {
   PaymentAlert,
   Pos,
   Reviews,
+  Subscriber,
   Table,
   UrlModel,
   User,
+  UserAnalytic,
   WhatsAppBusinessConfig,
   WhatsAppWABA,
   Zone,
@@ -1798,6 +1800,59 @@ const scriptRouter = new Hono()
 
         if (!business) {
           return respond(c, "Business not found", true, 404, {});
+        }
+
+        return respond(c, "done", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/update_subscribers",
+    zValidator(
+      "json",
+      z.object({
+        update: z.boolean(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+
+        const businesses = await Business.find();
+        for (const business of businesses) {
+          const subscribers = await Subscriber.find({
+            businessId: business._id,
+          });
+
+          for (const subscriber of subscribers) {
+            const userId = subscriber.userId;
+            const businessId = subscriber.businessId;
+
+            const userAnalyticsExist = await UserAnalytic.exists({
+              businessId,
+              userId,
+            });
+
+            if (!userAnalyticsExist) {
+              const userAnalytics = new UserAnalytic({
+                businessId,
+                userId,
+                avgSpend: 0,
+                totalSpend: 0,
+                visitCount: 1,
+                coinzIssued: 0,
+                coinzUsed: 0,
+                couponCount: 0,
+                currentCoins: 0,
+                dateOfJoining: Date.now(),
+              });
+
+              await userAnalytics.save();
+            }
+          }
         }
 
         return respond(c, "done", false, 200, {});
