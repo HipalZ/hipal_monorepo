@@ -2175,7 +2175,7 @@ const whatsappRouter = new Hono()
                   `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
                   {
                     messaging_product: "whatsapp",
-                    to: from?.phone?.toString(),
+                    to: from,
                     type: "template",
                     template: {
                       name: "coupon_template",
