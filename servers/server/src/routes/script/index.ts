@@ -1857,6 +1857,43 @@ const scriptRouter = new Hono()
         return respond(c, "done", false, 200, {});
       });
     },
+  )
+
+  .post(
+    "/whatsapp_coupon",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        urlCode: z.string().min(3).max(36),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { urlCode, businessId } = requestData;
+
+        const updateUrlModel = await UrlModel.findOneAndUpdate(
+          {
+            businessId: businessId,
+            urlCode: urlCode,
+          },
+          {
+            $set: {
+              shortUrlType: "COUPON",
+            },
+          },
+          { session, new: true },
+        );
+        if (!updateUrlModel) {
+          return respond(c, "Url not found", true, 404, {});
+        }
+
+        return respond(c, "done", false, 200, {});
+      });
+    },
   );
 
 export default scriptRouter;
