@@ -2169,6 +2169,59 @@ const whatsappRouter = new Hono()
                   "Content-Type": "application/json",
                 },
               });
+
+              try {
+                const res = await axios.post(
+                  `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
+                  {
+                    messaging_product: "whatsapp",
+                    to: from?.phone?.toString(),
+                    type: "template",
+                    template: {
+                      name: "coupon_template",
+                      language: { code: "en" },
+                      components: [
+                        {
+                          type: "body",
+                          parameters: [
+                            {
+                              type: "text",
+                              text: config?.businessName,
+                            },
+
+                            {
+                              type: "text",
+                              text: `${config.couponShortUrl}?q=wa`,
+                            },
+
+                            {
+                              type: "text",
+                              text: config?.couponDiscount,
+                            },
+                            {
+                              type: "text",
+                              text: config?.direction,
+                            },
+                            {
+                              type: "text",
+                              text: config?.socialLink,
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${config.token}`,
+                    },
+                  },
+                );
+              } catch (error) {
+                console.log("coupons error", error);
+              }
+
+              //coupon template
             } else if (shortUrlType === "ROOM") {
               const user = await User.findOne({
                 phone: userPhone,
