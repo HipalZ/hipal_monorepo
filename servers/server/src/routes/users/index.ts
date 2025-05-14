@@ -6,6 +6,7 @@ import {
   StaffPermissionGroup,
   Subscriber,
   User,
+  UserAnalytic,
   UserReward,
   UserRewardHistory,
 } from "@hi/db-models";
@@ -1108,6 +1109,23 @@ const usersRouter = new Hono()
 
       const { otp, loyaltyId, signUpBonus, name, userId, phone, businessId } =
         requestData;
+
+      const userAnalytics = await UserAnalytic.findOne({
+        userId: userId,
+      }).select("userId");
+
+      if (!userAnalytics) {
+        await UserAnalytic.create({
+          userId: userId,
+          businessId: businessId,
+          avgSpend: 0,
+          totalSpend: 0,
+          visitCount: 0,
+          coinzIssued: 0,
+          coinzUsed: 0,
+          dateOfJoining: Date.now(),
+        });
+      }
 
       let existingUser: UserType | null = null;
       existingUser = await User.findByIdAndUpdate(
