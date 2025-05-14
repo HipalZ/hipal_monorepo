@@ -147,6 +147,23 @@ const subsCriberRouter = new Hono()
           404,
         );
       }
+
+      const userAnalytics = await UserAnalytic.findOne({
+        userId: userId,
+      }).select("userId");
+
+      if (!userAnalytics) {
+        await UserAnalytic.create({
+          userId: userId,
+          businessId: businessId,
+          avgSpend: 0,
+          totalSpend: 0,
+          visitCount: 0,
+          coinzIssued: 0,
+          coinzUsed: 0,
+          dateOfJoining: Date.now(),
+        });
+      }
       if (subscriber) {
         await Subscriber.updateOne(
           { userId, businessId, isDeleted: false },

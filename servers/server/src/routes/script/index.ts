@@ -1813,6 +1813,7 @@ const scriptRouter = new Hono()
       "json",
       z.object({
         update: z.boolean(),
+        businessId: z.string().min(3).max(36),
       }),
     ),
 
@@ -1820,38 +1821,36 @@ const scriptRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const requestData = await c.req.json();
+        const { update, businessId } = requestData;
 
-        const businesses = await Business.find();
-        for (const business of businesses) {
-          const subscribers = await Subscriber.find({
-            businessId: business._id,
+        const subscribers = await Subscriber.find({
+          businessId: businessId,
+        });
+
+        for (const subscriber of subscribers) {
+          const userId = subscriber.userId;
+          const businessId = subscriber.businessId;
+
+          const userAnalyticsExist = await UserAnalytic.exists({
+            businessId,
+            userId,
           });
 
-          for (const subscriber of subscribers) {
-            const userId = subscriber.userId;
-            const businessId = subscriber.businessId;
-
-            const userAnalyticsExist = await UserAnalytic.exists({
+          if (!userAnalyticsExist) {
+            const userAnalytics = new UserAnalytic({
               businessId,
               userId,
+              avgSpend: 0,
+              totalSpend: 0,
+              visitCount: 1,
+              coinzIssued: 0,
+              coinzUsed: 0,
+              couponCount: 0,
+              currentCoins: 0,
+              dateOfJoining: Date.now(),
             });
 
-            if (!userAnalyticsExist) {
-              const userAnalytics = new UserAnalytic({
-                businessId,
-                userId,
-                avgSpend: 0,
-                totalSpend: 0,
-                visitCount: 1,
-                coinzIssued: 0,
-                coinzUsed: 0,
-                couponCount: 0,
-                currentCoins: 0,
-                dateOfJoining: Date.now(),
-              });
-
-              await userAnalytics.save();
-            }
+            await userAnalytics.save();
           }
         }
 
