@@ -13,6 +13,7 @@ export const useDeleteCart = () => {
         param: {
           id: cartID,
         },
+        json: {},
       });
       return res.json();
     },
@@ -44,7 +45,7 @@ export const useCreateOrder = () => {
       const res = await apiRpc.pos.captain.save_kot.$post({
         json: order,
       });
-      if(res.status === 401 || res.status === 403) {
+      if (res.status === 401 || res.status === 403) {
         setOpenErrorModal(true);
         setError("You are not authorized to perform this action");
       }
