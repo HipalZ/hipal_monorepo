@@ -2139,6 +2139,7 @@ const whatsappRouter = new Hono()
 
           if (phon_no_id && from && urlObj) {
             if (shortUrlType === "COUPON") {
+              console.log("yaha tk");
               try {
                 const res = await axios.post(
                   `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
@@ -2186,6 +2187,7 @@ const whatsappRouter = new Hono()
                     },
                   },
                 );
+                console.log("res", res.data);
               } catch (error) {
                 console.log("coupons error", error);
               }
