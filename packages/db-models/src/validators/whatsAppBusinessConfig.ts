@@ -17,6 +17,11 @@ export const whatsAppBusinessConfigSchema = z.object({
   marketingTemplateCost: z.number().default(0.89),
   utilityTemplateCost: z.number().default(0.2),
   sendBillSummaryTemplate: z.boolean().default(false),
+  businessName: z.string().min(3).max(200),
+  couponShortUrl: z.string().min(3).max(200).url(),
+  couponDiscount: z.number().int(),
+  direction: z.string().min(3).max(250),
+  socialLink: z.string().min(3).max(250),
 });
 
 export type WhatsAppBusinessConfigType = z.infer<

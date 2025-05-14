@@ -75,6 +75,27 @@ const whatsAppBusinessConfigSchema =
         required: false,
         default: false,
       },
+      businessName: {
+        type: String,
+        required: true,
+      },
+      couponShortUrl: {
+        type: String,
+        required: true,
+        unique: true,
+      },
+      couponDiscount: {
+        type: Number,
+        required: true,
+      },
+      direction: {
+        type: String,
+        required: true,
+      },
+      socialLink: {
+        type: String,
+        required: true,
+      },
     },
     {
       timestamps: true,
