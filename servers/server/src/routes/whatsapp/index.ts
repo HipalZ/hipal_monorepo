@@ -2118,6 +2118,7 @@ const whatsappRouter = new Hono()
           }
           if (userText) {
             const tableCode = userText.slice(-5);
+            console.log("tableCode", tableCode);
 
             const findLongUrl = await UrlModel.findOne({
               urlCode: tableCode,
@@ -2130,6 +2131,10 @@ const whatsappRouter = new Hono()
               findLongUrl?.longUrl
             }&id=${userObj?._id.toString()}`;
           }
+
+          console.log("phon_no_id", phon_no_id);
+          console.log("from", from);
+          console.log("urlObj", urlObj);
 
           if (phon_no_id && from && urlObj) {
             if (shortUrlType === "COUPON") {
