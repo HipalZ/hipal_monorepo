@@ -45,7 +45,4 @@ video upload test to prod testing
 test deploy
 vercel json filed testings vercel removed build
 pnpm lock trigger to
-vercel hipal deploy
-vercel stae hotel deploy
-vercel stae deploy
 Trigger HIpalz

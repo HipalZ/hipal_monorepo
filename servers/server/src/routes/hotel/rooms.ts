@@ -686,6 +686,11 @@ const roomRouter = new Hono()
         throw new Error("Error deleting room chat");
       }
 
+      const deleteRoomAlert = await HotelAlert.deleteMany(
+        { roomId: roomId },
+        { session },
+      );
+
       const registrationToken = await DeviceToken.find({
         businessId: requestData.businessId,
       });

@@ -11,6 +11,7 @@ import {
   Subscriber,
   UrlModel,
   User,
+  UserAnalytic,
   UserReward,
   WhatAppOrder,
   WhatAppTemplate,
@@ -2093,6 +2094,25 @@ const whatsappRouter = new Hono()
                   upsert: true,
                 },
               );
+
+              const userAnalytics = await UserAnalytic.exists({
+                userId: userData?._id,
+              });
+
+              if (!userAnalytics) {
+                await UserAnalytic.create({
+                  userId: userData?._id,
+                  businessId: config?.businessId,
+                  avgSpend: 0,
+                  coinzIssued: 0,
+                  coinzUsed: 0,
+                  couponCount: 0,
+                  currentCoins: 0,
+                  dateOfJoining: Date.now(),
+                  totalSpend: 0,
+                  visitCount: 1,
+                });
+              }
               userObj = userData;
             }
           }
@@ -2146,6 +2166,24 @@ const whatsappRouter = new Hono()
               const user = await User.findOne({
                 phone: userPhone,
               }).select("_id name phone");
+              const userAnalytics = await UserAnalytic.exists({
+                userId: user?._id,
+              });
+
+              if (!userAnalytics) {
+                await UserAnalytic.create({
+                  userId: user?._id,
+                  businessId: config?.businessId,
+                  avgSpend: 0,
+                  coinzIssued: 0,
+                  coinzUsed: 0,
+                  couponCount: 0,
+                  currentCoins: 0,
+                  dateOfJoining: Date.now(),
+                  totalSpend: 0,
+                  visitCount: 1,
+                });
+              }
               const authCode = nanoid(4).toUpperCase();
               const room = await HotelRoom.findOne({
                 slug: urlObj?.urlCode,
@@ -2279,7 +2317,6 @@ const whatsappRouter = new Hono()
                 },
               );
             } else {
-              console.log("intablescan");
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
@@ -2299,6 +2336,25 @@ const whatsappRouter = new Hono()
             const user = await User.findOne({
               phone: userPhone,
             }).select("_id");
+
+            const userAnalytics = await UserAnalytic.exists({
+              userId: user?._id,
+            });
+
+            if (!userAnalytics) {
+              await UserAnalytic.create({
+                userId: user?._id,
+                businessId: config?.businessId,
+                avgSpend: 0,
+                coinzIssued: 0,
+                coinzUsed: 0,
+                couponCount: 0,
+                currentCoins: 0,
+                dateOfJoining: Date.now(),
+                totalSpend: 0,
+                visitCount: 1,
+              });
+            }
 
             if (user && messages?.text?.body) {
               await WhatsAppUser.create({
