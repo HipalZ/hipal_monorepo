@@ -5,17 +5,9 @@ import type { BusinessDetails } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
-// export const revalidate = 300;
-
-const CategorySkeleton = dynamics(
-  () => import("@/components/atoms/progressBar/categoryLoader"),
-  {
-    ssr: false,
-    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
-  },
-);
+// export const dynamic = "force-dynamic";
+// export const fetchCache = "force-no-store";
+export const revalidate = 300;
 
 const MenuBannerPage = dynamics(
   () => import("@/components/organisms/menuBanner"),
@@ -34,7 +26,12 @@ const CategoryPageBtn = dynamics(
   () => import("@/components/molecules/bottomButton/categoryPageBtn"),
   {
     ssr: false,
-    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
+    loading: () => (
+      <div className="h-16 text-black">
+        {" "}
+        <LoadingSpinnerCircle />
+      </div>
+    ),
   },
 );
 
@@ -42,7 +39,12 @@ const LiveCart = dynamics(
   () => import("@/components/molecules/bottomButton/livecart"),
   {
     ssr: false,
-    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
+    loading: () => (
+      <div className="h-16 text-black">
+        {" "}
+        <LoadingSpinnerCircle />
+      </div>
+    ),
   },
 );
 
@@ -50,7 +52,12 @@ const CategoryHeader = dynamics(
   () => import("@/components/organisms/category/categoryHeader"),
   {
     ssr: false,
-    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
+    loading: () => (
+      <div className="h-16 text-black">
+        {" "}
+        <LoadingSpinnerCircle />
+      </div>
+    ),
   },
 );
 
@@ -58,7 +65,12 @@ const DishesList = dynamics(
   () => import("@/components/organisms/category/dishesList"),
   {
     ssr: false,
-    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
+    loading: () => (
+      <div className="h-16 text-black">
+        {" "}
+        <LoadingSpinnerCircle />
+      </div>
+    ),
   },
 );
 
@@ -66,7 +78,12 @@ const TopBackground = dynamics(
   () => import("@/components/molecules/topBackground"),
   {
     ssr: true,
-    loading: () => <div className="h-16 text-black"> <LoadingSpinnerCircle /></div>,
+    loading: () => (
+      <div className="h-16 text-black">
+        {" "}
+        <LoadingSpinnerCircle />
+      </div>
+    ),
   },
 );
 
@@ -136,7 +153,7 @@ export default async function Page({
   params,
   searchParams,
 }: {
-  params: { businessId: string }
+  params: { businessId: string };
   searchParams: { tableName?: string };
 }) {
   const { businessId } = params;

@@ -3,14 +3,12 @@ import MemoPlaceholderImg from "@/components/atoms/placeholder";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import React, { memo, useCallback, useMemo } from "react";
 import { BiArrowBack } from "react-icons/bi";
 import baloonsRight from "@/assets/img/baloons_right.png";
 import baloonsLeft from "@/assets/img/baloon_left.png";
 import birthdayPlaceholder from "@/assets/img/birthdayCouponz.png";
-import { GoArrowUpRight } from "react-icons/go";
 import { apiRpc, cn } from "@hi/common";
 import {
   formatDate,
@@ -29,13 +27,14 @@ import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { useErrorHandling } from "@/utils/helper";
 import { toast } from "react-toastify";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { GoArrowRight } from "react-icons/go";
 
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
   const { errorText } = useErrorHandling();
   const { couponId, channelId } = useParams();
   const router = useRouter();
-  const { setCheckLogin } = usePaymentStore()
+  const { setCheckLogin } = usePaymentStore();
   const { displayTermsAndConditions, openTc, setIsLoading } = useCouponTemp(
     (s) => ({
       displayTermsAndConditions: s.displayTermsAndConditions,
@@ -155,7 +154,7 @@ const MemoCouponz = () => {
 
   const redirectBack = useCallback(() => {
     router.push(`/${customLink}/explore`);
-    setDirection("")
+    setDirection("");
     setUrlFrom("");
   }, [setDirection, setUrlFrom, router, customLink]);
 
@@ -315,17 +314,21 @@ const MemoCouponz = () => {
         <section
           onClick={grabCouponz}
           onKeyDown={grabCouponz}
-          className="scale-90 z-10 w-full max-w-[calc(100%-2rem)] md:max-w-[28rem] h-[4.5rem] shine overflow-hidden p-4 rounded-xl flex gap-4 items-center fixed md:absolute left-1/2 transform -translate-x-1/2 bottom-10"
+          className="scale-90 z-10 w-full max-w-[calc(100%-2rem)] md:max-w-[28rem] h-[4.5rem] overflow-hidden p-4 rounded-xl flex gap-4 items-center fixed md:absolute left-1/2 transform -translate-x-1/2 bottom-10"
           style={{
             background: getLinearGradient(selectedCoupon?.bgColour) || "",
             position: "fixed",
           }}
         >
-          <article className="bg-black h-[3rem] rounded-lg aspect-square flex items-center justify-center">
-            <GoArrowUpRight color="white" size={30} />
-          </article>
-          <article className="text-black on_active_bounce">
+          <button
+            type="button"
+            className="text-black font-semibold on_active_bounce flex-1 flex items-center justify-center bg-transparent border-none outline-none"
+            style={{ background: "none", boxShadow: "none" }}
+          >
             <h1 className="text-lg">Grab the coupon now !</h1>
+          </button>
+          <article className="animate-bounce h-[3rem] rounded-lg aspect-square flex items-center justify-center">
+            <GoArrowRight color="black" size={30} />
           </article>
         </section>
       )}

@@ -1,7 +1,7 @@
 import dynamics from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { fetchBusinessData } from "@/apis/couponz";
-import type{ IBiz } from "@/components/types/businessData";
+import type { IBiz } from "@/components/types/businessData";
 import { notFound } from "next/navigation";
 import { apiRpc } from "@hi/common";
 

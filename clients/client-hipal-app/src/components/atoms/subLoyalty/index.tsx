@@ -145,10 +145,14 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
           )}
         </section>
       </section>
-      <h2 className="py-4 mt-4 text-2xl font-bold text-center text-primary rounded-t-3xl">
-        Google Review
-      </h2>
-      {placeUrl?.length > 0 ? <GoogleReviewCard /> : null}
+      {placeUrl?.length > 0 ? (
+        <>
+          <h2 className="py-4 mt-4 text-2xl font-bold text-center text-primary rounded-t-3xl">
+            Google Review
+          </h2>
+          <GoogleReviewCard />
+        </>
+      ) : null}
     </div>
   );
 };
