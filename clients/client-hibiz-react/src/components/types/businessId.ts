@@ -14,7 +14,7 @@ import Review from "@/assets/services/review.png";
 import POS from "@/assets/services/POS.png";
 import Zones from "@/assets/services/zones.png";
 import Events from "@/assets/services/events.jpg";
-import ImageGrid from "@/assets/services/ImageGrid.png"
+import ImageGrid from "@/assets/services/ImageGrid.png";
 
 export interface ILiteVersionCardButton {
   image: string;
@@ -53,8 +53,8 @@ export const getButtons = (
     },
     {
       image: Events,
-      text: "Events",
-      description: "All events related stuff",
+      text: "Birthday Events",
+      description: "Add your offers for Birthday",
       navigateTo: "events",
     },
   ],
@@ -74,32 +74,31 @@ export const getButtons = (
 
     ...(outletType === "MENU"
       ? [
-        {
-          image: MenuImage,
-          text: "Menu",
-          description: "Manage your menu",
-          navigateTo: "select-menu",
-        },
-        {
-          image: POS,
-          text: "POS",
-          description: "Manage your POS",
-          navigateTo: "pos",
-        },
-      ]
+          {
+            image: MenuImage,
+            text: "Menu",
+            description: "Manage your menu",
+            navigateTo: "select-menu",
+          },
+          {
+            image: POS,
+            text: "POS",
+            description: "Manage your POS",
+            navigateTo: "pos",
+          },
+        ]
       : [
-        {
-          image: Services,
-          text: "Services",
-          description: "Manage your services",
-          navigateTo: "services",
-        },
-
-      ]),
+          {
+            image: Services,
+            text: "Services",
+            description: "Manage your services",
+            navigateTo: "services",
+          },
+        ]),
     {
       image: ImageGrid,
-      text: "Thumbnail strip",
-      description: "Show case about yourself more",
+      text: "My Gallery",
+      description: "Show about ambience & vibe",
       navigateTo: "thumbnail",
     },
   ],

@@ -22,6 +22,7 @@ const MemoDeleteConfirmPopup = () => {
       param: {
         bannerId: id,
       },
+      json: {},
     });
     if (!response.ok) {
       throw new Error("Failed to delete banner");

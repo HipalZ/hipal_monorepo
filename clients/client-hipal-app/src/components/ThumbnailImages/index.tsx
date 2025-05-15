@@ -1,20 +1,25 @@
-"use client"
+"use client";
 
-import Image from "next/image"
-import { useState, useEffect, useMemo, useCallback, memo } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react"
-import SkeletonLoader from "@/components/atoms/loader/skeletonLoader"
-import { useGetBucketByBusinessId } from "../hooks/useImages"
-import { motion, AnimatePresence, useMotionValue, type PanInfo } from "framer-motion"
-import type { Image as ImageType, IBuckets } from "../hooks/useImages"
-import { cn } from "@/lib/utils"
+import Image from "next/image";
+import { useState, useEffect, useMemo, useCallback, memo } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import { useGetBucketByBusinessId } from "../hooks/useImages";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  type PanInfo,
+} from "framer-motion";
+import type { Image as ImageType, IBuckets } from "../hooks/useImages";
+import { cn } from "@/lib/utils";
 
 // Types
 interface BusinessImagesProps {
-  businessId: string
+  businessId: string;
 }
 
 // Animation variants
@@ -43,7 +48,7 @@ const imageVariants = {
       duration: 0.1,
     },
   }),
-}
+};
 
 const gridItemVariants = {
   hidden: { opacity: 0, scale: 0.8 },
@@ -65,7 +70,7 @@ const gridItemVariants = {
       duration: 0.3,
     },
   },
-}
+};
 
 // Memoized thumbnail component
 const ImageThumbnail = memo(
@@ -75,10 +80,10 @@ const ImageThumbnail = memo(
     isSelected,
     onClick,
   }: {
-    image: ImageType
-    index: number
-    isSelected: boolean
-    onClick: () => void
+    image: ImageType;
+    index: number;
+    isSelected: boolean;
+    onClick: () => void;
   }) => {
     return (
       <motion.div
@@ -99,11 +104,11 @@ const ImageThumbnail = memo(
           className="object-cover w-full h-full"
         />
       </motion.div>
-    )
+    );
   },
-)
+);
 
-ImageThumbnail.displayName = "ImageThumbnail"
+ImageThumbnail.displayName = "ImageThumbnail";
 
 // Memoized grid item component
 const GridItem = memo(
@@ -113,17 +118,19 @@ const GridItem = memo(
     categoryId,
     onClick,
   }: {
-    image: ImageType
-    index: number
-    categoryId: string
-    onClick: () => void
+    image: ImageType;
+    index: number;
+    categoryId: string;
+    onClick: () => void;
   }) => {
     return (
       <motion.div
         key={`${categoryId}-${index}`}
         className={cn(
           "overflow-hidden rounded-xl cursor-pointer ",
-          index === 0 ? "col-span-2 row-span-2 h-[13rem]" : "col-span-1 row-span-1 h-[6rem]"
+          index === 0
+            ? "col-span-2 row-span-2 h-[13rem]"
+            : "col-span-1 row-span-1 h-[6rem]",
         )}
         onClick={onClick}
         variants={gridItemVariants}
@@ -141,132 +148,135 @@ const GridItem = memo(
           className="object-cover w-full h-full"
         />
       </motion.div>
-    )
+    );
   },
-)
+);
 
-GridItem.displayName = "GridItem"
+GridItem.displayName = "GridItem";
 
 // Main component
 function BusinessImagesComponent({ businessId }: BusinessImagesProps) {
-  const { buckets, isLoading, isError } = useGetBucketByBusinessId(businessId)
-  const [activeCategory, setActiveCategory] = useState<string>("")
-  const [modalCategory, setModalCategory] = useState<string>("")
-  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [direction, setDirection] = useState(0)
+  const { buckets, isLoading, isError } = useGetBucketByBusinessId(businessId);
+  const [activeCategory, setActiveCategory] = useState<string>("");
+  const [modalCategory, setModalCategory] = useState<string>("");
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [direction, setDirection] = useState(0);
 
   // For drag gesture
-  const x = useMotionValue(0)
-  const dragThreshold = 100 // Amount of drag required to change image
+  const x = useMotionValue(0);
+  const dragThreshold = 100; // Amount of drag required to change image
 
   // Filter out categories with no images
   const validBuckets = useMemo(() => {
-    return buckets.filter((bucket) => bucket.images.length > 0)
-  }, [buckets])
+    return buckets.filter((bucket) => bucket.images.length > 0);
+  }, [buckets]);
 
   // Create an "All" category that combines all images
   const allImagesCategory = useMemo(() => {
-    if (validBuckets.length === 0) return null
+    if (validBuckets.length === 0) return null;
 
     const allImages = validBuckets.reduce<ImageType[]>((acc, bucket) => {
-      return [...acc, ...bucket.images]
-    }, [])
+      return [...acc, ...bucket.images];
+    }, []);
 
     return {
       categoryId: "all",
       categoryName: "All",
       images: allImages,
-    } as IBuckets
-  }, [validBuckets])
+    } as IBuckets;
+  }, [validBuckets]);
 
   // Combined buckets with "All" at the beginning
   const combinedBuckets = useMemo(() => {
-    if (!allImagesCategory) return validBuckets
-    return [allImagesCategory, ...validBuckets]
-  }, [allImagesCategory, validBuckets])
+    if (!allImagesCategory) return validBuckets;
+    return [allImagesCategory, ...validBuckets];
+  }, [allImagesCategory, validBuckets]);
 
   // Get current category object and images count
   const activeCategoryObj = useMemo(
     () => combinedBuckets.find((cat) => cat.categoryId === activeCategory),
     [combinedBuckets, activeCategory],
-  )
+  );
 
   const modalCategoryObj = useMemo(
     () => combinedBuckets.find((cat) => cat.categoryId === modalCategory),
     [combinedBuckets, modalCategory],
-  )
+  );
 
-  const imagesCount = useMemo(() => modalCategoryObj?.images.length || 0, [modalCategoryObj])
+  const imagesCount = useMemo(
+    () => modalCategoryObj?.images.length || 0,
+    [modalCategoryObj],
+  );
 
   // Set the first category as active when buckets load
   useEffect(() => {
     if (combinedBuckets.length > 0 && !activeCategory) {
-      setActiveCategory(combinedBuckets[0]?.categoryId)
+      setActiveCategory(combinedBuckets[0]?.categoryId);
     }
-  }, [combinedBuckets, activeCategory])
+  }, [combinedBuckets, activeCategory]);
 
   // Set modal category to match active category when opening modal
   useEffect(() => {
     if (isModalOpen) {
-      setModalCategory(activeCategory)
+      setModalCategory(activeCategory);
     }
-  }, [isModalOpen, activeCategory])
+  }, [isModalOpen, activeCategory]);
 
   // Event handlers with useCallback
   const handleImageClick = useCallback((index: number) => {
-    setSelectedImageIndex(index)
-    setIsModalOpen(true)
-  }, [])
+    setSelectedImageIndex(index);
+    setIsModalOpen(true);
+  }, []);
 
   const handlePrevImage = useCallback(() => {
-    setDirection(-1)
-    setSelectedImageIndex((prev) => (prev - 1 + imagesCount) % imagesCount)
-  }, [imagesCount])
+    setDirection(-1);
+    setSelectedImageIndex((prev) => (prev - 1 + imagesCount) % imagesCount);
+  }, [imagesCount]);
 
   const handleNextImage = useCallback(() => {
-    setDirection(1)
-    setSelectedImageIndex((prev) => (prev + 1) % imagesCount)
-  }, [imagesCount])
+    setDirection(1);
+    setSelectedImageIndex((prev) => (prev + 1) % imagesCount);
+  }, [imagesCount]);
 
   const handleDragEnd = useCallback(
     (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
       if (info.offset.x > dragThreshold) {
-        handlePrevImage()
+        handlePrevImage();
       } else if (info.offset.x < -dragThreshold) {
-        handleNextImage()
+        handleNextImage();
       }
-      x.set(0) // Reset position
+      x.set(0); // Reset position
     },
     [dragThreshold, handlePrevImage, handleNextImage, x],
-  )
+  );
 
   const handleCloseModal = useCallback(() => {
-    setIsModalOpen(false)
-  }, [])
+    setIsModalOpen(false);
+  }, []);
 
   const handleViewAllClick = useCallback(() => {
-    setIsModalOpen(true)
-  }, [])
+    setIsModalOpen(true);
+  }, []);
 
   const handleCategoryChange = useCallback((categoryId: string) => {
-    setModalCategory(categoryId)
-    setSelectedImageIndex(0)
-  }, [])
+    setModalCategory(categoryId);
+    setSelectedImageIndex(0);
+  }, []);
 
   if (isLoading) {
-    return <SkeletonLoader height={300} />
+    return <SkeletonLoader height={300} />;
   }
 
   if (isError || combinedBuckets.length === 0) {
-    return null
+    return null;
   }
 
   return (
     <section className="w-full rounded-3xl">
       <article className="relative bg-base-100 rounded-3xl">
         <motion.h2
-          className="py-4 mt-4 text-2xl font-bold text-center text-primary bg-base-100 rounded-t-3xl"
+          className="py-2 mt-4 text-2xl font-bold text-center text-primary bg-base-100 rounded-t-3xl"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -274,7 +284,11 @@ function BusinessImagesComponent({ businessId }: BusinessImagesProps) {
           Photo Gallery
         </motion.h2>
 
-        <Tabs defaultValue={combinedBuckets[0]?.categoryId} className="w-full" onValueChange={setActiveCategory}>
+        <Tabs
+          defaultValue={combinedBuckets[0]?.categoryId}
+          className="w-full"
+          onValueChange={setActiveCategory}
+        >
           <div className="px-4 overflow-x-auto">
             <TabsList className="h-auto p-1 mb-4">
               {combinedBuckets.map((category, idx) => (
@@ -286,7 +300,7 @@ function BusinessImagesComponent({ businessId }: BusinessImagesProps) {
                 >
                   <TabsTrigger
                     value={category.categoryId}
-                    className="px-4 py-2 mx-2 shadow-md rounded-xl text-primary border-primary"
+                    className="px-4 py-2 mx-2 shadow-md rounded-xl text-primary border-secondary capitalize"
                   >
                     {category.categoryName}
                   </TabsTrigger>
@@ -297,10 +311,14 @@ function BusinessImagesComponent({ businessId }: BusinessImagesProps) {
 
           {combinedBuckets.map((category) => {
             // Limit to 6 visible images (first one takes 4 spaces)
-            const visibleImages = category.images.slice(0, 6)
+            const visibleImages = category.images.slice(0, 6);
 
             return (
-              <TabsContent key={category.categoryId} value={category.categoryId} className="px-4 pb-6">
+              <TabsContent
+                key={category.categoryId}
+                value={category.categoryId}
+                className="px-4 pb-6"
+              >
                 <motion.div
                   className="grid grid-cols-3 gap-2"
                   initial={{ opacity: 0 }}
@@ -320,15 +338,22 @@ function BusinessImagesComponent({ businessId }: BusinessImagesProps) {
 
                 {category.images.length > 6 && (
                   <div className="flex justify-center mt-4">
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      <Button variant="outline" className="mt-4" onClick={handleViewAllClick}>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Button
+                        variant="outline"
+                        className="mt-4"
+                        onClick={handleViewAllClick}
+                      >
                         View All {category.images.length} Photos
                       </Button>
                     </motion.div>
                   </div>
                 )}
               </TabsContent>
-            )
+            );
           })}
         </Tabs>
 
@@ -356,7 +381,11 @@ function BusinessImagesComponent({ businessId }: BusinessImagesProps) {
                     <TabsTrigger
                       key={`modal-${category.categoryId}`}
                       value={category.categoryId}
-                      className={`px-3 py-1 mx-1 text-white ${modalCategory === category.categoryId ? "bg-primary/20" : ""}`}
+                      className={`px-3 py-1 mx-1 text-white ${
+                        modalCategory === category.categoryId
+                          ? "bg-primary/20"
+                          : ""
+                      }`}
                       onClick={() => handleCategoryChange(category.categoryId)}
                     >
                       {category.categoryName}
@@ -385,8 +414,14 @@ function BusinessImagesComponent({ businessId }: BusinessImagesProps) {
                     className="absolute flex items-center justify-center w-full h-full"
                   >
                     <Image
-                      src={modalCategoryObj.images[selectedImageIndex].imageUrl || "/placeholder.svg"}
-                      alt={modalCategoryObj.images[selectedImageIndex].name || "Gallery image"}
+                      src={
+                        modalCategoryObj.images[selectedImageIndex].imageUrl ||
+                        "/placeholder.svg"
+                      }
+                      alt={
+                        modalCategoryObj.images[selectedImageIndex].name ||
+                        "Gallery image"
+                      }
                       width={1200}
                       height={800}
                       className="object-contain max-w-full max-h-full p-4"
@@ -433,8 +468,8 @@ function BusinessImagesComponent({ businessId }: BusinessImagesProps) {
         </Dialog>
       </article>
     </section>
-  )
+  );
 }
 
 // Export memoized component for tree-shaking
-export default memo(BusinessImagesComponent)
+export default memo(BusinessImagesComponent);

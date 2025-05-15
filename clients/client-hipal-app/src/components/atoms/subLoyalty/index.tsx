@@ -1,4 +1,4 @@
-"use client";;
+"use client";
 import useLoyaltyData, {
   type ILoyaltySetting,
 } from "@/components/store/useLoyaltyData";
@@ -44,7 +44,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
   const logo = useBusinessDetails((s) => s.businessDetails?.logoUrl);
   const accessToken = useUserToken.getState().accessToken;
   const placeUrl = useBusinessDetails((s) => s.businessDetails?.placeUrl);
-  const outletInfo = _useAllBusiness((s) => s.data?.outletInfo)
+  const outletInfo = _useAllBusiness((s) => s.data?.outletInfo);
   const { setCheckLogin } = usePaymentStore();
   const openModal = useCallback(() => {
     setTimeout(() => setIsModalOpen(true), 5000);
@@ -68,7 +68,7 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
 
   const handleLogin = () => {
     setCheckLogin(true);
-  }
+  };
 
   useEffect(() => {
     if (loyalty?.loyaltyId) {
@@ -91,7 +91,16 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
           <h4 className="pb-4 text-2xl font-bold text-primary">REWARDZ</h4>
         </center>
         <section className="relative flex items-center justify-center gap-2 px-4 mt-4 overflow-hidden">
-          {outletInfo?.birthdayCampaign ? <BirthdayCardClaim ref={ref} isInView={isInView} /> : <LoyaltyCardClaim ref={ref} isInView={isInView} setCashBackPercentage={loyaltySetting?.setCashBackPercentage} logo={logo} />}
+          {outletInfo?.birthdayCampaign ? (
+            <BirthdayCardClaim ref={ref} isInView={isInView} />
+          ) : (
+            <LoyaltyCardClaim
+              ref={ref}
+              isInView={isInView}
+              setCashBackPercentage={loyaltySetting?.setCashBackPercentage}
+              logo={logo}
+            />
+          )}
           {loyaltySetting?.signUpBonus && loyaltySetting?.signUpBonus > 0 ? (
             <center
               ref={ref}
@@ -101,7 +110,8 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
                 Signup bonus
               </div>
               <div className="px-4 text-sm font-semibold text-white">
-                Win {loyaltySetting.signUpBonus} Coinz & {loyaltySetting.setCashBackPercentage}% Coinzback
+                Win {loyaltySetting.signUpBonus} Coinz &{" "}
+                {loyaltySetting.setCashBackPercentage}% Coinzback
               </div>
               <figure className="absolute bottom-0 z-0 animate-pulse">
                 <Image src={SignUpBonusBackground} alt="signup bonus" />
@@ -135,6 +145,9 @@ const SubLoyalty = ({ loyalty }: ILoyaltyCard): JSX.Element => {
           )}
         </section>
       </section>
+      <h2 className="py-4 mt-4 text-2xl font-bold text-center text-primary rounded-t-3xl">
+        Google Review
+      </h2>
       {placeUrl?.length > 0 ? <GoogleReviewCard /> : null}
     </div>
   );

@@ -1,4 +1,9 @@
-import { Business, UrlModel, WhatsAppBusinessConfig } from "@hi/db-models";
+import {
+  Business,
+  Table,
+  UrlModel,
+  WhatsAppBusinessConfig,
+} from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -45,7 +50,15 @@ const hipalzRouter = new Hono().get(
     }
 
     // Redirect to the original UR
-    return c.redirect(result.longUrl);
+    const count = await Table.countDocuments();
+    const randomIndex = Math.floor(Math.random() * count);
+    const randomDoc = await Table.findOne().skip(randomIndex);
+    const baseUrl = result.longUrl;
+    const tableName = randomDoc?.name;
+
+    const redirectUrl = `${baseUrl}?tableName=${encodeURIComponent(tableName)}`;
+    console.log("Redirect URL:", redirectUrl);
+    return c.redirect(redirectUrl);
   },
 );
 

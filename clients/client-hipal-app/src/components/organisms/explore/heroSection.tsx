@@ -30,7 +30,7 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
         style={{
           justifyContent: "flex-end",
         }}
-        className="pt-8 space-y-3 text-sm text-center text-primary"
+        className="pt-6 space-y-3 text-sm text-center text-primary"
       >
         <section className="flex flex-row justify-around">
           <button
@@ -58,7 +58,10 @@ function HeroSection({ data }: IHeroSection): JSX.Element {
         <center className="pt-4 text-2xl text-center text-primary">
           About us
         </center>
-        <ReadMore text={data?.business?.description || ""} className="text-center line-clamp-3" />
+        <ReadMore
+          text={data?.business?.description || ""}
+          className="text-justify"
+        />
       </center>
     </div>
   );
