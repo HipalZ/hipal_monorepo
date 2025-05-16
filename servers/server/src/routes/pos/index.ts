@@ -711,7 +711,7 @@ const posRouter = new Hono()
             zone = await Zone.create({
               businessId: businessId,
               name: "POS",
-              zoneId: "POS",
+              zoneId: nanoid(5),
               active: "1",
               tableIds: [],
               visibility: true,
@@ -744,7 +744,7 @@ const posRouter = new Hono()
           }
 
           for (const table of tables) {
-            const zoneId = table.restaurantareaid;
+            const zoneId = areas.length === 0 ? zone?.zoneId :   table.restaurantareaid;
             const tableName = table.table_no;
             const active = table.active;
             const rank = table.rank;
