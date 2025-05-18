@@ -165,7 +165,12 @@ export default async function Page({
     <main>
       <div className="relative flex flex-col w-full">
         {/* <TopSectionVideo /> */}
-        <TopBackground specialBanner={data?.business?.specialBannerUrl || ""} />
+        <TopBackground
+          specialBanner={
+            data?.business?.categoryTopBannerUrl ||
+            data?.business?.specialBannerUrl
+          }
+        />
         <MenuBannerPage
           timings={data?.timings}
           childCategory={data?.childCategories || []}

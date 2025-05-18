@@ -72,6 +72,12 @@ export const useOutletInfo = () => {
         footer: response?.data?.endBannerUrl,
       }));
     }
+    if (response?.data?.categoryTopBannerUrl) {
+      setImg((prevImg) => ({
+        ...prevImg,
+        categoryTopBanner: response?.data?.categoryTopBannerUrl,
+      }));
+    }
     setBizInfo(response?.data as IBizInfo);
     setToggleExplorePages(ExplorePages.MAINFORM);
 

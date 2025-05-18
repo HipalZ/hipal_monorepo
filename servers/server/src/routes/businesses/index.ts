@@ -479,6 +479,7 @@ const businessesRouter = new Hono()
           logo: requestData.logoUrl,
           address: requestData.address,
           name: requestData.name,
+          categoryTopBannerUrl: requestData.categoryTopBannerUrl,
         },
         { new: true },
       );

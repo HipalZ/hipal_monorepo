@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type { IBanner, IBizInfo, IDish } from "../types/businessData";
 export type ImageFiles = {
+  categoryTopBanner: File | null;
   banner: File | null;
   logo: File | null;
   footer: File | null;
@@ -22,6 +23,7 @@ interface ICropping {
 }
 
 interface IExploreStore {
+  setIsLoading: (loading: boolean) => void;
   clearBizInfo: () => void;
   clearImageFiles: () => void;
   bizInfo: IBizInfo;
@@ -66,6 +68,7 @@ export type ImagePreviews = {
   banner: string | ArrayBuffer | null;
   logo: string | ArrayBuffer | null;
   footer: string | ArrayBuffer | null;
+  categoryTopBanner: string | ArrayBuffer | null;
 };
 
 export type SetImageFilesFunction = (
@@ -101,6 +104,7 @@ export const useExploreStore = create(
         customTiming: [],
         isCustomTime: false,
         address: "",
+        categoryTopBannerUrl: "",
       },
       setBizInfo: (newBizInfo) =>
         set(() => ({
@@ -121,6 +125,7 @@ export const useExploreStore = create(
             specialBannerUrl: newBizInfo.specialBannerUrl || "",
             logoUrl: newBizInfo.logoUrl || "",
             endBannerUrl: newBizInfo.endBannerUrl || "",
+            categoryTopBannerUrl: newBizInfo.categoryTopBanner || "",
             footerDescription: newBizInfo.footerDescription || "",
             fixOpenTime: newBizInfo.fixOpenTime || "",
             fixCloseTime: newBizInfo.fixCloseTime || "",
@@ -206,16 +211,23 @@ export const useExploreStore = create(
             customTiming: [],
             isCustomTime: false,
             address: "",
+            categoryTopBannerUrl: "",
           },
         })),
       clearImageFiles: () =>
         set(() => ({
-          imageFiles: { banner: null, logo: null, footer: null },
+          imageFiles: {
+            banner: null,
+            logo: null,
+            footer: null,
+            categoryTopBanner: null,
+          } as ImageFiles,
         })),
       img: {
         banner: null,
         logo: null,
         footer: null,
+        categoryTopBanner: null,
       } as ImagePreviews,
       setImg: (
         previews: ImagePreviews | ((prev: ImagePreviews) => ImagePreviews),

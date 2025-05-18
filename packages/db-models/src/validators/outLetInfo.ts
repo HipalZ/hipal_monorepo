@@ -41,6 +41,12 @@ export const outLetInfoSchema = z.object({
     .min(10)
     .max(100)
     .optional(),
+  categoryTopBannerUrl: z
+    .string()
+    .url({ message: "add valid url" })
+    .min(10)
+    .max(100)
+    .optional(),
   logoUrl: z
     .string()
     .url({ message: "add valid url" })
