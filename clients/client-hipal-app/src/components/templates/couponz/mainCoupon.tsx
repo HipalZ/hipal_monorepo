@@ -1,15 +1,9 @@
 "use client";
-import React, { useEffect } from "react";
 import { ICouponPage } from "@/components/utils/helpers";
 import { useCouponz } from "@/components/store/useCouponz";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
-import {
-  useParams,
-  usePathname,
-  useRouter,
-  useSearchParams,
-} from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import type { Coupon, IBiz } from "@/components/types/businessData";
 import { useQuery } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
@@ -18,7 +12,6 @@ import useBusinessDetails from "@/components/store/useBusinessDetails";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import useTableData from "@/components/store/useTableData";
 import { toast } from "react-toastify";
-import { useCart } from "@/components/store/useCart";
 
 const Couponz = dynamic(() => import("./singleCoupon"), {
   loading: () => <SkeletonLoader height={200} />,
@@ -48,15 +41,15 @@ const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
 const MainCoupon = ({ business }: { business: IBiz }) => {
   const customLink = useParams()?.businessId as string;
   const { couponId, channelId } = useParams();
+  const router = useRouter();
+  console.log("router", router);
+  const searchParams = useSearchParams();
+  console.log("searchParams", searchParams);
   const { setBusinessDetails } = useBusinessDetails((s) => ({
     businessDetails: s.businessDetails,
     setBusinessDetails: s.setBusinessDetails,
   }));
-  const searchParams = useSearchParams();
-  const tableName = searchParams?.get("tableName");
-  const pathName = usePathname();
   const { setTableName, setTableNameTimeStamp } = useTableData();
-  const { resetCartStoreKeys, setShowCart } = useCart();
   const { openTc, displayTermsAndConditions, isLoading, setIsLoading } =
     useCouponTemp((s) => ({
       openTc: s.openTc,
@@ -64,7 +57,6 @@ const MainCoupon = ({ business }: { business: IBiz }) => {
       isLoading: s.isLoading,
       setIsLoading: s.setIsLoading,
     }));
-  const router = useRouter();
   const { currentPage, setSelectedCoupon, setChannelId, setCurrentPage } =
     useCouponz((s) => ({
       currentPage: s.currentPage,
@@ -101,19 +93,6 @@ const MainCoupon = ({ business }: { business: IBiz }) => {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (tableName !== null) {
-      setTableName(tableName || "");
-      setShowCart(false);
-      resetCartStoreKeys();
-      const timeStamp = Date.now();
-      setTableNameTimeStamp(timeStamp);
-    }
-    if (pathName.includes("/packaging")) {
-      setTableName("");
-    }
-  }, [tableName, pathName, setTableName]);
 
   useQuery({
     queryKey: ["singleCouponz", customLink, couponId, channelId],

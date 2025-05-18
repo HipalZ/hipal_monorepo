@@ -36,6 +36,7 @@ const hipalzRouter = new Hono().get(
     const randomDoc = await Table.findOne().skip(randomIndex);
     const baseUrl = result.longUrl;
     const tableName = randomDoc?.name;
+
     if (!q) {
       const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
         businessId: result?.businessId,
@@ -53,7 +54,7 @@ const hipalzRouter = new Hono().get(
         return c.redirect(`${redirectUrl}?tableName=${tableName}`);
       }
     }
-
+    console.log("baseUrl", `${baseUrl}?tableName=${tableName}`);
     // Redirect to the original UR
     return c.redirect(`${baseUrl}?tableName=${tableName}`);
   },
