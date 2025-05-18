@@ -370,7 +370,6 @@ const MemoCategoryPageBtn: FC<CategoryPageBtnProps> = (props) => {
             <BottomPopUp
               show={callWaiterModal}
               onClose={closeCallWaiterModal}
-              bottomCross
               hide
               height="100dvh"
             >

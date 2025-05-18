@@ -27,7 +27,7 @@ import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { useErrorHandling } from "@/utils/helper";
 import { toast } from "react-toastify";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import { GoArrowRight } from "react-icons/go";
+import { Button } from "@/components/ui/button";
 
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
@@ -311,26 +311,17 @@ const MemoCouponz = () => {
         <Image src={baloonsLeft} alt="baloonsLeft" width={100} height={100} />
       </picture>
       {assignedCoupon ? null : (
-        <section
+        <Button
           onClick={grabCouponz}
           onKeyDown={grabCouponz}
-          className="scale-90 z-10 w-full max-w-[calc(100%-2rem)] md:max-w-[28rem] h-[4.5rem] overflow-hidden p-4 rounded-xl flex gap-4 items-center fixed md:absolute left-1/2 transform -translate-x-1/2 bottom-10"
+          className="z-10 w-full max-w-[calc(100%-2rem)] md:max-w-[28rem] h-[3.5rem] overflow-hidden p-4 rounded-full flex gap-4 items-center fixed md:absolute left-1/2 transform -translate-x-1/2 bottom-10"
           style={{
             background: getLinearGradient(selectedCoupon?.bgColour) || "",
             position: "fixed",
           }}
         >
-          <button
-            type="button"
-            className="text-black font-semibold on_active_bounce flex-1 flex items-center justify-center bg-transparent border-none outline-none"
-            style={{ background: "none", boxShadow: "none" }}
-          >
-            <h1 className="text-lg">Grab the coupon now !</h1>
-          </button>
-          <article className="animate-bounce h-[3rem] rounded-lg aspect-square flex items-center justify-center">
-            <GoArrowRight color="black" size={30} />
-          </article>
-        </section>
+          <h1 className="text-base text-black">Click To Grab Coupon !!</h1>
+        </Button>
       )}
       <center
         className={cn(

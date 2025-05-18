@@ -43,14 +43,38 @@ const PhoneNumber = (props) => {
     }
   };
 
-  if (data && data.length > 0) {
-    return (
+  return (
+    <>
       <div className="space-y-4">
+        <div className="space-y-2">
+          <label htmlFor="phone" className="text-sm font-medium">
+            Enter Phone Number
+          </label>
+          <Input
+            id="phone"
+            type="tel"
+            placeholder="10-digit mobile number"
+            value={phoneNumber}
+            onChange={(e) =>
+              setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))
+            }
+            className="text-lg"
+          />
+        </div>
+        <Button
+          onClick={handlePhoneSubmit}
+          disabled={phoneNumber.length !== 10}
+          className="w-full"
+        >
+          Get OTP
+        </Button>
+      </div>
+      <div className="space-y-4 mt-4">
+        <center>(or)</center>
         <h4 className="text-sm font-medium text-gray-700">
           Select an Existing Customer
         </h4>
-        <p className="text-xs text-gray-500 mb-2">Tap a card to continue</p>
-        {data.map((customer) => (
+        {data?.map((customer) => (
           <div
             key={customer._id}
             onClick={() => handleCustomerClick(customer.userId.phone)}
@@ -65,34 +89,7 @@ const PhoneNumber = (props) => {
           </div>
         ))}
       </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <label htmlFor="phone" className="text-sm font-medium">
-          Enter Phone Number
-        </label>
-        <Input
-          id="phone"
-          type="tel"
-          placeholder="10-digit mobile number"
-          value={phoneNumber}
-          onChange={(e) =>
-            setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))
-          }
-          className="text-lg"
-        />
-      </div>
-      <Button
-        onClick={handlePhoneSubmit}
-        disabled={phoneNumber.length !== 10}
-        className="w-full"
-      >
-        Get OTP
-      </Button>
-    </div>
+    </>
   );
 };
 

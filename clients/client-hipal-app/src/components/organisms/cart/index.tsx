@@ -422,7 +422,7 @@ const Cart = () => {
         <section className="relative h-[calc(91dvh+5px)]">
           <div className="bg-white z-[500] sticky top-0 flex items-center justify-between px-4 py-3 border-b border-gray-200">
             <article className="flex items-center gap-2">
-              {outletInfo?.outLetType === "OTHER" || outletInfo?.shareCart ? (
+              {outletInfo?.outLetType === "OTHER" ? (
                 <button
                   type="button"
                   onClick={() => setShowCart(false)}
@@ -477,7 +477,6 @@ const Cart = () => {
                   >
                     <PiArrowBendUpLeftBold size={24} />
                   </button>
-
                   {!outletInfo?.placeOrderButton ? (
                     <motion.button
                       type="button"

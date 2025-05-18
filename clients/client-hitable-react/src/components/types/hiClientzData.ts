@@ -1,4 +1,12 @@
-export type NavItemTypes = "payments" | "history" | "sales" | "cart" | "Tables";
+export type NavItemTypes = "Alerts" | "History" | "Sales" | "Cart" | "Tables";
+
+export enum NavItemTypesEnum {
+  ALERTS = "Alerts",
+  HISTORY = "History",
+  SALES = "Sales",
+  CART = "Cart",
+  TABLES = "Tables",
+}
 
 export interface HiClientzData {
   address: string | undefined;

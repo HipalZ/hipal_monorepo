@@ -1,5 +1,8 @@
 import { useLiteStore } from "@/components/store/useLiteStore";
-import type { NavItemTypes } from "@/components/types/hiClientzData";
+import {
+  NavItemTypesEnum,
+  type NavItemTypes,
+} from "@/components/types/hiClientzData";
 import { createNavItems } from "@/components/utils/helpers";
 import { memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,7 +23,7 @@ const MemoNavItems = () => {
     setSelectedNavItem: s.setSelectedNavItem,
   }));
 
-  const outletInfo = useBusinessData(s => s.outletInfo)
+  const outletInfo = useBusinessData((s) => s.outletInfo);
 
   const handleNavItemClick = useCallback(
     (type: NavItemTypes) => {
@@ -31,10 +34,10 @@ const MemoNavItems = () => {
 
   const handleCount = useCallback(
     (type: string) => {
-      if (type === "payments" && onlineCount > 0) {
+      if (type === NavItemTypesEnum.ALERTS && onlineCount > 0) {
         return onlineCount + offlineCount;
       }
-      if (type === "cart" && cartCount > 0) {
+      if (type === NavItemTypesEnum.CART && cartCount > 0) {
         return cartCount;
       }
       return null;
@@ -53,9 +56,10 @@ const MemoNavItems = () => {
             onClick={() => handleNavItemClick(type)}
             className={`
               flex w-full max-w-[24rem] items-center justify-center px-4 py-2 rounded-full
-              ${selectedNavItem === type
-                ? "bg-purple-100 text-purple-600"
-                : "text-gray-500 hover:bg-gray-200"
+              ${
+                selectedNavItem === type
+                  ? "bg-purple-100 text-purple-600"
+                  : "text-gray-500 hover:bg-gray-200"
               }
               relative
             `}
@@ -66,9 +70,10 @@ const MemoNavItems = () => {
             <Icon
               size={24}
               className={`
-                ${selectedNavItem === type
-                  ? "text-purple-600"
-                  : "text-gray-500 group-hover:text-gray-700"
+                ${
+                  selectedNavItem === type
+                    ? "text-purple-600"
+                    : "text-gray-500 group-hover:text-gray-700"
                 }
                 transition-colors duration-300
               `}

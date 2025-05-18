@@ -51,7 +51,6 @@ const OnlineAlertCard = ({ onlineAlertData }: IOnlineProp) => {
     setClickViewMore(true);
   };
 
-
   return (
     <motion.main
       className=" pb-[5rem] m-4 gap-4  md:mx-4 grid md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
@@ -60,7 +59,8 @@ const OnlineAlertCard = ({ onlineAlertData }: IOnlineProp) => {
       transition={{ duration: 0.5 }}
     >
       <AnimatePresence>
-        {Array.isArray(onlineAlertData) && onlineAlertData.length > 0 &&
+        {Array.isArray(onlineAlertData) &&
+          onlineAlertData.length > 0 &&
           onlineAlertData.map((alert) => (
             <motion.div
               key={alert?._id}
@@ -95,7 +95,7 @@ const OnlineAlertCard = ({ onlineAlertData }: IOnlineProp) => {
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-2xl font-bold ">
                       {alert?.order_id?.discount > 0 ||
-                        alert?.order_id?.claimedCoins > 0 ? (
+                      alert?.order_id?.claimedCoins > 0 ? (
                         <span className="mr-2 text-sm line-through text-muted-foreground">
                           ₹ {alert?.order_id?.billValue}
                         </span>
@@ -116,23 +116,20 @@ const OnlineAlertCard = ({ onlineAlertData }: IOnlineProp) => {
                 <CardFooter
                   className={cn(
                     "flex items-center justify-between p-4",
-                    alert?.status === "FAIL" ? "bg-red-50" : "bg-green-50",
+                    alert?.status === "FAIL" ? "bg-red-100" : "bg-green-100",
                   )}
                 >
-                  {
-                    alert.alertType !== "OFFLINE" && (
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive bg-destructive/10"
-                        onClick={() => removeAlert(alert?._id)}
-                      >
-                        <IoCloseCircleSharp className="w-4 h-4 mr-2" />
-                        Remove
-                      </Button>
-                    )
-                  }
+                  {alert.alertType !== "OFFLINE" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive bg-destructive/10"
+                      onClick={() => removeAlert(alert?._id)}
+                    >
+                      <IoCloseCircleSharp className="w-4 h-4 mr-2" />
+                      Remove
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
@@ -144,8 +141,7 @@ const OnlineAlertCard = ({ onlineAlertData }: IOnlineProp) => {
                 </CardFooter>
               </Card>
             </motion.div>
-          ))
-        }
+          ))}
       </AnimatePresence>
     </motion.main>
   );

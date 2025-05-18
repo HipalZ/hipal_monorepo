@@ -7,6 +7,7 @@ import { BUSINESS_KEYID } from "@/configs";
 import { apiRpc } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { useParams } from "next/navigation";
+import Script from "next/script";
 import { memo, useMemo, useState } from "react";
 import { FiBriefcase, FiShare, FiUsers } from "react-icons/fi";
 import { toast } from "react-toastify";
@@ -18,7 +19,7 @@ const MemoShareCartButtons = () => {
   const userDetails = useLogin((state) => state.userDetails);
   const setDirection = useLogin((state) => state.setDirection);
   const customLink = useParams()?.businessId as string;
-  const { setCheckLogin } = usePaymentStore()
+  const { setCheckLogin } = usePaymentStore();
   const [shareState, setShareState] = useState({ showOptions: false, url: "" });
 
   const sanitizedCart = useMemo(() => {
@@ -29,7 +30,7 @@ const MemoShareCartButtons = () => {
   }, [cart]);
 
   const generateCartLink = async () => {
-    setDirection("category")
+    setDirection("category");
     if (!accessToken) {
       setCheckLogin(true);
       return;
@@ -89,6 +90,30 @@ const MemoShareCartButtons = () => {
   };
   return (
     <>
+      {sanitizedCart.map(({ dish }) => (
+        <Script
+          key={dish._id}
+          type="application/ld+json"
+          id={`structured-data-${dish._id}`}
+        >
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: dish.name,
+            image: dish.images?.[0] || outletInfo?.logoUrl,
+            description: dish.description || "",
+            sku: dish._id,
+            offers: {
+              "@type": "Offer",
+              priceCurrency: "INR",
+              price: dish.price,
+              availability: dish.availability ? "InStock" : "OutOfStock",
+              url: `${BUSINESS_KEYID}${customLink}/${dish._id}`,
+            },
+          })}
+        </Script>
+      ))}
+
       <button
         onClick={generateCartLink}
         type="button"

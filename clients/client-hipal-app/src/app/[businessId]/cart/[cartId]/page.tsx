@@ -1,11 +1,10 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import { BUSINESS_KEYID } from "@/configs";
-import { updateTheme } from "@/components/utils/themes";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import MemoizedCartItem from "@/components/organisms/cart/cartItem";
@@ -25,7 +24,6 @@ const CartPage = () => {
     );
     const res = await response.json();
     const themes = res.data?.theme;
-    updateTheme(themes);
     return res.data || {};
   };
 

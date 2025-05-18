@@ -7,7 +7,6 @@ import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import Image from "next/image";
 import { useLogin } from "@/components/store/useLogin";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
-import ShimmerImage from "../imageshimmer";
 
 const MemoCardFourLayout = () => {
   const cardLayout = useLoyaltyData((s) => s.loyaltySetting.cardLayout);
@@ -27,7 +26,7 @@ const MemoCardFourLayout = () => {
         width={260}
         height={160}
         alt="Selected Card"
-        className=" w-[100%] max-w-[28rem]  rounded-2xl"
+        className=" w-[100%] max-w-[28rem] rounded-2xl"
       />
       {business?.logoUrl && (
         <Image
@@ -35,8 +34,7 @@ const MemoCardFourLayout = () => {
           height={64}
           src={business?.logoUrl || hipalLogo}
           alt="logo"
-          className="absolute top-6 left-6 filter invert-0 mix-blend-screen rounded-xl"
-          style={{ filter: "invert(100%) contrast(150%) brightness(110%)" }}
+          className="absolute top-6 left-6 rounded-xl"
         />
       )}
       <figcaption className="absolute w-[35%] text-left text-white bottom-12 left-8">

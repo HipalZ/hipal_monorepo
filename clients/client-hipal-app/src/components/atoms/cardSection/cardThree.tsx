@@ -7,7 +7,6 @@ import Image from "next/image";
 import hipalLogo from "@/assets/HIPAL_LOGO.svg";
 import { useLogin } from "@/components/store/useLogin";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
-import ShimmerImage from "../imageshimmer";
 
 const MemoCardThreeLayout = () => {
   const cardLayout = useLoyaltyData((s) => s.loyaltySetting.cardLayout);
@@ -36,8 +35,7 @@ const MemoCardThreeLayout = () => {
           height={64}
           src={business?.logoUrl || hipalLogo}
           alt="logo"
-          className="absolute top-6 left-6 filter invert-0 mix-blend-screen rounded-xl"
-          style={{ filter: "invert(100%) contrast(150%) brightness(110%)" }}
+          className="absolute top-6 left-6  rounded-xl"
         />
       )}
       <figcaption className="absolute w-[85%] flex justify-between text-left text-white top-[9rem] leading-6 left-8">

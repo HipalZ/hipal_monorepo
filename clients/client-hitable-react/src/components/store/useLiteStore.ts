@@ -1,8 +1,9 @@
-import type {
-  Alert,
-  NavItemTypes,
-  ISalesLite,
-  Cart,
+import {
+  type Alert,
+  type NavItemTypes,
+  type ISalesLite,
+  type Cart,
+  NavItemTypesEnum,
 } from "@/components/types/hiClientzData";
 import { create } from "zustand";
 
@@ -102,7 +103,7 @@ interface ILiteStore {
 export const useLiteStore = create<ILiteStore>((set) => ({
   clickViewMore: false,
   setClickViewMore: (value) => set({ clickViewMore: value }),
-  selectedNavItem: "payments",
+  selectedNavItem: NavItemTypesEnum.ALERTS as NavItemTypes,
   setSelectedNavItem: (value) => set({ selectedNavItem: value }),
   clickedConfirm: false,
   setClickedConfirm: (value) => set({ clickedConfirm: value }),

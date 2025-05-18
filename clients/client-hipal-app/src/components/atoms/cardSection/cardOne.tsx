@@ -34,8 +34,7 @@ const MemoCardOneLayout = () => {
           height={64}
           src={business?.logoUrl || hipalLogo}
           alt="logo"
-          className="absolute top-6 left-6 filter invert-0 mix-blend-screen rounded-xl"
-          style={{ filter: "invert(100%) contrast(150%) brightness(110%)" }}
+          className="absolute top-6 left-6 rounded-xl"
         />
       )}
       <figcaption className="absolute w-[35%] text-left text-white bottom-12 left-8">

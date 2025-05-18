@@ -9,7 +9,11 @@ import useTableData from "@/components/store/useTableData";
 import Table from "@/assets/cart/Table.png";
 import Image from "next/image";
 
-function Header({ categories, primaryColor, secondaryColor }: {
+function Header({
+  categories,
+  primaryColor,
+  secondaryColor,
+}: {
   categories: CategoryType[];
   primaryColor: string;
   secondaryColor: string;
@@ -56,11 +60,13 @@ function Header({ categories, primaryColor, secondaryColor }: {
       transition={{ duration: 0.3, ease: "easeInOut" }}
     >
       <div className="relative flex flex-col items-start justify-between w-full overflow-hidden">
-        <h3 className="flex items-center justify-between w-full px-2 text-3xl">
+        <h3 className="flex items-center justify-end w-full px-2 text-3xl">
           {hiCode && (
             <h5 className="flex items-center gap-2 text-xl font-semibold opacity-80">
-              <Image src={Table} width={36} height={36} alt="Table" />
-              <span className="text-base">Table Code</span> {hiCode}
+              <Image src={Table} width={24} height={24} alt="Table" />
+              <span className="text-sm">
+                Table Code <b className="text-base">{hiCode}</b>
+              </span>
             </h5>
           )}
         </h3>

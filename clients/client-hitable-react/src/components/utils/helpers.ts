@@ -92,10 +92,10 @@ export function createNavItems(isPos: boolean): Array<{
   icon: IconType;
 }> {
   const navItems = [
-    { type: "cart" as NavItemTypes, icon: HiOutlineShoppingCart },
-    { type: "payments" as NavItemTypes, icon: CiGlobe },
-    { type: "sales" as NavItemTypes, icon: BsGraphUpArrow },
-    { type: "history" as NavItemTypes, icon: MdOutlineHistory },
+    { type: "Cart" as NavItemTypes, icon: HiOutlineShoppingCart },
+    { type: "Alerts" as NavItemTypes, icon: CiGlobe },
+    { type: "Sales" as NavItemTypes, icon: BsGraphUpArrow },
+    { type: "History" as NavItemTypes, icon: MdOutlineHistory },
   ];
 
   if (isPos) {

@@ -1,56 +1,57 @@
-"use client"
+"use client";
 
-import useBusinessDetails from "@/components/store/useBusinessDetails"
-import { useLogin } from "@/components/store/useLogin"
-import useTableData from "@/components/store/useTableData"
-import { apiRpc } from "@hi/common"
-import { memo, useCallback, useState } from "react"
-import { toast } from "react-toastify"
-import { useErrorHandling } from "@/utils/helper"
-import Bill from "@/assets/call/BillImage.png"
-import Breakfast from "@/assets/call/Breakfast.png"
-import Towel from "@/assets/call/Towel.png"
-import WaterBottle from "@/assets/call/Water.png"
-import ReceptionBell from "@/assets/call/ReceptionBell.png"
-import Image from "next/image"
-import { motion, AnimatePresence } from "framer-motion"
-import ConfettiHeader from "@/components/organisms/confettiHeader"
-import { cn } from "@/components/utils/helpers"
-import { Search, Send, X } from "lucide-react"
+import useBusinessDetails from "@/components/store/useBusinessDetails";
+import { useLogin } from "@/components/store/useLogin";
+import useTableData from "@/components/store/useTableData";
+import { apiRpc } from "@hi/common";
+import { memo, useCallback, useState } from "react";
+import { toast } from "react-toastify";
+import { useErrorHandling } from "@/utils/helper";
+import Bill from "@/assets/call/BillImage.png";
+import Breakfast from "@/assets/call/Breakfast.png";
+import Towel from "@/assets/call/Towel.png";
+import WaterBottle from "@/assets/call/Water.png";
+import ReceptionBell from "@/assets/call/ReceptionBell.png";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import ConfettiHeader from "@/components/organisms/confettiHeader";
+import { cn } from "@/components/utils/helpers";
+import { Search, Send, X } from "lucide-react";
+import { BiArrowBack } from "react-icons/bi";
 
 const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
-  const { errorText } = useErrorHandling()
-  const [message, setMessage] = useState("")
-  const [isFocused, setIsFocused] = useState(false)
-  const { tableName } = useTableData()
-  const name = useLogin((s) => s.userDetails?.name)
-  const userDetails = useLogin((s) => s.userDetails)
+  const { errorText } = useErrorHandling();
+  const [message, setMessage] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
+  const { tableName } = useTableData();
+  const name = useLogin((s) => s.userDetails?.name);
+  const userDetails = useLogin((s) => s.userDetails);
 
   const messageImageMap = {
     "Water Bottle": WaterBottle,
     "Remind for my order": Breakfast,
     "Get my bill": Bill,
     "Get tissues": Towel,
-  }
+  };
 
-  const suggestions = ["Clean the table", "Need Spoons", "Need extra plates"]
+  const suggestions = ["Clean the table", "Need Spoons", "Need extra plates"];
 
-  const [loading, setLoading] = useState<boolean>(false)
-  const businessId = useBusinessDetails((s) => s.businessDetails.businessId)
+  const [loading, setLoading] = useState<boolean>(false);
+  const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
 
   const handleSelectMessage = useCallback((selectedMessage: string) => {
-    setMessage(selectedMessage)
-    setIsFocused(false)
-  }, [])
+    setMessage(selectedMessage);
+    setIsFocused(false);
+  }, []);
 
   const callTheWaiter = useCallback(async () => {
     if (message === "") {
-      return toast.error("Please select a message to call staff")
+      return toast.error("Please select a message to call staff");
     }
     if (loading) {
-      return toast.error("Please wait for a moment")
+      return toast.error("Please wait for a moment");
     }
-    setLoading(true)
+    setLoading(true);
     const res = await apiRpc.payments.createWaiterAlert.$post({
       json: {
         businessId: businessId,
@@ -61,31 +62,56 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
         name: name,
         userId: userDetails._id,
       },
-    })
+    });
     if (!res.ok) {
-      setLoading(false)
-      return errorText(res.status)
+      setLoading(false);
+      return errorText(res.status);
     }
     if (res.status === 200) {
-      toast.success("Staff will be there soon. Thank you!!")
-      onClose()
+      toast.success("Staff will be there soon. Thank you!!");
+      onClose();
     }
-  }, [businessId, tableName, message, name, userDetails._id, loading, errorText, onClose])
+  }, [
+    businessId,
+    tableName,
+    message,
+    name,
+    userDetails._id,
+    loading,
+    errorText,
+    onClose,
+  ]);
 
   const handleCloseInput = useCallback(() => {
     if (!Object.keys(messageImageMap).includes(message)) {
-      setMessage("")
+      setMessage("");
     }
-    setIsFocused(false)
-  }, [message, messageImageMap])
+    setIsFocused(false);
+  }, [message, messageImageMap]);
 
   return (
     <div className="relative h-screen overflow-auto bg-white hide-scrollbar">
+      <button
+        type="button"
+        onClick={onClose}
+        className="top-4 left-4 py-2 rounded-full absolute z-[60] px-4 text-black bg-[#ffffff70] border border-[#CACACA] shadow-md hover:shadow-lg transition-all duration-300"
+      >
+        <BiArrowBack />
+      </button>
       <ConfettiHeader direction="top" />
       <center className="mt-20">
-        <Image src={ReceptionBell} alt="ReceptionBell" height={143} width={143} />
-        <h1 className="my-2 text-2xl font-semibold text-black">Calling Captain?</h1>
-        <p className="mt-2 text-sm text-gray-500">What should we tell the captain to help you with </p>
+        <Image
+          src={ReceptionBell}
+          alt="ReceptionBell"
+          height={143}
+          width={143}
+        />
+        <h1 className="my-2 text-2xl font-semibold text-black">
+          Calling Captain?
+        </h1>
+        <p className="mt-2 text-sm text-gray-500">
+          What should we tell the captain to help you with{" "}
+        </p>
       </center>
 
       {/* Enhanced Input Area */}
@@ -100,7 +126,9 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
             type="text"
             id="name"
             placeholder="Enter your request..."
-            value={!Object.keys(messageImageMap).includes(message) ? message : ""}
+            value={
+              !Object.keys(messageImageMap).includes(message) ? message : ""
+            }
             maxLength={30}
             onChange={(e) => setMessage(e.target.value)}
             onFocus={() => setIsFocused(true)}
@@ -122,7 +150,6 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
             {message?.length}/{30}
           </small>
         </div>
-
 
         {/* Quick Suggestions */}
         <AnimatePresence>
@@ -151,7 +178,7 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
 
       {/* Grid Options */}
       <motion.ul
-        className="grid flex-grow grid-cols-2 gap-5 p-4"
+        className="grid flex-grow grid-cols-2 gap-5 p-4 pb-[5rem]"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -160,8 +187,10 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
           <motion.li
             key={messageText}
             className={cn(
-              message === messageText ? "border-[#008800] border-2 bg-green-50" : "border-[#CACACA] border",
-              "overflow-hidden rounded-2xl pb-4 h-[11rem] relative cursor-pointer flex flex-col items-center justify-center hover:shadow-md transition-all duration-300",
+              message === messageText
+                ? "border-[#008800] border-2 bg-green-50"
+                : "border-[#CACACA] border",
+              "overflow-hidden rounded-2xl h-[10rem] aspect-square relative cursor-pointer flex flex-col items-center justify-center hover:shadow-md transition-all duration-300",
             )}
             onClick={() => handleSelectMessage(messageText)}
             whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
@@ -171,31 +200,37 @@ const CallTheWaiterComponent = ({ onClose }: { onClose: () => void }) => {
               <Image
                 src={imageSrc}
                 alt={messageText}
-                height={120}
-                width={120}
+                height={100}
+                width={100}
                 objectFit="cover"
                 className="transition-transform duration-300 ease-in-out transform hover:scale-110"
               />
             </motion.div>
-            <h3 className="text-sm font-medium text-center text-[#000000]">{messageText}</h3>
+            <h3 className="text-sm font-medium text-center text-[#000000]">
+              {messageText}
+            </h3>
           </motion.li>
         ))}
       </motion.ul>
 
       {/* Enhanced Button */}
-      <div className="mx-4 pb-20">
+      <div className="mx-4 pb-2 fixed bottom-0 left-0 right-0">
         <button
           type="button"
           onClick={callTheWaiter}
-          className={cn(message?.length > 0 ? "bg-[#008800] text-white" : "bg-[#FFFFFF] text-gray-500", "w-full border border-[#cacaca] text-base p-3 rounded-xl")}
+          className={cn(
+            message?.length > 0
+              ? "bg-[#008800] text-white"
+              : "bg-[#FFFFFF] text-gray-500",
+            "w-full border border-[#cacaca] text-base p-3 rounded-xl",
+          )}
         >
-          {message?.length > 0 ? 'Continue' : 'Select the option and call'}
+          {message?.length > 0 ? "Continue" : "Select the option and call"}
         </button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-const MemoCallTheWaiterComponent = memo(CallTheWaiterComponent)
-export default MemoCallTheWaiterComponent
-
+const MemoCallTheWaiterComponent = memo(CallTheWaiterComponent);
+export default MemoCallTheWaiterComponent;

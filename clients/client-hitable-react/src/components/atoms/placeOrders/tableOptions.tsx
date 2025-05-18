@@ -1,6 +1,6 @@
 import { memo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Users, UserCheck, ReceiptText, CookingPot } from "lucide-react";
 import {
   type orderModal,
@@ -43,8 +43,8 @@ const MemoTableOptions = () => {
   }, [setOpenOrderModal]);
 
   return (
-    <>
-      <CardContent className="space-y-4 pt-[5rem] md:pt-[8.5rem]">
+    <section className="min-h-[90dvh] flex justify-center md:py-[8rem] px-4 mx-auto">
+      <CardContent className="space-y-4 mt-24 md:mt-6">
         <h3 className="text-xl font-semibold opacity-80">Table Options</h3>
         {selectedTable?.hiCode && (
           <Badge variant="secondary" className="flex justify-between w-full">
@@ -116,11 +116,11 @@ const MemoTableOptions = () => {
           {
             text: "Back",
             onClick: closeOrderModalHandler,
-            className: "rounded-md w-full -ml-8",
+            className: "rounded-md w-full",
           },
         ]}
       />
-    </>
+    </section>
   );
 };
 

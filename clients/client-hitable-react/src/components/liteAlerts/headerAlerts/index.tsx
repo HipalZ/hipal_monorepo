@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useQuery } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
+import { NavItemTypesEnum } from "@/components/types/hiClientzData";
 
 const HeaderAlerts = ({
   hide,
@@ -38,7 +39,7 @@ const HeaderAlerts = ({
   }));
 
   const refetchData = () => {
-    if (selectedNavItem === "payments") {
+    if (selectedNavItem === NavItemTypesEnum.ALERTS) {
       refetchOnlineAlerts();
       refetchOfflineAlerts();
     }
@@ -95,7 +96,7 @@ const HeaderAlerts = ({
       )}
 
       <div className="flex items-center space-x-3">
-        {selectedNavItem === "payments" && !hide ? (
+        {selectedNavItem === NavItemTypesEnum.ALERTS && !hide ? (
           <HiOutlineRefresh
             onClick={refetchData}
             size={24}
