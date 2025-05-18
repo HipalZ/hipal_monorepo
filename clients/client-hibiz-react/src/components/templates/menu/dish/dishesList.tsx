@@ -7,6 +7,7 @@ import { useDishesStore } from "@/components/store/useDishesStore";
 import type { DishType } from "@hi/db-models/src/validators";
 import { useDishes } from "@/hooks/useDish";
 import useBusinessData from "@/components/store/useBusinessData";
+import MemoFoodType from "@/components/atom/FoodType";
 
 const MemoListOfDishes = () => {
   const {
@@ -57,7 +58,7 @@ const MemoListOfDishes = () => {
     // 3) Visibility filter
     if (visibilityFilter !== "all") {
       filtered = filtered.filter(
-        (d) => d.visibility === (visibilityFilter === "visible")
+        (d) => d.visibility === (visibilityFilter === "visible"),
       );
     }
 
@@ -84,9 +85,7 @@ const MemoListOfDishes = () => {
   );
 
   if (isLoading) {
-    return (
-      <LoadingSpinner />
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -97,30 +96,31 @@ const MemoListOfDishes = () => {
       </h3>
       {filteredDishes.length > 0 && filteredDishes
         ? filteredDishes.map((dish) => (
-          <button
-            onClick={() => handleEditDish(dish)}
-            type="button"
-            key={dish._id}
-            className="flex items-center justify-between w-full p-4 bg-white h-[4.5rem] rounded-2xl shadow md:max-w-[21rem] lg:max-w-[20rem] xl:max-w-[20rem] 2xl:max-w-[21.5rem]"
-          >
-            <h3
-              title={dish.name}
-              className="mb-2 text-lg font-semibold text-left"
+            <button
+              onClick={() => handleEditDish(dish)}
+              type="button"
+              key={dish._id}
+              className="flex items-center justify-between w-full p-3 gap-2 bg-white h-[4.5rem] rounded-2xl shadow md:max-w-[21rem] lg:max-w-[20rem] xl:max-w-[20rem] 2xl:max-w-[21.5rem]"
             >
-              {dish.name}
-            </h3>
-            <div className="flex items-center mb-2 text-gray-500">
-              {dish.visibility ? (
-                <FaEye className="text-green-500" />
-              ) : (
-                <FaEyeSlash className="text-red-500" />
-              )}
-              {!dish.availability && (
-                <span className="ml-2 text-red-500">N/A</span>
-              )}
-            </div>
-          </button>
-        ))
+              <MemoFoodType types={dish?.dishTypes} />
+              <h3
+                title={dish.name}
+                className="mb-2 text-lg font-semibold text-left"
+              >
+                {dish.name}
+              </h3>
+              <div className="flex items-center mb-2 text-gray-500">
+                {dish.visibility ? (
+                  <FaEye className="text-green-500" />
+                ) : (
+                  <FaEyeSlash className="text-red-500" />
+                )}
+                {!dish.availability && (
+                  <span className="ml-2 text-red-500">N/A</span>
+                )}
+              </div>
+            </button>
+          ))
         : null}
     </section>
   );
