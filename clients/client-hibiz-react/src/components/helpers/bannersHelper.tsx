@@ -314,6 +314,7 @@ export const useCheckValidations = () => {
     let bannerExplore: string | undefined;
     let logoExplore: string | undefined;
     let footerExplore: string | undefined;
+    let categoryTopBanner: string | undefined;
     if (imageFiles?.banner !== undefined && /base64/.test(img?.banner)) {
       bannerExplore = await storeImageAfterSave(
         imageFiles?.banner,
@@ -338,7 +339,18 @@ export const useCheckValidations = () => {
       );
     }
 
-    return { bannerExplore, logoExplore, footerExplore };
+    if (
+      imageFiles?.categoryTopBanner !== undefined &&
+      /base64/.test(img?.categoryTopBanner)
+    ) {
+      categoryTopBanner = await storeImageAfterSave(
+        imageFiles?.categoryTopBanner,
+        img?.categoryTopBanner,
+        setIsLoading,
+      );
+    }
+
+    return { bannerExplore, logoExplore, footerExplore, categoryTopBanner };
   };
 
   return { checkValidations };

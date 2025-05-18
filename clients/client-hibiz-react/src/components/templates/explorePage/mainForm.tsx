@@ -12,6 +12,7 @@ import type { CropperRef, IBizPayload } from "@/components/types/businessData";
 import useShowErrorToasts from "@/components/atom/errorToasts";
 import { useExploreTemp } from "@/components/store/useExploreTemp";
 import useBusinessData from "@/components/store/useBusinessData";
+const CategoryTopBanner = lazy(() => import("./categoryTopBanner"));
 
 const SocialMediaLinks = lazy(
   () => import("@/components/templates/explorePage/socialMediaLinks"),
@@ -74,7 +75,7 @@ const MemoMainForm = () => {
   const handleSaveExplorePage = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!businessId && !hotelId) return;
-    const { bannerExplore, logoExplore, footerExplore } =
+    const { bannerExplore, logoExplore, footerExplore, categoryTopBanner } =
       await checkValidations();
 
     // valid social media links
@@ -100,6 +101,7 @@ const MemoMainForm = () => {
       logoUrl: logoExplore,
       specialBannerUrl: bannerExplore,
       endBannerUrl: footerExplore,
+      categoryTopBannerUrl: categoryTopBanner,
       socialMediaLinks: filteredSocialMedia,
       name: bizInfo?.name,
       fssai: bizInfo?.fssai,
@@ -144,6 +146,19 @@ const MemoMainForm = () => {
     setIsLoading(false);
   };
 
+  // Define crop sizes
+  const cropSizes: Record<string, { width: number; height: number }> = {
+    logo: { width: 150, height: 150 },
+    categoryTopBanner: { width: 375, height: 135 },
+    banner: { width: 400, height: 400 },
+    footer: { width: 375, height: 135 },
+  };
+
+  const cropConfig = cropSizes[cropping.type] || {
+    width: 400,
+    height: 400,
+  };
+
   return (
     <form onSubmit={handleSaveExplorePage} className="px-4 pb-[5rem]">
       <ExplorePageTopSection />
@@ -152,6 +167,7 @@ const MemoMainForm = () => {
       {outletInfo?.outLetType !== "HOTEL" && !outletInfo?.isPosEnabled && (
         <UniquelyYoursSection />
       )}
+      {outletInfo?.outLetType !== "HOTEL" && <CategoryTopBanner />}
       {outletInfo?.outLetType === "HOTEL" ? <FooterSection /> : null}
       <SocialMediaLinks />
       <button type="submit" className="cursor-pointer bottom_btn">
@@ -164,8 +180,8 @@ const MemoMainForm = () => {
             key={cropping.image}
             image={cropping.image}
             ref={cropperRef}
-            width={400}
-            height={400}
+            width={cropConfig.width}
+            height={cropConfig.height}
           />
         </section>
         <BottomButton

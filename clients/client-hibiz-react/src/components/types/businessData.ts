@@ -139,6 +139,7 @@ export interface IOutletInfo {
   tags: string[];
   logoUrl: string;
   specialBannerUrl: string;
+  categoryTopBannerUrl: string;
   name: string;
   endBannerUrl: string;
   fssai: string;
@@ -258,9 +259,9 @@ export interface IExistingPayments {
   posBillId: string;
   settleType: string;
   splitModes: {
-      _id: string;
-      name: string;
-    }[]
+    _id: string;
+    name: string;
+  }[];
   __v: number;
 }
 export interface HistoryData {
@@ -321,11 +322,13 @@ export interface ICategory {
 }
 
 export interface IBizInfo {
+  categoryTopBanner: string;
   newAmenities: string[];
   _id: string;
   logoUrl: string;
   endBannerUrl: string;
   specialBannerUrl: string;
+  categoryTopBannerUrl: string;
   businessId: string;
   name: string;
   description: string;
@@ -408,6 +411,7 @@ export interface IBizPayload {
   footerDescription?: string;
   businessId: string;
   specialBannerUrl?: string;
+  categoryTopBannerUrl?: string;
   logoUrl?: string;
   endBannerUrl?: string;
   fssai?: string;
@@ -768,12 +772,12 @@ interface ExpiryClaimLimit {
 // Define the Availability type
 interface Availability {
   when:
-  | "custom"
-  | "allthetime"
-  | "birthdayweek"
-  | "birthdaymonth"
-  | "weekdays"
-  | "weekends";
+    | "custom"
+    | "allthetime"
+    | "birthdayweek"
+    | "birthdaymonth"
+    | "weekdays"
+    | "weekends";
   customDays: string[];
   startTime: number;
   endTime: number;

@@ -43,7 +43,7 @@ export async function storeImageAfterSave(
     formData.append("fileData", file);
     formData.append("fileName", `${imageId}`);
     formData.append("bucketName", "assets");
-    
+
     const response = await axios.post(
       "https://storage.test.hipalz.com/upload",
       formData,
@@ -631,38 +631,38 @@ export const removeUnwanted = (heading: string) => {
 };
 
 export const STEPS = [
-    { id: 1, label: "Menu structure" },
-    { id: 2, label: "Category layout" },
-    { id: 3, label: "Dish layout" },
-    { id: 4, label: "Colors" },
-    { id: 5, label: "Zone" },
-    { id: 6, label: "Days" },
-    { id: 7, label: "Time" },
-    { id: 8, label: "Preview" },
-]
+  { id: 1, label: "Menu structure" },
+  { id: 2, label: "Category layout" },
+  { id: 3, label: "Dish layout" },
+  { id: 4, label: "Colors" },
+  { id: 5, label: "Zone" },
+  { id: 6, label: "Days" },
+  { id: 7, label: "Time" },
+  { id: 8, label: "Preview" },
+];
 
 // Format minutes to time string (e.g., 60 -> "1:00 AM")
 export const formatMinutesToTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60)
-    const mins = minutes % 60
-    const period = hours >= 12 ? "PM" : "AM"
-    const displayHours = hours % 12 || 12
-    return `${displayHours}:${mins.toString().padStart(2, "0")} ${period}`
-}
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  const period = hours >= 12 ? "PM" : "AM";
+  const displayHours = hours % 12 || 12;
+  return `${displayHours}:${mins.toString().padStart(2, "0")} ${period}`;
+};
 
 // Get day names from array of day numbers
 export const getDayNames = (days: number[]) => {
-    const dayMap: Record<number, string> = {
-        1: "Sun",
-        2: "Mon",
-        3: "Tue",
-        4: "Wed",
-        5: "Thu",
-        6: "Fri",
-        7: "Sat",
-    }
+  const dayMap: Record<number, string> = {
+    1: "Sun",
+    2: "Mon",
+    3: "Tue",
+    4: "Wed",
+    5: "Thu",
+    6: "Fri",
+    7: "Sat",
+  };
 
-    if (days.length === 7) return "All days"
+  if (days.length === 7) return "All days";
 
-    return days.map((day) => dayMap[day]).join(", ")
-}
+  return days.map((day) => dayMap[day]).join(", ");
+};
