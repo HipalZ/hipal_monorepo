@@ -55,7 +55,7 @@ const MemoAfterGrabbingCoupon = () => {
               {customDays.map((day) => day.slice(0, 2)).join(", ")}
             </p>
           )}
-          {customDays.length === 0 && (
+          {customDays?.length === 0 && (
             <p className="text-lg font-semibold">All the time</p>
           )}
         </div>

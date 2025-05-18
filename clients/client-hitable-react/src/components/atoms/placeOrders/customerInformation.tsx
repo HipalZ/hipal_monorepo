@@ -1,7 +1,7 @@
 import { useOrderStore } from "@/components/store/useOrderData";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
-import { lazy, memo, useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";

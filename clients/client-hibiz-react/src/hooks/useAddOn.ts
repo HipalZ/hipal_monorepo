@@ -8,7 +8,10 @@ import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 
 export const useAddOnList = () => {
-  const { businessId, menuId } = useParams<{ businessId?: string; menuId: string }>();
+  const { businessId, menuId } = useParams<{
+    businessId?: string;
+    menuId: string;
+  }>();
 
   const { setAddOnTypes } = useCategoryStore((state) => ({
     setAddOnTypes: state.setAddOnTypes,
@@ -16,17 +19,17 @@ export const useAddOnList = () => {
 
   const updatedQuery = menuId
     ? {
-      menuId: menuId,
-      businessId: businessId,
-    }
+        menuId: menuId,
+        businessId: businessId,
+      }
     : {
-      businessId: businessId,
-    };
+        businessId: businessId,
+      };
 
   const getAllAddOn = async () => {
     if (!businessId && !menuId) return [];
     const res = await apiRpc.addons.$get({
-      query: updatedQuery
+      query: updatedQuery,
     });
     const data = (await res.json()).data as AddOnType[];
     setAddOnTypes(data);
@@ -165,6 +168,7 @@ export const useDeleteAddon = () => {
         param: {
           id,
         },
+        json: {},
       });
       return response.json();
     },

@@ -1,27 +1,27 @@
-import PopUp from "@/components/atom/popUp"
-import useTimings from "@/components/store/useTimings"
-import { memo, useCallback, useState } from "react"
-import { useParams } from "react-router-dom"
-import PaymentModal from "./paymentModal"
-import { CiFilter } from "react-icons/ci"
-import { RxCrossCircled } from "react-icons/rx"
-import type { IExistingPayments } from "@/components/types/businessData"
-import LoadingSpinner from "@/components/atom/loadingSpinner"
-import Pagination from "@/components/atom/pagination"
-import usePaginationStore from "@/components/store/usePaginationStore"
-import NoData from "@/assets/nodata.jpg"
-import { Button } from "@/components/ui/button"
-import { TableView } from "./TableView"
-import { Download, LayoutGrid, Table } from "lucide-react"
-import { useSalesStore } from "@/components/store/useSalesStore"
-import SalesFilters from "./SalesFiltes"
-import { useGetallSalesByGet } from "@/hooks/useSales"
-import SalesCards from "./SalesCards"
-import ConvertIntoCsv from "./ConvertIntoCsv"
+import PopUp from "@/components/atom/popUp";
+import useTimings from "@/components/store/useTimings";
+import { memo, useCallback, useState } from "react";
+import { useParams } from "react-router-dom";
+import PaymentModal from "./paymentModal";
+import { CiFilter } from "react-icons/ci";
+import { RxCrossCircled } from "react-icons/rx";
+import type { IExistingPayments } from "@/components/types/businessData";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
+import Pagination from "@/components/atom/pagination";
+import usePaginationStore from "@/components/store/usePaginationStore";
+import NoData from "@/assets/nodata.jpg";
+import { Button } from "@/components/ui/button";
+import { TableView } from "./TableView";
+import { Download, LayoutGrid, Table } from "lucide-react";
+import { useSalesStore } from "@/components/store/useSalesStore";
+import SalesFilters from "./SalesFiltes";
+import { useGetallSalesByGet } from "@/hooks/useSales";
+import SalesCards from "./SalesCards";
+import ConvertIntoCsv from "./ConvertIntoCsv";
 
 const MemoPaymentSales = () => {
-  const params = useParams()
-  const { timeStampStart, timeStampEnd, selectedRange } = useTimings()
+  const params = useParams();
+  const { timeStampStart, timeStampEnd, selectedRange } = useTimings();
   const {
     open,
     setOpen,
@@ -36,7 +36,7 @@ const MemoPaymentSales = () => {
     selectedFilters,
     setSelectedFilters,
     downloadCsv,
-    setDownloadCsv
+    setDownloadCsv,
   } = useSalesStore((s) => ({
     open: s.open,
     setOpen: s.setOpen,
@@ -51,14 +51,14 @@ const MemoPaymentSales = () => {
     selectedFilters: s.selectedFilters,
     setSelectedFilters: s.setSelectedFilters,
     downloadCsv: s.downloadCsv,
-    setDownloadCsv: s.setDownloadCsv
-  }))
-  const businessId = params?.businessId
-  const [currentSalesIndex, setCurrentSalesIndex] = useState(0)
+    setDownloadCsv: s.setDownloadCsv,
+  }));
+  const businessId = params?.businessId;
+  const [currentSalesIndex, setCurrentSalesIndex] = useState(0);
 
   const { pageNumber } = usePaginationStore((s) => ({
     pageNumber: s.pageNumber,
-  }))
+  }));
 
   const { isLoading } = useGetallSalesByGet({
     businessId: businessId || "",
@@ -66,29 +66,29 @@ const MemoPaymentSales = () => {
     from: timeStampStart.toString(),
     to: timeStampEnd.toString(),
     appliedFilters: selectedFilters,
-  })
+  });
 
   const closeModel = useCallback(() => {
-    setOpen(false)
-  }, [])
+    setOpen(false);
+  }, []);
 
   const openModel = useCallback(
     (data: IExistingPayments) => {
-      setOpen(true)
-      setSalesData(data)
-      const index = historyData.findIndex((item) => item._id === data._id)
-      setCurrentSalesIndex(index >= 0 ? index : 0)
+      setOpen(true);
+      setSalesData(data);
+      const index = historyData.findIndex((item) => item._id === data._id);
+      setCurrentSalesIndex(index >= 0 ? index : 0);
     },
     [historyData],
-  )
+  );
 
   const handleNavigate = useCallback(
     (newIndex: number) => {
-      setCurrentSalesIndex(newIndex)
-      setSalesData(historyData[newIndex])
+      setCurrentSalesIndex(newIndex);
+      setSalesData(historyData[newIndex]);
     },
     [historyData],
-  )
+  );
 
   const removeSingleFilter = useCallback(
     (key: string, value: string) => {
@@ -99,17 +99,15 @@ const MemoPaymentSales = () => {
               return {
                 ...filter,
                 value: filter.value.filter((v) => v !== value),
-              }
+              };
             }
-            return filter
+            return filter;
           })
           .filter((filter) => filter.value.length > 0),
-      )
+      );
     },
     [selectedFilters],
-  )
-
-  console.log("Payment Sales", historyData, totalSales, selectedFilters)
+  );
 
   return (
     <main className="relative h-[100dvh]">
@@ -121,8 +119,12 @@ const MemoPaymentSales = () => {
             <div className="sales_payment_background_effect1" />
             <div className="sales_payment_background_effect2" />
             <div className="sales_payment_background_effect3" />
-            <div className="absolute capitalize opacity-50 left-6 top-6">{selectedRange} Sales</div>
-            <h1 className="absolute text-3xl left-6 top-12">₹ {totalSales?.toLocaleString("en-IN")}</h1>
+            <div className="absolute capitalize opacity-50 left-6 top-6">
+              {selectedRange} Sales
+            </div>
+            <h1 className="absolute text-3xl left-6 top-12">
+              ₹ {totalSales?.toLocaleString("en-IN")}
+            </h1>
             <p className="absolute bottom-6 left-6">
               <span className="opacity-50">Last Synced</span> recently
             </p>
@@ -145,12 +147,11 @@ const MemoPaymentSales = () => {
               <Table className="w-4 h-4 " />
             </Button>
             <Button
-              variant="outline"
+              variant="default"
               size="icon"
               onClick={() => setDownloadCsv(true)}
-              className="px-4 shrink-2 w-[5rem]"
+              className="px-4 shrink-2 w-[5rem] bg-blue-500"
             >
-
               <Download />
               Sales
             </Button>
@@ -160,7 +161,10 @@ const MemoPaymentSales = () => {
             {selectedFilters && selectedFilters.length > 0 && (
               <>
                 {selectedFilters.map((filter) => (
-                  <div key={filter.key} className="flex items-center space-x-2 flex-nowrap">
+                  <div
+                    key={filter.key}
+                    className="flex items-center space-x-2 flex-nowrap"
+                  >
                     {filter?.value?.map((value) => (
                       <Button
                         onClick={() => removeSingleFilter(filter.key, value)}
@@ -181,7 +185,11 @@ const MemoPaymentSales = () => {
               viewMode === "grid" ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {historyData.map((data) => (
-                    <SalesCards key={data?._id} data={data} openModel={openModel} />
+                    <SalesCards
+                      key={data?._id}
+                      data={data}
+                      openModel={openModel}
+                    />
                   ))}
                 </div>
               ) : (
@@ -189,8 +197,14 @@ const MemoPaymentSales = () => {
               )
             ) : (
               <div className="flex flex-col items-center justify-center h-[50vh] mt-8">
-                <img src={NoData || "/placeholder.svg"} alt="No Data Found" className="w-1/2 h-auto max-w-xs" />
-                <p className="mt-4 text-lg font-medium text-muted-foreground">No Data Found</p>
+                <img
+                  src={NoData || "/placeholder.svg"}
+                  alt="No Data Found"
+                  className="w-1/2 h-auto max-w-xs"
+                />
+                <p className="mt-4 text-lg font-medium text-muted-foreground">
+                  No Data Found
+                </p>
               </div>
             )}
           </section>
@@ -198,7 +212,13 @@ const MemoPaymentSales = () => {
       )}
       <Pagination dataLength={historyData?.length || 1} />
       {open && (
-        <PopUp height="h-[100dvh] lg:h-[80dvh]" hide width="w-[30rem]" onClose={closeModel} show={open}>
+        <PopUp
+          height="h-[100dvh] lg:h-[80dvh]"
+          hide
+          width="w-[30rem]"
+          onClose={closeModel}
+          show={open}
+        >
           <PaymentModal
             salesData={salesData}
             onClose={closeModel}
@@ -220,24 +240,21 @@ const MemoPaymentSales = () => {
           <SalesFilters />
         </PopUp>
       )}
-      {
-        downloadCsv && (
-          <PopUp
-            height="h-[40rem] lg:h-[35rem]"
-            width="w-[30rem] lg:w-[40rem]"
-            onClose={() => setDownloadCsv(false)}
-            show={downloadCsv}
-            rightTopBack
-            hide
-          >
-            <ConvertIntoCsv />
-          </PopUp>
-        )
-      }
+      {downloadCsv && (
+        <PopUp
+          height="h-[40rem] lg:h-[35rem]"
+          width="w-[30rem] lg:w-[40rem]"
+          onClose={() => setDownloadCsv(false)}
+          show={downloadCsv}
+          rightTopBack
+          hide
+        >
+          <ConvertIntoCsv />
+        </PopUp>
+      )}
     </main>
-  )
-}
+  );
+};
 
-const PaymentSales = memo(MemoPaymentSales)
-export default PaymentSales
-
+const PaymentSales = memo(MemoPaymentSales);
+export default PaymentSales;

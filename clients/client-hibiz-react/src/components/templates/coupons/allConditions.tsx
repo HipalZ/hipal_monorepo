@@ -57,7 +57,7 @@ const MemoAllConditions = () => {
     }
 
     if (dayRestriction) {
-      if (!customDays || customDays.length === 0) {
+      if (!customDays || customDays?.length === 0) {
         toast.error("Please select at least one day for day restriction.");
         return;
       }

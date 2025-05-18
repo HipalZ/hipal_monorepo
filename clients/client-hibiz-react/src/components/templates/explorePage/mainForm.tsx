@@ -38,7 +38,7 @@ const UniquelyYoursSection = lazy(
 const MemoMainForm = () => {
   const { checkValidations } = useCheckValidations();
   const cropperRef = useRef<CropperRef>(null);
-  const outletInfo = useBusinessData((s)=>s.outletInfo);
+  const outletInfo = useBusinessData((s) => s.outletInfo);
   const {
     bizInfo,
     showUniquePopUp,
@@ -55,13 +55,11 @@ const MemoMainForm = () => {
     setShowUniquePopUp: s.setShowUniquePopUp,
   }));
 
-  const {setIsLoading} = useExploreTemp((s) => ({
+  const { setIsLoading } = useExploreTemp((s) => ({
     setIsLoading: s.setIsLoading,
   }));
 
-  const {
-    socialMediaLinks,
-  } = useExploreTemp((s) => ({
+  const { socialMediaLinks } = useExploreTemp((s) => ({
     socialMediaLinks: s.socialMediaLinks,
   }));
 
@@ -98,7 +96,7 @@ const MemoMainForm = () => {
     }));
 
     const payload: IBizPayload = {
-      businessId : businessId || hotelId,
+      businessId: businessId || hotelId,
       logoUrl: logoExplore,
       specialBannerUrl: bannerExplore,
       endBannerUrl: footerExplore,
@@ -137,8 +135,8 @@ const MemoMainForm = () => {
       const outletInfoData = await outletInfo.json();
       if (outletInfo.status === 200) {
         toast.success("Data saved successfully");
-        if(businessId) navigate(`/app/business/${businessId}/explorePage`);
-        if(hotelId) navigate(`/app/hotel/${hotelId}/website-display`);
+        if (businessId) navigate(`/app/business/${businessId}/explorePage`);
+        if (hotelId) navigate(`/app/hotel/${hotelId}/website-display`);
       } else if (outletInfo.status === 400) {
         showErrorToasts(outletInfoData?.error);
       }
@@ -151,8 +149,10 @@ const MemoMainForm = () => {
       <ExplorePageTopSection />
       <br />
       <BannerSection />
-      {outletInfo?.outLetType !=="HOTEL" && <UniquelyYoursSection />}
-      <FooterSection />
+      {outletInfo?.outLetType !== "HOTEL" && !outletInfo?.isPosEnabled && (
+        <UniquelyYoursSection />
+      )}
+      {outletInfo?.outLetType === "HOTEL" ? <FooterSection /> : null}
       <SocialMediaLinks />
       <button type="submit" className="cursor-pointer bottom_btn">
         Save

@@ -24,6 +24,7 @@ export interface ILiteVersionCardButton {
 
 export const getButtons = (
   outletType: string,
+  isPosEnabled: boolean,
 ): { [key: string]: ILiteVersionCardButton[] } => ({
   management: [
     {
@@ -128,12 +129,16 @@ export const getButtons = (
       description: "Manage your WhatsApp",
       navigateTo: "whatzapp",
     },
-    {
-      image: Analytics,
-      text: "Analytics",
-      description: "Get insights of your business",
-      navigateTo: "analytics",
-    },
+    ...(!isPosEnabled
+      ? [
+          {
+            image: Analytics,
+            text: "Analytics",
+            description: "Get insights of your business",
+            navigateTo: "analytics",
+          },
+        ]
+      : []),
   ],
 });
 

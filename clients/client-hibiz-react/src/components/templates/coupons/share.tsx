@@ -120,7 +120,7 @@ const MemoShare = () => {
     }
 
     const availability = {
-      when: customDays.length > 0 ? "custom" : "allthetime",
+      when: customDays?.length > 0 ? "custom" : "allthetime",
       customDays: customDays,
       startTime: startTime,
       endTime: extendedEndTime > 0 ? extendedEndTime : endTime,

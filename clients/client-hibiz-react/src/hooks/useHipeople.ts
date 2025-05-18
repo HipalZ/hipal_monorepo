@@ -381,6 +381,7 @@ export const useRemoveTag = () => {
         tagId: selectedDeleteTagId,
         userId: userId || selectedDeleteTagId,
       },
+      josn: {},
     });
     const data = await response.json();
     return data?.data;
@@ -592,6 +593,7 @@ export const useDeleteNotes = () => {
       param: {
         noteId: selectedDeleteNoteId,
       },
+      json: {},
     });
     const data = await response.json();
     return data?.data;
