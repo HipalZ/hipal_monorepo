@@ -1,14 +1,18 @@
-import { businessApis } from '@/apis/explore';
-import type { BusinessDetails, IBannerPayload, IBusinessData } from '@/components/types/businessData';
-import { apiRpc } from '@hi/common';
-import { Suspense } from 'react'
-import dynamic from 'next/dynamic';
-import SkeletonLoader from '@/components/atoms/loader/skeletonLoader';
+import { businessApis } from "@/apis/explore";
+import type {
+  BusinessDetails,
+  IBannerPayload,
+  IBusinessData,
+} from "@/components/types/businessData";
+import { apiRpc } from "@hi/common";
+import { Suspense } from "react";
+import dynamic from "next/dynamic";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { cn, defaultThemes } from "@/components/utils/helpers";
 
 // export const dynamic = "force-dynamic";
 // export const fetchCache = "force-no-store";
-export const revalidate = 300
+export const revalidate = 300;
 
 export async function generateMetadata({
   params,
@@ -69,69 +73,63 @@ export async function generateMetadata({
 
 const MainBackground = dynamic(
   () => import("@/components/organisms/explore/mainBackground"),
-  { loading: () => <SkeletonLoader height={200} /> }
+  { loading: () => <SkeletonLoader height={200} /> },
 );
 
 const HeroSection = dynamic(
   () => import("@/components/organisms/explore/heroSection"),
-  { loading: () => <SkeletonLoader height={200} /> }
+  { loading: () => <SkeletonLoader height={200} /> },
 );
 
-const SubLoyalty = dynamic(
-  () => import("@/components/atoms/subLoyalty"),
-  { loading: () => <SkeletonLoader height={200} /> }
-);
+const SubLoyalty = dynamic(() => import("@/components/atoms/subLoyalty"), {
+  loading: () => <SkeletonLoader height={200} />,
+});
 
-const Footer = dynamic(
-  () => import("@/components/molecules/footer"),
-  { loading: () => <SkeletonLoader height={200} /> }
-);
+const Footer = dynamic(() => import("@/components/molecules/footer"), {
+  loading: () => <SkeletonLoader height={200} />,
+});
 
 const AllCouponz = dynamic(
   () => import("@/components/templates/couponz/allCouponz"),
-  { loading: () => <SkeletonLoader height={200} /> }
+  { loading: () => <SkeletonLoader height={200} /> },
 );
 
 const EmblaCarousel2 = dynamic(
   () => import("@/components/atoms/emblaCarousel/emblaCarousel2"),
-  { loading: () => <SkeletonLoader height={200} /> }
+  { loading: () => <SkeletonLoader height={200} /> },
 );
 const BannerLayouts = dynamic(
   () => import("@/components/organisms/explore/bannerNewCards"),
-  { loading: () => <SkeletonLoader height={200} /> }
+  { loading: () => <SkeletonLoader height={200} /> },
 );
 
 const ServiceBottomButton = dynamic(
   () => import("@/components/molecules/bottomButton/ServiceButton"),
-  { loading: () => <SkeletonLoader height={200} /> }
+  { loading: () => <SkeletonLoader height={200} /> },
 );
 
 const BusinessImages = dynamic(() => import("@/components/ThumbnailImages"), {
   loading: () => <SkeletonLoader height={300} />,
-})
+});
 
 const Services = async ({
   params,
 }: {
   params: { businessId: string };
 }) => {
-
   const data = (await businessApis.all(params.businessId)) as IBusinessData;
 
   return (
     <Suspense fallback={<SkeletonLoader height={200} />}>
-
-
       <main className="relative w-full pb-16 overflow-hidden ">
         <MainBackground data={data} />
         <div className="z-10 w-full text-4xl shadow-xl bg-base-100">
           <HeroSection data={data} />
-
-          <SubLoyalty loyalty={data?.loyalty} />
-
           <AllCouponz />
 
-          {data?.banners?.some((banner: IBannerPayload) => banner?.isPublished) && (
+          {data?.banners?.some(
+            (banner: IBannerPayload) => banner?.isPublished,
+          ) && (
             <section className="w-full px-4 mt-8 rounded-3xl">
               <article className="relative bg-base-200 rounded-3xl">
                 <h2 className="py-4 mt-4 text-2xl font-bold text-center text-primary bg-base-200 rounded-t-3xl">
@@ -140,7 +138,7 @@ const Services = async ({
                 <article
                   className={cn(
                     data?.banners?.length === 1 ? "justify-center" : "",
-                    "h-[26rem] flex gap-4 bg-base-200 rounded-b-3xl flex-nowrap w-full"
+                    "h-[26rem] flex gap-4 bg-base-200 rounded-b-3xl flex-nowrap w-full",
                   )}
                 >
                   <EmblaCarousel2 customCarousel={data?.banners?.length === 1}>
@@ -151,7 +149,9 @@ const Services = async ({
                           key={index.toString()}
                           className={cn(
                             "embla__slide",
-                            data?.banners?.length === 1 ? "justify-start embla__container" : ""
+                            data?.banners?.length === 1
+                              ? "justify-start embla__container"
+                              : "",
                           )}
                         >
                           <div className="embla-_parallax">
@@ -187,6 +187,8 @@ const Services = async ({
               </article>
             </section>
           )}
+          <SubLoyalty loyalty={data?.loyalty} />
+
           <BusinessImages businessId={data.business?.businessId} />
           <Footer
             themes={data?.settings || defaultThemes}
@@ -197,7 +199,7 @@ const Services = async ({
         </div>
       </main>
     </Suspense>
-  )
-}
+  );
+};
 
-export default Services
+export default Services;

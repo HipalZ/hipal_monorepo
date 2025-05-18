@@ -75,15 +75,18 @@ const MemoOtherOutletCard = ({
                 !dishData.availability && "grayscale",
               )}
             />
-          ) : (
-            <OtherPlaceholderImg
-              onClick={openModal}
-              className="w-full h-full rounded-lg bg-muted"
-            />
-          )}
+          ) : null}
         </div>
       </div>
-      <div className="absolute mt-4 bottom-2.5 right-4">
+      <div
+        className={cn(
+          "absolute mt-4 right-4",
+          dishData.images &&
+            (dishData.images.length > 0 || dishData.images[0] === "")
+            ? "bottom-2.5"
+            : "bottom-1/2",
+        )}
+      >
         {dishData.availability ? (
           <DishQuantityButton dishData={dishData} />
         ) : (
