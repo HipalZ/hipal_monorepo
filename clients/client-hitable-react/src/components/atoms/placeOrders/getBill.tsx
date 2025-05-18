@@ -26,6 +26,7 @@ import { useError } from "@/components/store/useError";
 import AddCoinz from "./addCoinz";
 import { IoClose } from "react-icons/io5";
 import { useUpdateBill } from "@/components/hooks/useTableData";
+import useBusinessData from "@/components/store/useBusinessData";
 
 const MemoGetBill = () => {
   const { businessId } = useParams();
@@ -41,7 +42,7 @@ const MemoGetBill = () => {
   const [forceSettle, setForceSettle] = useState<boolean>(false);
   const [normalSettle, setNormalSettle] = useState<boolean>(false);
   const { updateBill } = useUpdateBill();
-
+  const existingLoyalty = useBusinessData((s) => s.existingLoyalty);
   const closeOrderModalHandler = useCallback(() => {
     setOpenOrderModal(false);
   }, [setOpenOrderModal]);
@@ -162,7 +163,7 @@ const MemoGetBill = () => {
   return (
     <>
       {!showqr && (
-        <Card className="max-w-md py-[5rem] md:py-[8rem] h-[90dvh] mx-auto mb-8 border border-none shadow-none">
+        <Card className="max-w-lg py-[5rem] md:py-[8rem] h-[90dvh] mx-auto mb-8 border border-none shadow-none">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Bill Summary</span>
@@ -231,19 +232,23 @@ const MemoGetBill = () => {
                 ))}
               </CollapsibleContent>
             </Collapsible>
+            <Separator className="my-4" />
 
-            <Separator className="my-4" />
-            <CardTitle className="flex items-center justify-between">
-              <span>Add customer coinz</span>
-              <Button
-                variant="default"
-                className="flex justify-end ml-auto"
-                onClick={triggerAddCoinz}
-              >
-                Add Coinz
-              </Button>
-            </CardTitle>
-            <Separator className="my-4" />
+            {existingLoyalty?.loyaltyId && (
+              <>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Use customer Loyalty</span>
+                  <Button
+                    variant="default"
+                    className="flex justify-end ml-auto"
+                    onClick={triggerAddCoinz}
+                  >
+                    Use Coinz
+                  </Button>
+                </CardTitle>
+                <Separator className="my-4" />
+              </>
+            )}
             <div className="mb-4 space-y-3">
               {[
                 [
@@ -340,7 +345,7 @@ const MemoGetBill = () => {
       )}
       {openAddCoinz && (
         <BottomPopUp
-          height="h-[90dvh] lg:h-[90dvh]"
+          height="h-[85dvh] lg:h-[85dvh]"
           width="w-[30rem]"
           show={openAddCoinz}
           onClose={() => setOpenAddCoinz(false)}

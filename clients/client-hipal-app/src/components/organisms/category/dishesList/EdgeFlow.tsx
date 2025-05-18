@@ -1,23 +1,23 @@
-"use client"
-import { type FC, memo, useEffect, useMemo, useRef } from "react"
-import { useActiveClass } from "@/components/store/useActiveClass"
-import type { CategoryType, DishType } from "@hi/db-models/src/validators"
-import { cn } from "@hi/common"
-import { InView } from "react-intersection-observer"
-import { useSearch } from "@/components/store/useSearch"
-import { useDishesStore } from "@/components/store/useDishesStore"
-import { _useAllBusiness } from "@/components/store/useAllBusiness"
+"use client";
+import { type FC, memo, useEffect, useMemo, useRef } from "react";
+import { useActiveClass } from "@/components/store/useActiveClass";
+import type { CategoryType, DishType } from "@hi/db-models/src/validators";
+import { cn } from "@hi/common";
+import { InView } from "react-intersection-observer";
+import { useSearch } from "@/components/store/useSearch";
+import { useDishesStore } from "@/components/store/useDishesStore";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 // Import motion from framer-motion at the top of the file
-import { motion } from "framer-motion"
-import Image from "next/image"
-import HorizontalCard from "@/components/atoms/card/horizontalCard"
-import GridDishCard from "@/components/atoms/card/GridDishCard"
+import { motion } from "framer-motion";
+import Image from "next/image";
+import HorizontalCard from "@/components/atoms/card/horizontalCard";
+import GridDishCard from "@/components/atoms/card/GridDishCard";
 
 interface EdgeFlowProps {
-  childCategory: CategoryType[]
-  isHorizontalCard: boolean
-  primaryColor?: string
-  secondaryColor?: string
+  childCategory: CategoryType[];
+  isHorizontalCard: boolean;
+  primaryColor?: string;
+  secondaryColor?: string;
 }
 
 // function DishRenderer({
@@ -32,16 +32,18 @@ const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
     alcohol: ["ALCOHOL"],
     nonalcohol: ["NON_ALCOHOL"],
     non_alcohol: ["NON_ALCOHOL"],
-  }
+  };
 
   if (isActiveDishType.toLowerCase() === "all") {
-    return visibleDishes
+    return visibleDishes;
   }
 
-  const allowedTypes = typeMap[isActiveDishType.toLowerCase()] || []
+  const allowedTypes = typeMap[isActiveDishType.toLowerCase()] || [];
 
-  return visibleDishes.filter((dish) => dish.dishTypes?.some((type) => allowedTypes.includes(type)))
-}
+  return visibleDishes.filter((dish) =>
+    dish.dishTypes?.some((type) => allowedTypes.includes(type)),
+  );
+};
 
 const EdgeFlow: FC<EdgeFlowProps> = ({
   childCategory,
@@ -49,7 +51,7 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
   primaryColor = "#ec4899",
   secondaryColor = "#fce7f3",
 }) => {
-  const { setDishes } = useDishesStore()
+  const { setDishes } = useDishesStore();
   const {
     isActiveDishType,
     isActiveCategory,
@@ -58,68 +60,81 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
     isActiveChildCategory,
     setActiveChildCategory,
     setObserverActive,
-  } = useActiveClass()
+  } = useActiveClass();
 
-  const visibleCategoriesRef = useRef<{ [key: string]: number }>({})
+  const visibleCategoriesRef = useRef<{ [key: string]: number }>({});
   const updateActiveCategory = () => {
-    if (!observerActive) return
+    if (!observerActive) return;
 
-    const entries = Object.entries(visibleCategoriesRef.current)
-    if (entries.length === 0) return
+    const entries = Object.entries(visibleCategoriesRef.current);
+    if (entries.length === 0) return;
 
     const closest = entries.reduce(
       (prev, curr) => {
-        const currOffset = curr[1]
+        const currOffset = curr[1];
         if (currOffset < prev.offset) {
-          return { id: curr[0], offset: currOffset }
+          return { id: curr[0], offset: currOffset };
         }
-        return prev
+        return prev;
       },
       { id: "", offset: Number.POSITIVE_INFINITY },
-    )
+    );
     if (closest.id && isActiveCategory !== closest.id) {
-      setActiveCategory(closest.id)
+      setActiveCategory(closest.id);
     }
-  }
+  };
 
   useEffect(() => {
     const handleHashChange = () => {
       if (isActiveChildCategory !== "") {
-        const element = document.getElementById(isActiveChildCategory)
+        const element = document.getElementById(isActiveChildCategory);
         if (element) {
-          element.style.scrollMarginTop = "300px"
+          element.style.scrollMarginTop = "300px";
           element.scrollIntoView({
             behavior: "smooth",
             block: "start",
-          })
+          });
         }
         setTimeout(() => {
-          setObserverActive(true)
-        }, 3000)
-        setActiveChildCategory("")
+          setObserverActive(true);
+        }, 3000);
+        setActiveChildCategory("");
       }
-      const active = observerActive ? "" : isActiveCategory
-      const element = document.getElementById(active)
+      const active = observerActive ? "" : isActiveCategory;
+      const element = document.getElementById(active);
       if (element) {
-        element.style.scrollMarginTop = "300px"
+        element.style.scrollMarginTop = "300px";
         element.scrollIntoView({
           behavior: "smooth",
           block: "start",
-        })
+        });
       }
-    }
-    handleHashChange()
-    window.addEventListener("hashchange", handleHashChange)
-    return () => window.removeEventListener("hashchange", handleHashChange)
-  }, [isActiveCategory, isActiveChildCategory, observerActive, setActiveChildCategory, setObserverActive])
+    };
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [
+    isActiveCategory,
+    isActiveChildCategory,
+    observerActive,
+    setActiveChildCategory,
+    setObserverActive,
+  ]);
 
   useMemo(() => {
-    const allDishes = childCategory.reduce((acc: DishType[], category: CategoryType) => {
-      return acc.concat(category.dishIds.filter((dish: DishType) => dish.visibility && !dish.isDeleted))
-    }, [])
-    setDishes(allDishes)
-    return allDishes
-  }, [childCategory, isActiveDishType, setDishes])
+    const allDishes = childCategory.reduce(
+      (acc: DishType[], category: CategoryType) => {
+        return acc.concat(
+          category.dishIds.filter(
+            (dish: DishType) => dish.visibility && !dish.isDeleted,
+          ),
+        );
+      },
+      [],
+    );
+    setDishes(allDishes);
+    return allDishes;
+  }, [childCategory, isActiveDishType, setDishes]);
 
   return (
     <div className="flex h-[calc(100vh-5rem)]">
@@ -131,13 +146,15 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
         {/* Add a container div that will ensure content fills the entire scrollable area */}
         <div className="flex flex-col min-h-full pb-20">
           {childCategory.map((category: CategoryType) => {
-            const isActive = category._id === isActiveCategory
+            const isActive = category._id === isActiveCategory;
 
             return (
               <button
                 id={`sidebar-category-${category._id}`}
                 key={category._id}
-                className={cn("w-full mb-2 p-2 text-xs font-medium flex flex-col items-center transition-colors")}
+                className={cn(
+                  "w-full mb-2 p-2 text-xs font-medium flex flex-col items-center transition-colors",
+                )}
                 style={{
                   color: isActive ? primaryColor : "black",
                   borderColor: isActive ? primaryColor : "transparent",
@@ -145,22 +162,26 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
                   borderWidth: "0 4px 0 0",
                 }}
                 onClick={() => {
-                  setObserverActive(false)
-                  setActiveCategory(category._id?.toString() || "")
-                  const element = document.getElementById(category._id?.toString() || "")
+                  setObserverActive(false);
+                  setActiveCategory(category._id?.toString() || "");
+                  const element = document.getElementById(
+                    category._id?.toString() || "",
+                  );
                   if (element) {
-                    element.style.scrollMarginTop = "110px"
-                    element.scrollIntoView({ behavior: "smooth" })
+                    element.style.scrollMarginTop = "110px";
+                    element.scrollIntoView({ behavior: "smooth" });
                   }
                   setTimeout(() => {
-                    setObserverActive(true)
-                  }, 1000)
+                    setObserverActive(true);
+                  }, 1000);
                 }}
               >
                 {category.coverImage ? (
                   <div
                     className="w-12 h-12 mb-1 overflow-hidden transition-colors border-2 rounded-full"
-                    style={{ borderColor: isActive ? primaryColor : "transparent" }}
+                    style={{
+                      borderColor: isActive ? primaryColor : "transparent",
+                    }}
                   >
                     <Image
                       src={category.coverImage || "/placeholder.svg"}
@@ -195,7 +216,7 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
                   {category.name}
                 </motion.span>
               </button>
-            )
+            );
           })}
           {/* Add a spacer div at the end to prevent clicking on empty space */}
           <div className="flex-grow pointer-events-none" />
@@ -205,10 +226,12 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
       {/* Right content area for dishes */}
       <div className="w-[80%] overflow-y-auto bg-white pb-[5rem] hide-scrollbar scroll-pt-16">
         {childCategory.map((category: CategoryType, index) => {
-          const visibleDishes = category.dishIds.filter((dish: DishType) => dish.visibility)
-          const dishesToRender = filterDishes(visibleDishes, isActiveDishType)
+          const visibleDishes = category.dishIds.filter(
+            (dish: DishType) => dish.visibility,
+          );
+          const dishesToRender = filterDishes(visibleDishes, isActiveDishType);
 
-          if (dishesToRender.length === 0) return null
+          if (dishesToRender.length === 0) return null;
 
           return (
             <section
@@ -220,21 +243,25 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
                 rootMargin="-150px 0px 0px 0px"
                 threshold={0.75}
                 onChange={(inView, entry) => {
-                  const categoryId = category._id?.toString()
+                  const categoryId = category._id?.toString();
                   if (categoryId) {
                     if (inView) {
-                      visibleCategoriesRef.current[categoryId] = Math.abs(entry.boundingClientRect.top - 300)
+                      visibleCategoriesRef.current[categoryId] = Math.abs(
+                        entry.boundingClientRect.top - 300,
+                      );
                     } else {
-                      delete visibleCategoriesRef.current[categoryId]
+                      delete visibleCategoriesRef.current[categoryId];
                     }
-                    updateActiveCategory()
+                    updateActiveCategory();
                   }
                 }}
               >
                 {({ ref }) => (
                   <div
                     ref={ref}
-                    className={cn("z-40 flex items-center space-x-4 justify-between h-[4rem] px-4 font-bold prose")}
+                    className={cn(
+                      "z-40 flex items-center space-x-4 justify-between h-[4rem] px-4 font-bold prose",
+                    )}
                     style={{
                       backgroundColor: `${secondaryColor}50`,
                       borderBottom: `1px solid ${primaryColor}20`,
@@ -277,11 +304,11 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
                 </div>
               )}
             </section>
-          )
+          );
         })}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default memo(EdgeFlow)
+export default memo(EdgeFlow);

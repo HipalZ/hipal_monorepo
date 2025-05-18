@@ -886,6 +886,53 @@ const businessesRouter = new Hono()
         error: false,
       });
     },
+  )
+  .put(
+    "/outletInfo/update/dishInfo/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+    zValidator("json", outLetInfoSchema.partial()),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+      const requestData = await c.req.json();
+      const updateOutletInfo = await OutLetInfo.findOneAndUpdate(
+        { businessId: businessId },
+        requestData,
+        { new: true, upsert: true },
+      );
+
+      if (!updateOutletInfo)
+        return respond(c, "outletInfo not found", true, 404, {});
+
+      await Business.findByIdAndUpdate(
+        requestData.businessId,
+        {
+          veg: requestData.veg,
+          nonVeg: requestData.nonVeg,
+          egg: requestData.egg,
+          vegan: requestData.vegan,
+          alcohol: requestData.alcohol,
+          nonAlcohol: requestData.nonAlcohol,
+          shareCart: requestData.shareCart,
+          addButton: requestData.addButton,
+          placeOrderButton: requestData.placeOrderButton,
+        },
+        { new: true },
+      );
+
+      return respond(
+        c,
+        "outlet dish Info updated",
+        false,
+        200,
+        updateOutletInfo,
+      );
+    },
   );
 
 export default businessesRouter;

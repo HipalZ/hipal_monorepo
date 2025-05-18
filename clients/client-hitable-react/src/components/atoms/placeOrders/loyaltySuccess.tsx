@@ -30,19 +30,23 @@ const LoyaltySuccess = (props) => {
           {userData?.name && (
             <>
               <p className="text-sm text-gray-500 font-medium">Customer Name</p>
-              <p className="text-sm text-black font-medium">{userData.name}</p>
+              <p className="text-sm text-black font-semibold">
+                {userData.name}
+              </p>
             </>
           )}
           {userData?.phone && (
             <>
               <p className="text-sm text-gray-500 font-medium">Phone Number</p>
-              <p className="text-sm text-black font-medium">{userData.phone}</p>
+              <p className="text-sm text-black font-semibold">
+                {userData.phone}
+              </p>
             </>
           )}
           {userData?.dob > 0 && (
             <>
               <p className="text-sm text-gray-500 font-medium">Birthday</p>
-              <p className="text-sm text-black font-medium">
+              <p className="text-sm text-black font-semibold">
                 {new Date(userData.dob).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "long",

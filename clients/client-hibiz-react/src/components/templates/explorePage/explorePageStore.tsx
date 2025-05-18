@@ -1,6 +1,7 @@
 import { apiRpc } from "@hi/common";
 import type { ICategory, IDish } from "@/components/types/businessData";
 import { BannerType } from "@/components/utils/bannerLayouts";
+import { useParams } from "react-router-dom";
 
 export const basicInfos = [
   {
@@ -99,14 +100,16 @@ export const combineAllDishes = async (categories: ICategory[]) => {
 
 //
 export const getAllCategoryData = async (businessId: string) => {
-   const {menuId} = useParams<{ menuId: string; businessId:string }>();
-  
-  const updatedQuery = menuId ? {
-    menuId: menuId,
-    businessId: businessId,
-  } : {
-    businessId: businessId,
-  }
+  const { menuId } = useParams<{ menuId: string; businessId: string }>();
+
+  const updatedQuery = menuId
+    ? {
+        menuId: menuId,
+        businessId: businessId,
+      }
+    : {
+        businessId: businessId,
+      };
   const categoryResponse = await apiRpc.categories.$get({
     query: updatedQuery,
   });

@@ -29,7 +29,7 @@ const MemoCardFiveLayout = () => {
         width={480}
         height={250}
         alt="Selected Card"
-        className=" w-[100%] max-w-[28rem]  rounded-2xl"
+        className=" w-[100%] max-w-[28rem] rounded-2xl"
       />
       {business?.logoUrl && (
         <Image
@@ -37,7 +37,7 @@ const MemoCardFiveLayout = () => {
           height={64}
           src={business?.logoUrl || hipalLogo}
           alt="logo"
-          className="absolute top-6 right-[2rem] filter invert-0 mix-blend-screen rounded-xl"
+          className="absolute top-6 right-[2rem] rounded-xl"
         />
       )}
       <figcaption className="absolute w-[80%] flex justify-between text-left text-white top-[11rem] leading-6 left-8">

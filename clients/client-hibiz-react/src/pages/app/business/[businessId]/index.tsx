@@ -16,7 +16,7 @@ const Business = () => {
   const { businessId } = useParams<{ businessId: string }>();
   const businessData = useBusinessData((s) => s.businessData);
   const outLetType = useBusinessData((s) => s?.outletInfo?.outLetType);
-
+  const isPosEnabled = useBusinessData((s) => s?.outletInfo?.isPosEnabled);
   const headerRef = useRef<HTMLElement>(null);
   const { scrollY } = useScroll();
 
@@ -62,7 +62,7 @@ const Business = () => {
     navigate("/app/business");
   }, [navigate]);
 
-  const buttons = getButtons(outLetType || "MENU");
+  const buttons = getButtons(outLetType || "MENU", isPosEnabled);
 
   return (
     <main className="relative">
@@ -72,11 +72,23 @@ const Business = () => {
         className="fixed top-0 z-10 w-full pb-4 linear_gradient_background"
         style={{ height: headerHeight }}
       >
-        <Header onBack={handleBack} leftIcon={<FaArrowLeft />} centerImage={HiPeopleLogo} />
-        <motion.div className="flex flex-col items-center justify-center pb-4 -mt-8 space-y-2" style={{ opacity: headerOpacity }}>
+        <Header
+          onBack={handleBack}
+          leftIcon={<FaArrowLeft />}
+          centerImage={HiPeopleLogo}
+        />
+        <motion.div
+          className="flex flex-col items-center justify-center pb-4 -mt-8 space-y-2"
+          style={{ opacity: headerOpacity }}
+        >
           {businessData?.logo && (
             <figure className="w-24 h-24 mt-[3vh] overflow-hidden rounded-full">
-              <img width={100} height={100} src={businessData.logo} alt="Business Logo" />
+              <img
+                width={100}
+                height={100}
+                src={businessData.logo}
+                alt="Business Logo"
+              />
             </figure>
           )}
         </motion.div>
@@ -101,7 +113,9 @@ const Business = () => {
           {/* Dynamically Render Service Categories */}
           {Object.keys(buttons).map((category) => (
             <section key={category} className="mb-6">
-              <h6 className="px-4 mt-4 text-2xl capitalize">{category.replace(/_/g, " ")}</h6>
+              <h6 className="px-4 mt-4 text-2xl capitalize">
+                {category.replace(/_/g, " ")}
+              </h6>
               <motion.section
                 className="grid grid-cols-2 gap-2 p-2 mx-auto sm:p-4 md:p-6 sm:gap-4 md:gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 max-w-7xl"
                 initial={{ opacity: 0, y: 20 }}
@@ -109,7 +123,8 @@ const Business = () => {
                 transition={{ staggerChildren: 0.1, delayChildren: 0.2 }}
               >
                 {buttons[category]?.map((item, index) => {
-                  const isDisabled = item.navigateTo !== "themes" && !businessData?.themeApplied;
+                  const isDisabled =
+                    item.navigateTo !== "themes" && !businessData?.themeApplied;
 
                   return (
                     <motion.article
@@ -118,15 +133,20 @@ const Business = () => {
                         "relative overflow-hidden rounded-2xl text-left aspect-square w-full",
                         "transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary",
                         {
-                          "bg-gray-400 cursor-not-allowed opacity-70": isDisabled,
-                        }
+                          "bg-gray-400 cursor-not-allowed opacity-70":
+                            isDisabled,
+                        },
                       )}
-                      onClick={() => !isDisabled && handleClick(item.navigateTo || "")}
+                      onClick={() =>
+                        !isDisabled && handleClick(item.navigateTo || "")
+                      }
                       whileHover={{ y: -8 }}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
-                      aria-label={`${item.text} - ${isDisabled ? "Activate after Themes" : item.description}`}
+                      aria-label={`${item.text} - ${
+                        isDisabled ? "Activate after Themes" : item.description
+                      }`}
                     >
                       <div className="absolute inset-0">
                         <div className="absolute inset-0 bg-gradient-to-tl from-[#7F66FE50] via-transparent to-transparent">
@@ -145,10 +165,15 @@ const Business = () => {
                           <h3 className="mr-2 text-sm font-semibold leading-tight truncate sm:text-base md:text-lg">
                             {item.text}
                           </h3>
-                          <FaArrowRight className="text-xs transform -rotate-45 sm:text-sm" aria-hidden="true" />
+                          <FaArrowRight
+                            className="text-xs transform -rotate-45 sm:text-sm"
+                            aria-hidden="true"
+                          />
                         </div>
                         <p className="text-xs sm:text-sm opacity-90 line-clamp-2">
-                          {isDisabled ? "Activate after Themes" : item.description}
+                          {isDisabled
+                            ? "Activate after Themes"
+                            : item.description}
                         </p>
                       </div>
                     </motion.article>

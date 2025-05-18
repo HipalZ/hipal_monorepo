@@ -35,8 +35,7 @@ const MemoCardThreeLayout = () => {
           height={64}
           src={business?.logoUrl || hipalLogo}
           alt="logo"
-          className="absolute top-6 left-6 filter invert-0 mix-blend-screen rounded-xl"
-          style={{ filter: "invert(100%) contrast(150%) brightness(110%)" }}
+          className="absolute top-6 left-6  rounded-xl"
         />
       )}
       <figcaption className="absolute w-[85%] flex justify-between text-left text-white top-[9rem] leading-6 left-8">

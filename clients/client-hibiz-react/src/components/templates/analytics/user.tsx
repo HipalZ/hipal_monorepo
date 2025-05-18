@@ -66,7 +66,6 @@ const MemoUserUnique: FC = () => {
   if (error || !data || data.err) {
     return (
       <div className="flex items-center justify-center h-64 text-red-500">
-        Error fetching user data:{" "}
         {error?.message || data?.message || "Unknown error"}
       </div>
     );

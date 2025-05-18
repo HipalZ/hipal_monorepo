@@ -25,13 +25,11 @@ const OfflineAlertCard = ({ offlineAlertData }: IOfflineProp) => {
   const {
     removeOfflineAlert,
     setViewData,
-    clickViewMore,
     setClickViewMore,
     removeOfflineCount,
   } = useLiteStore((s) => ({
     removeOfflineAlert: s.removeOfflineAlert,
     setViewData: s.setViewData,
-    clickViewMore: s.clickViewMore,
     setClickViewMore: s.setClickViewMore,
     removeOfflineCount: s.removeOfflineCount,
   }));
@@ -88,7 +86,7 @@ const OfflineAlertCard = ({ offlineAlertData }: IOfflineProp) => {
                     "relative overflow-hidden",
                     alert?.alertType === "WAITER"
                       ? "border-orange-200"
-                      : "border-blue-200"
+                      : "border-blue-200",
                   )}
                 >
                   <CardContent className="p-4">
@@ -120,7 +118,7 @@ const OfflineAlertCard = ({ offlineAlertData }: IOfflineProp) => {
                       "flex items-center justify-between p-4",
                       alert?.alertType === "WAITER"
                         ? "bg-orange-50"
-                        : "bg-blue-50"
+                        : "bg-blue-50",
                     )}
                   >
                     <Button

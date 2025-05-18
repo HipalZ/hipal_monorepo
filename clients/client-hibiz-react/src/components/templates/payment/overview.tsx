@@ -1,57 +1,57 @@
-import { memo } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import useTimings from "@/components/store/useTimings"
-import { apiRpc } from "@hi/common"
-import useBusinessData from "@/components/store/useBusinessData"
-import { InfoCard } from "./InfoCard"
-import { PieChart } from "./PieCharts"
-import { motion } from "framer-motion"
-import { DollarSign, CreditCard, Gift, AlertTriangle } from "lucide-react"
-import { BarChart } from "./BarChart"
+import { memo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import useTimings from "@/components/store/useTimings";
+import { apiRpc } from "@hi/common";
+import useBusinessData from "@/components/store/useBusinessData";
+import { InfoCard } from "./InfoCard";
+import { PieChart } from "./PieCharts";
+import { motion } from "framer-motion";
+import { DollarSign, CreditCard, Gift, AlertTriangle } from "lucide-react";
+import { BarChart } from "./BarChart";
 
 export interface SalesData {
-  overAllAmount: number
-  onlineSale: Record<string, number>
-  offlineSale: Record<string, number>
-  totalOrders: number
-  totalActiveTableValue: number
+  overAllAmount: number;
+  onlineSale: Record<string, number>;
+  offlineSale: Record<string, number>;
+  totalOrders: number;
+  totalActiveTableValue: number;
 }
 
 interface OtherAndWarningData {
   otherSale: {
-    totalTax: number
-    totalTip: number
-    totalServiceCharge: number
-  }
+    totalTax: number;
+    totalTip: number;
+    totalServiceCharge: number;
+  };
   warningSale: {
-    totalForceSettle: number
-    totalFreeSettle: number
-  }
+    totalForceSettle: number;
+    totalFreeSettle: number;
+  };
 }
 
 interface SalesExceptionData {
   exceptionSale: {
-    totalDuesReceived: number
-    totalDuesGiven: number
-    totalNpc: number
-    totalComplementary: number
-    totalDiscount: number
-  }
+    totalDuesReceived: number;
+    totalDuesGiven: number;
+    totalNpc: number;
+    totalComplementary: number;
+    totalDiscount: number;
+  };
   rewardSale: {
-    totalCoinsGiven: number
-    totalCoinUsed: number
-    totalCouponUsed: number
-  }
+    totalCoinsGiven: number;
+    totalCoinUsed: number;
+    totalCouponUsed: number;
+  };
 }
 
 const Overview = () => {
-  const business = useBusinessData((s) => s.businessData)
+  const business = useBusinessData((s) => s.businessData);
   const { timeStampStart, timeStampEnd } = useTimings((s) => ({
     timeStampStart: s.timeStampStart,
     timeStampEnd: s.timeStampEnd,
-  }))
+  }));
 
   const handleHistoryData = async (): Promise<SalesData> => {
     try {
@@ -62,17 +62,17 @@ const Overview = () => {
           to: timeStampEnd.toString(),
         },
         param: { id: business?._id || "" },
-      })
-      const data = (await response.json()).data as SalesData
+      });
+      const data = (await response.json()).data as SalesData;
       if (response.status === 200) {
-        return data
+        return data;
       }
-      throw new Error("Failed to fetch sales data")
+      throw new Error("Failed to fetch sales data");
     } catch (err) {
-      console.error(err)
-      throw err
+      console.error(err);
+      throw err;
     }
-  }
+  };
 
   const otherAndWarning = async (): Promise<OtherAndWarningData> => {
     const response = await apiRpc.payments.sale.other_and_warnings.$get({
@@ -81,10 +81,10 @@ const Overview = () => {
         from: timeStampStart.toString(),
         to: timeStampEnd.toString(),
       },
-    })
-    const data = (await response.json()).data as OtherAndWarningData
-    return data
-  }
+    });
+    const data = (await response.json()).data as OtherAndWarningData;
+    return data;
+  };
 
   const salesException = async (): Promise<SalesExceptionData> => {
     const response = await apiRpc.payments.sale.exception_and_rewards.$get({
@@ -93,10 +93,10 @@ const Overview = () => {
         from: timeStampStart.toString(),
         to: timeStampEnd.toString(),
       },
-    })
-    const data = (await response.json()).data as SalesExceptionData
-    return data
-  }
+    });
+    const data = (await response.json()).data as SalesExceptionData;
+    return data;
+  };
 
   const {
     data: salesData,
@@ -106,84 +106,94 @@ const Overview = () => {
     queryKey: ["salesData", business?._id, timeStampStart, timeStampEnd],
     queryFn: handleHistoryData,
     enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
-  })
+  });
 
   const { data: otherData } = useQuery<OtherAndWarningData, Error>({
     queryKey: ["otherAndWarning", business?._id, timeStampStart, timeStampEnd],
     queryFn: otherAndWarning,
     enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
-  })
+  });
 
   const { data: salesExceptionData } = useQuery<SalesExceptionData, Error>({
     queryKey: ["salesException", business?._id, timeStampStart, timeStampEnd],
     queryFn: salesException,
     enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
-  })
+  });
 
   if (isLoading) {
-    return <OverviewSkeleton />
+    return <OverviewSkeleton />;
   }
 
   if (error || !salesData) {
     return (
       <Card className="w-full h-[70vh] flex items-center justify-center">
         <CardContent>
-          <p className="text-center text-muted-foreground">No sales data found</p>
+          <p className="text-center text-muted-foreground">
+            No sales data found
+          </p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
-  const totalOfflineSale = Object.values(salesData.offlineSale).reduce((acc, curr) => acc + curr, 0)
+  const totalOfflineSale = Object.values(salesData.offlineSale).reduce(
+    (acc, curr) => acc + curr,
+    0,
+  );
   const totalExceptionAndReward = salesExceptionData
-    ? Object.values(salesExceptionData.exceptionSale).reduce((acc, curr) => acc + curr, 0) +
-    Object.values(salesExceptionData.rewardSale).reduce((acc, curr) => acc + curr, 0)
-    : 0
+    ? Object.values(salesExceptionData.exceptionSale).reduce(
+        (acc, curr) => acc + curr,
+        0,
+      ) +
+      Object.values(salesExceptionData.rewardSale).reduce(
+        (acc, curr) => acc + curr,
+        0,
+      )
+    : 0;
   const totalOtherAndWarning = otherData
     ? Object.values(otherData.otherSale).reduce((acc, curr) => acc + curr, 0) +
-    Object.values(otherData.warningSale).reduce((acc, curr) => acc + curr, 0)
-    : 0
+      Object.values(otherData.warningSale).reduce((acc, curr) => acc + curr, 0)
+    : 0;
 
   return (
     <div className="container mx-auto">
+      <section className="col-span-2 grid gap-4 px-4 mt-4 ">
+        <InfoCard
+          title="Total Sales"
+          value={salesData.overAllAmount}
+          icon={<DollarSign className="w-4 h-4" />}
+          gradient="from-blue-600 to-blue-200"
+        />
+      </section>
       <div className="grid grid-cols-2 gap-4 px-4 mt-4 md:grid-cols-4 lg:grid-cols-4">
-        <section className='col-span-2'>
+        <section className="col-span-2">
           <InfoCard
-            title="Total Sales"
-            value={salesData.overAllAmount}
-            icon={<DollarSign className="w-4 h-4" />}
-            gradient="from-blue-600 to-blue-200"
-          />
-        </section>
-        <section className='col-span-2'>
-
-          <InfoCard
-            title="Online Sales"
+            title="Hipalz Razorpay Sales"
             value={salesData.onlineSale.online}
             icon={<DollarSign className="w-4 h-4" />}
             gradient="from-black to-gray-100"
           />
         </section>
         <InfoCard
-          title="Offline Sales"
+          title="Pay To Captain Sales"
           value={totalOfflineSale}
           icon={<CreditCard className="w-4 h-4" />}
           gradient="from-green-600 to-green-100"
         />
         <InfoCard
-          title="Exception & Reward"
+          title="Loyalty & Rewards"
           value={totalExceptionAndReward}
           icon={<Gift className="w-4 h-4" />}
           gradient="from-purple-600 to-purple-100"
         />
         <InfoCard
-          title="Other & Warning"
+          title="Taxes & Service Charges"
           value={totalOtherAndWarning}
           icon={<AlertTriangle className="w-4 h-4" />}
           gradient="from-red-900 to-red-200"
         />
         <InfoCard
-          title="Total Active Table Value"
+          title="Running Tables"
           value={salesData.totalActiveTableValue}
           icon={<CreditCard className="w-4 h-4" />}
           gradient="from-blue-600 to-blue-200"
@@ -203,7 +213,9 @@ const Overview = () => {
             <CardContent className="p-4">
               <PieChart
                 data={[
-                  ...Object.entries(salesData.offlineSale).map(([mode, amount]) => ({ name: mode, value: amount })),
+                  ...Object.entries(salesData.offlineSale).map(
+                    ([mode, amount]) => ({ name: mode, value: amount }),
+                  ),
                 ]}
               />
             </CardContent>
@@ -217,13 +229,17 @@ const Overview = () => {
           >
             <Card>
               <CardHeader>
-                <CardTitle>Exception & Reward Sales</CardTitle>
+                <CardTitle>Loyalty & Rewards</CardTitle>
               </CardHeader>
               <CardContent>
                 <BarChart
                   data={[
-                    ...Object.entries(salesExceptionData.exceptionSale).map(([key, value]) => ({ name: key, value })),
-                    ...Object.entries(salesExceptionData.rewardSale).map(([key, value]) => ({ name: key, value })),
+                    ...Object.entries(salesExceptionData.exceptionSale).map(
+                      ([key, value]) => ({ name: key, value }),
+                    ),
+                    ...Object.entries(salesExceptionData.rewardSale).map(
+                      ([key, value]) => ({ name: key, value }),
+                    ),
                   ]}
                 />
               </CardContent>
@@ -239,13 +255,17 @@ const Overview = () => {
           >
             <Card>
               <CardHeader>
-                <CardTitle>Other & Warning Sales</CardTitle>
+                <CardTitle>Taxes & Service Charges</CardTitle>
               </CardHeader>
               <CardContent>
                 <BarChart
                   data={[
-                    ...Object.entries(otherData.otherSale).map(([key, value]) => ({ name: key, value })),
-                    ...Object.entries(otherData.warningSale).map(([key, value]) => ({ name: key, value })),
+                    ...Object.entries(otherData.otherSale).map(
+                      ([key, value]) => ({ name: key, value }),
+                    ),
+                    ...Object.entries(otherData.warningSale).map(
+                      ([key, value]) => ({ name: key, value }),
+                    ),
                   ]}
                 />
               </CardContent>
@@ -254,8 +274,8 @@ const Overview = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 const OverviewSkeleton = () => (
   <div className="container p-4 mx-auto space-y-6">
@@ -268,9 +288,8 @@ const OverviewSkeleton = () => (
       <Skeleton className="col-span-1 h-80 sm:col-span-2" />
     </div>
   </div>
-)
+);
 
-const MemoizedOverview = memo(Overview)
+const MemoizedOverview = memo(Overview);
 
-export default MemoizedOverview
-
+export default MemoizedOverview;

@@ -5,7 +5,6 @@ import { cn } from "@/components/utils/helper";
 import { apiRpc } from "@hi/common";
 import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
-import { LuArrowLeft } from "react-icons/lu";
 
 const Password = () => {
   const { step, setStep } = useLoginStore((state) => ({
@@ -15,10 +14,6 @@ const Password = () => {
   const { user } = useOwnerLogin();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-
-  const goBack = useCallback(() => {
-    setStep(step - 1);
-  }, [step]);
 
   const handlePassword = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
@@ -66,10 +61,6 @@ const Password = () => {
         src={Hand}
         alt="Hipal_hand"
       />
-      {/* <h3 onClick={goBack} className="flex items-center font-semibold leading-8 text-[#1C4EFF]">
-        <LuArrowLeft size={16} />
-        &nbsp; Back
-      </h3> */}
       <h3 className="mt-2 text-xl font-semibold leading-8">
         Security comes first*
       </h3>

@@ -4,6 +4,7 @@ import { useZonesAndTablesStore } from "@/components/store/useZonesAndTable";
 import { useScreenSize } from "@/hooks/useScreenSize";
 import { useFilters } from "@/components/store/useFilters";
 import SpinnerMemo from "@/components/atoms/loadingSpinner";
+import { NavItemTypesEnum } from "@/components/types/hiClientzData";
 
 // Lazy loaded components
 const HeaderAlerts = lazy(() => import("@/components/liteAlerts/headerAlerts"));
@@ -16,9 +17,13 @@ const NavItems = lazy(() => import("@/components/atoms/navItems"));
 const Zones = lazy(() => import("@/components/zones"));
 const BottomPopUp = lazy(() => import("@/components/atoms/universalPopup"));
 const ZoneFilters = lazy(() => import("@/components/zones/zoneFilters"));
-const CommonBottomButton = lazy(() => import("@/components/atoms/bottomButton"));
+const CommonBottomButton = lazy(
+  () => import("@/components/atoms/bottomButton"),
+);
 const EmptyTableList = lazy(() => import("@/components/tables"));
-const CallCaptanMainComp = lazy(() => import("@/components/liteAlerts/callWaiter"));
+const CallCaptanMainComp = lazy(
+  () => import("@/components/liteAlerts/callWaiter"),
+);
 
 const AlertsMemo = () => {
   const { selectedNavItem } = useLiteStore();
@@ -38,7 +43,7 @@ const AlertsMemo = () => {
         <HeaderAlerts />
       </Suspense>
       <section>
-        {selectedNavItem === "payments" && (
+        {selectedNavItem === NavItemTypesEnum.ALERTS && (
           <>
             {payFilter === "ALL" && (
               <Suspense fallback={<SpinnerMemo />}>
@@ -58,22 +63,22 @@ const AlertsMemo = () => {
             )}
           </>
         )}
-        {selectedNavItem === "Tables" && (
+        {selectedNavItem === NavItemTypesEnum.TABLES && (
           <Suspense fallback={<SpinnerMemo />}>
             <Zones />
           </Suspense>
         )}
-        {selectedNavItem === "history" && (
+        {selectedNavItem === NavItemTypesEnum.HISTORY && (
           <Suspense fallback={<SpinnerMemo />}>
             <History />
           </Suspense>
         )}
-        {selectedNavItem === "sales" && (
+        {selectedNavItem === NavItemTypesEnum.SALES && (
           <Suspense fallback={<SpinnerMemo />}>
             <SalesLite />
           </Suspense>
         )}
-        {selectedNavItem === "cart" && (
+        {selectedNavItem === NavItemTypesEnum.CART && (
           <Suspense fallback={<SpinnerMemo />}>
             <CartItems />
           </Suspense>
@@ -111,7 +116,7 @@ const AlertsMemo = () => {
             </Suspense>
           </nav>
         </div>
-        {selectedNavItem === "Tables" && (
+        {selectedNavItem === NavItemTypesEnum.TABLES && (
           <Suspense fallback={<SpinnerMemo />}>
             <CommonBottomButton
               fixed

@@ -254,12 +254,12 @@ const QuickFilter = () => {
       >
         {filters
           .filter(({ key }) => {
-            if (key === "veg") return outletInfo.veg;
-            if (key === "non_veg") return outletInfo.nonVeg;
-            if (key === "egg") return outletInfo.egg;
-            if (key === "vegan") return outletInfo.vegan;
-            if (key === "alcohol") return outletInfo.alcohol;
-            if (key === "nonalcohol") return outletInfo.nonAlcohol;
+            if (key === "veg") return outletInfo?.veg;
+            if (key === "non_veg") return outletInfo?.nonVeg;
+            if (key === "egg") return outletInfo?.egg;
+            if (key === "vegan") return outletInfo?.vegan;
+            if (key === "alcohol") return outletInfo?.alcohol;
+            if (key === "nonalcohol") return outletInfo?.nonAlcohol;
             return true;
           })
           .map(({ label, key, color, icon }) => (

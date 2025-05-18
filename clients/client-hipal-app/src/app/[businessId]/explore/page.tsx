@@ -1,83 +1,108 @@
-import { businessApis } from "@/apis/explore"
-import SkeletonLoader from "@/components/atoms/loader/skeletonLoader"
-import UniquelyDishes from "@/components/organisms/explore/uniquelyDishes"
-import type { BusinessDetails, IBannerPayload, IBusinessData } from "@/components/types/businessData"
-import { cn, defaultThemes } from "@/components/utils/helpers"
-import { apiRpc } from "@hi/common"
-import dynamic from "next/dynamic"
-import { Suspense } from "react"
+import { businessApis } from "@/apis/explore";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import UniquelyDishes from "@/components/organisms/explore/uniquelyDishes";
+import type {
+  BusinessDetails,
+  IBannerPayload,
+  IBusinessData,
+} from "@/components/types/businessData";
+import { cn, defaultThemes } from "@/components/utils/helpers";
+import { apiRpc } from "@hi/common";
+import dynamic from "next/dynamic";
+import { Suspense } from "react";
 
-export const revalidate = 300
+export const revalidate = 300;
 
 // Dynamic Imports with Skeleton Loaders
-const AllCouponz = dynamic(() => import("@/components/templates/couponz/allCouponz"), {
-  loading: () => <SkeletonLoader height={200} />,
-})
-const EmblaCarousel2 = dynamic(() => import("@/components/atoms/emblaCarousel/emblaCarousel2"), {
-  ssr: true,
-  loading: () => <SkeletonLoader height={200} />,
-})
-const BannerLayouts = dynamic(() => import("@/components/organisms/explore/bannerNewCards"), {
-  ssr: true,
-  loading: () => <SkeletonLoader height={200} />,
-})
-const MainBackground = dynamic(() => import("@/components/organisms/explore/mainBackground"), {
-  ssr: true,
-  loading: () => <SkeletonLoader height={200} />,
-})
-const HeroSection = dynamic(() => import("@/components/organisms/explore/heroSection"), {
-  loading: () => <SkeletonLoader height={200} />,
-})
+const AllCouponz = dynamic(
+  () => import("@/components/templates/couponz/allCouponz"),
+  {
+    loading: () => <SkeletonLoader height={200} />,
+  },
+);
+const EmblaCarousel2 = dynamic(
+  () => import("@/components/atoms/emblaCarousel/emblaCarousel2"),
+  {
+    ssr: true,
+    loading: () => <SkeletonLoader height={200} />,
+  },
+);
+const BannerLayouts = dynamic(
+  () => import("@/components/organisms/explore/bannerNewCards"),
+  {
+    ssr: true,
+    loading: () => <SkeletonLoader height={200} />,
+  },
+);
+const MainBackground = dynamic(
+  () => import("@/components/organisms/explore/mainBackground"),
+  {
+    ssr: true,
+    loading: () => <SkeletonLoader height={200} />,
+  },
+);
+const HeroSection = dynamic(
+  () => import("@/components/organisms/explore/heroSection"),
+  {
+    loading: () => <SkeletonLoader height={200} />,
+  },
+);
 const Footer = dynamic(() => import("@/components/molecules/footer"), {
   loading: () => <SkeletonLoader height={50} />,
   ssr: true,
-})
+});
 const SubLoyalty = dynamic(() => import("@/components/atoms/subLoyalty"), {
   loading: () => <SkeletonLoader height={50} />,
-})
-const BottomButton = dynamic(() => import("@/components/molecules/bottomButton"), {
-  loading: () => <SkeletonLoader height={50} />,
-})
-const BirthdayCard = dynamic(() => import("@/components/organisms/explore/birthday/birthdayCard"), {
-  loading: () => <SkeletonLoader height={200} />,
-})
+});
+const BottomButton = dynamic(
+  () => import("@/components/molecules/bottomButton"),
+  {
+    loading: () => <SkeletonLoader height={50} />,
+  },
+);
+const BirthdayCard = dynamic(
+  () => import("@/components/organisms/explore/birthday/birthdayCard"),
+  {
+    loading: () => <SkeletonLoader height={200} />,
+  },
+);
 const PageName = dynamic(() => import("@/components/molecules/pageName"), {
   loading: () => <SkeletonLoader height={50} />,
-})
+});
 
 const BusinessImages = dynamic(() => import("@/components/ThumbnailImages"), {
   loading: () => <SkeletonLoader height={300} />,
-})
+});
 
 export async function generateMetadata({
   params,
 }: {
-  params: { businessId: string }
+  params: { businessId: string };
 }) {
-  const objectIdRegex = /^[0-9a-fA-F]{24}$/
-  const { businessId } = params
+  const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+  const { businessId } = params;
 
   if (!objectIdRegex.test(businessId)) {
     try {
       const res = await apiRpc.businesses.n[":customLink"].$get({
         param: { customLink: businessId },
-      })
+      });
       const response = (await res.json()) as {
-        data: BusinessDetails
-        message: string
-        error: boolean
-      }
+        data: BusinessDetails;
+        message: string;
+        error: boolean;
+      };
 
-      const businessData = response?.data
+      const businessData = response?.data;
       if (!businessData) {
         return {
           title: "Explore",
           description: "Explore page for businesses",
-        }
+        };
       }
 
-      const { name, description, logoUrl } = businessData
-      const metaDescription = description || "Explore our business offerings!"
+      const { name, description, logoUrl } = businessData;
+      const metaDescription = description || "Explore our business offerings!";
 
       return {
         title: name,
@@ -98,33 +123,36 @@ export async function generateMetadata({
           ],
           type: "website",
         },
-      }
+      };
     } catch (error) {
-      console.error("Error fetching business metadata:", error)
+      console.error("Error fetching business metadata:", error);
     }
   }
 
   return {
     title: "Explore",
     description: "Explore page for businesses",
-  }
+  };
 }
 
 export default async function Explore({
   params,
 }: {
-  params: { businessId: string }
+  params: { businessId: string };
 }) {
-  const data = (await businessApis.all(params.businessId)) as IBusinessData
+  const data = (await businessApis.all(params.businessId)) as IBusinessData;
 
   // Check if banners exist and are published
-  const hasPublishedBanners = data?.banners?.some((banner: IBannerPayload) => banner?.isPublished)
+  const hasPublishedBanners = data?.banners?.some(
+    (banner: IBannerPayload) => banner?.isPublished,
+  );
 
   // Check if unique dishes exist
-  const hasUniqueDishes = data?.uniquelyDishes && data?.uniquelyDishes.length > 0
+  const hasUniqueDishes =
+    data?.uniquelyDishes && data?.uniquelyDishes.length > 0;
 
   // Check if banners length is exactly 1
-  const hasSingleBanner = data?.banners?.length === 1
+  const hasSingleBanner = data?.banners?.length === 1;
 
   return (
     <Suspense fallback={<SkeletonLoader height={200} />}>
@@ -133,8 +161,6 @@ export default async function Explore({
         <div className="z-10 w-full text-4xl shadow-xl bg-base-100">
           <BirthdayCard />
           <HeroSection data={data} />
-          <SubLoyalty loyalty={data?.loyalty} />
-
           <AllCouponz />
 
           {/* Banners Section */}
@@ -152,11 +178,16 @@ export default async function Explore({
                 >
                   <EmblaCarousel2 customCarousel={hasSingleBanner}>
                     {data?.banners?.map((banner, index) => {
-                      if (!banner?.isPublished) return null
+                      if (!banner?.isPublished) return null;
                       return (
                         <div
                           key={index.toString()}
-                          className={cn("embla__slide", hasSingleBanner ? "justify-start embla__container" : "")}
+                          className={cn(
+                            "embla__slide",
+                            hasSingleBanner
+                              ? "justify-start embla__container"
+                              : "",
+                          )}
                         >
                           <div className="embla-_parallax">
                             <div className={cn("embla-_parallax__layer")}>
@@ -184,7 +215,7 @@ export default async function Explore({
                             </div>
                           </div>
                         </div>
-                      )
+                      );
                     })}
                   </EmblaCarousel2>
                 </article>
@@ -198,6 +229,7 @@ export default async function Explore({
               <UniquelyDishes uniquelyDishes={data?.uniquelyDishes} />
             </div>
           )}
+          <SubLoyalty loyalty={data?.loyalty} />
 
           <BusinessImages businessId={data.business?.businessId} />
 
@@ -211,5 +243,5 @@ export default async function Explore({
         <BottomButton selected={"home"} />
       </main>
     </Suspense>
-  )
+  );
 }

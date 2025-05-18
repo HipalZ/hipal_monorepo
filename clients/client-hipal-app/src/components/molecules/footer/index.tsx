@@ -1,7 +1,6 @@
 "use client";
 import type { IThemes } from "@/components/types/businessData";
-import { updateTheme } from "@/components/utils/themes";
-import { memo, useEffect } from "react";
+import { memo } from "react";
 import { FaTelegram } from "react-icons/fa";
 import {
   IoLogoFacebook,
@@ -28,12 +27,7 @@ const iconMapping: { [key: string]: JSX.Element } = {
 };
 
 const Footer = (props: IFooter) => {
-  const { themes, socialMediaLinks } = props;
-
-  useEffect(() => {
-    updateTheme(themes);
-  }, [themes]);
-
+  const { socialMediaLinks } = props;
   return (
     <section className="flex justify-center px-2 pb-12 mt-8 space-x-2">
       {socialMediaLinks

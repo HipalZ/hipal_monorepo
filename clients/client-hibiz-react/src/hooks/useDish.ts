@@ -11,21 +11,24 @@ import useMenuPageStore from "@/components/store/useMenuStorage";
 import { useDishesStore } from "@/components/store/useDishesStore";
 
 export const useChildCategories = (dishStep: string) => {
-  const { businessId ,menuId} = useParams<{ businessId: string;menuId:string }>();
+  const { businessId, menuId } = useParams<{
+    businessId: string;
+    menuId: string;
+  }>();
 
-  const updatedQuery = menuId ?{
-    menuId: menuId,
-    businessId: businessId,
-    child: "true",
-  } : {
-    businessId: businessId,
-    child: "true",
-  }
-  const getAllChildCategoryData = async (
-    businessId: string,
-  ): Promise<ICategory[]> => {
+  const updatedQuery = menuId
+    ? {
+        menuId: menuId,
+        businessId: businessId,
+        child: "true",
+      }
+    : {
+        businessId: businessId,
+        child: "true",
+      };
+  const getAllChildCategoryData = async (): Promise<ICategory[]> => {
     const categoryResponse = await apiRpc.categories.$get({
-      query:updatedQuery
+      query: updatedQuery,
     });
     const data = await categoryResponse.json();
     return data?.data as ICategory[];
@@ -37,7 +40,7 @@ export const useChildCategories = (dishStep: string) => {
       businessId,
       dishStep === "LINK_CATEGORY_STEP",
     ],
-    queryFn: () => getAllChildCategoryData(businessId ?? ""),
+    queryFn: getAllChildCategoryData,
     enabled: !!businessId && dishStep === "LINK_CATEGORY_STEP",
   });
 
@@ -45,7 +48,7 @@ export const useChildCategories = (dishStep: string) => {
 };
 
 export const useDishes = () => {
-  const params = useParams<{ businessId: string, menuId?: string }>();
+  const params = useParams<{ businessId: string; menuId?: string }>();
   const { setDishes } = useDishesStore((s) => ({
     setDishes: s.setDishes,
   }));
@@ -55,15 +58,15 @@ export const useDishes = () => {
 
   const updatedQuery = menuId
     ? {
-      menuId: menuId,
-      businessId: businessId,
-    }
+        menuId: menuId,
+        businessId: businessId,
+      }
     : {
-      businessId: businessId,
-    };
+        businessId: businessId,
+      };
 
   const getAllDishes = async (): Promise<DishType[]> => {
-    if (!businessId) return []
+    if (!businessId) return [];
     const dishResponse = await apiRpc.dishes.$get({
       query: updatedQuery,
     });
@@ -81,10 +84,8 @@ export const useDishes = () => {
   return { data, isLoading, isError, refetch };
 };
 
-
-
 export const useLinkedDishes = () => {
-  const params = useParams<{ businessId?: string, menuId?: string }>();
+  const params = useParams<{ businessId?: string; menuId?: string }>();
   const { setLinkedDishes, linkedDishes } = useMenuPageStore((s) => ({
     linkedDishes: s.linkedDishes,
     setLinkedDishes: s.setLinkedDishes,
@@ -95,16 +96,16 @@ export const useLinkedDishes = () => {
 
   const updatedQuery = menuId
     ? {
-      menuId: menuId,
-      businessId: businessId,
-    }
+        menuId: menuId,
+        businessId: businessId,
+      }
     : {
-      businessId: businessId,
-    };
+        businessId: businessId,
+      };
 
   const getAllLinkedDishes = async (): Promise<CategoryType[]> => {
     const categoryResponse = await apiRpc.categories.menu.$get({
-      query: updatedQuery
+      query: updatedQuery,
     });
     const data = await categoryResponse.json();
     setLinkedDishes(data?.data as CategoryType[]);
@@ -125,23 +126,23 @@ export const useLinkedDishes = () => {
 };
 
 export const useAddons = (dishStep: string) => {
-  const { businessId,menuId } = useParams<{ businessId?: string;menuId }>();
+  const { businessId, menuId } = useParams<{ businessId?: string; menuId }>();
   const { setAddons } = useMenuPageStore((s) => ({
     setAddons: s.setAddons,
   }));
 
   const updatedQuery = menuId
     ? {
-      menuId: menuId,
-      businessId: businessId,
-    }
+        menuId: menuId,
+        businessId: businessId,
+      }
     : {
-      businessId: businessId,
-    };
+        businessId: businessId,
+      };
 
   const getAllAddons = async (businessId: string): Promise<AddOnType[]> => {
     const addonResponse = await apiRpc.addons.$get({
-      query: updatedQuery
+      query: updatedQuery,
     });
     const data = await addonResponse.json();
     setAddons(data?.data as AddOnType[]);
@@ -192,6 +193,7 @@ export async function deleteDishData(id: string): Promise<any> {
     param: {
       id: id,
     },
+    json: {},
   });
   const data = await dishResponse.json();
   return { data, dishResponse };

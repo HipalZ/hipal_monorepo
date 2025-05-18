@@ -378,6 +378,7 @@ export const useDeleteChats = () => {
           userId,
           ownerId,
         },
+        json: {},
       });
     },
     onSuccess: () => {

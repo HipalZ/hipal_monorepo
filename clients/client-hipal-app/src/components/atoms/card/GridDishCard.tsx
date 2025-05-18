@@ -162,7 +162,6 @@ const GridDishCard = ({
               {
                 text: "Go to cart",
                 onClick: openCart,
-                highlight: true,
               },
             ]}
           />

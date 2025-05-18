@@ -27,9 +27,18 @@ const BusinessesMemo = memo(() => {
         businessId: id,
       },
     });
+    const loyaltyResponse = await apiRpc.businesses[":businessId"].loyalty.$get(
+      {
+        param: {
+          businessId: id,
+        },
+      },
+    );
     const response = (await res.json()).data;
+    const loyalty = (await loyaltyResponse.json()).data;
     if (res.status === 200 || res.status === 201) {
       useBusinessData.getState().setOutletInfo(response);
+      useBusinessData.getState().setExistingLoyalty(loyalty);
     }
   };
 
@@ -70,42 +79,46 @@ const BusinessesMemo = memo(() => {
       <br />
       <h1 className="mx-5 mb-4 text-2xl text-black">You are added to</h1>
       <section className="mx-5 lg:grid lg:grid-cols-2">
-        {captainData?.customRole ? captainData?.customRole?.map((biz) =>
-          <section
-            onClick={() => exploreBusiness(biz)}
-            onKeyDown={() => exploreBusiness(biz)}
-            key={biz?.businessId?._id}
-            className="my-4 flex h-[6rem] items-center justify-between rounded-2xl p-4"
-            style={{ backgroundColor: "#f2f2f2" }}
-          >
-            <article className="flex items-center">
-              <img
-                src={biz?.businessId?.logo}
-                alt="logo"
-                width={65}
-                height={65}
-                className="border border-black rounded-full border-1"
-              />
-              <div className="ml-4">
-                <h1 className="text-xl font-medium">
-                  {biz?.businessId?.businessName}
-                </h1>
-                <p
-                  title={biz?.businessId?.address}
-                  className="w-48 text-base font-medium truncate"
-                >
-                  {biz?.businessId?.address}
-                </p>
+        {captainData?.customRole ? (
+          captainData?.customRole?.map((biz) => (
+            <section
+              onClick={() => exploreBusiness(biz)}
+              onKeyDown={() => exploreBusiness(biz)}
+              key={biz?.businessId?._id}
+              className="my-4 flex h-[6rem] items-center justify-between rounded-2xl p-4"
+              style={{ backgroundColor: "#f2f2f2" }}
+            >
+              <article className="flex items-center">
+                <img
+                  src={biz?.businessId?.logo}
+                  alt="logo"
+                  width={65}
+                  height={65}
+                  className="border border-black rounded-full border-1"
+                />
+                <div className="ml-4">
+                  <h1 className="text-xl font-medium">
+                    {biz?.businessId?.businessName}
+                  </h1>
+                  <p
+                    title={biz?.businessId?.address}
+                    className="w-48 text-base font-medium truncate"
+                  >
+                    {biz?.businessId?.address}
+                  </p>
+                </div>
+              </article>
+              <div>
+                <img
+                  src={biz.bookMark ? bookmarkAfter : bookmarkBefore}
+                  alt="bookmark"
+                />
               </div>
-            </article>
-            <div>
-              <img
-                src={biz.bookMark ? bookmarkAfter : bookmarkBefore}
-                alt="bookmark"
-              />
-            </div>
-          </section>
-        ) : <center>No Business Found</center>}
+            </section>
+          ))
+        ) : (
+          <center>No Business Found</center>
+        )}
       </section>
     </main>
   );

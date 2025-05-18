@@ -1,7 +1,7 @@
 import { useOrderStore } from "@/components/store/useOrderData";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
-import { lazy, memo, useCallback, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -58,7 +58,7 @@ const MemoCustomerInformation = () => {
         </h2>
         <Button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+          className="flex items-center gap-2 bg-black"
         >
           <UserPlus className="w-4 h-4" />
           Add Customer
@@ -81,7 +81,7 @@ const MemoCustomerInformation = () => {
               key={customerInfo?._id || index}
               className="overflow-hidden w-[22rem]"
             >
-              <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-500">
+              <CardHeader className="bg-black">
                 <CardTitle className="flex items-center justify-between text-white">
                   <span className="flex items-center gap-2">
                     <User className="w-5 h-5" />
@@ -93,9 +93,9 @@ const MemoCustomerInformation = () => {
                 </CardTitle>
               </CardHeader>
 
-              <CardContent className="mt-4 space-y-4">
+              <CardContent className="mt-4 space-y-4 !px-4">
                 <div className="flex justify-between text-sm">
-                  <div className="flex items-center gap-2 text-yellow-600">
+                  <div className="flex items-center gap-2 text-purple-600">
                     <Coins className="w-4 h-4" />
                     <span>Coins: {customerInfo?.currentCoins}</span>
                   </div>

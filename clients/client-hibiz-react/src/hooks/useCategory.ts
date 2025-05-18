@@ -16,24 +16,26 @@ export const useParentCategories = () => {
     setCategories: state.setCategories,
   }));
 
-  const updatedQuery = menuId ? {
-    menuId: menuId,
-    businessId: businessData?._id,
-    parent: "true",
-  } : {
-    businessId: businessData?._id,
-    parent: "true",
-  }
+  const updatedQuery = menuId
+    ? {
+        menuId: menuId,
+        businessId: businessData?._id,
+        parent: "true",
+      }
+    : {
+        businessId: businessData?._id,
+        parent: "true",
+      };
 
   const getAllParentCategory = useCallback(async () => {
     if (!businessData?._id) return [];
     const res = await apiRpc.categories.$get({
-      query: updatedQuery
+      query: updatedQuery,
     });
     const data = (await res.json()).data as CategoryType[];
     setCategories(data);
     return data;
-  }, [businessData?._id,menuId]);
+  }, [businessData?._id, menuId]);
 
   const { data: categories, isLoading } = useQuery({
     queryKey: ["getAllParentCategory", businessData?._id],
@@ -51,19 +53,21 @@ export const useChildCategories = () => {
     setSubCategories: state.setSubCategories,
   }));
 
-  const updatedQuery = menuId ? {
-    menuId: menuId,
-    businessId: businessData?._id,
-    child: "true",
-  } : {
-    businessId: businessData?._id,
-    child: "true",
-  }
+  const updatedQuery = menuId
+    ? {
+        menuId: menuId,
+        businessId: businessData?._id,
+        child: "true",
+      }
+    : {
+        businessId: businessData?._id,
+        child: "true",
+      };
 
   const getAllChildCategory = useCallback(async () => {
     if (!businessData?._id) return [];
     const res = await apiRpc.categories.$get({
-      query: updatedQuery
+      query: updatedQuery,
     });
     const data = (await res.json()).data as CategoryType[];
     setSubCategories(data);
@@ -185,7 +189,10 @@ export const normalizeAndMapKeys = (
 
 export const useBulkUploadDishes = () => {
   const queryClient = useQueryClient();
-  const {businessId,menuId} = useParams<{ businessId: string; menuId: string }>();
+  const { businessId, menuId } = useParams<{
+    businessId: string;
+    menuId: string;
+  }>();
   const { setOpenMenu, resetStore } = useMenuPageStore((s) => ({
     setOpenMenu: s.setOpenMenu,
     resetStore: s.resetStore,
@@ -308,6 +315,7 @@ export const useDeleteCategory = () => {
         param: {
           id,
         },
+        json: {},
       });
       return res.json();
     },

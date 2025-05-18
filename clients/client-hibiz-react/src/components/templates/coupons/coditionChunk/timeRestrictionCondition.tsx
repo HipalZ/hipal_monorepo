@@ -113,7 +113,7 @@ const MemoTimeRestrictionCondition = () => {
             handleTimeChange={handleTimeChange}
             errorMessage={errorMessage}
           />
-          {customDays.length === 1 && (
+          {customDays?.length === 1 && (
             <div className="mt-4">
               <label className="flex items-center">
                 <input
