@@ -11,7 +11,6 @@ import Settings from "@/assets/services/setting.png";
 import Services from "@/assets/services/services.png";
 import Analytics from "@/assets/services/analytics.png";
 import Review from "@/assets/services/review.png";
-import POS from "@/assets/services/POS.png";
 import Zones from "@/assets/services/zones.png";
 import Events from "@/assets/services/events.jpg";
 import ImageGrid from "@/assets/services/ImageGrid.png";
@@ -79,12 +78,6 @@ export const getButtons = (
             text: "Menu",
             description: "Manage your menu",
             navigateTo: "select-menu",
-          },
-          {
-            image: POS,
-            text: "POS",
-            description: "Manage your POS",
-            navigateTo: "pos",
           },
         ]
       : [

@@ -1,34 +1,37 @@
-import { memo, useCallback, useMemo, useState } from "react"
-import type { DishType } from "@hi/db-models/src/validators"
-import { cn } from "@hi/common"
-import { Badge } from "@/components/ui/badge"
-import { getPrice } from "@/components/utils/helpers"
-import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton"
-import ShimmerImage from "../imageshimmer"
-import OtherPlaceholderImg from "../placeholder/othePlaceholder"
-import ItemDescriptionPopup from "../dishDescription/itemDescription"
-import OutletItemInfo from "../dishPopup/outletcard"
-import { useActiveClass } from "@/components/store/useActiveClass"
-import MemoReadMore from "../readMore"
+import { memo, useCallback, useMemo, useState } from "react";
+import type { DishType } from "@hi/db-models/src/validators";
+import { cn } from "@hi/common";
+import { Badge } from "@/components/ui/badge";
+import { getPrice } from "@/components/utils/helpers";
+import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton";
+import ShimmerImage from "../imageshimmer";
+import OtherPlaceholderImg from "../placeholder/othePlaceholder";
+import ItemDescriptionPopup from "../dishDescription/itemDescription";
+import OutletItemInfo from "../dishPopup/outletcard";
+import { useActiveClass } from "@/components/store/useActiveClass";
+import MemoReadMore from "../readMore";
 
 const MemoOtherOutletCard = ({
   dishData,
 }: {
-  dishData: DishType
+  dishData: DishType;
 }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const { isSelectedDish, setSelectedDish } = useActiveClass()
-  const price = useMemo(() => getPrice(dishData?.price || 0), [dishData?.price])
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { isSelectedDish, setSelectedDish } = useActiveClass();
+  const price = useMemo(
+    () => getPrice(dishData?.price || 0),
+    [dishData?.price],
+  );
 
   const openModal = useCallback(() => {
-    setSelectedDish(dishData)
-    setIsModalOpen(true)
-  }, [dishData, setSelectedDish])
+    setSelectedDish(dishData);
+    setIsModalOpen(true);
+  }, [dishData, setSelectedDish]);
 
   const closeModal = useCallback(() => {
-    setSelectedDish({} as DishType)
-    setIsModalOpen(false)
-  }, [setSelectedDish])
+    setSelectedDish({} as DishType);
+    setIsModalOpen(false);
+  }, [setSelectedDish]);
 
   return (
     <div className="relative pb-8 overflow-hidden border-b border-gray-200">
@@ -39,13 +42,20 @@ const MemoOtherOutletCard = ({
               {dishData.tags[0]}
             </Badge>
           )}
-          <h3 className="mb-1 text-lg font-semibold text-[#000000]">{dishData.name}</h3>
+          <h3 className="mb-1 text-lg font-semibold text-[#000000] space-grotesk-700">
+            {dishData.name}
+          </h3>
           {Number(price) > 1 && (
-            <p className="text-sm text-primary">₹ {Number(price).toLocaleString("en-IN")}</p>
+            <p className="text-sm text-primary">
+              ₹ {Number(price).toLocaleString("en-IN")}
+            </p>
           )}
           {dishData?.description && (
-            <div className="mt-2 text-xs leading-3 text-[#000000]">
-              <MemoReadMore className="font-semibold !opacity-40" text={dishData?.description || ""} />
+            <div className="mt-2 text-xs leading-3 text-[#000000] space-grotesk-700">
+              <MemoReadMore
+                className="font-semibold !opacity-40"
+                text={dishData?.description || ""}
+              />
             </div>
           )}
         </div>
@@ -60,10 +70,16 @@ const MemoOtherOutletCard = ({
               width={128}
               height={128}
               onClick={openModal}
-              className={cn("object-cover w-full h-full rounded-lg", !dishData.availability && "grayscale")}
+              className={cn(
+                "object-cover w-full h-full rounded-lg",
+                !dishData.availability && "grayscale",
+              )}
             />
           ) : (
-            <OtherPlaceholderImg onClick={openModal} className="w-full h-full rounded-lg bg-muted" />
+            <OtherPlaceholderImg
+              onClick={openModal}
+              className="w-full h-full rounded-lg bg-muted"
+            />
           )}
         </div>
       </div>
@@ -76,15 +92,18 @@ const MemoOtherOutletCard = ({
       </div>
 
       {isModalOpen && (
-        <ItemDescriptionPopup heading={isSelectedDish?.name} show={isModalOpen} onClose={closeModal}>
+        <ItemDescriptionPopup
+          heading={isSelectedDish?.name}
+          show={isModalOpen}
+          onClose={closeModal}
+        >
           <OutletItemInfo />
         </ItemDescriptionPopup>
       )}
     </div>
-  )
-}
+  );
+};
 
-const OtherOutletCard = memo(MemoOtherOutletCard)
+const OtherOutletCard = memo(MemoOtherOutletCard);
 
-export default OtherOutletCard
-
+export default OtherOutletCard;

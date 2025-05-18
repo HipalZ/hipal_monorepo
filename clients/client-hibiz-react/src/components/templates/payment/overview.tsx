@@ -168,26 +168,26 @@ const Overview = () => {
       <div className="grid grid-cols-2 gap-4 px-4 mt-4 md:grid-cols-4 lg:grid-cols-4">
         <section className="col-span-2">
           <InfoCard
-            title="Online Sales"
+            title="Hipalz Razorpay Sales"
             value={salesData.onlineSale.online}
             icon={<DollarSign className="w-4 h-4" />}
             gradient="from-black to-gray-100"
           />
         </section>
         <InfoCard
-          title="Offline Sales"
+          title="Pay To Captain Sales"
           value={totalOfflineSale}
           icon={<CreditCard className="w-4 h-4" />}
           gradient="from-green-600 to-green-100"
         />
         <InfoCard
-          title="Exception & Reward"
+          title="Loyalty & Rewards"
           value={totalExceptionAndReward}
           icon={<Gift className="w-4 h-4" />}
           gradient="from-purple-600 to-purple-100"
         />
         <InfoCard
-          title="Other & Warning"
+          title="Taxes & Service Charges"
           value={totalOtherAndWarning}
           icon={<AlertTriangle className="w-4 h-4" />}
           gradient="from-red-900 to-red-200"
@@ -229,7 +229,7 @@ const Overview = () => {
           >
             <Card>
               <CardHeader>
-                <CardTitle>Exception & Reward Sales</CardTitle>
+                <CardTitle>Loyalty & Rewards</CardTitle>
               </CardHeader>
               <CardContent>
                 <BarChart
@@ -255,7 +255,7 @@ const Overview = () => {
           >
             <Card>
               <CardHeader>
-                <CardTitle>Other & Warning Sales</CardTitle>
+                <CardTitle>Taxes & Service Charges</CardTitle>
               </CardHeader>
               <CardContent>
                 <BarChart
