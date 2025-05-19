@@ -1,5 +1,4 @@
 import MemoizedHeader from "@/components/molecules/header";
-import { FaArrowLeft } from "react-icons/fa";
 import DishStepOne from "./dishStepOne";
 import { memo, useCallback } from "react";
 import useMenuPageStore, { DishSteps } from "@/components/store/useMenuStorage";
@@ -106,10 +105,7 @@ const MemoCreateDish = () => {
   return (
     <>
       <header className="sticky top-0 z-10 w-full rounded-t-2xl bg-base-100">
-        <MemoizedHeader
-          title={handleHeader()}
-          onBack={goBack}
-        />
+        <MemoizedHeader title={handleHeader()} onBack={goBack} />
       </header>
       {dishStep === "DISH_STEP_1" && <DishStepOne />}
       {dishStep === "DISH_STEP_2" && <DishStepTwo />}
