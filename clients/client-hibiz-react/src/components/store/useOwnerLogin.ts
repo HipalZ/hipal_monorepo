@@ -1,7 +1,8 @@
-import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export interface User {
+  dob: number;
   name: string;
   email: string;
   phone: string;
@@ -41,18 +42,18 @@ export interface IUserLogin {
 export const useOwnerLogin = create(
   persist<IUserLogin>(
     (set) => ({
-      phoneNumber: '',
-      password: '',
-      businessId: '',
+      phoneNumber: "",
+      password: "",
+      businessId: "",
       isLogin: false,
       user: {
-        name: '',
-        email: '',
-        phone: '',
+        name: "",
+        email: "",
+        phone: "",
         role: [],
         customRole: [],
-        password: '',
-        _id: '',
+        password: "",
+        _id: "",
         accessControl: {
           dish: false,
           staff: false,
@@ -70,7 +71,7 @@ export const useOwnerLogin = create(
       setUser: (d: User) => set({ user: d }),
     }),
     {
-      name: 'ownerLogin',
+      name: "ownerLogin",
       storage: createJSONStorage(() => localStorage),
     },
   ),
