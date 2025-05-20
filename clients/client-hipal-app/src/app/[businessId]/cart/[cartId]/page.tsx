@@ -23,7 +23,6 @@ const CartPage = () => {
       },
     );
     const res = await response.json();
-    const themes = res.data?.theme;
     return res.data || {};
   };
 
@@ -92,6 +91,7 @@ const CartPage = () => {
 
       <CommonBottomButton
         fixed
+        maxWidth="30rem"
         buttons={[
           { text: "Explore more", onClick: goToExplore },
           {

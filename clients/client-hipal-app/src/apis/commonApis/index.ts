@@ -28,6 +28,16 @@ export async function fetchCommonData(
     } else {
       data["business"] = {} as BusinessDetails;
     }
+  } else {
+    const res = await apiRpc.businesses.get.Single[":businessId"].$get({
+      param: { businessId },
+    });
+    const response = (await res.json()) as unknown as {
+      data: IBusinessData;
+      message: string;
+      error: boolean;
+    };
+    data["business"] = response.data as unknown as BusinessDetails;
   }
 
   if (!bizId) {
@@ -46,16 +56,15 @@ export async function fetchCommonData(
 }
 
 export const getBusinessData = async (customLink: string) => {
-   
-  if(!customLink){
-    return  redirect("/");
+  if (!customLink) {
+    return redirect("/");
   }
   try {
     const res = await apiRpc.businesses.n[":customLink"].$get({
       param: { customLink },
     });
 
-    const response = await res.json() as unknown as {
+    const response = (await res.json()) as unknown as {
       data: BusinessDetails;
       message: string;
       error?: boolean;
@@ -76,15 +85,15 @@ export const getBusinessData = async (customLink: string) => {
     console.error("Error fetching business data:", error);
     redirect("/");
   }
-}
+};
 
 export const getMenuData = async (tableName: string, businessId: string) => {
   const response = await apiRpc.menu.fetch_table_menu.$get({
     query: {
       tableName: tableName,
-      businessId:businessId,
+      businessId: businessId,
     },
-  })
+  });
   const menuData = await response.json();
   if (response.status === 400) {
     console.error("Error fetching menu data:", menuData);
@@ -94,4 +103,4 @@ export const getMenuData = async (tableName: string, businessId: string) => {
     return menuData.data;
   }
   return null;
-}
+};

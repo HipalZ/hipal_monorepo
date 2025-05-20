@@ -2,14 +2,18 @@ import { memo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaChevronDown, FaChevronUp, FaUser, FaClock } from "react-icons/fa";
 import {
-  MdRestaurantMenu,
   MdLocalOffer,
   MdTableBar,
   MdAddIcCall,
+  MdOutlineCall,
+  MdCall,
+  MdAddCall,
 } from "react-icons/md";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import { useDeleteCart } from "@/components/hooks/useCartApi";
 import CreateBillButton from "./cartWithBillButton";
+import type { Cart } from "@/components/types/hiClientzData";
+import { format } from "date-fns";
 
 const MemoCartwithoutPos = () => {
   const { cartData, removeCart, setCartCount } = useLiteStore();
@@ -29,7 +33,7 @@ const MemoCartwithoutPos = () => {
   return (
     <>
       {cartData && cartData?.length > 0 ? (
-        cartData.map((cart) => (
+        cartData.map((cart: Cart) => (
           <motion.div
             key={cart._id}
             layout
@@ -51,19 +55,27 @@ const MemoCartwithoutPos = () => {
                 <p className="flex items-center mt-1 text-sm font-semibold opacity-50">
                   <FaUser className="mr-1" /> {cart?.userId?.name || "User"}
                 </p>
-                <p className="flex items-center mt-1 text-sm font-semibold opacity-50">
+                <p className="flex items-center mt-1 text-sm font-semibold opacity-50 underline underline-offset-2">
                   <MdAddIcCall className="mr-1" />{" "}
                   {cart?.userId?.phone || "User"}
+                  <a
+                    href={`tel:+91${cart?.userId?.phone}`}
+                    className="flex items-center rounded-full px-2 py-1"
+                  >
+                    <MdAddCall size={16} />
+                  </a>
                 </p>
               </div>
               <div className="text-right">
                 <div className="flex flex-col items-end mb-2 text-sm font-semibold opacity-80">
                   <p className="flex items-center">
-                    <FaClock className="mr-1" />
-                    {new Date(cart?.date).toLocaleDateString("en-In")}
+                    {cart?.date
+                      ? format(new Date(cart.date), "dd-MMM-yyyy")
+                      : ""}
                   </p>
                   <p className="flex items-center mt-1 opacity-50">
-                    {new Date(cart?.date).toLocaleTimeString()}
+                    <FaClock className="mr-1" />
+                    {cart?.date ? format(new Date(cart.date), "hh:mm a") : ""}
                   </p>
                 </div>
                 <motion.div
@@ -89,7 +101,7 @@ const MemoCartwithoutPos = () => {
                   className="px-4 overflow-hidden bg-gray-50"
                 >
                   <div className="pt-4 space-y-4">
-                    {cart?.cart?.map((item) => (
+                    {cart?.cart?.map((item, index) => (
                       <motion.div
                         key={item._id}
                         initial={{ opacity: 0, x: -20 }}
@@ -98,8 +110,8 @@ const MemoCartwithoutPos = () => {
                         className="p-4 bg-white rounded-lg shadow-md"
                       >
                         <h4 className="flex items-center text-lg font-bold text-gray-800">
-                          <MdRestaurantMenu className="mr-2 text-indigo-600" />
-                          {item?.dish?.name}
+                          {index + 1}
+                          {". "} {item?.dish?.name}
                         </h4>
                         {item?.portion?.name && (
                           <p className="flex items-center mt-2 text-sm text-gray-600">
@@ -133,7 +145,7 @@ const MemoCartwithoutPos = () => {
                     className="w-[100%] mt-4 mb-4 px-4 py-2 text-white bg-red-600 rounded-xl"
                     type="button"
                   >
-                    remove
+                    Remove
                   </button>
                 </motion.div>
               )}
