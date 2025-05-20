@@ -46,15 +46,26 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
     }
 
     // Map only name and phone from peopleData
-    const csvData = peopleData.map((user) => ({
-      name: user?.userId?.name || "N/A",
-      phone: user?.userId?.phone || "N/A",
-    }));
+    const csvData = peopleData.map((user) => {
+      const dobRaw = user?.userId?.dob;
+      let dobFormatted = "0";
+      if (dobRaw) {
+        const date = new Date(dobRaw);
+        if (!Number.isNaN(date.getTime())) {
+          dobFormatted = date.toLocaleDateString();
+        }
+      }
+      return {
+        name: user?.userId?.name || "N/A",
+        phone: user?.userId?.phone || "N/A",
+        dob: dobFormatted,
+      };
+    });
 
     // Create CSV string
     const csvRows = [
-      ["Name", "Phone"], // CSV headers
-      ...csvData.map((row) => [row.name, row.phone]),
+      ["Name", "Phone", "DOB"], // CSV headers
+      ...csvData.map((row) => [row.name, row.phone, row.dob]),
     ]
       .map((row) => row.join(",")) // Join each row with commas
       .join("\n"); // Separate rows with newlines
