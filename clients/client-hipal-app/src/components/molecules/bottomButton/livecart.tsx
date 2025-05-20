@@ -19,7 +19,7 @@ const MemoLiveCart = () => {
   const { setShowCart, setCartPage, showCart } = useCart();
 
   const { tableNameMissing, setTableNameMissing, tableName } = useTableData();
-  const { isSearchActive, setIsSearchActive } = useSearch();
+  const { isSearchActive } = useSearch();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 
   const shineVariants = {
@@ -84,7 +84,7 @@ const MemoLiveCart = () => {
             </button>
             <button type="button" className="flex items-center gap-2">
               <span>
-                {outletInfo?.shareCart ? "Proceed to order" : "Continue"}
+                {outletInfo?.shareCart ? "Share Your Cart" : "Continue"}
               </span>
               <FaArrowRightLong />
             </button>

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { FaPlus, FaShareAlt, FaTimes } from "react-icons/fa";
+import { FaShareAlt, FaTimes } from "react-icons/fa";
 import QRCode from "react-qr-code";
 import useBusinessData from "@/components/store/useBusinessData";
+import { QrCodeIcon } from "lucide-react";
 
 type CreateBillButtonProps = {
   className?: string;
@@ -50,11 +51,11 @@ const CreateBillButton = ({ className = "" }: CreateBillButtonProps) => {
     <div className="fixed bottom-20 right-4 z-50">
       <motion.button
         onClick={handleCreateBill}
-        className={`flex items-center gap-2 px-4 py-2 text-white bg-indigo-600 rounded-lg shadow-md ${className}`}
+        className={`flex items-center gap-2 px-4 py-2 text-white bg-purple-500 rounded-lg shadow-md ${className}`}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        <FaPlus size={14} />
+        <QrCodeIcon size={14} />
         Create Bill
       </motion.button>
 
@@ -91,6 +92,7 @@ const CreateBillButton = ({ className = "" }: CreateBillButtonProps) => {
                     id="amount"
                     type="text"
                     value={amount}
+                    maxLength={6}
                     onChange={handleAmountChange}
                     placeholder="Enter amount"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"

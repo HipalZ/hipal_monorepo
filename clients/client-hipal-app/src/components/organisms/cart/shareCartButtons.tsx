@@ -1,15 +1,14 @@
-import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { useCartStore } from "@/components/store/useCartStore";
 import { useLogin } from "@/components/store/useLogin";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import { BUSINESS_KEYID } from "@/configs";
+import { BASE_URL, BUSINESS_KEYID } from "@/configs";
 import { apiRpc } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { useParams } from "next/navigation";
 import Script from "next/script";
 import { memo, useMemo, useState } from "react";
-import { FiBriefcase, FiShare, FiUsers } from "react-icons/fi";
+import { FaWhatsapp } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 const MemoShareCartButtons = () => {
@@ -50,7 +49,7 @@ const MemoShareCartButtons = () => {
 
       if (!res.err) {
         const newShareURL = `${BUSINESS_KEYID}${customLink}/cart/${res?.data?.cartID}`;
-        setShareState({ showOptions: true, url: newShareURL });
+        await shareCart(newShareURL);
       } else {
         toast.error(res.message || "Failed to create cart link");
       }
@@ -60,34 +59,19 @@ const MemoShareCartButtons = () => {
     }
   };
 
-  const shareCart = async (type: "friends" | "business") => {
-    if (!shareState.url) return;
+  const shareCart = async (urlOverride?: string) => {
+    const shareUrl = urlOverride || shareState.url;
+    if (!shareUrl) return;
+    const message = encodeURIComponent(
+      `Hi, I am interested in this item(s). Can I know more details?.\n\n *Customer Cart:* ${shareUrl}\n *Captain View (Internal Use):* ${BASE_URL}/${outletInfo?.businessId}/alerts`,
+    );
 
-    if (type === "friends") {
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: "Check out my cart",
-            text: "Here's the cart I want to share with you.",
-            url: shareState.url,
-          });
-        } catch (error) {
-          console.error("Error sharing:", error);
-        }
-      } else {
-        navigator.clipboard.writeText(shareState.url);
-        toast.success("Share URL copied to clipboard");
-      }
-    } else {
-      const message = encodeURIComponent(
-        `Hi, I am interested in this item. Can I know more details?\n*See the cart:* ${shareState.url}`,
-      );
-      const whatsappUrl = `https://wa.me/+91${outletInfo?.phone}?text=${message}`;
-      window.open(whatsappUrl, "_blank");
-    }
+    const whatsappUrl = `https://wa.me/+91${outletInfo?.phone}?text=${message}`;
+    window.open(whatsappUrl, "_blank");
 
-    setShareState({ ...shareState, showOptions: false });
+    setShareState({ showOptions: false, url: "" });
   };
+
   return (
     <>
       {sanitizedCart.map(({ dish }) => (
@@ -117,46 +101,11 @@ const MemoShareCartButtons = () => {
       <button
         onClick={generateCartLink}
         type="button"
-        className="fixed w-[92%] mx-4 py-3 rounded-full bg-[#000000] bottom-4 text-[#ffffff] flex items-center justify-center"
+        className="fixed bottom-4 mx-4 w-[92%] py-3 px-6 rounded-full bg-green-600 hover:bg-green-700 transition-colors duration-200 text-white text-lg font-medium flex items-center justify-center shadow-md gap-2"
       >
-        <FiShare className="mr-2 text-xl" />
-        Share
+        <span>Share in WhatsApp</span>
+        <FaWhatsapp size={22} />
       </button>
-      {shareState?.showOptions && (
-        <BottomPopUp
-          show={shareState.showOptions}
-          onClose={() => setShareState({ ...shareState, showOptions: false })}
-          height="40dvh"
-        >
-          <div className="p-4">
-            <div className="mb-4 text-xl font-semibold text-center text-[#000000]">
-              Share
-            </div>
-            <div className="flex justify-around">
-              <button
-                type="button"
-                onClick={() => shareCart("friends")}
-                className="flex flex-col items-center space-y-2"
-              >
-                <FiUsers className="text-4xl text-[#000000]" />
-                <span className="text-sm font-medium text-[#000000]">
-                  Share with Friends
-                </span>
-              </button>
-              <button
-                type="button"
-                onClick={() => shareCart("business")}
-                className="flex flex-col items-center space-y-2"
-              >
-                <FiBriefcase className="text-4xl text-[#000000]" />
-                <span className="text-sm font-medium text-[#000000]">
-                  Share with Business
-                </span>
-              </button>
-            </div>
-          </div>
-        </BottomPopUp>
-      )}
     </>
   );
 };
