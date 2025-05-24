@@ -40,7 +40,7 @@ export const useErrorHandling = () => {
 export const useGoNext = () => {
   const customLink = useParams()?.businessId as string;
   const { direction, isPayment, invoiceUrl, urlFrom } = useLogin();
-  const  tableName = useTableData(s=>s.tableName);
+  const tableName = useTableData((s) => s.tableName);
 
   const goNext = useCallback(() => {
     let newUrl = `/${customLink}/explore?pay=${isPayment}`;
@@ -65,7 +65,7 @@ export const useGoNext = () => {
           newUrl = urlFrom;
           break;
         case "payment":
-          newUrl = `/${customLink}/payment?pay=${isPayment}`;
+          newUrl = urlFrom;
           break;
         case "couponz":
           newUrl = urlFrom;
@@ -83,4 +83,3 @@ export const useGoNext = () => {
 
   return { goNext };
 };
-

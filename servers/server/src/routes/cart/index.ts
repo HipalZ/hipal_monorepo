@@ -275,7 +275,7 @@ const cartRouter = new Hono()
               token: obj.token,
               notification: {
                 title: "Please accept the order !!",
-                body: `T${body.tableName?.slice(-2)} `,
+                body: `${body.tableName?.slice(-2)} `,
               },
               android: {
                 notification: {

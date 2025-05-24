@@ -1,14 +1,7 @@
 import { memo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaChevronDown, FaChevronUp, FaUser, FaClock } from "react-icons/fa";
-import {
-  MdLocalOffer,
-  MdTableBar,
-  MdAddIcCall,
-  MdOutlineCall,
-  MdCall,
-  MdAddCall,
-} from "react-icons/md";
+import { MdLocalOffer, MdTableBar, MdAddCall } from "react-icons/md";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import { useDeleteCart } from "@/components/hooks/useCartApi";
 import CreateBillButton from "./cartWithBillButton";
@@ -55,16 +48,15 @@ const MemoCartwithoutPos = () => {
                 <p className="flex items-center mt-1 text-sm font-semibold opacity-50">
                   <FaUser className="mr-1" /> {cart?.userId?.name || "User"}
                 </p>
-                <p className="flex items-center mt-1 text-sm font-semibold opacity-50 underline underline-offset-2">
-                  <MdAddIcCall className="mr-1" />{" "}
-                  {cart?.userId?.phone || "User"}
-                  <a
-                    href={`tel:+91${cart?.userId?.phone}`}
-                    className="flex items-center rounded-full px-2 py-1"
-                  >
+                <a
+                  href={`tel:+91${cart?.userId?.phone}`}
+                  className="flex items-center mt-1 text-sm font-semibold opacity-50 underline underline-offset-2"
+                >
+                  <p className="-ml-2 flex items-center rounded-full px-2 py-1">
                     <MdAddCall size={16} />
-                  </a>
-                </p>
+                  </p>
+                  {cart?.userId?.phone || "User"}
+                </a>
               </div>
               <div className="text-right">
                 <div className="flex flex-col items-end mb-2 text-sm font-semibold opacity-80">
