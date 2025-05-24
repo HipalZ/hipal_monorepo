@@ -84,7 +84,7 @@ const MemoLiveCart = () => {
             </button>
             <button type="button" className="flex items-center gap-2">
               <span>
-                {outletInfo?.shareCart ? "Share Your Cart" : "Continue"}
+                {outletInfo?.shareCart ? "Proceed to order" : "Continue"}
               </span>
               <FaArrowRightLong />
             </button>

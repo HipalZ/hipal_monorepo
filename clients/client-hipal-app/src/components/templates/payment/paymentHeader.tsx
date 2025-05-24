@@ -2,12 +2,30 @@ import MemoPlaceholderImg from "@/components/atoms/placeholder";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { getRandomBlurImg } from "@/components/utils/images";
 import Image from "next/image";
-import React, { memo } from "react";
+import { memo, useEffect } from "react";
 import Sunrays from "@/assets/img/sunrays_white.png";
+import { usePathname, useSearchParams } from "next/navigation";
+import useTableData from "@/components/store/useTableData";
+import { useCart } from "@/components/store/useCart";
 
 const MemoPaymentHeader = () => {
+  const searchParams = useSearchParams();
+  const pathName = usePathname();
+  const tableName = searchParams?.get("tableName");
+  const setTableName = useTableData((state) => state.setTableName);
+  const setTableNameTimeStamp = useTableData((s) => s.setTableNameTimeStamp);
+  const resetCartStoreKeys = useCart((state) => state.resetCartStoreKeys);
+  const setShowCart = useCart((state) => state.setShowCart);
   const { businessDetails } = useBusinessDetails();
-
+  useEffect(() => {
+    if (tableName !== null) {
+      setTableName(tableName || "");
+      setShowCart(false);
+      resetCartStoreKeys();
+      const timeStamp = Date.now();
+      setTableNameTimeStamp(timeStamp);
+    }
+  }, [tableName, pathName, setTableName]);
   return (
     <center className="pt-2">
       <p className="mb-2 text-sm font-semibold">Paying:</p>
@@ -23,17 +41,21 @@ const MemoPaymentHeader = () => {
         </center>
       </section>
       <picture className="relative">
-        {businessDetails?.logoUrl ? <Image
-          src={businessDetails?.logoUrl}
-          height={50}
-          width={50}
-          quality={95}
-          objectFit="cover"
-          alt="logo-businessDetails"
-          className="object-center bg-white border rounded-full shadow-sm aspect-square"
-          placeholder="blur"
-          blurDataURL={getRandomBlurImg(100, 100)}
-        /> : <MemoPlaceholderImg />}
+        {businessDetails?.logoUrl ? (
+          <Image
+            src={businessDetails?.logoUrl}
+            height={50}
+            width={50}
+            quality={95}
+            objectFit="cover"
+            alt="logo-businessDetails"
+            className="object-center bg-white border rounded-full shadow-sm aspect-square"
+            placeholder="blur"
+            blurDataURL={getRandomBlurImg(100, 100)}
+          />
+        ) : (
+          <MemoPlaceholderImg />
+        )}
       </picture>
       <div
         className="relative"

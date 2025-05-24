@@ -50,8 +50,7 @@ const MemoCoinzRewardSection = () => {
   const { setApplyCouponz } = useCouponTemp((s) => ({
     setApplyCouponz: s.setApplyCouponz,
   }));
-  const { setShowCart, showCart } =
-    useCart();
+  const { setShowCart, showCart } = useCart();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const { availedCoupon, userCouponz } = useCouponz((s) => ({
     availedCoupon: s.availedCoupon,
@@ -59,7 +58,7 @@ const MemoCoinzRewardSection = () => {
   }));
   const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
   const { userCoinZ, setUrlFrom, userDetails } = useLogin();
-  const accessToken = useUserToken.getState().accessToken
+  const accessToken = useUserToken.getState().accessToken;
   const { loyaltySetting } = useLoyaltyData((s) => ({
     loyaltySetting: s.loyaltySetting,
   }));
@@ -83,9 +82,9 @@ const MemoCoinzRewardSection = () => {
 
   const openModal = useCallback(() => {
     if (!accessToken) {
-      setCheckLogin(true)
-      setUrlFrom(completeUrl)
-      return
+      setCheckLogin(true);
+      setUrlFrom(completeUrl);
+      return;
     }
     setIsModalOpen(true);
   }, [completeUrl, setCheckLogin, setUrlFrom, accessToken, setIsModalOpen]);
@@ -96,9 +95,9 @@ const MemoCoinzRewardSection = () => {
 
   const openCouponz = useCallback(() => {
     if (!accessToken) {
-      setCheckLogin(true)
-      setUrlFrom(completeUrl)
-      return
+      setCheckLogin(true);
+      setUrlFrom(completeUrl);
+      return;
     }
     setApplyCouponz(true);
   }, [setApplyCouponz, accessToken, completeUrl, setCheckLogin, setUrlFrom]);
@@ -161,7 +160,9 @@ const MemoCoinzRewardSection = () => {
                 <CardSection />
               </article>
               <article className="bg-[#FFFFFFD9] text-[#101010] absolute w-full h-[5rem] bottom-0 flex flex-col justify-center items-center rounded-b-xl">
-                {accessToken && userDetails?._id && <h1 className="mb-1 text-base">Coinz : {userCoinZ}</h1>}
+                {accessToken && userDetails?._id && (
+                  <h1 className="mb-1 text-base">Coinz : {userCoinZ}</h1>
+                )}
                 {claimedCoins > 0 && !billData?.couponId && (
                   <h1 className="text-sm">Coinz Applied: {claimedCoins}</h1>
                 )}
@@ -203,16 +204,21 @@ const MemoCoinzRewardSection = () => {
               onClick={openModal}
               onKeyDown={openModal}
             >
-              {outletInfo?.isPosEnabled ? <GameButton
-                text={cn(claimedCoins > 0 && !billData?.couponId ? "Applied" : "Use Coinz")}
-                hideShine={claimedCoins > 0 && !billData?.couponId || false}
-              />
-                :
+              {outletInfo?.isPosEnabled ? (
+                <GameButton
+                  text={cn(
+                    claimedCoins > 0 && !billData?.couponId
+                      ? "Applied"
+                      : "Use Coinz",
+                  )}
+                  hideShine={(claimedCoins > 0 && !billData?.couponId) || false}
+                />
+              ) : (
                 <GameButton
                   text={cn(claimedCoins > 0 ? "Applied" : "Use Coinz")}
                   hideShine={claimedCoins > 0 || false}
                 />
-              }
+              )}
             </article>
             <article
               onClick={openCouponz}
@@ -220,14 +226,18 @@ const MemoCoinzRewardSection = () => {
               className="relative flex items-center mr-4"
             >
               <GameButton
-                text={cn(claimCouponz > 0 || !!billData?.couponId ? "Applied" : "Use Couponz")}
+                text={cn(
+                  claimCouponz > 0 || !!billData?.couponId
+                    ? "Applied"
+                    : "Use Couponz",
+                )}
                 hideShine={claimCouponz > 0 || !!billData?.couponId || false}
               />
             </article>
           </section>
         </>
       ) : null}
-      {(editBillModal && !outletInfo?.isPosEnabled) && (
+      {editBillModal && !outletInfo?.isPosEnabled && (
         <BottomPopUp
           show={editBillModal}
           onClose={toggleBillModal}

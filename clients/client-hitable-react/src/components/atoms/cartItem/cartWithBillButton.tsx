@@ -28,8 +28,10 @@ const CreateBillButton = ({ className = "" }: CreateBillButtonProps) => {
   const generateQRCode = () => {
     if (!amount || Number.parseFloat(amount) <= 0) return;
 
-    // Generate a payment link (this would be your actual payment link in production)
-    const link = `https://hipal-test.hipalz.com/${businessId}/payment?amount=${amount}`;
+    const timestamp = Date.now();
+    const tableName = `T-${String(timestamp).slice(-5)}`;
+
+    const link = `https://hipal-test.hipalz.com/${businessId}/payment?tableName=${tableName}&amount=${amount}`;
     setPaymentLink(link);
     setGeneratedQR(true);
   };
