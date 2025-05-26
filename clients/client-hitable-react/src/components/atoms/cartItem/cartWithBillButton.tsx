@@ -31,7 +31,7 @@ const CreateBillButton = ({ className = "" }: CreateBillButtonProps) => {
     const timestamp = Date.now();
     const tableName = `T-${String(timestamp).slice(-5)}`;
 
-    const link = `https://hipal-test.hipalz.com/${businessId}/payment?tableName=${tableName}&amount=${amount}`;
+    const link = `https://hipalz.com/${businessId}/payment?tableName=${tableName}&amount=${amount}`;
     setPaymentLink(link);
     setGeneratedQR(true);
   };
