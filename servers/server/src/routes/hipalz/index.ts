@@ -1,9 +1,4 @@
-import {
-  Business,
-  Table,
-  UrlModel,
-  WhatsAppBusinessConfig,
-} from "@hi/db-models";
+import { Business, UrlModel, WhatsAppBusinessConfig } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -31,11 +26,7 @@ const hipalzRouter = new Hono().get(
         404,
       );
     }
-    const count = await Table.countDocuments();
-    const randomIndex = Math.floor(Math.random() * count);
-    const randomDoc = await Table.findOne().skip(randomIndex);
     const baseUrl = result.longUrl;
-    const tableName = randomDoc?.name;
     if (!q) {
       const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
         businessId: result?.businessId,
@@ -50,12 +41,11 @@ const hipalzRouter = new Hono().get(
       if (menuRedirection && menuRedirection === "WA") {
         const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, ${business?.name}. I'm interested to know coupon, can you share me link:${urlCode}`;
 
-        return c.redirect(`${redirectUrl}?tableName=${tableName}`);
+        return c.redirect(`${redirectUrl}`);
       }
     }
-
     // Redirect to the original UR
-    return c.redirect(`${baseUrl}?tableName=${tableName}`);
+    return c.redirect(`${baseUrl}`);
   },
 );
 
