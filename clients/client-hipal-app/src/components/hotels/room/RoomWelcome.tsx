@@ -24,7 +24,6 @@ export interface HotelWelcomeCardProps {
   businessId?: string;
   customLink?: string;
   userID?: string;
-  themeData?: IThemes;
 }
 
 export default function HotelWelcomeCard({
@@ -35,7 +34,6 @@ export default function HotelWelcomeCard({
   room,
   businessId,
   userID,
-  themeData,
 }: HotelWelcomeCardProps) {
   const [showPopup, setShowPopup] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
