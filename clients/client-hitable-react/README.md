@@ -1,4 +1,5 @@
 # React + TypeScript + Vite
+
 //
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
@@ -30,3 +31,4 @@ export default {
 - Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
 
 "test"
+test to understand hitable push for auto update ui apk
