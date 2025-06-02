@@ -8,6 +8,8 @@ import {
 } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { getCookie, setCookie } from "hono/cookie";
+import jwt from "jsonwebtoken";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { setShortUrl } from "../../utils/cacheHelper";
@@ -57,8 +59,54 @@ const surlRouter = new Hono()
 
       setShortUrl(urlCode, result.longUrl);
 
+      if (id) {
+        const getToken = getCookie(c, "token");
+
+        if (getToken) {
+          try {
+            const decoded = jwt.verify(
+              getToken,
+              Bun.env.JWT_SECRET as string,
+            ) as { id: string; role: string };
+
+            if (decoded.id !== id) {
+              return c.json(
+                {
+                  message: "please scan the QR code again",
+                  err: true,
+                  data: {},
+                },
+                400,
+              );
+            }
+          } catch (error) {
+            return c.json(
+              {
+                message: "Invalid token",
+                err: true,
+                data: {},
+              },
+              401,
+            );
+          }
+        }
+
+        const token = jwt.sign(
+          {
+            id: id,
+            role: "HIPAL_CUSTOMER",
+          },
+          Bun.env.JWT_SECRET as string,
+        );
+
+        setCookie(c, "token", token, {
+          httpOnly: false,
+          secure: false,
+        });
+      }
+
       // Redirect to the original URL
-      return c.redirect(`${result.longUrl} ${id ? `&id=${id}` : ""}`);
+      return c.redirect(`${result.longUrl}${id ? `&id=${id}` : ""}`);
     },
   )
 
