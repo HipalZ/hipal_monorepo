@@ -1,7 +1,5 @@
 import {
   BillUrlModel,
-  HotelRoom,
-  HotelRoomSession,
   Payment,
   QrBill,
   UrlModel,
@@ -74,7 +72,7 @@ const surlRouter = new Hono()
     ),
     async (c) => {
       const { urlCode } = c.req.param();
-      const { q } = c.req.query();
+      const { q, id } = c.req.query();
       if (!q) {
         const Bid = await UrlModel.findOne({
           urlCode,
@@ -106,7 +104,9 @@ const surlRouter = new Hono()
       }
 
       // Redirect to the original URL
-      return c.redirect(result.longUrl);
+      return c.redirect(
+        `${result.longUrl} ${q ? `?${q}` : ""}${id ? `&id=${id}` : ""}`,
+      );
     },
   )
 

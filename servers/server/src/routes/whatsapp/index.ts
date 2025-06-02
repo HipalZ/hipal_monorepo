@@ -2130,7 +2130,9 @@ const whatsappRouter = new Hono()
               urlCode: tableCode,
             }).select("longUrl shortUrl shortUrlType urlCode");
 
-            longUrl = `${findLongUrl?.shortUrl}?q=wa`;
+            longUrl = `${
+              findLongUrl?.shortUrl
+            }?q=wa&id=${userObj?._id.toString()}`;
             shortUrlType = findLongUrl?.shortUrlType || "";
             urlObj = findLongUrl;
             updateLongUrl = `${

@@ -13,7 +13,7 @@ const hipalzRouter = new Hono().get(
   ),
   async (c) => {
     const { urlCode } = c.req.param();
-    const { q } = c.req.query();
+    const { q, id } = c.req.query();
 
     const result = await UrlModel.findOne({ urlCode });
     if (!result) {
@@ -46,7 +46,7 @@ const hipalzRouter = new Hono().get(
       }
     }
     // Redirect to the original UR
-    return c.redirect(`${baseUrl}`);
+    return c.redirect(`${baseUrl} ${q ? `?${q}` : ""}${id ? `&id=${id}` : ""}`);
   },
 );
 
