@@ -23,7 +23,7 @@ const surlRouter = new Hono()
     ),
     async (c) => {
       const { urlCode } = c.req.param();
-      const { q } = c.req.query();
+      const { q, id } = c.req.query();
 
       if (!q) {
         const Bid = await UrlModel.findOne({
@@ -58,7 +58,7 @@ const surlRouter = new Hono()
       setShortUrl(urlCode, result.longUrl);
 
       // Redirect to the original URL
-      return c.redirect(result.longUrl);
+      return c.redirect(`${result.longUrl} ${id ? `&id=${id}` : ""}`);
     },
   )
 
