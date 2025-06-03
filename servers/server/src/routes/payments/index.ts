@@ -2709,7 +2709,10 @@ const paymentsRouter = new Hono()
         });
       }
 
-      const groupAnalytics = await GroupAnalytic.find({ businessId })
+      const groupAnalytics = await GroupAnalytic.find({
+        businessId,
+        isDefault: true,
+      })
         .sort({
           date: -1,
         })
