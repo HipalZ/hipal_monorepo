@@ -1435,14 +1435,14 @@ const paymentsRouter = new Hono()
 
             const userAnalytics = await UserAnalytic.findOne({
               userId: getOrder?.userId,
+              businessId: getOrder?.businessId,
             }).select("totalSpend visitCount");
             if (userAnalytics) {
-              const countAvgSpend =
-                Math.round(
-                  userAnalytics.totalSpend || 0 / userAnalytics.visitCount || 0,
-                ) || 0;
+              const countAvgSpend = Math.round(
+                userAnalytics.totalSpend / userAnalytics.visitCount,
+              );
               await UserAnalytic.findOneAndUpdate(
-                { userId: getOrder?.userId },
+                { userId: getOrder?.userId, businessId: getOrder?.businessId },
                 {
                   $inc: {
                     totalSpend: getOrder.total,
@@ -2729,6 +2729,8 @@ const paymentsRouter = new Hono()
           },
         });
 
+      console.log("groupAnalytics", groupAnalytics);
+
       const transformedData = transformData(groupAnalytics);
 
       const totalSubscriberCount = await totalSubscribers(businessId);
@@ -2922,7 +2924,7 @@ const paymentsRouter = new Hono()
       const PAGE_SIZE = 20;
       const pageNumber = c.req.query("pageNumber") as string;
       const skip: number = (Number(pageNumber) - 1) * PAGE_SIZE;
-      const userTotalSale = await UserAnalytic.findOne({ userId })
+      const userTotalSale = await UserAnalytic.findOne({ userId, businessId })
         .select("totalSpend visitCount avgSpend coinzIssued coinzUsed")
         .populate({
           path: "userId",
