@@ -9,10 +9,12 @@ import {
   HotelRoomSession,
   RecentCampaign,
   Subscriber,
+  TagModel,
   UrlModel,
   User,
   UserAnalytic,
   UserReward,
+  UserTags,
   WhatAppOrder,
   WhatAppTemplate,
   WhatsAppAnalyticsUser,
@@ -1948,10 +1950,7 @@ const whatsappRouter = new Hono()
           phoneId: phon_no_id,
         });
 
-        const bName = await Business.findById(config?.businessId).select(
-          "name",
-        );
-
+        const bName = await Business.findById(config?.businessId);
         if (statuses && statuses.length > 0) {
           const firstStatus = statuses[0];
           const extractedData = {
@@ -2380,6 +2379,31 @@ const whatsappRouter = new Hono()
                 },
               );
             } else {
+              let tag = await TagModel.findOne({
+                businessId: config?.businessId,
+                name: "whatsapp",
+              });
+              if (!tag) {
+                tag = await TagModel.create({
+                  businessId: config?.businessId,
+                  name: "whatsapp",
+                  createdBy: bName?.staffIds?.[0],
+                });
+              }
+
+              const userTag = await UserTags.findOneAndUpdate(
+                {
+                  userId: userObj?._id,
+                  businessId: config?.businessId,
+                },
+                {
+                  tagId: tag?._id,
+                },
+                {
+                  upsert: true,
+                  new: true,
+                },
+              );
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,

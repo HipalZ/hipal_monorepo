@@ -303,14 +303,9 @@ const totalSubscribers = async (businessId: string) => {
   const subscribers = await Subscriber.find({
     isDeleted: false,
     businessId,
-  }).select("userCount");
+  }).countDocuments();
 
-  const totalUserCount = subscribers.reduce(
-    (acc, sub) => acc + (sub.userCount ?? 0),
-    0,
-  );
-
-  return totalUserCount;
+  return subscribers;
 };
 
 const calculatePercentages = (totalReviewsLength: number, count: number) => {
@@ -2728,8 +2723,6 @@ const paymentsRouter = new Hono()
             "filter.spendType": 1,
           },
         });
-
-      console.log("groupAnalytics", groupAnalytics);
 
       const transformedData = transformData(groupAnalytics);
 
