@@ -396,8 +396,6 @@ const usersRouter = new Hono()
           "OWNER",
         );
 
-        console.log("comparePass", comparePass);
-
         return c.json({
           message: "Owner Logged in Successfully",
           data: { user: existingUser, accessToken, refreshToken },
@@ -1112,6 +1110,7 @@ const usersRouter = new Hono()
 
       const userAnalytics = await UserAnalytic.findOne({
         userId: userId,
+        businessId: businessId || business?._id.toString(),
       }).select("userId");
 
       if (!userAnalytics) {

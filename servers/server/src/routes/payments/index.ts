@@ -80,12 +80,6 @@ const transformData = (data: unknown[]) => {
         visitType: filter?.visitType,
         spendAmount: filter?.spend || 0,
         spendType: filter?.spendType,
-        cardBalance: filter?.cardBalance || 0,
-        cardBalanceType: filter?.cardBalanceType,
-        coinzIssued: filter?.coinzIssued || 0,
-        coinzIssuedType: filter?.coinzIssuedType,
-        coinzUsed: filter?.coinzUsed || 0,
-        coinzUsedType: filter?.coinzUsedType,
         userCount: item.userCount || 0,
         userPercentage: item.userPercentage || 0,
         groupColor: item.groupId.groupColor || "",
@@ -128,22 +122,6 @@ export const calculateDiscount = async (
 
   return discount;
 };
-
-interface SplitMode {
-  name: string;
-  amount: number;
-}
-
-interface AggregatedData {
-  totalSale: number;
-  forceSettle: number;
-  totalTips: number;
-  totalTax: number;
-  totalServiceCharge: number;
-  totalClaimedCoins: number;
-  totalEarnCoins: number;
-  modeObj: { [key: string]: number };
-}
 
 export const calculateReward = async (
   exist: number,
@@ -2745,12 +2723,6 @@ const paymentsRouter = new Hono()
             "filter.visitType": 1,
             "filter.spend": 1,
             "filter.spendType": 1,
-            "filter.cardBalance": 1,
-            "filter.cardBalanceType": 1,
-            "filter.coinzIssued": 1,
-            "filter.coinzIssuedType": 1,
-            "filter.coinzUsed": 1,
-            "filter.coinzUsedType": 1,
           },
         });
 

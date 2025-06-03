@@ -36,11 +36,11 @@ import {
   whatsAppOrderSchema,
   whatsAppWalletHistorySchema,
 } from "@hi/db-models/src/validators";
-import { createHmac } from "node:crypto";
-
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
+import { createHmac } from "node:crypto";
+
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
@@ -2104,6 +2104,7 @@ const whatsappRouter = new Hono()
 
               const userAnalytics = await UserAnalytic.exists({
                 userId: userData?._id,
+                businessId: config?.businessId,
               });
 
               if (!userAnalytics) {
@@ -2401,6 +2402,7 @@ const whatsappRouter = new Hono()
 
             const userAnalytics = await UserAnalytic.exists({
               userId: user?._id,
+              businessId: config?.businessId,
             });
 
             if (!userAnalytics) {

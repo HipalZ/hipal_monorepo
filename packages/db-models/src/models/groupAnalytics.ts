@@ -23,6 +23,61 @@ const groupAnalyticsSchema = new mongoose.Schema<groupAnalyticsType>({
     type: Number,
     required: false,
   },
+  duration: {
+    type: Number,
+    required: false,
+    default: 30,
+  },
+
+  groupColor: {
+    type: String,
+    required: false,
+  },
+  groupName: {
+    type: String,
+    required: false,
+  },
+  spendAmount: {
+    type: Number,
+    required: false,
+  },
+  spendType: {
+    type: String,
+    required: false,
+  },
+  visitCount: {
+    type: Number,
+    required: false,
+  },
+  visitType: {
+    type: String,
+    required: false,
+  },
+  isDefault: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  afternoon: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  morning: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  evening: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  night: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
 
   date: {
     type: Number,

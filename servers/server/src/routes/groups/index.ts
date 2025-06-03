@@ -10,6 +10,7 @@ import { groupSchema } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
+import { matchCondition, matchConditionDnamicGroup } from "../../utils/group";
 
 //Calculate the timestamps
 function calculateTimestamps(days: number): {
@@ -249,244 +250,106 @@ const groupRouter = new Hono()
     },
   )
   .put(
-    "/updateBestUsers/:businessId/:groupId",
+    "/updateDefaultGroups/all",
 
     zValidator(
-      "param",
+      "json",
       z.object({
-        businessId: z.string({ message: "businessId is required" }),
-        groupId: z.string({ message: "groupId is required" }),
+        businessId: z.string({ message: "businessId is required" }).optional(),
       }),
     ),
 
     async (c) => {
-      const { businessId, groupId } = c.req.param();
+      const defaultGroups = await GroupModel.find({
+        isDefault: true,
+        groupType: "DYNAMIC",
+      });
 
-      const bestUserGroup = await GroupModel.findById(groupId);
-      if (!bestUserGroup) {
-        return c.json(
-          {
-            message: "Group not found",
-            err: true,
-            data: {},
-          },
-          404,
+      for (const group of defaultGroups) {
+        const groupId = group._id.toString();
+
+        const { fromTimestamp, toTimestamp } = calculateTimestamps(
+          group.filter?.[0]?.duration ?? 30,
         );
-      }
 
-      const { fromTimestamp, toTimestamp } = calculateTimestamps(
-        bestUserGroup.filter[0].duration,
-      );
+        const userIds: string[] = [];
 
-      const userIds: string[] = [];
-
-      const users = await Payment.find({
-        businessId,
-        date: { $gte: fromTimestamp, $lte: toTimestamp },
-      });
-
-      const subscriber = await Subscriber.find({
-        businessId: businessId,
-      }).count();
-
-      const tagCountMap = new Map();
-
-      users.forEach((user) => {
-        user.tagIds.forEach((tagId) => {
-          if (tagCountMap.has(tagId)) {
-            tagCountMap.set(tagId, tagCountMap.get(tagId) + 1);
-          } else {
-            tagCountMap.set(tagId, 1);
-          }
+        const users = await Payment.find({
+          businessId: group.businessId,
+          date: { $gte: fromTimestamp, $lte: toTimestamp },
         });
-      });
 
-      const userAnalytics = await users.reduce(async (accPromise, user) => {
-        const acc = await accPromise;
+        const subscriber = await Subscriber.find({
+          businessId: group.businessId,
+        }).count();
 
-        if (!acc[user.userId]) {
-          const userReward = await UserReward.findOne({
-            userId: user.userId,
-            loyaltyId: user.businessId,
-          });
+        const userAnalytics = await users.reduce(async (accPromise, user) => {
+          const acc = await accPromise;
 
-          acc[user.userId] = {
-            userId: user.userId,
-            visit: 0,
-            spend: 0,
-            cardBalance: userReward ? userReward.rewards : 0,
-            coinzIssued: user.earnCoins,
-            coinzUsed: user.claimedCoins,
-            tags: user.tagIds.map((tagId) => ({ tagId, count: 0 })),
-          };
+          if (!acc[user.userId]) {
+            acc[user.userId] = {
+              userId: user.userId,
+              visit: 0,
+              spend: 0,
+            };
+          }
+
+          acc[user.userId].visit += 1;
+          acc[user.userId].spend += user.total;
+
+          return acc;
+        }, Promise.resolve({}));
+
+        const matchedUsers = matchCondition(userAnalytics, group.filter?.[0]);
+
+        for (const user of matchedUsers) {
+          userIds.push(user.userId.toString());
         }
 
-        acc[user.userId].visit += 1;
-        acc[user.userId].spend += user.total;
-        acc[user.userId].coinzIssued += user.earnCoins;
-        acc[user.userId].coinzUsed += user.claimedCoins;
-
-        user.tagIds.forEach((tagId) => {
-          const tag = acc[user.userId].tags.find((t) => t.tagId === tagId);
-          if (tag) {
-            tag.count = tagCountMap.get(tagId);
-          } else {
-            acc[user.userId].tags.push({
-              tagId,
-              count: tagCountMap.get(tagId),
-            });
-          }
-        });
-
-        return acc;
-      }, Promise.resolve({}));
-
-      const matchCondition = (data: Record<string, any>, condition: any) => {
-        return Object.values(data).filter((user) => {
-          let visitMatch = true;
-          let spendMatch = true;
-          let cardBalanceMatch = true;
-          let coinzIssuedMatch = true;
-          let coinzUsedMatch = true;
-
-          if (condition.visitType) {
-            switch (condition.visitType) {
-              case "ABOVE":
-                visitMatch = user.visit > condition.visit;
-                break;
-              case "BELOW":
-                visitMatch = user.visit < condition.visit;
-                break;
-              case "EQUAL":
-                visitMatch = user.visit === condition.visit;
-                break;
-            }
-          }
-
-          if (condition.spendType) {
-            switch (condition.spendType) {
-              case "ABOVE":
-                spendMatch = user.spend > condition.spend;
-                break;
-              case "BELOW":
-                spendMatch = user.spend < condition.spend;
-                break;
-              case "EQUAL":
-                spendMatch = user.spend === condition.spend;
-                break;
-            }
-          }
-
-          if (condition.cardBalanceType) {
-            switch (condition.cardBalanceType) {
-              case "ABOVE":
-                cardBalanceMatch = user.cardBalance > condition.cardBalance;
-                break;
-              case "BELOW":
-                cardBalanceMatch = user.cardBalance < condition.cardBalance;
-                break;
-              case "EQUAL":
-                cardBalanceMatch = user.cardBalance === condition.cardBalance;
-                break;
-            }
-          }
-
-          if (condition.coinzIssuedType) {
-            switch (condition.coinzIssuedType) {
-              case "ABOVE":
-                coinzIssuedMatch = user.coinzIssued > condition.coinzIssued;
-                break;
-              case "BELOW":
-                coinzIssuedMatch = user.coinzIssued < condition.coinzIssued;
-                break;
-              case "EQUAL":
-                coinzIssuedMatch = user.coinzIssued === condition.coinzIssued;
-                break;
-            }
-          }
-
-          if (condition.coinzUsedType) {
-            switch (condition.coinzUsedType) {
-              case "ABOVE":
-                coinzUsedMatch = user.coinzUsed > condition.coinzUsed;
-                break;
-              case "BELOW":
-                coinzUsedMatch = user.coinzUsed < condition.coinzUsed;
-                break;
-              case "EQUAL":
-                coinzUsedMatch = user.coinzUsed === condition.coinzUsed;
-                break;
-            }
-          }
-
-          return (
-            visitMatch &&
-            spendMatch &&
-            cardBalanceMatch &&
-            coinzIssuedMatch &&
-            coinzUsedMatch
-          );
-        });
-      };
-
-      const matchedUsers = matchCondition(
-        userAnalytics,
-        bestUserGroup.filter[0],
-      );
-
-      matchedUsers.map((user) => {
-        user.tags = user.tags.filter((tag) => {
-          return bestUserGroup.filter[0].tags.some(
-            (condition) =>
-              condition.tagId.toString() === tag.tagId.toString() &&
-              condition.count === tag.count,
-          );
-        });
-        return user;
-      });
-
-      matchedUsers.forEach((user) => {
-        userIds.push(user.userId.toString());
-      });
-
-      await GroupModel.findOneAndUpdate(
-        {
-          _id: groupId,
-        },
-        { $addToSet: { userIds: { $each: userIds } } },
-        { new: true },
-      );
-
-      const groupAnalytics = await GroupAnalytic.findOne({ groupId: groupId });
-      if (groupAnalytics) {
-        await GroupAnalytic.findOneAndUpdate(
+        await GroupModel.findOneAndUpdate(
           {
-            groupId: groupId,
+            _id: groupId,
           },
-          {
+          { $addToSet: { userIds: { $each: userIds } } },
+          { new: true },
+        );
+
+        const groupAnalytics = await GroupAnalytic.findOne({
+          groupId: groupId,
+        });
+
+        if (groupAnalytics) {
+          await GroupAnalytic.findOneAndUpdate(
+            {
+              groupId: groupId,
+            },
+            {
+              userCount: matchedUsers.length,
+              userPercentage: Math.round(
+                (matchedUsers.length / subscriber) * 100 || 0,
+              ),
+              businessId: group.businessId,
+              date: Date.now(),
+            },
+          );
+        } else {
+          await GroupAnalytic.create({
+            groupId,
+            businessId: group.businessId,
             userCount: matchedUsers.length,
             userPercentage: Math.round(
-              (matchedUsers.length / subscriber) * 100,
+              (matchedUsers.length / subscriber) * 100 || 0,
             ),
-            businessId,
-            date: Date.now(),
-          },
-        );
-      } else {
-        await GroupAnalytic.create({
-          groupId,
-          businessId,
-          userCount: matchedUsers.length,
-          userPercentage: Math.round((matchedUsers.length / subscriber) * 100),
 
-          date: Date.now(),
-        });
+            date: Date.now(),
+          });
+        }
       }
 
       return c.json({
-        message: "Best users found",
+        message: "Default groups updated successfully",
         err: false,
-        data: matchedUsers,
+        data: {},
       });
     },
   )
@@ -1218,433 +1081,413 @@ const groupRouter = new Hono()
     },
   )
   .put(
-    "/updateMorningUsers/:businessId/:groupId",
+    "/updateMorningUsersGroup/all",
 
     zValidator(
-      "param",
+      "json",
       z.object({
-        businessId: z.string({ message: "businessId is required" }),
-        groupId: z.string({ message: "groupId is required" }),
+        businessId: z.string({ message: "businessId is required" }).optional(),
       }),
     ),
 
     async (c) => {
-      const { businessId, groupId } = c.req.param();
-
-      const bestUserGroup = await GroupModel.findById(groupId);
-      if (!bestUserGroup) {
-        return c.json(
-          {
-            message: "Group not found",
-            err: true,
-            data: {},
-          },
-          404,
-        );
-      }
-
-      const { fromTimestamp, toTimestamp } = calculateTimestamps(
-        bestUserGroup.filter[0].duration,
-      );
-
-      const users = await Payment.find({
-        businessId,
-        date: { $gte: fromTimestamp, $lte: toTimestamp },
+      const allMorningGroups = await GroupModel.find({
+        morning: true,
       });
 
-      const subscriber = await Subscriber.find({
-        businessId: businessId,
-      }).count();
+      for (const morningGroup of allMorningGroups) {
+        const groupId = morningGroup._id.toString();
+        const businessId = morningGroup.businessId;
+        const { fromTimestamp, toTimestamp } = calculateTimestamps(
+          morningGroup.filter?.[0]?.duration ?? 30,
+        );
 
-      const MorningUser = {
-        visitCount: 0,
-        spendAmount: 0,
-        userCount: 0,
-        userIds: [],
-      };
+        const users = await Payment.find({
+          businessId,
+          date: { $gte: fromTimestamp, $lte: toTimestamp },
+        });
 
-      const processedUserIds = new Set<string>();
+        const subscriber = await Subscriber.find({
+          businessId: businessId,
+        }).count();
 
-      for (let i = 0; i < users.length; i++) {
-        const user = users[i];
-        const paymentHour = new Date(user.date).getHours();
-        if (paymentHour >= 6 && paymentHour < 12) {
-          if (!processedUserIds.has(user.userId.toString())) {
-            MorningUser.visitCount += 1;
-            MorningUser.spendAmount += user.total;
-            MorningUser.userCount += 1;
-            MorningUser.userIds.push(user.userId.toString());
-            processedUserIds.add(user.userId.toString());
+        const MorningUser = {
+          visitCount: 0,
+          spendAmount: 0,
+          userCount: 0,
+          userIds: [],
+        };
+
+        const processedUserIds = new Set<string>();
+
+        for (let i = 0; i < users.length; i++) {
+          const user = users[i];
+          const paymentHour = new Date(user.date).getHours();
+          if (paymentHour >= 6 && paymentHour < 12) {
+            if (!processedUserIds.has(user.userId.toString())) {
+              MorningUser.visitCount += 1;
+              MorningUser.spendAmount += user.total;
+              MorningUser.userCount += 1;
+              MorningUser.userIds.push(user.userId.toString());
+              processedUserIds.add(user.userId.toString());
+            }
           }
         }
-      }
 
-      const groupAnalytics = await GroupAnalytic.findOne({ groupId: groupId });
-      if (groupAnalytics) {
-        await GroupAnalytic.updateOne(
-          {
-            groupId: groupId,
-          },
-          {
+        const groupAnalytics = await GroupAnalytic.findOne({
+          groupId: groupId,
+        });
+        if (groupAnalytics) {
+          await GroupAnalytic.updateOne(
+            {
+              groupId: groupId,
+            },
+            {
+              userCount: MorningUser.userCount,
+              userPercentage: Math.round(
+                (MorningUser.userCount / subscriber) * 100 || 0,
+              ),
+              businessId,
+              date: Date.now(),
+            },
+          );
+        } else {
+          await GroupAnalytic.create({
+            groupId,
+            duration: morningGroup.filter?.[0]?.duration ?? 30,
+            businessId,
+
             userCount: MorningUser.userCount,
             userPercentage: Math.round(
-              (MorningUser.userCount / subscriber) * 100,
+              (MorningUser.userCount / subscriber) * 100 || 0,
             ),
-            businessId,
+            groupColor: morningGroup.groupColor,
+            groupName: morningGroup.name,
             date: Date.now(),
+          });
+        }
+
+        const group = await GroupModel.findOneAndUpdate(
+          {
+            _id: groupId,
           },
+          { $addToSet: { userIds: { $each: MorningUser.userIds } } },
+          { new: true },
         );
-      } else {
-        await GroupAnalytic.create({
-          groupId,
-          duration: bestUserGroup.filter[0].duration,
-          businessId,
-
-          userCount: MorningUser.userCount,
-          userPercentage: Math.round(
-            (MorningUser.userCount / subscriber) * 100,
-          ),
-          groupColor: bestUserGroup.groupColor,
-          groupName: bestUserGroup.name,
-          date: Date.now(),
-        });
       }
-
-      const group = await GroupModel.findOneAndUpdate(
-        {
-          _id: groupId,
-        },
-        { $addToSet: { userIds: { $each: MorningUser.userIds } } },
-        { new: true },
-      );
 
       return c.json({
         message: "Best users found",
         err: false,
-        data: MorningUser,
+        data: {},
       });
     },
   )
   .put(
-    "/updateAfterNoonUsers/:businessId/:groupId",
+    "/updateAfterNoonUsers/all",
 
     zValidator(
-      "param",
+      "json",
       z.object({
-        businessId: z.string({ message: "businessId is required" }),
-        groupId: z.string({ message: "groupId is required" }),
+        businessId: z.string({ message: "businessId is required" }).optional(),
       }),
     ),
 
     async (c) => {
-      const { businessId, groupId } = c.req.param();
-
-      const bestUserGroup = await GroupModel.findById(groupId);
-      if (!bestUserGroup) {
-        return c.json(
-          {
-            message: "Group not found",
-            err: true,
-            data: {},
-          },
-          404,
-        );
-      }
-
-      const { fromTimestamp, toTimestamp } = calculateTimestamps(
-        bestUserGroup.filter[0].duration,
-      );
-
-      const users = await Payment.find({
-        businessId,
-        date: { $gte: fromTimestamp, $lte: toTimestamp },
+      const allAfterNoonGroups = await GroupModel.find({
+        afterNoon: true,
       });
 
-      const subscriber = await Subscriber.find({
-        businessId: businessId,
-      }).count();
+      for (const afterNoonGroup of allAfterNoonGroups) {
+        const groupId = afterNoonGroup._id.toString();
+        const businessId = afterNoonGroup.businessId;
+        const { fromTimestamp, toTimestamp } = calculateTimestamps(
+          afterNoonGroup.filter?.[0]?.duration ?? 30,
+        );
 
-      const MorningUser = {
-        visitCount: 0,
-        spendAmount: 0,
-        userCount: 0,
-        userIds: [],
-      };
+        const users = await Payment.find({
+          businessId,
+          date: { $gte: fromTimestamp, $lte: toTimestamp },
+        });
 
-      const processedUserIds = new Set<string>();
+        const subscriber = await Subscriber.find({
+          businessId: businessId,
+        }).count();
 
-      for (let i = 0; i < users.length; i++) {
-        const user = users[i];
-        const paymentHour = new Date(user.date).getHours();
-        if (paymentHour >= 12 && paymentHour < 18) {
-          if (!processedUserIds.has(user.userId.toString())) {
-            MorningUser.visitCount += 1;
-            MorningUser.spendAmount += user.total;
-            MorningUser.userCount += 1;
-            MorningUser.userIds.push(user.userId.toString());
-            processedUserIds.add(user.userId.toString());
+        const MorningUser = {
+          visitCount: 0,
+          spendAmount: 0,
+          userCount: 0,
+          userIds: [],
+        };
+
+        const processedUserIds = new Set<string>();
+
+        for (let i = 0; i < users.length; i++) {
+          const user = users[i];
+          const paymentHour = new Date(user.date).getHours();
+          if (paymentHour >= 12 && paymentHour < 18) {
+            if (!processedUserIds.has(user.userId.toString())) {
+              MorningUser.visitCount += 1;
+              MorningUser.spendAmount += user.total;
+              MorningUser.userCount += 1;
+              MorningUser.userIds.push(user.userId.toString());
+              processedUserIds.add(user.userId.toString());
+            }
           }
         }
-      }
 
-      const groupAnalytics = await GroupAnalytic.findOne({ groupId: groupId });
-      if (groupAnalytics) {
-        await GroupAnalytic.updateOne(
-          {
-            groupId: groupId,
-          },
-          {
+        const groupAnalytics = await GroupAnalytic.findOne({
+          groupId: groupId,
+        });
+        if (groupAnalytics) {
+          await GroupAnalytic.updateOne(
+            {
+              groupId: groupId,
+            },
+            {
+              userCount: MorningUser.userCount,
+              userPercentage: Math.round(
+                (MorningUser.userCount / subscriber) * 100 || 0,
+              ),
+              businessId,
+              date: Date.now(),
+            },
+          );
+        } else {
+          await GroupAnalytic.create({
+            groupId,
+            duration: afterNoonGroup.filter?.[0]?.duration ?? 30,
+            businessId,
+
             userCount: MorningUser.userCount,
             userPercentage: Math.round(
-              (MorningUser.userCount / subscriber) * 100,
+              (MorningUser.userCount / subscriber) * 100 || 0,
             ),
-            businessId,
+            groupColor: afterNoonGroup.groupColor,
+            groupName: afterNoonGroup.name,
             date: Date.now(),
+          });
+        }
+
+        const group = await GroupModel.findOneAndUpdate(
+          {
+            _id: groupId,
           },
+          { $addToSet: { userIds: { $each: MorningUser.userIds } } },
+          { new: true },
         );
-      } else {
-        await GroupAnalytic.create({
-          groupId,
-          duration: bestUserGroup.filter[0].duration,
-          businessId,
-
-          userCount: MorningUser.userCount,
-          userPercentage: Math.round(
-            (MorningUser.userCount / subscriber) * 100,
-          ),
-          groupColor: bestUserGroup.groupColor,
-          groupName: bestUserGroup.name,
-          date: Date.now(),
-        });
       }
-
-      const group = await GroupModel.findOneAndUpdate(
-        {
-          _id: groupId,
-        },
-        { $addToSet: { userIds: { $each: MorningUser.userIds } } },
-        { new: true },
-      );
 
       return c.json({
         message: "Best users found",
         err: false,
-        data: MorningUser,
+        data: {},
       });
     },
   )
   .put(
-    "/updateEveningUsers/:businessId/:groupId",
+    "/updateEveningUsers/all",
 
     zValidator(
-      "param",
+      "json",
       z.object({
-        businessId: z.string({ message: "businessId is required" }),
-        groupId: z.string({ message: "groupId is required" }),
+        businessId: z.string({ message: "businessId is required" }).optional(),
       }),
     ),
 
     async (c) => {
-      const { businessId, groupId } = c.req.param();
-
-      const bestUserGroup = await GroupModel.findById(groupId);
-      if (!bestUserGroup) {
-        return c.json(
-          {
-            message: "Group not found",
-            err: true,
-            data: {},
-          },
-          404,
-        );
-      }
-
-      const { fromTimestamp, toTimestamp } = calculateTimestamps(
-        bestUserGroup.filter[0].duration,
-      );
-
-      const users = await Payment.find({
-        businessId,
-        date: { $gte: fromTimestamp, $lte: toTimestamp },
+      const allEveningGroups = await GroupModel.find({
+        evening: true,
       });
 
-      const subscriber = await Subscriber.find({
-        businessId: businessId,
-      }).count();
+      for (const eveningGroup of allEveningGroups) {
+        const groupId = eveningGroup._id.toString();
+        const businessId = eveningGroup.businessId;
+        const { fromTimestamp, toTimestamp } = calculateTimestamps(
+          eveningGroup.filter?.[0].duration ?? 30,
+        );
 
-      const MorningUser = {
-        visitCount: 0,
-        spendAmount: 0,
-        userCount: 0,
-        userIds: [],
-      };
+        const users = await Payment.find({
+          businessId,
+          date: { $gte: fromTimestamp, $lte: toTimestamp },
+        });
 
-      const processedUserIds = new Set<string>();
+        const subscriber = await Subscriber.find({
+          businessId: businessId,
+        }).count();
 
-      for (let i = 0; i < users.length; i++) {
-        const user = users[i];
-        const paymentHour = new Date(user.date).getHours();
-        if (paymentHour >= 18 && paymentHour < 24) {
-          if (!processedUserIds.has(user.userId.toString())) {
-            MorningUser.visitCount += 1;
-            MorningUser.spendAmount += user.total;
-            MorningUser.userCount += 1;
-            MorningUser.userIds.push(user.userId.toString());
-            processedUserIds.add(user.userId.toString());
+        const MorningUser = {
+          visitCount: 0,
+          spendAmount: 0,
+          userCount: 0,
+          userIds: [],
+        };
+
+        const processedUserIds = new Set<string>();
+
+        for (let i = 0; i < users.length; i++) {
+          const user = users[i];
+          const paymentHour = new Date(user.date).getHours();
+          if (paymentHour >= 18 && paymentHour < 24) {
+            if (!processedUserIds.has(user.userId.toString())) {
+              MorningUser.visitCount += 1;
+              MorningUser.spendAmount += user.total;
+              MorningUser.userCount += 1;
+              MorningUser.userIds.push(user.userId.toString());
+              processedUserIds.add(user.userId.toString());
+            }
           }
         }
-      }
 
-      const groupAnalytics = await GroupAnalytic.findOne({ groupId: groupId });
-      if (groupAnalytics) {
-        await GroupAnalytic.updateOne(
-          {
-            groupId: groupId,
-          },
-          {
+        const groupAnalytics = await GroupAnalytic.findOne({
+          groupId: groupId,
+        });
+        if (groupAnalytics) {
+          await GroupAnalytic.updateOne(
+            {
+              groupId: groupId,
+            },
+            {
+              userCount: MorningUser.userCount,
+              userPercentage: Math.round(
+                (MorningUser.userCount / subscriber) * 100 || 0,
+              ),
+              businessId,
+              date: Date.now(),
+            },
+          );
+        } else {
+          await GroupAnalytic.create({
+            groupId,
+            duration: eveningGroup.filter?.[0].duration ?? 30,
+            businessId,
+
             userCount: MorningUser.userCount,
             userPercentage: Math.round(
-              (MorningUser.userCount / subscriber) * 100,
+              (MorningUser.userCount / subscriber) * 100 || 0,
             ),
-            businessId,
+            groupColor: eveningGroup.groupColor,
+            groupName: eveningGroup.name,
             date: Date.now(),
+          });
+        }
+
+        const group = await GroupModel.findOneAndUpdate(
+          {
+            _id: groupId,
           },
+          { $addToSet: { userIds: { $each: MorningUser.userIds } } },
+          { new: true },
         );
-      } else {
-        await GroupAnalytic.create({
-          groupId,
-          duration: bestUserGroup.filter[0].duration,
-          businessId,
-
-          userCount: MorningUser.userCount,
-          userPercentage: Math.round(
-            (MorningUser.userCount / subscriber) * 100,
-          ),
-          groupColor: bestUserGroup.groupColor,
-          groupName: bestUserGroup.name,
-          date: Date.now(),
-        });
       }
-
-      const group = await GroupModel.findOneAndUpdate(
-        {
-          _id: groupId,
-        },
-        { $addToSet: { userIds: { $each: MorningUser.userIds } } },
-        { new: true },
-      );
 
       return c.json({
         message: "Best users found",
         err: false,
-        data: MorningUser,
+        data: {},
       });
     },
   )
   .put(
-    "/updateLateNightUsers/:businessId/:groupId",
+    "/updateLateNightUsers/all",
 
     zValidator(
-      "param",
+      "json",
       z.object({
-        businessId: z.string({ message: "businessId is required" }),
-        groupId: z.string({ message: "groupId is required" }),
+        businessId: z.string({ message: "businessId is required" }).optional(),
       }),
     ),
 
     async (c) => {
-      const { businessId, groupId } = c.req.param();
-
-      const bestUserGroup = await GroupModel.findById(groupId);
-      if (!bestUserGroup) {
-        return c.json(
-          {
-            message: "Group not found",
-            err: true,
-            data: {},
-          },
-          404,
-        );
-      }
-
-      const { fromTimestamp, toTimestamp } = calculateTimestamps(
-        bestUserGroup.filter[0].duration,
-      );
-
-      const users = await Payment.find({
-        businessId,
-        date: { $gte: fromTimestamp, $lte: toTimestamp },
+      const allLateNightGroups = await GroupModel.find({
+        night: true,
       });
+      for (const lateNightGroup of allLateNightGroups) {
+        const groupId = lateNightGroup._id.toString();
+        const businessId = lateNightGroup.businessId;
 
-      const subscriber = await Subscriber.find({
-        businessId: businessId,
-      }).count();
+        const { fromTimestamp, toTimestamp } = calculateTimestamps(
+          lateNightGroup.filter?.[0].duration ?? 30,
+        );
 
-      const MorningUser = {
-        visitCount: 0,
-        spendAmount: 0,
-        userCount: 0,
-        userIds: [],
-      };
+        const users = await Payment.find({
+          businessId,
+          date: { $gte: fromTimestamp, $lte: toTimestamp },
+        });
 
-      const processedUserIds = new Set<string>();
+        const subscriber = await Subscriber.find({
+          businessId: businessId,
+        }).count();
 
-      for (let i = 0; i < users.length; i++) {
-        const user = users[i];
-        const paymentHour = new Date(user.date).getHours();
-        if (paymentHour >= 0 && paymentHour < 6) {
-          if (!processedUserIds.has(user.userId.toString())) {
-            MorningUser.visitCount += 1;
-            MorningUser.spendAmount += user.total;
-            MorningUser.userCount += 1;
-            MorningUser.userIds.push(user.userId.toString());
-            processedUserIds.add(user.userId.toString());
+        const MorningUser = {
+          visitCount: 0,
+          spendAmount: 0,
+          userCount: 0,
+          userIds: [],
+        };
+
+        const processedUserIds = new Set<string>();
+
+        for (let i = 0; i < users.length; i++) {
+          const user = users[i];
+          const paymentHour = new Date(user.date).getHours();
+          if (paymentHour >= 0 && paymentHour < 6) {
+            if (!processedUserIds.has(user.userId.toString())) {
+              MorningUser.visitCount += 1;
+              MorningUser.spendAmount += user.total;
+              MorningUser.userCount += 1;
+              MorningUser.userIds.push(user.userId.toString());
+              processedUserIds.add(user.userId.toString());
+            }
           }
         }
-      }
 
-      const groupAnalytics = await GroupAnalytic.findOne({ groupId: groupId });
-      if (groupAnalytics) {
-        await GroupAnalytic.updateOne(
-          {
-            groupId: groupId,
-          },
-          {
+        const groupAnalytics = await GroupAnalytic.findOne({
+          groupId: groupId,
+        });
+        if (groupAnalytics) {
+          await GroupAnalytic.updateOne(
+            {
+              groupId: groupId,
+            },
+            {
+              userCount: MorningUser.userCount,
+              userPercentage: Math.round(
+                (MorningUser.userCount / subscriber) * 100 || 0,
+              ),
+              businessId,
+              date: Date.now(),
+            },
+          );
+        } else {
+          await GroupAnalytic.create({
+            groupId,
+            duration: lateNightGroup.filter?.[0].duration,
+            businessId,
+
             userCount: MorningUser.userCount,
             userPercentage: Math.round(
-              (MorningUser.userCount / subscriber) * 100,
+              (MorningUser.userCount / subscriber) * 100 || 0,
             ),
-            businessId,
+            groupColor: lateNightGroup.groupColor,
+            groupName: lateNightGroup.name,
             date: Date.now(),
+          });
+        }
+        const group = await GroupModel.findOneAndUpdate(
+          {
+            _id: groupId,
           },
+          { $addToSet: { userIds: { $each: MorningUser.userIds } } },
+          { new: true },
         );
-      } else {
-        await GroupAnalytic.create({
-          groupId,
-          duration: bestUserGroup.filter[0].duration,
-          businessId,
-
-          userCount: MorningUser.userCount,
-          userPercentage: Math.round(
-            (MorningUser.userCount / subscriber) * 100,
-          ),
-          groupColor: bestUserGroup.groupColor,
-          groupName: bestUserGroup.name,
-          date: Date.now(),
-        });
       }
-      const group = await GroupModel.findOneAndUpdate(
-        {
-          _id: groupId,
-        },
-        { $addToSet: { userIds: { $each: MorningUser.userIds } } },
-        { new: true },
-      );
 
       return c.json({
         message: "Best users found",
         err: false,
-        data: MorningUser,
+        data: {},
       });
     },
   )
@@ -1763,6 +1606,160 @@ const groupRouter = new Hono()
         message: "Users added successfully",
         err: false,
         data: createGroup,
+      });
+    },
+  )
+
+  .post(
+    "/update_dnamic_group",
+
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string({ message: "businessId is required" }).optional(),
+      }),
+    ),
+
+    async (c) => {
+      const allDnamicGroups = await GroupModel.find({
+        isDefault: false,
+        groupType: "DYNAMIC",
+      });
+
+      for (const dnamicGroup of allDnamicGroups) {
+        const groupId = dnamicGroup._id.toString();
+        const businessId = dnamicGroup.businessId;
+
+        const { fromTimestamp, toTimestamp } = calculateTimestamps(
+          dnamicGroup.filter?.[0].duration ?? 30,
+        );
+
+        const userIds: string[] = [];
+
+        const users = await Payment.find({
+          businessId,
+          date: { $gte: fromTimestamp, $lte: toTimestamp },
+        });
+
+        const subscriber = await Subscriber.find({
+          businessId: businessId,
+        }).count();
+
+        const tagCountMap = new Map();
+
+        for (const user of users) {
+          for (const tagId of user.tagIds) {
+            if (tagCountMap.has(tagId)) {
+              tagCountMap.set(tagId, tagCountMap.get(tagId) + 1);
+            } else {
+              tagCountMap.set(tagId, 1);
+            }
+          }
+        }
+
+        const userAnalytics = await users.reduce(async (accPromise, user) => {
+          const acc = await accPromise;
+
+          if (!acc[user.userId]) {
+            const userReward = await UserReward.findOne({
+              userId: user.userId,
+              loyaltyId: user.businessId,
+            });
+
+            acc[user.userId] = {
+              userId: user.userId,
+              visit: 0,
+              spend: 0,
+              cardBalance: userReward ? userReward.rewards : 0,
+              coinzIssued: user.earnCoins,
+              coinzUsed: user.claimedCoins,
+              tags: user.tagIds.map((tagId) => ({ tagId, count: 0 })),
+            };
+          }
+
+          acc[user.userId].visit += 1;
+          acc[user.userId].spend += user.total;
+          acc[user.userId].coinzIssued += user.earnCoins;
+          acc[user.userId].coinzUsed += user.claimedCoins;
+
+          for (const tagId of user.tagIds) {
+            const tag = acc[user.userId].tags.find((t) => t.tagId === tagId);
+            if (tag) {
+              tag.count = tagCountMap.get(tagId);
+            } else {
+              acc[user.userId].tags.push({
+                tagId,
+                count: tagCountMap.get(tagId),
+              });
+            }
+          }
+
+          return acc;
+        }, Promise.resolve({}));
+
+        const matchedUsers = matchConditionDnamicGroup(
+          userAnalytics,
+          dnamicGroup?.filter?.[0],
+        );
+
+        matchedUsers.map((user) => {
+          user.tags = user.tags.filter((tag) => {
+            return dnamicGroup?.filter?.[0].tags.some(
+              (condition) =>
+                condition.tagId.toString() === tag.tagId.toString() &&
+                condition.count === tag.count,
+            );
+          });
+          return user;
+        });
+
+        for (const user of matchedUsers) {
+          userIds.push(user.userId.toString());
+        }
+
+        await GroupModel.findOneAndUpdate(
+          {
+            _id: groupId,
+          },
+          { $addToSet: { userIds: { $each: userIds } } },
+          { new: true },
+        );
+
+        const groupAnalytics = await GroupAnalytic.findOne({
+          groupId: groupId,
+        });
+        if (groupAnalytics) {
+          await GroupAnalytic.findOneAndUpdate(
+            {
+              groupId: groupId,
+            },
+            {
+              userCount: matchedUsers.length,
+              userPercentage: Math.round(
+                (matchedUsers.length / subscriber) * 100 || 0,
+              ),
+              businessId,
+              date: Date.now(),
+            },
+          );
+        } else {
+          await GroupAnalytic.create({
+            groupId,
+            businessId,
+            userCount: matchedUsers.length,
+            userPercentage: Math.round(
+              (matchedUsers.length / subscriber) * 100 || 0,
+            ),
+
+            date: Date.now(),
+          });
+        }
+      }
+
+      return c.json({
+        message: "Dynamic groups updated successfully",
+        err: false,
+        data: {},
       });
     },
   );

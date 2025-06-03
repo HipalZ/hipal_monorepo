@@ -1903,6 +1903,98 @@ const scriptRouter = new Hono()
         return respond(c, "done", false, 200, {});
       });
     },
+  )
+
+  .post(
+    "/enable_group_analytics",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        schedule("0 19 * * *", async () => {
+          const res = await axios.put(
+            "https://api.test.hipalz.com/groups/updateLateNightUsers/all",
+            {
+              businessId: requestData.businessId,
+            },
+          );
+        });
+        schedule("0 20 * * *", async () => {
+          await axios.put(
+            "https://api.test.hipalz.com/groups/updateDefaultGroups/all",
+            {
+              businessId: requestData.businessId,
+            },
+          );
+        });
+
+        // 3:00am IST (21:30 UTC previous day)
+        schedule("0 21 * * *", async () => {
+          await axios.put(
+            "https://api.test.hipalz.com/groups/updateMorningUsersGroup/all",
+            {
+              businessId: requestData.businessId,
+            },
+          );
+        });
+
+        // 4:00am IST (22:30 UTC previous day)
+        schedule("0 22 * * *", async () => {
+          await axios.put(
+            "https://api.test.hipalz.com/groups/updateAfterNoonUsers/all",
+            {
+              businessId: requestData.businessId,
+            },
+          );
+        });
+
+        // 5:00am IST (23:30 UTC previous day)
+        schedule("0 23 * * *", async () => {
+          await axios.put(
+            "https://api.test.hipalz.com/groups/updateEveningUsers/all",
+            {
+              businessId: requestData.businessId,
+            },
+          );
+        });
+
+        return respond(c, "done", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/enable_dnamic_group_analytics",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        schedule("0 20 * * *", async () => {
+          const res = await axios.post(
+            "https://api.test.hipalz.com/groups/update_dnamic_group",
+            {
+              businessId: requestData.businessId,
+            },
+          );
+        });
+
+        return respond(c, "done", false, 200, {});
+      });
+    },
   );
 
 export default scriptRouter;

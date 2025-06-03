@@ -23,6 +23,7 @@ const subsCriberRouter = new Hono()
 
     const userAnalytics = await UserAnalytic.findOne({
       userId: userId,
+      businessId: businessId,
     }).select("userId");
 
     if (!userAnalytics) {
@@ -150,6 +151,7 @@ const subsCriberRouter = new Hono()
 
       const userAnalytics = await UserAnalytic.findOne({
         userId: userId,
+        businessId: businessId,
       }).select("userId");
 
       if (!userAnalytics) {

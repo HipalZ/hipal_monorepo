@@ -118,6 +118,31 @@ const groupSchema = new mongoose.Schema<Group>(
       enum: ["DYNAMIC", "MANUAL"],
       required: true,
     },
+    isDefault: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    morning: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    afternoon: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    evening: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    night: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   {
     timestamps: true,

@@ -14,6 +14,11 @@ export const groupAnalyticsSchema = z.object({
   groupColor: z.string().optional(),
   groupName: z.string().optional(),
   date: z.number().optional(),
+  isDefault: z.boolean().optional().default(false),
+  morning: z.boolean().optional().default(false),
+  afternoon: z.boolean().optional().default(false),
+  evening: z.boolean().optional().default(false),
+  night: z.boolean().optional().default(false),
 });
 
 export type groupAnalyticsType = z.infer<typeof groupAnalyticsSchema>;

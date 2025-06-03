@@ -107,6 +107,11 @@ export const groupSchema = z.object({
 
   userIds: z.array(ObjectIdSchema).optional(),
   removeUserIds: z.array(ObjectIdSchema).optional(),
+  morning: z.boolean().optional().default(false),
+  afternoon: z.boolean().optional().default(false),
+  evening: z.boolean().optional().default(false),
+  night: z.boolean().optional().default(false),
+  isDefault: z.boolean().optional().default(false),
 });
 
 export type Group = z.infer<typeof groupSchema>;
