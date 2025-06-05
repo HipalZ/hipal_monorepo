@@ -24,6 +24,7 @@ import paymentsRouter from "./payments";
 import permissionRouter from "./permission";
 import posRouter from "./pos";
 import posConfigurationRouter from "./posConfiguration";
+import qrRouter from "./qrs";
 import googleReview from "./reviews";
 import scriptRouter from "./script";
 import settingsRouter from "./settings";
@@ -81,6 +82,7 @@ export const routes = app
   .route("/bucket", bucketRouter)
   .route("/event", eventRouter)
   .route("/pos_configuration", posConfigurationRouter)
-  .route("/loyalty", loyaltyRouter);
+  .route("/loyalty", loyaltyRouter)
+  .route("/qrs", qrRouter);
 
 export type AppType = typeof routes;
