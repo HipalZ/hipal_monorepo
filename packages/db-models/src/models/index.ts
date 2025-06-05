@@ -86,4 +86,5 @@ export * from "./whatsAppWalletHistory";
 export * from "./whatsAppUser";
 export * from "./zone";
 
+export * from "./qrs";
 export * from "./termsAndConditions";
