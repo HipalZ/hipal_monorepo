@@ -35,7 +35,12 @@ const checkInQrUserRouter = new Hono()
       const checkInQrUsers = await CheckInQrUser.find({
         businessId,
         date: { $gte: fromDate, $lte: toDate },
-      }).sort({ date: -1 });
+      })
+        .sort({ date: -1 })
+        .populate({
+          path: "userId",
+          select: "name phone",
+        });
 
       return respond(
         c,
