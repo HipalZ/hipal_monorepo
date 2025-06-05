@@ -51,6 +51,12 @@ const checkInQrRouter = new Hono()
       });
       await newQr.save({ session });
 
+      await UrlModel.updateOne(
+        { _id: findUrl._id },
+        { $set: { qrId: newQr._id } },
+        { session },
+      );
+
       return respond(c, "QR created successfully", false, 201, {
         qrId: newQr._id,
       });
@@ -133,6 +139,8 @@ const checkInQrRouter = new Hono()
       if (!checkInQr) {
         return respond(c, "Check-in QR not found", true, 404, {});
       }
+
+      await UrlModel.deleteOne({ qrId: checkInQr._id });
 
       return respond(c, "Check-in QR deleted successfully", false, 200, {});
     },

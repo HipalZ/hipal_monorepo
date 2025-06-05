@@ -7,6 +7,7 @@ const UrlModelSchema = z.object({
   urlCode: z.string(),
   businessId: ObjectIdSchema.optional(),
   shortUrlType: z.string().optional().default("TABLE"),
+  qrId: ObjectIdSchema.optional(),
 });
 
 export type UrlModelType = z.infer<typeof UrlModelSchema>;

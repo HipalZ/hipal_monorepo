@@ -7,6 +7,7 @@ export const checkInQrValidator = z.object({
   downloadLink: z.string().url().optional(),
   date: z.number().optional(),
   isDeleted: z.boolean().default(false),
+  userCount: z.number().default(0),
 });
 
 export const updateCheckInQrValidator = z.object({

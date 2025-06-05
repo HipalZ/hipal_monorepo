@@ -2,6 +2,7 @@ import {
   Business,
   BusinessSettings,
   Campaign,
+  CheckInQr,
   CheckInQrUser,
   CouponLink,
   Couponz,
@@ -2377,7 +2378,7 @@ const whatsappRouter = new Hono()
                   userId: user?._id,
                   businessId: config?.businessId,
                   code,
-                  qrId: urlObj?._id,
+                  qrId: urlObj?.qrId,
                   date: Date.now(),
                 },
                 {
@@ -2386,6 +2387,21 @@ const whatsappRouter = new Hono()
                 },
               );
 
+              const checkInUserExist = await CheckInQrUser.exists({
+                userId: user?._id,
+                businessId: config?.businessId,
+              });
+
+              if (!checkInUserExist) {
+                await CheckInQr.findByIdAndUpdate(
+                  urlObj?.qrId,
+                  {
+                    $inc: { userCount: 1 },
+                  },
+                  { new: true },
+                );
+              }
+
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
@@ -2393,7 +2409,7 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: `Welcome to ${bName?.name}! 👋\n\nThanks for checking in. We're thrilled to have you!\n\n🍽️ *Explore Our Menu*: ${longUrl}\nDiscover handcrafted dishes, seasonal specials, and guest favorites.\n\nEnjoy your time with us! 😊`,
+                    body: `Welcome to ${bName?.name}! 👋\n\nThank you for checking in — we're truly grateful to have you with us today. 🙏\nYour code: *${code}*\n\n🍽️ *Explore Our Menu*: ${longUrl}\nDiscover handcrafted dishes, seasonal specials, and guest favorites.\n\nWe hope you have a delightful experience! 😊`,
                   },
                 },
                 headers: {

@@ -94,10 +94,10 @@ const transformData = (data: unknown[]) => {
     });
 };
 //dates
-const startOfToday = new Date();
+export const startOfToday = new Date();
 startOfToday.setHours(0, 0, 0, 0);
 
-const endOfToday = new Date();
+export const endOfToday = new Date();
 endOfToday.setHours(23, 59, 59, 999);
 
 export const calculateDiscount = async (
