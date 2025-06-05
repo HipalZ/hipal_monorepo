@@ -6,6 +6,7 @@ const checkInQrUserSchema = new mongoose.Schema<CheckInQrUserValidator>({
   businessId: {
     type: ObjectId,
     required: true,
+    ref: "Business",
   },
   code: {
     type: String,
@@ -14,6 +15,7 @@ const checkInQrUserSchema = new mongoose.Schema<CheckInQrUserValidator>({
   userId: {
     type: ObjectId,
     required: true,
+    ref: "User",
   },
   date: {
     type: Number,

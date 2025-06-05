@@ -25,6 +25,10 @@ const checkInQrSchema = new mongoose.Schema<CheckInQrValidator>({
     type: Boolean,
     default: false,
   },
+  userCount: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const CheckInQr: Model<CheckInQrValidator> = mongoose.model<CheckInQrValidator>(

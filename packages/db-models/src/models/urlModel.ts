@@ -27,6 +27,10 @@ const urlModelChema = new mongoose.Schema<UrlModelType>(
       required: false,
       default: "TABLE",
     },
+    qrId: {
+      type: ObjectId,
+      required: false,
+    },
   },
   {
     timestamps: true,

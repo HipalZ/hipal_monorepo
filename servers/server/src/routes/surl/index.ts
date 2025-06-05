@@ -134,7 +134,7 @@ const surlRouter = new Hono()
         const menuRedirection = whatsAppBusinessConfig?.menuRedirection;
 
         if (menuRedirection && menuRedirection === "WA") {
-          const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi! I’ve checked in via QR at *T-${urlCode}*. 🙂`;
+          const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, I have ve checked in via QR at T-${urlCode}`;
 
           return c.redirect(redirectUrl);
         }
