@@ -2,6 +2,7 @@ import {
   Business,
   BusinessSettings,
   Campaign,
+  CheckInQrUser,
   CouponLink,
   Couponz,
   GroupModel,
@@ -2122,7 +2123,7 @@ const whatsappRouter = new Hono()
 
             const findLongUrl = await UrlModel.findOne({
               urlCode: tableCode,
-            }).select("longUrl shortUrl shortUrlType urlCode");
+            });
 
             longUrl = `${findLongUrl?.shortUrl}?q=wa`;
             shortUrlType = findLongUrl?.shortUrlType || "";
@@ -2347,6 +2348,58 @@ const whatsappRouter = new Hono()
                   },
                 },
               );
+            } else if (shortUrlType === "CHECK_IN") {
+              let user = await User.findOne({
+                phone: userPhone,
+              });
+
+              if (!user) {
+                user = await User.create({
+                  phone: userPhone,
+                  name: userName,
+                  role: [
+                    "HIPAL_CUSTOMER",
+                    "OWNER",
+                    "MANAGER",
+                    "CAPTAIN",
+                    "CO_OWNER",
+                  ],
+                });
+              }
+              const code = Math.floor(1000 + Math.random() * 9000).toString();
+
+              const checkInUser = await CheckInQrUser.findOneAndUpdate(
+                {
+                  userId: user?._id,
+                  businessId: config?.businessId,
+                },
+                {
+                  userId: user?._id,
+                  businessId: config?.businessId,
+                  code,
+                  qrId: urlObj?._id,
+                  date: Date.now(),
+                },
+                {
+                  upsert: true,
+                  new: true,
+                },
+              );
+
+              await axios({
+                method: "POST",
+                url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
+                data: {
+                  messaging_product: "whatsapp",
+                  to: from,
+                  text: {
+                    body: `Welcome to ${bName?.name}! 👋\n\nThanks for checking in. We're thrilled to have you!\n\n🍽️ *Explore Our Menu*: ${longUrl}\nDiscover handcrafted dishes, seasonal specials, and guest favorites.\n\nEnjoy your time with us! 😊`,
+                  },
+                },
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
             } else {
               await axios({
                 method: "POST",
