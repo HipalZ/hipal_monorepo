@@ -1,15 +1,14 @@
-import MemoizedHeader from "@/components/molecules/header"
-import { type ChangeEvent, memo, useCallback, useEffect, useMemo, useRef } from "react"
+import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import { useLocation, useNavigate, useParams } from "react-router-dom"
-import Hi from "@/assets/svg/hi.svg"
 import { FaArrowLeft } from "react-icons/fa"
-import useMenuPageStore, { type MenuPageType } from "@/components/store/useMenuStorage"
-import Sidebar from "@/components/templates/menu/sideNavbaar"
-import { cn } from "@hi/common/src/error-handler"
 import { BiPlus } from "react-icons/bi"
+import { HiX } from "react-icons/hi"
+
+// Components
+import MemoizedHeader from "@/components/molecules/header"
+import Sidebar from "@/components/templates/menu/sideNavbaar"
 import PopUp from "@/components/atom/popUp"
 import CreateCategory from "@/components/templates/menu/category/createCategory"
-import { HiX } from "react-icons/hi"
 import ListOfParentCategory from "@/components/templates/menu/category/listOfParentCategory"
 import ListOfChildCategory from "@/components/templates/menu/category/listOfChildCategories"
 import Search from "@/components/templates/menu/category/search"
@@ -20,14 +19,21 @@ import EditDish from "@/components/templates/menu/dish/[editDish]/editDish"
 import AddOnForm from "@/components/templates/menu/addonPage/addOnform"
 import ListOfAddOn from "@/components/templates/menu/addonPage/listOfAddOn"
 import AlertClosePopup from "@/components/common/alertClosePopup"
-import { useBulkUploadDishes } from "@/hooks/useCategory"
 import LoadingSpinner from "@/components/atom/loadingSpinner"
+
+// Hooks and utilities
+import useMenuPageStore, { type MenuPageType } from "@/components/store/useMenuStorage"
+import { cn } from "@hi/common/src/error-handler"
+import { useBulkUploadDishes } from "@/hooks/useCategory"
 import { useGetMenuLayout } from "@/hooks/useMenuLayout"
 import { MenuType } from "@/components/store/useMenuCreationStore"
 
-// Import the existing breadcrumb components
+// Assets
+import Hi from "@/assets/svg/hi.svg"
+
+// UI Components
 import {
-  Breadcrumb as UIBreadcrumb,
+  Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
@@ -35,9 +41,11 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Link } from "react-router-dom"
+import BulkUploadModal from "@/components/templates/menu/dish/BulkUploadModal.tsx"
 
 const MemoizeDishAndCat = () => {
   const navigate = useNavigate()
+  const [showBulkUploadModal, setShowBulkUploadModal] = useState(false)
 
   const {
     selectedPage,
@@ -65,8 +73,7 @@ const MemoizeDishAndCat = () => {
     setTempPage: s.setTempPage,
   }))
 
-  // File upload refs and handlers
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  // File upload hooks
   const { mutate: handleFileUpload, isPending } = useBulkUploadDishes()
 
   // URL params and location
@@ -81,7 +88,6 @@ const MemoizeDishAndCat = () => {
     return menuLayout.data.menuType === MenuType.MAIN_SUB_DISH
   }, [isLoading, menuLayout])
 
-
   // Initialize page on component mount
   useEffect(() => {
     const isManagerExists = pathname.includes("dishandcat")
@@ -89,13 +95,21 @@ const MemoizeDishAndCat = () => {
     setSelectedPage("DISHES")
   }, [pathname, setIsMenuManager, setSelectedPage])
 
-  // Callbacks for UI interactions
+  // Open bulk upload modal
   const bulkUpload = useCallback(() => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click()
-    }
+    setShowBulkUploadModal(true)
   }, [])
 
+  // Handle file upload from modal
+  const handleModalFileUpload = useCallback(
+    (file: File) => {
+      handleFileUpload(file)
+      // Modal will be closed by the hook on success
+    },
+    [handleFileUpload],
+  )
+
+  // Open menu creation modal
   const openMenuModel = useCallback(() => {
     resetStore()
     if (selectedPage === "MAIN_CATEGORY") {
@@ -107,15 +121,18 @@ const MemoizeDishAndCat = () => {
     resetEditDish()
   }, [selectedPage, resetStore, resetEditDish, setSelectedCategory, setOpenMenu])
 
+  // Close menu modal with confirmation
   const closeMenu = useCallback(() => {
     setTempPage(selectedPage)
     setSelectedPage("ALERT")
   }, [selectedPage, setSelectedPage, setTempPage])
 
+  // Close edit menu modal
   const closeEditMenu = useCallback(() => {
     setEditOpenMenu(false)
   }, [setEditOpenMenu])
 
+  // Show confirmation popup
   const showPopUp = useCallback(() => {
     setTempPage(selectedPage)
     setSelectedPage("ALERT")
@@ -185,9 +202,6 @@ const MemoizeDishAndCat = () => {
           <MemoizedHeader title={dynamicHeading()} leftIcon={<FaArrowLeft />} onBack={handleBack} />
         </article>
 
-
-
-
         {/* Mobile navigation */}
         <section className="absolute w-full px-4 space-x-4 text-sm mobile-only">
           {sidebarItems.map((item) => (
@@ -211,8 +225,10 @@ const MemoizeDishAndCat = () => {
           <Search />
         </section>
       </div>
+
+      {/* Breadcrumb navigation */}
       <div className="px-4 py-4 font-semibold bg-white">
-        <UIBreadcrumb>
+        <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
@@ -243,7 +259,7 @@ const MemoizeDishAndCat = () => {
               <BreadcrumbPage>{dynamicHeading()}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
-        </UIBreadcrumb>
+        </Breadcrumb>
       </div>
 
       {/* Sidebar for desktop */}
@@ -297,9 +313,11 @@ const MemoizeDishAndCat = () => {
         </PopUp>
       )}
 
-      {/* Floating action buttons */}
+      {/* Action buttons */}
       <div
-        className={`${selectedPage === "MAIN_CATEGORY" ? "bottom-16" : "bottom-6"}  fixed z-50 flex flex-col items-end space-y-4 lg:sticky lg:float-right lg:bottom-6 right-6`}
+        className={`${
+          selectedPage === "MAIN_CATEGORY" ? "bottom-16" : "bottom-6"
+        }  fixed z-50 flex flex-col items-end space-y-4 lg:sticky lg:float-right lg:bottom-6 right-6`}
       >
         {selectedPage === "DISHES" && (
           <>
@@ -310,17 +328,6 @@ const MemoizeDishAndCat = () => {
             >
               <BiPlus size={20} /> Bulk Upload Dishes
             </button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                const file = e.target.files?.[0]
-                if (file) {
-                  handleFileUpload(file)
-                }
-              }}
-              style={{ display: "none" }}
-            />
           </>
         )}
         <button
@@ -331,10 +338,18 @@ const MemoizeDishAndCat = () => {
           <BiPlus size={20} /> {selectedPage?.toLowerCase()}
         </button>
       </div>
+
+      {/* Bulk upload modal */}
+      {showBulkUploadModal && (
+        <BulkUploadModal
+          onClose={() => setShowBulkUploadModal(false)}
+          onUpload={handleModalFileUpload}
+          isLoading={isPending}
+        />
+      )}
     </main>
   )
 }
 
 const DishAndCat = memo(MemoizeDishAndCat)
 export default DishAndCat
-

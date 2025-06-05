@@ -15,11 +15,10 @@ const checkInQrUserRouter = new Hono()
         businessId: z.string().min(2).max(50),
         from: z.string().optional(),
         to: z.string().optional(),
-        pageNumber: z.string().optional(),
       }),
     ),
     async (c) => {
-      const { businessId, from, to, pageNumber } = c.req.query();
+      const { businessId, from, to } = c.req.query();
 
       const fromDate = from ? Number(from) : startOfToday.getTime();
       const toDate = to ? Number(to) : endOfToday.getTime();

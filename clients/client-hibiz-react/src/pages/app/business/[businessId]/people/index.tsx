@@ -9,9 +9,13 @@ import Client from "@/components/templates/people/client";
 import Tagz from "@/components/templates/people/tagz";
 import TargetGroups from "@/components/templates/people/targetGropus";
 import { useNavigate, useParams } from "react-router-dom";
+import CheckInUsers from "@/components/templates/people/CheckInusers.tsx";
 
 const HiPeople = () => {
-  const { selectedPage, setSelectedPage } = useHiPeopleStore();
+  const { selectedPage, setSelectedPage } = useHiPeopleStore((s) => ({
+    selectedPage: s.selectedPage,
+    setSelectedPage: s.setSelectedPage,
+  }));
   const navigate = useNavigate();
   const { businessId } = useParams<{ businessId: string }>();
   const sidebarItems = [
@@ -31,12 +35,19 @@ const HiPeople = () => {
       text: "Tagz",
       onClick: () => setSelectedPage("TAGZ"),
     },
+    {
+      icon: Hi,
+      text: "Check In Users",
+      onClick: () => setSelectedPage("CHECK IN USERS"),
+    },
     // { icon: Hi, text: "Actions", onClick: () => setSelectedPage("ACTIONS") },
   ];
 
   const handleBack = () => {
     navigate(`/app/business/${businessId}`);
   };
+
+  console.log("Selected Page:", selectedPage);
 
   return (
     <main>
@@ -74,6 +85,7 @@ const HiPeople = () => {
       {selectedPage === "CLIENTS" && <Client />}
       {selectedPage === "TAGZ" && <Tagz />}
       {selectedPage === "TARGET GROUPS" && <TargetGroups />}
+      {selectedPage === "CHECK IN USERS" && <CheckInUsers />}
     </main>
   );
 };

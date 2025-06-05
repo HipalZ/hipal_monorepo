@@ -502,6 +502,7 @@ export interface BusinessDetails {
   }[];
   logoUrl: string;
   specialBannerUrl: string;
+  categoryTopBannerUrl:string;
   endBannerUrl: string;
   outLetType: string;
   isCustomTime: boolean;

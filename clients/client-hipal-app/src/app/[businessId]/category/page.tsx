@@ -5,9 +5,9 @@ import type { BusinessDetails } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 
-// export const dynamic = "force-dynamic";
-// export const fetchCache = "force-no-store";
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+// export const revalidate = 300;
 
 const MenuBannerPage = dynamics(
   () => import("@/components/organisms/menuBanner"),
@@ -132,7 +132,7 @@ export async function generateMetadata({
         description: metaDescription,
         images: [
           {
-            url: logoUrl || "https://example.com/fallback-image.jpg",
+            url: logoUrl,
             width: 1200,
             height: 630,
             alt: name,

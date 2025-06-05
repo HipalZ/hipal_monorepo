@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import Loading from "./loading";
 import "./globals.css";
+// import AutoLoginWrapper from "@/components/AutoLoginWrapper.jsx";
 const DynamicThemes = dynamic(
   () => import("@/components/atoms/dynamicThemes"),
   { ssr: false },
@@ -15,6 +16,12 @@ const DynamicScanPage = dynamic(
   },
 );
 
+const AutoLoginWrapper = dynamic(
+  () => import("@/components/AutoLoginWrapper"),
+  {
+    ssr: false,
+  },
+);
 const DynamicInternetConnection = dynamic(
   () => import("@/components/atoms/internetConnection"),
   {
@@ -113,6 +120,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+
   return (
     <html lang="en">
       <head>
@@ -164,6 +172,7 @@ export default function RootLayout({
           <DynamicQueryComponent>
             <div id="root">
               {children}
+              <AutoLoginWrapper />
               <DynamicCombinedLogin />
             </div>
           </DynamicQueryComponent>

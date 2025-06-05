@@ -73,9 +73,11 @@ function MemoIndividualItemDescription() {
                 <span className="text-sm font-normal text-[#000000]">
                   {portion?.name}
                 </span>
-                <span className="text-xs font-thin text-[#000000]">
+                {Number(portion?.price) > 1 && (
+                  <span className="text-xs font-thin text-[#000000]">
                   ₹ {getPrice(portion?.price)}
-                </span>
+                  </span>
+                )}
               </div>
             ))}
           </div>

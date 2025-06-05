@@ -70,7 +70,7 @@ const MemoCreateDish = () => {
     }
   }, [setDishStep, setOpenMenu, dishStep]);
 
-  const handleHeader = () => {
+  const handleHeader = useCallback(() => {
     switch (dishStep) {
       case DishSteps.DISH_STEP_1:
         return "Create Dish";
@@ -89,7 +89,9 @@ const MemoCreateDish = () => {
       default:
         return "Create Dish";
     }
-  };
+  },[
+    dishStep,
+  ]);
 
   const handleSaveCropper = () => {
     handleCrop(

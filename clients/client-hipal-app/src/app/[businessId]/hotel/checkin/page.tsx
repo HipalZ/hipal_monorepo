@@ -121,7 +121,6 @@ const page = async ({
   const userId = typeof searchParams.id === "string" ? searchParams.id : "";
   const themeData = await getThemeSettings(businessData?.businessId);
 
-  console.log("userId", userId);
   return (
     <HotelBackgroundContainer overlayOpacity={50}>
       <ViewPortContainer className="relative mx-auto max-w-[30rem] pb-[10rem]">

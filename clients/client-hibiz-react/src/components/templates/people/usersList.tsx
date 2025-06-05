@@ -18,7 +18,13 @@ const MemoUsersList = ({ hide }: { hide?: boolean }) => {
     clearAllUsers,
     selectedUserIds,
     setAddGroupPage,
-  } = useHiPeopleStore();
+  } = useHiPeopleStore((state) => ({
+    toggleUserSelection: state.toggleUserSelection,
+    selectAllUsers: state.selectAllUsers,
+    clearAllUsers: state.clearAllUsers,
+    selectedUserIds: state.selectedUserIds,
+    setAddGroupPage: state.setAddGroupPage,
+  }));
 
   const { isLoading, peopleData } = useGetAllPeoples();
 

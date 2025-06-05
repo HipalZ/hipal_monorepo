@@ -45,6 +45,10 @@ function Header({
     return result;
   }, [categories]);
 
+  if (outletInfo?.outLetType === "OTHER") {
+    return null;
+  }
+
   return (
     <motion.div
       style={{

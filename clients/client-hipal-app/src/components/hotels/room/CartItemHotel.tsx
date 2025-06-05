@@ -149,9 +149,11 @@ const MemoizedCartItemHotel = ({ cartItem, hide }: CartItemProp) => {
               </div>
               <div className="flex items-center justify-between mt-2">
                 <div className="flex items-center gap-4">
-                  <span className="block text-[#525252] text-sm font-semibold">
-                    ₹{calculateTotalPrice().toFixed(2)}
-                  </span>
+                    {calculateTotalPrice() > 1 && (
+                    <span className="block text-[#525252] text-sm font-semibold">
+                      ₹{calculateTotalPrice().toFixed(2)}
+                    </span>
+                    )}
                   {!cartItem?.dish?.instruction?.length && (
                     <button
                       type="button"

@@ -35,10 +35,14 @@ export interface ITable {
     zoneId?: string;
 }
 
+export type zonePages = "zones" | "tables" | "qrs" | "check in";
 interface ZoneStore {
 
     createZoneModal: boolean;
     setCreateZoneModal: (value: boolean) => void;
+
+    selectedTab: zonePages;
+    setSelectedTab: (value: zonePages) => void;
 
     showZoneDetails: boolean;
     setShowZoneDetails: (value: boolean) => void;
@@ -121,6 +125,9 @@ interface ZoneStore {
 const useZoneStore = create<ZoneStore>((set) => ({
     createZoneModal: false,
     setCreateZoneModal: (value) => set({ createZoneModal: value }),
+
+    selectedTab: "zones",
+    setSelectedTab: (value) => set({ selectedTab: value }),
 
     editZoneId: null,
     setEditZoneId: (value) => set({ editZoneId: value }),

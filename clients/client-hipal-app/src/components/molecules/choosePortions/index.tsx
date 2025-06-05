@@ -44,9 +44,11 @@ function MemoChoosePortions({ dishData }: { dishData: DishType }) {
                         </span>
                       </td>
                       <td className="!text-sm w-[20%] text-center font-semibold flex flex-row">
-                        <span className="mx-auto">
+                        {portion?.price > 1 && (
+                          <span className="mx-auto">
                           ₹ {portion?.price || 0}
-                        </span>
+                          </span>
+                        )}
                       </td>
                     </tr>
                   ))}

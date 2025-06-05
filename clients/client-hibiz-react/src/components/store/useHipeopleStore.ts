@@ -31,7 +31,8 @@ export type HiPeoplePages =
   | "CLIENTS"
   | "TARGET GROUPS"
   | "TAGZ"
-  | "ACTIONS";
+  | "ACTIONS"
+  | "CHECK IN USERS"
 
 export type NavItems =
   | "RECENT BILLS"

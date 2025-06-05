@@ -167,54 +167,219 @@ export const useUpdateCategory = () => {
   return { mutate: mutateAsync, isPending };
 };
 
-export const normalizeAndMapKeys = (
-  obj: any,
-  keyMap: { [key: string]: string },
-) => {
-  const normalizeKey = (key: string) => {
-    return key
-      .replace(/([a-z])([A-Z])/g, "$1 $2")
-      .replace(/[\s-_]+/g, " ")
-      .toLowerCase()
-      .replace(/\s+/g, "");
-  };
+const DISH_TYPE_MAPPING: Record<string, string> = {
+  // VEG variations
+  veg: "VEG",
+  vegetarian: "VEG",
+  v: "VEG",
 
-  return Object.keys(obj).reduce((acc, key) => {
-    const normalizedKey = normalizeKey(key);
-    const newKey = keyMap[normalizedKey] || key;
-    acc[newKey] = obj[key];
-    return acc;
-  }, {} as any);
+  // NON_VEG variations
+  non_veg: "NON_VEG",
+  "non-veg": "NON_VEG",
+  "non veg": "NON_VEG",
+  nonveg: "NON_VEG",
+  "non vegetarian": "NON_VEG",
+  meat: "NON_VEG",
+  chicken: "NON_VEG",
+  mutton: "NON_VEG",
+  fish: "NON_VEG",
+  seafood: "NON_VEG",
+
+  // EGG variations
+  egg: "EGG",
+  eggs: "EGG",
+
+  // VEGAN variations
+  vegan: "VEGAN",
+  "plant based": "VEGAN",
+  "plant-based": "VEGAN",
+
+  // ALCOHOL variations
+  alcohol: "ALCOHOL",
+  alcoholic: "ALCOHOL",
+  wine: "ALCOHOL",
+  beer: "ALCOHOL",
+  cocktail: "ALCOHOL",
+
+  // NON_ALCOHOL variations
+  non_alcohol: "NON_ALCOHOL",
+  "non-alcohol": "NON_ALCOHOL",
+  "non alcohol": "NON_ALCOHOL",
+  nonalcohol: "NON_ALCOHOL",
+  mocktail: "NON_ALCOHOL",
+  "soft drink": "NON_ALCOHOL",
+
+  // GLUTEN_FREE variations
+  gluten_free: "GLUTEN_FREE",
+  "gluten-free": "GLUTEN_FREE",
+  "gluten free": "GLUTEN_FREE",
+  glutenfree: "GLUTEN_FREE",
+  gf: "GLUTEN_FREE",
+
+  // MIX variations
+  mix: "MIX",
+  mixed: "MIX",
+  combination: "MIX",
+  combo: "MIX",
+};
+
+// Function to normalize dish types
+const normalizeDishType = (dishType: string): string => {
+  if (!dishType || typeof dishType !== "string") {
+    return "VEG"; // Default fallback
+  }
+
+  // Clean the input: remove extra spaces, convert to lowercase
+  const cleaned = dishType.trim().toLowerCase().replace(/\s+/g, " ");
+
+  // Check if it's already a valid dish type (case insensitive)
+  const validDishTypes = [
+    "VEG",
+    "NON_VEG",
+    "EGG",
+    "VEGAN",
+    "ALCOHOL",
+    "NON_ALCOHOL",
+    "GLUTEN_FREE",
+    "MIX",
+  ];
+  const upperCased = cleaned.toUpperCase();
+  if (validDishTypes.includes(upperCased)) {
+    return upperCased;
+  }
+
+  // Try to find a mapping
+  if (DISH_TYPE_MAPPING[cleaned]) {
+    return DISH_TYPE_MAPPING[cleaned];
+  }
+
+  // If no mapping found, return VEG as default
+  console.warn(`Unknown dish type: "${dishType}", defaulting to VEG`);
+  return "VEG";
+};
+
+// Function to normalize dish name
+const normalizeDishName = (name: string): string => {
+  if (!name || typeof name !== "string") {
+    return "";
+  }
+
+  return name
+    .trim() // Remove leading/trailing spaces
+    .replace(/\s+/g, " ") // Replace multiple spaces with single space
+    .replace(/[^\w\s-']/g, "") // Remove special characters except hyphens and apostrophes
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Title case
+    .join(" ");
+};
+
+// Function to normalize price
+const normalizePrice = (price: string | number): number => {
+  if (typeof price === "number") {
+    return Math.max(0, Math.round(price * 100) / 100); // Round to 2 decimal places, ensure positive
+  }
+
+  if (!price || typeof price !== "string") {
+    return 0;
+  }
+
+  // Remove currency symbols, spaces, and non-numeric characters except decimal point
+  const cleaned = price
+    .toString()
+    .replace(/[₹$€£¥,\s]/g, "") // Remove common currency symbols and spaces
+    .replace(/[^\d.]/g, ""); // Keep only digits and decimal point
+
+  const parsed = Number.parseFloat(cleaned);
+  return Number.isNaN(parsed) ? 0 : Math.max(0, Math.round(parsed * 100) / 100);
+};
+
+// Function to normalize description
+const normalizeDescription = (description: string): string => {
+  if (!description || typeof description !== "string") {
+    return "";
+  }
+
+  return description
+    .trim()
+    .replace(/\s+/g, " ") // Replace multiple spaces with single space
+    .slice(0, 190); // Limit to 190 characters
+};
+
+// Function to normalize portions
+const normalizePortions = (portionsString: string): any[] => {
+  if (!portionsString || typeof portionsString !== 'string') {
+    return []
+  }
+
+  try {
+    // Handle pipe-separated format: "Regular:299:NON_VEG:true|Large:399:NON_VEG:false"
+    const portionStrings = portionsString.split('|').filter(p => p.trim())
+    
+    return portionStrings.map((portionStr, index) => {
+      const [name, price, type, isDefault] = portionStr.split(':').map(s => s.trim())
+      
+      return {
+        name: normalizeDishName(name || `Portion ${index + 1}`),
+        price: normalizePrice(price || '0'),
+        portionTypes: [normalizeDishType(type || 'VEG')],
+        default: isDefault === 'true' || index === 0, // First portion is default if not specified
+      }
+    }).filter(portion => portion.name.length >= 3 && portion.price > 0)
+  } catch (error) {
+    console.warn('Failed to parse portions:', portionsString, error)
+    return []
+  }
+}
+
+// Enhanced normalizeAndMapKeys function
+const normalizeAndMapKeys = (item: any, keyMap: Record<string, string>) => {
+  const normalized: any = {};
+
+  Object.keys(item).forEach((key) => {
+    const cleanKey = key.toLowerCase().trim();
+    const mappedKey = keyMap[cleanKey] || cleanKey;
+
+    if (item[key] !== null && item[key] !== undefined && item[key] !== "") {
+      normalized[mappedKey] = item[key];
+    }
+  });
+
+  return normalized;
 };
 
 export const useBulkUploadDishes = () => {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   const { businessId, menuId } = useParams<{
-    businessId: string;
-    menuId: string;
-  }>();
-  const { setOpenMenu, resetStore } = useMenuPageStore((s) => ({
+    businessId: string
+    menuId: string
+  }>()
+  const { setOpenMenu, resetStore, setShowBulkUploadModal } = useMenuPageStore((s) => ({
     setOpenMenu: s.setOpenMenu,
     resetStore: s.resetStore,
-  }));
+    setShowBulkUploadModal: s.setShowBulkUploadModal,
+  }))
 
   const handleApiResponse = useCallback(
     (res: any) => {
       if (res.status === 400 || res.status === 403) {
-        toast.error("Please upload a valid format");
+        toast.error("Please upload a valid format")
       } else if (res.status === 201 || res.status === 200) {
-        toast.success("Dishes uploaded successfully");
-        setOpenMenu(false);
+        toast.success("Dishes uploaded successfully")
+        setOpenMenu(false)
         queryClient.invalidateQueries({
           queryKey: ["getAllDishes", businessId],
-        });
-        resetStore();
+        })
+        resetStore()
+        // Close the modal on success
+        if (typeof setShowBulkUploadModal === "function") {
+          setShowBulkUploadModal(false)
+        }
       } else {
-        toast.error("An unexpected error occurred");
+        toast.error("An unexpected error occurred")
       }
     },
-    [queryClient, setOpenMenu, resetStore, businessId],
-  );
+    [queryClient, setOpenMenu, resetStore, businessId, setShowBulkUploadModal],
+  )
 
   const { mutateAsync, isPending } = useMutation({
     mutationFn: async (file: File) => {
@@ -224,62 +389,95 @@ export const useBulkUploadDishes = () => {
           complete: async (result) => {
             const keyMap = {
               name: "name",
+              "dish name": "name",
+              dishname: "name",
               price: "price",
+              "dish price": "price",
+              dishprice: "price",
+              cost: "price",
               dishtypes: "dishTypes",
               "dish types": "dishTypes",
+              "dish type": "dishTypes",
+              dishtype: "dishTypes",
+              type: "dishTypes",
+              category: "dishTypes",
               description: "description",
-            };
+              "dish description": "description",
+              dishdescription: "description",
+              desc: "description",
+              details: "description",
+              portions: "portions",
+              "dish portions": "portions",
+              "portion sizes": "portions",
+              sizes: "portions",
+            }
 
-            const data = result.data.map((item: any) =>
-              normalizeAndMapKeys(item, keyMap),
-            ) as DishType[];
+            const data = result.data.map((item: any) => normalizeAndMapKeys(item, keyMap)) as DishType[]
 
             const validData = data
-              .filter(
-                (item: DishType) => item.name && Object.keys(item).length > 0,
-              )
-              .map((item: DishType) => ({
-                ...item,
-                dishTypes: [item.dishTypes],
-                businessId: businessId,
-                menuId: menuId,
-                name: item.name,
-                description: item.description?.slice(0, 190),
-              }));
+              .filter((item: DishType) => {
+                // More robust filtering
+                const hasName = item.name && typeof item.name === "string" && item.name.trim().length > 0
+                const hasPrice = item.price !== undefined && item.price !== null
+                return hasName && hasPrice
+              })
+              .map((item: DishType) => {
+                // Parse portions if provided
+                const portions = item.portions ? normalizePortions(item.portions as string) : []
 
-            const formData = new FormData();
-            formData.append("data", JSON.stringify(validData));
-            const dishes = JSON.parse(
-              formData.get("data") as string,
-            ) as DishType[];
+                // Normalize all fields
+                const normalizedItem = {
+                  ...item,
+                  name: normalizeDishName(item.name as string),
+                  price: normalizePrice(item.price as string | number),
+                  dishTypes: [normalizeDishType(item.dishTypes as string)],
+                  description: normalizeDescription(item.description as string),
+                  portions: portions,
+                  businessId: businessId,
+                  menuId: menuId,
+                }
+
+                return normalizedItem
+              })
+              .filter((item: DishType) => {
+                // Final validation after normalization
+                return item.name.length >= 3 && item.price > 0
+              })
+
+            if (validData.length === 0) {
+              throw new Error("No valid dishes found in the uploaded file")
+            }
+
             try {
               const res = await apiRpc.dishes[":businessId"].bulkUpload.$post({
                 param: {
-                  businessId: businessId,
+                  businessId: businessId || "",
                 },
-                json: dishes,
-              });
+                json: validData,
+              })
 
-              resolve(res);
+              resolve(res)
             } catch (error) {
-              reject(error);
+              reject(error)
             }
           },
-        });
-      });
+          error: (error) => {
+            reject(new Error(`Failed to parse CSV file: ${error.message}`))
+          },
+        })
+      })
     },
     onSuccess: (data) => {
-      handleApiResponse(data);
+      handleApiResponse(data)
     },
     onError: (error) => {
-      toast.error("Failed to upload dishes");
-      console.error("Error uploading dishes:", error);
+      toast.error("Failed to upload dishes")
+      console.error("Error uploading dishes:", error)
     },
-  });
+  })
 
-  return { mutate: mutateAsync, isPending };
-};
-
+  return { mutate: mutateAsync, isPending }
+}
 export const useDeleteCategory = () => {
   const queryClient = useQueryClient();
   const { setOpenMenu, resetStore, categoryStep, setIsCatDelete } =
