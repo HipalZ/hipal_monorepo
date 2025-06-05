@@ -87,6 +87,7 @@ export const useGetAllPeoples = () => {
     queryKey: ["getAllPeoples", businessData?._id],
     queryFn: getAllPeoples,
     enabled: !!businessData?._id,
+    staleTime: 1000 * 60 * 5,
   });
 
   return { peopleData, isLoading };

@@ -312,6 +312,10 @@ interface MenuPageStore {
 
   selectSingleParentCat: string[];
   setSelectSingleParentCat: (catId: string) => void;
+
+  setShowBulkUploadModal: (show: boolean) => void;
+  showBulkUploadModal: boolean;
+
 }
 
 const useMenuPageStore = create<MenuPageStore>((set) => ({
@@ -699,6 +703,11 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
 
   isCatDelete: false,
   setIsCatDelete: (isDelete: boolean) => set({ isCatDelete: isDelete }),
+
+  setShowBulkUploadModal: (show: boolean) =>
+    set({ showBulkUploadModal: show }),
+  showBulkUploadModal: false,
+
 }));
 
 export default useMenuPageStore;

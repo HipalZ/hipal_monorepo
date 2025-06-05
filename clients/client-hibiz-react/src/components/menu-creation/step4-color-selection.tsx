@@ -1,7 +1,6 @@
-
 import { memo, useCallback, useState, useEffect } from "react"
 import { HexColorPicker } from "react-colorful"
-import { Category, Dish } from "@/components/store/useMenuCreationStore"
+import type { Category, Dish } from "@/components/store/useMenuCreationStore"
 import { useMenuCreationStore } from "../store/useMenuCreationStore"
 
 interface Step4ColorSelectionProps {
@@ -10,17 +9,26 @@ interface Step4ColorSelectionProps {
 }
 
 const Step4ColorSelection = memo(({ sampleCategories, sampleDishes }: Step4ColorSelectionProps) => {
-  const { primaryColor, secondaryColor, setColors, categoryLayout, cardLayout } = useMenuCreationStore((state) => ({
+  const { primaryColor, secondaryColor, setColors, cardLayout } = useMenuCreationStore((state) => ({
     primaryColor: state.primaryColor,
     secondaryColor: state.secondaryColor,
     setColors: state.setColors,
-    categoryLayout: state.categoryLayout,
     cardLayout: state.cardLayout,
   }))
 
   const [activePrimary, setActivePrimary] = useState(primaryColor)
   const [activeSecondary, setActiveSecondary] = useState(secondaryColor)
   const [activeColorPicker, setActiveColorPicker] = useState<"primary" | "secondary" | null>(null)
+
+  // Input field states for manual color entry
+  const [primaryInput, setPrimaryInput] = useState(primaryColor)
+  const [secondaryInput, setSecondaryInput] = useState(secondaryColor)
+
+  // Sync input fields with active colors
+  useEffect(() => {
+    setPrimaryInput(activePrimary)
+    setSecondaryInput(activeSecondary)
+  }, [activePrimary, activeSecondary])
 
   // Apply colors when user finishes selecting
   useEffect(() => {
@@ -33,14 +41,41 @@ const Step4ColorSelection = memo(({ sampleCategories, sampleDishes }: Step4Color
     return () => clearTimeout(timer)
   }, [activePrimary, activeSecondary, primaryColor, secondaryColor, setColors])
 
-  // Predefined color combinations
+  // Validate hex color format
+  const isValidHexColor = (color: string): boolean => {
+    return /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color)
+  }
+
+  // Handle manual color input changes
+  const handlePrimaryInputChange = useCallback((value: string) => {
+    setPrimaryInput(value)
+    if (isValidHexColor(value)) {
+      setActivePrimary(value)
+    }
+  }, [
+    setActivePrimary,
+    setPrimaryInput,
+    isValidHexColor
+  ])
+
+  const handleSecondaryInputChange = useCallback((value: string) => {
+    setSecondaryInput(value)
+    if (isValidHexColor(value)) {
+      setActiveSecondary(value)
+    }
+  }, [
+    setActiveSecondary,
+    setSecondaryInput,
+    isValidHexColor
+  ])
+
   const colorPresets = [
-    { primary: "#3b82f6", secondary: "#dbeafe" }, // Blue
-    { primary: "#10b981", secondary: "#d1fae5" }, // Green
-    { primary: "#f59e0b", secondary: "#fef3c7" }, // Amber
-    { primary: "#ef4444", secondary: "#fee2e2" }, // Red
-    { primary: "#8b5cf6", secondary: "#ede9fe" }, // Purple
-    { primary: "#ec4899", secondary: "#fce7f3" }, // Pink
+    { primary: "#3b82f6", secondary: "#dbeafe" },
+    { primary: "#10b981", secondary: "#d1fae5" },
+    { primary: "#f59e0b", secondary: "#fef3c7" },
+    { primary: "#ef4444", secondary: "#fee2e2" },
+    { primary: "#8b5cf6", secondary: "#ede9fe" },
+    { primary: "#ec4899", secondary: "#fce7f3" },
   ]
 
   const handlePresetSelect = useCallback(
@@ -68,17 +103,53 @@ const Step4ColorSelection = memo(({ sampleCategories, sampleDishes }: Step4Color
           <div className="grid grid-cols-3 gap-2">
             {colorPresets.map((preset, index) => (
               <button
+                type="button"
                 key={index}
                 onClick={() => handlePresetSelect(preset.primary, preset.secondary)}
                 className="flex flex-col items-center p-2 border rounded-md hover:border-gray-400"
               >
                 <div className="flex w-full h-8 overflow-hidden rounded-md">
-                  <div className="w-1/2 h-full" style={{ backgroundColor: preset.primary }}></div>
-                  <div className="w-1/2 h-full" style={{ backgroundColor: preset.secondary }}></div>
+                  <div className="w-1/2 h-full" style={{ backgroundColor: preset.primary }} />
+                  <div className="w-1/2 h-full" style={{ backgroundColor: preset.secondary }} />
                 </div>
                 <span className="mt-1 text-xs">Preset {index + 1}</span>
               </button>
             ))}
+          </div>
+
+          {/* Manual color input fields */}
+          <div className="flex gap-4 mt-4">
+            <div className="flex-1">
+              <label className="block mb-1 text-sm font-medium">Primary Color (Hex)</label>
+              <input
+                type="text"
+                value={primaryInput}
+                onChange={(e) => handlePrimaryInputChange(e.target.value)}
+                placeholder="#3b82f6"
+                className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  isValidHexColor(primaryInput) ? "border-gray-300" : "border-red-300 bg-red-50"
+                }`}
+              />
+              {!isValidHexColor(primaryInput) && (
+                <p className="mt-1 text-xs text-red-500">Please enter a valid hex color (e.g., #3b82f6)</p>
+              )}
+            </div>
+
+            <div className="flex-1">
+              <label className="block mb-1 text-sm font-medium">Secondary Color (Hex)</label>
+              <input
+                type="text"
+                value={secondaryInput}
+                onChange={(e) => handleSecondaryInputChange(e.target.value)}
+                placeholder="#dbeafe"
+                className={`w-full px-3 py-2 text-sm border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  isValidHexColor(secondaryInput) ? "border-gray-300" : "border-red-300 bg-red-50"
+                }`}
+              />
+              {!isValidHexColor(secondaryInput) && (
+                <p className="mt-1 text-xs text-red-500">Please enter a valid hex color (e.g., #dbeafe)</p>
+              )}
+            </div>
           </div>
 
           {/* Custom color pickers */}
@@ -88,8 +159,13 @@ const Step4ColorSelection = memo(({ sampleCategories, sampleDishes }: Step4Color
               <div
                 className="w-full h-10 border border-gray-300 rounded-md cursor-pointer"
                 style={{ backgroundColor: activePrimary }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    setActiveColorPicker(activeColorPicker === "primary" ? null : "primary")
+                  }
+                }}
                 onClick={() => setActiveColorPicker(activeColorPicker === "primary" ? null : "primary")}
-              ></div>
+              />
               {activeColorPicker === "primary" && (
                 <div className="relative z-10 mt-2">
                   <HexColorPicker color={activePrimary} onChange={setActivePrimary} />
@@ -102,8 +178,13 @@ const Step4ColorSelection = memo(({ sampleCategories, sampleDishes }: Step4Color
               <div
                 className="w-full h-10 border border-gray-300 rounded-md cursor-pointer"
                 style={{ backgroundColor: activeSecondary }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    setActiveColorPicker(activeColorPicker === "secondary" ? null : "secondary")
+                  }
+                }}
                 onClick={() => setActiveColorPicker(activeColorPicker === "secondary" ? null : "secondary")}
-              ></div>
+              />
               {activeColorPicker === "secondary" && (
                 <div className="relative z-10 mt-2">
                   <HexColorPicker color={activeSecondary} onChange={setActiveSecondary} />
@@ -222,4 +303,3 @@ const Step4ColorSelection = memo(({ sampleCategories, sampleDishes }: Step4Color
 
 Step4ColorSelection.displayName = "Step4ColorSelection"
 export default Step4ColorSelection
-

@@ -1,28 +1,97 @@
-import { memo, useState } from "react";
+import { memo, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaChevronDown, FaChevronUp, FaUser, FaClock } from "react-icons/fa";
 import { MdLocalOffer, MdTableBar, MdAddCall } from "react-icons/md";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import { useDeleteCart } from "@/components/hooks/useCartApi";
 import CreateBillButton from "./cartWithBillButton";
+import PasswordModal from "./PasswordModal";
 import type { Cart } from "@/components/types/hiClientzData";
 import { format } from "date-fns";
+import { usePasswordStore } from "@/components/store/usePasswordStore.ts";
 
 const MemoCartwithoutPos = () => {
   const { cartData, removeCart, setCartCount } = useLiteStore();
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPhone, setCurrentPhone] = useState<string>("");
 
   const { deleteCart } = useDeleteCart();
+  const { revealedNumbers, addRevealedNumber } = usePasswordStore((state) => ({
+    revealedNumbers: state.revealedNumbers,
+    addRevealedNumber: state.addRevealedNumber,
+  }));
 
   const toggleAccordion = (id: string) => {
     setExpanded(expanded === id ? null : id);
   };
 
-  const removeCartFn = (id: string) => {
-    removeCart(id);
-    deleteCart(id);
-    setCartCount((prev) => prev - 1);
-  };
+  const removeCartFn = useCallback(
+    (id: string) => {
+      removeCart(id);
+      deleteCart(id);
+      setCartCount((prev) => prev - 1);
+    },
+    [removeCart, deleteCart, setCartCount],
+  );
+
+  const maskPhoneNumber = useCallback((phone: string) => {
+    if (!phone || phone.length < 6) return phone;
+    const cleanPhone = phone.replace(/\D/g, "");
+    if (cleanPhone.length < 6) return phone;
+
+    const first3 = cleanPhone.slice(0, 3);
+    const last3 = cleanPhone.slice(-3);
+    const stars = "*".repeat(Math.max(0, cleanPhone.length - 6));
+    return `${first3}${stars}${last3}`;
+  }, []);
+
+  const isPhoneRevealed = useCallback(
+    (phone: string) => {
+      return revealedNumbers.has(phone);
+    },
+    [revealedNumbers],
+  );
+
+  const handlePhoneClick = useCallback(
+    (e: React.MouseEvent, phone: string) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isPhoneRevealed(phone)) {
+        window.open(`tel:+91${phone}`, "_self");
+      } else {
+        setCurrentPhone(phone);
+        setShowPasswordModal(true);
+      }
+    },
+    [isPhoneRevealed],
+  );
+
+  const handlePasswordVerify = useCallback(
+    (isCorrect: boolean) => {
+      if (isCorrect && currentPhone) {
+        addRevealedNumber(currentPhone);
+        setTimeout(() => {
+          window.open(`tel:+91${currentPhone}`, "_self");
+        }, 100);
+      }
+    },
+    [currentPhone, addRevealedNumber],
+  );
+
+  const handleCloseModal = useCallback(() => {
+    setShowPasswordModal(false);
+    setCurrentPhone("");
+  }, []);
+
+  const getDisplayPhone = useCallback(
+    (phone: string) => {
+      return isPhoneRevealed(phone) ? phone : maskPhoneNumber(phone);
+    },
+    [isPhoneRevealed, maskPhoneNumber],
+  );
+
   return (
     <>
       {cartData && cartData?.length > 0 ? (
@@ -48,15 +117,22 @@ const MemoCartwithoutPos = () => {
                 <p className="flex items-center mt-1 text-sm font-semibold opacity-50">
                   <FaUser className="mr-1" /> {cart?.userId?.name || "User"}
                 </p>
-                <a
-                  href={`tel:+91${cart?.userId?.phone}`}
-                  className="flex items-center mt-1 text-sm font-semibold opacity-50 underline underline-offset-2"
+                <div
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handlePhoneClick(e, cart?.userId?.phone || "");
+                    }
+                  }}
+                  onClick={(e) =>
+                    handlePhoneClick(e, cart?.userId?.phone || "")
+                  }
+                  className="flex items-center mt-1 text-sm font-semibold opacity-50 underline underline-offset-2 cursor-pointer hover:opacity-70"
                 >
                   <p className="-ml-2 flex items-center rounded-full px-2 py-1">
                     <MdAddCall size={16} />
                   </p>
-                  {cart?.userId?.phone || "User"}
-                </a>
+                  {getDisplayPhone(cart?.userId?.phone || "User")}
+                </div>
               </div>
               <div className="text-right">
                 <div className="flex flex-col items-end mb-2 text-sm font-semibold opacity-80">
@@ -155,6 +231,12 @@ const MemoCartwithoutPos = () => {
         </motion.div>
       )}
       <CreateBillButton />
+
+      <PasswordModal
+        isOpen={showPasswordModal}
+        onVerify={handlePasswordVerify}
+        onClose={handleCloseModal}
+      />
     </>
   );
 };

@@ -1,11 +1,13 @@
-import { memo, useCallback } from "react"
-import BottomButton from "@/components/atom/bottomButton"
-import PopUp from "@/components/atom/popUp"
-import useZoneStore, { type IZone, type ITable } from "@/components/store/useZone"
-import AddZone from "./AddZone"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
-import ShowZoneDetails from "./ShowZoneDetails"
+import { memo, useCallback } from "react";
+import BottomButton from "@/components/atom/bottomButton";
+import PopUp from "@/components/atom/popUp";
+import useZoneStore, {
+  type IZone
+} from "@/components/store/useZone";
+import AddZone from "./AddZone";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import ShowZoneDetails from "./ShowZoneDetails";
 
 const MemoZonesMain = () => {
   const {
@@ -15,30 +17,41 @@ const MemoZonesMain = () => {
     showZoneDetails,
     allTables,
     setShowZoneDetails,
-    setSaveZoneDetails
-  } = useZoneStore()
-
+    setSaveZoneDetails,
+  } = useZoneStore((s) => ({
+    createZoneModal: s.createZoneModal,
+    setCreateZoneModal: s.setCreateZoneModal,
+    allZones: s.allZones,
+    showZoneDetails: s.showZoneDetails,
+    allTables: s.allTables,
+    setShowZoneDetails: s.setShowZoneDetails,
+    setSaveZoneDetails: s.setSaveZoneDetails,
+  }));
 
   const openZoneModalFunc = useCallback(() => {
-    setCreateZoneModal(true)
-  }, [setCreateZoneModal])
+    setCreateZoneModal(true);
+  }, [setCreateZoneModal]);
 
-  const getTablesForZone = (zoneId: string) => {
-    return allTables.filter((table: ITable) => table.internalZoneId === zoneId)
-  }
+  const getTablesForZone = useCallback(
+    (zoneId: string) => allTables.filter((table) => table.internalZoneId === zoneId),
+    [allTables],
+  );
 
-  const openZoneDetailsModal = useCallback((zone: IZone) => {
-    setShowZoneDetails(true)
-    setSaveZoneDetails(zone)
-  }, [setShowZoneDetails, setSaveZoneDetails])
-
-
+  const openZoneDetailsModal = useCallback(
+    (zone: IZone) => {
+      setShowZoneDetails(true);
+      setSaveZoneDetails(zone);
+    },
+    [setShowZoneDetails, setSaveZoneDetails],
+  );
 
   return (
     <section className="p-4 ">
       <div className="grid items-start w-full grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {allZones?.map((zone) => (
-          <Card key={zone._id} className="overflow-hidden cursor-pointer"
+          <Card
+            key={zone._id}
+            className="overflow-hidden cursor-pointer"
             onClick={() => openZoneDetailsModal(zone)}
           >
             <CardContent className="p-4">
@@ -51,7 +64,9 @@ const MemoZonesMain = () => {
                   <Badge variant={zone.visibility ? "outline" : "destructive"}>
                     {zone.visibility ? "Visible" : "Hidden"}
                   </Badge>
-                  <Badge variant="outline">Tables: {getTablesForZone(zone?._id).length}</Badge>
+                  <Badge variant="outline">
+                    Tables: {getTablesForZone(zone?._id).length}
+                  </Badge>
                 </div>
               </div>
             </CardContent>
@@ -72,7 +87,12 @@ const MemoZonesMain = () => {
       )}
 
       {showZoneDetails && (
-        <PopUp hide height="h-[100dvh] lg:h-[80dvh]" show={showZoneDetails} onClose={() => setShowZoneDetails(false)}>
+        <PopUp
+          hide
+          height="h-[100dvh] lg:h-[80dvh]"
+          show={showZoneDetails}
+          onClose={() => setShowZoneDetails(false)}
+        >
           <ShowZoneDetails />
         </PopUp>
       )}
@@ -87,9 +107,8 @@ const MemoZonesMain = () => {
         ]}
       />
     </section>
-  )
-}
+  );
+};
 
-const ZonesMain = memo(MemoZonesMain)
-export default ZonesMain
-
+const ZonesMain = memo(MemoZonesMain);
+export default ZonesMain;

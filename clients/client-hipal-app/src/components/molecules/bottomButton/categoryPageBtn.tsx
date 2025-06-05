@@ -3,7 +3,6 @@ import Link from "next/link";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { BsHandIndexThumb } from "react-icons/bs";
 import { FiSearch } from "react-icons/fi";
-import { GiCookingPot } from "react-icons/gi";
 import { FC, memo, useCallback, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
@@ -18,7 +17,6 @@ import AddAmountModal from "./addAmountModal";
 import BottomButton from ".";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import CallTheWaiterComponent from "./callTheWaiter";
-import CommonBottomButton from "@/components/atoms/bottomButton";
 import OrderPlaced from "@/components/organisms/cart/orderPlaced";
 import TimeBadge from "./test";
 import useTableData from "@/components/store/useTableData";
@@ -27,13 +25,13 @@ import HiCodeValidate from "@/components/organisms/cart/hicodeValidate";
 import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescription";
 import { cn } from "@/components/utils/helpers";
 import type { IMenuLayout } from "@/components/types/businessData";
+import InstructionPopup from "@/components/hotels/room/InstructionPopup";
 
 interface CategoryPageBtnProps {
   menuLayout: IMenuLayout;
 }
 
-const MemoCategoryPageBtn: FC<CategoryPageBtnProps> = (props) => {
-  const { menuLayout } = props;
+const MemoCategoryPageBtn = ({menuLayout}:CategoryPageBtnProps) => {
   const accessToken = useUserToken.getState().accessToken;
   const { userDetails } = useLogin();
   const primaryColor = menuLayout?.primaryColor || "#ec4899";
@@ -156,29 +154,6 @@ const MemoCategoryPageBtn: FC<CategoryPageBtnProps> = (props) => {
     exit: { y: 20, opacity: 0 },
   };
 
-  const handleInstructionText = useCallback((e) => {
-    const value = e.target.value;
-    const sanitizedValue = value.replace(/\s+/g, " ");
-    setTempInstruction(sanitizedValue);
-  }, []);
-
-  const handleSaveInstruction = useCallback(() => {
-    addInstructionToDish(tempInstruction);
-    setInstruction(tempInstruction);
-    setOpenInstructionModal(false);
-    setTempInstruction("");
-  }, [
-    addInstructionToDish,
-    setOpenInstructionModal,
-    tempInstruction,
-    setInstruction,
-  ]);
-
-  const handleCloseInstructionModal = useCallback(() => {
-    setOpenInstructionModal(false);
-    setTempInstruction("");
-  }, [setOpenInstructionModal]);
-
   return (
     <>
       {outletInfo?.outLetType !== "OTHER" ? (
@@ -291,57 +266,7 @@ const MemoCategoryPageBtn: FC<CategoryPageBtnProps> = (props) => {
       </AnimatePresence>
 
       {openInstructionModal && (
-        <BottomPopUp
-          height="50dvh"
-          show={openInstructionModal}
-          onClose={handleCloseInstructionModal}
-        >
-          <div className="p-3 pb-8 overflow-y-auto">
-            {/* Header */}
-            <header className="flex items-center gap-2 mb-4">
-              <GiCookingPot className="w-8 h-8 text-orange-500" />
-              <h2 className="text-2xl font-semibold text-black">
-                Cooking Instructions
-              </h2>
-            </header>
-
-            {/* Description */}
-            <p className="mb-6 text-gray-600">
-              Add any special cooking instructions, like less spicy, extra
-              cheese, or no onions.
-            </p>
-
-            {/* Textarea Container */}
-            <div className="relative mb-8">
-              <textarea
-                value={tempInstruction}
-                onChange={handleInstructionText}
-                maxLength={100}
-                placeholder="Enter your cooking instructions here..."
-                className="w-full min-h-[120px] p-2 text-base text-black bg-white rounded-lg border border-gray-200 
-                     focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500
-                     placeholder:text-gray-400 resize-none"
-                aria-label="Cooking instructions"
-              />
-              <span className="absolute text-sm text-gray-400 right-3 bottom-3">
-                {tempInstruction.length || 0}/{100}
-              </span>
-            </div>
-
-            {/* Save Button */}
-            <CommonBottomButton
-              buttons={[
-                {
-                  text: "Save Instruction",
-                  onClick: handleSaveInstruction,
-                  type: "button",
-                  highlight: true,
-                  disable: tempInstruction?.length === 0,
-                },
-              ]}
-            />
-          </div>
-        </BottomPopUp>
+      <InstructionPopup />
       )}
       <AnimatePresence>
         {orderPlaced && (

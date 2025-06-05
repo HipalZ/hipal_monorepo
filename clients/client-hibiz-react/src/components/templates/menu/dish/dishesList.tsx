@@ -102,13 +102,15 @@ const MemoListOfDishes = () => {
               key={dish._id}
               className="flex items-center justify-between w-full p-3 gap-2 bg-white h-[4.5rem] rounded-2xl shadow md:max-w-[21rem] lg:max-w-[20rem] xl:max-w-[20rem] 2xl:max-w-[21.5rem]"
             >
-              <MemoFoodType types={dish?.dishTypes} />
-              <h3
-                title={dish.name}
-                className="mb-2 text-lg font-semibold text-left"
-              >
-                {dish.name}
-              </h3>
+              <section className="flex gap-2 items-center">
+                <MemoFoodType types={dish?.dishTypes} />
+                <h3
+                  title={dish.name}
+                  className="text-lg font-semibold text-left"
+                >
+                  {dish.name}
+                </h3>
+              </section>
               <div className="flex items-center mb-2 text-gray-500">
                 {dish.visibility ? (
                   <FaEye className="text-green-500" />

@@ -58,5 +58,5 @@
   "editor.formatOnSave": true,
   "workbench.settings.applyToAllProfiles": [],
   "cSpell.words": ["Sandwhich"],
-  "typescript.tsdk": "../node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

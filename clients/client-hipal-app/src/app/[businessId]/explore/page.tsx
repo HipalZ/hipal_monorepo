@@ -6,12 +6,15 @@ import type {
   IBannerPayload,
   IBusinessData,
 } from "@/components/types/businessData";
+import dynamics from "next/dynamic";
+
 import { cn, defaultThemes } from "@/components/utils/helpers";
 import { apiRpc } from "@hi/common";
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
-export const revalidate = 300;
+// export const revalidate = 300;
+export const fetchCache = "force-no-store";
 
 // Dynamic Imports with Skeleton Loaders
 const AllCouponz = dynamic(
