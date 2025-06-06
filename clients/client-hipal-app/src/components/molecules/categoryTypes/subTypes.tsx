@@ -45,7 +45,10 @@ function DishRenderer({
   }
 
   return (
-    <div className="flex flex-col" style={{ backgroundColor: `${secondaryColor}20` }}>
+    <div
+      className="flex flex-col"
+      style={{ backgroundColor: `${secondaryColor}20` }}
+    >
       {dishes.map((dishData, dishIndex) => (
         <HorizontalCard
           key={`${dishData._id}-${dishIndex}`}
@@ -75,7 +78,9 @@ function filterDishes(visibleDishes: DishType[], activeType: string) {
   }
 
   const allowedTypes = typeMap[activeType.toLowerCase()] || [];
-  return visibleDishes.filter((dish) => dish.dishTypes?.some((type) => allowedTypes.includes(type)));
+  return visibleDishes.filter((dish) =>
+    dish.dishTypes?.some((type) => allowedTypes.includes(type)),
+  );
 }
 
 interface ISubTypes {
@@ -111,7 +116,7 @@ function MemoSubTypes({
       setObserverActive(false);
 
       if (category.parentCategoryIds?.length) {
-        setActiveParentCategory(category.parentCategoryIds[0].toString());
+        setActiveParentCategory(category.parentCategoryIds[0]?.toString());
       }
 
       setActiveCategory(category._id?.toString() || "");
@@ -130,7 +135,12 @@ function MemoSubTypes({
         setObserverActive(true);
       }, 1000);
     },
-    [setActiveCategory, setActiveParentCategory, setActiveChildCategory, setObserverActive]
+    [
+      setActiveCategory,
+      setActiveParentCategory,
+      setActiveChildCategory,
+      setObserverActive,
+    ],
   );
 
   /**
@@ -152,7 +162,7 @@ function MemoSubTypes({
         }
         return prev;
       },
-      { id: "", offset: Number.POSITIVE_INFINITY }
+      { id: "", offset: Number.POSITIVE_INFINITY },
     );
 
     if (closest.id && closest.id !== isActiveCategory) {
@@ -169,7 +179,9 @@ function MemoSubTypes({
   useEffect(() => {
     if (isActiveCategory && splideRef.current) {
       // find the category index
-      const slideIndex = childCategory.findIndex((item) => item._id?.toString() === isActiveCategory);
+      const slideIndex = childCategory.findIndex(
+        (item) => item._id?.toString() === isActiveCategory,
+      );
       if (slideIndex !== -1) {
         splideRef.current.go(slideIndex);
       }
@@ -202,7 +214,7 @@ function MemoSubTypes({
                   onClick={() => handleCategoryClick(cat)}
                   className={cn(
                     "relative flex flex-col items-center px-2 py-2 mx-2",
-                    active ? "" : "hover:bg-gray-50"
+                    active ? "" : "hover:bg-gray-50",
                   )}
                   whileTap={{ scale: 0.95 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
@@ -231,7 +243,7 @@ function MemoSubTypes({
                     </div>
                   )}
                   <span
-                    className="w-full max-w-[6rem] text-sm font-medium font-play leading-4 text-center line-clamp-2 h-[2rem]"
+                    className="w-full max-w-[6rem] text-sm font-medium poppins-regular  leading-4 text-center line-clamp-2 h-[2rem]"
                     style={{ color: active ? primaryColor : "#000000" }}
                   >
                     {cat.name}
@@ -243,7 +255,11 @@ function MemoSubTypes({
                       layoutId="activeCategoryIndicator"
                       className="absolute bottom-0 w-full h-1 rounded-t-md"
                       style={{ backgroundColor: primaryColor }}
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 30,
+                      }}
                     />
                   )}
                 </motion.button>
@@ -259,7 +275,8 @@ function MemoSubTypes({
         style={{ backgroundColor: `${secondaryColor}50` }}
       >
         {childCategory.map((cat: CategoryType, index) => {
-          const visibleDishes = cat.dishIds?.filter((dish: DishType) => dish.visibility) || [];
+          const visibleDishes =
+            cat.dishIds?.filter((dish: DishType) => dish.visibility) || [];
           const dishesToRender = filterDishes(visibleDishes, isActiveDishType);
           if (dishesToRender.length === 0) return null;
 
@@ -301,7 +318,7 @@ function MemoSubTypes({
                       }}
                     >
                       <h2
-                        className="w-full text-2xl font-semibold text-center capitalize truncate font-play"
+                        className="w-full text-2xl font-semibold text-center capitalize truncate poppins-regular "
                         style={{ color: primaryColor }}
                         title={cat.name || "Unnamed Category"}
                       >
@@ -321,12 +338,14 @@ function MemoSubTypes({
                           />
                         ) : (
                           <section className="grid gap-4 px-4 mt-4">
-                            {dishesToRender.map((dishData: DishType, dishIndex: number) => (
-                              <OtherOutletCard
-                                key={`${dishData._id}-${dishIndex}`}
-                                dishData={dishData}
-                              />
-                            ))}
+                            {dishesToRender.map(
+                              (dishData: DishType, dishIndex: number) => (
+                                <OtherOutletCard
+                                  key={`${dishData._id}-${dishIndex}`}
+                                  dishData={dishData}
+                                />
+                              ),
+                            )}
                           </section>
                         ))}
                     </div>

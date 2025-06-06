@@ -17,7 +17,7 @@ const ReadMore = ({
     shouldTruncate && isLong ? `${text.slice(0, maxChars)}...` : text;
 
   return (
-    <p className={`text-sm text-left opacity-80 ${className}`}>
+    <p className={`text-sm text-left opacity-80 inter ${className}`}>
       {displayText}
       {isLong && (
         <span

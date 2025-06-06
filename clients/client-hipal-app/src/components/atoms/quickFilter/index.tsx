@@ -130,7 +130,7 @@ const FilterOption = ({
           color: isActive ? color : undefined,
           borderColor: isActive ? color : "black",
         }}
-        className="ml-1 text-[0.7rem] flex items-center justify-center"
+        className="ml-1 text-[0.7rem] flex items-center justify-center poppins-regular"
       >
         {label}
         {isActive && (

@@ -100,7 +100,7 @@ const GridDishCard = ({
             <MemoFoodType types={dishData?.dishTypes} />
           </div>
           <h3
-            className="text-lg font-semibold font-play leading-[1.25rem] text-black h-[3.75rem] line-clamp-3"
+            className="text-lg font-semibold poppins-regular  leading-[1.25rem] text-black h-[3.75rem] line-clamp-3"
             onClick={openDishDetails}
           >
             {dishData.name}

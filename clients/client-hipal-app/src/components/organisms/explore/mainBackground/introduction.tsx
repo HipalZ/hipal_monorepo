@@ -31,7 +31,7 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
     setReviewPopup,
     setGoogleReviewCount,
   } = useLogin();
-  const { cart, emptyCart } = useCart()
+  const { cart, emptyCart } = useCart();
   const { setCartEmpty } = useCartStore();
   const customLink = useParams()?.businessId as string;
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
@@ -90,12 +90,15 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
     queryKey: ["isSubscribe", customLink, userDetails],
     queryFn: () => isSubscribe(userDetails),
     enabled: !!userDetails?._id && !!accessToken,
-  })
+  });
 
   return (
     <>
       <section className="absolute z-20 bottom-6 left-6 w-[75%] text-white">
-        <span onClick={redirectUrl} className="text-xs px-3 py-2 rounded-full bg-[#ffffff30]">
+        <span
+          onClick={redirectUrl}
+          className="text-xs px-3 py-2 rounded-full bg-[#ffffff30]"
+        >
           ⭐ {outletInfo?.avgRating || 4.7}
         </span>
         <h3 className="mt-2 text-3xl capitalize space-grotesk-700">
@@ -106,7 +109,7 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
             ? data?.business?.tags.join(" | ")
             : data?.business?.tags}
         </p>
-        <h4 className="mb-1 text-xs font-semibold line-clamp-2">
+        <h4 className="mb-1 text-xs font-semibold line-clamp-2 inter">
           {data?.business?.address}
         </h4>
       </section>

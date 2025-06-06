@@ -31,7 +31,7 @@ export default function ServiceCategoriesSection({ businessId }: ServiceCategori
     return (
         <div className="relative space-y-4">
             <div className="absolute -right-8 w-[calc(100%-10rem)] h-[2px] bg-black top-5" />
-            <h2 className="text-3xl font-play text-h-primary">Our Services</h2>
+            <h2 className="text-3xl poppins-regular  text-h-primary">Our Services</h2>
             <div className="grid grid-cols-2 gap-4">
             {categoriesData.map((category, index) => (
                 <div
