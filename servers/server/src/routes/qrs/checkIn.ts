@@ -29,7 +29,7 @@ const checkInQrRouter = new Hono()
 
       const businessInfo = await Business.findById(businessId);
 
-      const longUrl = `http://localhost:3000/${businessInfo?.customLink}/explore?tag=${updateQrName}`;
+      const longUrl = `https://hipal-test.hipalz.com/${businessInfo?.customLink}/explore?tag=${updateQrName}`;
 
       const uniqueOrderId = nanoid(5);
       let findUrl = await UrlModel.findOne({ longUrl });
@@ -37,7 +37,7 @@ const checkInQrRouter = new Hono()
       if (!findUrl) {
         findUrl = await UrlModel.create({
           longUrl: longUrl,
-          shortUrl: `http://localhost:4500/surl/check_in/${uniqueOrderId}`,
+          shortUrl: `https://api.test.hipalz.com/surl/check_in/${uniqueOrderId}`,
           urlCode: uniqueOrderId,
           businessId: businessId,
           shortUrlType: "CHECK_IN",
