@@ -116,7 +116,7 @@ function MemoSubTypes({
       setObserverActive(false);
 
       if (category.parentCategoryIds?.length) {
-        setActiveParentCategory(category.parentCategoryIds[0].toString());
+        setActiveParentCategory(category.parentCategoryIds[0]?.toString());
       }
 
       setActiveCategory(category._id?.toString() || "");

@@ -212,7 +212,7 @@ const MemoDishQuantityButton = ({
               <button
                 type="button"
                 onClick={() => handleClick(dishData)}
-                className="relative z-10 w-full h-full text-sm font-medium normal-case rounded-md"
+                className="relative z-10 w-full h-full text-sm font-medium normal-case rounded-md poppins-regular"
                 style={{
                   backgroundColor: secondaryColor,
                   color: primaryColor,
