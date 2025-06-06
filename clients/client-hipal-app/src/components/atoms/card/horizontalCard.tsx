@@ -81,7 +81,7 @@ const HorizontalCard = ({
           )}
           <h3
             className={cn(
-              "font-semibold line-clamp-2  max-h-[3.125rem] font-play",
+              "font-semibold line-clamp-2  max-h-[3.125rem] poppins-regular ",
               compactLayout
                 ? "text-base leading-4"
                 : "text-lg leading-[1.25rem]",
