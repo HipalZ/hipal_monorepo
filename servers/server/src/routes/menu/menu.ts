@@ -247,7 +247,7 @@ const menuRouter = new Hono()
     zValidator(
       "query",
       z.object({
-        tableName: z.string().min(1).max(30),
+        tableName: z.string().min(1).max(30).optional(),
         businessId: z.string().min(1).max(36),
       }),
     ),
@@ -267,7 +267,6 @@ const menuRouter = new Hono()
           businessId,
         }).lean();
 
-        console.log("tableData:", tableData);
 
         if (!tableData && !isHavePos) {
           const findDefaultZone = await Zone.findOne({
@@ -318,10 +317,7 @@ const menuRouter = new Hono()
         const currentTimeInMinutes =
           indianDate.getHours() * 60 + indianDate.getMinutes();
 
-        console.log(" zoneIds:", zone?._id);
-        console.log(" businessId:", businessId);
-        console.log(" currentDay:", currentDay);
-        console.log(" currentTimeInMinutes:", currentTimeInMinutes);
+        
 
         let menu = await Menu.findOne({
           zoneIds: zone?._id,
@@ -344,7 +340,22 @@ const menuRouter = new Hono()
             "menuType categoryLayout cardLayout primaryColor secondaryColor",
           );
 
-        if (!menu) return respond(c, "Menu not found", true, 404);
+        if (!menu) {
+          const defaultMenuLayout = await Menu.findOne({
+            businessId,
+          }).select(
+            "menuType categoryLayout cardLayout primaryColor secondaryColor",
+          );
+
+          return c.json(
+            {
+              message: "No active menu found for this zone",
+              err: false,
+              data: defaultMenuLayout,
+            },
+            200,
+          );
+        }
 
         return respond(c, "Menu fetched successfully", false, 200, menu);
       });
