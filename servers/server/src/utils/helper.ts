@@ -171,7 +171,7 @@ const transformData = (data) => {
         businessId: category?.restarant_ids,
         hierarchy: "CHILD",
         category_image_url: category?.category_image_url,
-        parentCategoryIds: [],
+        parentCategoryIds: [category?.group_category_id],
         subCategoryIds: [],
         coverImage: "",
         dishIds: transformedItems,
@@ -180,6 +180,55 @@ const transformData = (data) => {
     .filter((category) => category !== null);
 
   return transformedCategories;
+};
+
+const transformParentCategories = (
+  parentCategories,
+  subcategories,
+  businessId: string,
+) => {
+  try {
+    // Basic input validation
+    if (
+      !Array.isArray(parentCategories) ||
+      !Array.isArray(subcategories) ||
+      typeof businessId !== "string"
+    ) {
+      return [];
+    }
+
+    // Sort parent categories by rank (ascending)
+    const sortedParents = [...parentCategories].sort(
+      (a, b) => Number(a.rank) - Number(b.rank),
+    );
+
+    return sortedParents
+      .map((parent) => {
+        // Defensive: check required fields
+        if (!parent || !parent.id || !parent.name) return null;
+
+        // Find and sort subcategories for this parent by categoryrank
+        const subCats = subcategories
+          .filter((cat) => cat.group_category_id === parent.id)
+          .sort((a, b) => Number(a.categoryrank) - Number(b.categoryrank));
+
+        return {
+          _id: parent.id,
+          businessId: businessId,
+          name: parent.name,
+          visibility: true,
+          parentCategoryIds: [],
+          subCategoryIds: subCats.map((cat) => cat.categoryid),
+          dishIds: [],
+          availability: parent.status === "1",
+
+          coverImage: "",
+        };
+      })
+      .filter(Boolean); // Remove any nulls
+  } catch (e) {
+    return [];
+  }
 };
 
 const getCurrentISTTime = (): string => {
@@ -372,4 +421,5 @@ export {
   convertToPetpoojaCart,
   transformData,
   transformItemsToSimpleArray,
+  transformParentCategories,
 };
