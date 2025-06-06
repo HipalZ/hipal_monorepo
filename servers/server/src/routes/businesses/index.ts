@@ -7,6 +7,7 @@ import {
   Category,
   Dish,
   LoyaltySettings,
+  Menu,
   OutLetInfo,
   Permissions,
   Role,
@@ -64,6 +65,27 @@ const businessesRouter = new Hono()
           data: {},
           message: "business not created !",
         });
+      }
+
+      if (business.businessType === "OTHER") {
+        const createaMenu = await Menu.findOneAndUpdate(
+          { businessId: requestData.parentOutLetId },
+          {
+            businessId: business._id,
+            name: "Default",
+            menuType: 1,
+            days: [1, 2, 3, 4, 5, 6, 7],
+            startTime: 240,
+            endTime: 239,
+            isActive: true,
+            categoryLayout: 2,
+            cardLayout: 2,
+            primaryColor: "#f59e0b",
+            secondaryColor: "#fef3c7",
+            default: true,
+          },
+          { new: true, upsert: true },
+        );
       }
 
       return respond(c, "business created", false, 201, business);
@@ -220,6 +242,25 @@ const businessesRouter = new Hono()
             );
           }
         }
+
+        const createaMenu = await Menu.findOneAndUpdate(
+          { businessId: requestData.parentOutLetId },
+          {
+            businessId: business[0]._id,
+            name: "Default",
+            menuType: 1,
+            days: [1, 2, 3, 4, 5, 6, 7],
+            startTime: 240,
+            endTime: 239,
+            isActive: true,
+            categoryLayout: 2,
+            cardLayout: 2,
+            primaryColor: "#f59e0b",
+            secondaryColor: "#fef3c7",
+            default: true,
+          },
+          { new: true, upsert: true, session },
+        );
 
         return respond(c, "branch created", false, 201, business);
       });
