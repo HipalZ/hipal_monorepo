@@ -24,7 +24,7 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
-import { transformData } from "../../utils/helper";
+import { transformData, transformParentCategories } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 import {
   getMenuByBId,
@@ -402,7 +402,51 @@ const categoriesRouter = new Hono()
         });
 
         if (isHasPos) {
-          return respond(c, "fetched successfully", false, 200, []);
+          const table = await Table.findOne({
+            businessId,
+          }).select("name");
+          const getCache = await getMenuByBId(`${businessId}+parent`);
+
+          if (getCache) {
+            const parentCategories = transformParentCategories(
+              getCache.group_categories || [],
+              getCache.categories || [],
+              businessId,
+            );
+
+            return respond(
+              c,
+              "fetched successfully",
+              false,
+              200,
+              parentCategories || [],
+            );
+          }
+
+          const Config = {
+            "app-key": isHasPos.accessKey,
+            "app-secret": isHasPos.secretKey,
+            "access-token": isHasPos.authToken,
+            restID: isHasPos.restId,
+            tableNo: table?.name,
+          };
+
+          const menu = await axios.post(posApiPaths.fetchMenu, Config);
+          await setPosConfigTransfer(`${businessId}+parent`, menu.data);
+
+          const parentCategories = transformParentCategories(
+            menu.data.group_categories || [],
+            menu.data.categories || [],
+            businessId,
+          );
+
+          return respond(
+            c,
+            "fetched successfully",
+            false,
+            200,
+            parentCategories || [],
+          );
         }
 
         return respond(
