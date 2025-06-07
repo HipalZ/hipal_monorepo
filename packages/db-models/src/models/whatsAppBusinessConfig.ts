@@ -95,6 +95,11 @@ const whatsAppBusinessConfigSchema =
         type: String,
         required: true,
       },
+      campaign: {
+        type: Boolean,
+        required: false,
+        default: false,
+      },
     },
     {
       timestamps: true,
