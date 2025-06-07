@@ -8,6 +8,15 @@ export const roomTypeEnum = [
   "QUAD",
   "SUITE",
   "DELUXE",
+  "EXECUTIVE",
+  "PRESIDENTIAL",
+  "FAMILY",
+  "STANDARD",
+  "LUXURY",
+  "SUPER DELUXE",
+  "EXECUTIVE SUITE",
+  "JUNIOR SUITE",
+  "EXECUTIVE DELUXE",
 ] as const;
 
 export type HotelRoomEnumType = (typeof roomTypeEnum)[number];

@@ -6,6 +6,7 @@ import {
   Dish,
   GroupAnalytic,
   GroupModel,
+  HotelRoomType,
   HotelService,
   HotelServiceCategory,
   HotelStaffRole,
@@ -2280,6 +2281,62 @@ const scriptRouter = new Hono()
         }
 
         return respond(c, "done", false, 200, result);
+      });
+    },
+  )
+
+  .post(
+    "/add_room_type",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        roomType: z.string().min(2).max(50),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { businessId, roomType } = requestData;
+
+        const addRoomType = new HotelRoomType({
+          businessId,
+          roomType,
+        });
+
+        const saveData = await addRoomType.save({ session });
+
+        return respond(c, "d", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/update_outlet",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const result = await OutLetInfo.updateMany(
+          {},
+          {
+            $set: {
+              currencySymbol: "₹",
+              currencyCode: "INR",
+            },
+          },
+        );
+
+        return respond(c, "d", false, 200, {});
       });
     },
   );
