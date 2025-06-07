@@ -1,5 +1,5 @@
 import ReactDOM from "react-dom/client"
-import { useCallback, useState, useMemo } from "react"
+import { useCallback, useState, useMemo, memo } from "react"
 import BottomButton from "@/components/atom/bottomButton"
 import PopUp from "@/components/atom/popUp"
 import useZoneStore, { type ITable, type IZone } from "@/components/store/useZone"
@@ -21,7 +21,7 @@ interface User {
   name: string
 }
 
-const TablesMain = () => {
+const MemoTablesMain = () => {
   const {
     createTableModal,
     setCreateTableModal,
@@ -272,4 +272,5 @@ const TablesMain = () => {
   )
 }
 
+const TablesMain = memo(MemoTablesMain)
 export default TablesMain

@@ -8,7 +8,7 @@ interface PieChartProps {
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8", "#82CA9D"];
 
-export const PieChart: React.FC<PieChartProps> = ({ data }) => {
+export const PieChart = ({ data }:PieChartProps) => {
     const total = data.reduce((sum, entry) => sum + entry.value, 0);
 
     const dataWithPercentage = data.map(entry => ({

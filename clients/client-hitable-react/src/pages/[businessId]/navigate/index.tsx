@@ -1,19 +1,24 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { FaBell } from "react-icons/fa";
 import HeaderAlertsMemo from "@/components/liteAlerts/headerAlerts";
+import { useCallback } from "react";
+import { CreditCard, QrCode, X } from "lucide-react";
 
-const Navigate: React.FC = () => {
+const Navigate = () => {
   const navigate = useNavigate();
   const params = useParams();
   const businessId = params.businessId ?? ("" as string);
 
-  const navigateToAlerts = () => {
+  const navigateToAlerts = useCallback(() => {
     return navigate(`/${businessId}/alerts`);
-  };
+  },[]);
 
-  const navigateToTheUnsettleTables = () => {
+  const navigateToTheUnsettleTables = useCallback(() => {
     return navigate(`/${businessId}/unsettle`);
-  }
+  },[]);
+
+  const navigateToCheckIn = useCallback(() => {
+    return navigate(`/${businessId}/checkin`);
+  },[]);
 
 
   return (
@@ -23,17 +28,24 @@ const Navigate: React.FC = () => {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Card
             title="Payment Alerts "
-            icon={<FaBell className="text-3xl" />}
+            icon={<CreditCard />}
             onClick={navigateToAlerts}
             bgColor="bg-green-100"
             textColor="text-green-700"
           />
           <Card
             title="Unsettle Tables"
-            icon={<FaBell className="text-3xl" />}
+            icon={<X />}
             onClick={navigateToTheUnsettleTables}
             bgColor="bg-red-100"
             textColor="text-red-700"
+          />
+          <Card
+            title="Check In"
+            icon={<QrCode />}
+            onClick={navigateToCheckIn}
+            bgColor="bg-purple-100"
+            textColor="text-purple-700"
           />
         </div>
       </div>
@@ -49,16 +61,15 @@ interface CardProps {
   textColor: string;
 }
 
-const Card: React.FC<CardProps> = ({
-  title,
-  icon,
-  onClick,
-  bgColor,
-  textColor,
-}) => {
+const Card = ({ title, icon, onClick, bgColor, textColor }: CardProps) => {
   return (
     <div
       className={`${bgColor} ${textColor} rounded-lg shadow-md p-6 cursor-pointer transition-transform duration-300 ease-in-out transform hover:scale-105`}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          onClick();
+        }
+      }}
       onClick={onClick}
     >
       <div className="flex items-center justify-between">
