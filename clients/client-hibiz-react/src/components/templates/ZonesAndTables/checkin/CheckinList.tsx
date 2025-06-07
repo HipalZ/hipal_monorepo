@@ -42,11 +42,20 @@ const CheckInItem = memo(({ qr, onEdit, onDelete }: CheckInItemProps) => {
 
       const root = ReactDOM.createRoot(container);
       root.render(
-        <QRCode
-          value={link}
-          size={1080}
-          style={{ width: "100%", height: "100%" }}
-        />,
+        <div
+          style={{
+            padding: "20px",
+            background: "white",
+            border: "1px solid #ccc",
+            display: "inline-block",
+          }}
+        >
+          <QRCode
+            value={link}
+            size={1080}
+            style={{ width: "100%", height: "100%" }}
+          />
+        </div>,
       );
       await new Promise((resolve) => setTimeout(resolve, 100));
 

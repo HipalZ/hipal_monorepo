@@ -8,15 +8,15 @@ import { NavItemTypesEnum } from "@/components/types/hiClientzData";
 
 // Lazy loaded components
 const HeaderAlerts = lazy(() => import("@/components/liteAlerts/headerAlerts"));
-const SalesLite = lazy(() => import("@/components/atoms/salesLite"));
 const OnlineAlerts = lazy(() => import("@/components/liteAlerts/onlineAlerts"));
-const History = lazy(() => import("@/components/liteAlerts/history"));
 const BillPopUpMemo = lazy(() => import("@/components/atoms/billPopUp"));
 const CartItems = lazy(() => import("@/components/atoms/cartItem"));
 const NavItems = lazy(() => import("@/components/atoms/navItems"));
 const Zones = lazy(() => import("@/components/zones"));
 const BottomPopUp = lazy(() => import("@/components/atoms/universalPopup"));
 const ZoneFilters = lazy(() => import("@/components/zones/zoneFilters"));
+const SalesLiteMemo = lazy(() => import("@/components/atoms/salesLite"));
+const HistoryMemo = lazy(() => import("@/components/liteAlerts/history"));
 const CommonBottomButton = lazy(
   () => import("@/components/atoms/bottomButton"),
 );
@@ -70,12 +70,12 @@ const AlertsMemo = () => {
         )}
         {selectedNavItem === NavItemTypesEnum.HISTORY && (
           <Suspense fallback={<SpinnerMemo />}>
-            <History />
+            <HistoryMemo />
           </Suspense>
         )}
         {selectedNavItem === NavItemTypesEnum.SALES && (
           <Suspense fallback={<SpinnerMemo />}>
-            <SalesLite />
+            <SalesLiteMemo />
           </Suspense>
         )}
         {selectedNavItem === NavItemTypesEnum.CART && (
