@@ -326,9 +326,6 @@ function convertToPetpoojaCart(
 
         // Add special notes if available
         if (cartItem.extras && cartItem.extras.length > 0) {
-          kotItem.specialnotes = cartItem.extras
-            .map((e) => `${e.name}: ${e.quantity}`)
-            .join(", ");
           kotItem.AddonItem = JSON.stringify(
             cartItem.extras.map((extra) => ({
               group_id: "", // Group ID if available
