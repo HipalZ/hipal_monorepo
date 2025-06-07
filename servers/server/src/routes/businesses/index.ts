@@ -128,11 +128,41 @@ const businessesRouter = new Hono()
               businessId: parentOutLetId,
             }).lean();
 
+            if (business[0].businessType === "OTHER") {
+              await Menu.deleteOne(
+                { businessId: currentBusinessId },
+                { session },
+              );
+            }
+
+            const createaMenu = await Menu.findOneAndUpdate(
+              { businessId: currentBusinessId },
+              {
+                businessId: business[0]._id,
+                name: "Default",
+                menuType: 1,
+                days: [1, 2, 3, 4, 5, 6, 7],
+                startTime: 240,
+                endTime: 239,
+                isActive: true,
+                categoryLayout: 2,
+                cardLayout: 2,
+                primaryColor: "#f59e0b",
+                secondaryColor: "#fef3c7",
+                default: true,
+              },
+              { new: true, upsert: true, session },
+            );
+
+            if (!createaMenu)
+              return respond(c, "menu not created", true, 400, {});
+
             for (let i = 0; i < categories.length; i++) {
               const category = categories[i];
               category.parentCategoryIds = [];
               category.subCategoryIds = [];
               category.dishIds = [];
+              category.menuId = createaMenu._id.toString();
 
               delete category._id;
               category.businessId = currentBusinessId;
@@ -150,6 +180,7 @@ const businessesRouter = new Hono()
               dish.addOnIds = [];
               dish.categoryIds = [];
               dish.recommendationIds = [];
+              dish.menuId = createaMenu._id.toString();
             }
             await Dish.insertMany(dishes, { session });
 
@@ -159,6 +190,7 @@ const businessesRouter = new Hono()
             for (const extra of extras) {
               delete extra._id;
               extra.businessId = currentBusinessId;
+              extra.menuId = createaMenu._id.toString();
             }
             await AddOn.insertMany(extras, { session });
           }
@@ -242,25 +274,6 @@ const businessesRouter = new Hono()
             );
           }
         }
-
-        const createaMenu = await Menu.findOneAndUpdate(
-          { businessId: requestData.parentOutLetId },
-          {
-            businessId: business[0]._id,
-            name: "Default",
-            menuType: 1,
-            days: [1, 2, 3, 4, 5, 6, 7],
-            startTime: 240,
-            endTime: 239,
-            isActive: true,
-            categoryLayout: 2,
-            cardLayout: 2,
-            primaryColor: "#f59e0b",
-            secondaryColor: "#fef3c7",
-            default: true,
-          },
-          { new: true, upsert: true, session },
-        );
 
         return respond(c, "branch created", false, 201, business);
       });

@@ -15,6 +15,46 @@ export const Amenities = [
   "RESERVATION",
 ] as const;
 
+export const CurrencyCode = [
+  "INR",
+  "USD",
+  "EUR",
+  "GBP",
+  "JPY",
+  "AUD",
+  "CAD",
+  "CNY",
+  "RUB",
+  "BRL",
+  "ZAR",
+  "KRW",
+  "MXN",
+  "NZD",
+  "SGD",
+] as const;
+
+export type CurrencyCodeEnumType = (typeof CurrencyCode)[number];
+
+export const CurrencyCodeSymbol = [
+  "₹", // Indian Rupee
+  "$", // US Dollar
+  "€", // Euro
+  "£", // British Pound
+  "¥", // Japanese Yen
+  "A$", // Australian Dollar
+  "C$", // Canadian Dollar
+  "¥", // Chinese Yuan
+  "₽", // Russian Ruble
+  "R$", // Brazilian Real
+  "R", // South African Rand
+  "₩", // South Korean Won
+  "$", // Mexican Peso
+  "$", // New Zealand Dollar
+  "$", // Singapore Dollar
+] as const;
+
+export type CurrencyCodeSymbolEnumType = (typeof CurrencyCodeSymbol)[number];
+
 export const SocialMedia = z.object({
   icon: z.string().min(4).max(30),
   link: z.string().url().min(10).max(100),
@@ -124,6 +164,8 @@ export const outLetInfoSchema = z.object({
   nonAlcohol: z.boolean().optional().default(true),
   addButton: z.boolean().optional().default(true),
   placeOrderButton: z.boolean().optional().default(true),
+  currencyCode: z.enum(CurrencyCode).optional(),
+  currencySymbol: z.enum(CurrencyCodeSymbol).optional(),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;

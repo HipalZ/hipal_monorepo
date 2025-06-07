@@ -44,7 +44,11 @@ export const portionSchema = z.object({
     })
     .positive({
       message: "price must be positive",
-    }),
+    })
+    .refine(
+      (val) => Number.isFinite(val) && /^\d+(\.\d{1,2})?$/.test(val.toString()),
+      { message: "price must have at most 2 decimal places" },
+    ),
   default: z.boolean({
     message: "default is required",
   }),
@@ -76,7 +80,11 @@ export const dishSchema = z.object({
     })
     .positive({
       message: "price must be positive",
-    }),
+    })
+    .refine(
+      (val) => Number.isFinite(val) && /^\d+(\.\d{1,2})?$/.test(val.toString()),
+      { message: "price must have at most 2 decimal places" },
+    ),
   visibility: z.boolean().default(true),
   avgTime: z.coerce
     .number({
@@ -192,7 +200,11 @@ export const updateDishSchema = z.object({
     .positive({
       message: "price must be positive",
     })
-    .optional(),
+    .optional()
+    .refine(
+      (val) => Number.isFinite(val) && /^\d+(\.\d{1,2})?$/.test(val.toString()),
+      { message: "price must have at most 2 decimal places" },
+    ),
   visibility: z.boolean().default(true).optional(),
 
   dishTypes: z
