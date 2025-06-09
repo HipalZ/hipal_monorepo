@@ -1,13 +1,14 @@
-import Image from 'next/image';
-import { Button } from '@/components/ui/button';
-import { motion } from 'framer-motion';
-import BlueTickMobile from '@/assets/bluetick/bluetickmobile.png';
-import Engagement from '@/assets/bluetick/engagment.png';
-import Conversation from '@/assets/bluetick/Conversation.png';
-import SevenDays from '@/assets/bluetick/sevenDays.png';
-import Trust from '@/assets/bluetick/trust.png';
-import { memo, useEffect, useState } from 'react';
-import { ArrowRight } from 'lucide-react';
+"use client";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import BlueTickMobile from "@/assets/bluetick/bluetickmobile.png";
+import Engagement from "@/assets/bluetick/engagment.png";
+import Conversation from "@/assets/bluetick/Conversation.png";
+import SevenDays from "@/assets/bluetick/sevenDays.png";
+import Trust from "@/assets/bluetick/trust.png";
+import { memo, useCallback, useEffect, useState } from "react";
+import { ArrowRight } from "lucide-react";
 
 const floatingVariants = {
   float1: {
@@ -15,8 +16,8 @@ const floatingVariants = {
     transition: {
       duration: 3,
       repeat: Number.POSITIVE_INFINITY,
-      repeatType: 'loop',
-      ease: 'easeInOut',
+      repeatType: "loop",
+      ease: "easeInOut",
     },
   },
   float2: {
@@ -24,8 +25,8 @@ const floatingVariants = {
     transition: {
       duration: 3,
       repeat: Number.POSITIVE_INFINITY,
-      repeatType: 'loop',
-      ease: 'easeInOut',
+      repeatType: "loop",
+      ease: "easeInOut",
       delay: 1,
     },
   },
@@ -34,8 +35,8 @@ const floatingVariants = {
     transition: {
       duration: 4,
       repeat: Number.POSITIVE_INFINITY,
-      repeatType: 'loop',
-      ease: 'easeInOut',
+      repeatType: "loop",
+      ease: "easeInOut",
     },
   },
   float4: {
@@ -43,8 +44,8 @@ const floatingVariants = {
     transition: {
       duration: 4,
       repeat: Number.POSITIVE_INFINITY,
-      repeatType: 'loop',
-      ease: 'easeInOut',
+      repeatType: "loop",
+      ease: "easeInOut",
       delay: 2,
     },
   },
@@ -59,13 +60,21 @@ const MemoBlueTickHero = () => {
     setIsVisible(true);
   }, []);
 
+  const openCalendar = useCallback(() => {
+    window.open(
+      "https://calendly.com/palnesto/1hour",
+      "_blank",
+      "noopener,noreferrer",
+    );
+  }, []);
+
   return (
-    <section className="bg-[#F9F5EF] w-full min-h-screen flex flex-col items-center justify-start pt-12 relative overflow-hidden">
+    <section className="bg-[#F9F5EF] my-12 w-full flex flex-col items-center justify-start py-12 relative overflow-hidden">
       <motion.div
         className="text-center mb-8"
         initial={{ opacity: 0, y: -50 }}
         animate={isVisible ? { opacity: 1, y: 0 } : {}}
-        transition={{ duration: 0.8, ease: 'easeOut' }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
       >
         <motion.div
           className="text-[#1BA406] font-semibold text-4xl md:text-6xl mb-4"
@@ -82,7 +91,7 @@ const MemoBlueTickHero = () => {
             animate={isVisible ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.4 }}
           >
-            Mark in{' '}
+            Mark in{" "}
           </motion.span>
           <motion.span
             className="font-semibold"
@@ -101,13 +110,16 @@ const MemoBlueTickHero = () => {
         transition={{
           duration: 0.5,
           delay: 0.8,
-          type: 'spring',
+          type: "spring",
           stiffness: 200,
         }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        <Button className="bg-[#703BF7] text-white h-14 px-8 rounded-xl mb-8 md:mb-12 text-lg font-medium hover:bg-[#5a2ed6] transition-colors">
+        <Button
+          onClick={openCalendar}
+          className="bg-[#703BF7] text-white h-14 px-8 rounded-xl mb-4 md:my-6 text-lg font-medium hover:bg-[#5a2ed6] transition-colors"
+        >
           Book Free Consultation
           <ArrowRight size={28} className="text-xl" />
         </Button>
@@ -115,7 +127,7 @@ const MemoBlueTickHero = () => {
 
       <div className="relative flex justify-center items-center mt-12">
         <motion.div
-          className="relative bg-[#6532FF50] rounded-3xl p-4 md:px-12 lg:px-36 shadow-2xl"
+          className="relative bg-[#6532FF50] rounded-3xl p-12 md:px-12 lg:px-36"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={isVisible ? { opacity: 1, scale: 1 } : {}}
           transition={{ duration: 0.8, delay: 1.0 }}
@@ -136,7 +148,7 @@ const MemoBlueTickHero = () => {
           transition={{
             duration: 0.8,
             delay: 1.2,
-            type: 'spring',
+            type: "spring",
             stiffness: 100,
           }}
           whileHover={{ scale: 1.1, rotate: 5 }}
@@ -158,7 +170,7 @@ const MemoBlueTickHero = () => {
           transition={{
             duration: 0.8,
             delay: 1.4,
-            type: 'spring',
+            type: "spring",
             stiffness: 100,
           }}
           whileHover={{ scale: 1.1, rotate: -5 }}
@@ -180,7 +192,7 @@ const MemoBlueTickHero = () => {
           transition={{
             duration: 0.8,
             delay: 1.6,
-            type: 'spring',
+            type: "spring",
             stiffness: 100,
           }}
           whileHover={{ scale: 1.1, rotate: 5 }}
@@ -202,7 +214,7 @@ const MemoBlueTickHero = () => {
           transition={{
             duration: 0.8,
             delay: 1.8,
-            type: 'spring',
+            type: "spring",
             stiffness: 100,
           }}
           whileHover={{ scale: 1.1, rotate: -5 }}
@@ -224,7 +236,7 @@ const MemoBlueTickHero = () => {
           transition={{
             duration: 0.8,
             delay: 1.2,
-            type: 'spring',
+            type: "spring",
             stiffness: 100,
           }}
           variants={floatingVariants}
@@ -234,18 +246,18 @@ const MemoBlueTickHero = () => {
             alt="Engagement"
             width={200}
             height={200}
-            className="w-16 h-16 drop-shadow-lg"
+            className="w-24 h-24 drop-shadow-lg rotate-12"
           />
         </motion.div>
 
         <motion.div
-          className="md:hidden absolute -top-2 -right-8"
+          className="md:hidden absolute -top-10 -right-0"
           initial={{ opacity: 0, x: 50, y: -25 }}
           animate={isVisible ? { opacity: 1, x: 0, y: 0 } : {}}
           transition={{
             duration: 0.8,
             delay: 1.4,
-            type: 'spring',
+            type: "spring",
             stiffness: 100,
           }}
           variants={floatingVariants}
@@ -255,18 +267,18 @@ const MemoBlueTickHero = () => {
             alt="Conversation"
             width={180}
             height={180}
-            className="w-16 h-16 drop-shadow-lg"
+            className="w-24 h-24 drop-shadow-lg"
           />
         </motion.div>
 
         <motion.div
-          className="md:hidden absolute bottom-8 -left-10"
+          className="md:hidden absolute bottom-8 -left-8"
           initial={{ opacity: 0, x: -50, y: 25 }}
           animate={isVisible ? { opacity: 1, x: 0, y: 0 } : {}}
           transition={{
             duration: 0.8,
             delay: 1.6,
-            type: 'spring',
+            type: "spring",
             stiffness: 100,
           }}
           variants={floatingVariants}
@@ -276,18 +288,18 @@ const MemoBlueTickHero = () => {
             alt="Seven Days"
             width={190}
             height={190}
-            className="w-16 h-16 drop-shadow-lg"
+            className="w-24 h-24 drop-shadow-lg -rotate-6"
           />
         </motion.div>
 
         <motion.div
-          className="md:hidden absolute bottom-12 -right-10"
+          className="md:hidden absolute bottom-12 -right-4"
           initial={{ opacity: 0, x: 50, y: 25 }}
           animate={isVisible ? { opacity: 1, x: 0, y: 0 } : {}}
           transition={{
             duration: 0.8,
             delay: 1.8,
-            type: 'spring',
+            type: "spring",
             stiffness: 100,
           }}
           variants={floatingVariants}
@@ -297,7 +309,7 @@ const MemoBlueTickHero = () => {
             alt="Trust"
             width={190}
             height={190}
-            className="w-16 h-16 drop-shadow-lg"
+            className="w-24 h-24 drop-shadow-lg "
           />
         </motion.div>
       </div>
