@@ -6,8 +6,12 @@ import hipalz from "@/assets/bluetick/Hipal.png";
 import { useCallback } from "react";
 
 export default function Navbar() {
-  const openWhatsApp = useCallback(() => {
-    window.open("https://wa.me/917075179325", "_blank", "noopener,noreferrer");
+  const openCalendar = useCallback(() => {
+    window.open(
+      "https://calendly.com/palnesto/1hour",
+      "_blank",
+      "noopener,noreferrer",
+    );
   }, []);
 
   return (
@@ -28,7 +32,7 @@ export default function Navbar() {
 
           <section className="flex items-center space-x-4">
             <Button
-              onClick={openWhatsApp}
+              onClick={openCalendar}
               size="icon"
               className="w-full rounded-xl bg-[#703BF7] hover:bg-[#703BF7] text-white px-4"
               aria-label="User profile"
