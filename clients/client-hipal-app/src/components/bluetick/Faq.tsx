@@ -61,7 +61,7 @@ const Faq = () => {
   // +91 6300529700
 
   const callUs = useCallback(() => {
-    window.open("tel:+916300529700", "_blank", "noopener,noreferrer");
+    window.open("tel:+917075179325", "_blank", "noopener,noreferrer");
   }, []);
 
   return (

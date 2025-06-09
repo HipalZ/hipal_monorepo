@@ -8,12 +8,12 @@ const MemoBottom = () => {
 
   // Function to open WhatsApp chat
   const openWhatsApp = useCallback(() => {
-    window.open("https://wa.me/916300529700", "_blank", "noopener,noreferrer")
+    window.open("https://wa.me/917075179325", "_blank", "noopener,noreferrer")
   }, [])
 
   // Function to make a phone call
   const callUs = useCallback(() => {
-    window.open("tel:+916300529700", "_blank", "noopener,noreferrer")
+    window.open("tel:+917075179325", "_blank", "noopener,noreferrer")
   }, [])
 
   // Function to send an email

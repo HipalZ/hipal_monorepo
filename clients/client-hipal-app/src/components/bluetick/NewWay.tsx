@@ -173,7 +173,7 @@ const MemoNewWay = () => {
       <header className=" text-black text-center gap-8 mt-16 mb-8 bg-[#f9f5f0] p-4">
         <h1 className="flex flex-col lg:flex-row items-center justify-center">
           <span className="text-3xl sm:text-4xl font-bold leading-tight block">
-            Unlock Powerful
+            Unlock Powerful &ensp;
           </span>
           <span className="text-3xl sm:text-4xl font-bold leading-tight block">
             Business Advantages

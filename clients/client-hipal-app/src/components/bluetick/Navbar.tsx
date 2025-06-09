@@ -7,7 +7,7 @@ import { useCallback } from "react";
 
 export default function Navbar() {
   const openWhatsApp = useCallback(() => {
-    window.open("https://wa.me/916300529700", "_blank", "noopener,noreferrer");
+    window.open("https://wa.me/917075179325", "_blank", "noopener,noreferrer");
   }, []);
 
   return (
