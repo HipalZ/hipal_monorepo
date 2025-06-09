@@ -166,6 +166,7 @@ export const outLetInfoSchema = z.object({
   placeOrderButton: z.boolean().optional().default(true),
   currencyCode: z.enum(CurrencyCode).optional(),
   currencySymbol: z.enum(CurrencyCodeSymbol).optional(),
+  shareCart: z.boolean().optional().default(false),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;

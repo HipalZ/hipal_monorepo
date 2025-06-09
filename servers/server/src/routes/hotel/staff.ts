@@ -105,8 +105,6 @@ const staffRouter = new Hono()
         customRole: { $elemMatch: { businessId } },
       });
 
-      console.log("existingStaff", existingStaff);
-
       const customRole = {
         businessId,
         role,
@@ -116,6 +114,7 @@ const staffRouter = new Hono()
         serviceIds: serviceIds ?? [],
       };
       const hashPass = await hashPassword(password ?? "6344");
+      console.log();
 
       if (existingStaff) {
         const updatedStaff = await User.findOneAndUpdate(
@@ -126,10 +125,8 @@ const staffRouter = new Hono()
             $addToSet: { customRole },
             password: hashPass,
           },
-          { new: true, session },
+          { new: true, session, upsert: true },
         );
-
-        console.log("updatedStaffannn", updatedStaff);
 
         if (!updatedStaff) {
           return respond(c, "Staff role exist", false, 409, {});

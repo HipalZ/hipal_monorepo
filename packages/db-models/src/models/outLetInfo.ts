@@ -291,6 +291,10 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     enum: CurrencyCodeSymbol,
     default: "₹",
   },
+  shareCart: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 //middlewares

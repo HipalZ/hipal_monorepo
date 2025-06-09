@@ -2339,6 +2339,41 @@ const scriptRouter = new Hono()
         return respond(c, "d", false, 200, {});
       });
     },
+  )
+
+  .post(
+    "/sharecart_on_off",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        shareCart: z.boolean().default(false),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { businessId, shareCart } = requestData;
+        const updateOutlet = await OutLetInfo.findOneAndUpdate(
+          {
+            businessId,
+          },
+          {
+            $set: {
+              shareCart,
+            },
+          },
+          { session, new: true },
+        );
+        if (!updateOutlet) {
+          return respond(c, "Outlet not found", true, 404, {});
+        }
+
+        return respond(c, "d", false, 200, {});
+      });
+    },
   );
 
 export default scriptRouter;
