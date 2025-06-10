@@ -13,7 +13,7 @@ const hipalzRouter = new Hono().get(
   ),
   async (c) => {
     const { urlCode } = c.req.param();
-    const { q } = c.req.query();
+    const { q, id } = c.req.query();
 
     const result = await UrlModel.findOne({ urlCode });
     if (!result) {
@@ -26,7 +26,6 @@ const hipalzRouter = new Hono().get(
         404,
       );
     }
-    const baseUrl = result.longUrl;
     if (!q) {
       const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
         businessId: result?.businessId,
@@ -38,14 +37,18 @@ const hipalzRouter = new Hono().get(
         _id: result.businessId,
       });
 
-      if (menuRedirection && menuRedirection === "WA") {
+      if (
+        menuRedirection &&
+        menuRedirection === "WA" &&
+        whatsAppBusinessConfig.campaign
+      ) {
         const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, ${business?.name}. I'm interested to know coupon, can you share me link:${urlCode}`;
 
         return c.redirect(`${redirectUrl}`);
       }
     }
     // Redirect to the original UR
-    return c.redirect(`${baseUrl}`);
+    return c.redirect(`${result.longUrl}${id ? `&id=${id}` : ""}`);
   },
 );
 

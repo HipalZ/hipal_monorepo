@@ -267,7 +267,6 @@ const menuRouter = new Hono()
           businessId,
         }).lean();
 
-
         if (!tableData && !isHavePos) {
           const findDefaultZone = await Zone.findOne({
             businessId,
@@ -316,8 +315,6 @@ const menuRouter = new Hono()
 
         const currentTimeInMinutes =
           indianDate.getHours() * 60 + indianDate.getMinutes();
-
-        
 
         let menu = await Menu.findOne({
           zoneIds: zone?._id,

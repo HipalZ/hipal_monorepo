@@ -4,6 +4,9 @@ import {
   BusinessSettings,
   Category,
   Dish,
+  GroupAnalytic,
+  GroupModel,
+  HotelRoomType,
   HotelService,
   HotelServiceCategory,
   HotelStaffRole,
@@ -1902,6 +1905,474 @@ const scriptRouter = new Hono()
         }
 
         return respond(c, "done", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/enable_group_analytics",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        schedule("0 19 * * *", async () => {
+          const res = await axios.put(
+            "https://api.hipalz.com/groups/updateLateNightUsers/all",
+            {
+              businessId: requestData.businessId,
+            },
+          );
+        });
+        schedule("0 20 * * *", async () => {
+          await axios.put(
+            "https://api.hipalz.com/groups/updateDefaultGroups/all",
+            {
+              businessId: requestData.businessId,
+            },
+          );
+        });
+
+        // 3:00am IST (21:30 UTC previous day)
+        schedule("0 21 * * *", async () => {
+          await axios.put(
+            "https://api.hipalz.com/groups/updateMorningUsersGroup/all",
+            {
+              businessId: requestData.businessId,
+            },
+          );
+        });
+
+        // 4:00am IST (22:30 UTC previous day)
+        schedule("0 22 * * *", async () => {
+          await axios.put(
+            "https://api.hipalz.com/groups/updateAfterNoonUsers/all",
+            {
+              businessId: requestData.businessId,
+            },
+          );
+        });
+
+        // 5:00am IST (23:30 UTC previous day)
+        schedule("0 23 * * *", async () => {
+          await axios.put(
+            "https://api.hipalz.com/groups/updateEveningUsers/all",
+            {
+              businessId: requestData.businessId,
+            },
+          );
+        });
+
+        return respond(c, "done", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/enable_dnamic_group_analytics",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        schedule("0 20 * * *", async () => {
+          const res = await axios.post(
+            "https://api.hipalz.com/groups/update_dnamic_group",
+            {
+              businessId: requestData.businessId,
+            },
+          );
+        });
+
+        return respond(c, "done", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/update_group_analytics",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const allDefaultGroups = await GroupModel.find({
+          isDefault: true,
+        });
+
+        for (const group of allDefaultGroups) {
+          const groupId = group._id;
+
+          const groupAnalytics = await GroupAnalytic.findOneAndUpdate(
+            {
+              groupId: groupId,
+            },
+            {
+              $set: {
+                isDefault: true,
+              },
+            },
+            {
+              session,
+              upsert: true,
+              new: true,
+            },
+          );
+        }
+
+        return respond(c, "done", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/update_group_analytics_by_name_for_default",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const groupNames = [
+          "Best users",
+          "Average users",
+          "Attention Required users",
+          "Lost users",
+          "best users",
+          "average users",
+          "attention required users",
+          "lost users",
+          "best Users",
+          "average Users",
+          "attention Required Users",
+          "lost Users",
+          "attention Required Users",
+        ];
+        await GroupModel.updateMany(
+          {
+            name: { $in: groupNames },
+            groupType: "DYNAMIC",
+          },
+          {
+            isDefault: true,
+          },
+        );
+
+        return respond(c, "done", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/update_morning_group",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const morningGroupNames = [
+          "morning customer",
+          "morning Customers",
+          "Morning Customer",
+          "morning customer",
+          "morning Customers",
+          "Morning Customer",
+          "morning customer",
+          "morning Customers",
+          "Morning Customer",
+        ];
+        await GroupModel.updateMany(
+          {
+            name: { $in: morningGroupNames },
+            groupType: "DYNAMIC",
+          },
+          {
+            morning: true,
+          },
+        );
+
+        const afterNoonGroupNames = [
+          "after noon customer",
+          "after noon Customers",
+          "After Noon Customer",
+          "afterNoon customer",
+          "afterNoon Customers",
+          "AfterNoon Customer",
+        ];
+
+        await GroupModel.updateMany(
+          {
+            name: { $in: afterNoonGroupNames },
+            groupType: "DYNAMIC",
+          },
+          {
+            afternoon: true,
+          },
+        );
+
+        const eveningGroupNames = [
+          "evening customer",
+          "evening Customers",
+          "Evening Customer",
+          "evening customer",
+          "evening Customers",
+          "Evening Customer",
+        ];
+        await GroupModel.updateMany(
+          {
+            name: { $in: eveningGroupNames },
+            groupType: "DYNAMIC",
+          },
+          {
+            evening: true,
+          },
+        );
+
+        const nightGroupNames = [
+          "late night customer",
+          "late night Customers",
+          "Late Night Customer",
+          "lateNight customer",
+          "lateNight Customers",
+          "LateNight Customer",
+          "night customer",
+        ];
+
+        await GroupModel.updateMany(
+          {
+            name: { $in: nightGroupNames },
+            groupType: "DYNAMIC",
+          },
+          {
+            night: true,
+          },
+        );
+
+        return respond(c, "done", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/ugroup_payment_by_userId",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const allPayments = await Payment.find({
+          isDeleted: false,
+        });
+        // Aggregate payments by userId and businessId
+        const result: Array<{
+          userId: string;
+          businessId: string;
+          data: {
+            total: number;
+            coinzUsed: number;
+            coinzIssued: number;
+          };
+        }> = [];
+
+        const temp: Record<
+          string,
+          Record<
+            string,
+            {
+              total: number;
+              coinzUsed: number;
+              coinzIssued: number;
+            }
+          >
+        > = {};
+
+        for (const payment of allPayments) {
+          const userId = payment.userId?.toString?.() ?? "";
+          const businessId = payment.businessId?.toString?.() ?? "";
+
+          if (!userId || !businessId) continue;
+
+          if (!temp[userId]) {
+            temp[userId] = {};
+          }
+          if (!temp[userId][businessId]) {
+            temp[userId][businessId] = {
+              total: 0,
+              coinzUsed: 0,
+              coinzIssued: 0,
+            };
+          }
+
+          temp[userId][businessId].total += payment.total ?? 0;
+
+          if (payment.claimedCoins) {
+            temp[userId][businessId].coinzUsed += payment.claimedCoins;
+          }
+          if (payment.earnCoins) {
+            temp[userId][businessId].coinzIssued += payment.earnCoins;
+          }
+        }
+
+        for (const userId in temp) {
+          for (const businessId in temp[userId]) {
+            result.push({
+              userId,
+              businessId,
+              data: temp[userId][businessId],
+            });
+          }
+        }
+
+        for (const item of result) {
+          const { userId, businessId, data } = item;
+
+          const userAnalyticsExist = await UserAnalytic.findOne({
+            userId,
+            businessId,
+          });
+
+          const userAnalytics = await UserAnalytic.findOneAndUpdate(
+            {
+              userId,
+              businessId,
+            },
+            {
+              $set: {
+                totalSpend: data.total,
+                coinzUsed: data.coinzUsed,
+                coinzIssued: data.coinzIssued,
+                avgSpend: Math.round(
+                  data.total / userAnalyticsExist?.visitCount || 30,
+                ), // Assuming 30 days for average calculation
+              },
+            },
+            { session, upsert: true, new: true },
+          );
+        }
+
+        return respond(c, "done", false, 200, result);
+      });
+    },
+  )
+
+  .post(
+    "/add_room_type",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        roomType: z.string().min(2).max(50),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { businessId, roomType } = requestData;
+
+        const addRoomType = new HotelRoomType({
+          businessId,
+          roomType,
+        });
+
+        const saveData = await addRoomType.save({ session });
+
+        return respond(c, "d", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/update_outlet",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const result = await OutLetInfo.updateMany(
+          {},
+          {
+            $set: {
+              currencySymbol: "₹",
+              currencyCode: "INR",
+            },
+          },
+        );
+
+        return respond(c, "d", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/sharecart_on_off",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36),
+        shareCart: z.boolean().default(false),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { businessId, shareCart } = requestData;
+        const updateOutlet = await OutLetInfo.findOneAndUpdate(
+          {
+            businessId,
+          },
+          {
+            $set: {
+              shareCart,
+            },
+          },
+          { session, new: true },
+        );
+        if (!updateOutlet) {
+          return respond(c, "Outlet not found", true, 404, {});
+        }
+
+        return respond(c, "d", false, 200, {});
       });
     },
   );

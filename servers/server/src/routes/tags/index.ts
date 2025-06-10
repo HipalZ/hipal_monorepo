@@ -385,6 +385,48 @@ const tagRouter = new Hono()
       err: false,
       data: createNote,
     });
-  });
+  })
+
+  .get(
+    "/fetch_users/:tagname",
+    zValidator(
+      "param",
+      z.object({
+        tagname: z.string({
+          message: "tagId is required",
+        }),
+      }),
+    ),
+    async (c) => {
+      const { tagname } = c.req.param();
+      const tag = await TagModel.findOne({
+        name: tagname,
+        isDeleted: false,
+      });
+      if (!tag) {
+        return c.json(
+          {
+            message: "No tag found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
+
+      const users = await UserTags.find({
+        tagId: tag._id,
+      }).populate("userId", "name phone");
+
+      return c.json(
+        {
+          message: "tag users found",
+          err: false,
+          data: users,
+        },
+        200,
+      );
+    },
+  );
 
 export default tagRouter;

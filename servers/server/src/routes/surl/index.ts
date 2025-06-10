@@ -1,7 +1,5 @@
 import {
   BillUrlModel,
-  HotelRoom,
-  HotelRoomSession,
   Payment,
   QrBill,
   UrlModel,
@@ -10,6 +8,8 @@ import {
 } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { getCookie, setCookie } from "hono/cookie";
+import jwt from "jsonwebtoken";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { setShortUrl } from "../../utils/cacheHelper";
@@ -25,7 +25,7 @@ const surlRouter = new Hono()
     ),
     async (c) => {
       const { urlCode } = c.req.param();
-      const { q } = c.req.query();
+      const { q, id } = c.req.query();
 
       if (!q) {
         const Bid = await UrlModel.findOne({
@@ -104,6 +104,99 @@ const surlRouter = new Hono()
         );
       }
 
+      if (id) {
+        const getToken = getCookie(c, "token");
+
+        if (getToken) {
+          try {
+            const decoded = jwt.verify(
+              getToken,
+              Bun.env.JWT_SECRET as string,
+            ) as { id: string; role: string };
+
+            if (decoded.id !== id) {
+              return c.json(
+                {
+                  message: "please scan the QR code again",
+                  err: true,
+                  data: {},
+                },
+                400,
+              );
+            }
+          } catch (error) {
+            return c.json(
+              {
+                message: "Invalid token",
+                err: true,
+                data: {},
+              },
+              401,
+            );
+          }
+        }
+
+        const token = jwt.sign(
+          {
+            id: id,
+            role: "HIPAL_CUSTOMER",
+          },
+          Bun.env.JWT_SECRET as string,
+        );
+
+        setCookie(c, "token", token, {
+          httpOnly: false,
+          secure: false,
+        });
+      }
+
+      // Redirect to the original URL
+      return c.redirect(`${result.longUrl}${id ? `&id=${id}` : ""}`);
+    },
+  )
+
+  .get(
+    "/check_in/:urlCode",
+    zValidator(
+      "param",
+      z.object({
+        urlCode: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { urlCode } = c.req.param();
+      const { q, id } = c.req.query();
+
+      if (!q) {
+        const Bid = await UrlModel.findOne({
+          urlCode,
+        }).select("businessId");
+
+        const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
+          businessId: Bid?.businessId,
+        });
+
+        const menuRedirection = whatsAppBusinessConfig?.menuRedirection;
+
+        if (menuRedirection && menuRedirection === "WA") {
+          const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, I have ve checked in via QR at T-${urlCode}`;
+
+          return c.redirect(redirectUrl);
+        }
+      }
+
+      const result = await UrlModel.findOne({ urlCode });
+      if (!result) {
+        return c.json(
+          {
+            message: "URL not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
+
       // Redirect to the original URL
       return c.redirect(result.longUrl);
     },
@@ -119,7 +212,7 @@ const surlRouter = new Hono()
     ),
     async (c) => {
       const { urlCode } = c.req.param();
-      const { q } = c.req.query();
+      const { q, id } = c.req.query();
       if (!q) {
         const Bid = await UrlModel.findOne({
           urlCode,
@@ -151,7 +244,9 @@ const surlRouter = new Hono()
       }
 
       // Redirect to the original URL
-      return c.redirect(result.longUrl);
+      return c.redirect(
+        `${result.longUrl} ${q ? `?${q}` : ""}${id ? `&id=${id}` : ""}`,
+      );
     },
   )
 

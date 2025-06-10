@@ -22,6 +22,7 @@ export const whatsAppBusinessConfigSchema = z.object({
   couponDiscount: z.number().int(),
   direction: z.string().min(3).max(250),
   socialLink: z.string().min(3).max(250),
+  campaign: z.boolean().default(false),
 });
 
 export type WhatsAppBusinessConfigType = z.infer<

@@ -3,7 +3,12 @@ import mongoose from "mongoose";
 import type { Model } from "mongoose";
 import type { OutLetInfoType } from "../validators";
 
-import { Amenities, BusinessEnumType } from "../validators";
+import {
+  Amenities,
+  BusinessEnumType,
+  CurrencyCode,
+  CurrencyCodeSymbol,
+} from "../validators";
 import { Business } from "./business";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
@@ -275,6 +280,20 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
   placeOrderButton: {
     type: Boolean,
     default: true,
+  },
+  currencyCode: {
+    type: String,
+    enum: CurrencyCode,
+    default: "INR",
+  },
+  currencySymbol: {
+    type: String,
+    enum: CurrencyCodeSymbol,
+    default: "₹",
+  },
+  shareCart: {
+    type: Boolean,
+    default: false,
   },
 });
 

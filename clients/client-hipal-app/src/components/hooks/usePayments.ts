@@ -28,12 +28,10 @@ import { useSearchParams } from "next/navigation";
 import { useError } from "../store/useError";
 
 export const usePayments = () => {
-  const { businessDetails } = useBusinessDetails();
   const { setOpenErrorModal, setError } = useError();
   const pathName = usePathname();
   const { errorText } = useErrorHandling();
   const { loyaltySetting } = useLoyaltyData();
-  const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
   const { availedCoupon, channelId, setChannelId } = useCouponz((s) => ({
@@ -68,6 +66,9 @@ export const usePayments = () => {
     setShowError: s.setShowError,
   }));
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
+  const businessId = _useAllBusiness(
+    (state) => state.data.outletInfo?.businessId,
+  );
   // for pos and non pos finalAmount varies
   const finalAmount = useMemo(() => {
     return outletInfo?.isPosEnabled

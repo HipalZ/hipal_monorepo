@@ -11,10 +11,12 @@ import {
   HotelRoomSession,
   RecentCampaign,
   Subscriber,
+  TagModel,
   UrlModel,
   User,
   UserAnalytic,
   UserReward,
+  UserTags,
   WhatAppOrder,
   WhatAppTemplate,
   WhatsAppAnalyticsUser,
@@ -38,11 +40,11 @@ import {
   whatsAppOrderSchema,
   whatsAppWalletHistorySchema,
 } from "@hi/db-models/src/validators";
-import { createHmac } from "node:crypto";
-
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
+import { createHmac } from "node:crypto";
+
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
@@ -1943,10 +1945,7 @@ const whatsappRouter = new Hono()
           phoneId: phon_no_id,
         });
 
-        const bName = await Business.findById(config?.businessId).select(
-          "name",
-        );
-
+        const bName = await Business.findById(config?.businessId);
         if (statuses && statuses.length > 0) {
           const firstStatus = statuses[0];
           const extractedData = {
@@ -2099,6 +2098,7 @@ const whatsappRouter = new Hono()
 
               const userAnalytics = await UserAnalytic.exists({
                 userId: userData?._id,
+                businessId: config?.businessId,
               });
 
               if (!userAnalytics) {
@@ -2126,7 +2126,9 @@ const whatsappRouter = new Hono()
               urlCode: tableCode,
             });
 
-            longUrl = `${findLongUrl?.shortUrl}?q=wa`;
+            longUrl = `${
+              findLongUrl?.shortUrl
+            }?q=wa&id=${userObj?._id.toString()}`;
             shortUrlType = findLongUrl?.shortUrlType || "";
             urlObj = findLongUrl;
             updateLongUrl = `${
@@ -2417,6 +2419,31 @@ const whatsappRouter = new Hono()
                 },
               });
             } else {
+              let tag = await TagModel.findOne({
+                businessId: config?.businessId,
+                name: "whatsapp",
+              });
+              if (!tag) {
+                tag = await TagModel.create({
+                  businessId: config?.businessId,
+                  name: "whatsapp",
+                  createdBy: bName?.staffIds?.[0],
+                });
+              }
+
+              const userTag = await UserTags.findOneAndUpdate(
+                {
+                  userId: userObj?._id,
+                  businessId: config?.businessId,
+                },
+                {
+                  tagId: tag?._id,
+                },
+                {
+                  upsert: true,
+                  new: true,
+                },
+              );
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
@@ -2439,6 +2466,7 @@ const whatsappRouter = new Hono()
 
             const userAnalytics = await UserAnalytic.exists({
               userId: user?._id,
+              businessId: config?.businessId,
             });
 
             if (!userAnalytics) {

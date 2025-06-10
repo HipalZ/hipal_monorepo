@@ -4,6 +4,8 @@ import { FaShareAlt, FaTimes } from "react-icons/fa";
 import QRCode from "react-qr-code";
 import useBusinessData from "@/components/store/useBusinessData";
 import { QrCodeIcon } from "lucide-react";
+import { useAllTables } from "@/components/hooks/useCartApi";
+import { useQuery } from "@tanstack/react-query";
 
 type CreateBillButtonProps = {
   className?: string;
@@ -14,23 +16,21 @@ const CreateBillButton = ({ className = "" }: CreateBillButtonProps) => {
   const [amount, setAmount] = useState("");
   const [generatedQR, setGeneratedQR] = useState(false);
   const [paymentLink, setPaymentLink] = useState("");
+  const [tableName, setTableName] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
+  const { getTables } = useAllTables();
   const handleCreateBill = () => {
     setIsOpen(true);
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Only allow numbers
     const value = e.target.value.replace(/[^0-9]/g, "");
     setAmount(value);
   };
 
   const generateQRCode = () => {
     if (!amount || Number.parseFloat(amount) <= 0) return;
-
-    const timestamp = Date.now();
-    const tableName = `T-${String(timestamp).slice(-5)}`;
-
     const link = `https://hipalz.com/${businessId}/payment?tableName=${tableName}&amount=${amount}`;
     setPaymentLink(link);
     setGeneratedQR(true);
@@ -48,6 +48,12 @@ const CreateBillButton = ({ className = "" }: CreateBillButtonProps) => {
     setGeneratedQR(false);
     setPaymentLink("");
   };
+
+  const { data } = useQuery({
+    queryKey: ["getTables", businessId, isOpen],
+    queryFn: getTables,
+    enabled: !!businessId && !!isOpen,
+  });
 
   return (
     <div className="fixed bottom-20 right-4 z-50">
@@ -100,9 +106,48 @@ const CreateBillButton = ({ className = "" }: CreateBillButtonProps) => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
+                <div className="mb-4 relative">
+                  <label
+                    htmlFor="tableName"
+                    className="block mb-2 text-sm font-medium text-gray-700"
+                  >
+                    Select Table Name
+                  </label>
+
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg text-left focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      {tableName || "Choose table"}
+                    </button>
+
+                    {isDropdownOpen && (
+                      <div className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto border border-gray-300 bg-white rounded-md shadow-lg">
+                        <ul className="py-1 text-sm text-gray-700">
+                          {data?.map((table: any) => (
+                            <li
+                              key={table._id}
+                              onClick={() => {
+                                setTableName(table.name);
+                                setIsDropdownOpen(false);
+                              }}
+                              className="cursor-pointer px-4 py-2 hover:bg-gray-100"
+                            >
+                              {table.name}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 <motion.button
                   onClick={generateQRCode}
-                  disabled={!amount || Number.parseFloat(amount) <= 0}
+                  disabled={
+                    !amount || !tableName || Number.parseFloat(amount) <= 0
+                  }
                   className="w-full px-4 py-2 font-semibold text-white bg-indigo-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}

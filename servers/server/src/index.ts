@@ -15,7 +15,7 @@ import { routes } from "./routes";
 import { customTimeoutException } from "./utils";
 
 import "./utils/env";
-///////
+////////
 const app = new Hono({
   strict: true,
 });

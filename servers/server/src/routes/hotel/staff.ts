@@ -114,6 +114,7 @@ const staffRouter = new Hono()
         serviceIds: serviceIds ?? [],
       };
       const hashPass = await hashPassword(password ?? "6344");
+      console.log();
 
       if (existingStaff) {
         const updatedStaff = await User.findOneAndUpdate(
@@ -124,7 +125,7 @@ const staffRouter = new Hono()
             $addToSet: { customRole },
             password: hashPass,
           },
-          { new: true, session },
+          { new: true, session, upsert: true },
         );
 
         if (!updatedStaff) {

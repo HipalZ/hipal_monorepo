@@ -5,6 +5,7 @@ import { useCartStore } from "../store/useCartStore";
 import { useOrderStore } from "../store/useOrderData";
 import { useCart } from "../store/useCart";
 import { useError } from "../store/useError";
+import useBusinessData from "../store/useBusinessData";
 
 export const useDeleteCart = () => {
   const { mutateAsync, isPending } = useMutation({
@@ -119,4 +120,19 @@ export const useUpdateOrderAction = () => {
   });
 
   return { updateOrderAction: mutateAsync, isPending };
+};
+
+export const useAllTables = () => {
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
+  const getTables = async () => {
+    const res = await apiRpc.zones_and_tables.tables[":businessId"].$get({
+      param: {
+        businessId,
+      },
+    });
+    const response = await res.json();
+    return response.data || [];
+  };
+
+  return { getTables };
 };
