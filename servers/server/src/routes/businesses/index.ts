@@ -17,6 +17,8 @@ import {
 import {
   BranchSchema,
   BusinessSchema,
+  CurrencyCode,
+  CurrencyCodeSymbol,
   UpdateBusinessSchema,
   loyaltySchema,
   outLetInfoSchema,
@@ -949,6 +951,20 @@ const businessesRouter = new Hono()
       });
     },
   )
+
+  .get("/fetch_currency", async (c) => {
+    // Combine codes and symbols into an array of objects
+    const currencyList = CurrencyCode.map((code, idx) => ({
+      code,
+      symbol: CurrencyCodeSymbol[idx],
+    }));
+
+    return c.json({
+      err: false,
+      data: currencyList,
+      message: "Currency codes and symbols fetched successfully",
+    });
+  })
 
   .post(
     "/loyalty/status/:businessId",
