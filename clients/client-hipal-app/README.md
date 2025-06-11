@@ -42,4 +42,4 @@ pos payment
 test deploy
 vercel json filed testings vercel removed build
 pnpm lock trigger to
-Trigger HIpalz
+Trigger HIpalz2
