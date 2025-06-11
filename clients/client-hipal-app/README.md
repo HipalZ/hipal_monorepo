@@ -47,3 +47,4 @@ vercel json filed testings vercel removed build
 pnpm lock trigger to
 Trigger HIpalz
 prod push hipalz
+prod push hipalz2
