@@ -15,6 +15,7 @@ import groupRouter from "./groups";
 import hipalzRouter from "./hipalz";
 import hotelRouter from "./hotel";
 import iconRouter from "./icon";
+import kitchenRouter from "./kitchen";
 import kotRouter from "./kot";
 import loyaltyRouter from "./loyalty";
 import menuBannerRouter from "./menu-banner";
@@ -83,6 +84,7 @@ export const routes = app
   .route("/event", eventRouter)
   .route("/pos_configuration", posConfigurationRouter)
   .route("/loyalty", loyaltyRouter)
-  .route("/qrs", qrRouter);
+  .route("/qrs", qrRouter)
+  .route("/kitchen", kitchenRouter);
 
 export type AppType = typeof routes;

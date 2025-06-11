@@ -8,18 +8,17 @@ import {
   Kitchen,
   KotOrder,
   Menu,
-  MenuBanner,
   Pos,
   PosBill,
   Table,
   Tax,
-  UniquelyYours,
   UrlModel,
   User,
   UserAnalytic,
   UserSession,
   Zone,
 } from "@hi/db-models";
+import { OrderVerificationTypeEnum } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
@@ -446,7 +445,7 @@ const posRouter = new Hono()
     zValidator(
       "query",
       z.object({
-        businessId: z.string().min(3).max(200),
+        businessId: z.string().min(3).max(50),
       }),
     ),
     async (c) => {
@@ -651,7 +650,6 @@ const posRouter = new Hono()
 
   .post(
     "/configure",
-
     zValidator(
       "json",
       z.object({
@@ -660,20 +658,20 @@ const posRouter = new Hono()
         posId: z.string().min(1).max(50),
       }),
     ),
-
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
         const { businessId, restId } = await c.req.json();
-        // ! this is work if qr code is not generated for the table before this business
-        // ! if qr code is generated for the table then we need to use script not this api
 
-        await Menu.deleteMany({
-          businessId: businessId,
-        });
+        // Remove old menus
+        await Menu.deleteMany({ businessId }, { session });
 
-        const business =
-          await Business.findById(businessId).select("customLink");
+        // Fetch custom link
+        const business = await Business.findById(businessId)
+          .select("customLink")
+          .session(session);
+
+        // Fetch areas and tables from POS
         const fetchAreaAndTable = await axios.post(
           posApiPaths.fetchAreaAndTables,
           {
@@ -684,177 +682,113 @@ const posRouter = new Hono()
             tableNo: "",
           },
         );
-        if (fetchAreaAndTable.data.success === "0") {
+
+        if (fetchAreaAndTable.data.success !== "1") {
           throw new Error("area and table not fetched");
         }
 
-        if (fetchAreaAndTable.data.success === "0") {
-          throw new Error("area and table not fetched");
+        // Active areas and tables
+        const areas = fetchAreaAndTable.data.areas.filter(
+          (a) => a.active === "1",
+        );
+        const tables = fetchAreaAndTable.data.tables.filter(
+          (t) => t.active === "1",
+        );
+
+        // Ensure at least one zone
+        let zone = null;
+        if (areas.length === 0) {
+          // Create fallback zone within the transaction
+          zone = new Zone({
+            businessId,
+            name: "POS",
+            zoneId: nanoid(5),
+            active: "1",
+            tableIds: [],
+            visibility: true,
+          });
+          await zone.save({ session });
         }
 
-        if (fetchAreaAndTable.data.success === "1") {
-          // areas or zones
-          const areas = fetchAreaAndTable.data.areas.filter(
-            (area: {
-              active: string;
-            }) => area.active === "1",
-          );
-
-          // tables
-          const tables = fetchAreaAndTable.data.tables.filter(
-            (table: {
-              active: string;
-            }) => table.active === "1",
-          );
-          let zone = null;
-          if (areas.length === 0) {
-            zone = await Zone.create({
-              businessId: businessId,
-              name: "POS",
-              zoneId: "POS",
-              active: "1",
-              tableIds: [],
-              visibility: true,
-            });
-          }
-          for (const area of areas) {
-            // to find exact zone from zoneId
-            const zoneId = area.restaurantareaid;
-            const zoneName = area.displayname;
-            const active = area.active;
-            const rank = area.rank;
-
-            zone = await Zone.findOneAndUpdate(
-              {
-                zoneId,
-              },
-              {
-                name: zoneName,
-                businessId: businessId,
-                zoneId,
-                active,
-                rank,
-              },
-              {
-                upsert: true,
-                new: true,
-                session,
-              },
-            );
-          }
-
-          for (const table of tables) {
-            const zoneId = table.restaurantareaid;
-            const tableName = table.table_no;
-            const active = table.active;
-            const rank = table.rank;
-            const tableId = table.id;
-
-            const creatingTable = await Table.findOneAndUpdate(
-              {
-                tableId,
-              },
-              {
-                name: tableName,
-                businessId: businessId,
-                zoneId,
-                active,
-                rank,
-                tableId,
-                internalZoneId: zone?._id,
-              },
-              {
-                upsert: true,
-                new: true,
-                session,
-              },
-            );
-
-            // update tableIds in zone
-
-            Zone.findOneAndUpdate(
-              {
-                zoneId,
-              },
-              {
-                $addToSet: {
-                  tableIds: creatingTable._id,
-                },
-              },
-              {
-                new: true,
-                session,
-              },
-            );
-
-            const uniqueOrderId = nanoid(5);
-
-            const alreadyExists = await UrlModel.findOne({
-              businessId: businessId,
-              longUrl: `https://test-hipal.hipalz.com/${business?.customLink}/explore?tableName=${creatingTable.name}`,
-            });
-
-            if (!alreadyExists) {
-              const createShortUrl = await UrlModel.create({
-                businessId: businessId,
-                longUrl: `https://test-hipal.hipalz.com/${business?.customLink}/explore?tableName=${creatingTable.name}`,
-                shortUrl: `https://api.test.hipalz.com/surl/${uniqueOrderId}`,
-                urlCode: uniqueOrderId,
-              });
-
-              await Table.findOneAndUpdate(
-                {
-                  tableId,
-                },
-                {
-                  tableLink: createShortUrl.shortUrl,
-                },
-                {
-                  new: true,
-                  session,
-                },
-              );
-            }
-          }
-          // update uniquely yours
-          await UniquelyYours.findOneAndUpdate(
+        // Upsert each area as a zone
+        for (const area of areas) {
+          zone = await Zone.findOneAndUpdate(
+            { zoneId: area.restaurantareaid },
             {
+              name: area.displayname,
               businessId,
+              zoneId: area.restaurantareaid,
+              active: area.active,
+              rank: area.rank,
             },
-            {
-              isDeleted: true,
-            },
-            {
-              new: true,
-              session,
-            },
-          );
-          // update menu banner
-          await MenuBanner.findOneAndUpdate(
-            {
-              businessId,
-            },
-            {
-              isPublished: false,
-            },
-            {
-              new: true,
-              session,
-            },
+            { upsert: true, new: true, session },
           );
         }
 
-        const zone = await Zone.find({
-          businessId: businessId,
-        });
+        // Create/update tables and link to zones
+        for (const table of tables) {
+          const currentZoneId =
+            areas.length === 0 ? zone?.zoneId : table.restaurantareaid;
 
-        const zoneIds = zone.map((zone) => zone._id.toString());
-        const createMenu = await Menu.create(
+          // Upsert table
+          const creatingTable = await Table.findOneAndUpdate(
+            { tableId: table.id },
+            {
+              name: table.table_no,
+              businessId,
+              zoneId: currentZoneId,
+              active: table.active,
+              rank: table.rank,
+              tableId: table.id,
+              internalZoneId: zone?._id,
+            },
+            { upsert: true, new: true, session },
+          );
+
+          // Add table to zone.tableIds
+          await Zone.findOneAndUpdate(
+            { zoneId: currentZoneId },
+            { $addToSet: { tableIds: creatingTable._id } },
+            { new: true, session },
+          );
+
+          // Create short URL if not exists
+          const longUrl = `https://hipal-test.hipalz.com/${business?.customLink}/explore?tableName=${creatingTable.name}`;
+          const exists = await UrlModel.findOne({
+            businessId,
+            longUrl,
+          }).session(session);
+          if (!exists) {
+            const shortCode = nanoid(5);
+            const createShortUrl = await UrlModel.create(
+              [
+                {
+                  businessId,
+                  longUrl,
+                  shortUrl: `https://api.test.hipalz.com/surl/${shortCode}`,
+                  urlCode: shortCode,
+                },
+              ],
+              { session },
+            );
+
+            await Table.findOneAndUpdate(
+              { tableId: table.id },
+              { tableLink: createShortUrl[0].shortUrl },
+              { new: true, session },
+            );
+          }
+        }
+
+        const zones = await Zone.find({ businessId }).session(session);
+        const zoneIds = zones.map((z) => z._id.toString());
+
+        await Menu.create(
           [
             {
               name: "Default",
-              businessId: businessId,
-              zoneIds: zoneIds,
+              businessId,
+              zoneIds,
               menuType: 2,
               days: [1, 2, 3, 4, 5, 6, 7],
               startTime: 240,
@@ -867,18 +801,207 @@ const posRouter = new Hono()
               secondaryColor: "#fce7f3",
             },
           ],
-          {
-            session,
-          },
+          { session },
         );
 
         return c.json(
           {
             message: "POS Config saved successfully",
             err: false,
-            data: {
-              success: true,
+            data: { success: true },
+          },
+          200,
+        );
+      });
+    },
+  )
+
+  .post(
+    "/setup",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(1).max(50),
+        restId: z.string().min(1).max(50),
+        posId: z.string().min(1).max(50),
+        orderVerificationType: z.enum(OrderVerificationTypeEnum),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const { businessId, restId, orderVerificationType, posId } =
+          await c.req.json();
+
+        // Remove old menus
+        await Menu.deleteMany({ businessId }, { session });
+
+        // Fetch custom link
+        const business = await Business.findById(businessId).session(session);
+
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+        });
+
+        if (!businessPosConfig) {
+          const createBusinessPosConfig = new BusinessPosConfig({
+            businessId,
+            orderMode: "WITH_ORDER",
+            branchId: business?._id,
+            restName: business?.name,
+            accessKey: petpoojaPosConfig.accessKey,
+            secretKey: petpoojaPosConfig.secretKey,
+            authToken: petpoojaPosConfig.authToken,
+            restId,
+            isDeleted: false,
+            orderVerificationType,
+            posName: "Petpooja",
+            posId,
+            date: Date.now(),
+          });
+
+          await createBusinessPosConfig.save({ session });
+        }
+
+        // Fetch areas and tables from POS
+        const fetchAreaAndTable = await axios.post(
+          posApiPaths.fetchAreaAndTables,
+          {
+            "app-key": petpoojaPosConfig.accessKey,
+            "app-secret": petpoojaPosConfig.secretKey,
+            "access-token": petpoojaPosConfig.authToken,
+            restID: restId,
+            tableNo: "",
+          },
+        );
+
+        if (fetchAreaAndTable.data.success !== "1") {
+          throw new Error("area and table not fetched");
+        }
+
+        // Active areas and tables
+        const areas = fetchAreaAndTable.data.areas.filter(
+          (a) => a.active === "1",
+        );
+        const tables = fetchAreaAndTable.data.tables.filter(
+          (t) => t.active === "1",
+        );
+
+        // Ensure at least one zone
+        let zone = null;
+        if (areas.length === 0) {
+          // Create fallback zone within the transaction
+          zone = new Zone({
+            businessId,
+            name: "POS",
+            zoneId: nanoid(5),
+            active: "1",
+            tableIds: [],
+            visibility: true,
+          });
+          await zone.save({ session });
+        }
+
+        // Upsert each area as a zone
+        for (const area of areas) {
+          zone = await Zone.findOneAndUpdate(
+            { zoneId: area.restaurantareaid },
+            {
+              name: area.displayname,
+              businessId,
+              zoneId: area.restaurantareaid,
+              active: area.active,
+              rank: area.rank,
             },
+            { upsert: true, new: true, session },
+          );
+        }
+
+        // Create/update tables and link to zones
+        for (const table of tables) {
+          const currentZoneId =
+            areas.length === 0 ? zone?.zoneId : table.restaurantareaid;
+
+          // Upsert table
+          const creatingTable = await Table.findOneAndUpdate(
+            { tableId: table.id },
+            {
+              name: table.table_no,
+              businessId,
+              zoneId: currentZoneId,
+              active: table.active,
+              rank: table.rank,
+              tableId: table.id,
+              internalZoneId: zone?._id,
+            },
+            { upsert: true, new: true, session },
+          );
+
+          // Add table to zone.tableIds
+          await Zone.findOneAndUpdate(
+            { zoneId: currentZoneId },
+            { $addToSet: { tableIds: creatingTable._id } },
+            { new: true, session },
+          );
+
+          // Create short URL if not exists
+          const longUrl = `https://hipal-test.hipalz.com/${business?.customLink}/explore?tableName=${creatingTable.name}`;
+          const exists = await UrlModel.findOne({
+            businessId,
+            longUrl,
+          }).session(session);
+          if (!exists) {
+            const shortCode = nanoid(5);
+            const createShortUrl = await UrlModel.create(
+              [
+                {
+                  businessId,
+                  longUrl,
+                  shortUrl: `https://api.test.hipalz.com/surl/${shortCode}`,
+                  urlCode: shortCode,
+                },
+              ],
+              { session },
+            );
+
+            await Table.findOneAndUpdate(
+              { tableId: table.id },
+              { tableLink: createShortUrl[0].shortUrl },
+              { new: true, session },
+            );
+          }
+        }
+
+        const zones = await Zone.find({ businessId }).session(session);
+        const zoneIds = zones.map((z) => z._id.toString());
+
+        await Menu.create(
+          [
+            {
+              name: "Default",
+              businessId,
+              zoneIds,
+              menuType: 2,
+              days: [1, 2, 3, 4, 5, 6, 7],
+              startTime: 240,
+              endTime: 239,
+              isActive: true,
+              isDeleted: false,
+              categoryLayout: 2,
+              cardLayout: 2,
+              primaryColor: "#ec4899",
+              secondaryColor: "#fce7f3",
+            },
+          ],
+          { session },
+        );
+
+        return c.json(
+          {
+            message: "POS Config saved successfully",
+            err: false,
+            data: { success: true },
           },
           200,
         );
@@ -1931,8 +2054,44 @@ const posRouter = new Hono()
             err: false,
             data: { success: true },
           },
-          200
+          200,
         );
+      });
+    },
+  )
+
+  .put(
+    "/update_pos_config",
+
+    zValidator(
+      "json",
+      z.object({
+        posConfigId: z.string().min(3).max(50),
+        orderVerificationType: z
+          .enum(OrderVerificationTypeEnum)
+          .default("CAPTAIN"),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { posConfigId, orderVerificationType } = await c.req.json();
+
+        const updateBusinessPosConfig =
+          await BusinessPosConfig.findOneAndUpdate(
+            { _id: posConfigId },
+            { orderVerificationType },
+            { session },
+          );
+
+        if (!updateBusinessPosConfig) {
+          return respond(c, "Update failed", true, 400, {});
+        }
+
+        return respond(c, "Updated successfully", false, 200, {
+          _id: updateBusinessPosConfig._id,
+        });
       });
     },
   );

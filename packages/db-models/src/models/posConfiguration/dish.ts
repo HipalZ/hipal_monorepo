@@ -19,10 +19,9 @@ const posDishConfigSchema = new mongoose.Schema<PosDishConfigValidator>({
     default: true,
   },
   recommendationIds: {
-    type: [ObjectId],
+    type: Boolean,
     required: false,
-    ref: "Dish",
-    default: [],
+    default: true,
   },
   availabilty: {
     type: Boolean,

@@ -1,13 +1,15 @@
-import mongoose, { type Model } from 'mongoose';
-import type { KitchenType } from '../validators';
+import mongoose, { type Model } from "mongoose";
+import type { KitchenType } from "../validators";
+const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const kitchenSchema = new mongoose.Schema<KitchenType>(
   {
     businessId: {
+      type: ObjectId,
       required: true,
-      type: String,
+      ref: "Business",
     },
-    kitchenName: {
+    name: {
       required: true,
       type: String,
     },
@@ -15,9 +17,13 @@ const kitchenSchema = new mongoose.Schema<KitchenType>(
       required: false,
       type: String,
     },
-    staff: {
+    staffIds: {
+      type: [ObjectId],
       required: false,
-      type: [String],
+    },
+    dishIds: {
+      type: [ObjectId],
+      required: false,
     },
   },
   {
@@ -25,6 +31,9 @@ const kitchenSchema = new mongoose.Schema<KitchenType>(
   },
 );
 
-const Kitchen: Model<KitchenType> = mongoose.model<KitchenType>('Kitchen', kitchenSchema);
+const Kitchen: Model<KitchenType> = mongoose.model<KitchenType>(
+  "Kitchen",
+  kitchenSchema,
+);
 
 export { Kitchen };

@@ -6,7 +6,7 @@ export const posDishConfig = z.object({
   description: z.boolean().optional().default(true),
   images: z.boolean().optional().default(true),
   visibility: z.boolean().optional().default(true),
-  recommendationIds: z.array(ObjectIdSchema).optional().default([]),
+  recommendationIds: z.boolean().optional().default(true),
   availabilty: z.boolean().optional().default(true),
   businessId: ObjectIdSchema,
 });
