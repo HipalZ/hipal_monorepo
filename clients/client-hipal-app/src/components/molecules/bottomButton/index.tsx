@@ -94,13 +94,17 @@ export default function BottomButton({
   showBack,
 }: { selected?: ButtonType; showBack?: boolean }) {
   const tableName = useTableData((s) => s.tableName);
-  const router = useRouter()
+  const router = useRouter();
   const setDirection = useLogin((s) => s.setDirection);
   const accessToken = useUserToken.getState().accessToken;
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
-  const { setShowCart, showCart, inputModal, setInputModal, setCartPage } =
-    useCart();
-  const { setCheckLogin } = usePaymentStore()
+  const setShowCart = useCart((s) => s.setShowCart);
+  const showCart = useCart((s) => s.showCart);
+  const inputModal = useCart((s) => s.inputModal);
+  const setInputModal = useCart((s) => s.setInputModal);
+  const setCartPage = useCart((s) => s.setCartPage);
+
+  const { setCheckLogin } = usePaymentStore();
   const customLink = useParams()?.businessId || "";
   const { subscribeModal, reviewPopup } = useLogin((s) => ({
     subscribeModal: s.subscribeModal,
@@ -129,17 +133,24 @@ export default function BottomButton({
     outletInfo?.isPosEnabled,
     setShowCart,
     setCartPage,
-    setCheckLogin
+    setCheckLogin,
   ]);
 
   const handleRedirection = useCallback(() => {
     if (!accessToken) {
       setCheckLogin(true);
     } else {
-      setDirection("loyalty")
-      router.push(`/${customLink}/loyalty`)
+      setDirection("loyalty");
+      router.push(`/${customLink}/loyalty`);
     }
   }, [accessToken, setDirection, setCheckLogin, customLink]);
+
+  const goBack = () => {
+    if (showBack) {
+      return router.push(`/${customLink}/o`);
+    }
+    return router.push(`/${customLink}/explore`);
+  };
 
   if (subscribeModal || reviewPopup) {
     return null;
@@ -184,7 +195,7 @@ export default function BottomButton({
           {showBack && (
             <MenuItem
               icon={PiArrowBendUpLeftBold}
-              onClick={() => router.back()}
+              onClick={goBack}
               isSelected={false}
               label="Back"
             />
@@ -216,7 +227,9 @@ export default function BottomButton({
             <MenuItem
               icon={MdMenuBook}
               label="Menu"
-              href={`/${customLink}/category?${tableName ? `tableName=${tableName}` : ""}`}
+              href={`/${customLink}/category?${
+                tableName ? `tableName=${tableName}` : ""
+              }`}
               isSelected={selectedBtn === "menu" || selectedBtn === "catalogue"}
             />
           )}

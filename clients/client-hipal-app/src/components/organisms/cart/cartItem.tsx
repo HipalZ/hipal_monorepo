@@ -140,13 +140,17 @@ const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
                     <div>
                       {cartItem?.portion && (
                         <p className="inline-flex items-center gap-2 text-xs text-gray-500">
-                          <BiSolidDish size={16} />{" "}
+                          {outletInfo?.outLetType !== "OTHER" && (
+                            <BiSolidDish size={16} />
+                          )}
                           <span>{cartItem?.portion?.name}</span>
                         </p>
                       )}
                       {cartItem?.extras?.length > 0 && (
                         <p className="inline-flex items-center gap-2 text-xs text-gray-500">
-                          <GiBubblingBowl size={16} />{" "}
+                          {outletInfo?.outLetType !== "OTHER" && (
+                            <GiBubblingBowl size={16} />
+                          )}
                           <span>
                             {cartItem?.extras
                               ?.map((extra) => extra.name)
