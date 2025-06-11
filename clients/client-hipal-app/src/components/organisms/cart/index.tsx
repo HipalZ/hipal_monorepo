@@ -62,33 +62,26 @@ const Cart = () => {
   const { mutate, isPending } = useCallTheCaptain();
   const outLetInfo = _useAllBusiness((state) => state.data.outletInfo);
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
-  const {
-    setShowCart,
-    cartPage,
-    setCartPage,
-    setInputModal,
-    setOrderPlaced,
-    setHiCodePopupBeforeBill,
-    hiCodePopupBeforeBill,
-  } = useCart();
+  const setShowCart = useCart((s) => s.setShowCart);
+  const cartPage = useCart((s) => s.cartPage);
+  const setCartPage = useCart((s) => s.setCartPage);
+  const setInputModal = useCart((s) => s.setInputModal);
+  const setOrderPlaced = useCart((s) => s.setOrderPlaced);
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const [showPayAlert, setShowPayAlert] = useState<boolean>(false);
-  const {
-    tableName,
-    setHiCode,
-    hiCode,
-    setHiCodePopup,
-    hiCodePopup,
-    setHiCodeUser,
-    setTableName,
-  } = useTableData();
-  const { setCheckLogin } = usePaymentStore();
+  const tableName = useTableData((s) => s.tableName);
+  const hiCode = useTableData((s) => s.hiCode);
+  const hiCodePopup = useTableData((s) => s.hiCodePopup);
+  const setHiCodeUser = useTableData((s) => s.setHiCodeUser);
+  const setTableName = useTableData((s) => s.setTableName);
+  const setHiCodePopup = useTableData((s) => s.setHiCodePopup);
+  const setHiCode = useTableData((s) => s.setHiCode);
+  const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
   const accessToken = useUserToken.getState().accessToken;
   const userDetails = useLogin((state) => state.userDetails);
   const router = useRouter();
   const setDirection = useLogin((s) => s.setDirection);
   const customLink = useParams()?.businessId as string;
-  // const { placeOrder } = usePlaceOrder();
 
   const sanitizedCart = useMemo(() => {
     return cart.map(({ dish, ...item }) => {

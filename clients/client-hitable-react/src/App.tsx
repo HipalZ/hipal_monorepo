@@ -54,17 +54,6 @@ function App() {
     }),
   );
 
-  const pushNotify = async () => {
-    try {
-      NativeSettings.openAndroid({
-        option: AndroidSettings.ApplicationDetails,
-      });
-      setNotificationStatus(true);
-    } catch (error) {
-      toast.error("Error enabling notifications. Try after some time");
-      setNotificationStatus(false);
-    }
-  };
 
   const checkAllowRedirectionConditions = () => {
     const isValidBusiness = captainData?.customRole?.some(
@@ -93,7 +82,6 @@ function App() {
     setOnlineCount(data.length);
     return data;
   };
-
 
   const handleOfflineAlerts = async () => {
     if (!businessId) return;

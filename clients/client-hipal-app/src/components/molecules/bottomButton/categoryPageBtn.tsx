@@ -31,7 +31,7 @@ interface CategoryPageBtnProps {
   menuLayout: IMenuLayout;
 }
 
-const MemoCategoryPageBtn = ({menuLayout}:CategoryPageBtnProps) => {
+const MemoCategoryPageBtn = ({ menuLayout }: CategoryPageBtnProps) => {
   const accessToken = useUserToken.getState().accessToken;
   const { userDetails } = useLogin();
   const primaryColor = menuLayout?.primaryColor || "#ec4899";
@@ -45,23 +45,16 @@ const MemoCategoryPageBtn = ({menuLayout}:CategoryPageBtnProps) => {
   const setIsPayment = useLogin((s) => s.setIsPayment);
   const router = useRouter();
   const { setCheckLogin } = usePaymentStore();
-  const {
-    inputModal,
-    setInputModal,
-    callWaiterModal,
-    setCallWaiterModal,
-    orderPlaced,
-    setOrderPlaced,
-    hiCodePopupBeforeBill,
-    setHiCodePopupBeforeBill,
-  } = useCart();
-  const [tempInstruction, setTempInstruction] = useState("");
-  const {
-    setOpenInstructionModal,
-    openInstructionModal,
-    setInstruction,
-    addInstructionToDish,
-  } = useCartStore();
+  const inputModal = useCart((s) => s.inputModal);
+  const callWaiterModal = useCart((s) => s.callWaiterModal);
+  const orderPlaced = useCart((s) => s.orderPlaced);
+  const hiCodePopupBeforeBill = useCart((s) => s.hiCodePopupBeforeBill);
+  const setHiCodePopupBeforeBill = useCart((s) => s.setHiCodePopupBeforeBill);
+  const setInputModal = useCart((s) => s.setInputModal);
+  const setCallWaiterModal = useCart((s) => s.setCallWaiterModal);
+  const setOrderPlaced = useCart((s) => s.setOrderPlaced);
+
+  const openInstructionModal = useCartStore((s) => s.openInstructionModal);
 
   const closeModal = useCallback(() => {
     setInputModal(false);
@@ -265,9 +258,7 @@ const MemoCategoryPageBtn = ({menuLayout}:CategoryPageBtnProps) => {
         )}
       </AnimatePresence>
 
-      {openInstructionModal && (
-      <InstructionPopup />
-      )}
+      {openInstructionModal && <InstructionPopup />}
       <AnimatePresence>
         {orderPlaced && (
           <motion.div

@@ -1,4 +1,4 @@
-import { memo, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import SpinnerMemo from "../atoms/loadingSpinner";
@@ -34,8 +34,17 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
   } = useTableTransfer(businessId || "");
 
   const tables = useZonesAndTablesStore((s) => s.tables);
-  const sortByName = (arr: TableData[]) =>
-    [...arr].sort((a, b) => a.name.localeCompare(b.name));
+
+  const sortByName = useCallback(
+    (arr: TableData[]) =>
+      [...arr].sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, {
+          numeric: true,
+          sensitivity: "base",
+        }),
+      ),
+    [],
+  );
 
   const allTables = useMemo(() => {
     if (!transfer) {
@@ -92,7 +101,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
               <p className="text-center text-gray-500">No tables found.</p>
             ) : (
               <div className="grid grid-cols-3 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                {allTables?.map((table) => (
+                {allTables.map((table) => (
                   <button
                     type="button"
                     onClick={() => handleTableClick(table)}
@@ -103,7 +112,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
                         : "bg-white border-gray-200 hover:shadow-md"
                     }`}
                   >
-                    <h3 className="font-semibold">{table?.name}</h3>
+                    <h3 className="font-semibold">{table.name}</h3>
                   </button>
                 ))}
               </div>
