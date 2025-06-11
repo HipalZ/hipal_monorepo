@@ -321,6 +321,10 @@ export interface ICategory {
   id: string;
 }
 
+export type CurrencyCode = "INR" | "USD" | "EUR" | "GBP" | "JPY" | "AUD" | "CAD" | "CNY" | "RUB" | "BRL" | "ZAR" | "KRW" | "MXN" | "NZD" | "SGD";
+
+export type CurrencyCodeSymbol = "₹" | "$" | "€" | "£" | "¥" | "A$" | "C$" | "¥" | "₽" | "R$" | "R" | "₩" | "$" | "₩";
+
 export interface IBizInfo {
   categoryTopBanner: string;
   newAmenities: string[];
@@ -349,6 +353,8 @@ export interface IBizInfo {
   customTiming: Array<Record<string, string>>;
   isCustomTime: boolean;
   address: string;
+  currencyCode: string;
+  currencySymbol: string;
 }
 
 export type Banner = {

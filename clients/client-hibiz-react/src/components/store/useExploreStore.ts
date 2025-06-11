@@ -105,6 +105,8 @@ export const useExploreStore = create(
         isCustomTime: false,
         address: "",
         categoryTopBannerUrl: "",
+        currencyCode: "INR",
+        currencySymbol: "₹",
       },
       setBizInfo: (newBizInfo) =>
         set(() => ({
@@ -132,6 +134,8 @@ export const useExploreStore = create(
             customTiming: newBizInfo.customTiming || [],
             isCustomTime: newBizInfo.isCustomTime || false,
             address: newBizInfo.address || "",
+            currencyCode: newBizInfo.currencyCode || "INR",
+            currencySymbol: newBizInfo.currencySymbol || "₹",
           },
         })),
       uniquelyDishes: [],
@@ -212,6 +216,8 @@ export const useExploreStore = create(
             isCustomTime: false,
             address: "",
             categoryTopBannerUrl: "",
+            currencyCode: "",
+            currencySymbol: "",
           },
         })),
       clearImageFiles: () =>

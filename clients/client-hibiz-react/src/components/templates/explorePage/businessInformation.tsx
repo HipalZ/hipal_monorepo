@@ -39,13 +39,10 @@ const MemoBizInfo = () => {
     setToggleExplorePages: state.setToggleExplorePages,
   }));
 
-  const {
-    isLoading,
-    setIsLoading
-  } = useExploreTemp((s) => ({
+  const { isLoading, setIsLoading } = useExploreTemp((s) => ({
     isLoading: s.isLoading,
-    setIsLoading: s.setIsLoading
-  }))
+    setIsLoading: s.setIsLoading,
+  }));
 
   const queryClient = useQueryClient();
   const { businessId, hotelId } = useParams();
@@ -64,6 +61,8 @@ const MemoBizInfo = () => {
     customTimings,
     fixedTime,
     updateBizInfo,
+    currencyCode,
+    currencySymbol,
   } = useExploreTemp((s) => ({
     description: s.description,
     phone: s.phone,
@@ -77,6 +76,8 @@ const MemoBizInfo = () => {
     showCustomTime: s.showCustomTime,
     customTimings: s.customTimings,
     fixedTime: s.fixedTime,
+    currencyCode: s.currencyCode,
+    currencySymbol: s.currencySymbol,
     updateBizInfo: s.updateBizInfo,
   }));
 
@@ -99,11 +100,15 @@ const MemoBizInfo = () => {
       location: location,
       avgPricingForTwo: avgPricingForTwo,
       tags: tags.filter((tag) => tag.trim() !== ""),
-      ...(outletInfo?.outLetType !== "HOTEL" ? { amenities: amenities } : { newAmenities: amenities }),
+      ...(outletInfo?.outLetType !== "HOTEL"
+        ? { amenities: amenities }
+        : { newAmenities: amenities }),
       fixOpenTime: fixedTime?.openTime,
       fixCloseTime: fixedTime?.closeTime,
       customTiming: customTimings,
       address: address,
+      currencyCode: currencyCode,
+      currencySymbol: currencySymbol,
     });
     toast.success("Timings saved");
     handleTimings();
@@ -121,13 +126,17 @@ const MemoBizInfo = () => {
       location: location,
       avgPricingForTwo: avgPricingForTwo,
       tags: tags.filter((tag) => tag.trim() !== ""),
-      ...(outletInfo?.outLetType !== "HOTEL" ? { amenities: amenities } : { newAmenities: amenities }),
+      ...(outletInfo?.outLetType !== "HOTEL"
+        ? { amenities: amenities }
+        : { newAmenities: amenities }),
       fixOpenTime: fixedTime?.openTime,
       fixCloseTime: fixedTime?.closeTime,
       customTiming: customTimings.filter(
         (timing) => timing.openTime || timing.closeTime,
       ),
       address: address,
+      currencyCode: currencyCode,
+      currencySymbol: currencySymbol,
     };
     const filteredPayload = filterPayload(payload);
 

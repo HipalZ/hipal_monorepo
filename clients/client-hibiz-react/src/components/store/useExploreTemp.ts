@@ -1,5 +1,10 @@
 import { create } from "zustand";
-import type { IDish, SocialMediaLink } from "../types/businessData";
+import type {
+  CurrencyCode,
+  CurrencyCodeSymbol,
+  IDish,
+  SocialMediaLink,
+} from "../types/businessData";
 import useBusinessData from "./useBusinessData";
 import facebook from "@/assets/socialMedia/fb.png";
 import instagram from "@/assets/socialMedia/instagram.png";
@@ -49,6 +54,12 @@ interface ExploreTempState {
   customTimings: DayTiming[];
   setCustomTimings: (customTimings: []) => void;
 
+  currencyCode: CurrencyCode;
+  setCurrencyCode: (currencyCode: CurrencyCode) => void;
+
+  currencySymbol: CurrencyCodeSymbol;
+  setCurrencySymbol: (currencySymbol: CurrencyCodeSymbol) => void;
+
   fixedTime: {
     openTime: string;
     closeTime: string;
@@ -68,7 +79,7 @@ interface ExploreTempState {
 export const useExploreTemp = create<ExploreTempState>((set, get) => {
   return {
     selectedDishes: [],
-    setSelectedDishes: (dishes:string[]) => set({ selectedDishes: dishes }),
+    setSelectedDishes: (dishes: string[]) => set({ selectedDishes: dishes }),
 
     dishes: [],
     setDishes: (dishes) => set(() => ({ dishes })),
@@ -78,31 +89,39 @@ export const useExploreTemp = create<ExploreTempState>((set, get) => {
     clearOriginalDishes: () => set(() => ({ originalDishes: [] })),
 
     description: "",
-    setDescription: (description:string) => set({ description }),
+    setDescription: (description: string) => set({ description }),
 
     phone: "",
-    setPhone: (phone:string) => set({ phone }),
+    setPhone: (phone: string) => set({ phone }),
 
     location: "",
-    setLocation: (location:string) => set({ location }),
+    setLocation: (location: string) => set({ location }),
 
     avgPricingForTwo: "",
-    setAvgPricingForTwo: (avgPricingForTwo:string) => set({ avgPricingForTwo }),
+    setAvgPricingForTwo: (avgPricingForTwo: string) =>
+      set({ avgPricingForTwo }),
 
     tags: ["", "", ""],
-    setTags: (tags:string[]) => set({ tags }),
+    setTags: (tags: string[]) => set({ tags }),
 
     amenities: [],
-    setAmenities: (amenities:string[]) => set({ amenities }),
+    setAmenities: (amenities: string[]) => set({ amenities }),
 
     address: "",
-    setAddress: (address:string) => set({ address }),
+    setAddress: (address: string) => set({ address }),
 
     openTimings: false,
-    setOpenTimings: (openTimings:boolean) => set({ openTimings }),
+    setOpenTimings: (openTimings: boolean) => set({ openTimings }),
+
+    currencyCode: "INR",
+    setCurrencyCode: (currencyCode: CurrencyCode) => set({ currencyCode }),
+
+    currencySymbol: "₹",
+    setCurrencySymbol: (currencySymbol: CurrencyCodeSymbol) =>
+      set({ currencySymbol }),
 
     showCustomTime: false,
-    setShowCustomTime: (showCustomTime:boolean) => set({ showCustomTime }),
+    setShowCustomTime: (showCustomTime: boolean) => set({ showCustomTime }),
 
     customTimings: [
       { day: "Monday", openTime: "", closeTime: "" },
@@ -113,7 +132,7 @@ export const useExploreTemp = create<ExploreTempState>((set, get) => {
       { day: "Saturday", openTime: "", closeTime: "" },
       { day: "Sunday", openTime: "", closeTime: "" },
     ],
-    setCustomTimings: (customTimings:[]) => set({ customTimings }),
+    setCustomTimings: (customTimings: []) => set({ customTimings }),
 
     fixedTime: { openTime: "", closeTime: "" },
     setFixedTime: (newFixedTime) =>
@@ -122,7 +141,7 @@ export const useExploreTemp = create<ExploreTempState>((set, get) => {
       })),
 
     updateBizInfo: (payload) => {
-      const outletInfo = useBusinessData.getState().outletInfo; 
+      const outletInfo = useBusinessData.getState().outletInfo;
 
       const {
         description,
@@ -137,26 +156,35 @@ export const useExploreTemp = create<ExploreTempState>((set, get) => {
         fixOpenTime,
         fixCloseTime,
         customTiming,
+        currencyCode,
+        currencySymbol,
       } = payload;
 
       set({
         description: description || "",
         phone: phone || "",
         location: location || "",
+        currencyCode: currencyCode || "INR",
+        currencySymbol: currencySymbol || "₹",
         avgPricingForTwo: avgPricingForTwo || "",
         tags:
-          tags?.length > 0 ? [...tags, ...Array(3 - tags.length).fill("")] : ["", "", ""],
+          tags?.length > 0
+            ? [...tags, ...Array(3 - tags.length).fill("")]
+            : ["", "", ""],
         amenities:
           outletInfo?.outLetType === "HOTEL"
             ? newAmenities?.length > 0
               ? newAmenities
               : []
             : amenities?.length > 0
-            ? amenities
-            : [],
+              ? amenities
+              : [],
         address: address || "",
         selectedDishes: selectedDishes || [],
-        fixedTime: { openTime: fixOpenTime || "", closeTime: fixCloseTime || "" },
+        fixedTime: {
+          openTime: fixOpenTime || "",
+          closeTime: fixCloseTime || "",
+        },
       });
 
       if (customTiming?.length > 0) {
@@ -165,9 +193,11 @@ export const useExploreTemp = create<ExploreTempState>((set, get) => {
 
         const updatedTimings = currentCustomTimings.map((timing) => {
           const matchingBizTiming = flattenedCustomTimings.find(
-            (bizTiming) => bizTiming.day === timing.day
+            (bizTiming) => bizTiming.day === timing.day,
           );
-          return matchingBizTiming ? { ...timing, ...matchingBizTiming } : timing;
+          return matchingBizTiming
+            ? { ...timing, ...matchingBizTiming }
+            : timing;
         });
 
         set({ customTimings: updatedTimings });
