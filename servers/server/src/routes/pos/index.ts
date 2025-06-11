@@ -8,12 +8,10 @@ import {
   Kitchen,
   KotOrder,
   Menu,
-  MenuBanner,
   Pos,
   PosBill,
   Table,
   Tax,
-  UniquelyYours,
   UrlModel,
   User,
   UserAnalytic,
@@ -651,7 +649,6 @@ const posRouter = new Hono()
 
   .post(
     "/configure",
-
     zValidator(
       "json",
       z.object({
@@ -660,20 +657,20 @@ const posRouter = new Hono()
         posId: z.string().min(1).max(50),
       }),
     ),
-
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
         const { businessId, restId } = await c.req.json();
-        // ! this is work if qr code is not generated for the table before this business
-        // ! if qr code is generated for the table then we need to use script not this api
 
-        await Menu.deleteMany({
-          businessId: businessId,
-        });
+        // Remove old menus
+        await Menu.deleteMany({ businessId }, { session });
 
-        const business =
-          await Business.findById(businessId).select("customLink");
+        // Fetch custom link
+        const business = await Business.findById(businessId)
+          .select("customLink")
+          .session(session);
+
+        // Fetch areas and tables from POS
         const fetchAreaAndTable = await axios.post(
           posApiPaths.fetchAreaAndTables,
           {
@@ -684,193 +681,113 @@ const posRouter = new Hono()
             tableNo: "",
           },
         );
-        if (fetchAreaAndTable.data.success === "0") {
+
+        if (fetchAreaAndTable.data.success !== "1") {
           throw new Error("area and table not fetched");
         }
 
-        if (fetchAreaAndTable.data.success === "0") {
-          throw new Error("area and table not fetched");
+        // Active areas and tables
+        const areas = fetchAreaAndTable.data.areas.filter(
+          (a) => a.active === "1",
+        );
+        const tables = fetchAreaAndTable.data.tables.filter(
+          (t) => t.active === "1",
+        );
+
+        // Ensure at least one zone
+        let zone = null;
+        if (areas.length === 0) {
+          // Create fallback zone within the transaction
+          zone = new Zone({
+            businessId,
+            name: "POS",
+            zoneId: nanoid(5),
+            active: "1",
+            tableIds: [],
+            visibility: true,
+          });
+          await zone.save({ session });
         }
 
-        if (fetchAreaAndTable.data.success === "1") {
-          // areas or zones
-          const areas = fetchAreaAndTable.data.areas.filter(
-            (area: {
-              active: string;
-            }) => area.active === "1",
-          );
-
-          // tables
-          const tables = fetchAreaAndTable.data.tables.filter(
-            (table: {
-              active: string;
-            }) => table.active === "1",
-          );
-          let zone = null;
-          if (areas.length === 0) {
-            zone = await Zone.create({
-              businessId: businessId,
-              name: "POS",
-              zoneId: nanoid(5),
-              active: "1",
-              tableIds: [],
-              visibility: true,
-            });
-          }
-          for (const area of areas) {
-            // to find exact zone from zoneId
-            const zoneId = area.restaurantareaid;
-            const zoneName = area.displayname;
-            const active = area.active;
-            const rank = area.rank;
-
-            zone = await Zone.findOneAndUpdate(
-              {
-                zoneId,
-              },
-              {
-                name: zoneName,
-                businessId: businessId,
-                zoneId,
-                active,
-                rank,
-              },
-              {
-                upsert: true,
-                new: true,
-                session,
-              },
-            );
-          }
-
-          for (const table of tables) {
-            const zoneId = areas.length === 0 ? zone?.zoneId :   table.restaurantareaid;
-            const tableName = table.table_no;
-            const active = table.active;
-            const rank = table.rank;
-            const tableId = table.id;
-
-            const creatingTable = await Table.findOneAndUpdate(
-              {
-                tableId,
-              },
-              {
-                name: tableName,
-                businessId: businessId,
-                zoneId,
-                active,
-                rank,
-                tableId,
-                internalZoneId: zone?._id,
-              },
-              {
-                upsert: true,
-                new: true,
-                session,
-              },
-            );
-
-            // update tableIds in zone
-
-            Zone.findOneAndUpdate(
-              {
-                zoneId,
-              },
-              {
-                $addToSet: {
-                  tableIds: creatingTable._id,
-                },
-              },
-              {
-                new: true,
-                session,
-              },
-            );
-
-            const uniqueOrderId = nanoid(5);
-
-            const alreadyExists = await UrlModel.findOne({
-              businessId: businessId,
-              longUrl: `https://hipalz.com/${business?.customLink}/explore?tableName=${creatingTable.name}`,
-            });
-
-            if (!alreadyExists) {
-              const createShortUrl = await UrlModel.create({
-                businessId: businessId,
-                longUrl: `https://hipalz.com/${business?.customLink}/explore?tableName=${creatingTable.name}`,
-                shortUrl: `https://api.hipalz.com/surl/${uniqueOrderId}`,
-                urlCode: uniqueOrderId,
-              });
-
-              await Table.findOneAndUpdate(
-                {
-                  tableId,
-                },
-                {
-                  tableLink: createShortUrl.shortUrl,
-                },
-                {
-                  new: true,
-                  session,
-                },
-              );
-            }
-          }
-
-          // // update outlet info
-          // await OutLetInfo.findOneAndUpdate(
-          //   {
-          //     businessId,
-          //   },
-          //   {
-          //     isPosEnabled: true,
-          //   },
-          //   {
-          //     new: true,
-          //     upsert: true,
-          //     session,
-          //   },
-          // );
-
-          // update uniquely yours
-          await UniquelyYours.findOneAndUpdate(
+        // Upsert each area as a zone
+        for (const area of areas) {
+          zone = await Zone.findOneAndUpdate(
+            { zoneId: area.restaurantareaid },
             {
+              name: area.displayname,
               businessId,
+              zoneId: area.restaurantareaid,
+              active: area.active,
+              rank: area.rank,
             },
-            {
-              isDeleted: true,
-            },
-            {
-              new: true,
-              session,
-            },
-          );
-          // update menu banner
-          await MenuBanner.findOneAndUpdate(
-            {
-              businessId,
-            },
-            {
-              isPublished: false,
-            },
-            {
-              new: true,
-              session,
-            },
+            { upsert: true, new: true, session },
           );
         }
 
-        const zone = await Zone.find({
-          businessId: businessId,
-        });
+        // Create/update tables and link to zones
+        for (const table of tables) {
+          const currentZoneId =
+            areas.length === 0 ? zone?.zoneId : table.restaurantareaid;
 
-        const zoneIds = zone.map((zone) => zone._id.toString());
-        const createMenu = await Menu.create(
+          // Upsert table
+          const creatingTable = await Table.findOneAndUpdate(
+            { tableId: table.id },
+            {
+              name: table.table_no,
+              businessId,
+              zoneId: currentZoneId,
+              active: table.active,
+              rank: table.rank,
+              tableId: table.id,
+              internalZoneId: zone?._id,
+            },
+            { upsert: true, new: true, session },
+          );
+
+          // Add table to zone.tableIds
+          await Zone.findOneAndUpdate(
+            { zoneId: currentZoneId },
+            { $addToSet: { tableIds: creatingTable._id } },
+            { new: true, session },
+          );
+
+          // Create short URL if not exists
+          const longUrl = `https://hipalz.com/${business?.customLink}/explore?tableName=${creatingTable.name}`;
+          const exists = await UrlModel.findOne({
+            businessId,
+            longUrl,
+          }).session(session);
+          if (!exists) {
+            const shortCode = nanoid(5);
+            const createShortUrl = await UrlModel.create(
+              [
+                {
+                  businessId,
+                  longUrl,
+                  shortUrl: `https://api.hipalz.com/surl/${shortCode}`,
+                  urlCode: shortCode,
+                },
+              ],
+              { session },
+            );
+
+            await Table.findOneAndUpdate(
+              { tableId: table.id },
+              { tableLink: createShortUrl[0].shortUrl },
+              { new: true, session },
+            );
+          }
+        }
+
+        const zones = await Zone.find({ businessId }).session(session);
+        const zoneIds = zones.map((z) => z._id.toString());
+
+        await Menu.create(
           [
             {
               name: "Default",
-              businessId: businessId,
-              zoneIds: zoneIds,
+              businessId,
+              zoneIds,
               menuType: 2,
               days: [1, 2, 3, 4, 5, 6, 7],
               startTime: 240,
@@ -883,18 +800,14 @@ const posRouter = new Hono()
               secondaryColor: "#fce7f3",
             },
           ],
-          {
-            session,
-          },
+          { session },
         );
 
         return c.json(
           {
             message: "POS Config saved successfully",
             err: false,
-            data: {
-              success: true,
-            },
+            data: { success: true },
           },
           200,
         );
@@ -1947,7 +1860,7 @@ const posRouter = new Hono()
             err: false,
             data: { success: true },
           },
-          200
+          200,
         );
       });
     },
