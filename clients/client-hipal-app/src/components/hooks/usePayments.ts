@@ -3,13 +3,19 @@ import { useErrorHandling } from "@/utils/helper";
 import { apiRpc } from "@hi/common";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import {
+  useParams,
+  usePathname,
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
 import { type ChangeEvent, useCallback, useMemo } from "react";
 import { toast } from "react-toastify";
 import { _useAllBusiness } from "../store/useAllBusiness";
 import useBusinessDetails from "../store/useBusinessDetails";
 import { useCartStore } from "../store/useCartStore";
 import { useCouponz } from "../store/useCouponz";
+import { useError } from "../store/useError";
 import { useLogin } from "../store/useLogin";
 import useLoyaltyData from "../store/useLoyaltyData";
 import usePayment from "../store/usePayment";
@@ -24,8 +30,6 @@ import {
   calculateFinalBill,
   calculateReward,
 } from "../utils/helpers";
-import { useSearchParams } from "next/navigation";
-import { useError } from "../store/useError";
 
 export const usePayments = () => {
   const { setOpenErrorModal, setError } = useError();
@@ -66,6 +70,7 @@ export const usePayments = () => {
     setShowError: s.setShowError,
   }));
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
+  const businessDetails = useBusinessDetails((s) => s.businessDetails);
   const businessId = _useAllBusiness(
     (state) => state.data.outletInfo?.businessId,
   );
