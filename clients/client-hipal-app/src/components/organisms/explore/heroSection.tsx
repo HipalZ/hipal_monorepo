@@ -1,6 +1,6 @@
 "use client";
 import ReadMore from "@/components/atoms/readMore";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import type { IBusinessData } from "@/components/types/businessData";
 import { GrLocation } from "react-icons/gr";
 import { MdOutlineCall } from "react-icons/md";
@@ -11,19 +11,26 @@ interface IHeroSection {
 }
 
 function HeroSection({ data }: IHeroSection): JSX.Element {
-  const { location, phone } = data.outletInfo;
+  const { location, phone, currencyCode } = data.outletInfo;
+  const code = useMemo(() => {
+    if (currencyCode === "INR") return "+91";
+    if (currencyCode === "US" || currencyCode === "CAD") return "+1";
+    return "+91";
+  }, [currencyCode]);
+
   const goToLocation = useCallback(() => {
     if (typeof window === "undefined") return;
     window.open(location, "_blank");
   }, [location]);
   const callTheOwner = useCallback(() => {
     if (typeof window === "undefined") return;
-    window.open(`tel:${phone}`);
-  }, [phone]);
+    window.open(`tel:${code}${phone}`);
+  }, [phone, code]);
   const whatsappOwner = useCallback(() => {
     if (typeof window === "undefined") return;
-    window.open(`https://wa.me/+91${phone}`);
-  }, [phone]);
+    window.open(`https://wa.me/${code}${phone}`);
+  }, [phone, code]);
+
   return (
     <div className="relative items-center px-8">
       <center

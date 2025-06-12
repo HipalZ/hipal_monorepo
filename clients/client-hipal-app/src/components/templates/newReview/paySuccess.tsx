@@ -1,4 +1,4 @@
-"use client";;
+"use client";
 import { useLogin } from "@/components/store/useLogin";
 import useUserReward from "@/components/store/useUserReward";
 import Image from "next/image";
@@ -36,12 +36,12 @@ const MemoPayOnlineSuccess = () => {
   const { setIsPaymentDone } = useReview((s) => ({
     setIsPaymentDone: s.setIsPaymentDone,
   }));
-  const { setInputModal } = useCart()
+  const { setInputModal } = useCart();
   const { userDetails, setUserCoinZ } = useLogin((s) => ({
     userDetails: s.userDetails,
     setUserCoinZ: s.setUserCoinZ,
   }));
-  const { setIsLoading } = usePaymentStore()
+  const { setIsLoading } = usePaymentStore();
   const setUserReward = useUserReward((s) => s.setUserReward);
   const businessDetails = useBusinessDetails((s) => s.businessDetails);
   const loyaltySetting = useLoyaltyData((s) => s.loyaltySetting);
@@ -104,7 +104,7 @@ const MemoPayOnlineSuccess = () => {
           header: "Congratulations!",
           color: "#5ACB7A",
           subHeader: "Your Payment of",
-          amount: `₹ ${amount}`,
+          amount: `${businessDetails?.currencySymbol} ${amount}`,
           footer: "Is Successful",
           coinzContent: `You won approx. ${claim} coinz`,
         };
@@ -113,12 +113,12 @@ const MemoPayOnlineSuccess = () => {
           header: "Thank You!",
           color: "#CB5A5C",
           subHeader: "Your Payment of",
-          amount: `₹ ${amount}`,
+          amount: `${businessDetails?.currencySymbol} ${amount}`,
           footer: "Will be confirmed by the staff",
           coinzContent: `You'll get approx. ${claim} coinz`,
         };
     }
-  }, [mode, amount, claim]);
+  }, [mode, amount, claim, businessDetails?.currencySymbol]);
 
   useQuery({
     queryKey: [
@@ -153,7 +153,9 @@ const MemoPayOnlineSuccess = () => {
         <h3 className="text-xl">Hi {userName || "Guest"}</h3>
         <CurvedText text={textContent?.header} />
         <h1 className="poppins-regular">Your Payment of</h1>
-        <h6 className="my-1 text-4xl poppins-regular">₹ {amount}</h6>
+        <h6 className="my-1 text-4xl poppins-regular">
+          {businessDetails?.currencySymbol} {amount}
+        </h6>
         <h6 className="poppins-regular">{textContent?.footer}</h6>
       </center>
       {/* card section */}

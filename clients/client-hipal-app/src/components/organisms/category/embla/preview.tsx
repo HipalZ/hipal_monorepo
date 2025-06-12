@@ -78,7 +78,7 @@ const MemoLivePreview = ({ dish }: { dish: IDish }) => {
         </p>
         {Number(dish.price) > 1 && (
           <p className="absolute z-40 mt-2 font-bold text-gray-800 text-md md:text-lg left-4 bottom-4">
-            ₹ {dish.price}
+            {outletInfo?.currencySymbol} {dish.price}
           </p>
         )}
       </figcaption>

@@ -6,7 +6,10 @@ import { memo } from "react";
 import { CiCirclePlus } from "react-icons/ci";
 import { RiEdit2Fill } from "react-icons/ri";
 import PosBillBreakdown from "../posPayment/posBillBreakdown";
-import { useBillSummary, useDisplayValue } from "@/components/hooks/usePayments";
+import {
+  useBillSummary,
+  useDisplayValue,
+} from "@/components/hooks/usePayments";
 
 const BillSummary = () => {
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
@@ -24,16 +27,14 @@ const BillSummary = () => {
     tips,
   } = usePaymentStore();
 
-  const { clearTheTip,
-    handleTipSelect,
-    handleCustomTip,
-    handleSaveTip
-  } = useBillSummary()
+  const { clearTheTip, handleTipSelect, handleCustomTip, handleSaveTip } =
+    useBillSummary();
 
   return (
     <>
-      {outletInfo?.isPosEnabled ?
-        <PosBillBreakdown /> :
+      {outletInfo?.isPosEnabled ? (
+        <PosBillBreakdown />
+      ) : (
         <section className="flex flex-col pb-36 space-y-2 text-4xl transition-all rounded-t-3xl text-[#101018] poppins-regular mt-4">
           <h6 className="mx-4 mt-4 mb-2 text-xl">Bill Detailz</h6>
           <div
@@ -44,7 +45,9 @@ const BillSummary = () => {
           >
             <div className="text-base flex justify-between mx-4 mb-4 capitalize text-[#101018] leading-[1.25rem]">
               <h1 className="text-sm">Total bill amount</h1>
-              <h1>₹ {billValue}</h1>
+              <h1>
+                {outletInfo?.currencySymbol} {billValue}
+              </h1>
             </div>
             <hr
               className="mx-2 bg-white"
@@ -70,13 +73,15 @@ const BillSummary = () => {
                   </h1>
                   <article className="self-end text-[#4CAF50] flex justify-between items-center gap-2 text-sm">
                     <h1>
-                      ₹ {getDisplayValue(
+                      {outletInfo?.currencySymbol}{" "}
+                      {getDisplayValue(
                         billValue,
                         claimedCoins,
                         claimCouponz,
                       )}{" "}
                     </h1>
-                    <span onClick={() => setApplyCouponz(true)}
+                    <span
+                      onClick={() => setApplyCouponz(true)}
                       onKeyDown={() => setApplyCouponz(true)}
                     >
                       <RiEdit2Fill color="black" />
@@ -107,7 +112,9 @@ const BillSummary = () => {
                   ) : null}
                 </div>
                 <div className="flex">
-                  <span className="text-sm text-black">₹ {tips || 0}</span>
+                  <span className="text-sm text-black">
+                    {outletInfo?.currencySymbol} {tips || 0}
+                  </span>
                 </div>
               </div>
               {isTipActive ? (
@@ -117,8 +124,11 @@ const BillSummary = () => {
                       type="button"
                       key={index?.toString()}
                       onClick={() => handleTipSelect(tip)}
-                      className={`px-4 py-1 rounded-lg text-xs ${selectedTip === tip ? "bg-black text-white" : "bg-gray-200"
-                        }`}
+                      className={`px-4 py-1 rounded-lg text-xs ${
+                        selectedTip === tip
+                          ? "bg-black text-white"
+                          : "bg-gray-200"
+                      }`}
                     >
                       {tip}
                     </button>
@@ -162,13 +172,19 @@ const BillSummary = () => {
                 </h1>
                 <span className="text-base font-bold">
                   {" "}
-                  ₹{" "}
-                  {calculateFinalBill(billValue, claimedCoins, claimCouponz, tips)}
+                  {outletInfo?.currencySymbol}{" "}
+                  {calculateFinalBill(
+                    billValue,
+                    claimedCoins,
+                    claimCouponz,
+                    tips,
+                  )}
                 </span>
               </div>
             </div>
           </div>
-        </section>}
+        </section>
+      )}
     </>
   );
 };

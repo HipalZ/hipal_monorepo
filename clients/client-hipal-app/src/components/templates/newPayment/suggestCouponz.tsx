@@ -1,3 +1,4 @@
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { useCouponz } from "@/components/store/useCouponz";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import {
@@ -10,7 +11,9 @@ const MemoSuggestCouponz = () => {
   const { billValue } = usePaymentStore((s) => ({
     billValue: s.billValue,
   }));
-
+  const currencySymbol = useBusinessDetails(
+    (s) => s.businessDetails?.currencySymbol,
+  );
   const { availedCoupon, missingOutCoupon, updateCoupons } = useCouponz(
     (s) => ({
       availedCoupon: s.availedCoupon,
@@ -34,7 +37,9 @@ const MemoSuggestCouponz = () => {
           {bestCoupon && (
             <p className="inter text-left text-xs font-semibold text-[#fff]">
               {additionalAmount > 0 ? (
-                <>Add ₹ {additionalAmount} more to get </>
+                <>
+                  Add {currencySymbol} {additionalAmount} more to get{" "}
+                </>
               ) : (
                 <>You can get </>
               )}

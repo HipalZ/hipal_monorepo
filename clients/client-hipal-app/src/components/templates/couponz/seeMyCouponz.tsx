@@ -18,6 +18,7 @@ import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import dynamic from "next/dynamic";
 import useTableData from "@/components/store/useTableData";
 import { toast } from "react-toastify";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const AddAmountModal = dynamic(
   () => import("@/components/molecules/bottomButton/addAmountModal"),
@@ -32,6 +33,9 @@ const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
 const MemoSeeMyCouponz = () => {
   const router = useRouter();
   const customLink = useParams()?.businessId as string;
+  const currencySymbol = _useAllBusiness(
+    (s) => s.data?.outletInfo?.currencySymbol,
+  );
   const { tableName } = useTableData((s) => ({
     tableName: s.tableName,
   }));
@@ -146,7 +150,10 @@ const MemoSeeMyCouponz = () => {
                     <h3 className="text-[0.6rem] text-gray-500">
                       Min. Bill Amount
                     </h3>
-                    <p className="text-xs">₹{coupon?.conditions?.billValue}</p>
+                    <p className="text-xs">
+                      {currencySymbol}
+                      {coupon?.conditions?.billValue}
+                    </p>
                   </div>
                   <div className="flex flex-col items-start space-y-1">
                     <h3 className="text-[0.6rem]  text-gray-500">Valid Till</h3>

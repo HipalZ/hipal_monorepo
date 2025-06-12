@@ -31,6 +31,9 @@ import { Button } from "@/components/ui/button";
 
 const MemoCouponz = () => {
   const customLink = useParams()?.businessId as string;
+  const currencySymbol = useBusinessDetails(
+    (s) => s.businessDetails?.currencySymbol,
+  );
   const { errorText } = useErrorHandling();
   const { couponId, channelId } = useParams();
   const router = useRouter();
@@ -224,7 +227,10 @@ const MemoCouponz = () => {
         <div className="relative z-10 grid w-64 grid-cols-2 gap-4 p-4 -mt-px text-black bg-white rounded-b-xl">
           <div className="flex flex-col items-start space-y-1">
             <h3 className="text-xs text-gray-500">Min. Bill Amount</h3>
-            <p>₹{selectedCoupon?.conditions?.billValue}</p>
+            <p>
+              {currencySymbol}
+              {selectedCoupon?.conditions?.billValue}
+            </p>
           </div>
           <div className="flex flex-col items-start space-y-1">
             <h3 className="text-xs text-gray-500">Valid Till</h3>
@@ -273,7 +279,7 @@ const MemoCouponz = () => {
             OFF
             <p className="text-xs">
               {selectedCoupon?.config?.upto > 0
-                ? `up to ₹${selectedCoupon?.config?.upto}`
+                ? `up to ${currencySymbol}${selectedCoupon?.config?.upto}`
                 : ""}
             </p>
           </h6>

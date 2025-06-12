@@ -42,7 +42,7 @@ const MemoPaymentCard = () => {
         <section className="relative">
           <center className="relative mx-4 text-xl py-6 bg-[#F4E9FD] rounded-2xl">
             <h4 className="mt-1 text-4xl font-bold text-[#200866]">
-              ₹{" "}
+              {outletInfo?.currencySymbol}{" "}
               {Math.max(
                 0,
                 Number(billData?.subTotal ?? 0) -
@@ -70,7 +70,9 @@ const MemoPaymentCard = () => {
           />
           <h4 className="pt-2 text-sm font-semibold">You Pay</h4>
           {offer > 0 && (
-            <h4 className="mt-1 text-4xl font-bold">₹ {finalBillValue}</h4>
+            <h4 className="mt-1 text-4xl font-bold">
+              {outletInfo?.currencySymbol} {finalBillValue}
+            </h4>
           )}
           <h4
             className={`pb-2 ${
@@ -80,7 +82,7 @@ const MemoPaymentCard = () => {
             <span
               className={`${offer > 0 ? "line-through" : "text-3xl font-bold"}`}
             >
-              ₹
+              {outletInfo?.currencySymbol}
             </span>{" "}
             {billValue}
           </h4>

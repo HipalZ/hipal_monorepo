@@ -11,13 +11,16 @@ import {
 } from "@/components/utils/helpers";
 import { useCouponz } from "@/components/store/useCouponz";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const MemoCouponCardPay = () => {
   const { couponz, availedCoupon } = useCouponz((s) => ({
     couponz: s.couponz,
     availedCoupon: s.availedCoupon,
   }));
-
+  const currencySymbol = _useAllBusiness(
+    (s) => s.data.outletInfo?.currencySymbol,
+  );
   const { claimCouponz } = usePaymentStore((s) => ({
     claimCouponz: s.claimCouponz,
   }));
@@ -57,7 +60,8 @@ const MemoCouponCardPay = () => {
             <div className="flex flex-col items-start space-y-0.5 my-0.5">
               <h3 className="text-gray-500 text-[0.25rem]">Min. Bill Amount</h3>
               <p className="text-[0.3rem]">
-                ₹{couponz[1]?.conditions?.billValue || 1000}
+                {currencySymbol}
+                {couponz[1]?.conditions?.billValue || 1000}
               </p>
             </div>
             <div className="flex flex-col items-start space-y-0.5 my-0.5">
@@ -166,7 +170,7 @@ const MemoCouponCardPay = () => {
           <div className="flex flex-col items-start space-y-0.5 my-0.5">
             <h3 className="text-gray-500 text-[0.25rem]">Min. Bill Amount</h3>
             <p className="text-[0.3rem]">
-              ₹
+              {currencySymbol}
               {claimCouponz > 0
                 ? availedCoupon?.conditions?.billValue
                 : couponz[0]?.conditions?.billValue || 1000}
