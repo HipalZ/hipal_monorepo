@@ -9,10 +9,10 @@ const Choices = z.object({
     .string({
       message: "name is required",
     })
-    .min(3, {
+    .min(2, {
       message: "name must be atleast 3 characters long",
     })
-    .max(100, {
+    .max(200, {
       message: "name must be atmost 100 characters long",
     }),
   price: z.coerce.number({
@@ -63,6 +63,8 @@ export const AddOnsAttrs = z.object({
   isDeleted: z.boolean().default(true).optional(),
   removeDishIds: z.array(ObjectIdSchema).optional().default([]),
   menuId: ObjectIdSchema,
+  posAddOnId: z.string().min(3).max(100).optional(),
+  pos: z.boolean().default(false).optional(),
 });
 
 const UpdateChoices = z.object({

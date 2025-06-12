@@ -2,11 +2,9 @@ const transformData = (data) => {
   const nowIST = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
   );
-  // helper: map JS getDay() to your schedule_day strings
   const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const today = dayMap[nowIST.getDay()];
 
-  // parse the categorytimings JSON or return empty array
   const safeParseTimings = (raw) => {
     if (!raw) return [];
     try {
@@ -18,25 +16,20 @@ const transformData = (data) => {
     }
   };
 
-  // check if a category is active right now
   const isActiveNow = (timings) => {
     for (const schedule of timings) {
-      // match either today’s day or “All”
       if (schedule.schedule_day !== "All" && schedule.schedule_day !== today)
         continue;
       for (const slot of schedule.schedule_time_slots || []) {
         const [sh, sm] = slot.start_time.split(":").map(Number);
         const [eh, em] = slot.end_time.split(":").map(Number);
 
-        // build Date objects for this slot on IST
         const start = new Date(nowIST);
         start.setHours(sh, sm, 0, 0);
         const end = new Date(nowIST);
         end.setHours(eh, em, 0, 0);
 
-        // handle overnight spans (e.g. 22:00–06:00)
         if (end <= start) {
-          // if now ≥ start OR now ≤ end (past midnight)
           if (nowIST >= start || nowIST <= end) return true;
         } else {
           if (nowIST >= start && nowIST <= end) return true;
@@ -47,120 +40,114 @@ const transformData = (data) => {
   };
 
   const transformedCategories = data.categories
+    .filter((category) => category.active === "1") // Only active categories
     .map((category) => {
-      // Parse and check timings
       const timings = safeParseTimings(category.categorytimings);
       if (timings.length > 0 && !isActiveNow(timings)) {
-        return null; // exclude this category
+        return null;
       }
 
-      // Filter items belonging to this category
       const items = data.items.filter(
-        (item) => item.item_categoryid === category.categoryid,
+        (item) =>
+          item.item_categoryid === category.categoryid && item.active === "1", // Only active items
       );
 
-      const transformedItems =
-        items?.map((item) => {
-          let addOnIds =
-            item?.addon?.map((addOn) => {
-              const addOnGroup = data?.addongroups?.find(
-                (group) => group?.addongroupid === addOn?.addon_group_id,
-              );
-              return {
-                _id: addOn?.addon_group_id,
-                name: addOnGroup?.addongroup_name,
-                addon_item_selection: addOn?.addon_item_selection,
-                compulsory: 0,
-                addOnMaxQuantity: Number(addOn?.addon_item_selection_max),
-                choiceType: "NUMBER",
-                addon_item_selection_min: addOn?.addon_item_selection_min,
-                addon_item_selection_max: addOn?.addon_item_selection_max,
-                choices:
-                  addOnGroup?.addongroupitems?.map((choice) => ({
-                    name: choice?.addonitem_name,
-                    price: Number(choice?.addonitem_price),
-                    visibility: true,
-                    availability: true,
-                    choiceMaxQuantity: 2,
-                    choiceDishType: ["VEG"],
-                    uuid: choice?.addonitemid,
-                    _id: choice?.addonitemid,
-                  })) || [],
-              };
-            }) || [];
+      const transformedItems = items.map((item) => {
+        let addOnIds =
+          item?.addon?.map((addOn) => {
+            const addOnGroup = data?.addongroups?.find(
+              (group) => group?.addongroupid === addOn?.addon_group_id,
+            );
+            return {
+              _id: addOn?.addon_group_id,
+              name: addOnGroup?.addongroup_name,
+              addon_item_selection: addOn?.addon_item_selection,
+              compulsory: 0,
+              addOnMaxQuantity: Number(addOn?.addon_item_selection_max),
+              choiceType: "NUMBER",
+              addon_item_selection_min: addOn?.addon_item_selection_min,
+              addon_item_selection_max: addOn?.addon_item_selection_max,
+              choices:
+                addOnGroup?.addongroupitems?.map((choice) => ({
+                  name: choice?.addonitem_name,
+                  price: Number(choice?.addonitem_price),
+                  visibility: true,
+                  availability: true,
+                  choiceMaxQuantity: 2,
+                  choiceDishType: ["VEG"],
+                  uuid: choice?.addonitemid,
+                })) || [],
+            };
+          }) || [];
 
-          const portions =
-            item?.variation?.map((variation) => ({
-              name: variation?.name,
-              price: Number(variation?.price),
-              default: variation?.name === "Medium",
-              portionTypes: ["VEG"],
-              _id: variation?.id,
-            })) || [];
+        const portions =
+          item?.variation?.map((variation) => ({
+            name: variation?.name,
+            price: Number(variation?.price),
+            default: false,
+            portionTypes: ["VEG"],
+          })) || [];
 
-          for (let i = 0; i < item?.variation?.length; i++) {
-            const variation = item?.variation[i];
+        for (let i = 0; i < item?.variation?.length; i++) {
+          const variation = item?.variation[i];
 
-            if (
-              variation?.variationallowaddon === "1" &&
-              variation?.addon?.length > 0
-            ) {
-              addOnIds =
-                variation?.addon?.map((addOn) => {
-                  const addOnGroup = data?.addongroups?.find(
-                    (group) => group?.addongroupid === addOn?.addon_group_id,
-                  );
-                  return {
-                    _id: addOn?.addon_group_id,
-                    name: addOnGroup?.addongroup_name,
-                    addon_item_selection: addOn?.addon_item_selection,
-                    compulsory: 0,
-                    addOnMaxQuantity: Number(addOn?.addon_item_selection_max),
-                    choiceType: "NUMBER",
-                    addon_item_selection_min: addOn?.addon_item_selection_min,
-                    addon_item_selection_max: addOn?.addon_item_selection_max,
-                    choices:
-                      addOnGroup?.addongroupitems?.map((choice) => ({
-                        name: choice?.addonitem_name,
-                        price: Number(choice?.addonitem_price),
-                        visibility: true,
-                        availability: true,
-                        choiceMaxQuantity: 2,
-                        choiceDishType: ["VEG"],
-                        uuid: choice?.addonitemid,
-                        _id: choice?.addonitemid,
-                      })) || [],
-                  };
-                }) || [];
-            }
+          if (
+            variation?.variationallowaddon === "1" &&
+            variation?.addon?.length > 0
+          ) {
+            addOnIds =
+              variation?.addon?.map((addOn) => {
+                const addOnGroup = data?.addongroups?.find(
+                  (group) => group?.addongroupid === addOn?.addon_group_id,
+                );
+                return {
+                  _id: addOn?.addon_group_id,
+                  name: addOnGroup?.addongroup_name,
+                  addon_item_selection: addOn?.addon_item_selection,
+                  compulsory: 0,
+                  addOnMaxQuantity: Number(addOn?.addon_item_selection_max),
+                  choiceType: "NUMBER",
+                  addon_item_selection_min: addOn?.addon_item_selection_min,
+                  addon_item_selection_max: addOn?.addon_item_selection_max,
+                  choices:
+                    addOnGroup?.addongroupitems?.map((choice) => ({
+                      name: choice?.addonitem_name,
+                      price: Number(choice?.addonitem_price),
+                      visibility: true,
+                      availability: true,
+                      choiceMaxQuantity: 2,
+                      choiceDishType: ["VEG"],
+                      uuid: choice?.addonitemid,
+                    })) || [],
+                };
+              }) || [];
           }
+        }
 
-          const returnItemType = (item) => {
-            if (item?.item_attributeid === "1") {
-              return ["VEG"];
-            }
-            if (item?.item_attributeid === "2") {
-              return ["NON_VEG"];
-            }
-            if (item?.item_attributeid === "24") {
-              return ["EGG"];
-            }
-          };
+        const returnItemType = (item) => {
+          if (item?.item_attributeid === "1") return ["VEG"];
+          if (item?.item_attributeid === "2") return ["NON_VEG"];
+          if (item?.item_attributeid === "24") return ["EGG"];
+        };
 
-          return {
-            _id: item?.itemid,
-            name: item?.itemname,
-            categoryIds: [item?.item_categoryid],
-            price: Number(item?.price),
-            visibility: true,
-            availability: true,
-            dishTypes: returnItemType(item),
-            addOnIds: addOnIds,
-            images: [item.item_image_url],
-            portions: portions,
-            description: item?.itemdescription,
-          };
-        }) || [];
+        return {
+          _id: item?.itemid,
+          name: item?.itemname,
+          categoryIds: [item?.item_categoryid],
+          price: Number(item?.price),
+          visibility: true,
+          availability: true,
+          dishTypes: returnItemType(item),
+          addOnIds: addOnIds,
+          images: item.item_image_url !== "" ? [item.item_image_url] : [],
+          portions: portions,
+          description: item?.itemdescription,
+          itemrank: item?.itemrank,
+          ignoreDiscount: item?.ignore_discounts,
+          ignoreTax: item?.ignore_taxes,
+          posTax: item?.item_tax,
+        };
+      });
 
       return {
         _id: category?.categoryid,
@@ -171,10 +158,14 @@ const transformData = (data) => {
         businessId: category?.restarant_ids,
         hierarchy: "CHILD",
         category_image_url: category?.category_image_url,
-        parentCategoryIds: [category?.group_category_id],
+        parentCategoryIds:
+          category?.group_category_id != null
+            ? [category.group_category_id]
+            : [],
         subCategoryIds: [],
         coverImage: "",
         dishIds: transformedItems,
+        categorytimings: category.categorytimings,
       };
     })
     .filter((category) => category !== null);
@@ -197,14 +188,13 @@ const transformParentCategories = (
       return [];
     }
 
-    // Sort parent categories by rank (ascending)
-    const sortedParents = [...parentCategories].sort(
-      (a, b) => Number(a.rank) - Number(b.rank),
-    );
+    // Filter and sort parent categories by rank (ascending)
+    const sortedParents = parentCategories
+      .filter((parent) => parent.status === "1")
+      .sort((a, b) => Number(a.rank) - Number(b.rank));
 
     return sortedParents
       .map((parent) => {
-        // Defensive: check required fields
         if (!parent || !parent.id || !parent.name) return null;
 
         // Find and sort subcategories for this parent by categoryrank
@@ -220,12 +210,12 @@ const transformParentCategories = (
           parentCategoryIds: [],
           subCategoryIds: subCats.map((cat) => cat.categoryid),
           dishIds: [],
-          availability: parent.status === "1",
-
+          availability: true, // Already filtered for status === "1"
+          rank: parent.rank,
           coverImage: "",
         };
       })
-      .filter(Boolean); // Remove any nulls
+      .filter(Boolean);
   } catch (e) {
     return [];
   }

@@ -74,6 +74,10 @@ const businessPosConfigSchema = new mongoose.Schema<BusinessPosConfigType>(
       type: String,
       required: false,
     },
+    defaultTableName: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,

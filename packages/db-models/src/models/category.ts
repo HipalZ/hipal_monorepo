@@ -69,6 +69,23 @@ const categorySchema = new mongoose.Schema<CategoryType>(
       required: false,
       ref: "menu",
     },
+    categoryTimings: {
+      type: String,
+      required: false,
+    },
+    posCategoryId: {
+      type: String,
+      required: false,
+    },
+    rank: {
+      type: Number,
+      required: false,
+    },
+    pos: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   {
     timestamps: true,

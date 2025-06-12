@@ -335,6 +335,7 @@ const menuRouter = new Hono()
         if (!menu) {
           const defaultMenuLayout = await Menu.findOne({
             businessId,
+            isActive: true,
           }).select(
             "menuType categoryLayout cardLayout primaryColor secondaryColor",
           );

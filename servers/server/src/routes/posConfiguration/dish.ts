@@ -1,4 +1,4 @@
-import { PosDishConfig } from "@hi/db-models";
+import { BusinessPosConfig, PosDishConfig } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -11,11 +11,22 @@ const dishPosConfigRouter = new Hono()
       "json",
       z.object({
         businessId: z.string(),
-        description: z.boolean().optional(),
-        images: z.boolean().optional(),
+
         visibility: z.boolean().optional(),
         availability: z.boolean().optional(),
         recommendationIds: z.boolean().optional(),
+        name: z.boolean().optional(),
+        price: z.boolean().optional(),
+        avgTime: z.boolean().optional(),
+        dishTypes: z.boolean().optional(),
+        categoryIds: z.boolean().optional(),
+        addOnIds: z.boolean().optional(),
+        kitchenId: z.boolean().optional(),
+        images: z.boolean().optional(),
+        description: z.boolean().optional(),
+        tags: z.boolean().optional(),
+        portions: z.boolean().optional(),
+        calories: z.boolean().optional(),
       }),
     ),
 
@@ -27,6 +38,17 @@ const dishPosConfigRouter = new Hono()
         visibility,
         availability,
         recommendationIds,
+        name,
+        price,
+        avgTime,
+        dishTypes,
+        categoryIds,
+        addOnIds,
+        kitchenId,
+
+        tags,
+        portions,
+        calories,
       } = await c.req.json();
 
       const dishPosConfig = new PosDishConfig({
@@ -36,6 +58,16 @@ const dishPosConfigRouter = new Hono()
         visibility,
         availability,
         recommendationIds,
+        name,
+        price,
+        avgTime,
+        dishTypes,
+        categoryIds,
+        addOnIds,
+        kitchenId,
+        tags,
+        portions,
+        calories,
       });
       await dishPosConfig.save();
 
@@ -54,9 +86,16 @@ const dishPosConfigRouter = new Hono()
 
     async (c) => {
       const { businessId } = c.req.query();
+
+      const businessPosConfig = await BusinessPosConfig.findOne({
+        businessId,
+        isDeleted: false,
+      });
       const dishPosConfig = await PosDishConfig.findOne({
         businessId: businessId,
-      });
+      }).select(
+        "description images visibility recommendationIds availability kitchenId",
+      );
 
       if (!dishPosConfig) {
         return respond(c, "No dish pos config found", true, 404);

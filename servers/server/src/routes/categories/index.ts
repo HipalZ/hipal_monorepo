@@ -15,7 +15,6 @@ import {
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
-import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
@@ -24,12 +23,6 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
-import { transformData, transformParentCategories } from "../../utils/helper";
-import { posApiPaths } from "../../utils/posConfig/petPooja";
-import {
-  getMenuByBId,
-  setPosConfigTransfer,
-} from "../../utils/posTransferCache";
 import { respond } from "../../utils/response";
 
 //updateCategories
@@ -291,10 +284,16 @@ const categoriesRouter = new Hono()
       const { businessId, menu, child, parent, dishes, tableName, menuId } =
         c.req.query();
 
+      const businessPosConfig = await BusinessPosConfig.findOne({
+        businessId,
+        isDeleted: false,
+      });
+
       if (menu) {
         let query = {
           businessId,
           isDeleted: false,
+          pos: !!businessPosConfig,
         };
 
         if (menuId) {
@@ -322,6 +321,7 @@ const categoriesRouter = new Hono()
           hierarchy: "CHILD",
           isDeleted: false,
           menuId: menuId,
+          pos: !!businessPosConfig,
         };
 
         const existingCategories = await Category.find(query)
@@ -385,6 +385,7 @@ const categoriesRouter = new Hono()
           businessId,
           hierarchy: "PARENT",
           isDeleted: false,
+          pos: !!businessPosConfig,
         };
 
         if (menuId || tableName) {
@@ -396,59 +397,6 @@ const categoriesRouter = new Hono()
             "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence",
           );
 
-        const isHasPos = await BusinessPosConfig.findOne({
-          businessId,
-          isDeleted: false,
-        });
-
-        if (isHasPos) {
-          const table = await Table.findOne({
-            businessId,
-          }).select("name");
-          const getCache = await getMenuByBId(`${businessId}+parent`);
-
-          if (getCache) {
-            const parentCategories = transformParentCategories(
-              getCache.group_categories || [],
-              getCache.categories || [],
-              businessId,
-            );
-
-            return respond(
-              c,
-              "fetched successfully",
-              false,
-              200,
-              parentCategories || [],
-            );
-          }
-
-          const Config = {
-            "app-key": isHasPos.accessKey,
-            "app-secret": isHasPos.secretKey,
-            "access-token": isHasPos.authToken,
-            restID: isHasPos.restId,
-            tableNo: table?.name,
-          };
-
-          const menu = await axios.post(posApiPaths.fetchMenu, Config);
-          await setPosConfigTransfer(`${businessId}+parent`, menu.data);
-
-          const parentCategories = transformParentCategories(
-            menu.data.group_categories || [],
-            menu.data.categories || [],
-            businessId,
-          );
-
-          return respond(
-            c,
-            "fetched successfully",
-            false,
-            200,
-            parentCategories || [],
-          );
-        }
-
         return respond(
           c,
           "fetched successfully",
@@ -459,52 +407,6 @@ const categoriesRouter = new Hono()
       }
 
       if (dishes) {
-        const isHasPos = await BusinessPosConfig.findOne({
-          businessId,
-          isDeleted: false,
-        });
-
-        if (isHasPos) {
-          const table = await Table.findOne({
-            businessId,
-          }).select("name");
-
-          const getCache = await getMenuByBId(businessId);
-          if (getCache) {
-            const transformedCategories = transformData(getCache);
-            return c.json(
-              {
-                message: "Data fetched successfully",
-                err: false,
-                data: transformedCategories,
-              },
-              200,
-            );
-          }
-
-          const Config = {
-            "app-key": isHasPos.accessKey,
-            "app-secret": isHasPos.secretKey,
-            "access-token": isHasPos.authToken,
-            restID: isHasPos.restId,
-            tableNo: table?.name,
-          };
-
-          const menu = await axios.post(posApiPaths.fetchMenu, Config);
-          await setPosConfigTransfer(businessId, menu.data);
-          const transformedCategories = transformData(menu.data);
-
-          return c.json(
-            {
-              message: "Data fetched successfully",
-              err: false,
-              data: transformedCategories,
-            },
-            200,
-          );
-        }
-
-        // Find the table by name and businessId
         const tableData = await Table.findOne({
           name: tableName,
           businessId,
@@ -547,15 +449,12 @@ const categoriesRouter = new Hono()
           ],
         }).lean();
 
-        if (!menu) {
-          return respond(c, "Menu not found", true, 404, []);
-        }
-
         const query = {
           businessId,
           hierarchy: "CHILD",
           isDeleted: false,
           menuId: menuId || menu?._id,
+          pos: !!businessPosConfig,
         };
 
         const existingCategories = await Category.find(query).populate({
@@ -576,6 +475,7 @@ const categoriesRouter = new Hono()
       let query = {
         businessId,
         isDeleted: false,
+        pos: !!businessPosConfig,
       };
 
       if (menuId) {

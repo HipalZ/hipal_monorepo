@@ -60,6 +60,10 @@ export const categorySchema = z.object({
   availability: z.boolean().default(true).optional(),
   sequence: z.number().optional(),
   menuId: ObjectIdSchema,
+  posCategoryId: z.string().min(3).max(100).optional(),
+  rank: z.number().min(1).max(100).optional(),
+  categoryTimings: z.string().min(3).max(200).optional(),
+  pos: z.boolean().default(false).optional(),
 });
 
 export const updateCategorySchema = z.object({

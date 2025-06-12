@@ -2,6 +2,7 @@
 import {
   AddOn,
   Business,
+  BusinessPosConfig,
   Category,
   Dish,
   Pos,
@@ -296,6 +297,15 @@ const dishesRouter = new Hono()
       //@ts-ignore
       return await runInTransaction(async (session: ClientSession) => {
         const dish = await c.req.json();
+
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId: dish.businessId,
+          isDeleted: false,
+        });
+
+        if (businessPosConfig) {
+          return respond(c, "You cannot create a dish with POS", true, 400, {});
+        }
 
         const dishAlreadyExists = await Dish.findOne({
           businessId: dish.businessId,

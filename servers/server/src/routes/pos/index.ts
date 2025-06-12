@@ -30,7 +30,9 @@ import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import {
   calculateCartBill,
   convertToPetpoojaCart,
+  transformData,
   transformItemsToSimpleArray,
+  transformParentCategories,
 } from "../../utils/helper";
 import { petpoojaPosConfig, posApiPaths } from "../../utils/posConfig/petPooja";
 import { respond } from "../../utils/response";
@@ -828,71 +830,68 @@ const posRouter = new Hono()
       }),
     ),
     async (c) => {
-      //@ts-ignore
+      //@ts-ignore  // runInTransaction handles rollback/commit + error propagation
       return runInTransaction(async (session) => {
         const { businessId, restId, orderVerificationType, posId } =
           await c.req.json();
 
-        // Remove old menus
-        await Menu.deleteMany({ businessId }, { session });
-
-        // Fetch custom link
         const business = await Business.findById(businessId).session(session);
+        if (!business) throw new Error("Business not found");
 
-        const businessPosConfig = await BusinessPosConfig.findOne({
+        await Menu.deleteOne({ businessId }, { session });
+
+        let businessPosConfig = await BusinessPosConfig.findOne({
           businessId,
           isDeleted: false,
         });
 
         if (!businessPosConfig) {
-          const createBusinessPosConfig = new BusinessPosConfig({
+          if (!petpoojaPosConfig)
+            throw new Error("Petpooja keys missing in env/config");
+
+          businessPosConfig = new BusinessPosConfig({
             businessId,
+            branchId: business._id,
+            restName: business.name,
             orderMode: "WITH_ORDER",
-            branchId: business?._id,
-            restName: business?.name,
             accessKey: petpoojaPosConfig.accessKey,
             secretKey: petpoojaPosConfig.secretKey,
             authToken: petpoojaPosConfig.authToken,
             restId,
-            isDeleted: false,
             orderVerificationType,
             posName: "Petpooja",
             posId,
+            isDeleted: false,
             date: Date.now(),
           });
-
-          await createBusinessPosConfig.save({ session });
+          await businessPosConfig.save({ session });
         }
 
-        // Fetch areas and tables from POS
-        const fetchAreaAndTable = await axios.post(
+        const { data: areaTableRes } = await axios.post(
           posApiPaths.fetchAreaAndTables,
           {
-            "app-key": petpoojaPosConfig.accessKey,
-            "app-secret": petpoojaPosConfig.secretKey,
-            "access-token": petpoojaPosConfig.authToken,
+            "app-key": businessPosConfig.accessKey,
+            "app-secret": businessPosConfig.secretKey,
+            "access-token": businessPosConfig.authToken,
             restID: restId,
             tableNo: "",
           },
         );
 
-        if (fetchAreaAndTable.data.success !== "1") {
-          throw new Error("area and table not fetched");
-        }
+        if (areaTableRes.success !== "1")
+          throw new Error("POS area/table fetch failed");
 
-        // Active areas and tables
-        const areas = fetchAreaAndTable.data.areas.filter(
+        const areas = (areaTableRes.areas || []).filter(
           (a) => a.active === "1",
         );
-        const tables = fetchAreaAndTable.data.tables.filter(
+        const tables = (areaTableRes.tables || []).filter(
           (t) => t.active === "1",
         );
 
-        // Ensure at least one zone
-        let zone = null;
+        let defaultZone = null;
+
         if (areas.length === 0) {
-          // Create fallback zone within the transaction
-          zone = new Zone({
+          defaultZone = new Zone({
             businessId,
             name: "POS",
             zoneId: nanoid(5),
@@ -900,16 +899,15 @@ const posRouter = new Hono()
             tableIds: [],
             visibility: true,
           });
-          await zone.save({ session });
+          await defaultZone.save({ session });
         }
 
-        // Upsert each area as a zone
         for (const area of areas) {
-          zone = await Zone.findOneAndUpdate(
+          defaultZone = await Zone.findOneAndUpdate(
             { zoneId: area.restaurantareaid },
             {
-              name: area.displayname,
               businessId,
+              name: area.displayname,
               zoneId: area.restaurantareaid,
               active: area.active,
               rank: area.rank,
@@ -918,42 +916,46 @@ const posRouter = new Hono()
           );
         }
 
-        // Create/update tables and link to zones
         for (const table of tables) {
-          const currentZoneId =
-            areas.length === 0 ? zone?.zoneId : table.restaurantareaid;
+          const zoneIdToLink =
+            areas.length === 0 ? defaultZone?.zoneId : table.restaurantareaid;
 
-          // Upsert table
-          const creatingTable = await Table.findOneAndUpdate(
+          const tableDoc = await Table.findOneAndUpdate(
             { tableId: table.id },
             {
               name: table.table_no,
               businessId,
-              zoneId: currentZoneId,
+              zoneId: zoneIdToLink,
               active: table.active,
               rank: table.rank,
               tableId: table.id,
-              internalZoneId: zone?._id,
+              internalZoneId: defaultZone?._id,
             },
             { upsert: true, new: true, session },
           );
 
-          // Add table to zone.tableIds
-          await Zone.findOneAndUpdate(
-            { zoneId: currentZoneId },
-            { $addToSet: { tableIds: creatingTable._id } },
-            { new: true, session },
+          await BusinessPosConfig.findOneAndUpdate(
+            { businessId },
+            { $set: { defaultTableName: tableDoc.name } },
+            { session },
           );
 
-          // Create short URL if not exists
-          const longUrl = `https://hipal-test.hipalz.com/${business?.customLink}/explore?tableName=${creatingTable.name}`;
-          const exists = await UrlModel.findOne({
+          // make sure zone has reference
+          await Zone.findOneAndUpdate(
+            { zoneId: zoneIdToLink },
+            { $addToSet: { tableIds: tableDoc._id } },
+            { session },
+          );
+
+          // create short URL once per table
+          const longUrl = `https://hipal-test.hipalz.com/${business.customLink}/explore?tableName=${tableDoc.name}`;
+          const existingShort = await UrlModel.findOne({
             businessId,
             longUrl,
           }).session(session);
-          if (!exists) {
+          if (!existingShort) {
             const shortCode = nanoid(5);
-            const createShortUrl = await UrlModel.create(
+            const [{ shortUrl }] = await UrlModel.create(
               [
                 {
                   businessId,
@@ -964,19 +966,19 @@ const posRouter = new Hono()
               ],
               { session },
             );
-
             await Table.findOneAndUpdate(
-              { tableId: table.id },
-              { tableLink: createShortUrl[0].shortUrl },
-              { new: true, session },
+              { _id: tableDoc._id },
+              { tableLink: shortUrl },
+              { session },
             );
           }
         }
 
-        const zones = await Zone.find({ businessId }).session(session);
-        const zoneIds = zones.map((z) => z._id.toString());
+        const zoneIds = (await Zone.find({ businessId }).session(session)).map(
+          (z) => z._id.toString(),
+        );
 
-        await Menu.create(
+        const [menuDoc] = await Menu.create(
           [
             {
               name: "Default",
@@ -992,19 +994,167 @@ const posRouter = new Hono()
               cardLayout: 2,
               primaryColor: "#ec4899",
               secondaryColor: "#fce7f3",
+              default: true,
             },
           ],
           { session },
         );
 
-        return c.json(
-          {
-            message: "POS Config saved successfully",
-            err: false,
-            data: { success: true },
-          },
-          200,
+        const { data: menuRes } = await axios.post(posApiPaths.fetchMenu, {
+          "app-key": businessPosConfig.accessKey,
+          "app-secret": businessPosConfig.secretKey,
+          "access-token": businessPosConfig.authToken,
+          restID: businessPosConfig.restId,
+          tableNo: businessPosConfig.defaultTableName,
+        });
+
+        const parentCategories = transformParentCategories(
+          menuRes.group_categories || [],
+          menuRes.categories || [],
+          businessId,
         );
+        const transformedCategories = transformData(menuRes);
+
+        for (const pc of parentCategories) {
+          await Category.findOneAndUpdate(
+            { businessId, posCategoryId: pc?._id },
+            {
+              businessId,
+              visibility: true,
+              availability: true,
+              name: pc?.name,
+              hierarchy: "PARENT",
+              posCategoryId: pc?._id,
+              parentCategoryIds: [],
+              subCategoryIds: [],
+              dishIds: [],
+              coverImage: pc?.coverImage,
+              pos: true,
+              rank: pc?.rank,
+            },
+            { upsert: true, new: true, session },
+          );
+        }
+
+        for (const cat of transformedCategories) {
+          const childCat = await Category.findOneAndUpdate(
+            { businessId, posCategoryId: cat._id },
+            {
+              pos: true,
+              name: cat.name,
+              visibility: cat.visibility,
+              availability: cat.availability,
+              rank: cat.categoryrank,
+              businessId,
+              coverImage: cat.coverImage,
+              hierarchy: cat.hierarchy,
+              menuId: menuDoc._id,
+              parentCategoryIds: [], // we fill below
+              subCategoryIds: [],
+              dishIds: [],
+            },
+            { upsert: true, new: true, session },
+          );
+
+          for (const pId of cat.parentCategoryIds || []) {
+            const parentCat = await Category.findOne({
+              businessId,
+              posCategoryId: pId,
+              pos: true,
+            });
+            if (parentCat) {
+              await Category.findOneAndUpdate(
+                { _id: parentCat._id },
+                { $addToSet: { subCategoryIds: childCat._id } },
+                { session },
+              );
+              await Category.findOneAndUpdate(
+                { _id: childCat._id },
+                { $addToSet: { parentCategoryIds: parentCat._id } },
+                { session },
+              );
+            }
+          }
+
+          // 10‑c. upsert dishes in this category
+          for (const dish of cat.dishIds || []) {
+            const dishDoc = await Dish.findOneAndUpdate(
+              { businessId, posDishId: dish._id },
+              {
+                pos: true,
+                visibility: dish.visibility,
+                availability: dish.availability,
+                name: dish.name,
+                price: dish.price,
+                description: dish.description,
+                dishTypes: dish.dishTypes,
+                images: dish.images,
+                portions: dish.portions,
+                rank: dish.itemrank,
+                ignoreDiscount: dish.ignoreDiscount,
+                ignoreTax: dish.ignoreTax,
+                posDishId: dish._id,
+                menuId: menuDoc._id,
+                categoryIds: [],
+                addOnIds: [],
+                recommendationIds: [],
+                businessId,
+                posTax: dish.posTax,
+              },
+              { upsert: true, new: true, session },
+            );
+
+            await Dish.findByIdAndUpdate(
+              dishDoc._id,
+              { $addToSet: { categoryIds: childCat._id } },
+              { session },
+            );
+            await Category.findByIdAndUpdate(
+              childCat._id,
+              { $addToSet: { dishIds: dishDoc._id } },
+              { session },
+            );
+
+            for (const addOn of dish.addOnIds || []) {
+              console.log("addOn.choices", addOn.choices);
+              const addOnDoc = await AddOn.findOneAndUpdate(
+                { businessId, posAddOnId: addOn._id },
+                {
+                  pos: true,
+                  posAddOnId: addOn._id,
+                  businessId,
+                  name: addOn.name,
+                  visibility: addOn.visibility,
+                  availability: addOn.availability,
+                  addOnMaxQuantity: addOn.addOnMaxQuantity,
+                  compulsory: addOn.addon_item_selection_min === "1" ? 1 : 0,
+                  choiceType: addOn.choiceType,
+                  choices: addOn.choices,
+                  menuId: menuDoc._id,
+                  dishIds: [],
+                },
+                { upsert: true, new: true, session },
+              );
+
+              await Dish.findByIdAndUpdate(
+                dishDoc._id,
+                { $addToSet: { addOnIds: addOnDoc._id } },
+                { session },
+              );
+              await AddOn.findByIdAndUpdate(
+                addOnDoc._id,
+                { $addToSet: { dishIds: dishDoc._id } },
+                { session },
+              );
+            }
+          }
+        }
+
+        return c.json({
+          message: "POS Config saved successfully",
+          err: false,
+          data: {},
+        });
       });
     },
   )

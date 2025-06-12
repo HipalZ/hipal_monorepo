@@ -71,6 +71,15 @@ const extraSchema = new mongoose.Schema<AddOnType>(
       required: false,
       ref: "menu",
     },
+    pos: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    posAddOnId: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,

@@ -180,6 +180,13 @@ export const dishSchema = z.object({
   availability: z.boolean().default(true).optional(),
   isDeleted: z.boolean().default(false).optional(),
   menuId: ObjectIdSchema,
+
+  posDishId: z.string().min(3).max(100).optional(),
+  rank: z.number().min(1).max(100).optional(),
+  posTax: z.string().min(3).max(100).optional(),
+  ignoreTax: z.string().min(3).max(100).optional(),
+  ignoreDiscount: z.string().min(3).max(100).optional(),
+  pos: z.boolean().default(false).optional(),
 });
 
 export const updateDishSchema = z.object({

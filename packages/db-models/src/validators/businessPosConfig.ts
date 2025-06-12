@@ -17,6 +17,7 @@ export const businessPosConfigSchema = z.object({
   orderVerificationType: z.enum(OrderVerificationTypeEnum),
   posName: z.string().min(2).max(100),
   posId: z.string().min(4).max(100).optional(),
+  defaultTableName: z.string().min(1).max(50).optional(),
 
   date: z.number().optional(),
 });

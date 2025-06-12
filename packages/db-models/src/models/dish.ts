@@ -125,6 +125,32 @@ const dishSchema = new mongoose.Schema<DishType>(
       required: false,
       ref: "menu",
     },
+    ignoreDiscount: {
+      type: String,
+      required: false,
+    },
+    ignoreTax: {
+      type: String,
+      required: false,
+    },
+    pos: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    posDishId: {
+      type: String,
+      required: false,
+    },
+
+    posTax: {
+      type: String,
+      required: false,
+    },
+    rank: {
+      type: Number,
+      required: false,
+    },
   },
   {
     timestamps: true,
