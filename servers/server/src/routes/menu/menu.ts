@@ -368,7 +368,10 @@ const menuRouter = new Hono()
         sourceMenuId,
       } = requestData;
 
-      if (sourceMenuId && (await BusinessPosConfig.exists({ businessId }))) {
+      if (
+        sourceMenuId &&
+        (await BusinessPosConfig.exists({ businessId, isDeleted: false }))
+      ) {
         return respond(
           c,
           "You cannot create a menu with sourceMenuId as this business has POS",

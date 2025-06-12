@@ -1247,6 +1247,7 @@ const scriptRouter = new Hono()
       z.object({
         businessId: z.string().min(3).max(36),
         flow: z.enum(["USER", "CAPTAIN"]),
+        active: z.boolean().optional(),
       }),
     ),
 
@@ -1254,7 +1255,7 @@ const scriptRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const requestData = await c.req.json();
-        const { businessId, flow } = requestData;
+        const { businessId, flow, active } = requestData;
 
         const updateBusinessPosConfig =
           await BusinessPosConfig.findOneAndUpdate(
@@ -1264,6 +1265,7 @@ const scriptRouter = new Hono()
             {
               $set: {
                 orderVerificationType: flow,
+                // isDeleted: !active,
               },
             },
             { session, new: true },
@@ -1271,6 +1273,40 @@ const scriptRouter = new Hono()
         if (!updateBusinessPosConfig) {
           return respond(c, "Business not found", true, 404, {});
         }
+
+        // if (active === false) {
+        //   await Dish.updateMany(
+        //     {
+        //       businessId,
+        //     },
+        //     {
+        //       $set: {
+        //         pos: false,
+        //       },
+        //     },
+        //   );
+        //   await AddOn.updateMany(
+        //     {
+        //       businessId,
+        //     },
+        //     {
+        //       $set: {
+        //         pos: false,
+        //       },
+        //     },
+        //   );
+
+        //   await Category.updateMany(
+        //     {
+        //       businessId: businessId,
+        //     },
+        //     {
+        //       $set: {
+        //         pos: false,
+        //       },
+        //     },
+        //   );
+        // }
 
         return respond(c, "pos setting updated successfully", false, 200, {});
       });

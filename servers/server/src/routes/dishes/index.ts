@@ -5,7 +5,8 @@ import {
   BusinessPosConfig,
   Category,
   Dish,
-  Pos,
+  Kitchen,
+  PosDishConfig,
   Table,
   UniquelyYours,
 } from "@hi/db-models";
@@ -44,8 +45,9 @@ const dishesRouter = new Hono()
     async (c) => {
       const { businessId, UniquelyYours, menu, menuId } = c.req.query();
       if (UniquelyYours) {
-        const isHasPos = await Pos.findOne({
+        const isHasPos = await BusinessPosConfig.findOne({
           businessId,
+          isDeleted: false,
         });
 
         if (isHasPos) {
@@ -130,10 +132,11 @@ const dishesRouter = new Hono()
   )
   .put(
     "/:id",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
-    zValidator("param", z.object({ id: z.string() })),
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator("json", updateDishSchema),
+    zValidator("param", z.object({ id: z.string() })),
+
     async (c) => {
       //@ts-ignore
       return await runInTransaction(async (session: ClientSession) => {
@@ -155,7 +158,48 @@ const dishesRouter = new Hono()
           removeCategoryIds = [],
           removeAddOnIds = [],
           removeRecommendationIds = [],
+          kitchenId,
+          removeKitchenId,
         } = dish;
+
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId: dish.businessId,
+          isDeleted: false,
+        });
+
+        if (businessPosConfig) {
+          const posDishEditFields = await PosDishConfig.findOne({
+            businessId: dish.businessId,
+          })
+            .select(
+              "description images visibility recommendationIds availability kitchenId",
+            )
+            .lean();
+
+          if (!posDishEditFields) {
+            return respond(c, "POS dish config not found", true, 400, {});
+          }
+
+          const allowedKeys = Object.entries(posDishEditFields)
+            .filter(([_, isAllowed]) => isAllowed)
+            .map(([key]) => key);
+
+          const extraKeys = Object.keys(dish).filter(
+            (key) => key !== "businessId" && !allowedKeys.includes(key),
+          );
+
+          if (extraKeys.length) {
+            return respond(
+              c,
+              `Field(s) not permitted by POS configuration: ${extraKeys.join(
+                ", ",
+              )}`,
+              true,
+              400,
+              {},
+            );
+          }
+        }
 
         const updatedDish = await Dish.findByIdAndUpdate(
           id,
@@ -169,6 +213,8 @@ const dishesRouter = new Hono()
             images,
             description,
             tags,
+            kitchenId,
+            removeKitchenId,
           },
           {
             new: true,
@@ -255,7 +301,23 @@ const dishesRouter = new Hono()
           );
         }
 
-        return respond(c, "Updated successfully", false, 200, updatedDish);
+        if (kitchenId) {
+          await Kitchen.findByIdAndUpdate(
+            { _id: kitchenId },
+            { $push: { dishIds: updatedDish._id } },
+            { session },
+          );
+        }
+
+        if (removeKitchenId) {
+          await Kitchen.findByIdAndUpdate(
+            { _id: removeKitchenId },
+            { $pull: { dishIds: updatedDish._id } },
+            { session },
+          );
+        }
+
+        return respond(c, "Updated successfully", false, 200, {});
       });
     },
   )
@@ -332,6 +394,14 @@ const dishesRouter = new Hono()
           { $push: { dishIds: createDish[0]._id } },
           { session },
         );
+
+        if (dish.kitchenId) {
+          await Kitchen.findByIdAndUpdate(
+            { _id: dish.kitchenId },
+            { $push: { dishIds: createDish[0]._id } },
+            { session },
+          );
+        }
 
         return respond(c, "Created successfully", false, 201, createDish);
       });

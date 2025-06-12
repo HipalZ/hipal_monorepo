@@ -1,4 +1,4 @@
-import { Kitchen } from "@hi/db-models";
+import { Dish, Kitchen } from "@hi/db-models";
 import { KitchenAttrs, updateKitchenAttrs } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
@@ -63,6 +63,11 @@ const kitchenRouter = new Hono()
           400,
         );
       }
+
+      await Dish.updateMany(
+        { _id: { $in: dishIds } },
+        { $set: { kitchenId: kitchen._id } },
+      );
 
       return respond(c, "created successfully", false, 201, {
         _id: kitchen._id,
@@ -129,8 +134,14 @@ const kitchenRouter = new Hono()
   .put("/", zValidator("json", updateKitchenAttrs), async (c) => {
     //@ts-ignore
     return runInTransaction(async (session: ClientSession) => {
-      const { kitchenId, name, description, staffIds, dishIds } =
-        await c.req.json();
+      const {
+        kitchenId,
+        name,
+        description,
+        staffIds,
+        dishIds,
+        removeDishIds = [],
+      } = await c.req.json();
       const updateName = name.trim().toLowerCase();
 
       const kitchen = await Kitchen.findByIdAndUpdate(
@@ -154,6 +165,18 @@ const kitchenRouter = new Hono()
           404,
         );
       }
+
+      if (removeDishIds.length) {
+        await Dish.updateMany(
+          { _id: { $in: removeDishIds } },
+          { $pull: { kitchenId: kitchen._id } },
+        );
+      }
+
+      await Dish.updateMany(
+        { _id: { $in: dishIds } },
+        { $set: { kitchenId: kitchen._id } },
+      );
 
       return respond(c, "updated successfully", false, 200, {
         _id: kitchen._id,

@@ -15,6 +15,7 @@ export const updateKitchenAttrs = z.object({
   description: z.string().min(3).max(100).optional(),
   staffIds: z.array(ObjectIdSchema).optional(),
   dishIds: z.array(ObjectIdSchema).optional(),
+  removeDishIds: z.array(ObjectIdSchema).optional(),
 });
 
 export type KitchenType = z.infer<typeof KitchenAttrs>;
