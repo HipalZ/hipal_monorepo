@@ -88,7 +88,7 @@ const kitchenRouter = new Hono()
           .lean()
           .select("name description staffIds dishIds");
 
-        return respond(c, "created successfully", false, 201, kitchens);
+        return respond(c, "fetched successfully", false, 200, kitchens);
       });
     },
   )
@@ -121,7 +121,7 @@ const kitchenRouter = new Hono()
           );
         }
 
-        return respond(c, "created successfully", false, 201, kitchen);
+        return respond(c, "fetch successfully", false, 200, kitchen);
       });
     },
   )
