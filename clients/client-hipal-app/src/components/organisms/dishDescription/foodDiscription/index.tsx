@@ -9,10 +9,13 @@ import { BsFillCircleFill } from "react-icons/bs";
 import { IoFastFoodSharp } from "react-icons/io5";
 import type { DishType } from "@hi/db-models/src/validators";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 
 function FoodDescription({ dishData }: { dishData: DishType }) {
   const isAvailable = dishData?.availability;
-
+  const currencySymbol = useBusinessDetails(
+    (s) => s.businessDetails?.currencySymbol,
+  );
   const { outLetType } = _useAllBusiness((s) => s.data.outletInfo);
 
   const price = useMemo(
@@ -44,7 +47,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
           <div className="my-2">
             {Number(price) > 1 && (
               <span className="text-base">
-                ₹ {Number(price).toLocaleString("en-IN")}
+                {currencySymbol} {Number(price).toLocaleString("en-IN")}
               </span>
             )}
           </div>
@@ -77,7 +80,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
                   {portion?.name}
                 </span>
                 <span className="text-xs font-thin text-base-content">
-                  ₹ {getPrice(portion?.price)}
+                  {currencySymbol} {getPrice(portion?.price)}
                 </span>
               </div>
             ))}

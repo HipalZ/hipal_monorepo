@@ -95,7 +95,8 @@ const HorizontalCard = ({
             className="mt-1 text-base font-medium"
             style={{ color: primaryColor }}
           >
-            ₹{dishData.price.toFixed(2)}
+            {outletInfo?.currencySymbol}
+            {dishData.price.toFixed(2)}
           </p>
           {dishData.description && (
             <p

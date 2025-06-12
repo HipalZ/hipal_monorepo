@@ -1,22 +1,23 @@
-"use client"
-import { memo, useMemo } from "react"
-import FoodType, { type FOOD_TYPES } from "@/components/atoms/foodType"
-import Section from "@/components/molecules/section"
-import { Splide, SplideSlide } from "@splidejs/react-splide"
-import { ImSpoonKnife } from "react-icons/im"
-import DishQuantityButton from "../dishQuantityButton"
-import type { DishType } from "@hi/db-models/src/validators"
-import "@splidejs/react-splide/css"
-import ShimmerImage from "@/components/atoms/imageshimmer"
-import { useActiveClass } from "@/components/store/useActiveClass"
-import { useDishesStore } from "@/components/store/useDishesStore"
-import type { IDish } from "@/components/types/businessData"
+"use client";
+import { memo, useMemo } from "react";
+import FoodType, { type FOOD_TYPES } from "@/components/atoms/foodType";
+import Section from "@/components/molecules/section";
+import { Splide, SplideSlide } from "@splidejs/react-splide";
+import { ImSpoonKnife } from "react-icons/im";
+import DishQuantityButton from "../dishQuantityButton";
+import type { DishType } from "@hi/db-models/src/validators";
+import "@splidejs/react-splide/css";
+import ShimmerImage from "@/components/atoms/imageshimmer";
+import { useActiveClass } from "@/components/store/useActiveClass";
+import { useDishesStore } from "@/components/store/useDishesStore";
+import type { IDish } from "@/components/types/businessData";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 interface RecommendedDishesProps {
-  recommendations: DishType[]
-  openModal?: (dish: DishType) => void
-  primaryColor?: string
-  secondaryColor?: string
+  recommendations: DishType[];
+  openModal?: (dish: DishType) => void;
+  primaryColor?: string;
+  secondaryColor?: string;
 }
 
 function RecommendedDishes({
@@ -26,22 +27,26 @@ function RecommendedDishes({
   secondaryColor = "#fce7f3",
 }: RecommendedDishesProps) {
   // Use useMemo to prepare the dishes for rendering
-  const { setSelectedDish } = useActiveClass()
-  const dishes = useDishesStore((s) => s.dishes)
-
+  const { setSelectedDish } = useActiveClass();
+  const dishes = useDishesStore((s) => s.dishes);
+  const currencySymbol = _useAllBusiness(
+    (s) => s.data?.outletInfo?.currencySymbol,
+  );
   const changeTheDish = (dish: DishType) => {
     if (openModal) {
-      openModal(dish)
+      openModal(dish);
     } else {
-      setSelectedDish(dish)
+      setSelectedDish(dish);
     }
-  }
+  };
 
   const processedDishes = useMemo(() => {
-    return recommendations?.map((dishId) => dishes?.find((dish: IDish) => dish._id === dishId)).filter(Boolean)
-  }, [recommendations, dishes])
+    return recommendations
+      ?.map((dishId) => dishes?.find((dish: IDish) => dish._id === dishId))
+      .filter(Boolean);
+  }, [recommendations, dishes]);
 
-  if (!processedDishes || processedDishes.length === 0) return null
+  if (!processedDishes || processedDishes.length === 0) return null;
 
   return (
     <div className="py-4" style={{ backgroundColor: `${secondaryColor}10` }}>
@@ -54,7 +59,10 @@ function RecommendedDishes({
             >
               <ImSpoonKnife className="text-lg" />
             </div>
-            <h4 className="text-base font-medium" style={{ color: primaryColor }}>
+            <h4
+              className="text-base font-medium"
+              style={{ color: primaryColor }}
+            >
               Best Pair With
             </h4>
           </div>
@@ -73,10 +81,16 @@ function RecommendedDishes({
             }}
           >
             <div className="hidden splide__arrows">
-              <button type="button" className="splide__arrow splide__arrow--prev">
+              <button
+                type="button"
+                className="splide__arrow splide__arrow--prev"
+              >
                 Prev
               </button>
-              <button type="button" className="splide__arrow splide__arrow--next">
+              <button
+                type="button"
+                className="splide__arrow splide__arrow--next"
+              >
                 Next
               </button>
             </div>
@@ -113,7 +127,9 @@ function RecommendedDishes({
                             className="flex items-center justify-center w-full h-24 rounded-md"
                             style={{ backgroundColor: secondaryColor }}
                           >
-                            <span style={{ color: primaryColor }}>{dish?.name?.charAt(0)?.toUpperCase() || "D"}</span>
+                            <span style={{ color: primaryColor }}>
+                              {dish?.name?.charAt(0)?.toUpperCase() || "D"}
+                            </span>
                           </div>
                         )}
                       </button>
@@ -125,8 +141,12 @@ function RecommendedDishes({
                       </div>
                       <div className="flex items-center justify-between w-full pb-2 pr-2">
                         {Number(dish?.price) > 1 && (
-                          <div className="text-xs font-medium" style={{ color: primaryColor }}>
-                            ₹{dish?.price}
+                          <div
+                            className="text-xs font-medium"
+                            style={{ color: primaryColor }}
+                          >
+                            {currencySymbol}
+                            {dish?.price}
                           </div>
                         )}
                         <div className="mt-1 origin-right scale-75">
@@ -146,8 +166,8 @@ function RecommendedDishes({
         </div>
       </Section>
     </div>
-  )
+  );
 }
 
-const MemoRecommendedDishes = memo(RecommendedDishes)
-export default MemoRecommendedDishes
+const MemoRecommendedDishes = memo(RecommendedDishes);
+export default MemoRecommendedDishes;

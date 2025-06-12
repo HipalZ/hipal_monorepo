@@ -62,6 +62,8 @@ export const useBusinessDetails = create(
         id: "",
         phoneNumber: "",
         outLetType: "MENU",
+        currencySymbol: "₹",
+        placeId: "",
       },
       setBusinessDetails: (businessDetails: IBiz) =>
         set({ businessDetails: businessDetails }),

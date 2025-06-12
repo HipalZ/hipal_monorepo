@@ -11,11 +11,14 @@ import {
   type ICartHistory,
   useCartStore,
 } from "@/components/store/useCartStore";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const MemoHistoryCartItems = () => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const { cartHistory } = useCartStore();
-
+  const currencySymbol = _useAllBusiness(
+    (s) => s.data.outletInfo?.currencySymbol,
+  );
   const toggleAccordion = useCallback(
     (id: string) => {
       setExpanded(expanded === id ? null : id);
@@ -128,7 +131,8 @@ const MemoHistoryCartItems = () => {
                                   className="flex items-center text-xs"
                                 >
                                   <MdLocalOffer className="mr-1 text-green-500" />
-                                  {extra.name}: {extra.quantity} x ₹
+                                  {extra.name}: {extra.quantity} x{" "}
+                                  {currencySymbol}
                                   {extra.price}
                                 </p>
                               ))}

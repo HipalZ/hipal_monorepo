@@ -5,17 +5,20 @@ import { Badge } from "@/components/ui/badge";
 import { getPrice } from "@/components/utils/helpers";
 import DishQuantityButton from "@/components/organisms/dishDescription/dishQuantityButton";
 import ShimmerImage from "../imageshimmer";
-import OtherPlaceholderImg from "../placeholder/othePlaceholder";
 import ItemDescriptionPopup from "../dishDescription/itemDescription";
 import OutletItemInfo from "../dishPopup/outletcard";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import MemoReadMore from "../readMore";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 
 const MemoOtherOutletCard = ({
   dishData,
 }: {
   dishData: DishType;
 }) => {
+  const currencySymbol = useBusinessDetails(
+    (s) => s.businessDetails?.currencySymbol,
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { isSelectedDish, setSelectedDish } = useActiveClass();
   const price = useMemo(
@@ -47,7 +50,7 @@ const MemoOtherOutletCard = ({
           </h3>
           {Number(price) > 1 && (
             <p className="text-sm text-primary">
-              ₹ {Number(price).toLocaleString("en-IN")}
+              {currencySymbol} {Number(price).toLocaleString("en-IN")}
             </p>
           )}
           {dishData?.description && (

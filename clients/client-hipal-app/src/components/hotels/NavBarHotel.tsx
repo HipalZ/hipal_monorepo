@@ -1,23 +1,23 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
 import { MessageCircle, ArrowLeft } from "lucide-react";
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { useHotelBusinessData } from "../store/useHotelBusinessData"
-import { useRouter } from "next/navigation"
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useHotelBusinessData } from "../store/useHotelBusinessData";
+import { useRouter } from "next/navigation";
 import { useHotelTemp } from "../store/useHotelTemp";
 
 interface NavBarHotelProps {
-  businessName?: string
+  businessName?: string;
   // onChatClick?: () => void
-  onBackClick?: () => void
-  showBackButton?: boolean
-  hideChat?: boolean
-  text?: string
-  centerText?: boolean
-  hideLogo?: boolean
+  onBackClick?: () => void;
+  showBackButton?: boolean;
+  hideChat?: boolean;
+  text?: string;
+  centerText?: boolean;
+  hideLogo?: boolean;
 }
 
 export function NavBarHotel({
@@ -30,42 +30,43 @@ export function NavBarHotel({
   centerText = false,
   hideLogo = false,
 }: NavBarHotelProps) {
-  const {setIsOpenChat, isOpenChat} = useHotelTemp()
-  const router = useRouter()
-  const logoUrl = useHotelBusinessData(s => s.hotelData.logoUrl)
-
+  const { setIsOpenChat, isOpenChat } = useHotelTemp();
+  const router = useRouter();
+  const logoUrl = useHotelBusinessData((s) => s.hotelData.logoUrl);
 
   const handleBackClick = () => {
     if (onBackClick) {
-      onBackClick()
+      onBackClick();
     } else {
-      router.back()
+      router.back();
     }
-  }
+  };
 
   const onChatClick = () => {
-    setIsOpenChat(!isOpenChat)
-  }
+    setIsOpenChat(!isOpenChat);
+  };
 
   return (
     <>
       <motion.div
         className={cn(
-          "fixed w-full max-w-[30rem] !transform left-1/2 top-0 -translate-x-1/2  z-50 bg-white border-b"
+          "fixed w-full max-w-[30rem] !transform left-1/2 top-0 -translate-x-1/2  z-50 bg-white border-b",
         )}
         initial={{ y: 0 }}
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
         <div className="w-full max-w-[1280px] mx-auto px-4 h-16 flex items-center justify-between">
           {/* Left Section: Back Button and Logo */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 bg-primary rounded-lg ">
             {showBackButton && (
               <Button
-                variant="destructive"
                 size="icon"
                 onClick={handleBackClick}
-                className="mr-1 text-white hover:bg-black/5"
+                className="mr-1"
                 aria-label="Go back"
+                style={{
+                  color: "var(--s)",
+                }}
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
@@ -113,8 +114,11 @@ export function NavBarHotel({
               <Button
                 size="icon"
                 onClick={onChatClick}
+                style={{
+                  color: "var(--s)",
+                }}
                 aria-label="Chat with us"
-                className="relative text-white bg-[#000000] hover:bg-[#333333]"
+                className="relative transition-colors rounded-full bg-primary"
               >
                 <MessageCircle />
                 <motion.span
@@ -135,6 +139,5 @@ export function NavBarHotel({
       </motion.div>
       <div className="h-[4rem] " />
     </>
-
-  )
+  );
 }

@@ -1,4 +1,5 @@
 import { useBillSummary } from "@/components/hooks/usePayments";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { CiCirclePlus } from "react-icons/ci";
@@ -8,7 +9,9 @@ import { RiEdit2Fill } from "react-icons/ri";
 const PosBillBreakdown = () => {
   const { billData } = usePaymentStore();
   const { setApplyCouponz } = useCouponTemp();
-
+  const currencySymbol = useBusinessDetails(
+    (s) => s.businessDetails?.currencySymbol,
+  );
   const {
     isTipActive,
     showInput,
@@ -50,7 +53,7 @@ const PosBillBreakdown = () => {
           <BillItem
             icon={<FaMoneyBillWave />}
             label="Subtotal"
-            value={`₹${Math.max(
+            value={`${currencySymbol}${Math.max(
               0,
               Number(billData?.subTotal ?? 0) -
                 Number(billData?.claimedCoins ?? 0),
@@ -59,17 +62,17 @@ const PosBillBreakdown = () => {
           <BillItem
             icon={<FaPercent />}
             label="Service Charge"
-            value={`₹${billData?.serviceCharge || 0}`}
+            value={`${currencySymbol}${billData?.serviceCharge || 0}`}
           />
           <BillItem
             icon={<FaTags />}
             label="Discount"
-            value={`₹${billData?.discount || 0}`}
+            value={`${currencySymbol}${billData?.discount || 0}`}
           />
           <BillItem
             icon={<FaPercent />}
             label="Tax"
-            value={`₹${billData?.tax || 0}`}
+            value={`${currencySymbol}${billData?.tax || 0}`}
           />
         </div>
         <hr
@@ -96,11 +99,8 @@ const PosBillBreakdown = () => {
               </h1>
               <article className="self-end text-[#4CAF50] flex justify-between items-center gap-2 text-sm">
                 <h1>
-                  ₹ {getDisplayValue(
-                    billValue,
-                    claimedCoins,
-                    claimCouponz,
-                  )}{" "}
+                  {currencySymbol}{" "}
+                  {getDisplayValue(billValue, claimedCoins, claimCouponz)}{" "}
                 </h1>
                 <span
                   onClick={() => setApplyCouponz(true)}
@@ -133,7 +133,7 @@ const PosBillBreakdown = () => {
             </div>
             <div className="flex">
               <span className="text-sm text-black">
-                ₹ {billData?.tips || tips || 0}
+                {currencySymbol} {billData?.tips || tips || 0}
               </span>
             </div>
           </div>
@@ -175,7 +175,7 @@ const PosBillBreakdown = () => {
           <BillItem
             icon={<FaMoneyBillWave className="text-green-600" />}
             label="Total"
-            value={`₹${billData?.total || 0}`}
+            value={`${currencySymbol}${billData?.total || 0}`}
             className="px-2 text-lg !font-bold"
           />
           <hr
@@ -194,7 +194,10 @@ const PosBillBreakdown = () => {
             <h1 className="text-sm font-bold">
               To Pay <span className="text-xs">(rounded off)</span>
             </h1>
-            <span className="text-base font-bold"> ₹ {billData?.total}</span>
+            <span className="text-base font-bold">
+              {" "}
+              {currencySymbol} {billData?.total}
+            </span>
           </div>
         </div>
       </div>

@@ -1,9 +1,9 @@
 import type { ICart } from "@/components/store/useCart";
-import { MenuLayout, type CategoryType } from "@hi/db-models/src/validators";
+import type { CategoryType } from "@hi/db-models/src/validators";
 import type { ILoyaltySetting } from "../store/useLoyaltyData";
-import { Room } from "./hotelTypes";
 
 export interface IBiz {
+  currencySymbol: string;
   placeId: string;
   placeUrl: string;
   googleReviewLink: string;
@@ -504,7 +504,7 @@ export interface BusinessDetails {
   }[];
   logoUrl: string;
   specialBannerUrl: string;
-  categoryTopBannerUrl:string;
+  categoryTopBannerUrl: string;
   endBannerUrl: string;
   outLetType: string;
   isCustomTime: boolean;

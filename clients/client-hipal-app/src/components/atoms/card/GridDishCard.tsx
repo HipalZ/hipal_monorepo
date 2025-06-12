@@ -14,6 +14,7 @@ import MemoRecommendedDishes from "@/components/organisms/dishDescription/recomm
 import { useCart } from "@/components/store/useCart";
 import Image from "next/image";
 import foodImage from "@/assets/food.png";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 interface GridDishCardProps {
   dishData: DishType;
@@ -28,6 +29,7 @@ const GridDishCard = ({
   secondaryColor = "#fce7f3",
   isEdgeLayout,
 }: GridDishCardProps) => {
+  const currencySymbol = _useAllBusiness((s) => s.data.outletInfo?.currencySymbol);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { cart } = useCartStore();
   const { setSelectedDish, isSelectedDish } = useActiveClass();
@@ -107,7 +109,7 @@ const GridDishCard = ({
           </h3>
 
           <p className="mt-2 font-semibold text-black opacity-60">
-            ₹{dishData.price.toFixed(2)}
+            {currencySymbol} {dishData.price.toFixed(2)}
           </p>
 
           {dishData.description && (

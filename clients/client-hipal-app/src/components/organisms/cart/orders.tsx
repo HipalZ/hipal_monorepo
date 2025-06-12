@@ -1,4 +1,4 @@
-"use client";;
+"use client";
 import { memo, useState, useCallback, lazy } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaArrowLeft, FaRegCheckCircle } from "react-icons/fa";
@@ -32,17 +32,23 @@ const MemoOrders = () => {
   // Toggle Accordion
   const toggleAccordion = useCallback((id: string) => {
     setExpanded((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   }, []);
 
-  const handleConfirmBillPage = useCallback(() => setCartPage("confirmPayment"), [setCartPage]);
-
+  const handleConfirmBillPage = useCallback(
+    () => setCartPage("confirmPayment"),
+    [setCartPage],
+  );
 
   // Fetch Orders from POS
   const getOrderFromPos = async () => {
     const response = await apiRpc.pos.fetch_kot_by_table.$get({
-      query: { businessId: outletInfo?.businessId || "", tableName, userId: userDetails?._id },
+      query: {
+        businessId: outletInfo?.businessId || "",
+        tableName,
+        userId: userDetails?._id,
+      },
     });
     const res = await response.json();
     setCartHistory(res.data || []);
@@ -65,7 +71,7 @@ const MemoOrders = () => {
   // Loading Spinner
   if (isLoadingPos) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="h-full flex items-center justify-center">
         <LoadingSpinnerCircle />
       </div>
     );
@@ -74,7 +80,7 @@ const MemoOrders = () => {
   // Main Component
   return (
     <>
-      {cartHistory?.length ?
+      {cartHistory?.length ? (
         <div className="flex flex-col h-screen bg-gray-100">
           {/* Header */}
           <OrdersHeader />
@@ -82,10 +88,7 @@ const MemoOrders = () => {
           {/* Scrollable Content */}
           <main className="flex-1 pb-20 overflow-auto bg-gray-50/50 hide-scrollbar">
             {cartHistory.map((order) => (
-              <section
-                key={order._id}
-                className="max-w-3xl px-3 py-2 mx-auto"
-              >
+              <section key={order._id} className="px-3 py-2 max-w-3xl mx-auto">
                 <h1 className="text-[#008800] ml-3 mb-2">✔ ✔ Order Accepted</h1>
                 <article
                   className={cn(
@@ -94,15 +97,28 @@ const MemoOrders = () => {
                     "cursor-pointer select-none",
                   )}
                 >
-                  <article className="flex items-center justify-between gap-2 pl-3 pr-2 space-y-2 text-sm text-gray-500 poppins-regular">
+                  <article className="pl-3 pr-2 flex justify-between gap-2 items-center text-sm text-gray-500 space-y-2 poppins-regular">
                     <span className="inline-flex items-center">
-                      <Image src={celebration} alt="celebration" className="-ml-2" />
+                      <Image
+                        src={celebration}
+                        alt="celebration"
+                        className="-ml-2"
+                      />
                       <span>
-                        Orders by <span className="ml-1 font-semibold text-gray-900">{order.name}</span>
+                        Orders by{" "}
+                        <span className="font-semibold text-gray-900 ml-1">
+                          {order.name}
+                        </span>
                       </span>
                     </span>
-                    <div className="flex items-center" onClick={() => toggleAccordion(order._id)} onKeyDown={() => toggleAccordion(order._id)}>
-                      <span className="bg-[#4D12FF] text-white px-3 py-1 rounded-full text-sm poppins-regular">{expanded.includes(order?._id) ? 'Less' : 'More'}</span>
+                    <div
+                      className="flex items-center"
+                      onClick={() => toggleAccordion(order._id)}
+                      onKeyDown={() => toggleAccordion(order._id)}
+                    >
+                      <span className="bg-[#4D12FF] text-white px-3 py-1 rounded-full text-sm poppins-regular">
+                        {expanded.includes(order?._id) ? "Less" : "More"}
+                      </span>
                     </div>
                   </article>
                   <AnimatePresence>
@@ -110,28 +126,36 @@ const MemoOrders = () => {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       exit={{ opacity: 0, height: 0 }}
-                      className={`${expanded.includes(order._id) ? "block" : "hidden"} overflow-hidden bg-white space-y-3`}
+                      className={`${
+                        expanded.includes(order._id) ? "block" : "hidden"
+                      } overflow-hidden bg-white space-y-3`}
                     >
                       <article className="flex items-center gap-2 pl-3 pr-2">
                         <FaRegCheckCircle color="#008800" size={20} />
                         <h3 className="text-sm text-gray-500 poppins-regular">
-                          Accepted by <span className="font-semibold text-gray-900">{order?.editedBy?.name}</span>
+                          Accepted by{" "}
+                          <span className="font-semibold text-gray-900">
+                            {order?.editedBy?.name}
+                          </span>
                         </h3>
                       </article>
                       <article>
-                        {order?.transferd && <div className="space-y-2">
-                          <h3 className="bg-[#FF9C9C] text-sm text-[#8D0F16] poppins-regular p-1 pl-2">
-                            Transferred: <span className="font-semibold">{order?.fromTable} → {order?.toTable}</span>
-                          </h3>
-                        </div>}
+                        {order?.transferd && (
+                          <div className="space-y-2">
+                            <h3 className="bg-[#FF9C9C] text-sm text-[#8D0F16] poppins-regular p-1 pl-2">
+                              Transferred:{" "}
+                              <span className="font-semibold">
+                                {order?.fromTable} → {order?.toTable}
+                              </span>
+                            </h3>
+                          </div>
+                        )}
                       </article>
                     </motion.div>
                   </AnimatePresence>
                 </article>
                 {/* Order Details */}
-                <section
-                  className="overflow-hidden bg-white border border-t-0 border-gray-100 shadow-sm rounded-b-xl"
-                >
+                <section className="overflow-hidden bg-white border border-t-0 border-gray-100 rounded-b-xl shadow-sm">
                   {order.cart.map((item, index) => (
                     <motion.div
                       key={item.id}
@@ -140,7 +164,8 @@ const MemoOrders = () => {
                       transition={{ delay: index * 0.05 }}
                       className={cn(
                         "flex items-start gap-4 p-4",
-                        index !== order.cart.length - 1 && "border-b border-gray-100"
+                        index !== order.cart.length - 1 &&
+                          "border-b border-gray-100",
                       )}
                     >
                       <div className="flex-shrink-0">
@@ -161,37 +186,48 @@ const MemoOrders = () => {
                             Extras:{" "}
                             {item.extras.map((extra, index) => (
                               <span key={extra.id}>
-                                {extra.name} {extra.quantity > 1 ? `× ${extra.quantity}` : ""}
+                                {extra.name}{" "}
+                                {extra.quantity > 1
+                                  ? `× ${extra.quantity}`
+                                  : ""}
                                 {index !== item.extras.length - 1 && ", "}
                               </span>
                             ))}
                           </div>
                         )}
-                        {item?.dish?.instruction?.length > 0 &&
-                          <p className="inline-flex gap-1 mt-1 text-sm italic text-gray-500">
+                        {item?.dish?.instruction?.length > 0 && (
+                          <p className="inline-flex italic mt-1 gap-1 text-sm text-gray-500">
                             <span>⚠</span> {item?.dish?.instruction}
-                          </p>}
+                          </p>
+                        )}
                       </div>
 
-                      <div className="flex-shrink-0 text-right">
-                        <div className="px-2 py-1 text-sm font-medium text-gray-600 rounded bg-gray-50">
+                      <div className="text-right flex-shrink-0">
+                        <div className="px-2 py-1 text-sm font-medium text-gray-600 bg-gray-50 rounded">
                           × {item.quantity}
                         </div>
                         <p className="mt-1 text-base font-semibold text-gray-900">
-                          ₹{((item?.dish?.price || item?.portion?.price) * item?.quantity).toFixed(2)}
+                          {outletInfo?.currencySymbol}
+                          {(
+                            (item?.dish?.price || item?.portion?.price) *
+                            item?.quantity
+                          ).toFixed(2)}
                         </p>
                       </div>
                     </motion.div>
                   ))}
 
                   {/* Order Summary */}
-                  <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+                  <div className="p-4 bg-gray-50/50 border-t border-gray-100">
                     <div className="flex justify-between">
                       <span className="text-sm font-medium text-gray-500">
                         Total Items
                       </span>
                       <span className="text-base font-semibold text-gray-900">
-                        {order.cart.reduce((acc, item) => acc + item.quantity, 0)}
+                        {order.cart.reduce(
+                          (acc, item) => acc + item.quantity,
+                          0,
+                        )}
                       </span>
                     </div>
                   </div>
@@ -202,10 +238,10 @@ const MemoOrders = () => {
 
           {/* Bottom Bar */}
           <div className="fixed bottom-0 left-0 right-0 bg-white">
-            <div className="p-2 text-xs text-center text-red-500 bg-red-50">
+            <div className="p-2 text-center text-xs text-red-500 bg-red-50">
               Note: Some items modified will be shown in final bill.
             </div>
-            <div className="flex items-stretch h-16 gap-2 p-2">
+            <div className="flex items-stretch h-16 p-2 gap-2">
               <button
                 onClick={handleBack}
                 type="button"
@@ -227,20 +263,22 @@ const MemoOrders = () => {
             </div>
           </div>
         </div>
-        :
+      ) : (
         <>
-          <center className="flex items-center justify-center h-full">
+          <center className="h-full flex items-center justify-center">
             <figure>
               <Image src={order} alt="No orders" />
               <h1 className="text-xl font-semibold">No orders yet</h1>
             </figure>
           </center>
-          <CommonBottomButton buttons={[{ text: "Back To Order More", onClick: handleBack }]} />
+          <CommonBottomButton
+            buttons={[{ text: "Back To Order More", onClick: handleBack }]}
+          />
         </>
-      }
+      )}
     </>
   );
 };
 
 const Orders = memo(MemoOrders);
-export default Orders
+export default Orders;

@@ -3,8 +3,12 @@ import type { DishType, AddOnType } from "@hi/db-models/src/validators";
 import { useBottomPanel } from "@/components/store/useBottomPanel";
 import { useCartStore } from "@/components/store/useCartStore";
 import QuantityPickerNonOutline from "@/components/atoms/buttons/quantityPicker/quantityPickerNonOutline";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 
 function AddOnsWithDish({ dishData }: { dishData: DishType }) {
+  const currencySymbol = useBusinessDetails(
+    (s) => s.businessDetails?.currencySymbol,
+  );
   const addOns = dishData?.addOnIds || ([] as AddOnType[]);
   const { displayAlert, setDisplayAlert } = useBottomPanel();
   const { selectedChoices, setSelectedChoice } = useCartStore((s) => ({
@@ -74,8 +78,9 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
                 {addOn?.name}
               </h5>
               <span
-                className={`text-sm  font-semibold opacity-60 ${addOn?.compulsory === 0 ? "" : "!text-[#000000]"
-                  }`}
+                className={`text-sm  font-semibold opacity-60 ${
+                  addOn?.compulsory === 0 ? "" : "!text-[#000000]"
+                }`}
               >
                 Select up to {addOn?.addOnMaxQuantity} (
                 {addOn?.compulsory > 0
@@ -99,7 +104,7 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
                             {choice.name}
                           </span>
                           <span className=" text-[#000000] w-full font-semibold opacity-60">
-                            ₹ {choice.price}
+                            {currencySymbol} {choice.price}
                           </span>
                           <span className="text-xs ">
                             (Max: {choice.choiceMaxQuantity})

@@ -396,7 +396,7 @@ const hexToHSL = (H) => {
 
 // finding percentage or value in coupon
 export const formatDiscount = (value: number, discountType: string): string => {
-  return discountType === "PERCENTAGE" ? `${value}% ` : `₹${value} `;
+  return discountType === "PERCENTAGE" ? `${value}% ` : `${value} `;
 };
 
 // getting todays date in day, month, year

@@ -9,11 +9,14 @@ import { useDishesStore } from "@/components/store/useDishesStore";
 import type { IDish } from "@/components/types/businessData";
 import { isEmpty } from "lodash-es";
 import { MdMenuBook } from "react-icons/md";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 
 function MemoIndividualItemDescription() {
   const { isSelectedDish: dishData, setSelectedDish } = useActiveClass();
   const isAvailable = dishData?.availability;
-
+  const currencySymbol = useBusinessDetails(
+    (s) => s.businessDetails?.currencySymbol,
+  );
   const dishes = useDishesStore((s) => s.dishes);
 
   const processedDishes = useMemo(() => {
@@ -36,7 +39,7 @@ function MemoIndividualItemDescription() {
       )}
       {Number(dishData?.price) > 1 && (
         <b className="text-base opacity-60">
-          ₹ {Number(dishData?.price).toLocaleString("en-IN")}
+          {currencySymbol} {Number(dishData?.price).toLocaleString("en-IN")}
         </b>
       )}
       <div
@@ -75,7 +78,7 @@ function MemoIndividualItemDescription() {
                 </span>
                 {Number(portion?.price) > 1 && (
                   <span className="text-xs font-thin text-[#000000]">
-                  ₹ {getPrice(portion?.price)}
+                    {currencySymbol} {getPrice(portion?.price)}
                   </span>
                 )}
               </div>
@@ -105,7 +108,7 @@ function MemoIndividualItemDescription() {
                   {recommendation?.name}
                 </div>
                 <div className="px-2 text-sm text-[#000000]">
-                  ₹{" "}
+                  {currencySymbol}{" "}
                   {Number(getPrice(recommendation?.price || 0)).toLocaleString(
                     "en-IN",
                   )}

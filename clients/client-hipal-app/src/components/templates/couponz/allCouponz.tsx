@@ -13,6 +13,7 @@ import { apiRpc } from "@hi/common";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const EmblaCarousel2 = dynamic(
   () => import("@/components/atoms/emblaCarousel/emblaCarousel2"),
@@ -24,6 +25,9 @@ const EmblaCarousel2 = dynamic(
 const MemoAllCouponz = () => {
   const router = useRouter();
   const customLink = useParams()?.businessId as string;
+  const currencySymbol = _useAllBusiness(
+    (s) => s.data?.outletInfo?.currencySymbol,
+  );
   const { setCheckLogin } = usePaymentStore();
   const { businessDetails } = useBusinessDetails((s) => ({
     businessDetails: s.businessDetails,
@@ -124,7 +128,9 @@ const MemoAllCouponz = () => {
                       {coupon?.config?.discountType === "PERCENTAGE" &&
                       coupon?.config?.value
                         ? `${coupon?.config?.value}% OFF`
-                        : `₹${coupon?.config?.value || "0"} OFF`}
+                        : `${currencySymbol}${
+                            coupon?.config?.value || "0"
+                          } OFF`}
                     </h1>
                   </article>
 

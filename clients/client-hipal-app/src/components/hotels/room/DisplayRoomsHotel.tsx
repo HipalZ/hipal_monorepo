@@ -1,31 +1,34 @@
-"use client"
-import { useState } from "react"
-import { Star } from "lucide-react"
-import { Card, CardFooter, CardHeader } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { useShareRoom } from "@/components/utils/helpersHotel"
-import RoomTypeContent from "./BookRoomsContent"
-import RoomTypeImages from "./BookRoomImages"
+"use client";
+import { useState } from "react";
+import { Star } from "lucide-react";
+import { Card, CardFooter, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useShareRoom } from "@/components/utils/helpersHotel";
+import RoomTypeContent from "./BookRoomsContent";
+import RoomTypeImages from "./BookRoomImages";
 
 // Define the RoomType interface based on the provided data structure
 interface RoomType {
-  _id: string
-  roomType: string
-  availability: boolean
-  amenities: string[]
-  images: string[]
-  businessId: string
-  description: string
-  roomIds: string[]
-  pricePerNight: number
-  size: string
-  capacity: number
-  typeOfBed?: string
+  _id: string;
+  roomType: string;
+  availability: boolean;
+  amenities: string[];
+  images: string[];
+  businessId: string;
+  description: string;
+  roomIds: string[];
+  pricePerNight: number;
+  size: string;
+  capacity: number;
+  typeOfBed?: string;
 }
 
-export function DisplayRoomTypes({ roomTypes, imageUrl }: { roomTypes: RoomType[]; imageUrl: string }) {
-  const { shareCart } = useShareRoom()
-  const [expandedType, setExpandedType] = useState<string | null>(null)
+export function DisplayRoomTypes({
+  roomTypes,
+  imageUrl,
+}: { roomTypes: RoomType[]; imageUrl: string }) {
+  const { shareCart } = useShareRoom();
+  const [expandedType, setExpandedType] = useState<string | null>(null);
 
   const handleBookNow = (roomType: RoomType) => {
     const roomDetails = `
@@ -36,32 +39,41 @@ Size: ${roomType.size || "110"} sqft
 ${roomType.typeOfBed ? `Bed Type: ${roomType.typeOfBed}` : ""}
 ${roomType.description ? `Description: ${roomType.description}` : ""}
 Available Rooms: ${roomType.roomIds.length}
-    `.trim()
+    `.trim();
 
-    shareCart(roomDetails)
-  }
+    shareCart(roomDetails);
+  };
 
   const toggleExpand = (typeId: string) => {
-    setExpandedType(expandedType === typeId ? null : typeId)
-  }
+    setExpandedType(expandedType === typeId ? null : typeId);
+  };
 
   // Sort room types by price (lowest first)
-  const sortedRoomTypes = [...roomTypes].sort((a, b) => a.pricePerNight - b.pricePerNight)
+  const sortedRoomTypes = [...roomTypes].sort(
+    (a, b) => a.pricePerNight - b.pricePerNight,
+  );
 
   return (
     <section className="pb-[5rem]">
       {sortedRoomTypes.length === 0 ? (
         <div className="p-8 mt-4 text-center">
-          <p className="text-muted-foreground">No room types available at the moment.</p>
+          <p className="text-muted-foreground">
+            No room types available at the moment.
+          </p>
         </div>
       ) : (
         sortedRoomTypes.map((roomType) => {
-          const isExpanded = expandedType === roomType._id
+          const isExpanded = expandedType === roomType._id;
 
           return (
-            <Card key={roomType._id} className="flex flex-col h-full m-4 overflow-hidden">
+            <Card
+              key={roomType._id}
+              className="flex flex-col h-full m-4 overflow-hidden"
+            >
               <RoomTypeImages
-                images={roomType.images.length > 0 ? roomType.images : [imageUrl]}
+                images={
+                  roomType.images.length > 0 ? roomType.images : [imageUrl]
+                }
                 roomType={roomType.roomType}
                 roomCount={roomType.roomIds.length}
               />
@@ -77,7 +89,9 @@ Available Rooms: ${roomType.roomIds.length}
                   </h3>
                   <div className="flex items-center gap-1">
                     <Star className="w-5 h-5 font-bold text-yellow-400 fill-yellow-400" />
-                    <span className="text-lg font-bold text-black">{(4.5).toFixed(1)}</span>
+                    <span className="text-lg font-bold text-black">
+                      {(4.5).toFixed(1)}
+                    </span>
                   </div>
                 </div>
               </CardHeader>
@@ -92,18 +106,20 @@ Available Rooms: ${roomType.roomIds.length}
                 <Button
                   type="button"
                   onClick={() => handleBookNow(roomType)}
-                  className="w-full text-white bg-[#DC4C35]"
+                  className="w-full bg-primary text-secondary"
                   size="lg"
+                  style={{
+                    color: "var(--s)",
+                  }}
                   disabled={!roomType.availability}
                 >
                   {roomType.availability ? "Book now" : "Not Available"}
                 </Button>
               </CardFooter>
             </Card>
-          )
+          );
         })
       )}
     </section>
-  )
+  );
 }
-

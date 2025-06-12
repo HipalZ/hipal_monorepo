@@ -167,7 +167,8 @@ const MemoizedCartItem = ({ cartItem, hide }: CartItemProp) => {
               <div className="flex items-center gap-4">
                 {calculateTotalPrice() > 1 && (
                   <span className="block text-[#525252] text-sm font-semibold">
-                    ₹{calculateTotalPrice().toFixed(2)}
+                    {outletInfo?.currencySymbol}
+                    {calculateTotalPrice().toFixed(2)}
                   </span>
                 )}
                 {!cartItem?.dish?.instruction?.length &&
