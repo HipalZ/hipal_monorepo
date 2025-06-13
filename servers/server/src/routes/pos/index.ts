@@ -1060,7 +1060,6 @@ const posRouter = new Hono()
             const parentCat = await Category.findOne({
               businessId,
               posCategoryId: pId,
-              pos: true,
             });
             if (parentCat) {
               await Category.findOneAndUpdate(
@@ -1131,6 +1130,309 @@ const posRouter = new Hono()
                   choiceType: addOn.choiceType,
                   choices: addOn.choices,
                   menuId: menuDoc._id,
+                  dishIds: [],
+                },
+                { upsert: true, new: true, session },
+              );
+
+              await Dish.findByIdAndUpdate(
+                dishDoc._id,
+                { $addToSet: { addOnIds: addOnDoc._id } },
+                { session },
+              );
+              await AddOn.findByIdAndUpdate(
+                addOnDoc._id,
+                { $addToSet: { dishIds: dishDoc._id } },
+                { session },
+              );
+            }
+          }
+        }
+
+        return c.json({
+          message: "POS Config saved successfully",
+          err: false,
+          data: {},
+        });
+      });
+    },
+  )
+
+  .post(
+    "/sync_menu",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(1).max(50),
+        restId: z.string().min(1).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore  // runInTransaction handles rollback/commit + error propagation
+      return runInTransaction(async (session) => {
+        const { businessId, restId } = await c.req.json();
+
+        const business = await Business.findById(businessId).session(session);
+        if (!business) throw new Error("Business not found");
+
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+        });
+
+        const menu = await Menu.findOne({ businessId, isActive: true }).session(
+          session,
+        );
+
+        if (!menu) {
+          throw new Error("Menu not found");
+        }
+
+        if (!businessPosConfig) {
+          throw new Error("BusinessPosConfig not found");
+        }
+
+        const { data: areaTableRes } = await axios.post(
+          posApiPaths.fetchAreaAndTables,
+          {
+            "app-key": businessPosConfig.accessKey,
+            "app-secret": businessPosConfig.secretKey,
+            "access-token": businessPosConfig.authToken,
+            restID: restId,
+            tableNo: "",
+          },
+        );
+
+        if (areaTableRes.success !== "1")
+          throw new Error("POS area/table fetch failed");
+
+        const areas = (areaTableRes.areas || []).filter(
+          (a) => a.active === "1",
+        );
+        const tables = (areaTableRes.tables || []).filter(
+          (t) => t.active === "1",
+        );
+
+        let defaultZone = null;
+
+        if (areas.length === 0) {
+          defaultZone = new Zone({
+            businessId,
+            name: "POS",
+            zoneId: nanoid(5),
+            active: "1",
+            tableIds: [],
+            visibility: true,
+          });
+          await defaultZone.save({ session });
+        }
+
+        for (const area of areas) {
+          defaultZone = await Zone.findOneAndUpdate(
+            { zoneId: area.restaurantareaid },
+            {
+              businessId,
+              name: area.displayname,
+              zoneId: area.restaurantareaid,
+              active: area.active,
+              rank: area.rank,
+            },
+            { upsert: true, new: true, session },
+          );
+        }
+
+        for (const table of tables) {
+          const zoneIdToLink =
+            areas.length === 0 ? defaultZone?.zoneId : table.restaurantareaid;
+
+          const tableDoc = await Table.findOneAndUpdate(
+            { tableId: table.id },
+            {
+              name: table.table_no,
+              businessId,
+              zoneId: zoneIdToLink,
+              active: table.active,
+              rank: table.rank,
+              tableId: table.id,
+              internalZoneId: defaultZone?._id,
+            },
+            { upsert: true, new: true, session },
+          );
+
+          await BusinessPosConfig.findOneAndUpdate(
+            { businessId },
+            { $set: { defaultTableName: tableDoc.name } },
+            { session },
+          );
+
+          // make sure zone has reference
+          await Zone.findOneAndUpdate(
+            { zoneId: zoneIdToLink },
+            { $addToSet: { tableIds: tableDoc._id } },
+            { session },
+          );
+
+          // create short URL once per table
+          const longUrl = `https://hipal-test.hipalz.com/${business.customLink}/explore?tableName=${tableDoc.name}`;
+          const existingShort = await UrlModel.findOne({
+            businessId,
+            longUrl,
+          }).session(session);
+          if (!existingShort) {
+            const shortCode = nanoid(5);
+            const [{ shortUrl }] = await UrlModel.create(
+              [
+                {
+                  businessId,
+                  longUrl,
+                  shortUrl: `https://api.test.hipalz.com/surl/${shortCode}`,
+                  urlCode: shortCode,
+                },
+              ],
+              { session },
+            );
+            await Table.findOneAndUpdate(
+              { _id: tableDoc._id },
+              { tableLink: shortUrl },
+              { session },
+            );
+          }
+        }
+
+        const zoneIds = (await Zone.find({ businessId }).session(session)).map(
+          (z) => z._id.toString(),
+        );
+
+        const { data: menuRes } = await axios.post(posApiPaths.fetchMenu, {
+          "app-key": businessPosConfig.accessKey,
+          "app-secret": businessPosConfig.secretKey,
+          "access-token": businessPosConfig.authToken,
+          restID: businessPosConfig.restId,
+          tableNo: businessPosConfig.defaultTableName,
+        });
+
+        const parentCategories = transformParentCategories(
+          menuRes.group_categories || [],
+          menuRes.categories || [],
+          businessId,
+        );
+        const transformedCategories = transformData(menuRes);
+
+        for (const pc of parentCategories) {
+          await Category.findOneAndUpdate(
+            { businessId, posCategoryId: pc?._id },
+            {
+              businessId,
+              visibility: true,
+              availability: true,
+              name: pc?.name,
+              hierarchy: "PARENT",
+              posCategoryId: pc?._id,
+              parentCategoryIds: [],
+              subCategoryIds: [],
+              dishIds: [],
+              coverImage: pc?.coverImage,
+              menuId: menu._id,
+              pos: true,
+              rank: pc?.rank,
+            },
+            { upsert: true, new: true, session },
+          );
+        }
+
+        for (const cat of transformedCategories) {
+          const childCat = await Category.findOneAndUpdate(
+            { businessId, posCategoryId: cat._id },
+            {
+              pos: true,
+              name: cat.name,
+              visibility: cat.visibility,
+              availability: cat.availability,
+              rank: cat.categoryrank,
+              businessId,
+              coverImage: cat.coverImage,
+              hierarchy: cat.hierarchy,
+              menuId: menu._id,
+              parentCategoryIds: [], // we fill below
+              subCategoryIds: [],
+              dishIds: [],
+            },
+            { upsert: true, new: true, session },
+          );
+
+          for (const pId of cat.parentCategoryIds || []) {
+            const parentCat = await Category.findOne({
+              businessId,
+              posCategoryId: pId,
+            });
+            if (parentCat) {
+              await Category.findOneAndUpdate(
+                { _id: parentCat._id },
+                { $addToSet: { subCategoryIds: childCat._id } },
+                { session },
+              );
+              await Category.findOneAndUpdate(
+                { _id: childCat._id },
+                { $addToSet: { parentCategoryIds: parentCat._id } },
+                { session },
+              );
+            }
+          }
+
+          // 10‑c. upsert dishes in this category
+          for (const dish of cat.dishIds || []) {
+            const dishDoc = await Dish.findOneAndUpdate(
+              { businessId, posDishId: dish._id },
+              {
+                pos: true,
+                visibility: dish.visibility,
+                availability: dish.availability,
+                name: dish.name,
+                price: dish.price,
+                description: dish.description,
+                dishTypes: dish.dishTypes,
+                images: dish.images,
+                portions: dish.portions,
+                rank: dish.itemrank,
+                ignoreDiscount: dish.ignoreDiscount,
+                ignoreTax: dish.ignoreTax,
+                posDishId: dish._id,
+                menuId: menu._id,
+                categoryIds: [],
+                addOnIds: [],
+                recommendationIds: [],
+                businessId,
+                posTax: dish.posTax,
+              },
+              { upsert: true, new: true, session },
+            );
+
+            await Dish.findByIdAndUpdate(
+              dishDoc._id,
+              { $addToSet: { categoryIds: childCat._id } },
+              { session },
+            );
+            await Category.findByIdAndUpdate(
+              childCat._id,
+              { $addToSet: { dishIds: dishDoc._id } },
+              { session },
+            );
+
+            for (const addOn of dish.addOnIds || []) {
+              const addOnDoc = await AddOn.findOneAndUpdate(
+                { businessId, posAddOnId: addOn._id },
+                {
+                  pos: true,
+                  posAddOnId: addOn._id,
+                  businessId,
+                  name: addOn.name,
+                  visibility: addOn.visibility,
+                  availability: addOn.availability,
+                  addOnMaxQuantity: addOn.addOnMaxQuantity,
+                  compulsory: addOn.addon_item_selection_min === "1" ? 1 : 0,
+                  choiceType: addOn.choiceType,
+                  choices: addOn.choices,
+                  menuId: menu._id,
                   dishIds: [],
                 },
                 { upsert: true, new: true, session },
