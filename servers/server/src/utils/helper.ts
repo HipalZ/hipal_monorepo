@@ -40,7 +40,7 @@ const transformData = (data) => {
   };
 
   const transformedCategories = data.categories
-    .filter((category) => category.active === "1") // Only active categories
+    // Only active categories
     .map((category) => {
       const timings = safeParseTimings(category.categorytimings);
       if (timings.length > 0 && !isActiveNow(timings)) {
@@ -48,8 +48,7 @@ const transformData = (data) => {
       }
 
       const items = data.items.filter(
-        (item) =>
-          item.item_categoryid === category.categoryid && item.active === "1", // Only active items
+        (item) => item.item_categoryid === category.categoryid,
       );
 
       const transformedItems = items.map((item) => {
@@ -103,6 +102,7 @@ const transformData = (data) => {
                 return {
                   _id: addOn?.addon_group_id,
                   name: addOnGroup?.addongroup_name,
+                  active: addOnGroup.active,
                   addon_item_selection: addOn?.addon_item_selection,
                   compulsory: 0,
                   addOnMaxQuantity: Number(addOn?.addon_item_selection_max),
@@ -146,6 +146,7 @@ const transformData = (data) => {
           ignoreDiscount: item?.ignore_discounts,
           ignoreTax: item?.ignore_taxes,
           posTax: item?.item_tax,
+          active: item?.active,
         };
       });
 
@@ -189,9 +190,9 @@ const transformParentCategories = (
     }
 
     // Filter and sort parent categories by rank (ascending)
-    const sortedParents = parentCategories
-      .filter((parent) => parent.status === "1")
-      .sort((a, b) => Number(a.rank) - Number(b.rank));
+    const sortedParents = parentCategories.sort(
+      (a, b) => Number(a.rank) - Number(b.rank),
+    );
 
     return sortedParents
       .map((parent) => {
@@ -207,6 +208,7 @@ const transformParentCategories = (
           businessId: businessId,
           name: parent.name,
           visibility: true,
+          active: parent.status,
           parentCategoryIds: [],
           subCategoryIds: subCats.map((cat) => cat.categoryid),
           dishIds: [],

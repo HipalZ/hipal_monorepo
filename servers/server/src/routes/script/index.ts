@@ -1247,40 +1247,6 @@ const scriptRouter = new Hono()
           return respond(c, "Business not found", true, 404, {});
         }
 
-        // if (active === false) {
-        //   await Dish.updateMany(
-        //     {
-        //       businessId,
-        //     },
-        //     {
-        //       $set: {
-        //         pos: false,
-        //       },
-        //     },
-        //   );
-        //   await AddOn.updateMany(
-        //     {
-        //       businessId,
-        //     },
-        //     {
-        //       $set: {
-        //         pos: false,
-        //       },
-        //     },
-        //   );
-
-        //   await Category.updateMany(
-        //     {
-        //       businessId: businessId,
-        //     },
-        //     {
-        //       $set: {
-        //         pos: false,
-        //       },
-        //     },
-        //   );
-        // }
-
         return respond(c, "pos setting updated successfully", false, 200, {});
       });
     },

@@ -655,7 +655,7 @@ const tableRouter = new Hono()
             paymentMode?.name !== "complementary" &&
             paymentMode?.name !== "npc"
           ) {
-            let cashBack = await calculatedCashbackCoins(
+            const cashBack = await calculatedCashbackCoins(
               saveOrder[0].businessId.toString(),
               Number(saveOrder[0].billValue),
               Number(saveOrder[0].claimedCoins),

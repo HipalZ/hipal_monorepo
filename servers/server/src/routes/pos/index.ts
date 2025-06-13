@@ -478,103 +478,6 @@ const posRouter = new Hono()
   )
 
   .get(
-    "/dishes",
-    zValidator(
-      "query",
-      z.object({
-        businessId: z.string().min(3).max(200),
-        menuId: z.string().min(3).max(200),
-      }),
-    ),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const { businessId, menuId } = c.req.query();
-
-        const dishes = await Dish.find({
-          businessId: businessId,
-          menuId: menuId,
-          isDeleted: false,
-        });
-
-        return respond(c, "Data fetch", false, 200, dishes);
-      });
-    },
-  )
-  .get(
-    "/sub_categories",
-    zValidator(
-      "query",
-      z.object({
-        businessId: z.string().min(3).max(200),
-        menuId: z.string().min(3).max(200),
-      }),
-    ),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const { businessId, menuId } = c.req.query();
-
-        const categories = await Category.find({
-          businessId: businessId,
-          menuId: menuId,
-          isDeleted: false,
-          hierarchy: "CHILD",
-        });
-
-        return respond(c, "Data fetch", false, 200, categories);
-      });
-    },
-  )
-  .get(
-    "/main_categories",
-    zValidator(
-      "query",
-      z.object({
-        businessId: z.string().min(3).max(200),
-        menuId: z.string().min(3).max(200),
-      }),
-    ),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const { businessId, menuId } = c.req.query();
-
-        const categories = await Category.find({
-          businessId: businessId,
-          menuId: menuId,
-          isDeleted: false,
-          hierarchy: "PARENT",
-        });
-
-        return respond(c, "Data fetch", false, 200, categories);
-      });
-    },
-  )
-  .get(
-    "/addons",
-    zValidator(
-      "query",
-      z.object({
-        businessId: z.string().min(3).max(200),
-        menuId: z.string().min(3).max(200),
-      }),
-    ),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const { businessId, menuId } = c.req.query();
-        const addons = await AddOn.find({
-          businessId: businessId,
-          menuId: menuId,
-          isDeleted: false,
-        });
-
-        return respond(c, "Data fetch", false, 200, addons);
-      });
-    },
-  )
-  .get(
     "/kitchens",
     zValidator(
       "query",
@@ -617,37 +520,6 @@ const posRouter = new Hono()
         });
 
         return respond(c, "Data fetch", false, 200, taxes);
-      });
-    },
-  )
-
-  .get(
-    "/dish_config",
-    zValidator(
-      "query",
-      z.object({
-        businessId: z.string().min(3).max(200),
-      }),
-    ),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const { businessId } = c.req.query();
-
-        const dishConfig = await Pos.findOne({}, { businessId: businessId });
-
-        if (!dishConfig) {
-          return c.json(
-            {
-              message: "POS not found",
-              err: true,
-              data: { success: false },
-            },
-            404,
-          );
-        }
-
-        return respond(c, "Data fetch", false, 200, dishConfig);
       });
     },
   )
@@ -866,6 +738,7 @@ const posRouter = new Hono()
             posId,
             isDeleted: false,
             date: Date.now(),
+            active: true,
           });
           await businessPosConfig.save({ session });
         }
@@ -884,12 +757,8 @@ const posRouter = new Hono()
         if (areaTableRes.success !== "1")
           throw new Error("POS area/table fetch failed");
 
-        const areas = (areaTableRes.areas || []).filter(
-          (a) => a.active === "1",
-        );
-        const tables = (areaTableRes.tables || []).filter(
-          (t) => t.active === "1",
-        );
+        const areas = areaTableRes.areas || [];
+        const tables = areaTableRes.tables || [];
 
         let defaultZone = null;
 
@@ -912,7 +781,7 @@ const posRouter = new Hono()
               businessId,
               name: area.displayname,
               zoneId: area.restaurantareaid,
-              active: area.active,
+              active: area.active === "1",
               rank: area.rank,
             },
             { upsert: true, new: true, session },
@@ -929,7 +798,7 @@ const posRouter = new Hono()
               name: table.table_no,
               businessId,
               zoneId: zoneIdToLink,
-              active: table.active,
+              active: table.active === "1",
               rank: table.rank,
               tableId: table.id,
               internalZoneId: defaultZone?._id,
@@ -1034,6 +903,7 @@ const posRouter = new Hono()
               coverImage: pc?.coverImage,
               pos: true,
               rank: pc?.rank,
+              active: pc?.active === "1",
             },
             { upsert: true, new: true, session },
           );
@@ -1055,6 +925,7 @@ const posRouter = new Hono()
               parentCategoryIds: [], // we fill below
               subCategoryIds: [],
               dishIds: [],
+              active: cat.active === "1",
             },
             { upsert: true, new: true, session },
           );
@@ -1102,6 +973,7 @@ const posRouter = new Hono()
                 recommendationIds: [],
                 businessId,
                 posTax: dish.posTax,
+                active: dish.active === "1",
               },
               { upsert: true, new: true, session },
             );
@@ -1118,7 +990,6 @@ const posRouter = new Hono()
             );
 
             for (const addOn of dish.addOnIds || []) {
-              console.log("addOn.choices", addOn.choices);
               const addOnDoc = await AddOn.findOneAndUpdate(
                 { businessId, posAddOnId: addOn._id },
                 {
@@ -1134,6 +1005,7 @@ const posRouter = new Hono()
                   choices: addOn.choices,
                   menuId: menuDoc._id,
                   dishIds: [],
+                  active: addOn.active === "1",
                 },
                 { upsert: true, new: true, session },
               );
@@ -1155,7 +1027,10 @@ const posRouter = new Hono()
         return c.json({
           message: "POS Config saved successfully",
           err: false,
-          data: {},
+          data: {
+            transformedCategories,
+            parentCategories,
+          },
         });
       });
     },
@@ -1210,12 +1085,8 @@ const posRouter = new Hono()
         if (areaTableRes.success !== "1")
           throw new Error("POS area/table fetch failed");
 
-        const areas = (areaTableRes.areas || []).filter(
-          (a) => a.active === "1",
-        );
-        const tables = (areaTableRes.tables || []).filter(
-          (t) => t.active === "1",
-        );
+        const areas = areaTableRes.areas || [];
+        const tables = areaTableRes.tables || [];
 
         let defaultZone = null;
 
@@ -1238,7 +1109,7 @@ const posRouter = new Hono()
               businessId,
               name: area.displayname,
               zoneId: area.restaurantareaid,
-              active: area.active,
+              active: area.active === "1",
               rank: area.rank,
             },
             { upsert: true, new: true, session },
@@ -1255,18 +1126,12 @@ const posRouter = new Hono()
               name: table.table_no,
               businessId,
               zoneId: zoneIdToLink,
-              active: table.active,
+              active: table.active === "1",
               rank: table.rank,
               tableId: table.id,
               internalZoneId: defaultZone?._id,
             },
             { upsert: true, new: true, session },
-          );
-
-          await BusinessPosConfig.findOneAndUpdate(
-            { businessId },
-            { $set: { defaultTableName: tableDoc.name } },
-            { session },
           );
 
           // make sure zone has reference
@@ -1339,6 +1204,7 @@ const posRouter = new Hono()
               menuId: menu._id,
               pos: true,
               rank: pc?.rank,
+              active: pc?.active === "1",
             },
             { upsert: true, new: true, session },
           );
@@ -1360,6 +1226,7 @@ const posRouter = new Hono()
               parentCategoryIds: [], // we fill below
               subCategoryIds: [],
               dishIds: [],
+              active: cat.active === "1",
             },
             { upsert: true, new: true, session },
           );
@@ -1407,6 +1274,7 @@ const posRouter = new Hono()
                 recommendationIds: [],
                 businessId,
                 posTax: dish.posTax,
+                active: dish.active === "1",
               },
               { upsert: true, new: true, session },
             );
@@ -1438,6 +1306,7 @@ const posRouter = new Hono()
                   choices: addOn.choices,
                   menuId: menu._id,
                   dishIds: [],
+                  active: addOn.active === "1",
                 },
                 { upsert: true, new: true, session },
               );
@@ -2548,6 +2417,40 @@ const posRouter = new Hono()
         if (!updateBusinessPosConfig) {
           return respond(c, "Update failed", true, 400, {});
         }
+
+        // if (active === false) {
+        //   await Dish.updateMany(
+        //     {
+        //       businessId,
+        //     },
+        //     {
+        //       $set: {
+        //         pos: false,
+        //       },
+        //     },
+        //   );
+        //   await AddOn.updateMany(
+        //     {
+        //       businessId,
+        //     },
+        //     {
+        //       $set: {
+        //         pos: false,
+        //       },
+        //     },
+        //   );
+
+        //   await Category.updateMany(
+        //     {
+        //       businessId: businessId,
+        //     },
+        //     {
+        //       $set: {
+        //         pos: false,
+        //       },
+        //     },
+        //   );
+        // }
 
         return respond(c, "Updated successfully", false, 200, {
           _id: updateBusinessPosConfig._id,
