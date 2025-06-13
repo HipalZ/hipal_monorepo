@@ -714,6 +714,31 @@ const posRouter = new Hono()
 
         await Menu.deleteOne({ businessId }, { session });
 
+        await Dish.updateMany(
+          { businessId, active: true, isDeleted: false },
+          {
+            active: false,
+          },
+          { session },
+        );
+        await Category.updateMany(
+          { businessId, active: true, isDeleted: false },
+          {
+            active: false,
+          },
+          { session },
+        );
+
+        await AddOn.updateMany(
+          { businessId, active: true, isDeleted: false },
+          {
+            active: false,
+          },
+          { session },
+        );
+        let zoneSyncCount = 0;
+        let tableSyncCount = 0;
+
         let businessPosConfig = await BusinessPosConfig.findOne({
           businessId,
           isDeleted: false,
@@ -786,6 +811,8 @@ const posRouter = new Hono()
             },
             { upsert: true, new: true, session },
           );
+
+          zoneSyncCount += 1;
         }
 
         for (const table of tables) {
@@ -805,6 +832,8 @@ const posRouter = new Hono()
             },
             { upsert: true, new: true, session },
           );
+
+          tableSyncCount += 1;
 
           await BusinessPosConfig.findOneAndUpdate(
             { businessId },
@@ -879,6 +908,9 @@ const posRouter = new Hono()
           restID: businessPosConfig.restId,
           tableNo: businessPosConfig.defaultTableName,
         });
+        let dishSyncCount = 0;
+        let categorySyncCount = 0;
+        let addOnSyncCount = 0;
 
         const parentCategories = transformParentCategories(
           menuRes.group_categories || [],
@@ -930,6 +962,8 @@ const posRouter = new Hono()
             { upsert: true, new: true, session },
           );
 
+          categorySyncCount += 1;
+
           for (const pId of cat.parentCategoryIds || []) {
             const parentCat = await Category.findOne({
               businessId,
@@ -978,6 +1012,8 @@ const posRouter = new Hono()
               { upsert: true, new: true, session },
             );
 
+            dishSyncCount += 1;
+
             await Dish.findByIdAndUpdate(
               dishDoc._id,
               { $addToSet: { categoryIds: childCat._id } },
@@ -1010,6 +1046,8 @@ const posRouter = new Hono()
                 { upsert: true, new: true, session },
               );
 
+              addOnSyncCount += 1;
+
               await Dish.findByIdAndUpdate(
                 dishDoc._id,
                 { $addToSet: { addOnIds: addOnDoc._id } },
@@ -1028,8 +1066,11 @@ const posRouter = new Hono()
           message: "POS Config saved successfully",
           err: false,
           data: {
-            transformedCategories,
-            parentCategories,
+            dishSyncCount,
+            categorySyncCount,
+            addOnSyncCount,
+            zoneSyncCount,
+            tableSyncCount,
           },
         });
       });
@@ -1052,6 +1093,35 @@ const posRouter = new Hono()
 
         const business = await Business.findById(businessId).session(session);
         if (!business) throw new Error("Business not found");
+
+        await Dish.updateMany(
+          { businessId, active: true, isDeleted: false },
+          {
+            active: false,
+          },
+          { session },
+        );
+        await Category.updateMany(
+          { businessId, active: true, isDeleted: false },
+          {
+            active: false,
+          },
+          { session },
+        );
+
+        await AddOn.updateMany(
+          { businessId, active: true, isDeleted: false },
+          {
+            active: false,
+          },
+          { session },
+        );
+
+        let dishSyncCount = 0;
+        let categorySyncCount = 0;
+        let addOnSyncCount = 0;
+        let zoneSyncCount = 0;
+        let tableSyncCount = 0;
 
         const businessPosConfig = await BusinessPosConfig.findOne({
           businessId,
@@ -1114,9 +1184,12 @@ const posRouter = new Hono()
             },
             { upsert: true, new: true, session },
           );
+          zoneSyncCount += 1;
         }
 
         for (const table of tables) {
+          tableSyncCount += 1;
+
           const zoneIdToLink =
             areas.length === 0 ? defaultZone?.zoneId : table.restaurantareaid;
 
@@ -1211,6 +1284,7 @@ const posRouter = new Hono()
         }
 
         for (const cat of transformedCategories) {
+          categorySyncCount += 1;
           const childCat = await Category.findOneAndUpdate(
             { businessId, posCategoryId: cat._id },
             {
@@ -1252,6 +1326,7 @@ const posRouter = new Hono()
 
           // 10‑c. upsert dishes in this category
           for (const dish of cat.dishIds || []) {
+            dishSyncCount += 1;
             const dishDoc = await Dish.findOneAndUpdate(
               { businessId, posDishId: dish._id },
               {
@@ -1271,7 +1346,7 @@ const posRouter = new Hono()
                 menuId: menu._id,
                 categoryIds: [],
                 addOnIds: [],
-                recommendationIds: [],
+
                 businessId,
                 posTax: dish.posTax,
                 active: dish.active === "1",
@@ -1291,6 +1366,7 @@ const posRouter = new Hono()
             );
 
             for (const addOn of dish.addOnIds || []) {
+              addOnSyncCount += 1;
               const addOnDoc = await AddOn.findOneAndUpdate(
                 { businessId, posAddOnId: addOn._id },
                 {
@@ -1328,7 +1404,13 @@ const posRouter = new Hono()
         return c.json({
           message: "POS Config saved successfully",
           err: false,
-          data: {},
+          data: {
+            dishSyncCount,
+            categorySyncCount,
+            addOnSyncCount,
+            zoneSyncCount,
+            tableSyncCount,
+          },
         });
       });
     },
