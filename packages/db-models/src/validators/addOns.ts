@@ -65,6 +65,7 @@ export const AddOnsAttrs = z.object({
   menuId: ObjectIdSchema,
   posAddOnId: z.string().min(3).max(100).optional(),
   pos: z.boolean().default(false).optional(),
+  active: z.boolean().default(true).optional(),
 });
 
 const UpdateChoices = z.object({

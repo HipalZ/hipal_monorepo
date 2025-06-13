@@ -212,6 +212,7 @@ const posRouter = new Hono()
         const pos = await BusinessPosConfig.findOne({
           businessId,
           isDeleted: false,
+          active: true,
         });
         if (!pos) {
           return c.json(
@@ -458,6 +459,7 @@ const posRouter = new Hono()
         const posConfig = await BusinessPosConfig.findOne({
           businessId: businessId,
           isDeleted: false,
+          active: true,
         });
         if (!posConfig) {
           return c.json(
@@ -705,7 +707,7 @@ const posRouter = new Hono()
             businessId,
             name: "POS",
             zoneId: nanoid(5),
-            active: "1",
+            active: true,
             tableIds: [],
             visibility: true,
           });
@@ -843,6 +845,7 @@ const posRouter = new Hono()
         let businessPosConfig = await BusinessPosConfig.findOne({
           businessId,
           isDeleted: false,
+          active: true,
         });
 
         if (!businessPosConfig) {
@@ -895,7 +898,7 @@ const posRouter = new Hono()
             businessId,
             name: "POS",
             zoneId: nanoid(5),
-            active: "1",
+            active: true,
             tableIds: [],
             visibility: true,
           });
@@ -1178,6 +1181,7 @@ const posRouter = new Hono()
         const businessPosConfig = await BusinessPosConfig.findOne({
           businessId,
           isDeleted: false,
+          active: true,
         });
 
         const menu = await Menu.findOne({ businessId, isActive: true }).session(
@@ -1220,7 +1224,7 @@ const posRouter = new Hono()
             businessId,
             name: "POS",
             zoneId: nanoid(5),
-            active: "1",
+            active: true,
             tableIds: [],
             visibility: true,
           });
@@ -1523,6 +1527,7 @@ const posRouter = new Hono()
         const posConfigData = await BusinessPosConfig.findOne({
           businessId: businessId,
           isDeleted: false,
+          active: true,
         });
 
         if (!posConfigData) {
@@ -1943,6 +1948,7 @@ const posRouter = new Hono()
         const pos = await BusinessPosConfig.findOne({
           businessId: businessId,
           isDeleted: false,
+          active: true,
         });
 
         if (!pos) {
@@ -2522,18 +2528,20 @@ const posRouter = new Hono()
         orderVerificationType: z
           .enum(OrderVerificationTypeEnum)
           .default("CAPTAIN"),
+        active: z.boolean().default(true),
       }),
     ),
 
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { posConfigId, orderVerificationType } = await c.req.json();
+        const { posConfigId, orderVerificationType, active } =
+          await c.req.json();
 
         const updateBusinessPosConfig =
           await BusinessPosConfig.findOneAndUpdate(
             { _id: posConfigId },
-            { orderVerificationType },
+            { orderVerificationType, active },
             { session },
           );
 

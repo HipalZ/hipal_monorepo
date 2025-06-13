@@ -34,6 +34,7 @@ const zonesAndTablesRouter = new Hono()
       const isHavePos = await BusinessPosConfig.findOne({
         businessId,
         isDeleted: false,
+        active: true,
       });
 
       if (isHavePos) {
@@ -107,6 +108,7 @@ const zonesAndTablesRouter = new Hono()
       const isHavePos = await BusinessPosConfig.findOne({
         businessId,
         isDeleted: false,
+        active: true,
       });
 
       if (isHavePos) {
@@ -213,6 +215,7 @@ const zonesAndTablesRouter = new Hono()
       const isHavePos = await BusinessPosConfig.findOne({
         businessId,
         isDeleted: false,
+        active: true,
       });
 
       if (isHavePos) {
@@ -402,6 +405,7 @@ const zonesAndTablesRouter = new Hono()
       const isHavePos = await BusinessPosConfig.findOne({
         businessId,
         isDeleted: false,
+        active: true,
       });
 
       if (isHavePos) {

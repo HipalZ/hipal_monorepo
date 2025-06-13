@@ -86,6 +86,11 @@ const categorySchema = new mongoose.Schema<CategoryType>(
       required: false,
       default: false,
     },
+    active: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
   },
   {
     timestamps: true,

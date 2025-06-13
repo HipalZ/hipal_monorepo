@@ -90,6 +90,7 @@ const dishPosConfigRouter = new Hono()
       const businessPosConfig = await BusinessPosConfig.findOne({
         businessId,
         isDeleted: false,
+        active: true,
       });
       const dishPosConfig = await PosDishConfig.findOne({
         businessId: businessId,

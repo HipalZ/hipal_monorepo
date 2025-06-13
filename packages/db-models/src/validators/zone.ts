@@ -16,7 +16,7 @@ export const zoneChema = z.object({
   staffIds: z.array(ObjectIdSchema).optional(),
   zoneId: z.string().min(3).max(100).optional(),
   isDeleted: z.boolean().default(false).optional(),
-  active: z.string().min(1).max(30).optional(),
+  active: z.boolean().default(true).optional(),
   rank: z.string().min(1).max(30).optional(),
   visibility: z.boolean().default(true),
   taxes: z.number().min(1).max(100).optional(),

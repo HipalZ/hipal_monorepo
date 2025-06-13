@@ -151,6 +151,7 @@ const kotRouter = new Hono()
         const pos = await BusinessPosConfig.findOne({
           businessId: kot.businessId,
           isDeleted: false,
+          active: true,
         });
         if (!pos) {
           return c.json(

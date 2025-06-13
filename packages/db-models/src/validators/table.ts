@@ -24,7 +24,7 @@ export const tableSchema = z.object({
   tableId: z.string().min(3).max(100).optional(),
   hiCode: z.string().min(3).max(100).optional(),
 
-  active: z.string().min(1).max(30).optional(),
+  active: z.boolean().default(true).optional(),
   rank: z.string().min(1).max(30).optional(),
   status: z.enum(TableStatusEnum).default("EMPTY"),
   totalItemCount: z.number().default(0).optional(),

@@ -46,8 +46,9 @@ const tableSchema = new mongoose.Schema<TableType>(
       required: false,
     },
     active: {
-      type: String,
+      type: Boolean,
       required: false,
+      default: true,
     },
     currentTableAmount: {
       type: Number,

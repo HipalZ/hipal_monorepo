@@ -1836,6 +1836,7 @@ const paymentsRouter = new Hono()
               const isHavePos = await BusinessPosConfig.findOne({
                 businessId: order.businessId,
                 isDeleted: false,
+                active: true,
               });
 
               const tableSession = await UserSession.findOne({
@@ -3293,6 +3294,7 @@ const paymentsRouter = new Hono()
             const pos = await BusinessPosConfig.findOne({
               businessId: getOrder.businessId,
               isDeleted: false,
+              active: true,
             });
 
             if (pos) {

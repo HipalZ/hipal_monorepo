@@ -48,6 +48,7 @@ const dishesRouter = new Hono()
         const isHasPos = await BusinessPosConfig.findOne({
           businessId,
           isDeleted: false,
+          active: true,
         });
 
         if (isHasPos) {
@@ -165,6 +166,7 @@ const dishesRouter = new Hono()
         const businessPosConfig = await BusinessPosConfig.findOne({
           businessId: dish.businessId,
           isDeleted: false,
+          active: true,
         });
 
         if (businessPosConfig) {
@@ -363,6 +365,7 @@ const dishesRouter = new Hono()
         const businessPosConfig = await BusinessPosConfig.findOne({
           businessId: dish.businessId,
           isDeleted: false,
+          active: true,
         });
 
         if (businessPosConfig) {

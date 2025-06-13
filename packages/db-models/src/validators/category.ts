@@ -64,6 +64,7 @@ export const categorySchema = z.object({
   rank: z.number().min(1).max(100).optional(),
   categoryTimings: z.string().min(3).max(200).optional(),
   pos: z.boolean().default(false).optional(),
+  active: z.boolean().default(true).optional(),
 });
 
 export const updateCategorySchema = z.object({

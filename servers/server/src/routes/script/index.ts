@@ -15,7 +15,6 @@ import {
   OutLetInfo,
   Payment,
   PaymentAlert,
-  Pos,
   Reviews,
   Subscriber,
   Table,
@@ -56,42 +55,6 @@ const getCurrentDate = (): string => {
   return `${day}-${month}-${year}`; // Format: DD-MM-YYYY
 };
 const scriptRouter = new Hono()
-  .get("/pos_to_businessposconfig", async (c) => {
-    const businesses = await Business.find();
-
-    for (const business of businesses) {
-      const businessId = business._id;
-      const businessPosConfig = await BusinessPosConfig.findOne({ businessId });
-      if (businessPosConfig) {
-        const pos = await Pos.findOne({ _id: businessPosConfig.posId });
-        if (pos) {
-          await BusinessPosConfig.findOneAndUpdate(
-            { businessId },
-            {
-              $set: {
-                branchId: pos._id, /// ADD THIS LINE LATER
-                accessKey: pos.accessKey,
-                secretKey: pos.secretKey,
-                restId: pos.restId,
-                authToken: pos.authToken,
-                posName: "PETPOOJA",
-              },
-            },
-            { new: true },
-          );
-        }
-      }
-    }
-
-    return c.json(
-      {
-        message: "Script executed successfully",
-        err: false,
-        data: {},
-      },
-      200,
-    );
-  })
 
   .get("/add_service/:businessId", async (c) => {
     try {
@@ -756,6 +719,8 @@ const scriptRouter = new Hono()
 
       const isHavePos = await BusinessPosConfig.findOne({
         businessId: businessData._id,
+        isDeleted: false,
+        active: true,
       });
 
       if (!zone && !isHavePos) {
@@ -850,6 +815,8 @@ const scriptRouter = new Hono()
     for (const businessData of business) {
       const isHavePos = await BusinessPosConfig.findOne({
         businessId: businessData._id,
+        isDeleted: false,
+        active: true,
       });
 
       const parentCat = await Category.exists({
@@ -1163,6 +1130,8 @@ const scriptRouter = new Hono()
             await BusinessPosConfig.findOneAndUpdate(
               {
                 businessId,
+                active: true,
+                isDeleted: false,
               },
               {
                 $set: {
@@ -1199,6 +1168,8 @@ const scriptRouter = new Hono()
           await BusinessPosConfig.findOneAndUpdate(
             {
               businessId,
+              active: true,
+              isDeleted: false,
             },
             {
               $set: {
@@ -1261,6 +1232,8 @@ const scriptRouter = new Hono()
           await BusinessPosConfig.findOneAndUpdate(
             {
               businessId,
+              active: true,
+              isDeleted: false,
             },
             {
               $set: {

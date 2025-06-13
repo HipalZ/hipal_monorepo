@@ -287,6 +287,7 @@ const categoriesRouter = new Hono()
       const businessPosConfig = await BusinessPosConfig.findOne({
         businessId,
         isDeleted: false,
+        active: true,
       });
 
       if (menu) {

@@ -51,7 +51,7 @@ const tableRouter = new Hono()
 
       const tables = await Table.find({
         businessId,
-        active: "1",
+        active: true,
         status: "ACTIVE",
       }).populate({
         path: "userIds",
@@ -105,7 +105,7 @@ const tableRouter = new Hono()
       const tables = await Table.find({
         businessId,
         status: "EMPTY",
-        active: "1",
+        active: true,
         $or: [
           {
             internalZoneId: { $exists: true },
@@ -264,6 +264,7 @@ const tableRouter = new Hono()
         const pos = await BusinessPosConfig.findOne({
           businessId: table?.businessId,
           isDeleted: false,
+          active: true,
         });
 
         if (!pos) {
@@ -576,6 +577,7 @@ const tableRouter = new Hono()
         const pos = await BusinessPosConfig.findOne({
           businessId: table?.businessId,
           isDeleted: false,
+          active: true,
         });
         if (!pos) {
           return c.json(
@@ -877,6 +879,7 @@ const tableRouter = new Hono()
         const pos = await BusinessPosConfig.findOne({
           businessId: table?.businessId,
           isDeleted: false,
+          active: true,
         });
         if (!pos) {
           return c.json(
@@ -1140,6 +1143,7 @@ const tableRouter = new Hono()
       const posConfigData = await BusinessPosConfig.findOne({
         businessId,
         isDeleted: false,
+        active: true,
       });
 
       if (!posConfigData) {

@@ -187,6 +187,7 @@ export const dishSchema = z.object({
   ignoreTax: z.string().min(3).max(100).optional(),
   ignoreDiscount: z.string().min(3).max(100).optional(),
   pos: z.boolean().default(false).optional(),
+  active: z.boolean().default(true).optional(),
 });
 
 export const updateDishSchema = z

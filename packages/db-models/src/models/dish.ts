@@ -151,6 +151,11 @@ const dishSchema = new mongoose.Schema<DishType>(
       type: Number,
       required: false,
     },
+    active: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
   },
   {
     timestamps: true,

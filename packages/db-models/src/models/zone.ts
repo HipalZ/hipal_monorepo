@@ -29,8 +29,9 @@ const zoneSchema = new mongoose.Schema<ZoneType>(
       required: false,
     },
     active: {
-      type: String,
+      type: Boolean,
       required: false,
+      default: true,
     },
     rank: {
       type: String,
