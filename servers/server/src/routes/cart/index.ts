@@ -1,5 +1,4 @@
 import { Cart, DeviceToken } from "@hi/db-models";
-import { cartSchema } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -252,7 +251,6 @@ const cartRouter = new Hono()
   )
   .post(
     "/create",
-    zValidator("json", cartSchema),
 
     async (c) => {
       const body = await c.req.json();
