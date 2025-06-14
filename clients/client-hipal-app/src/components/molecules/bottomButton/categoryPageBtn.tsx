@@ -3,7 +3,7 @@ import Link from "next/link";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { BsHandIndexThumb } from "react-icons/bs";
 import { FiSearch } from "react-icons/fi";
-import { FC, memo, useCallback, useState } from "react";
+import { memo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PiArrowBendUpLeftBold } from "react-icons/pi";
 import { useCart } from "@/components/store/useCart";
@@ -178,26 +178,41 @@ const MemoCategoryPageBtn = ({ menuLayout }: CategoryPageBtnProps) => {
               </motion.div>
 
               {/* Search Button */}
-              <motion.div variants={itemVariants}>
+              <motion.div
+                variants={itemVariants}
+                style={{ borderColor: primaryColor }}
+                className={cn(
+                  tableName?.length === 0
+                    ? "w-full "
+                    : "gap-1 flex items-center",
+                  "border border-[#B0B0B0] p-2 rounded-md",
+                )}
+              >
                 <motion.button
                   type="button"
                   onClick={openSearchModal}
-                  style={{ borderColor: primaryColor }}
-                  className="border border-[#B0B0B0] p-2 rounded-md"
+                  className={cn(
+                    tableName?.length === 0
+                      ? "w-full flex justify-center items-center"
+                      : "flex items-center",
+                    "text-sm gap-1",
+                  )}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <FiSearch size={24} />
+                  <FiSearch size={24} />{" "}
+                  <span className="text-base">
+                    {tableName?.length === 0 ? "Search" : ""}
+                  </span>
                 </motion.button>
               </motion.div>
-
               {/* Call Captain Button */}
               <motion.div
                 variants={itemVariants}
                 style={{ borderColor: primaryColor }}
                 className={cn(
                   tableName?.length === 0
-                    ? "flex-1 w-full"
+                    ? "hidden"
                     : "gap-1 flex items-center",
                   "border border-[#B0B0B0] p-2 rounded-md",
                 )}
