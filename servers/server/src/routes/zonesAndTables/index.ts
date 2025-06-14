@@ -519,11 +519,18 @@ const zonesAndTablesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
+      const businessPosConfig = await BusinessPosConfig.exists({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
+
       const tables = await Table.find({
         businessId,
         isDeleted: false,
         visibility: true,
         active: true,
+        pos: !!businessPosConfig,
       });
       return c.json(
         {
@@ -546,10 +553,17 @@ const zonesAndTablesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
+      const businessPosConfig = await BusinessPosConfig.exists({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
+
       const zones = await Zone.find({
         businessId,
         isDeleted: false,
         active: true,
+        pos: !!businessPosConfig,
       });
       return c.json(
         {
@@ -573,6 +587,12 @@ const zonesAndTablesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
+      const businessPosConfig = await BusinessPosConfig.exists({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
+
       let totalTableAmount = 0;
 
       // Fetch zones
@@ -580,6 +600,7 @@ const zonesAndTablesRouter = new Hono()
         businessId,
         isDeleted: false,
         active: true,
+        pos: !!businessPosConfig,
       });
 
       // Construct output array

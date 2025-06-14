@@ -83,6 +83,11 @@ const businessPosConfigSchema = new mongoose.Schema<BusinessPosConfigType>(
       required: false,
       default: true,
     },
+    onlyMenu: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   {
     timestamps: true,

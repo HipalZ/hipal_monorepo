@@ -8,6 +8,7 @@ import {
   Kitchen,
   KotOrder,
   Menu,
+  OutLetInfo,
   Pos,
   PosBill,
   Table,
@@ -817,6 +818,7 @@ const posRouter = new Hono()
             active: true,
             tableIds: [],
             visibility: true,
+            pos: true,
           });
           await defaultZone.save({ session });
         }
@@ -831,6 +833,7 @@ const posRouter = new Hono()
               active: area.active === "1",
               rank: area.rank,
               tableIds: [],
+              pos: true,
             },
             { upsert: true, new: true, session },
           );
@@ -852,6 +855,7 @@ const posRouter = new Hono()
               rank: table.rank,
               tableId: table.id,
               internalZoneId: defaultZone?._id,
+              pos: true,
             },
             { upsert: true, new: true, session },
           );
@@ -2553,39 +2557,77 @@ const posRouter = new Hono()
           return respond(c, "Update failed", true, 400, {});
         }
 
-        // if (active === false) {
-        //   await Dish.updateMany(
-        //     {
-        //       businessId,
-        //     },
-        //     {
-        //       $set: {
-        //         pos: false,
-        //       },
-        //     },
-        //   );
-        //   await AddOn.updateMany(
-        //     {
-        //       businessId,
-        //     },
-        //     {
-        //       $set: {
-        //         pos: false,
-        //       },
-        //     },
-        //   );
+        if (active === false) {
+          await Dish.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: false,
+              },
+            },
+          );
+          await AddOn.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: false,
+              },
+            },
+          );
 
-        //   await Category.updateMany(
-        //     {
-        //       businessId: businessId,
-        //     },
-        //     {
-        //       $set: {
-        //         pos: false,
-        //       },
-        //     },
-        //   );
-        // }
+          await Category.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: false,
+              },
+            },
+          );
+
+          await Table.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: false,
+              },
+            },
+            { session },
+          );
+
+          await Zone.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: false,
+              },
+            },
+            { session },
+          );
+
+          await OutLetInfo.updateOne(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                isPosEnabled: false,
+                placeOrderButton: false,
+                isPosSynced: false,
+                posProgress: 0,
+              },
+            },
+          );
+        }
 
         return respond(c, "Updated successfully", false, 200, {
           _id: updateBusinessPosConfig._id,

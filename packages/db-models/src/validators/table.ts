@@ -37,6 +37,7 @@ export const tableSchema = z.object({
   editedBy: ObjectIdSchema.optional(),
   internalZoneId: ObjectIdSchema.optional(),
   tableLink: z.string().min(3).max(60).optional(),
+  pos: z.boolean().default(false).optional(),
 });
 
 export const createTableSchema = z.object({

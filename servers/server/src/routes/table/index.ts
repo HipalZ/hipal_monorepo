@@ -49,10 +49,17 @@ const tableRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
+      const businessPosConfig = await BusinessPosConfig.exists({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
+
       const tables = await Table.find({
         businessId,
         active: true,
         status: "ACTIVE",
+        pos: !!businessPosConfig,
       }).populate({
         path: "userIds",
         select: "name phone",
@@ -102,10 +109,17 @@ const tableRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
+      const businessPosConfig = await BusinessPosConfig.exists({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
+
       const tables = await Table.find({
         businessId,
         status: "EMPTY",
         active: true,
+        pos: !!businessPosConfig,
         $or: [
           {
             internalZoneId: { $exists: true },
@@ -1450,9 +1464,17 @@ const tableRouter = new Hono()
     async (c) => {
       const { tableName, businessId } = c.req.param();
 
+      const businessPosConfig = await BusinessPosConfig.exists({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
+
       const tableData = await Table.findOne({
         businessId,
         name: tableName,
+        active: true,
+        pos: !!businessPosConfig,
       });
 
       if (!tableData) {

@@ -110,6 +110,11 @@ const tableSchema = new mongoose.Schema<TableType>(
       type: String,
       required: false,
     },
+    pos: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   {
     timestamps: true,

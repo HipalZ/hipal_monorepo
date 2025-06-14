@@ -56,6 +56,11 @@ const zoneSchema = new mongoose.Schema<ZoneType>(
       required: false,
       ref: "table",
     },
+    pos: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   {
     timestamps: true,

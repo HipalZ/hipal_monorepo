@@ -22,6 +22,7 @@ export const zoneChema = z.object({
   taxes: z.number().min(1).max(100).optional(),
   couponIds: z.array(ObjectIdSchema).optional(),
   tableIds: z.array(ObjectIdSchema).optional(),
+  pos: z.boolean().default(false).optional(),
 });
 
 export const updateZoneChema = z.object({
@@ -40,6 +41,7 @@ export const updateZoneChema = z.object({
   taxes: z.number().min(1).max(100).optional(),
   couponIds: z.array(ObjectIdSchema).optional(),
   zoneId: z.string().min(3).max(100).optional(),
+  pos: z.boolean().default(false).optional(),
 });
 
 export type ZoneType = z.infer<typeof zoneChema>;
