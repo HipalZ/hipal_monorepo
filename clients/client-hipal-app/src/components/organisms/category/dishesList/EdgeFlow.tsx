@@ -32,6 +32,7 @@ const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
     alcohol: ["ALCOHOL"],
     nonalcohol: ["NON_ALCOHOL"],
     non_alcohol: ["NON_ALCOHOL"],
+    egg: ["EGG"],
   };
 
   if (isActiveDishType.toLowerCase() === "all") {
@@ -230,7 +231,6 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
             (dish: DishType) => dish.visibility,
           );
           const dishesToRender = filterDishes(visibleDishes, isActiveDishType);
-
           if (dishesToRender.length === 0) return null;
 
           return (
