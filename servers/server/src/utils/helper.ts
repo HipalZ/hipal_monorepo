@@ -227,9 +227,7 @@ const transformData = (data) => {
         coverImage: "",
         dishIds: transformedItems,
         categorytimings: category.categorytimings,
-        timings: formatCategoryTimings(
-          `[{"schedule_name":"TEST","schedule_day":"All","schedule_time_slots":[{"start_time":"00:00","end_time":"08:30"}]}]`,
-        ),
+        timings: formatCategoryTimings(category.categorytimings ?? ""),
       };
     })
     .filter((category) => category !== null);

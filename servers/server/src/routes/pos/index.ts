@@ -830,6 +830,7 @@ const posRouter = new Hono()
               zoneId: area.restaurantareaid,
               active: area.active === "1",
               rank: area.rank,
+              tableIds: [],
             },
             { upsert: true, new: true, session },
           );
@@ -872,7 +873,7 @@ const posRouter = new Hono()
 
           // create short URL once per table
           const longUrl = `https://hipal-test.hipalz.com/${business.customLink}/explore?tableName=${tableDoc.name}`;
-          const existingShort = await UrlModel.findOne({
+          const existingShort = await UrlModel.exists({
             businessId,
             longUrl,
           }).session(session);
@@ -1225,6 +1226,7 @@ const posRouter = new Hono()
               zoneId: area.restaurantareaid,
               active: area.active === "1",
               rank: area.rank,
+              tableIds: [],
             },
             { upsert: true, new: true, session },
           );
@@ -1260,7 +1262,7 @@ const posRouter = new Hono()
 
           // create short URL once per table
           const longUrl = `https://hipal-test.hipalz.com/${business.customLink}/explore?tableName=${tableDoc.name}`;
-          const existingShort = await UrlModel.findOne({
+          const existingShort = await UrlModel.exists({
             businessId,
             longUrl,
           }).session(session);
@@ -1287,6 +1289,12 @@ const posRouter = new Hono()
 
         const zoneIds = (await Zone.find({ businessId }).session(session)).map(
           (z) => z._id.toString(),
+        );
+
+        await Menu.findOneAndUpdate(
+          { businessId, isActive: true },
+          { zoneIds },
+          { session },
         );
 
         const { data: menuRes } = await axios.post(posApiPaths.fetchMenu, {
@@ -1328,7 +1336,6 @@ const posRouter = new Hono()
         }
 
         for (const cat of transformedCategories) {
-          console.log("cat", cat.timings);
           categorySyncCount += 1;
           const childCat = await Category.findOneAndUpdate(
             { businessId, posCategoryId: cat._id },

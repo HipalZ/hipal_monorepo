@@ -4,7 +4,6 @@ import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
-import { formatCategoryTimings } from "../../utils/helper";
 import { respond } from "../../utils/response";
 //
 //dates
@@ -88,29 +87,8 @@ const kitchenRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const { businessId } = c.req.query();
-        const raw1 = `[{"schedule_name":"test","schedule_day":"Sun,Mon,Tue,Wed","schedule_time_slots":[{"start_time":"00:00","end_time":"24:00"}]}]`;
-        console.log(formatCategoryTimings(raw1));
-        /* → [
-  { day:0, start:0,   end:1440 }, // Sun
-  { day:1, start:0,   end:1440 }, // Mon
-  { day:2, start:0,   end:1440 }, // Tue
-  { day:3, start:0,   end:1440 }  // Wed
-] */
 
         // Scenario-1: “All” days
-        const raw2 = `[{"schedule_name":"TEST","schedule_day":"All","schedule_time_slots":[{"start_time":"00:00","end_time":"08:30"}]}]`;
-        console.log(formatCategoryTimings(raw2));
-        /* → [ { day:-1, start:0, end:510 } ] */
-
-        // Scenario-2: single day
-        const raw3 = [
-          {
-            schedule_name: "TEST",
-            schedule_day: "Mon",
-            schedule_time_slots: [{ start_time: "00:00", end_time: "08:30" }],
-          },
-        ];
-        console.log(formatCategoryTimings(raw3));
 
         const kitchens = await Kitchen.find({ businessId })
           .session(session)
