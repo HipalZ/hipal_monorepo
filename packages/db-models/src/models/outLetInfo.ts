@@ -295,6 +295,14 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: Boolean,
     default: false,
   },
+  isPosSynced: {
+    type: Boolean,
+    default: false,
+  },
+  posProgress: {
+    type: Number,
+    default: 0,
+  },
 });
 
 //middlewares

@@ -1,52 +1,112 @@
-const transformData = (data) => {
-  const nowIST = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
-  );
-  const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const today = dayMap[nowIST.getDay()];
+const nowIST = new Date(
+  new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
+);
+const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const today = dayMap[nowIST.getDay()];
 
-  const safeParseTimings = (raw) => {
-    if (!raw) return [];
+export const safeParseTimings = (raw) => {
+  if (!raw) return [];
+  try {
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    console.warn("Failed to parse timings:", e);
+    return [];
+  }
+};
+
+export const isActiveNow = (timings) => {
+  for (const schedule of timings) {
+    if (schedule.schedule_day !== "All" && schedule.schedule_day !== today)
+      continue;
+    for (const slot of schedule.schedule_time_slots || []) {
+      const [sh, sm] = slot.start_time.split(":").map(Number);
+      const [eh, em] = slot.end_time.split(":").map(Number);
+
+      const start = new Date(nowIST);
+      start.setHours(sh, sm, 0, 0);
+      const end = new Date(nowIST);
+      end.setHours(eh, em, 0, 0);
+
+      if (end <= start) {
+        if (nowIST >= start || nowIST <= end) return true;
+      } else {
+        if (nowIST >= start && nowIST <= end) return true;
+      }
+    }
+  }
+  return false;
+};
+
+function formatCategoryTimings(raw) {
+  // our "always closed" default
+  const defaultSlot = [{ day: -1, start: 0, end: 1440 }];
+
+  // 1) empty or missing → default
+  if (!raw || (typeof raw === "string" && raw.trim() === "")) {
+    return defaultSlot;
+  }
+
+  // 2) parse JSON if needed
+  let schedules;
+  if (typeof raw === "string") {
     try {
-      const arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : [];
-    } catch (e) {
-      console.warn("Failed to parse timings:", e);
-      return [];
+      schedules = JSON.parse(raw);
+      if (!Array.isArray(schedules)) return defaultSlot;
+    } catch {
+      return defaultSlot;
     }
+  } else if (Array.isArray(raw)) {
+    schedules = raw;
+  } else {
+    return defaultSlot;
+  }
+
+  // 3) map day names to indices
+  const dayIndex = {
+    All: -1,
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
   };
 
-  const isActiveNow = (timings) => {
-    for (const schedule of timings) {
-      if (schedule.schedule_day !== "All" && schedule.schedule_day !== today)
-        continue;
-      for (const slot of schedule.schedule_time_slots || []) {
-        const [sh, sm] = slot.start_time.split(":").map(Number);
-        const [eh, em] = slot.end_time.split(":").map(Number);
+  const result = [];
 
-        const start = new Date(nowIST);
-        start.setHours(sh, sm, 0, 0);
-        const end = new Date(nowIST);
-        end.setHours(eh, em, 0, 0);
-
-        if (end <= start) {
-          if (nowIST >= start || nowIST <= end) return true;
-        } else {
-          if (nowIST >= start && nowIST <= end) return true;
-        }
-      }
+  // 4) flatten
+  schedules.forEach(({ schedule_day, schedule_time_slots }) => {
+    // only single‐day or "All" in your use-case
+    let days = [];
+    if (schedule_day === "All") {
+      days = [-1];
+    } else {
+      const idx = dayIndex[schedule_day.trim()];
+      if (idx != null) days = [idx];
     }
-    return false;
-  };
 
+    (schedule_time_slots || []).forEach(({ start_time, end_time }) => {
+      const [sh, sm] = start_time.split(":").map(Number);
+      const [eh, em] = end_time.split(":").map(Number);
+      const start = sh * 60 + sm;
+      const end = eh * 60 + em;
+
+      days.forEach((day) => {
+        result.push({ day, start, end });
+      });
+    });
+  });
+
+  // 5) if nothing produced, use default
+  return result.length ? result : defaultSlot;
+}
+
+const transformData = (data) => {
   const transformedCategories = data.categories
-    // Only active categories
-    .map((category) => {
-      const timings = safeParseTimings(category.categorytimings);
-      if (timings.length > 0 && !isActiveNow(timings)) {
-        return null;
-      }
 
+    .map((category) => {
       const items = data.items.filter(
         (item) => item.item_categoryid === category.categoryid,
       );
@@ -167,6 +227,9 @@ const transformData = (data) => {
         coverImage: "",
         dishIds: transformedItems,
         categorytimings: category.categorytimings,
+        timings: formatCategoryTimings(
+          `[{"schedule_name":"TEST","schedule_day":"All","schedule_time_slots":[{"start_time":"00:00","end_time":"08:30"}]}]`,
+        ),
       };
     })
     .filter((category) => category !== null);
@@ -405,9 +468,16 @@ function transformItemsToSimpleArray(itemsData) {
     });
 }
 
+export const currentDay = nowIST.getDay(); // 0–6
+export const currentMinute = nowIST.getHours() * 60 + nowIST.getMinutes();
+
+// ——— Example usage ———
+// → [ { day: -1, start: 0, end: 510 } ]
+
 export {
   calculateCartBill,
   convertToPetpoojaCart,
+  formatCategoryTimings,
   transformData,
   transformItemsToSimpleArray,
   transformParentCategories,

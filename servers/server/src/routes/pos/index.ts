@@ -736,6 +736,28 @@ const posRouter = new Hono()
           },
           { session },
         );
+
+        await Zone.updateMany(
+          {
+            businessId,
+            active: true,
+          },
+          {
+            active: false,
+          },
+          { session },
+        );
+
+        await Table.updateMany(
+          {
+            businessId,
+            active: true,
+          },
+          {
+            active: false,
+          },
+          { session },
+        );
         let zoneSyncCount = 0;
         let tableSyncCount = 0;
 
@@ -958,6 +980,7 @@ const posRouter = new Hono()
               subCategoryIds: [],
               dishIds: [],
               active: cat.active === "1",
+              timings: cat.timings,
             },
             { upsert: true, new: true, session },
           );
@@ -1111,6 +1134,27 @@ const posRouter = new Hono()
 
         await AddOn.updateMany(
           { businessId, active: true, isDeleted: false },
+          {
+            active: false,
+          },
+          { session },
+        );
+        await Zone.updateMany(
+          {
+            businessId,
+            active: true,
+          },
+          {
+            active: false,
+          },
+          { session },
+        );
+
+        await Table.updateMany(
+          {
+            businessId,
+            active: true,
+          },
           {
             active: false,
           },
@@ -1284,6 +1328,7 @@ const posRouter = new Hono()
         }
 
         for (const cat of transformedCategories) {
+          console.log("cat", cat.timings);
           categorySyncCount += 1;
           const childCat = await Category.findOneAndUpdate(
             { businessId, posCategoryId: cat._id },
@@ -1301,6 +1346,7 @@ const posRouter = new Hono()
               subCategoryIds: [],
               dishIds: [],
               active: cat.active === "1",
+              timings: cat.timings,
             },
             { upsert: true, new: true, session },
           );

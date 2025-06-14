@@ -23,6 +23,7 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
+import { currentDay, currentMinute } from "../../utils/helper";
 import { respond } from "../../utils/response";
 
 //updateCategories
@@ -350,11 +351,21 @@ const categoriesRouter = new Hono()
           pos: !!businessPosConfig,
           active: true,
           ...(menuId ? { menuId: menuId } : {}),
+          timings: {
+            $elemMatch: {
+              day: { $in: [currentDay, -1] },
+              start: { $lte: currentMinute },
+              end: { $gt: currentMinute },
+            },
+          },
         };
 
         const existingCategories = await Category.find(query).select(
           "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage",
         );
+
+        // const existingCategoriesWithTiming =
+        //   buildActiveCategories(existingCategories);
 
         return respond(
           c,
@@ -483,6 +494,13 @@ const categoriesRouter = new Hono()
           menuId: menuId || menu?._id,
           pos: !!businessPosConfig,
           active: true,
+          timings: {
+            $elemMatch: {
+              day: { $in: [currentDay, -1] },
+              start: { $lte: currentMinute },
+              end: { $gt: currentMinute },
+            },
+          },
         };
 
         const existingCategories = await Category.find(query).populate({
@@ -511,6 +529,13 @@ const categoriesRouter = new Hono()
           menuId: menuId,
           pos: !!businessPosConfig,
           active: true,
+          timings: {
+            $elemMatch: {
+              day: { $in: [currentDay, -1] },
+              start: { $lte: currentMinute },
+              end: { $gt: currentMinute },
+            },
+          },
         };
 
         const existingCategories = await Category.find(query)
@@ -534,6 +559,13 @@ const categoriesRouter = new Hono()
         pos: !!businessPosConfig,
         active: true,
         ...(menuId ? { menuId: menuId } : {}),
+        timings: {
+          $elemMatch: {
+            day: { $in: [currentDay, -1] },
+            start: { $lte: currentMinute },
+            end: { $gt: currentMinute },
+          },
+        },
       };
 
       const existingCategories = await Category.find(query);
@@ -560,6 +592,13 @@ const categoriesRouter = new Hono()
         hierarchy: "CHILD",
         active: true,
         ...(menuId ? { menuId: menuId } : {}),
+        timings: {
+          $elemMatch: {
+            day: { $in: [currentDay, -1] },
+            start: { $lte: currentMinute },
+            end: { $gt: currentMinute },
+          },
+        },
       };
 
       const existingCategories = await Category.find(query).populate("dishIds");
@@ -626,6 +665,13 @@ const categoriesRouter = new Hono()
         isDeleted: false,
         dishIds: { $ne: [] },
         active: true,
+        timings: {
+          $elemMatch: {
+            day: { $in: [currentDay, -1] },
+            start: { $lte: currentMinute },
+            end: { $gt: currentMinute },
+          },
+        },
       }).select("_id name coverImage");
 
       return respond(c, "fetched successfully", false, 200, existingCategories);
