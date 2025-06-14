@@ -28,11 +28,22 @@ const MemoLiveCart = () => {
   };
 
   const cartVariants = {
-    initial: { width: "100%", borderRadius: "0px", bottom: "4.5rem" },
+    initial: {
+      width: "100%",
+      borderRadius: "0px",
+      bottom: outletInfo?.outLetType === "OTHER" ? "3.5rem" : "4.5rem",
+    },
     animate: {
       width: isSearchActive ? "20rem" : "100%",
       borderRadius: isSearchActive ? "9999px" : "0px",
-      bottom: isSearchActive ? "4.5rem" : "4.5rem",
+      bottom:
+        outletInfo?.outLetType === "OTHER"
+          ? isSearchActive
+            ? "4.5rem"
+            : "4.5rem"
+          : isSearchActive
+            ? "3.5rem"
+            : "3.5rem",
     },
   };
 

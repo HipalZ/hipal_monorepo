@@ -71,6 +71,7 @@ function filterDishes(visibleDishes: DishType[], activeType: string) {
     alcohol: ["ALCOHOL"],
     nonalcohol: ["NON_ALCOHOL"],
     non_alcohol: ["NON_ALCOHOL"],
+    EGG: ["EGG"],
   };
 
   if (activeType.toLowerCase() === "all") {
@@ -191,7 +192,13 @@ function MemoSubTypes({
   return (
     <section className="h-[calc(100dvh)] flex flex-col bg-white">
       {/* 1) Splide top bar for categories */}
-      <div className="sticky top-[3rem] z-50 bg-white border-b">
+      <div
+        className={cn(
+          outletInfo?.outLetType === "OTHER"
+            ? "top-[3.5rem]"
+            : "sticky z-50 top-[4.5rem] bg-white border-b",
+        )}
+      >
         <Splide
           ref={splideRef}
           options={{
