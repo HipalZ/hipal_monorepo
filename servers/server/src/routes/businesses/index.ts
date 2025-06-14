@@ -669,6 +669,26 @@ const businessesRouter = new Hono()
     const getBusiness = await Business.findOne({
       customLink: customLink,
     }).select("_id");
+
+    const isKitchenNotLinkToDishes = await Dish.exists({
+      kitchenId: { $exists: false },
+      isDeleted: false,
+      active: true,
+      businessId: getBusiness?._id,
+    });
+
+    await OutLetInfo.findOneAndUpdate(
+      {
+        businessId: getBusiness?._id,
+      },
+      {
+        $set: {
+          posProgress: isKitchenNotLinkToDishes ? 0 : 1,
+        },
+      },
+      { new: true },
+    );
+
     const outLetInfo = await OutLetInfo.findOne({
       businessId: getBusiness?._id,
     })
