@@ -1,13 +1,12 @@
 "use client";
-
 import { motion } from "framer-motion";
-import { MessageCircle, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useHotelBusinessData } from "../store/useHotelBusinessData";
 import { useRouter } from "next/navigation";
-import { useHotelTemp } from "../store/useHotelTemp";
+import ChatButton from "./chatButton";
 
 interface NavBarHotelProps {
   businessName?: string;
@@ -25,12 +24,10 @@ export function NavBarHotel({
   // onChatClick,
   onBackClick,
   showBackButton = false,
-  hideChat = false,
   text,
   centerText = false,
   hideLogo = false,
 }: NavBarHotelProps) {
-  const { setIsOpenChat, isOpenChat } = useHotelTemp();
   const router = useRouter();
   const logoUrl = useHotelBusinessData((s) => s.hotelData.logoUrl);
 
@@ -40,10 +37,6 @@ export function NavBarHotel({
     } else {
       router.back();
     }
-  };
-
-  const onChatClick = () => {
-    setIsOpenChat(!isOpenChat);
   };
 
   return (
@@ -57,7 +50,7 @@ export function NavBarHotel({
       >
         <div className="w-full max-w-[1280px] mx-auto px-4 h-16 flex items-center justify-between">
           {/* Left Section: Back Button and Logo */}
-          <div className="flex items-center gap-3 bg-primary rounded-lg ">
+          <div className="flex items-center gap-3 rounded-lg ">
             {showBackButton && (
               <Button
                 size="icon"
@@ -86,7 +79,7 @@ export function NavBarHotel({
 
             {!logoUrl && businessName && !centerText && (
               <div className="flex items-center justify-center w-10 h-10 rounded-full">
-                <span className="font-semibold text-primary font-playfair">
+                <span className="font-semibold text-primary poppins-regular">
                   {businessName.charAt(0) || "B"}
                 </span>
               </div>
@@ -96,7 +89,7 @@ export function NavBarHotel({
           {/* Center Text */}
           {text && centerText && (
             <div className="absolute transform -translate-x-1/2 left-1/2">
-              <h1 className="text-lg font-bold text-h-primary font-playfair">
+              <h1 className="text-lg font-bold text-h-primary poppins-regular">
                 {text}
               </h1>
             </div>
@@ -105,35 +98,11 @@ export function NavBarHotel({
           {/* Right Section: Text (if not centered) and Chat Button */}
           <div className="flex items-center gap-4">
             {text && !centerText && (
-              <h1 className="text-lg font-medium text-h-primary font-playfair">
+              <h1 className="text-lg font-medium text-h-primary poppins-regular">
                 {text}
               </h1>
             )}
-
-            {!hideChat && (
-              <Button
-                size="icon"
-                onClick={onChatClick}
-                style={{
-                  color: "var(--s)",
-                }}
-                aria-label="Chat with us"
-                className="relative transition-colors rounded-full bg-primary"
-              >
-                <MessageCircle />
-                <motion.span
-                  className="absolute top-0 right-0 w-2 h-2 rounded-full bg-primary"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 300,
-                    damping: 20,
-                    delay: 0.2,
-                  }}
-                />
-              </Button>
-            )}
+            <ChatButton />
           </div>
         </div>
       </motion.div>

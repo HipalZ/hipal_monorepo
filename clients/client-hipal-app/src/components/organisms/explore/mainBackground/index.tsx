@@ -1,4 +1,4 @@
-"use client";;
+"use client";
 import { memo, useCallback, useEffect, useMemo } from "react";
 import img from "@/assets/img/cut.png";
 import type { IBusinessData } from "@/components/types/businessData";
@@ -55,29 +55,24 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
   }, [data]);
 
   // Check if URL is a video
-  const isVideo = useCallback(
-    (url: string) => {
-      const videoExtensions = ["mp4", "webm", "ogg", "mov", "avi", "flv", "wmv"];
-      return videoExtensions.includes(url.split(".").pop()?.toLowerCase() || "");
-    },
-    []
-  );
+  const isVideo = useCallback((url: string) => {
+    const videoExtensions = ["mp4", "webm", "ogg", "mov", "avi", "flv", "wmv"];
+    return videoExtensions.includes(url.split(".").pop()?.toLowerCase() || "");
+  }, []);
 
   // Memoize background styles
   const backgroundStyle = useMemo(
     () => ({
-      background: "linear-gradient(180deg, rgba(0, 0, 0, 0) 52.05%, rgba(0, 0, 0, 0.82) 90.7%)",
+      background:
+        "linear-gradient(180deg, rgba(0, 0, 0, 0) 52.05%, rgba(0, 0, 0, 0.82) 90.7%)",
     }),
-    []
+    [],
   );
 
   return (
     <section className="p-2 bg-base-100">
       <article className="relative w-full max-w-[26rem] mx-auto overflow-hidden aspect-square rounded-[2.5rem]">
-        <section
-          style={backgroundStyle}
-          className="absolute inset-0 z-10"
-        />
+        <section style={backgroundStyle} className="absolute inset-0 z-10" />
         <div className="absolute top-0 z-0 w-full bg-gradient">
           {isVideo(data.business?.specialBannerUrl || "") ? (
             <video
@@ -107,7 +102,6 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
             height={64}
             className="object-cover rounded-full aspect-square"
             hide
-
           />
         </div>
 

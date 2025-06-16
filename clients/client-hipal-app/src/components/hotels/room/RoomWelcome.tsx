@@ -1,8 +1,6 @@
 "use client";
 import type React from "react";
 import { useState, useEffect } from "react";
-import Lottie from "lottie-react";
-import Welcome from "@/assets/hotel/HotelWelcome.json";
 import { useCheckRoomStatus } from "@/components/hooks/useAuthForHotel";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import CommonBottomButton from "@/components/atoms/bottomButton";
@@ -14,7 +12,7 @@ import { toast } from "react-toastify";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import CheckInPopup from "./CheckInPopup";
 import AutoLogin from "./AutoLogin";
-import type { IThemes } from "@/components/types/businessData";
+import { useLogin } from "@/components/store/useLogin";
 
 export interface HotelWelcomeCardProps {
   hotelName: string;
@@ -39,6 +37,7 @@ export default function HotelWelcomeCard({
   const [verificationCode, setVerificationCode] = useState("");
   const [codeError, setCodeError] = useState("");
   const accessToken = useUserToken.getState().accessToken;
+  const guestName = useLogin((s) => s.userDetails?.name);
   const { checkRoom } = useCheckRoomStatus(
     businessId || "",
     room || "",
@@ -106,27 +105,15 @@ export default function HotelWelcomeCard({
   return (
     <>
       <div
-        className={`relative w-full max-w-[30rem] h-[180px] bg-h-base-100 px-4 rounded-lg overflow-hidden flex ${
+        className={`relative w-full p-4 bg-white mt-2 overflow-hidden ${
           className || ""
         }`}
       >
-        <div className="w-[30%] h-full flex items-center justify-center">
-          <Lottie
-            animationData={Welcome}
-            loop={true}
-            style={{ width: "100%", height: "100%" }}
-          />
-        </div>
-
-        <div className="w-[70%] h-full flex flex-col justify-center p-4 text-h-primary">
-          <h2 className="text-xl font-semibold text-center">Welcome to</h2>
-          <div className="mb-2 text-2xl font-bold text-center bungee-inline">
-            {hotelName}
-          </div>
-          <p className="pl-4 text-sm font-semibold text-center opacity-60">
-            Please feel free to reach out for anything. We value your feedback.
-          </p>
-        </div>
+        <center>
+          <h2 className="text-xl text-h-primary text-center inter">
+            Welcome, {guestName}!
+          </h2>
+        </center>
       </div>
       {accessToken === "" && userID && <AutoLogin userID={userID} />}
 
