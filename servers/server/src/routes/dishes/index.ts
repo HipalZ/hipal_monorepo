@@ -282,14 +282,6 @@ const dishesRouter = new Hono()
           );
         }
 
-        if (removeKitchenId) {
-          await Kitchen.findByIdAndUpdate(
-            { _id: removeKitchenId },
-            { $pull: { dishIds: updatedDish._id } },
-            { session },
-          );
-        }
-
         return respond(c, "Updated successfully", false, 200, {});
       });
     },
