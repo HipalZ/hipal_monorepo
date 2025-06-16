@@ -167,13 +167,13 @@ const kitchenRouter = new Hono()
           404,
         );
       }
-      await Dish.updateMany(
-        { kitchenId, businessId: kitchen.businessId },
-        {
-          kitchenId: null,
-        },
-        { session },
-      );
+
+      if (removeDishIds.length) {
+        await Dish.updateMany(
+          { _id: { $in: removeDishIds } },
+          { $pull: { kitchenId: kitchen._id } },
+        );
+      }
 
       await Dish.updateMany(
         { _id: { $in: dishIds } },
