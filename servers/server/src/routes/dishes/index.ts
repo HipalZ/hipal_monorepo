@@ -186,6 +186,16 @@ const dishesRouter = new Hono()
         );
         if (!updatedDish) return respond(c, "Error in updating", true, 400, {});
 
+        if (updatedDish.kitchenId) {
+          await Kitchen.findByIdAndUpdate(
+            updatedDish.kitchenId,
+            {
+              $pull: { dishIds: id },
+            },
+            { session },
+          );
+        }
+
         if (removeCategoryIds.length) {
           await Category.updateMany(
             { _id: { $in: removeCategoryIds } },
