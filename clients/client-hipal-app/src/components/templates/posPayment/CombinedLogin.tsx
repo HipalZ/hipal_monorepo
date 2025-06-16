@@ -21,6 +21,7 @@ import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { useUserToken } from "@hi/common/src/useUserToken";
+import { sanitizePhoneInput } from "@hi/common/src/helper";
 import { useErrorHandling, useGoNext } from "@/utils/helper";
 import { cn, triggerConfettiBlast } from "@/components/utils/helpers";
 import { useCart } from "@/components/store/useCart";
@@ -372,8 +373,15 @@ const MemoCombinedLogin = () => {
               <input
                 type="text"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                maxLength={10}
+                onChange={(e) =>
+                  setPhone(
+                    sanitizePhoneInput(
+                      e.target.value,
+                      phone,
+                      e.nativeEvent as InputEvent,
+                    ),
+                  )
+                }
                 className="w-full px-4 py-3 border border-black rounded-2xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                 placeholder="Phone number"
                 required

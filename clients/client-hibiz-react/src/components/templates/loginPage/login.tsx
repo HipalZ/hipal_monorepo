@@ -7,6 +7,7 @@ import { useOwnerLogin } from "@/components/store/useOwnerLogin";
 import { cn } from "@/components/utils/helper";
 import toast from "react-hot-toast";
 import { useUserToken } from "@hi/common/src/useUserToken";
+import { sanitizePhoneInput } from "@hi/common/src/helper";
 import { apiRpc } from "@hi/common";
 import type { ILoginProps } from "@/components/types/businessData";
 
@@ -122,7 +123,15 @@ const Login: React.FC = () => {
           <input
             type="tel"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={(e) =>
+              setPhone(
+                sanitizePhoneInput(
+                  e.target.value,
+                  phone,
+                  e.nativeEvent as InputEvent,
+                ),
+              )
+            }
             className={cn(
               "w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:border-transparent",
               validPhone
@@ -130,7 +139,6 @@ const Login: React.FC = () => {
                 : "border-red-500 focus:ring-red-500",
             )}
             placeholder="Enter phone number"
-            maxLength={10}
             required
           />
         </div>
