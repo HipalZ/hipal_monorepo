@@ -713,7 +713,15 @@ const posRouter = new Hono()
         const business = await Business.findById(businessId).session(session);
         if (!business) throw new Error("Business not found");
 
-        await Menu.deleteOne({ businessId }, { session });
+        let businessPosConfig = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (businessPosConfig) {
+          return respond(c, "POS already configured", true, 400, {});
+        }
 
         await Dish.updateMany(
           { businessId, active: true, isDeleted: false },
@@ -761,12 +769,6 @@ const posRouter = new Hono()
         );
         let zoneSyncCount = 0;
         let tableSyncCount = 0;
-
-        let businessPosConfig = await BusinessPosConfig.findOne({
-          businessId,
-          isDeleted: false,
-          active: true,
-        });
 
         if (!businessPosConfig) {
           if (!petpoojaPosConfig)
