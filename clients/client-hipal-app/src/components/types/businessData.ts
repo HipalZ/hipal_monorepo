@@ -178,6 +178,8 @@ export interface IOutlet {
   isPosEnabled: boolean;
   shareCart?: boolean;
   birthdayCampaign?: boolean;
+  currencySymbol: string;
+  currencyCode: string;
 }
 
 export interface TimingType {
