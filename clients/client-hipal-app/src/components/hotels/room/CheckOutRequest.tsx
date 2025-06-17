@@ -46,11 +46,11 @@ const MemoCheckOutRequest = ({
   }, [themeData]);
 
   return (
-    <article className="mx-3">
-      <div className="my-3 rounded-xl shadow-lg px-4 py-4 flex items-center border border-red-300 relative">
+    <article>
+      <div className="mx-4 my-3 rounded-xl shadow-lg px-4 py-4 flex items-center border border-blue-300 relative">
         <div className="flex-1 space-y-2">
           <h1 className="font-semibold text-h-primary text-base poppins">
-            Faster checkout!
+            Fast checkout!
           </h1>
           <p className="font-light text-h-primary text-xs poppins">
             Avoid Long standing queues by initiating
@@ -58,7 +58,7 @@ const MemoCheckOutRequest = ({
         </div>
         <button
           type="button"
-          className="text-sm poppins ml-4 flex items-center px-3 py-2 bg-black text-white rounded-xl font-light transition shadow-lg"
+          className="text-sm poppins ml-4 flex items-center px-3 py-2 bg-blue-500 text-white rounded-xl font-light transition shadow-lg"
           onClick={proceedToCheckout}
         >
           Checkout

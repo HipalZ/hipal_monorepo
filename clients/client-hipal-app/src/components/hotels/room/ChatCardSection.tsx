@@ -1,5 +1,8 @@
 "use client";
 import { useHotelTemp } from "@/components/store/useHotelTemp";
+import { Button } from "@/components/ui/button";
+import { MessageCircle } from "lucide-react";
+import { motion } from "framer-motion";
 
 const ChatCardSection = () => {
   const { setIsOpenChat, isOpenChat } = useHotelTemp();
@@ -11,7 +14,7 @@ const ChatCardSection = () => {
   return (
     <div
       onClick={onChatClick}
-      className="mx-4 mt-2 mb-4 rounded-2xl shadow-lg px-4 py-4 flex items-center border bg-blue-50 cursor-pointer transition hover:shadow-xl active:scale-[0.98]"
+      className="mx-4 mt-2 mb-4 rounded-2xl shadow-lg px-4 py-4 flex items-center border cursor-pointer transition hover:shadow-xl active:scale-[0.98]"
       role="button"
       tabIndex={0}
       aria-label="Open chat"
@@ -24,12 +27,24 @@ const ChatCardSection = () => {
           See your service requests, get real-time updates.
         </p>
       </div>
-      <button
-        type="button"
-        className="text-xs poppins ml-4 flex items-center p-2 bg-black text-white rounded-xl font-light transition shadow-lg"
+      <Button
+        size="icon"
+        aria-label="Chat with us"
+        className="relative transition-colors rounded-full bg-green-700 text-white"
       >
-        View Chats
-      </button>
+        <MessageCircle />
+        <motion.span
+          className="absolute top-0 right-0 w-2 h-2 rounded-full bg-green-700"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 20,
+            delay: 0.2,
+          }}
+        />
+      </Button>
     </div>
   );
 };

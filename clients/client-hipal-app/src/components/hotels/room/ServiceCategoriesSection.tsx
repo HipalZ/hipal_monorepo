@@ -94,41 +94,43 @@ export default function ServiceCategoriesSection({
           />
         </svg>
       </div>
-      <div className="grid grid-cols-2 gap-3">
-        {primary.map((category) => (
-          <div key={category._id} className="col-span-1 row-span-1">
-            <ServiceCategoryCard
-              category={{
-                ...category,
-                image:
-                  categoryImages[
-                    category.name as keyof typeof categoryImages
-                  ] || bell,
-                description:
-                  categoryDescriptions[
-                    category.name as keyof typeof categoryDescriptions
-                  ] || "",
-              }}
-              businessId={businessId}
-            />
-          </div>
-        ))}
+      <section className="flex justify-center">
+        <div className="grid grid-cols-2 gap-4 md:gap-6 lg:gap-9">
+          {primary.map((category) => (
+            <div key={category._id} className="w-[10.5rem] h-[10rem]">
+              <ServiceCategoryCard
+                category={{
+                  ...category,
+                  image:
+                    categoryImages[
+                      category.name as keyof typeof categoryImages
+                    ] || bell,
+                  description:
+                    categoryDescriptions[
+                      category.name as keyof typeof categoryDescriptions
+                    ] || "",
+                }}
+                businessId={businessId}
+              />
+            </div>
+          ))}
 
-        {others.length > 0 && (
-          <div key="others" className="scale-90">
-            <ServiceCategoryCard
-              category={{
-                _id: "others",
-                name: "OTHERS",
-                serviceIds: others.flatMap((c) => c.serviceIds),
-                image: bell,
-                description: categoryDescriptions.OTHERS,
-              }}
-              businessId={businessId}
-            />
-          </div>
-        )}
-      </div>
+          {others.length > 0 && (
+            <div key="others">
+              <ServiceCategoryCard
+                category={{
+                  _id: "others",
+                  name: "OTHERS",
+                  serviceIds: others.flatMap((c) => c.serviceIds),
+                  image: bell,
+                  description: categoryDescriptions.OTHERS,
+                }}
+                businessId={businessId}
+              />
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
