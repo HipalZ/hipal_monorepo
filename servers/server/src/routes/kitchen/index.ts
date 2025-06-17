@@ -23,7 +23,7 @@ const kitchenRouter = new Hono()
   .post("/", zValidator("json", KitchenAttrs), async (c) => {
     //@ts-ignore
     return runInTransaction(async (session: ClientSession) => {
-      const { businessId, name, description, staffIds, dishIds } =
+      const { businessId, name, description, staffIds, dishIds, menuId } =
         await c.req.json();
       const updateName = name.trim().toLowerCase();
 
@@ -49,6 +49,7 @@ const kitchenRouter = new Hono()
         description,
         staffIds,
         dishIds,
+        menuId,
       });
 
       await kitchen.save({ session });
@@ -81,16 +82,17 @@ const kitchenRouter = new Hono()
       "query",
       z.object({
         businessId: z.string().min(1).max(50),
+        menuId: z.string().min(1).max(50),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId } = c.req.query();
+        const { businessId, menuId } = c.req.query();
 
         // Scenario-1: “All” days
 
-        const kitchens = await Kitchen.find({ businessId })
+        const kitchens = await Kitchen.find({ businessId, menuId })
           .session(session)
           .lean()
           .select("name description staffIds dishIds");
