@@ -32,6 +32,7 @@ const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
     alcohol: ["ALCOHOL"],
     nonalcohol: ["NON_ALCOHOL"],
     non_alcohol: ["NON_ALCOHOL"],
+    egg: ["EGG"],
   };
 
   if (isActiveDishType.toLowerCase() === "all") {
