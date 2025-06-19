@@ -20,6 +20,8 @@ export const businessPosConfigSchema = z.object({
   defaultTableName: z.string().min(1).max(50).optional(),
   active: z.boolean().optional().default(true),
   onlyMenu: z.boolean().optional().default(false),
+  printKot: z.boolean().optional().default(true),
+  repeatPrint: z.coerce.number().min(1).max(5).optional().default(1),
 
   date: z.number().optional(),
 });

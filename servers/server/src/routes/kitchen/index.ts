@@ -1,4 +1,4 @@
-import { Dish, Kitchen } from "@hi/db-models";
+import { Dish, Kitchen, PrinterConfig } from "@hi/db-models";
 import { KitchenAttrs, updateKitchenAttrs } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
@@ -186,6 +186,41 @@ const kitchenRouter = new Hono()
         _id: kitchen._id,
       });
     });
-  });
+  })
+
+  .post(
+    "/printer_config",
+    zValidator(
+      "json",
+      z.object({
+        printers: z.array(
+          z.object({
+            kitchenId: z.string().min(2).max(50),
+            printerName: z.string().min(2).max(100),
+            businessId: z.string().min(2).max(50),
+          }),
+        ),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { printers } = await c.req.json();
+
+        // Example processing logic
+        for (const printer of printers) {
+          const { kitchenId, printerName, businessId } = printer;
+
+          await PrinterConfig.updateOne(
+            { kitchenId, businessId },
+            { $set: { printerName } },
+            { upsert: true, session },
+          );
+        }
+
+        return respond(c, "Printer config updated", false, 200, {});
+      });
+    },
+  );
 
 export default kitchenRouter;

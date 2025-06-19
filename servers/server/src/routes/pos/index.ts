@@ -35,6 +35,7 @@ import {
   transformItemsToSimpleArray,
   transformParentCategories,
 } from "../../utils/helper";
+import { sendKOTPrintEvent } from "../../utils/kot";
 import { petpoojaPosConfig, posApiPaths } from "../../utils/posConfig/petPooja";
 import { respond } from "../../utils/response";
 const admin = require("firebase-admin");
@@ -80,10 +81,12 @@ const saveKotOrder = async (
   );
 
   if (!saveKot) {
-    return false;
+    return {};
   }
 
-  return true;
+  return {
+    kotId: saveKot[0]._id,
+  };
 };
 
 export const sendPushNotification = async (
@@ -132,7 +135,7 @@ const saveOrder = async (
   if (saveKot.data.success === "0") {
     throw new Error("kot not saved in pos");
   }
-  await saveKotOrder(
+  const resData = await saveKotOrder(
     tableName,
     businessId,
     customerName,
@@ -176,6 +179,7 @@ const saveOrder = async (
       hiCode: hiCode,
       name: customerName,
       phone: customerPhone,
+      kotId: resData?.kotId?.toString(),
     },
   };
 };
@@ -1708,6 +1712,18 @@ const posRouter = new Hono()
               session,
             );
 
+            sendKOTPrintEvent({
+              tableName,
+              businessId,
+              customerName,
+              customerPhone,
+              cart: internalCart,
+              acceptedBy: "direct_user",
+              kotId: result?.data?.kotId?.toString() ?? "",
+              date: Date.now(),
+              posRestName: posConfigData?.restName,
+            });
+
             return c.json(result, 200);
           }
 
@@ -1768,6 +1784,19 @@ const posRouter = new Hono()
             userTableSession.hiCode,
             session,
           );
+
+          const res = sendKOTPrintEvent({
+            tableName,
+            businessId,
+            customerName,
+            customerPhone,
+            cart: internalCart,
+            acceptedBy: "direct_user",
+            kotId: result?.data?.kotId?.toString() ?? "",
+            date: Date.now(),
+            posRestName: posConfigData?.restName,
+          });
+
           return c.json(result, 200);
         }
 
@@ -2039,7 +2068,7 @@ const posRouter = new Hono()
             throw new Error("kot not saved in pos");
           }
 
-          await saveKotOrder(
+          const res = await saveKotOrder(
             tableName,
             businessId,
             customerName,
@@ -2075,6 +2104,18 @@ const posRouter = new Hono()
             },
           );
 
+          sendKOTPrintEvent({
+            tableName,
+            businessId,
+            customerName,
+            customerPhone,
+            cart: internalCart,
+            acceptedBy: customerName,
+            kotId: res?.kotId?.toString() ?? "",
+            date: Date.now(),
+            posRestName: pos?.restName,
+          });
+
           return c.json(
             {
               message: "Data fetched successfully",
@@ -2104,7 +2145,7 @@ const posRouter = new Hono()
           throw new Error("kot not saved in pos");
         }
 
-        await saveKotOrder(
+        const res = await saveKotOrder(
           tableName,
           businessId,
           tableInfo?.edited ? tableSession.customerName : customerName,
@@ -2140,6 +2181,18 @@ const posRouter = new Hono()
             session,
           },
         );
+
+        sendKOTPrintEvent({
+          tableName,
+          businessId,
+          customerName,
+          customerPhone,
+          cart: internalCart,
+          acceptedBy: customerName,
+          kotId: res?.kotId?.toString() ?? "",
+          date: Date.now(),
+          posRestName: pos?.restName,
+        });
 
         return c.json(
           {
@@ -2539,19 +2592,28 @@ const posRouter = new Hono()
           .enum(OrderVerificationTypeEnum)
           .default("CAPTAIN"),
         active: z.boolean().default(true),
+        onlyMenu: z.boolean().default(false).optional(),
+        printKot: z.boolean().default(true).optional(),
+        repeatPrint: z.coerce.number().min(1).max(5).default(1).optional(),
       }),
     ),
 
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { posConfigId, orderVerificationType, active } =
-          await c.req.json();
+        const {
+          posConfigId,
+          orderVerificationType,
+          active,
+          onlyMenu,
+          printKot,
+          repeatPrint,
+        } = await c.req.json();
 
         const updateBusinessPosConfig =
           await BusinessPosConfig.findOneAndUpdate(
             { _id: posConfigId },
-            { orderVerificationType, active },
+            { orderVerificationType, active, onlyMenu, printKot, repeatPrint },
             { session },
           );
 

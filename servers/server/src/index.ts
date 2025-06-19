@@ -56,6 +56,7 @@ app.use(
       "http://localhost:3001",
       "http://localhost:3002",
       "http://localhost:5173",
+      "http://localhost:3004",
 
       "https://www.biz.test.hipalz.com",
       "https://www.hipal-test.hipalz.com",

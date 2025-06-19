@@ -88,6 +88,16 @@ const businessPosConfigSchema = new mongoose.Schema<BusinessPosConfigType>(
       required: false,
       default: false,
     },
+    printKot: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+    repeatPrint: {
+      type: Number,
+      required: false,
+      default: 1,
+    },
   },
   {
     timestamps: true,

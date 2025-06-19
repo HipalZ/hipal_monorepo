@@ -1,5 +1,6 @@
 import {
   AddOn,
+  Business,
   BusinessPosConfig,
   Category,
   Dish,
@@ -428,6 +429,40 @@ const menuRouter = new Hono()
       });
     });
   })
+
+  .post(
+    "/customlink",
+    zValidator(
+      "json",
+      z.object({
+        customLink: z.string().min(1).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
+        const { customLink } = requestData;
+
+        const businessExists = await Business.exists({ customLink });
+
+        if (!businessExists) {
+          return respond(c, "Business not found", true, 404);
+        }
+
+        const menus = await Menu.find({
+          businessId: businessExists._id,
+          isActive: true,
+        }).lean();
+
+        if (menus.length === 0) {
+          return respond(c, "No menus found", true, 404);
+        }
+
+        return respond(c, "Menus fetched successfully", false, 200, menus);
+      });
+    },
+  )
 
   .put("/update_menu", zValidator("json", UpdateMenuSchema), async (c) => {
     //@ts-ignore
