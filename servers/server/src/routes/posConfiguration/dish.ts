@@ -95,7 +95,7 @@ const dishPosConfigRouter = new Hono()
       const dishPosConfig = await PosDishConfig.findOne({
         businessId: businessId,
       }).select(
-        "description images visibility recommendationIds availability kitchenId",
+        "description images visibility recommendationIds availability kitchenId menuId",
       );
 
       if (!dishPosConfig) {
