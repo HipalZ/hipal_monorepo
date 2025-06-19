@@ -64,6 +64,9 @@ export default async function Explore({
         <b>{businessDetails?.name}</b> is responsible for all financial service
         issues, including disputes and billing inaccuracies.
       </p>
+      <p className="paragraph">
+        <b>Note:</b> Service charges and government taxes are applicable.
+      </p>
       <h3 className="subheading">7. Service Fulfillment</h3>
       <p className="paragraph">
         While Hipalz provides the technology, <b>{businessDetails?.name}</b>{" "}
@@ -439,5 +442,3 @@ export default async function Explore({
     </main>
   );
 }
-
-
