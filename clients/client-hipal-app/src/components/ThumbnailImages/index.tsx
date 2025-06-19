@@ -344,7 +344,7 @@ function BusinessImagesComponent({ businessId }: BusinessImagesProps) {
                     >
                       <Button
                         variant="outline"
-                        className="mt-4"
+                        className="mt-4 text-primary"
                         onClick={handleViewAllClick}
                       >
                         View All {category.images.length} Photos
