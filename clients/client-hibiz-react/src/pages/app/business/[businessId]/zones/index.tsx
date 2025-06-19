@@ -54,9 +54,10 @@ const MemoZonesAndTables = () => {
   }, [businessData, navigate]);
 
   if (gettingZones || isLoading || isLoadingStaff) return <LoadingSpinner />;
+  
   return (
     <main className="min-h-screen">
-      <header className=" linear_gradient_background">
+      <header className="linear_gradient_background">
         <MemoizedHeader
           title="Zones And Tables"
           leftIcon={<FaArrowLeft />}

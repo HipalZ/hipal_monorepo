@@ -7,17 +7,17 @@ import { memo, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 interface SidebarProps {
-  items: { icon: string; text: string; onClick: () => void }[];
+  items: { icon?: string; text: string; onClick: () => void }[];
 }
 
 const MemoiseSidebar: React.FC<SidebarProps> = ({ items }) => {
   const navigate = useNavigate();
-  const {hotelId} = useParams()
+  const { hotelId } = useParams();
   const businessId = useBusinessData((state) => state.businessData?._id);
 
   const goToHome = useCallback(() => {
-    if(hotelId) return navigate(`/app/hotel/${hotelId}`);
-    if(businessId) return navigate(`/app/business/${businessId}`);
+    if (hotelId) return navigate(`/app/hotel/${hotelId}`);
+    if (businessId) return navigate(`/app/business/${businessId}`);
   }, [navigate, businessId, hotelId]);
 
   const { selectedPage } = useMenuPageStore((state) => ({
@@ -31,12 +31,12 @@ const MemoiseSidebar: React.FC<SidebarProps> = ({ items }) => {
     return isMatch;
   }, []);
 
-    const businessLogo = useBusinessData((s) => s?.businessData?.logo);
-    const fallbackBusinessLogo = useBusinessData((s) => s?.outletInfo?.logoUrl);
+  const businessLogo = useBusinessData((s) => s?.businessData?.logo);
+  const fallbackBusinessLogo = useBusinessData((s) => s?.outletInfo?.logoUrl);
 
   return (
     <section className="sidebar">
-     <button
+      <button
         type="button"
         onClick={goToHome}
         className="flex flex-col items-center justify-center mx-auto mt-8 mb-4 text-center cursor-pointer"
@@ -58,6 +58,15 @@ const MemoiseSidebar: React.FC<SidebarProps> = ({ items }) => {
           )}
           key={index}
           onClick={item.onClick}
+          onKeyDown={
+            item.onClick
+              ? (e) => {
+                  if (e.key === "Enter") {
+                    item.onClick();
+                  }
+                }
+              : undefined
+          }
         >
           <span>{item.text}</span>
         </center>

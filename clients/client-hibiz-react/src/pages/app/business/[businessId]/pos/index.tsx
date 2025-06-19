@@ -1,123 +1,115 @@
-import { FaArrowLeft } from "react-icons/fa";
+import { memo, useCallback, useState } from "react";
 import MemoizedHeader from "@/components/molecules/header";
-import { useNavigate } from "react-router-dom";
-import Hi from "@/assets/svg/hi.svg";
-import useBusinessData from "@/components/store/useBusinessData";
-import { useQuery } from "@tanstack/react-query";
-import { apiRpc } from "@hi/common";
-import { memo, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
-import useTempStore from "@/components/store/useTempStore";
-import PosForm from "@/components/templates/posForm";
 import MiddlePopUp from "@/components/atom/middlePopUp";
-import type { IListPos } from "@/components/types/businessData";
-
-interface PosData {
-    _id: string;
-    name: string;
-}
+import PosSetupModal from "@/components/templates/posSetupModal";
+import CodeVerificationModal from "@/components/templates/posSetupModal/codeVerificationModal.tsx";
+import PosConfigCard from "@/components/templates/posSetupModal/posConfigCard.tsx";
+import PopUp from "@/components/atom/popUp/index.tsx";
+import { FileText } from "lucide-react";
+import { useGetPosConfig } from "@/hooks/usePosHook.ts";
 
 const MemoPOS = () => {
-    const businessData = useBusinessData((s) => s.businessData);
-    const { setPosId, selectedPos, setSelectedPos } = useTempStore((s) => ({
-        setPosId: s.setPosId,
-        selectedPos: s.selectedPos,
-        setSelectedPos: s.setSelectedPos,
-    }));
+  const navigate = useNavigate();
+  const businessId = useParams<{ businessId: string }>().businessId;
+  const [showSetupModal, setShowSetupModal] = useState(false);
+  const [showCodeModal, setShowCodeModal] = useState(false);
+  const { posConfig, isLoading, refetch } = useGetPosConfig(
+    businessId as string,
+  );
 
-    const navigate = useNavigate();
+  const handleConfigurePos = useCallback(() => {
+    setShowSetupModal(true);
+  }, []);
 
-    // Back Button Handler
-    const handleBack = useCallback(() => {
-        navigate(`/app/business/${businessData?._id}`);
-    }, [businessData, navigate]);
+  const handleEditConfig = useCallback(() => {
+    setShowCodeModal(true);
+  }, []);
 
-    // ✅ POS Selection Handler
-    const selectPos = useCallback((posName: string) => {
-        setSelectedPos(posName);
-    }, [setSelectedPos]);
+  const handleCodeVerified = useCallback(() => {
+    setShowCodeModal(false);
+    setShowSetupModal(true);
+  }, []);
 
-    const handlePosSelection = useCallback((pos: IListPos) => {
-        selectPos(pos.name)
-        setPosId(pos._id)
-    }, [selectPos, setPosId]);
+  const handleSetupComplete = useCallback(() => {
+    setShowSetupModal(false);
+    refetch();
+  }, []);
 
-    // Fetch All POS
-    const fetchAllPos = async (businessId: string) => {
-        try {
-            const response = await apiRpc.pos.all_pos.$get({
-                businessId,
-            });
-            const res = await response.json();
-            return res.data as PosData[];
-        } catch (e) {
-            console.error(e);
-            throw new Error("Failed to fetch POS data");
-        }
-    };
+  const goBack = useCallback(() => {
+    return navigate(`/app/business/${businessId}`);
+  }, [businessId, navigate]);
 
-    // Query to Fetch POS Data
-    const { data: posList, isLoading } = useQuery({
-        queryKey: ["fetchAllPos", businessData?._id],
-        queryFn: () => fetchAllPos(businessData?._id || ""),
-        enabled: !!businessData?._id,
-    });
+  return (
+    <main className="min-h-screen">
+      <header className="linear_gradient_background">
+        <MemoizedHeader title="POS" onBack={goBack} />
+      </header>
 
-    return (
-        <main className="min-h-screen bg-gray-50">
-            <header className="linear_gradient_background">
-                <MemoizedHeader
-                    title="POS"
-                    leftIcon={<FaArrowLeft />}
-                    rightImage={Hi}
-                    onBack={handleBack}
-                />
-            </header>
+      {/* POS Config Section */}
+      <section className="p-4 md:p-6">
+        {isLoading ? (
+          <LoadingSpinner />
+        ) : posConfig ? (
+          <>
+            <PosConfigCard config={posConfig} onEdit={handleEditConfig} />
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <div className="mb-6">
+              <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <FileText className="w-12 h-12 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                No POS Configuration Found
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Please apply POS for further features
+              </p>
+              <button
+                type="button"
+                onClick={handleConfigurePos}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              >
+                Configure POS
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
 
-            {/* POS List Section */}
-            <section className="p-4 md:p-6">
-                {isLoading ? (
-                    <LoadingSpinner />
-                ) : (
-                    <div
-                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-                        role="list"
-                        aria-label="POS software list"
-                    >
-                        {posList?.map((pos) => (
-                            <article
-                                key={pos._id}
-                                role="listitem"
-                            >
-                                <button
-                                    type="button"
-                                    onClick={() => handlePosSelection(pos)}
-                                    className="bg-white w-full h-24 overflow-hidden p-4 text-left border rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200"
-                                    aria-label={`View details for ${pos.name}`}
-                                >
-                                    {pos.name === "petPooja" ? (
-                                        <img
-                                            alt="petPooja"
-                                            src="https://gdm-catalog-fmapi-prod.imgix.net/ProductLogo/5ee5d327-b1e8-44ae-a2c6-6c9e358f3ec7.png"
-                                            className="h-16 object-contain"
-                                        />
-                                    ) : (
-                                        pos.name
-                                    )}
-                                </button>
-                                <center className="text-xl mt-1 capitalize">{pos.name}</center>
-                            </article>
-                        ))}
-                    </div>
-                )}
-            </section>
-            {selectedPos?.length > 0 ? <>
-                <MiddlePopUp show={selectedPos?.length > 0} onlyPopUp onClose={() => setSelectedPos("")}>
-                    <PosForm />
-                </MiddlePopUp>
-            </> : null}
-        </main>
-    );
+      {/* Setup Modal */}
+      {showSetupModal && (
+        <PopUp
+          show={showSetupModal}
+          rightTopBack
+          onClose={() => setShowSetupModal(false)}
+          width="w-[30rem]"
+        >
+          <PosSetupModal
+            onComplete={handleSetupComplete}
+            onClose={() => setShowSetupModal(false)}
+            existingConfig={posConfig}
+          />
+        </PopUp>
+      )}
+
+      {/* Code Verification Modal */}
+      {showCodeModal && (
+        <MiddlePopUp
+          show={showCodeModal}
+          onlyPopUp
+          onClose={() => setShowCodeModal(false)}
+        >
+          <CodeVerificationModal
+            onVerified={handleCodeVerified}
+            onClose={() => setShowCodeModal(false)}
+          />
+        </MiddlePopUp>
+      )}
+    </main>
+  );
 };
 
 const POS = memo(MemoPOS);

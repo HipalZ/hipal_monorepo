@@ -9,14 +9,10 @@
       "color": "#b2bec3"
     }
   ],
-  "liveServer.settings.donotShowInfoMsg": true,
-  "eslint.experimental.useFlatConfig": false,
-  "eslint.runtime": "bun", // Bun-specific runtime
-  "eslint.packageManager": "bun",
+  "eslint.runtime": "bun",
   "eslint.options": {
     "overrideConfigFile": ".eslintrc.js"
   },
-  "playwright.reuseBrowser": true,
   "typescript.updateImportsOnFileMove.enabled": "always",
   "javascript.updateImportsOnFileMove.enabled": "always",
   "[typescriptreact]": {
@@ -40,8 +36,6 @@
   "[json]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
-  "security.workspace.trust.untrustedFiles": "open",
-  "github.copilot.editor.enableAutoCompletions": true,
   "remote.autoForwardPortsSource": "hybrid",
   "[jsonc]": {
     "editor.defaultFormatter": "biomejs.biome"
@@ -52,11 +46,8 @@
   "explorer.confirmDelete": false,
   "editor.fontFamily": "Fira Code",
   "editor.fontLigatures": true,
-  "settingsSync.keybindingsPerPlatform": false,
-  "workbench.iconTheme": "material-icon-theme",
   "workbench.colorTheme": "Default Dark Modern",
   "editor.formatOnSave": true,
-  "workbench.settings.applyToAllProfiles": [],
   "cSpell.words": ["Sandwhich"],
   "typescript.tsdk": "node_modules/typescript/lib"
 }

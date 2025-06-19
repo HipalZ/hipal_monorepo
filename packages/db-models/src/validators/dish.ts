@@ -211,7 +211,7 @@ export const updateDishSchema = z
     addOnIds: z.array(ObjectIdSchema).optional(),
     kitchenId: ObjectIdSchema.optional(),
     images: z.array(z.string().url().min(6).max(100)).optional(),
-    description: z.string().min(10).max(400).optional(),
+    description: z.string().min(3).max(400).optional(),
     calories: z.string().min(3).max(100).optional(),
     tags: z.array(z.string().min(3).max(60)).optional(),
     recommendationIds: z.array(ObjectIdSchema).optional(),
@@ -221,6 +221,7 @@ export const updateDishSchema = z
     removeAddOnIds: z.array(ObjectIdSchema).optional(),
     removeRecommendationIds: z.array(ObjectIdSchema).optional(),
     removeKitchenId: ObjectIdSchema.optional(),
+    menuId: ObjectIdSchema.optional(),
   })
   .strict();
 export type DishType = z.infer<typeof dishSchema>;

@@ -28,9 +28,14 @@ const CallCaptanMainComp = lazy(
 const AlertsMemo = () => {
   const { selectedNavItem } = useLiteStore();
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
-  const { setIsFilterOpen, isFilterOpen } = useZonesAndTablesStore();
+  const { setIsFilterOpen, isFilterOpen } = useZonesAndTablesStore((s) => ({
+    setIsFilterOpen: s.setIsFilterOpen,
+    isFilterOpen: s.isFilterOpen,
+  }));
   const [openTable, setOpenTable] = useState<boolean>(false);
-  const { payFilter } = useFilters();
+  const { payFilter } = useFilters((s) => ({
+    payFilter: s.payFilter,
+  }));
   const screenSize = useScreenSize();
 
   const toggleEmptyTableModal = useCallback(() => {
