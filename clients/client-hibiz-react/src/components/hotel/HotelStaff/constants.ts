@@ -12,4 +12,5 @@ export const roleBadgeColors: Record<string, string> = {
   LAUNDRY: "bg-sky-100 text-sky-800 border-sky-300",
   WAITER: "bg-indigo-100 text-indigo-800 border-indigo-300",
   KITCHEN: "bg-rose-100 text-rose-800 border-rose-300",
+  ENGINEERING: "bg-blue-100 text-blue-800 border-blue-300",
 };

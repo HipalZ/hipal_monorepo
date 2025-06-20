@@ -128,6 +128,33 @@ export const useGetAllHotelServices = (businessId: string) => {
   return { isLoading, hotelServicesData, refetch };
 };
 
+export const useGetCatServices = (businessId: string) => {
+  if (!businessId) return { hotelServicesData: [] };
+
+  const getCatServices = async () => {
+    const response = await apiRpc.hotel.service.fetch_service_category.$get({
+      query: {
+        businessId,
+      },
+    });
+    const result = await response.json();
+    const hotelServices = result.data as IService[];
+    return hotelServices ?? [];
+  };
+
+  const {
+    isLoading,
+    data: hotelServicesData,
+    refetch,
+  } = useQuery({
+    queryKey: ["getCatServices", businessId],
+    queryFn: getCatServices,
+    enabled: !!businessId,
+  });
+
+  return { isLoading, hotelServicesData, refetch };
+};
+
 export interface IHotelStaffPayload {
   name: string;
   phone: string;
