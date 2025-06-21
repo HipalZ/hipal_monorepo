@@ -1,18 +1,31 @@
-import { useState, useCallback } from "react"
-import { Home, ChevronRight, ArrowLeft, Settings, Utensils, Bed, Car, SpadeIcon as Spa, Coffee } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { useState, useCallback } from "react";
+import { Home, ChevronRight, ArrowLeft, Cog } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import HotelServices from "./Services"
+} from "@/components/ui/breadcrumb";
+import HotelServices from "./Services";
 
 // Define the service types
-type ServiceType = "services" | "rooms" | "restaurant" | "parking" | "spa" | "amenities"
+type ServiceType =
+  | "services"
+  | "rooms"
+  | "restaurant"
+  | "parking"
+  | "spa"
+  | "amenities";
 
 // Define the service card data
 const serviceCards = [
@@ -20,8 +33,12 @@ const serviceCards = [
     id: "services",
     title: "Hotel Services",
     description: "Manage all hotel services and their availability",
-    icon: <Settings className="w-6 h-6 text-primary" />,
-    color: "bg-blue-50 dark:bg-blue-950",
+    icon: (
+      <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-blue-400 to-blue-600 hover:scale-105">
+        <Cog className="w-8 h-8 text-white drop-shadow-md" />
+      </div>
+    ),
+    color: "bg-rose-50 dark:bg-blue-950",
   },
   // {
   //   id: "rooms",
@@ -58,47 +75,52 @@ const serviceCards = [
   //   icon: <Coffee className="w-6 h-6 text-primary" />,
   //   color: "bg-cyan-50 dark:bg-cyan-950",
   // },
-]
+];
 
 const HotelActions = () => {
-  const [activeService, setActiveService] = useState<ServiceType | null>(null)
+  const [activeService, setActiveService] = useState<ServiceType | null>(null);
 
   const handleServiceClick = useCallback((serviceId: ServiceType) => {
-    setActiveService(serviceId)
-  }, [])
+    setActiveService(serviceId);
+  }, []);
 
   const handleBackClick = useCallback(() => {
-    setActiveService(null)
-  }, [])
+    setActiveService(null);
+  }, []);
 
   // Render the service cards grid
   const renderServiceCards = () => (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 px-4 xl:px-0 md:grid-cols-2 lg:grid-cols-3 pb-[3rem]">
       {serviceCards.map((service) => (
         <Card
           key={service.id}
-          className={`cursor-pointer hover:shadow-md transition-all ${service.color} border-none`}
           onClick={() => handleServiceClick(service.id as ServiceType)}
+          className="relative h-full transition-all hover:shadow-md hover:border-primary/50"
         >
-          <CardContent className="p-6">
-            <div className="flex items-start space-x-4">
-              <div className="p-3 bg-white rounded-full shadow-sm dark:bg-gray-800">{service.icon}</div>
-              <div>
-                <h3 className="text-lg font-medium">{service.title}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{service.description}</p>
-              </div>
-            </div>
+          <CardHeader className="pb-2 h-[7rem]">
+            <CardTitle className="absolute top-4 left-4">
+              {service.icon}
+            </CardTitle>
+            <CardTitle className="pb-4 text-xl ml-[4rem]">
+              {service.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="h-[3rem]">
+            <CardDescription>{service.description}</CardDescription>
           </CardContent>
+          <CardFooter className="pt-2">
+            <span className="text-sm text-primary">Configure →</span>
+          </CardFooter>
         </Card>
       ))}
     </div>
-  )
+  );
 
   // Render the active service component
   const renderActiveService = () => {
     switch (activeService) {
       case "services":
-        return <HotelServices />
+        return <HotelServices />;
       case "rooms":
       case "restaurant":
       case "parking":
@@ -107,19 +129,25 @@ const HotelActions = () => {
         // Placeholder for future implementations
         return (
           <div className="py-10 text-center">
-            <h2 className="mb-4 text-2xl font-bold">{serviceCards.find((s) => s.id === activeService)?.title}</h2>
-            <p className="text-muted-foreground">This feature is coming soon!</p>
+            <h2 className="mb-4 text-2xl font-bold">
+              {serviceCards.find((s) => s.id === activeService)?.title}
+            </h2>
+            <p className="text-muted-foreground">
+              This feature is coming soon!
+            </p>
           </div>
-        )
+        );
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   // Get the active service title for breadcrumb
   const getActiveServiceTitle = () => {
-    return serviceCards.find((service) => service.id === activeService)?.title || ""
-  }
+    return (
+      serviceCards.find((service) => service.id === activeService)?.title || ""
+    );
+  };
 
   return (
     <div className="container px-4 py-8 mx-auto">
@@ -150,7 +178,9 @@ const HotelActions = () => {
               </BreadcrumbSeparator>
 
               <BreadcrumbItem>
-                <BreadcrumbLink href="#">{getActiveServiceTitle()}</BreadcrumbLink>
+                <BreadcrumbLink href="#">
+                  {getActiveServiceTitle()}
+                </BreadcrumbLink>
               </BreadcrumbItem>
             </>
           )}
@@ -159,17 +189,23 @@ const HotelActions = () => {
 
       {/* Back button when viewing a service */}
       {activeService && (
-        <Button variant="outline" size="sm" onClick={handleBackClick} className="flex items-center mb-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleBackClick}
+          className="flex items-center mb-4"
+        >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Actions
         </Button>
       )}
 
       {/* Main content */}
-      <div className="mt-4">{activeService ? renderActiveService() : renderServiceCards()}</div>
+      <div className="mt-4">
+        {activeService ? renderActiveService() : renderServiceCards()}
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default HotelActions
-
+export default HotelActions;
