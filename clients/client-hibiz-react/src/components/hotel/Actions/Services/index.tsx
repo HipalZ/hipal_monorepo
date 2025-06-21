@@ -1,115 +1,165 @@
-import { useState, useCallback, useEffect } from "react"
-import { Check, X, ToggleLeft, ToggleRight, Settings, Loader2, Search } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
-import { Separator } from "@/components/ui/separator"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import LoadingSpinner from "@/components/atom/loadingSpinner"
-import { toast } from "react-hot-toast"
-import useBusinessData from "@/components/store/useBusinessData"
-import { type IService, useGetServiceCategories, useUpdateHotelService } from "@/components/store/hotel/useHotelServices"
+import { lazy, useState, useCallback, useEffect, Suspense } from "react";
+import {
+  Check,
+  X,
+  ToggleLeft,
+  ToggleRight,
+  Settings,
+  Loader2,
+  Search,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
+import { toast } from "react-hot-toast";
+import useBusinessData from "@/components/store/useBusinessData";
+import {
+  type IService,
+  useGetServiceCategories,
+  useUpdateHotelService,
+} from "@/components/store/hotel/useHotelServices";
+import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
+import PopUp from "@/components/atom/popUp";
+const ServicesForm = lazy(() => import("./HotelServices"));
 
 const HotelServices = () => {
-  const businessId = useBusinessData((s) => s.businessData?._id)
-  const { categoriesData, categoriesLoading, refetchCategories } = useGetServiceCategories(businessId as string)
-  const { updateService, updateServiceLoading } = useUpdateHotelService()
-  const [searchQuery, setSearchQuery] = useState("")
-  const [updatingServiceId, setUpdatingServiceId] = useState<string | null>(null)
-  const [serviceAvailability, setServiceAvailability] = useState<Record<string, boolean>>({})
+  const businessId = useBusinessData((s) => s.businessData?._id);
+  const { categoriesData, categoriesLoading, refetchCategories } =
+    useGetServiceCategories(businessId as string);
+  const { updateService, updateServiceLoading } = useUpdateHotelService();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [updatingServiceId, setUpdatingServiceId] = useState<string | null>(
+    null,
+  );
+  const [serviceAvailability, setServiceAvailability] = useState<
+    Record<string, boolean>
+  >({});
+
+  const [openService, setOpenService] = useState(false);
 
   // Initialize service availability from API data
   useEffect(() => {
     if (categoriesData) {
-      const availabilityMap: Record<string, boolean> = {}
+      const availabilityMap: Record<string, boolean> = {};
 
-      categoriesData.forEach((category) => {
-        category.serviceIds.forEach((service) => {
+      for (const category of categoriesData) {
+        for (const service of category.serviceIds) {
           // Default to true if availability is not specified
-          availabilityMap[service._id] = service.availability !== undefined ? service.availability : true
-        })
-      })
+          availabilityMap[service._id] =
+            service.availability !== undefined ? service.availability : true;
+        }
+      }
 
-      setServiceAvailability(availabilityMap)
+      setServiceAvailability(availabilityMap);
     }
-  }, [categoriesData])
+  }, [categoriesData]);
 
   const handleToggleAvailability = useCallback(
-    async (service: IService, categoryName: string) => {
-      if (!businessId || updateServiceLoading) return
+    async (service: IService) => {
+      if (!businessId || updateServiceLoading) return;
 
-      const currentAvailability = serviceAvailability[service._id] || false
-      const newAvailability = !currentAvailability
+      const currentAvailability = serviceAvailability[service._id] || false;
+      const newAvailability = !currentAvailability;
 
       try {
-        setUpdatingServiceId(service._id)
+        setUpdatingServiceId(service._id);
 
         // Optimistically update the UI
         setServiceAvailability((prev) => ({
           ...prev,
           [service._id]: newAvailability,
-        }))
+        }));
 
         await updateService({
           name: service.name,
           businessId: businessId,
           availability: newAvailability,
           serviceId: service._id,
-        })
+        });
 
         // Refetch categories to ensure we have the latest data
-        await refetchCategories()
+        await refetchCategories();
 
-        toast.success(`${service.name} is now ${newAvailability ? "available" : "unavailable"}`)
+        toast.success(
+          `${service.name} is now ${
+            newAvailability ? "available" : "unavailable"
+          }`,
+        );
       } catch (error) {
         // Revert the optimistic update on error
         setServiceAvailability((prev) => ({
           ...prev,
           [service._id]: currentAvailability,
-        }))
+        }));
 
-        console.error("Error updating service:", error)
-        toast.error("Failed to update service availability")
+        console.error("Error updating service:", error);
+        toast.error("Failed to update service availability");
       } finally {
-        setUpdatingServiceId(null)
+        setUpdatingServiceId(null);
       }
     },
-    [businessId, updateService, updateServiceLoading, refetchCategories, serviceAvailability],
-  )
+    [
+      businessId,
+      updateService,
+      updateServiceLoading,
+      refetchCategories,
+      serviceAvailability,
+    ],
+  );
 
   // Filter categories and services based on search query
   const filteredCategories = useCallback(() => {
-    if (!categoriesData || !searchQuery.trim()) return categoriesData
+    if (!categoriesData || !searchQuery.trim()) return categoriesData;
 
     return categoriesData
       .map((category) => {
         // Filter services within this category
         const filteredServices = category.serviceIds.filter((service) =>
           service.name.toLowerCase().includes(searchQuery.toLowerCase()),
-        )
+        );
 
         // Return a new category object with filtered services
         return {
           ...category,
           serviceIds: filteredServices,
-        }
+        };
       })
-      .filter((category) => category.serviceIds.length > 0) // Only keep categories with matching services
-  }, [categoriesData, searchQuery])()
+      .filter((category) => category.serviceIds.length > 0); // Only keep categories with matching services
+  }, [categoriesData, searchQuery])();
 
   // Count total services and filtered services
   const totalServices = useCallback(() => {
-    return categoriesData?.reduce((count, category) => count + category.serviceIds.length, 0) || 0
-  }, [categoriesData])()
+    return (
+      categoriesData?.reduce(
+        (count, category) => count + category.serviceIds.length,
+        0,
+      ) || 0
+    );
+  }, [categoriesData])();
 
   const filteredServicesCount = useCallback(() => {
-    return filteredCategories?.reduce((count, category) => count + category.serviceIds.length, 0) || 0
-  }, [filteredCategories])()
+    return (
+      filteredCategories?.reduce(
+        (count, category) => count + category.serviceIds.length,
+        0,
+      ) || 0
+    );
+  }, [filteredCategories])();
+
+  const openServices = () => {
+    setOpenService(!openService);
+  };
 
   // Service Card Component
   const ServiceCard = useCallback(
-    ({ service, categoryName }: { service: IService; categoryName: string }) => {
+    ({
+      service,
+      categoryName,
+    }: { service: IService; categoryName: string }) => {
       return (
         <Card className="overflow-hidden transition-shadow hover:shadow-md">
           <CardContent className="p-0">
@@ -125,7 +175,9 @@ const HotelServices = () => {
                       />
                     ) : (
                       <div className="flex items-center justify-center w-full h-full bg-primary/10">
-                        <span className="text-lg font-bold text-primary">{service.name.charAt(0)}</span>
+                        <span className="text-lg font-bold text-primary">
+                          {service.name.charAt(0)}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -136,7 +188,9 @@ const HotelServices = () => {
                 ) : (
                   <Switch
                     checked={serviceAvailability[service._id] || false}
-                    onCheckedChange={() => handleToggleAvailability(service, categoryName)}
+                    onCheckedChange={() =>
+                      handleToggleAvailability(service, categoryName)
+                    }
                     aria-label={`Toggle ${service.name} availability`}
                   />
                 )}
@@ -150,12 +204,16 @@ const HotelServices = () => {
                 {serviceAvailability[service._id] ? (
                   <>
                     <ToggleRight className="h-4 w-4 mr-1.5 text-green-600" />
-                    <span className="text-sm font-medium text-green-600">Available</span>
+                    <span className="text-sm font-medium text-green-600">
+                      Available
+                    </span>
                   </>
                 ) : (
                   <>
                     <ToggleLeft className="h-4 w-4 mr-1.5 text-gray-500" />
-                    <span className="text-sm font-medium text-gray-500">Unavailable</span>
+                    <span className="text-sm font-medium text-gray-500">
+                      Unavailable
+                    </span>
                   </>
                 )}
               </div>
@@ -167,16 +225,20 @@ const HotelServices = () => {
                     : "bg-gray-50 text-gray-700 border-gray-200"
                 }`}
               >
-                {serviceAvailability[service._id] ? <Check className="w-3 h-3 mr-1" /> : <X className="w-3 h-3 mr-1" />}
+                {serviceAvailability[service._id] ? (
+                  <Check className="w-3 h-3 mr-1" />
+                ) : (
+                  <X className="w-3 h-3 mr-1" />
+                )}
                 {serviceAvailability[service._id] ? "Active" : "Inactive"}
               </Badge>
             </div>
           </CardContent>
         </Card>
-      )
+      );
     },
     [handleToggleAvailability, serviceAvailability, updatingServiceId],
-  )
+  );
 
   // Empty State Component
   const EmptyState = () => {
@@ -187,11 +249,13 @@ const HotelServices = () => {
             <Settings className="w-10 h-10 text-white drop-shadow-md" />
           </div>
           <h3 className="text-lg font-medium">No Services Available</h3>
-          <p className="text-sm text-muted-foreground">No services have been configured for this hotel yet</p>
+          <p className="text-sm text-muted-foreground">
+            No services have been configured for this hotel yet
+          </p>
         </div>
       </Card>
-    )
-  }
+    );
+  };
 
   // No Results Component
   const NoResults = () => {
@@ -200,14 +264,22 @@ const HotelServices = () => {
         <div className="p-4 mx-auto rounded-full bg-muted w-fit">
           <Search className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h3 className="mt-4 text-lg font-medium">No services match your search</h3>
-        <p className="mt-2 text-sm text-muted-foreground">Try a different search term</p>
-        <Button variant="outline" className="mt-4" onClick={() => setSearchQuery("")}>
+        <h3 className="mt-4 text-lg font-medium">
+          No services match your search
+        </h3>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Try a different search term
+        </p>
+        <Button
+          variant="outline"
+          className="mt-4"
+          onClick={() => setSearchQuery("")}
+        >
           Clear Search
         </Button>
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -243,7 +315,8 @@ const HotelServices = () => {
       {searchQuery && (
         <div className="flex items-center">
           <Badge variant="outline" className="px-2 py-1">
-            {filteredServicesCount} {filteredServicesCount === 1 ? "service" : "services"} found
+            {filteredServicesCount}{" "}
+            {filteredServicesCount === 1 ? "service" : "services"} found
           </Badge>
         </div>
       )}
@@ -274,25 +347,55 @@ const HotelServices = () => {
               {category.serviceIds.length > 0 ? (
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {category.serviceIds.map((service) => (
-                    <ServiceCard key={service._id} service={service} categoryName={category.name} />
+                    <ServiceCard
+                      key={service._id}
+                      service={service}
+                      categoryName={category.name}
+                    />
                   ))}
                 </div>
               ) : (
                 <Card className="p-4 text-center bg-muted/30">
-                  <p className="text-sm text-muted-foreground">No services in this category</p>
+                  <p className="text-sm text-muted-foreground">
+                    No services in this category
+                  </p>
                 </Card>
               )}
             </div>
           ))}
+          <AdvancedBottomButton
+            fixed={true}
+            maxWidth="30rem"
+            buttons={[
+              {
+                text: "Add Services",
+                onClick: openServices,
+                className: "w-full pl-3 rounded-md",
+              },
+            ]}
+          />
         </div>
       ) : searchQuery ? (
         <NoResults />
       ) : (
         <EmptyState />
       )}
+      <PopUp
+        width="w-[30rem] md:w-[48rem]"
+        hide
+        height="h-[100dvh] lg:h-[90dvh]"
+        show={openService}
+        onClose={openServices}
+      >
+        <Suspense fallback={<LoadingSpinner />}>
+          <ServicesForm
+            openServices={openServices}
+            categories={categoriesData}
+          />
+        </Suspense>
+      </PopUp>
     </div>
-  )
-}
+  );
+};
 
-export default HotelServices
-
+export default HotelServices;

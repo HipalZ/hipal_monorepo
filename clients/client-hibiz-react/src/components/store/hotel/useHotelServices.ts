@@ -1,6 +1,7 @@
 import { useError } from "@/components/store/useError";
 import { apiRpc } from "@hi/common";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 export interface IService {
   _id: string;
@@ -8,8 +9,14 @@ export interface IService {
   image: string;
   availability?: boolean;
 }
+export interface ICategoryPayload {
+  businessId: string;
+  name: string;
+  image: string;
+  availability: boolean;
+}
 
-interface IServiceCategory {
+export interface IServiceCategory {
   _id: string;
   name: string;
   image: string;
@@ -21,6 +28,13 @@ interface UpdateServicePayload {
   businessId: string;
   availability: boolean;
   serviceId: string;
+}
+
+export interface IServicePayload {
+  name: string;
+  businessId: string;
+  availability: boolean;
+  categoryId: string;
 }
 
 export const useGetServiceCategories = (businessId?: string) => {
@@ -129,4 +143,75 @@ export const useFetchEscalatedReports = (payload: IFetchEscalatedReports) => {
   );
 
   return { escalatedReportsLoading, escalationData };
+};
+
+export const useAddCategory = () => {
+  const { setError, setOpenErrorModal } = useError();
+  const queryClient = useQueryClient();
+  const { isPending: addCategoryLoader, mutateAsync: addCategory } =
+    useMutation({
+      mutationFn: async (payload: ICategoryPayload) => {
+        const response = await apiRpc.hotel.service.add_category.$post({
+          json: payload,
+        });
+        return response;
+      },
+      onSuccess: (data) => {
+        if (data.status === 400 || data.status === 401) {
+          toast.error("Failed to update category");
+        }
+        if (data.status === 409) {
+          setOpenErrorModal(true);
+          setError("Category already exists");
+          return toast.error("Category already exists");
+        }
+        if (data.status === 200 || data.status === 201) {
+          toast.success("Category Created");
+          queryClient.invalidateQueries({
+            queryKey: ["getServiceCategories"],
+          });
+          return;
+        }
+      },
+      onError: (data) => {
+        console.log(data);
+      },
+    });
+
+  return { addCategoryLoader, addCategory };
+};
+
+export const useAddService = () => {
+  const { setError, setOpenErrorModal } = useError();
+  const queryClient = useQueryClient();
+  const { isPending: addServiceLoader, mutateAsync: addService } = useMutation({
+    mutationFn: async (payload: IServicePayload) => {
+      const response = await apiRpc.hotel.service.add_service.$post({
+        json: payload,
+      });
+      return response;
+    },
+    onSuccess: (data) => {
+      if (data.status === 400 || data.status === 401) {
+        toast.error("Failed to update category");
+      }
+      if (data.status === 409) {
+        setOpenErrorModal(true);
+        setError("Service already exists");
+        return toast.error("Service already exists");
+      }
+      if (data.status === 200 || data.status === 201) {
+        toast.success("Category Created");
+        queryClient.invalidateQueries({
+          queryKey: ["getServiceCategories"],
+        });
+        return;
+      }
+    },
+    onError: (data) => {
+      console.log(data);
+    },
+  });
+
+  return { addServiceLoader, addService };
 };
