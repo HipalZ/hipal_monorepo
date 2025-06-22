@@ -2314,7 +2314,7 @@ const whatsappRouter = new Hono()
                   to: from,
                   type: "template",
                   template: {
-                    name: "test_welcome_template3",
+                    name: "test_welcome_message",
                     language: { code: "en" },
                     components: [
                       {
@@ -2323,7 +2323,7 @@ const whatsappRouter = new Hono()
                           {
                             type: "image",
                             image: {
-                              link: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/589185485.jpg?k=4f3001e657d6f119e0d732a2ae688f21e76ca70bff1d82f45ae9d47e3ca2d343&o=&hp=1",
+                              link: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/547559756.jpg?k=74617099739ca978f6af628d9ad5989243e224d957d82cf49753ab2598988db7&o=&hp=1",
                             },
                           },
                         ],
@@ -2339,6 +2339,10 @@ const whatsappRouter = new Hono()
                           {
                             type: "text",
                             text: updateLongUrl,
+                          },
+                          {
+                            type: "text",
+                            text: authCode,
                           },
                         ],
                       },
