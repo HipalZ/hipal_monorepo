@@ -74,7 +74,7 @@ export const useCheckIn = () => {
         roomId: roomData._id,
         name: guestName,
         phone: phoneNumber,
-        source: selectedSource,
+        ...(selectedSource && { source: selectedSource }),
       },
     });
     const res = await response.json();
