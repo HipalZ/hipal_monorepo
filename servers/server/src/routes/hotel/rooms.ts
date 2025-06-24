@@ -487,48 +487,48 @@ const roomRouter = new Hono()
         const business = await Business.findById(roomExists.businessId).select(
           "name",
         );
-        const res = await axios.post(
-          `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
-          {
-            messaging_product: "whatsapp",
-            to: user?.phone?.toString(),
-            type: "template",
-            template: {
-              name: "test_checkin_template",
-              language: { code: "en" },
-              components: [
-                {
-                  type: "body",
-                  parameters: [
-                    {
-                      type: "text",
-                      text: user?.name,
-                    },
+        // const res = await axios.post(
+        //   `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+        //   {
+        //     messaging_product: "whatsapp",
+        //     to: user?.phone?.toString(),
+        //     type: "template",
+        //     template: {
+        //       name: "test_checkin_template",
+        //       language: { code: "en" },
+        //       components: [
+        //         {
+        //           type: "body",
+        //           parameters: [
+        //             {
+        //               type: "text",
+        //               text: user?.name,
+        //             },
 
-                    {
-                      type: "text",
-                      text: authCode,
-                    },
+        //             {
+        //               type: "text",
+        //               text: authCode,
+        //             },
 
-                    {
-                      type: "text",
-                      text: roomExists?.name,
-                    },
-                  ],
-                },
-              ],
-            },
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${whatsAppConfig.token}`,
-            },
-          },
-        );
+        //             {
+        //               type: "text",
+        //               text: roomExists?.name,
+        //             },
+        //           ],
+        //         },
+        //       ],
+        //     },
+        //   },
+        //   {
+        //     headers: {
+        //       Authorization: `Bearer ${whatsAppConfig.token}`,
+        //     },
+        //   },
+        // );
 
-        if (res.status !== 200) {
-          throw new Error("Error sending message");
-        }
+        // if (res.status !== 200) {
+        //   throw new Error("Error sending message");
+        // }
 
         const shortUrlObj = await UrlModel.findOne({
           urlCode: updatedRoom.slug,
@@ -545,7 +545,7 @@ const roomRouter = new Hono()
             to: user?.phone?.toString(),
             type: "template",
             template: {
-              name: "test_welcome_template3",
+              name: "test_welcome_message",
               language: { code: "en" },
               components: [
                 {
@@ -554,7 +554,7 @@ const roomRouter = new Hono()
                     {
                       type: "image",
                       image: {
-                        link: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/589185485.jpg?k=4f3001e657d6f119e0d732a2ae688f21e76ca70bff1d82f45ae9d47e3ca2d343&o=&hp=1",
+                        link: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/547559756.jpg?k=74617099739ca978f6af628d9ad5989243e224d957d82cf49753ab2598988db7&o=&hp=1",
                       },
                     },
                   ],
@@ -570,6 +570,10 @@ const roomRouter = new Hono()
                     {
                       type: "text",
                       text: updateLongUrl,
+                    },
+                    {
+                      type: "text",
+                      text: authCode,
                     },
                   ],
                 },
