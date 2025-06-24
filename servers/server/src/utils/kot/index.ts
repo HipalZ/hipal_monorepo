@@ -1,5 +1,5 @@
 import axios from "axios";
-
+const wsUrl = "http://localhost:3002";
 interface KOTPayload {
   tableName: string;
   businessId: string;
@@ -30,7 +30,7 @@ interface BillPayload {
   businessId: string;
   customerName: string;
   customerPhone: string;
-  cart: unknown[];
+  items: unknown[];
   posRestName?: string;
   generatedBy: string;
   date: number;
@@ -57,7 +57,7 @@ export const sendKOTPrintEvent = ({
 }: KOTPayload): void => {
   axios
     .post(
-      "http://localhost:3001",
+      wsUrl,
       {
         event: `${businessId}_kot_print`,
         payload: {
@@ -97,7 +97,7 @@ export const deleteKOTPrintEvent = ({
 }: DeleteKOTPayload): void => {
   axios
     .post(
-      "http://localhost:3001",
+      wsUrl,
       {
         event: `${businessId}_delete_kot_print`,
         payload: {
@@ -129,7 +129,7 @@ export const sendBillPrintEvent = ({
   businessId,
   customerName,
   customerPhone,
-  cart,
+  items,
   posRestName,
   generatedBy,
   date,
@@ -144,7 +144,7 @@ export const sendBillPrintEvent = ({
 }: BillPayload): void => {
   axios
     .post(
-      "http://localhost:3001",
+      wsUrl,
       {
         event: `${businessId}_bill_print`,
         payload: {
@@ -152,7 +152,7 @@ export const sendBillPrintEvent = ({
           businessId,
           customerName,
           customerPhone,
-          cart,
+          items,
           posRestName,
           generatedBy,
           date,

@@ -13,6 +13,10 @@ const printerConfigSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  menuId: {
+    type: String,
+    required: true,
+  },
 });
 
 const PrinterConfig = mongoose.model("printerconfig", printerConfigSchema);

@@ -135,6 +135,86 @@ const kitchenRouter = new Hono()
     },
   )
 
+  .get(
+    "/printer/kot",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(2).max(50),
+        menuId: z.string().min(2).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, menuId } = c.req.query();
+        const printers = await PrinterConfig.find({
+          businessId,
+          menuId,
+          kitchenId: { $ne: "BILL_PRINTER" },
+        });
+
+        return respond(c, "fetched successfully", false, 200, printers);
+      });
+    },
+  )
+
+  .get(
+    "/printer/bill",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(2).max(50),
+        menuId: z.string().min(2).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, menuId } = c.req.query();
+        const printers = await PrinterConfig.find({
+          businessId,
+          menuId,
+          kitchenId: { $eq: "BILL_PRINTER" },
+        });
+
+        return respond(c, "fetched successfully", false, 200, printers);
+      });
+    },
+  )
+
+  .get(
+    "/printer/kot/:kitchenId",
+    zValidator(
+      "param",
+      z.object({
+        kitchenId: z.string().min(2).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { kitchenId } = c.req.param();
+        const printer = await PrinterConfig.findOne({
+          kitchenId,
+        });
+
+        if (!printer) {
+          return c.json(
+            {
+              message: "Printer not found",
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
+
+        return respond(c, "fetched successfully", false, 200, printer);
+      });
+    },
+  )
+
   .put("/", zValidator("json", updateKitchenAttrs), async (c) => {
     //@ts-ignore
     return runInTransaction(async (session: ClientSession) => {
@@ -189,7 +269,7 @@ const kitchenRouter = new Hono()
   })
 
   .post(
-    "/printer_config",
+    "/printer/config",
     zValidator(
       "json",
       z.object({
@@ -198,6 +278,7 @@ const kitchenRouter = new Hono()
             kitchenId: z.string().min(2).max(50),
             printerName: z.string().min(2).max(100),
             businessId: z.string().min(2).max(50),
+            menuId: z.string().min(2).max(50),
           }),
         ),
       }),
@@ -209,10 +290,10 @@ const kitchenRouter = new Hono()
 
         // Example processing logic
         for (const printer of printers) {
-          const { kitchenId, printerName, businessId } = printer;
+          const { kitchenId, printerName, businessId, menuId } = printer;
 
           await PrinterConfig.updateOne(
-            { kitchenId, businessId },
+            { kitchenId, businessId, menuId },
             { $set: { printerName } },
             { upsert: true, session },
           );

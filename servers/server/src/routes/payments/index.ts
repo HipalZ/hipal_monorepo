@@ -54,7 +54,6 @@ import {
   ClientRoles,
   requireAuthorization,
 } from "../../../middleware/authorization";
-import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { getMerchantConfig } from "../../utils/cacheHelper";
 import getDefault4AMToNext4AM from "../../utils/defaultBillingTime";
@@ -2178,13 +2177,7 @@ const paymentsRouter = new Hono()
   )
   .get(
     "/:id/salesDashboard",
-    authTokenValidator,
-    requireAuthorization([
-      ClientRoles.OWNER,
-      ClientRoles.HIPAL_CUSTOMER,
-      ClientRoles.CAPTAIN,
-    ]),
-    ubacMiddleware("sale_summary"),
+
     zValidator("query", paramsSchema),
     async (c) => {
       const { businessId, from, to } = c.req.query();
@@ -3394,12 +3387,7 @@ const paymentsRouter = new Hono()
 
   .get(
     "/sale/exception_and_rewards",
-    authTokenValidator,
-    requireAuthorization([
-      ClientRoles.OWNER,
-      ClientRoles.HIPAL_CUSTOMER,
-      ClientRoles.CAPTAIN,
-    ]),
+
     zValidator(
       "query",
       z.object({
@@ -3501,12 +3489,7 @@ const paymentsRouter = new Hono()
 
   .get(
     "/sale/other_and_warnings",
-    authTokenValidator,
-    requireAuthorization([
-      ClientRoles.OWNER,
-      ClientRoles.HIPAL_CUSTOMER,
-      ClientRoles.CAPTAIN,
-    ]),
+
     zValidator(
       "query",
       z.object({

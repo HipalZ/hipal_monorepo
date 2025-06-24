@@ -51,6 +51,28 @@ const serviceRouter = new Hono()
   )
 
   .get(
+    "/fetch_services_categories",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string(),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId } = c.req.query();
+      const services = await HotelServiceCategory.find({
+        businessId,
+      }).populate({
+        path: "serviceIds",
+        select: "name image availability",
+      });
+
+      return respond(c, "All services ", false, 200, services);
+    },
+  )
+
+  .get(
     "/fetch_service_category",
     zValidator(
       "query",
