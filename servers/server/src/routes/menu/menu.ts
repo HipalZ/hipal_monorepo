@@ -475,6 +475,21 @@ const menuRouter = new Hono()
         return respond(c, "Menu not found", true, 404);
       }
 
+      const businessPosConfig = await BusinessPosConfig.findOne({
+        businessId: businessId,
+        isDeleted: false,
+        active: true,
+      });
+
+      if (businessPosConfig) {
+        return respond(
+          c,
+          "POS is active for this business please deactivate it first",
+          true,
+          400,
+        );
+      }
+
       const activeMenus = await Menu.find({
         businessId: businessId || menu.businessId,
         isActive: true,
