@@ -45,6 +45,24 @@ const taxTypeschema = new mongoose.Schema<TaxTypes>(
   },
 );
 
+const taxNames = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+// Create a model for the tax schema
+const TaxName = mongoose.model("taxname", taxNames);
+// Create a model for the tax schema
+
 const Tax: Model<TaxTypes> = mongoose.model<TaxTypes>("tax", taxTypeschema);
 
-export { Tax };
+export { Tax, TaxName };

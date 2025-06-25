@@ -1,4 +1,4 @@
-import { Tax } from "@hi/db-models";
+import { Tax, TaxName } from "@hi/db-models";
 import {
   TaxTypeSchema,
   updateTaxTypeSchema,
@@ -140,6 +140,15 @@ const taxRouter = new Hono()
       }).select("-__v -createdAt -updatedAt -isDeleted");
 
       return respond(c, "Taxes fetched successfully", false, 200, taxes);
+    },
+  )
+  .get(
+    "/tax_name/fetch_all",
+
+    async (c) => {
+      const taxeNames = await TaxName.find({});
+
+      return respond(c, "Taxes fetched successfully", false, 200, taxeNames);
     },
   );
 
