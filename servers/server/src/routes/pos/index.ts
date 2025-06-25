@@ -1600,30 +1600,12 @@ const posRouter = new Hono()
         });
 
         if (!tableData) {
-          return c.json(
-            {
-              message: "Table not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
+          return respond(c, "Table not found", true, 404, {});
         }
 
         const userData = await User.findOne({ phone: customerPhone });
         if (!userData) {
-          return c.json(
-            {
-              message: "User not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
+          return respond(c, "User not found", true, 404, {});
         }
 
         const posConfigData = await BusinessPosConfig.findOne({
@@ -1633,23 +1615,13 @@ const posRouter = new Hono()
         });
 
         if (!posConfigData) {
-          return c.json(
-            {
-              message: "POS not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
+          return respond(c, "POS not found", true, 404, {});
         }
 
         const registrationToken = await DeviceToken.find({
           businessId: businessId,
         });
 
-        // send push notification to all devices
         if (registrationToken.length > 0) {
           for (const obj of registrationToken) {
             if (obj.notification) {
@@ -1657,8 +1629,6 @@ const posRouter = new Hono()
             }
           }
         }
-
-        // check if user have already active table session
 
         const userActiveTableSession = await UserSession.findOne({
           phoneNumbers: customerPhone,
@@ -1690,7 +1660,6 @@ const posRouter = new Hono()
           businessId: businessId,
         });
 
-        // check if bill already generated for a table
         if (userTableSession?.billRequestId) {
           return c.json(
             {

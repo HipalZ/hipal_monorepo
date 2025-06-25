@@ -169,17 +169,17 @@ const kotRouter = new Hono()
     zValidator(
       "json",
       z.object({
-        kotIds: z.array(z.string()).min(1).max(100),
+        kotItemIds: z.array(z.string()).min(1).max(100),
         deletedBy: z.string().min(1).max(50),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { kotIds, deletedBy } = await c.req.json();
+        const { kotItemIds, deletedBy } = await c.req.json();
 
         const kotOrderData = await KotOrder.findOne({
-          "cart._id": { $in: kotIds },
+          "cart._id": { $in: kotItemIds },
         });
 
         if (!kotOrderData) {
@@ -203,7 +203,7 @@ const kotRouter = new Hono()
 
         const captainInfo = await User.findById(kotOrderData.acceptedBy);
 
-        for (const kotItemId of kotIds) {
+        for (const kotItemId of kotItemIds) {
           // 1. Find KOT document containing this cart item
           const kotDoc = await KotOrder.findOne(
             { "cart._id": kotItemId },
