@@ -9,6 +9,7 @@ export const TaxTypeSchema = z
     type: z.enum(["PERCENTAGE", "FIXED"]),
     isActive: z.boolean().default(true).optional(),
     isDeleted: z.boolean().default(false).optional(),
+    menuId: ObjectIdSchema,
   })
   .refine(
     (data) => {
@@ -22,5 +23,12 @@ export const TaxTypeSchema = z
       path: ["value"], // Specify the path to the value field
     },
   );
+
+export const updateTaxTypeSchema = z.object({
+  taxId: ObjectIdSchema,
+  name: z.string().min(2).max(50).optional(),
+  value: z.coerce.number().optional(),
+  menuId: ObjectIdSchema.optional(),
+});
 
 export type TaxTypes = z.infer<typeof TaxTypeSchema>;

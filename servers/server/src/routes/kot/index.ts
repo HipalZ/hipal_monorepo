@@ -171,12 +171,13 @@ const kotRouter = new Hono()
       z.object({
         kotItemIds: z.array(z.string()).min(1).max(100),
         deletedBy: z.string().min(1).max(50),
+        reasonOfDeletion: z.string().min(1).max(500),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { kotItemIds, deletedBy } = await c.req.json();
+        const { kotItemIds, deletedBy, reasonOfDeletion } = await c.req.json();
 
         const kotOrderData = await KotOrder.findOne({
           "cart._id": { $in: kotItemIds },
@@ -246,6 +247,7 @@ const kotRouter = new Hono()
               $set: {
                 "cart.$[elem].isDeleted": true,
                 "cart.$[elem].deletedBy": user.name,
+                "cart.$[elem].reasonOfDeletion": reasonOfDeletion,
               },
             },
             {

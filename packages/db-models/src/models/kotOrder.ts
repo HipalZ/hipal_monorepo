@@ -33,6 +33,10 @@ const KotItemSchema = new Schema<KotOrderItemType>({
   deletedBy: {
     type: String,
   },
+  reasonOfDeletion: {
+    type: String,
+    maxlength: 500,
+  },
 });
 
 // Main Cart Schema

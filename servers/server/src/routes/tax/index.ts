@@ -1,16 +1,23 @@
 import { Tax } from "@hi/db-models";
-import { TaxTypeSchema } from "@hi/db-models/src/validators";
+import {
+  TaxTypeSchema,
+  updateTaxTypeSchema,
+} from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
+import { respond } from "../../utils/response";
 //
 const taxRouter = new Hono()
   .post("/", zValidator("json", TaxTypeSchema), async (c) => {
     const requestData = await c.req.json();
 
+    const taxName = requestData.name.trim().toLowerCase();
+
     const existingTax = await Tax.findOne({
-      name: requestData.name,
+      name: taxName,
       businessId: requestData.businessId,
+      menuId: requestData.menuId,
     });
 
     if (existingTax) {
@@ -24,7 +31,10 @@ const taxRouter = new Hono()
       );
     }
 
-    const createTax = await Tax.create(requestData);
+    const createTax = await Tax.create({
+      ...requestData,
+      name: taxName,
+    });
 
     if (!createTax) {
       return c.json(
@@ -41,30 +51,95 @@ const taxRouter = new Hono()
       {
         message: "Tax created successfully",
         err: false,
-        data: createTax,
+        data: {
+          _id: createTax._id,
+        },
       },
       201,
     );
   })
 
-  .get(
-    "/:businessId",
-    zValidator("param", z.object({ businessId: z.string() })),
+  .put("/", zValidator("json", updateTaxTypeSchema), async (c) => {
+    const requestData = await c.req.json();
+
+    const { taxId, name, value, menuId } = requestData;
+
+    const tax = await Tax.findByIdAndUpdate(
+      taxId,
+      { $set: { name, value, menuId } },
+      { new: true },
+    );
+
+    if (!tax) {
+      return respond(c, "Tax not found", true, 404, {});
+    }
+
+    return respond(c, "Tax updated successfully", false, 200, {
+      _id: tax._id,
+    });
+  })
+
+  .put(
+    "/tax_status",
+    zValidator(
+      "json",
+      z.object({ isActive: z.boolean(), taxId: z.string().min(24).max(24) }),
+    ),
     async (c) => {
-      const { businessId } = c.req.param();
+      const requestData = await c.req.json();
 
-      const taxes = await Tax.find({
-        businessId: businessId,
-      }).select("name value type");
+      const { taxId, isActive } = requestData;
 
-      return c.json(
-        {
-          message: "Tax fetched successfully",
-          err: false,
-          data: taxes,
-        },
-        200,
+      const tax = await Tax.findByIdAndUpdate(
+        taxId,
+        { $set: { isActive } },
+        { new: true },
       );
+
+      if (!tax) {
+        return respond(c, "Tax not found", true, 404, {});
+      }
+
+      return respond(c, "Tax updated successfully", false, 200, {
+        _id: tax._id,
+      });
+    },
+  )
+
+  .get(
+    "/:taxId",
+    zValidator("param", z.object({ taxId: z.string() })),
+    async (c) => {
+      const { taxId } = c.req.param();
+
+      const tax = await Tax.findById(taxId).select(
+        "-__v -createdAt -updatedAt -isDeleted",
+      );
+
+      if (!tax) {
+        return respond(c, "Tax not found", true, 404, {});
+      }
+
+      return respond(c, "Tax fetched successfully", false, 200, tax);
+    },
+  )
+
+  .get(
+    "/",
+    zValidator(
+      "query",
+      z.object({ businessId: z.string(), menuId: z.string() }),
+    ),
+    async (c) => {
+      const { businessId, menuId } = c.req.query();
+      const taxes = await Tax.find({
+        businessId,
+        menuId,
+        isActive: true,
+        isDeleted: false,
+      }).select("-__v -createdAt -updatedAt -isDeleted");
+
+      return respond(c, "Taxes fetched successfully", false, 200, taxes);
     },
   );
 

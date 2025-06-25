@@ -17,6 +17,7 @@ const KotOrderSchema = z.object({
   quantity: z.number().positive(),
   isDeleted: z.boolean().default(false),
   deletedBy: z.string().min(2).max(150).optional(),
+  reasonOfDeletion: z.string().min(1).max(500).optional(),
 });
 
 // Define the main cart schema
