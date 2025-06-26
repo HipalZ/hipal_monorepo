@@ -4,9 +4,7 @@ import { useActiveClass } from "@/components/store/useActiveClass";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
 import { InView } from "react-intersection-observer";
-import { useSearch } from "@/components/store/useSearch";
 import { useDishesStore } from "@/components/store/useDishesStore";
-import { _useAllBusiness } from "@/components/store/useAllBusiness";
 // Import motion from framer-motion at the top of the file
 import { motion } from "framer-motion";
 import Image from "next/image";

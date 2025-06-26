@@ -191,13 +191,7 @@ function MemoSubTypes({
   return (
     <section className="h-[calc(100dvh)] flex flex-col bg-white">
       {/* 1) Splide top bar for categories */}
-      <div
-        className={cn(
-          outletInfo?.outLetType === "OTHER"
-            ? "top-[3.5rem]"
-            : "sticky z-50 top-[4.5rem] bg-white border-b",
-        )}
-      >
+      <div className={cn("top-[3rem] sticky z-50 bg-white border-b")}>
         <Splide
           ref={splideRef}
           options={{

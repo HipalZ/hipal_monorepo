@@ -1,87 +1,42 @@
-"use client";
-import type React from "react";
-
-import { memo, useCallback, useRef, useEffect } from "react";
+import { memo, useCallback, useState } from "react";
 import { useActiveClass } from "@/components/store/useActiveClass";
 import Image from "next/image";
-import veg from "@/assets/veg.png";
-import nonVeg from "@/assets/nonveg.png";
-import egg from "@/assets/egg.png";
-import vegan from "@/assets/vegan.png";
 import Alcohol from "@/assets/alcohol.png";
 import NonAlcohol from "@/assets/NonAlcohol.png";
 import { cn } from "@hi/common";
 import { HiX } from "react-icons/hi";
 import { RiEqualizerLine } from "react-icons/ri";
-import { Splide, SplideSlide } from "@splidejs/react-splide";
-import type { Splide as SplideInstance } from "@splidejs/splide";
-
-// Import Splide CSS
-import "@splidejs/splide/dist/css/splide.min.css";
-import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import BottomPopUp from "../bottomPopUp";
 
 export const foodTypeIcons = {
-  veg: (
-    <div>
-      <Image
-        src={veg || "/placeholder.svg"}
-        alt="vegan"
-        width={24}
-        height={24}
-        className="w-full h-full"
-      />
-    </div>
-  ),
-  nonVeg: (
-    <div>
-      <Image
-        src={nonVeg || "/placeholder.svg"}
-        width={24}
-        height={24}
-        alt="vegan"
-        className="w-full h-full"
-      />
-    </div>
-  ),
   vegan: (
-    <div>
-      <Image
-        src={vegan || "/placeholder.svg"}
-        width={24}
-        height={24}
-        alt="vegan"
-        className="w-full h-full"
-      />
+    <div className="w-4 h-4 p-[0.125rem] border-2 border-[#02614b] rounded-sm">
+      <div className="w-[0.5rem] h-[0.5rem] bg-[#02614b] rounded-full" />
     </div>
   ),
   egg: (
-    <div>
-      <Image
-        src={egg || "/placeholder.svg"}
-        width={24}
-        height={24}
-        alt="egg"
-        className="w-full h-full"
-      />
+    <div className="w-4 h-4 p-[0.125rem] border-2 border-[#D2C903] rounded-sm">
+      <div className="w-[0.5rem] h-[0.5rem] bg-[#D2C903] rounded-full" />
     </div>
   ),
+
   alcohol: (
-    <div>
+    <div className="w-5 h-5">
       <Image
-        src={Alcohol || "/placeholder.svg"}
-        width={24}
-        height={24}
+        src={Alcohol}
+        width={20}
+        height={20}
         alt="Alcohol"
         className="w-full h-full"
       />
     </div>
   ),
   nonalcohol: (
-    <div>
+    <div className="w-5 h-5">
       <Image
-        src={NonAlcohol || "/placeholder.svg"}
-        width={24}
-        height={24}
+        src={NonAlcohol}
+        width={20}
+        height={20}
         alt="Non Alcohol"
         className="w-full h-full"
       />
@@ -98,7 +53,6 @@ export const foodTypeIcons = {
 const FilterOption = ({
   isActive,
   onClick,
-  onClear,
   icon,
   color,
   label,
@@ -106,7 +60,6 @@ const FilterOption = ({
 }: {
   isActive: boolean;
   onClick: () => void;
-  onClear?: (e: React.MouseEvent) => void;
   icon?: React.ReactNode;
   color?: string;
   label: string;
@@ -121,36 +74,63 @@ const FilterOption = ({
         borderColor: isActive ? color : "",
         color: isActive ? color : "#000000",
       }}
-      className={cn("flex px-2 rounded-md py-0.5 border w-full h-[2.25rem]")}
+      className={cn(
+        "flex justify-start items-center px-2 rounded-md py-1 border",
+      )}
       onClick={onClick}
     >
-      <div className="flex items-center justify-center">{icon}</div>
+      {icon ? (
+        <div className="flex items-center justify-center w-4 h-4">{icon}</div>
+      ) : (
+        <div
+          className="w-4 h-4 p-[0.125rem] border-2 rounded-sm"
+          style={{ borderColor: color }}
+        >
+          {!isNone ? (
+            <>
+              {label.toLowerCase() === "non veg" ? (
+                <div
+                  style={{
+                    borderLeft: "4px solid transparent",
+                    borderRight: "4px solid transparent",
+                    borderBottom: `8px solid ${color}`,
+                  }}
+                />
+              ) : (
+                <div
+                  className="w-[0.5rem] h-[0.5rem] rounded-full"
+                  style={{ backgroundColor: color }}
+                />
+              )}
+            </>
+          ) : null}
+        </div>
+      )}
       <div
         style={{
           color: isActive ? color : undefined,
           borderColor: isActive ? color : "black",
         }}
-        className="ml-1 text-[0.7rem] flex items-center justify-center poppins-regular"
+        className="ml-1 text-[0.75rem] flex items-center justify-center capitalize"
       >
         {label}
-        {isActive && (
-          <HiX
-            className="ml-1 cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClear?.(e);
-            }}
-          />
-        )}
+        {isActive && <HiX />}
       </div>
     </button>
   );
 };
 
 const QuickFilter = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { setActiveDishType, isActiveDishType } = useActiveClass();
-  const splideRef = useRef<SplideInstance>(null);
-  const outletInfo = _useAllBusiness((s) => s.data?.outletInfo);
+
+  const openModal = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
 
   const handleFilter = useCallback(
     (str: string) => {
@@ -159,124 +139,111 @@ const QuickFilter = () => {
         str?.replace(/[^a-zA-Z ]/, "").toLowerCase()
       ) {
         setActiveDishType("all");
-        if (splideRef.current) {
-          splideRef.current.go(0);
-        }
+        setIsModalOpen(false);
         return;
       }
       setActiveDishType(str);
+      setIsModalOpen(false);
     },
     [setActiveDishType, isActiveDishType],
   );
-
-  const handleClearFilter = useCallback(
-    (e: React.MouseEvent) => {
-      setActiveDishType("all");
-      // Reset to original position
-      if (splideRef.current) {
-        splideRef.current.go(0);
-      }
-    },
-    [setActiveDishType],
+  const activeIcon = (
+    <div className="flex items-center">
+      {["veg", "nonveg", "non_veg", "egg"].includes(
+        isActiveDishType?.replace(/[^a-zA-Z ]/g, "").toLowerCase(),
+      ) ? (
+        <div className="flex items-center">
+          <RiEqualizerLine size={20} />
+          <span className="ml-1">Filter</span>
+        </div>
+      ) : (
+        <>
+          {foodTypeIcons[
+            isActiveDishType
+              ?.replace(/[^a-zA-Z ]/g, "")
+              .toLowerCase() as keyof typeof foodTypeIcons
+          ] || <RiEqualizerLine size={20} />}
+          <span className="ml-1 capitalize">
+            {isActiveDishType.replace(/[^a-zA-Z ]/g, " ").toLowerCase()}
+          </span>
+        </>
+      )}
+      {isActiveDishType !== "all" && (
+        <HiX onClick={() => handleFilter("all")} className="ml-1" />
+      )}
+    </div>
   );
 
-  // Smooth scroll to active filter without forcing position
-  useEffect(() => {
-    const index = filters.findIndex(
-      (filter) => filter.key.toLowerCase() === isActiveDishType.toLowerCase(),
-    );
-
-    if (index !== -1 && splideRef.current) {
-      // Use go with smooth transition but don't force position
-      splideRef.current.go(index - 1);
-    }
-  }, [isActiveDishType]);
-
-  const filters = [
-    { label: "Veg", key: "veg", color: "#55CB1E", icon: foodTypeIcons.veg },
-    {
-      label: "Non-Veg",
-      key: "non_veg",
-      color: "#FF6363",
-      icon: foodTypeIcons.nonVeg,
-    },
-    { label: "Egg", key: "egg", color: "#D2C903", icon: foodTypeIcons.egg },
-    {
-      label: "Vegan",
-      key: "vegan",
-      color: "#02614b",
-      icon: foodTypeIcons.vegan,
-    },
-    {
-      label: "Alcohol",
-      key: "alcohol",
-      icon: foodTypeIcons.alcohol,
-      color: "#AA336A",
-    },
-    {
-      label: "Non Alcohol",
-      key: "nonalcohol",
-      icon: foodTypeIcons.nonalcohol,
-      color: "#02614b",
-    },
-  ];
-
   return (
-    <div className="relative w-full">
-      <Splide
-        ref={splideRef}
-        options={{
-          type: "slide",
-          pagination: false,
-          arrows: false,
-          gap: "0.5rem",
-          autoWidth: true,
-          drag: true,
-          snap: false,
-          trimSpace: false,
-          flickPower: 20,
-          flickMaxPages: 3,
-          speed: 400,
-          easing: "cubic-bezier(0.25, 1, 0.5, 1)",
-          waitForTransition: false,
-          dragMinThreshold: 5,
-          rewind: false,
-          rewindByDrag: false,
-          padding: { right: "1rem" },
-          height: "auto",
-          breakpoints: {
-            640: {
-              padding: { right: "2rem" },
-            },
-          },
-        }}
-        className="px-2 py-1 w-full"
-      >
-        {filters
-          .filter(({ key }) => {
-            if (key === "veg") return outletInfo?.veg;
-            if (key === "non_veg") return outletInfo?.nonVeg;
-            if (key === "egg") return outletInfo?.egg;
-            if (key === "vegan") return outletInfo?.vegan;
-            if (key === "alcohol") return outletInfo?.alcohol;
-            if (key === "nonalcohol") return outletInfo?.nonAlcohol;
-            return true;
-          })
-          .map(({ label, key, color, icon }) => (
-            <SplideSlide key={key} className="w-auto">
+    <div>
+      <section className="flex px-2 space-x-2 text-sm justify-evenly text-nowrap">
+        <FilterOption
+          isActive={isActiveDishType.toLowerCase() === "veg"}
+          onClick={() => handleFilter("VEG")}
+          color="#55CB1E"
+          label="Veg"
+        />
+        <FilterOption
+          isActive={isActiveDishType.toLowerCase() === "non_veg"}
+          onClick={() => handleFilter("NON_VEG")}
+          color="#804000"
+          label="Non Veg"
+        />
+        <FilterOption
+          isActive={isActiveDishType.toLowerCase() === "egg"}
+          onClick={() => handleFilter("EGG")}
+          color="#D2C903"
+          label="Egg"
+        />
+        <button
+          type="button"
+          onClick={openModal}
+          className="px-2 py-1 ml-2 text-xs font-semibold text-black border border-gray-200 rounded-md"
+        >
+          {activeIcon}
+        </button>
+      </section>
+      {isModalOpen && (
+        <BottomPopUp height="25dvh" show={isModalOpen} onClose={closeModal}>
+          <div className="pt-4 pb-8 mb-4 text-black bg-[#ffffff] rounded-xl">
+            <div className="mb-4 text-xl text-center text-[#000000]">
+              Filters
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-4 font-medium text-nowrap">
               <FilterOption
-                isActive={isActiveDishType.toLowerCase() === key.toLowerCase()}
-                onClick={() => {
-                  handleFilter(key.toUpperCase());
-                }}
-                onClear={handleClearFilter}
-                color={color}
-                label={label}
-                icon={icon}
+                isActive={isActiveDishType.toLowerCase() === "vegan"}
+                onClick={() => handleFilter("VEGAN")}
+                color="#02614b"
+                label="Vegan"
               />
-            </SplideSlide>
-          ))}
-      </Splide>
+
+              <FilterOption
+                isActive={isActiveDishType.toLowerCase() === "alcohol"}
+                onClick={() => handleFilter("ALCOHOL")}
+                icon={foodTypeIcons.alcohol}
+                label="Alcohol"
+              />
+              <FilterOption
+                isActive={
+                  isActiveDishType?.replace(/[^a-zA-Z ]/, "").toLowerCase() ===
+                  "nonalcohol"
+                }
+                onClick={() => handleFilter("NON_ALCOHOL")}
+                icon={foodTypeIcons.nonalcohol}
+                label="Non Alcohol"
+              />
+
+              <FilterOption
+                isActive={isActiveDishType === "all"}
+                onClick={() => handleFilter("ALL")}
+                color="black"
+                label="None"
+                isNone
+              />
+            </div>
+          </div>
+        </BottomPopUp>
+      )}
     </div>
   );
 };

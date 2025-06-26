@@ -1,4 +1,4 @@
-import { create } from "zustand"
+import { create } from "zustand";
 
 export enum MenuType {
   MAIN_SUB_DISH = 1,
@@ -8,6 +8,7 @@ export enum MenuType {
 export enum CategoryLayout {
   EDGE = 1,
   CLASSIC = 2,
+  COLLAPSE = 3,
 }
 
 export enum CardLayout {
@@ -26,106 +27,105 @@ export enum WeekDay {
 }
 
 export interface Category {
-  _id: string
-  name: string
-  coverImage?: string
-  dishIds?: string[]
+  _id: string;
+  name: string;
+  coverImage?: string;
+  dishIds?: string[];
 }
 
 export interface Dish {
-  _id: string
-  name: string
-  price: number
-  description?: string
-  images?: string[]
+  _id: string;
+  name: string;
+  price: number;
+  description?: string;
+  images?: string[];
 }
 
 export interface MenuLayout {
-  _id: string
-  name: string
-  menuType: MenuType
-  categoryLayout: CategoryLayout
-  cardLayout: CardLayout
-  primaryColor: string
-  secondaryColor: string
-  zoneIds: string[]
-  days: WeekDay[]
-  startTime: number
-  endTime: number
-  isActive?: boolean
-  isDeleted?: boolean
+  _id: string;
+  name: string;
+  menuType: MenuType;
+  categoryLayout: CategoryLayout;
+  cardLayout: CardLayout;
+  primaryColor: string;
+  secondaryColor: string;
+  zoneIds: string[];
+  days: WeekDay[];
+  startTime: number;
+  endTime: number;
+  isActive?: boolean;
+  isDeleted?: boolean;
 }
 
 interface MenuCreationState {
+  copyMenuLayoutId: string | null;
+  copyCompleteMenu: boolean;
+  sourceMenuName: string;
 
-  copyMenuLayoutId: string | null
-  copyCompleteMenu: boolean
-  sourceMenuName: string
+  showCopyMenuConfirmModal: boolean;
+  setShowCopyMenuConfirmModal: (show: boolean) => void;
 
-  showCopyMenuConfirmModal: boolean
-  setShowCopyMenuConfirmModal: (show: boolean) => void
-
-  currentStep: number
-  menuType: MenuType | null
-  categoryLayout: CategoryLayout | null
-  cardLayout: CardLayout | null
-  primaryColor: string
-  secondaryColor: string
+  currentStep: number;
+  menuType: MenuType | null;
+  categoryLayout: CategoryLayout | null;
+  cardLayout: CardLayout | null;
+  primaryColor: string;
+  secondaryColor: string;
 
   // New fields for additional steps
-  name: string
-  selectedZoneIds: string[]
-  selectedDays: WeekDay[]
-  startTime: number
-  endTime: number
+  name: string;
+  selectedZoneIds: string[];
+  selectedDays: WeekDay[];
+  startTime: number;
+  endTime: number;
 
-  editingMenuId: string
+  editingMenuId: string;
 
-  showCreationFlow: boolean
-  setShowCreationFlow: (show: boolean) => void
+  showCreationFlow: boolean;
+  setShowCreationFlow: (show: boolean) => void;
 
   // Actions
-  setCurrentStep: (step: number) => void
-  setMenuType: (type: MenuType) => void
-  setCategoryLayout: (layout: CategoryLayout) => void
-  setCardLayout: (layout: CardLayout) => void
-  setColors: (primary: string, secondary: string) => void
-  resetStore: () => void
-  goPreviousStep: () => void
+  setCurrentStep: (step: number) => void;
+  setMenuType: (type: MenuType) => void;
+  setCategoryLayout: (layout: CategoryLayout) => void;
+  setCardLayout: (layout: CardLayout) => void;
+  setColors: (primary: string, secondary: string) => void;
+  resetStore: () => void;
+  goPreviousStep: () => void;
 
   // New actions
-  setMenuName: (name: string) => void
-  setSelectedZoneIds: (zoneIds: string[]) => void
-  toggleZoneSelection: (zoneId: string) => void
-  toggleSelectedDay: (day: WeekDay) => void
-  setTimeRange: (start: number, end: number) => void
-  setEditingMenuId: (menuId: string) => void
+  setMenuName: (name: string) => void;
+  setSelectedZoneIds: (zoneIds: string[]) => void;
+  toggleZoneSelection: (zoneId: string) => void;
+  toggleSelectedDay: (day: WeekDay) => void;
+  setTimeRange: (start: number, end: number) => void;
+  setEditingMenuId: (menuId: string) => void;
 
   // New function to set all menu data at once
-  setMenuData: (menu: MenuLayout) => void
+  setMenuData: (menu: MenuLayout) => void;
 
   // Computed
-  getPayload: () => MenuCreationPayload
-  canProceed: () => boolean
+  getPayload: () => MenuCreationPayload;
+  canProceed: () => boolean;
 
-  setCopyMenuLayoutId: (id: string | null) => void
-  setCopyCompleteMenu: (copy: boolean) => void
-  setSourceMenuName: (name: string) => void
+  setCopyMenuLayoutId: (id: string | null) => void;
+  setCopyCompleteMenu: (copy: boolean) => void;
+  setSourceMenuName: (name: string) => void;
 }
 
 export interface MenuCreationPayload {
-  menuType: MenuType | null
-  categoryLayout: CategoryLayout | null
-  cardLayout: CardLayout | null
-  primaryColor: string
-  secondaryColor: string
-  name: string
-  zoneIds: string[]
-  days: WeekDay[]
-  startTime: number
-  endTime: number
-  copyCompleteMenu?: boolean
-  sourceMenuId?: string
+  menuType: MenuType | null;
+  categoryLayout: CategoryLayout | null;
+  cardLayout: CardLayout | null;
+  primaryColor: string;
+  secondaryColor: string;
+  name: string;
+  zoneIds: string[];
+  days: WeekDay[];
+  startTime: number;
+  endTime: number;
+  copyCompleteMenu?: boolean;
+  sourceMenuId?: string;
 }
 
 const initialState = {
@@ -145,7 +145,7 @@ const initialState = {
   startTime: 240,
   endTime: 239,
   editingMenuId: "",
-}
+};
 
 export const useMenuCreationStore = create<MenuCreationState>()((set, get) => ({
   ...initialState,
@@ -154,7 +154,8 @@ export const useMenuCreationStore = create<MenuCreationState>()((set, get) => ({
   setShowCreationFlow: (show) => set({ showCreationFlow: show }),
 
   showCopyMenuConfirmModal: false,
-  setShowCopyMenuConfirmModal: (show) => set({ showCopyMenuConfirmModal: show }),
+  setShowCopyMenuConfirmModal: (show) =>
+    set({ showCopyMenuConfirmModal: show }),
 
   setCopyMenuLayoutId: (id: string | null) => set({ copyMenuLayoutId: id }),
   setCopyCompleteMenu: (copy: boolean) => set({ copyCompleteMenu: copy }),
@@ -191,30 +192,30 @@ export const useMenuCreationStore = create<MenuCreationState>()((set, get) => ({
 
   toggleZoneSelection: (zoneId) =>
     set((state) => {
-      const zones = [...state.selectedZoneIds]
-      const index = zones.indexOf(zoneId)
+      const zones = [...state.selectedZoneIds];
+      const index = zones.indexOf(zoneId);
 
       if (index === -1) {
-        zones.push(zoneId)
+        zones.push(zoneId);
       } else {
-        zones.splice(index, 1)
+        zones.splice(index, 1);
       }
 
-      return { selectedZoneIds: zones }
+      return { selectedZoneIds: zones };
     }),
 
   toggleSelectedDay: (day) =>
     set((state) => {
-      const days = [...state.selectedDays]
-      const index = days.indexOf(day)
+      const days = [...state.selectedDays];
+      const index = days.indexOf(day);
 
       if (index === -1) {
-        days.push(day)
+        days.push(day);
       } else {
-        days.splice(index, 1)
+        days.splice(index, 1);
       }
 
-      return { selectedDays: days }
+      return { selectedDays: days };
     }),
 
   setTimeRange: (start: number, end: number) =>
@@ -258,42 +259,48 @@ export const useMenuCreationStore = create<MenuCreationState>()((set, get) => ({
       days: get().selectedDays,
       startTime: get().startTime,
       endTime: get().endTime,
-    }
+    };
 
     // Add copy properties if copying a menu
     if (get().copyMenuLayoutId) {
-      payload.sourceMenuId = get().copyMenuLayoutId
+      payload.sourceMenuId = get().copyMenuLayoutId;
 
       if (get().copyCompleteMenu) {
-        payload.copyCompleteMenu = true
+        payload.copyCompleteMenu = true;
       }
     }
 
-    return payload
+    return payload;
   },
 
   canProceed: () => {
-    const { currentStep, menuType, categoryLayout, cardLayout, name, selectedZoneIds } = get()
+    const {
+      currentStep,
+      menuType,
+      categoryLayout,
+      cardLayout,
+      name,
+      selectedZoneIds,
+    } = get();
     switch (currentStep) {
       case 1:
-        return menuType !== null
+        return menuType !== null;
       case 2:
-        return categoryLayout !== null
+        return categoryLayout !== null;
       case 3:
-        return cardLayout !== null
+        return cardLayout !== null;
       case 4:
-        return true
+        return true;
       case 5:
-        return name.trim() !== ""
+        return name.trim() !== "";
       case 6:
-        return name.trim() !== "" && selectedZoneIds.length > 0
+        return name.trim() !== "" && selectedZoneIds.length > 0;
       case 7:
-        return true
+        return true;
       case 8:
-        return true
+        return true;
       default:
-        return true
+        return true;
     }
   },
-}))
-
+}));
