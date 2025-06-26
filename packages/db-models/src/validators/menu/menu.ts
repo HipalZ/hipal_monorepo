@@ -20,6 +20,7 @@ export type MenuDay = (typeof MENU_DAYS)[keyof typeof MENU_DAYS];
 export const CATEGORY_LAYOUT_TYPES = {
   EDGE: 1,
   CLASSIC: 2,
+  COLLAPSE: 3,
 } as const;
 export type CategoryLayout =
   (typeof CATEGORY_LAYOUT_TYPES)[keyof typeof CATEGORY_LAYOUT_TYPES];

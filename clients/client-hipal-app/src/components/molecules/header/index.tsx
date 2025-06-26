@@ -55,7 +55,7 @@ function Header({
         // background: `linear-gradient(180deg, ${primaryColor} 0%, ${secondaryColor} 100%)`,
         backgroundColor: `${secondaryColor}`,
       }}
-      className="sticky top-0 z-[1000] flex flex-col space-y-2 text-4xl py-2 text-black overflow-hidden"
+      className="sticky top-0 z-[1000] flex flex-col text-4xl pb-2 text-black overflow-hidden"
       initial={{ opacity: 0, y: -100 }}
       animate={{
         opacity: showHeader ? 1 : 0,

@@ -75,9 +75,9 @@ const FoodType = ({ types }: { types: FOOD_TYPES[] }) => {
         return (
           <div
             key={index}
-            className={`w-5 h-5 border-2 rounded-md ${border} flex items-center justify-center`}
+            className={`w-4 h-4 border-2 rounded-md ${border} flex items-center justify-center`}
           >
-            <div className={`rounded-full w-2 h-2 ${circle}`} />
+            <div className={`rounded-full w-1.5 h-1.5 ${circle}`} />
           </div>
         );
       })}

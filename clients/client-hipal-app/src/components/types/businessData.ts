@@ -199,6 +199,7 @@ export enum MenuType {
 export enum CategoryLayout {
   EDGE = 1,
   CLASSIC = 2,
+  COLLAPSE = 3,
 }
 
 export enum CardLayout {
