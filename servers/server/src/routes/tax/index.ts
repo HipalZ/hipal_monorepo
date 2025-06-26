@@ -1,8 +1,9 @@
-import { Tax, TaxName } from "@hi/db-models";
+import { Dish, Tax, TaxName } from "@hi/db-models";
 import {
   TaxTypeSchema,
   updateTaxTypeSchema,
 } from "@hi/db-models/src/validators";
+import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -58,6 +59,80 @@ const taxRouter = new Hono()
       201,
     );
   })
+
+  .post(
+    "/link_dishes",
+    zValidator(
+      "json",
+      z.object({
+        dishIds: z.array(z.string().min(24).max(24)),
+        taxId: z.string().min(24).max(24),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { dishIds, taxId } = await c.req.json();
+
+        const tax = await Tax.findById(taxId).session(session);
+        if (!tax) {
+          return respond(c, "Tax not found", true, 404, {});
+        }
+
+        const result = await Dish.updateMany(
+          { _id: { $in: dishIds } },
+          { $set: { tax: tax.value } },
+          { session },
+        );
+
+        if (result.modifiedCount < 1) {
+          return respond(
+            c,
+            "No dishes were linked (maybe already set)",
+            true,
+            400,
+            {},
+          );
+        }
+
+        return respond(c, "Dishes linked successfully", false, 200, {
+          taxId: tax._id.toString(),
+        });
+      });
+    },
+  )
+
+  .post(
+    "/unlink_dishes",
+    zValidator(
+      "json",
+      z.object({
+        dishIds: z.array(z.string().min(24).max(24)),
+        taxId: z.string().min(24).max(24),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { dishIds, taxId } = await c.req.json();
+
+        const tax = await Tax.findById(taxId).session(session);
+        if (!tax) {
+          return respond(c, "Tax not found", true, 404, {});
+        }
+
+        const result = await Dish.updateMany(
+          { _id: { $in: dishIds } },
+          { $unset: { tax: 0 } },
+          { session },
+        );
+
+        return respond(c, "Dishes unlinked successfully", false, 200, {
+          taxId: tax._id,
+        });
+      });
+    },
+  )
 
   .put("/", zValidator("json", updateTaxTypeSchema), async (c) => {
     const requestData = await c.req.json();
