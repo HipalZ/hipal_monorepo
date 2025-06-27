@@ -195,6 +195,347 @@ const posRouter = new Hono()
       200,
     );
   })
+  // .get(
+  //   "/get_bill",
+  //   ubacMiddleware("bill"),
+  //   zValidator(
+  //     "query",
+  //     z.object({
+  //       businessId: z.string().min(3).max(200),
+  //       tableName: z.string().min(1).max(200),
+  //       generatedBy: z.string().min(1).max(200),
+  //     }),
+  //   ),
+  //   async (c) => {
+  //     //@ts-ignore
+  //     return runInTransaction(async (session: ClientSession) => {
+  //       const { businessId, tableName, generatedBy } = c.req.query();
+
+  //       sendBillPrintEvent({
+  //         tableName: "T1",
+  //         businessId: businessId,
+  //         customerName: "Datta",
+  //         customerPhone: "9588413799",
+  //         items: [
+  //           {
+  //             dish: {
+  //               name: "Mushroom Pasta (Full)",
+  //               price: 330,
+  //               quantity: 1,
+  //             },
+  //             extras: [],
+  //           },
+  //           {
+  //             dish: {
+  //               name: "turkish eggs with greek yogurt",
+  //               price: 270,
+  //               quantity: 1,
+  //             },
+  //             extras: [],
+  //           },
+  //           {
+  //             dish: {
+  //               name: 'Margherita Pizza (8" inch)',
+  //               price: 265,
+  //               quantity: 1,
+  //             },
+  //             extras: [
+  //               {
+  //                 name: "Neapolitan Dough",
+  //                 price: 0,
+  //                 quantity: 1,
+  //               },
+  //               {
+  //                 name: "Bell Pepper 50 Grams",
+  //                 price: 25,
+  //                 quantity: 1,
+  //               },
+  //             ],
+  //           },
+  //           {
+  //             dish: {
+  //               name: "Green Apple Mojito (Jar)",
+  //               price: 220,
+  //               quantity: 1,
+  //             },
+  //             extras: [],
+  //           },
+  //           {
+  //             dish: {
+  //               name: "peach ice tea (Jar)",
+  //               price: 240,
+  //               quantity: 1,
+  //             },
+  //             extras: [],
+  //           },
+  //         ],
+  //         posRestName: "test",
+  //         generatedBy: generatedBy,
+  //         date: Date.now(),
+  //         serviceCharge: 0,
+  //         discount: 0,
+  //         tax: 5,
+  //         total: 256,
+  //         billRequestId: "dddwqz",
+  //         subTotal: 90,
+  //         tips: 5,
+  //         claimedCoins: 30,
+  //       });
+
+  //       // // Fetch POS config for the business
+  //       // const pos = await BusinessPosConfig.findOne({
+  //       //   businessId,
+  //       //   isDeleted: false,
+  //       //   active: true,
+  //       // });
+  //       // if (!pos) {
+  //       //   return c.json(
+  //       //     {
+  //       //       message: "POS not found",
+  //       //       err: true,
+  //       //       data: { success: false },
+  //       //     },
+  //       //     404,
+  //       //   );
+  //       // }
+
+  //       // // Fetch table session data
+  //       // const tableSession = await UserSession.findOne({
+  //       //   businessId,
+  //       //   tableName,
+  //       // });
+
+  //       // if (!tableSession) {
+  //       //   return c.json(
+  //       //     {
+  //       //       message: "Table session not found",
+  //       //       err: true,
+  //       //       data: { success: false },
+  //       //     },
+  //       //     404,
+  //       //   );
+  //       // }
+
+  //       // // Helper to call axios posts with the necessary config
+  //       // const axiosPosApiCall = async (path: string, config: object) => {
+  //       //   return axios.post(path, {
+  //       //     app_key: pos.accessKey,
+  //       //     app_secret: pos.secretKey,
+  //       //     access_token: pos.authToken,
+  //       //     restID: pos.restId,
+  //       //     ...config,
+  //       //   });
+  //       // };
+
+  //       // // If session exists, check if re-registration is required
+  //       // if (tableSession) {
+  //       //   const hoursSinceLastUpdate =
+  //       //     (Date.now() - new Date(tableSession.date).getTime()) /
+  //       //     (1000 * 60 * 60);
+  //       //   if (hoursSinceLastUpdate > 3) {
+  //       //     const { data: regData } = await axiosPosApiCall(
+  //       //       posApiPaths.registerUser,
+  //       //       {
+  //       //         phone: tableSession.pin,
+  //       //         name: generatedBy,
+  //       //       },
+  //       //     );
+  //       //     if (regData.success === "0") {
+  //       //       throw new Error("User not registered");
+  //       //     }
+  //       //   }
+  //       // }
+
+  //       // // Try fetching bill if already requested
+  //       // if (tableSession?.billRequestId) {
+  //       //   const { data: billData } = await axiosPosApiCall(
+  //       //     posApiPaths.getBill,
+  //       //     {
+  //       //       bill_request_id: tableSession.billRequestId,
+  //       //     },
+  //       //   );
+
+  //       //   if (billData.success === "0") {
+  //       //     throw new Error("Error fetching  bill");
+  //       //   }
+  //       //   const simpleArray = transformItemsToSimpleArray(
+  //       //     billData.items_data || [],
+  //       //   );
+  //       //   if (billData.success === "1") {
+  //       //     const orderData = billData.order_data;
+  //       //     const billObj = {
+  //       //       billing_user_name: orderData.billing_user_name,
+  //       //       serviceCharge: orderData.service_charge,
+  //       //       discount: orderData.discount,
+  //       //       tax: tableSession.finalTax,
+  //       //       total: tableSession.finalTotal,
+  //       //       customerPhone:
+  //       //         tableSession.phoneNumbers[0] || orderData.customer_phone,
+  //       //       customerName:
+  //       //         tableSession.customerName || orderData.customer_name,
+  //       //       tableName: orderData.table_no,
+  //       //       billRequestId: tableSession.billRequestId,
+  //       //       items: simpleArray,
+  //       //       subTotal: orderData.core_price,
+  //       //       tips: tableSession.tips || 0,
+  //       //       claimedCoins: tableSession.claimedCoins || 0,
+  //       //       couponId: tableSession.couponId,
+  //       //       initialTotal: tableSession.initialTotal,
+  //       //     };
+
+  //       //     return c.json(
+  //       //       {
+  //       //         message: "Data fetched successfully",
+  //       //         err: false,
+  //       //         data: billObj,
+  //       //       },
+  //       //       200,
+  //       //     );
+  //       //   }
+  //       // }
+
+  //       // // Request a new bill
+  //       // const { data: requestData } = await axiosPosApiCall(
+  //       //   posApiPaths.requestBill,
+  //       //   {
+  //       //     pin: tableSession?.pin,
+  //       //     tableNo: tableName,
+  //       //   },
+  //       // );
+  //       // if (requestData.success === "0") {
+  //       //   throw new Error("Error requesting bill");
+  //       // }
+
+  //       // // Ensure requestId is stored in session
+  //       // const request_id = tableSession?.requestId || requestData.request_id;
+  //       // if (!tableSession?.requestId) {
+  //       //   await UserSession.findOneAndUpdate(
+  //       //     { businessId, tableName },
+  //       //     { requestId: request_id },
+  //       //     { new: true },
+  //       //   );
+  //       // }
+
+  //       // // Check bill status
+  //       // const { data: checkData } = await axiosPosApiCall(
+  //       //   posApiPaths.checkBill,
+  //       //   {
+  //       //     request_id,
+  //       //   },
+  //       // );
+  //       // if (checkData.success === "0") {
+  //       //   throw new Error("Error checking bill");
+  //       // }
+
+  //       // const bill_request_id = checkData.bill_request_id;
+  //       // if (!bill_request_id) {
+  //       //   return c.json(
+  //       //     {
+  //       //       message: "Error fetching data",
+  //       //       err: true,
+  //       //       data: { success: false },
+  //       //     },
+  //       //     400,
+  //       //   );
+  //       // }
+
+  //       // // Get bill details
+  //       // const { data: getBillData } = await axiosPosApiCall(
+  //       //   posApiPaths.getBill,
+  //       //   {
+  //       //     bill_request_id,
+  //       //   },
+  //       // );
+  //       // const simpleArray = transformItemsToSimpleArray(
+  //       //   getBillData.items_data || [],
+  //       // );
+  //       // if (getBillData.success === "1") {
+  //       //   const orderData = getBillData.order_data;
+
+  //       //   // Update or create a PosBill record
+  //       //   await PosBill.findOneAndUpdate(
+  //       //     { businessId, billRequestId: bill_request_id },
+  //       //     { items: simpleArray, billInfo: orderData, createdAt: Date.now() },
+  //       //     { upsert: true, new: true },
+  //       //   );
+
+  //       //   const updateFields = {
+  //       //     billGeneratedBy: generatedBy,
+  //       //     billRequestId: bill_request_id,
+  //       //     billInvoiceId: orderData?.invoice_id,
+  //       //     tax: orderData?.tax || 0,
+  //       //     serviceCharge: orderData?.service_charge,
+  //       //     initialTax: orderData?.tax || 0,
+  //       //     initialSubTotal: orderData?.core_price || 0,
+  //       //     discount: orderData?.discount || 0,
+  //       //     initialTotal: orderData?.total || 0,
+  //       //     finalTax: orderData?.tax || 0,
+  //       //     finalTotal: orderData?.total || 0,
+  //       //     finalSubTotal: orderData?.core_price || 0,
+  //       //   };
+  //       //   const updateSession = await UserSession.findOneAndUpdate(
+  //       //     { businessId, tableName },
+  //       //     updateFields,
+  //       //     { new: true },
+  //       //   );
+
+  //       //   const billObj = {
+  //       //     billing_user_name: orderData.billing_user_name,
+  //       //     serviceCharge: orderData.service_charge,
+  //       //     discount: orderData.discount,
+  //       //     tax: updateSession?.finalTax,
+  //       //     total: updateSession?.finalTotal,
+  //       //     customerPhone:
+  //       //       tableSession.phoneNumbers[0] || orderData.customer_phone,
+  //       //     customerName: tableSession.customerName || orderData.customer_name,
+  //       //     tableName: orderData.table_no,
+  //       //     billRequestId: bill_request_id,
+  //       //     items: simpleArray,
+  //       //     subTotal: orderData.core_price,
+  //       //     tips: updateSession?.tips || 0,
+  //       //     claimedCoins: updateSession?.claimedCoins || 0,
+  //       //     couponId: updateSession?.couponId,
+  //       //     initialTotal: updateSession?.initialTotal,
+  //       //   };
+
+  //       //   // sendBillPrintEvent({
+  //       //   //   tableName: orderData.table_no,
+  //       //   //   businessId: businessId,
+  //       //   //   customerName: tableSession.customerName || orderData.customer_name,
+  //       //   //   customerPhone:
+  //       //   //     tableSession.phoneNumbers[0] || orderData.customer_phone,
+  //       //   //   items: simpleArray,
+  //       //   //   posRestName: pos.restName,
+  //       //   //   generatedBy: generatedBy,
+  //       //   //   date: Date.now(),
+  //       //   //   serviceCharge: orderData.service_charge,
+  //       //   //   discount: orderData.discount,
+  //       //   //   tax: updateSession?.finalTax || 0,
+  //       //   //   total: updateSession?.finalTotal || 0,
+  //       //   //   billRequestId: bill_request_id,
+  //       //   //   subTotal: orderData.core_price,
+  //       //   //   tips: updateSession?.tips || 0,
+  //       //   //   claimedCoins: updateSession?.claimedCoins || 0,
+  //       //   // });
+
+  //       //   return c.json(
+  //       //     { message: "Data fetched successfully", err: false, data: billObj },
+  //       //     200,
+  //       //   );
+  //       // }
+
+  //       return c.json(
+  //         {
+  //           message: "Error fetching data",
+  //           err: true,
+  //           data: { success: false },
+  //         },
+  //         400,
+  //       );
+  //     });
+  //   },
+  // )
+
   .get(
     "/get_bill",
     ubacMiddleware("bill"),
@@ -210,327 +551,19 @@ const posRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const { businessId, tableName, generatedBy } = c.req.query();
-
-        sendBillPrintEvent({
-          tableName: "T1",
+        const kotOrders = await KotOrder.find({
+          tableName: tableName,
+          settled: false,
           businessId: businessId,
-          customerName: "Datta",
-          customerPhone: "9588413799",
-          items: [
-            {
-              dish: {
-                name: "Mushroom Pasta (Full)",
-                price: 330,
-                quantity: 1,
-              },
-              extras: [],
-            },
-            {
-              dish: {
-                name: "turkish eggs with greek yogurt",
-                price: 270,
-                quantity: 1,
-              },
-              extras: [],
-            },
-            {
-              dish: {
-                name: 'Margherita Pizza (8" inch)',
-                price: 265,
-                quantity: 1,
-              },
-              extras: [
-                {
-                  name: "Neapolitan Dough",
-                  price: 0,
-                  quantity: 1,
-                },
-                {
-                  name: "Bell Pepper 50 Grams",
-                  price: 25,
-                  quantity: 1,
-                },
-              ],
-            },
-            {
-              dish: {
-                name: "Green Apple Mojito (Jar)",
-                price: 220,
-                quantity: 1,
-              },
-              extras: [],
-            },
-            {
-              dish: {
-                name: "peach ice tea (Jar)",
-                price: 240,
-                quantity: 1,
-              },
-              extras: [],
-            },
-          ],
-          posRestName: "test",
-          generatedBy: generatedBy,
-          date: Date.now(),
-          serviceCharge: 0,
-          discount: 0,
-          tax: 5,
-          total: 256,
-          billRequestId: "dddwqz",
-          subTotal: 90,
-          tips: 5,
-          claimedCoins: 30,
         });
-
-        // // Fetch POS config for the business
-        // const pos = await BusinessPosConfig.findOne({
-        //   businessId,
-        //   isDeleted: false,
-        //   active: true,
-        // });
-        // if (!pos) {
-        //   return c.json(
-        //     {
-        //       message: "POS not found",
-        //       err: true,
-        //       data: { success: false },
-        //     },
-        //     404,
-        //   );
-        // }
-
-        // // Fetch table session data
-        // const tableSession = await UserSession.findOne({
-        //   businessId,
-        //   tableName,
-        // });
-
-        // if (!tableSession) {
-        //   return c.json(
-        //     {
-        //       message: "Table session not found",
-        //       err: true,
-        //       data: { success: false },
-        //     },
-        //     404,
-        //   );
-        // }
-
-        // // Helper to call axios posts with the necessary config
-        // const axiosPosApiCall = async (path: string, config: object) => {
-        //   return axios.post(path, {
-        //     app_key: pos.accessKey,
-        //     app_secret: pos.secretKey,
-        //     access_token: pos.authToken,
-        //     restID: pos.restId,
-        //     ...config,
-        //   });
-        // };
-
-        // // If session exists, check if re-registration is required
-        // if (tableSession) {
-        //   const hoursSinceLastUpdate =
-        //     (Date.now() - new Date(tableSession.date).getTime()) /
-        //     (1000 * 60 * 60);
-        //   if (hoursSinceLastUpdate > 3) {
-        //     const { data: regData } = await axiosPosApiCall(
-        //       posApiPaths.registerUser,
-        //       {
-        //         phone: tableSession.pin,
-        //         name: generatedBy,
-        //       },
-        //     );
-        //     if (regData.success === "0") {
-        //       throw new Error("User not registered");
-        //     }
-        //   }
-        // }
-
-        // // Try fetching bill if already requested
-        // if (tableSession?.billRequestId) {
-        //   const { data: billData } = await axiosPosApiCall(
-        //     posApiPaths.getBill,
-        //     {
-        //       bill_request_id: tableSession.billRequestId,
-        //     },
-        //   );
-
-        //   if (billData.success === "0") {
-        //     throw new Error("Error fetching  bill");
-        //   }
-        //   const simpleArray = transformItemsToSimpleArray(
-        //     billData.items_data || [],
-        //   );
-        //   if (billData.success === "1") {
-        //     const orderData = billData.order_data;
-        //     const billObj = {
-        //       billing_user_name: orderData.billing_user_name,
-        //       serviceCharge: orderData.service_charge,
-        //       discount: orderData.discount,
-        //       tax: tableSession.finalTax,
-        //       total: tableSession.finalTotal,
-        //       customerPhone:
-        //         tableSession.phoneNumbers[0] || orderData.customer_phone,
-        //       customerName:
-        //         tableSession.customerName || orderData.customer_name,
-        //       tableName: orderData.table_no,
-        //       billRequestId: tableSession.billRequestId,
-        //       items: simpleArray,
-        //       subTotal: orderData.core_price,
-        //       tips: tableSession.tips || 0,
-        //       claimedCoins: tableSession.claimedCoins || 0,
-        //       couponId: tableSession.couponId,
-        //       initialTotal: tableSession.initialTotal,
-        //     };
-
-        //     return c.json(
-        //       {
-        //         message: "Data fetched successfully",
-        //         err: false,
-        //         data: billObj,
-        //       },
-        //       200,
-        //     );
-        //   }
-        // }
-
-        // // Request a new bill
-        // const { data: requestData } = await axiosPosApiCall(
-        //   posApiPaths.requestBill,
-        //   {
-        //     pin: tableSession?.pin,
-        //     tableNo: tableName,
-        //   },
-        // );
-        // if (requestData.success === "0") {
-        //   throw new Error("Error requesting bill");
-        // }
-
-        // // Ensure requestId is stored in session
-        // const request_id = tableSession?.requestId || requestData.request_id;
-        // if (!tableSession?.requestId) {
-        //   await UserSession.findOneAndUpdate(
-        //     { businessId, tableName },
-        //     { requestId: request_id },
-        //     { new: true },
-        //   );
-        // }
-
-        // // Check bill status
-        // const { data: checkData } = await axiosPosApiCall(
-        //   posApiPaths.checkBill,
-        //   {
-        //     request_id,
-        //   },
-        // );
-        // if (checkData.success === "0") {
-        //   throw new Error("Error checking bill");
-        // }
-
-        // const bill_request_id = checkData.bill_request_id;
-        // if (!bill_request_id) {
-        //   return c.json(
-        //     {
-        //       message: "Error fetching data",
-        //       err: true,
-        //       data: { success: false },
-        //     },
-        //     400,
-        //   );
-        // }
-
-        // // Get bill details
-        // const { data: getBillData } = await axiosPosApiCall(
-        //   posApiPaths.getBill,
-        //   {
-        //     bill_request_id,
-        //   },
-        // );
-        // const simpleArray = transformItemsToSimpleArray(
-        //   getBillData.items_data || [],
-        // );
-        // if (getBillData.success === "1") {
-        //   const orderData = getBillData.order_data;
-
-        //   // Update or create a PosBill record
-        //   await PosBill.findOneAndUpdate(
-        //     { businessId, billRequestId: bill_request_id },
-        //     { items: simpleArray, billInfo: orderData, createdAt: Date.now() },
-        //     { upsert: true, new: true },
-        //   );
-
-        //   const updateFields = {
-        //     billGeneratedBy: generatedBy,
-        //     billRequestId: bill_request_id,
-        //     billInvoiceId: orderData?.invoice_id,
-        //     tax: orderData?.tax || 0,
-        //     serviceCharge: orderData?.service_charge,
-        //     initialTax: orderData?.tax || 0,
-        //     initialSubTotal: orderData?.core_price || 0,
-        //     discount: orderData?.discount || 0,
-        //     initialTotal: orderData?.total || 0,
-        //     finalTax: orderData?.tax || 0,
-        //     finalTotal: orderData?.total || 0,
-        //     finalSubTotal: orderData?.core_price || 0,
-        //   };
-        //   const updateSession = await UserSession.findOneAndUpdate(
-        //     { businessId, tableName },
-        //     updateFields,
-        //     { new: true },
-        //   );
-
-        //   const billObj = {
-        //     billing_user_name: orderData.billing_user_name,
-        //     serviceCharge: orderData.service_charge,
-        //     discount: orderData.discount,
-        //     tax: updateSession?.finalTax,
-        //     total: updateSession?.finalTotal,
-        //     customerPhone:
-        //       tableSession.phoneNumbers[0] || orderData.customer_phone,
-        //     customerName: tableSession.customerName || orderData.customer_name,
-        //     tableName: orderData.table_no,
-        //     billRequestId: bill_request_id,
-        //     items: simpleArray,
-        //     subTotal: orderData.core_price,
-        //     tips: updateSession?.tips || 0,
-        //     claimedCoins: updateSession?.claimedCoins || 0,
-        //     couponId: updateSession?.couponId,
-        //     initialTotal: updateSession?.initialTotal,
-        //   };
-
-        //   // sendBillPrintEvent({
-        //   //   tableName: orderData.table_no,
-        //   //   businessId: businessId,
-        //   //   customerName: tableSession.customerName || orderData.customer_name,
-        //   //   customerPhone:
-        //   //     tableSession.phoneNumbers[0] || orderData.customer_phone,
-        //   //   items: simpleArray,
-        //   //   posRestName: pos.restName,
-        //   //   generatedBy: generatedBy,
-        //   //   date: Date.now(),
-        //   //   serviceCharge: orderData.service_charge,
-        //   //   discount: orderData.discount,
-        //   //   tax: updateSession?.finalTax || 0,
-        //   //   total: updateSession?.finalTotal || 0,
-        //   //   billRequestId: bill_request_id,
-        //   //   subTotal: orderData.core_price,
-        //   //   tips: updateSession?.tips || 0,
-        //   //   claimedCoins: updateSession?.claimedCoins || 0,
-        //   // });
-
-        //   return c.json(
-        //     { message: "Data fetched successfully", err: false, data: billObj },
-        //     200,
-        //   );
-        // }
 
         return c.json(
           {
-            message: "Error fetching data",
-            err: true,
-            data: { success: false },
+            message: "Data fetched successfully",
+            err: false,
+            data: kotOrders,
           },
-          400,
+          200,
         );
       });
     },
@@ -1997,7 +2030,6 @@ const posRouter = new Hono()
         customerPhone: z.string().min(1).max(200),
       }),
     ),
-
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
@@ -2014,30 +2046,12 @@ const posRouter = new Hono()
         });
 
         if (!tableInfo) {
-          return c.json(
-            {
-              message: "Table not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
+          return respond(c, "Table not found", true, 404, {});
         }
 
         const user = await User.findOne({ phone: customerPhone });
         if (!user) {
-          return c.json(
-            {
-              message: "User not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
+          return respond(c, "User not found", true, 404, {});
         }
 
         // find posconfig for a place order
@@ -2048,16 +2062,7 @@ const posRouter = new Hono()
         });
 
         if (!pos) {
-          return c.json(
-            {
-              message: "POS not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
+          return respond(c, "POS not found", true, 404, {});
         }
 
         const tableSession = await UserSession.findOne({
@@ -2065,32 +2070,8 @@ const posRouter = new Hono()
           businessId: businessId,
         });
 
-        if (tableSession?.billRequestId) {
-          return c.json(
-            {
-              message: `Bill already generated for table ${tableName} by ${tableSession?.billGeneratedBy} you can't add more items`,
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            400,
-          );
-        }
-
         const tenDigitCode = generateTenDigitCode();
         if (!tableSession) {
-          const registerUser = await axios.post(posApiPaths.registerUser, {
-            app_key: pos.accessKey,
-            app_secret: pos.secretKey,
-            access_token: pos.authToken,
-            restID: pos.restId,
-            phone: tenDigitCode,
-            name: customerName,
-          });
-          if (registerUser.data.success === "0") {
-            throw new Error("user not registered");
-          }
           const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
           const userSession = new UserSession(
             {
@@ -2099,7 +2080,6 @@ const posRouter = new Hono()
               pin: tenDigitCode,
               tableName: tableName,
               customerName: customerName,
-
               performedBy: "captain",
               date: Date.now(),
             },
@@ -2108,22 +2088,6 @@ const posRouter = new Hono()
             },
           );
           await userSession.save();
-          const petpoojaCart = convertToPetpoojaCart(
-            internalCart,
-            pos.restId,
-            customerName,
-            tenDigitCode,
-            tableName,
-            pos.accessKey,
-            pos.secretKey,
-
-            pos.authToken,
-          );
-
-          const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
-          if (saveKot.data.success === "0") {
-            throw new Error("kot not saved in pos");
-          }
 
           const res = await saveKotOrder(
             tableName,
@@ -2184,23 +2148,6 @@ const posRouter = new Hono()
             200,
           );
         }
-        // if table session already exists
-        const petpoojaCart = convertToPetpoojaCart(
-          internalCart,
-          pos.restId,
-          customerName,
-          tableSession.pin,
-          tableName,
-          pos.accessKey,
-          pos.secretKey,
-          pos.authToken,
-        );
-
-        const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
-
-        if (saveKot.data.success === "0") {
-          throw new Error("kot not saved in pos");
-        }
 
         const res = await saveKotOrder(
           tableName,
@@ -2250,7 +2197,6 @@ const posRouter = new Hono()
           date: Date.now(),
           posRestName: pos?.restName,
         });
-
         return c.json(
           {
             message: "Data fetched successfully",

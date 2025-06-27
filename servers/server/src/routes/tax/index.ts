@@ -141,7 +141,7 @@ const taxRouter = new Hono()
 
     const tax = await Tax.findByIdAndUpdate(
       taxId,
-      { $set: { name, value, menuId } },
+      { $set: { value, menuId } },
       { new: true },
     );
 

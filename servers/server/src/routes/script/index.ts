@@ -33,7 +33,7 @@ import type { ClientSession } from "mongoose";
 import { schedule } from "node-cron";
 import { z } from "zod";
 import { cache } from "../../utils/cacheHelper";
-import { petpoojaPosConfig, posApiPaths } from "../../utils/posConfig/petPooja";
+import { petpoojaPosConfig } from "../../utils/posConfig/petPooja";
 import { razorpayWrapper } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 import { whatsAppConfig } from "../../utils/whatAppTemplate";
@@ -2361,40 +2361,62 @@ const scriptRouter = new Hono()
     ),
 
     async (c) => {
-      const axiosPosApiCall = async (path: string, config: object) => {
-        return axios.post(path, {
-          app_key: "6jh08fc457wp2qkv1dntbrma3yeouxig",
-          app_secret: "26669606e665e4a014ca1d426ff2d643551ed21a",
-          access_token: "9aeec28f3aab55dd23033194beb39972d7ff6890",
-          restID: "vb0rgpfn59",
-        });
+      const payload = {
+        app_key: "6jh08fc457wp2qkv1dntbrma3yeouxig",
+        app_secret: "26669606e665e4a014ca1d426ff2d643551ed21a",
+        access_token: "9aeec28f3aab55dd23033194beb39972d7ff6890",
+        restID: "vb0rgpfn59",
+        pin: "5989193999",
+        tableNo: "A6",
       };
-      const { data: requestData } = await axiosPosApiCall(
-        posApiPaths.requestBill,
+
+      const response = await axios.post(
+        "http://api.petpooja.com/V1/captainorders/request_bill",
+        payload,
         {
-          pin: "1546598748",
-          tableNo: "1",
+          headers: {
+            "Content-Type": "application/json",
+          },
         },
       );
-      if (requestData.success === "0") {
-        throw new Error("Error requesting bill");
-      }
 
-      // Ensure requestId is stored in session
-      const request_id = requestData.request_id;
+      return respond(c, "Check bill success", false, 200, {});
+    },
+  )
 
-      // Check bill status
-      const { data: checkData } = await axiosPosApiCall(posApiPaths.checkBill, {
-        request_id,
-      });
-      if (checkData.success === "0") {
-        throw new Error("Error checking bill");
-      }
+  .post(
+    "/request_bills",
+    zValidator(
+      "json",
+      z.object({
+        isDefined: z.boolean().default(false),
+      }),
+    ),
 
-      const bill_request_id = checkData.bill_request_id;
+    async (c) => {
+      const payload = {
+        app_key: "6jh08fc457wp2qkv1dntbrma3yeouxig",
+        app_secret: "26669606e665e4a014ca1d426ff2d643551ed21a",
+        access_token: "9aeec28f3aab55dd23033194beb39972d7ff6890",
+        restID: "vb0rgpfn59",
+        pin: "5989193999",
+        tableNo: "A6",
+      };
 
-      return respond(c, "Bill requested successfully", false, 200, {
-        request_id: bill_request_id,
+      const response = await axios.post(
+        "http://api.petpooja.com/V1/captainorders/request_bill",
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      console.log(response.data);
+
+      return respond(c, "Check bill success", false, 200, {
+        bill_request_id: response.data.bill_request_id,
       });
     },
   );
