@@ -47,7 +47,7 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     type: String,
     required: false,
   },
-  tax: {
+  gst: {
     type: Number,
     required: false,
     default: 0,
@@ -109,7 +109,7 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: 0,
   },
-  finalTax: {
+  finalGst: {
     type: Number,
     required: false,
     default: 0,
@@ -124,7 +124,7 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: 0,
   },
-  initialTax: {
+  initialGst: {
     type: Number,
     required: false,
     default: 0,
@@ -172,11 +172,13 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     type: ObjectId,
     required: false,
     ref: "User",
+    default: null,
   },
   serviceChargeRemovedBy: {
     type: ObjectId,
     required: false,
     ref: "User",
+    default: null,
   },
   discountAppliedBy: {
     type: ObjectId,
@@ -204,6 +206,16 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     type: Number,
     required: false,
     default: 0,
+  },
+  otherTax: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  discountAppliedOn: {
+    type: String,
+    enum: ["ON_BILL", "ON_DISH"],
+    required: false,
   },
 });
 

@@ -27,6 +27,7 @@ import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
+import { KotOrderType, calculateBillTotals } from "../../utils/bill";
 import {
   calculateCartBill,
   convertToPetpoojaCart,
@@ -551,23 +552,72 @@ const posRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const { businessId, tableName, generatedBy } = c.req.query();
-        const kotOrders = await KotOrder.find({
+        const kotOrders = (await KotOrder.find({
           tableName: tableName,
           settled: false,
           businessId: businessId,
           bill: false,
-        });
+        }).lean()) as KotOrderType[];
+        const cartItems = kotOrders.flatMap((order) =>
+          order.cart.filter((item) => !item.isDeleted),
+        );
 
-        for (const kotOrder of kotOrders) {
-          for (const item of kotOrder.cart) {
-          }
+        const { totalDishTotal, totalGst } = calculateBillTotals(kotOrders);
+
+        const checkTableSessionIsExists = await UserSession.exists({
+          businessId: businessId,
+          tableName: tableName,
+        }).session(session);
+
+        if (!checkTableSessionIsExists) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const updateTableSession = await UserSession.findOneAndUpdate(
+          { businessId, tableName },
+          {
+            $set: {
+              initialSubTotal: totalDishTotal,
+              initialGst: totalGst,
+              total: totalDishTotal + totalGst,
+              gst: totalGst,
+              subTotal: totalDishTotal,
+            },
+          },
+          { session, new: true },
+        );
+
+        if (!updateTableSession) {
+          return respond(c, "Table session not found", true, 404, {});
         }
 
         return c.json(
           {
             message: "Data fetched successfully",
             err: false,
-            data: kotOrders,
+            data: {
+              customerName: updateTableSession.customerName,
+              customerPhone: updateTableSession.phoneNumbers[0],
+              tableName: updateTableSession.tableName,
+              couponId: updateTableSession.couponId,
+              discountAppliedOn: updateTableSession.discountAppliedOn,
+              reasonOfDiscount: updateTableSession.reasonOfDiscount,
+              reasonOfServiceCharge: updateTableSession.reasonOfServiceCharge,
+              serviceChargeAppliedBy: updateTableSession.serviceChargeAppliedBy,
+              serviceChargeRemovedBy: updateTableSession.serviceChargeRemovedBy,
+              discountAppliedBy: updateTableSession.discountAppliedBy,
+              discountRemovedBy: updateTableSession.discountRemovedBy,
+              items: cartItems,
+              subTotal: updateTableSession.subTotal,
+              gst: updateTableSession.gst,
+              discount: updateTableSession.discount,
+              claimedCoins: updateTableSession.claimedCoins,
+              couponDiscount: updateTableSession.couponDiscount,
+              serviceCharge: updateTableSession.serviceCharge,
+              otherTax: updateTableSession.otherTax,
+              tips: updateTableSession.tips,
+              total: updateTableSession.total,
+            },
           },
           200,
         );
@@ -2936,6 +2986,155 @@ const posRouter = new Hono()
         //     );
         //   }
         // }
+
+        return respond(c, "sucess", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/add_discount",
+    zValidator(
+      "json",
+      z
+        .object({
+          businessId: z.string().min(3).max(200),
+          tableName: z.string().min(1).max(200),
+          value: z.number().positive(),
+          reasonOfDiscount: z.string().min(1).max(100).optional(),
+          discountAppliedOn: z.enum(["ON_BILL", "ON_DISH"]),
+          dishIds: z.array(z.string().min(1).max(200)).optional(),
+        })
+        .refine(
+          (data) =>
+            data.discountAppliedOn !== "ON_DISH" ||
+            (Array.isArray(data.dishIds) && data.dishIds.length > 0),
+          {
+            message:
+              "dishIds must be a non-empty array when discountAppliedOn is ON_DISH",
+            path: ["dishIds"],
+          },
+        ),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, generatedBy } = await c.req.json();
+
+        return respond(c, "sucess", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/add_coins",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+        value: z.number().positive(),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, generatedBy } = await c.req.json();
+
+        return respond(c, "sucess", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/add_coupon",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+        couponId: z.string().min(1).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, generatedBy } = await c.req.json();
+
+        return respond(c, "sucess", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/remove_discount",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, generatedBy } = await c.req.json();
+
+        return respond(c, "sucess", true, 200, {});
+      });
+    },
+  )
+  .post(
+    "/remove_coins",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, generatedBy } = await c.req.json();
+
+        return respond(c, "sucess", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/remove_coupon",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, generatedBy } = await c.req.json();
+
+        return respond(c, "sucess", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/clear_all_discounts",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, generatedBy } = await c.req.json();
 
         return respond(c, "sucess", true, 200, {});
       });
