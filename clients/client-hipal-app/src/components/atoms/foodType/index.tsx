@@ -17,10 +17,9 @@ const FoodType = ({ types }: { types: FOOD_TYPES[] }) => {
     alcohol: { src: Alcohol, alt: "Alcohol" },
     nonalcohol: { src: NonAlcohol, alt: "NonAlcohol" },
   };
-
   const classes: Record<
     string,
-    { border: string; circle: string; text: string }
+    { border: string; circle: string; text: string; borderBottom?: string }
   > = {
     veg: {
       border: "border-green-500",
@@ -33,9 +32,10 @@ const FoodType = ({ types }: { types: FOOD_TYPES[] }) => {
       text: "text-[#D2C903]",
     },
     nonveg: {
-      border: "border-red-500",
-      circle: "bg-red-500",
+      border: "border-[#804000]",
+      circle: "bg-[#804000]",
       text: "text-red-500",
+      borderBottom: "8px solid #804000",
     },
     vegan: {
       border: "border-[#02614b]",
@@ -71,13 +71,26 @@ const FoodType = ({ types }: { types: FOOD_TYPES[] }) => {
           );
         }
 
-        const { border, circle } = classes[currentType] || classes.other;
+        const { border, circle, borderBottom } =
+          classes[currentType] || classes.other;
+
         return (
           <div
             key={index}
-            className={`w-4 h-4 border-2 rounded-md ${border} flex items-center justify-center`}
+            className={`w-4 h-4 border-2 p-[0.125rem] rounded-sm ${border} flex items-center justify-center`}
           >
-            <div className={`rounded-full w-1.5 h-1.5 ${circle}`} />
+            {borderBottom ? (
+              <div
+                style={{
+                  borderLeft: "4px solid transparent",
+                  borderRight: "4px solid transparent",
+                  borderBottom: borderBottom,
+                }}
+                className="w-full h-full"
+              />
+            ) : (
+              <div className={`rounded-full w-1.5 h-1.5 ${circle}`} />
+            )}
           </div>
         );
       })}

@@ -114,7 +114,7 @@ const FilterOption = ({
         className="ml-1 text-[0.75rem] flex items-center justify-center capitalize"
       >
         {label}
-        {isActive && <HiX />}
+        {isActive && <HiX onClick={onClick} />}
       </div>
     </button>
   );
@@ -169,7 +169,13 @@ const QuickFilter = () => {
         </>
       )}
       {isActiveDishType !== "all" && (
-        <HiX onClick={() => handleFilter("all")} className="ml-1" />
+        <HiX
+          onClick={(e) => {
+            e.stopPropagation();
+            handleFilter("all");
+          }}
+          className="ml-1"
+        />
       )}
     </div>
   );
