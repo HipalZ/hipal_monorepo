@@ -118,12 +118,14 @@ const DishesList: FC<IDishesProps> = (props) => {
         />
       )}
 
-      <MainTypes
-        parentCategory={parentCategory || []}
-        childCategory={subTypes || []}
-        primaryColor={primaryColor}
-        secondaryColor={secondaryColor}
-      />
+      {!isCollapseLayout && (
+        <MainTypes
+          parentCategory={parentCategory || []}
+          childCategory={subTypes || []}
+          primaryColor={primaryColor}
+          secondaryColor={secondaryColor}
+        />
+      )}
     </>
   );
 };

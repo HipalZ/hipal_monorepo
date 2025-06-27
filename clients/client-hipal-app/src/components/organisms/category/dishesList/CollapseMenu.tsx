@@ -90,7 +90,7 @@ const CollapseMenu: FC<CollapseMenuProps> = ({
                       : undefined
                   }
                 >
-                  {cat.coverImage && (
+                  {cat.coverImage && cat.coverImage.length > 0 ? (
                     <Image
                       src={cat.coverImage}
                       alt={cat.name}
@@ -98,6 +98,17 @@ const CollapseMenu: FC<CollapseMenuProps> = ({
                       height={80}
                       className="object-cover w-full h-full"
                     />
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-full">
+                      <span
+                        style={{
+                          color: primaryColor,
+                        }}
+                        className="text-lg poppins"
+                      >
+                        {cat.name.charAt(0)}
+                      </span>
+                    </div>
                   )}
                 </div>
 
