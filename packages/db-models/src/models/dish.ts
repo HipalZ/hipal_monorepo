@@ -156,7 +156,7 @@ const dishSchema = new mongoose.Schema<DishType>(
       required: false,
       default: true,
     },
-    tax: {
+    gst: {
       type: Number,
       required: false,
       default: 5,

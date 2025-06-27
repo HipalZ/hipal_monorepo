@@ -81,7 +81,7 @@ const taxRouter = new Hono()
 
         const result = await Dish.updateMany(
           { _id: { $in: dishIds } },
-          { $set: { tax: tax.value } },
+          { $set: { gst: tax.value } },
           { session },
         );
 
@@ -123,7 +123,7 @@ const taxRouter = new Hono()
 
         const result = await Dish.updateMany(
           { _id: { $in: dishIds } },
-          { $unset: { tax: 0 } },
+          { $unset: { gst: 0 } },
           { session },
         );
 

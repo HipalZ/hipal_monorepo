@@ -555,7 +555,13 @@ const posRouter = new Hono()
           tableName: tableName,
           settled: false,
           businessId: businessId,
+          bill: false,
         });
+
+        for (const kotOrder of kotOrders) {
+          for (const item of kotOrder.cart) {
+          }
+        }
 
         return c.json(
           {

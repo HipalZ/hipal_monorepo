@@ -152,11 +152,58 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     type: String,
     required: false,
   },
-  coinsAppliedUserId: {
+
+  couponDiscount: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  isDiscountApplied: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  reasonOfDiscount: {
+    type: String,
+    required: false,
+    default: "",
+  },
+  serviceChargeAppliedBy: {
+    type: ObjectId,
+    required: false,
+    ref: "User",
+  },
+  serviceChargeRemovedBy: {
+    type: ObjectId,
+    required: false,
+    ref: "User",
+  },
+  discountAppliedBy: {
     type: ObjectId,
     required: false,
     ref: "User",
     default: null,
+  },
+  discountRemovedBy: {
+    type: ObjectId,
+    required: false,
+    ref: "User",
+    default: null,
+  },
+  reasonOfServiceCharge: {
+    type: String,
+    required: false,
+    default: "",
+  },
+  subTotal: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  total: {
+    type: Number,
+    required: false,
+    default: 0,
   },
 });
 

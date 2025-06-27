@@ -188,7 +188,7 @@ export const dishSchema = z.object({
   ignoreDiscount: z.string().min(3).max(100).optional(),
   pos: z.boolean().default(false).optional(),
   active: z.boolean().default(true).optional(),
-  tax: z.coerce.number().positive().optional(),
+  gst: z.coerce.number().positive().optional(),
 });
 
 export const updateDishSchema = z
@@ -223,7 +223,7 @@ export const updateDishSchema = z
     removeRecommendationIds: z.array(ObjectIdSchema).optional(),
     removeKitchenId: ObjectIdSchema.optional(),
     menuId: ObjectIdSchema.optional(),
-    tax: z.coerce.number().optional(),
+    gst: z.coerce.number().optional(),
   })
   .strict();
 export type DishType = z.infer<typeof dishSchema>;

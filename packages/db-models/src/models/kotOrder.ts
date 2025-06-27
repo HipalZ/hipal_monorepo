@@ -133,6 +133,14 @@ const KotOrderSchema = new Schema<KotOrderType>(
       type: String,
       default: "",
     },
+    bill: {
+      type: Boolean,
+      default: false,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
