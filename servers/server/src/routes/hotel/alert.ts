@@ -769,7 +769,7 @@ const hotelAlertRouter = new Hono()
                       },
                       {
                         type: "text",
-                        text: "https://staehotels.com/",
+                        text: "https://google.com/",
                       },
                     ],
                   },
