@@ -217,6 +217,11 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     enum: ["ON_BILL", "ON_DISH"],
     required: false,
   },
+  gstPercentage: {
+    type: Number,
+    required: false,
+    default: 5,
+  },
 });
 
 userSessionSchema.index({ businessId: 1, tableName: 1 }, { unique: true });

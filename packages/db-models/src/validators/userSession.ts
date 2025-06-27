@@ -39,6 +39,7 @@ export const userSessionSchema = z.object({
   reasonOfServiceCharge: z.string().max(100).optional(),
   otherTax: z.coerce.number().optional().default(0),
   discountAppliedOn: z.enum(["ON_BILL", "ON_DISH"]).optional(),
+  gstPercentage: z.coerce.number().optional().default(5),
 });
 
 export type UserSessionSchemaType = z.infer<typeof userSessionSchema>;

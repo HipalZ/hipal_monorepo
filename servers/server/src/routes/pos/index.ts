@@ -27,7 +27,13 @@ import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
-import { KotOrderType, calculateBillTotals } from "../../utils/bill";
+import type { KotOrderTypes } from "../../utils/bill";
+import {
+  calculateBillDishIds,
+  calculateBillTotals,
+  calculateFinalTotal,
+  calculateTotalDiscount,
+} from "../../utils/bill";
 import {
   calculateCartBill,
   convertToPetpoojaCart,
@@ -556,15 +562,14 @@ const posRouter = new Hono()
           tableName: tableName,
           settled: false,
           businessId: businessId,
-          bill: false,
-        }).lean()) as KotOrderType[];
+        }).lean()) as KotOrderTypes[];
         const cartItems = kotOrders.flatMap((order) =>
           order.cart.filter((item) => !item.isDeleted),
         );
 
         const { totalDishTotal, totalGst } = calculateBillTotals(kotOrders);
 
-        const checkTableSessionIsExists = await UserSession.exists({
+        const checkTableSessionIsExists = await UserSession.findOne({
           businessId: businessId,
           tableName: tableName,
         }).session(session);
@@ -573,14 +578,35 @@ const posRouter = new Hono()
           return respond(c, "Table session not found", true, 404, {});
         }
 
+        const calculateTotalDis = calculateTotalDiscount(
+          checkTableSessionIsExists.discount,
+          checkTableSessionIsExists.claimedCoins,
+          checkTableSessionIsExists.couponDiscount,
+        );
+
+        const findServiceCharge = await Tax.findOne({
+          businessId,
+          menuId: cartItems[0].dish.menuId,
+          isActive: true,
+        });
+
+        const total = calculateFinalTotal(
+          totalDishTotal,
+          totalGst,
+          calculateTotalDis,
+          findServiceCharge?.value || 0,
+          0,
+          0,
+        );
+
         const updateTableSession = await UserSession.findOneAndUpdate(
           { businessId, tableName },
           {
             $set: {
               initialSubTotal: totalDishTotal,
               initialGst: totalGst,
-              total: totalDishTotal + totalGst,
-              gst: totalGst,
+              total: total,
+              gst: totalGst.toFixed(2),
               subTotal: totalDishTotal,
             },
           },
@@ -3004,6 +3030,7 @@ const posRouter = new Hono()
           reasonOfDiscount: z.string().min(1).max(100).optional(),
           discountAppliedOn: z.enum(["ON_BILL", "ON_DISH"]),
           dishIds: z.array(z.string().min(1).max(200)).optional(),
+          discountAppliedBy: z.string().min(1).max(50),
         })
         .refine(
           (data) =>
@@ -3019,7 +3046,117 @@ const posRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, generatedBy } = await c.req.json();
+        const {
+          businessId,
+          tableName,
+          value,
+          reasonOfDiscount,
+          discountAppliedOn,
+          dishIds,
+          discountAppliedBy,
+        } = await c.req.json();
+
+        const tableSession = await UserSession.findOne({
+          tableName: tableName,
+          businessId: businessId,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        if (discountAppliedOn === "ON_BILL") {
+          const finalSubTotal =
+            tableSession?.subTotal -
+            (value ? 0 : Math.min(value, tableSession.subTotal));
+
+          const finalTax = (tableSession.gstPercentage / 100) * finalSubTotal;
+          const totalDis = calculateTotalDiscount(
+            value,
+            tableSession.claimedCoins,
+            tableSession.couponDiscount,
+          );
+
+          const finalTotal = calculateFinalTotal(
+            finalSubTotal,
+            finalTax,
+            totalDis,
+            tableSession.serviceCharge,
+            tableSession.otherTax,
+            tableSession.tips,
+          );
+
+          await UserSession.findOneAndUpdate(
+            { businessId, tableName },
+            {
+              $set: {
+                tax: finalTax.toFixed(2),
+                total: finalTotal,
+                reasonOfDiscount: reasonOfDiscount,
+                discountAppliedOn: discountAppliedOn,
+                discountAppliedBy: discountAppliedBy,
+                isDiscountApplied: true,
+                discount: value,
+              },
+            },
+            { session, new: true },
+          );
+        }
+
+        if (discountAppliedOn === "ON_DISH") {
+          const kotOrder = (await KotOrder.find({
+            "cart.dish._id": { $in: dishIds },
+            tableName: tableName,
+            businessId: businessId,
+            settled: false,
+          }).lean()) as KotOrderTypes[];
+
+          const { totalDishTotal, totalGst } = calculateBillDishIds(
+            kotOrder,
+            dishIds,
+          );
+
+          const minDiscount = Math.min(value, totalDishTotal);
+
+          const finalSubTotal = tableSession.subTotal - minDiscount;
+
+          const finalTax = tableSession.gst - totalGst;
+
+          const totalDis = calculateTotalDiscount(
+            value,
+            tableSession.claimedCoins,
+            tableSession.couponDiscount,
+          );
+
+          const finalTotal = calculateFinalTotal(
+            finalSubTotal,
+            finalTax,
+            totalDis,
+            tableSession.serviceCharge,
+            tableSession.otherTax,
+            tableSession.tips,
+          );
+
+          await UserSession.findOneAndUpdate(
+            { businessId, tableName },
+            {
+              $set: {
+                tax: finalTax.toFixed(2),
+                total: finalTotal,
+                reasonOfDiscount: reasonOfDiscount,
+                discountAppliedOn: discountAppliedOn,
+                discountAppliedBy: discountAppliedBy,
+                discount: value,
+              },
+            },
+            { session, new: true },
+          );
+
+          return respond(c, "sucess", true, 200, {
+            totalDishTotal,
+            totalGst,
+          });
+        }
 
         return respond(c, "sucess", true, 200, {});
       });

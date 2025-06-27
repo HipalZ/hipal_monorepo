@@ -13,7 +13,6 @@ const taxTypeschema = new mongoose.Schema<TaxTypes>(
       type: String,
       required: true,
       trim: true,
-      unique: true,
     },
     value: {
       type: Number,

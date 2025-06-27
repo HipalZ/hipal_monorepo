@@ -66,7 +66,7 @@ export interface CartItem {
 }
 
 // The KOT (Kitchen Order Ticket) document
-export interface KotOrderType {
+export interface KotOrderTypes {
   _id: string;
   businessId: BusinessRef;
   userId: string;
@@ -92,7 +92,7 @@ export interface KotOrderType {
   __v: number;
 }
 
-function calculateBillTotals(kots: KotOrderType[]): {
+function calculateBillTotals(kots: KotOrderTypes[]): {
   totalDishTotal: number;
   totalGst: number;
 } {
@@ -104,6 +104,53 @@ function calculateBillTotals(kots: KotOrderType[]): {
       for (const item of kot.cart) {
         // Skip deleted items
         if (item.isDeleted) continue;
+
+        // Base price comes from portion if present, otherwise dish.price
+        const basePrice = item.portion?.price ?? item.dish.price;
+
+        // Sum up all extras (price * quantity)
+        const extrasTotal = item.extras.reduce(
+          (sum, ex) => sum + ex.price * ex.quantity,
+          0,
+        );
+
+        // Line total for this item
+        const lineTotal = (basePrice + extrasTotal) * item.quantity;
+        totalDishTotal += lineTotal;
+        console.log("Line total:", lineTotal);
+
+        // Determine GST percentage (prefer gst field)
+        const gstPercent = item.dish.gst ?? item.dish.tax ?? 0;
+        totalGst += (lineTotal * gstPercent) / 100;
+        console.log(
+          `GST for item ${item.id} (${item.dish.name}): ${gstPercent}%`,
+          (lineTotal * gstPercent) / 100,
+        );
+      }
+    }
+  } catch (err) {
+    console.error("Error calculating bill totals:", err);
+    throw new Error("Invalid data structure in KOTs");
+  }
+
+  return { totalDishTotal, totalGst };
+}
+
+function calculateBillDishIds(
+  kots: KotOrderTypes[],
+  dishIds: string[],
+): {
+  totalDishTotal: number;
+  totalGst: number;
+} {
+  let totalDishTotal = 0;
+  let totalGst = 0;
+
+  try {
+    for (const kot of kots) {
+      for (const item of kot.cart) {
+        // Skip deleted items
+        if (item.isDeleted || !dishIds.includes(item.dish._id)) continue;
 
         // Base price comes from portion if present, otherwise dish.price
         const basePrice = item.portion?.price ?? item.dish.price;
@@ -149,4 +196,18 @@ function calculateFinalTotal(
   return Math.round(total); // Round to 2 decimal places
 }
 
-export { calculateBillTotals, calculateFinalTotal };
+function calculateTotalDiscount(
+  discount: number,
+  claimedCoins: number,
+  couponDiscount: number,
+) {
+  const totalDiscount = discount + claimedCoins + couponDiscount;
+  return Math.round(totalDiscount); // Round to 2 decimal places
+}
+
+export {
+  calculateBillDishIds,
+  calculateBillTotals,
+  calculateFinalTotal,
+  calculateTotalDiscount,
+};
