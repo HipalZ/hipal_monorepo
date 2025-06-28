@@ -1,11 +1,9 @@
 import useTimings from "@/components/store/useTimings";
 import { endOfDay, startOfDay, subDays } from "date-fns";
-import React, { memo, useEffect, useState } from "react";
-import DatePicker from "react-datepicker";
+import { memo, useEffect, useState } from "react";
 import "react-datepicker/dist/react-datepicker.css";
-import PopUp from "../popUp";
 
-const DateRangePicker: React.FC = () => {
+const DateRangePicker = () => {
   const {
     setInTime,
     setTimeStampStart,
@@ -22,9 +20,7 @@ const DateRangePicker: React.FC = () => {
     setSelectedRange: s.setSelectedRange,
   }));
   const [dayBeforeYesterday, setDayBeforeYesterday] = useState("");
-  const [startDate, setStartDate] = useState(startOfDay(new Date()));
-  const [endDate, setEndDate] = useState(endOfDay(new Date()));
-  const [isCustomDate, setIsCustomDate] = useState(false);
+
   const formatDate = (date: Date) => {
     return `${String(date?.getDate())?.padStart(2, "0")}-${String(
       date?.getMonth() + 1,
@@ -32,10 +28,8 @@ const DateRangePicker: React.FC = () => {
   };
 
   const fetchReportForRange = (start: Date, end: Date) => {
-    setStartDate(start);
     // do not place the optional chaining operator here
     setTimeStampStart(Date.parse(start.toString()));
-    setEndDate(end);
     // do not place the optional chaining operator here
     setTimeStampEnd(Date.parse(end.toString()));
     setInTime(formatDate(start));
@@ -77,57 +71,37 @@ const DateRangePicker: React.FC = () => {
         <div className="flex flex-wrap items-center justify-start space-x-2">
           <button
             type="button"
-            className={`rounded-full border px-3 py-1 text-xs ${selectedRange === "today" ? "bg-[#000000] text-white" : "bg-white"
-              }`}
+            className={`rounded-full border px-3 py-1 text-xs ${
+              selectedRange === "today" ? "bg-[#000000] text-white" : "bg-white"
+            }`}
             onClick={handleTodayClick}
           >
             Today
           </button>
           <button
             type="button"
-            className={`rounded-full border px-3 py-1 text-xs ${selectedRange === "yesterday"
+            className={`rounded-full border px-3 py-1 text-xs ${
+              selectedRange === "yesterday"
                 ? "bg-[#000000] text-white"
                 : "bg-white"
-              }`}
+            }`}
             onClick={handleYesterdayClick}
           >
             Yesterday
           </button>
           <button
             type="button"
-            className={`rounded-full border px-3 py-1 text-xs ${selectedRange === "daybeforeyesterday"
+            className={`rounded-full border px-3 py-1 text-xs ${
+              selectedRange === "daybeforeyesterday"
                 ? "bg-[#000000] text-white"
                 : "bg-white"
-              }`}
+            }`}
             onClick={handleDayBeforeYesterdayClick}
           >
             {dayBeforeYesterday}
           </button>
         </div>
       </div>
-      {/* <div className="mx-6 date-picker-container">
-        {isCustomDate && (
-          <PopUp show={isCustomDate} onClose={() => setIsCustomDate(false)}>
-            <div className="flex justify-center p-2 date-picker-container item-center">
-              <DatePicker
-                selected={startDate}
-                onChange={(dates: any) => {
-                  if (Array.isArray(dates) && dates.length === 2) {
-                    const [start, end] = dates;
-                    fetchReportForRange(start, end);
-                  } else {
-                    fetchReportForRange(dates, dates);
-                  }
-                }}
-                startDate={startDate}
-                endDate={endDate}
-                selectsRange
-                inline
-              />
-            </div>
-          </PopUp>
-        )}
-      </div> */}
     </div>
   );
 };

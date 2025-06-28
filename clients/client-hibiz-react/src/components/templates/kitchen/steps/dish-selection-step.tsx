@@ -121,11 +121,7 @@ function DishSelectionStepComponent({
                       </Badge>
                     )}
                   </div>
-                  {dish.description && (
-                    <p className="text-sm text-gray-500 line-clamp-1">
-                      {dish.description}
-                    </p>
-                  )}
+                 
                 </div>
               </div>
             ))}

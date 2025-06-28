@@ -112,6 +112,9 @@ export interface CartItem {
   extras: any[]; // Replace `any[]` with a specific type if extras have a defined structure
   quantity: number;
   _id: string;
+  isDeleted: boolean;
+  deletedBy: string;
+  reasonOfDeletion: string;
 }
 
 export interface Dish {
@@ -291,10 +294,14 @@ export interface OrderData {
   phone: string;
   cart: {
     id: string;
+    _id: string;
     dish: {
       name: string;
       price: number;
     };
+    isDeleted: boolean;
+    deletedBy: string;
+    reasonOfDeletion: string;
     quantity: number;
     portion?: {
       name: string;
@@ -319,6 +326,9 @@ export interface OrderData {
   toTable: string;
   fromTable: string;
   userId: string;
+  isDeleted: boolean;
+  deletedBy: string;
+  reasonOfDeletion: string;
 }
 
 export interface ICategory {
@@ -437,6 +447,14 @@ export interface IBillData {
   billing_user_name: string;
   serviceCharge: number;
   discount: number;
+  couponDiscount: number;
+  discountAppliedBy: boolean;
+  discountRemovedBy: boolean;
+  gst: number;
+  reasonOfDiscount: string;
+  reasonOfServiceCharge: string;
+  serviceChargeAppliedBy: "";
+  serviceChargeRemovedBy: "";
   tax: number;
   total: number;
   customerPhone: string;
@@ -450,6 +468,8 @@ export interface IBillData {
       price: number;
       quantity: number;
     };
+    id: string;
+    _id: string;
     extras: Array<{
       name: string;
       price: number;

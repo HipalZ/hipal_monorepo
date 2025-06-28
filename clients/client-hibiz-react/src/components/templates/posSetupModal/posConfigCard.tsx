@@ -1,4 +1,6 @@
-import { memo } from "react";
+import { usePosSync } from "@/hooks/usePosHook.ts";
+import { memo, useCallback } from "react";
+import { BiSync } from "react-icons/bi";
 
 interface PosConfigData {
   _id: string;
@@ -24,9 +26,15 @@ interface PosConfigCardProps {
 }
 
 const MemoPosConfigCard = ({ config, onEdit }: PosConfigCardProps) => {
+  const { isPending, mutate } = usePosSync();
+
+  const handleSync = useCallback((restId: string) => {
+    mutate(restId);
+  }, []);
+
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
+    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden max-w-[30rem]">
+      <div className="bg-primary px-6 py-4">
         <h2 className="text-xl font-bold text-white">POS Configuration</h2>
         <p className="text-blue-100">Current setup details</p>
       </div>
@@ -97,13 +105,37 @@ const MemoPosConfigCard = ({ config, onEdit }: PosConfigCardProps) => {
           </div>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-6 flex gap-6">
           <button
             type="button"
             onClick={onEdit}
-            className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+            disabled={isPending}
+            className="w-full border border-black text-sm text-nowrap text-black md:w-auto  px-4 py-2 rounded-lg font-medium transition-colors"
           >
             Edit Configuration
+          </button>
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => handleSync(config?.restId)}
+            className={`
+      flex items-center justify-center
+      w-full md:w-auto bg-primary text-white px-6 py-2 rounded-lg font-medium
+      transition-colors
+      ${isPending ? "opacity-50 cursor-not-allowed" : "hover:bg-primary-dark"}
+    `}
+          >
+            {isPending ? (
+              // spinner
+              <span
+                className="inline-block h-4 w-4 mr-2
+                   border-2 border-white border-t-transparent
+                   rounded-full animate-spin"
+              />
+            ) : (
+              <BiSync className="inline-block mr-2" />
+            )}
+            {isPending ? "Syncing..." : "Sync"}
           </button>
         </div>
       </div>

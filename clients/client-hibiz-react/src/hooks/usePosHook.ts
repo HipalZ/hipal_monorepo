@@ -1,6 +1,8 @@
+import { useError } from "@/components/store/useError.ts";
 import { apiRpc } from "@hi/common";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
+import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
 
 export interface PosConfigData {
@@ -87,7 +89,6 @@ export const useDishPermission = (isBoolean: boolean) => {
         });
 
       const res = await response.json();
-      console.log("sankalesh data", res.data);
       return res.data as DishPermissionData;
     } catch (e) {
       console.error(e);
@@ -104,5 +105,41 @@ export const useDishPermission = (isBoolean: boolean) => {
   return {
     posPermission,
     permissionLoading,
+  };
+};
+
+export const usePosSync = () => {
+  const businessId = useParams<{ businessId: string }>().businessId;
+  const { setError, setOpenErrorModal } = useError();
+  const { isPending, mutate } = useMutation({
+    mutationFn: async (restId: string) => {
+      const response = await apiRpc.pos.sync_menu.$post({
+        json: {
+          businessId: businessId || "",
+          restId: restId || "",
+        },
+      });
+      return response;
+    },
+    onSuccess: async (data) => {
+      const extraData = await data.json();
+      if (data.status === 400 || data.status === 401) {
+        setError(extraData?.error?.issues[0]?.message);
+        setOpenErrorModal(true);
+        return toast.error("Failed to sync POS");
+      }
+      if (data.status === 200 || data.status === 201) {
+        toast.success("POS synced successfully");
+        return;
+      }
+    },
+    onError: (error) => {
+      setError(error.message);
+      setOpenErrorModal(true);
+    },
+  });
+  return {
+    isPending,
+    mutate,
   };
 };

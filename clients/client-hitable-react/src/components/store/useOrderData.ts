@@ -4,7 +4,7 @@ import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import type { OrderData, User } from "../types/hiClientzData";
 
 export type orderPages = "online" | "offline" | "history" | "";
-export type TransferTable = "ITEM" | "TABLE" | "" | "FREE";
+export type TransferTable = "ITEM" | "TABLE" | "" | "FREE" | "DELETE";
 
 export type orderModal =
   | ""

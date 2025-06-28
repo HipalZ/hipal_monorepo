@@ -6,6 +6,7 @@ import Manager from "@/assets/menuManager.png";
 import Card from "@/assets/cards/card62.png";
 import MenuCard from "@/components/atom/menulayouts/MenuCards";
 import Kitchen from "@/assets/kitchen.png";
+import Tax from "@/assets/tax.png";
 import {
   Breadcrumb as UIBreadcrumb,
   BreadcrumbItem,
@@ -48,6 +49,13 @@ const menuArray = [
     subTitle: "Add Kitchen to your restaurant",
     navigate: "kitchen",
     image: Kitchen,
+  },
+  {
+    id: 5,
+    title: "Tax",
+    subTitle: "Add Tax to your restaurant",
+    navigate: "Tax",
+    image: Tax,
   },
 ];
 

@@ -1,6 +1,6 @@
 import { memo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import { Users, UserCheck, ReceiptText, CookingPot } from "lucide-react";
 import {
   type orderModal,
@@ -13,15 +13,14 @@ import CommonBottomButton from "../bottomButton";
 import { useScreenSize } from "@/hooks/useScreenSize";
 
 const MemoTableOptions = () => {
-  const {
-    setModalType,
-    selectedTable,
-    setTransferTable,
-    transferTable,
-    transferModal,
-    setTransferModal,
-    setOpenOrderModal,
-  } = useOrderStore();
+  const setModalType = useOrderStore((s) => s.setModalType);
+  const selectedTable = useOrderStore((s) => s.selectedTable);
+  const setTransferTable = useOrderStore((s) => s.setTransferTable);
+  const transferTable = useOrderStore((s) => s.transferTable);
+  const transferModal = useOrderStore((s) => s.transferModal);
+  const setTransferModal = useOrderStore((s) => s.setTransferModal);
+  const setOpenOrderModal = useOrderStore((s) => s.setOpenOrderModal);
+
   const screenSize = useScreenSize();
   const toggleModalType = useCallback(
     (type: orderModal) => {
@@ -44,7 +43,7 @@ const MemoTableOptions = () => {
 
   return (
     <section className="min-h-[90dvh] flex justify-center md:py-[8rem] px-4 mx-auto">
-      <CardContent className="space-y-4 mt-24 md:mt-6">
+      <CardContent className="space-y-4 mt-24 md:mt-6 h-[70dvh] pb-[5rem] overflow-auto hide-scrollbar">
         <h3 className="text-xl font-semibold opacity-80">Table Options</h3>
         {selectedTable?.hiCode && (
           <Badge variant="secondary" className="flex justify-between w-full">
@@ -106,6 +105,15 @@ const MemoTableOptions = () => {
         >
           <MdTableBar className="w-5 h-5 mr-2" />
           Free Table
+        </Button>
+        <Button
+          size="lg"
+          variant="outline"
+          className="w-full"
+          onClick={() => handleTransferTable("DELETE")}
+        >
+          <MdTableBar className="w-5 h-5 mr-2" />
+          Delete kot
         </Button>
       </CardContent>
       <CommonBottomButton

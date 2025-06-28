@@ -6,6 +6,7 @@ import { cn } from "@/components/utils/helpers";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import { CiGlobe } from "react-icons/ci";
 import { GiTakeMyMoney } from "react-icons/gi";
+import { Button } from "@/components/ui/button.tsx";
 
 const MemoBottomPopUp = ({
   children,
@@ -17,6 +18,7 @@ const MemoBottomPopUp = ({
   height,
   width,
   status,
+  rightTopBack 
 }: {
   children: React.ReactNode;
   show: boolean;
@@ -27,6 +29,7 @@ const MemoBottomPopUp = ({
   height?: string;
   width?: string;
   status?: string;
+  rightTopBack?: boolean;
 }) => {
 
   const { viewData } = useLiteStore();
@@ -87,7 +90,7 @@ const MemoBottomPopUp = ({
             )}
             onClick={(e) => e.stopPropagation()}
           >
-            {!hide && (
+            {!hide && !rightTopBack && (
               <div className="absolute flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 on_active_bounce -top-8 left-1/2">
                 <HiX
                   className="p-2 text-4xl text-black bg-white rounded-full cursor-pointer"
@@ -114,6 +117,11 @@ const MemoBottomPopUp = ({
                 <HiX />
               </button>
             )}
+              {rightTopBack && (
+                <Button className="absolute z-50 w-8 h-8 rounded-full top-2 right-2" onClick={onClose}>
+                  <HiX className="text-2xl cursor-pointer "/>
+                </Button>
+              )}
           </motion.div>
         </motion.div>
       )}

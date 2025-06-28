@@ -13,6 +13,7 @@ import {
 import { useCart } from "@/components/store/useCart";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SpinnerMemo from "@/components/atoms/loadingSpinner";
+import DeleteKotPanel from "@/components/delete/DeleteKot.tsx";
 
 // Lazy loaded components
 const PlaceOrders = lazy(() => import("@/components/atoms/placeOrders"));
@@ -285,7 +286,7 @@ const MemoTablePos = () => {
             </ScrollArea>
           </BottomPopUp>
           {transferModal && (
-            <BottomPopUp hide show={transferModal} onClose={closeTransferModal}>
+            <BottomPopUp hide rightTopBack show={transferModal} onClose={closeTransferModal}>
               {transferTable === "ITEM" && (
                 <Suspense fallback={<SpinnerMemo />}>
                   <TransferItem />
@@ -299,6 +300,11 @@ const MemoTablePos = () => {
               {transferTable === "FREE" && (
                 <Suspense fallback={<SpinnerMemo />}>
                   <FreeTable />
+                </Suspense>
+              )}
+              {transferTable === "DELETE" && (
+                <Suspense fallback={<SpinnerMemo />}>
+                  <DeleteKotPanel />
                 </Suspense>
               )}
             </BottomPopUp>

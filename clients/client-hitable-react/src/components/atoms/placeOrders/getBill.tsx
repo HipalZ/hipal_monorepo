@@ -3,97 +3,67 @@ import { useParams } from "react-router-dom";
 import { apiRpc } from "@hi/common";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useOrderStore } from "@/components/store/useOrderData";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Separator } from "@/components/ui/separator";
-import { Phone, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Phone,
+  ChevronDown,
+  ChevronUp,
+  User,
+  Clock,
+  AlertCircle,
+} from "lucide-react";
 import SpinnerMemo from "@/components/atoms/loadingSpinner";
 import { MdTableBar } from "react-icons/md";
 import CommonBottomButton from "../bottomButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useScreenSize } from "@/hooks/useScreenSize";
-import ForceSettle from "./forceSettle";
 import BottomPopUp from "../universalPopup";
-import type { IBillData } from "@/components/types/hiClientzData";
 import QrCodePreview from "./qrCode";
 import Normalsettle from "./normalsettle";
-import { useError } from "@/components/store/useError";
 import AddCoinz from "./addCoinz";
 import { IoClose } from "react-icons/io5";
 import { useUpdateBill } from "@/components/hooks/useTableData";
 import useBusinessData from "@/components/store/useBusinessData";
+import MemoBillOptions from "./BillOptions";
+import { useGetBill } from "@/components/hooks/useBill";
 
 const MemoGetBill = () => {
   const { businessId } = useParams();
-  const queryClient = useQueryClient();
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const { openAddCoinz, setOpenAddCoinz, setOpenOrderModal } = useOrderStore();
   const screenSize = useScreenSize();
-  const { setError, setOpenErrorModal } = useError();
   const { captainData: userData } = useHiClientZ();
+
   const [qrBillId, setQrBillId] = useState<string | null>(null);
   const [showqr, setShowqr] = useState<boolean>(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
-  const [forceSettle, setForceSettle] = useState<boolean>(false);
+  const [showMoreOption, setShowMoreOption] = useState<boolean>(false);
   const [normalSettle, setNormalSettle] = useState<boolean>(false);
+
   const { updateBill } = useUpdateBill();
   const existingLoyalty = useBusinessData((s) => s.existingLoyalty);
+
   const closeOrderModalHandler = useCallback(() => {
     setOpenOrderModal(false);
   }, [setOpenOrderModal]);
 
-  const getTableBill = async () => {
-    const response = await apiRpc.pos.get_bill.$get({
-      query: {
-        businessId: businessId || "",
-        tableName: selectedTable?.name || "",
-        generatedBy: userData?.name || "",
-      },
-    });
-
-    if (response.status === 400) {
-      return Promise.reject({
-        status: 400,
-        message: "Server timeout occurred",
-      });
-    }
-    if (response.status === 403 || response.status === 401) {
-      setOpenErrorModal(true);
-      setError("You are not authorized to perform this action");
-      return;
-    }
-
-    const res = await response.json();
-    const payment = res?.data as IBillData;
-    return payment;
-  };
-
-  const { isLoading, data } = useQuery({
-    queryKey: ["getTableBill", businessId, selectedTable?.name, userData?.name],
-    queryFn: getTableBill,
-    enabled: !!businessId && !!selectedTable && !!userData,
-    staleTime: 1000 * 60,
-    initialData: () => {
-      return queryClient.getQueryData([
-        "getTableBill",
-        businessId,
-        selectedTable?.name,
-        userData?.name,
-      ]);
-    },
-  });
+  const { isLoading, data } = useGetBill();
 
   const toggleQr = () => {
     setShowqr(!showqr);
   };
 
-  const closeForceSettle = () => {
-    setForceSettle(false);
+  const closeMoreOptions = () => {
+    setShowMoreOption(false);
   };
 
   const closeNormalSettle = () => {
@@ -113,11 +83,13 @@ const MemoGetBill = () => {
           billRequestId: data?.billRequestId ?? "",
         },
       });
+
       if (response.status === 200) {
         const result = await response.json();
         setQrBillId(result?.data?.path);
         setShowqr(true);
       }
+
       return response.json();
     },
   });
@@ -126,7 +98,9 @@ const MemoGetBill = () => {
     const confirmReplace = window.confirm(
       "Applying this will remove your Coinz/Coupon. Continue?",
     );
+
     if (!confirmReplace) return;
+
     updateBill({
       tableName: data?.tableName,
       coinz: 0,
@@ -134,6 +108,116 @@ const MemoGetBill = () => {
       couponId: null,
       businessId,
     });
+  };
+
+  // Helper function to render action history
+  const renderActionHistory = () => {
+    if (!data) return null;
+
+    const actions = [];
+
+    if (data.discountAppliedBy) {
+      actions.push({
+        type: "Discount Applied",
+        user: data.discountAppliedBy,
+        details: `₹${data.discount} discount applied ${
+          data.discountAppliedOn === "ON_DISH"
+            ? "on specific items"
+            : "on entire bill"
+        }`,
+        reason: data.reasonOfDiscount,
+        color: "bg-red-50 border-red-200 text-red-800",
+        badgeColor: "bg-red-100 text-red-800",
+      });
+    }
+
+    if (data.discountRemovedBy) {
+      actions.push({
+        type: "Discount Removed",
+        user: data.discountRemovedBy,
+        details: "Previous discount has been removed from the bill",
+        color: "bg-green-50 border-green-200 text-green-800",
+        badgeColor: "bg-green-100 text-green-800",
+      });
+    }
+
+    if (data.serviceChargeAppliedBy) {
+      actions.push({
+        type: "Service Charge Applied",
+        user: data.serviceChargeAppliedBy,
+        details: `₹${data.serviceCharge} service charge added to the bill`,
+        color: "bg-blue-50 border-blue-200 text-blue-800",
+        badgeColor: "bg-blue-100 text-blue-800",
+      });
+    }
+
+    if (data.serviceChargeRemovedBy) {
+      actions.push({
+        type: "Service Charge Removed",
+        user: data.serviceChargeRemovedBy,
+        details: "Service charge has been removed from the bill",
+        reason: data.reasonOfServiceCharge,
+        color: "bg-yellow-50 border-yellow-200 text-yellow-800",
+        badgeColor: "bg-yellow-100 text-yellow-800",
+      });
+    }
+
+    if (data.claimedCoins > 0) {
+      actions.push({
+        type: "Loyalty Coins Applied",
+        user: "Customer",
+        details: `₹${data.claimedCoins} loyalty coins redeemed`,
+        color: "bg-purple-50 border-purple-200 text-purple-800",
+        badgeColor: "bg-purple-100 text-purple-800",
+      });
+    }
+
+    if (data.couponDiscount > 0) {
+      actions.push({
+        type: "Coupon Applied",
+        user: "System",
+        details: `₹${data.couponDiscount} coupon discount applied`,
+        color: "bg-indigo-50 border-indigo-200 text-indigo-800",
+        badgeColor: "bg-indigo-100 text-indigo-800",
+      });
+    }
+
+    return actions.length > 0 ? (
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Clock className="w-5 h-5" />
+            Bill Modifications History
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {actions.map((action, index) => (
+            <Alert key={index} className={`${action.color} border-l-4`}>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold">{action.type}</span>
+                      <Badge className={action.badgeColor}>
+                        <User className="w-3 h-3 mr-1" />
+                        {action.user}
+                      </Badge>
+                    </div>
+                    <p className="text-sm">{action.details}</p>
+                    {action.reason && (
+                      <p className="text-xs mt-1 opacity-80">
+                        Reason: {action.reason}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </AlertDescription>
+            </Alert>
+          ))}
+        </CardContent>
+      </Card>
+    ) : null;
   };
 
   if (isLoading) {
@@ -167,8 +251,8 @@ const MemoGetBill = () => {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Bill Summary</span>
-              <Button variant="outline" onClick={() => setForceSettle(true)}>
-                Force Settle
+              <Button variant="outline" onClick={() => setShowMoreOption(true)}>
+                More options
               </Button>
             </CardTitle>
           </CardHeader>
@@ -189,6 +273,9 @@ const MemoGetBill = () => {
             </div>
 
             <Separator className="my-4" />
+
+            {/* Action History */}
+            {renderActionHistory()}
 
             <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
               <CollapsibleTrigger asChild>
@@ -232,6 +319,7 @@ const MemoGetBill = () => {
                 ))}
               </CollapsibleContent>
             </Collapsible>
+
             <Separator className="my-4" />
 
             {existingLoyalty?.loyaltyId && (
@@ -249,6 +337,7 @@ const MemoGetBill = () => {
                 <Separator className="my-4" />
               </>
             )}
+
             <div className="mb-4 space-y-3">
               {[
                 [
@@ -262,7 +351,7 @@ const MemoGetBill = () => {
                 ["serviceCharge", data.serviceCharge],
                 ["tips", data.tips],
                 ["discount", data.discount],
-                ["tax", data.tax],
+                ["tax", data.gst],
                 ["claimedCoins", data.claimedCoins],
               ]
                 .filter(([_, value]) => typeof value === "number" && value > 0)
@@ -275,7 +364,7 @@ const MemoGetBill = () => {
                       className="flex justify-between items-center text-sm"
                     >
                       <p className="text-gray-700 capitalize">
-                        {key.replace(/([A-Z])/g, " $1")}
+                        {key?.replace(/([A-Z])/g, " $1")}
                       </p>
                       <div className="flex items-center space-x-2">
                         <p
@@ -311,14 +400,16 @@ const MemoGetBill = () => {
         </Card>
       )}
 
-      {forceSettle && (
+      {showMoreOption && (
         <BottomPopUp
           width="w-[30rem]"
+          height="h-[100dvh] lg:h-[90dvh]"
           hide
-          show={forceSettle}
-          onClose={() => setForceSettle(false)}
+          show={showMoreOption}
+          onClose={closeMoreOptions}
+          rightTopBack
         >
-          <ForceSettle closeForceSettle={closeForceSettle} data={data} />
+          <MemoBillOptions data={data} />
         </BottomPopUp>
       )}
 
@@ -332,9 +423,10 @@ const MemoGetBill = () => {
           <QrCodePreview data={data} qrBillId={qrBillId} toggleQr={toggleQr} />
         </BottomPopUp>
       )}
+
       {normalSettle && (
         <BottomPopUp
-          height="h-[100dvh] lg:h-[80dvh]"
+          height="h-[100dvh] lg:h-[90dvh]"
           hide
           width="w-[30rem]"
           show={normalSettle}
@@ -343,6 +435,7 @@ const MemoGetBill = () => {
           <Normalsettle closeNormalSettle={closeNormalSettle} data={data} />
         </BottomPopUp>
       )}
+
       {openAddCoinz && (
         <BottomPopUp
           height="h-[85dvh] lg:h-[85dvh]"
@@ -388,4 +481,5 @@ const MemoGetBill = () => {
 };
 
 const GetBill = memo(MemoGetBill);
+
 export default GetBill;
