@@ -46,6 +46,7 @@ import {
 import { sendBillPrintEvent, sendKOTPrintEvent } from "../../utils/kot";
 import { petpoojaPosConfig, posApiPaths } from "../../utils/posConfig/petPooja";
 import { respond } from "../../utils/response";
+import items from "razorpay/dist/types/items.js";
 const admin = require("firebase-admin");
 export const generateTenDigitCode = (): string => {
   const min = 1000000000; // Minimum 10-digit number
@@ -308,6 +309,7 @@ const posRouter = new Hono()
             serviceCharge: serviceChargeAmount,
             generatedBy: generatedBy,
             subTotal: totalDishTotal,
+            items: cartItems,
           },
         );
 
@@ -429,6 +431,51 @@ const posRouter = new Hono()
         });
 
         return respond(c, "Data fetch", false, 200, taxes);
+      });
+    },
+  )
+
+
+   .get(
+    "/fetch_bill",
+    zValidator(
+      "query",
+      z.object({
+        orderId: z.string().min(24).max(24),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const {  orderId } = c.req.query();
+
+        const tableSession = await UserSession.findById(orderId);
+
+        if(!tableSession){
+          return respond(c, "Session not found", true, 404, {});
+        }
+       
+
+        return respond(c, "Data fetch", false, 200, {
+          customerName: tableSession.customerName,
+              customerPhone: tableSession.phoneNumbers[0],
+              tableName: tableSession.tableName,
+              couponId: tableSession.couponId,
+              discountAppliedOn: tableSession.discountAppliedOn,
+              reasonOfDiscount: tableSession.reasonOfDiscount,
+              reasonOfServiceCharge: tableSession.reasonOfServiceCharge,
+              items: tableSession.items,
+              subTotal: tableSession.subTotal,
+              gst: tableSession.gst,
+              discount: tableSession.discount,
+              claimedCoins: tableSession.claimedCoins,
+              couponDiscount: tableSession.couponDiscount,
+              serviceCharge: tableSession.serviceCharge,
+              otherTax: tableSession.otherTax,
+              tips: tableSession.tips,
+              total: tableSession.total,
+              billId: tableSession._id.toString(),
+        });
       });
     },
   )
@@ -3321,6 +3368,8 @@ const posRouter = new Hono()
         return respond(c, "Success", true, 200, {});
       });
     },
-  );
+  )
+
+  
 
 export default posRouter;

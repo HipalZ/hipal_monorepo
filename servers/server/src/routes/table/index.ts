@@ -384,6 +384,7 @@ const tableRouter = new Hono()
               date: Date.now(),
               discount: tableSession?.discount,
               couponDiscount: tableSession?.couponDiscount,
+              billId:tableSession?._id.toString(),
             },
           ],
           { session },
@@ -530,13 +531,13 @@ const tableRouter = new Hono()
       z.object({
         tableId: z.string().min(1).max(500),
         captainId: z.string().min(1).max(500),
-        billRequestId: z.string().min(1).max(500),
+        billId: z.string().min(24).max(24),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { tableId, captainId, billRequestId } = await c.req.json();
+        const { tableId, captainId, billId } = await c.req.json();
 
         const table = await Table.findById(tableId);
 
@@ -563,90 +564,51 @@ const tableRouter = new Hono()
           return respond(c, "Pos not found", true, 400, {});
         }
 
-        // const alreadySetlle = await Payment.findOne({
-        //   posBillRequestId: billRequestId,
-        // });
+        const alreadySetlle = await Payment.findOne({
+          billId: billId,
+        });
 
-        // if (alreadySetlle) {
-        //   return c.json(
-        //     {
-        //       message: "Bill already settled",
-        //       err: true,
-        //       data: {},
-        //     },
-        //     409,
-        //   );
-        // }
-        // await UserSession.findOneAndUpdate(
-        //   {
-        //     businessId: table?.businessId,
-        //     tableName: table?.name,
-        //   },
-        //   {
-        //     $set: {
-        //       settleType: "HI_SETTLE",
-        //     },
-        //   },
-        //   { session },
-        // );
+        if (alreadySetlle) {
+          return respond(c, "Bill already settled", true, 409, {});
+        }
+        await UserSession.findOneAndUpdate(
+          {
+            businessId: table?.businessId,
+            tableName: table?.name,
+          },
+          {
+            $set: {
+              settleType: "HI_SETTLE",
+            },
+          },
+          { session },
+        );
 
-        // const customLink = await Business.findById(table?.businessId);
+        const customLink = await Business.findById(table?.businessId);
 
-        // const qrBill = await QrBill.findOne({
-        //   requestBillId: billRequestId,
-        // });
+       
 
-        // if (qrBill) {
-        //   await QrBill.findOneAndUpdate(
-        //     {
-        //       requestBillId: billRequestId,
-        //     },
-        //     {
-        //       $set: {
-        //         captainId: captainId,
-        //         date: Date.now(),
-        //       },
-        //     },
-        //   );
+        
 
-        //   await qrBill.save();
-        //   return c.json(
-        //     {
-        //       message: "fetched qr bill",
-        //       err: false,
-        //       data: {
-        //         qrBillId: qrBill.requestBillId,
-        //         expireIn: qrBill.expireIn,
-        //         path: `https://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${qrBill.requestBillId}`,
-        //       },
-        //     },
-        //     200,
-        //   );
-        // }
-
-        // const createQrBill = await QrBill.create([
-        //   {
-        //     businessId: table?.businessId,
-        //     captainId: captainId,
-        //     date: Date.now(),
-        //     requestBillId: billRequestId,
-        //     serviceCharge: tableSession?.serviceCharge,
-        //     tableName: table?.name,
-        //     tax: tableSession?.finalTax || 0,
-        //     total: tableSession?.finalTotal || 0,
-        //     expireIn: 300000,
-        //     subTotal: tableSession?.initialTotal || 0,
-        //   },
-        // ]);
+       const updateQrBill = await QrBill.findOneAndUpdate(
+          {
+            billId: billId,
+          },
+          {
+            $set: {
+              date: Date.now(),
+            },
+          },
+          { new: true,session },
+        );
 
         return c.json(
           {
             message: "fetched qr bill",
             err: false,
             data: {
-              // qrBillId: createQrBill[0].requestBillId,
-              // expireIn: createQrBill[0].expireIn,
-              // path: `https://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${createQrBill[0].requestBillId}`,
+              qrBillId: billId,
+              path: `https://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${billId}`,
             },
           },
           200,
@@ -655,17 +617,17 @@ const tableRouter = new Hono()
     },
   )
   .get(
-    "/qr_webhook/:billRequestId",
+    "/qr_webhook/:billId",
     zValidator(
       "param",
       z.object({
-        billRequestId: z.string().min(1).max(500),
+        billId: z.string().min(1).max(500),
       }),
     ),
     async (c) => {
-      const { billRequestId } = c.req.param();
+      const { billId } = c.req.param();
       const paymentStatus = await QrBill.findOne({
-        requestBillId: billRequestId,
+        billId: billId,
       });
 
       return c.json(
@@ -699,8 +661,13 @@ const tableRouter = new Hono()
         tableId,
       } = await c.req.json();
       const business = await Business.findById(businessId);
+      const tableData= await Table.findById(tableId);
+      const tableSession = await UserSession.findOne({
+        businessId: businessId,
+        tableName: tableData?.name,
+      });
 
-      const longUrl = `https://hipal-test.hipalz.com/${business?.customLink}/ebill?tableId=${tableId}`;
+      const longUrl = `https://hipal-test.hipalz.com/${business?.customLink}/ebill?billId=${tableSession?._id.toString()}`;
 
       const uniqueOrderId = nanoid(5);
       let findLongUrl = await BillUrlModel.findOne({ longUrl });
@@ -748,18 +715,18 @@ const tableRouter = new Hono()
   )
 
   .get(
-    "/table_offline_alert/:billRequestId",
+    "/table_offline_alert/:billId",
     zValidator(
       "param",
       z.object({
-        billRequestId: z.string().min(1).max(500),
+        billId: z.string().min(1).max(500),
       }),
     ),
     async (c) => {
-      const { billRequestId } = c.req.param();
+      const { billId } = c.req.param();
       const findOfflineAlert = await PaymentAlert.findOne({
         alertType: "OFFLINE",
-        posBillRequestId: billRequestId,
+        billId: billId,
         isAccepted: false,
         isRejected: false,
       }).populate("userId order_id");
@@ -855,19 +822,7 @@ const tableRouter = new Hono()
         );
       }
 
-      // check if bill already generated for a table
-      if (tableSession?.billRequestId) {
-        return c.json(
-          {
-            message: `Bill already generated for table ${tableSession.tableName} by ${tableSession?.billGeneratedBy} you can't transfer the table`,
-            err: true,
-            data: {
-              success: false,
-            },
-          },
-          400,
-        );
-      }
+      
 
       if (transferType === "TABLE") {
         if (destinationTable.status === "ACTIVE") {
@@ -1039,18 +994,9 @@ const tableRouter = new Hono()
             hiCode = Math.floor(1000 + Math.random() * 9000).toString();
 
             const tenDigitCode = generateTenDigitCode();
-            const registerUser = await axios.post(posApiPaths.registerUser, {
-              app_key: posConfigData.accessKey,
-              app_secret: posConfigData.secretKey,
-              access_token: posConfigData.authToken,
-              restID: posConfigData.restId,
-              phone: tenDigitCode,
-              name: sourceTablSession?.customerName || "Guest",
-            });
+            
 
-            if (registerUser.data.success === "0") {
-              throw new Error("Failed to register user");
-            }
+          
             await UserSession.create(
               [
                 {
@@ -1110,66 +1056,6 @@ const tableRouter = new Hono()
     });
   })
 
-  .get(
-    "/get_table_session/:tableName/:businessId",
-    zValidator(
-      "param",
-      z.object({
-        tableName: z.string().min(1).max(500),
-        businessId: z.string().min(1).max(500),
-      }),
-    ),
-    async (c) => {
-      const { tableName, businessId } = c.req.param();
-
-      const businessPosConfig = await BusinessPosConfig.exists({
-        businessId,
-        isDeleted: false,
-        active: true,
-      });
-
-      const tableData = await Table.findOne({
-        businessId,
-        name: tableName,
-        active: true,
-        pos: !!businessPosConfig,
-      });
-
-      if (!tableData) {
-        return c.json(
-          {
-            message: "Table not found",
-            err: true,
-            data: {},
-          },
-          404,
-        );
-      }
-
-      const tableSession = await UserSession.findOne({
-        businessId,
-
-        $or: [
-          {
-            transferTableFrom: tableData._id.toString(),
-          },
-          {
-            transferTableTo: tableData._id.toString(),
-          },
-        ],
-      });
-
-      return c.json(
-        {
-          message: "Table session fetched successfully",
-          err: false,
-          data: tableSession || {
-            isTransfer: false,
-          },
-        },
-        200,
-      );
-    },
-  );
+ 
 
 export default tableRouter;
