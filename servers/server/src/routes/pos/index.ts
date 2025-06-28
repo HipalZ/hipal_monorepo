@@ -307,6 +307,7 @@ const posRouter = new Hono()
             total: newTotal,
             serviceCharge: serviceChargeAmount,
             generatedBy: generatedBy,
+            subTotal: totalDishTotal,
           },
         );
 
