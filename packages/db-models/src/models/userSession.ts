@@ -39,14 +39,7 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     type: String,
     required: false,
   },
-  billRequestId: {
-    type: String,
-    required: false,
-  },
-  billInvoiceId: {
-    type: String,
-    required: false,
-  },
+
   gst: {
     type: Number,
     required: false,
@@ -95,40 +88,7 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     type: Number,
     required: false,
   },
-  isPinActive: {
-    type: Boolean,
-    default: false,
-  },
-  finalSubTotal: {
-    type: Number,
-    required: false,
-    default: 0,
-  },
-  finalTotal: {
-    type: Number,
-    required: false,
-    default: 0,
-  },
-  finalGst: {
-    type: Number,
-    required: false,
-    default: 0,
-  },
-  initialSubTotal: {
-    type: Number,
-    required: false,
-    default: 0,
-  },
-  initialTotal: {
-    type: Number,
-    required: false,
-    default: 0,
-  },
-  initialGst: {
-    type: Number,
-    required: false,
-    default: 0,
-  },
+
   discount: {
     type: Number,
     required: false,
@@ -145,10 +105,6 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     default: 0,
   },
   couponId: {
-    type: String,
-    required: false,
-  },
-  requestId: {
     type: String,
     required: false,
   },
@@ -226,6 +182,16 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     type: Number,
     required: false,
     default: 0,
+  },
+  newDishGst: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  isServiceChargeRemoved: {
+    type: Boolean,
+    required: false,
+    default: false,
   },
 });
 

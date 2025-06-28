@@ -37,7 +37,6 @@ import {
 } from "../../utils/bill";
 import {
   calculateCartBill,
-  convertToPetpoojaCart,
   transformData,
   transformParentCategories,
 } from "../../utils/helper";
@@ -203,346 +202,6 @@ const posRouter = new Hono()
       200,
     );
   })
-  // .get(
-  //   "/get_bill",
-  //   ubacMiddleware("bill"),
-  //   zValidator(
-  //     "query",
-  //     z.object({
-  //       businessId: z.string().min(3).max(200),
-  //       tableName: z.string().min(1).max(200),
-  //       generatedBy: z.string().min(1).max(200),
-  //     }),
-  //   ),
-  //   async (c) => {
-  //     //@ts-ignore
-  //     return runInTransaction(async (session: ClientSession) => {
-  //       const { businessId, tableName, generatedBy } = c.req.query();
-
-  //       sendBillPrintEvent({
-  //         tableName: "T1",
-  //         businessId: businessId,
-  //         customerName: "Datta",
-  //         customerPhone: "9588413799",
-  //         items: [
-  //           {
-  //             dish: {
-  //               name: "Mushroom Pasta (Full)",
-  //               price: 330,
-  //               quantity: 1,
-  //             },
-  //             extras: [],
-  //           },
-  //           {
-  //             dish: {
-  //               name: "turkish eggs with greek yogurt",
-  //               price: 270,
-  //               quantity: 1,
-  //             },
-  //             extras: [],
-  //           },
-  //           {
-  //             dish: {
-  //               name: 'Margherita Pizza (8" inch)',
-  //               price: 265,
-  //               quantity: 1,
-  //             },
-  //             extras: [
-  //               {
-  //                 name: "Neapolitan Dough",
-  //                 price: 0,
-  //                 quantity: 1,
-  //               },
-  //               {
-  //                 name: "Bell Pepper 50 Grams",
-  //                 price: 25,
-  //                 quantity: 1,
-  //               },
-  //             ],
-  //           },
-  //           {
-  //             dish: {
-  //               name: "Green Apple Mojito (Jar)",
-  //               price: 220,
-  //               quantity: 1,
-  //             },
-  //             extras: [],
-  //           },
-  //           {
-  //             dish: {
-  //               name: "peach ice tea (Jar)",
-  //               price: 240,
-  //               quantity: 1,
-  //             },
-  //             extras: [],
-  //           },
-  //         ],
-  //         posRestName: "test",
-  //         generatedBy: generatedBy,
-  //         date: Date.now(),
-  //         serviceCharge: 0,
-  //         discount: 0,
-  //         tax: 5,
-  //         total: 256,
-  //         billRequestId: "dddwqz",
-  //         subTotal: 90,
-  //         tips: 5,
-  //         claimedCoins: 30,
-  //       });
-
-  //       // // Fetch POS config for the business
-  //       // const pos = await BusinessPosConfig.findOne({
-  //       //   businessId,
-  //       //   isDeleted: false,
-  //       //   active: true,
-  //       // });
-  //       // if (!pos) {
-  //       //   return c.json(
-  //       //     {
-  //       //       message: "POS not found",
-  //       //       err: true,
-  //       //       data: { success: false },
-  //       //     },
-  //       //     404,
-  //       //   );
-  //       // }
-
-  //       // // Fetch table session data
-  //       // const tableSession = await UserSession.findOne({
-  //       //   businessId,
-  //       //   tableName,
-  //       // });
-
-  //       // if (!tableSession) {
-  //       //   return c.json(
-  //       //     {
-  //       //       message: "Table session not found",
-  //       //       err: true,
-  //       //       data: { success: false },
-  //       //     },
-  //       //     404,
-  //       //   );
-  //       // }
-
-  //       // // Helper to call axios posts with the necessary config
-  //       // const axiosPosApiCall = async (path: string, config: object) => {
-  //       //   return axios.post(path, {
-  //       //     app_key: pos.accessKey,
-  //       //     app_secret: pos.secretKey,
-  //       //     access_token: pos.authToken,
-  //       //     restID: pos.restId,
-  //       //     ...config,
-  //       //   });
-  //       // };
-
-  //       // // If session exists, check if re-registration is required
-  //       // if (tableSession) {
-  //       //   const hoursSinceLastUpdate =
-  //       //     (Date.now() - new Date(tableSession.date).getTime()) /
-  //       //     (1000 * 60 * 60);
-  //       //   if (hoursSinceLastUpdate > 3) {
-  //       //     const { data: regData } = await axiosPosApiCall(
-  //       //       posApiPaths.registerUser,
-  //       //       {
-  //       //         phone: tableSession.pin,
-  //       //         name: generatedBy,
-  //       //       },
-  //       //     );
-  //       //     if (regData.success === "0") {
-  //       //       throw new Error("User not registered");
-  //       //     }
-  //       //   }
-  //       // }
-
-  //       // // Try fetching bill if already requested
-  //       // if (tableSession?.billRequestId) {
-  //       //   const { data: billData } = await axiosPosApiCall(
-  //       //     posApiPaths.getBill,
-  //       //     {
-  //       //       bill_request_id: tableSession.billRequestId,
-  //       //     },
-  //       //   );
-
-  //       //   if (billData.success === "0") {
-  //       //     throw new Error("Error fetching  bill");
-  //       //   }
-  //       //   const simpleArray = transformItemsToSimpleArray(
-  //       //     billData.items_data || [],
-  //       //   );
-  //       //   if (billData.success === "1") {
-  //       //     const orderData = billData.order_data;
-  //       //     const billObj = {
-  //       //       billing_user_name: orderData.billing_user_name,
-  //       //       serviceCharge: orderData.service_charge,
-  //       //       discount: orderData.discount,
-  //       //       tax: tableSession.finalTax,
-  //       //       total: tableSession.finalTotal,
-  //       //       customerPhone:
-  //       //         tableSession.phoneNumbers[0] || orderData.customer_phone,
-  //       //       customerName:
-  //       //         tableSession.customerName || orderData.customer_name,
-  //       //       tableName: orderData.table_no,
-  //       //       billRequestId: tableSession.billRequestId,
-  //       //       items: simpleArray,
-  //       //       subTotal: orderData.core_price,
-  //       //       tips: tableSession.tips || 0,
-  //       //       claimedCoins: tableSession.claimedCoins || 0,
-  //       //       couponId: tableSession.couponId,
-  //       //       initialTotal: tableSession.initialTotal,
-  //       //     };
-
-  //       //     return c.json(
-  //       //       {
-  //       //         message: "Data fetched successfully",
-  //       //         err: false,
-  //       //         data: billObj,
-  //       //       },
-  //       //       200,
-  //       //     );
-  //       //   }
-  //       // }
-
-  //       // // Request a new bill
-  //       // const { data: requestData } = await axiosPosApiCall(
-  //       //   posApiPaths.requestBill,
-  //       //   {
-  //       //     pin: tableSession?.pin,
-  //       //     tableNo: tableName,
-  //       //   },
-  //       // );
-  //       // if (requestData.success === "0") {
-  //       //   throw new Error("Error requesting bill");
-  //       // }
-
-  //       // // Ensure requestId is stored in session
-  //       // const request_id = tableSession?.requestId || requestData.request_id;
-  //       // if (!tableSession?.requestId) {
-  //       //   await UserSession.findOneAndUpdate(
-  //       //     { businessId, tableName },
-  //       //     { requestId: request_id },
-  //       //     { new: true },
-  //       //   );
-  //       // }
-
-  //       // // Check bill status
-  //       // const { data: checkData } = await axiosPosApiCall(
-  //       //   posApiPaths.checkBill,
-  //       //   {
-  //       //     request_id,
-  //       //   },
-  //       // );
-  //       // if (checkData.success === "0") {
-  //       //   throw new Error("Error checking bill");
-  //       // }
-
-  //       // const bill_request_id = checkData.bill_request_id;
-  //       // if (!bill_request_id) {
-  //       //   return c.json(
-  //       //     {
-  //       //       message: "Error fetching data",
-  //       //       err: true,
-  //       //       data: { success: false },
-  //       //     },
-  //       //     400,
-  //       //   );
-  //       // }
-
-  //       // // Get bill details
-  //       // const { data: getBillData } = await axiosPosApiCall(
-  //       //   posApiPaths.getBill,
-  //       //   {
-  //       //     bill_request_id,
-  //       //   },
-  //       // );
-  //       // const simpleArray = transformItemsToSimpleArray(
-  //       //   getBillData.items_data || [],
-  //       // );
-  //       // if (getBillData.success === "1") {
-  //       //   const orderData = getBillData.order_data;
-
-  //       //   // Update or create a PosBill record
-  //       //   await PosBill.findOneAndUpdate(
-  //       //     { businessId, billRequestId: bill_request_id },
-  //       //     { items: simpleArray, billInfo: orderData, createdAt: Date.now() },
-  //       //     { upsert: true, new: true },
-  //       //   );
-
-  //       //   const updateFields = {
-  //       //     billGeneratedBy: generatedBy,
-  //       //     billRequestId: bill_request_id,
-  //       //     billInvoiceId: orderData?.invoice_id,
-  //       //     tax: orderData?.tax || 0,
-  //       //     serviceCharge: orderData?.service_charge,
-  //       //     initialTax: orderData?.tax || 0,
-  //       //     initialSubTotal: orderData?.core_price || 0,
-  //       //     discount: orderData?.discount || 0,
-  //       //     initialTotal: orderData?.total || 0,
-  //       //     finalTax: orderData?.tax || 0,
-  //       //     finalTotal: orderData?.total || 0,
-  //       //     finalSubTotal: orderData?.core_price || 0,
-  //       //   };
-  //       //   const updateSession = await UserSession.findOneAndUpdate(
-  //       //     { businessId, tableName },
-  //       //     updateFields,
-  //       //     { new: true },
-  //       //   );
-
-  //       //   const billObj = {
-  //       //     billing_user_name: orderData.billing_user_name,
-  //       //     serviceCharge: orderData.service_charge,
-  //       //     discount: orderData.discount,
-  //       //     tax: updateSession?.finalTax,
-  //       //     total: updateSession?.finalTotal,
-  //       //     customerPhone:
-  //       //       tableSession.phoneNumbers[0] || orderData.customer_phone,
-  //       //     customerName: tableSession.customerName || orderData.customer_name,
-  //       //     tableName: orderData.table_no,
-  //       //     billRequestId: bill_request_id,
-  //       //     items: simpleArray,
-  //       //     subTotal: orderData.core_price,
-  //       //     tips: updateSession?.tips || 0,
-  //       //     claimedCoins: updateSession?.claimedCoins || 0,
-  //       //     couponId: updateSession?.couponId,
-  //       //     initialTotal: updateSession?.initialTotal,
-  //       //   };
-
-  //       //   // sendBillPrintEvent({
-  //       //   //   tableName: orderData.table_no,
-  //       //   //   businessId: businessId,
-  //       //   //   customerName: tableSession.customerName || orderData.customer_name,
-  //       //   //   customerPhone:
-  //       //   //     tableSession.phoneNumbers[0] || orderData.customer_phone,
-  //       //   //   items: simpleArray,
-  //       //   //   posRestName: pos.restName,
-  //       //   //   generatedBy: generatedBy,
-  //       //   //   date: Date.now(),
-  //       //   //   serviceCharge: orderData.service_charge,
-  //       //   //   discount: orderData.discount,
-  //       //   //   tax: updateSession?.finalTax || 0,
-  //       //   //   total: updateSession?.finalTotal || 0,
-  //       //   //   billRequestId: bill_request_id,
-  //       //   //   subTotal: orderData.core_price,
-  //       //   //   tips: updateSession?.tips || 0,
-  //       //   //   claimedCoins: updateSession?.claimedCoins || 0,
-  //       //   // });
-
-  //       //   return c.json(
-  //       //     { message: "Data fetched successfully", err: false, data: billObj },
-  //       //     200,
-  //       //   );
-  //       // }
-
-  //       return c.json(
-  //         {
-  //           message: "Error fetching data",
-  //           err: true,
-  //           data: { success: false },
-  //         },
-  //         400,
-  //       );
-  //     });
-  //   },
-  // )
 
   .get(
     "/get_bill",
@@ -570,10 +229,10 @@ const posRouter = new Hono()
 
         const { totalDishTotal, totalGst } = calculateBillTotals(kotOrders);
 
-        const tableSession = await UserSession.findOne({
+        let tableSession = await UserSession.findOne({
           businessId: businessId,
           tableName: tableName,
-        }).session(session);
+        });
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
@@ -593,16 +252,33 @@ const posRouter = new Hono()
           tableSession.couponDiscount -
           tableSession.discount;
 
-        const serviceCharge = Math.round(
+        let serviceCharge = Math.round(
           (serviceChargePercentage / 100) * baseAmount,
         );
+
+        if (tableSession.isServiceChargeRemoved) {
+          serviceCharge = 0;
+        }
+
+        let newGst = 0;
 
         const newSubTotal =
           totalDishTotal -
           tableSession.discount -
           tableSession.claimedCoins -
           tableSession.couponDiscount;
-        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+
+        if (
+          tableSession.discountAppliedBy &&
+          tableSession.discountAppliedOn === "ON_DISH"
+        ) {
+          newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+          newGst = newGst - tableSession.newDishGst;
+        } else if (tableSession.discountAppliedBy) {
+          newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+        } else {
+          newGst = totalGst;
+        }
 
         const totalDis = calculateTotalDiscount(
           tableSession.discount,
@@ -618,7 +294,7 @@ const posRouter = new Hono()
           tableSession.tips,
         );
 
-        const updateTableSession = await UserSession.findOneAndUpdate(
+        tableSession = await UserSession.findOneAndUpdate(
           { businessId, tableName },
           {
             $set: {
@@ -630,13 +306,24 @@ const posRouter = new Hono()
           { session, new: true },
         );
 
+        if (!tableSession) {
+          return c.json(
+            {
+              message: "Table session not found",
+              err: true,
+              data: { success: false },
+            },
+            404,
+          );
+        }
+
         return c.json(
           {
             message: "Data fetched successfully",
             err: false,
             data: {
               customerName: tableSession.customerName,
-              customerPhone: tableSession.phoneNumbers[0],
+              customerPhone: kotOrders[0].phone,
               tableName: tableSession.tableName,
               couponId: tableSession.couponId,
               discountAppliedOn: tableSession.discountAppliedOn,
@@ -648,7 +335,7 @@ const posRouter = new Hono()
               discountRemovedBy: tableSession.discountRemovedBy,
               items: cartItems,
               subTotal: totalDishTotal,
-              gst: newGst.toFixed(2),
+              gst: tableSession.gst,
               discount: tableSession.discount,
               claimedCoins: tableSession.claimedCoins,
               couponDiscount: tableSession.couponDiscount,
@@ -1788,19 +1475,6 @@ const posRouter = new Hono()
           businessId: businessId,
         });
 
-        if (userTableSession?.billRequestId) {
-          return c.json(
-            {
-              message: `Bill already generated for table ${tableName} by ${userTableSession?.billGeneratedBy} you can't add more items`,
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            400,
-          );
-        }
-
         if (userTableSession) {
           if (
             !userTableSession.phoneNumbers.includes(customerPhone) &&
@@ -1824,17 +1498,7 @@ const posRouter = new Hono()
 
         if (!userTableSession) {
           const tenDigitCode = generateTenDigitCode();
-          const registerUser = await axios.post(posApiPaths.registerUser, {
-            app_key: posConfigData.accessKey,
-            app_secret: posConfigData.secretKey,
-            access_token: posConfigData.authToken,
-            restID: posConfigData.restId,
-            phone: tenDigitCode,
-            name: customerName,
-          });
-          if (registerUser.data.success === "0") {
-            throw new Error("user not registered");
-          }
+
           const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
           // Generate the hicode and save it in the user session
           await Table.findOneAndUpdate(
@@ -1869,18 +1533,6 @@ const posRouter = new Hono()
           );
           await userSession.save();
           if (posConfigData.orderVerificationType === "USER") {
-            const petpoojaCart = convertToPetpoojaCart(
-              internalCart,
-              posConfigData.restId,
-              customerName,
-              tenDigitCode,
-              tableName,
-              posConfigData.accessKey,
-              posConfigData.secretKey,
-
-              posConfigData.authToken,
-            );
-
             const result = await saveOrder(
               tableName,
               businessId,
@@ -1892,7 +1544,7 @@ const posRouter = new Hono()
               tableData?._id.toString(),
               false,
               null,
-              petpoojaCart,
+              internalCart,
               hiCode,
               session,
             );
@@ -1942,18 +1594,6 @@ const posRouter = new Hono()
         }
 
         if (posConfigData.orderVerificationType === "USER") {
-          const petpoojaCart = convertToPetpoojaCart(
-            internalCart,
-            posConfigData.restId,
-            customerName,
-            userTableSession.pin,
-            tableName,
-            posConfigData.accessKey,
-            posConfigData.secretKey,
-
-            posConfigData.authToken,
-          );
-
           const result = await saveOrder(
             tableName,
             businessId,
@@ -1965,7 +1605,7 @@ const posRouter = new Hono()
             tableData._id.toString(),
             false,
             null,
-            petpoojaCart,
+            internalCart,
             userTableSession.hiCode,
             session,
           );
@@ -2175,6 +1815,7 @@ const posRouter = new Hono()
               pin: tenDigitCode,
               tableName: tableName,
               customerName: customerName,
+              phoneNumbers: [customerPhone],
               performedBy: "captain",
               date: Date.now(),
             },
@@ -3110,7 +2751,7 @@ const posRouter = new Hono()
             { businessId, tableName },
             {
               $set: {
-                gst: newGst.toFixed(2),
+                gst: Number(newGst).toFixed(2),
                 total: newTotal,
                 reasonOfDiscount: reasonOfDiscount,
                 discountAppliedOn: discountAppliedOn,
@@ -3170,13 +2811,14 @@ const posRouter = new Hono()
             { businessId, tableName },
             {
               $set: {
-                gst: newGst?.toFixed(2),
+                gst: Number(newGst).toFixed(2),
                 total: newTotal,
                 reasonOfDiscount: reasonOfDiscount,
                 discountAppliedOn: discountAppliedOn,
                 discountAppliedBy: discountAppliedBy,
                 isDiscountApplied: true,
                 discount: discount,
+                newDishGst: Number(newDishGst).toFixed(2),
               },
             },
             { session, new: true },
@@ -3210,6 +2852,16 @@ const posRouter = new Hono()
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
+
+        if (tableSession.couponDiscount > 0) {
+          return respond(
+            c,
+            "coupon already claimed for this table ",
+            true,
+            400,
+            {},
+          );
+        }
         const coins = Math.min(
           value,
           tableSession.subTotal -
@@ -3241,7 +2893,7 @@ const posRouter = new Hono()
           { businessId, tableName },
           {
             $set: {
-              gst: newGst.toFixed(2),
+              gst: Number(newGst).toFixed(2),
               total: newTotal,
               isDiscountApplied: true,
               claimedCoins: coins,
@@ -3284,6 +2936,16 @@ const posRouter = new Hono()
 
         if (!coupon) {
           return respond(c, "Coupon not found", true, 404, {});
+        }
+
+        if (tableSession.claimedCoins > 0) {
+          return respond(
+            c,
+            "coins already claimed for this table ",
+            true,
+            400,
+            {},
+          );
         }
 
         const couponType = coupon?.config?.discountType;
@@ -3331,7 +2993,7 @@ const posRouter = new Hono()
           { businessId, tableName },
           {
             $set: {
-              gst: newGst.toFixed(2),
+              gst: Number(newGst).toFixed(2),
               total: newTotal,
               isDiscountApplied: true,
               couponDiscount: couponDiscount,
@@ -3392,16 +3054,20 @@ const posRouter = new Hono()
           tableSession.tips,
         );
 
+        const isDiscountApplied =
+          tableSession.claimedCoins > 0 || tableSession.couponDiscount > 0;
+
         const updateTableSession = await UserSession.findOneAndUpdate(
           { businessId, tableName },
           {
             $set: {
-              gst: newGst.toFixed(2),
+              gst: Number(newGst).toFixed(2),
               total: newTotal,
               reasonOfDiscount: reasonOfDiscount,
-              isDiscountApplied: true,
+              isDiscountApplied: isDiscountApplied,
               discount: 0,
               discountRemovedBy: discountRemovedBy,
+              newDishGst: 0,
             },
           },
           { session, new: true },
@@ -3432,6 +3098,8 @@ const posRouter = new Hono()
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
+        const isDiscountApplied =
+          tableSession.discount > 0 || tableSession.couponDiscount > 0;
 
         const newSubTotal =
           tableSession.subTotal -
@@ -3460,10 +3128,8 @@ const posRouter = new Hono()
             $set: {
               gst: newGst.toFixed(2),
               total: newTotal,
-
-              isDiscountApplied: true,
+              isDiscountApplied: isDiscountApplied,
               claimedCoins: 0,
-              // discountRemovedBy: discountRemovedBy,
             },
           },
           { session, new: true },
@@ -3496,6 +3162,8 @@ const posRouter = new Hono()
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
+        const isDiscountApplied =
+          tableSession.discount > 0 || tableSession.claimedCoins > 0;
 
         const newSubTotal =
           tableSession.subTotal -
@@ -3526,7 +3194,7 @@ const posRouter = new Hono()
               total: newTotal,
               couponId: null,
 
-              isDiscountApplied: true,
+              isDiscountApplied: isDiscountApplied,
               couponDiscount: 0,
             },
           },
@@ -3578,9 +3246,8 @@ const posRouter = new Hono()
           { businessId, tableName },
           {
             $set: {
-              gst: newGst.toFixed(2),
+              gst: Number(newGst).toFixed(2),
               total: newTotal,
-
               isDiscountApplied: false,
               couponDiscount: 0,
               claimedCoins: 0,
@@ -3592,6 +3259,7 @@ const posRouter = new Hono()
               reasonOfDiscount: "",
               discountAppliedBy: null,
               serviceChargeAppliedBy: null,
+              newDishGst: 0,
             },
           },
           { session, new: true },
@@ -3627,24 +3295,12 @@ const posRouter = new Hono()
           return respond(c, "Table session not found", true, 404, {});
         }
 
-        const serviceChargePercentage = tableSession.serviceChargePercentage;
-
-        const baseAmount =
-          tableSession.subTotal -
-          tableSession.claimedCoins -
-          tableSession.couponDiscount -
-          tableSession.discount;
-
-        const serviceCharge = Math.round(
-          (serviceChargePercentage / 100) * baseAmount,
-        );
-
         const updateTableSession = await UserSession.findOneAndUpdate(
           { businessId, tableName },
           {
             $set: {
-              serviceCharge: serviceCharge,
               serviceChargeAppliedBy: serviceChargeAppliedBy,
+              isServiceChargeRemoved: false,
             },
           },
           { session, new: true },
@@ -3692,6 +3348,7 @@ const posRouter = new Hono()
               serviceCharge: 0,
               serviceChargeRemovedBy: serviceChargeRemovedBy,
               reasonOfServiceCharge: reasonOfServiceCharge,
+              isServiceChargeRemoved: true,
             },
           },
           { session, new: true },

@@ -18,9 +18,7 @@ export const userSessionSchema = z.object({
   transferBy: ObjectIdSchema.optional(),
   transferType: z.enum(["TABLE", "ITEM"]).optional(),
   date: z.coerce.number().optional(),
-  initialGst: z.coerce.number().optional().default(0),
-  initialTotal: z.coerce.number().optional().default(0),
-  initialSubTotal: z.coerce.number().optional().default(0),
+
   total: z.coerce.number().optional().default(0),
   subTotal: z.coerce.number().optional().default(0),
   gst: z.coerce.number().optional().default(0),
@@ -41,6 +39,8 @@ export const userSessionSchema = z.object({
   discountAppliedOn: z.enum(["ON_BILL", "ON_DISH"]).optional(),
   gstPercentage: z.coerce.number().optional().default(5),
   serviceChargePercentage: z.coerce.number().optional().default(0),
+  newDishGst: z.coerce.number().optional().default(0),
+  isServiceChargeRemoved: z.boolean().optional().default(false),
 });
 
 export type UserSessionSchemaType = z.infer<typeof userSessionSchema>;
