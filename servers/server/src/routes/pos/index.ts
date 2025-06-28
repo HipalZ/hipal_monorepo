@@ -317,7 +317,6 @@ const posRouter = new Hono()
           return respond(c, "Table session not found", true, 404, {});
         }
 
-        // Return success response
         return c.json(
           {
             message: "Data fetched successfully",
@@ -3274,6 +3273,35 @@ const posRouter = new Hono()
           },
           { session, new: true },
         );
+
+        return respond(c, "Success", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/settle_bill",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+        settledBy: z.string().min(1).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, settledBy } = await c.req.json();
+
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
 
         return respond(c, "Success", true, 200, {});
       });

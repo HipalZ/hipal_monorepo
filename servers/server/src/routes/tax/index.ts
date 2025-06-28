@@ -79,6 +79,10 @@ const taxRouter = new Hono()
           return respond(c, "Tax not found", true, 404, {});
         }
 
+        console.log("tax", tax);
+        console.log("dishIds", dishIds);
+        console.log("taxId", taxId);
+
         const result = await Dish.updateMany(
           { _id: { $in: dishIds } },
           { $set: { gst: tax.value } },
@@ -123,7 +127,7 @@ const taxRouter = new Hono()
 
         const result = await Dish.updateMany(
           { _id: { $in: dishIds } },
-          { $unset: { gst: 0 } },
+          { $set: { gst: 0 } },
           { session },
         );
 
