@@ -185,14 +185,14 @@ function calculateBillDishIds(
 
 function calculateFinalTotal(
   subtotal: number,
-  gst: number,
   totalDiscount: number,
+  gst: number,
   serviceCharge: number,
   otherTax: number,
   tips: number,
 ) {
   const total =
-    subtotal + gst - totalDiscount + serviceCharge + otherTax + tips;
+    subtotal - totalDiscount + gst + serviceCharge + otherTax + tips;
   return Math.round(total); // Round to 2 decimal places
 }
 

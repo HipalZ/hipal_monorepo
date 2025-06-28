@@ -3,6 +3,7 @@ import {
   Business,
   BusinessPosConfig,
   Category,
+  Couponz,
   DeviceToken,
   Dish,
   Kitchen,
@@ -569,20 +570,14 @@ const posRouter = new Hono()
 
         const { totalDishTotal, totalGst } = calculateBillTotals(kotOrders);
 
-        const checkTableSessionIsExists = await UserSession.findOne({
+        const tableSession = await UserSession.findOne({
           businessId: businessId,
           tableName: tableName,
         }).session(session);
 
-        if (!checkTableSessionIsExists) {
+        if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
-
-        const calculateTotalDis = calculateTotalDiscount(
-          checkTableSessionIsExists.discount,
-          checkTableSessionIsExists.claimedCoins,
-          checkTableSessionIsExists.couponDiscount,
-        );
 
         const findServiceCharge = await Tax.findOne({
           businessId,
@@ -590,59 +585,77 @@ const posRouter = new Hono()
           isActive: true,
         });
 
-        const total = calculateFinalTotal(
-          totalDishTotal,
-          totalGst,
-          calculateTotalDis,
-          findServiceCharge?.value || 0,
-          0,
-          0,
+        const serviceChargePercentage = findServiceCharge?.value || 0;
+
+        const baseAmount =
+          totalDishTotal -
+          tableSession.claimedCoins -
+          tableSession.couponDiscount -
+          tableSession.discount;
+
+        const serviceCharge = Math.round(
+          (serviceChargePercentage / 100) * baseAmount,
+        );
+
+        const newSubTotal =
+          totalDishTotal -
+          tableSession.discount -
+          tableSession.claimedCoins -
+          tableSession.couponDiscount;
+        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+
+        const totalDis = calculateTotalDiscount(
+          tableSession.discount,
+          tableSession.claimedCoins,
+          tableSession.couponDiscount,
+        );
+        const newTotal = calculateFinalTotal(
+          newSubTotal,
+          totalDis,
+          newGst,
+          serviceCharge,
+          tableSession.otherTax,
+          tableSession.tips,
         );
 
         const updateTableSession = await UserSession.findOneAndUpdate(
           { businessId, tableName },
           {
             $set: {
-              initialSubTotal: totalDishTotal,
-              initialGst: totalGst,
-              total: total,
-              gst: totalGst.toFixed(2),
-              subTotal: totalDishTotal,
+              gst: newGst.toFixed(2),
+              total: newTotal,
+              serviceCharge: serviceCharge,
             },
           },
           { session, new: true },
         );
-
-        if (!updateTableSession) {
-          return respond(c, "Table session not found", true, 404, {});
-        }
 
         return c.json(
           {
             message: "Data fetched successfully",
             err: false,
             data: {
-              customerName: updateTableSession.customerName,
-              customerPhone: updateTableSession.phoneNumbers[0],
-              tableName: updateTableSession.tableName,
-              couponId: updateTableSession.couponId,
-              discountAppliedOn: updateTableSession.discountAppliedOn,
-              reasonOfDiscount: updateTableSession.reasonOfDiscount,
-              reasonOfServiceCharge: updateTableSession.reasonOfServiceCharge,
-              serviceChargeAppliedBy: updateTableSession.serviceChargeAppliedBy,
-              serviceChargeRemovedBy: updateTableSession.serviceChargeRemovedBy,
-              discountAppliedBy: updateTableSession.discountAppliedBy,
-              discountRemovedBy: updateTableSession.discountRemovedBy,
+              customerName: tableSession.customerName,
+              customerPhone: tableSession.phoneNumbers[0],
+              tableName: tableSession.tableName,
+              couponId: tableSession.couponId,
+              discountAppliedOn: tableSession.discountAppliedOn,
+              reasonOfDiscount: tableSession.reasonOfDiscount,
+              reasonOfServiceCharge: tableSession.reasonOfServiceCharge,
+              serviceChargeAppliedBy: tableSession.serviceChargeAppliedBy,
+              serviceChargeRemovedBy: tableSession.serviceChargeRemovedBy,
+              discountAppliedBy: tableSession.discountAppliedBy,
+              discountRemovedBy: tableSession.discountRemovedBy,
               items: cartItems,
-              subTotal: updateTableSession.subTotal,
-              gst: updateTableSession.gst,
-              discount: updateTableSession.discount,
-              claimedCoins: updateTableSession.claimedCoins,
-              couponDiscount: updateTableSession.couponDiscount,
-              serviceCharge: updateTableSession.serviceCharge,
-              otherTax: updateTableSession.otherTax,
-              tips: updateTableSession.tips,
-              total: updateTableSession.total,
+              subTotal: totalDishTotal,
+              gst: newGst.toFixed(2),
+              discount: tableSession.discount,
+              claimedCoins: tableSession.claimedCoins,
+              couponDiscount: tableSession.couponDiscount,
+              serviceCharge: tableSession.serviceCharge,
+              otherTax: tableSession.otherTax,
+              tips: tableSession.tips,
+              total: tableSession.total,
             },
           },
           200,
@@ -3057,8 +3070,8 @@ const posRouter = new Hono()
         } = await c.req.json();
 
         const tableSession = await UserSession.findOne({
-          tableName: tableName,
           businessId: businessId,
+          tableName: tableName,
         });
 
         if (!tableSession) {
@@ -3066,37 +3079,44 @@ const posRouter = new Hono()
         }
 
         if (discountAppliedOn === "ON_BILL") {
-          const finalSubTotal =
-            tableSession?.subTotal -
-            (value ? 0 : Math.min(value, tableSession.subTotal));
-
-          const finalTax = (tableSession.gstPercentage / 100) * finalSubTotal;
-          const totalDis = calculateTotalDiscount(
+          const discount = Math.min(
             value,
+            tableSession.subTotal -
+              tableSession.claimedCoins -
+              tableSession.couponDiscount,
+          );
+          const newSubTotal =
+            tableSession.subTotal -
+            discount -
+            tableSession.claimedCoins -
+            tableSession.couponDiscount;
+          const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+
+          const totalDis = calculateTotalDiscount(
+            discount,
             tableSession.claimedCoins,
             tableSession.couponDiscount,
           );
-
-          const finalTotal = calculateFinalTotal(
-            finalSubTotal,
-            finalTax,
+          const newTotal = calculateFinalTotal(
+            newSubTotal,
             totalDis,
+            newGst,
             tableSession.serviceCharge,
             tableSession.otherTax,
             tableSession.tips,
           );
 
-          await UserSession.findOneAndUpdate(
+          const updateTableSession = await UserSession.findOneAndUpdate(
             { businessId, tableName },
             {
               $set: {
-                tax: finalTax.toFixed(2),
-                total: finalTotal,
+                gst: newGst.toFixed(2),
+                total: newTotal,
                 reasonOfDiscount: reasonOfDiscount,
                 discountAppliedOn: discountAppliedOn,
                 discountAppliedBy: discountAppliedBy,
                 isDiscountApplied: true,
-                discount: value,
+                discount: discount,
               },
             },
             { session, new: true },
@@ -3116,46 +3136,51 @@ const posRouter = new Hono()
             dishIds,
           );
 
-          const minDiscount = Math.min(value, totalDishTotal);
+          const dis = Math.min(value, totalDishTotal);
+          const discount = Math.min(
+            dis,
+            tableSession.claimedCoins - tableSession.couponDiscount,
+          );
+          const newDishSubTotal = totalDishTotal - discount;
+          const newDishGst =
+            (tableSession.gstPercentage / 100) * newDishSubTotal;
 
-          const finalSubTotal = tableSession.subTotal - minDiscount;
-
-          const finalTax = tableSession.gst - totalGst;
+          const newSubTotal =
+            tableSession.subTotal -
+            newDishSubTotal -
+            tableSession.claimedCoins -
+            tableSession.couponDiscount;
+          const newGst = tableSession.gst - newDishGst;
 
           const totalDis = calculateTotalDiscount(
-            value,
+            discount,
             tableSession.claimedCoins,
             tableSession.couponDiscount,
           );
-
-          const finalTotal = calculateFinalTotal(
-            finalSubTotal,
-            finalTax,
+          const newTotal = calculateFinalTotal(
+            newSubTotal,
             totalDis,
+            newGst,
             tableSession.serviceCharge,
             tableSession.otherTax,
             tableSession.tips,
           );
 
-          await UserSession.findOneAndUpdate(
+          const updateTableSession = await UserSession.findOneAndUpdate(
             { businessId, tableName },
             {
               $set: {
-                tax: finalTax.toFixed(2),
-                total: finalTotal,
+                gst: newGst?.toFixed(2),
+                total: newTotal,
                 reasonOfDiscount: reasonOfDiscount,
                 discountAppliedOn: discountAppliedOn,
                 discountAppliedBy: discountAppliedBy,
-                discount: value,
+                isDiscountApplied: true,
+                discount: discount,
               },
             },
             { session, new: true },
           );
-
-          return respond(c, "sucess", true, 200, {
-            totalDishTotal,
-            totalGst,
-          });
         }
 
         return respond(c, "sucess", true, 200, {});
@@ -3176,7 +3201,54 @@ const posRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, generatedBy } = await c.req.json();
+        const { businessId, tableName, value } = await c.req.json();
+        const tableSession = await UserSession.findOne({
+          businessId: businessId,
+          tableName: tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+        const coins = Math.min(
+          value,
+          tableSession.subTotal -
+            tableSession.discount -
+            tableSession.couponDiscount,
+        );
+        const newSubTotal =
+          tableSession.subTotal -
+          coins -
+          tableSession.discount -
+          tableSession.couponDiscount;
+        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+
+        const totalDis = calculateTotalDiscount(
+          tableSession.discount,
+          coins,
+          tableSession.couponDiscount,
+        );
+        const newTotal = calculateFinalTotal(
+          newSubTotal,
+          totalDis,
+          newGst,
+          tableSession.serviceCharge,
+          tableSession.otherTax,
+          tableSession.tips,
+        );
+
+        const updateTableSession = await UserSession.findOneAndUpdate(
+          { businessId, tableName },
+          {
+            $set: {
+              gst: newGst.toFixed(2),
+              total: newTotal,
+              isDiscountApplied: true,
+              claimedCoins: coins,
+            },
+          },
+          { session, new: true },
+        );
 
         return respond(c, "sucess", true, 200, {});
       });
@@ -3196,7 +3268,78 @@ const posRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, generatedBy } = await c.req.json();
+        const { businessId, tableName, couponId } = await c.req.json();
+        const tableSession = await UserSession.findOne({
+          businessId: businessId,
+          tableName: tableName,
+        });
+
+        let couponDiscount = 0;
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const coupon = await Couponz.findById(couponId);
+
+        if (!coupon) {
+          return respond(c, "Coupon not found", true, 404, {});
+        }
+
+        const couponType = coupon?.config?.discountType;
+
+        if (couponType === "PERCENTAGE") {
+          const percentValue =
+            ((coupon?.config?.value || 0) / 100) *
+            (tableSession?.subTotal || 0);
+          couponDiscount = Math.min(
+            percentValue,
+            coupon?.config?.upto || Number.POSITIVE_INFINITY,
+          );
+        } else {
+          couponDiscount = coupon?.config?.value as number;
+        }
+
+        couponDiscount = Math.min(
+          couponDiscount,
+          tableSession.subTotal -
+            tableSession.discount -
+            tableSession.claimedCoins,
+        );
+        const newSubTotal =
+          tableSession.subTotal -
+          tableSession.claimedCoins -
+          tableSession.discount -
+          couponDiscount;
+        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+
+        const totalDis = calculateTotalDiscount(
+          tableSession.discount,
+          tableSession.claimedCoins,
+          couponDiscount,
+        );
+        const newTotal = calculateFinalTotal(
+          newSubTotal,
+          totalDis,
+          newGst,
+          tableSession.serviceCharge,
+          tableSession.otherTax,
+          tableSession.tips,
+        );
+
+        const updateTableSession = await UserSession.findOneAndUpdate(
+          { businessId, tableName },
+          {
+            $set: {
+              gst: newGst.toFixed(2),
+              total: newTotal,
+              isDiscountApplied: true,
+              couponDiscount: couponDiscount,
+              couponId: couponId,
+            },
+          },
+          { session, new: true },
+        );
 
         return respond(c, "sucess", true, 200, {});
       });
@@ -3210,12 +3353,59 @@ const posRouter = new Hono()
       z.object({
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
+        reasonOfDiscount: z.string().min(1).max(100).optional(),
+        discountRemovedBy: z.string().min(1).max(50),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, generatedBy } = await c.req.json();
+        const { businessId, tableName, discountRemovedBy, reasonOfDiscount } =
+          await c.req.json();
+        const tableSession = await UserSession.findOne({
+          businessId: businessId,
+          tableName: tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const newSubTotal =
+          tableSession.subTotal -
+          0 -
+          tableSession.claimedCoins -
+          tableSession.couponDiscount;
+        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+
+        const totalDis = calculateTotalDiscount(
+          0,
+          tableSession.claimedCoins,
+          tableSession.couponDiscount,
+        );
+        const newTotal = calculateFinalTotal(
+          newSubTotal,
+          totalDis,
+          newGst,
+          tableSession.serviceCharge,
+          tableSession.otherTax,
+          tableSession.tips,
+        );
+
+        const updateTableSession = await UserSession.findOneAndUpdate(
+          { businessId, tableName },
+          {
+            $set: {
+              gst: newGst.toFixed(2),
+              total: newTotal,
+              reasonOfDiscount: reasonOfDiscount,
+              isDiscountApplied: true,
+              discount: 0,
+              discountRemovedBy: discountRemovedBy,
+            },
+          },
+          { session, new: true },
+        );
 
         return respond(c, "sucess", true, 200, {});
       });
@@ -3233,7 +3423,51 @@ const posRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, generatedBy } = await c.req.json();
+        const { businessId, tableName } = await c.req.json();
+        const tableSession = await UserSession.findOne({
+          businessId: businessId,
+          tableName: tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const newSubTotal =
+          tableSession.subTotal -
+          tableSession.discount -
+          0 -
+          tableSession.couponDiscount;
+        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+
+        const totalDis = calculateTotalDiscount(
+          tableSession.discount,
+          0,
+          tableSession.couponDiscount,
+        );
+        const newTotal = calculateFinalTotal(
+          newSubTotal,
+          totalDis,
+          newGst,
+          tableSession.serviceCharge,
+          tableSession.otherTax,
+          tableSession.tips,
+        );
+
+        const updateTableSession = await UserSession.findOneAndUpdate(
+          { businessId, tableName },
+          {
+            $set: {
+              gst: newGst.toFixed(2),
+              total: newTotal,
+
+              isDiscountApplied: true,
+              claimedCoins: 0,
+              // discountRemovedBy: discountRemovedBy,
+            },
+          },
+          { session, new: true },
+        );
 
         return respond(c, "sucess", true, 200, {});
       });
@@ -3252,7 +3486,52 @@ const posRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, generatedBy } = await c.req.json();
+        const { businessId, tableName } = await c.req.json();
+
+        const tableSession = await UserSession.findOne({
+          businessId: businessId,
+          tableName: tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const newSubTotal =
+          tableSession.subTotal -
+          tableSession.discount -
+          tableSession.claimedCoins -
+          0;
+        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+
+        const totalDis = calculateTotalDiscount(
+          tableSession.discount,
+          tableSession.claimedCoins,
+          0,
+        );
+        const newTotal = calculateFinalTotal(
+          newSubTotal,
+          totalDis,
+          newGst,
+          tableSession.serviceCharge,
+          tableSession.otherTax,
+          tableSession.tips,
+        );
+
+        const updateTableSession = await UserSession.findOneAndUpdate(
+          { businessId, tableName },
+          {
+            $set: {
+              gst: newGst.toFixed(2),
+              total: newTotal,
+              couponId: null,
+
+              isDiscountApplied: true,
+              couponDiscount: 0,
+            },
+          },
+          { session, new: true },
+        );
 
         return respond(c, "sucess", true, 200, {});
       });
@@ -3271,7 +3550,152 @@ const posRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, generatedBy } = await c.req.json();
+        const { businessId, tableName } = await c.req.json();
+
+        const tableSession = await UserSession.findOne({
+          businessId: businessId,
+          tableName: tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const newSubTotal = tableSession.subTotal - 0 - 0 - 0;
+        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+
+        const totalDis = calculateTotalDiscount(0, 0, 0);
+        const newTotal = calculateFinalTotal(
+          newSubTotal,
+          totalDis,
+          newGst,
+          tableSession.serviceCharge,
+          tableSession.otherTax,
+          tableSession.tips,
+        );
+
+        const updateTableSession = await UserSession.findOneAndUpdate(
+          { businessId, tableName },
+          {
+            $set: {
+              gst: newGst.toFixed(2),
+              total: newTotal,
+
+              isDiscountApplied: false,
+              couponDiscount: 0,
+              claimedCoins: 0,
+              discount: 0,
+              couponId: null,
+              reasonOfServiceCharge: "",
+              serviceChargeRemovedBy: null,
+              discountRemovedBy: null,
+              reasonOfDiscount: "",
+              discountAppliedBy: null,
+              serviceChargeAppliedBy: null,
+            },
+          },
+          { session, new: true },
+        );
+
+        return respond(c, "sucess", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/add_service_charge",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+        serviceChargeAppliedBy: z.string().min(1).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, serviceChargeAppliedBy } =
+          await c.req.json();
+
+        const tableSession = await UserSession.findOne({
+          businessId: businessId,
+          tableName: tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const serviceChargePercentage = tableSession.serviceChargePercentage;
+
+        const baseAmount =
+          tableSession.subTotal -
+          tableSession.claimedCoins -
+          tableSession.couponDiscount -
+          tableSession.discount;
+
+        const serviceCharge = Math.round(
+          (serviceChargePercentage / 100) * baseAmount,
+        );
+
+        const updateTableSession = await UserSession.findOneAndUpdate(
+          { businessId, tableName },
+          {
+            $set: {
+              serviceCharge: serviceCharge,
+              serviceChargeAppliedBy: serviceChargeAppliedBy,
+            },
+          },
+          { session, new: true },
+        );
+
+        return respond(c, "sucess", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/remove_service_charge",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+        serviceChargeRemovedBy: z.string().min(1).max(50),
+        reasonOfServiceCharge: z.string().min(1).max(100).optional(),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const {
+          businessId,
+          tableName,
+          serviceChargeRemovedBy,
+          reasonOfServiceCharge,
+        } = await c.req.json();
+
+        const tableSession = await UserSession.findOne({
+          businessId: businessId,
+          tableName: tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        await UserSession.findOneAndUpdate(
+          { businessId, tableName },
+          {
+            $set: {
+              serviceCharge: 0,
+              serviceChargeRemovedBy: serviceChargeRemovedBy,
+              reasonOfServiceCharge: reasonOfServiceCharge,
+            },
+          },
+          { session, new: true },
+        );
 
         return respond(c, "sucess", true, 200, {});
       });

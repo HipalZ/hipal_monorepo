@@ -222,6 +222,11 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: 5,
   },
+  serviceChargePercentage: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
 });
 
 userSessionSchema.index({ businessId: 1, tableName: 1 }, { unique: true });
