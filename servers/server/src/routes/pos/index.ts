@@ -3315,7 +3315,6 @@ const posRouter = new Hono()
       z.object({
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
-        settledBy: z.string().min(1).max(50),
       }),
     ),
     async (c) => {
