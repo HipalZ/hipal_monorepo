@@ -1,3 +1,6 @@
+import { UserSession } from "@hi/db-models";
+import type { ClientSession } from "mongoose";
+
 // Reference to a business populated with name
 export interface BusinessRef {
   _id: string;
@@ -183,31 +186,75 @@ function calculateBillDishIds(
   return { totalDishTotal, totalGst };
 }
 
-function calculateFinalTotal(
+// function calculateFinalTotal(
+//   subtotal: number,
+//   totalDiscount: number,
+//   gst: number,
+//   serviceCharge: number,
+//   otherTax: number,
+//   tips: number,
+// ) {
+//   const total =
+//     subtotal - totalDiscount + gst + serviceCharge + otherTax + tips;
+//   return Math.round(total); // Round to 2 decimal places
+// }
+
+// function calculateTotalDiscount(
+//   discount: number,
+//   claimedCoins: number,
+//   couponDiscount: number,
+// ) {
+//   const totalDiscount = discount + claimedCoins + couponDiscount;
+//   return Math.round(totalDiscount); // Round to 2 decimal places
+// }
+
+// Calculate the total discount applied (coins, coupons, etc.)
+const calculateTotalDiscount = (
+  discount: number,
+  claimedCoins: number,
+  couponDiscount: number,
+) => {
+  return Math.round(discount + claimedCoins + couponDiscount);
+};
+
+// Calculate the GST for a given subtotal
+const calculateGst = (gstPercentage: number, subtotal: number) => {
+  return (gstPercentage / 100) * subtotal;
+};
+
+// Calculate the final total after applying all discounts, GST, service charge, etc.
+const calculateFinalTotal = (
   subtotal: number,
   totalDiscount: number,
   gst: number,
   serviceCharge: number,
   otherTax: number,
   tips: number,
-) {
-  const total =
-    subtotal - totalDiscount + gst + serviceCharge + otherTax + tips;
-  return Math.round(total); // Round to 2 decimal places
-}
+) => {
+  return Math.round(
+    subtotal - totalDiscount + gst + serviceCharge + otherTax + tips,
+  );
+};
 
-function calculateTotalDiscount(
-  discount: number,
-  claimedCoins: number,
-  couponDiscount: number,
-) {
-  const totalDiscount = discount + claimedCoins + couponDiscount;
-  return Math.round(totalDiscount); // Round to 2 decimal places
-}
+// Reusable function to update table session after applying or removing discounts
+const updateTableSession = async (
+  businessId: string,
+  tableName: string,
+  session: ClientSession,
+  updatedFields: object,
+) => {
+  return await UserSession.findOneAndUpdate(
+    { businessId, tableName },
+    { $set: updatedFields },
+    { session, new: true },
+  );
+};
 
 export {
   calculateBillDishIds,
   calculateBillTotals,
   calculateFinalTotal,
+  calculateGst,
   calculateTotalDiscount,
+  updateTableSession,
 };
