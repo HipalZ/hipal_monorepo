@@ -153,7 +153,7 @@ function calculateBillDishIds(
     for (const kot of kots) {
       for (const item of kot.cart) {
         // Skip deleted items
-        if (item.isDeleted || !dishIds.includes(item.dish._id)) continue;
+        if (item.isDeleted || !dishIds.includes(item._id)) continue;
 
         // Base price comes from portion if present, otherwise dish.price
         const basePrice = item.portion?.price ?? item.dish.price;

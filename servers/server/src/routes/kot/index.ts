@@ -10,13 +10,11 @@ import {
 import { kotOrderAcceptSchema } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
-import axios from "axios";
 import { Hono } from "hono";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
-import { calculateCartBill, convertToPetpoojaCart } from "../../utils/helper";
+import { calculateCartBill } from "../../utils/helper";
 import { deleteKOTPrintEvent, sendKOTPrintEvent } from "../../utils/kot";
-import { posApiPaths } from "../../utils/posConfig/petPooja";
 import { respond } from "../../utils/response";
 
 const kotRouter = new Hono()
@@ -300,14 +298,7 @@ const kotRouter = new Hono()
         });
 
         if (!kot) {
-          return c.json(
-            {
-              message: "Kot not found",
-              err: true,
-              data: {},
-            },
-            404,
-          );
+          return respond(c, "Order not found", true, 404, {});
         }
         // find posconfig for a place order
         const pos = await BusinessPosConfig.findOne({
@@ -316,16 +307,7 @@ const kotRouter = new Hono()
           active: true,
         });
         if (!pos) {
-          return c.json(
-            {
-              message: "POS not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
+          return respond(c, "POS not found", true, 404, {});
         }
 
         if (orderAction === "ACCEPT") {
@@ -334,42 +316,11 @@ const kotRouter = new Hono()
             businessId: kot.businessId,
           });
 
-          // check if bill already generated for table
-          if (tableSession?.billRequestId) {
-            return c.json(
-              {
-                message: `Bill already generated for table ${tableSession.tableName} by ${tableSession?.billGeneratedBy} you can't add more items`,
-                err: true,
-                data: {
-                  success: false,
-                },
-              },
-              400,
-            );
-          }
           kot.accepted = true;
           kot.acceptedBy = performBy;
           await kot.save();
 
           const totalBill = calculateCartBill(kot.cart);
-
-          const petpoojaCart = convertToPetpoojaCart(
-            kot.cart,
-            pos.restId,
-            kot.name,
-            tableSession?.pin,
-            kot.tableName,
-            pos.accessKey,
-            pos.secretKey,
-
-            pos.authToken,
-          );
-
-          const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
-
-          if (saveKot.data.status === "0") {
-            throw new Error("Error in saving kot");
-          }
 
           await Table.findOneAndUpdate(
             {
@@ -395,41 +346,23 @@ const kotRouter = new Hono()
           const userInfo = await User.findById(kot.userId);
           const captainInfo = await User.findById(performBy);
 
-          axios.post(
-            "http://localhost:3001",
-            {
-              event: `${tableSession?.businessId}_kot_print`,
-              payload: {
-                tableName: tableSession?.tableName,
-                businessId: tableSession?.businessId,
-                customerName: userInfo?.name,
-                customerPhone: userInfo?.phone,
-                cart: kot.cart,
-                acceptedBy: captainInfo?.name,
-                kotId: kot._id.toString(),
-                date: Date.now(),
-                businessName: pos?.restName,
-              },
-            },
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-            },
-          );
+          sendKOTPrintEvent({
+            tableName: tableSession?.tableName as string,
+            businessId: tableSession?.businessId as string,
+            customerName: userInfo?.name as string,
+            customerPhone: userInfo?.phone as string,
+            cart: kot.cart,
+            acceptedBy: captainInfo?.name as string,
+            kotId: kot._id.toString(),
+            date: Date.now(),
+            posRestName: pos?.restName,
+          });
 
-          return c.json(
-            {
-              message: "Data fetched successfully",
-              err: false,
-              data: {
-                success: true,
-                name: kot.name,
-                phone: kot.phone,
-              },
-            },
-            200,
-          );
+          return respond(c, "Data fetched successfully", false, 200, {
+            success: true,
+            name: kot.name,
+            phone: kot.phone,
+          });
         }
 
         if (orderAction === "REJECT") {

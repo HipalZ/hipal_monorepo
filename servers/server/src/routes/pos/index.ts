@@ -134,14 +134,9 @@ const saveOrder = async (
   tableId: string,
   edited: boolean,
   editedBy: string,
-  petpoojaCart: unknown,
   hiCode: string,
   session: ClientSession,
 ) => {
-  const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
-  if (saveKot.data.success === "0") {
-    throw new Error("kot not saved in pos");
-  }
   const resData = await saveKotOrder(
     tableName,
     businessId,
@@ -310,6 +305,7 @@ const posRouter = new Hono()
             gst: Number(newGst).toFixed(2),
             total: newTotal,
             serviceCharge: serviceChargeAmount,
+            generatedBy: generatedBy,
           },
         );
 
@@ -345,6 +341,7 @@ const posRouter = new Hono()
               otherTax: tableSession.otherTax,
               tips: tableSession.tips,
               total: tableSession.total,
+              billId: tableSession._id.toString(),
             },
           },
           200,
@@ -1392,24 +1389,15 @@ const posRouter = new Hono()
         tableName: z.string().max(30),
         internalCart: z.array(z.object({})),
         businessId: z.string().min(1).max(50),
-        customerName: z.string().min(1).max(50),
-        customerPhone: z.string().min(10).max(10),
-        //TODO : add userId
-        userId: z.string().min(1).max(100).optional(),
+        userId: z.string().min(1).max(100),
       }),
     ),
 
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const {
-          internalCart,
-          tableName,
-          businessId,
-          customerName,
-          customerPhone,
-          userId,
-        } = await c.req.json();
+        const { internalCart, tableName, businessId, userId } =
+          await c.req.json();
         //  table info
         const tableData = await Table.findOne({
           businessId: businessId,
@@ -1420,7 +1408,7 @@ const posRouter = new Hono()
           return respond(c, "Table not found", true, 404, {});
         }
 
-        const userData = await User.findOne({ phone: customerPhone });
+        const userData = await User.findById(userId);
         if (!userData) {
           return respond(c, "User not found", true, 404, {});
         }
@@ -1442,34 +1430,13 @@ const posRouter = new Hono()
         if (registrationToken.length > 0) {
           for (const obj of registrationToken) {
             if (obj.notification) {
-              sendPushNotification(obj.token, customerName, tableName);
+              sendPushNotification(
+                obj.token,
+                userData.name as string,
+                tableName,
+              );
             }
           }
-        }
-
-        const userActiveTableSession = await UserSession.findOne({
-          phoneNumbers: customerPhone,
-          businessId: businessId,
-        });
-
-        if (
-          userActiveTableSession &&
-          userActiveTableSession?.tableName !== tableName
-        ) {
-          return c.json(
-            {
-              message: `User already active on table ${userActiveTableSession.tableName} please close that table first`,
-              err: true,
-              data: {
-                success: false,
-                data: {
-                  tableName: userActiveTableSession.tableName,
-                  hiCode: userActiveTableSession.hiCode,
-                },
-              },
-            },
-            409,
-          );
         }
 
         const userTableSession = await UserSession.findOne({
@@ -1477,9 +1444,26 @@ const posRouter = new Hono()
           businessId: businessId,
         });
 
+        if (userTableSession && userTableSession?.tableName !== tableName) {
+          return c.json(
+            {
+              message: `User already active on table ${userTableSession.tableName} please close that table first`,
+              err: true,
+              data: {
+                success: false,
+                data: {
+                  tableName: userTableSession.tableName,
+                  hiCode: userTableSession.hiCode,
+                },
+              },
+            },
+            409,
+          );
+        }
+
         if (userTableSession) {
           if (
-            !userTableSession.phoneNumbers.includes(customerPhone) &&
+            !userTableSession.phoneNumbers.includes(userData.phone) &&
             // if captain place the order then we need to check if the table is already occupied by user
             userTableSession.phoneNumbers.length > 0
           ) {
@@ -1500,7 +1484,6 @@ const posRouter = new Hono()
 
         if (!userTableSession) {
           const tenDigitCode = generateTenDigitCode();
-
           const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
           // Generate the hicode and save it in the user session
           await Table.findOneAndUpdate(
@@ -1523,8 +1506,8 @@ const posRouter = new Hono()
               hiCode: hiCode,
               pin: tenDigitCode,
               tableName: tableName,
-              customerName: customerName,
-              phoneNumbers: [customerPhone],
+              customerName: userData.name,
+              phoneNumbers: [userData.phone],
               customerIds: [userData._id],
               performedBy: "user",
               date: Date.now(),
@@ -1538,15 +1521,14 @@ const posRouter = new Hono()
             const result = await saveOrder(
               tableName,
               businessId,
-              customerName,
-              customerPhone,
+              userData.name as string,
+              userData.phone as string,
               internalCart,
               userData._id,
               true,
               tableData?._id.toString(),
               false,
               null,
-              internalCart,
               hiCode,
               session,
             );
@@ -1554,8 +1536,8 @@ const posRouter = new Hono()
             sendKOTPrintEvent({
               tableName,
               businessId,
-              customerName,
-              customerPhone,
+              customerName: userData.name as string,
+              customerPhone: userData.phone as string,
               cart: internalCart,
               acceptedBy: "direct_user",
               kotId: result?.data?.kotId?.toString() ?? "",
@@ -1569,8 +1551,8 @@ const posRouter = new Hono()
           await saveKotOrder(
             tableName,
             businessId,
-            customerName,
-            customerPhone,
+            userData.name as string,
+            userData.phone as string,
             internalCart,
             userData._id,
             false,
@@ -1587,8 +1569,8 @@ const posRouter = new Hono()
               data: {
                 success: true,
                 hiCode: hiCode,
-                name: customerName,
-                phone: customerPhone,
+                name: userData.name,
+                phone: userData.phone,
               },
             },
             200,
@@ -1599,15 +1581,14 @@ const posRouter = new Hono()
           const result = await saveOrder(
             tableName,
             businessId,
-            customerName,
-            customerPhone,
+            userData.name as string,
+            userData.phone as string,
             internalCart,
             userData._id,
             true,
             tableData._id.toString(),
             false,
             null,
-            internalCart,
             userTableSession.hiCode,
             session,
           );
@@ -1615,8 +1596,8 @@ const posRouter = new Hono()
           const res = sendKOTPrintEvent({
             tableName,
             businessId,
-            customerName,
-            customerPhone,
+            customerName: userData.name as string,
+            customerPhone: userData.phone as string,
             cart: internalCart,
             acceptedBy: "direct_user",
             kotId: result?.data?.kotId?.toString() ?? "",
@@ -1630,8 +1611,8 @@ const posRouter = new Hono()
         await saveKotOrder(
           tableName,
           businessId,
-          customerName,
-          customerPhone,
+          userData.name as string,
+          userData.phone as string,
           internalCart,
           userData._id,
           false,
@@ -1674,16 +1655,7 @@ const posRouter = new Hono()
         const userData = await User.findOne({ phone: customerPhone });
 
         if (!userData) {
-          return c.json(
-            {
-              message: "User not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
+          return respond(c, "User not found", true, 404, {});
         }
 
         const userTableSession = await UserSession.findOne({
@@ -1692,22 +1664,12 @@ const posRouter = new Hono()
         });
 
         if (!userTableSession) {
-          return c.json(
-            {
-              message: "Invalid HiCode",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            400,
-          );
+          return respond(c, "Invalid HiCode", true, 400, {});
         }
 
         await UserSession.findOneAndUpdate(
           {
             businessId: businessId,
-
             tableName: userTableSession.tableName,
           },
           {
@@ -1762,21 +1724,15 @@ const posRouter = new Hono()
       z.object({
         tableName: z.string().min(1).max(200),
         internalCart: z.array(z.object({})),
-        businessId: z.string().min(1).max(200),
-        customerName: z.string().min(1).max(200),
-        customerPhone: z.string().min(1).max(200),
+        businessId: z.string().min(24).max(24),
+        userId: z.string().min(24).max(24),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const {
-          internalCart,
-          tableName,
-          businessId,
-          customerName,
-          customerPhone,
-        } = await c.req.json();
+        const { internalCart, tableName, businessId, userId } =
+          await c.req.json();
         const tableInfo = await Table.findOne({
           businessId: businessId,
           name: tableName,
@@ -1786,7 +1742,7 @@ const posRouter = new Hono()
           return respond(c, "Table not found", true, 404, {});
         }
 
-        const user = await User.findOne({ phone: customerPhone });
+        const user = await User.findById(userId);
         if (!user) {
           return respond(c, "User not found", true, 404, {});
         }
@@ -1816,8 +1772,8 @@ const posRouter = new Hono()
               hiCode: hiCode,
               pin: tenDigitCode,
               tableName: tableName,
-              customerName: customerName,
-              phoneNumbers: [customerPhone],
+              customerName: user.name as string,
+              phoneNumbers: [user.phone],
               performedBy: "captain",
               date: Date.now(),
             },
@@ -1830,8 +1786,8 @@ const posRouter = new Hono()
           const res = await saveKotOrder(
             tableName,
             businessId,
-            customerName,
-            customerPhone,
+            user.name as string,
+            user.phone as string,
             internalCart,
             user._id,
             true,
@@ -1866,32 +1822,25 @@ const posRouter = new Hono()
           sendKOTPrintEvent({
             tableName,
             businessId,
-            customerName,
-            customerPhone,
+            customerName: user.name as string,
+            customerPhone: user.phone as string,
             cart: internalCart,
-            acceptedBy: customerName,
+            acceptedBy: user.name as string,
             kotId: res?.kotId?.toString() ?? "",
             date: Date.now(),
             posRestName: pos?.restName,
           });
 
-          return c.json(
-            {
-              message: "Data fetched successfully",
-              err: false,
-              data: {
-                success: true,
-              },
-            },
-            200,
-          );
+          return respond(c, "Data fetched successfully", false, 200, {
+            success: true,
+          });
         }
 
         const res = await saveKotOrder(
           tableName,
           businessId,
-          tableInfo?.edited ? tableSession.customerName : customerName,
-          customerPhone,
+          tableInfo?.edited ? tableSession.customerName : (user.name as string),
+          user.phone as string,
           internalCart,
           user._id,
           true,
@@ -1927,25 +1876,18 @@ const posRouter = new Hono()
         sendKOTPrintEvent({
           tableName,
           businessId,
-          customerName,
-          customerPhone,
+          customerName: user.name as string,
+          customerPhone: user.phone as string,
           cart: internalCart,
-          acceptedBy: customerName,
+          acceptedBy: user.name as string,
           kotId: res?.kotId?.toString() ?? "",
           date: Date.now(),
           posRestName: pos?.restName,
         });
-        return c.json(
-          {
-            message: "Data fetched successfully",
-            err: false,
-            data: {
-              success: true,
-              hiCode: tableSession.hiCode,
-            },
-          },
-          200,
-        );
+        return respond(c, "Data fetched successfully", false, 200, {
+          success: true,
+          hiCode: tableSession.hiCode,
+        });
       });
     },
   )
@@ -2682,7 +2624,7 @@ const posRouter = new Hono()
         .object({
           businessId: z.string().min(3).max(200),
           tableName: z.string().min(1).max(200),
-          value: z.number().positive(),
+          value: z.number().positive().min(1).max(100),
           reasonOfDiscount: z.string().min(1).max(100).optional(),
           discountAppliedOn: z.enum(["ON_BILL", "ON_DISH"]),
           dishIds: z.array(z.string().min(1).max(200)).optional(),
@@ -2702,7 +2644,7 @@ const posRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const {
+        let {
           businessId,
           tableName,
           value,
@@ -2724,6 +2666,8 @@ const posRouter = new Hono()
         let discountAmount = 0;
         let newSubTotal = tableSession.subTotal;
 
+        value = Math.round((value / 100) * newSubTotal);
+
         if (discountAppliedOn === "ON_BILL") {
           // Calculate discount on the bill
           discountAmount = Math.min(
@@ -2738,7 +2682,7 @@ const posRouter = new Hono()
         if (discountAppliedOn === "ON_DISH") {
           // Calculate discount on selected dishes
           const kotOrder = (await KotOrder.find({
-            "cart.dish._id": { $in: dishIds },
+            "cart._id": { $in: dishIds },
             tableName,
             businessId,
             settled: false,
@@ -3281,35 +3225,6 @@ const posRouter = new Hono()
 
   .post(
     "/settle",
-    zValidator(
-      "json",
-      z.object({
-        businessId: z.string().min(3).max(200),
-        tableName: z.string().min(1).max(200),
-        settledBy: z.string().min(1).max(50),
-      }),
-    ),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, settledBy } = await c.req.json();
-
-        const tableSession = await UserSession.findOne({
-          businessId,
-          tableName,
-        });
-
-        if (!tableSession) {
-          return respond(c, "Table session not found", true, 404, {});
-        }
-
-        return respond(c, "Success", true, 200, {});
-      });
-    },
-  )
-
-  .post(
-    "/confirm_settle",
     zValidator(
       "json",
       z.object({

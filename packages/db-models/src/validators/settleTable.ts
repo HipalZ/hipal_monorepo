@@ -64,7 +64,7 @@ export const normalSettleSchema = z
   .object({
     tableId: z.string().min(1).max(500),
     captainId: z.string().min(1).max(500),
-    billRequestId: z.string().min(1).max(500),
+    billId: z.string().min(1).max(500),
     settleModes: settleModesSchema,
     split: z.boolean().default(false).optional(),
     duesUserId: z.string().max(100).optional(),
