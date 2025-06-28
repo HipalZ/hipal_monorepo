@@ -233,7 +233,12 @@ const posRouter = new Hono()
         const { totalDishTotal, totalGst } = calculateBillTotals(kotOrders);
 
         // Get the table session
-        let tableSession = await UserSession.findOne({ businessId, tableName });
+        let tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        }).populate(
+          "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy",
+        );
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
@@ -325,10 +330,12 @@ const posRouter = new Hono()
               discountAppliedOn: tableSession.discountAppliedOn,
               reasonOfDiscount: tableSession.reasonOfDiscount,
               reasonOfServiceCharge: tableSession.reasonOfServiceCharge,
-              serviceChargeAppliedBy: tableSession.serviceChargeAppliedBy,
-              serviceChargeRemovedBy: tableSession.serviceChargeRemovedBy,
-              discountAppliedBy: tableSession.discountAppliedBy,
-              discountRemovedBy: tableSession.discountRemovedBy,
+              serviceChargeAppliedBy:
+                tableSession?.serviceChargeAppliedBy?.name || "",
+              serviceChargeRemovedBy:
+                tableSession?.serviceChargeRemovedBy?.name || "",
+              discountAppliedBy: tableSession?.discountAppliedBy?.name || "",
+              discountRemovedBy: tableSession?.discountRemovedBy?.name || "",
               items: cartItems,
               subTotal: totalDishTotal,
               gst: tableSession.gst,
