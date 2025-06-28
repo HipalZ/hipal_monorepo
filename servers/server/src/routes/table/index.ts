@@ -563,90 +563,90 @@ const tableRouter = new Hono()
           return respond(c, "Pos not found", true, 400, {});
         }
 
-        const alreadySetlle = await Payment.findOne({
-          posBillRequestId: billRequestId,
-        });
+        // const alreadySetlle = await Payment.findOne({
+        //   posBillRequestId: billRequestId,
+        // });
 
-        if (alreadySetlle) {
-          return c.json(
-            {
-              message: "Bill already settled",
-              err: true,
-              data: {},
-            },
-            409,
-          );
-        }
-        await UserSession.findOneAndUpdate(
-          {
-            businessId: table?.businessId,
-            tableName: table?.name,
-          },
-          {
-            $set: {
-              settleType: "HI_SETTLE",
-            },
-          },
-          { session },
-        );
+        // if (alreadySetlle) {
+        //   return c.json(
+        //     {
+        //       message: "Bill already settled",
+        //       err: true,
+        //       data: {},
+        //     },
+        //     409,
+        //   );
+        // }
+        // await UserSession.findOneAndUpdate(
+        //   {
+        //     businessId: table?.businessId,
+        //     tableName: table?.name,
+        //   },
+        //   {
+        //     $set: {
+        //       settleType: "HI_SETTLE",
+        //     },
+        //   },
+        //   { session },
+        // );
 
-        const customLink = await Business.findById(table?.businessId);
+        // const customLink = await Business.findById(table?.businessId);
 
-        const qrBill = await QrBill.findOne({
-          requestBillId: billRequestId,
-        });
+        // const qrBill = await QrBill.findOne({
+        //   requestBillId: billRequestId,
+        // });
 
-        if (qrBill) {
-          await QrBill.findOneAndUpdate(
-            {
-              requestBillId: billRequestId,
-            },
-            {
-              $set: {
-                captainId: captainId,
-                date: Date.now(),
-              },
-            },
-          );
+        // if (qrBill) {
+        //   await QrBill.findOneAndUpdate(
+        //     {
+        //       requestBillId: billRequestId,
+        //     },
+        //     {
+        //       $set: {
+        //         captainId: captainId,
+        //         date: Date.now(),
+        //       },
+        //     },
+        //   );
 
-          await qrBill.save();
-          return c.json(
-            {
-              message: "fetched qr bill",
-              err: false,
-              data: {
-                qrBillId: qrBill.requestBillId,
-                expireIn: qrBill.expireIn,
-                path: `https://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${qrBill.requestBillId}`,
-              },
-            },
-            200,
-          );
-        }
+        //   await qrBill.save();
+        //   return c.json(
+        //     {
+        //       message: "fetched qr bill",
+        //       err: false,
+        //       data: {
+        //         qrBillId: qrBill.requestBillId,
+        //         expireIn: qrBill.expireIn,
+        //         path: `https://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${qrBill.requestBillId}`,
+        //       },
+        //     },
+        //     200,
+        //   );
+        // }
 
-        const createQrBill = await QrBill.create([
-          {
-            businessId: table?.businessId,
-            captainId: captainId,
-            date: Date.now(),
-            requestBillId: billRequestId,
-            serviceCharge: tableSession?.serviceCharge,
-            tableName: table?.name,
-            tax: tableSession?.finalTax || 0,
-            total: tableSession?.finalTotal || 0,
-            expireIn: 300000,
-            subTotal: tableSession?.initialTotal || 0,
-          },
-        ]);
+        // const createQrBill = await QrBill.create([
+        //   {
+        //     businessId: table?.businessId,
+        //     captainId: captainId,
+        //     date: Date.now(),
+        //     requestBillId: billRequestId,
+        //     serviceCharge: tableSession?.serviceCharge,
+        //     tableName: table?.name,
+        //     tax: tableSession?.finalTax || 0,
+        //     total: tableSession?.finalTotal || 0,
+        //     expireIn: 300000,
+        //     subTotal: tableSession?.initialTotal || 0,
+        //   },
+        // ]);
 
         return c.json(
           {
             message: "fetched qr bill",
             err: false,
             data: {
-              qrBillId: createQrBill[0].requestBillId,
-              expireIn: createQrBill[0].expireIn,
-              path: `https://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${createQrBill[0].requestBillId}`,
+              // qrBillId: createQrBill[0].requestBillId,
+              // expireIn: createQrBill[0].expireIn,
+              // path: `https://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${createQrBill[0].requestBillId}`,
             },
           },
           200,
