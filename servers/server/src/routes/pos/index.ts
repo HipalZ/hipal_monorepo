@@ -3280,7 +3280,36 @@ const posRouter = new Hono()
   )
 
   .post(
-    "/settle_bill",
+    "/settle",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+        settledBy: z.string().min(1).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, settledBy } = await c.req.json();
+
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        return respond(c, "Success", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/confirm_settle",
     zValidator(
       "json",
       z.object({
