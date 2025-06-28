@@ -274,7 +274,7 @@ const tableRouter = new Hono()
         ) {
           modifyTotal = 0;
         } else {
-          modifyTotal = tableSession?.finalTotal || 0;
+          modifyTotal = tableSession?.total || 0;
 
           if (settleModes.length > 1) {
             for (const settle of settleModes) {
@@ -292,7 +292,7 @@ const tableRouter = new Hono()
                 paymentMode?.name === "npc" ||
                 paymentMode?.name === "complementary"
                   ? 0
-                  : tableSession?.finalTotal || 0,
+                  : tableSession?.total || 0,
               currency: "INR",
               receipt: uniqueOrderId,
               userId:
@@ -302,9 +302,11 @@ const tableRouter = new Hono()
               claimedCoins: tableSession?.claimedCoins || 0,
               tableName: table?.name,
               tips: tableSession?.tips || 0,
-              billValue: tableSession?.initialTotal || 0,
+              billValue: tableSession?.subTotal || 0,
               businessId: table?.businessId,
               order_id: uniqueOrderId,
+              discount: tableSession?.discount || 0,
+              couponDiscount: tableSession?.couponDiscount || 0,
 
               date: Date.now(),
             },
@@ -313,17 +315,16 @@ const tableRouter = new Hono()
         );
 
         let finalCashBack = 0;
+        const cashBack = await calculatedCashbackCoins(
+          saveOrder[0].businessId.toString(),
+          Number(saveOrder[0].billValue),
+          Number(saveOrder[0].claimedCoins),
+        );
         if (saveOrder[0]?.claimedCoins > 0) {
           if (
             paymentMode?.name !== "complementary" &&
             paymentMode?.name !== "npc"
           ) {
-            const cashBack = await calculatedCashbackCoins(
-              saveOrder[0].businessId.toString(),
-              Number(saveOrder[0].billValue),
-              Number(saveOrder[0].claimedCoins),
-            );
-
             await removeCoins(
               Number(saveOrder[0]?.claimedCoins),
               saveOrder[0].tableName,
@@ -332,20 +333,19 @@ const tableRouter = new Hono()
               saveOrder[0].userId.toString(),
               session,
             );
-
-            finalCashBack = await addCoins(
-              cashBack,
-              saveOrder[0].userId.toString(),
-              saveOrder[0]._id.toString(),
-              saveOrder[0].tableName || "",
-              saveOrder[0].businessId.toString(),
-
-              businessLoyalty?.loyaltyId.toString() || "",
-
-              session,
-            );
           }
         }
+        finalCashBack = await addCoins(
+          cashBack,
+          saveOrder[0].userId.toString(),
+          saveOrder[0]._id.toString(),
+          saveOrder[0].tableName || "",
+          saveOrder[0].businessId.toString(),
+
+          businessLoyalty?.loyaltyId.toString() || "",
+
+          session,
+        );
 
         const createPayment = await Payment.create(
           [
@@ -367,26 +367,23 @@ const tableRouter = new Hono()
               razorpayPaymentId: nanoid(15),
               settleType: "NORMAL_SETTLE",
               comment: "NORMAL SETTLE",
-
-              posBillId: tableSession?.requestId,
+              posBillId: tableSession?._id,
               tax:
                 paymentMode?.name === "npc" ||
                 paymentMode?.name === "complementary"
                   ? 0
-                  : tableSession?.finalTax,
+                  : tableSession?.gst,
               serviceCharge:
                 paymentMode?.name === "npc" ||
                 paymentMode?.name === "complementary"
                   ? 0
                   : tableSession?.serviceCharge,
-              posBillRequestId: billRequestId,
+
               waiterName: captain?.name,
               splitModes: settleModes,
               date: Date.now(),
               discount: tableSession?.discount,
-              initialTax: tableSession?.initialTax,
-              initialSubTotal: tableSession?.initialSubTotal,
-              initialTotal: tableSession?.initialTotal,
+              couponDiscount: tableSession?.couponDiscount,
             },
           ],
           { session },
@@ -444,12 +441,31 @@ const tableRouter = new Hono()
           { session },
         );
 
+        const payload = {
+          app_key: pos.accessKey,
+          app_secret: pos.secretKey,
+          access_token: pos.authToken,
+          restID: pos.restId,
+          pin: tableSession?.pin,
+          tableNo: table?.name,
+        };
+
+        const response = await axios.post(posApiPaths.requestBill, payload, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.data.success === "0") {
+          throw new Error("Error in requesting bill");
+        }
+
         const res = await axios.post(posApiPaths.settleTable, {
           app_key: pos.accessKey,
           app_secret: pos.secretKey,
           access_token: pos.authToken,
           restID: pos.restId,
-          bill_request_id: billRequestId,
+          bill_request_id: response.data.bill_request_id,
           amount_paid: modifyTotal,
           pin: tableSession?.pin,
         });

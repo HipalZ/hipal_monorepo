@@ -41,6 +41,7 @@ export const userSessionSchema = z.object({
   serviceChargePercentage: z.coerce.number().optional().default(0),
   newDishGst: z.coerce.number().optional().default(0),
   isServiceChargeRemoved: z.boolean().optional().default(false),
+  customerIds: z.array(ObjectIdSchema).optional(),
 });
 
 export type UserSessionSchemaType = z.infer<typeof userSessionSchema>;

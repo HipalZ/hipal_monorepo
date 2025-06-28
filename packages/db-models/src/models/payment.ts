@@ -220,6 +220,10 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: String,
       required: false,
     },
+    couponDiscount: {
+      type: Number,
+      default: 0,
+    },
   },
 
   { timestamps: true },

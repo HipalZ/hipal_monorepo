@@ -79,6 +79,12 @@ export const OrderSchema = z.object({
   channelId: ObjectIdSchema.optional(),
   cashbackAvailable: z.boolean().optional(),
   posBillId: z.string().optional(),
+  couponDiscount: z.coerce
+    .number({
+      message: "Coupon discount must be a number",
+    })
+    .optional()
+    .default(0),
 });
 
 export type OrderType = z.infer<typeof OrderSchema>;

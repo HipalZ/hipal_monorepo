@@ -39,6 +39,7 @@ import {
 } from "../../utils/bill";
 import {
   calculateCartBill,
+  convertToPetpoojaCart,
   transformData,
   transformParentCategories,
 } from "../../utils/helper";
@@ -3244,6 +3245,76 @@ const posRouter = new Hono()
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const pos = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (!pos) {
+          return respond(c, "Pos not found", true, 400, {});
+        }
+
+        const kotOrders = (await KotOrder.find({
+          tableName,
+          settled: false,
+          businessId,
+        }).lean()) as KotOrderTypes[];
+
+        const cartItems = kotOrders.flatMap((order) =>
+          order.cart.filter((item) => !item.isDeleted),
+        );
+
+        const registerUser = await axios.post(posApiPaths.registerUser, {
+          app_key: pos.accessKey,
+          app_secret: pos.secretKey,
+          access_token: pos.authToken,
+          restID: pos.restId,
+          phone: tableSession?.pin,
+          name: kotOrders[0].name,
+        });
+
+        if (registerUser.data.success === "0") {
+          throw new Error("Failed to register user");
+        }
+
+        const petpoojaCart = convertToPetpoojaCart(
+          cartItems,
+          pos.restId,
+          kotOrders[0].name,
+          tableSession?.pin,
+          tableName,
+          pos.accessKey,
+          pos.secretKey,
+
+          pos.authToken,
+        );
+
+        const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
+
+        if (saveKot.data.status === "0") {
+          throw new Error("Error in saving kot");
+        }
+
+        const payload = {
+          app_key: pos.accessKey,
+          app_secret: pos.secretKey,
+          access_token: pos.authToken,
+          restID: pos.restId,
+          pin: tableSession?.pin,
+          tableNo: tableName,
+        };
+
+        const response = await axios.post(posApiPaths.requestBill, payload, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.data.success === "0") {
+          throw new Error("Error in requesting bill");
         }
 
         return respond(c, "Success", true, 200, {});

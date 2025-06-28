@@ -159,6 +159,8 @@ export const PaymentSchema = z.object({
     .default(false),
   updatedAt: z.number().optional(),
   updatedBy: ObjectIdSchema.optional(),
+  couponDiscount: z.coerce.number().optional().default(0),
+  billId: z.string().optional(),
 });
 
 export type PaymentType = z.infer<typeof PaymentSchema>;
