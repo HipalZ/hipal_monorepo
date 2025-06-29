@@ -3211,6 +3211,103 @@ const posRouter = new Hono()
         return respond(c, "Success", true, 200, {});
       });
     },
+  )
+
+  .post(
+    "/add_tip",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+        value: z.number().positive(),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, value } = await c.req.json();
+
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const pos = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (!pos) {
+          return respond(c, "Pos not found", true, 400, {});
+        }
+
+        await UserSession.findOneAndUpdate(
+          { businessId, tableName },
+          {
+            $set: {
+              tips: value,
+            },
+          },
+          { session, new: true },
+        );
+
+        return respond(c, "Success", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/remove_tip",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName } = await c.req.json();
+
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const pos = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (!pos) {
+          return respond(c, "Pos not found", true, 400, {});
+        }
+
+        await UserSession.findOneAndUpdate(
+          { businessId, tableName },
+          {
+            $set: {
+              tips: 0,
+            },
+          },
+          { session, new: true },
+        );
+
+        return respond(c, "Success", true, 200, {});
+      });
+    },
   );
 
 export default posRouter;

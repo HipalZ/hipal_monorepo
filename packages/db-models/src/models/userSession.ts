@@ -194,7 +194,7 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     default: false,
   },
   items:{
-    type: [ObjectId],
+    type: [Object],
     required: false,
   }
 });
