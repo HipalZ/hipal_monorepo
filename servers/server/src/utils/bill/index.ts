@@ -214,12 +214,16 @@ const calculateTotalDiscount = (
   claimedCoins: number,
   couponDiscount: number,
 ) => {
-  return Math.round(discount + claimedCoins + couponDiscount);
+  const dis= Math.round(discount + claimedCoins + couponDiscount);
+  if (dis < 0) return 0;
+  return dis;
 };
 
 // Calculate the GST for a given subtotal
 const calculateGst = (gstPercentage: number, subtotal: number) => {
-  return (gstPercentage / 100) * subtotal;
+  const gst = (gstPercentage / 100) * subtotal;
+  if (gst < 0) return 0;
+  return gst;
 };
 
 // Calculate the final total after applying all discounts, GST, service charge, etc.
@@ -231,9 +235,11 @@ const calculateFinalTotal = (
   otherTax: number,
   tips: number,
 ) => {
-  return Math.round(
+  const total = Math.round(
     subtotal - totalDiscount + gst + serviceCharge + otherTax + tips,
   );
+  if (total < 0) return 0;
+  return total;
 };
 
 // Reusable function to update table session after applying or removing discounts

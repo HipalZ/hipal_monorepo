@@ -255,6 +255,7 @@ const posRouter = new Hono()
           tableSession.couponDiscount -
           tableSession.discount;
 
+
         let serviceChargeAmount = Math.round(
           (serviceChargePercentage / 100) * baseAmount,
         );
@@ -288,7 +289,7 @@ const posRouter = new Hono()
 
         // Final total
         const newTotal = calculateFinalTotal(
-          newSubTotal,
+          totalDishTotal,
           totalDis,
           newGst,
           serviceChargeAmount,
