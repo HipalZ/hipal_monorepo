@@ -170,15 +170,25 @@ const MemoBillPage = () => {
                         {item?.dish?.name}
                       </h3>
                       <p className="text-sm text-black">
-                        Quantity: {item?.dish?.quantity}
+                        Quantity: {item?.quantity}
                       </p>
                     </div>
                     <p className="font-medium text-black">
                       {currencySymbol}
-                      {item?.dish?.price * item?.dish?.quantity || 0}
+                      {item?.dish?.price * item?.quantity || 0}
                     </p>
                   </div>
-
+                  {item?.portion && (
+                    <div className="mt-2 pl-4 border-l-2 border-gray-100">
+                      <div className="flex justify-between text-sm text-black">
+                        <span>+ {item?.portion?.name}</span>
+                        <span>
+                          {currencySymbol}
+                          {item?.portion?.price}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                   {item?.extras?.length > 0 && (
                     <div className="mt-2 pl-4 border-l-2 border-gray-100">
                       {item?.extras.map((extra, idx) => (
@@ -217,7 +227,16 @@ const MemoBillPage = () => {
                   </span>
                 </div>
               ) : null}
-              {billData?.claimedCoins > 0 && (
+              {billData?.gst > 0 ? (
+                <div className="flex justify-between text-black">
+                  <span>GST</span>
+                  <span>
+                    {currencySymbol}
+                    {billData?.gst}
+                  </span>
+                </div>
+              ) : null}
+              {billData?.claimedCoins > 0 ? (
                 <div className="flex justify-between text-green-600">
                   <span>Coins/Couponz</span>
                   <span>
@@ -225,22 +244,17 @@ const MemoBillPage = () => {
                     {billData?.claimedCoins}
                   </span>
                 </div>
-              )}
-              <div className="flex justify-between text-black">
-                <span>Service Charge</span>
-                <span>
-                  {currencySymbol}
-                  {billData?.serviceCharge}
-                </span>
-              </div>
-              <div className="flex justify-between text-black">
-                <span>Tax</span>
-                <span>
-                  {currencySymbol}
-                  {billData?.tax}
-                </span>
-              </div>
-              {billData?.discount > 0 && (
+              ) : null}
+              {billData?.serviceCharge ? (
+                <div className="flex justify-between text-black">
+                  <span>Service Charge</span>
+                  <span>
+                    {currencySymbol}
+                    {billData?.serviceCharge}
+                  </span>
+                </div>
+              ) : null}
+              {billData?.discount > 0 ? (
                 <div className="flex justify-between text-green-600">
                   <span>Discount</span>
                   <span>
@@ -248,7 +262,16 @@ const MemoBillPage = () => {
                     {billData?.discount}
                   </span>
                 </div>
-              )}
+              ) : null}
+              {billData?.tips > 0 ? (
+                <div className="flex justify-between text-black">
+                  <span>Tips</span>
+                  <span>
+                    {currencySymbol}
+                    {billData?.tips}
+                  </span>
+                </div>
+              ) : null}
               <div className="h-px bg-gray-200 my-2" />
               <div className="text-black flex justify-between text-lg">
                 <span className="font-bold">Total</span>

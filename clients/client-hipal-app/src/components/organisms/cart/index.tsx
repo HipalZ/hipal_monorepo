@@ -25,12 +25,8 @@ import useTableData, {
 } from "@/components/store/useTableData";
 import { BsHandIndexThumb } from "react-icons/bs";
 
-const ConfirmPayment = dynamic(() => import("./confirmPayment"), {
-  ssr: false,
-});
 const EmptyCart = dynamic(() => import("./emptyCart"), { ssr: false });
 const PaymentAlert = dynamic(() => import("./paymentAlert"), { ssr: false });
-const CartPayment = dynamic(() => import("./cartPayment"), { ssr: false });
 const SwipeToPlaceOrder = dynamic(() => import("./swipeToPlaceOrder"));
 const CartItem = dynamic(() => import("./cartItem"), {
   ssr: false,
@@ -114,7 +110,17 @@ const Cart = () => {
     };
 
     mutate(payload);
-  }, [setDirection, accessToken, router, customLink, tableName]);
+  }, [
+    setDirection,
+    accessToken,
+    router,
+    customLink,
+    tableName,
+    businessId,
+    mutate,
+    setCheckLogin,
+    userDetails,
+  ]);
 
   const triggerModal = useCallback(() => {
     setOrderPlaced(true);
@@ -242,11 +248,12 @@ const Cart = () => {
     triggerModal,
     setCheckLogin,
     hiCode,
+    setTableName,
   ]);
 
   const payBill = useCallback(() => {
     setShowPayAlert(true);
-  }, [setShowPayAlert]);
+  }, []);
 
   const getBottomButtons = useMemo(() => {
     if (!tableName || outletInfo?.outLetType === "OTHER") {
@@ -301,16 +308,6 @@ const Cart = () => {
       ];
     }
 
-    if (cartPage === "confirmPayment") {
-      return [
-        {
-          text: "Pay Bill",
-          onClick: payBill,
-          type: "button" as const,
-        },
-      ];
-    }
-
     return [];
   }, [
     tableName,
@@ -321,6 +318,7 @@ const Cart = () => {
     payBill,
     setCartPage,
     setShowCart,
+    cartHistory,
   ]);
 
   const getButtonForPopcorn = useMemo(() => {
@@ -392,9 +390,12 @@ const Cart = () => {
     cartPage,
     cart.length,
     payPopCorn,
-    payBill,
     setCartPage,
     setShowCart,
+    isPending,
+    outLetInfo,
+    placeOrder,
+    triggerCallWaiter,
   ]);
 
   const handleBack = useCallback(() => {
@@ -506,10 +507,6 @@ const Cart = () => {
         </section>
       )}
       {cartPage === "order" && <Orders />}
-
-      {cartPage === "payment" && <CartPayment />}
-
-      {cartPage === "confirmPayment" && <ConfirmPayment />}
 
       {outletInfo?.outLetType !== "OTHER" && <CartWarning />}
 

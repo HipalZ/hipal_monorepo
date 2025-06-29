@@ -620,6 +620,8 @@ interface Extra {
 }
 
 interface DishItem {
+  portion: any;
+  quantity: ReactNode;
   dish: {
     name: string;
     price: number;
@@ -629,6 +631,8 @@ interface DishItem {
 }
 
 export interface BillData {
+  gst: number;
+  otherTax: ReactNode;
   billing_user_name: string;
   serviceCharge: number;
   discount: number;

@@ -1,9 +1,8 @@
 "use client";
-import { memo, useState, useCallback, lazy } from "react";
+import dynamic from "next/dynamic";
+import { memo, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaArrowLeft, FaRegCheckCircle } from "react-icons/fa";
-import { RiNewspaperLine } from "react-icons/ri";
-import { BiRightArrow } from "react-icons/bi";
 import Image from "next/image";
 import { useQuery } from "@tanstack/react-query";
 import { useCartStore } from "@/components/store/useCartStore";
@@ -18,9 +17,14 @@ import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { apiRpc } from "@hi/common";
 import { cn } from "@/components/utils/helpers";
 import celebration from "@/assets/cart/celebration.png";
-const OrdersHeader = lazy(() => import("./headerOrders"));
+import { useParams, useRouter } from "next/navigation";
+
+const OrdersHeader = dynamic(() => import("./headerOrders"));
+const SwipeToPlaceOrder = dynamic(() => import("./swipeToPlaceOrder"));
 
 const MemoOrders = () => {
+  const customLink = useParams()?.businessId as string;
+  const router = useRouter();
   const { cartHistory, setCartHistory } = useCartStore();
   const { setShowCart, cartPage, setCartPage } = useCart();
   const [expanded, setExpanded] = useState<string[]>([]);
@@ -36,10 +40,9 @@ const MemoOrders = () => {
     );
   }, []);
 
-  const handleConfirmBillPage = useCallback(
-    () => setCartPage("confirmPayment"),
-    [setCartPage],
-  );
+  const handleConfirmBillPage = useCallback(() => {
+    router.push(`/${customLink}/payment`);
+  }, [setCartPage, customLink]);
 
   // Fetch Orders from POS
   const getOrderFromPos = async () => {
@@ -238,10 +241,7 @@ const MemoOrders = () => {
 
           {/* Bottom Bar */}
           <div className="fixed bottom-0 left-0 right-0 bg-white">
-            <div className="p-2 text-center text-xs text-red-500 bg-red-50">
-              Note: Some items modified will be shown in final bill.
-            </div>
-            <div className="flex items-stretch h-16 p-2 gap-2">
+            <div className="flex h-16 p-2 gap-2">
               <button
                 onClick={handleBack}
                 type="button"
@@ -249,17 +249,7 @@ const MemoOrders = () => {
               >
                 <FaArrowLeft className="w-4 h-4 text-gray-600" />
               </button>
-              <button
-                onClick={handleConfirmBillPage}
-                type="button"
-                className="px-6 w-full inline-flex items-center justify-between bg-[#008800] rounded-lg text-white font-medium hover:bg-green-800"
-              >
-                <span className="inline-flex items-center gap-2">
-                  <RiNewspaperLine size={20} />
-                  Generate Final Bill
-                </span>
-                <BiRightArrow className="w-4 h-4 ml-2" />
-              </button>
+              <SwipeToPlaceOrder placeOrder={handleConfirmBillPage} />
             </div>
           </div>
         </div>

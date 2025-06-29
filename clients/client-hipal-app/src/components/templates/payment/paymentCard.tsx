@@ -51,7 +51,7 @@ const MemoPaymentCard = () => {
             </h4>
           </center>
           {Math.abs(billData?.subTotal - billData?.claimedCoins) > 0 && (
-            <article className="absolute text-center left-1/2 bottom-2 -translate-x-1/2 w-28 py-1 px-4 bg-[#6732F9] rounded-full">
+            <article className="absolute text-center left-1/2 -bottom-2 -translate-x-1/2 w-28 py-1 px-4 bg-[#6732F9] rounded-full h-8">
               <button
                 onClick={handleRedirection}
                 type="button"
