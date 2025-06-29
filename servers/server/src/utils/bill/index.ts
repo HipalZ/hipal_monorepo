@@ -120,15 +120,11 @@ function calculateBillTotals(kots: KotOrderTypes[]): {
         // Line total for this item
         const lineTotal = (basePrice + extrasTotal) * item.quantity;
         totalDishTotal += lineTotal;
-        console.log("Line total:", lineTotal);
 
         // Determine GST percentage (prefer gst field)
         const gstPercent = item.dish.gst ?? item.dish.tax ?? 0;
         totalGst += (lineTotal * gstPercent) / 100;
-        console.log(
-          `GST for item ${item.id} (${item.dish.name}): ${gstPercent}%`,
-          (lineTotal * gstPercent) / 100,
-        );
+       
       }
     }
   } catch (err) {
@@ -153,7 +149,9 @@ function calculateBillDishIds(
     for (const kot of kots) {
       for (const item of kot.cart) {
         // Skip deleted items
-        if (item.isDeleted || !dishIds.includes(item._id)) continue;
+        if (item.isDeleted) continue;
+
+        console.log("item", item);
 
         // Base price comes from portion if present, otherwise dish.price
         const basePrice = item.portion?.price ?? item.dish.price;
@@ -167,15 +165,11 @@ function calculateBillDishIds(
         // Line total for this item
         const lineTotal = (basePrice + extrasTotal) * item.quantity;
         totalDishTotal += lineTotal;
-        console.log("Line total:", lineTotal);
 
         // Determine GST percentage (prefer gst field)
         const gstPercent = item.dish.gst ?? item.dish.tax ?? 0;
         totalGst += (lineTotal * gstPercent) / 100;
-        console.log(
-          `GST for item ${item.id} (${item.dish.name}): ${gstPercent}%`,
-          (lineTotal * gstPercent) / 100,
-        );
+       
       }
     }
   } catch (err) {

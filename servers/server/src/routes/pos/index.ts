@@ -2559,12 +2559,13 @@ const posRouter = new Hono()
         let discountAmount = 0;
         let newSubTotal = tableSession.subTotal;
 
-        value = Math.round((value / 100) * newSubTotal);
 
         if (discountAppliedOn === "ON_BILL") {
+        const dis = Math.round((value / 100) * newSubTotal);
+
           // Calculate discount on the bill
           discountAmount = Math.min(
-            value,
+            dis,
             newSubTotal -
               tableSession.claimedCoins -
               tableSession.couponDiscount,
@@ -2581,11 +2582,17 @@ const posRouter = new Hono()
             settled: false,
           }).lean()) as KotOrderTypes[];
 
+          console.log("kotOrder", kotOrder);
+
           const { totalDishTotal, totalGst } = calculateBillDishIds(
             kotOrder,
             dishIds,
           );
-          discountAmount = Math.min(value, totalDishTotal);
+
+          console.log("totalDishTotal", totalDishTotal);
+          console.log("totalGst", totalGst);
+        const  dishDis = Math.round((value / 100) * totalDishTotal);
+          discountAmount = Math.min(dishDis, totalDishTotal);
           newSubTotal -= discountAmount;
         }
 
@@ -2599,7 +2606,7 @@ const posRouter = new Hono()
           tableSession.couponDiscount,
         );
         const newTotal = calculateFinalTotal(
-          newSubTotal,
+          tableSession.subTotal,
           totalDis,
           newGst,
           tableSession.serviceCharge,
@@ -2677,7 +2684,7 @@ const posRouter = new Hono()
           tableSession.couponDiscount,
         );
         const newTotal = calculateFinalTotal(
-          newSubTotal,
+          tableSession.subTotal,
           totalDis,
           newGst,
           tableSession.serviceCharge,
@@ -2772,7 +2779,7 @@ const posRouter = new Hono()
           couponDiscount,
         );
         const newTotal = calculateFinalTotal(
-          newSubTotal,
+          tableSession.subTotal,
           totalDis,
           newGst,
           tableSession.serviceCharge,
@@ -2831,7 +2838,7 @@ const posRouter = new Hono()
           tableSession.couponDiscount,
         );
         const newTotal = calculateFinalTotal(
-          newSubTotal,
+          tableSession.subTotal,
           totalDis,
           newGst,
           tableSession.serviceCharge,
@@ -2895,7 +2902,7 @@ const posRouter = new Hono()
           tableSession.couponDiscount,
         );
         const newTotal = calculateFinalTotal(
-          newSubTotal,
+          tableSession.subTotal,
           totalDis,
           newGst,
           tableSession.serviceCharge,
@@ -2954,7 +2961,7 @@ const posRouter = new Hono()
           0,
         );
         const newTotal = calculateFinalTotal(
-          newSubTotal,
+          tableSession.subTotal,
           totalDis,
           newGst,
           tableSession.serviceCharge,
@@ -3003,7 +3010,7 @@ const posRouter = new Hono()
 
         const totalDis = calculateTotalDiscount(0, 0, 0);
         const newTotal = calculateFinalTotal(
-          newSubTotal,
+          tableSession.subTotal,
           totalDis,
           newGst,
           tableSession.serviceCharge,
