@@ -46,7 +46,6 @@ import {
 import { sendBillPrintEvent, sendKOTPrintEvent } from "../../utils/kot";
 import { petpoojaPosConfig, posApiPaths } from "../../utils/posConfig/petPooja";
 import { respond } from "../../utils/response";
-import items from "razorpay/dist/types/items.js";
 const admin = require("firebase-admin");
 export const generateTenDigitCode = (): string => {
   const min = 1000000000; // Minimum 10-digit number
@@ -204,7 +203,6 @@ const posRouter = new Hono()
 
   .get(
     "/get_bill",
-    ubacMiddleware("bill"),
     zValidator(
       "query",
       z.object({
@@ -435,8 +433,7 @@ const posRouter = new Hono()
     },
   )
 
-
-   .get(
+  .get(
     "/fetch_bill",
     zValidator(
       "query",
@@ -447,203 +444,34 @@ const posRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const {  orderId } = c.req.query();
+        const { orderId } = c.req.query();
 
         const tableSession = await UserSession.findById(orderId);
 
-        if(!tableSession){
+        if (!tableSession) {
           return respond(c, "Session not found", true, 404, {});
         }
-       
 
         return respond(c, "Data fetch", false, 200, {
           customerName: tableSession.customerName,
-              customerPhone: tableSession.phoneNumbers[0],
-              tableName: tableSession.tableName,
-              couponId: tableSession.couponId,
-              discountAppliedOn: tableSession.discountAppliedOn,
-              reasonOfDiscount: tableSession.reasonOfDiscount,
-              reasonOfServiceCharge: tableSession.reasonOfServiceCharge,
-              items: tableSession.items,
-              subTotal: tableSession.subTotal,
-              gst: tableSession.gst,
-              discount: tableSession.discount,
-              claimedCoins: tableSession.claimedCoins,
-              couponDiscount: tableSession.couponDiscount,
-              serviceCharge: tableSession.serviceCharge,
-              otherTax: tableSession.otherTax,
-              tips: tableSession.tips,
-              total: tableSession.total,
-              billId: tableSession._id.toString(),
+          customerPhone: tableSession.phoneNumbers[0],
+          tableName: tableSession.tableName,
+          couponId: tableSession.couponId,
+          discountAppliedOn: tableSession.discountAppliedOn,
+          reasonOfDiscount: tableSession.reasonOfDiscount,
+          reasonOfServiceCharge: tableSession.reasonOfServiceCharge,
+          items: tableSession.items,
+          subTotal: tableSession.subTotal,
+          gst: tableSession.gst,
+          discount: tableSession.discount,
+          claimedCoins: tableSession.claimedCoins,
+          couponDiscount: tableSession.couponDiscount,
+          serviceCharge: tableSession.serviceCharge,
+          otherTax: tableSession.otherTax,
+          tips: tableSession.tips,
+          total: tableSession.total,
+          billId: tableSession._id.toString(),
         });
-      });
-    },
-  )
-
-  .post(
-    "/configure",
-    zValidator(
-      "json",
-      z.object({
-        businessId: z.string().min(1).max(50),
-        restId: z.string().min(1).max(50),
-        posId: z.string().min(1).max(50),
-      }),
-    ),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session) => {
-        const { businessId, restId } = await c.req.json();
-
-        // Remove old menus
-        await Menu.deleteMany({ businessId }, { session });
-
-        // Fetch custom link
-        const business = await Business.findById(businessId)
-          .select("customLink")
-          .session(session);
-
-        // Fetch areas and tables from POS
-        const fetchAreaAndTable = await axios.post(
-          posApiPaths.fetchAreaAndTables,
-          {
-            "app-key": petpoojaPosConfig.accessKey,
-            "app-secret": petpoojaPosConfig.secretKey,
-            "access-token": petpoojaPosConfig.authToken,
-            restID: restId,
-            tableNo: "",
-          },
-        );
-
-        if (fetchAreaAndTable.data.success !== "1") {
-          throw new Error("area and table not fetched");
-        }
-
-        // Active areas and tables
-        const areas = fetchAreaAndTable.data.areas.filter(
-          (a) => a.active === "1",
-        );
-        const tables = fetchAreaAndTable.data.tables.filter(
-          (t) => t.active === "1",
-        );
-
-        // Ensure at least one zone
-        let zone = null;
-        if (areas.length === 0) {
-          // Create fallback zone within the transaction
-          zone = new Zone({
-            businessId,
-            name: "POS",
-            zoneId: nanoid(5),
-            active: true,
-            tableIds: [],
-            visibility: true,
-          });
-          await zone.save({ session });
-        }
-
-        // Upsert each area as a zone
-        for (const area of areas) {
-          zone = await Zone.findOneAndUpdate(
-            { zoneId: area.restaurantareaid },
-            {
-              name: area.displayname,
-              businessId,
-              zoneId: area.restaurantareaid,
-              active: area.active,
-              rank: area.rank,
-            },
-            { upsert: true, new: true, session },
-          );
-        }
-
-        // Create/update tables and link to zones
-        for (const table of tables) {
-          const currentZoneId =
-            areas.length === 0 ? zone?.zoneId : table.restaurantareaid;
-
-          // Upsert table
-          const creatingTable = await Table.findOneAndUpdate(
-            { tableId: table.id },
-            {
-              name: table.table_no,
-              businessId,
-              zoneId: currentZoneId,
-              active: table.active,
-              rank: table.rank,
-              tableId: table.id,
-              internalZoneId: zone?._id,
-            },
-            { upsert: true, new: true, session },
-          );
-
-          // Add table to zone.tableIds
-          await Zone.findOneAndUpdate(
-            { zoneId: currentZoneId },
-            { $addToSet: { tableIds: creatingTable._id } },
-            { new: true, session },
-          );
-
-          // Create short URL if not exists
-          const longUrl = `https://hipal-test.hipalz.com/${business?.customLink}/explore?tableName=${creatingTable.name}`;
-          const exists = await UrlModel.findOne({
-            businessId,
-            longUrl,
-          }).session(session);
-          if (!exists) {
-            const shortCode = nanoid(5);
-            const createShortUrl = await UrlModel.create(
-              [
-                {
-                  businessId,
-                  longUrl,
-                  shortUrl: `https://api.test.hipalz.com/surl/${shortCode}`,
-                  urlCode: shortCode,
-                },
-              ],
-              { session },
-            );
-
-            await Table.findOneAndUpdate(
-              { tableId: table.id },
-              { tableLink: createShortUrl[0].shortUrl },
-              { new: true, session },
-            );
-          }
-        }
-
-        const zones = await Zone.find({ businessId }).session(session);
-        const zoneIds = zones.map((z) => z._id.toString());
-
-        await Menu.create(
-          [
-            {
-              name: "Default",
-              businessId,
-              zoneIds,
-              menuType: 2,
-              days: [1, 2, 3, 4, 5, 6, 7],
-              startTime: 240,
-              endTime: 239,
-              isActive: true,
-              isDeleted: false,
-              categoryLayout: 2,
-              cardLayout: 2,
-              primaryColor: "#ec4899",
-              secondaryColor: "#fce7f3",
-            },
-          ],
-          { session },
-        );
-
-        return c.json(
-          {
-            message: "POS Config saved successfully",
-            err: false,
-            data: { success: true },
-          },
-          200,
-        );
       });
     },
   )
@@ -664,6 +492,21 @@ const posRouter = new Hono()
       return runInTransaction(async (session) => {
         const { businessId, restId, orderVerificationType, posId } =
           await c.req.json();
+
+        await Menu.updateMany(
+          {
+            businessId,
+          },
+          {
+            $set: {
+              isActive: false,
+              default: false,
+            },
+          },
+          {
+            session,
+          },
+        );
 
         const business = await Business.findById(businessId).session(session);
         if (!business) throw new Error("Business not found");
@@ -3368,8 +3211,6 @@ const posRouter = new Hono()
         return respond(c, "Success", true, 200, {});
       });
     },
-  )
-
-  
+  );
 
 export default posRouter;
