@@ -73,6 +73,41 @@ const tableRouter = new Hono()
       );
     },
   )
+
+  .get(
+    "/fetch_all",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.query();
+
+      const businessPosConfig = await BusinessPosConfig.exists({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
+
+      const tables = await Table.find({
+        businessId,
+        active: true,
+        status: ["ACTIVE", "EMPTY"],
+        pos: !!businessPosConfig,
+      }).select("name _id status currentTableAmount");
+
+      return c.json(
+        {
+          message: "Tables fetched successfully",
+          err: false,
+          data: tables,
+        },
+        200,
+      );
+    },
+  )
   .get(
     "/:tableId",
     zValidator(
@@ -816,7 +851,6 @@ const tableRouter = new Hono()
       }
 
       if (transferType === "TABLE") {
-        // transfer all the kot orders to the destination table
         await KotOrder.updateMany(
           {
             tableName: sourceTable.name,
@@ -895,7 +929,6 @@ const tableRouter = new Hono()
       }
 
       if (transferType === "ITEM") {
-        // Find all the `KotOrder` with the given `itemIds` and `sourceTable.name`
         const kotOrders = await KotOrder.find({
           cart: { $elemMatch: { _id: { $in: itemIds } } },
           settled: false,
@@ -937,7 +970,12 @@ const tableRouter = new Hono()
 
           const { _id, ...newKotOrderData } = kotOrder.toObject();
 
-          const totalBill = calculateCartBill(removedItems);
+          const calculateBillDishIds = removedItems.filter((item) => {
+            return item.dish.isDeleted === false;
+          });
+          // Filter out items that are not in the `calculateBillDishIds`
+
+          const totalBill = calculateCartBill(calculateBillDishIds);
 
           await KotOrder.create(
             [
