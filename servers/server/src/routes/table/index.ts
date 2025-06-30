@@ -384,7 +384,7 @@ const tableRouter = new Hono()
               date: Date.now(),
               discount: tableSession?.discount,
               couponDiscount: tableSession?.couponDiscount,
-              billId:tableSession?._id.toString(),
+              billId: tableSession?._id.toString(),
             },
           ],
           { session },
@@ -586,11 +586,7 @@ const tableRouter = new Hono()
 
         const customLink = await Business.findById(table?.businessId);
 
-       
-
-        
-
-       const updateQrBill = await QrBill.findOneAndUpdate(
+        const updateQrBill = await QrBill.findOneAndUpdate(
           {
             billId: billId,
           },
@@ -599,7 +595,7 @@ const tableRouter = new Hono()
               date: Date.now(),
             },
           },
-          { new: true,session },
+          { new: true, session },
         );
 
         return c.json(
@@ -661,13 +657,15 @@ const tableRouter = new Hono()
         tableId,
       } = await c.req.json();
       const business = await Business.findById(businessId);
-      const tableData= await Table.findById(tableId);
+      const tableData = await Table.findById(tableId);
       const tableSession = await UserSession.findOne({
         businessId: businessId,
         tableName: tableData?.name,
       });
 
-      const longUrl = `https://hipal-test.hipalz.com/${business?.customLink}/ebill?billId=${tableSession?._id.toString()}`;
+      const longUrl = `https://hipal-test.hipalz.com/${
+        business?.customLink
+      }/ebill?billId=${tableSession?._id.toString()}`;
 
       const uniqueOrderId = nanoid(5);
       let findLongUrl = await BillUrlModel.findOne({ longUrl });
@@ -773,11 +771,20 @@ const tableRouter = new Hono()
         transferType,
         fromTableId,
         toTableId,
-        kotIds = [],
         itemIds = [],
       } = (await c.req.json()) as SwitchTableType;
       const sourceTable = await Table.findById(fromTableId); // from table
       const destinationTable = await Table.findById(toTableId); // to table
+
+      if (sourceTable === destinationTable) {
+        return respond(
+          c,
+          "Cannot switch tables to the same table",
+          true,
+          400,
+          {},
+        );
+      }
 
       const posConfigData = await BusinessPosConfig.findOne({
         businessId,
@@ -786,24 +793,11 @@ const tableRouter = new Hono()
       });
 
       if (!posConfigData) {
-        return c.json(
-          {
-            message: "Pos not found",
-            err: true,
-          },
-          400,
-        );
+        return respond(c, "Pos not found", true, 400, {});
       }
 
       if (!sourceTable || !destinationTable) {
-        return c.json(
-          {
-            message: "Table not found",
-            err: true,
-            data: {},
-          },
-          400,
-        );
+        return respond(c, "Table not found", true, 404, {});
       }
       // check if table have any active session
       const tableSession = await UserSession.findOne({
@@ -811,30 +805,17 @@ const tableRouter = new Hono()
         businessId: businessId,
       });
 
-      if (!tableSession) {
-        return c.json(
-          {
-            message: `No active session found for table ${sourceTable.name}`,
-            err: true,
-            data: {},
-          },
+      if (!tableSession || sourceTable.status === "EMPTY") {
+        return respond(
+          c,
+          `No active session found for table ${sourceTable.name}`,
+          true,
           400,
+          {},
         );
       }
 
-      
-
       if (transferType === "TABLE") {
-        if (destinationTable.status === "ACTIVE") {
-          return c.json(
-            {
-              message: "Table already active can't transfer",
-              err: true,
-              data: {},
-            },
-            400,
-          );
-        }
         // transfer all the kot orders to the destination table
         await KotOrder.updateMany(
           {
@@ -923,19 +904,8 @@ const tableRouter = new Hono()
         });
 
         if (kotOrders.length === 0) {
-          return c.json(
-            {
-              message: "No items found in the KotOrder",
-              err: true,
-              data: {},
-            },
-            400,
-          );
+          return respond(c, "No items found in the KotOrder", true, 400, {});
         }
-        const sourceTablSession = await UserSession.findOne({
-          tableName: sourceTable.name,
-          businessId,
-        });
 
         const destinationTableSession = await UserSession.findOne({
           tableName: destinationTable.name,
@@ -965,12 +935,10 @@ const tableRouter = new Hono()
             await kotOrder.save({ session });
           }
 
-          // Prepare the new `KotOrder` without `_id` to avoid duplicate key errors
           const { _id, ...newKotOrderData } = kotOrder.toObject();
 
           const totalBill = calculateCartBill(removedItems);
 
-          // Create a new `KotOrder` with the removed items
           await KotOrder.create(
             [
               {
@@ -990,13 +958,11 @@ const tableRouter = new Hono()
           );
 
           let hiCode = "";
-          if (!destinationTableSession) {
+          if (!destinationTableSession || destinationTable.status === "EMPTY") {
             hiCode = Math.floor(1000 + Math.random() * 9000).toString();
 
             const tenDigitCode = generateTenDigitCode();
-            
 
-          
             await UserSession.create(
               [
                 {
@@ -1005,7 +971,7 @@ const tableRouter = new Hono()
                   transferTableFrom: sourceTable._id,
                   transferTableTo: destinationTable._id,
                   isTransfer: true,
-                  customerName: sourceTablSession?.customerName || "Guest",
+                  customerName: tableSession?.customerName || "Guest",
                   transferBy,
                   transferType: "ITEM",
                   hiCode: hiCode,
@@ -1054,8 +1020,6 @@ const tableRouter = new Hono()
         );
       }
     });
-  })
-
- 
+  });
 
 export default tableRouter;

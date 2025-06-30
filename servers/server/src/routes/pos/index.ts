@@ -2381,7 +2381,9 @@ const posRouter = new Hono()
           couponDiscount: tableSession?.couponDiscount || 0,
         });
 
-        return respond(c, "sucess", true, 200, {});
+        return respond(c, "sucess", true, 200, {
+          items,
+        });
       });
     },
   )

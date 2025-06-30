@@ -225,8 +225,8 @@ const updateTableSession = async (
   );
 };
 
-const billPrintItems = (cartItem: CartItem[]) => {
-  cartItem.map((item) => {
+const billPrintItems = (cartItems: CartItem[]) => {
+  return cartItems.map((item) => {
     // pick the correct price
     const price = item.portion ? item.portion.price : item.dish.price;
 
@@ -248,8 +248,6 @@ const billPrintItems = (cartItem: CartItem[]) => {
       })),
     };
   });
-
-  return cartItem;
 };
 
 export {
