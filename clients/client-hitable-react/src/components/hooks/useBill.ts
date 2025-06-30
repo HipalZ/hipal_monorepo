@@ -279,9 +279,7 @@ export const useAddCoupon = () => {
       onSuccess: async (data) => {
         const extraData = await data.json();
         if (data.status === 400 || data.status === 401) {
-          setError(
-            extraData.error?.issues[0]?.message || "Failed to add coupon",
-          );
+          setError(extraData.message || "Failed to add coupon");
           setOpenErrorModal(true);
           toast.error("Failed to add coupon");
           return;
@@ -355,47 +353,48 @@ export const useRemoveCoupon = () => {
 };
 
 export interface AddServiceChargePayload {
-
-    businessId: string;
-    tableName: string;
-    serviceChargeAppliedBy: string;
+  businessId: string;
+  tableName: string;
+  serviceChargeAppliedBy: string;
 }
 
 export const useAddServiceCharge = () => {
   const { setError, setOpenErrorModal } = useError();
   const queryClient = useQueryClient();
-  const { isPending: addingServiceChargeLoader, mutateAsync: addingServiceCharge } =
-    useMutation({
-      mutationFn: async (payload: AddServiceChargePayload) => {
-        const response = await apiRpc.pos.add_service_charge.$post({
-          json: payload,
-        });
-        return response;
-      },
-      onSuccess: async (data) => {
-        const extraData = await data.json();
-        if (data.status === 400 || data.status === 401) {
-          setError(
-            extraData.error?.issues[0]?.message || "Failed to add service charge",
-          );
-          setOpenErrorModal(true);
-          toast.error("Failed to add service charge");
-          return;
-        }
-
-        if (data.status === 200 || data.status === 201) {
-          toast.success("Service charge added successfully");
-          queryClient.invalidateQueries({
-            queryKey: ["getTableBill"],
-          });
-        }
-      },
-      onError: (err: any) => {
-        setError(err?.message || "Error adding service charge");
+  const {
+    isPending: addingServiceChargeLoader,
+    mutateAsync: addingServiceCharge,
+  } = useMutation({
+    mutationFn: async (payload: AddServiceChargePayload) => {
+      const response = await apiRpc.pos.add_service_charge.$post({
+        json: payload,
+      });
+      return response;
+    },
+    onSuccess: async (data) => {
+      const extraData = await data.json();
+      if (data.status === 400 || data.status === 401) {
+        setError(
+          extraData.error?.issues[0]?.message || "Failed to add service charge",
+        );
         setOpenErrorModal(true);
-        toast.error("Error adding service charge");
-      },      
-    });
+        toast.error("Failed to add service charge");
+        return;
+      }
+
+      if (data.status === 200 || data.status === 201) {
+        toast.success("Service charge added successfully");
+        queryClient.invalidateQueries({
+          queryKey: ["getTableBill"],
+        });
+      }
+    },
+    onError: (err: any) => {
+      setError(err?.message || "Error adding service charge");
+      setOpenErrorModal(true);
+      toast.error("Error adding service charge");
+    },
+  });
 
   return {
     addingServiceChargeLoader,
@@ -413,42 +412,44 @@ export interface RemoveServiceChargePayload {
 export const useRemoveServiceCharge = () => {
   const { setError, setOpenErrorModal } = useError();
   const queryClient = useQueryClient();
-  const { isPending: removingServiceChargeLoader, mutateAsync: removingServiceCharge } =
-    useMutation({
-      mutationFn: async (payload: RemoveServiceChargePayload) => {
-        const response = await apiRpc.pos.remove_service_charge.$post({
-          json: payload,
-        });
-        return response;
-      },
-      onSuccess: async (data) => {
-        const extraData = await data.json();
-        if (data.status === 400 || data.status === 401) {
-          setError(
-            extraData.error?.issues[0]?.message || "Failed to remove service charge",
-          );
-          setOpenErrorModal(true);
-          toast.error("Failed to remove service charge");
-          return;
-        }
-
-        if (data.status === 200 || data.status === 201) {
-          toast.success("Service charge removed successfully");
-          queryClient.invalidateQueries({
-            queryKey: ["getTableBill"],
-          });
-        }
-      },
-      onError: (err: any) => {
-        setError(err?.message || "Error removing service charge");
+  const {
+    isPending: removingServiceChargeLoader,
+    mutateAsync: removingServiceCharge,
+  } = useMutation({
+    mutationFn: async (payload: RemoveServiceChargePayload) => {
+      const response = await apiRpc.pos.remove_service_charge.$post({
+        json: payload,
+      });
+      return response;
+    },
+    onSuccess: async (data) => {
+      const extraData = await data.json();
+      if (data.status === 400 || data.status === 401) {
+        setError(
+          extraData.error?.issues[0]?.message ||
+            "Failed to remove service charge",
+        );
         setOpenErrorModal(true);
-        toast.error("Error removing service charge");
-      },
-    });
+        toast.error("Failed to remove service charge");
+        return;
+      }
+
+      if (data.status === 200 || data.status === 201) {
+        toast.success("Service charge removed successfully");
+        queryClient.invalidateQueries({
+          queryKey: ["getTableBill"],
+        });
+      }
+    },
+    onError: (err: any) => {
+      setError(err?.message || "Error removing service charge");
+      setOpenErrorModal(true);
+      toast.error("Error removing service charge");
+    },
+  });
 
   return {
     removingServiceChargeLoader,
     removingServiceCharge,
   };
 };
-

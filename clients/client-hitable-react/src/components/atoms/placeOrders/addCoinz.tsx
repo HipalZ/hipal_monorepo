@@ -11,11 +11,14 @@ import useBusinessData from "@/components/store/useBusinessData";
 import PhoneNumber from "./phoneNumber";
 import OtpStep from "./otpStep";
 import LoyaltySuccess from "./loyaltySuccess";
+import { useAddCoinz, useAddCoupon } from "@/components/hooks/useBill";
 
 const MemoAddCoinz = (props) => {
   const { data } = props;
   const billValue = data.total || 0;
   const [userData, setUserData] = useState<any>({});
+  const { addingCoinzLoader, addingCoinz } = useAddCoinz();
+  const { addingCoupon } = useAddCoupon();
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const { setOpenAddCoinz } = useOrderStore();
   const { loyaltyData } = useCheckLoyalty();
@@ -114,13 +117,10 @@ const MemoAddCoinz = (props) => {
     setAvailedCoupon(coupon);
     // setClaimCouponz(discountValue);
     toast.success(`Coupon "${coupon.name}" applied: ₹${discountValue} off`);
-    updateBill({
+    addingCoupon({
+      businessId: businessId || "",
       tableName: data.tableName,
-      coinz: discountValue,
-      total: data.total,
       couponId: coupon?._id || null,
-      businessId,
-      userId: userData?._id,
     });
   };
 
@@ -173,13 +173,10 @@ const MemoAddCoinz = (props) => {
     if (coinzAdded > 0) {
       setApplyCoinz(coinzAdded);
       toast.success(`Applied ${coinzAdded} Coinz on this bill.`);
-      updateBill({
+      addingCoinz({
+        businessId: businessId || "",
         tableName: data.tableName,
-        coinz: coinzAdded,
-        total: data.total,
-        couponId: availedCoupon?._id || null,
-        businessId,
-        userId: userData?._id,
+        value: coinzAdded,
       });
     }
   };

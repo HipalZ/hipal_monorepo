@@ -33,8 +33,12 @@ import AddCoinz from "./addCoinz";
 import { IoClose } from "react-icons/io5";
 import { useUpdateBill } from "@/components/hooks/useTableData";
 import useBusinessData from "@/components/store/useBusinessData";
-import MemoBillOptions from "./BillOptions";
-import { useGetBill } from "@/components/hooks/useBill";
+import BillOptions from "./BillOptions";
+import {
+  useGetBill,
+  useRemoveCoinz,
+  useRemoveCoupon,
+} from "@/components/hooks/useBill";
 
 const MemoGetBill = () => {
   const { businessId } = useParams();
@@ -42,7 +46,8 @@ const MemoGetBill = () => {
   const { openAddCoinz, setOpenAddCoinz, setOpenOrderModal } = useOrderStore();
   const screenSize = useScreenSize();
   const { captainData: userData } = useHiClientZ();
-
+  const { removingCoupon } = useRemoveCoupon();
+  const { removingCoinzLoader, removingCoinz } = useRemoveCoinz();
   const [qrBillId, setQrBillId] = useState<string | null>(null);
   const [showqr, setShowqr] = useState<boolean>(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -101,12 +106,23 @@ const MemoGetBill = () => {
 
     if (!confirmReplace) return;
 
-    updateBill({
+    removingCoinz({
+      businessId: businessId || "",
       tableName: data?.tableName,
-      coinz: 0,
-      total: data?.total,
-      couponId: null,
-      businessId,
+      coinzRemovedBy: userData?.name || "",
+    });
+  };
+
+  const removeCoupon = () => {
+    const confirmReplace = window.confirm(
+      "Applying this will remove your Coupon. Continue?",
+    );
+
+    if (!confirmReplace) return;
+
+    removingCoupon({
+      businessId: businessId || "",
+      tableName: data?.tableName,
     });
   };
 
@@ -299,10 +315,8 @@ const MemoGetBill = () => {
                     <div className="flex items-center justify-between">
                       <p className="font-medium">{item?.dish?.name}</p>
                       <div className="flex items-center gap-2">
-                        <p className="text-gray-600">
-                          Qty: {item?.dish?.quantity}
-                        </p>
-                        <p>₹{item?.dish?.quantity * item?.dish?.price}</p>
+                        <p className="text-gray-600">Qty: {item?.quantity}</p>
+                        <p>₹{item?.quantity * item?.dish?.price}</p>
                       </div>
                     </div>
                     {item?.extras?.length > 0 && (
@@ -353,6 +367,7 @@ const MemoGetBill = () => {
                 ["discount", data.discount],
                 ["tax", data.gst],
                 ["claimedCoins", data.claimedCoins],
+                ["couponDiscount", data.couponDiscount],
               ]
                 .filter(([_, value]) => typeof value === "number" && value > 0)
                 .map(([key, value]) => {
@@ -385,6 +400,15 @@ const MemoGetBill = () => {
                             <IoClose />
                           </button>
                         )}
+                        {key === "couponDiscount" && (
+                          <button
+                            type="button"
+                            onClick={removeCoupon}
+                            className="text-red-600 text-2xl hover:underline"
+                          >
+                            <IoClose />
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -409,7 +433,7 @@ const MemoGetBill = () => {
           onClose={closeMoreOptions}
           rightTopBack
         >
-          <MemoBillOptions data={data} />
+          <BillOptions data={data} />
         </BottomPopUp>
       )}
 

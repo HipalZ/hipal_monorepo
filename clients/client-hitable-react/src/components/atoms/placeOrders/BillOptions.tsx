@@ -1,7 +1,6 @@
 import { memo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import BottomPopUp from "../universalPopup";
 import DiscountModal from "./billModals/DiscountModal.tsx";
 import ServiceChargeModal from "./billModals/ServiceChargeModal.tsx";
@@ -17,7 +16,6 @@ const MemoBillOptions = ({ data }: BillOptionsProps) => {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
 
   const closeModal = () => setActiveModal(null);
-
 
   return (
     <>
