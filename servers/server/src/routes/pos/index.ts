@@ -30,6 +30,7 @@ import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import type { KotOrderTypes } from "../../utils/bill";
 import {
+  billPrintItems,
   calculateBillDishIds,
   calculateBillTotals,
   calculateFinalTotal,
@@ -215,6 +216,28 @@ const posRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const { businessId, tableName, generatedBy } = c.req.query();
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (!businessPosConfig) {
+          return respond(c, "Pos not found", true, 400, {});
+        }
+
+        // Get the table session
+        let tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        }).populate({
+          path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy",
+          select: "name phone",
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
         const kotOrders = (await KotOrder.find({
           tableName,
           settled: false,
@@ -227,16 +250,36 @@ const posRouter = new Hono()
 
         const { totalDishTotal, totalGst } = calculateBillTotals(kotOrders);
 
-        // Get the table session
-        let tableSession = await UserSession.findOne({
-          businessId,
-          tableName,
-        }).populate(
-          "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy",
-        );
-        if (!tableSession) {
-          return respond(c, "Table session not found", true, 404, {});
+        if (!tableSession.billGeneratedBy) {
+          const items = billPrintItems(cartItems);
+
+          sendBillPrintEvent({
+            tableName: tableName,
+            businessId: businessId,
+            customerName: kotOrders[0].name,
+            customerPhone: kotOrders[0].phone,
+            items: items,
+            posRestName: businessPosConfig.restName,
+            generatedBy: tableSession?.billGeneratedBy || generatedBy,
+            date: Date.now(),
+            serviceCharge: tableSession?.serviceCharge || 0,
+            discount: tableSession?.discount || 0,
+            tax: tableSession?.gst || 0,
+            total: tableSession?.total || 0,
+            billRequestId: tableSession?._id.toString() || "",
+            subTotal: tableSession?.subTotal || 0,
+            tips: tableSession?.tips || 0,
+            claimedCoins: tableSession?.claimedCoins || 0,
+            couponDiscount: tableSession?.couponDiscount || 0,
+          });
         }
+
+        const discountAppliedBy = tableSession.discountAppliedBy?.name || "";
+        const discountRemovedBy = tableSession.discountRemovedBy?.name || "";
+        const serviceChargeAppliedBy =
+          tableSession.serviceChargeAppliedBy?.name || "";
+        const serviceChargeRemovedBy =
+          tableSession.serviceChargeRemovedBy?.name || "";
 
         // Get service charge info
         const serviceCharge = await Tax.findOne({
@@ -254,7 +297,6 @@ const posRouter = new Hono()
           tableSession.claimedCoins -
           tableSession.couponDiscount -
           tableSession.discount;
-
 
         let serviceChargeAmount = Math.round(
           (serviceChargePercentage / 100) * baseAmount,
@@ -306,7 +348,7 @@ const posRouter = new Hono()
             gst: Number(newGst).toFixed(2),
             total: newTotal,
             serviceCharge: serviceChargeAmount,
-            generatedBy: generatedBy,
+            billGeneratedBy: generatedBy,
             subTotal: totalDishTotal,
             items: cartItems,
           },
@@ -328,12 +370,11 @@ const posRouter = new Hono()
               discountAppliedOn: tableSession.discountAppliedOn,
               reasonOfDiscount: tableSession.reasonOfDiscount,
               reasonOfServiceCharge: tableSession.reasonOfServiceCharge,
-              serviceChargeAppliedBy:
-                tableSession?.serviceChargeAppliedBy?.name || "",
-              serviceChargeRemovedBy:
-                tableSession?.serviceChargeRemovedBy?.name || "",
-              discountAppliedBy: tableSession?.discountAppliedBy?.name || "",
-              discountRemovedBy: tableSession?.discountRemovedBy?.name || "",
+              serviceChargeAppliedBy: serviceChargeAppliedBy,
+              serviceChargeRemovedBy: serviceChargeRemovedBy,
+              discountAppliedBy: discountAppliedBy,
+              discountRemovedBy: discountRemovedBy,
+
               items: cartItems,
               subTotal: totalDishTotal,
               gst: tableSession.gst,
@@ -2289,220 +2330,56 @@ const posRouter = new Hono()
       return runInTransaction(async (session: ClientSession) => {
         const { businessId, tableName, generatedBy } = await c.req.json();
 
-        sendBillPrintEvent({
-          tableName: "T1",
-          businessId: businessId,
-          customerName: "Datta",
-          customerPhone: "9588413799",
-          items: [
-            {
-              dish: {
-                name: "Mushroom Pasta (Full)",
-                price: 330,
-                quantity: 1,
-              },
-              extras: [],
-            },
-            {
-              dish: {
-                name: "turkish eggs with greek yogurt",
-                price: 270,
-                quantity: 1,
-              },
-              extras: [],
-            },
-            {
-              dish: {
-                name: 'Margherita Pizza (8" inch)',
-                price: 265,
-                quantity: 1,
-              },
-              extras: [
-                {
-                  name: "Neapolitan Dough",
-                  price: 0,
-                  quantity: 1,
-                },
-                {
-                  name: "Bell Pepper 50 Grams",
-                  price: 25,
-                  quantity: 1,
-                },
-              ],
-            },
-            {
-              dish: {
-                name: "Green Apple Mojito (Jar)",
-                price: 220,
-                quantity: 1,
-              },
-              extras: [],
-            },
-            {
-              dish: {
-                name: "peach ice tea (Jar)",
-                price: 240,
-                quantity: 1,
-              },
-              extras: [],
-            },
-          ],
-          posRestName: "test",
-          generatedBy: generatedBy,
-          date: Date.now(),
-          serviceCharge: 0,
-          discount: 0,
-          tax: 5,
-          total: 256,
-          billRequestId: "dddwqz",
-          subTotal: 90,
-          tips: 5,
-          claimedCoins: 30,
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
         });
 
-        // // Fetch POS config for the business
-        // const pos = await BusinessPosConfig.findOne({
-        //   businessId,
-        //   isDeleted: false,
-        //   active: true,
-        // });
-        // if (!pos) {
-        //   return c.json(
-        //     {
-        //       message: "POS not found",
-        //       err: true,
-        //       data: { success: false },
-        //     },
-        //     404,
-        //   );
-        // }
+        if (!businessPosConfig) {
+          return respond(c, "Pos not found", true, 400, {});
+        }
 
-        // // Fetch table session data
-        // const tableSession = await UserSession.findOne({
-        //   businessId,
-        //   tableName,
-        // });
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
 
-        // if (!tableSession) {
-        //   return c.json(
-        //     {
-        //       message: "Table session not found",
-        //       err: true,
-        //       data: { success: false },
-        //     },
-        //     404,
-        //   );
-        // }
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
 
-        // // Helper to call axios posts with the necessary config
-        // const axiosPosApiCall = async (path: string, config: object) => {
-        //   return axios.post(path, {
-        //     app_key: pos.accessKey,
-        //     app_secret: pos.secretKey,
-        //     access_token: pos.authToken,
-        //     restID: pos.restId,
-        //     ...config,
-        //   });
-        // };
+        const KotOrders = (await KotOrder.find({
+          tableName,
+          businessId,
+          settled: false,
+        }).lean()) as KotOrderTypes[];
 
-        // // If session exists, check if re-registration is required
-        // if (tableSession) {
-        //   const hoursSinceLastUpdate =
-        //     (Date.now() - new Date(tableSession.date).getTime()) /
-        //     (1000 * 60 * 60);
-        //   if (hoursSinceLastUpdate > 3) {
-        //     const { data: regData } = await axiosPosApiCall(
-        //       posApiPaths.registerUser,
-        //       {
-        //         phone: tableSession.pin,
-        //         name: generatedBy,
-        //       },
-        //     );
-        //     if (regData.success === "0") {
-        //       throw new Error("User not registered");
-        //     }
-        //   }
-        // }
+        const cartItems = KotOrders.flatMap((order) =>
+          order.cart.filter((item) => !item.isDeleted),
+        );
 
-        // if (!tableSession?.billRequestId) {
-        //   return c.json(
-        //     {
-        //       message: "Bill not found",
-        //       err: true,
-        //       data: { success: false },
-        //     },
-        //     404,
-        //   );
-        // }
+        const items = billPrintItems(cartItems);
 
-        // // Try fetching bill if already requested
-        // if (tableSession?.billRequestId) {
-        //   const { data: billData } = await axiosPosApiCall(
-        //     posApiPaths.getBill,
-        //     {
-        //       bill_request_id: tableSession.billRequestId,
-        //     },
-        //   );
-
-        //   if (billData.success === "0") {
-        //     throw new Error("Error fetching  bill");
-        //   }
-        //   const simpleArray = transformItemsToSimpleArray(
-        //     billData.items_data || [],
-        //   );
-        //   if (billData.success === "1") {
-        //     const orderData = billData.order_data;
-        //     const billObj = {
-        //       billing_user_name: orderData.billing_user_name,
-        //       serviceCharge: orderData.service_charge,
-        //       discount: orderData.discount,
-        //       tax: tableSession.finalTax,
-        //       total: tableSession.finalTotal,
-        //       customerPhone:
-        //         tableSession.phoneNumbers[0] || orderData.customer_phone,
-        //       customerName:
-        //         tableSession.customerName || orderData.customer_name,
-        //       tableName: orderData.table_no,
-        //       billRequestId: tableSession.billRequestId,
-        //       items: simpleArray,
-        //       subTotal: orderData.core_price,
-        //       tips: tableSession.tips || 0,
-        //       claimedCoins: tableSession.claimedCoins || 0,
-        //       couponId: tableSession.couponId,
-        //       initialTotal: tableSession.initialTotal,
-        //     };
-
-        //     sendBillPrintEvent({
-        //       tableName: orderData.table_no,
-        //       businessId: businessId,
-        //       customerName:
-        //         tableSession.customerName || orderData.customer_name,
-        //       customerPhone:
-        //         tableSession.phoneNumbers[0] || orderData.customer_phone,
-        //       items: simpleArray,
-        //       posRestName: pos.restName,
-        //       generatedBy: generatedBy,
-        //       date: Date.now(),
-        //       serviceCharge: orderData.service_charge,
-        //       discount: orderData.discount,
-        //       tax: tableSession?.finalTax || 0,
-        //       total: tableSession?.finalTotal || 0,
-        //       billRequestId: tableSession.billRequestId,
-        //       subTotal: orderData.core_price,
-        //       tips: tableSession?.tips || 0,
-        //       claimedCoins: tableSession?.claimedCoins || 0,
-        //     });
-
-        //     return c.json(
-        //       {
-        //         message: "print",
-        //         err: false,
-        //         data: {},
-        //       },
-        //       200,
-        //     );
-        //   }
-        // }
+        sendBillPrintEvent({
+          tableName: tableName,
+          businessId: businessId,
+          customerName: KotOrders[0].name,
+          customerPhone: KotOrders[0].phone,
+          items: items,
+          posRestName: businessPosConfig.restName,
+          generatedBy: tableSession?.billGeneratedBy || generatedBy,
+          date: Date.now(),
+          serviceCharge: tableSession?.serviceCharge || 0,
+          discount: tableSession?.discount || 0,
+          tax: tableSession?.gst || 0,
+          total: tableSession?.total || 0,
+          billRequestId: tableSession?._id.toString() || "",
+          subTotal: tableSession?.subTotal || 0,
+          tips: tableSession?.tips || 0,
+          claimedCoins: tableSession?.claimedCoins || 0,
+          couponDiscount: tableSession?.couponDiscount || 0,
+        });
 
         return respond(c, "sucess", true, 200, {});
       });
@@ -2559,9 +2436,8 @@ const posRouter = new Hono()
         let discountAmount = 0;
         let newSubTotal = tableSession.subTotal;
 
-
         if (discountAppliedOn === "ON_BILL") {
-        const dis = Math.round((value / 100) * newSubTotal);
+          const dis = Math.round((value / 100) * newSubTotal);
 
           // Calculate discount on the bill
           discountAmount = Math.min(
@@ -2582,16 +2458,12 @@ const posRouter = new Hono()
             settled: false,
           }).lean()) as KotOrderTypes[];
 
-          console.log("kotOrder", kotOrder);
-
           const { totalDishTotal, totalGst } = calculateBillDishIds(
             kotOrder,
             dishIds,
           );
 
-          console.log("totalDishTotal", totalDishTotal);
-          console.log("totalGst", totalGst);
-        const  dishDis = Math.round((value / 100) * totalDishTotal);
+          const dishDis = Math.round((value / 100) * totalDishTotal);
           discountAmount = Math.min(dishDis, totalDishTotal);
           newSubTotal -= discountAmount;
         }
@@ -2622,6 +2494,7 @@ const posRouter = new Hono()
           discountAppliedOn,
           discountAppliedBy,
           isDiscountApplied: true,
+          discountRemovedBy: null,
           discount: discountAmount,
         });
 
@@ -2855,6 +2728,7 @@ const posRouter = new Hono()
           reasonOfDiscount,
           isDiscountApplied,
           discount: 0,
+          discountAppliedBy: null,
           discountRemovedBy,
           newDishGst: 0,
         });
@@ -3068,6 +2942,7 @@ const posRouter = new Hono()
         await updateTableSession(businessId, tableName, session, {
           serviceChargeAppliedBy,
           isServiceChargeRemoved: false,
+          serviceChargeRemovedBy: null,
         });
 
         return respond(c, "Success", true, 200, {});
@@ -3113,6 +2988,7 @@ const posRouter = new Hono()
               serviceChargeRemovedBy,
               reasonOfServiceCharge,
               isServiceChargeRemoved: true,
+              serviceChargeAppliedBy: null,
             },
           },
           { session, new: true },

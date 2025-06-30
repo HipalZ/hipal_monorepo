@@ -124,7 +124,6 @@ function calculateBillTotals(kots: KotOrderTypes[]): {
         // Determine GST percentage (prefer gst field)
         const gstPercent = item.dish.gst ?? item.dish.tax ?? 0;
         totalGst += (lineTotal * gstPercent) / 100;
-       
       }
     }
   } catch (err) {
@@ -169,7 +168,6 @@ function calculateBillDishIds(
         // Determine GST percentage (prefer gst field)
         const gstPercent = item.dish.gst ?? item.dish.tax ?? 0;
         totalGst += (lineTotal * gstPercent) / 100;
-       
       }
     }
   } catch (err) {
@@ -180,35 +178,12 @@ function calculateBillDishIds(
   return { totalDishTotal, totalGst };
 }
 
-// function calculateFinalTotal(
-//   subtotal: number,
-//   totalDiscount: number,
-//   gst: number,
-//   serviceCharge: number,
-//   otherTax: number,
-//   tips: number,
-// ) {
-//   const total =
-//     subtotal - totalDiscount + gst + serviceCharge + otherTax + tips;
-//   return Math.round(total); // Round to 2 decimal places
-// }
-
-// function calculateTotalDiscount(
-//   discount: number,
-//   claimedCoins: number,
-//   couponDiscount: number,
-// ) {
-//   const totalDiscount = discount + claimedCoins + couponDiscount;
-//   return Math.round(totalDiscount); // Round to 2 decimal places
-// }
-
-// Calculate the total discount applied (coins, coupons, etc.)
 const calculateTotalDiscount = (
   discount: number,
   claimedCoins: number,
   couponDiscount: number,
 ) => {
-  const dis= Math.round(discount + claimedCoins + couponDiscount);
+  const dis = Math.round(discount + claimedCoins + couponDiscount);
   if (dis < 0) return 0;
   return dis;
 };
@@ -216,7 +191,7 @@ const calculateTotalDiscount = (
 // Calculate the GST for a given subtotal
 const calculateGst = (gstPercentage: number, subtotal: number) => {
   const gst = (gstPercentage / 100) * subtotal;
-  if (gst < 0) return 0;
+  if (gst < 0.5) return 0;
   return gst;
 };
 
@@ -250,7 +225,35 @@ const updateTableSession = async (
   );
 };
 
+const billPrintItems = (cartItem: CartItem[]) => {
+  cartItem.map((item) => {
+    // pick the correct price
+    const price = item.portion ? item.portion.price : item.dish.price;
+
+    // build the name, appending the portion in parentheses if present
+    const name = item.portion
+      ? `${item.dish.name} (${item.portion.name})`
+      : item.dish.name;
+
+    return {
+      dish: {
+        name,
+        price,
+        quantity: item.quantity,
+      },
+      extras: item.extras.map((extra) => ({
+        name: extra.name,
+        price: extra.price,
+        quantity: extra.quantity,
+      })),
+    };
+  });
+
+  return cartItem;
+};
+
 export {
+  billPrintItems,
   calculateBillDishIds,
   calculateBillTotals,
   calculateFinalTotal,
