@@ -17,7 +17,7 @@ const MemoAddCoinz = (props) => {
   const { data } = props;
   const billValue = data.total || 0;
   const [userData, setUserData] = useState<any>({});
-  const { addingCoinzLoader, addingCoinz } = useAddCoinz();
+  const { addingCoinz } = useAddCoinz();
   const { addingCoupon } = useAddCoupon();
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const { setOpenAddCoinz } = useOrderStore();
@@ -252,11 +252,13 @@ const MemoAddCoinz = (props) => {
     <Card className="border-none shadow-none">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-xl">Total</CardTitle>
-        <CardTitle className="text-2xl cursor-pointer">
+        <CardTitle className="text-2xl pr-4 cursor-pointer">
           <span>₹{billValue}</span>
         </CardTitle>
       </CardHeader>
-      <CardContent>{renderContent()}</CardContent>
+      <CardContent className="h-[90dvh] overflow-auto pb-[5rem]">
+        {renderContent()}
+      </CardContent>
     </Card>
   );
 };

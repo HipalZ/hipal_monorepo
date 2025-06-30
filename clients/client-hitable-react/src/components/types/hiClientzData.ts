@@ -461,7 +461,8 @@ export interface IBillData {
   customerName: string;
   tableName: string;
   subTotal: number;
-  billRequestId: string;
+  billId: string;
+  _id: string;
   items: Array<{
     dish: {
       name: string;

@@ -30,7 +30,7 @@ const LoyaltySuccess = (props) => {
           {userData?.name && (
             <>
               <p className="text-sm text-gray-500 font-medium">Customer Name</p>
-              <p className="text-sm text-black font-semibold">
+              <p className="text-sm text-right text-black font-semibold">
                 {userData.name}
               </p>
             </>
@@ -38,7 +38,7 @@ const LoyaltySuccess = (props) => {
           {userData?.phone && (
             <>
               <p className="text-sm text-gray-500 font-medium">Phone Number</p>
-              <p className="text-sm text-black font-semibold">
+              <p className="text-sm text-right text-black font-semibold">
                 {userData.phone}
               </p>
             </>

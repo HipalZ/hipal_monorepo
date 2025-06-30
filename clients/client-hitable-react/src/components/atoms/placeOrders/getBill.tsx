@@ -12,6 +12,7 @@ import {
   User,
   Clock,
   AlertCircle,
+  AlignCenter,
 } from "lucide-react";
 import SpinnerMemo from "@/components/atoms/loadingSpinner";
 import { MdTableBar } from "react-icons/md";
@@ -31,14 +32,17 @@ import QrCodePreview from "./qrCode";
 import Normalsettle from "./normalsettle";
 import AddCoinz from "./addCoinz";
 import { IoClose } from "react-icons/io5";
-import { useUpdateBill } from "@/components/hooks/useTableData";
 import useBusinessData from "@/components/store/useBusinessData";
 import BillOptions from "./BillOptions";
 import {
+  useConfirmSettle,
   useGetBill,
   useRemoveCoinz,
   useRemoveCoupon,
+  useRemoveServiceCharge,
+  useReprintBill,
 } from "@/components/hooks/useBill";
+import { BiSync } from "react-icons/bi";
 
 const MemoGetBill = () => {
   const { businessId } = useParams();
@@ -46,22 +50,25 @@ const MemoGetBill = () => {
   const { openAddCoinz, setOpenAddCoinz, setOpenOrderModal } = useOrderStore();
   const screenSize = useScreenSize();
   const { captainData: userData } = useHiClientZ();
-  const { removingCoupon } = useRemoveCoupon();
+  const { isConfirming, confirmSettle } = useConfirmSettle();
+  const { reprintBill, isPrinting } = useReprintBill();
+  const { removingCouponLoader, removingCoupon } = useRemoveCoupon();
   const { removingCoinzLoader, removingCoinz } = useRemoveCoinz();
   const [qrBillId, setQrBillId] = useState<string | null>(null);
   const [showqr, setShowqr] = useState<boolean>(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [showMoreOption, setShowMoreOption] = useState<boolean>(false);
   const [normalSettle, setNormalSettle] = useState<boolean>(false);
+  const { removingServiceChargeLoader, removingServiceCharge } =
+    useRemoveServiceCharge();
 
-  const { updateBill } = useUpdateBill();
   const existingLoyalty = useBusinessData((s) => s.existingLoyalty);
 
   const closeOrderModalHandler = useCallback(() => {
     setOpenOrderModal(false);
   }, [setOpenOrderModal]);
 
-  const { isLoading, data } = useGetBill();
+  const { isLoading, data: billData } = useGetBill();
 
   const toggleQr = () => {
     setShowqr(!showqr);
@@ -71,6 +78,20 @@ const MemoGetBill = () => {
     setShowMoreOption(false);
   };
 
+  const openNormalSettle = useCallback(async () => {
+    const really = window.confirm("Are you sure you want to confirm settle?");
+    if (!really) return;
+    const response = await confirmSettle({
+      businessId: businessId || "",
+      tableName: selectedTable?.name || "",
+    });
+
+    if (response.status === 200 || response.status === 201) {
+      setNormalSettle(true);
+    }
+    //
+  }, [confirmSettle, businessId, selectedTable?.name]);
+
   const closeNormalSettle = () => {
     setNormalSettle(false);
   };
@@ -79,13 +100,20 @@ const MemoGetBill = () => {
     setOpenAddCoinz(true);
   };
 
+  const reprintBillHandler = () => {
+    reprintBill({
+      businessId: businessId || "",
+      tableName: selectedTable?.name || "",
+    });
+  };
+
   const { isPending, mutate } = useMutation({
     mutationFn: async () => {
       const response = await apiRpc.table.hi_settle.$post({
         json: {
           tableId: selectedTable?._id || "",
           captainId: userData?._id,
-          billRequestId: data?.billRequestId ?? "",
+          billId: billData?.billId ?? "",
         },
       });
 
@@ -108,7 +136,7 @@ const MemoGetBill = () => {
 
     removingCoinz({
       businessId: businessId || "",
-      tableName: data?.tableName,
+      tableName: billData?.tableName,
       coinzRemovedBy: userData?.name || "",
     });
   };
@@ -122,77 +150,92 @@ const MemoGetBill = () => {
 
     removingCoupon({
       businessId: businessId || "",
-      tableName: data?.tableName,
+      tableName: billData?.tableName,
+    });
+  };
+
+  const removeServiceCharge = () => {
+    const confirmReplace = window.confirm(
+      "Applying this will remove your Service Charge. Continue?",
+    );
+
+    if (!confirmReplace) return;
+
+    removingServiceCharge({
+      businessId: businessId || "",
+      tableName: billData?.tableName,
+      serviceChargeRemovedBy: userData?._id || "",
+      reasonOfServiceCharge: "Service Charge Removed by Customer",
     });
   };
 
   // Helper function to render action history
   const renderActionHistory = () => {
-    if (!data) return null;
+    if (!billData) return null;
 
     const actions = [];
 
-    if (data.discountAppliedBy) {
+    if (billData.discountAppliedBy) {
       actions.push({
         type: "Discount Applied",
-        user: data.discountAppliedBy,
-        details: `₹${data.discount} discount applied ${
-          data.discountAppliedOn === "ON_DISH"
+        user: billData.discountAppliedBy,
+        details: `₹${billData.discount} discount applied ${
+          billData.discountAppliedOn === "ON_DISH"
             ? "on specific items"
             : "on entire bill"
         }`,
-        reason: data.reasonOfDiscount,
+        reason: billData.reasonOfDiscount,
         color: "bg-red-50 border-red-200 text-red-800",
         badgeColor: "bg-red-100 text-red-800",
       });
     }
 
-    if (data.discountRemovedBy) {
+    if (billData.discountRemovedBy) {
       actions.push({
         type: "Discount Removed",
-        user: data.discountRemovedBy,
+        user: billData.discountRemovedBy,
         details: "Previous discount has been removed from the bill",
         color: "bg-green-50 border-green-200 text-green-800",
         badgeColor: "bg-green-100 text-green-800",
       });
     }
 
-    if (data.serviceChargeAppliedBy) {
+    if (billData.serviceChargeAppliedBy) {
       actions.push({
         type: "Service Charge Applied",
-        user: data.serviceChargeAppliedBy,
-        details: `₹${data.serviceCharge} service charge added to the bill`,
+        user: billData.serviceChargeAppliedBy,
+        details: `₹${billData.serviceCharge} service charge added to the bill`,
         color: "bg-blue-50 border-blue-200 text-blue-800",
         badgeColor: "bg-blue-100 text-blue-800",
       });
     }
 
-    if (data.serviceChargeRemovedBy) {
+    if (billData.serviceChargeRemovedBy) {
       actions.push({
         type: "Service Charge Removed",
-        user: data.serviceChargeRemovedBy,
+        user: billData.serviceChargeRemovedBy,
         details: "Service charge has been removed from the bill",
-        reason: data.reasonOfServiceCharge,
+        reason: billData.reasonOfServiceCharge,
         color: "bg-yellow-50 border-yellow-200 text-yellow-800",
         badgeColor: "bg-yellow-100 text-yellow-800",
       });
     }
 
-    if (data.claimedCoins > 0) {
+    if (billData.claimedCoins > 0) {
       actions.push({
         type: "Loyalty Coins Applied",
         user: "Customer",
-        details: `₹${data.claimedCoins} loyalty coins redeemed`,
+        details: `₹${billData.claimedCoins} loyalty coins redeemed`,
         color: "bg-purple-50 border-purple-200 text-purple-800",
         badgeColor: "bg-purple-100 text-purple-800",
       });
     }
 
-    if (data.couponDiscount > 0) {
+    if (billData.couponDiscount > 0) {
       actions.push({
         type: "Coupon Applied",
         user: "System",
-        details: `₹${data.couponDiscount} coupon discount applied`,
+        details: `₹${billData.couponDiscount} coupon discount applied`,
         color: "bg-indigo-50 border-indigo-200 text-indigo-800",
         badgeColor: "bg-indigo-100 text-indigo-800",
       });
@@ -236,11 +279,18 @@ const MemoGetBill = () => {
     ) : null;
   };
 
-  if (isLoading) {
+  if (
+    isLoading ||
+    removingServiceChargeLoader ||
+    removingCouponLoader ||
+    removingCoinzLoader ||
+    isPrinting ||
+    isConfirming
+  ) {
     return <SpinnerMemo />;
   }
 
-  if (!data) {
+  if (!billData) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-gray-500">No bill available.</p>
@@ -267,9 +317,24 @@ const MemoGetBill = () => {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Bill Summary</span>
-              <Button variant="outline" onClick={() => setShowMoreOption(true)}>
-                More options
-              </Button>
+              <section className="space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={reprintBillHandler}
+                  size="sm"
+                >
+                  <BiSync />
+                  Print Bill
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowMoreOption(true)}
+                >
+                  <AlignCenter />
+                  More options
+                </Button>
+              </section>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -277,13 +342,13 @@ const MemoGetBill = () => {
               <div className="flex items-center gap-2">
                 <Phone className="w-5 h-5 text-gray-600" />
                 <p className="text-sm text-gray-700">
-                  {data?.customerName} ({data?.customerPhone})
+                  {billData?.customerName} ({billData?.customerPhone})
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <MdTableBar className="w-5 h-5 text-gray-600" />
                 <p className="text-sm text-gray-700">
-                  Table: {data?.tableName}
+                  Table: {billData?.tableName}
                 </p>
               </div>
             </div>
@@ -297,7 +362,7 @@ const MemoGetBill = () => {
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="justify-between w-full">
                   <h3 className="font-semibold">
-                    Items: {data?.items?.length}
+                    Items: {billData?.items?.length}
                   </h3>
                   {isExpanded ? (
                     <ChevronUp strokeWidth={4} className="w-4 h-4" />
@@ -307,7 +372,7 @@ const MemoGetBill = () => {
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-2 overflow-auto max-h-[40vh] hide-scrollbar py-2">
-                {data?.items?.map((item, index) => (
+                {billData?.items?.map((item, index) => (
                   <div
                     key={index}
                     className="p-2 text-sm rounded-md bg-gray-50"
@@ -358,16 +423,16 @@ const MemoGetBill = () => {
                   "subTotal",
                   Math.max(
                     0,
-                    Number(data?.subTotal ?? 0) -
-                      Number(data?.claimedCoins ?? 0),
+                    Number(billData?.subTotal ?? 0) -
+                      Number(billData?.claimedCoins ?? 0),
                   ),
                 ],
-                ["serviceCharge", data.serviceCharge],
-                ["tips", data.tips],
-                ["discount", data.discount],
-                ["tax", data.gst],
-                ["claimedCoins", data.claimedCoins],
-                ["couponDiscount", data.couponDiscount],
+                ["serviceCharge", billData.serviceCharge],
+                ["tips", billData.tips],
+                ["discount", billData.discount],
+                ["tax", billData.gst],
+                ["claimedCoins", billData.claimedCoins],
+                ["couponDiscount", billData.couponDiscount],
               ]
                 .filter(([_, value]) => typeof value === "number" && value > 0)
                 .map(([key, value]) => {
@@ -384,7 +449,7 @@ const MemoGetBill = () => {
                       <div className="flex items-center space-x-2">
                         <p
                           className={`font-medium ${
-                            isDeduction ? "text-green-600" : "text-gray-900"
+                            isDeduction ? "text-red-600" : "text-gray-900"
                           }`}
                         >
                           {isDeduction
@@ -409,13 +474,24 @@ const MemoGetBill = () => {
                             <IoClose />
                           </button>
                         )}
+                        {/* {key === "serviceCharge" && (
+                          <button
+                            type="button"
+                            onClick={removeServiceCharge}
+                            className="text-red-600 text-2xl hover:underline"
+                          >
+                            <IoClose />
+                          </button>
+                        )} */}
                       </div>
                     </div>
                   );
                 })}
               <div className="flex justify-between font-semibold text-base border-t pt-2">
                 <p className="text-black">Total</p>
-                <p className="text-black">₹{Number(data.total).toFixed(2)}</p>
+                <p className="text-black">
+                  ₹{Number(billData.total).toFixed(2)}
+                </p>
               </div>
             </div>
 
@@ -433,7 +509,7 @@ const MemoGetBill = () => {
           onClose={closeMoreOptions}
           rightTopBack
         >
-          <BillOptions data={data} />
+          <BillOptions data={billData} />
         </BottomPopUp>
       )}
 
@@ -444,7 +520,11 @@ const MemoGetBill = () => {
           show={showqr}
           onClose={() => setShowqr(false)}
         >
-          <QrCodePreview data={data} qrBillId={qrBillId} toggleQr={toggleQr} />
+          <QrCodePreview
+            data={billData}
+            qrBillId={qrBillId}
+            toggleQr={toggleQr}
+          />
         </BottomPopUp>
       )}
 
@@ -456,18 +536,20 @@ const MemoGetBill = () => {
           show={normalSettle}
           onClose={() => setNormalSettle(false)}
         >
-          <Normalsettle closeNormalSettle={closeNormalSettle} data={data} />
+          <Normalsettle closeNormalSettle={closeNormalSettle} data={billData} />
         </BottomPopUp>
       )}
 
       {openAddCoinz && (
         <BottomPopUp
-          height="h-[85dvh] lg:h-[85dvh]"
+          height="h-[100dvh] lg:h-[85dvh]"
           width="w-[30rem]"
+          rightTopBack
+          hide
           show={openAddCoinz}
           onClose={() => setOpenAddCoinz(false)}
         >
-          <AddCoinz data={data} />
+          <AddCoinz data={billData} />
         </BottomPopUp>
       )}
 
@@ -483,9 +565,7 @@ const MemoGetBill = () => {
           },
           {
             text: "Normal Settle",
-            onClick: () => {
-              setNormalSettle(true);
-            },
+            onClick: openNormalSettle,
             className: "rounded-md",
           },
           {

@@ -37,7 +37,6 @@ export const useGetBill = () => {
 
     const res = await response.json();
     const payment = res?.data as IBillData;
-    console.log(payment);
     return payment;
   };
 
@@ -452,4 +451,83 @@ export const useRemoveServiceCharge = () => {
     removingServiceChargeLoader,
     removingServiceCharge,
   };
+};
+
+export interface SettleTypePayload {
+  businessId: string;
+  tableName: string;
+}
+
+export const useConfirmSettle = () => {
+  const { setError, setOpenErrorModal } = useError();
+
+  const { isPending: isConfirming, mutateAsync: confirmSettle } = useMutation({
+    mutationFn: async (payload: SettleTypePayload) => {
+      const response = await apiRpc.pos.settle.$post({
+        json: payload,
+      });
+      return response;
+    },
+    onSuccess: async (data) => {
+      const extraData = await data.json();
+      if (data.status === 400 || data.status === 401) {
+        setError(
+          extraData?.message || "Failed to confirm settle",
+        );
+        setOpenErrorModal(true);
+        toast.error("Failed to confirm settle");
+        return;
+      }
+      if (data.status === 200 || data.status === 201) {
+        toast.success("Settle confirmed successfully");
+        return;
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Something went wrong.");
+    },
+  });
+  return {
+    isPending: isConfirming,
+    confirmSettle,
+  };
+};
+
+export interface reprintPayload {
+    businessId: string;
+    tableName: string;
+}
+
+export const useReprintBill = () => {
+    const { setError, setOpenErrorModal } = useError();
+    const { isPending, mutateAsync } = useMutation({
+        mutationFn: async (payload: reprintPayload) => {
+            const response = await apiRpc.pos.re_print_bill.$post({
+                json: payload,
+            });
+            return response;
+        },
+        onSuccess: async (data) => {
+            const extraData = await data.json();
+            if (data.status === 400 || data.status === 401) {
+                setError(
+                    extraData.error?.issues[0]?.message || "Failed to reprint bill",
+                );
+                setOpenErrorModal(true);
+                toast.error("Failed to reprint bill");
+                return;
+            }
+            if (data.status === 200 || data.status === 201) {
+                toast.success("Bill reprinted successfully");
+               
+            }
+        },
+        onError: (error: any) => {
+            toast.error(error?.message || "Something went wrong.");
+        },
+    });
+    return {
+        isPrinting: isPending,
+        reprintBill: mutateAsync,
+    };
 };

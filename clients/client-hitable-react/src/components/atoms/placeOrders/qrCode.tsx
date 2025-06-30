@@ -37,8 +37,8 @@ const MemoQrCode = ({ data, qrBillId, toggleQr }: { data: IBillData; qrBillId: s
 
     // API call to fetch bill status
     const webhook = async () => {
-        const response = await apiRpc.table.qr_webhook[":billRequestId"].$get({
-            param: { billRequestId: data?.billRequestId || "" },
+        const response = await apiRpc.table.qr_webhook[":billId"].$get({
+            param: { billId: data?.billId || "" },
         });
         const json = await response.json();
         return json.data;
@@ -46,24 +46,24 @@ const MemoQrCode = ({ data, qrBillId, toggleQr }: { data: IBillData; qrBillId: s
 
     // API call to fetch alert data
     const tableAlert = async () => {
-        const response = await apiRpc.table.table_offline_alert[":billRequestId"].$get({
-            param: { billRequestId: data?.billRequestId || "" },
+        const response = await apiRpc.table.table_offline_alert[":billId"].$get({
+            param: { billId: data?.billId || "" },
         });
         const json = await response.json();
         return json.data;
     };
     const { data: alertData, isFetching: isAlertFetching } = useQuery({
-        queryKey: ["tableAlert", data?.billRequestId],
+        queryKey: ["tableAlert", data?.billId],
         queryFn: tableAlert,
-        enabled: !!data?.billRequestId && showStatus,
+        enabled: !!data?.billId && showStatus,
         refetchInterval: 5000,
     });
 
     // React Query with refetch interval for bill status
     const { data: billStatus, isFetching } = useQuery({
-        queryKey: ["webhook", data?.billRequestId],
+        queryKey: ["webhook", data?.billId],
         queryFn: webhook,
-        enabled: !!data?.billRequestId && showStatus,
+        enabled: !!data?.billId && showStatus,
         refetchInterval: 5000,
     });
 

@@ -72,7 +72,7 @@ const MemoNormalSettle = ({
     const { mutateAsync: settleTable, isPending: isSettling } = useMutation({
         mutationFn: async (payload: {
             tableId: string;
-            billRequestId: string;
+            billId: string;
             captainId: string;
             settleModes: {
                 _id: string;
@@ -207,7 +207,7 @@ const MemoNormalSettle = ({
             } else {
                 const payload = {
                     tableId: selectedTable?._id || "",
-                    billRequestId: billData?.billRequestId || "",
+                    billId: billData?._id || "",
                     captainId: captainData?._id || "",
                     settleModes,
                     split: isMultiple,
@@ -283,7 +283,7 @@ const MemoNormalSettle = ({
                 !openDues ? (
                     <CommonBottomButton
                         fixed={true}
-                        maxWidth="48rem"
+                        maxWidth="30rem"
                         buttons={[
                             {
                                 text: "Back",
