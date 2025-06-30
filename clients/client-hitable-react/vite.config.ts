@@ -1,14 +1,17 @@
-import react from '@vitejs/plugin-react';
-import { resolve } from 'path';
-import { defineConfig } from 'vite';
-import Pages from 'vite-plugin-pages';
+import react from "@vitejs/plugin-react";
+import { resolve } from "path";
+import { defineConfig } from "vite";
+import Pages from "vite-plugin-pages";
 
 const ReactCompilerConfig = {
-  compilationMode: 'annotation',
+  compilationMode: "annotation",
 };
 
 export default defineConfig({
-  envDir: 'env',
+  envDir: "env",
+  server: {
+    port: 3004,
+  },
   plugins: [
     react(),
     // babel({
@@ -18,7 +21,7 @@ export default defineConfig({
     //   },
     // }),
     Pages({
-      importMode: 'async',
+      importMode: "async",
     }),
     // VitePWA({
     //   registerType: 'autoUpdate',
@@ -50,7 +53,7 @@ export default defineConfig({
   resolve: {
     // declaring alias
     alias: {
-      '@': resolve(__dirname, './src'),
+      "@": resolve(__dirname, "./src"),
     },
   },
 });

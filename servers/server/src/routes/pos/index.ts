@@ -1467,17 +1467,17 @@ const posRouter = new Hono()
               session,
             );
 
-            sendKOTPrintEvent({
-              tableName,
-              businessId,
-              customerName: userData.name as string,
-              customerPhone: userData.phone as string,
-              cart: internalCart,
-              acceptedBy: "direct_user",
-              kotId: result?.data?.kotId?.toString() ?? "",
-              date: Date.now(),
-              posRestName: posConfigData?.restName,
-            });
+            // sendKOTPrintEvent({
+            //   tableName,
+            //   businessId,
+            //   customerName: userData.name as string,
+            //   customerPhone: userData.phone as string,
+            //   cart: internalCart,
+            //   acceptedBy: "direct_user",
+            //   kotId: result?.data?.kotId?.toString() ?? "",
+            //   date: Date.now(),
+            //   posRestName: posConfigData?.restName,
+            // });
 
             return c.json(result, 200);
           }
@@ -1753,17 +1753,17 @@ const posRouter = new Hono()
             },
           );
 
-          sendKOTPrintEvent({
-            tableName,
-            businessId,
-            customerName: user.name as string,
-            customerPhone: user.phone as string,
-            cart: internalCart,
-            acceptedBy: user.name as string,
-            kotId: res?.kotId?.toString() ?? "",
-            date: Date.now(),
-            posRestName: pos?.restName,
-          });
+          // sendKOTPrintEvent({
+          //   tableName,
+          //   businessId,
+          //   customerName: user.name as string,
+          //   customerPhone: user.phone as string,
+          //   cart: internalCart,
+          //   acceptedBy: user.name as string,
+          //   kotId: res?.kotId?.toString() ?? "",
+          //   date: Date.now(),
+          //   posRestName: pos?.restName,
+          // });
 
           return respond(c, "Data fetched successfully", false, 200, {
             success: true,
@@ -1807,17 +1807,17 @@ const posRouter = new Hono()
           },
         );
 
-        sendKOTPrintEvent({
-          tableName,
-          businessId,
-          customerName: user.name as string,
-          customerPhone: user.phone as string,
-          cart: internalCart,
-          acceptedBy: user.name as string,
-          kotId: res?.kotId?.toString() ?? "",
-          date: Date.now(),
-          posRestName: pos?.restName,
-        });
+        // sendKOTPrintEvent({
+        //   tableName,
+        //   businessId,
+        //   customerName: user.name as string,
+        //   customerPhone: user.phone as string,
+        //   cart: internalCart,
+        //   acceptedBy: user.name as string,
+        //   kotId: res?.kotId?.toString() ?? "",
+        //   date: Date.now(),
+        //   posRestName: pos?.restName,
+        // });
         return respond(c, "Data fetched successfully", false, 200, {
           success: true,
           hiCode: tableSession.hiCode,

@@ -1,7 +1,6 @@
 import {
   BusinessPosConfig,
   KotOrder,
-  PosBill,
   Table,
   User,
   UserAnalytic,
@@ -14,7 +13,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { calculateCartBill } from "../../utils/helper";
-import { deleteKOTPrintEvent, sendKOTPrintEvent } from "../../utils/kot";
+import { sendKOTPrintEvent } from "../../utils/kot";
 import { respond } from "../../utils/response";
 
 const kotRouter = new Hono()
@@ -167,7 +166,12 @@ const kotRouter = new Hono()
     zValidator(
       "json",
       z.object({
-        kotItemIds: z.array(z.string()).min(1).max(100),
+        kotItems: z.array(
+          z.object({
+            itemId: z.string().min(24).max(24),
+            quantity: z.number().min(1),
+          }),
+        ),
         deletedBy: z.string().min(1).max(50),
         reasonOfDeletion: z.string().min(1).max(500),
       }),
@@ -175,84 +179,149 @@ const kotRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { kotItemIds, deletedBy, reasonOfDeletion } = await c.req.json();
+        const { kotItems, deletedBy, reasonOfDeletion } = await c.req.json();
 
-        const kotOrderData = await KotOrder.findOne({
-          "cart._id": { $in: kotItemIds },
-        });
-
-        if (!kotOrderData) {
-          return respond(c, "KOT not found", true, 404);
-        }
-
-        const pos = await BusinessPosConfig.findOne({
-          businessId: kotOrderData.businessId,
-          isDeleted: false,
-          active: true,
-        });
-
-        if (!pos) {
-          return respond(c, "POS not found", true, 404);
-        }
-
-        const user = await User.findById(deletedBy);
+        // 1. Load and validate user
+        const user = await User.findById(deletedBy).session(session);
         if (!user) {
           return respond(c, "User not found", true, 404);
         }
 
-        const captainInfo = await User.findById(kotOrderData.acceptedBy);
+        const itemIds = kotItems.map((i) => i.itemId);
+        const kotDocs = await KotOrder.find(
+          { "cart._id": { $in: itemIds } },
+          {
+            cart: 1,
+            businessId: 1,
+            acceptedBy: 1,
+            tableName: 1,
+            name: 1,
+            phone: 1,
+            isDeleted: 1,
+          },
+        ).session(session);
 
-        for (const kotItemId of kotItemIds) {
-          // 1. Find KOT document containing this cart item
-          const kotDoc = await KotOrder.findOne(
-            { "cart._id": kotItemId },
-            { "cart.$": 1 }, // fetch only matched cart item
-          ).lean();
+        const deletedOrders = kotDocs.filter((d) => d.isDeleted);
+        if (deletedOrders.length) {
+          const ids = deletedOrders.map((d) => d._id.toString()).join(", ");
+          return respond(
+            c,
+            `KOT order${
+              deletedOrders.length > 1 ? "s" : ""
+            } (${ids}) already deleted`,
+            true,
+            400,
+          );
+        }
 
-          const matchedItem = kotDoc?.cart?.[0];
-
-          deleteKOTPrintEvent({
-            tableName: kotOrderData?.tableName ?? "",
-            businessId: kotOrderData.businessId,
-            customerName: kotOrderData.name,
-            customerPhone: kotOrderData.phone,
-            cart: kotDoc?.cart ?? [],
-            deletedBy: user.name || "",
-            acceptedBy: captainInfo?.name || user.name || "",
-            kotId: kotOrderData?._id.toString() ?? "",
-            date: Date.now(),
-            posRestName: pos?.restName,
-          });
-
-          if (!matchedItem) {
-            return respond(c, `Cart item not found: ${kotItemId}`, true, 404);
+        const lookup = new Map<string, { kotDoc: any; cartItem: any }>();
+        for (const kd of kotDocs) {
+          for (const ci of kd.cart) {
+            const id = ci._id.toString();
+            if (itemIds.includes(id)) {
+              lookup.set(id, { kotDoc: kd, cartItem: ci });
+            }
           }
+        }
 
-          // 2. Check if already deleted
-          if (matchedItem.isDeleted) {
-            return respond(
-              c,
-              `Cart item already deleted: ${kotItemId}`,
-              true,
-              400,
+        for (const { itemId, quantity } of kotItems) {
+          const entry = lookup.get(itemId);
+          if (!entry) {
+            return respond(c, `KOT item ${itemId} not found`, true, 404);
+          }
+          if (entry.cartItem.isDeleted) {
+            return respond(c, `KOT item ${itemId} already deleted`, true, 400);
+          }
+          if (quantity > entry.cartItem.quantity) {
+            return respond(c, "Quantity exceeds available amount", true, 400);
+          }
+        }
+
+        for (const { itemId, quantity } of kotItems) {
+          const { kotDoc, cartItem: matched } = lookup.get(itemId)!;
+          const kotId = kotDoc._id;
+
+          if (matched.quantity > quantity) {
+            await KotOrder.updateOne(
+              { _id: kotId, "cart._id": itemId },
+              { $inc: { "cart.$.quantity": -quantity } },
+              { session },
             );
           }
 
-          // 3. Proceed to mark as deleted
-          await KotOrder.updateOne(
-            { "cart._id": kotItemId },
-            {
-              $set: {
-                "cart.$[elem].isDeleted": true,
-                "cart.$[elem].deletedBy": user.name,
-                "cart.$[elem].reasonOfDeletion": reasonOfDeletion,
+          const original = matched.toObject();
+          delete original._id;
+          const baseDeleted = {
+            ...original,
+            quantity: 1,
+            isDeleted: true,
+            deletedBy: user.name,
+            reasonOfDeletion,
+          };
+
+          let deletedItems: (typeof baseDeleted)[];
+
+          if (quantity === matched.quantity) {
+            // full-stack delete: mark existing cart item
+            await KotOrder.updateOne(
+              { _id: kotId, "cart._id": itemId },
+              {
+                $set: {
+                  "cart.$.isDeleted": true,
+                  "cart.$.deletedBy": user.name,
+                  "cart.$.reasonOfDeletion": reasonOfDeletion,
+                },
               },
-            },
-            {
-              arrayFilters: [{ "elem._id": kotItemId }],
-              session,
-            },
+              { session },
+            );
+
+            // for billing, treat it as one item of `quantity`
+            deletedItems = [{ ...baseDeleted, quantity }];
+          } else {
+            // partial delete: push `quantity` one-unit deleted copies
+            deletedItems = Array.from({ length: quantity }, () => ({
+              ...baseDeleted,
+            }));
+
+            await KotOrder.updateOne(
+              { _id: kotId },
+              { $push: { cart: { $each: deletedItems } } },
+              { session },
+            );
+          }
+
+          const deletedTotal = calculateCartBill(deletedItems);
+          await Table.updateOne(
+            { businessId: kotDoc.businessId, name: kotDoc.tableName },
+            { $inc: { currentTableAmount: -deletedTotal } },
+            { session },
           );
+
+          const pos = await BusinessPosConfig.findOne(
+            {
+              businessId: kotDoc.businessId,
+              isDeleted: false,
+              active: true,
+            },
+            undefined,
+            { session },
+          );
+          const captain = await User.findById(kotDoc.acceptedBy).session(
+            session,
+          );
+
+          // deleteKOTPrintEvent({
+          //   tableName: kotDoc.tableName,
+          //   businessId: kotDoc.businessId,
+          //   customerName: kotDoc.name,
+          //   customerPhone: kotDoc.phone,
+          //   cart: deletedItems.map((it) => ({ ...it, quantity: it.quantity })),
+          //   deletedBy: user.name,
+          //   acceptedBy: captain?.name || user.name,
+          //   kotId: kotId.toString(),
+          //   date: Date.now(),
+          //   posRestName: pos?.restName,
+          // });
         }
 
         return respond(
@@ -563,8 +632,6 @@ const kotRouter = new Hono()
         400,
       );
     },
-  )
-
- 
+  );
 
 export default kotRouter;
