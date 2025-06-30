@@ -35,6 +35,9 @@ interface OrderState {
   currentPage: orderPages;
   setCurrentPage: (page: orderPages) => void;
 
+  showMoreOption: boolean;
+  setShowMoreOption: (show: boolean) => void;
+
   transferTable: TransferTable;
   setTransferTable: (table: TransferTable) => void;
 
@@ -109,6 +112,9 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   openDues: false,
   setOpenDues: (open) => set({ openDues: open }),
+
+  showMoreOption: false,
+  setShowMoreOption: (show) => set({ showMoreOption: show }),
 
   saveDueUser: null,
   setSaveDueUser: (user) => set({ saveDueUser: user }),

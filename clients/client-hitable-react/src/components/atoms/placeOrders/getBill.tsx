@@ -47,17 +47,21 @@ import { BiSync } from "react-icons/bi";
 const MemoGetBill = () => {
   const { businessId } = useParams();
   const selectedTable = useOrderStore((s) => s.selectedTable);
-  const { openAddCoinz, setOpenAddCoinz, setOpenOrderModal } = useOrderStore();
+  // const { openAddCoinz, setOpenAddCoinz, setOpenOrderModal } = useOrderStore();
+  const openAddCoinz = useOrderStore((s) => s.openAddCoinz);
+  const setOpenAddCoinz = useOrderStore((s) => s.setOpenAddCoinz);
+  const setOpenOrderModal = useOrderStore((s) => s.setOpenOrderModal);
+  const showMoreOption = useOrderStore((s) => s.showMoreOption);
+  const setShowMoreOption = useOrderStore((s) => s.setShowMoreOption);
   const screenSize = useScreenSize();
   const { captainData: userData } = useHiClientZ();
-  const { isConfirming, confirmSettle } = useConfirmSettle();
+  const { confirmSettle } = useConfirmSettle();
   const { reprintBill, isPrinting } = useReprintBill();
   const { removingCouponLoader, removingCoupon } = useRemoveCoupon();
   const { removingCoinzLoader, removingCoinz } = useRemoveCoinz();
   const [qrBillId, setQrBillId] = useState<string | null>(null);
   const [showqr, setShowqr] = useState<boolean>(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
-  const [showMoreOption, setShowMoreOption] = useState<boolean>(false);
   const [normalSettle, setNormalSettle] = useState<boolean>(false);
   const { removingServiceChargeLoader, removingServiceCharge } =
     useRemoveServiceCharge();

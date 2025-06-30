@@ -207,7 +207,7 @@ const MemoNormalSettle = ({
             } else {
                 const payload = {
                     tableId: selectedTable?._id || "",
-                    billId: billData?._id || "",
+                    billId: billData?.billId || "",
                     captainId: captainData?._id || "",
                     settleModes,
                     split: isMultiple,

@@ -1,7 +1,7 @@
 import { memo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
-import { Users, UserCheck, ReceiptText, CookingPot } from "lucide-react";
+import { Users, UserCheck, ReceiptText, CookingPot, BookmarkX } from "lucide-react";
 import {
   type orderModal,
   type TransferTable,
@@ -97,22 +97,14 @@ const MemoTableOptions = () => {
           <MdTableBar className="w-5 h-5 mr-2" />
           Transfer Table
         </Button>
-        <Button
-          size="lg"
-          variant="outline"
-          className="w-full"
-          onClick={() => handleTransferTable("FREE")}
-        >
-          <MdTableBar className="w-5 h-5 mr-2" />
-          Free Table
-        </Button>
+       
         <Button
           size="lg"
           variant="outline"
           className="w-full"
           onClick={() => handleTransferTable("DELETE")}
         >
-          <MdTableBar className="w-5 h-5 mr-2" />
+          <BookmarkX className="w-5 h-5 mr-2" />
           Delete kot
         </Button>
       </CardContent>

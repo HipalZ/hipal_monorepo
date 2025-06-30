@@ -1,5 +1,5 @@
 import { apiRpc } from "@hi/common";
-import { useMutation, useQueryClient,useQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { useCart } from "@/components/store/useCart";
@@ -17,7 +17,7 @@ export const useGetAllOrders = () => {
     });
 
     const res = await response.json();
-    const orderData = res.data as OrderData[] 
+    const orderData = res.data as OrderData[];
     setOrderDataStore(orderData);
     if (orderData?.length > 0) {
       setIsPlacingNewOrder(false);
@@ -33,8 +33,12 @@ export const useGetAllOrders = () => {
   return { isLoading, data };
 };
 
+interface DeleteKotItems {
+  itemId: string;
+  quantity: number;
+}
 interface DeleteKotPayload {
-  kotItemIds: string[];
+  kotItems: DeleteKotItems[];
   deletedBy: string;
   reasonOfDeletion: string;
 }
@@ -52,7 +56,7 @@ export const useDeleteKot = () => {
     onSuccess: async (data) => {
       const extraData = await data.json();
       if (data.status === 400 || data.status === 401) {
-        toast.error(extraData?.error?.issues[0]?.message);
+        toast.error(extraData?.message);
         throw new Error(extraData?.error?.issues[0]?.message);
       }
       if (data.status === 200 || data.status === 201) {

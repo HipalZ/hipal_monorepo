@@ -44,9 +44,6 @@ const TransferItem = lazy(
   () => import("@/components/atoms/placeOrders/transferItem"),
 );
 const EmptyTableList = lazy(() => import("@/components/tables"));
-const FreeTable = lazy(
-  () => import("@/components/atoms/placeOrders/freeTable"),
-);
 
 const MemoTablePos = () => {
   const { tableId, businessId } = useParams();
@@ -110,7 +107,6 @@ const MemoTablePos = () => {
     queryKey: ["fetchIndividualTable", tableId],
     queryFn: fetchIndividualTable,
     enabled: !!tableId,
-    // refetchInterval: 30000,
   });
 
   return (
@@ -286,7 +282,12 @@ const MemoTablePos = () => {
             </ScrollArea>
           </BottomPopUp>
           {transferModal && (
-            <BottomPopUp hide rightTopBack show={transferModal} onClose={closeTransferModal}>
+            <BottomPopUp
+              hide
+              rightTopBack
+              show={transferModal}
+              onClose={closeTransferModal}
+            >
               {transferTable === "ITEM" && (
                 <Suspense fallback={<SpinnerMemo />}>
                   <TransferItem />
@@ -297,11 +298,7 @@ const MemoTablePos = () => {
                   <EmptyTableList transfer />
                 </Suspense>
               )}
-              {transferTable === "FREE" && (
-                <Suspense fallback={<SpinnerMemo />}>
-                  <FreeTable />
-                </Suspense>
-              )}
+
               {transferTable === "DELETE" && (
                 <Suspense fallback={<SpinnerMemo />}>
                   <DeleteKotPanel />

@@ -44,15 +44,6 @@ export const useGetBill = () => {
     queryKey: ["getTableBill", businessId, selectedTable?.name, userData?.name],
     queryFn: getTableBill,
     enabled: !!businessId && !!selectedTable && !!userData,
-    staleTime: 1000 * 60,
-    initialData: () => {
-      return queryClient.getQueryData([
-        "getTableBill",
-        businessId,
-        selectedTable?.name,
-        userData?.name,
-      ]);
-    },
   });
 
   return {
