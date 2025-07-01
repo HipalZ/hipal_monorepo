@@ -4,17 +4,16 @@ import type { IUserId } from "@/components/types/hiClientzData";
 import { apiRpc } from "@hi/common";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import CommonBottomButton from "../bottomButton";
-import { useScreenSize } from "@/hooks/useScreenSize";
 import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import SpinnerMemo from "../loadingSpinner";
 import { Phone, UserPlus, X } from "lucide-react";
 
-const MemoEbill = () => {
-  const screenSize = useScreenSize();
-  const { selectedTable, setOpenOrderModal } = useOrderStore();
+const MemoEBill = () => {
+  const selectedTable  = useOrderStore(s=>s.selectedTable);
   const [phoneNumbers, setPhoneNumbers] = useState<string[]>([]);
   const [newPhoneNumber, setNewPhoneNumber] = useState("");
+  const setShowEBill = useOrderStore((s) => s.setShowEBill);
 
   const { businessId } = useParams();
 
@@ -75,11 +74,10 @@ const MemoEbill = () => {
       return response.json();
     },
     onSuccess: () => {
-      setOpenOrderModal(false);
+      setShowEBill(false);
       toast.success("E-Bill sent successfully");
     },
     onError: (error) => {
-      console.error("Error sending E-Bill:", error);
       toast.error("Failed to send E-Bill. Please try again.");
     },
   });
@@ -196,10 +194,8 @@ const MemoEbill = () => {
 
       <CommonBottomButton
         maxWidth="48rem"
-        position="mid"
-        fixed
+        fixed={true}
         shadow
-        offset={screenSize === "xs" || screenSize === "md" ? "5rem" : "0rem"}
         buttons={[
           {
             text: "Send E-Bill",
@@ -215,5 +211,5 @@ const MemoEbill = () => {
   );
 };
 
-const Ebill = memo(MemoEbill);
-export default Ebill;
+const EBill = memo(MemoEBill);
+export default EBill;

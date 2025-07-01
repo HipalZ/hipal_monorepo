@@ -1,7 +1,13 @@
 import { memo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
-import { Users, UserCheck, ReceiptText, CookingPot, BookmarkX } from "lucide-react";
+import {
+  Users,
+  UserCheck,
+  ReceiptText,
+  CookingPot,
+  BookmarkX,
+} from "lucide-react";
 import {
   type orderModal,
   type TransferTable,
@@ -44,7 +50,6 @@ const MemoTableOptions = () => {
   return (
     <section className="min-h-[90dvh] flex justify-center md:py-[8rem] px-4 mx-auto">
       <CardContent className="space-y-4 mt-24 md:mt-6 h-[70dvh] pb-[5rem] overflow-auto hide-scrollbar">
-        <h3 className="text-xl font-semibold opacity-80">Table Options</h3>
         {selectedTable?.hiCode && (
           <Badge variant="secondary" className="flex justify-between w-full">
             <div className="text-2xl font-bold">Table code :-</div>
@@ -74,15 +79,6 @@ const MemoTableOptions = () => {
           size="lg"
           variant="outline"
           className="w-full"
-          onClick={() => toggleModalType("ebill")}
-        >
-          <ReceiptText className="w-5 h-5 mr-2" />
-          Send Ebill
-        </Button>
-        <Button
-          size="lg"
-          variant="outline"
-          className="w-full"
           onClick={() => handleTransferTable("ITEM")}
         >
           <CookingPot className="w-5 h-5 mr-2" />
@@ -97,7 +93,7 @@ const MemoTableOptions = () => {
           <MdTableBar className="w-5 h-5 mr-2" />
           Transfer Table
         </Button>
-       
+
         <Button
           size="lg"
           variant="outline"

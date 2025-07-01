@@ -14,6 +14,7 @@ import { useCart } from "@/components/store/useCart";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import SpinnerMemo from "@/components/atoms/loadingSpinner";
 import DeleteKotPanel from "@/components/delete/DeleteKot.tsx";
+import TableHeader from "@/components/atoms/placeOrders/TableHeader.tsx";
 
 // Lazy loaded components
 const PlaceOrders = lazy(() => import("@/components/atoms/placeOrders"));
@@ -36,7 +37,6 @@ const Bill = lazy(() => import("@/components/atoms/placeOrders/bill"));
 const AlertCount = lazy(
   () => import("@/components/atoms/placeOrders/alertCount"),
 );
-const Ebill = lazy(() => import("@/components/atoms/placeOrders/ebill"));
 const CustomerInformation = lazy(
   () => import("@/components/atoms/placeOrders/customerInformation"),
 );
@@ -49,19 +49,18 @@ const MemoTablePos = () => {
   const { tableId, businessId } = useParams();
   const navigate = useNavigate();
   const { isPlacingNewOrder } = useCart();
-  const {
-    setSelectedTable,
-    setModalType,
-    selectedTable,
-    openOrderModal,
-    modalType,
-    setOpenOrderModal,
-    setPaymentSteps,
-    transferTable,
-    transferModal,
-    setTransferModal,
-    setTransferTable,
-  } = useOrderStore();
+
+  const setSelectedTable = useOrderStore((s) => s.setSelectedTable);
+  const setModalType = useOrderStore((s) => s.setModalType);
+  const selectedTable = useOrderStore((s) => s.selectedTable);
+  const openOrderModal = useOrderStore((s) => s.openOrderModal);
+  const modalType = useOrderStore((s) => s.modalType);
+  const setOpenOrderModal = useOrderStore((s) => s.setOpenOrderModal);
+  const setPaymentSteps = useOrderStore((s) => s.setPaymentSteps);
+  const transferTable = useOrderStore((s) => s.transferTable);
+  const transferModal = useOrderStore((s) => s.transferModal);
+  const setTransferModal = useOrderStore((s) => s.setTransferModal);
+  const setTransferTable = useOrderStore((s) => s.setTransferTable);
 
   const closeTransferModal = () => {
     setTransferModal(false);
@@ -184,7 +183,7 @@ const MemoTablePos = () => {
             show={openOrderModal}
             onClose={closeOrderModalHandler}
           >
-            <OrdersHeader width="48rem" />
+            {modalType === "bill" ? <TableHeader /> : <OrdersHeader width="48rem" />}
             <ScrollArea className="lg:h-[100dvh] min-h-[100dvh]">
               {modalType === "guest" && (
                 <motion.div
@@ -193,12 +192,10 @@ const MemoTablePos = () => {
                   exit={{ opacity: 0, x: 20 }}
                   className="p-4"
                 >
-                  <Suspense fallback={<SpinnerMemo />}>
-                    <AddTableCount
-                      key={selectedTable?.capacity}
-                      selectedTable={selectedTable}
-                    />
-                  </Suspense>
+                  <AddTableCount
+                    key={selectedTable?.capacity}
+                    selectedTable={selectedTable}
+                  />
                 </motion.div>
               )}
               {modalType === "options" && (
@@ -208,9 +205,7 @@ const MemoTablePos = () => {
                   exit={{ opacity: 0, x: 20 }}
                   className="p-4"
                 >
-                  <Suspense fallback={<SpinnerMemo />}>
-                    <TableOptions />
-                  </Suspense>
+                  <TableOptions />
                 </motion.div>
               )}
               {modalType === "addItem" && (
@@ -219,9 +214,7 @@ const MemoTablePos = () => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                 >
-                  <Suspense fallback={<SpinnerMemo />}>
-                    <Category />
-                  </Suspense>
+                  <Category />
                 </motion.div>
               )}
               {modalType === "liveCart" && (
@@ -230,9 +223,7 @@ const MemoTablePos = () => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                 >
-                  <Suspense fallback={<SpinnerMemo />}>
-                    <CartItem />
-                  </Suspense>
+                  <CartItem />
                 </motion.div>
               )}
               {modalType === "bill" && (
@@ -241,9 +232,7 @@ const MemoTablePos = () => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                 >
-                  <Suspense fallback={<SpinnerMemo />}>
-                    <Bill />
-                  </Suspense>
+                  <Bill />
                 </motion.div>
               )}
               {modalType === "customer" && (
@@ -252,9 +241,7 @@ const MemoTablePos = () => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                 >
-                  <Suspense fallback={<SpinnerMemo />}>
-                    <CustomerInformation />
-                  </Suspense>
+                  <CustomerInformation />
                 </motion.div>
               )}
               {modalType === "alerts" && (
@@ -263,22 +250,10 @@ const MemoTablePos = () => {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                 >
-                  <Suspense fallback={<SpinnerMemo />}>
-                    <AlertCount />
-                  </Suspense>
+                  <AlertCount />
                 </motion.div>
               )}
-              {modalType === "ebill" && (
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
-                >
-                  <Suspense fallback={<SpinnerMemo />}>
-                    <Ebill />
-                  </Suspense>
-                </motion.div>
-              )}
+             
             </ScrollArea>
           </BottomPopUp>
           {transferModal && (
@@ -288,22 +263,12 @@ const MemoTablePos = () => {
               show={transferModal}
               onClose={closeTransferModal}
             >
-              {transferTable === "ITEM" && (
-                <Suspense fallback={<SpinnerMemo />}>
-                  <TransferItem />
-                </Suspense>
-              )}
-              {transferTable === "TABLE" && (
-                <Suspense fallback={<SpinnerMemo />}>
-                  <EmptyTableList transfer />
-                </Suspense>
-              )}
+              <Suspense fallback={<SpinnerMemo />}>
+                {transferTable === "ITEM" && <TransferItem />}
+                {transferTable === "TABLE" && <EmptyTableList transfer />}
 
-              {transferTable === "DELETE" && (
-                <Suspense fallback={<SpinnerMemo />}>
-                  <DeleteKotPanel />
-                </Suspense>
-              )}
+                {transferTable === "DELETE" && <DeleteKotPanel />}
+              </Suspense>
             </BottomPopUp>
           )}
         </Suspense>

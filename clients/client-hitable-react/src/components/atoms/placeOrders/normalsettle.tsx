@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
@@ -14,332 +14,350 @@ import SingleMode from "./singleMode";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import { useGetAllModes } from "@/components/hooks/useTableData";
 import { useError } from "@/components/store/useError";
+import { useConfirmSettle } from "@/components/hooks/useBill.ts";
 
 export interface IMode {
-    _id: string;
-    name: string;
-    active: boolean;
+  _id: string;
+  name: string;
+  active: boolean;
 }
 
 export const ModeIcon = ({ name }: { name: string }) => {
-    switch (name.toLowerCase()) {
-        case "cash":
-            return <Banknote className="w-6 h-6" />;
-        case "upi":
-            return <Smartphone className="w-6 h-6" />;
-        default:
-            return <CreditCard className="w-6 h-6" />;
-    }
+  switch (name.toLowerCase()) {
+    case "cash":
+      return <Banknote className="w-6 h-6" />;
+    case "upi":
+      return <Smartphone className="w-6 h-6" />;
+    default:
+      return <CreditCard className="w-6 h-6" />;
+  }
 };
 
 const MemoNormalSettle = ({
-    closeNormalSettle,
-    data: billData,
-    alertData,
+  closeNormalSettle,
+  data: billData,
+  alertData,
 }: {
-    data?: IBillData;
-    closeNormalSettle: () => void;
-    alertData?: Alert;
+  data?: IBillData;
+  closeNormalSettle: () => void;
+  alertData?: Alert;
 }) => {
-    const { businessId } = useParams();
-    const navigate = useNavigate();
-    const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
-    const { setError, setOpenErrorModal } = useError();
-    const {
-        selectedTable,
-        setOpenOrderModal,
-        isSplit,
-        setIsSplit,
-        settleModes,
-        setSettleModes,
-        openDues,
-        setOpenDues,
-        setSaveDueUser,
-        saveDueUser
-    } = useOrderStore();
+  const { businessId } = useParams();
+  const navigate = useNavigate();
+  const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
+  const { setError, setOpenErrorModal } = useError();
 
-    const { removeOnlineAlert, removeOnlineCount } = useLiteStore(
-        (s) => ({
-            removeOnlineAlert: s.removeOnlineAlert,
-            removeOnlineCount: s.removeOnlineCount,
-        }),
-    );
+  const selectedTable = useOrderStore((s) => s.selectedTable);
+  const setOpenOrderModal = useOrderStore((s) => s.setOpenOrderModal);
+  const isSplit = useOrderStore((s) => s.isSplit);
+  const setIsSplit = useOrderStore((s) => s.setIsSplit);
+  const settleModes = useOrderStore((s) => s.settleModes);
+  const setSettleModes = useOrderStore((s) => s.setSettleModes);
+  const openDues = useOrderStore((s) => s.openDues);
+  const setOpenDues = useOrderStore((s) => s.setOpenDues);
+  const setSaveDueUser = useOrderStore((s) => s.setSaveDueUser);
+  const saveDueUser = useOrderStore((s) => s.saveDueUser);
 
-    const captainData = useHiClientZ((s) => s.captainData);
+  const { isConfirming, confirmSettle } = useConfirmSettle();
 
-    const { isLoading, paymentMode } = useGetAllModes(businessId, captainData?.name)
+  const { removeOnlineAlert, removeOnlineCount } = useLiteStore((s) => ({
+    removeOnlineAlert: s.removeOnlineAlert,
+    removeOnlineCount: s.removeOnlineCount,
+  }));
 
-    const { mutateAsync: settleTable, isPending: isSettling } = useMutation({
-        mutationFn: async (payload: {
-            tableId: string;
-            billId: string;
-            captainId: string;
-            settleModes: {
-                _id: string;
-                name: string;
-                amount: number;
-            }[];
-            split?: boolean;
-            duesUserId?: string;
-        }) => {
-            const response = await apiRpc.table.normal_settle.$post({
-                json: payload,
-            });
-            if (response.status === 401 || response.status === 403) {
-                setOpenErrorModal(true);
-                setError("You are not authorized to perform this action");
-                return { err: true, message: "You are not authorized to perform this action" };
-            }
-            const res = await response.json();
-            return res;
-        },
-        onSuccess: (data) => {
-            if (data?.err) {
-                toast.error(data.message);
-                return;
-            }
-            if (!data?.err) {
-                toast.success("Table settled successfully!");
-                setSettleModes([]);
-                closeNormalSettle();
-                setOpenOrderModal(false);
-                setIsSplit(false);
-                setOpenDues(false);
-                setSettleModes([]);
-                setSaveDueUser(null)
-                navigate(`/${businessId}/alerts`);
-            }
+  const captainData = useHiClientZ((s) => s.captainData);
 
-        },
-        onError: (error: any) => {
-            toast.error(error?.message || "Something went wrong.");
-        },
-    });
+  const { isLoading, paymentMode } = useGetAllModes(
+    businessId,
+    captainData?.name,
+  );
 
-    const { mutateAsync: confirmAlert, isPending: isAlertLoading } = useMutation({
-        mutationFn: async (payload: {
-            id: string;
-            comment: string;
-            waiterName: string;
-            settleModes: { _id: string; name: string; amount: number }[];
-            duesUserId?: string;
-        }) => {
-            const res = await apiRpc.payments[":pid"].order[":alertId"].$put({
-                param: { alertId: payload.id },
-                json: payload,
-            });
+  const { mutateAsync: settleTable, isPending: isSettling } = useMutation({
+    mutationFn: async (payload: {
+      tableId: string;
+      billId: string;
+      captainId: string;
+      settleModes: {
+        _id: string;
+        name: string;
+        amount: number;
+      }[];
+      split?: boolean;
+      duesUserId?: string;
+    }) => {
+      const response = await apiRpc.table.normal_settle.$post({
+        json: payload,
+      });
+      if (response.status === 401 || response.status === 403) {
+        setOpenErrorModal(true);
+        setError("You are not authorized to perform this action");
+        return {
+          err: true,
+          message: "You are not authorized to perform this action",
+        };
+      }
+      const res = await response.json();
+      return res;
+    },
+    onSuccess: (data) => {
+      if (data?.err) {
+        toast.error(data.message);
+        return;
+      }
+      if (!data?.err) {
+        toast.success("Table settled successfully!");
+        setSettleModes([]);
+        closeNormalSettle();
+        setOpenOrderModal(false);
+        setIsSplit(false);
+        setOpenDues(false);
+        setSettleModes([]);
+        setSaveDueUser(null);
+        navigate(`/${businessId}/alerts`);
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Something went wrong.");
+    },
+  });
 
-            if (res.status === 401 || res.status === 403) {
-                setOpenErrorModal(true);
-                setError("You are not authorized to perform this action");
-                return res.json();
-            }
-            if (res.status === 200 || res.status === 201) {
-                removeOnlineAlert(payload.id)
-                removeOnlineCount()
-                toast.success("Order confirmed successfully!");
-                setSettleModes([]);
-                setIsSplit(false);
-                closeNormalSettle();
-                setOpenOrderModal(false);
-                setClickViewMore(false);
-                setOpenDues(false);
-                setSettleModes([]);
-                setSaveDueUser(null)
-                navigate(`/${businessId}/alerts`);
-                return res.json();
-            }
-        },
-        onSuccess: (data) => {
-            if (data?.err) {
-                toast.error(data.message);
-                return
-            }
+  const { mutateAsync: confirmAlert, isPending: isAlertLoading } = useMutation({
+    mutationFn: async (payload: {
+      id: string;
+      comment: string;
+      waiterName: string;
+      settleModes: { _id: string; name: string; amount: number }[];
+      duesUserId?: string;
+    }) => {
+      const res = await apiRpc.payments[":pid"].order[":alertId"].$put({
+        param: { alertId: payload.id },
+        json: payload,
+      });
 
-        },
-        onError: (error: any) => {
-            toast.error(error?.message || "Something went wrong.");
-        },
-    });
+      if (res.status === 401 || res.status === 403) {
+        setOpenErrorModal(true);
+        setError("You are not authorized to perform this action");
+        return res.json();
+      }
+      if (res.status === 200 || res.status === 201) {
+        removeOnlineAlert(payload.id);
+        removeOnlineCount();
+        toast.success("Order confirmed successfully!");
+        setSettleModes([]);
+        setIsSplit(false);
+        closeNormalSettle();
+        setOpenOrderModal(false);
+        setClickViewMore(false);
+        setOpenDues(false);
+        setSettleModes([]);
+        setSaveDueUser(null);
+        navigate(`/${businessId}/alerts`);
+        return res.json();
+      }
+    },
+    onSuccess: (data) => {
+      if (data?.err) {
+        toast.error(data.message);
+        return;
+      }
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Something went wrong.");
+    },
+  });
 
-    const handleConfirm = async () => {
-        try {
-            if (settleModes.length === 0) {
-                toast.error("Please select at least one payment mode.");
-                return;
-            }
+  const handleConfirm = async () => {
+    try {
+      if (settleModes.length === 0) {
+        toast.error("Please select at least one payment mode.");
+        return;
+      }
 
-            // Validate total
-            const sum = settleModes.reduce((acc, item) => acc + item.amount, 0);
-            if (sum !== (alertData?.order_id?.total
-                ? alertData.order_id.total
-                : billData?.total ?? 0)) {
-                toast.error("Selected amounts must match the total bill.");
-                return;
-            }
+      // Validate total
+      const sum = settleModes.reduce((acc, item) => acc + item.amount, 0);
+      if (
+        sum !==
+        (alertData?.order_id?.total
+          ? alertData.order_id.total
+          : billData?.total ?? 0)
+      ) {
+        toast.error("Selected amounts must match the total bill.");
+        return;
+      }
 
-            const isMultiple = settleModes.length > 1;
+      const isMultiple = settleModes.length > 1;
 
-            const hasDuesMode = settleModes.some(
-                (mode) => mode.name.toLowerCase() === "dues"
-            );
-            const hasNpcMode = settleModes.some(
-                (mode) => mode.name.toLowerCase() === "npc"
-            );
+      const hasDuesMode = settleModes.some(
+        (mode) => mode.name.toLowerCase() === "dues",
+      );
+      const hasNpcMode = settleModes.some(
+        (mode) => mode.name.toLowerCase() === "npc",
+      );
 
-            if (alertData) {
-                const payload = {
-                    id: alertData._id,
-                    waiterName: captainData?.name,
-                    comment: isMultiple
-                        ? "Confirmed by waiter (split)."
-                        : "Confirmed by waiter (single).",
-                    settleModes,
-                }
+      if (alertData) {
+        const payload = {
+          id: alertData._id,
+          waiterName: captainData?.name,
+          comment: isMultiple
+            ? "Confirmed by waiter (split)."
+            : "Confirmed by waiter (single).",
+          settleModes,
+        };
 
-                if (hasDuesMode && saveDueUser?._id) {
-                    payload["duesUserId"] = saveDueUser._id;
-                }
-                if (hasNpcMode && saveDueUser?._id) {
-                    payload["npcUserId"] = saveDueUser?._id;
-                }
-                await confirmAlert(payload);
-            } else {
-                const payload = {
-                    tableId: selectedTable?._id || "",
-                    billId: billData?.billId || "",
-                    captainId: captainData?._id || "",
-                    settleModes,
-                    split: isMultiple,
-                };
-
-                // If there's a "dues" mode selected, append the duesUserId
-                if (hasDuesMode && saveDueUser?._id) {
-                    payload["duesUserId"] = saveDueUser._id;
-                }
-
-                if (hasNpcMode && saveDueUser?._id) {
-                    payload["npcUserId"] = saveDueUser?._id;
-                }
-
-                // Call the API
-                await settleTable(payload);
-            }
-        } catch (err) {
-            console.error(err);
-            toast.error("Something went wrong. Please try again.");
+        if (hasDuesMode && saveDueUser?._id) {
+          payload["duesUserId"] = saveDueUser._id;
         }
-    };
+        if (hasNpcMode && saveDueUser?._id) {
+          payload["npcUserId"] = saveDueUser?._id;
+        }
+        await confirmAlert(payload);
+      } else {
+        const payload = {
+          tableId: selectedTable?._id || "",
+          billId: billData?.billId || "",
+          captainId: captainData?._id || "",
+          settleModes,
+          split: isMultiple,
+        };
 
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-64">
-                <SpinnerMemo />
-            </div>
-        );
+        // If there's a "dues" mode selected, append the duesUserId
+        if (hasDuesMode && saveDueUser?._id) {
+          payload["duesUserId"] = saveDueUser._id;
+        }
+
+        if (hasNpcMode && saveDueUser?._id) {
+          payload["npcUserId"] = saveDueUser?._id;
+        }
+
+        // Call the API
+        await settleTable(payload);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong. Please try again.");
     }
+  };
 
-    return (
-        <section className="mx-auto">
-            <h2 className="flex items-center justify-between p-4 mb-2 text-2xl font-bold text-center">
-                <span>{isSplit ? "Split Payment" : "Select Payment Mode"}</span>
-                <span>₹{
-                    alertData?.order_id?.total
-                        ? alertData.order_id.total
-                        : billData?.total
-                }</span>
-            </h2>
+  const openNormalSettle = useCallback(async () => {
+    const really = window.confirm("Are you sure you want to confirm settle?");
+    if (!really) return;
+    const response = await confirmSettle({
+      businessId: businessId || "",
+      tableName: selectedTable?.name || "",
+    });
 
-            {/* =======================
+    if (response.status === 200 || response.status === 201) {
+      handleConfirm();
+    }
+  }, [confirmSettle, businessId, selectedTable?.name]);
+
+  if (isLoading || isConfirming) {
+    return <SpinnerMemo />;
+  }
+
+  return (
+    <section className="mx-auto">
+      <h2 className="flex items-center justify-between p-4 mb-2 text-2xl font-bold text-center">
+        <span>{isSplit ? "Split Payment" : "Select Payment Mode"}</span>
+        <span>
+          ₹
+          {alertData?.order_id?.total
+            ? alertData.order_id.total
+            : billData?.total}
+        </span>
+      </h2>
+
+      {/* =======================
           SINGLE MODE UI
       ======================== */}
-            {!isSplit && (
-                <SingleMode
-                    paymentModes={paymentMode || []}
-                    billData={
-                        alertData?.order_id?.total
-                            ? { total: Number(alertData.order_id.total) }
-                            : billData
-                    }
-                />)}
+      {!isSplit && (
+        <SingleMode
+          paymentModes={paymentMode || []}
+          billData={
+            alertData?.order_id?.total
+              ? { total: Number(alertData.order_id.total) }
+              : billData
+          }
+        />
+      )}
 
-            {/* =======================
+      {/* =======================
           SPLIT MODE UI
       ======================== */}
-            {isSplit && (
-                <MultipleModes paymentModes={paymentMode || []}
-                    billData={
-                        alertData?.order_id?.total
-                            ? { total: Number(alertData.order_id.total) }
-                            : billData
-                    }
-                />
-            )}
+      {isSplit && (
+        <MultipleModes
+          paymentModes={paymentMode || []}
+          billData={
+            alertData?.order_id?.total
+              ? { total: Number(alertData.order_id.total) }
+              : billData
+          }
+        />
+      )}
 
-            {/* =======================
+      {/* =======================
           BOTTOM BUTTONS
       ======================== */}
+      {!openDues ? (
+        <CommonBottomButton
+          fixed={true}
+          maxWidth="30rem"
+          buttons={[
             {
-                !openDues ? (
-                    <CommonBottomButton
-                        fixed={true}
-                        maxWidth="30rem"
-                        buttons={[
-                            {
-                                text: "Back",
-                                onClick: () => {
-                                    if (isSplit) {
-                                        setIsSplit(false);
-                                    } else {
-                                        closeNormalSettle();
-                                    }
-                                },
-                                className: "w-full rounded-md pl-3",
-                                isBackButton: true,
-                            },
-                            {
-                                text: isSplit ? "Normal" : "Split",
-                                onClick: () => {
-                                    setIsSplit(!isSplit);
-                                },
-                                className: "w-full rounded-md pl-3",
-                            },
-                            {
-                                text: "Confirm",
-                                onClick: async () => await handleConfirm(),
-                                className: "w-full rounded-md",
-                                disable: settleModes.length === 0,
-                                isLoading: isSettling || isAlertLoading,
-                            },
-                        ]}
-                    />
-                )
-                    : <CommonBottomButton
-                        fixed={true}
-                        maxWidth="30rem"
-                        buttons={[
-                            {
-                                text: "Back",
-                                onClick: () => {
-                                    setOpenDues(false);
-                                    setSettleModes([]);
-                                    setSaveDueUser(null)
-                                },
-                                className: "w-full rounded-md pl-3",
-                                isBackButton: true,
-                            },
-                            {
-                                text: "Confirm",
-                                onClick: async () => await handleConfirm(),
-                                className: "w-full rounded-md",
-                                disable: settleModes.length === 0,
-                                isLoading: isSettling || isAlertLoading,
-                            },
-                        ]}
-                    />}
-
-        </section>
-    );
+              text: "Back",
+              onClick: () => {
+                if (isSplit) {
+                  setIsSplit(false);
+                } else {
+                  closeNormalSettle();
+                }
+              },
+              className: "w-full rounded-md pl-3",
+              isBackButton: true,
+            },
+            {
+              text: isSplit ? "Normal" : "Split",
+              onClick: () => {
+                setIsSplit(!isSplit);
+              },
+              className: "w-full rounded-md pl-3",
+            },
+            {
+              text: "Confirm",
+              onClick: openNormalSettle,
+              className: "w-full rounded-md",
+              disable: settleModes.length === 0,
+              isLoading: isSettling || isAlertLoading,
+            },
+          ]}
+        />
+      ) : (
+        <CommonBottomButton
+          fixed={true}
+          maxWidth="30rem"
+          buttons={[
+            {
+              text: "Back",
+              onClick: () => {
+                setOpenDues(false);
+                setSettleModes([]);
+                setSaveDueUser(null);
+              },
+              className: "w-full rounded-md pl-3",
+              isBackButton: true,
+            },
+            {
+              text: "Confirm",
+              onClick: openNormalSettle,
+              className: "w-full rounded-md",
+              disable: settleModes.length === 0,
+              isLoading: isSettling || isAlertLoading,
+            },
+          ]}
+        />
+      )}
+    </section>
+  );
 };
 
 const NormalSettle = memo(MemoNormalSettle);

@@ -1,19 +1,14 @@
-"use client";
-
 import { memo, useCallback, useState } from "react";
 import { useOrderStore } from "@/components/store/useOrderData";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
   ArrowRight,
-  AlertTriangle,
-  ShoppingBag,
-  XCircle,
-  Menu,
+  AlertTriangle, XCircle
 } from "lucide-react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import CommonBottomButton from "../bottomButton";
 import { useScreenSize } from "@/hooks/useScreenSize";
-import { BiDish, BiFoodMenu, BiRupee } from "react-icons/bi";
+import { BiDish, BiRupee } from "react-icons/bi";
 
 const MemoBillWarning = () => {
   const screenSize = useScreenSize();

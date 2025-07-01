@@ -38,6 +38,12 @@ interface OrderState {
   showMoreOption: boolean;
   setShowMoreOption: (show: boolean) => void;
 
+  showEBill: boolean;
+  setShowEBill: (show: boolean) => void;
+
+  normalSettle: boolean;
+  setNormalSettle: (open: boolean) => void;
+
   transferTable: TransferTable;
   setTransferTable: (table: TransferTable) => void;
 
@@ -112,6 +118,12 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   openDues: false,
   setOpenDues: (open) => set({ openDues: open }),
+
+  normalSettle: false,
+  setNormalSettle: (open) => set({ normalSettle: open }),
+
+  showEBill: false,
+  setShowEBill: (show) => set({ showEBill: show }),
 
   showMoreOption: false,
   setShowMoreOption: (show) => set({ showMoreOption: show }),

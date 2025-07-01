@@ -13,6 +13,7 @@ import {
   Clock,
   AlertCircle,
   AlignCenter,
+  ReceiptText,
 } from "lucide-react";
 import SpinnerMemo from "@/components/atoms/loadingSpinner";
 import { MdTableBar } from "react-icons/md";
@@ -29,7 +30,7 @@ import {
 import { useScreenSize } from "@/hooks/useScreenSize";
 import BottomPopUp from "../universalPopup";
 import QrCodePreview from "./qrCode";
-import Normalsettle from "./normalsettle";
+import NormalSettle from "./normalsettle";
 import AddCoinz from "./addCoinz";
 import { IoClose } from "react-icons/io5";
 import useBusinessData from "@/components/store/useBusinessData";
@@ -43,26 +44,28 @@ import {
   useReprintBill,
 } from "@/components/hooks/useBill";
 import { BiSync } from "react-icons/bi";
+import EBill from "./ebill.tsx";
 
 const MemoGetBill = () => {
   const { businessId } = useParams();
   const selectedTable = useOrderStore((s) => s.selectedTable);
-  // const { openAddCoinz, setOpenAddCoinz, setOpenOrderModal } = useOrderStore();
   const openAddCoinz = useOrderStore((s) => s.openAddCoinz);
   const setOpenAddCoinz = useOrderStore((s) => s.setOpenAddCoinz);
   const setOpenOrderModal = useOrderStore((s) => s.setOpenOrderModal);
   const showMoreOption = useOrderStore((s) => s.showMoreOption);
   const setShowMoreOption = useOrderStore((s) => s.setShowMoreOption);
+  const normalSettle = useOrderStore((s) => s.normalSettle);
+  const setNormalSettle = useOrderStore((s) => s.setNormalSettle);
+  const showEBill = useOrderStore((s) => s.showEBill);
+  const setShowEBill = useOrderStore((s) => s.setShowEBill);
   const screenSize = useScreenSize();
   const { captainData: userData } = useHiClientZ();
-  const { confirmSettle } = useConfirmSettle();
   const { reprintBill, isPrinting } = useReprintBill();
   const { removingCouponLoader, removingCoupon } = useRemoveCoupon();
   const { removingCoinzLoader, removingCoinz } = useRemoveCoinz();
   const [qrBillId, setQrBillId] = useState<string | null>(null);
   const [showqr, setShowqr] = useState<boolean>(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
-  const [normalSettle, setNormalSettle] = useState<boolean>(false);
   const { removingServiceChargeLoader, removingServiceCharge } =
     useRemoveServiceCharge();
 
@@ -83,18 +86,8 @@ const MemoGetBill = () => {
   };
 
   const openNormalSettle = useCallback(async () => {
-    const really = window.confirm("Are you sure you want to confirm settle?");
-    if (!really) return;
-    const response = await confirmSettle({
-      businessId: businessId || "",
-      tableName: selectedTable?.name || "",
-    });
-
-    if (response.status === 200 || response.status === 201) {
-      setNormalSettle(true);
-    }
-    //
-  }, [confirmSettle, businessId, selectedTable?.name]);
+    setNormalSettle(true);
+  }, []);
 
   const closeNormalSettle = () => {
     setNormalSettle(false);
@@ -288,8 +281,7 @@ const MemoGetBill = () => {
     removingServiceChargeLoader ||
     removingCouponLoader ||
     removingCoinzLoader ||
-    isPrinting ||
-    isConfirming
+    isPrinting 
   ) {
     return <SpinnerMemo />;
   }
@@ -333,10 +325,10 @@ const MemoGetBill = () => {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => setShowMoreOption(true)}
+                  onClick={() => setShowEBill(true)}
                 >
-                  <AlignCenter />
-                  More options
+                  <ReceiptText />
+                  E-Bill
                 </Button>
               </section>
             </CardTitle>
@@ -517,6 +509,18 @@ const MemoGetBill = () => {
         </BottomPopUp>
       )}
 
+      {showEBill && (
+        <BottomPopUp
+          width="w-[30rem]"
+          hide
+          rightTopBack
+          show={showEBill}
+          onClose={() => setShowEBill(false)}
+        >
+          <EBill />
+        </BottomPopUp>
+      )}
+
       {showqr && (
         <BottomPopUp
           width="w-[30rem]"
@@ -540,7 +544,7 @@ const MemoGetBill = () => {
           show={normalSettle}
           onClose={() => setNormalSettle(false)}
         >
-          <Normalsettle closeNormalSettle={closeNormalSettle} data={billData} />
+          <NormalSettle closeNormalSettle={closeNormalSettle} data={billData} />
         </BottomPopUp>
       )}
 

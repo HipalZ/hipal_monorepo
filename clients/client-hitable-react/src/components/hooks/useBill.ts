@@ -479,7 +479,7 @@ export const useConfirmSettle = () => {
     },
   });
   return {
-    isPending: isConfirming,
+    isConfirming,
     confirmSettle,
   };
 };
