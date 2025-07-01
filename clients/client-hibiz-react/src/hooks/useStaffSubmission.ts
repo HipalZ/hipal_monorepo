@@ -36,7 +36,7 @@ export const useStaffSubmission = () => {
           phone: personalInfo.phone,
           ...(personalInfo.nickname && { nickName: personalInfo.nickname }),
           role: selectedRole?.role || "FRONT_OFFICE",
-          services: selectedServices.map((service) => service._id),
+          serviceIds: selectedServices.map((service) => service._id),
           businessId: businessId as string,
           staffId: editStaffId || "",
         };
@@ -48,7 +48,7 @@ export const useStaffSubmission = () => {
           password: personalInfo.password,
           ...(personalInfo.nickname && { nickName: personalInfo.nickname }),
           role: selectedRole?.role || "FRONT_OFFICE",
-          services: selectedServices.map((service) => service._id),
+          serviceIds: selectedServices.map((service) => service._id),
           businessId: businessId as string,
         };
 
