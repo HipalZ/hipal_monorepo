@@ -23,11 +23,13 @@ const taxRouter = new Hono()
 
     const taxName = requestData.name.trim().toLowerCase();
 
-    const rateInName = extractGstRate(taxName);
-    if (rateInName !== requestData.value) {
-      throw new Error(
-        `GST mismatch: name indicates ${rateInName}%, but payload has ${requestData.gst}%`,
-      );
+    if (taxName.includes("gst")) {
+      const rateInName = extractGstRate(taxName);
+      if (rateInName !== requestData.value) {
+        throw new Error(
+          `GST mismatch: name indicates ${rateInName}%, but payload has ${requestData.value}%`,
+        );
+      }
     }
 
     const existingTax = await Tax.findOne({
@@ -157,6 +159,20 @@ const taxRouter = new Hono()
     const requestData = await c.req.json();
 
     const { taxId, name, value, menuId } = requestData;
+
+    const findTax = await Tax.findById(taxId);
+    if (!findTax) {
+      return respond(c, "Tax not found", true, 404, {});
+    }
+
+    if (findTax.name.includes("gst")) {
+      const rateInName = extractGstRate(findTax.name);
+      if (rateInName !== value) {
+        throw new Error(
+          `GST mismatch: name indicates ${rateInName}%, but payload has ${value}%`,
+        );
+      }
+    }
 
     const tax = await Tax.findByIdAndUpdate(
       taxId,

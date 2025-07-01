@@ -420,6 +420,7 @@ const tableRouter = new Hono()
               discount: tableSession?.discount,
               couponDiscount: tableSession?.couponDiscount,
               billId: tableSession?._id.toString(),
+              billItems: tableSession?.items || [],
             },
           ],
           { session },

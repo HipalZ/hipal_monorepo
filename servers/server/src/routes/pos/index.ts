@@ -506,7 +506,7 @@ const posRouter = new Hono()
           discountAppliedOn: tableSession.discountAppliedOn,
           reasonOfDiscount: tableSession.reasonOfDiscount,
           reasonOfServiceCharge: tableSession.reasonOfServiceCharge,
-          items: tableSession.items,
+          billItems: tableSession.items,
           subTotal: tableSession.subTotal,
           gst: tableSession.gst,
           discount: tableSession.discount,

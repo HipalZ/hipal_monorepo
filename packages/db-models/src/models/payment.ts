@@ -224,6 +224,11 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: Number,
       default: 0,
     },
+    billItems: {
+      type: [Object],
+      required: false,
+      default: [],
+    },
   },
 
   { timestamps: true },
