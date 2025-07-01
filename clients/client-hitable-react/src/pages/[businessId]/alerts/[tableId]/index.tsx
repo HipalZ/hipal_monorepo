@@ -183,7 +183,11 @@ const MemoTablePos = () => {
             show={openOrderModal}
             onClose={closeOrderModalHandler}
           >
-            {modalType === "bill" ? <TableHeader /> : <OrdersHeader width="48rem" />}
+            {modalType === "bill" ? (
+              <TableHeader width="48rem" />
+            ) : (
+              <OrdersHeader width="48rem" />
+            )}
             <ScrollArea className="lg:h-[100dvh] min-h-[100dvh]">
               {modalType === "guest" && (
                 <motion.div
@@ -253,7 +257,6 @@ const MemoTablePos = () => {
                   <AlertCount />
                 </motion.div>
               )}
-             
             </ScrollArea>
           </BottomPopUp>
           {transferModal && (

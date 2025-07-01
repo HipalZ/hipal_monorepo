@@ -765,7 +765,7 @@ const hotelAlertRouter = new Hono()
                       },
                       {
                         type: "text",
-                        text: `http://localhost:3000/${businessData.customLink}/hotel/chat?room=${roomData.name}&id=${userData._id}`,
+                        text: `https://hipal-test.hipalz.com/${businessData.customLink}/hotel/chat?room=${roomData.name}&id=${userData._id}`,
                       },
                       {
                         type: "text",
