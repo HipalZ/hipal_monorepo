@@ -103,8 +103,8 @@ export const usePayments = () => {
 
   // initialTotal for sending to razorpay
   const initialTotal = useMemo(() => {
-    return outletInfo?.isPosEnabled ? billData?.initialTotal : billValue;
-  }, [outletInfo?.isPosEnabled, billData?.initialTotal, billValue]);
+    return outletInfo?.isPosEnabled ? billData?.total : billValue;
+  }, [outletInfo?.isPosEnabled, billData?.total, billValue]);
 
   const { tableName, setTableName } = useTableData();
   // payment response
