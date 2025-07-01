@@ -9,11 +9,26 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { respond } from "../../utils/response";
 //
+
+function extractGstRate(name: string): number {
+  const match = name.match(/\((\d+)%\)/);
+  if (!match) {
+    throw new Error(`Could not parse GST rate from "${name}"`);
+  }
+  return Number(match[1]);
+}
 const taxRouter = new Hono()
   .post("/", zValidator("json", TaxTypeSchema), async (c) => {
     const requestData = await c.req.json();
 
     const taxName = requestData.name.trim().toLowerCase();
+
+    const rateInName = extractGstRate(taxName);
+    if (rateInName !== requestData.value) {
+      throw new Error(
+        `GST mismatch: name indicates ${rateInName}%, but payload has ${requestData.gst}%`,
+      );
+    }
 
     const existingTax = await Tax.findOne({
       name: taxName,

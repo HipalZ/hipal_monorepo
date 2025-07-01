@@ -321,10 +321,8 @@ const posRouter = new Hono()
         ) {
           newGst = (tableSession.gstPercentage / 100) * newSubTotal;
           newGst -= tableSession.newDishGst;
-          console.log("yaha", newGst);
         } else if (tableSession.discountAppliedBy) {
           newGst = (tableSession.gstPercentage / 100) * newSubTotal;
-          console.log("yaha2", newGst);
         } else {
           newGst = totalGst;
         }
@@ -344,8 +342,6 @@ const posRouter = new Hono()
           tableSession.otherTax,
           tableSession.tips,
         );
-
-        console.log("newGst", newGst);
 
         // Update table session with new values
         tableSession = await updateTableSession(
