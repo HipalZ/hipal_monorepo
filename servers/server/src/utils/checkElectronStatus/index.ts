@@ -7,7 +7,7 @@ import axios from "axios";
 export async function checkElectronJsStatus() {
   try {
     const { data } = await axios.get(
-      "https://ws.test.hipalz.com/check_eletronjs_status",
+      "http://localhost:3002/check_eletronjs_status",
     );
     // data = { event: string, active: boolean }
     return Boolean(data.active);

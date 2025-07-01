@@ -36,8 +36,10 @@ import {
   calculateFinalTotal,
   calculateGst,
   calculateTotalDiscount,
+  groupItemsByGST,
   updateTableSession,
 } from "../../utils/bill";
+import { Item } from "../../utils/billTypes";
 import { checkElectronJsStatus } from "../../utils/checkElectronStatus";
 import {
   calculateCartBill,
@@ -247,9 +249,11 @@ const posRouter = new Hono()
 
         const cartItems = kotOrders.flatMap((order) =>
           order.cart.filter((item) => !item.isDeleted),
-        );
+        ) as Item[];
 
         const { totalDishTotal, totalGst } = calculateBillTotals(kotOrders);
+
+        const billItems = groupItemsByGST(cartItems);
 
         if (!tableSession.billGeneratedBy) {
           const items = billPrintItems(cartItems);
@@ -292,7 +296,6 @@ const posRouter = new Hono()
 
         const serviceChargePercentage = serviceCharge?.value || 0;
 
-        // Calculate base amount (totalDishTotal minus discounts)
         const baseAmount =
           totalDishTotal -
           tableSession.claimedCoins -
@@ -318,8 +321,10 @@ const posRouter = new Hono()
         ) {
           newGst = (tableSession.gstPercentage / 100) * newSubTotal;
           newGst -= tableSession.newDishGst;
+          console.log("yaha", newGst);
         } else if (tableSession.discountAppliedBy) {
           newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+          console.log("yaha2", newGst);
         } else {
           newGst = totalGst;
         }
@@ -339,6 +344,8 @@ const posRouter = new Hono()
           tableSession.otherTax,
           tableSession.tips,
         );
+
+        console.log("newGst", newGst);
 
         // Update table session with new values
         tableSession = await updateTableSession(
@@ -376,7 +383,7 @@ const posRouter = new Hono()
               discountAppliedBy: discountAppliedBy,
               discountRemovedBy: discountRemovedBy,
 
-              items: cartItems,
+              billItems,
               subTotal: totalDishTotal,
               gst: tableSession.gst,
               discount: tableSession.discount,

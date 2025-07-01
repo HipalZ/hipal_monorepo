@@ -1,5 +1,6 @@
 import { UserSession } from "@hi/db-models";
 import type { ClientSession } from "mongoose";
+import type { BillGroup, Item } from "../billTypes";
 
 // Reference to a business populated with name
 export interface BusinessRef {
@@ -122,7 +123,7 @@ function calculateBillTotals(kots: KotOrderTypes[]): {
         totalDishTotal += lineTotal;
 
         // Determine GST percentage (prefer gst field)
-        const gstPercent = item.dish.gst ?? item.dish.tax ?? 0;
+        const gstPercent = item.dish.gst || 0;
         totalGst += (lineTotal * gstPercent) / 100;
       }
     }
@@ -249,6 +250,50 @@ const billPrintItems = (cartItems: CartItem[]) => {
     };
   });
 };
+
+///
+
+export function groupItemsByGST(items: Item[]): BillGroup[] {
+  const map = items.reduce<Record<number, BillGroup>>((acc, item) => {
+    const rate = item.dish.gst ?? 0;
+
+    if (!acc[rate]) {
+      acc[rate] = {
+        gst: rate,
+        subTotal: 0,
+        totalGst: 0,
+        items: [],
+      };
+    }
+
+    // Pick the right base price
+    const basePrice = item.portion?.price ?? item.dish.price;
+
+    // Compute total extras per unit
+    const extrasPerUnit = item.extras.reduce(
+      (sum, ex) => sum + ex.price * ex.quantity,
+      0,
+    );
+
+    // Net total for this item (without tax)
+    const netTotal = (basePrice + extrasPerUnit) * item.quantity;
+
+    // Accumulate
+    acc[rate].subTotal += netTotal;
+    acc[rate].totalGst += netTotal * (rate / 100);
+    acc[rate].items.push(item);
+
+    return acc;
+  }, {});
+
+  // Round to two decimal places
+  return Object.values(map).map((group) => ({
+    gst: group.gst,
+    subTotal: Number(group.subTotal.toFixed(2)),
+    totalGst: Number(group.totalGst.toFixed(2)),
+    items: group.items,
+  }));
+}
 
 export {
   billPrintItems,
