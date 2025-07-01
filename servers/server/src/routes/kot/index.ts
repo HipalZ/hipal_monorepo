@@ -13,7 +13,11 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { calculateCartBill } from "../../utils/helper";
-import { sendKOTPrintEvent, sendReKOTPrintEvent } from "../../utils/kot";
+import {
+  deleteKOTPrintEvent,
+  sendKOTPrintEvent,
+  sendReKOTPrintEvent,
+} from "../../utils/kot";
 import { respond } from "../../utils/response";
 
 const kotRouter = new Hono()
@@ -310,18 +314,18 @@ const kotRouter = new Hono()
             session,
           );
 
-          // deleteKOTPrintEvent({
-          //   tableName: kotDoc.tableName,
-          //   businessId: kotDoc.businessId,
-          //   customerName: kotDoc.name,
-          //   customerPhone: kotDoc.phone,
-          //   cart: deletedItems.map((it) => ({ ...it, quantity: it.quantity })),
-          //   deletedBy: user.name,
-          //   acceptedBy: captain?.name || user.name,
-          //   kotId: kotId.toString(),
-          //   date: Date.now(),
-          //   posRestName: pos?.restName,
-          // });
+          deleteKOTPrintEvent({
+            tableName: kotDoc.tableName,
+            businessId: kotDoc.businessId,
+            customerName: kotDoc.name,
+            customerPhone: kotDoc.phone,
+            cart: deletedItems.map((it) => ({ ...it, quantity: it.quantity })),
+            deletedBy: user.name,
+            acceptedBy: captain?.name || user.name,
+            kotId: kotId.toString(),
+            date: Date.now(),
+            posRestName: pos?.restName,
+          });
         }
 
         return respond(

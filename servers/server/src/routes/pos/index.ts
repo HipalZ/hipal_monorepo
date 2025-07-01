@@ -1473,17 +1473,17 @@ const posRouter = new Hono()
               session,
             );
 
-            // sendKOTPrintEvent({
-            //   tableName,
-            //   businessId,
-            //   customerName: userData.name as string,
-            //   customerPhone: userData.phone as string,
-            //   cart: internalCart,
-            //   acceptedBy: "direct_user",
-            //   kotId: result?.data?.kotId?.toString() ?? "",
-            //   date: Date.now(),
-            //   posRestName: posConfigData?.restName,
-            // });
+            sendKOTPrintEvent({
+              tableName,
+              businessId,
+              customerName: userData.name as string,
+              customerPhone: userData.phone as string,
+              cart: internalCart,
+              acceptedBy: "direct_user",
+              kotId: result?.data?.kotId?.toString() ?? "",
+              date: Date.now(),
+              posRestName: posConfigData?.restName,
+            });
 
             return c.json(result, 200);
           }
