@@ -38,6 +38,7 @@ import {
   calculateTotalDiscount,
   updateTableSession,
 } from "../../utils/bill";
+import { checkElectronJsStatus } from "../../utils/checkElectronStatus";
 import {
   calculateCartBill,
   convertToPetpoojaCart,
@@ -1357,6 +1358,11 @@ const posRouter = new Hono()
           return respond(c, "POS not found", true, 404, {});
         }
 
+        const isActive = await checkElectronJsStatus();
+        if (!isActive && posConfigData.printKot) {
+          return respond(c, "Kot-printer server is not active", true, 400, {});
+        }
+
         const registrationToken = await DeviceToken.find({
           businessId: businessId,
         });
@@ -1697,6 +1703,11 @@ const posRouter = new Hono()
           businessId: businessId,
         });
 
+        const isActive = await checkElectronJsStatus();
+        if (!isActive && pos.printKot) {
+          return respond(c, "kot-printer server is not active", true, 400, {});
+        }
+
         const tenDigitCode = generateTenDigitCode();
         if (!tableSession) {
           const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
@@ -1753,17 +1764,17 @@ const posRouter = new Hono()
             },
           );
 
-          // sendKOTPrintEvent({
-          //   tableName,
-          //   businessId,
-          //   customerName: user.name as string,
-          //   customerPhone: user.phone as string,
-          //   cart: internalCart,
-          //   acceptedBy: user.name as string,
-          //   kotId: res?.kotId?.toString() ?? "",
-          //   date: Date.now(),
-          //   posRestName: pos?.restName,
-          // });
+          sendKOTPrintEvent({
+            tableName,
+            businessId,
+            customerName: user.name as string,
+            customerPhone: user.phone as string,
+            cart: internalCart,
+            acceptedBy: user.name as string,
+            kotId: res?.kotId?.toString() ?? "",
+            date: Date.now(),
+            posRestName: pos?.restName,
+          });
 
           return respond(c, "Data fetched successfully", false, 200, {
             success: true,
@@ -1807,17 +1818,17 @@ const posRouter = new Hono()
           },
         );
 
-        // sendKOTPrintEvent({
-        //   tableName,
-        //   businessId,
-        //   customerName: user.name as string,
-        //   customerPhone: user.phone as string,
-        //   cart: internalCart,
-        //   acceptedBy: user.name as string,
-        //   kotId: res?.kotId?.toString() ?? "",
-        //   date: Date.now(),
-        //   posRestName: pos?.restName,
-        // });
+        sendKOTPrintEvent({
+          tableName,
+          businessId,
+          customerName: user.name as string,
+          customerPhone: user.phone as string,
+          cart: internalCart,
+          acceptedBy: user.name as string,
+          kotId: res?.kotId?.toString() ?? "",
+          date: Date.now(),
+          posRestName: pos?.restName,
+        });
         return respond(c, "Data fetched successfully", false, 200, {
           success: true,
           hiCode: tableSession.hiCode,
@@ -3038,6 +3049,7 @@ const posRouter = new Hono()
           tableName,
           settled: false,
           businessId,
+          isSync: false,
         }).lean()) as KotOrderTypes[];
 
         const cartItems = kotOrders.flatMap((order) =>
@@ -3093,6 +3105,22 @@ const posRouter = new Hono()
         if (response.data.success === "0") {
           throw new Error("Error in requesting bill");
         }
+
+        await KotOrder.updateMany(
+          {
+            tableName,
+            settled: false,
+            businessId,
+          },
+          {
+            $set: {
+              isSync: true,
+            },
+          },
+          {
+            session,
+          },
+        );
 
         return respond(c, "Success", true, 200, {});
       });

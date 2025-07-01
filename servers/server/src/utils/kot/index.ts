@@ -84,6 +84,45 @@ export const sendKOTPrintEvent = ({
     });
 };
 
+export const sendReKOTPrintEvent = ({
+  tableName,
+  businessId,
+  customerName,
+  customerPhone,
+  cart,
+  acceptedBy,
+  kotId,
+  date,
+  posRestName,
+}: KOTPayload): void => {
+  axios
+    .post(
+      wsUrl,
+      {
+        event: `${businessId}_re_kot_print`,
+        payload: {
+          tableName,
+          businessId,
+          customerName,
+          customerPhone,
+          cart,
+          acceptedBy,
+          kotId,
+          date,
+          businessName: posRestName,
+        },
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    )
+    .catch((error) => {
+      console.error("KOT print event failed:", error);
+    });
+};
+
 export const deleteKOTPrintEvent = ({
   tableName,
   businessId,

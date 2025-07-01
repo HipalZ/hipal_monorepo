@@ -13,7 +13,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { calculateCartBill } from "../../utils/helper";
-import { sendKOTPrintEvent } from "../../utils/kot";
+import { sendKOTPrintEvent, sendReKOTPrintEvent } from "../../utils/kot";
 import { respond } from "../../utils/response";
 
 const kotRouter = new Hono()
@@ -137,7 +137,7 @@ const kotRouter = new Hono()
 
         const captainInfo = await User.findById(kot.acceptedBy);
 
-        sendKOTPrintEvent({
+        sendReKOTPrintEvent({
           tableName: kot?.tableName ?? "",
           businessId: kot.businessId._id.toString(),
           customerName: kot.name,

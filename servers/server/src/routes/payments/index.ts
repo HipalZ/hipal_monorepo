@@ -465,6 +465,7 @@ const paymentsRouter = new Hono()
             tableName,
             settled: false,
             businessId,
+            isSync: false,
           }).lean()) as KotOrderTypes[];
 
           const cartItems = kotOrders.flatMap((order) =>
@@ -520,6 +521,22 @@ const paymentsRouter = new Hono()
           if (response.data.success === "0") {
             throw new Error("Error in requesting bill");
           }
+
+          await KotOrder.updateMany(
+            {
+              tableName,
+              settled: false,
+              businessId,
+            },
+            {
+              $set: {
+                isSync: true,
+              },
+            },
+            {
+              session,
+            },
+          );
         }
 
         const client = await razorpayWrapper.getClient(merchantId);
@@ -666,6 +683,7 @@ const paymentsRouter = new Hono()
             tableName,
             settled: false,
             businessId,
+            isSync: false,
           }).lean()) as KotOrderTypes[];
 
           const cartItems = kotOrders.flatMap((order) =>
@@ -721,6 +739,22 @@ const paymentsRouter = new Hono()
           if (response.data.success === "0") {
             throw new Error("Error in requesting bill");
           }
+
+          await KotOrder.updateMany(
+            {
+              tableName,
+              settled: false,
+              businessId,
+            },
+            {
+              $set: {
+                isSync: true,
+              },
+            },
+            {
+              session,
+            },
+          );
         }
 
         const saveOrder = await Order.create(

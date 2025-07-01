@@ -47,6 +47,7 @@ export const kotSchema = z.object({
   message: z.string().max(300).optional(),
   bill: z.boolean().default(false).optional(),
   isDeleted: z.boolean().default(false).optional(),
+  isSync: z.boolean().default(false).optional(),
 });
 
 export type KotOrderType = z.infer<typeof kotSchema>;

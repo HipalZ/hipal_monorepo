@@ -141,6 +141,10 @@ const KotOrderSchema = new Schema<KotOrderType>(
       type: Boolean,
       default: false,
     },
+    isSync: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
