@@ -12,8 +12,6 @@ export const useGetBill = () => {
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const { captainData: userData } = useHiClientZ();
 
-  const queryClient = useQueryClient();
-
   const getTableBill = async () => {
     const response = await apiRpc.pos.get_bill.$get({
       query: {

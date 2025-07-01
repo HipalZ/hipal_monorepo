@@ -441,42 +441,83 @@ export interface ICustomerInformation {
 }
 
 export interface IBillData {
-  tips: number;
-  initialTotal: number;
-  claimedCoins: number;
-  billing_user_name: string;
-  serviceCharge: number;
-  discount: number;
-  couponDiscount: number;
-  discountAppliedBy: boolean;
-  discountRemovedBy: boolean;
-  gst: number;
-  reasonOfDiscount: string;
-  reasonOfServiceCharge: string;
-  serviceChargeAppliedBy: "";
-  serviceChargeRemovedBy: "";
-  tax: number;
-  total: number;
-  customerPhone: string;
-  customerName: string;
-  tableName: string;
-  subTotal: number;
-  billId: string;
-  _id: string;
-  items: Array<{
-    dish: {
-      name: string;
-      price: number;
-      quantity: number;
-    };
-    id: string;
-    _id: string;
-    extras: Array<{
-      name: string;
-      price: number;
-      quantity: number;
-    }>;
-  }>;
+  tips: number
+  claimedCoins: number
+  serviceCharge: number
+  discount: number
+  couponDiscount: number
+  discountAppliedBy: string
+  discountRemovedBy: string
+  gst: number
+  reasonOfDiscount: string
+  reasonOfServiceCharge: string
+  serviceChargeAppliedBy: string
+  serviceChargeRemovedBy: string
+  total: number
+  customerPhone: string
+  customerName: string
+  tableName: string
+  subTotal: number
+  billId: string
+  _id?: string
+  otherTax: number
+  discountAppliedOn?: string
+  couponId?: string
+  billItems: Array<{
+    gst: number
+    subTotal: number
+    totalGst: number
+    items: Array<{
+      dish: {
+        _id: string
+        name: string
+        price: number
+        businessId: string
+        posDishId: string
+        description: string
+        dishTypes: string[]
+        ignoreDiscount: string
+        ignoreTax: string
+        images: string[]
+        isDeleted: boolean
+        menuId: string
+        portions: Array<{
+          name: string
+          price: number
+          default: boolean
+          portionTypes: string[]
+          _id: string
+        }>
+        pos: boolean
+        posTax: string
+        rank: number
+        tags: string[]
+        visibility: boolean
+        active: boolean
+        kitchenId?: string
+        tax: number
+        gst: number
+        instruction?: string
+      }
+      id: string
+      _id: string
+      portion: {
+        name: string
+        price: number
+        default: boolean
+        portionTypes: string[]
+        _id: string
+      } | null
+      extras: Array<{
+        id: string
+        name: string
+        price: number
+        quantity: number
+      }>
+      quantity: number
+      isDeleted: boolean
+    }>
+  }>
 }
 
 export interface IUnsettleTables {
