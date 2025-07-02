@@ -1,5 +1,5 @@
 import axios from "axios";
-const wsUrl = "http://localhost:3002";
+const wsUrl = "https://ws.test.hipalz.com";
 interface KOTPayload {
   tableName: string;
   businessId: string;

@@ -30,7 +30,6 @@ import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import type { KotOrderTypes } from "../../utils/bill";
 import {
-  billPrintItems,
   calculateBillDishIds,
   calculateBillTotals,
   calculateFinalTotal,
@@ -39,7 +38,7 @@ import {
   groupItemsByGST,
   updateTableSession,
 } from "../../utils/bill";
-import { Item } from "../../utils/billTypes";
+import type { Item } from "../../utils/billTypes";
 import { checkElectronJsStatus } from "../../utils/checkElectronStatus";
 import {
   calculateCartBill,
@@ -256,14 +255,12 @@ const posRouter = new Hono()
         const billItems = groupItemsByGST(cartItems);
 
         if (!tableSession.billGeneratedBy) {
-          const items = billPrintItems(cartItems);
-
           sendBillPrintEvent({
             tableName: tableName,
             businessId: businessId,
             customerName: kotOrders[0].name,
             customerPhone: kotOrders[0].phone,
-            items: items,
+            items: billItems,
             posRestName: businessPosConfig.restName,
             generatedBy: tableSession?.billGeneratedBy || generatedBy,
             date: Date.now(),
@@ -2371,16 +2368,16 @@ const posRouter = new Hono()
 
         const cartItems = KotOrders.flatMap((order) =>
           order.cart.filter((item) => !item.isDeleted),
-        );
+        ) as Item[];
 
-        const items = billPrintItems(cartItems);
+        const billItems = groupItemsByGST(cartItems);
 
         sendBillPrintEvent({
           tableName: tableName,
           businessId: businessId,
           customerName: KotOrders[0].name,
           customerPhone: KotOrders[0].phone,
-          items: items,
+          items: billItems,
           posRestName: businessPosConfig.restName,
           generatedBy: tableSession?.billGeneratedBy || generatedBy,
           date: Date.now(),
@@ -2395,9 +2392,7 @@ const posRouter = new Hono()
           couponDiscount: tableSession?.couponDiscount || 0,
         });
 
-        return respond(c, "sucess", true, 200, {
-          items,
-        });
+        return respond(c, "sucess", true, 200, {});
       });
     },
   )
