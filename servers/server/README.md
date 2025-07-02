@@ -17,4 +17,4 @@ open http://localhost:3000
 // collapse menu
 ````
 
-WABA ID
+WABA ID templates
