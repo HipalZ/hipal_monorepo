@@ -111,7 +111,6 @@ const Room = async ({
           hideChat
           centerText
           showBackButton
-          businessName={business?.name}
         />
         <ResponsiveImage
           imageUrl={business?.endBannerUrl}
