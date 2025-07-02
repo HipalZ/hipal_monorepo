@@ -2314,7 +2314,7 @@ const whatsappRouter = new Hono()
                   to: from,
                   type: "template",
                   template: {
-                    name: "test_welcome_message",
+                    name: "fi_welcoming_template",
                     language: { code: "en" },
                     components: [
                       {
