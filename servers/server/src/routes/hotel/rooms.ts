@@ -770,7 +770,7 @@ const roomRouter = new Hono()
               type: "template",
               template: {
                 name: "test_checkout_template",
-                language: { code: "en_GB" },
+                language: { code: "en" },
                 components: [
                   {
                     type: "body",
