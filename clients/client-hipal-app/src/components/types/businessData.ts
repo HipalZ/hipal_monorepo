@@ -516,6 +516,7 @@ export interface BusinessDetails {
   address: string;
   avgRating: number;
   logo: string;
+  menuId: IMenuLayout;
 }
 
 export interface GoogleReview {

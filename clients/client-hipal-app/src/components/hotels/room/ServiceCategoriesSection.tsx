@@ -6,12 +6,15 @@ import bell from "@/assets/hotel/bell.png";
 import foodDome from "@/assets/hotel/food dome.png";
 import housekeeping from "@/assets/hotel/housekeeping.png";
 import waterBottle from "@/assets/hotel/waterbottle.png";
+import type { IMenuLayout } from "@/components/types/businessData";
 interface ServiceCategoriesSectionProps {
   businessId: string;
+  menuId: IMenuLayout;
 }
 
 export default function ServiceCategoriesSection({
   businessId,
+  menuId,
 }: ServiceCategoriesSectionProps) {
   const { categoriesLoading, categoriesData } =
     useGetServiceCategories(businessId);
@@ -111,6 +114,7 @@ export default function ServiceCategoriesSection({
                     ] || "",
                 }}
                 businessId={businessId}
+                menuId={menuId}
               />
             </div>
           ))}

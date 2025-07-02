@@ -153,7 +153,10 @@ const page = async ({
         />
 
         <section className="p-4">
-          <ServiceCategoriesSection businessId={businessData.businessId} />
+          <ServiceCategoriesSection
+            menuId={businessData?.menuId}
+            businessId={businessData.businessId}
+          />
         </section>
         <ChatCardSection />
         <CheckOutRequest

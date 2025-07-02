@@ -24,6 +24,7 @@ import { toast } from "react-toastify";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import dynamic from "next/dynamic";
 import { useCartStore } from "@/components/store/useCartStore";
+import type { IMenuLayout } from "@/components/types/businessData";
 
 // Lazy-loaded components for better tree-shaking
 const AlertCircle = dynamic(
@@ -48,6 +49,7 @@ interface ServiceCategoryCardProps {
   category: IServiceCategory;
   className?: string;
   businessId: string;
+  menuId?: IMenuLayout;
 }
 
 // Memoized service item component for better performance
@@ -131,6 +133,7 @@ export default function ServiceCategoryCard({
   category,
   className = "",
   businessId,
+  menuId,
 }: ServiceCategoryCardProps) {
   // State
   const [servicePopup, setServicePopup] = useState<boolean>(false);
@@ -274,6 +277,7 @@ export default function ServiceCategoryCard({
               room={room || ""}
               userId={userDetails?._id || ""}
               services={category.serviceIds}
+              menuId={menuId}
             />
           ) : (
             <BottomPopUp hide show={servicePopup} onClose={closeServicePopup}>
