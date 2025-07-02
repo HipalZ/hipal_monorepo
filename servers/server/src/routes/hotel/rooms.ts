@@ -545,8 +545,8 @@ const roomRouter = new Hono()
             to: user?.phone?.toString(),
             type: "template",
             template: {
-              name: "testing_welcome_message",
-              language: { code: "en_gb" },
+              name: "f_welcome_message",
+              language: { code: "en" },
               components: [
                 {
                   type: "header",
@@ -624,8 +624,8 @@ const roomRouter = new Hono()
               to: userData?.phone?.toString(),
               type: "template",
               template: {
-                name: "testing_thankyou_template",
-                language: { code: "en_gb" },
+                name: "f_thankyou_template",
+                language: { code: "en" },
                 components: [
                   {
                     type: "body",
@@ -769,8 +769,8 @@ const roomRouter = new Hono()
               to: userData?.phone?.toString(),
               type: "template",
               template: {
-                name: "testing_checkout_template",
-                language: { code: "en_gb" },
+                name: "f_checkout_template",
+                language: { code: "en" },
                 components: [
                   {
                     type: "body",
