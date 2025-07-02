@@ -1,11 +1,12 @@
 "use client"
 
-import { ArrowLeft, MenuIcon } from "lucide-react"
+import { ArrowLeft } from "lucide-react";
 import { MenuItemSkeleton } from "./MenuItemSkeleton"
 import { useGetAllRestaurantMenu } from "@/components/hooks/useGetAllRestaurantMenu"
 import DishesList from "@/components/organisms/category/dishesList"
 import MenuBannerPage from "@/components/organisms/menuBanner"
 import LiveCartHotel from "./LiveCartForRestaurant"
+import { IMenuLayout } from "@/components/types/businessData"
 
 interface ILinkHotels {
     _id: string
@@ -18,9 +19,10 @@ interface MenuViewProps {
     restaurant: ILinkHotels
     onBack: () => void
     isLoading: boolean
+    menuId:IMenuLayout
 }
 
-export const MenuView = ({ restaurant, onBack, isLoading }: MenuViewProps) => {
+export const MenuView = ({ restaurant, onBack, isLoading, menuId }: MenuViewProps) => {
     const { menuLoading, menuData } = useGetAllRestaurantMenu(restaurant._id as string)
 
     return (
@@ -49,6 +51,7 @@ export const MenuView = ({ restaurant, onBack, isLoading }: MenuViewProps) => {
                             parentCategory={menuData?.parentCategories || []}
                             childCategory={menuData?.childCategories || []}
                             timings={menuData?.timings}
+                            menuLayout={menuId}
                         />
                         <LiveCartHotel />
                     </div>

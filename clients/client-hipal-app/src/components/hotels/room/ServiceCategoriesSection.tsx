@@ -3,13 +3,16 @@
 import { useGetServiceCategories } from "@/components/hooks/useServicesHotel";
 import ServiceCategoryCard from "./ServiceCategoryCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { IMenuLayout } from "@/components/types/businessData";
 
 interface ServiceCategoriesSectionProps {
   businessId: string;
+  menuId:IMenuLayout
 }
 
 export default function ServiceCategoriesSection({
   businessId,
+  menuId,
 }: ServiceCategoriesSectionProps) {
   const { categoriesLoading, categoriesData } =
     useGetServiceCategories(businessId);
@@ -38,7 +41,7 @@ export default function ServiceCategoriesSection({
       <div className="grid grid-cols-2 gap-4">
         {categoriesData.map((category, index) => (
           <div key={category._id} className={index === 2 ? "col-span-2" : ""}>
-            <ServiceCategoryCard category={category} businessId={businessId} />
+            <ServiceCategoryCard category={category} businessId={businessId} menuId={menuId}/>
           </div>
         ))}
       </div>

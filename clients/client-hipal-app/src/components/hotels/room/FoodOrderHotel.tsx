@@ -12,6 +12,7 @@ import { MenuView } from "./MenuView"
 import { useCartStore } from "@/components/store/useCartStore"
 import { useCart } from "@/components/store/useCart"
 import { SuccessView } from "./SuccessView"
+import { IMenuLayout } from "@/components/types/businessData"
 
 interface FoodOrderPopupProps {
     show: boolean
@@ -20,6 +21,7 @@ interface FoodOrderPopupProps {
     room: string
     userId: string
     services: IService[]
+    menuId:IMenuLayout | undefined
 }
 
 interface ILinkHotels {
@@ -33,7 +35,7 @@ interface ILinkHotels {
 type ViewType = "restaurants" | "menu"
 type OrderStatus = "idle" | "loading" | "success" | "error"
 
-export default function FoodOrderPopup({ show, onClose, businessId, room, userId, services }: FoodOrderPopupProps) {
+export default function FoodOrderPopup({ show, onClose, businessId, room, userId, services, menuId }: FoodOrderPopupProps) {
     // State
     const [orderStatus, setOrderStatus] = useState<OrderStatus>("idle")
     const [selectedRestaurant, setSelectedRestaurant] = useState<ILinkHotels | null>(null)
@@ -132,7 +134,7 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
         }
 
         if (currentView === "menu" && selectedRestaurant) {
-            return <MenuView restaurant={selectedRestaurant} onBack={handleBackToRestaurants} isLoading={menuLoading} />
+            return <MenuView restaurant={selectedRestaurant} onBack={handleBackToRestaurants} isLoading={menuLoading} menuId={menuId}/>
         }
 
         return (

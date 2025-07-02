@@ -481,6 +481,7 @@ interface SocialMediaLink {
 }
 
 export interface BusinessDetails {
+  menuId: IMenuLayout;
   _id: string;
   businessId: string;
   __v: number;

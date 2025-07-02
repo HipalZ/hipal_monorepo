@@ -152,7 +152,7 @@ const page = async ({
         />
 
         <section className="px-6 pb-6">
-          <ServiceCategoriesSection businessId={businessData.businessId} />
+          <ServiceCategoriesSection businessId={businessData.businessId} menuId={businessData?.menuId}/>
         </section>
         <CheckOutRequest businessId={businessData.businessId} />
       </ViewPortContainer>
