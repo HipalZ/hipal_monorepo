@@ -769,8 +769,8 @@ const roomRouter = new Hono()
               to: userData?.phone?.toString(),
               type: "template",
               template: {
-                name: "f_checkout_template",
-                language: { code: "en" },
+                name: "test_checkout_template",
+                language: { code: "en_GB" },
                 components: [
                   {
                     type: "body",

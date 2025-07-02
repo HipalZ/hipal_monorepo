@@ -141,12 +141,10 @@ export const buttonSchema = z.object({
   ),
 });
 
-export const LanguageCode = ["en_GB", "en", "en_US"] as const;
-
 export const validateWhatAppTemplateSchema = z.object({
   name: z.string().min(3).max(100),
   parameter_format: z.string().min(3).max(100).default("POSITIONAL"),
-  language: z.enum(LanguageCode).default("en_GB"),
+  language: z.string().min(1).max(100).default("en_GB"),
   // status: z.enum(whatAppTemplateStatusEnum).default("PENDING"),
   category: z.enum(whatAppTemplateCategoryEnum).default("UTILITY"),
   // sub_category: z.string().min(3).max(100).default("CUSTOM"),
