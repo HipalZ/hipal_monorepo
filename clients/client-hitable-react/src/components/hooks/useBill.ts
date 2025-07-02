@@ -6,6 +6,7 @@ import { useParams } from "react-router-dom";
 import { useOrderStore } from "../store/useOrderData.ts";
 import { useHiClientZ } from "../store/useHiClientzData.ts";
 import toast from "react-hot-toast";
+
 export const useGetBill = () => {
   const { businessId } = useParams();
   const { setError, setOpenErrorModal } = useError();

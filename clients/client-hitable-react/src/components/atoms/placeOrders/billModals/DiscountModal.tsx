@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,22 +24,53 @@ import type { IBillData } from "@/components/types/hiClientzData.ts";
 
 interface BillItem {
   _id: string;
+  id: string;
   dish: {
     _id: string;
     name: string;
     price: number;
+    businessId: string;
+    posDishId: string;
+    description: string;
+    dishTypes: string[];
+    ignoreDiscount: string; // Changed from boolean to string
+    ignoreTax: string; // Changed from boolean to string
+    images: string[];
+    isDeleted: boolean;
+    menuId: string;
+    portions: Array<{
+      name: string;
+      price: number;
+      default: boolean;
+      portionTypes: string[];
+      _id: string;
+    }>;
+    pos: boolean;
+    posTax: string;
+    rank: number;
+    tags: string[];
+    visibility: boolean;
+    active: boolean;
+    kitchenId?: string;
+    tax: number;
+    gst: number;
+    instruction?: string;
   };
-  portion?: {
+  portion: {
     name: string;
     price: number;
-  };
+    default: boolean;
+    portionTypes: string[];
+    _id: string;
+  } | null;
   extras: Array<{
     id: string;
     name: string;
-    quantity: number;
     price: number;
+    quantity: number;
   }>;
   quantity: number;
+  isDeleted: boolean; // Added isDeleted field
 }
 
 interface DiscountModalProps {
@@ -64,13 +95,27 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
   const { addingDiscountLoader, addingDiscount } = useAddDiscount();
   const { removingDiscountLoader, removingDiscount } = useRemoveDiscount();
 
+  // Flatten all items from billItems array, excluding deleted items
+  const allItems = useMemo(() => {
+    if (!data.billItems) return [];
+    return data.billItems.flatMap((billGroup) =>
+      billGroup.items.filter((item) => !item.isDeleted),
+    );
+  }, [data.billItems]);
+
+  // Get items that can have discount applied (not ignoring discount)
+  const discountableItems = useMemo(() => {
+    return allItems.filter((item) => item.dish.ignoreDiscount !== "true");
+  }, [allItems]);
+
   const getItemTotalPrice = useCallback((item: BillItem) => {
-    const dishPrice = item.portion?.price || item.dish.price;
+    const dishPrice = item.dish.price;
+    const portionPrice = item.portion?.price || 0;
     const extrasPrice = item.extras.reduce(
       (sum, extra) => sum + extra.price * extra.quantity,
       0,
     );
-    return (dishPrice + extrasPrice) * item.quantity;
+    return (dishPrice + portionPrice + extrasPrice) * item.quantity;
   }, []);
 
   // This function calculates preview amount in rupees for display purposes
@@ -82,7 +127,7 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
         return discountValue;
       }
     } else {
-      const selectedItemsTotal = data.items
+      const selectedItemsTotal = discountableItems
         .filter((item) => selectedItems.includes(item._id))
         .reduce((sum, item) => sum + getItemTotalPrice(item), 0);
 
@@ -97,7 +142,7 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
     discountValueType,
     discountValue,
     data.subTotal,
-    data.items,
+    discountableItems,
     selectedItems,
     getItemTotalPrice,
   ]);
@@ -106,7 +151,7 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
     if (discountType === "ON_BILL") {
       return discountValueType === "percentage" ? 100 : data.subTotal;
     } else {
-      const selectedItemsTotal = data.items
+      const selectedItemsTotal = discountableItems
         .filter((item) => selectedItems.includes(item._id))
         .reduce((sum, item) => sum + getItemTotalPrice(item), 0);
 
@@ -116,7 +161,7 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
     discountType,
     discountValueType,
     data.subTotal,
-    data.items,
+    discountableItems,
     selectedItems,
     getItemTotalPrice,
   ]);
@@ -132,11 +177,11 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
       return;
     }
 
-    const dishIds = discountType === "ON_DISH" ? selectedItems : [];
+    // For item-wise discount, send the actual item IDs (not dish IDs)
+    const itemIds = discountType === "ON_DISH" ? selectedItems : [];
 
     // Send percentage value to API
     let finalDiscountValue: number;
-
     if (discountValueType === "percentage") {
       // Send percentage directly to API
       finalDiscountValue = discountValue;
@@ -145,9 +190,10 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
       if (discountType === "ON_BILL") {
         finalDiscountValue = (discountValue / data.subTotal) * 100;
       } else {
-        const selectedItemsTotal = data.items
+        const selectedItemsTotal = discountableItems
           .filter((item) => selectedItems.includes(item._id))
           .reduce((sum, item) => sum + getItemTotalPrice(item), 0);
+
         finalDiscountValue = (discountValue / selectedItemsTotal) * 100;
       }
     }
@@ -159,7 +205,7 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
       reasonOfDiscount: discountReason,
       discountAppliedBy: userData._id,
       discountAppliedOn: discountType,
-      dishIds,
+      itemIds, // Changed from dishIds to itemIds to include complete items
     });
 
     onClose();
@@ -173,7 +219,7 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
     discountValueType,
     selectedItems,
     data.subTotal,
-    data.items,
+    discountableItems,
     getItemTotalPrice,
     addingDiscount,
     onClose,
@@ -230,21 +276,23 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
       if (discountType === "ON_BILL") {
         return ((discountValue / data.subTotal) * 100).toFixed(2);
       } else {
-        const selectedItemsTotal = data.items
+        const selectedItemsTotal = discountableItems
           .filter((item) => selectedItems.includes(item._id))
           .reduce((sum, item) => sum + getItemTotalPrice(item), 0);
+
         if (selectedItemsTotal > 0) {
           return ((discountValue / selectedItemsTotal) * 100).toFixed(2);
         }
       }
     }
+
     return null;
   }, [
     discountValueType,
     discountValue,
     discountType,
     data.subTotal,
-    data.items,
+    discountableItems,
     selectedItems,
     getItemTotalPrice,
   ]);
@@ -266,6 +314,7 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
             </SelectContent>
           </Select>
         </div>
+
         <div>
           <Label>Value Type</Label>
           <RadioGroup
@@ -320,34 +369,118 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
         </p>
       </div>
 
-      {discountType === "ON_DISH" && data.items && (
+      {discountType === "ON_DISH" && allItems.length > 0 && (
         <div>
           <Label>Select Items for Discount</Label>
           <div className="max-h-40 overflow-y-auto space-y-2 border rounded p-2">
-            {data.items.map((item) => (
-              <div key={item._id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={item._id}
-                  checked={selectedItems.includes(item._id)}
-                  onCheckedChange={(checked) =>
-                    handleItemSelection(item._id, checked as boolean)
-                  }
-                />
-                <label htmlFor={item._id} className="flex-1 text-sm">
-                  {item.dish.name}
-                  {item.portion && ` (${item.portion.name})`} - ₹
-                  {getItemTotalPrice(item)}
-                </label>
+            {data.billItems?.map((billGroup, groupIndex) => (
+              <div key={groupIndex} className="space-y-2">
+                {/* GST Group Header */}
+                <div className="bg-gray-100 p-2 rounded text-sm font-medium">
+                  GST {billGroup.gst}% Items
+                </div>
+
+                {/* Items in this GST group */}
+                {billGroup.items
+                  .filter((item) => !item.isDeleted) // Filter out deleted items
+                  .map((item) => {
+                    const canApplyDiscount =
+                      item.dish.ignoreDiscount !== "true";
+                    const itemTotal = getItemTotalPrice(item);
+
+                    return (
+                      <div
+                        key={item._id}
+                        className="flex items-center space-x-2 pl-4"
+                      >
+                        <Checkbox
+                          id={item._id}
+                          checked={selectedItems.includes(item._id)}
+                          onCheckedChange={(checked) =>
+                            handleItemSelection(item._id, checked as boolean)
+                          }
+                          disabled={!canApplyDiscount}
+                        />
+                        <label
+                          htmlFor={item._id}
+                          className={`flex-1 text-sm ${
+                            !canApplyDiscount
+                              ? "text-gray-400 line-through"
+                              : ""
+                          }`}
+                        >
+                          <div className="space-y-1">
+                            <div className="font-medium">
+                              {item.dish.name} - ₹{itemTotal}
+                              <span className="text-xs text-gray-500 ml-2">
+                                Qty: {item.quantity}
+                              </span>
+                            </div>
+
+                            {/* Show portion details */}
+                            {item.portion && (
+                              <div className="text-xs text-blue-600 pl-2">
+                                Portion: {item.portion.name} (+₹
+                                {item.portion.price})
+                              </div>
+                            )}
+
+                            {/* Show extras details */}
+                            {item.extras && item.extras.length > 0 && (
+                              <div className="text-xs text-green-600 pl-2">
+                                Extras:{" "}
+                                {item.extras
+                                  .map(
+                                    (extra) =>
+                                      `${extra.name} (₹${extra.price} x ${extra.quantity})`,
+                                  )
+                                  .join(", ")}
+                              </div>
+                            )}
+
+                            {/* Show dish instruction if any */}
+                            {item.dish.instruction && (
+                              <div className="text-xs text-orange-600 pl-2 italic">
+                                Note: {item.dish.instruction}
+                              </div>
+                            )}
+
+                            {!canApplyDiscount && (
+                              <div className="text-xs text-red-500 pl-2">
+                                (Discount not allowed)
+                              </div>
+                            )}
+                          </div>
+                        </label>
+                      </div>
+                    );
+                  })}
               </div>
             ))}
           </div>
+
           {selectedItems.length > 0 && (
-            <p className="text-xs text-gray-600">
-              Selected items total: ₹
-              {data.items
-                .filter((item) => selectedItems.includes(item._id))
-                .reduce((sum, item) => sum + getItemTotalPrice(item), 0)}
-            </p>
+            <div className="text-xs text-gray-600 space-y-1">
+              <p className="font-medium">
+                Selected items total: ₹
+                {discountableItems
+                  .filter((item) => selectedItems.includes(item._id))
+                  .reduce((sum, item) => sum + getItemTotalPrice(item), 0)}
+              </p>
+              <div className="pl-2 space-y-1">
+                {discountableItems
+                  .filter((item) => selectedItems.includes(item._id))
+                  .map((item) => (
+                    <div key={item._id} className="text-xs">
+                      • {item.dish.name}
+                      {item.portion && ` (${item.portion.name})`}
+                      {item.extras.length > 0 &&
+                        ` + ${item.extras.length} extra(s)`}
+                      : ₹{getItemTotalPrice(item)}
+                    </div>
+                  ))}
+              </div>
+            </div>
           )}
         </div>
       )}
@@ -375,6 +508,7 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
         >
           {addingDiscountLoader ? "Adding..." : "Add Discount"}
         </Button>
+
         <Button
           variant="outline"
           onClick={handleRemoveDiscount}

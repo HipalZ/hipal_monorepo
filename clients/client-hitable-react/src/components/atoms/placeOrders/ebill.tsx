@@ -10,7 +10,7 @@ import SpinnerMemo from "../loadingSpinner";
 import { Phone, UserPlus, X } from "lucide-react";
 
 const MemoEBill = () => {
-  const selectedTable  = useOrderStore(s=>s.selectedTable);
+  const selectedTable = useOrderStore((s) => s.selectedTable);
   const [phoneNumbers, setPhoneNumbers] = useState<string[]>([]);
   const [newPhoneNumber, setNewPhoneNumber] = useState("");
   const setShowEBill = useOrderStore((s) => s.setShowEBill);
@@ -150,50 +150,51 @@ const MemoEBill = () => {
             )}
           </div>
         </div>
-
-        <div className="mb-8 overflow-hidden bg-white rounded-lg shadow-md">
-          <div className="p-6">
-            <h3 className="mb-4 text-lg font-semibold text-gray-900">
-              Select Users
-            </h3>
-            {isLoading ? (
-              <p className="text-center text-gray-600">Loading users...</p>
-            ) : (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {users?.map((user) => (
-                  <div
-                    key={user._id}
-                    onClick={() => handleUserSelect(user?.phone)}
-                    className={`cursor-pointer p-4 rounded-md border transition-all ${
-                      phoneNumbers.includes(user?.phone)
-                        ? "bg-blue-50 border-blue-500"
-                        : "bg-white border-gray-300 hover:border-blue-300"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className="text-lg font-semibold text-gray-900">
-                        {user.name}
+        {users?.length > 0 && users && (
+          <div className="mb-8 overflow-hidden bg-white rounded-lg shadow-md">
+            <div className="p-6">
+              <h3 className="mb-4 text-lg font-semibold text-gray-900">
+                Select Users
+              </h3>
+              {isLoading ? (
+                <p className="text-center text-gray-600">Loading users...</p>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {users?.map((user) => (
+                    <div
+                      key={user._id}
+                      onClick={() => handleUserSelect(user?.phone)}
+                      className={`cursor-pointer p-4 rounded-md border transition-all ${
+                        phoneNumbers.includes(user?.phone)
+                          ? "bg-blue-50 border-blue-500"
+                          : "bg-white border-gray-300 hover:border-blue-300"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <p className="text-lg font-semibold text-gray-900">
+                          {user.name}
+                        </p>
+                        <input
+                          type="checkbox"
+                          checked={phoneNumbers.includes(user?.phone)}
+                          onChange={() => handleUserSelect(user?.phone)}
+                          className="w-5 h-5 text-blue-600 form-checkbox"
+                        />
+                      </div>
+                      <p className="mt-1 text-sm text-gray-500">
+                        {user?.phone?.slice(0, 3)}****{user?.phone?.slice(-3)}
                       </p>
-                      <input
-                        type="checkbox"
-                        checked={phoneNumbers.includes(user?.phone)}
-                        onChange={() => handleUserSelect(user?.phone)}
-                        className="w-5 h-5 text-blue-600 form-checkbox"
-                      />
                     </div>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {user?.phone?.slice(0, 3)}****{user?.phone?.slice(-3)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <CommonBottomButton
-        maxWidth="48rem"
+        maxWidth="30rem"
         fixed={true}
         shadow
         buttons={[

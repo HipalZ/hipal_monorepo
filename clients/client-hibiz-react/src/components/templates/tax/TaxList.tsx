@@ -2,16 +2,8 @@ import { memo, useCallback, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Edit,
-  Percent,
-  DollarSign,
-  Plus,
-  Info,
-  AlertCircle,
-} from "lucide-react";
+import { Edit, Percent, DollarSign, Plus, Info } from "lucide-react";
 import {
   useFetchTaxesByBusiness,
   useGetAllTaxes,
@@ -20,9 +12,10 @@ import {
 import LoadingSpinner from "@/components/atom/loadingSpinner/index.tsx";
 import PopUp from "@/components/atom/popUp/index.tsx";
 import LinkingDishesToTax from "./linkingDishesToTax.tsx";
+import { useTaxStore } from "@/components/store/useTaxStore.ts";
 
 interface TaxListProps {
-  onEditTax: (tax: TaxById) => void;
+  onEditTax: (tax: TaxById, type?: string) => void;
   onAddTax: () => void;
 }
 
@@ -30,17 +23,26 @@ const MemoTaxList = ({ onEditTax, onAddTax }: TaxListProps) => {
   const { isLoading: loadingBusinessTaxes, businessTaxes } =
     useFetchTaxesByBusiness();
   const { isLoading: loadingAllTaxes, taxes: allTaxes } = useGetAllTaxes();
-  const [linkDishModal, setLinkDishModal] = useState<boolean>(false);
-
+  const setLinkDishModal = useTaxStore((s) => s.setLinkDishModal);
+  const linkDishModal = useTaxStore((s) => s.linkDishModal);
   const isLoading = loadingBusinessTaxes || loadingAllTaxes;
 
   const activeTaxes = useMemo(() => {
     return businessTaxes?.filter((tax) => tax.isActive) || [];
   }, [businessTaxes]);
 
-  const getGstTax = useMemo(() => {
-    return businessTaxes?.find((tax) => tax.name === "gst") || null;
-  }, [businessTaxes]);
+  // Get GST tax by ID from useTaxStore
+  const selectedTaxId = useTaxStore((s) => s.selectedTaxId);
+  const setSelectedTaxId = useTaxStore((s) => s.setSelectedTaxId);
+
+  // Find tax by ID instead of using word "gst"
+  const getSelectedTax = useMemo(() => {
+    if (!selectedTaxId || !businessTaxes) return null;
+    return (
+      businessTaxes.find((tax) => tax._id === selectedTaxId && tax.isActive) ||
+      null
+    );
+  }, [businessTaxes, selectedTaxId]);
 
   const inactiveTaxes = useMemo(() => {
     return businessTaxes?.filter((tax) => !tax.isActive) || [];
@@ -55,14 +57,18 @@ const MemoTaxList = ({ onEditTax, onAddTax }: TaxListProps) => {
 
   const handleEditClick = useCallback(
     (tax: TaxById) => {
-      onEditTax(tax);
+      onEditTax(tax, "edit");
     },
     [onEditTax],
   );
 
-  const openModalFunc = useCallback(() => {
-    setLinkDishModal(true);
-  }, []);
+  const openModalFunc = useCallback(
+    (tax: TaxById) => {
+      setSelectedTaxId(tax?._id);
+      onEditTax(tax, "link");
+    },
+    [onEditTax, setSelectedTaxId],
+  );
 
   const closeModalFunc = useCallback(() => {
     setLinkDishModal(false);
@@ -76,45 +82,54 @@ const MemoTaxList = ({ onEditTax, onAddTax }: TaxListProps) => {
   }, [availableTaxesToAdd, onAddTax]);
 
   const renderTaxCard = useCallback(
-    (tax: TaxById, index: number) => (
-      <div key={tax._id}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              {tax.type === "PERCENTAGE" ? (
-                <Percent className="h-4 w-4 text-blue-500" />
-              ) : (
-                <DollarSign className="h-4 w-4 text-green-500" />
-              )}
-              <span className="font-medium">{tax.name}</span>
+    (tax: TaxById, index: number) => {
+      // Check if this tax can have dishes linked to it (you can customize this logic)
+      const canLinkDishes = tax.type === "PERCENTAGE" && tax.isActive;
+
+      return (
+        <div key={tax._id}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                {tax.type === "PERCENTAGE" ? (
+                  <Percent className="h-4 w-4 text-blue-500" />
+                ) : (
+                  <DollarSign className="h-4 w-4 text-green-500" />
+                )}
+                <span className="font-medium">{tax.name}</span>
+              </div>
+              <Badge variant={tax.isActive ? "default" : "secondary"}>
+                {tax.value}
+                {tax.type === "PERCENTAGE" ? "%" : "₹"}
+              </Badge>
+              {!tax.isActive && <Badge variant="outline">Inactive</Badge>}
             </div>
-            <Badge variant={tax.isActive ? "default" : "secondary"}>
-              {tax.value}
-              {tax.type === "PERCENTAGE" ? "%" : "₹"}
-            </Badge>
-            {!tax.isActive && <Badge variant="outline">Inactive</Badge>}
-          </div>
-          <div className="flex items-center gap-2">
-            {tax.name === "gst" && (
-              <Button onClick={openModalFunc} variant="outline" size="sm">
-                Link Dishes
+            <div className="flex items-center gap-2">
+              {canLinkDishes && (
+                <Button
+                  onClick={() => openModalFunc(tax)}
+                  variant="outline"
+                  size="sm"
+                >
+                  Link Dishes
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleEditClick(tax)}
+              >
+                <Edit className="h-4 w-4" />
               </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleEditClick(tax)}
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
+            </div>
           </div>
+          {index < activeTaxes.length - 1 && (
+            <hr className="my-4 border-t-2 border-gray-200" />
+          )}
         </div>
-        {index < activeTaxes.length - 1 && (
-          <hr className="my-4 border-t-2 border-gray-200" />
-        )}
-      </div>
-    ),
-    [handleEditClick],
+      );
+    },
+    [handleEditClick, openModalFunc, activeTaxes.length],
   );
 
   if (isLoading) {
@@ -152,7 +167,8 @@ const MemoTaxList = ({ onEditTax, onAddTax }: TaxListProps) => {
             <Info className="h-4 w-4" />
             <AlertDescription>
               You can add {availableTaxesToAdd} more tax type
-              {availableTaxesToAdd !== 1 ? "s" : ""} to your business.
+              {availableTaxesToAdd !== 1 ? "s" : ""} to your business. GST taxes
+              have auto-extracted values from their names.
             </AlertDescription>
           </Alert>
         )}
@@ -213,9 +229,16 @@ const MemoTaxList = ({ onEditTax, onAddTax }: TaxListProps) => {
           </Card>
         )}
       </div>
+
       {linkDishModal && (
-        <PopUp rightTopBack hide height="h-[100dvh] lg:h-[90dvh]" show={linkDishModal} onClose={closeModalFunc}>
-          <LinkingDishesToTax getGstTax={getGstTax} />
+        <PopUp
+          rightTopBack
+          hide
+          height="h-[100dvh] lg:h-[90dvh]"
+          show={linkDishModal}
+          onClose={closeModalFunc}
+        >
+          <LinkingDishesToTax getSelectedTax={getSelectedTax} />
         </PopUp>
       )}
     </>

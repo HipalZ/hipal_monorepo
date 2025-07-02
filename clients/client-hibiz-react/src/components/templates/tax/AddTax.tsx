@@ -4,7 +4,8 @@ import MemoizedHeader from "@/components/molecules/header/index.tsx";
 import type { TaxById } from "@/hooks/useTax.ts";
 import TaxList from "./TaxList.tsx";
 import TaxForm from "./TaxForm.tsx";
-
+import { useTaxStore } from "@/components/store/useTaxStore.ts";
+export type TaxTypeModal = "edit" | "link";
 const MemoAddTax = () => {
   const { businessId, menuId } = useParams<{
     businessId: string;
@@ -13,16 +14,25 @@ const MemoAddTax = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTax, setEditingTax] = useState<TaxById | null>(null);
-
+  const setLinkDishModal = useTaxStore((s) => s.setLinkDishModal);
   const handleAddTax = useCallback(() => {
     setEditingTax(null);
     setIsFormOpen(true);
   }, []);
 
-  const handleEditTax = useCallback((tax: TaxById) => {
-    setEditingTax(tax);
-    setIsFormOpen(true);
-  }, []);
+  const handleEditTax = useCallback(
+    (tax: TaxById, type: TaxTypeModal) => {
+      console.log("Editing tax:", tax, type);
+      setEditingTax(tax);
+      if (type === "link") {
+        setLinkDishModal(true);
+      }
+      if (type === "edit") {
+        setIsFormOpen(true);
+      }
+    },
+    [setLinkDishModal],
+  );
 
   const handleCloseForm = useCallback(() => {
     setIsFormOpen(false);

@@ -18,7 +18,15 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Plus, Edit, Percent, DollarSign, AlertCircle } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Percent,
+  DollarSign,
+  AlertCircle,
+  Lock,
+} from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import toast from "react-hot-toast";
 import {
   useCreateTax,
@@ -39,6 +47,7 @@ interface TaxFormProps {
     name: string;
     value: number;
     type: taxType;
+    isActive: boolean;
   } | null;
   businessId: string;
   menuId: string;
@@ -55,6 +64,7 @@ const MemoTaxForm = ({
     selectedTaxId: "",
     value: "",
     type: "PERCENTAGE" as taxType,
+    isActive: true,
   });
 
   const { isLoading: loadingAllTaxes, taxes: allTaxes } = useGetAllTaxes();
@@ -84,6 +94,24 @@ const MemoTaxForm = ({
     );
   }, [formData.selectedTaxId, allTaxes]);
 
+  const extractGstPercentage = useCallback((taxName: string): number | null => {
+    // look for: gst (28%)  —  case‐insensitive, with optional spaces
+    const gstMatch = taxName.match(/gst\s*\(\s*(\d+(?:\.\d+)?)\s*%\s*\)/i);
+    console.log("Regex match for:", taxName, "Result:", gstMatch);
+    return gstMatch ? Number.parseFloat(gstMatch[1]) : null;
+  }, []);
+
+  // Check if selected tax is a GST tax
+  const isGstTax = useMemo(() => {
+    return selectedTax ? selectedTax.name.toLowerCase().includes("gst") : false;
+  }, [selectedTax]);
+
+  // Auto-extracted GST value
+  const autoGstValue = useMemo(() => {
+    if (!selectedTax || !isGstTax) return null;
+    return extractGstPercentage(selectedTax.name);
+  }, [selectedTax, isGstTax, extractGstPercentage]);
+
   useEffect(() => {
     if (isOpen) {
       if (editingTax) {
@@ -94,23 +122,69 @@ const MemoTaxForm = ({
           selectedTaxId: taxFromAll?._id.toString() || "",
           value: editingTax.value.toString(),
           type: editingTax.type,
+          isActive: editingTax.isActive,
         });
       } else {
         setFormData({
           selectedTaxId: "",
           value: "",
           type: "PERCENTAGE",
+          isActive: true,
         });
       }
     }
   }, [isOpen, editingTax, allTaxes]);
 
-  const handleTaxSelection = useCallback((taxId: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      selectedTaxId: taxId,
-    }));
-  }, []);
+  // Auto-set value when GST tax is selected
+  useEffect(() => {
+    if (selectedTax && isGstTax && autoGstValue !== null && !isEditing) {
+      setFormData((prev) => ({
+        ...prev,
+        value: autoGstValue.toString(),
+        type: "PERCENTAGE",
+      }));
+    }
+  }, [selectedTax, isGstTax, autoGstValue, isEditing]);
+
+  const handleTaxSelection = useCallback(
+    (taxId: string) => {
+      const selectedTaxData = allTaxes?.find(
+        (tax) => tax._id.toString() === taxId,
+      );
+
+      if (selectedTaxData) {
+        const isSelectedGstTax = selectedTaxData.name
+          .toLowerCase()
+          .includes("gst");
+
+        if (isSelectedGstTax) {
+          // Extract GST value immediately when GST tax is selected
+          const extractedValue = extractGstPercentage(selectedTaxData.name);
+
+          setFormData((prev) => ({
+            ...prev,
+            selectedTaxId: taxId,
+            value: extractedValue !== null ? extractedValue.toString() : "",
+            type: "PERCENTAGE",
+          }));
+        } else {
+          // For non-GST taxes, just set the ID and reset other fields
+          setFormData((prev) => ({
+            ...prev,
+            selectedTaxId: taxId,
+            value: "",
+            type: "PERCENTAGE",
+          }));
+        }
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          selectedTaxId: taxId,
+        }));
+      }
+    },
+    [allTaxes, extractGstPercentage],
+  );
 
   const handleInputChange = useCallback((field: string, value: string) => {
     setFormData((prev) => ({
@@ -126,20 +200,46 @@ const MemoTaxForm = ({
     }));
   }, []);
 
+  const handleActiveChange = useCallback((checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      isActive: checked,
+    }));
+  }, []);
+
   const validateForm = useCallback(() => {
     if (!formData.selectedTaxId) {
       toast.error("Please select a tax");
       return false;
     }
+
+    // For GST taxes, value is auto-extracted and always valid - skip manual validation
+    if (isGstTax && autoGstValue !== null) {
+      // Check for duplicates only
+      if (!isEditing && businessTaxes && selectedTax) {
+        const isDuplicate = businessTaxes.some(
+          (tax) => tax.name === selectedTax.name,
+        );
+        if (isDuplicate) {
+          toast.error("This tax is already added to your business");
+          return false;
+        }
+      }
+      return true;
+    }
+
+    // For non-GST taxes, validate the manual input
     if (!formData.value.trim()) {
       toast.error("Tax value is required");
       return false;
     }
+
     const numValue = Number.parseFloat(formData.value);
     if (isNaN(numValue) || numValue < 0) {
       toast.error("Tax value must be a valid positive number");
       return false;
     }
+
     if (formData.type === "PERCENTAGE" && numValue > 100) {
       toast.error("Percentage value cannot exceed 100%");
       return false;
@@ -156,33 +256,47 @@ const MemoTaxForm = ({
     }
 
     return true;
-  }, [formData, businessTaxes, selectedTax, isEditing]);
+  }, [formData, businessTaxes, selectedTax, isEditing, isGstTax, autoGstValue]);
+
+  // Add debugging
+  console.log("Debug info:", {
+    selectedTax: selectedTax?.name,
+    isGstTax,
+    autoGstValue,
+    extractedValue: selectedTax ? extractGstPercentage(selectedTax.name) : null,
+  });
 
   const handleSubmit = useCallback(async () => {
     if (!validateForm() || !selectedTax) return;
 
     try {
-      const numValue = Number.parseFloat(formData.value);
+      // Use auto-extracted value for GST taxes, otherwise use form value
+      const taxValue =
+        isGstTax && autoGstValue !== null
+          ? autoGstValue
+          : Number.parseFloat(formData.value);
 
       if (isEditing && editingTax) {
         const updatePayload: updateTaxPayload = {
           taxId: editingTax._id,
           name: selectedTax.name,
-          value: numValue,
-          type: formData.type,
+          value: taxValue,
+          type: isGstTax ? "PERCENTAGE" : formData.type,
+          isActive: formData.isActive,
           menuId,
         };
         await updateTax(updatePayload);
       } else {
         const createPayload: createTaxPayload = {
           name: selectedTax.name,
-          value: numValue,
-          type: formData.type,
+          value: taxValue,
+          type: isGstTax ? "PERCENTAGE" : formData.type,
           businessId,
           menuId,
         };
         await createTax(createPayload);
       }
+
       onClose();
     } catch (error) {
       console.error(error);
@@ -198,6 +312,8 @@ const MemoTaxForm = ({
     businessId,
     menuId,
     onClose,
+    isGstTax,
+    autoGstValue,
   ]);
 
   const handleClose = useCallback(() => {
@@ -217,6 +333,14 @@ const MemoTaxForm = ({
       </Dialog>
     );
   }
+
+  const effectiveValue =
+    isGstTax && autoGstValue !== null
+      ? autoGstValue.toString()
+      : formData.value;
+  const effectiveType = isGstTax ? "PERCENTAGE" : formData.type;
+  const isValueReadonly = isGstTax && autoGstValue !== null;
+  const isTypeReadonly = isGstTax;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -254,7 +378,12 @@ const MemoTaxForm = ({
                 ) : (
                   availableTaxes.map((tax) => (
                     <SelectItem key={tax._id} value={tax._id.toString()}>
-                      {tax.name}
+                      <div className="flex items-center gap-2">
+                        {tax.name}
+                        {tax.name.toLowerCase().includes("gst") && (
+                          <Badge variant="outline">Auto-value</Badge>
+                        )}
+                      </div>
                     </SelectItem>
                   ))
                 )}
@@ -273,13 +402,24 @@ const MemoTaxForm = ({
             </Alert>
           )}
 
+          {/* GST Auto-value Alert */}
+          {isGstTax && autoGstValue !== null && (
+            <Alert>
+              <Lock className="h-4 w-4" />
+              <AlertDescription>
+                GST tax value ({autoGstValue}%) is automatically extracted from
+                the tax name and cannot be modified.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Tax Type Selection */}
           <div className="space-y-2">
             <Label htmlFor="taxType">Tax Type</Label>
             <Select
-              value={formData.type}
+              value={effectiveType}
               onValueChange={handleTypeChange}
-              disabled={isLoading}
+              disabled={isLoading || isTypeReadonly}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select tax type" />
@@ -289,6 +429,9 @@ const MemoTaxForm = ({
                   <div className="flex items-center gap-2">
                     <Percent className="h-4 w-4" />
                     Percentage
+                    {isTypeReadonly && (
+                      <Lock className="h-3 w-3 text-gray-400" />
+                    )}
                   </div>
                 </SelectItem>
                 <SelectItem value="FIXED">
@@ -301,38 +444,89 @@ const MemoTaxForm = ({
             </Select>
           </div>
 
-          {/* Tax Value Input */}
-          <div className="space-y-2">
-            <Label htmlFor="taxValue">
-              Tax Value {formData.type === "PERCENTAGE" ? "(%)" : "(₹)"}
-            </Label>
-            <Input
-              id="taxValue"
-              type="number"
-              step="0.01"
-              min="0"
-              max={formData.type === "PERCENTAGE" ? "100" : undefined}
-              placeholder={
-                formData.type === "PERCENTAGE"
-                  ? "Enter percentage (0-100)"
-                  : "Enter fixed amount"
-              }
-              value={formData.value}
-              onChange={(e) => handleInputChange("value", e.target.value)}
-              disabled={isLoading}
-            />
-          </div>
+          {/* Tax Value Input - Only show for non-GST taxes */}
+          {!isGstTax && (
+            <div className="space-y-2">
+              <Label htmlFor="taxValue" className="flex items-center gap-2">
+                Tax Value {effectiveType === "PERCENTAGE" ? "(%)" : "(₹)"}
+                {isValueReadonly && <Lock className="h-3 w-3 text-gray-400" />}
+              </Label>
+              <Input
+                id="taxValue"
+                type="number"
+                step="0.01"
+                min="0"
+                max={effectiveType === "PERCENTAGE" ? "100" : undefined}
+                placeholder={
+                  effectiveType === "PERCENTAGE"
+                    ? "Enter percentage (0-100)"
+                    : "Enter fixed amount"
+                }
+                value={effectiveValue}
+                onChange={(e) => handleInputChange("value", e.target.value)}
+                disabled={isLoading || isValueReadonly}
+                className={isValueReadonly ? "bg-gray-50 text-gray-600" : ""}
+              />
+              {isValueReadonly && (
+                <p className="text-xs text-gray-500">
+                  This value is automatically set based on the selected GST tax.
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* GST Auto-value Info - Only show for GST taxes */}
+          {isGstTax && autoGstValue !== null && (
+            <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Lock className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-800">
+                  GST Tax Value
+                </span>
+              </div>
+              <p className="text-sm text-blue-700">
+                Tax value <strong>{autoGstValue}%</strong> is automatically
+                extracted from the selected GST tax name and cannot be modified.
+              </p>
+            </div>
+          )}
+
+          {/* isActive Switch - Only visible when editing */}
+          {isEditing && (
+            <div className="flex items-center justify-between space-x-2 p-2 rounded-md bg-gray-50">
+              <Label htmlFor="isActive" className="flex flex-col">
+                <span className="text-sm font-medium leading-none">
+                  Active Tax
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  Toggle to activate or deactivate this tax.
+                </span>
+              </Label>
+              <Switch
+                id="isActive"
+                checked={formData.isActive}
+                onCheckedChange={handleActiveChange}
+                disabled={isLoading}
+              />
+            </div>
+          )}
 
           {/* Preview */}
-          {selectedTax && formData.value && (
+          {selectedTax && effectiveValue && (
             <div className="p-3 bg-gray-50 rounded-md">
               <p className="text-sm font-medium text-gray-700">Preview:</p>
               <div className="flex items-center gap-2 mt-1">
                 <Badge variant="secondary">{selectedTax.name}</Badge>
                 <span className="text-sm">
-                  {formData.value}
-                  {formData.type === "PERCENTAGE" ? "%" : "₹"}
+                  {effectiveValue}
+                  {effectiveType === "PERCENTAGE" ? "%" : "₹"}
                 </span>
+                {isGstTax && <Badge variant="outline">Auto-extracted</Badge>}
+                {isEditing && (
+                  <Badge variant={formData.isActive ? "default" : "outline"}>
+                    {formData.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                )}
               </div>
             </div>
           )}
@@ -349,7 +543,8 @@ const MemoTaxForm = ({
             disabled={
               isLoading ||
               !formData.selectedTaxId ||
-              !formData.value.trim() ||
+              // Only require value for non-GST taxes
+              (!isGstTax && !formData.value.trim()) ||
               (availableTaxes.length === 0 && !isEditing)
             }
           >

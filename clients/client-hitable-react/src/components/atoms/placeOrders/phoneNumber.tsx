@@ -75,25 +75,26 @@ const MemoPhoneNumber = (props) => {
         <h4 className="text-sm font-medium text-gray-700">
           Select an Existing Customer
         </h4>
-        {data?.map((customer) => (
-          <div
-            key={customer._id}
-            onClick={() => handleCustomerClick(customer.userId.phone)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleCustomerClick(customer.userId.phone);
-              }
-            }}
-            className="p-4 border border-black rounded-lg cursor-pointer hover:shadow-md transition flex justify-between items-center bg-white"
-          >
-            <div>
-              <div className="flex justify-between text-sm font-semibold">
-                {customer.userId.name}
+        {data?.length > 0 &&
+          data?.map((customer) => (
+            <div
+              key={customer._id}
+              onClick={() => handleCustomerClick(customer?.userId?.phone)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleCustomerClick(customer?.userId?.phone);
+                }
+              }}
+              className="p-4 border border-black rounded-lg cursor-pointer hover:shadow-md transition flex justify-between items-center bg-white"
+            >
+              <div>
+                <div className="flex justify-between text-sm font-semibold">
+                  {customer?.userId?.name}
+                </div>
               </div>
+              <ArrowRight className="w-4 h-4 text-black" />
             </div>
-            <ArrowRight className="w-4 h-4 text-black" />
-          </div>
-        ))}
+          ))}
       </div>
     </>
   );

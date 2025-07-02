@@ -9,7 +9,6 @@ interface TableHeaderProps {
 
 const MemoTableHeader = ({ width = "30rem" }: TableHeaderProps) => {
   const outletInfo = useBusinessData((s) => s.outletInfo);
-  //   const { setModalType, selectedTable, setOpenOrderModal } = useOrderStore();
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const setShowMoreOption = useOrderStore((s) => s.setShowMoreOption);
 
