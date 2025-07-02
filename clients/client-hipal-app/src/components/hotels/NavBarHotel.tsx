@@ -87,7 +87,7 @@ export function NavBarHotel({
             {!logoUrl && businessName && !centerText && (
               <div className="flex items-center justify-center w-10 h-10 rounded-full">
                 <span className="font-semibold text-primary font-playfair">
-                  {businessName.charAt(0) || "B"}
+                  {businessName?.charAt(0) || "B"}
                 </span>
               </div>
             )}
