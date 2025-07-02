@@ -739,7 +739,7 @@ const hotelAlertRouter = new Hono()
               to: userData?.phone?.toString(),
               type: "template",
               template: {
-                name: "f_delivered_message",
+                name: "f_delivered_template",
                 language: { code: "en" },
                 components: [
                   {

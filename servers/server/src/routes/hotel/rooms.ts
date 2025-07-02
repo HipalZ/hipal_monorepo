@@ -545,7 +545,7 @@ const roomRouter = new Hono()
             to: user?.phone?.toString(),
             type: "template",
             template: {
-              name: "f_welcomes_message",
+              name: "f_welcomes_template",
               language: { code: "en" },
               components: [
                 {
@@ -637,7 +637,11 @@ const roomRouter = new Hono()
 
                       {
                         type: "text",
-                        text: "https:google.com",
+                        text: "hotel",
+                      },
+                      {
+                        type: "text",
+                        text: "https//:www.google.com",
                       },
                     ],
                   },
@@ -769,7 +773,7 @@ const roomRouter = new Hono()
               to: userData?.phone?.toString(),
               type: "template",
               template: {
-                name: "test_checkout_template",
+                name: "f_checkout_template",
                 language: { code: "en" },
                 components: [
                   {
