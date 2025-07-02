@@ -1,25 +1,39 @@
-"use client";
+"use client"
 
-import { motion } from "framer-motion";
-import { Receipt, User } from "lucide-react";
-import { memo } from "react";
-import { Coins, Gift } from "lucide-react";
-import useLoyaltyData from "@/components/store/useLoyaltyData";
-import dynamic from "next/dynamic";
-import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
-import { usePaymentStore } from "@/components/store/usePaymentStore";
-import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import { motion } from "framer-motion"
+import { Receipt, User } from "lucide-react"
+import { memo, useMemo } from "react"
+import { Coins, Gift } from "lucide-react"
+import useLoyaltyData from "@/components/store/useLoyaltyData"
+import dynamic from "next/dynamic"
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader"
+import { usePaymentStore } from "@/components/store/usePaymentStore"
+import { _useAllBusiness } from "@/components/store/useAllBusiness"
+
 const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
   ssr: false,
   loading: () => <SkeletonLoader height={200} />,
-});
+})
 
 const MemoBillPage = () => {
-  const { loyaltySetting } = useLoyaltyData();
-  const currencySymbol = _useAllBusiness(
-    (s) => s.data.outletInfo?.currencySymbol,
-  );
-  const { showBillPage, setShowBillPage, billData } = usePaymentStore();
+  const { loyaltySetting } = useLoyaltyData()
+  const currencySymbol = _useAllBusiness((s) => s.data.outletInfo?.currencySymbol)
+  const { showBillPage, setShowBillPage, billData } = usePaymentStore()
+
+  // Flatten all items from billItems array for display
+  const allItems = useMemo(() => {
+    if (!billData?.billItems) return []
+    return billData.billItems.flatMap((billGroup) => billGroup.items.filter((item) => !item.isDeleted))
+  }, [billData?.billItems])
+
+  // Helper function to calculate item total price
+  const calculateItemTotal = (item: any) => {
+    const dishPrice = item.dish.price
+    const portionPrice = item.portion?.price || 0
+    const extrasTotal = item.extras?.reduce((sum: number, extra: any) => sum + extra.price * extra.quantity, 0) || 0
+    return (dishPrice + portionPrice + extrasTotal) * item.quantity
+  }
+
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -28,16 +42,15 @@ const MemoBillPage = () => {
         staggerChildren: 0.1,
       },
     },
-  };
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0 },
+  }
 
   return (
-    <BottomPopUp
-      height="h-[100dvh]"
-      bottomCross
-      hide
-      show={showBillPage}
-      onClose={() => setShowBillPage(false)}
-    >
+    <BottomPopUp height="h-[100dvh]" bottomCross hide show={showBillPage} onClose={() => setShowBillPage(false)}>
       <main className="bg-white pb-20 overflow-auto h-[100dvh] hide-scrollbar">
         <motion.div
           className="max-w-2xl mx-auto rounded-2xl"
@@ -48,27 +61,18 @@ const MemoBillPage = () => {
           <header className="p-4 rounded-t-lg">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">
-                  Bill Details
-                </h1>
-                <p className="text-black text-sm">
-                  Bill ID: {billData?.billRequestId || "Id"}
-                </p>
+                <h1 className="text-2xl font-bold text-gray-800">Bill Details</h1>
+                <p className="text-black text-sm">Bill ID: {billData?.billId || "Id"}</p>
               </div>
               <div className="text-right text-[#008800]">
-                <p className="text-lg font-semibold">
-                  Table {billData?.tableName || "table"}
-                </p>
-                <p className="text-sm text-black">
-                  Biller: {billData?.billing_user_name || "User"}
-                </p>
+                <p className="text-lg font-semibold">Table {billData?.tableName || "table"}</p>
+                <p className="text-sm text-black">Customer: {billData?.customerName || "Guest"}</p>
               </div>
             </div>
-
             <div className="flex gap-4 text-sm text-black">
               <div className="flex items-center gap-1">
                 <User size={16} />
-                <span>{billData?.customerName || "Customer"}</span>
+                <span>{billData?.customerPhone || "Phone not provided"}</span>
               </div>
             </div>
           </header>
@@ -93,9 +97,7 @@ const MemoBillPage = () => {
                     }}
                   >
                     <div className="w-12 h-12 bg-amber-400 rounded-full flex items-center justify-center">
-                      <span className="text-2xl font-bold text-white">
-                        {currencySymbol}1
-                      </span>
+                      <span className="text-2xl font-bold text-white">{currencySymbol}1</span>
                     </div>
                     <motion.div
                       className="absolute -right-1 -bottom-1 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center"
@@ -110,14 +112,9 @@ const MemoBillPage = () => {
                       <Coins className="w-4 h-4 text-white" />
                     </motion.div>
                   </motion.div>
-
                   <div className="flex-1">
-                    <h3 className="text-lg font-bold text-amber-900">
-                      1 Coin = 1 {currencySymbol}
-                    </h3>
-                    <p className="text-amber-700 text-sm">
-                      Earn exciting coinz by paying your bill!
-                    </p>
+                    <h3 className="text-lg font-bold text-amber-900">1 Coin = 1 {currencySymbol}</h3>
+                    <p className="text-amber-700 text-sm">Earn exciting coinz by paying your bill!</p>
                   </div>
                 </div>
 
@@ -134,10 +131,7 @@ const MemoBillPage = () => {
                     </div>
                     <p className="text-sm text-amber-900">
                       <span className="font-semibold">Redeem</span>
-                      <span className="text-amber-700">
-                        {" "}
-                        for amazing rewards!
-                      </span>
+                      <span className="text-amber-700"> for amazing rewards!</span>
                     </p>
                   </motion.div>
                 </div>
@@ -157,55 +151,89 @@ const MemoBillPage = () => {
               Order Details
             </h2>
 
-            <div className="space-y-4">
-              {billData?.items?.map((item, index) => (
-                <motion.article
-                  key={index?.toString()}
-                  variants={item}
-                  className="border-b last:border-0 pb-4 last:pb-0"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-black">
-                        {item?.dish?.name}
-                      </h3>
-                      <p className="text-sm text-black">
-                        Quantity: {item?.quantity}
-                      </p>
+            <div className="space-y-6">
+              {billData?.billItems?.map((billGroup, groupIndex) => (
+                <div key={groupIndex} className="space-y-4">
+                  {/* GST Group Header */}
+                  <div className="bg-gray-100 p-3 rounded-lg">
+                    <h3 className="font-semibold text-gray-700">GST {billGroup.gst}% Items</h3>
+                    <div className="flex justify-between text-sm text-gray-600 mt-1">
+                      <span>{billGroup.items.filter((item) => !item.isDeleted).length} items</span>
+                      <span>
+                        Subtotal: {currencySymbol}
+                        {billGroup.subTotal.toFixed(2)}
+                      </span>
                     </div>
-                    <p className="font-medium text-black">
-                      {currencySymbol}
-                      {item?.dish?.price * item?.quantity || 0}
-                    </p>
                   </div>
-                  {item?.portion && (
-                    <div className="mt-2 pl-4 border-l-2 border-gray-100">
-                      <div className="flex justify-between text-sm text-black">
-                        <span>+ {item?.portion?.name}</span>
+
+                  {/* Items in this GST group */}
+                  <div className="space-y-3 pl-4">
+                    {billGroup.items
+                      .filter((item) => !item.isDeleted)
+                      .map((item, index) => (
+                        <motion.article
+                          key={`${item._id}-${index}`}
+                          variants={itemVariants}
+                          className="border-b last:border-0 pb-3 last:pb-0"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-black">{item?.dish?.name}</h4>
+                              <p className="text-sm text-gray-600">Quantity: {item?.quantity}</p>
+                              {item?.dish?.instruction && (
+                                <p className="text-xs text-orange-600 italic mt-1">Note: {item.dish.instruction}</p>
+                              )}
+                            </div>
+                            <p className="font-medium text-black">
+                              {currencySymbol}
+                              {calculateItemTotal(item).toFixed(2)}
+                            </p>
+                          </div>
+
+                          {item?.portion && (
+                            <div className="mt-2 pl-4 border-l-2 border-blue-100">
+                              <div className="flex justify-between text-sm text-blue-600">
+                                <span>+ {item?.portion?.name}</span>
+                                <span>
+                                  {currencySymbol}
+                                  {item?.portion?.price}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          {item?.extras?.length > 0 && (
+                            <div className="mt-2 pl-4 border-l-2 border-green-100">
+                              {item?.extras.map((extra: any, idx: number) => (
+                                <div key={`${extra.id}-${idx}`} className="flex justify-between text-sm text-green-600">
+                                  <span>
+                                    + {extra?.name} (x{extra?.quantity})
+                                  </span>
+                                  <span>
+                                    {currencySymbol}
+                                    {(extra?.price * extra?.quantity).toFixed(2)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </motion.article>
+                      ))}
+                  </div>
+
+                  {/* GST Group Summary */}
+                  {billGroup.gst > 0 && (
+                    <div className="bg-gray-50 p-2 rounded text-sm">
+                      <div className="flex justify-between text-gray-600">
+                        <span>GST ({billGroup.gst}%)</span>
                         <span>
                           {currencySymbol}
-                          {item?.portion?.price}
+                          {billGroup.totalGst.toFixed(2)}
                         </span>
                       </div>
                     </div>
                   )}
-                  {item?.extras?.length > 0 && (
-                    <div className="mt-2 pl-4 border-l-2 border-gray-100">
-                      {item?.extras.map((extra, idx) => (
-                        <div
-                          key={idx?.toString()}
-                          className="flex justify-between text-sm text-black"
-                        >
-                          <span>+ {extra?.name}</span>
-                          <span>
-                            {currencySymbol}
-                            {extra?.price * extra?.quantity}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </motion.article>
+                </div>
               ))}
             </div>
           </motion.section>
@@ -223,61 +251,88 @@ const MemoBillPage = () => {
                   <span>Subtotal</span>
                   <span>
                     {currencySymbol}
-                    {billData?.subTotal}
+                    {billData?.subTotal.toFixed(2)}
                   </span>
                 </div>
               ) : null}
+
               {billData?.gst > 0 ? (
                 <div className="flex justify-between text-black">
-                  <span>GST</span>
+                  <span>Total GST</span>
                   <span>
                     {currencySymbol}
-                    {billData?.gst}
+                    {billData?.gst.toFixed(2)}
                   </span>
                 </div>
               ) : null}
+
+              {billData?.otherTax > 0 ? (
+                <div className="flex justify-between text-black">
+                  <span>Other Tax</span>
+                  <span>
+                    {currencySymbol}
+                    {billData?.otherTax.toFixed(2)}
+                  </span>
+                </div>
+              ) : null}
+
               {billData?.claimedCoins > 0 ? (
                 <div className="flex justify-between text-green-600">
-                  <span>Coins/Couponz</span>
+                  <span>Loyalty Coins</span>
                   <span>
                     -{currencySymbol}
-                    {billData?.claimedCoins}
+                    {billData?.claimedCoins.toFixed(2)}
                   </span>
                 </div>
               ) : null}
-              {billData?.serviceCharge ? (
+
+              {billData?.couponDiscount > 0 ? (
+                <div className="flex justify-between text-green-600">
+                  <span>Coupon Discount</span>
+                  <span>
+                    -{currencySymbol}
+                    {billData?.couponDiscount.toFixed(2)}
+                  </span>
+                </div>
+              ) : null}
+
+              {billData?.serviceCharge > 0 ? (
                 <div className="flex justify-between text-black">
                   <span>Service Charge</span>
                   <span>
                     {currencySymbol}
-                    {billData?.serviceCharge}
+                    {billData?.serviceCharge.toFixed(2)}
                   </span>
                 </div>
               ) : null}
+
               {billData?.discount > 0 ? (
                 <div className="flex justify-between text-green-600">
                   <span>Discount</span>
                   <span>
                     -{currencySymbol}
-                    {billData?.discount}
+                    {billData?.discount.toFixed(2)}
                   </span>
                 </div>
               ) : null}
+
               {billData?.tips > 0 ? (
                 <div className="flex justify-between text-black">
                   <span>Tips</span>
                   <span>
                     {currencySymbol}
-                    {billData?.tips}
+                    {billData?.tips.toFixed(2)}
                   </span>
                 </div>
               ) : null}
+
               <div className="h-px bg-gray-200 my-2" />
+
               <div className="text-black flex justify-between text-lg">
                 <span className="font-bold">Total</span>
                 <span className="font-bold">
                   {currencySymbol}
-                  {billData?.total}
+                  {billData?.total?.toFixed(2)}
                 </span>
               </div>
             </div>
@@ -285,8 +340,9 @@ const MemoBillPage = () => {
         </motion.div>
       </main>
     </BottomPopUp>
-  );
-};
+  )
+}
 
-const BillPage = memo(MemoBillPage);
-export default BillPage;
+const BillPage = memo(MemoBillPage)
+
+export default BillPage

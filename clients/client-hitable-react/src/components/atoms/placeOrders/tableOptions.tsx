@@ -47,6 +47,8 @@ const MemoTableOptions = () => {
     setOpenOrderModal(false);
   }, [setOpenOrderModal]);
 
+  console.log("this is table data",selectedTable);
+
   return (
     <section className="min-h-[90dvh] flex justify-center md:py-[8rem] px-4 mx-auto">
       <CardContent className="space-y-4 mt-24 md:mt-6 h-[70dvh] pb-[5rem] overflow-auto hide-scrollbar">
