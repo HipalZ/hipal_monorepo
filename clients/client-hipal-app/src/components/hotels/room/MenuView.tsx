@@ -22,15 +22,11 @@ interface MenuViewProps {
   menuId: IMenuLayout;
 }
 
-export const MenuView = ({
-  restaurant,
-  onBack,
-  isLoading,
-  menuId,
-}: MenuViewProps) => {
+export const MenuView = ({ restaurant, onBack, isLoading }: MenuViewProps) => {
   const { menuLoading, menuData } = useGetAllRestaurantMenu(
     restaurant._id as string,
   );
+  console.log("menuData", menuData);
   return (
     <div className="relative p-2">
       <div className="flex items-center mb-4">
@@ -61,7 +57,7 @@ export const MenuView = ({
               parentCategory={menuData?.parentCategories || []}
               childCategory={menuData?.childCategories || []}
               timings={menuData?.timings}
-              menuLayout={menuId}
+              menuLayout={menuData?.menuData}
             />
             <LiveCartHotel />
           </div>
