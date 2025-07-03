@@ -238,7 +238,7 @@ const MemoNormalSettle = ({
     }
   };
 
-  const openNormalSettle = useCallback(async () => {
+  const openNormalSettle = async () => {
     const really = window.confirm("Are you sure you want to confirm settle?");
     if (!really) return;
     const response = await confirmSettle({
@@ -247,9 +247,9 @@ const MemoNormalSettle = ({
     });
 
     if (response.status === 200 || response.status === 201) {
-      await handleConfirm();
-    }
-  }, [confirmSettle, businessId, selectedTable?.name]);
+      await handleConfirm();  
+    } 
+  };
 
   if (isLoading) {
     return <SpinnerMemo />;
