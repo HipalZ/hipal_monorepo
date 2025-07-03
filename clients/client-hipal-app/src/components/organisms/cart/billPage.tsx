@@ -1,38 +1,73 @@
-"use client"
+"use client";
 
-import { motion } from "framer-motion"
-import { Receipt, User } from "lucide-react"
-import { memo, useMemo } from "react"
-import { Coins, Gift } from "lucide-react"
-import useLoyaltyData from "@/components/store/useLoyaltyData"
-import dynamic from "next/dynamic"
-import SkeletonLoader from "@/components/atoms/loader/skeletonLoader"
-import { usePaymentStore } from "@/components/store/usePaymentStore"
-import { _useAllBusiness } from "@/components/store/useAllBusiness"
+import { motion } from "framer-motion";
+import { Receipt, User } from "lucide-react";
+import { memo, useMemo } from "react";
+import { Coins, Gift } from "lucide-react";
+import useLoyaltyData from "@/components/store/useLoyaltyData";
+import dynamic from "next/dynamic";
+import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
   ssr: false,
   loading: () => <SkeletonLoader height={200} />,
-})
+});
 
 const MemoBillPage = () => {
-  const { loyaltySetting } = useLoyaltyData()
-  const currencySymbol = _useAllBusiness((s) => s.data.outletInfo?.currencySymbol)
-  const { showBillPage, setShowBillPage, billData } = usePaymentStore()
+  const { loyaltySetting } = useLoyaltyData();
+  const currencySymbol = _useAllBusiness(
+    (s) => s.data.outletInfo?.currencySymbol,
+  );
+  const { showBillPage, setShowBillPage, billData } = usePaymentStore();
 
-  // Flatten all items from billItems array for display
-  const allItems = useMemo(() => {
-    if (!billData?.billItems) return []
-    return billData.billItems.flatMap((billGroup) => billGroup.items.filter((item) => !item.isDeleted))
-  }, [billData?.billItems])
-
-  // Helper function to calculate item total price
   const calculateItemTotal = (item: any) => {
-    const dishPrice = item.dish.price
-    const portionPrice = item.portion?.price || 0
-    const extrasTotal = item.extras?.reduce((sum: number, extra: any) => sum + extra.price * extra.quantity, 0) || 0
-    return (dishPrice + portionPrice + extrasTotal) * item.quantity
-  }
+    const dishPrice = item.dish.price;
+    const portionPrice = item.portion?.price || 0;
+    const extrasTotal =
+      item.extras?.reduce(
+        (sum: number, extra: any) => sum + extra.price * extra.quantity,
+        0,
+      ) || 0;
+    return (dishPrice + portionPrice + extrasTotal) * item.quantity;
+  };
+
+  // Group items by GST rate and calculate totals
+  const itemsByGST = useMemo(() => {
+    if (!billData?.billItems) return [];
+
+    const grouped: { [key: number]: any[] } = {};
+
+    // Filter out deleted items and group by GST rate
+    billData.billItems
+      .filter((item: any) => !item.isDeleted)
+      .forEach((item: any) => {
+        const gstRate = item.dish.gst || 0;
+        if (!grouped[gstRate]) {
+          grouped[gstRate] = [];
+        }
+        grouped[gstRate].push(item);
+      });
+
+    // Convert to array with calculated totals
+    return Object.entries(grouped)
+      .map(([gstRate, items]) => {
+        const subTotal = items.reduce(
+          (sum, item) => sum + calculateItemTotal(item),
+          0,
+        );
+        const totalGst = (subTotal * Number(gstRate)) / 100;
+
+        return {
+          gst: Number(gstRate),
+          items,
+          subTotal,
+          totalGst,
+        };
+      })
+      .sort((a, b) => a.gst - b.gst);
+  }, [billData?.billItems]);
 
   const container = {
     hidden: { opacity: 0 },
@@ -42,15 +77,21 @@ const MemoBillPage = () => {
         staggerChildren: 0.1,
       },
     },
-  }
+  };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 },
-  }
+  };
 
   return (
-    <BottomPopUp height="h-[100dvh]" bottomCross hide show={showBillPage} onClose={() => setShowBillPage(false)}>
+    <BottomPopUp
+      height="h-[100dvh]"
+      bottomCross
+      hide
+      show={showBillPage}
+      onClose={() => setShowBillPage(false)}
+    >
       <main className="bg-white pb-20 overflow-auto h-[100dvh] hide-scrollbar">
         <motion.div
           className="max-w-2xl mx-auto rounded-2xl"
@@ -61,12 +102,20 @@ const MemoBillPage = () => {
           <header className="p-4 rounded-t-lg">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">Bill Details</h1>
-                <p className="text-black text-sm">Bill ID: {billData?.billId || "Id"}</p>
+                <h1 className="text-2xl font-bold text-gray-800">
+                  Bill Details
+                </h1>
+                <p className="text-black text-sm">
+                  Bill ID: {billData?.billId || "Id"}
+                </p>
               </div>
               <div className="text-right text-[#008800]">
-                <p className="text-lg font-semibold">Table {billData?.tableName || "table"}</p>
-                <p className="text-sm text-black">Customer: {billData?.customerName || "Guest"}</p>
+                <p className="text-lg font-semibold">
+                  Table {billData?.tableName || "table"}
+                </p>
+                <p className="text-sm text-black">
+                  Customer: {billData?.customerName || "Guest"}
+                </p>
               </div>
             </div>
             <div className="flex gap-4 text-sm text-black">
@@ -97,7 +146,9 @@ const MemoBillPage = () => {
                     }}
                   >
                     <div className="w-12 h-12 bg-amber-400 rounded-full flex items-center justify-center">
-                      <span className="text-2xl font-bold text-white">{currencySymbol}1</span>
+                      <span className="text-2xl font-bold text-white">
+                        {currencySymbol}1
+                      </span>
                     </div>
                     <motion.div
                       className="absolute -right-1 -bottom-1 w-6 h-6 bg-amber-500 rounded-full flex items-center justify-center"
@@ -113,8 +164,12 @@ const MemoBillPage = () => {
                     </motion.div>
                   </motion.div>
                   <div className="flex-1">
-                    <h3 className="text-lg font-bold text-amber-900">1 Coin = 1 {currencySymbol}</h3>
-                    <p className="text-amber-700 text-sm">Earn exciting coinz by paying your bill!</p>
+                    <h3 className="text-lg font-bold text-amber-900">
+                      1 Coin = 1 {currencySymbol}
+                    </h3>
+                    <p className="text-amber-700 text-sm">
+                      Earn exciting coinz by paying your bill!
+                    </p>
                   </div>
                 </div>
 
@@ -131,7 +186,10 @@ const MemoBillPage = () => {
                     </div>
                     <p className="text-sm text-amber-900">
                       <span className="font-semibold">Redeem</span>
-                      <span className="text-amber-700"> for amazing rewards!</span>
+                      <span className="text-amber-700">
+                        {" "}
+                        for amazing rewards!
+                      </span>
                     </p>
                   </motion.div>
                 </div>
@@ -152,25 +210,26 @@ const MemoBillPage = () => {
             </h2>
 
             <div className="space-y-6">
-              {billData?.billItems?.map((billGroup, groupIndex) => (
-                <div key={groupIndex} className="space-y-4">
-                  {/* GST Group Header */}
-                  <div className="bg-gray-100 p-3 rounded-lg">
-                    <h3 className="font-semibold text-gray-700">GST {billGroup.gst}% Items</h3>
-                    <div className="flex justify-between text-sm text-gray-600 mt-1">
-                      <span>{billGroup.items.filter((item) => !item.isDeleted).length} items</span>
-                      <span>
-                        Subtotal: {currencySymbol}
-                        {billGroup.subTotal.toFixed(2)}
-                      </span>
+              {itemsByGST.length > 0 ? (
+                itemsByGST.map((billGroup, groupIndex) => (
+                  <div key={groupIndex} className="space-y-4">
+                    {/* GST Group Header */}
+                    <div className="bg-gray-100 p-3 rounded-lg">
+                      <h3 className="font-semibold text-gray-700">
+                        GST {billGroup.gst}% Items
+                      </h3>
+                      <div className="flex justify-between text-sm text-gray-600 mt-1">
+                        <span>{billGroup.items.length} items</span>
+                        <span>
+                          Subtotal: {currencySymbol}
+                          {billGroup.subTotal.toFixed(2)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Items in this GST group */}
-                  <div className="space-y-3 pl-4">
-                    {billGroup.items
-                      .filter((item) => !item.isDeleted)
-                      .map((item, index) => (
+                    {/* Items in this GST group */}
+                    <div className="space-y-3 pl-4">
+                      {billGroup.items.map((item: any, index: number) => (
                         <motion.article
                           key={`${item._id}-${index}`}
                           variants={itemVariants}
@@ -178,10 +237,16 @@ const MemoBillPage = () => {
                         >
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
-                              <h4 className="font-medium text-black">{item?.dish?.name}</h4>
-                              <p className="text-sm text-gray-600">Quantity: {item?.quantity}</p>
+                              <h4 className="font-medium text-black">
+                                {item?.dish?.name}
+                              </h4>
+                              <p className="text-sm text-gray-600">
+                                Quantity: {item?.quantity}
+                              </p>
                               {item?.dish?.instruction && (
-                                <p className="text-xs text-orange-600 italic mt-1">Note: {item.dish.instruction}</p>
+                                <p className="text-xs text-orange-600 italic mt-1">
+                                  Note: {item.dish.instruction}
+                                </p>
                               )}
                             </div>
                             <p className="font-medium text-black">
@@ -205,13 +270,18 @@ const MemoBillPage = () => {
                           {item?.extras?.length > 0 && (
                             <div className="mt-2 pl-4 border-l-2 border-green-100">
                               {item?.extras.map((extra: any, idx: number) => (
-                                <div key={`${extra.id}-${idx}`} className="flex justify-between text-sm text-green-600">
+                                <div
+                                  key={`${extra.id}-${idx}`}
+                                  className="flex justify-between text-sm text-green-600"
+                                >
                                   <span>
                                     + {extra?.name} (x{extra?.quantity})
                                   </span>
                                   <span>
                                     {currencySymbol}
-                                    {(extra?.price * extra?.quantity).toFixed(2)}
+                                    {(extra?.price * extra?.quantity).toFixed(
+                                      2,
+                                    )}
                                   </span>
                                 </div>
                               ))}
@@ -219,22 +289,28 @@ const MemoBillPage = () => {
                           )}
                         </motion.article>
                       ))}
-                  </div>
-
-                  {/* GST Group Summary */}
-                  {billGroup.gst > 0 && (
-                    <div className="bg-gray-50 p-2 rounded text-sm">
-                      <div className="flex justify-between text-gray-600">
-                        <span>GST ({billGroup.gst}%)</span>
-                        <span>
-                          {currencySymbol}
-                          {billGroup.totalGst.toFixed(2)}
-                        </span>
-                      </div>
                     </div>
-                  )}
+
+                    {/* GST Group Summary */}
+                    {billGroup.gst > 0 && (
+                      <div className="bg-gray-50 p-2 rounded text-sm">
+                        <div className="flex justify-between text-gray-600">
+                          <span>GST ({billGroup.gst}%)</span>
+                          <span>
+                            {currencySymbol}
+                            {billGroup.totalGst.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Receipt className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>No items found in this bill</p>
                 </div>
-              ))}
+              )}
             </div>
           </motion.section>
 
@@ -340,9 +416,9 @@ const MemoBillPage = () => {
         </motion.div>
       </main>
     </BottomPopUp>
-  )
-}
+  );
+};
 
-const BillPage = memo(MemoBillPage)
+const BillPage = memo(MemoBillPage);
 
-export default BillPage
+export default BillPage;
