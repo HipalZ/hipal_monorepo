@@ -475,14 +475,20 @@ const paymentsRouter = new Hono()
             return respond(c, "No Items in cart", true, 200, {});
           }
 
-          const registerUser = await axios.post(posApiPaths.registerUser, {
-            app_key: businessPosConfig.accessKey,
-            app_secret: businessPosConfig.secretKey,
-            access_token: businessPosConfig.authToken,
-            restID: businessPosConfig.restId,
-            phone: tableSession?.pin,
-            name: tableSession?.customerName,
-          });
+          if (!tableSession?.isUserRegistered) {
+            const registerUser = await axios.post(posApiPaths.registerUser, {
+              app_key: businessPosConfig.accessKey,
+              app_secret: businessPosConfig.secretKey,
+              access_token: businessPosConfig.authToken,
+              restID: businessPosConfig.restId,
+              phone: tableSession?.pin,
+              name: tableSession?.customerName,
+            });
+
+            if (registerUser.data.status === "0") {
+              throw new Error("Error in registering user");
+            }
+          }
 
           const petpoojaCart = convertToPetpoojaCart(
             cartItems,
@@ -535,6 +541,19 @@ const paymentsRouter = new Hono()
             {
               session,
             },
+          );
+
+          await UserSession.findOneAndUpdate(
+            {
+              tableName,
+              businessId,
+            },
+            {
+              $set: {
+                isUserRegistered: true,
+              },
+            },
+            { session },
           );
         }
 
@@ -693,14 +712,20 @@ const paymentsRouter = new Hono()
             return respond(c, "No Items in cart", true, 200, {});
           }
 
-          const registerUser = await axios.post(posApiPaths.registerUser, {
-            app_key: businessPosConfig.accessKey,
-            app_secret: businessPosConfig.secretKey,
-            access_token: businessPosConfig.authToken,
-            restID: businessPosConfig.restId,
-            phone: tableSession?.pin,
-            name: tableSession?.customerName,
-          });
+          if (tableSession?.isUserRegistered) {
+            const registerUser = await axios.post(posApiPaths.registerUser, {
+              app_key: businessPosConfig.accessKey,
+              app_secret: businessPosConfig.secretKey,
+              access_token: businessPosConfig.authToken,
+              restID: businessPosConfig.restId,
+              phone: tableSession?.pin,
+              name: tableSession?.customerName,
+            });
+
+            if (registerUser.data.status === "0") {
+              throw new Error("Error in registering user");
+            }
+          }
 
           const petpoojaCart = convertToPetpoojaCart(
             cartItems,
@@ -753,6 +778,19 @@ const paymentsRouter = new Hono()
             {
               session,
             },
+          );
+
+          await UserSession.findOneAndUpdate(
+            {
+              tableName,
+              businessId,
+            },
+            {
+              $set: {
+                isUserRegistered: true,
+              },
+            },
+            { session },
           );
         }
 

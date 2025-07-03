@@ -193,10 +193,15 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: false,
   },
-  items:{
+  items: {
     type: [Object],
     required: false,
-  }
+  },
+  isUserRegistered: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
 });
 
 userSessionSchema.index({ businessId: 1, tableName: 1 }, { unique: true });

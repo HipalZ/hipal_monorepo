@@ -3058,14 +3058,20 @@ const posRouter = new Hono()
           return respond(c, "No Items in cart", true, 200, {});
         }
 
-        const registerUser = await axios.post(posApiPaths.registerUser, {
-          app_key: pos.accessKey,
-          app_secret: pos.secretKey,
-          access_token: pos.authToken,
-          restID: pos.restId,
-          phone: tableSession?.pin,
-          name: tableSession?.customerName,
-        });
+        if (!tableSession.isUserRegistered) {
+          const registerUser = await axios.post(posApiPaths.registerUser, {
+            app_key: pos.accessKey,
+            app_secret: pos.secretKey,
+            access_token: pos.authToken,
+            restID: pos.restId,
+            phone: tableSession?.pin,
+            name: tableSession?.customerName,
+          });
+
+          if (registerUser.data.status === "0") {
+            throw new Error("Error in registering user");
+          }
+        }
 
         const petpoojaCart = convertToPetpoojaCart(
           cartItems,
@@ -3118,6 +3124,19 @@ const posRouter = new Hono()
           {
             session,
           },
+        );
+
+        await UserSession.findOneAndUpdate(
+          {
+            tableName,
+            businessId,
+          },
+          {
+            $set: {
+              isUserRegistered: true,
+            },
+          },
+          { session },
         );
 
         return respond(c, "Success", true, 200, {});
