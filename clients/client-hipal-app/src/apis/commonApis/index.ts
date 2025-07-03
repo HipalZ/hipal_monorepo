@@ -104,3 +104,20 @@ export const getMenuData = async (tableName: string, businessId: string) => {
   }
   return null;
 };
+
+export const getMenuWithoutTableName = async (businessId: string) => {
+  const response = await apiRpc.menu.fetch_table_menu.$get({
+    query: {
+      businessId: businessId,
+    },
+  });
+  const menuData = await response.json();
+  if (response.status === 400) {
+    console.error("Error fetching menu data:", menuData);
+    // redirect("/");
+  }
+  if (response.status === 200) {
+    return menuData.data;
+  }
+  return null;
+};

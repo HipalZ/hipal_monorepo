@@ -66,7 +66,7 @@ export default function FoodOrderPopup({ show, onClose, businessId, room, userId
                 // If already selected, toggle menu view
                 setCurrentView((prev) => (prev === "restaurants" ? "menu" : "restaurants"))
             } else {
-
+                console.log("Selected restaurant", restaurant)
                 setSelectedRestaurant(restaurant)
                 setCurrentView("menu")
 
