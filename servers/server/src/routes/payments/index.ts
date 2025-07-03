@@ -471,6 +471,9 @@ const paymentsRouter = new Hono()
           const cartItems = kotOrders.flatMap((order) =>
             order.cart.filter((item) => !item.isDeleted),
           );
+          if (!kotOrders.length) {
+            return respond(c, "No Items in cart", true, 200, {});
+          }
 
           const registerUser = await axios.post(posApiPaths.registerUser, {
             app_key: businessPosConfig.accessKey,
@@ -480,10 +483,6 @@ const paymentsRouter = new Hono()
             phone: tableSession?.pin,
             name: tableSession?.customerName,
           });
-
-          if (registerUser.data.success === "0") {
-            throw new Error("Failed to register user");
-          }
 
           const petpoojaCart = convertToPetpoojaCart(
             cartItems,
@@ -690,6 +689,10 @@ const paymentsRouter = new Hono()
             order.cart.filter((item) => !item.isDeleted),
           );
 
+          if (!kotOrders.length) {
+            return respond(c, "No Items in cart", true, 200, {});
+          }
+
           const registerUser = await axios.post(posApiPaths.registerUser, {
             app_key: businessPosConfig.accessKey,
             app_secret: businessPosConfig.secretKey,
@@ -698,10 +701,6 @@ const paymentsRouter = new Hono()
             phone: tableSession?.pin,
             name: tableSession?.customerName,
           });
-
-          if (registerUser.data.success === "0") {
-            throw new Error("Failed to register user");
-          }
 
           const petpoojaCart = convertToPetpoojaCart(
             cartItems,

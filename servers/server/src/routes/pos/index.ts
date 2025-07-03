@@ -3054,7 +3054,7 @@ const posRouter = new Hono()
           order.cart.filter((item) => !item.isDeleted),
         );
 
-        if (!cartItems.length) {
+        if (!kotOrders.length) {
           return respond(c, "No Items in cart", true, 200, {});
         }
 
