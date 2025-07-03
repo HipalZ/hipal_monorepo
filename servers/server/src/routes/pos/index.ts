@@ -3054,18 +3054,18 @@ const posRouter = new Hono()
           order.cart.filter((item) => !item.isDeleted),
         );
 
+        if (!cartItems.length) {
+          return respond(c, "No Items in cart", true, 200, {});
+        }
+
         const registerUser = await axios.post(posApiPaths.registerUser, {
           app_key: pos.accessKey,
           app_secret: pos.secretKey,
           access_token: pos.authToken,
           restID: pos.restId,
           phone: tableSession?.pin,
-          name: kotOrders[0].name,
+          name: tableSession?.customerName,
         });
-
-        if (registerUser.data.success === "0") {
-          throw new Error("Failed to register user");
-        }
 
         const petpoojaCart = convertToPetpoojaCart(
           cartItems,

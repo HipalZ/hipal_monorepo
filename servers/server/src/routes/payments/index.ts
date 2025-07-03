@@ -478,7 +478,7 @@ const paymentsRouter = new Hono()
             access_token: businessPosConfig.authToken,
             restID: businessPosConfig.restId,
             phone: tableSession?.pin,
-            name: kotOrders[0].name,
+            name: tableSession?.customerName,
           });
 
           if (registerUser.data.success === "0") {
@@ -696,7 +696,7 @@ const paymentsRouter = new Hono()
             access_token: businessPosConfig.authToken,
             restID: businessPosConfig.restId,
             phone: tableSession?.pin,
-            name: kotOrders[0].name,
+            name: tableSession?.customerName,
           });
 
           if (registerUser.data.success === "0") {
