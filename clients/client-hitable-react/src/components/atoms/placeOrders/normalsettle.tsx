@@ -247,11 +247,11 @@ const MemoNormalSettle = ({
     });
 
     if (response.status === 200 || response.status === 201) {
-      handleConfirm();
+      await handleConfirm();
     }
   }, [confirmSettle, businessId, selectedTable?.name]);
 
-  if (isLoading || isConfirming) {
+  if (isLoading) {
     return <SpinnerMemo />;
   }
 
