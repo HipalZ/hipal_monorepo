@@ -206,6 +206,8 @@ export default function ServiceCategoryCard({ category, className = "", business
   // Loading state
   const isLoading = gettingRoomLoader || creatingAlert
 
+  console.log('ServiceCategoryCard',menuId)
+
   return (
     <>
       <Card

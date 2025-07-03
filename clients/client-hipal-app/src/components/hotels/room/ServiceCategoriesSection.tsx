@@ -33,7 +33,7 @@ export default function ServiceCategoriesSection({
   if (!categoriesData || categoriesData.length === 0) {
     return null;
   }
-
+console.log('ServiceCategoryse',menuId)
   return (
     <div className="relative space-y-4">
       <div className="absolute -right-8 w-[calc(100%-10rem)] h-[2px] bg-black top-5" />

@@ -25,7 +25,7 @@ interface IDishesProps {
 const DishesList: FC<IDishesProps> = (props) => {
   const { childCategory, parentCategory, menuLayout } = props;
   const { isSearchActive } = useSearch();
-
+console.log('dishesList',menuLayout)
   const primaryColor = menuLayout?.primaryColor || "#ec4899";
   const secondaryColor = menuLayout?.secondaryColor || "#fce7f3";
 

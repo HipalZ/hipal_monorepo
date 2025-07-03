@@ -21,7 +21,7 @@ interface FoodOrderPopupProps {
     room: string
     userId: string
     services: IService[]
-    menuId:IMenuLayout | undefined
+    menuId?:IMenuLayout
 }
 
 interface ILinkHotels {
@@ -37,6 +37,7 @@ type OrderStatus = "idle" | "loading" | "success" | "error"
 
 export default function FoodOrderPopup({ show, onClose, businessId, room, userId, services, menuId }: FoodOrderPopupProps) {
     // State
+    console.log('food menuId',menuId)
     const [orderStatus, setOrderStatus] = useState<OrderStatus>("idle")
     const [selectedRestaurant, setSelectedRestaurant] = useState<ILinkHotels | null>(null)
     const [currentView, setCurrentView] = useState<ViewType>("restaurants")

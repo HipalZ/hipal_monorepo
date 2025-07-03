@@ -116,11 +116,11 @@ const page = async ({
   const businessData = (await getBusinessData(
     params.businessId,
   )) as BusinessDetails;
+  console.log('businessData',businessData?.menuId)
   const room =
     typeof searchParams.room === "string" ? searchParams.room : "hipalz";
   const userId = typeof searchParams.id === "string" ? searchParams.id : "";
   const themeData = await getThemeSettings(businessData?.businessId);
-
   return (
     <HotelBackgroundContainer overlayOpacity={50}>
       <ViewPortContainer className="relative mx-auto max-w-[30rem] pb-[10rem]">

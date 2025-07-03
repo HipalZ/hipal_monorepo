@@ -22,7 +22,9 @@ interface MenuViewProps {
     menuId:IMenuLayout
 }
 
+
 export const MenuView = ({ restaurant, onBack, isLoading, menuId }: MenuViewProps) => {
+    console.log('menuview',menuId)
     const { menuLoading, menuData } = useGetAllRestaurantMenu(restaurant._id as string)
 
     return (
