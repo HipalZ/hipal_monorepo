@@ -1002,23 +1002,22 @@ const tableRouter = new Hono()
 
             const tenDigitCode = generateTenDigitCode();
 
-            await UserSession.create(
-              [
-                {
-                  businessId,
-                  tableName: destinationTable.name,
+            const sessionUpdate = await UserSession.findOneAndUpdate(
+              { businessId, tableName: destinationTable.name },
+              {
+                $set: {
                   transferTableFrom: sourceTable._id,
                   transferTableTo: destinationTable._id,
                   isTransfer: true,
                   customerName: tableSession?.customerName || "Guest",
                   transferBy,
                   transferType: "ITEM",
-                  hiCode: hiCode,
+                  hiCode,
                   pin: tenDigitCode,
                   date: Date.now(),
                 },
-              ],
-              { session },
+              },
+              { upsert: true, session },
             );
           }
 
