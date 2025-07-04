@@ -145,6 +145,7 @@ const transformData = (data) => {
             price: Number(variation?.price),
             default: false,
             portionTypes: ["VEG"],
+            posPortionId: variation?.id,
           })) || [];
 
         for (let i = 0; i < item?.variation?.length; i++) {
@@ -362,8 +363,8 @@ function convertToPetpoojaCart(
 
         // Use portion ID if available, otherwise use dish ID
         const itemId = cartItem.portion
-          ? cartItem.portion._id
-          : cartItem.dish._id;
+          ? cartItem.portion.posPortionId
+          : cartItem.dish.posDishId;
 
         // Create KOTItem
         const kotItem = {

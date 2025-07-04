@@ -23,6 +23,7 @@ import { OrderVerificationTypeEnum } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
+import { sleep } from "bun";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
@@ -337,27 +338,25 @@ const posRouter = new Hono()
           return respond(c, "Table session not found", true, 404, {});
         }
 
-        if (!tableSession.billGeneratedBy) {
-          sendBillPrintEvent({
-            tableName: tableName,
-            businessId: businessId,
-            customerName: kotOrders[0].name,
-            customerPhone: kotOrders[0].phone,
-            items: billItems,
-            posRestName: businessPosConfig.restName,
-            generatedBy: tableSession?.billGeneratedBy || generatedBy,
-            date: Date.now(),
-            serviceCharge: tableSession?.serviceCharge || 0,
-            discount: tableSession?.discount || 0,
-            tax: tableSession?.gst || 0,
-            total: tableSession?.total || 0,
-            billRequestId: tableSession?._id.toString() || "",
-            subTotal: tableSession?.subTotal || 0,
-            tips: tableSession?.tips || 0,
-            claimedCoins: tableSession?.claimedCoins || 0,
-            couponDiscount: tableSession?.couponDiscount || 0,
-          });
-        }
+        sendBillPrintEvent({
+          tableName: tableName,
+          businessId: businessId,
+          customerName: kotOrders[0].name,
+          customerPhone: kotOrders[0].phone,
+          items: billItems,
+          posRestName: businessPosConfig.restName,
+          generatedBy: tableSession?.billGeneratedBy || generatedBy,
+          date: Date.now(),
+          serviceCharge: tableSession?.serviceCharge || 0,
+          discount: tableSession?.discount || 0,
+          tax: tableSession?.gst || 0,
+          total: tableSession?.total || 0,
+          billRequestId: tableSession?._id.toString() || "",
+          subTotal: tableSession?.subTotal || 0,
+          tips: tableSession?.tips || 0,
+          claimedCoins: tableSession?.claimedCoins || 0,
+          couponDiscount: tableSession?.couponDiscount || 0,
+        });
 
         return c.json(
           {
@@ -1324,14 +1323,15 @@ const posRouter = new Hono()
         tableName: z.string().max(30),
         internalCart: z.array(z.object({})),
         businessId: z.string().min(1).max(50),
-        userId: z.string().min(1).max(100),
+        userId: z.string().min(1).max(100).optional(),
+        customerPhone: z.string().min(1).max(10).optional(),
       }),
     ),
 
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { internalCart, tableName, businessId, userId } =
+        const { internalCart, tableName, businessId, userId, customerPhone } =
           await c.req.json();
         //  table info
         const tableData = await Table.findOne({
@@ -1343,7 +1343,11 @@ const posRouter = new Hono()
           return respond(c, "Table not found", true, 404, {});
         }
 
-        const userData = await User.findById(userId);
+        // const userData = await User.findById(userId);
+        const userData = await User.findOne({
+          phone: customerPhone,
+        });
+
         if (!userData) {
           return respond(c, "User not found", true, 404, {});
         }
@@ -1709,6 +1713,7 @@ const posRouter = new Hono()
         }
 
         const tenDigitCode = generateTenDigitCode();
+
         if (!tableSession) {
           const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
           const userSession = new UserSession(
@@ -3076,7 +3081,7 @@ const posRouter = new Hono()
         const petpoojaCart = convertToPetpoojaCart(
           cartItems,
           pos.restId,
-          kotOrders[0].name,
+          tableSession?.customerName,
           tableSession?.pin,
           tableName,
           pos.accessKey,
@@ -3100,14 +3105,17 @@ const posRouter = new Hono()
           tableNo: tableName,
         };
 
-        const response = await axios.post(posApiPaths.requestBill, payload, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        if (!tableSession?.billRequest) {
+          await sleep(3000);
+          const response = await axios.post(posApiPaths.requestBill, payload, {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
 
-        if (response.data.success === "0") {
-          throw new Error("Error in requesting bill");
+          if (response.data.success === "0") {
+            throw new Error("Error in requesting bill");
+          }
         }
 
         await KotOrder.updateMany(
@@ -3134,6 +3142,7 @@ const posRouter = new Hono()
           {
             $set: {
               isUserRegistered: true,
+              billRequest: true,
             },
           },
           { session },

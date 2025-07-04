@@ -61,6 +61,8 @@ export const portionSchema = z.object({
         "portionType must be one of VEG, NON_VEG, EGG, VEGAN, GLUTEN_FREE",
     },
   ),
+
+  posPortionId: z.string().optional(),
 });
 
 export const dishSchema = z.object({

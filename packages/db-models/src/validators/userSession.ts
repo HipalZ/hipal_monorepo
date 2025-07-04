@@ -44,6 +44,7 @@ export const userSessionSchema = z.object({
   customerIds: z.array(ObjectIdSchema).optional(),
   items: z.array(z.object({})).optional(),
   isUserRegistered: z.boolean().optional().default(false),
+  billRequest: z.boolean().optional().default(false),
 });
 
 export type UserSessionSchemaType = z.infer<typeof userSessionSchema>;

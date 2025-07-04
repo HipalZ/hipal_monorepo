@@ -24,6 +24,10 @@ const portionSchema = new mongoose.Schema<PortionType>(
       enum: DishTypeEnum,
       required: true,
     },
+    posPortionId: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,

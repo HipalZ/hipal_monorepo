@@ -95,6 +95,10 @@ startOfToday.setHours(0, 0, 0, 0);
 export const endOfToday = new Date();
 endOfToday.setHours(23, 59, 59, 999);
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export const calculateDiscount = async (
   businessId: string,
   totalBill: number,
@@ -471,9 +475,6 @@ const paymentsRouter = new Hono()
           const cartItems = kotOrders.flatMap((order) =>
             order.cart.filter((item) => !item.isDeleted),
           );
-          if (!kotOrders.length) {
-            return respond(c, "No Items in cart", true, 200, {});
-          }
 
           if (!tableSession?.isUserRegistered) {
             const registerUser = await axios.post(posApiPaths.registerUser, {
@@ -490,22 +491,23 @@ const paymentsRouter = new Hono()
             }
           }
 
-          const petpoojaCart = convertToPetpoojaCart(
-            cartItems,
-            businessPosConfig.restId,
-            kotOrders[0].name,
-            tableSession?.pin,
-            tableName,
-            businessPosConfig.accessKey,
-            businessPosConfig.secretKey,
+          if (kotOrders.length > 0) {
+            const petpoojaCart = convertToPetpoojaCart(
+              cartItems,
+              businessPosConfig.restId,
+              tableSession?.customerName,
+              tableSession?.pin,
+              tableName,
+              businessPosConfig.accessKey,
+              businessPosConfig.secretKey,
+              businessPosConfig.authToken,
+            );
 
-            businessPosConfig.authToken,
-          );
+            const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
 
-          const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
-
-          if (saveKot.data.status === "0") {
-            throw new Error("Error in saving kot");
+            if (saveKot.data.status === "0") {
+              throw new Error("Error in saving kot");
+            }
           }
 
           const payload = {
@@ -517,14 +519,19 @@ const paymentsRouter = new Hono()
             tableNo: tableName,
           };
 
-          const response = await axios.post(posApiPaths.requestBill, payload, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
+          if (!tableSession?.billRequest) {
+            await sleep(3000);
+            const response = await axios.post(
+              posApiPaths.requestBill,
+              payload,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              },
+            );
 
-          if (response.data.success === "0") {
-            throw new Error("Error in requesting bill");
+            console.log("request response", response.data);
           }
 
           await KotOrder.updateMany(
@@ -551,6 +558,7 @@ const paymentsRouter = new Hono()
             {
               $set: {
                 isUserRegistered: true,
+                billRequest: true,
               },
             },
             { session },
@@ -708,11 +716,7 @@ const paymentsRouter = new Hono()
             order.cart.filter((item) => !item.isDeleted),
           );
 
-          if (!kotOrders.length) {
-            return respond(c, "No Items in cart", true, 200, {});
-          }
-
-          if (tableSession?.isUserRegistered) {
+          if (!tableSession?.isUserRegistered) {
             const registerUser = await axios.post(posApiPaths.registerUser, {
               app_key: businessPosConfig.accessKey,
               app_secret: businessPosConfig.secretKey,
@@ -727,22 +731,24 @@ const paymentsRouter = new Hono()
             }
           }
 
-          const petpoojaCart = convertToPetpoojaCart(
-            cartItems,
-            businessPosConfig.restId,
-            kotOrders[0].name,
-            tableSession?.pin,
-            tableName,
-            businessPosConfig.accessKey,
-            businessPosConfig.secretKey,
+          if (kotOrders.length > 0) {
+            const petpoojaCart = convertToPetpoojaCart(
+              cartItems,
+              businessPosConfig.restId,
+              kotOrders[0].name,
+              tableSession?.pin,
+              tableName,
+              businessPosConfig.accessKey,
+              businessPosConfig.secretKey,
 
-            businessPosConfig.authToken,
-          );
+              businessPosConfig.authToken,
+            );
 
-          const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
+            const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
 
-          if (saveKot.data.status === "0") {
-            throw new Error("Error in saving kot");
+            if (saveKot.data.status === "0") {
+              throw new Error("Error in saving kot");
+            }
           }
 
           const payload = {
@@ -754,14 +760,19 @@ const paymentsRouter = new Hono()
             tableNo: tableName,
           };
 
-          const response = await axios.post(posApiPaths.requestBill, payload, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
+          if (!tableSession?.billRequest) {
+            await sleep(3000);
+            const response = await axios.post(
+              posApiPaths.requestBill,
+              payload,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              },
+            );
 
-          if (response.data.success === "0") {
-            throw new Error("Error in requesting bill");
+            console.log("request response", response.data);
           }
 
           await KotOrder.updateMany(
@@ -788,6 +799,7 @@ const paymentsRouter = new Hono()
             {
               $set: {
                 isUserRegistered: true,
+                billRequest: true,
               },
             },
             { session },
@@ -843,49 +855,6 @@ const paymentsRouter = new Hono()
         const registrationToken = await DeviceToken.find({
           businessId: businessId,
         });
-
-        if (registrationToken.length > 0) {
-          for (const obj of registrationToken) {
-            if (obj.notification) {
-              const pushMessage = {
-                token: obj.token, // or use 'topic' if you're sending to a topic
-                notification: {
-                  title: "Confirm Payment  !!",
-                  body: `${tableName} requested to settle bill`,
-                },
-                android: {
-                  notification: {
-                    channel_id: "custom_channel_id",
-                    sound: "order",
-                  },
-                },
-              };
-
-              admin
-                .messaging()
-                .send(pushMessage)
-                .then((response: unknown) => {
-                  console.log("Successfully sent message:", response);
-                  return c.json({
-                    message: "FCM message sent successfully",
-                    err: false,
-                    data: response,
-                  });
-                })
-                .catch((err: Error) => {
-                  console.log("Error sending FCM message:", err);
-                  return c.json(
-                    {
-                      message: "Error sending FCM message",
-                      err: true,
-                      data: {},
-                    },
-                    400,
-                  );
-                });
-            }
-          }
-        }
 
         return respond(c, "Order created successfully", false, 200, {
           order_id: saveOrder?.[0]._id,
@@ -1106,51 +1075,6 @@ const paymentsRouter = new Hono()
       const registrationToken = await DeviceToken.find({
         businessId: businessId,
       });
-
-      if (registrationToken.length > 0) {
-        for (const obj of registrationToken) {
-          if (obj.notification) {
-            const pushMessage = {
-              token: obj.token, // or use 'topic' if you're sending to a topic
-              notification: {
-                title: "Payment Successful !!",
-                body: `T${tableName?.slice(
-                  -2,
-                )} has successfully  paid ${paidAmount}`,
-              },
-              android: {
-                notification: {
-                  channel_id: "custom_channel_id",
-                  sound: "order",
-                },
-              },
-            };
-
-            admin
-              .messaging()
-              .send(pushMessage)
-              .then((response: unknown) => {
-                console.log("Successfully sent message:", response);
-                return c.json({
-                  message: "FCM message sent successfully",
-                  err: false,
-                  data: response,
-                });
-              })
-              .catch((err: Error) => {
-                console.log("Error sending FCM message:", err);
-                return c.json(
-                  {
-                    message: "Error sending FCM message",
-                    err: true,
-                    data: {},
-                  },
-                  400,
-                );
-              });
-          }
-        }
-      }
 
       if (signature === razorpay_signature) {
         return c.json({
@@ -1602,49 +1526,6 @@ const paymentsRouter = new Hono()
         businessId: businessId,
       });
 
-      if (registrationToken.length > 0) {
-        for (const obj of registrationToken) {
-          if (obj.notification) {
-            const pushMessage = {
-              token: obj.token, // or use 'topic' if you're sending to a topic
-              notification: {
-                title: "Hi Captain !!",
-                body: `T-${tableName?.slice(-2)} : ${message}`,
-              },
-              android: {
-                notification: {
-                  channel_id: "custom_channel_id",
-                  sound: "order",
-                },
-              },
-            };
-
-            admin
-              .messaging()
-              .send(pushMessage)
-              .then((response: unknown) => {
-                console.log("Successfully sent message:", response);
-                return c.json({
-                  message: "FCM message sent successfully",
-                  err: false,
-                  data: response,
-                });
-              })
-              .catch((err: Error) => {
-                console.log("Error sending FCM message:", err);
-                return c.json(
-                  {
-                    message: "Error sending FCM message",
-                    err: true,
-                    data: {},
-                  },
-                  400,
-                );
-              });
-          }
-        }
-      }
-
       return respond(c, "Alert created successfully", false, 200, alert);
     },
   )
@@ -1841,10 +1722,7 @@ const paymentsRouter = new Hono()
 
         if (alert.alertType === "OFFLINE") {
           if (alert && !alert.isAccepted) {
-            const order = await Order.findById(alert.order_id).populate({
-              path: "userId",
-              select: "name",
-            });
+            const order = await Order.findById(alert.order_id);
 
             const paymentMode = await UpiMode.findById(settleModes[0]._id);
 
@@ -1877,10 +1755,12 @@ const paymentsRouter = new Hono()
                     order.userId.toString(),
                     session,
                   );
+                  console.log("yeee");
                   if (order.cashbackAvailable === false) {
                     cashBack = 0;
                   }
                 }
+
                 finalCashBack = await addCoins(
                   cashBack,
                   order.userId.toString(),
@@ -2032,9 +1912,9 @@ const paymentsRouter = new Hono()
                   pin: tableSession?.pin,
                   tableNo: tableSession?.tableName,
                 };
-
+                await sleep(2000);
                 const response = await axios.post(
-                  "http://api.petpooja.com/V1/captainorders/request_bill",
+                  posApiPaths.requestBill,
                   payload,
                   {
                     headers: {
@@ -3384,8 +3264,10 @@ const paymentsRouter = new Hono()
                 tableNo: getOrder.tableName,
               };
 
+              await sleep(1000);
+
               const response = await axios.post(
-                posApiPaths.checkBill,
+                posApiPaths.requestBill,
                 payload,
                 {
                   headers: {

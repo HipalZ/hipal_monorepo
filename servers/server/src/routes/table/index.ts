@@ -24,6 +24,7 @@ import {
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
+import { sleep } from "bun";
 import { Hono } from "hono";
 import type { ClientSession } from "mongodb";
 import { nanoid } from "nanoid";
@@ -486,7 +487,7 @@ const tableRouter = new Hono()
           pin: tableSession?.pin,
           tableNo: table?.name,
         };
-
+        await sleep(6000);
         const response = await axios.post(posApiPaths.requestBill, payload, {
           headers: {
             "Content-Type": "application/json",
@@ -631,7 +632,7 @@ const tableRouter = new Hono()
               date: Date.now(),
             },
           },
-          { new: true, session },
+          { new: true, session, upsert: true },
         );
 
         return c.json(
