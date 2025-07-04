@@ -2146,10 +2146,9 @@ const whatsappRouter = new Hono()
               findLongUrl?.shortUrl
             }?q=wa&id=${userObj?._id.toString()}`;
             shortUrlType = findLongUrl?.shortUrlType || "";
+            const userId = userObj?._id.toString();
             urlObj = findLongUrl;
-            updateLongUrl = `${
-              findLongUrl?.longUrl
-            }&id=${userObj?._id.toString()}`;
+            updateLongUrl = `${findLongUrl?.longUrl}&id=${userId}`;
           }
 
           console.log("phon_no_id", phon_no_id);
@@ -2431,7 +2430,7 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: `Welcome to ${bName?.name}! 👋\n\nThank you for checking in — we're truly grateful to have you with us today. 🙏\nYour code: *${code}*\n\n🍽️ *Explore Our Menu*: ${longUrl}\nDiscover handcrafted dishes, seasonal specials, and guest favorites.\n\nWe hope you have a delightful experience! 😊`,
+                    body: `Welcome to ${bName?.name}! 👋\n\nThank you for checking in — we're truly grateful to have you with us today. 🙏\nYour code: *${code}*\n\n🍽️ *Explore Our Menu*: ${updateLongUrl}\nDiscover handcrafted dishes, seasonal specials, and guest favorites.\n\nWe hope you have a delightful experience! 😊`,
                   },
                 },
                 headers: {
