@@ -189,6 +189,7 @@ export const dishSchema = z.object({
   pos: z.boolean().default(false).optional(),
   active: z.boolean().default(true).optional(),
   gst: z.coerce.number().positive().optional(),
+  vat: z.coerce.number().positive().optional(),
 });
 
 export const updateDishSchema = z

@@ -161,6 +161,11 @@ const dishSchema = new mongoose.Schema<DishType>(
       required: false,
       default: 5,
     },
+    vat: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   },
   {
     timestamps: true,
