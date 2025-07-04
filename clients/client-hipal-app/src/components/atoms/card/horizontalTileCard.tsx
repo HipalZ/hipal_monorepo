@@ -64,18 +64,20 @@ const HorizontalTileCard = ({
       >
         {/* Dish Image */}
         <div className="w-[5rem] h-[5rem] rounded-lg overflow-hidden shrink-0">
-          <ShimmerImage
-            src={dishData?.images?.[0] || foodImage}
-            alt="dish"
-            quality={95}
-            width={80}
-            height={80}
-            onClick={openDishDetails}
-            className={cn(
-              "w-full h-full object-cover cursor-pointer transition-all hover:scale-105",
-              !dishData.availability && "grayscale",
-            )}
-          />
+          {dishData?.images?.[0] ? (
+            <ShimmerImage
+              src={dishData.images[0]}
+              alt="dish"
+              quality={95}
+              width={80}
+              height={80}
+              onClick={openDishDetails}
+              className={cn(
+                "w-full h-full object-cover cursor-pointer transition-all hover:scale-105",
+                !dishData.availability && "grayscale",
+              )}
+            />
+          ) : null}
         </div>
         <article>
           {/* Dish Name */}
@@ -104,9 +106,16 @@ const HorizontalTileCard = ({
             {outletInfo?.currencySymbol}
             {dishData.price.toFixed(2)}
           </p>
-          {dishData && dishData.portions?.length > 0 && (
+          {dishData && dishData?.portions?.length > 0 && (
             <p className="text-xs text-gray-500 mt-0.5 w-32">
-              {dishData?.portions.map((p) => p.name).join(" | ")}
+              {dishData.portions
+                .map(
+                  (p) =>
+                    `${p.name} ${outletInfo?.currencySymbol || ""}${
+                      p.price?.toFixed?.(2) ?? ""
+                    }`,
+                )
+                .join(" | ")}
             </p>
           )}
         </article>
