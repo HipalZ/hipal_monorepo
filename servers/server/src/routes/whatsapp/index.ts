@@ -9,7 +9,6 @@ import {
   GroupModel,
   HotelRoom,
   HotelRoomSession,
-  OutLetInfo,
   RecentCampaign,
   Subscriber,
   TagModel,
@@ -1946,15 +1945,7 @@ const whatsappRouter = new Hono()
         const config = await WhatsAppBusinessConfig.findOne({
           phoneId: phon_no_id,
         });
-        const outLetInfo = await OutLetInfo.findOne({
-          businessId: config?.businessId,
-        });
-        let sliceNumber = 2;
-        if (outLetInfo && outLetInfo.currencyCode === "INR") {
-          sliceNumber = 2;
-        } else {
-          sliceNumber = 1;
-        }
+        const sliceNumber = -10;
 
         const bName = await Business.findById(config?.businessId);
         if (statuses && statuses.length > 0) {
@@ -2051,7 +2042,7 @@ const whatsappRouter = new Hono()
                 await WhatsAppAnalyticsUser.create({
                   businessId: RecentCampaignData?.businessId,
                   name: userName,
-                  phone: userPhone.toString().slice(2),
+                  phone: userPhone.toString().slice(sliceNumber),
                   status: "blocked",
                   templateId: RecentCampaignData?.templateId,
                   date: Date.now(),
@@ -2059,7 +2050,7 @@ const whatsappRouter = new Hono()
                 });
               }
               const findBlockedUser = await getBlockedUser(
-                userPhone.toString().slice(2),
+                userPhone.toString().slice(sliceNumber),
               );
 
               if (!findBlockedUser) {
@@ -2076,7 +2067,7 @@ const whatsappRouter = new Hono()
                   },
                 );
                 await setBlockedUser(
-                  userPhone.toString().slice(2),
+                  userPhone.toString().slice(sliceNumber),
                   userPhone.toString().slice(sliceNumber),
                 );
               }
@@ -2085,7 +2076,7 @@ const whatsappRouter = new Hono()
               await WhatsAppBlockedUser.findOneAndDelete({
                 phone: userPhone.toString().slice(sliceNumber),
               });
-              await deleteBlockedUser(userPhone.toString().slice(2));
+              await deleteBlockedUser(userPhone.toString().slice(sliceNumber));
             }
           }
           let userObj;
