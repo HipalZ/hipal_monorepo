@@ -2422,7 +2422,7 @@ const whatsappRouter = new Hono()
                   { new: true },
                 );
               }
-
+              // hotel
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
@@ -2463,6 +2463,7 @@ const whatsappRouter = new Hono()
                   new: true,
                 },
               );
+              // restaurant
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
@@ -2470,7 +2471,7 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: `Welcome to ${bName?.name}! ☕\nWe’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${longUrl}\n🍽️ View our curated menu featuring handcrafted delights.`,
+                    body: `Welcome to ${bName?.name}! ☕\nWe’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${updateLongUrl}\n🍽️ View our curated menu featuring handcrafted delights.`,
                   },
                 },
                 headers: {
