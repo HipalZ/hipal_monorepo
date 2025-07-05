@@ -2452,17 +2452,17 @@ const posRouter = new Hono()
           value: z.number().positive().min(1).max(100),
           reasonOfDiscount: z.string().min(1).max(100).optional(),
           discountAppliedOn: z.enum(["ON_BILL", "ON_DISH"]),
-          dishIds: z.array(z.string().min(1).max(200)).optional(),
+          itemIds: z.array(z.string().min(1).max(200)).optional(),
           discountAppliedBy: z.string().min(1).max(50),
         })
         .refine(
           (data) =>
             data.discountAppliedOn !== "ON_DISH" ||
-            (Array.isArray(data.dishIds) && data.dishIds.length > 0),
+            (Array.isArray(data.itemIds) && data.itemIds.length > 0),
           {
             message:
-              "dishIds must be a non-empty array when discountAppliedOn is ON_DISH",
-            path: ["dishIds"],
+              "itemIds must be a non-empty array when discountAppliedOn is ON_DISH",
+            path: ["itemIds"],
           },
         ),
     ),
@@ -2475,7 +2475,7 @@ const posRouter = new Hono()
           value,
           reasonOfDiscount,
           discountAppliedOn,
-          dishIds,
+          itemIds,
           discountAppliedBy,
         } = await c.req.json();
 
@@ -2507,7 +2507,7 @@ const posRouter = new Hono()
         if (discountAppliedOn === "ON_DISH") {
           // Calculate discount on selected dishes
           const kotOrder = (await KotOrder.find({
-            "cart._id": { $in: dishIds },
+            "cart._id": { $in: itemIds },
             tableName,
             businessId,
             settled: false,
@@ -2515,7 +2515,7 @@ const posRouter = new Hono()
 
           const { totalDishTotal, totalGst } = calculateBillDishIds(
             kotOrder,
-            dishIds,
+            itemIds,
           );
 
           const dishDis = Math.round((value / 100) * totalDishTotal);
