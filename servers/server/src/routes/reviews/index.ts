@@ -266,11 +266,18 @@ const reviewRouter = new Hono()
         return respond(c, "User not found", true, 404, {});
       }
 
+      const nawabId = "683dd65e510e94e87194bbf5";
+      let cashBack = 25;
+
+      if (loyaltyId === nawabId) {
+        cashBack = 1;
+      }
+
       if (userRewards.googleReviewCount === 1) {
         await UserReward.findOneAndUpdate(
           { userId, loyaltyId },
           {
-            $inc: { rewards: 25 },
+            $inc: { rewards: cashBack },
           },
         );
       }
