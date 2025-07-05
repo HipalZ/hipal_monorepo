@@ -96,7 +96,7 @@ const AlertsMemo = () => {
             <BottomPopUp
               onClose={() => setIsFilterOpen(false)}
               show={isFilterOpen}
-              height="80dvh"
+              height="h-[90dvh] lg:h-[80dvh]"
             >
               <ZoneFilters />
             </BottomPopUp>

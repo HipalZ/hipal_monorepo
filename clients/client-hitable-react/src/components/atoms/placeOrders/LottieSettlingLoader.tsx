@@ -48,7 +48,7 @@ export function LottieSettlingLoader({
         }
         return prev
       })
-    }, 2000)
+    }, 3000)
 
     return () => {
       clearInterval(progressInterval)

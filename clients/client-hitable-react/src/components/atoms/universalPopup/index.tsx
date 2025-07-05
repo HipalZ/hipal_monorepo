@@ -98,7 +98,7 @@ const MemoBottomPopUp = ({
                 />
               </div>
             )}
-            <article className={cn("absolute z-50 flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 on_active_bounce left-1/2", status?.length > 0 ? 'top-2' : '-top-6')}>
+            <article className={cn("absolute z-50 flex items-center justify-center transform -translate-x-1/2 -translate-y-[90%] on_active_bounce left-1/2", status?.length > 0 ? 'top-2' : '-top-6')}>
               {status && status.length > 0 ?
                 <article className={cn("flex items-center p-2 rounded-full bg-green-100")}>
                   <span>{viewData?.alertType === "ONLINE" ? <CiGlobe size={24} /> : <GiTakeMyMoney size={24} />}</span>&nbsp;
