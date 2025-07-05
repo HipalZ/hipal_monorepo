@@ -23,7 +23,6 @@ import { OrderVerificationTypeEnum } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
-import { sleep } from "bun";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
@@ -238,6 +237,8 @@ const posRouter = new Hono()
           select: "name phone",
         });
 
+        console.log("tableSession", tableSession);
+
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
@@ -279,7 +280,7 @@ const posRouter = new Hono()
           tableSession.discount;
 
         let serviceChargeAmount = Math.round(
-          (serviceChargePercentage / 100) * baseAmount,
+          (serviceChargePercentage / 100) * totalDishTotal,
         );
         if (tableSession.isServiceChargeRemoved) serviceChargeAmount = 0;
 
@@ -292,12 +293,12 @@ const posRouter = new Hono()
           tableSession.couponDiscount;
 
         if (
-          tableSession.discountAppliedBy &&
+          tableSession.isDiscountApplied &&
           tableSession.discountAppliedOn === "ON_DISH"
         ) {
           newGst = (tableSession.gstPercentage / 100) * newSubTotal;
           newGst -= tableSession.newDishGst;
-        } else if (tableSession.discountAppliedBy) {
+        } else if (tableSession.isDiscountApplied) {
           newGst = (tableSession.gstPercentage / 100) * newSubTotal;
         } else {
           newGst = totalGst;
@@ -2581,12 +2582,14 @@ const posRouter = new Hono()
           tableSession.tips,
         );
 
-        await updateTableSession(businessId, tableName, session, {
+        const f = await updateTableSession(businessId, tableName, session, {
           gst: newGst.toFixed(2),
           total: newTotal,
           isDiscountApplied: true,
           claimedCoins: coins,
         });
+
+        console.log("updateTableSession", f);
 
         return respond(c, "Success", true, 200, {});
       });
@@ -3073,7 +3076,7 @@ const posRouter = new Hono()
             name: tableSession?.customerName,
           });
 
-          if (registerUser.data.status === "0") {
+          if (registerUser.data.success === "0") {
             throw new Error("Error in registering user");
           }
         }
@@ -3092,7 +3095,7 @@ const posRouter = new Hono()
 
         const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
 
-        if (saveKot.data.status === "0") {
+        if (saveKot.data.success === "0") {
           throw new Error("Error in saving kot");
         }
 
@@ -3105,18 +3108,18 @@ const posRouter = new Hono()
           tableNo: tableName,
         };
 
-        if (!tableSession?.billRequest) {
-          await sleep(3000);
-          const response = await axios.post(posApiPaths.requestBill, payload, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
+        // if (!tableSession?.billRequest) {
+        //   await sleep(3000);
+        //   const response = await axios.post(posApiPaths.requestBill, payload, {
+        //     headers: {
+        //       "Content-Type": "application/json",
+        //     },
+        //   });
 
-          if (response.data.success === "0") {
-            throw new Error("Error in requesting bill");
-          }
-        }
+        //   if (response.data.success === "0") {
+        //     throw new Error("Error in requesting bill");
+        //   }
+        // }
 
         await KotOrder.updateMany(
           {

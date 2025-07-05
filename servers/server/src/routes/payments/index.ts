@@ -21,6 +21,7 @@ import {
   Subscriber,
   Table,
   TempTableSettle,
+  UnsettleTable,
   UpiMode,
   User,
   UserAnalytic,
@@ -95,9 +96,7 @@ startOfToday.setHours(0, 0, 0, 0);
 export const endOfToday = new Date();
 endOfToday.setHours(23, 59, 59, 999);
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import { sleep } from "bun";
 
 export const calculateDiscount = async (
   businessId: string,
@@ -486,7 +485,7 @@ const paymentsRouter = new Hono()
               name: tableSession?.customerName,
             });
 
-            if (registerUser.data.status === "0") {
+            if (registerUser.data.success === "0") {
               throw new Error("Error in registering user");
             }
           }
@@ -505,33 +504,9 @@ const paymentsRouter = new Hono()
 
             const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
 
-            if (saveKot.data.status === "0") {
+            if (saveKot.data.success === "0") {
               throw new Error("Error in saving kot");
             }
-          }
-
-          const payload = {
-            app_key: businessPosConfig.accessKey,
-            app_secret: businessPosConfig.secretKey,
-            access_token: businessPosConfig.authToken,
-            restID: businessPosConfig.restId,
-            pin: tableSession?.pin,
-            tableNo: tableName,
-          };
-
-          if (!tableSession?.billRequest) {
-            await sleep(3000);
-            const response = await axios.post(
-              posApiPaths.requestBill,
-              payload,
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              },
-            );
-
-            console.log("request response", response.data);
           }
 
           await KotOrder.updateMany(
@@ -726,7 +701,7 @@ const paymentsRouter = new Hono()
               name: tableSession?.customerName,
             });
 
-            if (registerUser.data.status === "0") {
+            if (registerUser.data.success === "0") {
               throw new Error("Error in registering user");
             }
           }
@@ -746,33 +721,9 @@ const paymentsRouter = new Hono()
 
             const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
 
-            if (saveKot.data.status === "0") {
+            if (saveKot.data.success === "0") {
               throw new Error("Error in saving kot");
             }
-          }
-
-          const payload = {
-            app_key: businessPosConfig.accessKey,
-            app_secret: businessPosConfig.secretKey,
-            access_token: businessPosConfig.authToken,
-            restID: businessPosConfig.restId,
-            pin: tableSession?.pin,
-            tableNo: tableName,
-          };
-
-          if (!tableSession?.billRequest) {
-            await sleep(3000);
-            const response = await axios.post(
-              posApiPaths.requestBill,
-              payload,
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              },
-            );
-
-            console.log("request response", response.data);
           }
 
           await KotOrder.updateMany(
@@ -1755,7 +1706,6 @@ const paymentsRouter = new Hono()
                     order.userId.toString(),
                     session,
                   );
-                  console.log("yeee");
                   if (order.cashbackAvailable === false) {
                     cashBack = 0;
                   }
@@ -1912,7 +1862,13 @@ const paymentsRouter = new Hono()
                   pin: tableSession?.pin,
                   tableNo: tableSession?.tableName,
                 };
-                await sleep(2000);
+
+                await axios.post(posApiPaths.requestBill, payload, {
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                });
+                await sleep(7000);
                 const response = await axios.post(
                   posApiPaths.requestBill,
                   payload,
@@ -1933,8 +1889,25 @@ const paymentsRouter = new Hono()
                 });
 
                 if (res.data.success === "0") {
-                  console.log("err", res.data);
-                  throw new Error("payment failed in pos");
+                  await UnsettleTable.findOneAndUpdate(
+                    {
+                      businessId: order.businessId,
+                      tableName: order.tableName,
+                      pin: tableSession?.pin,
+                    },
+                    {
+                      sync: false,
+                      requestId: response.data.request_id,
+                      pin: tableSession?.pin,
+                      restId: isHavePos?.restId,
+                      date: Date.now(),
+                      total: modifyTotal,
+                    },
+                    {
+                      new: true,
+                      upsert: true,
+                    },
+                  );
                 }
 
                 await KotOrder.updateMany(
@@ -3239,7 +3212,7 @@ const paymentsRouter = new Hono()
             businessId: getOrder.businessId,
             tableName: getOrder.tableName,
             hiCode: tableSession?.hiCode,
-            pin: tableSession?.pin,
+            pin: tableSession?._id.toString(),
           });
 
           if (!alreadyTableSettle) {
@@ -3264,8 +3237,13 @@ const paymentsRouter = new Hono()
                 tableNo: getOrder.tableName,
               };
 
-              await sleep(1000);
+              await axios.post(posApiPaths.requestBill, payload, {
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
 
+              await sleep(7000);
               const response = await axios.post(
                 posApiPaths.requestBill,
                 payload,
@@ -3286,6 +3264,28 @@ const paymentsRouter = new Hono()
                 pin: tableSession?.pin,
               });
 
+              if (res.data.success === "0") {
+                await UnsettleTable.findOneAndUpdate(
+                  {
+                    businessId: getOrder.businessId,
+                    tableName: getOrder.tableName,
+                    pin: tableSession?.pin,
+                  },
+                  {
+                    sync: false,
+                    requestId: response.data.request_id,
+                    pin: tableSession?.pin,
+                    restId: pos?.restId,
+                    date: Date.now(),
+                    total: getOrder.total,
+                  },
+                  {
+                    new: true,
+                    upsert: true,
+                  },
+                );
+              }
+
               await TempTableSettle.create(
                 [
                   {
@@ -3293,7 +3293,7 @@ const paymentsRouter = new Hono()
                     tableName: getOrder.tableName,
                     settleBy: getOrder.userId?.name,
                     hiCode: tableSession?.hiCode,
-                    pin: tableSession?.pin,
+                    pin: tableSession?._id.toString(),
                   },
                 ],
                 {
