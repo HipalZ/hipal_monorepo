@@ -26,6 +26,7 @@ const orderSchema = new mongoose.Schema<OrderType>(
     date: { type: Number, required: true },
     posBillId: { type: String, required: false },
     couponDiscount: { type: Number, default: 0 },
+    gst: { type: Number, default: 0 },
   },
   {
     timestamps: true,

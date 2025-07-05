@@ -85,6 +85,12 @@ export const OrderSchema = z.object({
     })
     .optional()
     .default(0),
+  gst: z.coerce
+    .number({
+      message: "GST must be a number",
+    })
+    .optional()
+    .default(0),
 });
 
 export type OrderType = z.infer<typeof OrderSchema>;

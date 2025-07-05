@@ -371,6 +371,7 @@ const tableRouter = new Hono()
               order_id: uniqueOrderId,
               discount: tableSession?.discount || 0,
               couponDiscount: tableSession?.couponDiscount || 0,
+              gst: tableSession?.gst || 0,
 
               date: Date.now(),
             },
