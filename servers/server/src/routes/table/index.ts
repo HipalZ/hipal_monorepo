@@ -12,6 +12,7 @@ import {
   PendingDues,
   QrBill,
   Table,
+  UnsettleTable,
   UpiMode,
   User,
   UserSession,
@@ -199,6 +200,33 @@ const tableRouter = new Hono()
           message: "Orders fetched successfully",
           err: false,
           data: order,
+        },
+        200,
+      );
+    },
+  )
+
+  .get(
+    "/unsettle_table/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.param();
+
+      const unsettleTables = await UnsettleTable.find({
+        businessId: businessId,
+        sync: false,
+      });
+
+      return c.json(
+        {
+          message: "tables fetched successfully",
+          err: false,
+          data: unsettleTables,
         },
         200,
       );
@@ -487,16 +515,19 @@ const tableRouter = new Hono()
           pin: tableSession?.pin,
           tableNo: table?.name,
         };
-        await sleep(6000);
-        const response = await axios.post(posApiPaths.requestBill, payload, {
+
+        await axios.post(posApiPaths.requestBill, payload, {
           headers: {
             "Content-Type": "application/json",
           },
         });
 
-        if (response.data.success === "0") {
-          throw new Error("Error in requesting bill");
-        }
+        await sleep(7000);
+        const response = await axios.post(posApiPaths.requestBill, payload, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
 
         const res = await axios.post(posApiPaths.settleTable, {
           app_key: pos.accessKey,
@@ -509,7 +540,25 @@ const tableRouter = new Hono()
         });
 
         if (res.data.success === "0") {
-          throw new Error("Payment failed at pos");
+          await UnsettleTable.findOneAndUpdate(
+            {
+              businessId: table?.businessId,
+              tableName: table?.name,
+              pin: tableSession?.pin,
+            },
+            {
+              sync: false,
+              requestId: response.data.request_id,
+              pin: tableSession?.pin,
+              restId: pos?.restId,
+              date: Date.now(),
+              total: modifyTotal,
+            },
+            {
+              new: true,
+              upsert: true,
+            },
+          );
         }
 
         await UserSession.deleteOne(
