@@ -54,11 +54,7 @@ const PosBillBreakdown = () => {
           <BillItem
             icon={<FaMoneyBillWave />}
             label="Subtotal"
-            value={`${currencySymbol}${Math.max(
-              0,
-              Number(billData?.subTotal ?? 0) -
-                Number(billData?.claimedCoins ?? 0),
-            )}`}
+            value={`${currencySymbol}${billData?.subTotal}`}
           />
           <BillItem
             icon={<Receipt size={12} />}

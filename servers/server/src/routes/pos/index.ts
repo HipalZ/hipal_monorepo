@@ -10,6 +10,7 @@ import {
   KotOrder,
   Menu,
   OutLetInfo,
+  PaymentAlert,
   Pos,
   Table,
   Tax,
@@ -1366,6 +1367,22 @@ const posRouter = new Hono()
           return respond(c, "Kot-printer server is not active", true, 400, {});
         }
 
+        const orderAlreadyExist = await PaymentAlert.findOne({
+          businessId,
+          tableName,
+          alertType: "OFFLINE",
+          isAccepted: false,
+        });
+
+        if (orderAlreadyExist)
+          return respond(
+            c,
+            "A request for this service is already in progress. Please wait for the staff to take action",
+            true,
+            400,
+            {},
+          );
+
         const registrationToken = await DeviceToken.find({
           businessId: businessId,
         });
@@ -1710,6 +1727,22 @@ const posRouter = new Hono()
         if (!isActive && pos.printKot) {
           return respond(c, "kot-printer server is not active", true, 400, {});
         }
+
+        const orderAlreadyExist = await PaymentAlert.findOne({
+          businessId,
+          tableName,
+          alertType: "OFFLINE",
+          isAccepted: false,
+        });
+
+        if (orderAlreadyExist)
+          return respond(
+            c,
+            "A request for this service is already in progress. Please wait for the staff to take action",
+            true,
+            400,
+            {},
+          );
 
         const tenDigitCode = generateTenDigitCode();
 

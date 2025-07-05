@@ -453,7 +453,7 @@ export const usePayments = () => {
         claimedCoins: outletInfo?.isPosEnabled
           ? billData?.claimedCoins
           : claimedCoins || claimCouponz,
-        billValue: initialTotal,
+        billValue: outletInfo?.isPosEnabled ? billData?.subTotal : initialTotal,
         userId: userDetails?._id,
         tips: outletInfo?.isPosEnabled ? billData?.tips : tips,
         currency: "INR",
