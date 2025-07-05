@@ -228,6 +228,10 @@ const posRouter = new Hono()
           return respond(c, "Pos not found", true, 400, {});
         }
 
+        const outLetInfo = await OutLetInfo.findOne({
+          businessId,
+        }).select("gst fssai");
+
         // Get the table session
         let tableSession = await UserSession.findOne({
           businessId,
@@ -236,8 +240,6 @@ const posRouter = new Hono()
           path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy",
           select: "name phone",
         });
-
-        console.log("tableSession", tableSession);
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
@@ -272,12 +274,6 @@ const posRouter = new Hono()
         });
 
         const serviceChargePercentage = serviceCharge?.value || 0;
-
-        const baseAmount =
-          totalDishTotal -
-          tableSession.claimedCoins -
-          tableSession.couponDiscount -
-          tableSession.discount;
 
         let serviceChargeAmount = Math.round(
           (serviceChargePercentage / 100) * totalDishTotal,
@@ -357,6 +353,8 @@ const posRouter = new Hono()
           tips: tableSession?.tips || 0,
           claimedCoins: tableSession?.claimedCoins || 0,
           couponDiscount: tableSession?.couponDiscount || 0,
+          fssai: outLetInfo?.fssai || "",
+          gst: outLetInfo?.gst || "",
         });
 
         return c.json(
@@ -2357,6 +2355,10 @@ const posRouter = new Hono()
           return respond(c, "Pos not found", true, 400, {});
         }
 
+        const outLetInfo = await OutLetInfo.findOne({
+          businessId,
+        });
+
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
@@ -2396,6 +2398,9 @@ const posRouter = new Hono()
           tips: tableSession?.tips || 0,
           claimedCoins: tableSession?.claimedCoins || 0,
           couponDiscount: tableSession?.couponDiscount || 0,
+          gst: outLetInfo?.gst || "",
+
+          fssai: outLetInfo?.fssai || "",
         });
 
         return respond(c, "sucess", true, 200, {});

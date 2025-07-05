@@ -43,6 +43,8 @@ interface BillPayload {
   tips: number;
   claimedCoins: number;
   couponDiscount: number;
+  gst: string;
+  fssai: string;
 }
 
 export const sendKOTPrintEvent = ({
@@ -182,6 +184,8 @@ export const sendBillPrintEvent = ({
   tips,
   claimedCoins,
   couponDiscount,
+  gst,
+  fssai,
 }: BillPayload): void => {
   axios
     .post(
@@ -206,6 +210,8 @@ export const sendBillPrintEvent = ({
           tips,
           claimedCoins,
           couponDiscount,
+          gst,
+          fssai,
         },
       },
       {
