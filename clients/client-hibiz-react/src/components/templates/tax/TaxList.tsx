@@ -79,7 +79,9 @@ const MemoTaxList = ({ onEditTax, onAddTax }: TaxListProps) => {
   const renderTaxCard = useCallback(
     (tax: TaxById, index: number) => {
       // only allow linking when this is an active GST or VAT tax:
-      const canLinkDishes = tax.isActive && /(gst|vat)/i.test(tax.name);
+      // const canLinkDishes = tax.isActive && /(gst|vat)/i.test(tax.name);
+      const canLinkDishes = tax.isActive && /(gst)/i.test(tax.name);
+
 
       return (
         <Card key={tax._id} className="mb-4">
