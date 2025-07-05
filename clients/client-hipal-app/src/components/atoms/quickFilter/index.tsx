@@ -7,6 +7,7 @@ import { cn } from "@hi/common";
 import { HiX } from "react-icons/hi";
 import { RiEqualizerLine } from "react-icons/ri";
 import BottomPopUp from "../bottomPopUp";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 export const foodTypeIcons = {
   vegan: (
@@ -121,6 +122,7 @@ const FilterOption = ({
 };
 
 const QuickFilter = () => {
+  const outletInfo = _useAllBusiness((s) => s.data?.outletInfo);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { setActiveDishType, isActiveDishType } = useActiveClass();
 
@@ -183,28 +185,34 @@ const QuickFilter = () => {
   return (
     <div>
       <section className="flex px-2 space-x-2 text-sm justify-evenly text-nowrap">
-        <FilterOption
-          isActive={isActiveDishType.toLowerCase() === "veg"}
-          onClick={() => handleFilter("VEG")}
-          color="#55CB1E"
-          label="Veg"
-        />
-        <FilterOption
-          isActive={isActiveDishType.toLowerCase() === "non_veg"}
-          onClick={() => handleFilter("NON_VEG")}
-          color="#804000"
-          label="Non Veg"
-        />
-        <FilterOption
-          isActive={isActiveDishType.toLowerCase() === "egg"}
-          onClick={() => handleFilter("EGG")}
-          color="#D2C903"
-          label="Egg"
-        />
+        {outletInfo?.veg && (
+          <FilterOption
+            isActive={isActiveDishType.toLowerCase() === "veg"}
+            onClick={() => handleFilter("VEG")}
+            color="#55CB1E"
+            label="Veg"
+          />
+        )}
+        {outletInfo?.nonVeg && (
+          <FilterOption
+            isActive={isActiveDishType.toLowerCase() === "non_veg"}
+            onClick={() => handleFilter("NON_VEG")}
+            color="#804000"
+            label="Non Veg"
+          />
+        )}
+        {outletInfo?.egg && (
+          <FilterOption
+            isActive={isActiveDishType.toLowerCase() === "egg"}
+            onClick={() => handleFilter("EGG")}
+            color="#D2C903"
+            label="Egg"
+          />
+        )}
         <button
           type="button"
           onClick={openModal}
-          className="px-2 py-1 ml-2 text-xs font-semibold text-black border border-gray-200 rounded-md"
+          className="px-2 py-1 ml-2 text-xs font-semibold text-black bg-white border border-gray-200 rounded-md"
         >
           {activeIcon}
         </button>
@@ -216,29 +224,35 @@ const QuickFilter = () => {
               Filters
             </div>
             <div className="flex flex-wrap items-center justify-center gap-4 font-medium text-nowrap">
-              <FilterOption
-                isActive={isActiveDishType.toLowerCase() === "vegan"}
-                onClick={() => handleFilter("VEGAN")}
-                color="#02614b"
-                label="Vegan"
-              />
+              {outletInfo?.vegan && (
+                <FilterOption
+                  isActive={isActiveDishType.toLowerCase() === "vegan"}
+                  onClick={() => handleFilter("VEGAN")}
+                  color="#02614b"
+                  label="Vegan"
+                />
+              )}
 
-              <FilterOption
-                isActive={isActiveDishType.toLowerCase() === "alcohol"}
-                onClick={() => handleFilter("ALCOHOL")}
-                icon={foodTypeIcons.alcohol}
-                label="Alcohol"
-              />
-              <FilterOption
-                isActive={
-                  isActiveDishType?.replace(/[^a-zA-Z ]/, "").toLowerCase() ===
-                  "nonalcohol"
-                }
-                onClick={() => handleFilter("NON_ALCOHOL")}
-                icon={foodTypeIcons.nonalcohol}
-                label="Non Alcohol"
-              />
-
+              {outletInfo?.alcohol && (
+                <FilterOption
+                  isActive={isActiveDishType.toLowerCase() === "alcohol"}
+                  onClick={() => handleFilter("ALCOHOL")}
+                  icon={foodTypeIcons.alcohol}
+                  label="Alcohol"
+                />
+              )}
+              {outletInfo?.nonAlcohol && (
+                <FilterOption
+                  isActive={
+                    isActiveDishType
+                      ?.replace(/[^a-zA-Z ]/, "")
+                      .toLowerCase() === "nonalcohol"
+                  }
+                  onClick={() => handleFilter("NON_ALCOHOL")}
+                  icon={foodTypeIcons.nonalcohol}
+                  label="Non Alcohol"
+                />
+              )}
               <FilterOption
                 isActive={isActiveDishType === "all"}
                 onClick={() => handleFilter("ALL")}
