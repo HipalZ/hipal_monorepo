@@ -1,4 +1,4 @@
-import { memo, useCallback } from "react";
+import { memo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
@@ -15,6 +15,7 @@ import { useLiteStore } from "@/components/store/useLiteStore";
 import { useGetAllModes } from "@/components/hooks/useTableData";
 import { useError } from "@/components/store/useError";
 import { useConfirmSettle } from "@/components/hooks/useBill.ts";
+import { SettleConfirmationDialog } from "./SettleConfirmation.tsx";
 
 export interface IMode {
   _id: string;
@@ -44,9 +45,10 @@ const MemoNormalSettle = ({
 }) => {
   const { businessId } = useParams();
   const navigate = useNavigate();
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
   const { setError, setOpenErrorModal } = useError();
-
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const setOpenOrderModal = useOrderStore((s) => s.setOpenOrderModal);
   const isSplit = useOrderStore((s) => s.isSplit);
@@ -57,7 +59,6 @@ const MemoNormalSettle = ({
   const setOpenDues = useOrderStore((s) => s.setOpenDues);
   const setSaveDueUser = useOrderStore((s) => s.setSaveDueUser);
   const saveDueUser = useOrderStore((s) => s.saveDueUser);
-
   const { isConfirming, confirmSettle } = useConfirmSettle();
 
   const { removeOnlineAlert, removeOnlineCount } = useLiteStore((s) => ({
@@ -133,7 +134,6 @@ const MemoNormalSettle = ({
         param: { alertId: payload.id },
         json: payload,
       });
-
       if (res.status === 401 || res.status === 403) {
         setOpenErrorModal(true);
         setError("You are not authorized to perform this action");
@@ -166,13 +166,13 @@ const MemoNormalSettle = ({
     },
   });
 
-  const handleConfirm = async () => {
+  const handleConfirm = async (alertData: Alert) => {
+    console.log("step 1");
     try {
       if (settleModes.length === 0) {
         toast.error("Please select at least one payment mode.");
         return;
       }
-
       // Validate total
       const sum = settleModes.reduce((acc, item) => acc + item.amount, 0);
       if (
@@ -186,7 +186,6 @@ const MemoNormalSettle = ({
       }
 
       const isMultiple = settleModes.length > 1;
-
       const hasDuesMode = settleModes.some(
         (mode) => mode.name.toLowerCase() === "dues",
       );
@@ -194,7 +193,8 @@ const MemoNormalSettle = ({
         (mode) => mode.name.toLowerCase() === "npc",
       );
 
-      if (alertData) {
+      if (alertData?.alertType === "OFFLINE") {
+        console.log("alertData aaya dekh", alertData);
         const payload = {
           id: alertData._id,
           waiterName: captainData?.name,
@@ -210,8 +210,10 @@ const MemoNormalSettle = ({
         if (hasNpcMode && saveDueUser?._id) {
           payload["npcUserId"] = saveDueUser?._id;
         }
+
         await confirmAlert(payload);
       } else {
+        console.log("idhar ku aaya tu");
         const payload = {
           tableId: selectedTable?._id || "",
           billId: billData?.billId || "",
@@ -224,7 +226,6 @@ const MemoNormalSettle = ({
         if (hasDuesMode && saveDueUser?._id) {
           payload["duesUserId"] = saveDueUser._id;
         }
-
         if (hasNpcMode && saveDueUser?._id) {
           payload["npcUserId"] = saveDueUser?._id;
         }
@@ -238,17 +239,25 @@ const MemoNormalSettle = ({
     }
   };
 
-  const openNormalSettle = async () => {
-    const really = window.confirm("Are you sure you want to confirm settle?");
-    if (!really) return;
+  const openNormalSettle = () => {
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSettle = async () => {
+    setShowConfirmDialog(false);
+
+    if (alertData?.alertType === "OFFLINE") {
+      await handleConfirm(alertData);
+      return;
+    }
     const response = await confirmSettle({
       businessId: businessId || "",
       tableName: selectedTable?.name || "",
     });
 
     if (response.status === 200 || response.status === 201) {
-      await handleConfirm();  
-    } 
+      await handleConfirm(alertData);
+    }
   };
 
   if (isLoading) {
@@ -327,7 +336,7 @@ const MemoNormalSettle = ({
               onClick: openNormalSettle,
               className: "w-full rounded-md",
               disable: settleModes.length === 0,
-              isLoading: isSettling || isAlertLoading,
+              isLoading: isSettling || isAlertLoading || isConfirming,
             },
           ]}
         />
@@ -351,11 +360,20 @@ const MemoNormalSettle = ({
               onClick: openNormalSettle,
               className: "w-full rounded-md",
               disable: settleModes.length === 0,
-              isLoading: isSettling || isAlertLoading,
+              isLoading: isSettling || isAlertLoading || isConfirming,
             },
           ]}
         />
       )}
+
+      {/* Confirmation Dialog */}
+      <SettleConfirmationDialog
+        open={showConfirmDialog}
+        onOpenChange={setShowConfirmDialog}
+        onConfirm={handleConfirmSettle}
+        isLoading={isConfirming || isSettling || isAlertLoading}
+        showSettlingLoader={isSettling}
+      />
     </section>
   );
 };

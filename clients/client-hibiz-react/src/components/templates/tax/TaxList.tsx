@@ -1,9 +1,9 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Edit, Percent, DollarSign, Plus, Info } from "lucide-react";
+import { Edit, Plus, Info } from "lucide-react";
 import {
   useFetchTaxesByBusiness,
   useGetAllTaxes,
@@ -25,17 +25,21 @@ const MemoTaxList = ({ onEditTax, onAddTax }: TaxListProps) => {
   const { isLoading: loadingAllTaxes, taxes: allTaxes } = useGetAllTaxes();
   const setLinkDishModal = useTaxStore((s) => s.setLinkDishModal);
   const linkDishModal = useTaxStore((s) => s.linkDishModal);
-  const isLoading = loadingBusinessTaxes || loadingAllTaxes;
-
-  const activeTaxes = useMemo(() => {
-    return businessTaxes?.filter((tax) => tax.isActive) || [];
-  }, [businessTaxes]);
-
-  // Get GST tax by ID from useTaxStore
   const selectedTaxId = useTaxStore((s) => s.selectedTaxId);
   const setSelectedTaxId = useTaxStore((s) => s.setSelectedTaxId);
 
-  // Find tax by ID instead of using word "gst"
+  const isLoading = loadingBusinessTaxes || loadingAllTaxes;
+
+  const activeTaxes = useMemo(
+    () => businessTaxes?.filter((tax) => tax.isActive) || [],
+    [businessTaxes],
+  );
+
+  const inactiveTaxes = useMemo(
+    () => businessTaxes?.filter((tax) => !tax.isActive) || [],
+    [businessTaxes],
+  );
+
   const getSelectedTax = useMemo(() => {
     if (!selectedTaxId || !businessTaxes) return null;
     return (
@@ -44,201 +48,165 @@ const MemoTaxList = ({ onEditTax, onAddTax }: TaxListProps) => {
     );
   }, [businessTaxes, selectedTaxId]);
 
-  const inactiveTaxes = useMemo(() => {
-    return businessTaxes?.filter((tax) => !tax.isActive) || [];
-  }, [businessTaxes]);
-
-  // Check if there are any taxes available to add
   const availableTaxesToAdd = useMemo(() => {
     if (!allTaxes || !businessTaxes) return 0;
-    const addedTaxNames = new Set(businessTaxes.map((tax) => tax.name));
-    return allTaxes.filter((tax) => !addedTaxNames.has(tax.name)).length;
+    const added = new Set(businessTaxes.map((t) => t.name));
+    return allTaxes.filter((t) => !added.has(t.name)).length;
   }, [allTaxes, businessTaxes]);
 
   const handleEditClick = useCallback(
-    (tax: TaxById) => {
-      onEditTax(tax, "edit");
-    },
+    (tax: TaxById) => onEditTax(tax, "edit"),
     [onEditTax],
   );
 
   const openModalFunc = useCallback(
     (tax: TaxById) => {
-      setSelectedTaxId(tax?._id);
+      setSelectedTaxId(tax._id);
       onEditTax(tax, "link");
     },
     [onEditTax, setSelectedTaxId],
   );
 
-  const closeModalFunc = useCallback(() => {
-    setLinkDishModal(false);
-  }, []);
+  const closeModalFunc = useCallback(
+    () => setLinkDishModal(false),
+    [setLinkDishModal],
+  );
 
   const handleAddTaxClick = useCallback(() => {
-    if (availableTaxesToAdd === 0) {
-      return; // Button should be disabled, but just in case
-    }
-    onAddTax();
+    if (availableTaxesToAdd > 0) onAddTax();
   }, [availableTaxesToAdd, onAddTax]);
 
   const renderTaxCard = useCallback(
     (tax: TaxById, index: number) => {
-      // Check if this tax can have dishes linked to it (you can customize this logic)
-      const canLinkDishes = tax.type === "PERCENTAGE" && tax.isActive;
+      // only allow linking when this is an active GST or VAT tax:
+      const canLinkDishes = tax.isActive && /(gst|vat)/i.test(tax.name);
 
       return (
-        <div key={tax._id}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                {tax.type === "PERCENTAGE" ? (
-                  <Percent className="h-4 w-4 text-blue-500" />
-                ) : (
-                  <DollarSign className="h-4 w-4 text-green-500" />
-                )}
-                <span className="font-medium">{tax.name}</span>
-              </div>
-              <Badge variant={tax.isActive ? "default" : "secondary"}>
+        <Card key={tax._id} className="mb-4">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>{tax.name}</span>
+              <Badge variant="secondary">
                 {tax.value}
                 {tax.type === "PERCENTAGE" ? "%" : "₹"}
               </Badge>
-              {!tax.isActive && <Badge variant="outline">Inactive</Badge>}
-            </div>
-            <div className="flex items-center gap-2">
-              {canLinkDishes && (
-                <Button
-                  onClick={() => openModalFunc(tax)}
-                  variant="outline"
-                  size="sm"
-                >
-                  Link Dishes
-                </Button>
-              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex justify-end space-x-2">
+            {canLinkDishes && (
               <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleEditClick(tax)}
+                variant="outline"
+                size="sm"
+                onClick={() => openModalFunc(tax)}
               >
-                <Edit className="h-4 w-4" />
+                Link Dishes
               </Button>
-            </div>
-          </div>
-          {index < activeTaxes.length - 1 && (
-            <hr className="my-4 border-t-2 border-gray-200" />
-          )}
-        </div>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleEditClick(tax)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+          </CardContent>
+        </Card>
       );
     },
-    [handleEditClick, openModalFunc, activeTaxes.length],
+    [openModalFunc, handleEditClick],
   );
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="flex items-center justify-center py-8">
+        <LoadingSpinner />
+      </div>
+    );
   }
 
   return (
     <>
-      <div className="space-y-6">
-        {/* Header with Add Button */}
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Tax Management</h2>
-          <div className="flex flex-col items-end gap-2">
-            <Button
-              onClick={handleAddTaxClick}
-              className="flex items-center gap-2"
-              disabled={availableTaxesToAdd === 0}
-            >
-              <Plus className="h-4 w-4" />
-              Add Tax
-            </Button>
-            {availableTaxesToAdd === 0 &&
-              businessTaxes &&
-              businessTaxes.length > 0 && (
-                <span className="text-xs text-gray-500">
-                  All available taxes added
-                </span>
-              )}
-          </div>
-        </div>
-
-        {/* Available taxes counter */}
-        {availableTaxesToAdd > 0 && (
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              You can add {availableTaxesToAdd} more tax type
-              {availableTaxesToAdd !== 1 ? "s" : ""} to your business. GST taxes
-              have auto-extracted values from their names.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Active Taxes */}
-        {activeTaxes.length > 0 && (
-          <Card className="max-w-[30rem]">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <span>Active Taxes</span>
-                <Badge variant="default">{activeTaxes.length}</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
-              {activeTaxes.map(renderTaxCard)}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Inactive Taxes */}
-        {inactiveTaxes.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <span>Inactive Taxes</span>
-                <Badge variant="secondary">{inactiveTaxes.length}</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {inactiveTaxes.map(renderTaxCard)}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Empty State */}
-        {activeTaxes.length === 0 && inactiveTaxes.length === 0 && (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <Info className="h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No taxes configured
-              </h3>
-              <p className="text-gray-500 mb-4">
-                {availableTaxesToAdd > 0
-                  ? "Get started by adding your first tax configuration from the available options."
-                  : "No tax types are available to add. Contact support for assistance."}
-              </p>
-              {availableTaxesToAdd > 0 && (
-                <Button
-                  onClick={handleAddTaxClick}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Your First Tax
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        )}
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-medium">Tax Management</h2>
+        <Button
+          onClick={handleAddTaxClick}
+          disabled={availableTaxesToAdd === 0}
+        >
+          <Plus className="mr-1 h-4 w-4" />
+          Add Tax
+        </Button>
       </div>
 
-      {linkDishModal && (
+      {/* Info */}
+      {availableTaxesToAdd > 0 && (
+        <Alert className="mb-4">
+          <Info className="h-4 w-4 mr-2" />
+          <AlertDescription>
+            You can add {availableTaxesToAdd} more tax type
+            {availableTaxesToAdd !== 1 ? "s" : ""} to your business. VAT/GST
+            taxes will have values auto-extracted from their names.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Active Taxes */}
+      {activeTaxes.length > 0 && (
+        <section className="mt-4">
+          <h3 className="text-md font-semibold mb-2">
+            Active Taxes ({activeTaxes.length})
+          </h3>
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4">
+            {activeTaxes.map(renderTaxCard)}
+          </section>
+        </section>
+      )}
+
+      {/* Inactive Taxes */}
+      {inactiveTaxes.length > 0 && (
+        <section className="mt-4">
+          <h3 className="text-md font-semibold mb-2">
+            Inactive Taxes ({inactiveTaxes.length})
+          </h3>
+          {inactiveTaxes.map(renderTaxCard)}
+        </section>
+      )}
+
+      {/* Empty State */}
+      {activeTaxes.length === 0 && inactiveTaxes.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-sm text-gray-500">No taxes configured</p>
+          {availableTaxesToAdd > 0 ? (
+            <p className="mt-2 text-sm">
+              Get started by adding your first tax. VAT/GST taxes will have
+              values auto-extracted.
+            </p>
+          ) : (
+            <p className="mt-2 text-sm">
+              No tax types are available to add. Contact support for assistance.
+            </p>
+          )}
+          {availableTaxesToAdd > 0 && (
+            <Button className="mt-4" onClick={handleAddTaxClick}>
+              Add Your First Tax
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Link Dishes Modal */}
+      {linkDishModal && getSelectedTax && (
         <PopUp
-          rightTopBack
+          show={linkDishModal}
           hide
           height="h-[100dvh] lg:h-[90dvh]"
-          show={linkDishModal}
           onClose={closeModalFunc}
+          rightTopBack
         >
-          <LinkingDishesToTax getSelectedTax={getSelectedTax} />
+          <LinkingDishesToTax
+            getSelectedTax={getSelectedTax}
+            onClose={closeModalFunc}
+          />
         </PopUp>
       )}
     </>

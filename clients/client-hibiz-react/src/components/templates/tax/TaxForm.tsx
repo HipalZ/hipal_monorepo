@@ -95,22 +95,25 @@ const MemoTaxForm = ({
   }, [formData.selectedTaxId, allTaxes]);
 
   const extractGstPercentage = useCallback((taxName: string): number | null => {
-    // look for: gst (28%)  —  case‐insensitive, with optional spaces
-    const gstMatch = taxName.match(/gst\s*\(\s*(\d+(?:\.\d+)?)\s*%\s*\)/i);
+    const gstMatch = taxName.match(
+      /(gst|vat)\s*$$\s*(\d+(?:\.\d+)?)\s*%\s*$$/i,
+    );
     console.log("Regex match for:", taxName, "Result:", gstMatch);
-    return gstMatch ? Number.parseFloat(gstMatch[1]) : null;
+    return gstMatch ? Number.parseFloat(gstMatch[2]) : null;
   }, []);
 
-  // Check if selected tax is a GST tax
-  const isGstTax = useMemo(() => {
-    return selectedTax ? selectedTax.name.toLowerCase().includes("gst") : false;
+  // Check if selected tax is a GST or VAT tax
+  const isAutoTax = useMemo(() => {
+    if (!selectedTax) return false;
+    const taxName = selectedTax.name.toLowerCase();
+    return taxName.includes("gst") || taxName.includes("vat");
   }, [selectedTax]);
 
-  // Auto-extracted GST value
-  const autoGstValue = useMemo(() => {
-    if (!selectedTax || !isGstTax) return null;
+  // Auto-extracted tax value for GST/VAT
+  const autoTaxValue = useMemo(() => {
+    if (!selectedTax || !isAutoTax) return null;
     return extractGstPercentage(selectedTax.name);
-  }, [selectedTax, isGstTax, extractGstPercentage]);
+  }, [selectedTax, isAutoTax, extractGstPercentage]);
 
   useEffect(() => {
     if (isOpen) {
@@ -135,16 +138,16 @@ const MemoTaxForm = ({
     }
   }, [isOpen, editingTax, allTaxes]);
 
-  // Auto-set value when GST tax is selected
+  // Auto-set value when GST/VAT tax is selected
   useEffect(() => {
-    if (selectedTax && isGstTax && autoGstValue !== null && !isEditing) {
+    if (selectedTax && isAutoTax && autoTaxValue !== null && !isEditing) {
       setFormData((prev) => ({
         ...prev,
-        value: autoGstValue.toString(),
+        value: autoTaxValue.toString(),
         type: "PERCENTAGE",
       }));
     }
-  }, [selectedTax, isGstTax, autoGstValue, isEditing]);
+  }, [selectedTax, isAutoTax, autoTaxValue, isEditing]);
 
   const handleTaxSelection = useCallback(
     (taxId: string) => {
@@ -153,12 +156,12 @@ const MemoTaxForm = ({
       );
 
       if (selectedTaxData) {
-        const isSelectedGstTax = selectedTaxData.name
-          .toLowerCase()
-          .includes("gst");
+        const taxName = selectedTaxData.name.toLowerCase();
+        const isSelectedAutoTax =
+          taxName.includes("gst") || taxName.includes("vat");
 
-        if (isSelectedGstTax) {
-          // Extract GST value immediately when GST tax is selected
+        if (isSelectedAutoTax) {
+          // Extract tax value immediately when GST/VAT tax is selected
           const extractedValue = extractGstPercentage(selectedTaxData.name);
 
           setFormData((prev) => ({
@@ -168,7 +171,7 @@ const MemoTaxForm = ({
             type: "PERCENTAGE",
           }));
         } else {
-          // For non-GST taxes, just set the ID and reset other fields
+          // For non-GST/VAT taxes, just set the ID and reset other fields
           setFormData((prev) => ({
             ...prev,
             selectedTaxId: taxId,
@@ -213,8 +216,8 @@ const MemoTaxForm = ({
       return false;
     }
 
-    // For GST taxes, value is auto-extracted and always valid - skip manual validation
-    if (isGstTax && autoGstValue !== null) {
+    // For GST/VAT taxes, value is auto-extracted and always valid - skip manual validation
+    if (isAutoTax && autoTaxValue !== null) {
       // Check for duplicates only
       if (!isEditing && businessTaxes && selectedTax) {
         const isDuplicate = businessTaxes.some(
@@ -228,7 +231,7 @@ const MemoTaxForm = ({
       return true;
     }
 
-    // For non-GST taxes, validate the manual input
+    // For non-GST/VAT taxes, validate the manual input
     if (!formData.value.trim()) {
       toast.error("Tax value is required");
       return false;
@@ -256,13 +259,20 @@ const MemoTaxForm = ({
     }
 
     return true;
-  }, [formData, businessTaxes, selectedTax, isEditing, isGstTax, autoGstValue]);
+  }, [
+    formData,
+    businessTaxes,
+    selectedTax,
+    isEditing,
+    isAutoTax,
+    autoTaxValue,
+  ]);
 
   // Add debugging
   console.log("Debug info:", {
     selectedTax: selectedTax?.name,
-    isGstTax,
-    autoGstValue,
+    isAutoTax,
+    autoTaxValue,
     extractedValue: selectedTax ? extractGstPercentage(selectedTax.name) : null,
   });
 
@@ -270,10 +280,10 @@ const MemoTaxForm = ({
     if (!validateForm() || !selectedTax) return;
 
     try {
-      // Use auto-extracted value for GST taxes, otherwise use form value
+      // Use auto-extracted value for GST/VAT taxes, otherwise use form value
       const taxValue =
-        isGstTax && autoGstValue !== null
-          ? autoGstValue
+        isAutoTax && autoTaxValue !== null
+          ? autoTaxValue
           : Number.parseFloat(formData.value);
 
       if (isEditing && editingTax) {
@@ -281,7 +291,7 @@ const MemoTaxForm = ({
           taxId: editingTax._id,
           name: selectedTax.name,
           value: taxValue,
-          type: isGstTax ? "PERCENTAGE" : formData.type,
+          type: isAutoTax ? "PERCENTAGE" : formData.type,
           isActive: formData.isActive,
           menuId,
         };
@@ -290,7 +300,7 @@ const MemoTaxForm = ({
         const createPayload: createTaxPayload = {
           name: selectedTax.name,
           value: taxValue,
-          type: isGstTax ? "PERCENTAGE" : formData.type,
+          type: isAutoTax ? "PERCENTAGE" : formData.type,
           businessId,
           menuId,
         };
@@ -312,8 +322,8 @@ const MemoTaxForm = ({
     businessId,
     menuId,
     onClose,
-    isGstTax,
-    autoGstValue,
+    isAutoTax,
+    autoTaxValue,
   ]);
 
   const handleClose = useCallback(() => {
@@ -335,12 +345,12 @@ const MemoTaxForm = ({
   }
 
   const effectiveValue =
-    isGstTax && autoGstValue !== null
-      ? autoGstValue.toString()
+    isAutoTax && autoTaxValue !== null
+      ? autoTaxValue.toString()
       : formData.value;
-  const effectiveType = isGstTax ? "PERCENTAGE" : formData.type;
-  const isValueReadonly = isGstTax && autoGstValue !== null;
-  const isTypeReadonly = isGstTax;
+  const effectiveType = isAutoTax ? "PERCENTAGE" : formData.type;
+  const isValueReadonly = isAutoTax && autoTaxValue !== null;
+  const isTypeReadonly = isAutoTax;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -363,16 +373,18 @@ const MemoTaxForm = ({
             <Select
               value={formData.selectedTaxId}
               onValueChange={handleTaxSelection}
-              disabled={isLoading}
+              disabled={isLoading || isEditing} // Add isEditing to disable in edit mode
             >
-              <SelectTrigger>
+              <SelectTrigger
+                className={isEditing ? "bg-gray-50 text-gray-600" : ""}
+              >
                 <SelectValue placeholder="Choose a tax type" />
               </SelectTrigger>
               <SelectContent>
                 {availableTaxes.length === 0 ? (
                   <div className="p-2 text-sm text-gray-500 text-center">
                     {isEditing
-                      ? "No taxes available"
+                      ? "Tax type cannot be changed"
                       : "All available taxes have been added"}
                   </div>
                 ) : (
@@ -380,7 +392,8 @@ const MemoTaxForm = ({
                     <SelectItem key={tax._id} value={tax._id.toString()}>
                       <div className="flex items-center gap-2">
                         {tax.name}
-                        {tax.name.toLowerCase().includes("gst") && (
+                        {(tax.name.toLowerCase().includes("gst") ||
+                          tax.name.toLowerCase().includes("vat")) && (
                           <Badge variant="outline">Auto-value</Badge>
                         )}
                       </div>
@@ -389,6 +402,12 @@ const MemoTaxForm = ({
                 )}
               </SelectContent>
             </Select>
+            {isEditing && (
+              <p className="text-xs text-gray-500 flex items-center gap-1">
+                <Lock className="h-3 w-3" />
+                Tax name cannot be changed when editing
+              </p>
+            )}
           </div>
 
           {/* Show alert if no taxes available for new addition */}
@@ -402,13 +421,16 @@ const MemoTaxForm = ({
             </Alert>
           )}
 
-          {/* GST Auto-value Alert */}
-          {isGstTax && autoGstValue !== null && (
+          {/* GST/VAT Auto-value Alert */}
+          {isAutoTax && autoTaxValue !== null && (
             <Alert>
               <Lock className="h-4 w-4" />
               <AlertDescription>
-                GST tax value ({autoGstValue}%) is automatically extracted from
-                the tax name and cannot be modified.
+                {selectedTax?.name.toLowerCase().includes("gst")
+                  ? "GST"
+                  : "VAT"}{" "}
+                tax value ({autoTaxValue}%) is automatically extracted from the
+                tax name and cannot be modified.
               </AlertDescription>
             </Alert>
           )}
@@ -419,9 +441,11 @@ const MemoTaxForm = ({
             <Select
               value={effectiveType}
               onValueChange={handleTypeChange}
-              disabled={isLoading || isTypeReadonly}
+              disabled={isLoading || isTypeReadonly || isEditing} // Add isEditing to disable in edit mode
             >
-              <SelectTrigger>
+              <SelectTrigger
+                className={isEditing ? "bg-gray-50 text-gray-600" : ""}
+              >
                 <SelectValue placeholder="Select tax type" />
               </SelectTrigger>
               <SelectContent>
@@ -429,7 +453,7 @@ const MemoTaxForm = ({
                   <div className="flex items-center gap-2">
                     <Percent className="h-4 w-4" />
                     Percentage
-                    {isTypeReadonly && (
+                    {(isTypeReadonly || isEditing) && (
                       <Lock className="h-3 w-3 text-gray-400" />
                     )}
                   </div>
@@ -442,51 +466,77 @@ const MemoTaxForm = ({
                 </SelectItem>
               </SelectContent>
             </Select>
+            {isEditing && (
+              <p className="text-xs text-gray-500 flex items-center gap-1">
+                <Lock className="h-3 w-3" />
+                Tax type cannot be changed when editing
+              </p>
+            )}
           </div>
 
-          {/* Tax Value Input - Only show for non-GST taxes */}
-          {!isGstTax && (
-            <div className="space-y-2">
-              <Label htmlFor="taxValue" className="flex items-center gap-2">
-                Tax Value {effectiveType === "PERCENTAGE" ? "(%)" : "(₹)"}
-                {isValueReadonly && <Lock className="h-3 w-3 text-gray-400" />}
-              </Label>
-              <Input
-                id="taxValue"
-                type="number"
-                step="0.01"
-                min="0"
-                max={effectiveType === "PERCENTAGE" ? "100" : undefined}
-                placeholder={
-                  effectiveType === "PERCENTAGE"
-                    ? "Enter percentage (0-100)"
-                    : "Enter fixed amount"
-                }
-                value={effectiveValue}
-                onChange={(e) => handleInputChange("value", e.target.value)}
-                disabled={isLoading || isValueReadonly}
-                className={isValueReadonly ? "bg-gray-50 text-gray-600" : ""}
-              />
-              {isValueReadonly && (
-                <p className="text-xs text-gray-500">
-                  This value is automatically set based on the selected GST tax.
-                </p>
+          {/* Tax Value Input - Show for all taxes when editing, but disable auto taxes */}
+          <div className="space-y-2">
+            <Label htmlFor="taxValue" className="flex items-center gap-2">
+              Tax Value {effectiveType === "PERCENTAGE" ? "(%)" : "(₹)"}
+              {(isValueReadonly || (isEditing && isAutoTax)) && (
+                <Lock className="h-3 w-3 text-gray-400" />
               )}
-            </div>
-          )}
+            </Label>
+            <Input
+              id="taxValue"
+              type="number"
+              step="0.01"
+              min="0"
+              max={effectiveType === "PERCENTAGE" ? "100" : undefined}
+              placeholder={
+                effectiveType === "PERCENTAGE"
+                  ? "Enter percentage (0-100)"
+                  : "Enter fixed amount"
+              }
+              value={effectiveValue}
+              onChange={(e) => handleInputChange("value", e.target.value)}
+              disabled={
+                isLoading || isValueReadonly || (isEditing && isAutoTax)
+              }
+              className={
+                isValueReadonly || (isEditing && isAutoTax)
+                  ? "bg-gray-50 text-gray-600"
+                  : ""
+              }
+            />
+            {(isValueReadonly || (isEditing && isAutoTax)) && (
+              <p className="text-xs text-gray-500">
+                {isAutoTax
+                  ? "GST/VAT tax values cannot be modified. Only active/inactive status can be changed."
+                  : "This value is automatically set based on the selected tax and cannot be modified."}
+              </p>
+            )}
+            {isEditing && !isValueReadonly && !isAutoTax && (
+              <p className="text-xs text-gray-500">
+                You can modify the tax value when editing.
+              </p>
+            )}
+          </div>
 
-          {/* GST Auto-value Info - Only show for GST taxes */}
-          {isGstTax && autoGstValue !== null && (
+          {/* GST/VAT Auto-value Info - Only show for auto taxes */}
+          {isAutoTax && autoTaxValue !== null && (
             <div className="p-3 bg-blue-50 rounded-md border border-blue-200">
               <div className="flex items-center gap-2 mb-2">
                 <Lock className="h-4 w-4 text-blue-600" />
                 <span className="text-sm font-medium text-blue-800">
-                  GST Tax Value
+                  {selectedTax?.name.toLowerCase().includes("gst")
+                    ? "GST"
+                    : "VAT"}{" "}
+                  Tax Value
                 </span>
               </div>
               <p className="text-sm text-blue-700">
-                Tax value <strong>{autoGstValue}%</strong> is automatically
-                extracted from the selected GST tax name and cannot be modified.
+                Tax value <strong>{autoTaxValue}%</strong> is automatically
+                extracted from the selected{" "}
+                {selectedTax?.name.toLowerCase().includes("gst")
+                  ? "GST"
+                  : "VAT"}{" "}
+                tax name and cannot be modified.
               </p>
             </div>
           )}
@@ -511,6 +561,30 @@ const MemoTaxForm = ({
             </div>
           )}
 
+          {/* Editing Restrictions Alert */}
+          {isEditing && (
+            <Alert>
+              <Lock className="h-4 w-4" />
+              <AlertDescription>
+                {isAutoTax ? (
+                  <>
+                    For <strong>GST/VAT taxes</strong>, you can only change the{" "}
+                    <strong>active status</strong>. Tax name, type, and value
+                    cannot be modified to maintain compliance and data
+                    consistency.
+                  </>
+                ) : (
+                  <>
+                    When editing a tax, you can modify the{" "}
+                    <strong>tax value</strong> and{" "}
+                    <strong>active status</strong>. Tax name and type cannot be
+                    changed to maintain data consistency.
+                  </>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Preview */}
           {selectedTax && effectiveValue && (
             <div className="p-3 bg-gray-50 rounded-md">
@@ -521,7 +595,7 @@ const MemoTaxForm = ({
                   {effectiveValue}
                   {effectiveType === "PERCENTAGE" ? "%" : "₹"}
                 </span>
-                {isGstTax && <Badge variant="outline">Auto-extracted</Badge>}
+                {isAutoTax && <Badge variant="outline">Auto-extracted</Badge>}
                 {isEditing && (
                   <Badge variant={formData.isActive ? "default" : "outline"}>
                     {formData.isActive ? "Active" : "Inactive"}
@@ -543,8 +617,8 @@ const MemoTaxForm = ({
             disabled={
               isLoading ||
               !formData.selectedTaxId ||
-              // Only require value for non-GST taxes
-              (!isGstTax && !formData.value.trim()) ||
+              // Only require value for non-auto taxes
+              (!isAutoTax && !formData.value.trim()) ||
               (availableTaxes.length === 0 && !isEditing)
             }
           >

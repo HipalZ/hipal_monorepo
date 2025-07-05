@@ -27,7 +27,6 @@ import {
   useLinkedDishesToTax,
   useUnlinkedDishesFromTax,
   type LinkedOrUnlinkedDishesPayload,
-  useFetchTaxesByBusiness,
   useGetAllTaxes,
 } from "@/hooks/useTax";
 import { useChildCategories } from "@/hooks/useCategory.ts";
@@ -37,18 +36,19 @@ import LoadingSpinner from "@/components/atom/loadingSpinner/index.tsx";
 import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton.tsx";
 
 interface DishWithTaxStatus extends DishType {
-  hasGst: boolean;
-  originalGst: boolean;
-  currentGstRate?: number;
-  currentGstTaxId?: string;
-  currentGstTaxName?: string;
-  newGstRate?: number;
+  hasTax: boolean;
+  originalTax: number | null;
+  currentTaxRate?: number;
+  currentTaxId?: string;
+  currentTaxName?: string;
+  newTaxRate?: number;
   isChanging?: boolean;
+  vat: number;
 }
 
 interface LinkingDishesToTaxProps {
   onClose?: () => void;
-  getSelectedTax?: TaxById; // Changed from getGstTax
+  getSelectedTax?: TaxById;
 }
 
 const MemoLinkingDishesToTax = ({
@@ -69,12 +69,12 @@ const MemoLinkingDishesToTax = ({
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
     new Set(),
   );
-  const [expandedGstGroups, setExpandedGstGroups] = useState<Set<string>>(
+  const [expandedTaxGroups, setExpandedTaxGroups] = useState<Set<string>>(
     new Set(),
   );
   const [initialDishStates, setInitialDishStates] = useState<
     Record<string, string | null>
-  >({}); // Store tax ID instead of boolean
+  >({});
   const [activeTab, setActiveTab] = useState("gst-filter");
 
   const isLoading =
@@ -84,54 +84,80 @@ const MemoLinkingDishesToTax = ({
     unlinkingDishes ||
     loadingAllTaxes;
 
-  // Extract GST rate from tax name
-  const extractGstRate = useCallback((taxName: string): number | null => {
-    // look for: gst (28%)  —  case‐insensitive, with optional spaces
-    const gstMatch = taxName.match(/gst\s*\(\s*(\d+(?:\.\d+)?)\s*%\s*\)/i);
-    return gstMatch ? Number.parseFloat(gstMatch[1]) : null;
+  // Extract tax rate from tax name (works for both GST and VAT)
+  const extractTaxRate = useCallback((taxName: string): number | null => {
+    // Matches "gst (18%)" or "vat (12%)", case-insensitive
+    const taxMatch = taxName.match(
+      /(gst|vat)\s*\(\s*(\d+(?:\.\d+)?)\s*%\s*\)/i,
+    );
+    console.log("regex match for:", taxName, "Result:", taxMatch);
+    // taxMatch[2] is the number inside the parentheses
+    return taxMatch ? Number.parseFloat(taxMatch[2]) : null;
   }, []);
 
-  // Get all GST taxes with their rates (from both business and all taxes)
+  // Get all GST taxes with their rates
   const allGstTaxes = useMemo(() => {
     if (!allTaxes) return [];
     return allTaxes
       .filter((tax) => tax.name.toLowerCase().includes("gst"))
       .map((tax) => ({
         ...tax,
-        rate: extractGstRate(tax.name) || 0,
+        rate: extractTaxRate(tax.name) || tax.value,
       }))
       .sort((a, b) => a.rate - b.rate);
-  }, [allTaxes, extractGstRate]);
+  }, [allTaxes, extractTaxRate]);
+
+  // Get all VAT taxes with their rates
+  const allVatTaxes = useMemo(() => {
+    if (!allTaxes) return [];
+    return allTaxes
+      .filter((tax) => tax.name.toLowerCase().includes("vat"))
+      .map((tax) => ({
+        ...tax,
+        rate: extractTaxRate(tax.name) || tax.value,
+      }))
+      .sort((a, b) => a.rate - b.rate);
+  }, [allTaxes, extractTaxRate]);
+
+  // Get all taxes with their rates (combined GST and VAT)
+  const allTaxesWithRates = useMemo(() => {
+    return [...allGstTaxes, ...allVatTaxes];
+  }, [allGstTaxes, allVatTaxes]);
 
   const dishesWithTaxStatus = useMemo<DishWithTaxStatus[]>(() => {
-    if (!dishes || !allGstTaxes.length) return [];
+    if (!dishes || !allTaxesWithRates.length) return [];
 
     return dishes.map((dish) => {
-      const gstTax = dish.gst
-        ? allGstTaxes.find((tax) => tax.rate === dish.gst)
-        : undefined;
+      // Check both GST and VAT values to determine current tax
+      const gstValue = dish.gst && dish.gst > 0 ? dish.gst : null;
+      const vatValue = dish.vat && dish.vat > 0 ? dish.vat : null;
 
-      const currentGstRate = gstTax?.rate;
-      const currentGstTaxId = gstTax?._id;
-      const currentGstTaxName = gstTax?.name;
+      // Find the tax that matches either GST or VAT rate
+      let currentTax = undefined;
+      if (gstValue) {
+        currentTax = allTaxesWithRates.find((tax) => tax.rate === gstValue);
+      } else if (vatValue) {
+        currentTax = allTaxesWithRates.find((tax) => tax.rate === vatValue);
+      }
 
-      const newGstRate = getSelectedTax?.value;
+      const currentTaxRate = currentTax?.rate;
+      const currentTaxId = currentTax?._id;
+      const currentTaxName = currentTax?.name;
+
+      const newTaxRate = getSelectedTax?.value;
 
       return {
         ...dish,
-
-        hasGst: !!dish.gst,
-        originalGst: dish.gst ?? null,
-
-        currentGstRate,
-        currentGstTaxId,
-        currentGstTaxName,
-
-        newGstRate,
-        isChanging: newGstRate !== undefined && newGstRate !== currentGstRate,
+        hasTax: !!(gstValue || vatValue), // Has tax if either GST or VAT > 0
+        originalTax: gstValue || vatValue || null, // Use whichever is set
+        currentTaxRate,
+        currentTaxId,
+        currentTaxName,
+        newTaxRate,
+        isChanging: newTaxRate !== undefined && newTaxRate !== currentTaxRate,
       };
     });
-  }, [dishes, allGstTaxes, getSelectedTax]);
+  }, [dishes, allTaxesWithRates, getSelectedTax]);
 
   useEffect(() => {
     if (dishesWithTaxStatus.length > 0) {
@@ -139,11 +165,11 @@ const MemoLinkingDishesToTax = ({
       const initialSelected: string[] = [];
 
       for (const dish of dishesWithTaxStatus) {
-        // Store the current tax ID (or null if no GST)
-        initialStates[dish._id] = dish.currentGstTaxId || null;
+        // Store the current tax ID (or null if no tax)
+        initialStates[dish._id] = dish.currentTaxId || null;
 
-        // Select dishes that already have the target GST rate
-        if (dish.currentGstTaxId === getSelectedTax?._id) {
+        // Select dishes that already have the target tax rate
+        if (dish.currentTaxId === getSelectedTax?._id) {
           initialSelected.push(dish._id);
         }
       }
@@ -152,6 +178,8 @@ const MemoLinkingDishesToTax = ({
       setSelectedDishIds(initialSelected);
     }
   }, [dishesWithTaxStatus, getSelectedTax]);
+
+  // Group dishes by GST rates
   const dishesByGstRate = useMemo(() => {
     const groups: { [key: string]: DishWithTaxStatus[] } = {};
 
@@ -165,12 +193,21 @@ const MemoLinkingDishesToTax = ({
     );
 
     for (const dish of filteredDishes) {
-      if (!dish.hasGst || !dish.currentGstTaxName) {
+      const gstValue = dish.gst && dish.gst > 0 ? dish.gst : null;
+
+      if (!gstValue) {
         groups["No GST"].push(dish);
       } else {
-        const groupKey = `${dish.currentGstTaxName} (${dish.currentGstRate}%)`;
-        if (groups[groupKey]) {
-          groups[groupKey].push(dish);
+        // Find GST tax that matches the dish's GST value
+        const matchingGstTax = allGstTaxes.find((tax) => tax.rate === gstValue);
+        if (matchingGstTax) {
+          const groupKey = `${matchingGstTax.name} (${matchingGstTax.rate}%)`;
+          if (groups[groupKey]) {
+            groups[groupKey].push(dish);
+          }
+        } else {
+          // If no matching GST tax found, put in "No GST"
+          groups["No GST"].push(dish);
         }
       }
     }
@@ -179,6 +216,44 @@ const MemoLinkingDishesToTax = ({
       Object.entries(groups).filter(([, dishes]) => dishes.length > 0),
     );
   }, [dishesWithTaxStatus, allGstTaxes, searchTerm]);
+
+  // Group dishes by VAT rates
+  const dishesByVatRate = useMemo(() => {
+    const groups: { [key: string]: DishWithTaxStatus[] } = {};
+
+    groups["No VAT"] = [];
+    for (const tax of allVatTaxes) {
+      groups[`${tax.name} (${tax.rate}%)`] = [];
+    }
+
+    const filteredDishes = dishesWithTaxStatus.filter((dish) =>
+      dish.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+
+    for (const dish of filteredDishes) {
+      const vatValue = dish.vat && dish.vat > 0 ? dish.vat : null;
+
+      if (!vatValue) {
+        groups["No VAT"].push(dish);
+      } else {
+        // Find VAT tax that matches the dish's VAT value
+        const matchingVatTax = allVatTaxes.find((tax) => tax.rate === vatValue);
+        if (matchingVatTax) {
+          const groupKey = `${matchingVatTax.name} (${matchingVatTax.rate}%)`;
+          if (groups[groupKey]) {
+            groups[groupKey].push(dish);
+          }
+        } else {
+          // If no matching VAT tax found, put in "No VAT"
+          groups["No VAT"].push(dish);
+        }
+      }
+    }
+
+    return Object.fromEntries(
+      Object.entries(groups).filter(([, dishes]) => dishes.length > 0),
+    );
+  }, [dishesWithTaxStatus, allVatTaxes, searchTerm]);
 
   const groupedDishes = useMemo(() => {
     const groups: { [key: string]: DishWithTaxStatus[] } = {
@@ -216,9 +291,9 @@ const MemoLinkingDishesToTax = ({
 
   const changesAnalysis = useMemo(() => {
     const changingDishes: DishWithTaxStatus[] = [];
-    const addingGst: DishWithTaxStatus[] = [];
-    const removingGst: DishWithTaxStatus[] = [];
-    const switchingGst: DishWithTaxStatus[] = [];
+    const addingTax: DishWithTaxStatus[] = [];
+    const removingTax: DishWithTaxStatus[] = [];
+    const switchingTax: DishWithTaxStatus[] = [];
 
     for (const dish of dishesWithTaxStatus) {
       const isCurrentlySelected = selectedDishIds.includes(dish._id);
@@ -230,16 +305,16 @@ const MemoLinkingDishesToTax = ({
 
       if (willHaveTargetTax !== currentlyHasTargetTax) {
         if (willHaveTargetTax) {
-          // Will get the target GST rate
-          if (!dish.hasGst) {
-            addingGst.push({ ...dish, isChanging: true });
+          // Will get the target tax rate
+          if (!dish.hasTax) {
+            addingTax.push({ ...dish, isChanging: true });
           } else {
-            switchingGst.push({ ...dish, isChanging: true });
+            switchingTax.push({ ...dish, isChanging: true });
           }
         } else {
-          // Will lose the target GST (but might keep another GST)
-          if (dish.currentGstTaxId === getSelectedTax?._id) {
-            removingGst.push({ ...dish, isChanging: true });
+          // Will lose the target tax (but might keep another tax)
+          if (dish.currentTaxId === getSelectedTax?._id) {
+            removingTax.push({ ...dish, isChanging: true });
           }
         }
         changingDishes.push({ ...dish, isChanging: true });
@@ -248,16 +323,16 @@ const MemoLinkingDishesToTax = ({
 
     return {
       changingDishes,
-      addingGst,
-      removingGst,
-      switchingGst,
+      addingTax,
+      removingTax,
+      switchingTax,
       hasChanges: changingDishes.length > 0,
       totalChanges: changingDishes.length,
     };
   }, [dishesWithTaxStatus, selectedDishIds, initialDishStates, getSelectedTax]);
 
-  const toggleGstGroupExpansion = useCallback((groupName: string) => {
-    setExpandedGstGroups((prev) => {
+  const toggleTaxGroupExpansion = useCallback((groupName: string) => {
+    setExpandedTaxGroups((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(groupName)) {
         newSet.delete(groupName);
@@ -290,9 +365,12 @@ const MemoLinkingDishesToTax = ({
     });
   }, []);
 
-  const toggleSelectAllInGstGroup = useCallback(
-    (groupName: string) => {
-      const dishesInGroup = dishesByGstRate[groupName] || [];
+  const toggleSelectAllInTaxGroup = useCallback(
+    (groupName: string, taxType: "gst" | "vat") => {
+      const dishesInGroup =
+        taxType === "gst"
+          ? dishesByGstRate[groupName] || []
+          : dishesByVatRate[groupName] || [];
       const allSelectedInThisGroup = dishesInGroup.every((dish) =>
         selectedDishIds.includes(dish._id),
       );
@@ -315,7 +393,7 @@ const MemoLinkingDishesToTax = ({
         return newSelected;
       });
     },
-    [dishesByGstRate, selectedDishIds],
+    [dishesByGstRate, dishesByVatRate, selectedDishIds],
   );
 
   const toggleSelectAllInCategory = useCallback(
@@ -385,7 +463,7 @@ const MemoLinkingDishesToTax = ({
         if (selectedDishIds.includes(dish._id)) {
           newInitialStates[dish._id] = getSelectedTax?._id || null;
         } else {
-          newInitialStates[dish._id] = dish.currentGstTaxId || null;
+          newInitialStates[dish._id] = dish.currentTaxId || null;
         }
       }
       setInitialDishStates(newInitialStates);
@@ -427,19 +505,19 @@ const MemoLinkingDishesToTax = ({
     const currentlyHasTargetTax = originalTaxId === getSelectedTax?._id;
     const hasChanged = willHaveTargetTax !== currentlyHasTargetTax;
 
-    const getCurrentGstBadge = () => {
-      if (!dish.hasGst) {
-        return <Badge variant="outline">No GST</Badge>;
+    const getCurrentTaxBadge = () => {
+      if (!dish.hasTax) {
+        return <Badge variant="outline">No Tax</Badge>;
       }
       return (
         <Badge variant="secondary" className="bg-blue-100 text-blue-800">
           <Percent className="h-3 w-3 mr-1" />
-          {dish.currentGstRate}%
+          {dish.currentTaxRate}%
         </Badge>
       );
     };
 
-    const getTargetGstBadge = () => {
+    const getTargetTaxBadge = () => {
       if (!isSelected) {
         return <Badge variant="outline">Will Remove</Badge>;
       }
@@ -454,22 +532,22 @@ const MemoLinkingDishesToTax = ({
     const getChangeType = () => {
       if (!hasChanged) return null;
 
-      if (isSelected && !dish.hasGst) {
+      if (isSelected && !dish.hasTax) {
         return (
           <Badge
             variant="outline"
             className="bg-green-50 text-green-700 border-green-200"
           >
             <Zap className="h-3 w-3 mr-1" />
-            Adding GST
+            Adding Tax
           </Badge>
         );
       }
 
       if (
         isSelected &&
-        dish.hasGst &&
-        dish.currentGstRate !== getSelectedTax?.value
+        dish.hasTax &&
+        dish.currentTaxRate !== getSelectedTax?.value
       ) {
         return (
           <Badge
@@ -477,19 +555,19 @@ const MemoLinkingDishesToTax = ({
             className="bg-yellow-50 text-yellow-700 border-yellow-200"
           >
             <ArrowRight className="h-3 w-3 mr-1" />
-            Switching GST
+            Switching Tax
           </Badge>
         );
       }
 
-      if (!isSelected && dish.currentGstTaxId === getSelectedTax?._id) {
+      if (!isSelected && dish.currentTaxId === getSelectedTax?._id) {
         return (
           <Badge
             variant="outline"
             className="bg-red-50 text-red-700 border-red-200"
           >
             <MinusCircle className="h-3 w-3 mr-1" />
-            Removing GST
+            Removing Tax
           </Badge>
         );
       }
@@ -523,12 +601,12 @@ const MemoLinkingDishesToTax = ({
 
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs text-gray-500">Current:</span>
-                {getCurrentGstBadge()}
+                {getCurrentTaxBadge()}
                 {hasChanged && (
                   <>
                     <ArrowRight className="h-3 w-3 text-gray-400" />
                     <span className="text-xs text-gray-500">Will be:</span>
-                    {getTargetGstBadge()}
+                    {getTargetTaxBadge()}
                   </>
                 )}
               </div>
@@ -543,14 +621,114 @@ const MemoLinkingDishesToTax = ({
     );
   };
 
+  const renderTaxGroupContent = (
+    taxGroups: { [key: string]: DishWithTaxStatus[] },
+    taxType: "gst" | "vat",
+  ) => {
+    return Object.keys(taxGroups).length > 0 ? (
+      <div className="space-y-4">
+        {Object.entries(taxGroups).map(([taxGroup, dishesInGroup]) => {
+          const isExpanded = expandedTaxGroups.has(taxGroup);
+          const selectedInThisGroupCount = dishesInGroup.filter((dish) =>
+            selectedDishIds.includes(dish._id),
+          ).length;
+          const totalInThisGroup = dishesInGroup.length;
+          const allSelectedInThisGroup =
+            totalInThisGroup > 0 &&
+            selectedInThisGroupCount === totalInThisGroup;
+          const someSelectedInThisGroup =
+            selectedInThisGroupCount > 0 &&
+            selectedInThisGroupCount < totalInThisGroup;
+
+          return (
+            <Card key={taxGroup} className="overflow-hidden">
+              <CardHeader
+                className="cursor-pointer hover:bg-gray-50 transition-colors pb-3"
+                onClick={() => toggleTaxGroupExpansion(taxGroup)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      checked={allSelectedInThisGroup}
+                      indeterminate={someSelectedInThisGroup}
+                      onCheckedChange={() =>
+                        toggleSelectAllInTaxGroup(taxGroup, taxType)
+                      }
+                      onClick={(e) => e.stopPropagation()}
+                      className="data-[state=checked]:bg-primary"
+                    />
+                    <div className="flex items-center gap-2">
+                      {taxGroup.includes("No") ? (
+                        <MinusCircle className="h-5 w-5 text-gray-400" />
+                      ) : (
+                        <Percent className="h-5 w-5 text-green-600" />
+                      )}
+                      <div>
+                        <CardTitle className="text-lg text-gray-800">
+                          {taxGroup?.slice(0, 10)}
+                        </CardTitle>
+                        <p className="text-sm text-gray-500">
+                          {selectedInThisGroupCount} of {totalInThisGroup}{" "}
+                          dishes selected
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{totalInThisGroup} dishes</Badge>
+                    {isExpanded ? (
+                      <ChevronUp className="h-5 w-5 text-gray-500" />
+                    ) : (
+                      <ChevronDown className="h-5 w-5 text-gray-500" />
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+
+              {isExpanded && (
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {dishesInGroup.map((dish) => renderDishCard(dish))}
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          );
+        })}
+      </div>
+    ) : (
+      <Card>
+        <CardContent className="text-center py-12">
+          <Filter className="mx-auto h-16 w-16 text-gray-300 mb-4" />
+          <p className="text-gray-500">No dishes found matching your search.</p>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  // Get tax type name for display (GST, VAT, or Tax)
+  const getTaxTypeName = () => {
+    if (!getSelectedTax) return "Tax";
+    const taxName = getSelectedTax.name.toLowerCase();
+    if (taxName.includes("gst")) return "GST";
+    if (taxName.includes("vat")) return "VAT";
+    return "Tax";
+  };
+
+  const taxTypeName = getTaxTypeName();
+
   return (
     <div className="space-y-6 max-w-6xl p-6 mx-auto h-[100dvh] pb-[10rem] lg:h-[90dvh] overflow-auto hide-scrollbar">
       {/* Header */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-2xl font-bold text-gray-900">GST Management</h3>
-            <p className="text-gray-600">Assign dishes to GST rates</p>
+            <h3 className="text-2xl font-bold text-gray-900">
+              {taxTypeName} Management
+            </h3>
+            <p className="text-gray-600">
+              Assign dishes to {taxTypeName.toLowerCase()} rates
+            </p>
           </div>
           {changesAnalysis.hasChanges && (
             <Badge variant="outline" className="text-blue-600 px-3 py-1">
@@ -566,7 +744,7 @@ const MemoLinkingDishesToTax = ({
             <AlertDescription>
               <div className="flex items-center gap-2">
                 <span>Target Tax Rate:</span>
-                <Badge variant="default" className="bg-primary ">
+                <Badge variant="default" className="bg-primary">
                   <Percent className="h-3 w-3 mr-1" />
                   {getSelectedTax.name}
                 </Badge>
@@ -593,10 +771,14 @@ const MemoLinkingDishesToTax = ({
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="gst-filter" className="flex items-center gap-2">
             <Filter className="h-4 w-4" />
             Filter by GST Rate
+          </TabsTrigger>
+          <TabsTrigger value="vat-filter" className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            Filter by VAT Rate
           </TabsTrigger>
           <TabsTrigger
             value="category-filter"
@@ -612,92 +794,15 @@ const MemoLinkingDishesToTax = ({
             View dishes grouped by their current GST rates. Select dishes to
             move them to <strong>{getSelectedTax?.name}</strong>.
           </div>
+          {renderTaxGroupContent(dishesByGstRate, "gst")}
+        </TabsContent>
 
-          {Object.keys(dishesByGstRate).length > 0 ? (
-            <div className="space-y-4">
-              {Object.entries(dishesByGstRate).map(
-                ([gstGroup, dishesInGroup]) => {
-                  const isExpanded = expandedGstGroups.has(gstGroup);
-                  const selectedInThisGroupCount = dishesInGroup.filter(
-                    (dish) => selectedDishIds.includes(dish._id),
-                  ).length;
-                  const totalInThisGroup = dishesInGroup.length;
-                  const allSelectedInThisGroup =
-                    totalInThisGroup > 0 &&
-                    selectedInThisGroupCount === totalInThisGroup;
-                  const someSelectedInThisGroup =
-                    selectedInThisGroupCount > 0 &&
-                    selectedInThisGroupCount < totalInThisGroup;
-
-                  return (
-                    <Card key={gstGroup} className="overflow-hidden">
-                      <CardHeader
-                        className="cursor-pointer hover:bg-gray-50 transition-colors pb-3"
-                        onClick={() => toggleGstGroupExpansion(gstGroup)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <Checkbox
-                              checked={allSelectedInThisGroup}
-                              indeterminate={someSelectedInThisGroup}
-                              onCheckedChange={() =>
-                                toggleSelectAllInGstGroup(gstGroup)
-                              }
-                              onClick={(e) => e.stopPropagation()}
-                              className="data-[state=checked]:bg-primary"
-                            />
-                            <div className="flex items-center gap-2">
-                              {gstGroup === "No GST" ? (
-                                <MinusCircle className="h-5 w-5 text-gray-400" />
-                              ) : (
-                                <Percent className="h-5 w-5 text-green-600" />
-                              )}
-                              <div>
-                                <CardTitle className="text-lg text-gray-800">
-                                  {gstGroup?.slice(0, 9)}
-                                </CardTitle>
-                                <p className="text-sm text-gray-500">
-                                  {selectedInThisGroupCount} of{" "}
-                                  {totalInThisGroup} dishes selected
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary">
-                              {totalInThisGroup} dishes
-                            </Badge>
-                            {isExpanded ? (
-                              <ChevronUp className="h-5 w-5 text-gray-500" />
-                            ) : (
-                              <ChevronDown className="h-5 w-5 text-gray-500" />
-                            )}
-                          </div>
-                        </div>
-                      </CardHeader>
-
-                      {isExpanded && (
-                        <CardContent className="pt-0">
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            {dishesInGroup.map((dish) => renderDishCard(dish))}
-                          </div>
-                        </CardContent>
-                      )}
-                    </Card>
-                  );
-                },
-              )}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="text-center py-12">
-                <Filter className="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                <p className="text-gray-500">
-                  No dishes found matching your search.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+        <TabsContent value="vat-filter" className="space-y-4">
+          <div className="text-sm text-gray-600 mb-4">
+            View dishes grouped by their current VAT rates. Select dishes to
+            move them to <strong>{getSelectedTax?.name}</strong>.
+          </div>
+          {renderTaxGroupContent(dishesByVatRate, "vat")}
         </TabsContent>
 
         <TabsContent value="category-filter" className="space-y-4">
@@ -797,35 +902,42 @@ const MemoLinkingDishesToTax = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {changesAnalysis.addingGst.length > 0 && (
+            {changesAnalysis.addingTax.length > 0 && (
               <div className="flex items-center gap-2 text-sm">
                 <Badge
                   variant="outline"
                   className="bg-green-100 text-green-800"
                 >
-                  +{changesAnalysis.addingGst.length}
+                  +{changesAnalysis.addingTax.length}
                 </Badge>
-                <span>dishes will get GST {getSelectedTax?.value}%</span>
+                <span>
+                  dishes will get {getSelectedTax?.name} (
+                  {getSelectedTax?.value}%)
+                </span>
               </div>
             )}
-            {changesAnalysis.switchingGst.length > 0 && (
+            {changesAnalysis.switchingTax.length > 0 && (
               <div className="flex items-center gap-2 text-sm">
                 <Badge
                   variant="outline"
                   className="bg-yellow-100 text-yellow-800"
                 >
-                  ↔{changesAnalysis.switchingGst.length}
-                </Badge>
-                <span>dishes will switch to GST {getSelectedTax?.value}%</span>
-              </div>
-            )}
-            {changesAnalysis.removingGst.length > 0 && (
-              <div className="flex items-center gap-2 text-sm">
-                <Badge variant="outline" className="bg-red-100 text-red-800">
-                  -{changesAnalysis.removingGst.length}
+                  ↔{changesAnalysis.switchingTax.length}
                 </Badge>
                 <span>
-                  dishes will have GST {getSelectedTax?.value}% removed
+                  dishes will switch to {getSelectedTax?.name} (
+                  {getSelectedTax?.value}%)
+                </span>
+              </div>
+            )}
+            {changesAnalysis.removingTax.length > 0 && (
+              <div className="flex items-center gap-2 text-sm">
+                <Badge variant="outline" className="bg-red-100 text-red-800">
+                  -{changesAnalysis.removingTax.length}
+                </Badge>
+                <span>
+                  dishes will have {getSelectedTax?.name} (
+                  {getSelectedTax?.value}%) removed
                 </span>
               </div>
             )}
