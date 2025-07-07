@@ -122,7 +122,6 @@ const tableSchema = new mongoose.Schema<TableType>(
 );
 
 tableSchema.index({ businessId: 1, name: 1, tableId: 1 }, { unique: true });
-tableSchema.index({ businessId: 1, name: 1 }, { unique: true });
 
 const Table: Model<TableType> = mongoose.model<TableType>("table", tableSchema);
 

@@ -68,7 +68,6 @@ const zoneSchema = new mongoose.Schema<ZoneType>(
 );
 
 zoneSchema.index({ businessId: 1, name: 1, zoneId: 1 }, { unique: true });
-zoneSchema.index({ businessId: 1, name: 1 }, { unique: true });
 
 const Zone: Model<ZoneType> = mongoose.model<ZoneType>("zone", zoneSchema);
 
