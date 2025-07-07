@@ -2,8 +2,9 @@ import { useBillSummary } from "@/components/hooks/usePayments";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import { Receipt } from "lucide-react";
 import { CiCirclePlus } from "react-icons/ci";
-import { FaMoneyBillWave, FaPercent, FaTags } from "react-icons/fa";
+import { FaMoneyBillWave, FaTags } from "react-icons/fa";
 import { RiEdit2Fill } from "react-icons/ri";
 
 const PosBillBreakdown = () => {
@@ -53,30 +54,21 @@ const PosBillBreakdown = () => {
           <BillItem
             icon={<FaMoneyBillWave />}
             label="Subtotal"
-            value={`${currencySymbol}${Math.max(
-              0,
-              Number(billData?.subTotal ?? 0) -
-                Number(billData?.claimedCoins ?? 0),
-            )}`}
+            value={`${currencySymbol}${billData?.subTotal}`}
           />
           <BillItem
-            icon={<FaPercent />}
+            icon={<Receipt size={12} />}
             label="Service Charge"
             value={`${currencySymbol}${billData?.serviceCharge || 0}`}
           />
           <BillItem
-            icon={<FaTags />}
-            label="Discount"
-            value={`${currencySymbol}${billData?.discount || 0}`}
-          />
-          <BillItem
-            icon={<FaPercent />}
+            icon={<Receipt size={12} />}
             label="Tax"
-            value={`${currencySymbol}${billData?.tax || 0}`}
+            value={`${currencySymbol}${billData?.gst || 0}`}
           />
         </div>
         <hr
-          className="mx-2 my-4 bg-white"
+          className="mx-2 my-2 bg-white"
           style={{
             backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
               "#10101875",
@@ -89,7 +81,7 @@ const PosBillBreakdown = () => {
         />
         <div className="mx-2 mt-2">
           {claimCouponz > 0 || claimedCoins > 0 ? (
-            <article className="flex items-center justify-between mx-2 text-xs">
+            <article className="flex items-center justify-between m-2 text-xs">
               <h1 className="text-[#4CAF50]">
                 {claimedCoins > 0 && !billData?.couponId ? (
                   <>Hi-Coinz applied</>
@@ -111,7 +103,7 @@ const PosBillBreakdown = () => {
               </article>
             </article>
           ) : null}
-          <div className="flex justify-between p-2 text-sm capitalize text-[#101018]">
+          <div className="flex justify-between px-2 text-sm capitalize text-[#101018]">
             <div className="flex items-center">
               <div
                 className="flex items-center text-red-500"
@@ -125,7 +117,7 @@ const PosBillBreakdown = () => {
               {isTipActive ? (
                 <span
                   onClick={clearTheTip}
-                  className="mx-2 text-xs underline underline-offset-2"
+                  className="ml-4 text-xs underline underline-offset-2"
                 >
                   Clear Tip
                 </span>
@@ -138,7 +130,7 @@ const PosBillBreakdown = () => {
             </div>
           </div>
           {isTipActive ? (
-            <div className="flex mx-2 space-x-2">
+            <div className="flex m-2 space-x-2">
               {["100", "200", "500", "Other"].map((tip, index) => (
                 <button
                   type="button"
@@ -172,14 +164,8 @@ const PosBillBreakdown = () => {
               </button>
             </div>
           )}
-          <BillItem
-            icon={<FaMoneyBillWave className="text-green-600" />}
-            label="Total"
-            value={`${currencySymbol}${billData?.total || 0}`}
-            className="px-2 text-lg !font-bold"
-          />
           <hr
-            className="mt-3 bg-white"
+            className="bg-white my-2"
             style={{
               backgroundImage: `url(\"data:image/svg+xml,%3csvg width='100%25' height='10' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='6' fill='none' stroke='${encodeURIComponent(
                 "#10101875",
@@ -190,6 +176,19 @@ const PosBillBreakdown = () => {
               border: "none",
             }}
           />
+          <div className="space-y-3 px-2">
+            <BillItem
+              icon={<FaTags />}
+              label="Discount"
+              value={`${currencySymbol}${billData?.discount || 0}`}
+            />
+            <BillItem
+              icon={<FaMoneyBillWave className="text-green-600" />}
+              label="Total"
+              value={`${currencySymbol}${billData?.total || 0}`}
+              className="text-lg !font-bold"
+            />
+          </div>
           <div className="flex justify-between mx-2 mt-4">
             <h1 className="text-sm font-bold">
               To Pay <span className="text-xs">(rounded off)</span>

@@ -216,6 +216,19 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       required: false,
       ref: "User",
     },
+    billId: {
+      type: String,
+      required: false,
+    },
+    couponDiscount: {
+      type: Number,
+      default: 0,
+    },
+    billItems: {
+      type: [Object],
+      required: false,
+      default: [],
+    },
   },
 
   { timestamps: true },

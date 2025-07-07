@@ -16,6 +16,8 @@ import {
 import {
   BranchSchema,
   BusinessSchema,
+  CurrencyCode,
+  CurrencyCodeSymbol,
   UpdateBusinessSchema,
   loyaltySchema,
   outLetInfoSchema,
@@ -127,17 +129,9 @@ const businessesRouter = new Hono()
               businessId: parentOutLetId,
             }).lean();
 
-            if (business[0].businessType === "OTHER") {
-              await Menu.deleteOne(
-                { businessId: currentBusinessId },
-                { session },
-              );
-            }
-
             const createaMenu = await Menu.findOneAndUpdate(
               { businessId: currentBusinessId },
               {
-                businessId: business[0]._id,
                 name: "Default",
                 menuType: 1,
                 days: [1, 2, 3, 4, 5, 6, 7],
@@ -651,6 +645,26 @@ const businessesRouter = new Hono()
     const getBusiness = await Business.findOne({
       customLink: customLink,
     }).select("_id");
+
+    const isKitchenNotLinkToDishes = await Dish.exists({
+      kitchenId: { $exists: false },
+      isDeleted: false,
+      active: true,
+      businessId: getBusiness?._id,
+    });
+
+    await OutLetInfo.findOneAndUpdate(
+      {
+        businessId: getBusiness?._id,
+      },
+      {
+        $set: {
+          posProgress: isKitchenNotLinkToDishes ? 0 : 1,
+        },
+      },
+      { new: true },
+    );
+
     const outLetInfo = await OutLetInfo.findOne({
       businessId: getBusiness?._id,
     }).populate("newAmenities");
@@ -928,6 +942,20 @@ const businessesRouter = new Hono()
       });
     },
   )
+
+  .get("/fetch_currency", async (c) => {
+    // Combine codes and symbols into an array of objects
+    const currencyList = CurrencyCode.map((code, idx) => ({
+      code,
+      symbol: CurrencyCodeSymbol[idx],
+    }));
+
+    return c.json({
+      err: false,
+      data: currencyList,
+      message: "Currency codes and symbols fetched successfully",
+    });
+  })
 
   .post(
     "/loyalty/status/:businessId",

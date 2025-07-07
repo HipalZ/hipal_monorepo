@@ -24,6 +24,10 @@ const portionSchema = new mongoose.Schema<PortionType>(
       enum: DishTypeEnum,
       required: true,
     },
+    posPortionId: {
+      type: String,
+      required: false,
+    },
   },
   {
     timestamps: true,
@@ -124,6 +128,47 @@ const dishSchema = new mongoose.Schema<DishType>(
       type: ObjectId,
       required: false,
       ref: "menu",
+    },
+    ignoreDiscount: {
+      type: String,
+      required: false,
+    },
+    ignoreTax: {
+      type: String,
+      required: false,
+    },
+    pos: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    posDishId: {
+      type: String,
+      required: false,
+    },
+
+    posTax: {
+      type: String,
+      required: false,
+    },
+    rank: {
+      type: Number,
+      required: false,
+    },
+    active: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+    gst: {
+      type: Number,
+      required: false,
+      default: 5,
+    },
+    vat: {
+      type: Number,
+      required: false,
+      default: 0,
     },
   },
   {

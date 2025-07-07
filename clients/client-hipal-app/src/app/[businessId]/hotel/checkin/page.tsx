@@ -1,8 +1,7 @@
 import { getBusinessData } from "@/apis/commonApis";
 import { getThemeSettings } from "@/apis/hotel";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
-import CheckInNavbar from "@/components/hotels/room/CheckInNavbar";
-import ServiceCategoriesSection from "@/components/hotels/room/ServiceCategoriesSection";
+
 import type { BusinessDetails } from "@/components/types/businessData";
 import dynamic from "next/dynamic";
 
@@ -77,13 +76,6 @@ const ViewPortContainer = dynamic(
   },
 );
 
-const ResponsiveImage = dynamic(
-  () => import("@/components/hotels/room/RoomTopSection"),
-  {
-    loading: () => <SkeletonLoader height={200} />,
-  },
-);
-
 const RoomCard = dynamic(() => import("@/components/hotels/room/RoomNumber"), {
   loading: () => <SkeletonLoader height={200} />,
 });
@@ -106,6 +98,20 @@ const CheckOutRequest = dynamic(
   },
 );
 
+const ServiceCategoriesSection = dynamic(
+  () => import("@/components/hotels/room/ServiceCategoriesSection"),
+  {
+    loading: () => <SkeletonLoader height={100} />,
+  },
+);
+
+const ChatCardSection = dynamic(
+  () => import("@/components/hotels/room/ChatCardSection"),
+  {
+    loading: () => <SkeletonLoader height={200} />,
+  },
+);
+
 const page = async ({
   params,
   searchParams,
@@ -116,23 +122,19 @@ const page = async ({
   const businessData = (await getBusinessData(
     params.businessId,
   )) as BusinessDetails;
-  console.log('businessData',businessData?.menuId)
+  console.log("businessData", businessData?.menuId);
   const room =
     typeof searchParams.room === "string" ? searchParams.room : "hipalz";
   const userId = typeof searchParams.id === "string" ? searchParams.id : "";
   const themeData = await getThemeSettings(businessData?.businessId);
   return (
     <HotelBackgroundContainer overlayOpacity={50}>
-      <ViewPortContainer className="relative mx-auto max-w-[30rem] pb-[10rem]">
-        <CheckInNavbar room={room} themeData={themeData} />
-
-        <ResponsiveImage
-          imageUrl={businessData.endBannerUrl || ""}
-          alt="Room Top Section"
-        />
-
-        <section className="p-6">
-          <RoomCard roomNumber={room} />
+      <ViewPortContainer className="relative mx-auto max-w-[30rem] pb-[5rem] bg-gray-50">
+        <section className="p-3">
+          <RoomCard
+            roomNumber={room}
+            specialBannerUrl={businessData?.specialBannerUrl}
+          />
         </section>
 
         <HotelWelcomeCard
@@ -151,10 +153,17 @@ const page = async ({
           businessId={businessData.businessId}
         />
 
-        <section className="px-6 pb-6">
-          <ServiceCategoriesSection businessId={businessData.businessId} menuId={businessData?.menuId}/>
+        <section className="p-4">
+          <ServiceCategoriesSection
+            menuId={businessData?.menuId}
+            businessId={businessData.businessId}
+          />
         </section>
-        <CheckOutRequest businessId={businessData.businessId} />
+        <ChatCardSection />
+        <CheckOutRequest
+          businessId={businessData.businessId}
+          themeData={themeData}
+        />
       </ViewPortContainer>
     </HotelBackgroundContainer>
   );

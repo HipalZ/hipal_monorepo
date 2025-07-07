@@ -45,7 +45,4 @@ video upload test to prod testing
 test deploy
 vercel json filed testings vercel removed build
 pnpm lock trigger to
-Trigger HIpalz
-prod push hipalz
-prod push hipalz2
-test collpase menu to prod
+Trigger HIpalz2

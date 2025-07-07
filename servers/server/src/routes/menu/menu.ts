@@ -1,5 +1,6 @@
 import {
   AddOn,
+  Business,
   BusinessPosConfig,
   Category,
   Dish,
@@ -340,6 +341,7 @@ const menuRouter = new Hono()
         if (!menu) {
           const defaultMenuLayout = await Menu.findOne({
             businessId,
+            isActive: true,
           }).select(
             "menuType categoryLayout cardLayout primaryColor secondaryColor",
           );
@@ -372,7 +374,10 @@ const menuRouter = new Hono()
         sourceMenuId,
       } = requestData;
 
-      if (sourceMenuId && (await BusinessPosConfig.exists({ businessId }))) {
+      if (
+        sourceMenuId &&
+        (await BusinessPosConfig.exists({ businessId, isDeleted: false }))
+      ) {
         return respond(
           c,
           "You cannot create a menu with sourceMenuId as this business has POS",
@@ -430,6 +435,40 @@ const menuRouter = new Hono()
     });
   })
 
+  .post(
+    "/customlink",
+    zValidator(
+      "json",
+      z.object({
+        customLink: z.string().min(1).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
+        const { customLink } = requestData;
+
+        const businessExists = await Business.exists({ customLink });
+
+        if (!businessExists) {
+          return respond(c, "Business not found", true, 404);
+        }
+
+        const menus = await Menu.find({
+          businessId: businessExists._id,
+          isActive: true,
+        }).lean();
+
+        if (menus.length === 0) {
+          return respond(c, "No menus found", true, 404);
+        }
+
+        return respond(c, "Menus fetched successfully", false, 200, menus);
+      });
+    },
+  )
+
   .put("/update_menu", zValidator("json", UpdateMenuSchema), async (c) => {
     //@ts-ignore
     return runInTransaction(async (session) => {
@@ -439,6 +478,21 @@ const menuRouter = new Hono()
       const menu = await Menu.findById(menuId);
       if (!menu) {
         return respond(c, "Menu not found", true, 404);
+      }
+
+      const businessPosConfig = await BusinessPosConfig.findOne({
+        businessId: businessId,
+        isDeleted: false,
+        active: true,
+      });
+
+      if (businessPosConfig) {
+        return respond(
+          c,
+          "POS is active for this business please deactivate it first",
+          true,
+          400,
+        );
       }
 
       const activeMenus = await Menu.find({

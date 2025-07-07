@@ -1,4 +1,4 @@
-import { AddOn, Dish } from "@hi/db-models";
+import { AddOn, BusinessPosConfig, Dish } from "@hi/db-models";
 import {
   type AddOnType,
   AddOnsAttrs,
@@ -24,10 +24,27 @@ const addonRouter = new Hono()
       return await runInTransaction(async (session: ClientSession) => {
         const requestData = (await c.req.json()) as AddOnType;
 
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId: requestData.businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (businessPosConfig) {
+          return respond(
+            c,
+            "pos is enabled for this business you can't create addon",
+            true,
+            400,
+            {},
+          );
+        }
+
         const existingAddon = await AddOn.findOne({
           name: requestData.name,
           isDeleted: false,
           businessId: requestData.businessId,
+          active: true,
         });
 
         if (existingAddon) return respond(c, "already exist", true, 409, {});
@@ -57,15 +74,21 @@ const addonRouter = new Hono()
         const { id } = c.req.param();
         const requestData = await c.req.json();
         const { dishIds = [], removeDishIds = [] } = requestData;
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId: requestData.businessId,
+          isDeleted: false,
+          active: true,
+        });
 
-        // const addOn = await AddOn.findOne({
-        //   name: requestData.name,
-        //   businessId: requestData.businessId,
-        //   _id: { $ne: id },
-        //   isDeleted: false,
-        // });
-
-        // if (addOn) return respond(c, "add On already exist", true, 409, {});
+        if (businessPosConfig) {
+          return respond(
+            c,
+            "pos is enabled for this business you can't update addon",
+            true,
+            400,
+            {},
+          );
+        }
 
         const updatedAddOn = await AddOn.findByIdAndUpdate(
           id,
@@ -131,6 +154,27 @@ const addonRouter = new Hono()
       return await runInTransaction(async (session: ClientSession) => {
         const { id } = c.req.param();
 
+        const fetchAddOn = await AddOn.findById(id);
+        if (!fetchAddOn) {
+          return respond(c, "not found", true, 404, {});
+        }
+
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId: fetchAddOn.businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (businessPosConfig) {
+          return respond(
+            c,
+            "pos is enabled for this business you can't delete addon",
+            true,
+            400,
+            {},
+          );
+        }
+
         const addon = await AddOn.findByIdAndUpdate(id, { isDeleted: true });
 
         if (!addon) return respond(c, "not found", true, 404, {});
@@ -158,7 +202,11 @@ const addonRouter = new Hono()
     async (c) => {
       const { id } = c.req.param();
 
-      const addon = await AddOn.findOne({ _id: id, isDeleted: false });
+      const addon = await AddOn.findOne({
+        _id: id,
+        isDeleted: false,
+        active: true,
+      });
 
       if (!addon) return respond(c, "not found", true, 404, {});
 
@@ -185,6 +233,7 @@ const addonRouter = new Hono()
           businessId,
           isDeleted: false,
           menuId: menuId,
+          active: true,
         };
 
         const addon = await AddOn.find(query).select(
@@ -192,11 +241,11 @@ const addonRouter = new Hono()
         );
         return respond(c, "success", false, 200, addon);
       }
-
       const query = {
         businessId,
         isDeleted: false,
         menuId: menuId,
+        active: true,
       };
 
       const addon = await AddOn.find(query);

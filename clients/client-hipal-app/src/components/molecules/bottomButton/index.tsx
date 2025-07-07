@@ -172,7 +172,7 @@ export default function BottomButton({
           fixed z-50 bottom-4 w-[calc(100%-2rem)] 
           left-4 max-w-[30rem] bg-primary shadow-lg
           transform md:-translate-x-1/2 md:left-1/2
-          overflow-hidden rounded-full py-4
+          overflow-hidden rounded-[1.5rem] py-4
         "
         style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}

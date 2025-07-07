@@ -4,18 +4,28 @@ import { useOrderStore } from "@/components/store/useOrderData";
 import {
   useCheckLoyalty,
   useCustomerLogin,
-  useUpdateBill,
 } from "@/components/hooks/useTableData";
 import toast from "react-hot-toast";
 import useBusinessData from "@/components/store/useBusinessData";
 import PhoneNumber from "./phoneNumber";
 import OtpStep from "./otpStep";
 import LoyaltySuccess from "./loyaltySuccess";
+import {
+  useAddCoinz,
+  useAddCoupon,
+  useRemoveCoinz,
+  useRemoveCoupon,
+} from "@/components/hooks/useBill";
+import SpinnerMemo from "../loadingSpinner/index.tsx";
 
 const MemoAddCoinz = (props) => {
-  const { data } = props;
-  const billValue = data.total || 0;
+  const { data: billData } = props;
+  const billValue = billData.total || 0;
   const [userData, setUserData] = useState<any>({});
+  const { addingCoinzLoader, addingCoinz } = useAddCoinz();
+  const { addingCouponLoader, addingCoupon } = useAddCoupon();
+  const { removingCouponLoader, removingCoupon } = useRemoveCoupon();
+  const {removingCoinzLoader, removingCoinz } = useRemoveCoinz();
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const { setOpenAddCoinz } = useOrderStore();
   const { loyaltyData } = useCheckLoyalty();
@@ -25,9 +35,8 @@ const MemoAddCoinz = (props) => {
   const [availedCoupon, setAvailedCoupon] = useState<any>(null);
   const [couponz, setCouponz] = useState();
   const [availableCoinz, setAvailableCoinz] = useState(0);
-  const [coinzAdded, setCoinzAdded] = useState(data?.claimedCoins);
-  const [applyCoinz, setApplyCoinz] = useState(data?.claimedCoins);
-  const { updateBill } = useUpdateBill();
+  const [coinzAdded, setCoinzAdded] = useState(billData?.claimedCoins);
+  const [applyCoinz, setApplyCoinz] = useState(billData?.claimedCoins);
   const handleCloseModal = () => {
     setOpenAddCoinz(false);
   };
@@ -49,12 +58,9 @@ const MemoAddCoinz = (props) => {
 
   const removeCoupon = () => {
     setAvailedCoupon(null);
-    updateBill({
-      tableName: data.tableName,
-      coinz: 0,
-      total: data.total,
-      couponId: null,
-      businessId,
+    removingCoupon({
+      businessId: businessId || "",
+      tableName: billData.tableName,
     });
   };
 
@@ -97,7 +103,11 @@ const MemoAddCoinz = (props) => {
 
       // Clear coinz before proceeding
       setCoinzAdded(0);
-      toast.success("Coinz removed.");
+      await removingCoinz({
+        businessId: businessId || "",
+        tableName: billData.tableName,
+        coinzRemovedBy: userData?._id || "",
+      });
     }
 
     // Calculate discount
@@ -112,15 +122,11 @@ const MemoAddCoinz = (props) => {
     }
 
     setAvailedCoupon(coupon);
-    // setClaimCouponz(discountValue);
     toast.success(`Coupon "${coupon.name}" applied: ₹${discountValue} off`);
-    updateBill({
-      tableName: data.tableName,
-      coinz: discountValue,
-      total: data.total,
+    addingCoupon({
+      businessId: businessId || "",
+      tableName: billData.tableName,
       couponId: coupon?._id || null,
-      businessId,
-      userId: userData?._id,
     });
   };
 
@@ -143,12 +149,12 @@ const MemoAddCoinz = (props) => {
 
   const maxClaim = useMemo(() => {
     const canClaimCoinz = Math.round(
-      (data?.subTotal || billValue) *
+      (billData?.subTotal || billValue) *
         (loyaltyData?.setClaimedPercentage / 100) || 0,
     );
     return canClaimCoinz < availableCoinz ? canClaimCoinz : availableCoinz;
   }, [
-    data?.subTotal,
+    billData?.subTotal,
     billValue,
     loyaltyData?.setClaimedPercentage,
     availableCoinz,
@@ -173,13 +179,10 @@ const MemoAddCoinz = (props) => {
     if (coinzAdded > 0) {
       setApplyCoinz(coinzAdded);
       toast.success(`Applied ${coinzAdded} Coinz on this bill.`);
-      updateBill({
-        tableName: data.tableName,
-        coinz: coinzAdded,
-        total: data.total,
-        couponId: availedCoupon?._id || null,
-        businessId,
-        userId: userData?._id,
+      addingCoinz({
+        businessId: businessId || "",
+        tableName: billData.tableName,
+        value: coinzAdded,
       });
     }
   };
@@ -187,14 +190,11 @@ const MemoAddCoinz = (props) => {
   const removeApplyCoinz = () => {
     setApplyCoinz(0);
     setCoinzAdded(0);
-    updateBill({
-      tableName: data.tableName,
-      coinz: 0,
-      total: data.total,
-      couponId: null,
-      businessId,
+    removingCoinz({
+      businessId: businessId || "",
+      tableName: billData.tableName,
+      coinzRemovedBy: userData?._id || "",
     });
-    toast.success("Removed Coinz from this bill.");
   };
 
   if (!loyaltyData?.loyaltyId)
@@ -203,6 +203,15 @@ const MemoAddCoinz = (props) => {
         Your Business doesn't have loyalty
       </center>
     );
+
+  if (
+    removingCouponLoader ||
+    removingCoinzLoader ||
+    addingCouponLoader ||
+    addingCoinzLoader
+  ) {
+    return <SpinnerMemo />;
+  }
 
   const renderContent = () => {
     switch (step) {
@@ -246,6 +255,7 @@ const MemoAddCoinz = (props) => {
             availedCoupon={availedCoupon}
             confirmApplyCoinz={confirmApplyCoinz}
             coinzAdded={coinzAdded}
+            billData={billData}
           />
         );
     }
@@ -255,11 +265,13 @@ const MemoAddCoinz = (props) => {
     <Card className="border-none shadow-none">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-xl">Total</CardTitle>
-        <CardTitle className="text-2xl cursor-pointer">
+        <CardTitle className="text-2xl pr-4 cursor-pointer">
           <span>₹{billValue}</span>
         </CardTitle>
       </CardHeader>
-      <CardContent>{renderContent()}</CardContent>
+      <CardContent className="h-[90dvh] overflow-auto pb-[5rem]">
+        {renderContent()}
+      </CardContent>
     </Card>
   );
 };

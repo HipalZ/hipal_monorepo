@@ -104,12 +104,12 @@ const MemoIntroduction = ({ data }: { data: IBusinessData }) => {
         <h3 className="mt-2 text-3xl capitalize space-grotesk-700">
           {data?.business?.name}
         </h3>
-        <p className={cn("text-sm line-clamp-2 capitalize mb-4")}>
+        <p className={cn("text-sm line-clamp-2 capitalize mb-2")}>
           {Array.isArray(data?.business?.tags)
             ? data?.business?.tags.join(" | ")
             : data?.business?.tags}
         </p>
-        <h4 className="mb-1 text-xs font-semibold line-clamp-2 inter">
+        <h4 className="text-xs font-normal line-clamp-2 inter">
           {data?.business?.address}
         </h4>
       </section>

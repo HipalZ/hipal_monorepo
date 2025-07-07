@@ -46,8 +46,9 @@ const tableSchema = new mongoose.Schema<TableType>(
       required: false,
     },
     active: {
-      type: String,
+      type: Boolean,
       required: false,
+      default: true,
     },
     currentTableAmount: {
       type: Number,
@@ -108,6 +109,11 @@ const tableSchema = new mongoose.Schema<TableType>(
     tableLink: {
       type: String,
       required: false,
+    },
+    pos: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   {

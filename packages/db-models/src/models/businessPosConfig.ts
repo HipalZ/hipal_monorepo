@@ -74,6 +74,30 @@ const businessPosConfigSchema = new mongoose.Schema<BusinessPosConfigType>(
       type: String,
       required: false,
     },
+    defaultTableName: {
+      type: String,
+      required: false,
+    },
+    active: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+    onlyMenu: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    printKot: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+    repeatPrint: {
+      type: Number,
+      required: false,
+      default: 1,
+    },
   },
   {
     timestamps: true,

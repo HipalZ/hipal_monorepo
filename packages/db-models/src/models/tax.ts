@@ -13,7 +13,6 @@ const taxTypeschema = new mongoose.Schema<TaxTypes>(
       type: String,
       required: true,
       trim: true,
-      unique: true,
     },
     value: {
       type: Number,
@@ -34,12 +33,35 @@ const taxTypeschema = new mongoose.Schema<TaxTypes>(
       required: false,
       default: false,
     },
+    menuId: {
+      type: ObjectId,
+      required: false,
+      ref: "Menu",
+    },
   },
   {
     timestamps: true,
   },
 );
 
+const taxNames = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      unique: true,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+// Create a model for the tax schema
+const TaxName = mongoose.model("taxname", taxNames);
+// Create a model for the tax schema
+
 const Tax: Model<TaxTypes> = mongoose.model<TaxTypes>("tax", taxTypeschema);
 
-export { Tax };
+export { Tax, TaxName };

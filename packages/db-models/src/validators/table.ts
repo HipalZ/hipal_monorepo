@@ -24,7 +24,7 @@ export const tableSchema = z.object({
   tableId: z.string().min(3).max(100).optional(),
   hiCode: z.string().min(3).max(100).optional(),
 
-  active: z.string().min(1).max(30).optional(),
+  active: z.boolean().default(true).optional(),
   rank: z.string().min(1).max(30).optional(),
   status: z.enum(TableStatusEnum).default("EMPTY"),
   totalItemCount: z.number().default(0).optional(),
@@ -37,6 +37,7 @@ export const tableSchema = z.object({
   editedBy: ObjectIdSchema.optional(),
   internalZoneId: ObjectIdSchema.optional(),
   tableLink: z.string().min(3).max(60).optional(),
+  pos: z.boolean().default(false).optional(),
 });
 
 export const createTableSchema = z.object({

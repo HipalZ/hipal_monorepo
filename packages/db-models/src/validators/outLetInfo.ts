@@ -167,6 +167,8 @@ export const outLetInfoSchema = z.object({
   currencyCode: z.enum(CurrencyCode).optional(),
   currencySymbol: z.enum(CurrencyCodeSymbol).optional(),
   shareCart: z.boolean().optional().default(false),
+  isPosSynced: z.boolean().optional().default(false),
+  posProgress: z.number().optional().default(0),
 });
 
 export type OutLetInfoType = z.infer<typeof outLetInfoSchema>;

@@ -135,7 +135,7 @@ const MemoForceSettle = ({ closeForceSettle, data }: { closeForceSettle: () => v
                 tableId: selectedTable?._id,
                 reason: selectedReason || customReason,
                 captainId: captainData?._id,
-                billId: data?.billRequestId,
+                billId: data?._id,
                 settleAmount,
                 settleModes: settleModes,
             };

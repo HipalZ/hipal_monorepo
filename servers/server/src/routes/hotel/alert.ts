@@ -105,7 +105,7 @@ const scheduleAlertUpdate = (
                   to: manager?.phone?.toString(),
                   type: "template",
                   template: {
-                    name: "fi_escalation_template",
+                    name: "f_escalation_template ",
                     language: { code: "en" },
                     components: [
                       {
@@ -739,7 +739,7 @@ const hotelAlertRouter = new Hono()
               to: userData?.phone?.toString(),
               type: "template",
               template: {
-                name: "fi_delivered_template",
+                name: "f_delivered_template",
                 language: { code: "en" },
                 components: [
                   {

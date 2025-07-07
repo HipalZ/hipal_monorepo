@@ -126,7 +126,7 @@ export const useLinkedDishes = () => {
 };
 
 export const useAddons = (dishStep: string) => {
-  const { businessId, menuId } = useParams<{ businessId?: string; menuId }>();
+  const { businessId, menuId } = useParams<{ businessId?: string; menuId:string }>();
   const { setAddons } = useMenuPageStore((s) => ({
     setAddons: s.setAddons,
   }));

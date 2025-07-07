@@ -124,13 +124,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
           <h2 className="mb-4 text-xl font-bold text-red-600">
             Warning: Please Confirm the Transfer!
           </h2>
-          <p className="mb-6 text-gray-700">
-            Ensure that the items for table <strong>{toTable?.name}</strong>{" "}
-            have been transferred in your desktop application before proceeding.
-          </p>
-          <p className="mb-6 text-gray-600">
-            This action cannot be undone. Please double-check before confirming.
-          </p>
+       
           <section>
             Table is transferring from <strong>{selectedTable?.name}</strong> to{" "}
             <strong>{toTable?.name}</strong>

@@ -4,7 +4,7 @@ import type { CategoryType, DishType } from "@hi/db-models/src/validators";
 import type { OrderData, User } from "../types/hiClientzData";
 
 export type orderPages = "online" | "offline" | "history" | "";
-export type TransferTable = "ITEM" | "TABLE" | "" | "FREE";
+export type TransferTable = "ITEM" | "TABLE" | "" | "FREE" | "DELETE";
 
 export type orderModal =
   | ""
@@ -34,6 +34,15 @@ export interface IDuesPersonsData {
 interface OrderState {
   currentPage: orderPages;
   setCurrentPage: (page: orderPages) => void;
+
+  showMoreOption: boolean;
+  setShowMoreOption: (show: boolean) => void;
+
+  showEBill: boolean;
+  setShowEBill: (show: boolean) => void;
+
+  normalSettle: boolean;
+  setNormalSettle: (open: boolean) => void;
 
   transferTable: TransferTable;
   setTransferTable: (table: TransferTable) => void;
@@ -109,6 +118,15 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   openDues: false,
   setOpenDues: (open) => set({ openDues: open }),
+
+  normalSettle: false,
+  setNormalSettle: (open) => set({ normalSettle: open }),
+
+  showEBill: false,
+  setShowEBill: (show) => set({ showEBill: show }),
+
+  showMoreOption: false,
+  setShowMoreOption: (show) => set({ showMoreOption: show }),
 
   saveDueUser: null,
   setSaveDueUser: (user) => set({ saveDueUser: user }),

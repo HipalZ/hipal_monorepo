@@ -15,6 +15,8 @@ import { useCouponz } from "@/components/store/useCouponz";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { useCallTheCaptain } from "@/components/hooks/useCartHook";
 import CommonBottomButton from "@/components/atoms/bottomButton";
+import { usePayments } from "@/components/hooks/usePayments";
+import { useMutation } from "@tanstack/react-query";
 
 const AddAmountModal = memo(() => {
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
@@ -160,13 +162,13 @@ const AddAmountModal = memo(() => {
         buttons={[
           ...(outletInfo?.outLetType !== "OTHER"
             ? [
-              {
-                text: "Call Captain",
-                onClick: callTheWaiter,
-                disable: isPending,
-                isLoading: isPending,
-              },
-            ]
+                {
+                  text: "Call Captain",
+                  onClick: callTheWaiter,
+                  disable: isPending,
+                  isLoading: isPending,
+                },
+              ]
             : []),
           {
             text: "Next",

@@ -14,6 +14,7 @@ import Review from "@/assets/services/review.png";
 import Zones from "@/assets/services/zones.png";
 import Events from "@/assets/services/events.jpg";
 import ImageGrid from "@/assets/services/ImageGrid.png";
+import PosImage from "@/assets/services/posImage.png";
 
 export interface ILiteVersionCardButton {
   image: string;
@@ -32,6 +33,12 @@ export const getButtons = (
       text: "Themes",
       description: "Make your app look good",
       navigateTo: "themes",
+    },
+    {
+      image: PosImage,
+      text: "Point on Sale",
+      description: "Manage your POS",
+      navigateTo: "pos",
     },
     {
       image: StaffImage,

@@ -19,10 +19,9 @@ const posDishConfigSchema = new mongoose.Schema<PosDishConfigValidator>({
     default: true,
   },
   recommendationIds: {
-    type: [ObjectId],
+    type: Boolean,
     required: false,
-    ref: "Dish",
-    default: [],
+    default: true,
   },
   availabilty: {
     type: Boolean,
@@ -33,6 +32,56 @@ const posDishConfigSchema = new mongoose.Schema<PosDishConfigValidator>({
     type: ObjectId,
     required: true,
     ref: "Business",
+  },
+  kitchenId: {
+    type: Boolean,
+    required: false,
+    default: true,
+  },
+  name: {
+    type: Boolean,
+    required: false,
+    default: true,
+  },
+  price: {
+    type: Boolean,
+    required: false,
+    default: true,
+  },
+  avgTime: {
+    type: Boolean,
+    required: false,
+    default: true,
+  },
+  dishTypes: {
+    type: Boolean,
+    required: false,
+    default: true,
+  },
+  categoryIds: {
+    type: Boolean,
+    required: false,
+    default: true,
+  },
+  addOnIds: {
+    type: Boolean,
+    required: false,
+    default: true,
+  },
+  tags: {
+    type: Boolean,
+    required: false,
+    default: true,
+  },
+  portions: {
+    type: Boolean,
+    required: false,
+    default: true,
+  },
+  calories: {
+    type: Boolean,
+    required: false,
+    default: true,
   },
 });
 

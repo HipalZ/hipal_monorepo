@@ -80,7 +80,7 @@ const MemoCoinzRewardSection = () => {
     billData: s.billData,
   }));
 
-  const openModal = useCallback(() => {
+  const openCoinz = useCallback(() => {
     if (!accessToken) {
       setCheckLogin(true);
       setUrlFrom(completeUrl);
@@ -201,8 +201,8 @@ const MemoCoinzRewardSection = () => {
           <section className="flex justify-between">
             <article
               className="relative flex items-center mx-4"
-              onClick={openModal}
-              onKeyDown={openModal}
+              onClick={openCoinz}
+              onKeyDown={openCoinz}
             >
               {outletInfo?.isPosEnabled ? (
                 <GameButton

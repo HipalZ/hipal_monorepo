@@ -42,7 +42,7 @@ export const PaymentAlertSchema = z.object({
     .optional(),
   isRejected: z.boolean().default(false).optional(),
   date: z.number(),
-  posBillRequestId: z.string().optional(),
+  billId: z.string().optional(),
   userId: ObjectIdSchema,
   hiCode: z.string().default("").optional(),
   mode: z.string().min(1).max(100).optional(),

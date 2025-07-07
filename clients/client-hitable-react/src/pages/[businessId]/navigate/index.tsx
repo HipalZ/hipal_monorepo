@@ -10,16 +10,11 @@ const Navigate = () => {
 
   const navigateToAlerts = useCallback(() => {
     return navigate(`/${businessId}/alerts`);
-  },[]);
-
-  const navigateToTheUnsettleTables = useCallback(() => {
-    return navigate(`/${businessId}/unsettle`);
-  },[]);
+  }, []);
 
   const navigateToCheckIn = useCallback(() => {
     return navigate(`/${businessId}/checkin`);
-  },[]);
-
+  }, []);
 
   return (
     <>
@@ -33,13 +28,7 @@ const Navigate = () => {
             bgColor="bg-green-100"
             textColor="text-green-700"
           />
-          <Card
-            title="Unsettle Tables"
-            icon={<X />}
-            onClick={navigateToTheUnsettleTables}
-            bgColor="bg-red-100"
-            textColor="text-red-700"
-          />
+
           <Card
             title="Check In"
             icon={<QrCode />}

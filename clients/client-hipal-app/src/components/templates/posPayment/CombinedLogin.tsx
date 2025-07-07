@@ -31,8 +31,6 @@ const MemoCombinedLogin = () => {
   const searchParams = useSearchParams();
   const amount = searchParams?.get("amount");
   const tableName = searchParams?.get("tableName");
-  console.log("amount", amount);
-  console.log("tableName", tableName);
   const query = useSearchParams();
   const { goNext } = useGoNext();
   const { errorText } = useErrorHandling();

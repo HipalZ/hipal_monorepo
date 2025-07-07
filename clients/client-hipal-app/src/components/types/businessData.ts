@@ -517,6 +517,7 @@ export interface BusinessDetails {
   address: string;
   avgRating: number;
   logo: string;
+  menuId: IMenuLayout;
 }
 
 export interface GoogleReview {
@@ -621,6 +622,8 @@ interface Extra {
 }
 
 interface DishItem {
+  portion: any;
+  quantity: ReactNode;
   dish: {
     name: string;
     price: number;
@@ -630,22 +633,83 @@ interface DishItem {
 }
 
 export interface BillData {
-  billing_user_name: string;
-  serviceCharge: number;
-  discount: number;
-  tax: number;
-  total: number;
-  customerPhone: string;
-  customerName: string;
-  tableName: string;
-  subTotal: number;
-  billRequestId: string;
-  items: DishItem[];
-  claimedCoins: number;
-  tips: number;
-  initialTotal: number;
-  couponId: string;
-  finalSubTotal: number;
+  tips: number
+  claimedCoins: number
+  serviceCharge: number
+  discount: number
+  couponDiscount: number
+  discountAppliedBy: string
+  discountRemovedBy: string
+  gst: number
+  reasonOfDiscount: string
+  reasonOfServiceCharge: string
+  serviceChargeAppliedBy: string
+  serviceChargeRemovedBy: string
+  total: number
+  customerPhone: string
+  customerName: string
+  tableName: string
+  subTotal: number
+  billId: string
+  _id?: string
+  otherTax: number
+  discountAppliedOn?: string
+  couponId?: string
+  billItems: Array<{
+    gst: number
+    subTotal: number
+    totalGst: number
+    items: Array<{
+      dish: {
+        _id: string
+        name: string
+        price: number
+        businessId: string
+        posDishId: string
+        description: string
+        dishTypes: string[]
+        ignoreDiscount: string
+        ignoreTax: string
+        images: string[]
+        isDeleted: boolean
+        menuId: string
+        portions: Array<{
+          name: string
+          price: number
+          default: boolean
+          portionTypes: string[]
+          _id: string
+        }>
+        pos: boolean
+        posTax: string
+        rank: number
+        tags: string[]
+        visibility: boolean
+        active: boolean
+        kitchenId?: string
+        tax: number
+        gst: number
+        instruction?: string
+      }
+      id: string
+      _id: string
+      portion: {
+        name: string
+        price: number
+        default: boolean
+        portionTypes: string[]
+        _id: string
+      } | null
+      extras: Array<{
+        id: string
+        name: string
+        price: number
+        quantity: number
+      }>
+      quantity: number
+      isDeleted: boolean
+    }>
+  }>
 }
 
 interface CartItem {

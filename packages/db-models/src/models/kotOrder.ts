@@ -26,6 +26,17 @@ const KotItemSchema = new Schema<KotOrderItemType>({
     type: Number,
     required: true,
   },
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
+  deletedBy: {
+    type: String,
+  },
+  reasonOfDeletion: {
+    type: String,
+    maxlength: 500,
+  },
 });
 
 // Main Cart Schema
@@ -121,6 +132,18 @@ const KotOrderSchema = new Schema<KotOrderType>(
     message: {
       type: String,
       default: "",
+    },
+    bill: {
+      type: Boolean,
+      default: false,
+    },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    isSync: {
+      type: Boolean,
+      default: false,
     },
   },
   {

@@ -25,6 +25,8 @@ const orderSchema = new mongoose.Schema<OrderType>(
     cashbackAvailable: { type: Boolean, default: true },
     date: { type: Number, required: true },
     posBillId: { type: String, required: false },
+    couponDiscount: { type: Number, default: 0 },
+    gst: { type: Number, default: 0 },
   },
   {
     timestamps: true,

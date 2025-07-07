@@ -10,11 +10,11 @@ interface SidebarProps {
   changeNav: (str: string) => void;
 }
 
-const MemoUniversalNav: React.FC<SidebarProps> = ({
+const MemoUniversalNav = ({
   items,
   selectedNavItem,
   changeNav,
-}) => {
+}:SidebarProps) => {
   const navigate = useNavigate();
   const businessId = useBusinessData((state) => state.businessData?._id);
   const businessLogo = useBusinessData((s) => s?.businessData?.logo);

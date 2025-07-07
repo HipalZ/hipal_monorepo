@@ -2323,7 +2323,7 @@ const whatsappRouter = new Hono()
                   to: from,
                   type: "template",
                   template: {
-                    name: "fi_welcoming_template",
+                    name: "f_welcomes_template",
                     language: { code: "en" },
                     components: [
                       {
@@ -2645,7 +2645,8 @@ const whatsappRouter = new Hono()
       const { text, phoneNumber, businessId, isOwner, userId, ownerId } = body;
       const config = await WhatsAppBusinessConfig.findOne({
         businessId,
-      }).select("token phoneId");
+      });
+
       await axios({
         method: "POST",
         url: `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages?access_token=${config?.token}`,
@@ -2660,6 +2661,7 @@ const whatsappRouter = new Hono()
           "Content-Type": "application/json",
         },
       });
+
       const saveUserMessage = await WhatsAppUser.create({
         businessId,
         date: Date.now(),

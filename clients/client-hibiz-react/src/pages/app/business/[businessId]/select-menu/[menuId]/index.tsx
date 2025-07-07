@@ -1,11 +1,12 @@
 import MemoizedHeader from "@/components/molecules/header";
-import useBusinessData from "@/components/store/useBusinessData";
 import { routeToMenu } from "@/components/utils/routes";
 import { useNavigate, useParams } from "react-router-dom";
 import DishAndCat from "@/assets/dishAdbcat.png";
 import Manager from "@/assets/menuManager.png";
 import Card from "@/assets/cards/card62.png";
 import MenuCard from "@/components/atom/menulayouts/MenuCards";
+import Kitchen from "@/assets/kitchen.png";
+import Tax from "@/assets/tax.png";
 import {
   Breadcrumb as UIBreadcrumb,
   BreadcrumbItem,
@@ -15,6 +16,8 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Link } from "react-router-dom";
 import { useGetMenuLayout } from "@/hooks/useMenuLayout";
+import { useGetPosConfig } from "@/hooks/usePosHook.ts";
+
 const menuArray = [
   {
     id: 1,
@@ -40,20 +43,42 @@ const menuArray = [
     navigate: "menubanners",
     image: Card,
   },
+  {
+    id: 4,
+    title: "Kitchen",
+    subTitle: "Add Kitchen to your restaurant",
+    navigate: "kitchen",
+    image: Kitchen,
+  },
+  {
+    id: 5,
+    title: "Tax",
+    subTitle: "Add Tax to your restaurant",
+    navigate: "Tax",
+    image: Tax,
+  },
 ];
 
 const Menu = () => {
-  const businessData = useBusinessData((s) => s.businessData);
-  const businessId = businessData?._id;
-  const { menuId } = useParams<{ menuId: string }>();
+  const { menuId, businessId } = useParams<{
+    menuId: string;
+    businessId: string;
+  }>();
   const { menuLayout } = useGetMenuLayout(menuId as string);
   const navigate = useNavigate();
   const handleBack = () => {
-    navigate(routeToMenu(businessData?._id as string));
+    navigate(routeToMenu(businessId as string));
   };
+  const { posConfig } = useGetPosConfig(businessId as string);
+
+  // determine if we should hide the dishes & categories card
+  const isPetPooja = posConfig?.posName?.toLowerCase() === "petpooja";
+  const filteredMenu = isPetPooja
+    ? menuArray.filter((m) => m.id !== 1)
+    : menuArray;
 
   return (
-    <main className="">
+    <main>
       <div className="sticky top-0 z-50 w-full linear_gradient_background">
         <MemoizedHeader title="Menu" onBack={handleBack} />
       </div>
@@ -67,7 +92,6 @@ const Menu = () => {
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
-
             {menuLayout?.data?.name && (
               <>
                 <BreadcrumbSeparator />
@@ -89,12 +113,8 @@ const Menu = () => {
       </div>
       <section>
         <div className="flex flex-wrap">
-          {menuArray.map((menu) => (
-            <MenuCard
-              key={menu.id}
-              menu={menu}
-              businessId={businessData?._id || ""}
-            />
+          {filteredMenu.map((menu) => (
+            <MenuCard key={menu.id} menu={menu} businessId={businessId || ""} />
           ))}
         </div>
       </section>

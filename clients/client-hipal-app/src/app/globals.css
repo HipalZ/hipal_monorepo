@@ -1186,19 +1186,12 @@ input[type='password'] {
     border-radius: 10% / 20%;
   }
 
-
-
   @media (min-width: 30rem) {
 	main {
 	  max-width: 30rem !important;
 	  margin: 0 auto;
 	}
   }
-  
-  /* landing page */
-
- 
-  
   
   .nav_bar_logo {
 	position: fixed;

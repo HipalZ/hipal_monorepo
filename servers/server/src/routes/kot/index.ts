@@ -1,20 +1,24 @@
 import {
   BusinessPosConfig,
   KotOrder,
-  PosBill,
   Table,
+  User,
   UserAnalytic,
   UserSession,
 } from "@hi/db-models";
 import { kotOrderAcceptSchema } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
-import axios from "axios";
 import { Hono } from "hono";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
-import { calculateCartBill, convertToPetpoojaCart } from "../../utils/helper";
-import { posApiPaths } from "../../utils/posConfig/petPooja";
+import { calculateCartBill } from "../../utils/helper";
+import {
+  deleteKOTPrintEvent,
+  sendKOTPrintEvent,
+  sendReKOTPrintEvent,
+} from "../../utils/kot";
+import { respond } from "../../utils/response";
 
 const kotRouter = new Hono()
   .get(
@@ -105,6 +109,235 @@ const kotRouter = new Hono()
       );
     },
   )
+
+  .post(
+    "/reprint_kot",
+    zValidator(
+      "json",
+      z.object({
+        kotId: z.string().min(1).max(100),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { kotId } = await c.req.json();
+
+        const kot = await KotOrder.findById(kotId).populate({
+          path: "businessId",
+          select: "name",
+        });
+
+        if (!kot) {
+          return c.json(
+            {
+              message: "Kot not found",
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
+
+        const captainInfo = await User.findById(kot.acceptedBy);
+
+        sendReKOTPrintEvent({
+          tableName: kot?.tableName ?? "",
+          businessId: kot.businessId._id.toString(),
+          customerName: kot.name || captainInfo?.name || "",
+          customerPhone: kot.phone,
+          cart: kot.cart,
+          acceptedBy: captainInfo?.name || kot.name || "",
+          kotId: kot.id.toString(),
+          date: Date.now(),
+          posRestName: kot.businessId.name,
+        });
+
+        return c.json(
+          {
+            message: "Data fetched successfully",
+            err: false,
+            data: {},
+          },
+          200,
+        );
+      });
+    },
+  )
+
+  .post(
+    "/delete_kot",
+    zValidator(
+      "json",
+      z.object({
+        kotItems: z.array(
+          z.object({
+            itemId: z.string().min(24).max(24),
+            quantity: z.number().min(1),
+          }),
+        ),
+        deletedBy: z.string().min(1).max(50),
+        reasonOfDeletion: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { kotItems, deletedBy, reasonOfDeletion } = await c.req.json();
+
+        // 1. Load and validate user
+        const user = await User.findById(deletedBy).session(session);
+        if (!user) {
+          return respond(c, "User not found", true, 404);
+        }
+
+        const itemIds = kotItems.map((i) => i.itemId);
+        const kotDocs = await KotOrder.find(
+          { "cart._id": { $in: itemIds } },
+          {
+            cart: 1,
+            businessId: 1,
+            acceptedBy: 1,
+            tableName: 1,
+            name: 1,
+            phone: 1,
+            isDeleted: 1,
+          },
+        ).session(session);
+
+        const deletedOrders = kotDocs.filter((d) => d.isDeleted);
+        if (deletedOrders.length) {
+          const ids = deletedOrders.map((d) => d._id.toString()).join(", ");
+          return respond(
+            c,
+            `KOT order${
+              deletedOrders.length > 1 ? "s" : ""
+            } (${ids}) already deleted`,
+            true,
+            400,
+          );
+        }
+
+        const lookup = new Map<string, { kotDoc: any; cartItem: any }>();
+        for (const kd of kotDocs) {
+          for (const ci of kd.cart) {
+            const id = ci._id.toString();
+            if (itemIds.includes(id)) {
+              lookup.set(id, { kotDoc: kd, cartItem: ci });
+            }
+          }
+        }
+
+        for (const { itemId, quantity } of kotItems) {
+          const entry = lookup.get(itemId);
+          if (!entry) {
+            return respond(c, `KOT item ${itemId} not found`, true, 404);
+          }
+          if (entry.cartItem.isDeleted) {
+            return respond(c, `KOT item ${itemId} already deleted`, true, 400);
+          }
+          if (quantity > entry.cartItem.quantity) {
+            return respond(c, "Quantity exceeds available amount", true, 400);
+          }
+        }
+
+        for (const { itemId, quantity } of kotItems) {
+          const { kotDoc, cartItem: matched } = lookup.get(itemId)!;
+          const kotId = kotDoc._id;
+
+          if (matched.quantity > quantity) {
+            await KotOrder.updateOne(
+              { _id: kotId, "cart._id": itemId },
+              { $inc: { "cart.$.quantity": -quantity } },
+              { session },
+            );
+          }
+
+          const original = matched.toObject();
+          delete original._id;
+          const baseDeleted = {
+            ...original,
+            quantity: 1,
+            isDeleted: true,
+            deletedBy: user.name,
+            reasonOfDeletion,
+          };
+
+          let deletedItems: (typeof baseDeleted)[];
+
+          if (quantity === matched.quantity) {
+            // full-stack delete: mark existing cart item
+            await KotOrder.updateOne(
+              { _id: kotId, "cart._id": itemId },
+              {
+                $set: {
+                  "cart.$.isDeleted": true,
+                  "cart.$.deletedBy": user.name,
+                  "cart.$.reasonOfDeletion": reasonOfDeletion,
+                },
+              },
+              { session },
+            );
+
+            // for billing, treat it as one item of `quantity`
+            deletedItems = [{ ...baseDeleted, quantity }];
+          } else {
+            // partial delete: push `quantity` one-unit deleted copies
+            deletedItems = Array.from({ length: quantity }, () => ({
+              ...baseDeleted,
+            }));
+
+            await KotOrder.updateOne(
+              { _id: kotId },
+              { $push: { cart: { $each: deletedItems } } },
+              { session },
+            );
+          }
+
+          const deletedTotal = calculateCartBill(deletedItems);
+          await Table.updateOne(
+            { businessId: kotDoc.businessId, name: kotDoc.tableName },
+            { $inc: { currentTableAmount: -deletedTotal } },
+            { session },
+          );
+
+          const pos = await BusinessPosConfig.findOne(
+            {
+              businessId: kotDoc.businessId,
+              isDeleted: false,
+              active: true,
+            },
+            undefined,
+            { session },
+          );
+          const captain = await User.findById(kotDoc.acceptedBy).session(
+            session,
+          );
+
+          deleteKOTPrintEvent({
+            tableName: kotDoc.tableName,
+            businessId: kotDoc.businessId,
+            customerName: kotDoc.name,
+            customerPhone: kotDoc.phone,
+            cart: deletedItems.map((it) => ({ ...it, quantity: it.quantity })),
+            deletedBy: user.name,
+            acceptedBy: captain?.name || user.name,
+            kotId: kotId.toString(),
+            date: Date.now(),
+            posRestName: pos?.restName,
+          });
+        }
+
+        return respond(
+          c,
+          "KOT item(s) marked as deleted successfully",
+          false,
+          200,
+        );
+      });
+    },
+  )
+
   .put(
     "/",
     ubacMiddleware("order_accept"),
@@ -138,31 +371,16 @@ const kotRouter = new Hono()
         });
 
         if (!kot) {
-          return c.json(
-            {
-              message: "Kot not found",
-              err: true,
-              data: {},
-            },
-            404,
-          );
+          return respond(c, "Order not found", true, 404, {});
         }
         // find posconfig for a place order
         const pos = await BusinessPosConfig.findOne({
           businessId: kot.businessId,
           isDeleted: false,
+          active: true,
         });
         if (!pos) {
-          return c.json(
-            {
-              message: "POS not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
+          return respond(c, "POS not found", true, 404, {});
         }
 
         if (orderAction === "ACCEPT") {
@@ -171,42 +389,11 @@ const kotRouter = new Hono()
             businessId: kot.businessId,
           });
 
-          // check if bill already generated for table
-          if (tableSession?.billRequestId) {
-            return c.json(
-              {
-                message: `Bill already generated for table ${tableSession.tableName} by ${tableSession?.billGeneratedBy} you can't add more items`,
-                err: true,
-                data: {
-                  success: false,
-                },
-              },
-              400,
-            );
-          }
           kot.accepted = true;
           kot.acceptedBy = performBy;
           await kot.save();
 
           const totalBill = calculateCartBill(kot.cart);
-
-          const petpoojaCart = convertToPetpoojaCart(
-            kot.cart,
-            pos.restId,
-            kot.name,
-            tableSession?.pin,
-            kot.tableName,
-            pos.accessKey,
-            pos.secretKey,
-
-            pos.authToken,
-          );
-
-          const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
-
-          if (saveKot.data.status === "0") {
-            throw new Error("Error in saving kot");
-          }
 
           await Table.findOneAndUpdate(
             {
@@ -229,18 +416,26 @@ const kotRouter = new Hono()
             },
           );
 
-          return c.json(
-            {
-              message: "Data fetched successfully",
-              err: false,
-              data: {
-                success: true,
-                name: kot.name,
-                phone: kot.phone,
-              },
-            },
-            200,
-          );
+          const userInfo = await User.findById(kot.userId);
+          const captainInfo = await User.findById(performBy);
+
+          sendKOTPrintEvent({
+            tableName: tableSession?.tableName as string,
+            businessId: tableSession?.businessId as string,
+            customerName: userInfo?.name as string,
+            customerPhone: userInfo?.phone as string,
+            cart: kot.cart,
+            acceptedBy: captainInfo?.name as string,
+            kotId: kot._id.toString(),
+            date: Date.now(),
+            posRestName: pos?.restName,
+          });
+
+          return respond(c, "Data fetched successfully", false, 200, {
+            success: true,
+            name: kot.name,
+            phone: kot.phone,
+          });
         }
 
         if (orderAction === "REJECT") {
@@ -439,33 +634,6 @@ const kotRouter = new Hono()
           data: {},
         },
         400,
-      );
-    },
-  )
-
-  .get(
-    "/get_pos_bill/:billRequestId",
-
-    zValidator(
-      "param",
-      z.object({
-        billRequestId: z.string().min(1).max(500),
-      }),
-    ),
-    async (c) => {
-      const { billRequestId } = c.req.param();
-
-      const posBill = await PosBill.findOne({
-        billRequestId: billRequestId,
-      });
-
-      return c.json(
-        {
-          message: "Data fetched successfully",
-          err: false,
-          data: posBill?.items || [],
-        },
-        200,
       );
     },
   );

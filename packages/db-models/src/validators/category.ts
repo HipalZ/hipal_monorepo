@@ -2,6 +2,12 @@ import { z } from "zod";
 import { ObjectIdSchema } from "./common";
 
 export const HierarchyEnum = ["PARENT", "CHILD"] as const;
+
+export const timingSchema = z.object({
+  day: z.string().optional(),
+  start: z.string().optional(),
+  end: z.string().optional(),
+});
 export const categorySchema = z.object({
   _id: ObjectIdSchema.optional(),
   businessId: ObjectIdSchema,
@@ -60,6 +66,12 @@ export const categorySchema = z.object({
   availability: z.boolean().default(true).optional(),
   sequence: z.number().optional(),
   menuId: ObjectIdSchema,
+  posCategoryId: z.string().min(3).max(100).optional(),
+  rank: z.number().min(1).max(100).optional(),
+  categoryTimings: z.string().min(3).max(200).optional(),
+  pos: z.boolean().default(false).optional(),
+  active: z.boolean().default(true).optional(),
+  timings: z.array(timingSchema).optional(),
 });
 
 export const updateCategorySchema = z.object({
@@ -114,3 +126,4 @@ export const updateCategorySchema = z.object({
 });
 
 export type CategoryType = z.infer<typeof categorySchema>;
+export type TimingType = z.infer<typeof timingSchema>;

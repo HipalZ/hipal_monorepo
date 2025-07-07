@@ -103,8 +103,8 @@ export const usePayments = () => {
 
   // initialTotal for sending to razorpay
   const initialTotal = useMemo(() => {
-    return outletInfo?.isPosEnabled ? billData?.initialTotal : billValue;
-  }, [outletInfo?.isPosEnabled, billData?.initialTotal, billValue]);
+    return outletInfo?.isPosEnabled ? billData?.total : billValue;
+  }, [outletInfo?.isPosEnabled, billData?.total, billValue]);
 
   const { tableName, setTableName } = useTableData();
   // payment response
@@ -453,7 +453,7 @@ export const usePayments = () => {
         claimedCoins: outletInfo?.isPosEnabled
           ? billData?.claimedCoins
           : claimedCoins || claimCouponz,
-        billValue: initialTotal,
+        billValue: outletInfo?.isPosEnabled ? billData?.subTotal : initialTotal,
         userId: userDetails?._id,
         tips: outletInfo?.isPosEnabled ? billData?.tips : tips,
         currency: "INR",
@@ -670,7 +670,10 @@ export const useDisplayValue = () => {
 };
 
 export const useBillSummary = () => {
-  const { updateBill } = useUpdateBill();
+  const { addTips, removeTips } = useUpdateBill();
+  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
+  const removeTipsMutation = useMutation({ mutationFn: removeTips });
+  const addTipsMutation = useMutation({ mutationFn: addTips });
   const {
     setIsTipActive,
     tips,
@@ -679,39 +682,49 @@ export const useBillSummary = () => {
     setCustomTip,
     setShowInput,
   } = usePaymentStore();
-  const clearTheTip = useCallback(() => {
-    setTips(0);
+  const clearTheTip = useCallback(async () => {
+    if (outletInfo?.isPosEnabled) {
+      await removeTipsMutation.mutateAsync();
+    }
     setSelectedTip("");
     setCustomTip("");
     setShowInput(false);
     setIsTipActive(false);
-    mutateAsync({
-      tips: 0,
-    });
-  }, [setTips, setSelectedTip, setCustomTip, setShowInput, setIsTipActive]);
-
-  const { mutateAsync } = useMutation({
-    mutationFn: updateBill,
-  });
+  }, [
+    setSelectedTip,
+    setCustomTip,
+    setShowInput,
+    setIsTipActive,
+    removeTipsMutation,
+    outletInfo?.isPosEnabled,
+  ]);
 
   const handleTipSelect = useCallback(
-    (tip: string) => {
+    async (tip: string) => {
       if (tip === "Other") {
         setSelectedTip(tip);
         setShowInput(true);
         setCustomTip("");
         setTips(0);
-      } else {
-        setSelectedTip(tip);
-        setShowInput(false);
-        setCustomTip("");
-        setTips(Number(tip));
-        mutateAsync({
+      }
+      setSelectedTip(tip);
+      setShowInput(false);
+      setCustomTip("");
+      setTips(Number(tip));
+      if (outletInfo?.isPosEnabled) {
+        await addTipsMutation.mutateAsync({
           tips: Number(tip),
         });
       }
     },
-    [setSelectedTip, setShowInput, setCustomTip, setTips, mutateAsync],
+    [
+      setSelectedTip,
+      setShowInput,
+      setCustomTip,
+      setTips,
+      addTipsMutation,
+      outletInfo?.isPosEnabled,
+    ],
   );
 
   const handleCustomTip = useCallback(
@@ -723,12 +736,14 @@ export const useBillSummary = () => {
     [setCustomTip, setTips],
   );
 
-  const handleSaveTip = useCallback(() => {
+  const handleSaveTip = useCallback(async () => {
     setShowInput(false);
-    mutateAsync({
-      tips: Number(tips),
-    });
-  }, [setShowInput, mutateAsync, tips]);
+    if (outletInfo?.isPosEnabled) {
+      await addTipsMutation.mutateAsync({
+        tips: Number(tips),
+      });
+    }
+  }, [setShowInput, addTipsMutation, tips, outletInfo?.isPosEnabled]);
 
   return {
     clearTheTip,
@@ -874,8 +889,7 @@ export const usePlaceOrder = () => {
             tableName,
             businessId: outletInfo?.businessId,
             internalCart: sanitizedCart,
-            customerName: userDetails?.name || "Guest",
-            customerPhone: userDetails?.phone,
+            userId: userDetails?._id,
             hiCode: hiCode || "",
           },
         });
@@ -927,26 +941,15 @@ export const useUpdateBill = () => {
   const queryClient = useQueryClient();
   const pathName = usePathname();
   const { loyaltySetting } = useLoyaltyData();
-  const { billData } = usePaymentStore();
   const { tableName } = useTableData();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
-  const updateBill = async (data: OptionalPropsData) => {
-    const { coinz, tips, couponId, userId } = data;
-    const response = await apiRpc.payments.fetch_update_bill[
-      ":businessId"
-    ].$post({
-      param: {
-        businessId: loyaltySetting.businessId,
-      },
+  const addCoins = async (data: OptionalPropsData) => {
+    const { coinz } = data;
+    const response = await apiRpc.pos.add_coins.$post({
       json: {
-        tableName: tableName,
-        total: billData?.total,
-        ...(coinz && { claimedCoins: coinz }),
-        ...(coinz === 0 && { removeCoins: true }),
-        ...(tips && { tips: tips }),
-        ...(tips === 0 && { removeTips: true }),
-        ...(couponId && { couponId }),
-        ...(userId && { userId }),
+        businessId: loyaltySetting.businessId,
+        tableName,
+        value: coinz,
       },
     });
     const res = await response.json();
@@ -966,7 +969,140 @@ export const useUpdateBill = () => {
     return res;
   };
 
-  return { updateBill };
+  const addCouponz = async (data: OptionalPropsData) => {
+    const { couponId } = data;
+    const response = await apiRpc.pos.add_coupon.$post({
+      json: {
+        businessId: loyaltySetting.businessId,
+        tableName,
+        couponId,
+      },
+    });
+    const res = await response.json();
+    if (response.status === 200 || response.status === 201) {
+      toast.success("Bill updated successfully");
+      if (outletInfo?.isPosEnabled) {
+        queryClient.invalidateQueries({
+          queryKey: ["getBill", outletInfo?.businessId, tableName],
+        });
+      }
+      if (pathName?.includes("posPayment")) {
+        queryClient.invalidateQueries({
+          queryKey: ["getBusinessDetails"],
+        });
+      }
+    }
+    return res;
+  };
+
+  const removeCoinz = async () => {
+    const response = await apiRpc.pos.remove_coins.$post({
+      json: {
+        businessId: loyaltySetting.businessId,
+        tableName,
+      },
+    });
+    const res = await response.json();
+    if (response.status === 200 || response.status === 201) {
+      toast.success("Bill updated successfully");
+      console.log("triggered");
+      if (outletInfo?.isPosEnabled) {
+        queryClient.invalidateQueries({
+          queryKey: ["getBill", outletInfo?.businessId, tableName],
+        });
+      }
+      if (pathName?.includes("posPayment")) {
+        queryClient.invalidateQueries({
+          queryKey: ["getBusinessDetails"],
+        });
+      }
+    }
+    return res;
+  };
+
+  const removeCouponz = async () => {
+    const response = await apiRpc.pos.remove_coupon.$post({
+      json: {
+        businessId: loyaltySetting.businessId,
+        tableName,
+      },
+    });
+    const res = await response.json();
+    if (response.status === 200 || response.status === 201) {
+      toast.success("Bill updated successfully");
+      if (outletInfo?.isPosEnabled) {
+        queryClient.invalidateQueries({
+          queryKey: ["getBill", outletInfo?.businessId, tableName],
+        });
+      }
+      if (pathName?.includes("posPayment")) {
+        queryClient.invalidateQueries({
+          queryKey: ["getBusinessDetails"],
+        });
+      }
+    }
+
+    return res;
+  };
+
+  const addTips = async (data: OptionalPropsData) => {
+    const { tips } = data;
+    const response = await apiRpc.pos.add_tip.$post({
+      json: {
+        businessId: loyaltySetting.businessId,
+        tableName,
+        value: tips,
+      },
+    });
+    const res = await response.json();
+    if (response.status === 200 || response.status === 201) {
+      toast.success("Bill updated successfully");
+      if (outletInfo?.isPosEnabled) {
+        queryClient.invalidateQueries({
+          queryKey: ["getBill", outletInfo?.businessId, tableName],
+        });
+      }
+      if (pathName?.includes("posPayment")) {
+        queryClient.invalidateQueries({
+          queryKey: ["getBusinessDetails"],
+        });
+      }
+    }
+    return res;
+  };
+
+  const removeTips = async () => {
+    const response = await apiRpc.pos.remove_tip.$post({
+      json: {
+        businessId: loyaltySetting.businessId,
+        tableName,
+      },
+    });
+    const res = await response.json();
+    if (response.status === 200 || response.status === 201) {
+      toast.success("Bill updated successfully");
+      if (outletInfo?.isPosEnabled) {
+        queryClient.invalidateQueries({
+          queryKey: ["getBill", outletInfo?.businessId, tableName],
+        });
+      }
+      if (pathName?.includes("posPayment")) {
+        queryClient.invalidateQueries({
+          queryKey: ["getBusinessDetails"],
+        });
+      }
+    }
+    return res;
+  };
+
+  return {
+    addCoins,
+    addCouponz,
+    removeCoinz,
+    removeCouponz,
+    addTips,
+    removeTips,
+  };
 };
 
 export const useGetOrderId = () => {
@@ -978,8 +1114,8 @@ export const useGetOrderId = () => {
 
   const handleGetOrderId = async () => {
     try {
-      const response = await apiRpc.surl.get_table_data[":orderId"].$get({
-        param: {
+      const response = await apiRpc.pos.fetch_bill.$get({
+        query: {
           orderId: orderId,
         },
       });

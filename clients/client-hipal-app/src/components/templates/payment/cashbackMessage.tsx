@@ -72,7 +72,7 @@ const MemoCashbackMessage = () => {
   return (
     <>
       {(claimedCoins > 0 || availedCoupon?.cashbackAvailable) && (
-        <center className="relative">
+        <center className="relative mt-3">
           <h1 className="text-xs btn-shine">
             You will get {Math.round(finalReward)} on this bill
           </h1>

@@ -1,4 +1,5 @@
 import {
+  AddOn,
   Business,
   BusinessPosConfig,
   BusinessSettings,
@@ -15,10 +16,10 @@ import {
   OutLetInfo,
   Payment,
   PaymentAlert,
-  Pos,
   Reviews,
   Subscriber,
   Table,
+  UnsettleTable,
   UrlModel,
   User,
   UserAnalytic,
@@ -57,42 +58,6 @@ const getCurrentDate = (): string => {
   return `${day}-${month}-${year}`; // Format: DD-MM-YYYY
 };
 const scriptRouter = new Hono()
-  .get("/pos_to_businessposconfig", async (c) => {
-    const businesses = await Business.find();
-
-    for (const business of businesses) {
-      const businessId = business._id;
-      const businessPosConfig = await BusinessPosConfig.findOne({ businessId });
-      if (businessPosConfig) {
-        const pos = await Pos.findOne({ _id: businessPosConfig.posId });
-        if (pos) {
-          await BusinessPosConfig.findOneAndUpdate(
-            { businessId },
-            {
-              $set: {
-                branchId: pos._id, /// ADD THIS LINE LATER
-                accessKey: pos.accessKey,
-                secretKey: pos.secretKey,
-                restId: pos.restId,
-                authToken: pos.authToken,
-                posName: "PETPOOJA",
-              },
-            },
-            { new: true },
-          );
-        }
-      }
-    }
-
-    return c.json(
-      {
-        message: "Script executed successfully",
-        err: false,
-        data: {},
-      },
-      200,
-    );
-  })
 
   .get("/add_service/:businessId", async (c) => {
     try {
@@ -757,6 +722,8 @@ const scriptRouter = new Hono()
 
       const isHavePos = await BusinessPosConfig.findOne({
         businessId: businessData._id,
+        isDeleted: false,
+        active: true,
       });
 
       if (!zone && !isHavePos) {
@@ -851,6 +818,8 @@ const scriptRouter = new Hono()
     for (const businessData of business) {
       const isHavePos = await BusinessPosConfig.findOne({
         businessId: businessData._id,
+        isDeleted: false,
+        active: true,
       });
 
       const parentCat = await Category.exists({
@@ -1164,6 +1133,8 @@ const scriptRouter = new Hono()
             await BusinessPosConfig.findOneAndUpdate(
               {
                 businessId,
+                active: true,
+                isDeleted: false,
               },
               {
                 $set: {
@@ -1200,6 +1171,8 @@ const scriptRouter = new Hono()
           await BusinessPosConfig.findOneAndUpdate(
             {
               businessId,
+              active: true,
+              isDeleted: false,
             },
             {
               $set: {
@@ -1248,6 +1221,7 @@ const scriptRouter = new Hono()
       z.object({
         businessId: z.string().min(3).max(36),
         flow: z.enum(["USER", "CAPTAIN"]),
+        active: z.boolean().optional(),
       }),
     ),
 
@@ -1255,16 +1229,19 @@ const scriptRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const requestData = await c.req.json();
-        const { businessId, flow } = requestData;
+        const { businessId, flow, active } = requestData;
 
         const updateBusinessPosConfig =
           await BusinessPosConfig.findOneAndUpdate(
             {
               businessId,
+              active: true,
+              isDeleted: false,
             },
             {
               $set: {
                 orderVerificationType: flow,
+                // isDeleted: !active,
               },
             },
             { session, new: true },
@@ -2374,6 +2351,173 @@ const scriptRouter = new Hono()
 
         return respond(c, "d", false, 200, {});
       });
+    },
+  )
+
+  .post(
+    "/request_bill",
+    zValidator(
+      "json",
+      z.object({
+        isDefined: z.boolean().default(false),
+      }),
+    ),
+
+    async (c) => {
+      const payload = {
+        app_key: "6jh08fc457wp2qkv1dntbrma3yeouxig",
+        app_secret: "26669606e665e4a014ca1d426ff2d643551ed21a",
+        access_token: "9aeec28f3aab55dd23033194beb39972d7ff6890",
+        restID: "vb0rgpfn59",
+        pin: "5989193999",
+        tableNo: "A6",
+      };
+
+      const response = await axios.post(
+        "http://api.petpooja.com/V1/captainorders/request_bill",
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      return respond(c, "Check bill success", false, 200, {});
+    },
+  )
+
+  .post(
+    "/settle_unsetled_bills",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      const unsettleTables = await UnsettleTable.find({
+        sync: false,
+      });
+
+      for (const table of unsettleTables) {
+        const payload = {
+          app_key: petpoojaPosConfig.accessKey,
+          app_secret: petpoojaPosConfig.secretKey,
+          access_token: petpoojaPosConfig.authToken,
+          restID: table.restId,
+          request_id: table.requestId,
+        };
+
+        const response = await axios.post(
+          "http://api.petpooja.com/V1/captainorders/check_bill",
+          payload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        console.log("check bill response", response.data);
+
+        if (
+          response.data.success === "1" &&
+          response.data.bill_request_id !== 0
+        ) {
+          const settlePayload = {
+            app_key: petpoojaPosConfig.accessKey,
+            app_secret: petpoojaPosConfig.secretKey,
+            access_token: petpoojaPosConfig.authToken,
+            restID: table.restId,
+            bill_request_id: response.data.bill_request_id,
+            amount_paid: table.total,
+            pin: table.pin,
+          };
+
+          const settleRes = await axios.post(
+            "http://api.petpooja.com/V1/captainorders/success_payment",
+            settlePayload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            },
+          );
+
+          if (settleRes.data.success === "1") {
+            await UnsettleTable.findByIdAndUpdate(
+              table._id,
+              {
+                $set: {
+                  sync: true,
+                },
+              },
+              { new: true },
+            );
+          }
+        }
+      }
+
+      return respond(c, "settle unseltled bills success", false, 200, {});
+    },
+  )
+
+  .post(
+    "/all_pos_dishes_off",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      const allPos = await BusinessPosConfig.find({});
+
+      for (const pos of allPos) {
+        await Dish.updateMany(
+          {
+            businessId: pos.businessId,
+          },
+          {
+            $set: {
+              isDeleted: true,
+            },
+          },
+        );
+
+        await AddOn.updateMany(
+          {
+            businessId: pos.businessId,
+          },
+          {
+            $set: {
+              isDeleted: true,
+            },
+          },
+        );
+
+        await Category.updateMany(
+          {
+            businessId: pos.businessId,
+          },
+          {
+            $set: {
+              isDeleted: true,
+            },
+          },
+        );
+      }
+
+      return respond(
+        c,
+        "All pos dishes, addons and categories deleted",
+        false,
+        200,
+        {},
+      );
     },
   );
 

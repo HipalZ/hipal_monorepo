@@ -8,7 +8,7 @@ interface OrdersHeaderProps {
     width?: string;
 }
 
-const MemoOrdersHeader: React.FC<OrdersHeaderProps> = ({ width = "30rem" }) => {
+const MemoOrdersHeader = ({ width = "30rem" }:OrdersHeaderProps) => {
     const outletInfo = useBusinessData(s => s.outletInfo);
     const { setModalType, selectedTable, setOpenOrderModal } = useOrderStore()
 

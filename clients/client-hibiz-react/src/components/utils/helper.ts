@@ -223,7 +223,6 @@ export const handleCrop = async (
     if (croppedAreaPixels) {
       try {
         const croppedData = await getCroppedImg(image, croppedAreaPixels);
-        console.log("croppedData", croppedData);
         if (croppedData && croppedData.base64) {
           const blob = await (await fetch(croppedData.base64)).blob();
           const croppedFile = new File([blob], imageFiles[type]?.name, {

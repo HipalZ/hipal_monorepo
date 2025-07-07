@@ -57,62 +57,37 @@ const HorizontalTileCard = ({
 
   return (
     <>
-      <div
-        className={cn(
-          "relative flex gap-4 bg-white rounded-xl transition-all duration-200 p-2",
-        )}
-      >
-        {/* Dish Image */}
-        <div className="w-[5rem] h-[5rem] rounded-lg overflow-hidden shrink-0">
-          {dishData?.images?.[0] ? (
-            <ShimmerImage
-              src={dishData.images[0]}
-              alt="dish"
-              quality={95}
-              width={80}
-              height={80}
-              onClick={openDishDetails}
-              className={cn(
-                "w-full h-full object-cover cursor-pointer transition-all hover:scale-105",
-                !dishData.availability && "grayscale",
-              )}
-            />
-          ) : null}
-        </div>
-        <article>
-          {/* Dish Name */}
+      <div className="flex min-h-[3.5rem] w-full items-start justify-between gap-3 rounded-xl bg-white p-3">
+        {/* Dish Content (Name, Price, Portions) */}
+        <article className="flex-1">
+          {/* Dish Name with Food Type */}
           <div
             onClick={openDishDetails}
-            className={cn(
-              "font-semibold line-clamp-2 poppins-regular cursor-pointer text-sm leading-[1rem] flex items-center gap-1",
-            )}
+            className="flex items-center gap-1 text-sm font-semibold leading-[1.1rem] poppins-regular cursor-pointer"
             style={{ color: primaryColor }}
           >
-            <div className="flex items-center gap-1">
-              {dishData?.dishTypes && outletInfo?.outLetType !== "OTHER" && (
-                <div>
-                  <MemoFoodType types={dishData?.dishTypes} />
-                </div>
-              )}
-              <span>{dishData.name}</span>
-            </div>
+            {dishData?.dishTypes && outletInfo?.outLetType !== "OTHER" && (
+              <MemoFoodType types={dishData?.dishTypes} />
+            )}
+            <span>{dishData.name}</span>
           </div>
-
           {/* Price */}
           <p
-            className="mt-1 text-sm font-medium"
+            className="text-sm font-medium mt-1"
             style={{ color: primaryColor }}
           >
             {outletInfo?.currencySymbol}
             {dishData.price.toFixed(2)}
           </p>
+
+          {/* Portions */}
           {dishData && dishData?.portions?.length > 0 && (
-            <p className="text-xs text-gray-500 mt-0.5 w-32">
+            <p className="text-xs text-gray-500 mt-0.5">
               {dishData.portions
                 .map(
                   (p) =>
                     `${p.name} ${outletInfo?.currencySymbol || ""}${
-                      p.price?.toFixed?.(2) ?? ""
+                      p.price?.toFixed(2) ?? ""
                     }`,
                 )
                 .join(" | ")}
@@ -120,21 +95,53 @@ const HorizontalTileCard = ({
           )}
         </article>
 
-        {/* Dish Action */}
-        <div className="absolute right-1 bottom-1 scale-75">
-          {dishData.availability ? (
-            <DishQuantityButton
-              dishData={dishData}
-              primaryColor={primaryColor}
-              secondaryColor={secondaryColor}
-            />
-          ) : (
-            <div className="px-3 py-1 text-xs text-gray-500 bg-gray-200 rounded-md">
-              Not Available
-            </div>
+        {/* Dish Image + ADD Button */}
+        <section className="min-h-[4rem] flex flex-col items-center relative shrink-0">
+          {dishData?.images?.[0] && (
+            <article className="h-[4.75rem] w-[4.75rem] rounded-md overflow-hidden">
+              <ShimmerImage
+                src={dishData.images[0]}
+                alt="dish"
+                width={80}
+                height={80}
+                onClick={openDishDetails}
+                className={cn(
+                  "cursor-pointer transition-all",
+                  !dishData.availability && "grayscale",
+                )}
+              />
+            </article>
           )}
-        </div>
+
+          {/* Action Button */}
+          <article
+            style={{
+              transform: "scale(0.70)",
+            }}
+            className={cn(
+              "w-full text-center",
+              `${
+                dishData?.images[0]?.length > 0
+                  ? "left-1/2 -mt-4"
+                  : "top-1/2 mt-2"
+              }`,
+            )}
+          >
+            {dishData.availability ? (
+              <DishQuantityButton
+                dishData={dishData}
+                primaryColor={primaryColor}
+                secondaryColor={secondaryColor}
+              />
+            ) : (
+              <div className="text-xs bg-gray-200 text-gray-500 rounded px-2 py-0.5">
+                Not Available
+              </div>
+            )}
+          </article>
+        </section>
       </div>
+
       {isModalOpen && (
         <ItemDescriptionPopup show={isModalOpen} onClose={closeModal}>
           <DishPopup dishData={isSelectedDish} />

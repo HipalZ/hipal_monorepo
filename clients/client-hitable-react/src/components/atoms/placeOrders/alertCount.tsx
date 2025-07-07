@@ -1,5 +1,3 @@
-"use client";
-
 import { memo, useEffect, useRef, useState } from "react";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,13 +9,11 @@ import { useOrderStore } from "@/components/store/useOrderData";
 import { NavItemTypesEnum } from "@/components/types/hiClientzData";
 
 const MemoAlertCount = () => {
-  const { onlineCount, offlineCount, cartCount, seSelectedNavItem } =
-    useLiteStore((s) => ({
-      onlineCount: s.onlineCount,
-      offlineCount: s.offlineCount,
-      cartCount: s.cartCount,
-      seSelectedNavItem: s.setSelectedNavItem,
-    }));
+
+  const onlineCount = useLiteStore((s) => s.onlineCount);
+  const offlineCount = useLiteStore((s) => s.offlineCount);
+  const cartCount = useLiteStore((s) => s.cartCount);
+  const seSelectedNavItem = useLiteStore((s) => s.setSelectedNavItem);
   const { setOpenOrderModal } = useOrderStore();
   const { setPayFilter } = useFilters();
   const { businessId } = useParams();

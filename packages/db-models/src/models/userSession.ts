@@ -39,15 +39,8 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     type: String,
     required: false,
   },
-  billRequestId: {
-    type: String,
-    required: false,
-  },
-  billInvoiceId: {
-    type: String,
-    required: false,
-  },
-  tax: {
+
+  gst: {
     type: Number,
     required: false,
     default: 0,
@@ -95,40 +88,7 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     type: Number,
     required: false,
   },
-  isPinActive: {
-    type: Boolean,
-    default: false,
-  },
-  finalSubTotal: {
-    type: Number,
-    required: false,
-    default: 0,
-  },
-  finalTotal: {
-    type: Number,
-    required: false,
-    default: 0,
-  },
-  finalTax: {
-    type: Number,
-    required: false,
-    default: 0,
-  },
-  initialSubTotal: {
-    type: Number,
-    required: false,
-    default: 0,
-  },
-  initialTotal: {
-    type: Number,
-    required: false,
-    default: 0,
-  },
-  initialTax: {
-    type: Number,
-    required: false,
-    default: 0,
-  },
+
   discount: {
     type: Number,
     required: false,
@@ -148,15 +108,109 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     type: String,
     required: false,
   },
-  requestId: {
+
+  couponDiscount: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  isDiscountApplied: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  reasonOfDiscount: {
     type: String,
     required: false,
+    default: "",
   },
-  coinsAppliedUserId: {
+  serviceChargeAppliedBy: {
     type: ObjectId,
     required: false,
     ref: "User",
     default: null,
+  },
+  serviceChargeRemovedBy: {
+    type: ObjectId,
+    required: false,
+    ref: "User",
+    default: null,
+  },
+  discountAppliedBy: {
+    type: ObjectId,
+    required: false,
+    ref: "User",
+    default: null,
+  },
+  discountRemovedBy: {
+    type: ObjectId,
+    required: false,
+    ref: "User",
+    default: null,
+  },
+  reasonOfServiceCharge: {
+    type: String,
+    required: false,
+    default: "",
+  },
+  subTotal: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  total: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  otherTax: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  discountAppliedOn: {
+    type: String,
+    enum: ["ON_BILL", "ON_DISH"],
+    required: false,
+  },
+  gstPercentage: {
+    type: Number,
+    required: false,
+    default: 5,
+  },
+  serviceChargePercentage: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  newDishGst: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  isServiceChargeRemoved: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  items: {
+    type: [Object],
+    required: false,
+  },
+  isUserRegistered: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  billRequest: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  billPrintCount: {
+    type: Number,
+    required: false,
+    default: 0,
   },
 });
 

@@ -1,13 +1,15 @@
 "use client";
-
 import { useGetServiceCategories } from "@/components/hooks/useServicesHotel";
 import ServiceCategoryCard from "./ServiceCategoryCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { IMenuLayout } from "@/components/types/businessData";
-
+import bell from "@/assets/hotel/bell.png";
+import foodDome from "@/assets/hotel/food dome.png";
+import housekeeping from "@/assets/hotel/housekeeping.png";
+import waterBottle from "@/assets/hotel/waterbottle.png";
+import type { IMenuLayout } from "@/components/types/businessData";
 interface ServiceCategoriesSectionProps {
   businessId: string;
-  menuId:IMenuLayout
+  menuId: IMenuLayout;
 }
 
 export default function ServiceCategoriesSection({
@@ -33,18 +35,106 @@ export default function ServiceCategoriesSection({
   if (!categoriesData || categoriesData.length === 0) {
     return null;
   }
-console.log('ServiceCategoryse',menuId)
+
+  const categoryImages = {
+    FOOD: foodDome,
+    WATERBOTTLE: waterBottle,
+    HOUSE_KEEPING: housekeeping,
+    OTHERS: bell,
+  };
+
+  const categoryDescriptions = {
+    FOOD: "Delicious food to your room",
+    WATERBOTTLE: "Get fresh water anytime",
+    HOUSE_KEEPING: "Request room cleaning",
+    OTHERS: "Explore services",
+  };
+
+  const primaryCategories = ["FOOD", "WATERBOTTLE", "HOUSE_KEEPING"];
+
+  // Separate the categories
+  const primary = categoriesData.filter((cat) =>
+    primaryCategories.includes(cat.name),
+  );
+  const others = categoriesData.filter(
+    (cat) => !primaryCategories.includes(cat.name),
+  );
+
   return (
-    <div className="relative space-y-4">
-      <div className="absolute -right-8 w-[calc(100%-10rem)] h-[2px] bg-black top-5" />
-      <h2 className="text-3xl poppins-regular  text-h-primary">Our Services</h2>
-      <div className="grid grid-cols-2 gap-4">
-        {categoriesData.map((category, index) => (
-          <div key={category._id} className={index === 2 ? "col-span-2" : ""}>
-            <ServiceCategoryCard category={category} businessId={businessId} menuId={menuId}/>
-          </div>
-        ))}
+    <div className="relative space-y-3">
+      <div className="flex items-center justify-center">
+        {/* Left ornament */}
+        <svg
+          width="32"
+          height="10"
+          viewBox="0 0 32 10"
+          fill="none"
+          className="mr-3"
+        >
+          <path
+            d="M0 5h18M22 5h10M18 5a2 2 0 1 1 4 0 2 2 0 0 1-4 0z"
+            stroke="#bbb"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
+        </svg>
+        <span className="poppins-regular text-gray-400 text-[0.9rem]">
+          Room Services
+        </span>
+        {/* Right ornament */}
+        <svg
+          width="32"
+          height="10"
+          viewBox="0 0 32 10"
+          fill="none"
+          className="ml-3"
+        >
+          <path
+            d="M0 5h10M14 5h18M10 5a2 2 0 1 0 4 0 2 2 0 0 0-4 0z"
+            stroke="#bbb"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
+        </svg>
       </div>
+      <section className="flex justify-center">
+        <div className="grid grid-cols-2 gap-4 md:gap-6 lg:gap-9">
+          {primary.map((category) => (
+            <div key={category._id} className="w-[10.5rem] h-[10rem]">
+              <ServiceCategoryCard
+                category={{
+                  ...category,
+                  image:
+                    categoryImages[
+                      category.name as keyof typeof categoryImages
+                    ] || bell,
+                  description:
+                    categoryDescriptions[
+                      category.name as keyof typeof categoryDescriptions
+                    ] || "",
+                }}
+                businessId={businessId}
+                menuId={menuId}
+              />
+            </div>
+          ))}
+
+          {others.length > 0 && (
+            <div key="others">
+              <ServiceCategoryCard
+                category={{
+                  _id: "others",
+                  name: "OTHERS",
+                  serviceIds: others.flatMap((c) => c.serviceIds),
+                  image: bell,
+                  description: categoryDescriptions.OTHERS,
+                }}
+                businessId={businessId}
+              />
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }

@@ -57,14 +57,19 @@ export interface Order {
   currency: string;
   billValue: number;
   receipt: string;
-  name: string;
-  phone: string;
+  userId: string;
   tips: number;
   claimedCoins: number;
   discount: number;
   order_id: string;
-  tableName: null | string;
+  tableName: string;
+  cashbackAvailable: boolean;
   date: number;
+  couponDiscount: number;
+  gst: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 }
 
 export interface Alert {
@@ -112,6 +117,9 @@ export interface CartItem {
   extras: any[]; // Replace `any[]` with a specific type if extras have a defined structure
   quantity: number;
   _id: string;
+  isDeleted: boolean;
+  deletedBy: string;
+  reasonOfDeletion: string;
 }
 
 export interface Dish {
@@ -291,10 +299,14 @@ export interface OrderData {
   phone: string;
   cart: {
     id: string;
+    _id: string;
     dish: {
       name: string;
       price: number;
     };
+    isDeleted: boolean;
+    deletedBy: string;
+    reasonOfDeletion: string;
     quantity: number;
     portion?: {
       name: string;
@@ -319,6 +331,9 @@ export interface OrderData {
   toTable: string;
   fromTable: string;
   userId: string;
+  isDeleted: boolean;
+  deletedBy: string;
+  reasonOfDeletion: string;
 }
 
 export interface ICategory {
@@ -432,28 +447,80 @@ export interface ICustomerInformation {
 
 export interface IBillData {
   tips: number;
-  initialTotal: number;
   claimedCoins: number;
-  billing_user_name: string;
   serviceCharge: number;
   discount: number;
-  tax: number;
+  couponDiscount: number;
+  discountAppliedBy: string;
+  discountRemovedBy: string;
+  gst: number;
+  reasonOfDiscount: string;
+  reasonOfServiceCharge: string;
+  serviceChargeAppliedBy: string;
+  serviceChargeRemovedBy: string;
   total: number;
   customerPhone: string;
   customerName: string;
   tableName: string;
   subTotal: number;
-  billRequestId: string;
-  items: Array<{
-    dish: {
-      name: string;
-      price: number;
+  billId: string;
+  _id?: string;
+  otherTax: number;
+  discountAppliedOn?: string;
+  couponId?: string;
+  billItems: Array<{
+    gst: number;
+    subTotal: number;
+    totalGst: number;
+    items: Array<{
+      dish: {
+        _id: string;
+        name: string;
+        price: number;
+        businessId: string;
+        posDishId: string;
+        description: string;
+        dishTypes: string[];
+        ignoreDiscount: string;
+        ignoreTax: string;
+        images: string[];
+        isDeleted: boolean;
+        menuId: string;
+        portions: Array<{
+          name: string;
+          price: number;
+          default: boolean;
+          portionTypes: string[];
+          _id: string;
+        }>;
+        pos: boolean;
+        posTax: string;
+        rank: number;
+        tags: string[];
+        visibility: boolean;
+        active: boolean;
+        kitchenId?: string;
+        tax: number;
+        gst: number;
+        instruction?: string;
+      };
+      id: string;
+      _id: string;
+      portion: {
+        name: string;
+        price: number;
+        default: boolean;
+        portionTypes: string[];
+        _id: string;
+      } | null;
+      extras: Array<{
+        id: string;
+        name: string;
+        price: number;
+        quantity: number;
+      }>;
       quantity: number;
-    };
-    extras: Array<{
-      name: string;
-      price: number;
-      quantity: number;
+      isDeleted: boolean;
     }>;
   }>;
 }

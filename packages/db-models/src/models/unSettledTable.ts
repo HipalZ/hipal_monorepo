@@ -8,55 +8,33 @@ const unsettledTableSchema = new mongoose.Schema<UnsettleTableType>(
       type: ObjectId,
       required: true,
     },
-    capacity: {
-      type: Number,
-      required: false,
-    },
-    tableId: {
-      type: ObjectId,
-      required: true,
-      ref: "table",
-    },
-    kotIds: {
-      type: [ObjectId],
-      required: false,
-      default: [],
-      ref: "kotorder",
-    },
-    status: {
-      type: String,
-      required: false,
-      default: "ACTIVE",
-    },
-    totalItemCount: {
-      type: Number,
-      required: false,
-      default: 0,
-    },
-    userIds: {
-      type: [ObjectId],
-      required: false,
-      default: [],
-      ref: "User",
-    },
-    currentTableAmount: {
-      type: Number,
-      required: false,
-      default: 0,
-    },
     date: {
       type: Number,
-      required: false,
+      required: true,
     },
-    isDeleted: {
+    tableName: {
+      type: String,
+      required: true,
+    },
+    total: {
+      type: Number,
+      required: true,
+    },
+    sync: {
       type: Boolean,
-      required: false,
-      default: false,
+      required: true,
     },
-    performedBy: {
-      type: ObjectId,
-      required: false,
-      ref: "User",
+    requestId: {
+      type: String,
+      required: true,
+    },
+    pin: {
+      type: String,
+      required: true,
+    },
+    restId: {
+      type: String,
+      required: true,
     },
   },
   {

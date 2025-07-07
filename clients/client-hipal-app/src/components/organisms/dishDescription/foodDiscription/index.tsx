@@ -26,7 +26,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
   return (
     <div className="flex flex-col -mt-9 space-y-4 no-scrollbar pb-[2rem]">
       <div className="flex flex-col">
-        <div className="flex flex-row flex-wrap flex-1 w-full">
+        <div className="flex flex-row flex-wrap flex-1 w-full ">
           {dishData?.dishTypes?.length > 0 && outLetType !== "OTHER" && (
             <div className="my-auto">
               <FoodType types={dishData.dishTypes} />
@@ -38,7 +38,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
             </div>
           )}
           <div
-            className={`w-full font-medium mt-1 
+            className={`w-full font-medium mt-1 poppins-regular 
         ${dishData?.name?.length > 30 ? "text-lg" : "text-xl"}
         ${isAvailable ? "mt-4" : "mt-6"}`}
           >
@@ -63,7 +63,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
         <div className="flex flex-col mt-1 space-y-5">
           <div className="flex flex-row gap-4 text-base text-[#000000]">
             <MdOutlineRiceBowl className="my-auto" />
-            <h4 className="my-auto">
+            <h4 className="my-auto poppins-regular">
               {dishData?.portions?.length} Portions available
             </h4>
           </div>
@@ -76,10 +76,10 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
                   "flex flex-col min-w-[22%] max-w-full mx-auto space-y-1 text-base text-center bg-[#ffffff] flex-grow p-2"
                 }
               >
-                <span className="text-sm font-normal text-base-content">
+                <span className="text-sm font-normal text-base-content poppins-regular">
                   {portion?.name}
                 </span>
-                <span className="text-xs font-thin text-base-content">
+                <span className="text-xs font-thin text-base-content ">
                   {currencySymbol} {getPrice(portion?.price)}
                 </span>
               </div>
@@ -97,7 +97,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
 
           {dishData?.addOnIds?.map((addOn, key) => (
             <div key={addOn._id.toString()} className="space-y-3">
-              <h6 className="text-sm ">
+              <h6 className="text-sm poppins-regular">
                 {key + 1}. {addOn?.name}
               </h6>
 
@@ -108,7 +108,7 @@ function FoodDescription({ dishData }: { dishData: DishType }) {
                     className="flex flex-row gap-2 py-2 text-sm font-normal opacity-60 min-w-fit text-[#000000]"
                   >
                     <BsFillCircleFill className="inline-flex p-1 my-auto text-xs" />
-                    <span className="my-auto text-sm text-start">
+                    <span className="my-auto text-sm text-start poppins-regular">
                       {choice?.name}
                     </span>
                   </li>

@@ -8,6 +8,9 @@ import MiddlePopUp from "@/components/atom/middlePopUp";
 import { IoMdArrowDropdown, IoMdArrowDropup } from "react-icons/io";
 import { useDishes, useLinkedDishes } from "@/hooks/useDish";
 import { useDishesStore } from "@/components/store/useDishesStore";
+import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton.tsx";
+import { HiArrowNarrowRight } from "react-icons/hi";
+import { cn } from "@/lib/utils.ts";
 
 const MemoDishesManager = () => {
   const [showPopUp, setShowPopUp] = useState(false);
@@ -32,11 +35,10 @@ const MemoDishesManager = () => {
 
   const { isLoading } = useDishes();
   const { data: linkedCategories } = useLinkedDishes();
-  console.log("linkedCategories", linkedCategories);
 
-   const { dishes } = useDishesStore((s) => ({
-      dishes: s.dishes,
-    }));
+  const { dishes } = useDishesStore((s) => ({
+    dishes: s.dishes,
+  }));
 
   const allDishes = useMemo(() => {
     const linkedDishes =
@@ -102,15 +104,12 @@ const MemoDishesManager = () => {
     setShowPopUp(!showPopUp);
   }, [showPopUp]);
 
-  const toggleCategory = useCallback(
-    (categoryId: string) => {
-      setOpenCategoryIds((prev) => ({
-        ...prev,
-        [categoryId]: !prev[categoryId],
-      }));
-    },
-    [],
-  );
+  const toggleCategory = useCallback((categoryId: string) => {
+    setOpenCategoryIds((prev) => ({
+      ...prev,
+      [categoryId]: !prev[categoryId],
+    }));
+  }, []);
 
   const handleDishClick = (dishId: string) => {
     setShowPopUp(false);
@@ -126,16 +125,13 @@ const MemoDishesManager = () => {
   };
 
   if (isLoading) {
-    return (
-      <LoadingSpinner />
-    );
+    return <LoadingSpinner />;
   }
 
-  console.log("filteredLinkedCategories", filteredLinkedCategories);
 
   return (
     <section className="relative">
-      <section className="flex flex-wrap justify-start mt-[7rem] gap-4 mx-4 lg:mt-[5rem]">
+      <section className="flex flex-wrap justify-start mt-[1rem] gap-4 mx-4 lg:mt-[1rem]">
         {unlinkedDishes && unlinkedDishes.length > 0 && (
           <>
             <h2 className="w-full text-lg font-semibold opacity-50">
@@ -176,63 +172,83 @@ const MemoDishesManager = () => {
               ),
           )}
       </section>
-      <MiddlePopUp show={showPopUp} onClose={() => setShowPopUp(!showPopUp)}>
+      <MiddlePopUp show={showPopUp} onClose={() => setShowPopUp(false)}>
         <section className="pt-4">
-          <h1 className="ml-6 text-base font-semibold">Categories</h1>
-          <section className="h-[60dvh] overflow-y-auto flex flex-wrap justify-center">
-            {filteredLinkedCategories && filteredLinkedCategories?.length > 0
-              ? filteredLinkedCategories?.map((category) => (
+          <h1 className="ml-6 text-base font-semibold sr-only">Categories</h1>{" "}
+          {/* Added sr-only as title is in DialogHeader */}
+          <section className="h-[60dvh] overflow-y-auto flex flex-col items-center gap-2 p-4">
+            {" "}
+            {/* Changed flex-wrap justify-center to flex-col items-center gap-2 p-4 */}
+            {filteredLinkedCategories &&
+            filteredLinkedCategories?.length > 0 ? (
+              filteredLinkedCategories?.map((category) => (
                 <div
                   key={category?._id}
-                  className="relative flex flex-col w-[90%] p-2 rounded-lg md:max-w-[14rem] lg:max-w-[14rem]"
+                  className="w-full max-w-md rounded-lg border bg-card text-card-foreground shadow-sm" // Enhanced styling
                 >
                   <label
-                    className="flex items-center cursor-pointer"
+                    className="flex items-center justify-between cursor-pointer p-4 hover:bg-accent hover:text-accent-foreground rounded-t-lg transition-colors" // Enhanced styling
                     onClick={() => toggleCategory(category._id)}
                   >
-                    <h3 className="text-sm">{category?.name} </h3>
-                    {openCategoryIds[category._id] ? (
-                      <>
-                        <span className="text-xs">
-                          {category?.dishIds?.length}
-                        </span>
-                        <IoMdArrowDropup className="text-gray-500" />
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-xs">
-                          {category?.dishIds?.length}
-                        </span>
-                        <IoMdArrowDropdown className="ml-4 text-gray-500" />
-                      </>
-                    )}
+                    <h3 className="text-base font-medium">{category?.name} </h3>{" "}
+                    {/* Adjusted font size */}
+                    <div className="flex items-center gap-1 text-muted-foreground">
+                      {" "}
+                      {/* Grouped count and icon */}
+                      <span className="text-sm">
+                        {category?.dishIds?.length}
+                      </span>{" "}
+                      {/* Adjusted font size */}
+                      {openCategoryIds[category._id] ? (
+                        <IoMdArrowDropup className="h-5 w-5" />
+                      ) : (
+                        <IoMdArrowDropdown className="h-5 w-5" />
+                      )}
+                    </div>
                   </label>
-                  {openCategoryIds[category._id] &&
-                    category?.dishIds.map((dish) => (
-                      <a
-                        key={dish._id.toString()}
-                        href={`#${dish._id}`}
-                        onClick={() => handleDishClick(dish._id.toString())}
-                        className="mt-2 ml-2"
-                      >
-                        <p className="text-sm font-medium">{dish?.name}</p>
-                      </a>
-                    ))}
+                  {openCategoryIds[category._id] && (
+                    <div className="border-t p-2">
+                      {" "}
+                      {/* Added border-t for separation */}
+                      {category?.dishIds.map((dish) => (
+                        <a
+                          key={dish._id.toString()}
+                          href={`#${dish._id}`}
+                          onClick={() => handleDishClick(dish._id.toString())}
+                          className={cn(
+                            "block rounded-md px-4 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors", // Enhanced styling
+                            window.location.hash === `#${dish._id}` &&
+                              "bg-muted text-foreground", // Highlight active dish
+                          )}
+                        >
+                          <p className="font-medium">{dish?.name}</p>
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))
-              : null}
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                No categories found.
+              </p>
+            )}{" "}
+            {/* Added message for no categories */}
           </section>
         </section>
       </MiddlePopUp>
-      <footer className="fixed bottom-4 flex lg:justify-center lg:-left-6 w-[92%] lg:w-[96%] gap-4 mx-4">
-        <button
-          onClick={redirectionDish}
-          type="button"
-          className="w-full py-3 text-white bg-black rounded-full lg:w-1/2"
-        >
-          Main Category
-        </button>
-      </footer>
+      <AdvancedBottomButton
+        fixed={true}
+        maxWidth="30rem"
+        buttons={[
+          {
+            text: "Main Category",
+            icon: <HiArrowNarrowRight className="mr-2 h-4 w-4" />,
+            onClick: redirectionDish,
+            className: "w-full",
+          },
+        ]}
+      />
     </section>
   );
 };

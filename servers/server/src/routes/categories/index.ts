@@ -15,7 +15,6 @@ import {
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
-import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
@@ -24,12 +23,7 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
-import { transformData, transformParentCategories } from "../../utils/helper";
-import { posApiPaths } from "../../utils/posConfig/petPooja";
-import {
-  getMenuByBId,
-  setPosConfigTransfer,
-} from "../../utils/posTransferCache";
+import { currentDay, currentMinute } from "../../utils/helper";
 import { respond } from "../../utils/response";
 
 //updateCategories
@@ -56,10 +50,27 @@ const categoriesRouter = new Hono()
 
         if (!business) return respond(c, "Business not found", true, 404, {});
 
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (businessPosConfig) {
+          return respond(
+            c,
+            "pos is enabled for this business you can't create category",
+            true,
+            400,
+            {},
+          );
+        }
+
         const existingCategory = await Category.findOne({
           name: requestData.name,
           businessId,
           isDeleted: false,
+          active: true,
         }).select("_id");
         if (existingCategory)
           return respond(c, "Already exists", true, 409, {});
@@ -132,7 +143,24 @@ const categoriesRouter = new Hono()
           removeSubCategoryIds = [],
           removeDishIds = [],
           removeParentCategoryIds = [],
+          businessId,
         } = requestData;
+
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (businessPosConfig) {
+          return respond(
+            c,
+            "pos is enabled for this business you can't update category",
+            true,
+            400,
+            {},
+          );
+        }
 
         const updatedCategory = await Category.findByIdAndUpdate(
           id,
@@ -236,12 +264,33 @@ const categoriesRouter = new Hono()
       return await runInTransaction(async (session: ClientSession) => {
         const { id } = c.req.param();
 
+        const fetchCategory = await Category.findById(id);
+        if (!fetchCategory) {
+          return respond(c, "not found", true, 404, {});
+        }
+
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId: fetchCategory.businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (businessPosConfig) {
+          return respond(
+            c,
+            "pos is enabled for this business you can't delete category",
+            true,
+            400,
+            {},
+          );
+        }
+
         const deletedCategory = await Category.findByIdAndUpdate(id, {
           isDeleted: true,
         });
         if (!deletedCategory) return respond(c, "Not found", true, 404, {});
 
-        const pullCategory = await Category.updateMany(
+        await Category.updateMany(
           {
             parentCategoryIds: id,
           },
@@ -259,7 +308,7 @@ const categoriesRouter = new Hono()
           },
         );
 
-        const pullDish = await Dish.updateMany(
+        await Dish.updateMany(
           {
             categoryIds: id,
           },
@@ -288,47 +337,35 @@ const categoriesRouter = new Hono()
       }),
     ),
     async (c) => {
-      const { businessId, menu, child, parent, dishes, tableName, menuId } =
+      const { businessId, menu, menuId, parent, tableName, child, dishes } =
         c.req.query();
-
+      const businessPosConfig = await BusinessPosConfig.findOne({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
       if (menu) {
-        let query = {
+        const query = {
           businessId,
           isDeleted: false,
+          pos: !!businessPosConfig,
+          active: true,
+          ...(menuId ? { menuId: menuId } : {}),
+          timings: {
+            $elemMatch: {
+              day: { $in: [currentDay, -1] },
+              start: { $lte: currentMinute },
+              end: { $gt: currentMinute },
+            },
+          },
         };
 
-        // if (menuId) {
-        //   query["menuId"] = menuId;
-        // }
         const existingCategories = await Category.find(query).select(
           "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage",
         );
 
-        return respond(
-          c,
-          "fetched successfully",
-          false,
-          200,
-          existingCategories,
-        );
-      }
-
-      if (child) {
-        if (!menuId) {
-          return respond(c, "MenuId is required", true, 400, {});
-        }
-        let query = {
-          businessId,
-          hierarchy: "CHILD",
-          isDeleted: false,
-          menuId: menuId,
-        };
-
-        const existingCategories = await Category.find(query)
-          .select(
-            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId",
-          )
-          .sort({ sequence: 1 });
+        // const existingCategoriesWithTiming =
+        //   buildActiveCategories(existingCategories);
 
         return respond(
           c,
@@ -343,13 +380,14 @@ const categoriesRouter = new Hono()
         const tableData = await Table.findOne({
           name: tableName,
           businessId,
+          active: true,
         }).lean();
 
         // Find the associated zone using either internalZoneId or zoneId
         const zone = await Zone.findOne({
           $or: [
-            { _id: tableData?.internalZoneId, businessId },
-            { zoneId: tableData?.zoneId, businessId },
+            { _id: tableData?.internalZoneId, businessId, active: true },
+            { zoneId: tableData?.zoneId, businessId, active: true },
           ],
         });
 
@@ -380,74 +418,20 @@ const categoriesRouter = new Hono()
             },
           ],
         }).lean();
-
-        let query = {
+        const query = {
           businessId,
           hierarchy: "PARENT",
           isDeleted: false,
+          pos: !!businessPosConfig,
+          active: true,
+          ...(menuId || tableName ? { menuId: menuId ?? menu?._id } : {}),
         };
 
-        if (menuId || tableName) {
-          query["menuId"] = menuId || menu?._id;
-        }
         const existingCategories = await Category.find(query)
           .sort({ sequence: 1 })
           .select(
             "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence businessId",
           );
-
-        const isHasPos = await BusinessPosConfig.findOne({
-          businessId,
-          isDeleted: false,
-        });
-
-        if (isHasPos) {
-          const table = await Table.findOne({
-            businessId,
-          }).select("name");
-          const getCache = await getMenuByBId(`${businessId}+parent`);
-
-          if (getCache) {
-            const parentCategories = transformParentCategories(
-              getCache.group_categories || [],
-              getCache.categories || [],
-              businessId,
-            );
-
-            return respond(
-              c,
-              "fetched successfully",
-              false,
-              200,
-              parentCategories || [],
-            );
-          }
-
-          const Config = {
-            "app-key": isHasPos.accessKey,
-            "app-secret": isHasPos.secretKey,
-            "access-token": isHasPos.authToken,
-            restID: isHasPos.restId,
-            tableNo: table?.name,
-          };
-
-          const menu = await axios.post(posApiPaths.fetchMenu, Config);
-          await setPosConfigTransfer(`${businessId}+parent`, menu.data);
-
-          const parentCategories = transformParentCategories(
-            menu.data.group_categories || [],
-            menu.data.categories || [],
-            businessId,
-          );
-
-          return respond(
-            c,
-            "fetched successfully",
-            false,
-            200,
-            parentCategories || [],
-          );
-        }
 
         return respond(
           c,
@@ -459,62 +443,17 @@ const categoriesRouter = new Hono()
       }
 
       if (dishes) {
-        const isHasPos = await BusinessPosConfig.findOne({
-          businessId,
-          isDeleted: false,
-        });
-
-        if (isHasPos) {
-          const table = await Table.findOne({
-            businessId,
-          }).select("name");
-
-          const getCache = await getMenuByBId(businessId);
-          if (getCache) {
-            const transformedCategories = transformData(getCache);
-            return c.json(
-              {
-                message: "Data fetched successfully",
-                err: false,
-                data: transformedCategories,
-              },
-              200,
-            );
-          }
-
-          const Config = {
-            "app-key": isHasPos.accessKey,
-            "app-secret": isHasPos.secretKey,
-            "access-token": isHasPos.authToken,
-            restID: isHasPos.restId,
-            tableNo: table?.name,
-          };
-
-          const menu = await axios.post(posApiPaths.fetchMenu, Config);
-          await setPosConfigTransfer(businessId, menu.data);
-          const transformedCategories = transformData(menu.data);
-
-          return c.json(
-            {
-              message: "Data fetched successfully",
-              err: false,
-              data: transformedCategories,
-            },
-            200,
-          );
-        }
-
-        // Find the table by name and businessId
         const tableData = await Table.findOne({
           name: tableName,
           businessId,
+          active: true,
         }).lean();
 
         // Find the associated zone using either internalZoneId or zoneId
         const zone = await Zone.findOne({
           $or: [
-            { _id: tableData?.internalZoneId, businessId },
-            { zoneId: tableData?.zoneId, businessId },
+            { _id: tableData?.internalZoneId, businessId, active: true },
+            { zoneId: tableData?.zoneId, businessId, active: true },
           ],
         });
 
@@ -547,15 +486,20 @@ const categoriesRouter = new Hono()
           ],
         }).lean();
 
-        if (!menu) {
-          return respond(c, "Menu not found", true, 404, []);
-        }
-
         const query = {
           businessId,
           hierarchy: "CHILD",
           isDeleted: false,
           menuId: menuId || menu?._id,
+          pos: !!businessPosConfig,
+          active: true,
+          timings: {
+            $elemMatch: {
+              day: { $in: [currentDay, -1] },
+              start: { $lte: currentMinute },
+              end: { $gt: currentMinute },
+            },
+          },
         };
 
         const existingCategories = await Category.find(query).populate({
@@ -573,21 +517,63 @@ const categoriesRouter = new Hono()
         );
       }
 
-      let query = {
+      if (child) {
+        if (!menuId) {
+          return respond(c, "MenuId is required", true, 400, {});
+        }
+        const query = {
+          businessId,
+          hierarchy: "CHILD",
+          isDeleted: false,
+          menuId: menuId,
+          pos: !!businessPosConfig,
+          active: true,
+          timings: {
+            $elemMatch: {
+              day: { $in: [currentDay, -1] },
+              start: { $lte: currentMinute },
+              end: { $gt: currentMinute },
+            },
+          },
+        };
+
+        const existingCategories = await Category.find(query)
+          .select(
+            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId",
+          )
+          .sort({ sequence: 1 });
+
+        return respond(
+          c,
+          "fetched successfully",
+          false,
+          200,
+          existingCategories,
+        );
+      }
+
+      const query = {
         businessId,
         visibility: true,
         isDeleted: false,
+        pos: !!businessPosConfig,
+        active: true,
+        ...(menuId ? { menuId: menuId } : {}),
+        timings: {
+          $elemMatch: {
+            day: { $in: [currentDay, -1] },
+            start: { $lte: currentMinute },
+            end: { $gt: currentMinute },
+          },
+        },
       };
-
-      // if (menuId) {
-      //   query["menuId"] = menuId;
-      // }
 
       const existingCategories = await Category.find(query);
 
       return respond(c, "fetched successfully", false, 200, existingCategories);
     },
   )
+
   .get(
     "/menu",
     zValidator(
@@ -600,14 +586,20 @@ const categoriesRouter = new Hono()
     async (c) => {
       const { businessId, menuId } = c.req.query();
 
-      let query = {
+      const query = {
         businessId,
         isDeleted: false,
         hierarchy: "CHILD",
+        active: true,
+        ...(menuId ? { menuId: menuId } : {}),
+        timings: {
+          $elemMatch: {
+            day: { $in: [currentDay, -1] },
+            start: { $lte: currentMinute },
+            end: { $gt: currentMinute },
+          },
+        },
       };
-      // if (menuId) {
-      //   query["menuId"] = menuId;
-      // }
 
       const existingCategories = await Category.find(query).populate("dishIds");
 
@@ -624,6 +616,7 @@ const categoriesRouter = new Hono()
       const existingCategory = await Category.findOne({
         _id: id,
         isDeleted: false,
+        active: true,
       });
 
       if (!existingCategory) return respond(c, "Not found", true, 404, {});
@@ -671,6 +664,14 @@ const categoriesRouter = new Hono()
         hierarchy: "CHILD",
         isDeleted: false,
         dishIds: { $ne: [] },
+        active: true,
+        timings: {
+          $elemMatch: {
+            day: { $in: [currentDay, -1] },
+            start: { $lte: currentMinute },
+            end: { $gt: currentMinute },
+          },
+        },
       }).select("_id name coverImage");
 
       return respond(c, "fetched successfully", false, 200, existingCategories);

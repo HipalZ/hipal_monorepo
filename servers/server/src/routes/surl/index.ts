@@ -1,11 +1,4 @@
-import {
-  BillUrlModel,
-  Payment,
-  QrBill,
-  UrlModel,
-  UserSession,
-  WhatsAppBusinessConfig,
-} from "@hi/db-models";
+import { BillUrlModel, UrlModel, WhatsAppBusinessConfig } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
@@ -324,66 +317,6 @@ const surlRouter = new Hono()
         },
         200,
       );
-    },
-  )
-  .get(
-    "/get_table_data/:orderId",
-    zValidator(
-      "param",
-      z.object({
-        orderId: z.string().min(1).max(500),
-      }),
-    ),
-    async (c) => {
-      const { orderId } = c.req.param();
-
-      const alreadyExists = await Payment.findOne({
-        posBillRequestId: orderId,
-      });
-
-      if (alreadyExists) {
-        return c.json(
-          {
-            message: "Bill already settled",
-            err: true,
-            data: {},
-          },
-          409,
-        );
-      }
-
-      const userSession = await UserSession.findOne({ billRequestId: orderId });
-
-      const updateBill = await QrBill.findOneAndUpdate(
-        { requestBillId: orderId },
-        {
-          total: userSession?.finalTotal,
-          tax: userSession?.finalTax.toFixed(2),
-          subTotal: userSession?.initialSubTotal,
-          tips: userSession?.tips,
-          claimedCoins: userSession?.claimedCoins,
-          couponId: userSession?.couponId,
-          initialTotal: userSession?.initialTotal,
-        },
-        { new: true },
-      );
-
-      if (!updateBill) {
-        return c.json(
-          {
-            message: "Bill not found",
-            err: true,
-            data: {},
-          },
-          404,
-        );
-      }
-
-      return c.json({
-        message: "Bill found",
-        err: false,
-        data: updateBill,
-      });
     },
   );
 

@@ -1,36 +1,40 @@
-import { apiRpc } from "@hi/common"
-import { useQuery } from "@tanstack/react-query"
+import { apiRpc } from "@hi/common";
+import { useQuery } from "@tanstack/react-query";
+import type { StaticImageData } from "next/image";
 
 // Define the interfaces
 export interface IService {
-  _id: string
-  name: string
-  image: string
-  availability?: boolean
+  _id: string;
+  name: string;
+  image: string;
+  availability?: boolean;
 }
 
 export interface IServiceCategory {
-  _id: string
-  name: string
-  image: string
-  serviceIds: IService[]
+  _id: string;
+  name: string;
+  image: string | StaticImageData;
+  serviceIds: IService[];
+  description?: string;
 }
 
 export const useGetServiceCategories = (businessId?: string) => {
   const fetchServiceCategories = async (): Promise<IServiceCategory[]> => {
-    if (!businessId) return []
+    if (!businessId) return [];
 
     const response = await apiRpc.hotel.service.fetch_service_category.$get({
       query: {
         businessId,
       },
-    })
+    });
 
-    const data = await response.json()
-    const filteredData = (data?.data || []).filter((category: IServiceCategory) => category.serviceIds.length > 0)
+    const data = await response.json();
+    const filteredData = (data?.data || []).filter(
+      (category: IServiceCategory) => category.serviceIds.length > 0,
+    );
 
-    return filteredData || []
-  }
+    return filteredData || [];
+  };
 
   const {
     isLoading: categoriesLoading,
@@ -41,8 +45,7 @@ export const useGetServiceCategories = (businessId?: string) => {
     queryFn: fetchServiceCategories,
     enabled: !!businessId,
     staleTime: 1000 * 60,
-  })
+  });
 
-  return { categoriesLoading, categoriesData, refetchCategories }
-}
-
+  return { categoriesLoading, categoriesData, refetchCategories };
+};

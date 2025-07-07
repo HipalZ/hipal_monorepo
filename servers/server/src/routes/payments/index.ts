@@ -21,6 +21,7 @@ import {
   Subscriber,
   Table,
   TempTableSettle,
+  UnsettleTable,
   UpiMode,
   User,
   UserAnalytic,
@@ -54,10 +55,11 @@ import {
   ClientRoles,
   requireAuthorization,
 } from "../../../middleware/authorization";
-import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
+import type { KotOrderTypes } from "../../utils/bill";
 import { getMerchantConfig } from "../../utils/cacheHelper";
 import getDefault4AMToNext4AM from "../../utils/defaultBillingTime";
+import { convertToPetpoojaCart } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 import {
   type MerchantConfig,
@@ -93,6 +95,8 @@ startOfToday.setHours(0, 0, 0, 0);
 
 export const endOfToday = new Date();
 endOfToday.setHours(23, 59, 59, 999);
+
+import { sleep } from "bun";
 
 export const calculateDiscount = async (
   businessId: string,
@@ -453,6 +457,89 @@ const paymentsRouter = new Hono()
           tableName,
         });
 
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (businessPosConfig) {
+          const kotOrders = (await KotOrder.find({
+            tableName,
+            settled: false,
+            businessId,
+            isSync: false,
+          }).lean()) as KotOrderTypes[];
+
+          const cartItems = kotOrders.flatMap((order) =>
+            order.cart.filter((item) => !item.isDeleted),
+          );
+
+          if (!tableSession?.isUserRegistered) {
+            const registerUser = await axios.post(posApiPaths.registerUser, {
+              app_key: businessPosConfig.accessKey,
+              app_secret: businessPosConfig.secretKey,
+              access_token: businessPosConfig.authToken,
+              restID: businessPosConfig.restId,
+              phone: tableSession?.pin,
+              name: tableSession?.customerName,
+            });
+
+            if (registerUser.data.success === "0") {
+              throw new Error("Error in registering user");
+            }
+          }
+
+          if (kotOrders.length > 0) {
+            const petpoojaCart = convertToPetpoojaCart(
+              cartItems,
+              businessPosConfig.restId,
+              tableSession?.customerName,
+              tableSession?.pin,
+              tableName,
+              businessPosConfig.accessKey,
+              businessPosConfig.secretKey,
+              businessPosConfig.authToken,
+            );
+
+            const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
+
+            if (saveKot.data.success === "0") {
+              throw new Error("Error in saving kot");
+            }
+          }
+
+          await KotOrder.updateMany(
+            {
+              tableName,
+              settled: false,
+              businessId,
+            },
+            {
+              $set: {
+                isSync: true,
+              },
+            },
+            {
+              session,
+            },
+          );
+
+          await UserSession.findOneAndUpdate(
+            {
+              tableName,
+              businessId,
+            },
+            {
+              $set: {
+                isUserRegistered: true,
+                billRequest: true,
+              },
+            },
+            { session },
+          );
+        }
+
         const client = await razorpayWrapper.getClient(merchantId);
         const response = await client.orders.create({
           amount: total * 100, // Fixed multiplication logic
@@ -462,9 +549,9 @@ const paymentsRouter = new Hono()
         const saveOrder = await Order.create(
           [
             {
-              total,
+              total: tableSession?.total || total,
               currency,
-              billValue: tableSession?.initialTotal || billValue,
+              billValue: tableSession?.subTotal || billValue,
               businessId,
               receipt: uniqueOrderId,
               userId,
@@ -476,7 +563,10 @@ const paymentsRouter = new Hono()
               channelId,
               cashbackAvailable,
               date: Date.now(),
-              posBillId,
+              billId: tableSession?._id.toString(),
+              discount: tableSession?.discount,
+              couponDiscount: tableSession?.couponDiscount,
+              gst: tableSession?.gst,
             },
           ],
           { session },
@@ -487,137 +577,6 @@ const paymentsRouter = new Hono()
         return respond(c, "Order created successfully", false, 200, {
           order_id: response.id,
         });
-      });
-    },
-  )
-
-  .post(
-    "/fetch_update_bill/:businessId",
-    // authTokenValidator,
-    // requireAuthorization([ClientRoles.HIPAL_CUSTOMER]),
-    zValidator(
-      "json",
-      z.object({
-        tableName: z.string().min(1).max(20),
-        claimedCoins: z.coerce.number().default(0),
-        tips: z.coerce.number().optional(),
-        total: z.coerce.number(),
-        couponId: z.string().optional(),
-        removeCoins: z.boolean().optional(),
-        removeTips: z.boolean().optional(),
-        userId: z.string().min(1).max(50).optional(),
-      }),
-    ),
-    zValidator("param", z.object({ businessId: z.string().min(1).max(50) })),
-
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session) => {
-        try {
-          const requestData = await c.req.json();
-          let {
-            tableName,
-            claimedCoins = 0,
-            tips = 0,
-            couponId,
-            removeCoins,
-            removeTips,
-            userId,
-          } = requestData;
-          const { businessId } = c.req.param();
-
-          const isUserCoinsAllocatedToOtherTable = await UserSession.findOne({
-            businessId,
-            tableName: { $ne: tableName },
-            coinsAppliedUserId: userId ? userId : { $ne: null },
-          });
-
-          if (isUserCoinsAllocatedToOtherTable) {
-            return respond(
-              c,
-              `You have already applied coins in  table  ${isUserCoinsAllocatedToOtherTable.tableName}`,
-              true,
-              400,
-              {},
-            );
-          }
-          const tempTable = await UserSession.findOne({
-            businessId,
-            tableName,
-          });
-          if (!tempTable) {
-            return respond(c, "Table not found", true, 400, {});
-          }
-          const coupon = await Couponz.findOne({
-            _id: couponId,
-            businessId,
-            isDeleted: false,
-          });
-          if (coupon) {
-            const couponType = coupon?.config?.discountType;
-            const initialSubTotal = tempTable?.initialSubTotal;
-            if (couponType === "PERCENTAGE") {
-              claimedCoins = Math.min(
-                Math.round(initialSubTotal * (coupon?.config?.value / 100)),
-                coupon?.config?.upto || Number.POSITIVE_INFINITY,
-              );
-            } else {
-              claimedCoins = coupon?.config?.value as number;
-            }
-          }
-
-          const effectiveClaimedCoins = claimedCoins || tempTable.claimedCoins;
-
-          // Step 1: Calculate finalSubTotal
-          const finalSubTotal =
-            tempTable.initialSubTotal -
-            (removeCoins
-              ? 0
-              : Math.min(effectiveClaimedCoins, tempTable.initialSubTotal));
-
-          // Step 2: Calculate gstPercentage
-          const gstPercentage =
-            (tempTable.initialTax / tempTable.initialSubTotal) * 100;
-
-          // Step 3: Calculate finalTax
-          const finalTax = (gstPercentage / 100) * finalSubTotal;
-
-          // Step 4: Calculate finalTotal
-          const finalTotal = Math.round(
-            finalSubTotal +
-              finalTax +
-              (removeTips ? 0 : tips || tempTable.tips) +
-              tempTable.serviceCharge,
-          );
-
-          await UserSession.findOneAndUpdate(
-            { businessId, tableName },
-            {
-              finalSubTotal,
-              finalTotal,
-              couponId: couponId || null,
-              finalTax: finalTax.toFixed(2),
-              tips: removeTips ? 0 : tips || tempTable.tips,
-              claimedCoins: removeCoins
-                ? 0
-                : Math.min(effectiveClaimedCoins, tempTable.initialTotal),
-              coinsAppliedUserId: userId ? userId : null,
-            },
-            { session, new: true },
-          );
-
-          return c.json(
-            {
-              message: "Bill updated successfully",
-              err: false,
-              data: {},
-            },
-            200,
-          );
-        } catch (error) {
-          console.error("Error updating bill:", error);
-          return respond(c, "Internal server error", true, 500, {});
-        }
       });
     },
   )
@@ -715,37 +674,117 @@ const paymentsRouter = new Hono()
             {},
           );
 
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (businessPosConfig) {
+          const kotOrders = (await KotOrder.find({
+            tableName,
+            settled: false,
+            businessId,
+            isSync: false,
+          }).lean()) as KotOrderTypes[];
+
+          const cartItems = kotOrders.flatMap((order) =>
+            order.cart.filter((item) => !item.isDeleted),
+          );
+
+          if (!tableSession?.isUserRegistered) {
+            const registerUser = await axios.post(posApiPaths.registerUser, {
+              app_key: businessPosConfig.accessKey,
+              app_secret: businessPosConfig.secretKey,
+              access_token: businessPosConfig.authToken,
+              restID: businessPosConfig.restId,
+              phone: tableSession?.pin,
+              name: tableSession?.customerName,
+            });
+
+            if (registerUser.data.success === "0") {
+              throw new Error("Error in registering user");
+            }
+          }
+
+          if (kotOrders.length > 0) {
+            const petpoojaCart = convertToPetpoojaCart(
+              cartItems,
+              businessPosConfig.restId,
+              kotOrders[0].name,
+              tableSession?.pin,
+              tableName,
+              businessPosConfig.accessKey,
+              businessPosConfig.secretKey,
+
+              businessPosConfig.authToken,
+            );
+
+            const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
+
+            if (saveKot.data.success === "0") {
+              throw new Error("Error in saving kot");
+            }
+          }
+
+          await KotOrder.updateMany(
+            {
+              tableName,
+              settled: false,
+              businessId,
+            },
+            {
+              $set: {
+                isSync: true,
+              },
+            },
+            {
+              session,
+            },
+          );
+
+          await UserSession.findOneAndUpdate(
+            {
+              tableName,
+              businessId,
+            },
+            {
+              $set: {
+                isUserRegistered: true,
+                billRequest: true,
+              },
+            },
+            { session },
+          );
+        }
+
         const saveOrder = await Order.create(
           [
             {
-              total,
+              total: tableSession?.total || total,
               currency,
               receipt: uniqueOrderId,
               userId,
               claimedCoins: tableSession?.claimedCoins || claimedCoins,
               tableName,
               tips: tableSession?.tips || tips,
-              billValue: tableSession?.initialTotal || billValue,
+              billValue: tableSession?.subTotal || billValue,
               businessId,
               order_id: uniqueOrderId,
               couponId,
               channelId,
               cashbackAvailable,
               date: Date.now(),
-              posBillId,
+              billId: tableSession?._id.toString(),
+              discount: tableSession?.discount,
+              couponDiscount: tableSession?.couponDiscount,
+              gst: tableSession?.gst,
             },
           ],
           { session },
         );
         if (!saveOrder) return respond(c, "Order not created", true, 400, {});
-        let posDiscount = 0;
-        if (Number(tableSession?.claimedCoins || claimedCoins) > 0) {
-          posDiscount = await calculateDiscount(
-            businessId,
-            Number(billValue),
-            Number(tableSession?.claimedCoins || claimedCoins),
-          );
-        }
+
         await PaymentAlert.create(
           [
             {
@@ -760,8 +799,7 @@ const paymentsRouter = new Hono()
               ),
               message: `Paid ${total}`,
               date: Date.now(),
-              posDiscount: posDiscount,
-              posBillRequestId: tableSession?.billRequestId,
+              billId: tableSession?._id.toString(),
               mode: "OFFLINE",
             },
           ],
@@ -770,47 +808,6 @@ const paymentsRouter = new Hono()
         const registrationToken = await DeviceToken.find({
           businessId: businessId,
         });
-
-        if (registrationToken.length > 0) {
-          for (const obj of registrationToken) {
-            if (obj.notification) {
-              const pushMessage = {
-                token: obj.token, // or use 'topic' if you're sending to a topic
-                notification: {
-                  title: "Confirm Payment  !!",
-                  body: `${tableName} requested to settle bill`,
-                },
-                android: {
-                  notification: {
-                    channel_id: "custom_channel_id",
-                    sound: "order",
-                  },
-                },
-              };
-
-              admin
-                .messaging()
-                .send(pushMessage)
-                .then((response: unknown) => {
-                  return c.json({
-                    message: "FCM message sent successfully",
-                    err: false,
-                    data: response,
-                  });
-                })
-                .catch((err: Error) => {
-                  return c.json(
-                    {
-                      message: "Error sending FCM message",
-                      err: true,
-                      data: {},
-                    },
-                    400,
-                  );
-                });
-            }
-          }
-        }
 
         return respond(c, "Order created successfully", false, 200, {
           order_id: saveOrder?.[0]._id,
@@ -1032,49 +1029,6 @@ const paymentsRouter = new Hono()
         businessId: businessId,
       });
 
-      if (registrationToken.length > 0) {
-        for (const obj of registrationToken) {
-          if (obj.notification) {
-            const pushMessage = {
-              token: obj.token, // or use 'topic' if you're sending to a topic
-              notification: {
-                title: "Payment Successful !!",
-                body: `T-${tableName?.slice(
-                  -2,
-                )} has successfully paid ${paidAmount}`,
-              },
-              android: {
-                notification: {
-                  channel_id: "custom_channel_id",
-                  sound: "order",
-                },
-              },
-            };
-
-            admin
-              .messaging()
-              .send(pushMessage)
-              .then((response: unknown) => {
-                return c.json({
-                  message: "FCM message sent successfully",
-                  err: false,
-                  data: response,
-                });
-              })
-              .catch((err: Error) => {
-                return c.json(
-                  {
-                    message: "Error sending FCM message",
-                    err: true,
-                    data: {},
-                  },
-                  400,
-                );
-              });
-          }
-        }
-      }
-
       if (signature === razorpay_signature) {
         return c.json({
           err: false,
@@ -1186,7 +1140,7 @@ const paymentsRouter = new Hono()
           );
 
           QrBill.findOneAndUpdate(
-            { requestBillId: tableSession?.billRequestId },
+            { billId: tableSession?._id.toString() },
             { status: "FAILED" },
             { session },
           );
@@ -1209,14 +1163,6 @@ const paymentsRouter = new Hono()
             { isAccepted: true, isRejected: true },
             { session },
           );
-          let posDiscount = 0;
-          if (claimCoins > 0) {
-            posDiscount = await calculateDiscount(
-              getOrder?.businessId.toString() || "",
-              Number(getOrder?.billValue),
-              claimCoins,
-            );
-          }
 
           let getCashBack = 0;
 
@@ -1278,16 +1224,13 @@ const paymentsRouter = new Hono()
                 channelId: getOrder?.channelId,
                 earnCoins: getCashBack,
                 date: Date.now(),
-                tax: tableSession?.finalTax,
+                tax: tableSession?.gst,
                 serviceCharge: tableSession?.serviceCharge,
-                posBillRequestId: tableSession?.billRequestId,
-                posBillId: tableSession?.billInvoiceId,
+                billId: tableSession?._id.toString(),
                 settleType: tableSession?.settleType || "PAYMENT_GATEWAY",
-                initialSubTotal: tableSession?.initialSubTotal,
-                initialTax: tableSession?.initialTax,
-                initialTotal: tableSession?.initialTotal,
-                finalSubTotal: tableSession?.finalSubTotal,
                 discount: tableSession?.discount,
+                couponDiscount: tableSession?.couponDiscount,
+                billItems: tableSession?.items || [],
               },
             ],
             { session },
@@ -1306,7 +1249,6 @@ const paymentsRouter = new Hono()
                 tableName: `T-${getOrder?.tableName?.slice(-2)}`,
                 isAccepted: false,
                 userId: getOrder?.userId,
-                posDiscount: posDiscount,
                 date: Date.now(),
                 mode: payload.payment.entity.method,
               },
@@ -1531,47 +1473,6 @@ const paymentsRouter = new Hono()
         businessId: businessId,
       });
 
-      if (registrationToken.length > 0) {
-        for (const obj of registrationToken) {
-          if (obj.notification) {
-            const pushMessage = {
-              token: obj.token, // or use 'topic' if you're sending to a topic
-              notification: {
-                title: "Hi Captain !!",
-                body: `T-${tableName?.slice(-2)} : ${message}`,
-              },
-              android: {
-                notification: {
-                  channel_id: "custom_channel_id",
-                  sound: "order",
-                },
-              },
-            };
-
-            admin
-              .messaging()
-              .send(pushMessage)
-              .then((response: unknown) => {
-                return c.json({
-                  message: "FCM message sent successfully",
-                  err: false,
-                  data: response,
-                });
-              })
-              .catch((err: Error) => {
-                return c.json(
-                  {
-                    message: "Error sending FCM message",
-                    err: true,
-                    data: {},
-                  },
-                  400,
-                );
-              });
-          }
-        }
-      }
-
       return respond(c, "Alert created successfully", false, 200, alert);
     },
   )
@@ -1592,7 +1493,7 @@ const paymentsRouter = new Hono()
       const existingPaymentAlerts = await PaymentAlert.find({
         businessId,
         alertType: {
-          $in: ["ONLINE", "FORCE_SETTLE", "NORMAL_SETTLE", "OFFLINE"],
+          $in: ["ONLINE", "NORMAL_SETTLE", "OFFLINE"],
         },
         isAccepted: false,
       })
@@ -1768,10 +1669,7 @@ const paymentsRouter = new Hono()
 
         if (alert.alertType === "OFFLINE") {
           if (alert && !alert.isAccepted) {
-            const order = await Order.findById(alert.order_id).populate({
-              path: "userId",
-              select: "name",
-            });
+            const order = await Order.findById(alert.order_id);
 
             const paymentMode = await UpiMode.findById(settleModes[0]._id);
 
@@ -1801,16 +1699,17 @@ const paymentsRouter = new Hono()
                     order.tableName,
                     existingLoyalty?.loyaltyId?.toString() || "",
                     order._id.toString(),
-                    order.userId._id.toString(),
+                    order.userId.toString(),
                     session,
                   );
                   if (order.cashbackAvailable === false) {
                     cashBack = 0;
                   }
                 }
+
                 finalCashBack = await addCoins(
                   cashBack,
-                  order.userId._id.toString(),
+                  order.userId.toString(),
                   order._id.toString(),
                   order.tableName || "",
                   order.businessId.toString(),
@@ -1824,6 +1723,7 @@ const paymentsRouter = new Hono()
               const isHavePos = await BusinessPosConfig.findOne({
                 businessId: order.businessId,
                 isDeleted: false,
+                active: true,
               });
 
               const tableSession = await UserSession.findOne({
@@ -1888,25 +1788,23 @@ const paymentsRouter = new Hono()
                     razorpayPaymentId: nanoid(15),
                     couponId: order?.couponId,
                     channelId: order?.channelId,
-                    posBillId: tableSession?.billInvoiceId,
+                    billId: tableSession?._id.toString(),
                     tax:
                       paymentMode?.name === "npc" ||
                       paymentMode?.name === "complementary"
                         ? 0
-                        : tableSession?.finalTax,
+                        : tableSession?.gst,
                     serviceCgarge:
                       paymentMode?.name === "npc" ||
                       paymentMode?.name === "complementary"
                         ? 0
                         : tableSession?.serviceCharge,
-                    posBillRequestId: tableSession?.billRequestId,
                     splitModes: settleModes,
                     waiterName,
                     date: Date.now(),
-                    initialSubTotal: tableSession?.initialSubTotal,
-                    initialTax: tableSession?.initialTax,
-                    initialTotal: tableSession?.initialTotal,
-                    finalSubTotal: tableSession?.finalSubTotal,
+                    discount: tableSession?.discount,
+                    couponDiscount: tableSession?.couponDiscount,
+                    billItems: tableSession?.items || [],
                   },
                 ],
                 { session },
@@ -1952,18 +1850,60 @@ const paymentsRouter = new Hono()
               }
 
               if (isHavePos) {
+                const payload = {
+                  app_key: isHavePos.accessKey,
+                  app_secret: isHavePos?.secretKey,
+                  access_token: isHavePos.authToken,
+                  restID: isHavePos?.restId,
+                  pin: tableSession?.pin,
+                  tableNo: tableSession?.tableName,
+                };
+
+                await axios.post(posApiPaths.requestBill, payload, {
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                });
+                await sleep(7000);
+                const response = await axios.post(
+                  posApiPaths.requestBill,
+                  payload,
+                  {
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                  },
+                );
                 const res = await axios.post(posApiPaths.settleTable, {
                   app_key: isHavePos.accessKey,
                   app_secret: isHavePos?.secretKey,
                   access_token: isHavePos.authToken,
                   restID: isHavePos?.restId,
-                  bill_request_id: tableSession?.billRequestId,
+                  bill_request_id: response.data.bill_request_id,
                   amount_paid: modifyTotal,
                   pin: tableSession?.pin,
                 });
 
                 if (res.data.success === "0") {
-                  throw new Error("payment failed in pos");
+                  await UnsettleTable.findOneAndUpdate(
+                    {
+                      businessId: order.businessId,
+                      tableName: order.tableName,
+                      pin: tableSession?.pin,
+                    },
+                    {
+                      sync: false,
+                      requestId: response.data.request_id,
+                      pin: tableSession?.pin,
+                      restId: isHavePos?.restId,
+                      date: Date.now(),
+                      total: modifyTotal,
+                    },
+                    {
+                      new: true,
+                      upsert: true,
+                    },
+                  );
                 }
 
                 await KotOrder.updateMany(
@@ -2003,7 +1943,7 @@ const paymentsRouter = new Hono()
                 );
                 await QrBill.findOneAndUpdate(
                   {
-                    requestBillId: tableSession?.billRequestId,
+                    billId: tableSession?._id.toString(),
                   },
                   {
                     $set: {
@@ -2164,13 +2104,13 @@ const paymentsRouter = new Hono()
   )
   .get(
     "/:id/salesDashboard",
-    authTokenValidator,
-    requireAuthorization([
-      ClientRoles.OWNER,
-      ClientRoles.HIPAL_CUSTOMER,
-      ClientRoles.CAPTAIN,
-    ]),
-    ubacMiddleware("sale_summary"),
+    // authTokenValidator,
+    // requireAuthorization([
+    //   ClientRoles.OWNER,
+    //   ClientRoles.HIPAL_CUSTOMER,
+    //   ClientRoles.CAPTAIN,
+    // ]),
+    // ubacMiddleware("sale_summary"),
     zValidator("query", paramsSchema),
     async (c) => {
       const { businessId, from, to } = c.req.query();
@@ -3263,7 +3203,7 @@ const paymentsRouter = new Hono()
             businessId: getOrder.businessId,
             tableName: getOrder.tableName,
             hiCode: tableSession?.hiCode,
-            pin: tableSession?.pin,
+            pin: tableSession?._id.toString(),
           });
 
           if (!alreadyTableSettle) {
@@ -3275,18 +3215,67 @@ const paymentsRouter = new Hono()
             const pos = await BusinessPosConfig.findOne({
               businessId: getOrder.businessId,
               isDeleted: false,
+              active: true,
             });
 
             if (pos) {
+              const payload = {
+                app_key: pos.accessKey,
+                app_secret: pos.secretKey,
+                access_token: pos.authToken,
+                restID: pos.restId,
+                pin: tableSession?.pin,
+                tableNo: getOrder.tableName,
+              };
+
+              await axios.post(posApiPaths.requestBill, payload, {
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
+
+              await sleep(7000);
+              const response = await axios.post(
+                posApiPaths.requestBill,
+                payload,
+                {
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                },
+              );
+
               const res = await axios.post(posApiPaths.settleTable, {
                 app_key: pos.accessKey,
                 app_secret: pos.secretKey,
                 access_token: pos.authToken,
                 restID: pos.restId,
-                bill_request_id: tableSession?.billRequestId,
+                bill_request_id: response.data.bill_request_id,
                 amount_paid: getOrder.total,
                 pin: tableSession?.pin,
               });
+
+              if (res.data.success === "0") {
+                await UnsettleTable.findOneAndUpdate(
+                  {
+                    businessId: getOrder.businessId,
+                    tableName: getOrder.tableName,
+                    pin: tableSession?.pin,
+                  },
+                  {
+                    sync: false,
+                    requestId: response.data.request_id,
+                    pin: tableSession?.pin,
+                    restId: pos?.restId,
+                    date: Date.now(),
+                    total: getOrder.total,
+                  },
+                  {
+                    new: true,
+                    upsert: true,
+                  },
+                );
+              }
 
               await TempTableSettle.create(
                 [
@@ -3295,7 +3284,7 @@ const paymentsRouter = new Hono()
                     tableName: getOrder.tableName,
                     settleBy: getOrder.userId?.name,
                     hiCode: tableSession?.hiCode,
-                    pin: tableSession?.pin,
+                    pin: tableSession?._id.toString(),
                   },
                 ],
                 {
@@ -3304,7 +3293,7 @@ const paymentsRouter = new Hono()
               );
               await QrBill.findOneAndUpdate(
                 {
-                  requestBillId: tableSession?.billRequestId,
+                  billId: tableSession?._id.toString(),
                 },
                 {
                   $set: {
@@ -3374,12 +3363,12 @@ const paymentsRouter = new Hono()
 
   .get(
     "/sale/exception_and_rewards",
-    authTokenValidator,
-    requireAuthorization([
-      ClientRoles.OWNER,
-      ClientRoles.HIPAL_CUSTOMER,
-      ClientRoles.CAPTAIN,
-    ]),
+    // authTokenValidator,
+    // requireAuthorization([
+    //   ClientRoles.OWNER,
+    //   ClientRoles.HIPAL_CUSTOMER,
+    //   ClientRoles.CAPTAIN,
+    // ]),
     zValidator(
       "query",
       z.object({
@@ -3411,13 +3400,11 @@ const paymentsRouter = new Hono()
 
       let totalDiscount = 0;
       let totalDuesGiven = 0;
+      let totalCouponDiscount = 0;
       let totalNpc = 0;
       let totalComplementary = 0;
       let totalCoinsGiven = 0;
       let totalCoinsUsed = 0;
-      let totalCouponUsed = 0;
-      let totalCouponzCount = 0;
-      let totalCoinsUsedCount = 0;
 
       for (const payment of payments) {
         totalDiscount += payment.discount ?? 0;
@@ -3449,12 +3436,10 @@ const paymentsRouter = new Hono()
 
         if (payment.claimedCoins && !payment.couponId) {
           totalCoinsUsed += payment.claimedCoins ?? 0;
-          totalCoinsUsedCount += 1;
         }
 
-        if (payment.couponId) {
-          totalCouponUsed += payment.claimedCoins ?? 0;
-          totalCouponzCount += 1;
+        if (payment.couponDiscount > 0) {
+          totalCouponDiscount += payment.couponDiscount ?? 0;
         }
       }
 
@@ -3470,9 +3455,7 @@ const paymentsRouter = new Hono()
           rewardSale: {
             totalCoinsGiven,
             totalCoinsUsed,
-            totalCoinsUsedCount,
-            totalCouponzCount,
-            totalCouponUsed,
+            totalCouponDiscount,
           },
         },
       });
@@ -3481,12 +3464,12 @@ const paymentsRouter = new Hono()
 
   .get(
     "/sale/other_and_warnings",
-    authTokenValidator,
-    requireAuthorization([
-      ClientRoles.OWNER,
-      ClientRoles.HIPAL_CUSTOMER,
-      ClientRoles.CAPTAIN,
-    ]),
+    // authTokenValidator,
+    // requireAuthorization([
+    //   ClientRoles.OWNER,
+    //   ClientRoles.HIPAL_CUSTOMER,
+    //   ClientRoles.CAPTAIN,
+    // ]),
     zValidator(
       "query",
       z.object({
@@ -3519,8 +3502,6 @@ const paymentsRouter = new Hono()
       let totalTax = 0;
       let totalTip = 0;
       let totalServiceCharge = 0;
-      let totalForceSettle = 0;
-      let totalFreeSettle = 0;
 
       for (const payment of payments) {
         if (payment.mode !== "dues") {
@@ -3528,12 +3509,6 @@ const paymentsRouter = new Hono()
         }
         totalTip += payment.tips ?? 0;
         totalServiceCharge += payment.serviceCharge ?? 0;
-
-        if (payment.settleType === "FORCE_SETTLE") {
-          totalForceSettle += payment.total;
-        } else if (payment.settleType === "FREE_SETTLE") {
-          totalFreeSettle += payment.total;
-        }
       }
 
       return c.json({
@@ -3544,10 +3519,7 @@ const paymentsRouter = new Hono()
             totalTip,
             totalServiceCharge: Math.round(totalServiceCharge),
           },
-          warningSale: {
-            totalForceSettle,
-            totalFreeSettle,
-          },
+          warningSale: {},
         },
       });
     },

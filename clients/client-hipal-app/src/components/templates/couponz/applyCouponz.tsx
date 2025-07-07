@@ -102,10 +102,10 @@ const MemoApplyCouponz = () => {
     upcomingCouponz: s.upcomingCouponz,
     setUpcomingCouponz: s.setUpcomingCouponz,
   }));
-  const { updateBill } = useUpdateBill();
-  const { mutateAsync } = useMutation({
-    mutationFn: updateBill,
-  });
+  const { addCouponz, removeCouponz, removeCoinz } = useUpdateBill();
+  const addCouponMutation = useMutation({ mutationFn: addCouponz });
+  const removeCouponMutation = useMutation({ mutationFn: removeCouponz });
+  const removeCoinzMutation = useMutation({ mutationFn: removeCoinz });
 
   const [selectedCoupon, setSelectedCouponState] = useState(null);
   const { setApplyCouponz, setIsLoading } = useCouponTemp((s) => ({
@@ -147,11 +147,26 @@ const MemoApplyCouponz = () => {
   const replaceLoyalty = useCallback(async () => {
     setClaimedCoins(0);
     setShowAlert(false);
-    toast.success("Coinz removed successfully");
-    if (selectedCoupon) {
-      await applyCouponLogic(selectedCoupon);
-    }
-  }, [setClaimedCoins, setShowAlert, selectedCoupon]);
+    await applyCouponLogic(selectedCoupon);
+  }, [
+    setClaimedCoins,
+    setShowAlert,
+    selectedCoupon,
+    removeCouponMutation.mutateAsync,
+    claimedCoins,
+  ]);
+
+  const replacePosLoyalty = useCallback(async () => {
+    setClaimedCoins(0);
+    setShowAlert(false);
+    await removeCoinzMutation.mutateAsync({});
+    await applyCouponLogic(selectedCoupon);
+  }, [
+    setClaimedCoins,
+    setShowAlert,
+    selectedCoupon,
+    removeCoinzMutation.mutateAsync,
+  ]);
 
   const applyCouponLogic = useCallback(
     async (coupon) => {
@@ -196,10 +211,8 @@ const MemoApplyCouponz = () => {
         claimedCoins,
       );
       if (outletInfo?.isPosEnabled) {
-        mutateAsync({
-          coinz: discountValue,
+        await addCouponMutation.mutateAsync({
           couponId: coupon?._id,
-          userId: userDetails?._id,
         });
       }
       setClaimCouponz(discountValue);
@@ -236,14 +249,14 @@ const MemoApplyCouponz = () => {
     ],
   );
 
-  const removeCoupon = useCallback(() => {
+  const removeCoupon = useCallback(async () => {
     setAvailedCoupon({});
     setClaimCouponz(0);
-    mutateAsync({
-      coinz: 0,
-    });
+    if (outletInfo?.isPosEnabled) {
+      await removeCouponMutation.mutateAsync();
+    }
     setApplyCouponz(false);
-  }, [mutateAsync, setClaimCouponz, setAvailedCoupon, setApplyCouponz]);
+  }, [setClaimCouponz, setAvailedCoupon, setApplyCouponz, removeCoinzMutation]);
 
   // if availedCoupon from the apply couponz then calculate the discount
   useEffect(() => {
@@ -279,7 +292,7 @@ const MemoApplyCouponz = () => {
       const missingOut = [];
       const upcomingCouponz = [];
 
-      res?.data.forEach((coupon) => {
+      for (const coupon of res?.data) {
         const { conditions } = coupon;
         const startTime = conditions?.couponStartDate
           ? new Date(conditions.couponStartDate).getTime()
@@ -294,21 +307,26 @@ const MemoApplyCouponz = () => {
 
         if (isUpcoming) {
           upcomingCouponz.push(coupon);
-          return;
+          continue;
         }
 
         if (isExpired) {
           // Ignore expired coupons (optional: handle separately if needed)
-          return;
+          continue;
         }
 
         // Check bill value to classify as `greatDeals` or `missingOut`
         if (billValue >= conditions.billValue) {
           greatDeals.push(coupon);
         } else {
-          missingOut.push(coupon);
+          // Skip pushing to missingOut if it's the applied coupon
+          if (coupon._id !== (billData?.couponId || selectedCoupon?._id)) {
+            missingOut.push(coupon);
+          } else {
+            greatDeals.push(coupon);
+          }
         }
-      });
+      }
 
       // Update state
       setGreatDeals(greatDeals);
@@ -364,7 +382,9 @@ const MemoApplyCouponz = () => {
             <button
               type="button"
               className="inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-[#9267EC] border border-transparent rounded-md hover:bg-[#9267EC] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-              onClick={replaceLoyalty}
+              onClick={
+                outletInfo?.isPosEnabled ? replacePosLoyalty : replaceLoyalty
+              }
             >
               <IoCheckmark className="w-4 h-4 mr-2" />
               Yes

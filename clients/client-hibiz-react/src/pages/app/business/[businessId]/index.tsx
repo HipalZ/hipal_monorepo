@@ -1,51 +1,27 @@
-import { memo, useCallback, useMemo, useRef } from "react";
+import { memo, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { motion, useScroll, useSpring, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { PiSealWarningFill } from "react-icons/pi";
-import HiPeopleLogo from "@/assets/hibizNewLogo.png";
-import Header from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
-import { useSelectedIcon } from "@/components/store/useSelectedIcon";
+import {
+  type DashBoardState,
+  useSelectedIcon,
+} from "@/components/store/useSelectedIcon";
 import { getButtons } from "@/components/types/businessId";
 import { cn } from "@hi/common";
+import MemoizedHeader from "@/components/molecules/header";
+import UniversalNav from "@/components/templates/menu/sideNavbaar/universelSidenav.tsx";
 
 const Business = () => {
   const setSelectedIcon = useSelectedIcon((s) => s.setSelectedIcon);
+  const setSelectedDashboard = useSelectedIcon((s) => s.setSelectedDashboard);
+  const selectedDashboard = useSelectedIcon((s) => s.selectedDashboard);
   const navigate = useNavigate();
   const { businessId } = useParams<{ businessId: string }>();
   const businessData = useBusinessData((s) => s.businessData);
   const outLetType = useBusinessData((s) => s?.outletInfo?.outLetType);
   const isPosEnabled = useBusinessData((s) => s?.outletInfo?.isPosEnabled);
-  const headerRef = useRef<HTMLElement>(null);
-  const { scrollY } = useScroll();
-
-  const isMobileMemo = useMemo(() => window.innerWidth < 600, []);
-
-  const transformHeaderHeight = useTransform(scrollY, [0, 100], [200, 70]);
-  const transformHeaderOpacity = useTransform(scrollY, [0, 50], [1, 0]);
-  const transformBusinessNameScale = useTransform(scrollY, [0, 100], [1, 0.9]);
-
-  const headerHeight = useSpring(isMobileMemo ? transformHeaderHeight : 200, {
-    stiffness: 300,
-    damping: 30,
-    mass: 0.5,
-  });
-
-  const headerOpacity = useSpring(isMobileMemo ? transformHeaderOpacity : 1, {
-    stiffness: 300,
-    damping: 30,
-    mass: 0.5,
-  });
-
-  const businessNameScale = useSpring(
-    isMobileMemo ? transformBusinessNameScale : 1,
-    {
-      stiffness: 300,
-      damping: 30,
-      mass: 0.5,
-    },
-  );
 
   const handleClick = useCallback(
     (text: string) => {
@@ -58,51 +34,65 @@ const Business = () => {
     [businessId, navigate, setSelectedIcon],
   );
 
+  const selectIcon = useCallback(
+    (text: string) => {
+      const str = text as DashBoardState;
+      setSelectedDashboard(str);
+    },
+    [setSelectedDashboard],
+  );
+
   const handleBack = useCallback(() => {
     navigate("/app/business");
   }, [navigate]);
 
-  const buttons = getButtons(outLetType || "MENU", isPosEnabled);
+  const buttons = getButtons(outLetType || "MENU", isPosEnabled || false);
+  const navItems = Object.keys(buttons).map((key) => ({
+    text: key.replace(/_/g, " "),
+  }));
+  const activeKey = selectedDashboard.replace(/ /g, "_");
 
   return (
-    <main className="relative">
-      {/* Header */}
-      <motion.section
-        ref={headerRef}
-        className="fixed top-0 z-10 w-full pb-4 linear_gradient_background"
-        style={{ height: headerHeight }}
-      >
-        <Header
-          onBack={handleBack}
-          leftIcon={<FaArrowLeft />}
-          centerImage={HiPeopleLogo}
-        />
-        <motion.div
-          className="flex flex-col items-center justify-center pb-4 -mt-8 space-y-2"
-          style={{ opacity: headerOpacity }}
-        >
-          {businessData?.logo && (
-            <figure className="w-24 h-24 mt-[3vh] overflow-hidden rounded-full">
-              <img
-                width={100}
-                height={100}
-                src={businessData.logo}
-                alt="Business Logo"
-              />
-            </figure>
-          )}
-        </motion.div>
-        <motion.h1
-          className="absolute text-xl font-bold text-center capitalize left-1/2"
-          style={{ top: "1.5rem", x: "-50%", scale: businessNameScale }}
-        >
-          {businessData?.name}
-        </motion.h1>
-      </motion.section>
+    <main className="min-h-screen">
+      <div className="sticky top-0 z-50 w-full">
+        <header className="linear_gradient_background">
+          <MemoizedHeader
+            title={businessData?.name}
+            leftIcon={<FaArrowLeft />}
+            onBack={handleBack}
+          />
+        </header>
+        {/* Mobile tab bar */}
+        <nav className="absolute flex w-full px-4 space-x-4 overflow-auto text-sm text-nowrap flex-nowrap hide-scrollbar mobile-only">
+          {navItems.map((item) => (
+            <button
+              type="button"
+              key={item.text}
+              className={cn(
+                "pb-3 pt-4 bg-white capitalize",
+                selectedDashboard.toLowerCase().replace(/ /g, "_") ===
+                  item.text.toLowerCase().replace(/ /g, "_")
+                  ? "border-b-2 border-[#8162e6] text-[#8162e6] font-semibold"
+                  : "",
+              )}
+              onClick={() => selectIcon(item.text)}
+            >
+              {item.text}
+            </button>
+          ))}
+        </nav>
+      </div>
 
+      {/* Sidebar / desktop nav */}
+      <UniversalNav
+        items={navItems}
+        selectedNavItem={selectedDashboard}
+        changeNav={selectIcon}
+      />
       {/* Services Section */}
       {!businessData?.withPopCorn && (
         <>
+          {/* Theme lock warning */}
           {!businessData?.themeApplied && (
             <center className="px-4 py-2 mt-2 text-sm font-semibold text-[#da0606] bg-[#da060630] flex items-center justify-center">
               <PiSealWarningFill size={32} className="mr-2" />
@@ -110,11 +100,11 @@ const Business = () => {
             </center>
           )}
 
-          {/* Dynamically Render Service Categories */}
-          {Object.keys(buttons).map((category) => (
-            <section key={category} className="mb-6">
+          {/* Only render the selected category */}
+          {buttons[activeKey] && (
+            <section className="mb-6">
               <h6 className="px-4 mt-4 text-2xl capitalize">
-                {category.replace(/_/g, " ")}
+                {activeKey.replace(/_/g, " ")}
               </h6>
               <motion.section
                 className="grid grid-cols-2 gap-2 p-2 mx-auto sm:p-4 md:p-6 sm:gap-4 md:gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 max-w-7xl"
@@ -122,10 +112,9 @@ const Business = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ staggerChildren: 0.1, delayChildren: 0.2 }}
               >
-                {buttons[category]?.map((item, index) => {
+                {buttons[activeKey].map((item, index) => {
                   const isDisabled =
                     item.navigateTo !== "themes" && !businessData?.themeApplied;
-
                   return (
                     <motion.article
                       key={item.text}
@@ -181,7 +170,7 @@ const Business = () => {
                 })}
               </motion.section>
             </section>
-          ))}
+          )}
         </>
       )}
     </main>

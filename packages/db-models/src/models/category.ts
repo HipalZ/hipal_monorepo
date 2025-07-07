@@ -1,8 +1,28 @@
 import type { Model } from "mongoose";
 import mongoose from "mongoose";
-import type { CategoryType } from "../validators";
+import type { CategoryType, TimingType } from "../validators";
 import { HierarchyEnum } from "../validators/category";
 const ObjectId = mongoose.Schema.Types.ObjectId;
+
+const timingSchema = new mongoose.Schema<TimingType>(
+  {
+    day: {
+      type: Number,
+      required: false,
+    },
+    start: {
+      type: Number,
+      required: false,
+    },
+    end: {
+      type: Number,
+      required: false,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
 const categorySchema = new mongoose.Schema<CategoryType>(
   {
     businessId: {
@@ -68,6 +88,39 @@ const categorySchema = new mongoose.Schema<CategoryType>(
       type: ObjectId,
       required: false,
       ref: "menu",
+    },
+    categoryTimings: {
+      type: String,
+      required: false,
+    },
+    posCategoryId: {
+      type: String,
+      required: false,
+    },
+    rank: {
+      type: Number,
+      required: false,
+    },
+    pos: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    active: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+    timings: {
+      type: [timingSchema],
+      required: false,
+      default: [
+        {
+          day: -1,
+          start: 1440,
+          end: 1440,
+        },
+      ],
     },
   },
   {

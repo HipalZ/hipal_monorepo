@@ -1,11 +1,11 @@
 // books.ts
 import {
   AddOn,
-  Business,
+  BusinessPosConfig,
   Category,
   Dish,
-  Pos,
-  Table,
+  Kitchen,
+  PosDishConfig,
   UniquelyYours,
 } from "@hi/db-models";
 import {
@@ -15,7 +15,6 @@ import {
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
-import axios from "axios";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { z } from "zod";
@@ -24,7 +23,6 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
-import { posApiPaths } from "../../utils/posConfig/petPooja";
 import { respond } from "../../utils/response";
 //
 const dishesRouter = new Hono()
@@ -41,56 +39,23 @@ const dishesRouter = new Hono()
       }),
     ),
     async (c) => {
-      const { businessId, UniquelyYours, menu, menuId } = c.req.query();
+      const { businessId, menuId, UniquelyYours, menu } = c.req.query();
+
+      const businessPosConfig = await BusinessPosConfig.findOne({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
+
       if (UniquelyYours) {
-        const isHasPos = await Pos.findOne({
-          businessId,
-        });
-
-        if (isHasPos) {
-          const table = await Table.findOne({
-            businessId,
-          }).select("name");
-
-          const posDishes = await axios.post(posApiPaths.fetchMenu, {
-            "app-key": isHasPos.accessKey,
-            "app-secret": isHasPos.secretKey,
-            "access-token": isHasPos.authToken,
-            restID: isHasPos.restId,
-            tableNo: table?.name,
-          });
-
-          if (posDishes.data.success === "1") {
-            const posDishesData = posDishes.data.items.map((item: any) => {
-              return {
-                _id: item.itemid,
-                name: item.itemname,
-                dishTypes: ["VEG"],
-                images: [item.item_image_url],
-              };
-            });
-
-            return respond(
-              c,
-              "Dishes fetched successfully",
-              false,
-              200,
-              posDishesData,
-            );
-          }
-
-          return respond(c, "unable to fetch dishes", false, 400, {});
-        }
-
-        let query = {
+        const query = {
           businessId,
           "categoryIds.0": { $exists: true },
           isDeleted: false,
+          active: true,
+          ...(menuId ? { menuId: menuId } : {}),
+          pos: !!businessPosConfig,
         };
-
-        if (menuId) {
-          query["menuId"] = menuId;
-        }
 
         const existingDishes = await Dish.find(query).select(
           "_id name images dishTypes",
@@ -99,40 +64,41 @@ const dishesRouter = new Hono()
       }
 
       if (menu) {
-        let query = {
+        const query = {
           businessId,
           isDeleted: false,
+          active: true,
+          ...(menuId ? { menuId: menuId } : {}),
+          pos: !!businessPosConfig,
         };
 
-        if (menuId) {
-          query["menuId"] = menuId;
-        }
         const existingDishes = await Dish.find(query).select(
           " _id businessId name images availability tags dishTypes visibility price categoryIds addOnIds recommendationIds",
         );
         return respond(c, "Fetched successfully", false, 200, existingDishes);
       }
 
-      let query = {
+      const query = {
         businessId,
         isDeleted: false,
+        active: true,
+        ...(menuId ? { menuId: menuId } : {}),
+        pos: !!businessPosConfig,
       };
-
-      if (menuId) {
-        query["menuId"] = menuId;
-      }
 
       const existingDishes = await Dish.find(query);
 
       return respond(c, "Fetched successfully", false, 200, existingDishes);
     },
   )
+
   .put(
     "/:id",
-    authTokenValidator,
-    requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
-    zValidator("param", z.object({ id: z.string() })),
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
     zValidator("json", updateDishSchema),
+    zValidator("param", z.object({ id: z.string() })),
+
     async (c) => {
       //@ts-ignore
       return await runInTransaction(async (session: ClientSession) => {
@@ -154,7 +120,52 @@ const dishesRouter = new Hono()
           removeCategoryIds = [],
           removeAddOnIds = [],
           removeRecommendationIds = [],
+          kitchenId,
+          removeKitchenId,
         } = dish;
+
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId: dish.businessId,
+          isDeleted: false,
+          active: true,
+        });
+        console.log("businessPosConfig", businessPosConfig);
+
+        if (businessPosConfig) {
+          const posDishEditFields = await PosDishConfig.findOne({
+            businessId: dish.businessId,
+          })
+            .select(
+              "description images visibility recommendationIds availability kitchenId menuId",
+            )
+            .lean();
+
+            console.log("posDishEditFields", posDishEditFields);
+
+          if (!posDishEditFields) {
+            return respond(c, "POS dish config not found", true, 400, {});
+          }
+
+          const allowedKeys = Object.entries(posDishEditFields)
+            .filter(([_, isAllowed]) => isAllowed)
+            .map(([key]) => key);
+
+          const extraKeys = Object.keys(dish).filter(
+            (key) => key !== "businessId" && !allowedKeys.includes(key),
+          );
+
+          if (extraKeys.length) {
+            return respond(
+              c,
+              `Field(s) not permitted by POS configuration: ${extraKeys.join(
+                ", ",
+              )}`,
+              true,
+              400,
+              {},
+            );
+          }
+        }
 
         const updatedDish = await Dish.findByIdAndUpdate(
           id,
@@ -168,6 +179,8 @@ const dishesRouter = new Hono()
             images,
             description,
             tags,
+            kitchenId,
+            removeKitchenId,
           },
           {
             new: true,
@@ -254,7 +267,23 @@ const dishesRouter = new Hono()
           );
         }
 
-        return respond(c, "Updated successfully", false, 200, updatedDish);
+        if (kitchenId) {
+          await Kitchen.findByIdAndUpdate(
+            { _id: kitchenId },
+            { $push: { dishIds: updatedDish._id } },
+            { session },
+          );
+        }
+
+        if (removeKitchenId) {
+          await Kitchen.findByIdAndUpdate(
+            { _id: removeKitchenId },
+            { $pull: { dishIds: updatedDish._id } },
+            { session },
+          );
+        }
+
+        return respond(c, "Updated successfully", false, 200, {});
       });
     },
   )
@@ -267,6 +296,27 @@ const dishesRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const { id } = c.req.param();
+
+        const fetchDish = await Dish.findById(id);
+        if (!fetchDish) {
+          return respond(c, "not found", true, 404, {});
+        }
+
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId: fetchDish.businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (businessPosConfig) {
+          return respond(
+            c,
+            "pos is enabled for this business you can't delete dish",
+            true,
+            400,
+            {},
+          );
+        }
 
         const existingDish = await Dish.findByIdAndUpdate(id, {
           isDeleted: true,
@@ -297,17 +347,25 @@ const dishesRouter = new Hono()
       return await runInTransaction(async (session: ClientSession) => {
         const dish = await c.req.json();
 
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId: dish.businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (businessPosConfig) {
+          return respond(c, "You cannot create a dish with POS", true, 400, {});
+        }
+
         const dishAlreadyExists = await Dish.findOne({
           businessId: dish.businessId,
           name: dish.name,
           isDeleted: false,
+          active: true,
         });
         if (dishAlreadyExists)
           return respond(c, "Already exists", true, 400, {});
-        const menuLayout = await Business.findOne({
-          businessId: dish.businessId,
-        });
-        if (!menuLayout) return respond(c, "Business not found", true, 404, {});
+
         const createDish = await Dish.create([dish], { session });
         if (!createDish) return respond(c, "Error in creating", true, 400, {});
 
@@ -322,6 +380,14 @@ const dishesRouter = new Hono()
           { $push: { dishIds: createDish[0]._id } },
           { session },
         );
+
+        if (dish.kitchenId) {
+          await Kitchen.findByIdAndUpdate(
+            { _id: dish.kitchenId },
+            { $push: { dishIds: createDish[0]._id } },
+            { session },
+          );
+        }
 
         return respond(c, "Created successfully", false, 201, createDish);
       });
@@ -397,6 +463,7 @@ const dishesRouter = new Hono()
       const existingDish = await Dish.findOne({
         _id: id,
         isDeleted: false,
+        active: true,
       }).populate({
         path: "recommendationIds",
         select: "name price images dishTypes _id",
@@ -416,11 +483,28 @@ const dishesRouter = new Hono()
       return runInTransaction(async (session: ClientSession) => {
         const dishes = await c.req.json();
 
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId: dishes[0].businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (businessPosConfig) {
+          return respond(
+            c,
+            "pos is enabled for this business you can't create dish",
+            true,
+            400,
+            {},
+          );
+        }
+
         for (const dish of dishes) {
           const dishAlreadyExists = await Dish.findOne({
             businessId: dish.businessId,
             name: dish.name,
             isDeleted: false,
+            active: true,
           });
           if (!dishAlreadyExists) {
             const createDish = await Dish.create([dish], { session });

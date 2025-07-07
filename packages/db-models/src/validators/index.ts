@@ -54,6 +54,7 @@ export * from "./menu";
 export * from "./menuBanner";
 export * from "./note";
 export * from "./npcUser";
+export * from "./passwordManger/passwordManager";
 export * from "./pendingDues";
 export * from "./permission";
 export * from "./permissionGroup";

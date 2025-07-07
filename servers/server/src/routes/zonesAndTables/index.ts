@@ -34,6 +34,7 @@ const zonesAndTablesRouter = new Hono()
       const isHavePos = await BusinessPosConfig.findOne({
         businessId,
         isDeleted: false,
+        active: true,
       });
 
       if (isHavePos) {
@@ -46,7 +47,11 @@ const zonesAndTablesRouter = new Hono()
         );
       }
 
-      const alreadyExists = await Zone.findOne({ businessId, name });
+      const alreadyExists = await Zone.findOne({
+        businessId,
+        name,
+        active: true,
+      });
 
       if (alreadyExists) {
         return c.json(
@@ -69,14 +74,6 @@ const zonesAndTablesRouter = new Hono()
       });
 
       await zone.save({ session });
-
-      // if (tableIds.length > 0) {
-      //   await Table.updateMany(
-      //     { _id: { $in: tableIds } },
-      //     { $set: { internalZoneId: zone._id } },
-      //     { session },
-      //   );
-      // }
 
       return c.json(
         {
@@ -107,6 +104,7 @@ const zonesAndTablesRouter = new Hono()
       const isHavePos = await BusinessPosConfig.findOne({
         businessId,
         isDeleted: false,
+        active: true,
       });
 
       if (isHavePos) {
@@ -174,14 +172,6 @@ const zonesAndTablesRouter = new Hono()
         throw new Error("Zone not found");
       }
 
-      // if (tableIds.length > 0) {
-      //   await Table.updateMany(
-      //     { _id: { $in: tableIds } },
-      //     { $addToSet: { internalZoneId: updatedZone._id } },
-      //     { session },
-      //   );
-      // }
-
       return c.json(
         {
           message: "Zone update successfully",
@@ -207,12 +197,12 @@ const zonesAndTablesRouter = new Hono()
       const businessInfo =
         await Business.findById(businessId).select("customLink");
       //TODO: change the url to the actual url
-      console.log("NAME", name);
       const uniqueOrderId = nanoid(5);
 
       const isHavePos = await BusinessPosConfig.findOne({
         businessId,
         isDeleted: false,
+        active: true,
       });
 
       if (isHavePos) {
@@ -225,7 +215,11 @@ const zonesAndTablesRouter = new Hono()
         );
       }
 
-      const alreadyExists = await Table.findOne({ businessId, name });
+      const alreadyExists = await Table.findOne({
+        businessId,
+        name,
+        active: true,
+      });
 
       if (alreadyExists) {
         return c.json(
@@ -402,6 +396,7 @@ const zonesAndTablesRouter = new Hono()
       const isHavePos = await BusinessPosConfig.findOne({
         businessId,
         isDeleted: false,
+        active: true,
       });
 
       if (isHavePos) {
@@ -524,10 +519,18 @@ const zonesAndTablesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
+      const businessPosConfig = await BusinessPosConfig.exists({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
+
       const tables = await Table.find({
         businessId,
         isDeleted: false,
         visibility: true,
+        active: true,
+        pos: !!businessPosConfig,
       });
       return c.json(
         {
@@ -550,9 +553,17 @@ const zonesAndTablesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
+      const businessPosConfig = await BusinessPosConfig.exists({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
+
       const zones = await Zone.find({
         businessId,
         isDeleted: false,
+        active: true,
+        pos: !!businessPosConfig,
       });
       return c.json(
         {
@@ -576,12 +587,20 @@ const zonesAndTablesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
 
+      const businessPosConfig = await BusinessPosConfig.exists({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
+
       let totalTableAmount = 0;
 
       // Fetch zones
       const zones = await Zone.find({
         businessId,
         isDeleted: false,
+        active: true,
+        pos: !!businessPosConfig,
       });
 
       // Construct output array
@@ -592,6 +611,7 @@ const zonesAndTablesRouter = new Hono()
             businessId,
             zoneId: zone.zoneId,
             status: "ACTIVE",
+            active: true,
           });
 
           // Construct tables array

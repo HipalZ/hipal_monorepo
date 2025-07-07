@@ -3,16 +3,13 @@ import { ObjectIdSchema } from "./common";
 
 export const unsettleTableSchema = z.object({
   businessId: ObjectIdSchema,
-  capacity: z.number().optional(),
-  tableId: ObjectIdSchema,
-  kotIds: z.array(ObjectIdSchema).default([]).optional(),
-  status: z.enum(["ACTIVE"]).default("ACTIVE"),
-  totalItemCount: z.number().default(0).optional(),
-  userIds: z.array(ObjectIdSchema).default([]).optional(),
-  currentTableAmount: z.number().default(0).optional(),
-  date: z.number().optional(),
-  isDeleted: z.boolean().default(false).optional(),
-  performedBy: ObjectIdSchema.optional(),
+  restId: z.string().min(1).max(100),
+  pin: z.string().min(1).max(100),
+  tableName: z.string().min(1).max(100),
+  total: z.number(),
+  sync: z.boolean().default(false),
+  requestId: z.string().min(1).max(100),
+  date: z.number(),
 });
 
 export type UnsettleTableType = z.infer<typeof unsettleTableSchema>;

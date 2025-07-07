@@ -3,13 +3,15 @@ import {
   Business,
   BusinessPosConfig,
   Category,
+  Couponz,
   DeviceToken,
   Dish,
   Kitchen,
   KotOrder,
   Menu,
+  OutLetInfo,
+  PaymentAlert,
   Pos,
-  PosBill,
   Table,
   Tax,
   UrlModel,
@@ -18,6 +20,7 @@ import {
   UserSession,
   Zone,
 } from "@hi/db-models";
+import { OrderVerificationTypeEnum } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
@@ -26,11 +29,25 @@ import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
+import type { KotOrderTypes } from "../../utils/bill";
+import {
+  calculateBillDishIds,
+  calculateBillTotals,
+  calculateFinalTotal,
+  calculateGst,
+  calculateTotalDiscount,
+  groupItemsByGST,
+  updateTableSession,
+} from "../../utils/bill";
+import type { Item } from "../../utils/billTypes";
+import { checkElectronJsStatus } from "../../utils/checkElectronStatus";
 import {
   calculateCartBill,
   convertToPetpoojaCart,
-  transformItemsToSimpleArray,
+  transformData,
+  transformParentCategories,
 } from "../../utils/helper";
+import { sendBillPrintEvent, sendKOTPrintEvent } from "../../utils/kot";
 import { petpoojaPosConfig, posApiPaths } from "../../utils/posConfig/petPooja";
 import { respond } from "../../utils/response";
 const admin = require("firebase-admin");
@@ -76,10 +93,12 @@ const saveKotOrder = async (
   );
 
   if (!saveKot) {
-    return false;
+    return {};
   }
 
-  return true;
+  return {
+    kotId: saveKot[0]._id,
+  };
 };
 
 export const sendPushNotification = async (
@@ -120,15 +139,10 @@ const saveOrder = async (
   tableId: string,
   edited: boolean,
   editedBy: string,
-  petpoojaCart: unknown,
   hiCode: string,
   session: ClientSession,
 ) => {
-  const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
-  if (saveKot.data.success === "0") {
-    throw new Error("kot not saved in pos");
-  }
-  await saveKotOrder(
+  const resData = await saveKotOrder(
     tableName,
     businessId,
     customerName,
@@ -172,6 +186,7 @@ const saveOrder = async (
       hiCode: hiCode,
       name: customerName,
       phone: customerPhone,
+      kotId: resData?.kotId?.toString(),
     },
   };
 };
@@ -189,9 +204,9 @@ const posRouter = new Hono()
       200,
     );
   })
+
   .get(
     "/get_bill",
-    ubacMiddleware("bill"),
     zValidator(
       "query",
       z.object({
@@ -204,236 +219,179 @@ const posRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const { businessId, tableName, generatedBy } = c.req.query();
-
-        // Fetch POS config for the business
-        const pos = await BusinessPosConfig.findOne({
+        const businessPosConfig = await BusinessPosConfig.findOne({
           businessId,
           isDeleted: false,
+          active: true,
         });
-        if (!pos) {
-          return c.json(
-            {
-              message: "POS not found",
-              err: true,
-              data: { success: false },
-            },
-            404,
-          );
+
+        if (!businessPosConfig) {
+          return respond(c, "Pos not found", true, 400, {});
         }
 
-        // Fetch table session data
-        const tableSession = await UserSession.findOne({
+        const outLetInfo = await OutLetInfo.findOne({
+          businessId,
+        }).select("gst fssai");
+
+        // Get the table session
+        let tableSession = await UserSession.findOne({
           businessId,
           tableName,
+        }).populate({
+          path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy",
+          select: "name phone",
         });
 
         if (!tableSession) {
-          return c.json(
-            {
-              message: "Table session not found",
-              err: true,
-              data: { success: false },
-            },
-            404,
-          );
+          return respond(c, "Table session not found", true, 404, {});
+        }
+        const kotOrders = (await KotOrder.find({
+          tableName,
+          settled: false,
+          businessId,
+        }).lean()) as KotOrderTypes[];
+
+        const cartItems = kotOrders.flatMap((order) =>
+          order.cart.filter((item) => !item.isDeleted),
+        ) as Item[];
+
+        const { totalDishTotal, totalGst } = calculateBillTotals(kotOrders);
+
+        const billItems = groupItemsByGST(cartItems);
+
+        const discountAppliedBy = tableSession.discountAppliedBy?.name || "";
+        const discountRemovedBy = tableSession.discountRemovedBy?.name || "";
+        const serviceChargeAppliedBy =
+          tableSession.serviceChargeAppliedBy?.name || "";
+        const serviceChargeRemovedBy =
+          tableSession.serviceChargeRemovedBy?.name || "";
+
+        // Get service charge info
+        const serviceCharge = await Tax.findOne({
+          businessId,
+          menuId: cartItems[0].dish.menuId,
+          isActive: true,
+          name: "servicecharge",
+        });
+
+        const serviceChargePercentage = serviceCharge?.value || 0;
+
+        let serviceChargeAmount = Math.round(
+          (serviceChargePercentage / 100) * totalDishTotal,
+        );
+        if (tableSession.isServiceChargeRemoved) serviceChargeAmount = 0;
+
+        // Calculate GST
+        let newGst = 0;
+        const newSubTotal =
+          totalDishTotal -
+          tableSession.discount -
+          tableSession.claimedCoins -
+          tableSession.couponDiscount;
+
+        if (
+          tableSession.isDiscountApplied &&
+          tableSession.discountAppliedOn === "ON_DISH"
+        ) {
+          newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+          newGst -= tableSession.newDishGst;
+        } else if (tableSession.isDiscountApplied) {
+          newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+        } else {
+          newGst = totalGst;
         }
 
-        // Helper to call axios posts with the necessary config
-        const axiosPosApiCall = async (path: string, config: object) => {
-          return axios.post(path, {
-            app_key: pos.accessKey,
-            app_secret: pos.secretKey,
-            access_token: pos.authToken,
-            restID: pos.restId,
-            ...config,
-          });
-        };
+        const totalDis = calculateTotalDiscount(
+          tableSession.discount,
+          tableSession.claimedCoins,
+          tableSession.couponDiscount,
+        );
 
-        // If session exists, check if re-registration is required
-        if (tableSession) {
-          const hoursSinceLastUpdate =
-            (Date.now() - new Date(tableSession.date).getTime()) /
-            (1000 * 60 * 60);
-          if (hoursSinceLastUpdate > 3) {
-            const { data: regData } = await axiosPosApiCall(
-              posApiPaths.registerUser,
-              {
-                phone: tableSession.pin,
-                name: generatedBy,
-              },
-            );
-            if (regData.success === "0") {
-              throw new Error("User not registered");
-            }
-          }
-        }
+        // Final total
+        const newTotal = calculateFinalTotal(
+          totalDishTotal,
+          totalDis,
+          newGst,
+          serviceChargeAmount,
+          tableSession.otherTax,
+          tableSession.tips,
+        );
 
-        // Try fetching bill if already requested
-        if (tableSession?.billRequestId) {
-          const { data: billData } = await axiosPosApiCall(
-            posApiPaths.getBill,
-            {
-              bill_request_id: tableSession.billRequestId,
-            },
-          );
-
-          if (billData.success === "0") {
-            throw new Error("Error fetching  bill");
-          }
-          const simpleArray = transformItemsToSimpleArray(
-            billData.items_data || [],
-          );
-          if (billData.success === "1") {
-            const orderData = billData.order_data;
-            const billObj = {
-              billing_user_name: orderData.billing_user_name,
-              serviceCharge: orderData.service_charge,
-              discount: orderData.discount,
-              tax: tableSession.finalTax,
-              total: tableSession.finalTotal,
-              customerPhone:
-                tableSession.phoneNumbers[0] || orderData.customer_phone,
-              customerName:
-                tableSession.customerName || orderData.customer_name,
-              tableName: orderData.table_no,
-              billRequestId: tableSession.billRequestId,
-              items: simpleArray,
-              subTotal: orderData.core_price,
-              tips: tableSession.tips || 0,
-              claimedCoins: tableSession.claimedCoins || 0,
-              couponId: tableSession.couponId,
-              initialTotal: tableSession.initialTotal,
-            };
-
-            return c.json(
-              {
-                message: "Data fetched successfully",
-                err: false,
-                data: billObj,
-              },
-              200,
-            );
-          }
-        }
-
-        // Request a new bill
-        const { data: requestData } = await axiosPosApiCall(
-          posApiPaths.requestBill,
+        // Update table session with new values
+        tableSession = await updateTableSession(
+          businessId,
+          tableName,
+          session,
           {
-            pin: tableSession?.pin,
-            tableNo: tableName,
-          },
-        );
-        if (requestData.success === "0") {
-          throw new Error("Error requesting bill");
-        }
-
-        // Ensure requestId is stored in session
-        const request_id = tableSession?.requestId || requestData.request_id;
-        if (!tableSession?.requestId) {
-          await UserSession.findOneAndUpdate(
-            { businessId, tableName },
-            { requestId: request_id },
-            { new: true },
-          );
-        }
-
-        // Check bill status
-        const { data: checkData } = await axiosPosApiCall(
-          posApiPaths.checkBill,
-          {
-            request_id,
-          },
-        );
-        if (checkData.success === "0") {
-          throw new Error("Error checking bill");
-        }
-
-        const bill_request_id = checkData.bill_request_id;
-        if (!bill_request_id) {
-          return c.json(
-            {
-              message: "Error fetching data",
-              err: true,
-              data: { success: false },
-            },
-            400,
-          );
-        }
-
-        // Get bill details
-        const { data: getBillData } = await axiosPosApiCall(
-          posApiPaths.getBill,
-          {
-            bill_request_id,
-          },
-        );
-        const simpleArray = transformItemsToSimpleArray(
-          getBillData.items_data || [],
-        );
-        if (getBillData.success === "1") {
-          const orderData = getBillData.order_data;
-
-          // Update or create a PosBill record
-          await PosBill.findOneAndUpdate(
-            { businessId, billRequestId: bill_request_id },
-            { items: simpleArray, billInfo: orderData, createdAt: Date.now() },
-            { upsert: true, new: true },
-          );
-
-          // Update the user session with bill details
-          const updateFields = {
+            gst: Number(newGst).toFixed(2),
+            total: newTotal,
+            serviceCharge: serviceChargeAmount,
             billGeneratedBy: generatedBy,
-            billRequestId: bill_request_id,
-            billInvoiceId: orderData?.invoice_id,
-            tax: orderData?.tax || 0,
-            serviceCharge: orderData?.service_charge,
-            initialTax: orderData?.tax || 0,
-            initialSubTotal: orderData?.core_price || 0,
-            discount: orderData?.discount || 0,
-            initialTotal: orderData?.total || 0,
-            finalTax: orderData?.tax || 0,
-            finalTotal: orderData?.total || 0,
-            finalSubTotal: orderData?.core_price || 0,
-          };
-          const updateSession = await UserSession.findOneAndUpdate(
-            { businessId, tableName },
-            updateFields,
-            { new: true },
-          );
+            subTotal: totalDishTotal,
+            items: cartItems,
+            billPrintCount: tableSession.billPrintCount + 1,
+          },
+        );
 
-          const billObj = {
-            billing_user_name: orderData.billing_user_name,
-            serviceCharge: orderData.service_charge,
-            discount: orderData.discount,
-            tax: updateSession?.finalTax,
-            total: updateSession?.finalTotal,
-            customerPhone:
-              tableSession.phoneNumbers[0] || orderData.customer_phone,
-            customerName: tableSession.customerName || orderData.customer_name,
-            tableName: orderData.table_no,
-            billRequestId: bill_request_id,
-            items: simpleArray,
-            subTotal: orderData.core_price,
-            tips: updateSession?.tips || 0,
-            claimedCoins: updateSession?.claimedCoins || 0,
-            couponId: updateSession?.couponId,
-            initialTotal: updateSession?.initialTotal,
-          };
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
 
-          return c.json(
-            { message: "Data fetched successfully", err: false, data: billObj },
-            200,
-          );
+        if (tableSession.billPrintCount <= 1) {
+          sendBillPrintEvent({
+            tableName: tableName,
+            businessId: businessId,
+            customerName: kotOrders[0].name,
+            customerPhone: kotOrders[0].phone,
+            items: billItems,
+            posRestName: businessPosConfig.restName,
+            generatedBy: tableSession?.billGeneratedBy || generatedBy,
+            date: Date.now(),
+            serviceCharge: tableSession?.serviceCharge || 0,
+            discount: tableSession?.discount || 0,
+            tax: tableSession?.gst || 0,
+            total: tableSession?.total || 0,
+            billRequestId: tableSession?._id.toString() || "",
+            subTotal: tableSession?.subTotal || 0,
+            tips: tableSession?.tips || 0,
+            claimedCoins: tableSession?.claimedCoins || 0,
+            couponDiscount: tableSession?.couponDiscount || 0,
+            fssai: outLetInfo?.fssai || "",
+            gst: outLetInfo?.gst || "",
+          });
         }
 
         return c.json(
           {
-            message: "Error fetching data",
-            err: true,
-            data: { success: false },
+            message: "Data fetched successfully",
+            err: false,
+            data: {
+              customerName: tableSession.customerName,
+              customerPhone: kotOrders[0].phone,
+              tableName: tableSession.tableName,
+              couponId: tableSession.couponId,
+              discountAppliedOn: tableSession.discountAppliedOn,
+              reasonOfDiscount: tableSession.reasonOfDiscount,
+              reasonOfServiceCharge: tableSession.reasonOfServiceCharge,
+              serviceChargeAppliedBy: serviceChargeAppliedBy,
+              serviceChargeRemovedBy: serviceChargeRemovedBy,
+              discountAppliedBy: discountAppliedBy,
+              discountRemovedBy: discountRemovedBy,
+
+              billItems,
+              subTotal: totalDishTotal,
+              gst: tableSession.gst,
+              discount: tableSession.discount,
+              claimedCoins: tableSession.claimedCoins,
+              couponDiscount: tableSession.couponDiscount,
+              serviceCharge: tableSession.serviceCharge,
+              otherTax: tableSession.otherTax,
+              tips: tableSession.tips,
+              total: tableSession.total,
+              billId: tableSession._id.toString(),
+            },
           },
-          400,
+          200,
         );
       });
     },
@@ -444,7 +402,7 @@ const posRouter = new Hono()
     zValidator(
       "query",
       z.object({
-        businessId: z.string().min(3).max(200),
+        businessId: z.string().min(3).max(50),
       }),
     ),
     async (c) => {
@@ -455,6 +413,7 @@ const posRouter = new Hono()
         const posConfig = await BusinessPosConfig.findOne({
           businessId: businessId,
           isDeleted: false,
+          active: true,
         });
         if (!posConfig) {
           return c.json(
@@ -472,103 +431,6 @@ const posRouter = new Hono()
     },
   )
 
-  .get(
-    "/dishes",
-    zValidator(
-      "query",
-      z.object({
-        businessId: z.string().min(3).max(200),
-        menuId: z.string().min(3).max(200),
-      }),
-    ),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const { businessId, menuId } = c.req.query();
-
-        const dishes = await Dish.find({
-          businessId: businessId,
-          menuId: menuId,
-          isDeleted: false,
-        });
-
-        return respond(c, "Data fetch", false, 200, dishes);
-      });
-    },
-  )
-  .get(
-    "/sub_categories",
-    zValidator(
-      "query",
-      z.object({
-        businessId: z.string().min(3).max(200),
-        menuId: z.string().min(3).max(200),
-      }),
-    ),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const { businessId, menuId } = c.req.query();
-
-        const categories = await Category.find({
-          businessId: businessId,
-          menuId: menuId,
-          isDeleted: false,
-          hierarchy: "CHILD",
-        });
-
-        return respond(c, "Data fetch", false, 200, categories);
-      });
-    },
-  )
-  .get(
-    "/main_categories",
-    zValidator(
-      "query",
-      z.object({
-        businessId: z.string().min(3).max(200),
-        menuId: z.string().min(3).max(200),
-      }),
-    ),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const { businessId, menuId } = c.req.query();
-
-        const categories = await Category.find({
-          businessId: businessId,
-          menuId: menuId,
-          isDeleted: false,
-          hierarchy: "PARENT",
-        });
-
-        return respond(c, "Data fetch", false, 200, categories);
-      });
-    },
-  )
-  .get(
-    "/addons",
-    zValidator(
-      "query",
-      z.object({
-        businessId: z.string().min(3).max(200),
-        menuId: z.string().min(3).max(200),
-      }),
-    ),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const { businessId, menuId } = c.req.query();
-        const addons = await AddOn.find({
-          businessId: businessId,
-          menuId: menuId,
-          isDeleted: false,
-        });
-
-        return respond(c, "Data fetch", false, 200, addons);
-      });
-    },
-  )
   .get(
     "/kitchens",
     zValidator(
@@ -617,149 +479,254 @@ const posRouter = new Hono()
   )
 
   .get(
-    "/dish_config",
+    "/fetch_bill",
     zValidator(
       "query",
       z.object({
-        businessId: z.string().min(3).max(200),
+        orderId: z.string().min(24).max(24),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId } = c.req.query();
+        const { orderId } = c.req.query();
 
-        const dishConfig = await Pos.findOne({}, { businessId: businessId });
+        const tableSession = await UserSession.findById(orderId);
 
-        if (!dishConfig) {
-          return c.json(
-            {
-              message: "POS not found",
-              err: true,
-              data: { success: false },
-            },
-            404,
-          );
+        if (!tableSession) {
+          return respond(c, "Session not found", true, 404, {});
         }
 
-        return respond(c, "Data fetch", false, 200, dishConfig);
+        return respond(c, "Data fetch", false, 200, {
+          customerName: tableSession.customerName,
+          customerPhone: tableSession.phoneNumbers[0],
+          tableName: tableSession.tableName,
+          couponId: tableSession.couponId,
+          discountAppliedOn: tableSession.discountAppliedOn,
+          reasonOfDiscount: tableSession.reasonOfDiscount,
+          reasonOfServiceCharge: tableSession.reasonOfServiceCharge,
+          billItems: tableSession.items,
+          subTotal: tableSession.subTotal,
+          gst: tableSession.gst,
+          discount: tableSession.discount,
+          claimedCoins: tableSession.claimedCoins,
+          couponDiscount: tableSession.couponDiscount,
+          serviceCharge: tableSession.serviceCharge,
+          otherTax: tableSession.otherTax,
+          tips: tableSession.tips,
+          total: tableSession.total,
+          billId: tableSession._id.toString(),
+        });
       });
     },
   )
 
   .post(
-    "/configure",
+    "/setup",
     zValidator(
       "json",
       z.object({
         businessId: z.string().min(1).max(50),
         restId: z.string().min(1).max(50),
         posId: z.string().min(1).max(50),
+        orderVerificationType: z.enum(OrderVerificationTypeEnum),
       }),
     ),
     async (c) => {
-      //@ts-ignore
+      //@ts-ignore  // runInTransaction handles rollback/commit + error propagation
       return runInTransaction(async (session) => {
-        const { businessId, restId } = await c.req.json();
+        const { businessId, restId, orderVerificationType, posId } =
+          await c.req.json();
 
-        // Remove old menus
-        await Menu.deleteMany({ businessId }, { session });
+        await Menu.updateMany(
+          {
+            businessId,
+          },
+          {
+            $set: {
+              isActive: false,
+              default: false,
+            },
+          },
+          {
+            session,
+          },
+        );
 
-        // Fetch custom link
-        const business = await Business.findById(businessId)
-          .select("customLink")
-          .session(session);
+        const business = await Business.findById(businessId).session(session);
+        if (!business) throw new Error("Business not found");
 
-        // Fetch areas and tables from POS
-        const fetchAreaAndTable = await axios.post(
+        let businessPosConfig = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (businessPosConfig) {
+          return respond(c, "POS already configured", true, 400, {});
+        }
+
+        await Dish.updateMany(
+          { businessId },
+          {
+            isDeleted: true,
+          },
+          { session },
+        );
+        await Category.updateMany(
+          { businessId },
+          {
+            isDeleted: true,
+          },
+          { session },
+        );
+
+        await AddOn.updateMany(
+          { businessId },
+          {
+            isDeleted: true,
+          },
+          { session },
+        );
+
+        await Zone.updateMany(
+          {
+            businessId,
+          },
+          {
+            isDeleted: true,
+          },
+          { session },
+        );
+
+        await Table.updateMany(
+          {
+            businessId,
+          },
+          {
+            isDeleted: true,
+          },
+          { session },
+        );
+        let zoneSyncCount = 0;
+        let tableSyncCount = 0;
+
+        if (!businessPosConfig) {
+          if (!petpoojaPosConfig)
+            throw new Error("Petpooja keys missing in env/config");
+
+          businessPosConfig = new BusinessPosConfig({
+            businessId,
+            branchId: business._id,
+            restName: business.name,
+            orderMode: "WITH_ORDER",
+            accessKey: petpoojaPosConfig.accessKey,
+            secretKey: petpoojaPosConfig.secretKey,
+            authToken: petpoojaPosConfig.authToken,
+            restId,
+            orderVerificationType,
+            posName: "Petpooja",
+            posId,
+            isDeleted: false,
+            date: Date.now(),
+            active: true,
+          });
+          await businessPosConfig.save({ session });
+        }
+
+        const { data: areaTableRes } = await axios.post(
           posApiPaths.fetchAreaAndTables,
           {
-            "app-key": petpoojaPosConfig.accessKey,
-            "app-secret": petpoojaPosConfig.secretKey,
-            "access-token": petpoojaPosConfig.authToken,
+            "app-key": businessPosConfig.accessKey,
+            "app-secret": businessPosConfig.secretKey,
+            "access-token": businessPosConfig.authToken,
             restID: restId,
             tableNo: "",
           },
         );
 
-        if (fetchAreaAndTable.data.success !== "1") {
-          throw new Error("area and table not fetched");
-        }
+        if (areaTableRes.success !== "1")
+          throw new Error("POS area/table fetch failed");
 
-        // Active areas and tables
-        const areas = fetchAreaAndTable.data.areas.filter(
-          (a) => a.active === "1",
-        );
-        const tables = fetchAreaAndTable.data.tables.filter(
-          (t) => t.active === "1",
-        );
+        const areas = areaTableRes.areas || [];
+        const tables = areaTableRes.tables || [];
 
-        // Ensure at least one zone
-        let zone = null;
+        let defaultZone = null;
+
         if (areas.length === 0) {
-          // Create fallback zone within the transaction
-          zone = new Zone({
+          defaultZone = new Zone({
             businessId,
             name: "POS",
             zoneId: nanoid(5),
-            active: "1",
+            active: true,
             tableIds: [],
             visibility: true,
+            pos: true,
           });
-          await zone.save({ session });
+          await defaultZone.save({ session });
         }
 
-        // Upsert each area as a zone
         for (const area of areas) {
-          zone = await Zone.findOneAndUpdate(
+          defaultZone = await Zone.findOneAndUpdate(
             { zoneId: area.restaurantareaid },
             {
-              name: area.displayname,
               businessId,
+              name: area.displayname,
               zoneId: area.restaurantareaid,
-              active: area.active,
+              active: area.active === "1",
               rank: area.rank,
+              tableIds: [],
+              pos: true,
             },
             { upsert: true, new: true, session },
           );
+
+          zoneSyncCount += 1;
         }
 
-        // Create/update tables and link to zones
         for (const table of tables) {
-          const currentZoneId =
-            areas.length === 0 ? zone?.zoneId : table.restaurantareaid;
+          const zoneIdToLink =
+            areas.length === 0 ? defaultZone?.zoneId : table.restaurantareaid;
 
-          // Upsert table
-          const creatingTable = await Table.findOneAndUpdate(
+          const tableDoc = await Table.findOneAndUpdate(
             { tableId: table.id },
             {
               name: table.table_no,
               businessId,
-              zoneId: currentZoneId,
-              active: table.active,
+              zoneId: zoneIdToLink,
+              active: table.active === "1",
               rank: table.rank,
               tableId: table.id,
-              internalZoneId: zone?._id,
+              internalZoneId: defaultZone?._id,
+              pos: true,
             },
             { upsert: true, new: true, session },
           );
 
-          // Add table to zone.tableIds
-          await Zone.findOneAndUpdate(
-            { zoneId: currentZoneId },
-            { $addToSet: { tableIds: creatingTable._id } },
-            { new: true, session },
+          tableSyncCount += 1;
+
+          await BusinessPosConfig.findOneAndUpdate(
+            { businessId },
+            { $set: { defaultTableName: tableDoc.name } },
+            { session },
           );
 
-          // Create short URL if not exists
-          const longUrl = `https://hipalz.com/${business?.customLink}/explore?tableName=${creatingTable.name}`;
-          const exists = await UrlModel.findOne({
+          // make sure zone has reference
+          await Zone.findOneAndUpdate(
+            { zoneId: zoneIdToLink },
+            { $addToSet: { tableIds: tableDoc._id } },
+            { session },
+          );
+
+          // create short URL once per table
+          const longUrl = `https://hipalz.com/${business.customLink}/explore?tableName=${tableDoc.name}`;
+          const existingShort = await UrlModel.exists({
             businessId,
             longUrl,
           }).session(session);
-          if (!exists) {
+          if (!existingShort) {
             const shortCode = nanoid(5);
-            const createShortUrl = await UrlModel.create(
+            const [{ shortUrl }] = await UrlModel.create(
               [
                 {
                   businessId,
@@ -770,19 +737,19 @@ const posRouter = new Hono()
               ],
               { session },
             );
-
             await Table.findOneAndUpdate(
-              { tableId: table.id },
-              { tableLink: createShortUrl[0].shortUrl },
-              { new: true, session },
+              { _id: tableDoc._id },
+              { tableLink: shortUrl },
+              { session },
             );
           }
         }
 
-        const zones = await Zone.find({ businessId }).session(session);
-        const zoneIds = zones.map((z) => z._id.toString());
+        const zoneIds = (await Zone.find({ businessId }).session(session)).map(
+          (z) => z._id.toString(),
+        );
 
-        await Menu.create(
+        const [menuDoc] = await Menu.create(
           [
             {
               name: "Default",
@@ -798,19 +765,553 @@ const posRouter = new Hono()
               cardLayout: 2,
               primaryColor: "#ec4899",
               secondaryColor: "#fce7f3",
+              default: true,
             },
           ],
           { session },
         );
 
-        return c.json(
-          {
-            message: "POS Config saved successfully",
-            err: false,
-            data: { success: true },
-          },
-          200,
+        const { data: menuRes } = await axios.post(posApiPaths.fetchMenu, {
+          "app-key": businessPosConfig.accessKey,
+          "app-secret": businessPosConfig.secretKey,
+          "access-token": businessPosConfig.authToken,
+          restID: businessPosConfig.restId,
+          tableNo: businessPosConfig.defaultTableName,
+        });
+        let dishSyncCount = 0;
+        let categorySyncCount = 0;
+        let addOnSyncCount = 0;
+
+        const parentCategories = transformParentCategories(
+          menuRes.group_categories || [],
+          menuRes.categories || [],
+          businessId,
         );
+        const transformedCategories = transformData(menuRes);
+
+        for (const pc of parentCategories) {
+          await Category.findOneAndUpdate(
+            { businessId, posCategoryId: pc?._id },
+            {
+              businessId,
+              visibility: true,
+              availability: true,
+              name: pc?.name,
+              hierarchy: "PARENT",
+              posCategoryId: pc?._id,
+              parentCategoryIds: [],
+              subCategoryIds: [],
+              dishIds: [],
+              coverImage: pc?.coverImage,
+              pos: true,
+              rank: pc?.rank,
+              active: pc?.active === "1",
+            },
+            { upsert: true, new: true, session },
+          );
+        }
+
+        for (const cat of transformedCategories) {
+          const childCat = await Category.findOneAndUpdate(
+            { businessId, posCategoryId: cat._id },
+            {
+              pos: true,
+              name: cat.name,
+              visibility: cat.visibility,
+              availability: cat.availability,
+              rank: cat.categoryrank,
+              businessId,
+              coverImage: cat.coverImage,
+              hierarchy: cat.hierarchy,
+              menuId: menuDoc._id,
+              parentCategoryIds: [], // we fill below
+              subCategoryIds: [],
+              dishIds: [],
+              active: cat.active === "1",
+              timings: cat.timings,
+            },
+            { upsert: true, new: true, session },
+          );
+
+          categorySyncCount += 1;
+
+          for (const pId of cat.parentCategoryIds || []) {
+            const parentCat = await Category.findOne({
+              businessId,
+              posCategoryId: pId,
+            });
+            if (parentCat) {
+              await Category.findOneAndUpdate(
+                { _id: parentCat._id },
+                { $addToSet: { subCategoryIds: childCat._id } },
+                { session },
+              );
+              await Category.findOneAndUpdate(
+                { _id: childCat._id },
+                { $addToSet: { parentCategoryIds: parentCat._id } },
+                { session },
+              );
+            }
+          }
+
+          // 10‑c. upsert dishes in this category
+          for (const dish of cat.dishIds || []) {
+            const dishDoc = await Dish.findOneAndUpdate(
+              { businessId, posDishId: dish._id },
+              {
+                pos: true,
+                visibility: dish.visibility,
+                availability: dish.availability,
+                name: dish.name,
+                price: dish.price,
+                description: dish.description,
+                dishTypes: dish.dishTypes,
+                images: dish.images,
+                portions: dish.portions,
+                rank: dish.itemrank,
+                ignoreDiscount: dish.ignoreDiscount,
+                ignoreTax: dish.ignoreTax,
+                posDishId: dish._id,
+                menuId: menuDoc._id,
+                categoryIds: [],
+                addOnIds: [],
+                recommendationIds: [],
+                businessId,
+                posTax: dish.posTax,
+                active: dish.active === "1",
+              },
+              { upsert: true, new: true, session },
+            );
+
+            dishSyncCount += 1;
+
+            await Dish.findByIdAndUpdate(
+              dishDoc._id,
+              { $addToSet: { categoryIds: childCat._id } },
+              { session },
+            );
+            await Category.findByIdAndUpdate(
+              childCat._id,
+              { $addToSet: { dishIds: dishDoc._id } },
+              { session },
+            );
+
+            for (const addOn of dish.addOnIds || []) {
+              const addOnDoc = await AddOn.findOneAndUpdate(
+                { businessId, posAddOnId: addOn._id },
+                {
+                  pos: true,
+                  posAddOnId: addOn._id,
+                  businessId,
+                  name: addOn.name,
+                  visibility: addOn.visibility,
+                  availability: addOn.availability,
+                  addOnMaxQuantity: addOn.addOnMaxQuantity,
+                  compulsory: addOn.addon_item_selection_min === "1" ? 1 : 0,
+                  choiceType: addOn.choiceType,
+                  choices: addOn.choices,
+                  menuId: menuDoc._id,
+                  dishIds: [],
+                  active: addOn.active === "1",
+                },
+                { upsert: true, new: true, session },
+              );
+
+              addOnSyncCount += 1;
+
+              await Dish.findByIdAndUpdate(
+                dishDoc._id,
+                { $addToSet: { addOnIds: addOnDoc._id } },
+                { session },
+              );
+              await AddOn.findByIdAndUpdate(
+                addOnDoc._id,
+                { $addToSet: { dishIds: dishDoc._id } },
+                { session },
+              );
+            }
+          }
+        }
+
+        return c.json({
+          message: "POS Config saved successfully",
+          err: false,
+          data: {
+            dishSyncCount,
+            categorySyncCount,
+            addOnSyncCount,
+            zoneSyncCount,
+            tableSyncCount,
+          },
+        });
+      });
+    },
+  )
+
+  .post(
+    "/sync_menu",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(1).max(50),
+        restId: z.string().min(1).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore  // runInTransaction handles rollback/commit + error propagation
+      return runInTransaction(async (session) => {
+        const { businessId, restId } = await c.req.json();
+
+        const business = await Business.findById(businessId).session(session);
+        if (!business) throw new Error("Business not found");
+
+        await Dish.updateMany(
+          { businessId, active: true, isDeleted: false },
+          {
+            active: false,
+          },
+          { session },
+        );
+        await Category.updateMany(
+          { businessId, active: true, isDeleted: false },
+          {
+            active: false,
+          },
+          { session },
+        );
+
+        await AddOn.updateMany(
+          { businessId, active: true, isDeleted: false },
+          {
+            active: false,
+          },
+          { session },
+        );
+        await Zone.updateMany(
+          {
+            businessId,
+            active: true,
+          },
+          {
+            active: false,
+          },
+          { session },
+        );
+
+        await Table.updateMany(
+          {
+            businessId,
+            active: true,
+          },
+          {
+            active: false,
+          },
+          { session },
+        );
+
+        let dishSyncCount = 0;
+        let categorySyncCount = 0;
+        let addOnSyncCount = 0;
+        let zoneSyncCount = 0;
+        let tableSyncCount = 0;
+
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        const menu = await Menu.findOne({ businessId, isActive: true }).session(
+          session,
+        );
+
+        if (!menu) {
+          throw new Error("Menu not found");
+        }
+
+        if (!businessPosConfig) {
+          throw new Error("BusinessPosConfig not found");
+        }
+
+        const { data: areaTableRes } = await axios.post(
+          posApiPaths.fetchAreaAndTables,
+          {
+            "app-key": businessPosConfig.accessKey,
+            "app-secret": businessPosConfig.secretKey,
+            "access-token": businessPosConfig.authToken,
+            restID: restId,
+            tableNo: "",
+          },
+        );
+
+        if (areaTableRes.success !== "1")
+          throw new Error("POS area/table fetch failed");
+
+        const areas = areaTableRes.areas || [];
+        const tables = areaTableRes.tables || [];
+
+        let defaultZone = null;
+
+        if (areas.length === 0) {
+          defaultZone = new Zone({
+            businessId,
+            name: "POS",
+            zoneId: nanoid(5),
+            active: true,
+            tableIds: [],
+            visibility: true,
+          });
+          await defaultZone.save({ session });
+        }
+
+        for (const area of areas) {
+          defaultZone = await Zone.findOneAndUpdate(
+            { zoneId: area.restaurantareaid },
+            {
+              businessId,
+              name: area.displayname,
+              zoneId: area.restaurantareaid,
+              active: area.active === "1",
+              rank: area.rank,
+              tableIds: [],
+            },
+            { upsert: true, new: true, session },
+          );
+          zoneSyncCount += 1;
+        }
+
+        for (const table of tables) {
+          tableSyncCount += 1;
+
+          const zoneIdToLink =
+            areas.length === 0 ? defaultZone?.zoneId : table.restaurantareaid;
+
+          const tableDoc = await Table.findOneAndUpdate(
+            { tableId: table.id },
+            {
+              name: table.table_no,
+              businessId,
+              zoneId: zoneIdToLink,
+              active: table.active === "1",
+              rank: table.rank,
+              tableId: table.id,
+              internalZoneId: defaultZone?._id,
+            },
+            { upsert: true, new: true, session },
+          );
+
+          // make sure zone has reference
+          await Zone.findOneAndUpdate(
+            { zoneId: zoneIdToLink },
+            { $addToSet: { tableIds: tableDoc._id } },
+            { session },
+          );
+
+          // create short URL once per table
+          const longUrl = `https://hipalz.com/${business.customLink}/explore?tableName=${tableDoc.name}`;
+          const existingShort = await UrlModel.exists({
+            businessId,
+            longUrl,
+          }).session(session);
+          if (!existingShort) {
+            const shortCode = nanoid(5);
+            const [{ shortUrl }] = await UrlModel.create(
+              [
+                {
+                  businessId,
+                  longUrl,
+                  shortUrl: `https://api.hipalz.com/surl/${shortCode}`,
+                  urlCode: shortCode,
+                },
+              ],
+              { session },
+            );
+            await Table.findOneAndUpdate(
+              { _id: tableDoc._id },
+              { tableLink: shortUrl },
+              { session },
+            );
+          }
+        }
+
+        const zoneIds = (await Zone.find({ businessId }).session(session)).map(
+          (z) => z._id.toString(),
+        );
+
+        await Menu.findOneAndUpdate(
+          { businessId, isActive: true },
+          { zoneIds },
+          { session },
+        );
+
+        const { data: menuRes } = await axios.post(posApiPaths.fetchMenu, {
+          "app-key": businessPosConfig.accessKey,
+          "app-secret": businessPosConfig.secretKey,
+          "access-token": businessPosConfig.authToken,
+          restID: businessPosConfig.restId,
+          tableNo: businessPosConfig.defaultTableName,
+        });
+
+        const parentCategories = transformParentCategories(
+          menuRes.group_categories || [],
+          menuRes.categories || [],
+          businessId,
+        );
+        const transformedCategories = transformData(menuRes);
+
+        for (const pc of parentCategories) {
+          await Category.findOneAndUpdate(
+            { businessId, posCategoryId: pc?._id },
+            {
+              businessId,
+              visibility: true,
+              availability: true,
+              name: pc?.name,
+              hierarchy: "PARENT",
+              posCategoryId: pc?._id,
+              parentCategoryIds: [],
+              subCategoryIds: [],
+              dishIds: [],
+              coverImage: pc?.coverImage,
+              menuId: menu._id,
+              pos: true,
+              rank: pc?.rank,
+              active: pc?.active === "1",
+            },
+            { upsert: true, new: true, session },
+          );
+        }
+
+        for (const cat of transformedCategories) {
+          categorySyncCount += 1;
+          const childCat = await Category.findOneAndUpdate(
+            { businessId, posCategoryId: cat._id },
+            {
+              pos: true,
+              name: cat.name,
+              visibility: cat.visibility,
+              availability: cat.availability,
+              rank: cat.categoryrank,
+              businessId,
+              coverImage: cat.coverImage,
+              hierarchy: cat.hierarchy,
+              menuId: menu._id,
+              parentCategoryIds: [], // we fill below
+              subCategoryIds: [],
+              dishIds: [],
+              active: cat.active === "1",
+              timings: cat.timings,
+            },
+            { upsert: true, new: true, session },
+          );
+
+          for (const pId of cat.parentCategoryIds || []) {
+            const parentCat = await Category.findOne({
+              businessId,
+              posCategoryId: pId,
+            });
+            if (parentCat) {
+              await Category.findOneAndUpdate(
+                { _id: parentCat._id },
+                { $addToSet: { subCategoryIds: childCat._id } },
+                { session },
+              );
+              await Category.findOneAndUpdate(
+                { _id: childCat._id },
+                { $addToSet: { parentCategoryIds: parentCat._id } },
+                { session },
+              );
+            }
+          }
+
+          // 10‑c. upsert dishes in this category
+          for (const dish of cat.dishIds || []) {
+            dishSyncCount += 1;
+            const dishDoc = await Dish.findOneAndUpdate(
+              { businessId, posDishId: dish._id },
+              {
+                pos: true,
+                visibility: dish.visibility,
+                availability: dish.availability,
+                name: dish.name,
+                price: dish.price,
+                description: dish.description,
+                dishTypes: dish.dishTypes,
+                images: dish.images,
+                portions: dish.portions,
+                rank: dish.itemrank,
+                ignoreDiscount: dish.ignoreDiscount,
+                ignoreTax: dish.ignoreTax,
+                posDishId: dish._id,
+                menuId: menu._id,
+                categoryIds: [],
+                addOnIds: [],
+
+                businessId,
+                posTax: dish.posTax,
+                active: dish.active === "1",
+              },
+              { upsert: true, new: true, session },
+            );
+
+            await Dish.findByIdAndUpdate(
+              dishDoc._id,
+              { $addToSet: { categoryIds: childCat._id } },
+              { session },
+            );
+            await Category.findByIdAndUpdate(
+              childCat._id,
+              { $addToSet: { dishIds: dishDoc._id } },
+              { session },
+            );
+
+            for (const addOn of dish.addOnIds || []) {
+              addOnSyncCount += 1;
+              const addOnDoc = await AddOn.findOneAndUpdate(
+                { businessId, posAddOnId: addOn._id },
+                {
+                  pos: true,
+                  posAddOnId: addOn._id,
+                  businessId,
+                  name: addOn.name,
+                  visibility: addOn.visibility,
+                  availability: addOn.availability,
+                  addOnMaxQuantity: addOn.addOnMaxQuantity,
+                  compulsory: addOn.addon_item_selection_min === "1" ? 1 : 0,
+                  choiceType: addOn.choiceType,
+                  choices: addOn.choices,
+                  menuId: menu._id,
+                  dishIds: [],
+                  active: addOn.active === "1",
+                },
+                { upsert: true, new: true, session },
+              );
+
+              await Dish.findByIdAndUpdate(
+                dishDoc._id,
+                { $addToSet: { addOnIds: addOnDoc._id } },
+                { session },
+              );
+              await AddOn.findByIdAndUpdate(
+                addOnDoc._id,
+                { $addToSet: { dishIds: dishDoc._id } },
+                { session },
+              );
+            }
+          }
+        }
+
+        return c.json({
+          message: "POS Config saved successfully",
+          err: false,
+          data: {
+            dishSyncCount,
+            categorySyncCount,
+            addOnSyncCount,
+            zoneSyncCount,
+            tableSyncCount,
+          },
+        });
       });
     },
   )
@@ -823,24 +1324,16 @@ const posRouter = new Hono()
         tableName: z.string().max(30),
         internalCart: z.array(z.object({})),
         businessId: z.string().min(1).max(50),
-        customerName: z.string().min(1).max(50),
-        customerPhone: z.string().min(10).max(10),
-        //TODO : add userId
         userId: z.string().min(1).max(100).optional(),
+        customerPhone: z.string().min(1).max(10).optional(),
       }),
     ),
 
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const {
-          internalCart,
-          tableName,
-          businessId,
-          customerName,
-          customerPhone,
-          userId,
-        } = await c.req.json();
+        const { internalCart, tableName, businessId, userId, customerPhone } =
+          await c.req.json();
         //  table info
         const tableData = await Table.findOne({
           businessId: businessId,
@@ -848,88 +1341,63 @@ const posRouter = new Hono()
         });
 
         if (!tableData) {
-          return c.json(
-            {
-              message: "Table not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
+          return respond(c, "Table not found", true, 404, {});
         }
 
-        const userData = await User.findOne({ phone: customerPhone });
+        // const userData = await User.findById(userId);
+        const userData = await User.findOne({
+          phone: customerPhone,
+        });
+
         if (!userData) {
-          return c.json(
-            {
-              message: "User not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
+          return respond(c, "User not found", true, 404, {});
         }
 
         const posConfigData = await BusinessPosConfig.findOne({
           businessId: businessId,
           isDeleted: false,
+          active: true,
         });
 
         if (!posConfigData) {
-          return c.json(
-            {
-              message: "POS not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
+          return respond(c, "POS not found", true, 404, {});
         }
+
+        const isActive = await checkElectronJsStatus();
+        if (!isActive && posConfigData.printKot) {
+          return respond(c, "Kot-printer server is not active", true, 400, {});
+        }
+
+        const orderAlreadyExist = await PaymentAlert.findOne({
+          businessId,
+          tableName,
+          alertType: "OFFLINE",
+          isAccepted: false,
+        });
+
+        if (orderAlreadyExist)
+          return respond(
+            c,
+            "A request for this service is already in progress. Please wait for the staff to take action",
+            true,
+            400,
+            {},
+          );
 
         const registrationToken = await DeviceToken.find({
           businessId: businessId,
         });
 
-        // send push notification to all devices
         if (registrationToken.length > 0) {
           for (const obj of registrationToken) {
             if (obj.notification) {
-              sendPushNotification(obj.token, customerName, tableName);
+              sendPushNotification(
+                obj.token,
+                userData.name as string,
+                tableName,
+              );
             }
           }
-        }
-
-        // check if user have already active table session
-
-        const userActiveTableSession = await UserSession.findOne({
-          phoneNumbers: customerPhone,
-          businessId: businessId,
-        });
-
-        if (
-          userActiveTableSession &&
-          userActiveTableSession?.tableName !== tableName
-        ) {
-          return c.json(
-            {
-              message: `User already active on table ${userActiveTableSession.tableName} please close that table first`,
-              err: true,
-              data: {
-                success: false,
-                data: {
-                  tableName: userActiveTableSession.tableName,
-                  hiCode: userActiveTableSession.hiCode,
-                },
-              },
-            },
-            409,
-          );
         }
 
         const userTableSession = await UserSession.findOne({
@@ -937,23 +1405,26 @@ const posRouter = new Hono()
           businessId: businessId,
         });
 
-        // check if bill already generated for a table
-        if (userTableSession?.billRequestId) {
+        if (userTableSession && userTableSession?.tableName !== tableName) {
           return c.json(
             {
-              message: `Bill already generated for table ${tableName} by ${userTableSession?.billGeneratedBy} you can't add more items`,
+              message: `User already active on table ${userTableSession.tableName} please close that table first`,
               err: true,
               data: {
                 success: false,
+                data: {
+                  tableName: userTableSession.tableName,
+                  hiCode: userTableSession.hiCode,
+                },
               },
             },
-            400,
+            409,
           );
         }
 
         if (userTableSession) {
           if (
-            !userTableSession.phoneNumbers.includes(customerPhone) &&
+            !userTableSession.phoneNumbers.includes(userData.phone) &&
             // if captain place the order then we need to check if the table is already occupied by user
             userTableSession.phoneNumbers.length > 0
           ) {
@@ -974,17 +1445,6 @@ const posRouter = new Hono()
 
         if (!userTableSession) {
           const tenDigitCode = generateTenDigitCode();
-          const registerUser = await axios.post(posApiPaths.registerUser, {
-            app_key: posConfigData.accessKey,
-            app_secret: posConfigData.secretKey,
-            access_token: posConfigData.authToken,
-            restID: posConfigData.restId,
-            phone: tenDigitCode,
-            name: customerName,
-          });
-          if (registerUser.data.success === "0") {
-            throw new Error("user not registered");
-          }
           const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
           // Generate the hicode and save it in the user session
           await Table.findOneAndUpdate(
@@ -1007,8 +1467,8 @@ const posRouter = new Hono()
               hiCode: hiCode,
               pin: tenDigitCode,
               tableName: tableName,
-              customerName: customerName,
-              phoneNumbers: [customerPhone],
+              customerName: userData.name,
+              phoneNumbers: [userData.phone],
               customerIds: [userData._id],
               performedBy: "user",
               date: Date.now(),
@@ -1019,33 +1479,32 @@ const posRouter = new Hono()
           );
           await userSession.save();
           if (posConfigData.orderVerificationType === "USER") {
-            const petpoojaCart = convertToPetpoojaCart(
-              internalCart,
-              posConfigData.restId,
-              customerName,
-              tenDigitCode,
-              tableName,
-              posConfigData.accessKey,
-              posConfigData.secretKey,
-
-              posConfigData.authToken,
-            );
-
             const result = await saveOrder(
               tableName,
               businessId,
-              customerName,
-              customerPhone,
+              userData.name as string,
+              userData.phone as string,
               internalCart,
               userData._id,
               true,
               tableData?._id.toString(),
               false,
               null,
-              petpoojaCart,
               hiCode,
               session,
             );
+
+            sendKOTPrintEvent({
+              tableName,
+              businessId,
+              customerName: userData.name as string,
+              customerPhone: userData.phone as string,
+              cart: internalCart,
+              acceptedBy: "direct_user",
+              kotId: result?.data?.kotId?.toString() ?? "",
+              date: Date.now(),
+              posRestName: posConfigData?.restName,
+            });
 
             return c.json(result, 200);
           }
@@ -1053,8 +1512,8 @@ const posRouter = new Hono()
           await saveKotOrder(
             tableName,
             businessId,
-            customerName,
-            customerPhone,
+            userData.name as string,
+            userData.phone as string,
             internalCart,
             userData._id,
             false,
@@ -1071,8 +1530,8 @@ const posRouter = new Hono()
               data: {
                 success: true,
                 hiCode: hiCode,
-                name: customerName,
-                phone: customerPhone,
+                name: userData.name,
+                phone: userData.phone,
               },
             },
             200,
@@ -1080,41 +1539,41 @@ const posRouter = new Hono()
         }
 
         if (posConfigData.orderVerificationType === "USER") {
-          const petpoojaCart = convertToPetpoojaCart(
-            internalCart,
-            posConfigData.restId,
-            customerName,
-            userTableSession.pin,
-            tableName,
-            posConfigData.accessKey,
-            posConfigData.secretKey,
-
-            posConfigData.authToken,
-          );
-
           const result = await saveOrder(
             tableName,
             businessId,
-            customerName,
-            customerPhone,
+            userData.name as string,
+            userData.phone as string,
             internalCart,
             userData._id,
             true,
             tableData._id.toString(),
             false,
             null,
-            petpoojaCart,
             userTableSession.hiCode,
             session,
           );
+
+          const res = sendKOTPrintEvent({
+            tableName,
+            businessId,
+            customerName: userData.name as string,
+            customerPhone: userData.phone as string,
+            cart: internalCart,
+            acceptedBy: "direct_user",
+            kotId: result?.data?.kotId?.toString() ?? "",
+            date: Date.now(),
+            posRestName: posConfigData?.restName,
+          });
+
           return c.json(result, 200);
         }
 
         await saveKotOrder(
           tableName,
           businessId,
-          customerName,
-          customerPhone,
+          userData.name as string,
+          userData.phone as string,
           internalCart,
           userData._id,
           false,
@@ -1157,16 +1616,7 @@ const posRouter = new Hono()
         const userData = await User.findOne({ phone: customerPhone });
 
         if (!userData) {
-          return c.json(
-            {
-              message: "User not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
+          return respond(c, "User not found", true, 404, {});
         }
 
         const userTableSession = await UserSession.findOne({
@@ -1175,22 +1625,12 @@ const posRouter = new Hono()
         });
 
         if (!userTableSession) {
-          return c.json(
-            {
-              message: "Invalid HiCode",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            400,
-          );
+          return respond(c, "Invalid HiCode", true, 400, {});
         }
 
         await UserSession.findOneAndUpdate(
           {
             businessId: businessId,
-
             tableName: userTableSession.tableName,
           },
           {
@@ -1245,71 +1685,38 @@ const posRouter = new Hono()
       z.object({
         tableName: z.string().min(1).max(200),
         internalCart: z.array(z.object({})),
-        businessId: z.string().min(1).max(200),
-        customerName: z.string().min(1).max(200),
-        customerPhone: z.string().min(1).max(200),
+        businessId: z.string().min(24).max(24),
+        userId: z.string().min(24).max(24),
       }),
     ),
-
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const {
-          internalCart,
-          tableName,
-          businessId,
-          customerName,
-          customerPhone,
-        } = await c.req.json();
+        const { internalCart, tableName, businessId, userId } =
+          await c.req.json();
         const tableInfo = await Table.findOne({
           businessId: businessId,
           name: tableName,
         });
 
         if (!tableInfo) {
-          return c.json(
-            {
-              message: "Table not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
+          return respond(c, "Table not found", true, 404, {});
         }
 
-        const user = await User.findOne({ phone: customerPhone });
+        const user = await User.findById(userId);
         if (!user) {
-          return c.json(
-            {
-              message: "User not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
+          return respond(c, "User not found", true, 404, {});
         }
 
         // find posconfig for a place order
         const pos = await BusinessPosConfig.findOne({
           businessId: businessId,
           isDeleted: false,
+          active: true,
         });
 
         if (!pos) {
-          return c.json(
-            {
-              message: "POS not found",
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            404,
-          );
+          return respond(c, "POS not found", true, 404, {});
         }
 
         const tableSession = await UserSession.findOne({
@@ -1317,32 +1724,30 @@ const posRouter = new Hono()
           businessId: businessId,
         });
 
-        if (tableSession?.billRequestId) {
-          return c.json(
-            {
-              message: `Bill already generated for table ${tableName} by ${tableSession?.billGeneratedBy} you can't add more items`,
-              err: true,
-              data: {
-                success: false,
-              },
-            },
-            400,
-          );
+        const isActive = await checkElectronJsStatus();
+        if (!isActive && pos.printKot) {
+          return respond(c, "kot-printer server is not active", true, 400, {});
         }
 
+        const orderAlreadyExist = await PaymentAlert.findOne({
+          businessId,
+          tableName,
+          alertType: "OFFLINE",
+          isAccepted: false,
+        });
+
+        if (orderAlreadyExist)
+          return respond(
+            c,
+            "A request for this service is already in progress. Please wait for the staff to take action",
+            true,
+            400,
+            {},
+          );
+
         const tenDigitCode = generateTenDigitCode();
+
         if (!tableSession) {
-          const registerUser = await axios.post(posApiPaths.registerUser, {
-            app_key: pos.accessKey,
-            app_secret: pos.secretKey,
-            access_token: pos.authToken,
-            restID: pos.restId,
-            phone: tenDigitCode,
-            name: customerName,
-          });
-          if (registerUser.data.success === "0") {
-            throw new Error("user not registered");
-          }
           const hiCode = Math.floor(1000 + Math.random() * 9000).toString();
           const userSession = new UserSession(
             {
@@ -1350,8 +1755,8 @@ const posRouter = new Hono()
               hiCode: hiCode,
               pin: tenDigitCode,
               tableName: tableName,
-              customerName: customerName,
-
+              customerName: user.name as string,
+              phoneNumbers: [user.phone],
               performedBy: "captain",
               date: Date.now(),
             },
@@ -1360,28 +1765,12 @@ const posRouter = new Hono()
             },
           );
           await userSession.save();
-          const petpoojaCart = convertToPetpoojaCart(
-            internalCart,
-            pos.restId,
-            customerName,
-            tenDigitCode,
-            tableName,
-            pos.accessKey,
-            pos.secretKey,
 
-            pos.authToken,
-          );
-
-          const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
-          if (saveKot.data.success === "0") {
-            throw new Error("kot not saved in pos");
-          }
-
-          await saveKotOrder(
+          const res = await saveKotOrder(
             tableName,
             businessId,
-            customerName,
-            customerPhone,
+            user.name as string,
+            user.phone as string,
             internalCart,
             user._id,
             true,
@@ -1413,40 +1802,28 @@ const posRouter = new Hono()
             },
           );
 
-          return c.json(
-            {
-              message: "Data fetched successfully",
-              err: false,
-              data: {
-                success: true,
-              },
-            },
-            200,
-          );
-        }
-        // if table session already exists
-        const petpoojaCart = convertToPetpoojaCart(
-          internalCart,
-          pos.restId,
-          customerName,
-          tableSession.pin,
-          tableName,
-          pos.accessKey,
-          pos.secretKey,
-          pos.authToken,
-        );
+          sendKOTPrintEvent({
+            tableName,
+            businessId,
+            customerName: user.name as string,
+            customerPhone: user.phone as string,
+            cart: internalCart,
+            acceptedBy: user.name as string,
+            kotId: res?.kotId?.toString() ?? "",
+            date: Date.now(),
+            posRestName: pos?.restName,
+          });
 
-        const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
-
-        if (saveKot.data.success === "0") {
-          throw new Error("kot not saved in pos");
+          return respond(c, "Data fetched successfully", false, 200, {
+            success: true,
+          });
         }
 
-        await saveKotOrder(
+        const res = await saveKotOrder(
           tableName,
           businessId,
-          tableInfo?.edited ? tableSession.customerName : customerName,
-          customerPhone,
+          tableInfo?.edited ? tableSession.customerName : (user.name as string),
+          user.phone as string,
           internalCart,
           user._id,
           true,
@@ -1479,17 +1856,21 @@ const posRouter = new Hono()
           },
         );
 
-        return c.json(
-          {
-            message: "Data fetched successfully",
-            err: false,
-            data: {
-              success: true,
-              hiCode: tableSession.hiCode,
-            },
-          },
-          200,
-        );
+        sendKOTPrintEvent({
+          tableName,
+          businessId,
+          customerName: user.name as string,
+          customerPhone: user.phone as string,
+          cart: internalCart,
+          acceptedBy: user.name as string,
+          kotId: res?.kotId?.toString() ?? "",
+          date: Date.now(),
+          posRestName: pos?.restName,
+        });
+        return respond(c, "Data fetched successfully", false, 200, {
+          success: true,
+          hiCode: tableSession.hiCode,
+        });
       });
     },
   )
@@ -1862,6 +2243,1122 @@ const posRouter = new Hono()
           },
           200,
         );
+      });
+    },
+  )
+
+  .put(
+    "/update_pos_config",
+
+    zValidator(
+      "json",
+      z.object({
+        posConfigId: z.string().min(3).max(50),
+        orderVerificationType: z
+          .enum(OrderVerificationTypeEnum)
+          .default("CAPTAIN"),
+        active: z.boolean().default(true),
+        onlyMenu: z.boolean().default(false).optional(),
+        printKot: z.boolean().default(true).optional(),
+        repeatPrint: z.coerce.number().min(1).max(5).default(1).optional(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const {
+          posConfigId,
+          orderVerificationType,
+          active,
+          onlyMenu,
+          printKot,
+          repeatPrint,
+        } = await c.req.json();
+
+        const updateBusinessPosConfig =
+          await BusinessPosConfig.findOneAndUpdate(
+            { _id: posConfigId },
+            { orderVerificationType, active, onlyMenu, printKot, repeatPrint },
+            { session },
+          );
+
+        if (!updateBusinessPosConfig) {
+          return respond(c, "Update failed", true, 400, {});
+        }
+
+        if (active === false) {
+          await Dish.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: false,
+              },
+            },
+          );
+          await AddOn.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: false,
+              },
+            },
+          );
+
+          await Category.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: false,
+              },
+            },
+          );
+
+          await Table.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: false,
+              },
+            },
+            { session },
+          );
+
+          await Zone.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: false,
+              },
+            },
+            { session },
+          );
+
+          await OutLetInfo.updateOne(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                isPosEnabled: false,
+                placeOrderButton: false,
+                isPosSynced: false,
+                posProgress: 0,
+              },
+            },
+          );
+        }
+        if (active === true) {
+          await Dish.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: false,
+              },
+            },
+          );
+          await AddOn.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: true,
+              },
+            },
+          );
+
+          await Category.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: true,
+              },
+            },
+          );
+
+          await Table.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: true,
+              },
+            },
+            { session },
+          );
+
+          await Zone.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: true,
+              },
+            },
+            { session },
+          );
+
+          await OutLetInfo.updateOne(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                isPosEnabled: true,
+                placeOrderButton: true,
+                isPosSynced: true,
+                posProgress: 1,
+              },
+            },
+          );
+        }
+
+        return respond(c, "Updated successfully", false, 200, {
+          _id: updateBusinessPosConfig._id,
+        });
+      });
+    },
+  )
+  .post(
+    "/re_print_bill",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, generatedBy } = await c.req.json();
+
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (!businessPosConfig) {
+          return respond(c, "Pos not found", true, 400, {});
+        }
+
+        const outLetInfo = await OutLetInfo.findOne({
+          businessId,
+        });
+
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const KotOrders = (await KotOrder.find({
+          tableName,
+          businessId,
+          settled: false,
+        }).lean()) as KotOrderTypes[];
+
+        const cartItems = KotOrders.flatMap((order) =>
+          order.cart.filter((item) => !item.isDeleted),
+        ) as Item[];
+
+        const billItems = groupItemsByGST(cartItems);
+
+        sendBillPrintEvent({
+          tableName: tableName,
+          businessId: businessId,
+          customerName: KotOrders[0].name,
+          customerPhone: KotOrders[0].phone,
+          items: billItems,
+          posRestName: businessPosConfig.restName,
+          generatedBy: tableSession?.billGeneratedBy || generatedBy,
+          date: Date.now(),
+          serviceCharge: tableSession?.serviceCharge || 0,
+          discount: tableSession?.discount || 0,
+          tax: tableSession?.gst || 0,
+          total: tableSession?.total || 0,
+          billRequestId: tableSession?._id.toString() || "",
+          subTotal: tableSession?.subTotal || 0,
+          tips: tableSession?.tips || 0,
+          claimedCoins: tableSession?.claimedCoins || 0,
+          couponDiscount: tableSession?.couponDiscount || 0,
+          gst: outLetInfo?.gst || "",
+
+          fssai: outLetInfo?.fssai || "",
+        });
+
+        return respond(c, "sucess", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/add_discount",
+    zValidator(
+      "json",
+      z
+        .object({
+          businessId: z.string().min(3).max(200),
+          tableName: z.string().min(1).max(200),
+          value: z.number().positive().min(1).max(100),
+          reasonOfDiscount: z.string().min(1).max(100).optional(),
+          discountAppliedOn: z.enum(["ON_BILL", "ON_DISH"]),
+          itemIds: z.array(z.string().min(1).max(200)).optional(),
+          discountAppliedBy: z.string().min(1).max(50),
+        })
+        .refine(
+          (data) =>
+            data.discountAppliedOn !== "ON_DISH" ||
+            (Array.isArray(data.itemIds) && data.itemIds.length > 0),
+          {
+            message:
+              "itemIds must be a non-empty array when discountAppliedOn is ON_DISH",
+            path: ["itemIds"],
+          },
+        ),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        let {
+          businessId,
+          tableName,
+          value,
+          reasonOfDiscount,
+          discountAppliedOn,
+          itemIds,
+          discountAppliedBy,
+        } = await c.req.json();
+
+        // Fetch the table session
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        let discountAmount = 0;
+        let newSubTotal = tableSession.subTotal;
+
+        if (discountAppliedOn === "ON_BILL") {
+          const dis = Math.round((value / 100) * newSubTotal);
+
+          // Calculate discount on the bill
+          discountAmount = Math.min(
+            dis,
+            newSubTotal -
+              tableSession.claimedCoins -
+              tableSession.couponDiscount,
+          );
+          newSubTotal -= discountAmount;
+        }
+
+        if (discountAppliedOn === "ON_DISH") {
+          // Calculate discount on selected dishes
+          const kotOrder = (await KotOrder.find({
+            "cart._id": { $in: itemIds },
+            tableName,
+            businessId,
+            settled: false,
+          }).lean()) as KotOrderTypes[];
+
+          const { totalDishTotal, totalGst } = calculateBillDishIds(
+            kotOrder,
+            itemIds,
+          );
+
+          const dishDis = Math.round((value / 100) * totalDishTotal);
+          discountAmount = Math.min(dishDis, totalDishTotal);
+          newSubTotal -= discountAmount;
+        }
+
+        // GST Calculation
+        const newGst = calculateGst(tableSession.gstPercentage, newSubTotal);
+
+        // Calculate final total
+        const totalDis = calculateTotalDiscount(
+          discountAmount,
+          tableSession.claimedCoins,
+          tableSession.couponDiscount,
+        );
+        const newTotal = calculateFinalTotal(
+          tableSession.subTotal,
+          totalDis,
+          newGst,
+          tableSession.serviceCharge,
+          tableSession.otherTax,
+          tableSession.tips,
+        );
+
+        // Update session after applying the discount
+        await updateTableSession(businessId, tableName, session, {
+          gst: Number(newGst).toFixed(2),
+          total: newTotal,
+          reasonOfDiscount,
+          discountAppliedOn,
+          discountAppliedBy,
+          isDiscountApplied: true,
+          discountRemovedBy: null,
+          discount: discountAmount,
+        });
+
+        return respond(c, "Success", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/add_coins",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+        value: z.number().positive(),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, value } = await c.req.json();
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        if (tableSession.couponDiscount > 0) {
+          return respond(
+            c,
+            "Coupon already claimed for this table",
+            true,
+            400,
+            {},
+          );
+        }
+
+        const coins = Math.min(
+          value,
+          tableSession.subTotal -
+            tableSession.discount -
+            tableSession.couponDiscount,
+        );
+
+        const newSubTotal =
+          tableSession.subTotal -
+          coins -
+          tableSession.discount -
+          tableSession.couponDiscount;
+
+        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+
+        const totalDis = calculateTotalDiscount(
+          tableSession.discount,
+          coins,
+          tableSession.couponDiscount,
+        );
+        const newTotal = calculateFinalTotal(
+          tableSession.subTotal,
+          totalDis,
+          newGst,
+          tableSession.serviceCharge,
+          tableSession.otherTax,
+          tableSession.tips,
+        );
+
+        const f = await updateTableSession(businessId, tableName, session, {
+          gst: newGst.toFixed(2),
+          total: newTotal,
+          isDiscountApplied: true,
+          claimedCoins: coins,
+        });
+
+        console.log("updateTableSession", f);
+
+        return respond(c, "Success", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/add_coupon",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+        couponId: z.string().min(1).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, couponId } = await c.req.json();
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        let couponDiscount = 0;
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const coupon = await Couponz.findById(couponId);
+
+        if (!coupon) {
+          return respond(c, "Coupon not found", true, 404, {});
+        }
+
+        if (tableSession.claimedCoins > 0) {
+          return respond(
+            c,
+            "Coins already claimed for this table",
+            true,
+            400,
+            {},
+          );
+        }
+
+        const couponType = coupon?.config?.discountType;
+
+        if (couponType === "PERCENTAGE") {
+          const percentValue =
+            ((coupon?.config?.value || 0) / 100) *
+            (tableSession?.subTotal || 0);
+          couponDiscount = Math.min(
+            percentValue,
+            coupon?.config?.upto || Number.POSITIVE_INFINITY,
+          );
+        } else {
+          couponDiscount = coupon?.config?.value as number;
+        }
+
+        couponDiscount = Math.min(
+          couponDiscount,
+          tableSession.subTotal -
+            tableSession.discount -
+            tableSession.claimedCoins,
+        );
+
+        const newSubTotal =
+          tableSession.subTotal -
+          tableSession.claimedCoins -
+          tableSession.discount -
+          couponDiscount;
+        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+
+        const totalDis = calculateTotalDiscount(
+          tableSession.discount,
+          tableSession.claimedCoins,
+          couponDiscount,
+        );
+        const newTotal = calculateFinalTotal(
+          tableSession.subTotal,
+          totalDis,
+          newGst,
+          tableSession.serviceCharge,
+          tableSession.otherTax,
+          tableSession.tips,
+        );
+
+        await updateTableSession(businessId, tableName, session, {
+          gst: Number(newGst).toFixed(2),
+          total: newTotal,
+          isDiscountApplied: true,
+          couponDiscount,
+          couponId,
+        });
+
+        return respond(c, "Success", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/remove_discount",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+        reasonOfDiscount: z.string().min(1).max(100).optional(),
+        discountRemovedBy: z.string().min(1).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, discountRemovedBy, reasonOfDiscount } =
+          await c.req.json();
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const newSubTotal =
+          tableSession.subTotal -
+          0 -
+          tableSession.claimedCoins -
+          tableSession.couponDiscount;
+        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+
+        const totalDis = calculateTotalDiscount(
+          0,
+          tableSession.claimedCoins,
+          tableSession.couponDiscount,
+        );
+        const newTotal = calculateFinalTotal(
+          tableSession.subTotal,
+          totalDis,
+          newGst,
+          tableSession.serviceCharge,
+          tableSession.otherTax,
+          tableSession.tips,
+        );
+
+        const isDiscountApplied =
+          tableSession.claimedCoins > 0 || tableSession.couponDiscount > 0;
+
+        await updateTableSession(businessId, tableName, session, {
+          gst: Number(newGst).toFixed(2),
+          total: newTotal,
+          reasonOfDiscount,
+          isDiscountApplied,
+          discount: 0,
+          discountAppliedBy: null,
+          discountRemovedBy,
+          newDishGst: 0,
+        });
+
+        return respond(c, "Success", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/remove_coins",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName } = await c.req.json();
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const isDiscountApplied =
+          tableSession.discount > 0 || tableSession.couponDiscount > 0;
+
+        const newSubTotal =
+          tableSession.subTotal -
+          tableSession.discount -
+          0 -
+          tableSession.couponDiscount;
+        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+
+        const totalDis = calculateTotalDiscount(
+          tableSession.discount,
+          0,
+          tableSession.couponDiscount,
+        );
+        const newTotal = calculateFinalTotal(
+          tableSession.subTotal,
+          totalDis,
+          newGst,
+          tableSession.serviceCharge,
+          tableSession.otherTax,
+          tableSession.tips,
+        );
+
+        await updateTableSession(businessId, tableName, session, {
+          gst: newGst.toFixed(2),
+          total: newTotal,
+          isDiscountApplied,
+          claimedCoins: 0,
+        });
+
+        return respond(c, "Success", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/remove_coupon",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName } = await c.req.json();
+
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const isDiscountApplied =
+          tableSession.discount > 0 || tableSession.claimedCoins > 0;
+
+        const newSubTotal =
+          tableSession.subTotal -
+          tableSession.discount -
+          tableSession.claimedCoins -
+          0;
+        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+
+        const totalDis = calculateTotalDiscount(
+          tableSession.discount,
+          tableSession.claimedCoins,
+          0,
+        );
+        const newTotal = calculateFinalTotal(
+          tableSession.subTotal,
+          totalDis,
+          newGst,
+          tableSession.serviceCharge,
+          tableSession.otherTax,
+          tableSession.tips,
+        );
+
+        await updateTableSession(businessId, tableName, session, {
+          gst: newGst.toFixed(2),
+          total: newTotal,
+          couponId: null,
+          isDiscountApplied,
+          couponDiscount: 0,
+        });
+
+        return respond(c, "Success", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/clear_all_discounts",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName } = await c.req.json();
+
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const newSubTotal = tableSession.subTotal - 0 - 0 - 0;
+        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+
+        const totalDis = calculateTotalDiscount(0, 0, 0);
+        const newTotal = calculateFinalTotal(
+          tableSession.subTotal,
+          totalDis,
+          newGst,
+          tableSession.serviceCharge,
+          tableSession.otherTax,
+          tableSession.tips,
+        );
+
+        await updateTableSession(businessId, tableName, session, {
+          gst: Number(newGst).toFixed(2),
+          total: newTotal,
+          isDiscountApplied: false,
+          couponDiscount: 0,
+          claimedCoins: 0,
+          discount: 0,
+          couponId: null,
+          reasonOfServiceCharge: "",
+          serviceChargeRemovedBy: null,
+          discountRemovedBy: null,
+          reasonOfDiscount: "",
+          discountAppliedBy: null,
+          serviceChargeAppliedBy: null,
+          newDishGst: 0,
+        });
+
+        return respond(c, "Success", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/add_service_charge",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+        serviceChargeAppliedBy: z.string().min(1).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, serviceChargeAppliedBy } =
+          await c.req.json();
+
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        await updateTableSession(businessId, tableName, session, {
+          serviceChargeAppliedBy,
+          isServiceChargeRemoved: false,
+          serviceChargeRemovedBy: null,
+        });
+
+        return respond(c, "Success", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/remove_service_charge",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+        serviceChargeRemovedBy: z.string().min(1).max(50),
+        reasonOfServiceCharge: z.string().min(1).max(100).optional(),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const {
+          businessId,
+          tableName,
+          serviceChargeRemovedBy,
+          reasonOfServiceCharge,
+        } = await c.req.json();
+
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        await UserSession.findOneAndUpdate(
+          { businessId, tableName },
+          {
+            $set: {
+              serviceCharge: 0,
+              serviceChargeRemovedBy,
+              reasonOfServiceCharge,
+              isServiceChargeRemoved: true,
+              serviceChargeAppliedBy: null,
+            },
+          },
+          { session, new: true },
+        );
+
+        return respond(c, "Success", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/settle",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, settledBy } = await c.req.json();
+
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const pos = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (!pos) {
+          return respond(c, "Pos not found", true, 400, {});
+        }
+
+        const kotOrders = (await KotOrder.find({
+          tableName,
+          settled: false,
+          businessId,
+          isSync: false,
+        }).lean()) as KotOrderTypes[];
+
+        const cartItems = kotOrders.flatMap((order) =>
+          order.cart.filter((item) => !item.isDeleted),
+        );
+
+        if (!kotOrders.length) {
+          return respond(c, "No Items in cart", true, 200, {});
+        }
+
+        if (!tableSession.isUserRegistered) {
+          const registerUser = await axios.post(posApiPaths.registerUser, {
+            app_key: pos.accessKey,
+            app_secret: pos.secretKey,
+            access_token: pos.authToken,
+            restID: pos.restId,
+            phone: tableSession?.pin,
+            name: tableSession?.customerName,
+          });
+
+          if (registerUser.data.success === "0") {
+            throw new Error("Error in registering user");
+          }
+        }
+
+        const petpoojaCart = convertToPetpoojaCart(
+          cartItems,
+          pos.restId,
+          tableSession?.customerName,
+          tableSession?.pin,
+          tableName,
+          pos.accessKey,
+          pos.secretKey,
+
+          pos.authToken,
+        );
+
+        const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
+
+        if (saveKot.data.success === "0") {
+          throw new Error("Error in saving kot");
+        }
+
+        const payload = {
+          app_key: pos.accessKey,
+          app_secret: pos.secretKey,
+          access_token: pos.authToken,
+          restID: pos.restId,
+          pin: tableSession?.pin,
+          tableNo: tableName,
+        };
+
+        // if (!tableSession?.billRequest) {
+        //   await sleep(3000);
+        //   const response = await axios.post(posApiPaths.requestBill, payload, {
+        //     headers: {
+        //       "Content-Type": "application/json",
+        //     },
+        //   });
+
+        //   if (response.data.success === "0") {
+        //     throw new Error("Error in requesting bill");
+        //   }
+        // }
+
+        await KotOrder.updateMany(
+          {
+            tableName,
+            settled: false,
+            businessId,
+          },
+          {
+            $set: {
+              isSync: true,
+            },
+          },
+          {
+            session,
+          },
+        );
+
+        await UserSession.findOneAndUpdate(
+          {
+            tableName,
+            businessId,
+          },
+          {
+            $set: {
+              isUserRegistered: true,
+              billRequest: true,
+            },
+          },
+          { session },
+        );
+
+        return respond(c, "Success", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/add_tip",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+        value: z.number().positive(),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName, value } = await c.req.json();
+
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const pos = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (!pos) {
+          return respond(c, "Pos not found", true, 400, {});
+        }
+
+        await UserSession.findOneAndUpdate(
+          { businessId, tableName },
+          {
+            $set: {
+              tips: value,
+            },
+          },
+          { session, new: true },
+        );
+
+        return respond(c, "Success", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/remove_tip",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(200),
+        tableName: z.string().min(1).max(200),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, tableName } = await c.req.json();
+
+        const tableSession = await UserSession.findOne({
+          businessId,
+          tableName,
+        });
+
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const pos = await BusinessPosConfig.findOne({
+          businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (!pos) {
+          return respond(c, "Pos not found", true, 400, {});
+        }
+
+        await UserSession.findOneAndUpdate(
+          { businessId, tableName },
+          {
+            $set: {
+              tips: 0,
+            },
+          },
+          { session, new: true },
+        );
+
+        return respond(c, "Success", true, 200, {});
       });
     },
   );

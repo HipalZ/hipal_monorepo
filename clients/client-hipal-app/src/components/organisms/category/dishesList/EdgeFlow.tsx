@@ -229,7 +229,6 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
             (dish: DishType) => dish.visibility,
           );
           const dishesToRender = filterDishes(visibleDishes, isActiveDishType);
-
           if (dishesToRender.length === 0) return null;
 
           return (

@@ -1,166 +1,215 @@
-const transformData = (data) => {
-  const nowIST = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
-  );
-  // helper: map JS getDay() to your schedule_day strings
-  const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const today = dayMap[nowIST.getDay()];
+const nowIST = new Date(
+  new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
+);
+const dayMap = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const today = dayMap[nowIST.getDay()];
 
-  // parse the categorytimings JSON or return empty array
-  const safeParseTimings = (raw) => {
-    if (!raw) return [];
+export const safeParseTimings = (raw) => {
+  if (!raw) return [];
+  try {
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    console.warn("Failed to parse timings:", e);
+    return [];
+  }
+};
+
+export const isActiveNow = (timings) => {
+  for (const schedule of timings) {
+    if (schedule.schedule_day !== "All" && schedule.schedule_day !== today)
+      continue;
+    for (const slot of schedule.schedule_time_slots || []) {
+      const [sh, sm] = slot.start_time.split(":").map(Number);
+      const [eh, em] = slot.end_time.split(":").map(Number);
+
+      const start = new Date(nowIST);
+      start.setHours(sh, sm, 0, 0);
+      const end = new Date(nowIST);
+      end.setHours(eh, em, 0, 0);
+
+      if (end <= start) {
+        if (nowIST >= start || nowIST <= end) return true;
+      } else {
+        if (nowIST >= start && nowIST <= end) return true;
+      }
+    }
+  }
+  return false;
+};
+
+function formatCategoryTimings(raw) {
+  // our "always closed" default
+  const defaultSlot = [{ day: -1, start: 0, end: 1440 }];
+
+  // 1) empty or missing → default
+  if (!raw || (typeof raw === "string" && raw.trim() === "")) {
+    return defaultSlot;
+  }
+
+  // 2) parse JSON if needed
+  let schedules;
+  if (typeof raw === "string") {
     try {
-      const arr = JSON.parse(raw);
-      return Array.isArray(arr) ? arr : [];
-    } catch (e) {
-      console.warn("Failed to parse timings:", e);
-      return [];
+      schedules = JSON.parse(raw);
+      if (!Array.isArray(schedules)) return defaultSlot;
+    } catch {
+      return defaultSlot;
     }
+  } else if (Array.isArray(raw)) {
+    schedules = raw;
+  } else {
+    return defaultSlot;
+  }
+
+  // 3) map day names to indices
+  const dayIndex = {
+    All: -1,
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
   };
 
-  // check if a category is active right now
-  const isActiveNow = (timings) => {
-    for (const schedule of timings) {
-      // match either today’s day or “All”
-      if (schedule.schedule_day !== "All" && schedule.schedule_day !== today)
-        continue;
-      for (const slot of schedule.schedule_time_slots || []) {
-        const [sh, sm] = slot.start_time.split(":").map(Number);
-        const [eh, em] = slot.end_time.split(":").map(Number);
+  const result = [];
 
-        // build Date objects for this slot on IST
-        const start = new Date(nowIST);
-        start.setHours(sh, sm, 0, 0);
-        const end = new Date(nowIST);
-        end.setHours(eh, em, 0, 0);
-
-        // handle overnight spans (e.g. 22:00–06:00)
-        if (end <= start) {
-          // if now ≥ start OR now ≤ end (past midnight)
-          if (nowIST >= start || nowIST <= end) return true;
-        } else {
-          if (nowIST >= start && nowIST <= end) return true;
-        }
-      }
+  // 4) flatten
+  schedules.forEach(({ schedule_day, schedule_time_slots }) => {
+    // only single‐day or "All" in your use-case
+    let days = [];
+    if (schedule_day === "All") {
+      days = [-1];
+    } else {
+      const idx = dayIndex[schedule_day.trim()];
+      if (idx != null) days = [idx];
     }
-    return false;
-  };
 
+    (schedule_time_slots || []).forEach(({ start_time, end_time }) => {
+      const [sh, sm] = start_time.split(":").map(Number);
+      const [eh, em] = end_time.split(":").map(Number);
+      const start = sh * 60 + sm;
+      const end = eh * 60 + em;
+
+      days.forEach((day) => {
+        result.push({ day, start, end });
+      });
+    });
+  });
+
+  // 5) if nothing produced, use default
+  return result.length ? result : defaultSlot;
+}
+
+const transformData = (data) => {
   const transformedCategories = data.categories
-    .map((category) => {
-      // Parse and check timings
-      const timings = safeParseTimings(category.categorytimings);
-      if (timings.length > 0 && !isActiveNow(timings)) {
-        return null; // exclude this category
-      }
 
-      // Filter items belonging to this category
+    .map((category) => {
       const items = data.items.filter(
         (item) => item.item_categoryid === category.categoryid,
       );
 
-      const transformedItems =
-        items?.map((item) => {
-          let addOnIds =
-            item?.addon?.map((addOn) => {
-              const addOnGroup = data?.addongroups?.find(
-                (group) => group?.addongroupid === addOn?.addon_group_id,
-              );
-              return {
-                _id: addOn?.addon_group_id,
-                name: addOnGroup?.addongroup_name,
-                addon_item_selection: addOn?.addon_item_selection,
-                compulsory: 0,
-                addOnMaxQuantity: Number(addOn?.addon_item_selection_max),
-                choiceType: "NUMBER",
-                addon_item_selection_min: addOn?.addon_item_selection_min,
-                addon_item_selection_max: addOn?.addon_item_selection_max,
-                choices:
-                  addOnGroup?.addongroupitems?.map((choice) => ({
-                    name: choice?.addonitem_name,
-                    price: Number(choice?.addonitem_price),
-                    visibility: true,
-                    availability: true,
-                    choiceMaxQuantity: 2,
-                    choiceDishType: ["VEG"],
-                    uuid: choice?.addonitemid,
-                    _id: choice?.addonitemid,
-                  })) || [],
-              };
-            }) || [];
+      const transformedItems = items.map((item) => {
+        let addOnIds =
+          item?.addon?.map((addOn) => {
+            const addOnGroup = data?.addongroups?.find(
+              (group) => group?.addongroupid === addOn?.addon_group_id,
+            );
+            return {
+              _id: addOn?.addon_group_id,
+              name: addOnGroup?.addongroup_name,
+              addon_item_selection: addOn?.addon_item_selection,
+              compulsory: 0,
+              addOnMaxQuantity: Number(addOn?.addon_item_selection_max),
+              choiceType: "NUMBER",
+              addon_item_selection_min: addOn?.addon_item_selection_min,
+              addon_item_selection_max: addOn?.addon_item_selection_max,
+              choices:
+                addOnGroup?.addongroupitems?.map((choice) => ({
+                  name: choice?.addonitem_name,
+                  price: Number(choice?.addonitem_price),
+                  visibility: true,
+                  availability: true,
+                  choiceMaxQuantity: 2,
+                  choiceDishType: ["VEG"],
+                  uuid: choice?.addonitemid,
+                })) || [],
+            };
+          }) || [];
 
-          const portions =
-            item?.variation?.map((variation) => ({
-              name: variation?.name,
-              price: Number(variation?.price),
-              default: variation?.name === "Medium",
-              portionTypes: ["VEG"],
-              _id: variation?.id,
-            })) || [];
+        const portions =
+          item?.variation?.map((variation) => ({
+            name: variation?.name,
+            price: Number(variation?.price),
+            default: false,
+            portionTypes: ["VEG"],
+            posPortionId: variation?.id,
+          })) || [];
 
-          for (let i = 0; i < item?.variation?.length; i++) {
-            const variation = item?.variation[i];
+        for (let i = 0; i < item?.variation?.length; i++) {
+          const variation = item?.variation[i];
 
-            if (
-              variation?.variationallowaddon === "1" &&
-              variation?.addon?.length > 0
-            ) {
-              addOnIds =
-                variation?.addon?.map((addOn) => {
-                  const addOnGroup = data?.addongroups?.find(
-                    (group) => group?.addongroupid === addOn?.addon_group_id,
-                  );
-                  return {
-                    _id: addOn?.addon_group_id,
-                    name: addOnGroup?.addongroup_name,
-                    addon_item_selection: addOn?.addon_item_selection,
-                    compulsory: 0,
-                    addOnMaxQuantity: Number(addOn?.addon_item_selection_max),
-                    choiceType: "NUMBER",
-                    addon_item_selection_min: addOn?.addon_item_selection_min,
-                    addon_item_selection_max: addOn?.addon_item_selection_max,
-                    choices:
-                      addOnGroup?.addongroupitems?.map((choice) => ({
-                        name: choice?.addonitem_name,
-                        price: Number(choice?.addonitem_price),
-                        visibility: true,
-                        availability: true,
-                        choiceMaxQuantity: 2,
-                        choiceDishType: ["VEG"],
-                        uuid: choice?.addonitemid,
-                        _id: choice?.addonitemid,
-                      })) || [],
-                  };
-                }) || [];
-            }
+          if (
+            variation?.variationallowaddon === "1" &&
+            variation?.addon?.length > 0
+          ) {
+            addOnIds =
+              variation?.addon?.map((addOn) => {
+                const addOnGroup = data?.addongroups?.find(
+                  (group) => group?.addongroupid === addOn?.addon_group_id,
+                );
+                return {
+                  _id: addOn?.addon_group_id,
+                  name: addOnGroup?.addongroup_name,
+                  active: addOnGroup.active,
+                  addon_item_selection: addOn?.addon_item_selection,
+                  compulsory: 0,
+                  addOnMaxQuantity: Number(addOn?.addon_item_selection_max),
+                  choiceType: "NUMBER",
+                  addon_item_selection_min: addOn?.addon_item_selection_min,
+                  addon_item_selection_max: addOn?.addon_item_selection_max,
+                  choices:
+                    addOnGroup?.addongroupitems?.map((choice) => ({
+                      name: choice?.addonitem_name,
+                      price: Number(choice?.addonitem_price),
+                      visibility: true,
+                      availability: true,
+                      choiceMaxQuantity: 2,
+                      choiceDishType: ["VEG"],
+                      uuid: choice?.addonitemid,
+                    })) || [],
+                };
+              }) || [];
           }
+        }
 
-          const returnItemType = (item) => {
-            if (item?.item_attributeid === "1") {
-              return ["VEG"];
-            }
-            if (item?.item_attributeid === "2") {
-              return ["NON_VEG"];
-            }
-            if (item?.item_attributeid === "24") {
-              return ["EGG"];
-            }
-          };
+        const returnItemType = (item) => {
+          if (item?.item_attributeid === "1") return ["VEG"];
+          if (item?.item_attributeid === "2") return ["NON_VEG"];
+          if (item?.item_attributeid === "24") return ["EGG"];
+        };
 
-          return {
-            _id: item?.itemid,
-            name: item?.itemname,
-            categoryIds: [item?.item_categoryid],
-            price: Number(item?.price),
-            visibility: true,
-            availability: true,
-            dishTypes: returnItemType(item),
-            addOnIds: addOnIds,
-            images: [item.item_image_url],
-            portions: portions,
-            description: item?.itemdescription,
-          };
-        }) || [];
+        return {
+          _id: item?.itemid,
+          name: item?.itemname,
+          categoryIds: [item?.item_categoryid],
+          price: Number(item?.price),
+          visibility: true,
+          availability: true,
+          dishTypes: returnItemType(item),
+          addOnIds: addOnIds,
+          images: item.item_image_url !== "" ? [item.item_image_url] : [],
+          portions: portions,
+          description: item?.itemdescription,
+          itemrank: item?.itemrank,
+          ignoreDiscount: item?.ignore_discounts,
+          ignoreTax: item?.ignore_taxes,
+          posTax: item?.item_tax,
+          active: item?.active,
+        };
+      });
 
       return {
         _id: category?.categoryid,
@@ -171,10 +220,15 @@ const transformData = (data) => {
         businessId: category?.restarant_ids,
         hierarchy: "CHILD",
         category_image_url: category?.category_image_url,
-        parentCategoryIds: [category?.group_category_id],
+        parentCategoryIds:
+          category?.group_category_id != null
+            ? [category.group_category_id]
+            : [],
         subCategoryIds: [],
         coverImage: "",
         dishIds: transformedItems,
+        categorytimings: category.categorytimings,
+        timings: formatCategoryTimings(category.categorytimings ?? ""),
       };
     })
     .filter((category) => category !== null);
@@ -197,14 +251,13 @@ const transformParentCategories = (
       return [];
     }
 
-    // Sort parent categories by rank (ascending)
-    const sortedParents = [...parentCategories].sort(
+    // Filter and sort parent categories by rank (ascending)
+    const sortedParents = parentCategories.sort(
       (a, b) => Number(a.rank) - Number(b.rank),
     );
 
     return sortedParents
       .map((parent) => {
-        // Defensive: check required fields
         if (!parent || !parent.id || !parent.name) return null;
 
         // Find and sort subcategories for this parent by categoryrank
@@ -217,15 +270,16 @@ const transformParentCategories = (
           businessId: businessId,
           name: parent.name,
           visibility: true,
+          active: parent.status,
           parentCategoryIds: [],
           subCategoryIds: subCats.map((cat) => cat.categoryid),
           dishIds: [],
-          availability: parent.status === "1",
-
+          availability: true, // Already filtered for status === "1"
+          rank: parent.rank,
           coverImage: "",
         };
       })
-      .filter(Boolean); // Remove any nulls
+      .filter(Boolean);
   } catch (e) {
     return [];
   }
@@ -309,8 +363,8 @@ function convertToPetpoojaCart(
 
         // Use portion ID if available, otherwise use dish ID
         const itemId = cartItem.portion
-          ? cartItem.portion._id
-          : cartItem.dish._id;
+          ? cartItem.portion.posPortionId
+          : cartItem.dish.posDishId;
 
         // Create KOTItem
         const kotItem = {
@@ -413,9 +467,16 @@ function transformItemsToSimpleArray(itemsData) {
     });
 }
 
+export const currentDay = nowIST.getDay(); // 0–6
+export const currentMinute = nowIST.getHours() * 60 + nowIST.getMinutes();
+
+// ——— Example usage ———
+// → [ { day: -1, start: 0, end: 510 } ]
+
 export {
   calculateCartBill,
   convertToPetpoojaCart,
+  formatCategoryTimings,
   transformData,
   transformItemsToSimpleArray,
   transformParentCategories,

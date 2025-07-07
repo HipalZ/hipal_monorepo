@@ -5,7 +5,6 @@ import { useUpdateBill } from "@/components/hooks/usePayments";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import { useCouponz } from "@/components/store/useCouponz";
-import { useLogin } from "@/components/store/useLogin";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { DialogTitle } from "@headlessui/react";
@@ -30,22 +29,17 @@ const AvailableCoinz = () => {
     billData,
   } = usePaymentStore();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
-
-  // getBill
-  const { updateBill } = useUpdateBill();
+  const { addCoins, removeCoinz, removeCouponz } = useUpdateBill();
   const { loyaltySetting } = useLoyaltyData();
-  const { mutateAsync } = useMutation({
-    mutationFn: updateBill,
-  });
-  const userDetails = useLogin((s) => s.userDetails);
-  const handleApplyCoinz = (finalValue: number) => {
+  const addCoinsMutation = useMutation({ mutationFn: addCoins });
+  const removeCoinsMutation = useMutation({ mutationFn: removeCoinz });
+  const removeCouponMutation = useMutation({ mutationFn: removeCouponz });
+  const handleApplyCoinz = async (finalValue: number) => {
     setClaimedCoins(finalValue);
     handleCoins(finalValue);
     if (outletInfo?.isPosEnabled) {
-      mutateAsync({
+      await addCoinsMutation.mutateAsync({
         coinz: finalValue,
-        couponId: "",
-        ...(finalValue !== 0 && { userId: userDetails?._id }),
       });
     }
   };
@@ -110,19 +104,37 @@ const AvailableCoinz = () => {
   };
 
   // Update global state on button click
-  const handleNextClick = useCallback(() => {
-    if (claimCouponz > 0) {
-      setShowAlert(true);
-    } else {
-      handleApplyCoinz(tempClaimedCoins || 0);
+  const handlePosLogic = useCallback(async () => {
+    if (claimedCoins > 0) {
+      setShowAlert(false);
+      setClaimedCoins(0);
+      await removeCoinsMutation.mutateAsync();
+      closeModal();
+      return;
     }
-  }, [setShowAlert, tempClaimedCoins, handleApplyCoinz, claimCouponz]);
 
-  const replaceLoyalty = useCallback(() => {
+    if (billData?.couponId) {
+      setShowAlert(true);
+      return;
+    }
+    handleApplyCoinz(tempClaimedCoins || 0);
+    closeModal();
+  }, [
+    claimedCoins,
+    billData?.couponId,
+    tempClaimedCoins,
+    handleApplyCoinz,
+    removeCoinsMutation,
+    setShowAlert,
+    setClaimedCoins,
+  ]);
+
+  const replaceLoyalty = useCallback(async () => {
     setClaimCouponz(0);
     setShowAlert(false);
     setAvailedCoupon({});
     toast.success("Coupon removed successfully");
+    await removeCouponMutation.mutateAsync({});
     handleApplyCoinz(tempClaimedCoins || 0);
   }, [
     setClaimCouponz,
@@ -130,6 +142,7 @@ const AvailableCoinz = () => {
     handleApplyCoinz,
     tempClaimedCoins,
     setAvailedCoupon,
+    removeCouponMutation.mutateAsync,
   ]);
 
   const closeModal = useCallback(() => {
@@ -142,6 +155,25 @@ const AvailableCoinz = () => {
     }
     return userCoinz;
   }, [claimedCoins, userCoinz]);
+
+  const handlePopCornLogic = async () => {
+    if (claimedCoins > 0) {
+      setShowAlert(true);
+      setClaimedCoins(0);
+    } else {
+      handleApplyCoinz(tempClaimedCoins || 0);
+    }
+    closeModal();
+  };
+
+  if (
+    claimedCoins &&
+    !tempClaimedCoins &&
+    typeof claimedCoins === "number" &&
+    typeof tempClaimedCoins !== "number"
+  ) {
+    setTempClaimedCoins(claimedCoins);
+  }
 
   return (
     <>
@@ -194,6 +226,7 @@ const AvailableCoinz = () => {
               min={0}
               maxLength={5}
               max={userCoinz}
+              disabled={claimedCoins > 0}
               className="w-full border border-[#000] placeholder:text-sm pl-3 min-h-[3rem] mx-auto font-semibold text-[1rem] rounded-lg my-auto !py-2 text-black"
             />
             <p className="my-2 text-sm text-center text-gray-600">
@@ -215,8 +248,10 @@ const AvailableCoinz = () => {
             fixed
             buttons={[
               {
-                text: "Apply",
-                onClick: handleNextClick,
+                text: claimedCoins === 0 ? "Apply" : "Remove",
+                onClick: outletInfo?.isPosEnabled
+                  ? handlePosLogic
+                  : handlePopCornLogic,
                 type: "button",
               },
             ]}

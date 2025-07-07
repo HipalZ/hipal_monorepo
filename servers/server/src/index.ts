@@ -52,6 +52,7 @@ app.use(
       "https://hibiz.hipalz.com",
       "https://hiclient.hipalz.com",
       "https://www.table.test.hipalz.com",
+      "http://www.localhost:5173",
 
       "https://www.biz.test.hipalz.com",
       "https://www.hipal-test.hipalz.com",
