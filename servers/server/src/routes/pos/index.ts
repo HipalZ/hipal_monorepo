@@ -1060,6 +1060,7 @@ const posRouter = new Hono()
             active: true,
             tableIds: [],
             visibility: true,
+            pos: true,
           });
           await defaultZone.save({ session });
         }
@@ -1073,6 +1074,7 @@ const posRouter = new Hono()
               zoneId: area.restaurantareaid,
               active: area.active === "1",
               rank: area.rank,
+              pos: true,
               tableIds: [],
             },
             { upsert: true, new: true, session },
@@ -1095,6 +1097,7 @@ const posRouter = new Hono()
               active: table.active === "1",
               rank: table.rank,
               tableId: table.id,
+              pos: true,
               internalZoneId: defaultZone?._id,
             },
             { upsert: true, new: true, session },
