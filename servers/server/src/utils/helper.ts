@@ -163,7 +163,7 @@ const transformData = (data) => {
                 return {
                   _id: addOn?.addon_group_id,
                   name: addOnGroup?.addongroup_name,
-                  active: addOnGroup.active,
+                  active: addOnGroup?.active || true,
                   addon_item_selection: addOn?.addon_item_selection,
                   compulsory: 0,
                   addOnMaxQuantity: Number(addOn?.addon_item_selection_max),
