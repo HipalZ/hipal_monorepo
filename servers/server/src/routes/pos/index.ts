@@ -567,24 +567,24 @@ const posRouter = new Hono()
         }
 
         await Dish.updateMany(
-          { businessId, active: true, isDeleted: false },
+          { businessId },
           {
-            active: false,
+            isDeleted: true,
           },
           { session },
         );
         await Category.updateMany(
-          { businessId, active: true, isDeleted: false },
+          { businessId },
           {
-            active: false,
+            isDeleted: true,
           },
           { session },
         );
 
         await AddOn.updateMany(
-          { businessId, active: true, isDeleted: false },
+          { businessId },
           {
-            active: false,
+            isDeleted: true,
           },
           { session },
         );
@@ -592,10 +592,9 @@ const posRouter = new Hono()
         await Zone.updateMany(
           {
             businessId,
-            active: true,
           },
           {
-            active: false,
+            isDeleted: true,
           },
           { session },
         );
@@ -603,10 +602,9 @@ const posRouter = new Hono()
         await Table.updateMany(
           {
             businessId,
-            active: true,
           },
           {
-            active: false,
+            isDeleted: true,
           },
           { session },
         );
@@ -2356,6 +2354,77 @@ const posRouter = new Hono()
                 placeOrderButton: false,
                 isPosSynced: false,
                 posProgress: 0,
+              },
+            },
+          );
+        }
+        if (active === true) {
+          await Dish.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: false,
+              },
+            },
+          );
+          await AddOn.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: true,
+              },
+            },
+          );
+
+          await Category.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: true,
+              },
+            },
+          );
+
+          await Table.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: true,
+              },
+            },
+            { session },
+          );
+
+          await Zone.updateMany(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                pos: true,
+              },
+            },
+            { session },
+          );
+
+          await OutLetInfo.updateOne(
+            {
+              businessId: updateBusinessPosConfig.businessId,
+            },
+            {
+              $set: {
+                isPosEnabled: true,
+                placeOrderButton: true,
+                isPosSynced: true,
+                posProgress: 1,
               },
             },
           );
