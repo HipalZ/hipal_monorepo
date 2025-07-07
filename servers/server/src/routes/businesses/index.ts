@@ -130,17 +130,9 @@ const businessesRouter = new Hono()
               businessId: parentOutLetId,
             }).lean();
 
-            if (business[0].businessType === "OTHER") {
-              await Menu.deleteOne(
-                { businessId: currentBusinessId },
-                { session },
-              );
-            }
-
             const createaMenu = await Menu.findOneAndUpdate(
               { businessId: currentBusinessId },
               {
-                businessId: business[0]._id,
                 name: "Default",
                 menuType: 1,
                 days: [1, 2, 3, 4, 5, 6, 7],

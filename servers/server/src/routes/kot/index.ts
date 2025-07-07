@@ -144,10 +144,10 @@ const kotRouter = new Hono()
         sendReKOTPrintEvent({
           tableName: kot?.tableName ?? "",
           businessId: kot.businessId._id.toString(),
-          customerName: kot.name,
+          customerName: kot.name || captainInfo?.name || "",
           customerPhone: kot.phone,
           cart: kot.cart,
-          acceptedBy: captainInfo?.name ?? "",
+          acceptedBy: captainInfo?.name || kot.name || "",
           kotId: kot.id.toString(),
           date: Date.now(),
           posRestName: kot.businessId.name,
