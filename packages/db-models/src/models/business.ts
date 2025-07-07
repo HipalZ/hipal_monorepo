@@ -6,6 +6,7 @@ import { BusinessEnumType, ExploreLayout, MenuLayout } from "../validators";
 import { GroupModel } from "./group";
 import { MenuBanner } from "./menuBanner";
 import { OutLetInfo } from "./outLetInfo";
+import { PasswordManager } from "./passwordManager/passwordManager";
 import { UpiMode } from "./upiMode";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const businessSchema = new mongoose.Schema<BusinessType>(
@@ -162,6 +163,29 @@ businessSchema.post("save", async (doc) => {
   ];
 
   await MenuBanner.insertMany(menuBaners);
+
+  const defaultPasswords = [
+    {
+      businessId: doc._id,
+      name: "DISCOUNT",
+      password: "1234",
+      isActive: true,
+    },
+    {
+      businessId: doc._id,
+      name: "DELETE_KOT",
+      password: "1234",
+      isActive: true,
+    },
+    {
+      businessId: doc._id,
+      name: "SERVICE_CHARGE",
+      password: "1234",
+      isActive: true,
+    },
+  ];
+
+  await PasswordManager.insertMany(defaultPasswords);
 
   await OutLetInfo.findOneAndUpdate(
     { businessId: doc._id }, // Filter condition

@@ -21,6 +21,7 @@ import loyaltyRouter from "./loyalty";
 import menuBannerRouter from "./menu-banner";
 import menuRouter from "./menu/menu";
 import npcRouter from "./npc";
+import passwordManagerRouter from "./passwordManager";
 import paymentsRouter from "./payments";
 import permissionRouter from "./permission";
 import posRouter from "./pos";
@@ -85,6 +86,7 @@ export const routes = app
   .route("/pos_configuration", posConfigurationRouter)
   .route("/loyalty", loyaltyRouter)
   .route("/qrs", qrRouter)
-  .route("/kitchen", kitchenRouter);
+  .route("/kitchen", kitchenRouter)
+  .route("/password_manager", passwordManagerRouter);
 
 export type AppType = typeof routes;
