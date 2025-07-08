@@ -327,10 +327,10 @@ const MemoEBill = () => {
           <div className="fixed bottom-0 pb-6 left-0 w-full mx-auto right-0 p-4 text-center backdrop-blur-sm bg-white/80 border-t border-gray-200">
             <Button
               onClick={goToPay}
-              className="w-full max-w-md flex flex-col mx-auto text-base-100"
+              className="w-full max-w-md flex flex-col mx-auto text-white bg-black"
             >
               Pay
-              <strong className="text-gray-900 text-xs leading-3 -mb-7 mt-1">
+              <strong className=" text-xs leading-3 text-white -mb-7 mt-1">
                 Powered by Hipalz
               </strong>
             </Button>
@@ -342,5 +342,4 @@ const MemoEBill = () => {
 };
 
 const EBill = memo(MemoEBill);
-
 export default EBill;
