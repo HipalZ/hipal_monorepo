@@ -5,7 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import bell from "@/assets/hotel/bell.png";
 import foodDome from "@/assets/hotel/food dome.png";
 import housekeeping from "@/assets/hotel/housekeeping.png";
-import waterBottle from "@/assets/hotel/waterbottle.png";
+import maintainance from "@/assets/hotel/maintainance.png";
+import frontoffice from "@/assets/hotel/frontoffice.png";
 import type { IMenuLayout } from "@/components/types/businessData";
 interface ServiceCategoriesSectionProps {
   businessId: string;
@@ -38,19 +39,24 @@ export default function ServiceCategoriesSection({
 
   const categoryImages = {
     FOOD: foodDome,
-    WATERBOTTLE: waterBottle,
     HOUSE_KEEPING: housekeeping,
-    OTHERS: bell,
+    FRONT_OFFICE: frontoffice,
+    OTHERS: maintainance,
   };
 
   const categoryDescriptions = {
-    FOOD: "Delicious food to your room",
-    WATERBOTTLE: "Get fresh water anytime",
-    HOUSE_KEEPING: "Request room cleaning",
-    OTHERS: "Explore services",
+    FOOD: "Order Delicious Food",
+    FRONT_OFFICE: "24*7 Support",
+    HOUSE_KEEPING: "cleaning services",
+    OTHERS: "Repairs & fixes",
   };
 
-  const primaryCategories = ["FOOD", "WATERBOTTLE", "HOUSE_KEEPING"];
+  const primaryCategories = [
+    "FOOD",
+    "HOUSE_KEEPING",
+    "MAINTAINANCE",
+    "FRONT_OFFICE",
+  ];
 
   // Separate the categories
   const primary = categoriesData.filter((cat) =>
@@ -79,7 +85,7 @@ export default function ServiceCategoriesSection({
           />
         </svg>
         <span className="poppins-regular text-gray-400 text-[0.9rem]">
-          Room Services
+          Guest Support
         </span>
         {/* Right ornament */}
         <svg
@@ -98,9 +104,9 @@ export default function ServiceCategoriesSection({
         </svg>
       </div>
       <section className="flex justify-center">
-        <div className="grid grid-cols-2 gap-4 md:gap-6 lg:gap-9">
+        <div className="grid grid-cols-2 gap-4 md:gap-6 lg:gap-9 mt-2">
           {primary.map((category) => (
-            <div key={category._id} className="w-[10.5rem] h-[10rem]">
+            <div key={category._id} className="min-w-[10rem] h-[10rem]">
               <ServiceCategoryCard
                 category={{
                   ...category,
@@ -120,13 +126,13 @@ export default function ServiceCategoriesSection({
           ))}
 
           {others.length > 0 && (
-            <div key="others">
+            <div key="others" className="min-w-[10rem] h-[10rem]">
               <ServiceCategoryCard
                 category={{
                   _id: "others",
-                  name: "OTHERS",
+                  name: "MAINTAINANCE",
                   serviceIds: others.flatMap((c) => c.serviceIds),
-                  image: bell,
+                  image: maintainance,
                   description: categoryDescriptions.OTHERS,
                 }}
                 businessId={businessId}

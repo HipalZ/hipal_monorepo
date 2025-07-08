@@ -14,18 +14,18 @@ const ChatCardSection = () => {
   return (
     <div
       onClick={onChatClick}
-      className="mx-4 mt-2 mb-4 rounded-2xl shadow-lg px-4 py-4 flex items-center border cursor-pointer transition hover:shadow-xl active:scale-[0.98]"
+      className="mx-4 mt-2 mb-4 bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.08)] px-4 py-4 flex items-center cursor-pointer transition hover:shadow-xl active:scale-[0.98]"
       role="button"
       tabIndex={0}
       aria-label="Open chat"
     >
       <div className="flex-1">
-        <h1 className="font-semibold text-h-primary text-base poppins mb-1">
+        <p className="font-light text-h-primary text-xs poppins mb-1">
+          For any further assistance.
+        </p>
+        <h1 className="font-semibold text-h-primary text-base poppins">
           Chat With Us
         </h1>
-        <p className="font-light text-h-primary text-xs poppins opacity-80">
-          See your service requests, get real-time updates.
-        </p>
       </div>
       <Button
         size="icon"

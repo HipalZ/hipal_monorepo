@@ -128,11 +128,13 @@ const page = async ({
   const themeData = await getThemeSettings(businessData?.businessId);
   return (
     <HotelBackgroundContainer overlayOpacity={50}>
-      <ViewPortContainer className="relative mx-auto max-w-[30rem] pb-[5rem] bg-gray-50">
+      <ViewPortContainer className="relative mx-auto max-w-[30rem] pb-[5rem]">
         <section className="p-3">
           <RoomCard
             roomNumber={room}
             specialBannerUrl={businessData?.specialBannerUrl}
+            logoUrl={businessData?.logoUrl}
+            hotelBanners={businessData?.hotelBanners}
           />
         </section>
 

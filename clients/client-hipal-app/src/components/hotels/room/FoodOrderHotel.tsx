@@ -58,8 +58,12 @@ export default function FoodOrderPopup({
   // Hooks
   const { gettingRoomLoader, roomPayload } = useHotelRoomData();
   const { creatingAlert, createAlert } = useCreateAlert();
-  const { fetchingRestaurants, restaurantData } =
-    useGetAllLinkRestautants(businessId);
+  const { fetchingRestaurants, restaurantData } = useGetAllLinkRestautants(
+    businessId,
+  ) as {
+    fetchingRestaurants: boolean;
+    restaurantData: ILinkHotels[];
+  };
 
   const { cart, setCartEmpty } = useCartStore();
   const { setShowCart } = useCart();
@@ -70,8 +74,6 @@ export default function FoodOrderPopup({
       return { ...item, dish: sanitizedDish };
     });
   }, [cart]);
-
-  console.log("sanitizedCart", sanitizedCart);
 
   // Handle restaurant selection
   const handleSelectRestaurant = useCallback(
@@ -160,6 +162,17 @@ export default function FoodOrderPopup({
     if (orderStatus === "success") {
       return <SuccessView restaurant={selectedRestaurant} />;
     }
+    const onlyOneRestaurant =
+      restaurantData && restaurantData.length === 1 && !selectedRestaurant;
+
+    if (onlyOneRestaurant) {
+      const sole = restaurantData[0];
+      setSelectedRestaurant(sole);
+      setCurrentView("menu");
+      setMenuLoading(true);
+      setTimeout(() => setMenuLoading(false), 1000);
+      return <LoadingSpinnerCircle />;
+    }
 
     if (currentView === "menu" && selectedRestaurant) {
       return (
@@ -183,8 +196,13 @@ export default function FoodOrderPopup({
   };
 
   return (
-    <BottomPopUp hide show={show} onClose={onClose}>
-      <section className="relative overflow-auto h-[100dvh] hide-scrollbar">
+    <BottomPopUp
+      hide
+      height={currentView === "menu" ? "100dvh" : "75dvh"}
+      show={show}
+      onClose={onClose}
+    >
+      <section className="relative overflow-auto hide-scrollbar">
         {renderContent()}
       </section>
 

@@ -12,6 +12,7 @@ import type { CropperRef, IBizPayload } from "@/components/types/businessData";
 import useShowErrorToasts from "@/components/atom/errorToasts";
 import { useExploreTemp } from "@/components/store/useExploreTemp";
 import useBusinessData from "@/components/store/useBusinessData";
+import { storeImageAfterSave } from "@/components/uploadAdmin/imageUpload";
 const CategoryTopBanner = lazy(() => import("./categoryTopBanner"));
 
 const SocialMediaLinks = lazy(
@@ -47,6 +48,8 @@ const MemoMainForm = () => {
     showCropper,
     cropping,
     setShowCropper,
+    hotelBanners,
+    setHotelBanners,
   } = useExploreStore((s) => ({
     bizInfo: s.bizInfo,
     showUniquePopUp: s.showUniquePopUp,
@@ -54,6 +57,8 @@ const MemoMainForm = () => {
     cropping: s.cropping,
     setShowCropper: s.setShowCropper,
     setShowUniquePopUp: s.setShowUniquePopUp,
+    hotelBanners: s.hotelBanners,
+    setHotelBanners: s.setHotelBanners,
   }));
 
   const { setIsLoading } = useExploreTemp((s) => ({
@@ -78,9 +83,35 @@ const MemoMainForm = () => {
     const { bannerExplore, logoExplore, footerExplore, categoryTopBanner } =
       await checkValidations();
 
-    // valid social media links
+    // Upload base64 previews in hotelBanners
+    const uploadedHotelBanners: string[] = [];
+
+    for (let i = 0; i < hotelBanners.length; i++) {
+      const base64 = hotelBanners[i];
+
+      if (base64?.startsWith("data:image")) {
+        const fileType =
+          base64.match(/^data:(image\/\w+);base64,/)?.[1] || "image/jpeg";
+        const blob = await (await fetch(base64)).blob();
+        const file = new File([blob], "hotel-banner.jpg", { type: fileType });
+        const url = await storeImageAfterSave(file, base64);
+
+        const finalUrl = url || "";
+
+        setHotelBanners((prev) => {
+          const updated = [...prev];
+          updated[i] = finalUrl;
+          return updated;
+        });
+
+        uploadedHotelBanners.push(finalUrl);
+      } else {
+        uploadedHotelBanners.push(base64);
+      }
+    }
+
+    // Validate social links
     const validSocialMediaLinks = socialMediaLinks.filter((item) => item.link);
-    // check if all social media links start with 'https://'
     for (const item of validSocialMediaLinks) {
       if (!item.link.startsWith("https://")) {
         toast.error(
@@ -90,7 +121,6 @@ const MemoMainForm = () => {
       }
     }
 
-    // filter out empty social media links
     const filteredSocialMedia = validSocialMediaLinks.map((item) => ({
       icon: item.icon,
       link: item.link,
@@ -107,24 +137,18 @@ const MemoMainForm = () => {
       fssai: bizInfo?.fssai,
       gst: bizInfo?.gst,
       footerDescription: bizInfo?.footerDescription,
+      hotelBanners: uploadedHotelBanners,
     };
 
-    // filter out empty values undefined, null or not used keys
     const filteredPayload = filterPayload(payload);
     setIsLoading(true);
 
-    let res: {
-      status: number;
-    };
+    let res: { status: number };
 
-    // if there is no bizInfo?._id then create a new outlet
     if (bizInfo?._id === "") {
-      res = await apiRpc.businesses.outletInfo.$post({
-        json: filteredPayload,
-      });
+      res = await apiRpc.businesses.outletInfo.$post({ json: filteredPayload });
     }
 
-    // if there is bizInfo?._id then update the existing outlet
     if (bizInfo?._id !== "" || (res && res.status === 409)) {
       const outletInfo = await apiRpc.businesses.outletInfo.update[
         ":businessId"
@@ -134,6 +158,7 @@ const MemoMainForm = () => {
           businessId: businessId || hotelId,
         },
       });
+
       const outletInfoData = await outletInfo.json();
       if (outletInfo.status === 200) {
         toast.success("Data saved successfully");
@@ -143,6 +168,7 @@ const MemoMainForm = () => {
         showErrorToasts(outletInfoData?.error);
       }
     }
+
     setIsLoading(false);
   };
 

@@ -245,25 +245,27 @@ export default function ServiceCategoryCard({
     <>
       <Card
         onClick={() => openServicePopup(category?.serviceIds)}
-        className={`border cursor-pointer transition-all duration-200 overflow-hidden rounded-3xl bg-white shadow-sm flex flex-col items-center justify-center aspect-square ${className}`}
+        className={`transition-all duration-200 border border-[#E0E0E0] cursor-pointer aspect-square rounded-3xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.08)] flex flex-col items-start justify-between ${className}`}
       >
         <CardContent className="relative flex flex-col justify-between w-full h-full p-4">
-          <div className="mr-4 absolute bottom-0 -right-4">
+          <div className="absolute bottom-0 right-0">
             <Image
               src={category.image || "/placeholder.svg"}
               alt={category.name}
               style={{ objectFit: "cover" }}
-              width={75}
-              height={75}
+              width={80}
+              height={80}
             />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base poppins font-semibold text-h-primary capitalize">
-              {category?.name.replace(/[^a-zA-Z0-9 ]/g, " ").toLowerCase()}
-            </h3>
-            <h6 className="text-xs font-light text-h-primary poppins-regular">
-              {category?.description}
-            </h6>
+            <div className="space-y-1 z-10">
+              <h3 className="text-base poppins font-semibold capitalize leading-tight text-h-primary">
+                {category?.name.replace(/[^a-zA-Z0-9 ]/g, " ").toLowerCase()}
+              </h3>
+              <h6 className="text-xs text-h-primary poppins-regular">
+                {category?.description}
+              </h6>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -286,7 +288,7 @@ export default function ServiceCategoryCard({
               ) : (
                 <div className="p-4 relative max-h-[90dvh] overflow-auto hide-scrollbar">
                   <h2 className="mb-4 text-xl font-bold text-h-primary">
-                    {category.name} Services
+                    {category?.name} Services
                   </h2>
 
                   {alertStatus === "success" ? (
