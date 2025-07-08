@@ -475,6 +475,57 @@ const paymentsRouter = new Hono()
             order.cart.filter((item) => !item.isDeleted),
           );
 
+          const unsettleTable = await UnsettleTable.findOne({
+            businessId,
+            tableName,
+            restId: businessPosConfig.restId,
+            sync: false,
+          });
+          const payload = {
+            app_key: businessPosConfig.accessKey,
+            app_secret: businessPosConfig.secretKey,
+            access_token: businessPosConfig.authToken,
+            restID: businessPosConfig.restId,
+            pin: unsettleTable?.pin,
+            tableNo: unsettleTable?.tableName,
+          };
+
+          if (unsettleTable) {
+            const response = await axios.post(
+              posApiPaths.requestBill,
+              payload,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              },
+            );
+
+            if (
+              response.data.success === "1" &&
+              response.data.bill_request_id.length > 2
+            ) {
+              await UnsettleTable.updateOne(
+                { _id: unsettleTable._id },
+                {
+                  $set: {
+                    sync: true,
+                  },
+                },
+                { session },
+              );
+              const res = await axios.post(posApiPaths.settleTable, {
+                app_key: businessPosConfig.accessKey,
+                app_secret: businessPosConfig.secretKey,
+                access_token: businessPosConfig.authToken,
+                restID: businessPosConfig.restId,
+                bill_request_id: response.data.bill_request_id,
+                amount_paid: unsettleTable?.total,
+                pin: unsettleTable?.pin,
+              });
+            }
+          }
+
           if (!tableSession?.isUserRegistered) {
             const registerUser = await axios.post(posApiPaths.registerUser, {
               app_key: businessPosConfig.accessKey,
@@ -691,6 +742,56 @@ const paymentsRouter = new Hono()
           const cartItems = kotOrders.flatMap((order) =>
             order.cart.filter((item) => !item.isDeleted),
           );
+          const unsettleTable = await UnsettleTable.findOne({
+            businessId,
+            tableName,
+            restId: businessPosConfig.restId,
+            sync: false,
+          });
+          const payload = {
+            app_key: businessPosConfig.accessKey,
+            app_secret: businessPosConfig.secretKey,
+            access_token: businessPosConfig.authToken,
+            restID: businessPosConfig.restId,
+            pin: unsettleTable?.pin,
+            tableNo: unsettleTable?.tableName,
+          };
+
+          if (unsettleTable) {
+            const response = await axios.post(
+              posApiPaths.requestBill,
+              payload,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              },
+            );
+
+            if (
+              response.data.success === "1" &&
+              response.data.bill_request_id.length > 2
+            ) {
+              await UnsettleTable.updateOne(
+                { _id: unsettleTable._id },
+                {
+                  $set: {
+                    sync: true,
+                  },
+                },
+                { session },
+              );
+              const res = await axios.post(posApiPaths.settleTable, {
+                app_key: businessPosConfig.accessKey,
+                app_secret: businessPosConfig.secretKey,
+                access_token: businessPosConfig.authToken,
+                restID: businessPosConfig.restId,
+                bill_request_id: response.data.bill_request_id,
+                amount_paid: unsettleTable?.total,
+                pin: unsettleTable?.pin,
+              });
+            }
+          }
 
           if (!tableSession?.isUserRegistered) {
             const registerUser = await axios.post(posApiPaths.registerUser, {
@@ -1963,6 +2064,32 @@ const paymentsRouter = new Hono()
                     session,
                   },
                 );
+
+                const unsettle_table = await UnsettleTable.find({
+                  businessId: order.businessId,
+                  sync: false,
+                });
+
+                for (const table of unsettle_table) {
+                  const payload = {
+                    app_key: isHavePos.accessKey,
+                    app_secret: isHavePos.secretKey,
+                    access_token: isHavePos.authToken,
+                    restID: isHavePos.restId,
+                    pin: table?.pin,
+                    tableNo: table?.tableName,
+                  };
+
+                  const response = await axios.post(
+                    posApiPaths.requestBill,
+                    payload,
+                    {
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                    },
+                  );
+                }
               }
             }
           }
@@ -3234,7 +3361,7 @@ const paymentsRouter = new Hono()
                 },
               });
 
-              await sleep(7000);
+              await sleep(8000);
               const response = await axios.post(
                 posApiPaths.requestBill,
                 payload,
@@ -3350,6 +3477,31 @@ const paymentsRouter = new Hono()
                   session,
                 },
               );
+              const unsettle_table = await UnsettleTable.find({
+                businessId: getOrder.businessId,
+                sync: false,
+              });
+
+              for (const table of unsettle_table) {
+                const payload = {
+                  app_key: pos.accessKey,
+                  app_secret: pos.secretKey,
+                  access_token: pos.authToken,
+                  restID: pos.restId,
+                  pin: table?.pin,
+                  tableNo: table?.tableName,
+                };
+
+                const response = await axios.post(
+                  posApiPaths.requestBill,
+                  payload,
+                  {
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                  },
+                );
+              }
             }
           }
         }

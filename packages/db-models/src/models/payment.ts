@@ -229,6 +229,14 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       required: false,
       default: [],
     },
+    pin: {
+      type: String,
+      required: false,
+    },
+    billRequestId: {
+      type: String,
+      required: false,
+    },
   },
 
   { timestamps: true },

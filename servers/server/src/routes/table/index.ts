@@ -411,6 +411,26 @@ const tableRouter = new Hono()
 
           session,
         );
+        const payload = {
+          app_key: pos.accessKey,
+          app_secret: pos.secretKey,
+          access_token: pos.authToken,
+          restID: pos.restId,
+          pin: tableSession?.pin,
+          tableNo: table?.name,
+        };
+
+        const billRequestId = await axios.post(
+          posApiPaths.requestBill,
+          payload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        console.log("Bill Request ID:", billRequestId.data);
 
         const createPayment = await Payment.create(
           [
@@ -451,6 +471,8 @@ const tableRouter = new Hono()
               couponDiscount: tableSession?.couponDiscount,
               billId: tableSession?._id.toString(),
               billItems: tableSession?.items || [],
+              pin: tableSession?.pin,
+              billRequestId: billRequestId.data.request_id,
             },
           ],
           { session },
@@ -508,21 +530,6 @@ const tableRouter = new Hono()
           { session },
         );
 
-        const payload = {
-          app_key: pos.accessKey,
-          app_secret: pos.secretKey,
-          access_token: pos.authToken,
-          restID: pos.restId,
-          pin: tableSession?.pin,
-          tableNo: table?.name,
-        };
-
-        await axios.post(posApiPaths.requestBill, payload, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
         await sleep(7000);
         const response = await axios.post(posApiPaths.requestBill, payload, {
           headers: {
@@ -539,6 +546,8 @@ const tableRouter = new Hono()
           amount_paid: modifyTotal,
           pin: tableSession?.pin,
         });
+
+        console.log("Settle Table Response:", res.data);
 
         if (res.data.success === "0") {
           await UnsettleTable.findOneAndUpdate(
@@ -600,6 +609,28 @@ const tableRouter = new Hono()
           ],
           { session },
         );
+
+        const unsettle_table = await UnsettleTable.find({
+          businessId: tableSession.businessId,
+          sync: false,
+        });
+
+        for (const table of unsettle_table) {
+          const payload = {
+            app_key: pos.accessKey,
+            app_secret: pos.secretKey,
+            access_token: pos.authToken,
+            restID: pos.restId,
+            pin: table?.pin,
+            tableNo: table?.tableName,
+          };
+
+          const response = await axios.post(posApiPaths.requestBill, payload, {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+        }
 
         return c.json(
           {
