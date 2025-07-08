@@ -545,7 +545,7 @@ const roomRouter = new Hono()
             to: user?.phone?.toString(),
             type: "template",
             template: {
-              name: "f_welcomes_template",
+              name: "fi_welcoming_template",
               language: { code: "en" },
               components: [
                 {
