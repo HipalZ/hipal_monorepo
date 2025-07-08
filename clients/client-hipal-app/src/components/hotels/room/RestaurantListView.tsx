@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { RestaurantCard } from "./RestaurantCard"
-import { RestaurantCardSkeleton } from "./RestaurantCardSkeleton"
+import { RestaurantCard } from "./RestaurantCard";
+import { RestaurantCardSkeleton } from "./RestaurantCardSkeleton";
 
 interface ILinkHotels {
-  _id: string
-  name: string
-  customLink: string
-  logo: string
+  _id: string;
+  name: string;
+  customLink: string;
+  logo: string;
 }
 
 interface RestaurantListViewProps {
-  restaurants: ILinkHotels[] | undefined
-  selectedRestaurant: ILinkHotels | null
-  onSelectRestaurant: (restaurant: ILinkHotels) => void
-  isLoading: boolean
+  restaurants: ILinkHotels[] | undefined;
+  selectedRestaurant: ILinkHotels | null;
+  onSelectRestaurant: (restaurant: ILinkHotels) => void;
+  isLoading: boolean;
 }
 
 export const RestaurantListView = ({
@@ -25,16 +25,18 @@ export const RestaurantListView = ({
 }: RestaurantListViewProps) => {
   return (
     <div className="p-4">
-      <h2 className="mb-4 text-xl font-bold text-h-primary">Select a Restaurant</h2>
+      <h2 className="mb-4 text-xl font-semibold text-h-primary poppins">
+        Select a Restaurant
+      </h2>
 
       {isLoading ? (
         <div className="space-y-3">
-          {[1,2,3].map((i) => (
+          {[1, 2, 3].map((i) => (
             <RestaurantCardSkeleton key={i} />
           ))}
         </div>
       ) : restaurants && restaurants.length > 0 ? (
-        <div className="mb-20 space-y-3">
+        <div className="grid grid-cols-2 gap-4 md:gap-6 lg:gap-9">
           {restaurants.map((restaurant) => (
             <RestaurantCard
               key={restaurant._id}
@@ -45,9 +47,10 @@ export const RestaurantListView = ({
           ))}
         </div>
       ) : (
-        <div className="py-8 text-center text-gray-500">No restaurants available at the moment</div>
+        <div className="py-8 text-center text-gray-500">
+          No restaurants available at the moment
+        </div>
       )}
     </div>
-  )
-}
-
+  );
+};

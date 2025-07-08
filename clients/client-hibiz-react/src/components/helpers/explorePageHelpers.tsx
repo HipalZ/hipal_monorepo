@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
 import type { CropperRef } from "../types/businessData";
 import { useExploreTemp } from "../store/useExploreTemp";
+import { storeImageAfterSave } from "../uploadAdmin/imageUpload";
 
 // Callbacks to handle navigation in the explore page
 export const useExploreNavigation = () => {
@@ -39,8 +40,8 @@ export const useExploreNavigation = () => {
       clearImageFiles();
       clearBizInfo();
       setImg({});
-      if(hotelId) navigate(`/app/hotel/${hotelId}/`);
-      if(businessId) navigate(`/app/business/${businessId}/`);
+      if (hotelId) navigate(`/app/hotel/${hotelId}/`);
+      if (businessId) navigate(`/app/business/${businessId}/`);
     }
   }, [
     businessId,
@@ -59,13 +60,20 @@ export const useExploreNavigation = () => {
 
 // Callbacks to handle image changes in the explore page
 export const useImageChange = () => {
-  const { setCropping, setShowCropper, setImageFiles } = useExploreStore(
-    (s) => ({
-      setCropping: s.setCropping,
-      setShowCropper: s.setShowCropper,
-      setImageFiles: s.setImageFiles,
-    }),
-  );
+  const {
+    setCropping,
+    setShowCropper,
+    setImageFiles,
+    setHotelBanners,
+    hotelBanners,
+  } = useExploreStore((s) => ({
+    setCropping: s.setCropping,
+    setShowCropper: s.setShowCropper,
+    setImageFiles: s.setImageFiles,
+    setHotelBanners: s.setHotelBanners,
+    hotelBanners: s.hotelBanners,
+  }));
+
   const handleImageChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => {
       const type = event.target.dataset.type as keyof ImageFiles;
@@ -88,7 +96,44 @@ export const useImageChange = () => {
     [setImageFiles, setCropping, setShowCropper],
   );
 
-  return { handleImageChange };
+  const imageUploadUrl = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const type = event.target.dataset.type as "first" | "second" | "third";
+      const file = event.target.files?.[0];
+      if (!file || !type) return;
+
+      const maxSize = 3 * 1024 * 1024;
+      if (file.size > maxSize) {
+        toast.error("Image size exceeds 3MB.");
+        return;
+      }
+
+      const imageTypeToIndex = {
+        first: 0,
+        second: 1,
+        third: 2,
+      } as const;
+
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+
+      reader.onloadend = () => {
+        const preview = reader.result?.toString() || null;
+        if (!preview) return;
+
+        const index = imageTypeToIndex[type];
+        setHotelBanners((prev) => {
+          const current = Array.isArray(prev) ? prev : ["", "", ""];
+          const updated = [...current];
+          updated[index] = preview;
+          return updated;
+        });
+      };
+    },
+    [setHotelBanners],
+  );
+
+  return { handleImageChange, imageUploadUrl };
 };
 
 // Callbacks to handle changes in the footer section of the explore page

@@ -105,7 +105,7 @@ export default function HotelWelcomeCard({
   return (
     <>
       <div
-        className={`relative w-full p-4 bg-white mt-2 overflow-hidden ${
+        className={`relative w-full px-4 mt-2 overflow-hidden ${
           className || ""
         }`}
       >

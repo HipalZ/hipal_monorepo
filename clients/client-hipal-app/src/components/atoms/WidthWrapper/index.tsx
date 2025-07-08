@@ -1,53 +1,41 @@
-import { cn } from "@/lib/utils"
-import Image from "next/image"
-import type { ReactNode } from "react"
-import HotelBackground from "@/assets/hotel/hotel background.png"
-
+import { cn } from "@/lib/utils";
+import type { ReactNode } from "react";
 
 interface ContainerProps {
-  children: ReactNode
-  className?: string
+  children: ReactNode;
+  className?: string;
 }
 
 export function ViewPortContainer({ children, className }: ContainerProps) {
-  return <div className={cn("w-full max-w-[1280px] overflow-hidden", className)}>{children}</div>
+  return (
+    <div className={cn("w-full max-w-[1280px] overflow-hidden", className)}>
+      {children}
+    </div>
+  );
 }
 
 interface HotelBackgroundContainerProps {
-  children: ReactNode
-  className?: string
-  overlayOpacity?: number 
+  children: ReactNode;
+  className?: string;
+  overlayOpacity?: number;
 }
 
 export function HotelBackgroundContainer({
   children,
   className,
-  overlayOpacity = 10
+  overlayOpacity = 10,
 }: HotelBackgroundContainerProps) {
   return (
-    <div className={cn("relative w-full overflow-hidden", className)}>
-      {/* Background Image */}
-      <div  className={`absolute -z-10 mt-6 lg:mt-0 opacity-${overlayOpacity} md:opacity-10`}>
-        <Image
-          src={HotelBackground || "/placeholder.svg"}
-          alt="Hotel background"
-          priority
-          width={1980}
-          height={1980}
-          style={{
-            objectFit: "contain",
-            objectPosition: "top",
-            backgroundRepeat:"repeat"
-          }}
-          className="hidden md:block w-[1980px] h-screen lg:h-[1980px]"
-          sizes="100vw"
-        />
-      </div>
-
+    <div
+      className={cn(
+        "relative w-full overflow-hidden bg-[linear-gradient(135deg,_#FCFCFC_0%,_#F7F2F2_100%)]",
+        className,
+      )}
+    >
       {/* Content Container */}
       <div className="relative z-10 w-full max-w-[1280px] mx-auto">
         {children}
       </div>
     </div>
-  )
+  );
 }

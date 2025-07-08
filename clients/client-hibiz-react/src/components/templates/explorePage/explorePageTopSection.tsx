@@ -18,6 +18,7 @@ import { CiEdit } from "react-icons/ci";
 import { useImageChange } from "../../helpers/explorePageHelpers";
 import { ChevronRight } from "lucide-react";
 
+const HotelRoomImages = lazy(() => import("./hotelRoomImages"));
 const PlusButton = lazy(() => import("@/components/atom/plusButton"));
 const SubHeader = lazy(() => import("@/components/atom/subHeader"));
 
@@ -28,6 +29,7 @@ const MemoExplorePageSection = () => {
     img,
     toggleBizInfo,
     setToggleBizInfo,
+    hotelBanners,
     setBizInfo,
   } = useExploreStore((s) => ({
     bizInfo: s.bizInfo,
@@ -35,10 +37,11 @@ const MemoExplorePageSection = () => {
     img: s.img,
     toggleBizInfo: s.toggleBizInfo,
     setToggleBizInfo: s.setToggleBizInfo,
+    hotelBanners: s.hotelBanners,
     setBizInfo: s.setBizInfo,
   }));
 
-  const { handleImageChange } = useImageChange();
+  const { handleImageChange, imageUploadUrl } = useImageChange();
 
   const handleBizName = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -76,8 +79,8 @@ const MemoExplorePageSection = () => {
         amenities:
           Array.isArray(bizInfo.amenities || bizInfo.newAmenities) &&
           (outletInfo?.outLetType === "HOTEL"
-        ? !!bizInfo?.newAmenities?.length
-        : !!bizInfo?.amenities?.length),
+            ? !!bizInfo?.newAmenities?.length
+            : !!bizInfo?.amenities?.length),
         tags: Array.isArray(bizInfo.tags) && !!bizInfo.tags.length,
       });
     }
@@ -85,48 +88,62 @@ const MemoExplorePageSection = () => {
 
   return (
     <section className="gap-4 md:flex">
-      <section className="flex-1 mb-4">
-        <SubHeader text="Main Banner" />
-        <article
-          className={cn(
-            "relative rounded-xl h-[20rem] w-[20rem] sm:w-[22rem]",
-            img?.banner?.length > 0
-              ? ""
-              : " border-dashed border-2 inline-block border-[#8C63FF]",
-          )}
-        >
-          <input
-            ref={bannerInputRef}
-            onClick={(e) => handleClick(e, bannerInputRef)}
-            type="file"
-            id="bannerInput"
-            style={{ display: "none" }}
-            onChange={handleImageChange}
-            data-type="banner"
+      {outletInfo?.outLetType === "HOTEL" ? (
+        <section className="flex flex-col">
+          <SubHeader text="Banners" />
+          <HotelRoomImages
+            handleImageChange={imageUploadUrl}
+            img={{
+              first: hotelBanners[0] || "",
+              second: hotelBanners[1] || "",
+              third: hotelBanners[2] || "",
+            }}
           />
-          <figure className="w-[20rem] h-[20rem] mx-auto lg:mx-0">
-            <label
-              htmlFor="bannerInput"
-              className="flex items-center justify-center overflow-hidden cursor-pointer lg:justify-start rounded-xl"
-            >
-              {img.banner ? (
-                <div className="relative w-[20rem] h-[20rem]">
-                  <figure className="w-full h-full min-w-[20rem]">
-                    <img
-                      src={img.banner}
-                      alt="Banner"
-                      className="object-cover w-full h-full rounded-2xl"
-                    />
-                  </figure>
-                  <CiEdit className="absolute top-0 right-0 w-8 h-8 p-1 text-black bg-white rounded-full cursor-pointer" />
-                </div>
-              ) : (
-                <PlusButton />
-              )}
-            </label>
-          </figure>
-        </article>
-      </section>
+        </section>
+      ) : (
+        <section className="flex-1 mb-4">
+          <SubHeader text="Main Banner" />
+          <article
+            className={cn(
+              "relative rounded-xl h-[20rem] w-[20rem] sm:w-[22rem]",
+              img?.banner?.length > 0
+                ? ""
+                : " border-dashed border-2 inline-block border-[#8C63FF]",
+            )}
+          >
+            <input
+              ref={bannerInputRef}
+              onClick={(e) => handleClick(e, bannerInputRef)}
+              type="file"
+              id="bannerInput"
+              style={{ display: "none" }}
+              onChange={handleImageChange}
+              data-type="banner"
+            />
+            <figure className="w-[20rem] h-[20rem] mx-auto lg:mx-0">
+              <label
+                htmlFor="bannerInput"
+                className="flex items-center justify-center overflow-hidden cursor-pointer lg:justify-start rounded-xl"
+              >
+                {img.banner ? (
+                  <div className="relative w-[20rem] h-[20rem]">
+                    <figure className="w-full h-full min-w-[20rem]">
+                      <img
+                        src={img.banner}
+                        alt="Banner"
+                        className="object-cover w-full h-full rounded-2xl"
+                      />
+                    </figure>
+                    <CiEdit className="absolute top-0 right-0 w-8 h-8 p-1 text-black bg-white rounded-full cursor-pointer" />
+                  </div>
+                ) : (
+                  <PlusButton />
+                )}
+              </label>
+            </figure>
+          </article>
+        </section>
+      )}
       &nbsp;
       <section className="flex-1 md:space-y-4">
         <SubHeader text="Logo & Biz Name" />
@@ -175,7 +192,7 @@ const MemoExplorePageSection = () => {
               minLength={4}
               maxLength={30}
               value={bizInfo?.name || businessData?.name}
-              className="w-full p-2 pr-14 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF]"
+              className="w-full p-2 pr-14 bg-white border border-black rounded-xl focus:ring-0 focus:bg-white focus:border-[#8C63FF] placeholder:text-gray-400"
               onChange={handleBizName}
             />
             <small className="absolute bottom-2 right-4">
@@ -200,7 +217,9 @@ const MemoExplorePageSection = () => {
                 ${isFilled ? "border-[#008800]" : "border-black"}
               `}
                 >
-                  <span className={`${isFilled ? "text-[#008800]" : "text-black"}`}>
+                  <span
+                    className={`${isFilled ? "text-[#008800]" : "text-black"}`}
+                  >
                     {isFilled ? "✓" : "!"}&nbsp;{info.text}
                   </span>
                 </div>

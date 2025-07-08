@@ -47,7 +47,7 @@ const MemoCheckOutRequest = ({
 
   return (
     <article>
-      <div className="mx-4 my-3 rounded-xl shadow-lg px-4 py-4 flex items-center border border-blue-300 relative">
+      <div className="m-4 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.08)] px-4 py-4 flex items-center bg-white relative">
         <div className="flex-1 space-y-2">
           <h1 className="font-semibold text-h-primary text-base poppins">
             Fast checkout!
@@ -58,7 +58,7 @@ const MemoCheckOutRequest = ({
         </div>
         <button
           type="button"
-          className="text-sm poppins ml-4 flex items-center px-3 py-2 bg-blue-500 text-white rounded-xl font-light transition shadow-lg"
+          className="text-sm poppins ml-4 flex items-center px-3 py-2 bg-blue-600 text-white rounded-xl font-light transition shadow-lg"
           onClick={proceedToCheckout}
         >
           Checkout
@@ -118,7 +118,7 @@ const MemoCheckOutRequest = ({
 
                   {/* Title */}
                   <h2 className="text-xl font-normal text-gray-900 mb-2 inter">
-                    Ready to Check Out?
+                    Request to Check Out?
                   </h2>
 
                   <p className="text-gray-600 mb-6 inter text-sm">
@@ -139,7 +139,7 @@ const MemoCheckOutRequest = ({
                       maxWidth="30rem"
                       buttons={[
                         {
-                          text: "Confirm To Checkout",
+                          text: "Swipe To Checkout",
                           onClick: confirmCheckout,
                           className: "w-full rounded-xl h-[2.5rem]",
                           swipe: true,

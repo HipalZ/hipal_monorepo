@@ -1,6 +1,7 @@
 import type { ICart } from "@/components/store/useCart";
 import type { CategoryType } from "@hi/db-models/src/validators";
 import type { ILoyaltySetting } from "../store/useLoyaltyData";
+import { Dish } from "@hipal/server/src/utils/bill";
 
 export interface IBiz {
   currencySymbol: string;
@@ -481,7 +482,7 @@ interface SocialMediaLink {
 }
 
 export interface BusinessDetails {
-  menuId: IMenuLayout;
+  hotelBanners: string[];
   _id: string;
   businessId: string;
   __v: number;
@@ -623,7 +624,7 @@ interface Extra {
 
 interface DishItem {
   portion: any;
-  quantity: ReactNode;
+  quantity: number;
   dish: {
     name: string;
     price: number;
@@ -633,83 +634,83 @@ interface DishItem {
 }
 
 export interface BillData {
-  tips: number
-  claimedCoins: number
-  serviceCharge: number
-  discount: number
-  couponDiscount: number
-  discountAppliedBy: string
-  discountRemovedBy: string
-  gst: number
-  reasonOfDiscount: string
-  reasonOfServiceCharge: string
-  serviceChargeAppliedBy: string
-  serviceChargeRemovedBy: string
-  total: number
-  customerPhone: string
-  customerName: string
-  tableName: string
-  subTotal: number
-  billId: string
-  _id?: string
-  otherTax: number
-  discountAppliedOn?: string
-  couponId?: string
+  tips: number;
+  claimedCoins: number;
+  serviceCharge: number;
+  discount: number;
+  couponDiscount: number;
+  discountAppliedBy: string;
+  discountRemovedBy: string;
+  gst: number;
+  reasonOfDiscount: string;
+  reasonOfServiceCharge: string;
+  serviceChargeAppliedBy: string;
+  serviceChargeRemovedBy: string;
+  total: number;
+  customerPhone: string;
+  customerName: string;
+  tableName: string;
+  subTotal: number;
+  billId: string;
+  _id?: string;
+  otherTax: number;
+  discountAppliedOn?: string;
+  couponId?: string;
   billItems: Array<{
-    gst: number
-    subTotal: number
-    totalGst: number
+    gst: number;
+    subTotal: number;
+    totalGst: number;
     items: Array<{
       dish: {
-        _id: string
-        name: string
-        price: number
-        businessId: string
-        posDishId: string
-        description: string
-        dishTypes: string[]
-        ignoreDiscount: string
-        ignoreTax: string
-        images: string[]
-        isDeleted: boolean
-        menuId: string
+        _id: string;
+        name: string;
+        price: number;
+        businessId: string;
+        posDishId: string;
+        description: string;
+        dishTypes: string[];
+        ignoreDiscount: string;
+        ignoreTax: string;
+        images: string[];
+        isDeleted: boolean;
+        menuId: string;
         portions: Array<{
-          name: string
-          price: number
-          default: boolean
-          portionTypes: string[]
-          _id: string
-        }>
-        pos: boolean
-        posTax: string
-        rank: number
-        tags: string[]
-        visibility: boolean
-        active: boolean
-        kitchenId?: string
-        tax: number
-        gst: number
-        instruction?: string
-      }
-      id: string
-      _id: string
+          name: string;
+          price: number;
+          default: boolean;
+          portionTypes: string[];
+          _id: string;
+        }>;
+        pos: boolean;
+        posTax: string;
+        rank: number;
+        tags: string[];
+        visibility: boolean;
+        active: boolean;
+        kitchenId?: string;
+        tax: number;
+        gst: number;
+        instruction?: string;
+      };
+      id: string;
+      _id: string;
       portion: {
-        name: string
-        price: number
-        default: boolean
-        portionTypes: string[]
-        _id: string
-      } | null
+        name: string;
+        price: number;
+        default: boolean;
+        portionTypes: string[];
+        _id: string;
+      } | null;
       extras: Array<{
-        id: string
-        name: string
-        price: number
-        quantity: number
-      }>
-      quantity: number
-      isDeleted: boolean
-    }>
-  }>
+        id: string;
+        name: string;
+        price: number;
+        quantity: number;
+      }>;
+      quantity: number;
+      isDeleted: boolean;
+    }>;
+  }>;
 }
 
 interface CartItem {

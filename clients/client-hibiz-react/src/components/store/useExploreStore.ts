@@ -6,6 +6,9 @@ export type ImageFiles = {
   banner: File | null;
   logo: File | null;
   footer: File | null;
+  first: File | null;
+  second: File | null;
+  third: File | null;
 };
 
 export enum ExplorePages {
@@ -22,13 +25,18 @@ interface ICropping {
   type: string | null;
 }
 
+type BannerType = string[];
+
 interface IExploreStore {
   setIsLoading: (loading: boolean) => void;
   clearBizInfo: () => void;
   clearImageFiles: () => void;
   bizInfo: IBizInfo;
   setBizInfo: (bizInfo: IBizInfo) => void;
-
+  hotelBanners: string[];
+  setHotelBanners: (
+    value: BannerType | ((prev: BannerType) => BannerType),
+  ) => void;
   uniquelyDishes: IDish[];
   setUniquelyDishes: (dishes: IDish[]) => void;
   banners: IBanner[];
@@ -69,6 +77,9 @@ export type ImagePreviews = {
   logo: string | ArrayBuffer | null;
   footer: string | ArrayBuffer | null;
   categoryTopBanner: string | ArrayBuffer | null;
+  first: string | ArrayBuffer | null;
+  second: string | ArrayBuffer | null;
+  third: string | ArrayBuffer | null;
 };
 
 export type SetImageFilesFunction = (
@@ -108,6 +119,7 @@ export const useExploreStore = create(
         currencyCode: "INR",
         currencySymbol: "₹",
       },
+      hotelBanners: [],
       setBizInfo: (newBizInfo) =>
         set(() => ({
           bizInfo: {
@@ -137,6 +149,11 @@ export const useExploreStore = create(
             currencyCode: newBizInfo.currencyCode || "INR",
             currencySymbol: newBizInfo.currencySymbol || "₹",
           },
+        })),
+      setHotelBanners: (value) =>
+        set((state) => ({
+          hotelBanners:
+            typeof value === "function" ? value(state.hotelBanners) : value,
         })),
       uniquelyDishes: [],
       setUniquelyDishes: (dishes) => set(() => ({ uniquelyDishes: dishes })),
@@ -227,6 +244,9 @@ export const useExploreStore = create(
             logo: null,
             footer: null,
             categoryTopBanner: null,
+            first: null,
+            second: null,
+            third: null,
           } as ImageFiles,
         })),
       img: {
@@ -234,6 +254,9 @@ export const useExploreStore = create(
         logo: null,
         footer: null,
         categoryTopBanner: null,
+        first: null,
+        second: null,
+        third: null,
       } as ImagePreviews,
       setImg: (
         previews: ImagePreviews | ((prev: ImagePreviews) => ImagePreviews),

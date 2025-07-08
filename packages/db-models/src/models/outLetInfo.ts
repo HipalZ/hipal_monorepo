@@ -69,6 +69,12 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     required: false,
   },
 
+  hotelBanners: {
+    type: [String],
+    default: [],
+    required: false,
+  },
+
   logoUrl: {
     type: String,
 

@@ -509,6 +509,7 @@ const businessesRouter = new Hono()
           address: requestData.address,
           name: requestData.name,
           categoryTopBannerUrl: requestData.categoryTopBannerUrl,
+          hotelBanners: requestData?.hotelBanners,
         },
         { new: true },
       );
