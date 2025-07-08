@@ -253,7 +253,7 @@ const kitchenRouter = new Hono()
       if (removeDishIds.length > 1) {
         await Dish.updateMany(
           { _id: { $in: removeDishIds } },
-          { $pull: { kitchenId: kitchen._id } },
+          { kitchenId: null },
         );
       }
 
