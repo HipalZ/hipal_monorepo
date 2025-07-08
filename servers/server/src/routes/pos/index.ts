@@ -14,6 +14,7 @@ import {
   Pos,
   Table,
   Tax,
+  UnsettleTable,
   UrlModel,
   User,
   UserAnalytic,
@@ -248,6 +249,7 @@ const posRouter = new Hono()
         const kotOrders = (await KotOrder.find({
           tableName,
           settled: false,
+          edited: false,
           businessId,
         }).lean()) as KotOrderTypes[];
 
@@ -3160,6 +3162,54 @@ const posRouter = new Hono()
         if (!pos) {
           return respond(c, "Pos not found", true, 400, {});
         }
+        const unsettleTable = await UnsettleTable.findOne({
+          businessId,
+          tableName,
+          restId: pos.restId,
+          sync: false,
+        });
+        const payload = {
+          app_key: pos.accessKey,
+          app_secret: pos.secretKey,
+          access_token: pos.authToken,
+          restID: pos.restId,
+          pin: unsettleTable?.pin,
+          tableNo: unsettleTable?.tableName,
+        };
+
+        if (unsettleTable) {
+          const response = await axios.post(posApiPaths.requestBill, payload, {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          console.log("Response from requestBill:", response.data);
+
+          if (
+            response.data.success === "1" &&
+            response.data?.bill_request_id?.length > 2
+          ) {
+            await UnsettleTable.updateOne(
+              { _id: unsettleTable._id },
+              {
+                $set: {
+                  sync: true,
+                },
+              },
+              { session },
+            );
+            const res = await axios.post(posApiPaths.settleTable, {
+              app_key: pos.accessKey,
+              app_secret: pos.secretKey,
+              access_token: pos.authToken,
+              restID: pos.restId,
+              bill_request_id: response.data.bill_request_id,
+              amount_paid: unsettleTable?.total,
+              pin: unsettleTable?.pin,
+            });
+          }
+        }
 
         const kotOrders = (await KotOrder.find({
           tableName,
@@ -3185,10 +3235,6 @@ const posRouter = new Hono()
             phone: tableSession?.pin,
             name: tableSession?.customerName,
           });
-
-          if (registerUser.data.success === "0") {
-            throw new Error("Error in registering user");
-          }
         }
 
         const petpoojaCart = convertToPetpoojaCart(
@@ -3208,28 +3254,6 @@ const posRouter = new Hono()
         if (saveKot.data.success === "0") {
           throw new Error("Error in saving kot");
         }
-
-        const payload = {
-          app_key: pos.accessKey,
-          app_secret: pos.secretKey,
-          access_token: pos.authToken,
-          restID: pos.restId,
-          pin: tableSession?.pin,
-          tableNo: tableName,
-        };
-
-        // if (!tableSession?.billRequest) {
-        //   await sleep(3000);
-        //   const response = await axios.post(posApiPaths.requestBill, payload, {
-        //     headers: {
-        //       "Content-Type": "application/json",
-        //     },
-        //   });
-
-        //   if (response.data.success === "0") {
-        //     throw new Error("Error in requesting bill");
-        //   }
-        // }
 
         await KotOrder.updateMany(
           {
