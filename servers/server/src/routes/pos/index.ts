@@ -248,7 +248,7 @@ const posRouter = new Hono()
         const kotOrders = (await KotOrder.find({
           tableName,
           settled: false,
-          edited: false,
+          accepted: true,
           businessId,
         }).lean()) as KotOrderTypes[];
 
