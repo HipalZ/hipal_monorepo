@@ -215,6 +215,40 @@ const kitchenRouter = new Hono()
     },
   )
 
+  .get(
+    "/printer/fetch_bill/:kitchenId/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        kitchenId: z.string().min(2).max(50),
+        businessId: z.string().min(2).max(50),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { kitchenId, businessId } = c.req.param();
+        const printer = await PrinterConfig.findOne({
+          kitchenId,
+          businessId,
+        });
+
+        if (!printer) {
+          return c.json(
+            {
+              message: "Printer not found",
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
+
+        return respond(c, "fetched successfully", false, 200, printer);
+      });
+    },
+  )
+
   .put("/", zValidator("json", updateKitchenAttrs), async (c) => {
     //@ts-ignore
     return runInTransaction(async (session: ClientSession) => {

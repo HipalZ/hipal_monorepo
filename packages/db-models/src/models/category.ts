@@ -117,7 +117,7 @@ const categorySchema = new mongoose.Schema<CategoryType>(
       default: [
         {
           day: -1,
-          start: 1440,
+          start: 0,
           end: 1440,
         },
       ],
