@@ -69,7 +69,7 @@ const MemoEBill = () => {
   };
 
   const goToPay = () => {
-    if(!orderId) return toast.error("No order ID found");
+    if (!orderId) return toast.error("No order ID found");
     router.push(`/${businessId}/posPayment?orderId=${orderId}`);
   };
 
@@ -99,20 +99,6 @@ const MemoEBill = () => {
                   <p className="text-base text-gray-600">
                     Table: {billData.tableName}
                   </p>
-                </div>
-
-                {/* Customer Info */}
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-gray-700">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4" />
-                    <span>{billData.customerName || "Guest"}</span>
-                  </div>
-                  {billData.customerPhone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-4 h-4" />
-                      <span>{billData.customerPhone}</span>
-                    </div>
-                  )}
                 </div>
               </header>
 
