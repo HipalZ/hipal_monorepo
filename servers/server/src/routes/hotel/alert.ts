@@ -105,7 +105,7 @@ const scheduleAlertUpdate = (
                   to: manager?.phone?.toString(),
                   type: "template",
                   template: {
-                    name: "f_escalation_template ",
+                    name: "fi_escalation_template ",
                     language: { code: "en" },
                     components: [
                       {
