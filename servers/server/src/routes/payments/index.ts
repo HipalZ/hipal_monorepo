@@ -1385,7 +1385,7 @@ const paymentsRouter = new Hono()
                   // 1. Request the bill
                   const {
                     data: { bill_request_id },
-                  } = await axios.post(posApiPaths.requestBill, payload, {
+                  } = await axios.post(posApiPaths.requestBill, pay, {
                     headers: { "Content-Type": "application/json" },
                   });
 
