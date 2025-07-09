@@ -41,7 +41,6 @@ import {
   updateTableSession,
 } from "../../utils/bill";
 import type { Item } from "../../utils/billTypes";
-import { checkElectronJsStatus } from "../../utils/checkElectronStatus";
 import {
   calculateCartBill,
   convertToPetpoojaCart,
@@ -1368,11 +1367,6 @@ const posRouter = new Hono()
           return respond(c, "POS not found", true, 404, {});
         }
 
-        const isActive = await checkElectronJsStatus();
-        if (!isActive && posConfigData.printKot) {
-          return respond(c, "Kot-printer server is not active", true, 400, {});
-        }
-
         const orderAlreadyExist = await PaymentAlert.findOne({
           businessId,
           tableName,
@@ -1728,11 +1722,6 @@ const posRouter = new Hono()
           tableName: tableName,
           businessId: businessId,
         });
-
-        const isActive = await checkElectronJsStatus();
-        if (!isActive && pos.printKot) {
-          return respond(c, "kot-printer server is not active", true, 400, {});
-        }
 
         const orderAlreadyExist = await PaymentAlert.findOne({
           businessId,
