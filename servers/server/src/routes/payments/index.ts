@@ -1208,6 +1208,12 @@ const paymentsRouter = new Hono()
         tableName: getOrder?.tableName,
       });
 
+      const pos = await BusinessPosConfig.findOne({
+        businessId: getOrder?.businessId,
+        isDeleted: false,
+        active: true,
+      });
+
       if (event === "payment.failed") {
         console.log("Payment failed");
         const claimCoins = Number(getOrder?.claimedCoins) || 0;
@@ -1355,6 +1361,149 @@ const paymentsRouter = new Hono()
             ],
             { session },
           );
+
+          if (pos) {
+            const pay = {
+              app_key: pos.accessKey,
+              app_secret: pos.secretKey,
+              access_token: pos.authToken,
+              restID: pos.restId,
+              pin: tableSession?.pin,
+              tableNo: getOrder.tableName,
+            };
+            await axios.post(posApiPaths.requestBill, pay, {
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+
+            setTimeout(() => {
+              (async () => {
+                try {
+                  // 1. Request the bill
+                  const {
+                    data: { bill_request_id },
+                  } = await axios.post(posApiPaths.requestBill, payload, {
+                    headers: { "Content-Type": "application/json" },
+                  });
+
+                  console.log("in webbook", bill_request_id);
+
+                  // 2. Settle the table
+                  const { data: settleData } = await axios.post(
+                    posApiPaths.settleTable,
+                    {
+                      app_key: pos.accessKey,
+                      app_secret: pos.secretKey,
+                      access_token: pos.authToken,
+                      restID: pos.restId,
+                      bill_request_id,
+                      amount_paid: getOrder.total,
+                      pin: tableSession?.pin,
+                    },
+                  );
+
+                  // 3. If settlement failed (success === "0"), upsert into UnsettleTable
+                  if (settleData.success === "0") {
+                    await UnsettleTable.findOneAndUpdate(
+                      {
+                        businessId: getOrder.businessId,
+                        tableName: getOrder.tableName,
+                        pin: tableSession?.pin,
+                      },
+                      {
+                        sync: false,
+                        // <-- use settleData.request_id, not response.data.request_id
+                        requestId: settleData.request_id,
+                        pin: tableSession?.pin,
+                        restId: pos.restId,
+                        date: Date.now(),
+                        total: getOrder.total,
+                      },
+                      { new: true, upsert: true },
+                    );
+                  }
+                } catch (err) {
+                  console.error("Failed to request/settle bill:", err);
+                }
+              })();
+            }, 12000);
+
+            await TempTableSettle.create(
+              [
+                {
+                  businessId: getOrder.businessId,
+                  tableName: getOrder.tableName,
+                  settleBy: getOrder.userId?.name,
+                  hiCode: tableSession?.hiCode,
+                  pin: tableSession?._id.toString(),
+                },
+              ],
+              {
+                session,
+              },
+            );
+
+            await QrBill.findOneAndUpdate(
+              {
+                billId: tableSession?._id.toString(),
+              },
+              {
+                $set: {
+                  status: "SUCCESS",
+                },
+              },
+              {
+                session,
+              },
+            );
+
+            await UserSession.deleteOne(
+              {
+                tableName: getOrder.tableName,
+                businessId: getOrder.businessId,
+              },
+              {
+                session,
+              },
+            );
+
+            await KotOrder.updateMany(
+              {
+                tableName: getOrder.tableName,
+                businessId: getOrder.businessId,
+              },
+              {
+                $set: {
+                  settled: true,
+                },
+              },
+              {
+                session,
+              },
+            );
+
+            await Table.findOneAndUpdate(
+              {
+                businessId: getOrder.businessId,
+                name: getOrder.tableName,
+              },
+              {
+                $set: {
+                  status: "EMPTY",
+                  currentTableAmount: 0,
+                  userIds: [],
+                  totalItemCount: 0,
+                  capacity: 0,
+                  hiCode: "",
+                  isTransfer: false,
+                },
+              },
+              {
+                session,
+              },
+            );
+          }
         }
       }
 
@@ -3359,146 +3508,6 @@ const paymentsRouter = new Hono()
             });
 
             if (pos) {
-              const payload = {
-                app_key: pos.accessKey,
-                app_secret: pos.secretKey,
-                access_token: pos.authToken,
-                restID: pos.restId,
-                pin: tableSession?.pin,
-                tableNo: getOrder.tableName,
-              };
-
-              await axios.post(posApiPaths.requestBill, payload, {
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              });
-
-              setTimeout(() => {
-                (async () => {
-                  try {
-                    // 1. Request the bill
-                    const {
-                      data: { bill_request_id },
-                    } = await axios.post(posApiPaths.requestBill, payload, {
-                      headers: { "Content-Type": "application/json" },
-                    });
-
-                    console.log("in webbook", bill_request_id);
-
-                    // 2. Settle the table
-                    const { data: settleData } = await axios.post(
-                      posApiPaths.settleTable,
-                      {
-                        app_key: pos.accessKey,
-                        app_secret: pos.secretKey,
-                        access_token: pos.authToken,
-                        restID: pos.restId,
-                        bill_request_id,
-                        amount_paid: getOrder.total,
-                        pin: tableSession?.pin,
-                      },
-                    );
-
-                    // 3. If settlement failed (success === "0"), upsert into UnsettleTable
-                    if (settleData.success === "0") {
-                      await UnsettleTable.findOneAndUpdate(
-                        {
-                          businessId: getOrder.businessId,
-                          tableName: getOrder.tableName,
-                          pin: tableSession?.pin,
-                        },
-                        {
-                          sync: false,
-                          // <-- use settleData.request_id, not response.data.request_id
-                          requestId: settleData.request_id,
-                          pin: tableSession?.pin,
-                          restId: pos.restId,
-                          date: Date.now(),
-                          total: getOrder.total,
-                        },
-                        { new: true, upsert: true },
-                      );
-                    }
-                  } catch (err) {
-                    console.error("Failed to request/settle bill:", err);
-                  }
-                })();
-              }, 12000);
-
-              await TempTableSettle.create(
-                [
-                  {
-                    businessId: getOrder.businessId,
-                    tableName: getOrder.tableName,
-                    settleBy: getOrder.userId?.name,
-                    hiCode: tableSession?.hiCode,
-                    pin: tableSession?._id.toString(),
-                  },
-                ],
-                {
-                  session,
-                },
-              );
-              await QrBill.findOneAndUpdate(
-                {
-                  billId: tableSession?._id.toString(),
-                },
-                {
-                  $set: {
-                    status: "SUCCESS",
-                  },
-                },
-                {
-                  session,
-                },
-              );
-
-              await UserSession.deleteOne(
-                {
-                  tableName: getOrder.tableName,
-                  businessId: getOrder.businessId,
-                },
-                {
-                  session,
-                },
-              );
-
-              await KotOrder.updateMany(
-                {
-                  tableName: getOrder.tableName,
-                  businessId: getOrder.businessId,
-                },
-                {
-                  $set: {
-                    settled: true,
-                  },
-                },
-                {
-                  session,
-                },
-              );
-
-              await Table.findOneAndUpdate(
-                {
-                  businessId: getOrder.businessId,
-                  name: getOrder.tableName,
-                },
-                {
-                  $set: {
-                    status: "EMPTY",
-                    currentTableAmount: 0,
-                    userIds: [],
-                    totalItemCount: 0,
-                    capacity: 0,
-                    hiCode: "",
-                    isTransfer: false,
-                  },
-                },
-                {
-                  session,
-                },
-              );
               const unsettle_table = await UnsettleTable.find({
                 businessId: getOrder.businessId,
                 sync: false,
