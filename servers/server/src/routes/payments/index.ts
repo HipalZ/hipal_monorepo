@@ -1208,12 +1208,6 @@ const paymentsRouter = new Hono()
         tableName: getOrder?.tableName,
       });
 
-      const pos = await BusinessPosConfig.findOne({
-        businessId: getOrder?.businessId,
-        isDeleted: false,
-        active: true,
-      });
-
       if (event === "payment.failed") {
         console.log("Payment failed");
         const claimCoins = Number(getOrder?.claimedCoins) || 0;
@@ -1259,6 +1253,11 @@ const paymentsRouter = new Hono()
         });
 
         if (!paymentAlreadyExist && getOrder) {
+          const pos = await BusinessPosConfig.findOne({
+            businessId: getOrder?.businessId,
+            isDeleted: false,
+            active: true,
+          });
           const claimCoins = Number(getOrder?.claimedCoins) || 0;
           await PaymentAlert.updateOne(
             {
@@ -1503,6 +1502,33 @@ const paymentsRouter = new Hono()
                 session,
               },
             );
+            const unsettle_table = await UnsettleTable.find({
+              businessId: getOrder.businessId,
+              sync: false,
+            });
+
+            for (const table of unsettle_table) {
+              const payload = {
+                app_key: pos.accessKey,
+                app_secret: pos.secretKey,
+                access_token: pos.authToken,
+                restID: pos.restId,
+                pin: table?.pin,
+                tableNo: table?.tableName,
+              };
+
+              const response = await axios.post(
+                posApiPaths.requestBill,
+                payload,
+                {
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                },
+              );
+
+              console.log("in webhook", response.data);
+            }
           }
         }
       }
@@ -3423,128 +3449,6 @@ const paymentsRouter = new Hono()
       });
     },
   )
-
-  .post("/razorpay-webhook/3/:merchantId", async (c) => {
-    //@ts-ignore
-    return runInTransaction(async (session: ClientSession) => {
-      const { merchantId } = c.req.param();
-      const merchantConfig = (await getMerchantConfig(
-        merchantId,
-      )) as MerchantConfig;
-
-      let RAZORPAY_WEBHOOK_SECRET = "";
-      const body = await c.req.json();
-      if (!merchantConfig) {
-        const merchant = await BusinessSettings.findOne({
-          razorpayMerchantId: merchantId,
-        }).select("razorpayWebhookSecret");
-        RAZORPAY_WEBHOOK_SECRET = merchant?.razorpayWebhookSecret || "";
-      } else {
-        RAZORPAY_WEBHOOK_SECRET = merchantConfig.razorpayWebhookSecret;
-      }
-
-      if (!RAZORPAY_WEBHOOK_SECRET) {
-        console.log("razorpay_webhook_secret missing");
-      }
-
-      const headersResult = RazorpayWebhookHeadersSchema.safeParse(
-        c.req.header(),
-      );
-      if (!headersResult.success) {
-        console.log("Invalid headers");
-        return respond(c, "Invalid headers", true, 200, {});
-      }
-
-      const {
-        "x-razorpay-signature": razorpaySignature,
-        "x-razorpay-event-id": razorpayEventId,
-      } = headersResult.data as RazorpayWebhookHeaders;
-
-      const isSignatureValid = validateWebhookSignature(
-        JSON.stringify(body),
-        razorpaySignature,
-        RAZORPAY_WEBHOOK_SECRET,
-      );
-      if (!isSignatureValid) {
-        console.log("Invalid signature");
-        return respond(c, "Invalid signature", true, 200, {});
-      }
-
-      const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
-
-      if (!bodyResult.success) {
-        console.log("Invalid body", bodyResult);
-
-        return respond(c, "Invalid body", true, 200, {});
-      }
-      //@ts-ignore
-      const { event, payload } = bodyResult.data;
-
-      const getOrder = await Order.findOne({
-        order_id: payload.payment.entity.order_id,
-      }).populate({
-        path: "userId",
-        select: "name",
-      });
-
-      if (event === "payment.captured") {
-        if (getOrder) {
-          const tableSession = await UserSession.findOne({
-            tableName: getOrder.tableName,
-            businessId: getOrder.businessId,
-          });
-          const alreadyTableSettle = await TempTableSettle.findOne({
-            businessId: getOrder.businessId,
-            tableName: getOrder.tableName,
-            hiCode: tableSession?.hiCode,
-            pin: tableSession?._id.toString(),
-          });
-
-          if (!alreadyTableSettle) {
-            const pos = await BusinessPosConfig.findOne({
-              businessId: getOrder.businessId,
-              isDeleted: false,
-              active: true,
-            });
-
-            if (pos) {
-              const unsettle_table = await UnsettleTable.find({
-                businessId: getOrder.businessId,
-                sync: false,
-              });
-
-              for (const table of unsettle_table) {
-                const payload = {
-                  app_key: pos.accessKey,
-                  app_secret: pos.secretKey,
-                  access_token: pos.authToken,
-                  restID: pos.restId,
-                  pin: table?.pin,
-                  tableNo: table?.tableName,
-                };
-
-                const response = await axios.post(
-                  posApiPaths.requestBill,
-                  payload,
-                  {
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                  },
-                );
-
-                console.log("in webhook", response.data);
-              }
-            }
-          }
-        }
-
-        return respond(c, "3 Webhook received successfully", false, 200, {});
-      }
-
-      return respond(c, "3 Webhook received successfully", false, 200, {});
-    });
-  })
 
   .get(
     "/sale/exception_and_rewards",
