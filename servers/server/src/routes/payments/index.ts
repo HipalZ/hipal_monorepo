@@ -1370,11 +1370,14 @@ const paymentsRouter = new Hono()
               pin: tableSession?.pin,
               tableNo: getOrder.tableName,
             };
-            await axios.post(posApiPaths.requestBill, pay, {
+            const ek = await axios.post(posApiPaths.requestBill, pay, {
               headers: {
                 "Content-Type": "application/json",
               },
             });
+
+            console.log("1", ek.data);
+            console.log("pos", pos);
 
             setTimeout(() => {
               (async () => {
@@ -1386,7 +1389,7 @@ const paymentsRouter = new Hono()
                     headers: { "Content-Type": "application/json" },
                   });
 
-                  console.log("in webbook", bill_request_id);
+                  console.log("2", bill_request_id);
 
                   // 2. Settle the table
                   const { data: settleData } = await axios.post(
@@ -1401,6 +1404,8 @@ const paymentsRouter = new Hono()
                       pin: tableSession?.pin,
                     },
                   );
+
+                  console.log("3", settleData);
 
                   // 3. If settlement failed (success === "0"), upsert into UnsettleTable
                   if (settleData.success === "0") {
