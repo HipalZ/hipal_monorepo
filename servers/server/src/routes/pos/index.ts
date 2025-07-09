@@ -11,6 +11,7 @@ import {
   Menu,
   OutLetInfo,
   PaymentAlert,
+  PetpoojaCartItem,
   Pos,
   Table,
   Tax,
@@ -3242,6 +3243,14 @@ const posRouter = new Hono()
         );
 
         const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
+        const saveCart = new PetpoojaCartItem({
+          petpoojaCart,
+          tableName,
+          cartItems,
+          businessId: businessId,
+        });
+
+        await saveCart.save({ session });
 
         if (saveKot.data.success === "0") {
           throw new Error("Error in saving kot");

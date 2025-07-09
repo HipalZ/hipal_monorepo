@@ -16,6 +16,7 @@ import {
   Payment,
   PaymentAlert,
   PendingDues,
+  PetpoojaCartItem,
   QrBill,
   Reviews,
   Subscriber,
@@ -551,6 +552,15 @@ const paymentsRouter = new Hono()
               businessPosConfig.authToken,
             );
 
+            const saveCart = new PetpoojaCartItem({
+              petpoojaCart,
+              tableName,
+              cartItems,
+              businessId: businessPosConfig.businessId,
+            });
+
+            await saveCart.save({ session });
+
             const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
 
             if (saveKot.data.success === "0") {
@@ -820,6 +830,15 @@ const paymentsRouter = new Hono()
             );
 
             const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
+
+            const saveCart = new PetpoojaCartItem({
+              petpoojaCart,
+              tableName,
+              cartItems,
+              businessId: businessPosConfig.businessId,
+            });
+
+            await saveCart.save({ session });
 
             if (saveKot.data.success === "0") {
               throw new Error("Error in saving kot");
