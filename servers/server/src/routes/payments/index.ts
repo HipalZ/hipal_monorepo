@@ -501,7 +501,7 @@ const paymentsRouter = new Hono()
 
             if (
               response.data.success === "1" &&
-              response.data.bill_request_id.length > 2
+              response?.data.bill_request_id?.length > 2
             ) {
               await UnsettleTable.updateOne(
                 { _id: unsettleTable._id },
@@ -768,7 +768,7 @@ const paymentsRouter = new Hono()
 
             if (
               response.data.success === "1" &&
-              response.data.bill_request_id.length > 2
+              response?.data.bill_request_id?.length > 2
             ) {
               await UnsettleTable.updateOne(
                 { _id: unsettleTable._id },
