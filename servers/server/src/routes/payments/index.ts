@@ -3337,8 +3337,8 @@ const paymentsRouter = new Hono()
             businessId: getOrder.businessId,
             tableName: getOrder.tableName,
             pin: {
-              $exists: true, // only docs that actually have a pin field
-              $ne: tableSession?._id.toString(), // but pin ≠ your current session’s pin
+              $exists: true,
+              $eq: tableSession?._id.toString(),
             },
           });
           if (!alreadyTableSettle) {
