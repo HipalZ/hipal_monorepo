@@ -1426,7 +1426,7 @@ const paymentsRouter = new Hono()
                   console.error("Failed to request/settle bill:", err);
                 }
               })();
-            }, 12000);
+            }, 15000);
 
             await TempTableSettle.create(
               [
@@ -2161,7 +2161,7 @@ const paymentsRouter = new Hono()
                       console.error("Failed to request/settle bill:", err);
                     }
                   })();
-                }, 12000);
+                }, 15000);
 
                 await KotOrder.updateMany(
                   {

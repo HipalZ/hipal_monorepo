@@ -575,7 +575,7 @@ const tableRouter = new Hono()
               console.error("Failed to request/settle bill:", err);
             }
           })();
-        }, 12000);
+        }, 15000);
 
         await UserSession.deleteOne(
           {
