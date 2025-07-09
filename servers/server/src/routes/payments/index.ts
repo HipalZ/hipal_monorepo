@@ -20,6 +20,7 @@ import {
   Reviews,
   Subscriber,
   Table,
+  TempTableSettle,
   UnsettleTable,
   UpiMode,
   User,
@@ -3408,6 +3409,20 @@ const paymentsRouter = new Hono()
                 })();
               }, 12000);
 
+              await TempTableSettle.create(
+                [
+                  {
+                    businessId: getOrder.businessId,
+                    tableName: getOrder.tableName,
+                    settleBy: getOrder.userId?.name,
+                    hiCode: tableSession?.hiCode,
+                    pin: tableSession?._id.toString(),
+                  },
+                ],
+                {
+                  session,
+                },
+              );
               await QrBill.findOneAndUpdate(
                 {
                   billId: tableSession?._id.toString(),
