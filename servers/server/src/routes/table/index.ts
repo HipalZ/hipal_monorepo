@@ -25,7 +25,6 @@ import {
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
-import { sleep } from "bun";
 import { Hono } from "hono";
 import type { ClientSession } from "mongodb";
 import { nanoid } from "nanoid";
@@ -530,46 +529,55 @@ const tableRouter = new Hono()
           { session },
         );
 
-        await sleep(7000);
-        const response = await axios.post(posApiPaths.requestBill, payload, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        setTimeout(() => {
+          (async () => {
+            try {
+              // 1. Request the bill
+              const {
+                data: { bill_request_id },
+              } = await axios.post(posApiPaths.requestBill, payload, {
+                headers: { "Content-Type": "application/json" },
+              });
 
-        const res = await axios.post(posApiPaths.settleTable, {
-          app_key: pos.accessKey,
-          app_secret: pos.secretKey,
-          access_token: pos.authToken,
-          restID: pos.restId,
-          bill_request_id: response.data.bill_request_id,
-          amount_paid: modifyTotal,
-          pin: tableSession?.pin,
-        });
+              // 2. Settle the table
+              const { data: settleData } = await axios.post(
+                posApiPaths.settleTable,
+                {
+                  app_key: pos.accessKey,
+                  app_secret: pos.secretKey,
+                  access_token: pos.authToken,
+                  restID: pos.restId,
+                  bill_request_id,
+                  amount_paid: saveOrder[0].total,
+                  pin: tableSession?.pin,
+                },
+              );
 
-        console.log("Settle Table Response:", res.data);
-
-        if (res.data.success === "0") {
-          await UnsettleTable.findOneAndUpdate(
-            {
-              businessId: table?.businessId,
-              tableName: table?.name,
-              pin: tableSession?.pin,
-            },
-            {
-              sync: false,
-              requestId: response.data.request_id,
-              pin: tableSession?.pin,
-              restId: pos?.restId,
-              date: Date.now(),
-              total: modifyTotal,
-            },
-            {
-              new: true,
-              upsert: true,
-            },
-          );
-        }
+              // 3. If settlement failed (success === "0"), upsert into UnsettleTable
+              if (settleData.success === "0") {
+                await UnsettleTable.findOneAndUpdate(
+                  {
+                    businessId: saveOrder[0].businessId,
+                    tableName: saveOrder[0].tableName,
+                    pin: tableSession?.pin,
+                  },
+                  {
+                    sync: false,
+                    // <-- use settleData.request_id, not response.data.request_id
+                    requestId: settleData.request_id,
+                    pin: tableSession?.pin,
+                    restId: pos.restId,
+                    date: Date.now(),
+                    total: saveOrder[0].total,
+                  },
+                  { new: true, upsert: true },
+                );
+              }
+            } catch (err) {
+              console.error("Failed to request/settle bill:", err);
+            }
+          })();
+        }, 10000);
 
         await UserSession.deleteOne(
           {
