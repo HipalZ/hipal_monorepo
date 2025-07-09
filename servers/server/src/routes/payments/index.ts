@@ -2012,7 +2012,7 @@ const paymentsRouter = new Hono()
                       console.error("Failed to request/settle bill:", err);
                     }
                   })();
-                }, 10000);
+                }, 12000);
 
                 await KotOrder.updateMany(
                   {
@@ -3341,11 +3341,6 @@ const paymentsRouter = new Hono()
           });
 
           if (!alreadyTableSettle) {
-            const table = await Table.findOne({
-              businessId: getOrder.businessId,
-              name: getOrder.tableName,
-            });
-
             const pos = await BusinessPosConfig.findOne({
               businessId: getOrder.businessId,
               isDeleted: false,
@@ -3377,6 +3372,8 @@ const paymentsRouter = new Hono()
                     } = await axios.post(posApiPaths.requestBill, payload, {
                       headers: { "Content-Type": "application/json" },
                     });
+
+                    console.log("in webbook", bill_request_id);
 
                     // 2. Settle the table
                     const { data: settleData } = await axios.post(
@@ -3416,7 +3413,7 @@ const paymentsRouter = new Hono()
                     console.error("Failed to request/settle bill:", err);
                   }
                 })();
-              }, 10000);
+              }, 12000);
 
               await TempTableSettle.create(
                 [
@@ -3515,6 +3512,8 @@ const paymentsRouter = new Hono()
                     },
                   },
                 );
+
+                console.log("in webhook", response.data);
               }
             }
           }

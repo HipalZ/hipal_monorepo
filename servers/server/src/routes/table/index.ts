@@ -429,8 +429,6 @@ const tableRouter = new Hono()
           },
         );
 
-        console.log("Bill Request ID:", billRequestId.data);
-
         const createPayment = await Payment.create(
           [
             {
@@ -577,7 +575,7 @@ const tableRouter = new Hono()
               console.error("Failed to request/settle bill:", err);
             }
           })();
-        }, 10000);
+        }, 12000);
 
         await UserSession.deleteOne(
           {
