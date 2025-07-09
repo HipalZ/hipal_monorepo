@@ -8,6 +8,7 @@ import type { IconType } from "react-icons";
 import type { NavItemTypes } from "../types/hiClientzData";
 import { HiOutlineShoppingCart } from "react-icons/hi";
 import { BsGraphUpArrow } from "react-icons/bs";
+import { useHiClientZ } from "../store/useHiClientzData";
 
 export function timestampToDateTime(timestamp: number): string {
   const IST_OFFSET = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
@@ -91,12 +92,20 @@ export function createNavItems(isPos: boolean): Array<{
   type: NavItemTypes;
   icon: IconType;
 }> {
-  const navItems = [
+  const permissions = useHiClientZ((s) => s.selectedBiz?.permissions);
+
+  let navItems = [
     { type: "Cart" as NavItemTypes, icon: HiOutlineShoppingCart },
     { type: "Alerts" as NavItemTypes, icon: CiGlobe },
     { type: "Sales" as NavItemTypes, icon: BsGraphUpArrow },
     { type: "History" as NavItemTypes, icon: MdOutlineHistory },
   ];
+
+  if (!permissions?.sale_summary) {
+    navItems = navItems.filter(
+      (item) => item.type !== "Sales" && item.type !== "History",
+    );
+  }
 
   if (isPos) {
     navItems.unshift({
