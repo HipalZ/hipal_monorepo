@@ -3336,10 +3336,7 @@ const paymentsRouter = new Hono()
           const alreadyTableSettle = await TempTableSettle.findOne({
             businessId: getOrder.businessId,
             tableName: getOrder.tableName,
-            pin: {
-              $exists: true,
-              $eq: tableSession?._id.toString(),
-            },
+            pin: tableSession?._id.toString(),
           });
           if (!alreadyTableSettle) {
             const pos = await BusinessPosConfig.findOne({
