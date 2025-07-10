@@ -3208,6 +3208,7 @@ const posRouter = new Hono()
         const kotOrders = (await KotOrder.find({
           tableName,
           settled: false,
+          accepted: true,
           businessId,
           isSync: false,
         }).lean()) as KotOrderTypes[];
