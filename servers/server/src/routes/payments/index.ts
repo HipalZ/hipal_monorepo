@@ -67,6 +67,7 @@ import {
   razorpayWrapper,
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
+import { generateTenDigitCode } from "../pos/index.js";
 const admin = require("firebase-admin");
 // Hash a passwordss
 
@@ -475,22 +476,22 @@ const paymentsRouter = new Hono()
             order.cart.filter((item) => !item.isDeleted),
           );
 
-          const unsettleTable = await UnsettleTable.findOne({
+          const unsettleTable = await UnsettleTable.find({
             businessId,
-            tableName,
             restId: businessPosConfig.restId,
             sync: false,
           });
-          const payload = {
-            app_key: businessPosConfig.accessKey,
-            app_secret: businessPosConfig.secretKey,
-            access_token: businessPosConfig.authToken,
-            restID: businessPosConfig.restId,
-            pin: unsettleTable?.pin,
-            tableNo: unsettleTable?.tableName,
-          };
 
-          if (unsettleTable) {
+          for (const table of unsettleTable) {
+            const payload = {
+              app_key: businessPosConfig.accessKey,
+              app_secret: businessPosConfig.secretKey,
+              access_token: businessPosConfig.authToken,
+              restID: businessPosConfig.restId,
+              pin: table?.pin,
+              tableNo: table?.tableName,
+            };
+
             const response = await axios.post(
               posApiPaths.requestBill,
               payload,
@@ -503,16 +504,16 @@ const paymentsRouter = new Hono()
 
             if (
               response.data.success === "1" &&
-              response?.data.bill_request_id?.length > 2
+              response.data?.bill_request_id?.length > 2
             ) {
-              await UnsettleTable.updateOne(
-                { _id: unsettleTable._id },
+              const updateSettleTable = await UnsettleTable.findOneAndUpdate(
+                { _id: table._id },
                 {
                   $set: {
                     sync: true,
                   },
                 },
-                { session },
+                { session, new: true },
               );
               const res = await axios.post(posApiPaths.settleTable, {
                 app_key: businessPosConfig.accessKey,
@@ -520,26 +521,33 @@ const paymentsRouter = new Hono()
                 access_token: businessPosConfig.authToken,
                 restID: businessPosConfig.restId,
                 bill_request_id: response.data.bill_request_id,
-                amount_paid: unsettleTable?.total,
-                pin: unsettleTable?.pin,
+                amount_paid: table?.total,
+                pin: table?.pin,
               });
             }
           }
 
-          if (!tableSession?.isUserRegistered) {
-            const registerUser = await axios.post(posApiPaths.registerUser, {
-              app_key: businessPosConfig.accessKey,
-              app_secret: businessPosConfig.secretKey,
-              access_token: businessPosConfig.authToken,
-              restID: businessPosConfig.restId,
-              phone: tableSession?.pin,
-              name: tableSession?.customerName,
-            });
+          const newPin = generateTenDigitCode();
+          const registerUser = await axios.post(posApiPaths.registerUser, {
+            app_key: businessPosConfig.accessKey,
+            app_secret: businessPosConfig.secretKey,
+            access_token: businessPosConfig.authToken,
+            restID: businessPosConfig.restId,
+            phone: newPin,
+          });
 
-            if (registerUser.data.success === "0") {
-              throw new Error("Error in registering user");
-            }
-          }
+          await UserSession.findOneAndUpdate(
+            {
+              tableName: tableName,
+              businessId: businessId,
+            },
+            {
+              $set: {
+                pin: newPin,
+              },
+            },
+            { session, new: true },
+          );
 
           if (kotOrders.length > 0) {
             const petpoojaCart = convertToPetpoojaCart(
@@ -752,22 +760,23 @@ const paymentsRouter = new Hono()
           const cartItems = kotOrders.flatMap((order) =>
             order.cart.filter((item) => !item.isDeleted),
           );
-          const unsettleTable = await UnsettleTable.findOne({
+
+          const unsettleTable = await UnsettleTable.find({
             businessId,
-            tableName,
             restId: businessPosConfig.restId,
             sync: false,
           });
-          const payload = {
-            app_key: businessPosConfig.accessKey,
-            app_secret: businessPosConfig.secretKey,
-            access_token: businessPosConfig.authToken,
-            restID: businessPosConfig.restId,
-            pin: unsettleTable?.pin,
-            tableNo: unsettleTable?.tableName,
-          };
 
-          if (unsettleTable) {
+          for (const table of unsettleTable) {
+            const payload = {
+              app_key: businessPosConfig.accessKey,
+              app_secret: businessPosConfig.secretKey,
+              access_token: businessPosConfig.authToken,
+              restID: businessPosConfig.restId,
+              pin: table?.pin,
+              tableNo: table?.tableName,
+            };
+
             const response = await axios.post(
               posApiPaths.requestBill,
               payload,
@@ -780,16 +789,16 @@ const paymentsRouter = new Hono()
 
             if (
               response.data.success === "1" &&
-              response?.data.bill_request_id?.length > 2
+              response.data?.bill_request_id?.length > 2
             ) {
-              await UnsettleTable.updateOne(
-                { _id: unsettleTable._id },
+              const updateSettleTable = await UnsettleTable.findOneAndUpdate(
+                { _id: table._id },
                 {
                   $set: {
                     sync: true,
                   },
                 },
-                { session },
+                { session, new: true },
               );
               const res = await axios.post(posApiPaths.settleTable, {
                 app_key: businessPosConfig.accessKey,
@@ -797,26 +806,33 @@ const paymentsRouter = new Hono()
                 access_token: businessPosConfig.authToken,
                 restID: businessPosConfig.restId,
                 bill_request_id: response.data.bill_request_id,
-                amount_paid: unsettleTable?.total,
-                pin: unsettleTable?.pin,
+                amount_paid: table?.total,
+                pin: table?.pin,
               });
             }
           }
 
-          if (!tableSession?.isUserRegistered) {
-            const registerUser = await axios.post(posApiPaths.registerUser, {
-              app_key: businessPosConfig.accessKey,
-              app_secret: businessPosConfig.secretKey,
-              access_token: businessPosConfig.authToken,
-              restID: businessPosConfig.restId,
-              phone: tableSession?.pin,
-              name: tableSession?.customerName,
-            });
+          const newPin = generateTenDigitCode();
+          const registerUser = await axios.post(posApiPaths.registerUser, {
+            app_key: businessPosConfig.accessKey,
+            app_secret: businessPosConfig.secretKey,
+            access_token: businessPosConfig.authToken,
+            restID: businessPosConfig.restId,
+            phone: newPin,
+          });
 
-            if (registerUser.data.success === "0") {
-              throw new Error("Error in registering user");
-            }
-          }
+          await UserSession.findOneAndUpdate(
+            {
+              tableName: tableName,
+              businessId: businessId,
+            },
+            {
+              $set: {
+                pin: newPin,
+              },
+            },
+            { session, new: true },
+          );
 
           if (kotOrders.length > 0) {
             const petpoojaCart = convertToPetpoojaCart(
@@ -1390,14 +1406,20 @@ const paymentsRouter = new Hono()
               pin: tableSession?.pin,
               tableNo: getOrder.tableName,
             };
-            const ek = await axios.post(posApiPaths.requestBill, pay, {
-              headers: {
-                "Content-Type": "application/json",
-              },
-            });
-
-            console.log("1", ek.data);
-            console.log("pos", pos);
+            setTimeout(() => {
+              (async () => {
+                try {
+                  // 1. Request the bill
+                  const {
+                    data: { bill_request_id },
+                  } = await axios.post(posApiPaths.requestBill, pay, {
+                    headers: { "Content-Type": "application/json" },
+                  });
+                } catch (err) {
+                  console.error("Failed to request/settle bill:", err);
+                }
+              })();
+            }, 7000);
 
             setTimeout(() => {
               (async () => {
@@ -1451,7 +1473,7 @@ const paymentsRouter = new Hono()
                   console.error("Failed to request/settle bill:", err);
                 }
               })();
-            }, 15000);
+            }, 30000);
 
             await TempTableSettle.create(
               [
@@ -2135,11 +2157,20 @@ const paymentsRouter = new Hono()
                   tableNo: tableSession?.tableName,
                 };
 
-                await axios.post(posApiPaths.requestBill, payload, {
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                });
+                setTimeout(() => {
+                  (async () => {
+                    try {
+                      // 1. Request the bill
+                      const {
+                        data: { bill_request_id },
+                      } = await axios.post(posApiPaths.requestBill, payload, {
+                        headers: { "Content-Type": "application/json" },
+                      });
+                    } catch (err) {
+                      console.error("Failed to request/settle bill:", err);
+                    }
+                  })();
+                }, 7000);
 
                 setTimeout(() => {
                   (async () => {
@@ -2189,7 +2220,7 @@ const paymentsRouter = new Hono()
                       console.error("Failed to request/settle bill:", err);
                     }
                   })();
-                }, 15000);
+                }, 30000);
 
                 await KotOrder.updateMany(
                   {

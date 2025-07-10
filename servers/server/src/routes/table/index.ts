@@ -419,15 +419,7 @@ const tableRouter = new Hono()
           tableNo: table?.name,
         };
 
-        const billRequestId = await axios.post(
-          posApiPaths.requestBill,
-          payload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        );
+      
 
         const createPayment = await Payment.create(
           [
@@ -469,7 +461,7 @@ const tableRouter = new Hono()
               billId: tableSession?._id.toString(),
               billItems: tableSession?.items || [],
               pin: tableSession?.pin,
-              billRequestId: billRequestId.data.request_id,
+             
             },
           ],
           { session },
@@ -527,6 +519,24 @@ const tableRouter = new Hono()
           { session },
         );
 
+
+         setTimeout(() => {
+          (async () => {
+            try {
+              // 1. Request the bill
+              const {
+                data: { bill_request_id },
+              } = await axios.post(posApiPaths.requestBill, payload, {
+                headers: { "Content-Type": "application/json" },
+              });
+
+            
+            } catch (err) {
+              console.error("Failed to request/settle bill:", err);
+            }
+          })();
+        }, 7000);
+
         setTimeout(() => {
           (async () => {
             try {
@@ -575,7 +585,7 @@ const tableRouter = new Hono()
               console.error("Failed to request/settle bill:", err);
             }
           })();
-        }, 15000);
+        }, 30000);
 
         await UserSession.deleteOne(
           {

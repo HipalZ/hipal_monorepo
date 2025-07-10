@@ -773,12 +773,16 @@ const posRouter = new Hono()
           { session },
         );
 
+        const dtableName = await Table.findOne({
+          businessId: businessId,
+        }).session(session);
+
         const { data: menuRes } = await axios.post(posApiPaths.fetchMenu, {
           "app-key": businessPosConfig.accessKey,
           "app-secret": businessPosConfig.secretKey,
           "access-token": businessPosConfig.authToken,
           restID: businessPosConfig.restId,
-          tableNo: businessPosConfig.defaultTableName,
+          tableNo: dtableName?.name,
         });
         let dishSyncCount = 0;
         let categorySyncCount = 0;
@@ -3156,42 +3160,40 @@ const posRouter = new Hono()
         if (!pos) {
           return respond(c, "Pos not found", true, 400, {});
         }
-        const unsettleTable = await UnsettleTable.findOne({
+        const unsettleTable = await UnsettleTable.find({
           businessId,
-          tableName,
           restId: pos.restId,
           sync: false,
         });
-        const payload = {
-          app_key: pos.accessKey,
-          app_secret: pos.secretKey,
-          access_token: pos.authToken,
-          restID: pos.restId,
-          pin: unsettleTable?.pin,
-          tableNo: unsettleTable?.tableName,
-        };
 
-        if (unsettleTable) {
+        for (const table of unsettleTable) {
+          const payload = {
+            app_key: pos.accessKey,
+            app_secret: pos.secretKey,
+            access_token: pos.authToken,
+            restID: pos.restId,
+            pin: table?.pin,
+            tableNo: table?.tableName,
+          };
+
           const response = await axios.post(posApiPaths.requestBill, payload, {
             headers: {
               "Content-Type": "application/json",
             },
           });
 
-          console.log("Response from requestBill:", response.data);
-
           if (
             response.data.success === "1" &&
             response.data?.bill_request_id?.length > 2
           ) {
-            await UnsettleTable.updateOne(
-              { _id: unsettleTable._id },
+            const updateSettleTable = await UnsettleTable.findOneAndUpdate(
+              { _id: table._id },
               {
                 $set: {
                   sync: true,
                 },
               },
-              { session },
+              { session, new: true },
             );
             const res = await axios.post(posApiPaths.settleTable, {
               app_key: pos.accessKey,
@@ -3199,11 +3201,33 @@ const posRouter = new Hono()
               access_token: pos.authToken,
               restID: pos.restId,
               bill_request_id: response.data.bill_request_id,
-              amount_paid: unsettleTable?.total,
-              pin: unsettleTable?.pin,
+              amount_paid: table?.total,
+              pin: table?.pin,
             });
           }
         }
+
+        const newPin = generateTenDigitCode();
+        const registerUser = await axios.post(posApiPaths.registerUser, {
+          app_key: pos.accessKey,
+          app_secret: pos.secretKey,
+          access_token: pos.authToken,
+          restID: pos.restId,
+          phone: newPin,
+        });
+
+        await UserSession.findOneAndUpdate(
+          {
+            tableName: tableName,
+            businessId: businessId,
+          },
+          {
+            $set: {
+              pin: newPin,
+            },
+          },
+          { session, new: true },
+        );
 
         const kotOrders = (await KotOrder.find({
           tableName,
@@ -3219,17 +3243,6 @@ const posRouter = new Hono()
 
         if (!kotOrders.length) {
           return respond(c, "No Items in cart", true, 200, {});
-        }
-
-        if (!tableSession.isUserRegistered) {
-          const registerUser = await axios.post(posApiPaths.registerUser, {
-            app_key: pos.accessKey,
-            app_secret: pos.secretKey,
-            access_token: pos.authToken,
-            restID: pos.restId,
-            phone: tableSession?.pin,
-            name: tableSession?.customerName,
-          });
         }
 
         const petpoojaCart = convertToPetpoojaCart(
