@@ -529,7 +529,7 @@ const tableRouter = new Hono()
               console.error("Failed to request/settle bill:", err);
             }
           })();
-        }, 7000);
+        }, 8000);
 
         setTimeout(() => {
           (async () => {
@@ -575,11 +575,35 @@ const tableRouter = new Hono()
                   { new: true, upsert: true },
                 );
               }
+              
+        const unsettleTable = await UnsettleTable.find({
+          businessId: saveOrder[0]?.businessId,
+          restId: pos.restId,
+          sync: false,
+        });
+
+        for (const table of unsettleTable) {
+          const payload = {
+            app_key: pos.accessKey,
+            app_secret: pos.secretKey,
+            access_token: pos.authToken,
+            restID: pos.restId,
+            pin: table?.pin,
+            tableNo: table?.tableName,
+          };
+
+          await axios.post(posApiPaths.requestBill, payload, {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+        }
+
             } catch (err) {
               console.error("Failed to request/settle bill:", err);
             }
           })();
-        }, 30000);
+        }, 32000);
 
         await UserSession.deleteOne(
           {
@@ -620,28 +644,6 @@ const tableRouter = new Hono()
           { session },
         );
 
-        const unsettleTable = await UnsettleTable.find({
-          businessId: saveOrder[0]?.businessId,
-          restId: pos.restId,
-          sync: false,
-        });
-
-        for (const table of unsettleTable) {
-          const payload = {
-            app_key: pos.accessKey,
-            app_secret: pos.secretKey,
-            access_token: pos.authToken,
-            restID: pos.restId,
-            pin: table?.pin,
-            tableNo: table?.tableName,
-          };
-
-          await axios.post(posApiPaths.requestBill, payload, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-        }
 
         return c.json(
           {
