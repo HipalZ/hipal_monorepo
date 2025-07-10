@@ -626,27 +626,7 @@ const tableRouter = new Hono()
           { session },
         );
 
-        const unsettle_table = await UnsettleTable.find({
-          businessId: tableSession.businessId,
-          sync: false,
-        });
-
-        for (const table of unsettle_table) {
-          const payload = {
-            app_key: pos.accessKey,
-            app_secret: pos.secretKey,
-            access_token: pos.authToken,
-            restID: pos.restId,
-            pin: table?.pin,
-            tableNo: table?.tableName,
-          };
-
-          const response = await axios.post(posApiPaths.requestBill, payload, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-        }
+        
 
         return c.json(
           {
