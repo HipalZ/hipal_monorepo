@@ -2471,7 +2471,8 @@ const posRouter = new Hono()
         const KotOrders = (await KotOrder.find({
           tableName,
           businessId,
-          settled: false,
+            settled: false,
+          accepted: true,
         }).lean()) as KotOrderTypes[];
 
         const cartItems = KotOrders.flatMap((order) =>
