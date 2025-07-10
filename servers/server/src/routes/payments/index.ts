@@ -1527,33 +1527,9 @@ const paymentsRouter = new Hono()
                 session,
               },
             );
-            const unsettle_table = await UnsettleTable.find({
-              businessId: getOrder.businessId,
-              sync: false,
-            });
+           
 
-            for (const table of unsettle_table) {
-              const payload = {
-                app_key: pos.accessKey,
-                app_secret: pos.secretKey,
-                access_token: pos.authToken,
-                restID: pos.restId,
-                pin: table?.pin,
-                tableNo: table?.tableName,
-              };
-
-              const response = await axios.post(
-                posApiPaths.requestBill,
-                payload,
-                {
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                },
-              );
-
-              console.log("in webhook", response.data);
-            }
+            
           }
         }
       }
@@ -2273,31 +2249,7 @@ const paymentsRouter = new Hono()
                   },
                 );
 
-                const unsettle_table = await UnsettleTable.find({
-                  businessId: order.businessId,
-                  sync: false,
-                });
-
-                for (const table of unsettle_table) {
-                  const payload = {
-                    app_key: isHavePos.accessKey,
-                    app_secret: isHavePos.secretKey,
-                    access_token: isHavePos.authToken,
-                    restID: isHavePos.restId,
-                    pin: table?.pin,
-                    tableNo: table?.tableName,
-                  };
-
-                  const response = await axios.post(
-                    posApiPaths.requestBill,
-                    payload,
-                    {
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-                    },
-                  );
-                }
+               
               }
             }
           }
