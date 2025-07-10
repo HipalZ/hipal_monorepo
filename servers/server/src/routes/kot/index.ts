@@ -1,6 +1,7 @@
 import {
   BusinessPosConfig,
   KotOrder,
+  PaymentAlert,
   Table,
   User,
   UserAnalytic,
@@ -388,6 +389,21 @@ const kotRouter = new Hono()
             tableName: kot.tableName,
             businessId: kot.businessId,
           });
+          const orderAlreadyExist = await PaymentAlert.findOne({
+            businessId: kot.businessId,
+            tableName: kot.tableName,
+            alertType: "OFFLINE",
+            isAccepted: false,
+          });
+
+          if (orderAlreadyExist)
+            return respond(
+              c,
+              "A request for this service is already in progress. Please wait for the staff to take action",
+              true,
+              400,
+              {},
+            );
 
           kot.accepted = true;
           kot.acceptedBy = performBy;
