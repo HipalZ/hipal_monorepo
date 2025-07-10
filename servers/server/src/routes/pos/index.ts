@@ -1218,10 +1218,7 @@ const posRouter = new Hono()
           return respond(c, 'POS not found', true, 404, {});
         }
 
-        const isActive = await checkElectronJsStatus();
-        if (!isActive && posConfigData.printKot) {
-          return respond(c, 'Kot-printer server is not active', true, 400, {});
-        }
+      
 
         const orderAlreadyExist = await PaymentAlert.findOne({
           businessId,
@@ -1568,10 +1565,6 @@ const posRouter = new Hono()
           businessId: businessId,
         });
 
-        const isActive = await checkElectronJsStatus();
-        if (!isActive && pos.printKot) {
-          return respond(c, 'kot-printer server is not active', true, 400, {});
-        }
 
         const orderAlreadyExist = await PaymentAlert.findOne({
           businessId,
