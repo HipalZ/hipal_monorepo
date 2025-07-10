@@ -2579,6 +2579,7 @@ const posRouter = new Hono()
             tableName,
             businessId,
             settled: false,
+            accepted: true,
           }).lean()) as KotOrderTypes[];
 
           const { totalDishTotal, totalGst } = calculateBillDishIds(

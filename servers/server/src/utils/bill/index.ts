@@ -137,7 +137,7 @@ function calculateBillTotals(kots: KotOrderTypes[]): {
 
 function calculateBillDishIds(
   kots: KotOrderTypes[],
-  dishIds: string[],
+  itemIds: string[],
 ): {
   totalDishTotal: number;
   totalGst: number;
@@ -145,13 +145,16 @@ function calculateBillDishIds(
   let totalDishTotal = 0;
   let totalGst = 0;
 
+  // for faster lookups
+  const allowed = new Set(itemIds);
+
   try {
     for (const kot of kots) {
       for (const item of kot.cart) {
         // Skip deleted items
         if (item.isDeleted) continue;
-
-        console.log("item", item);
+        // Only include if this item's id is in our list
+        if (!allowed.has(item._id.toString())) continue;
 
         // Base price comes from portion if present, otherwise dish.price
         const basePrice = item.portion?.price ?? item.dish.price;
