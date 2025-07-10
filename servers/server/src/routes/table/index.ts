@@ -419,8 +419,6 @@ const tableRouter = new Hono()
           tableNo: table?.name,
         };
 
-      
-
         const createPayment = await Payment.create(
           [
             {
@@ -461,7 +459,6 @@ const tableRouter = new Hono()
               billId: tableSession?._id.toString(),
               billItems: tableSession?.items || [],
               pin: tableSession?.pin,
-             
             },
           ],
           { session },
@@ -519,8 +516,7 @@ const tableRouter = new Hono()
           { session },
         );
 
-
-         setTimeout(() => {
+        setTimeout(() => {
           (async () => {
             try {
               // 1. Request the bill
@@ -529,8 +525,6 @@ const tableRouter = new Hono()
               } = await axios.post(posApiPaths.requestBill, payload, {
                 headers: { "Content-Type": "application/json" },
               });
-
-            
             } catch (err) {
               console.error("Failed to request/settle bill:", err);
             }
@@ -626,7 +620,28 @@ const tableRouter = new Hono()
           { session },
         );
 
-        
+        const unsettleTable = await UnsettleTable.find({
+          businessId: saveOrder[0]?.businessId,
+          restId: pos.restId,
+          sync: false,
+        });
+
+        for (const table of unsettleTable) {
+          const payload = {
+            app_key: pos.accessKey,
+            app_secret: pos.secretKey,
+            access_token: pos.authToken,
+            restID: pos.restId,
+            pin: table?.pin,
+            tableNo: table?.tableName,
+          };
+
+          await axios.post(posApiPaths.requestBill, payload, {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+        }
 
         return c.json(
           {
