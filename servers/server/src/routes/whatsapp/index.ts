@@ -2132,24 +2132,19 @@ const whatsappRouter = new Hono()
             const findLongUrl = await UrlModel.findOne({
               urlCode: tableCode,
             });
-            console.log("old userObj", userObj);
-            longUrl = `${
-              findLongUrl?.shortUrl
-            }?q=wa&id=${userObj?._id.toString()}`;
-            shortUrlType = findLongUrl?.shortUrlType || "";
-            const userId = userObj?._id.toString();
-            urlObj = findLongUrl;
-            updateLongUrl = `${findLongUrl?.longUrl}&id=${userId}`;
+
+            if (findLongUrl) {
+              const idParam = userObj?._id.toString();
+
+              longUrl = encodeURI(`${findLongUrl.shortUrl}?q=wa&id=${idParam}`);
+              updateLongUrl = encodeURI(`${findLongUrl.longUrl}&id=${idParam}`);
+              shortUrlType = findLongUrl.shortUrlType || "";
+              urlObj = findLongUrl;
+              console.log("longUrl", longUrl);
+              console.log("short", shortUrlType);
+              console.log("urlObj", urlObj);
+            }
           }
-
-          console.log("phon_no_id", phon_no_id);
-          console.log("from", from);
-          console.log("urlObj", urlObj);
-          console.log("tostring", userObj?._id.toString());
-          console.log("shortUrlType", shortUrlType);
-          console.log("updateLongUrl", updateLongUrl);
-          console.log("longUrl", longUrl);
-
           if (phon_no_id && from && urlObj) {
             if (shortUrlType === "COUPON") {
               console.log("yaha tk");
