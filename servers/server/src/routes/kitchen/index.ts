@@ -43,6 +43,22 @@ const kitchenRouter = new Hono()
         );
       }
 
+      const allKitchens = await Kitchen.find({
+        businessId,
+        menuId,
+        dishIds: {
+          $in: dishIds,
+        },
+      });
+
+      for (const kitchen of allKitchens) {
+        await Kitchen.updateMany(
+          { _id: kitchen._id },
+          { $pull: { dishIds: { $in: dishIds } } },
+          { session },
+        );
+      }
+
       const kitchen = new Kitchen({
         businessId,
         name: updateName,
@@ -262,6 +278,28 @@ const kitchenRouter = new Hono()
       } = await c.req.json();
       const updateName = name.trim().toLowerCase();
 
+      const kitchenData = await Kitchen.findById(kitchenId);
+
+      if (!kitchenData) {
+        return respond(c, "Kitchen not found", true, 404, {});
+      }
+
+      const allKitchens = await Kitchen.find({
+        businessId: kitchenData.businessId,
+        menuId: kitchenData.menuId,
+        dishIds: {
+          $in: dishIds,
+        },
+      });
+
+      for (const kitchen of allKitchens) {
+        await Kitchen.updateMany(
+          { _id: kitchen._id },
+          { $pull: { dishIds: { $in: dishIds } } },
+          { session },
+        );
+      }
+
       const kitchen = await Kitchen.findByIdAndUpdate(
         kitchenId,
         {
@@ -287,7 +325,7 @@ const kitchenRouter = new Hono()
       if (removeDishIds.length > 1) {
         await Dish.updateMany(
           { _id: { $in: removeDishIds } },
-          { $pull: { kitchenId: kitchen._id } },
+          { kitchenId: null },
         );
       }
 

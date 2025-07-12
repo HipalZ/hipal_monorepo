@@ -414,7 +414,6 @@ const posRouter = new Hono()
         const posConfig = await BusinessPosConfig.findOne({
           businessId: businessId,
           isDeleted: false,
-          active: true,
         });
         if (!posConfig) {
           return c.json(
@@ -2360,7 +2359,7 @@ const posRouter = new Hono()
             },
             {
               $set: {
-                pos: false,
+                pos: true,
               },
             },
           );
