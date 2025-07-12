@@ -2132,16 +2132,18 @@ const whatsappRouter = new Hono()
               urlCode: tableCode,
             });
 
-            longUrl = `${
-              findLongUrl?.shortUrl
-            }?q=wa&id=${userObj?._id.toString()}`;
-            shortUrlType = findLongUrl?.shortUrlType || "";
-            urlObj = findLongUrl;
-            updateLongUrl = `${
-              findLongUrl?.longUrl
-            }&id=${userObj?._id.toString()}`;
-          }
+            if (findLongUrl) {
+              const idParam = userObj?._id.toString();
 
+              longUrl = encodeURI(`${findLongUrl.shortUrl}?q=wa&id=${idParam}`);
+              updateLongUrl = encodeURI(`${findLongUrl.longUrl}&id=${idParam}`);
+              shortUrlType = findLongUrl.shortUrlType || "";
+              urlObj = findLongUrl;
+              console.log("longUrl", longUrl);
+              console.log("short", shortUrlType);
+              console.log("urlObj", urlObj);
+            }
+          }
           if (phon_no_id && from && urlObj) {
             if (shortUrlType === "COUPON") {
               await axios({
