@@ -155,6 +155,85 @@ const MemoDishQuantityButton = ({
     }
   }, [cartItemsForDish, updateCartItem, removeFromCart]);
 
+  const isAddButtonDisabled = useCallback(() => {
+    // Step 1: Filter compulsory add-ons (compulsory > 0)
+    const compulsoryAddOns = selectedDish?.addOnIds?.filter(
+      (addOn) => addOn.compulsory > 0,
+    );
+
+    // Step 2: Check if a portion is selected
+    const isPortionSelected = selectedPortion !== null;
+
+    // Step 3: Check if any add-on choice is selected (with quantity > 0)
+    const isAddOnSelected = selectedChoices?.some(
+      (choice) => choice?.quantity > 0,
+    );
+
+    // Case 1: Only Portions (no add-ons)
+    if (selectedDish?.portions?.length > 0 && !selectedDish?.addOnIds?.length) {
+      return !isPortionSelected; // Disable if no portion is selected
+    }
+
+    // Case 2: Only Add-ons (no portions)
+    if (
+      selectedDish?.addOnIds?.length > 0 &&
+      selectedDish?.portions?.length === 0
+    ) {
+      // Disable button until all compulsory add-ons are selected
+      if (compulsoryAddOns.length > 0) {
+        // Check if all compulsory add-ons are selected
+        const allCompulsorySelected = compulsoryAddOns.every((addOn) => {
+
+          // Check if any choice within the add-on has been selected
+          const isSelected = addOn.choices?.some((choice) => {
+            return selectedChoices?.some(
+              (selectedChoice) =>
+                selectedChoice?.id === choice._id &&
+                selectedChoice?.quantity > 0,
+            );
+          });
+
+          return isSelected;
+        });
+
+        // Log the result of all compulsory selections
+        return !allCompulsorySelected; // Disable if any compulsory add-on is not selected
+      }
+      return !isAddOnSelected; // Enable the button if no compulsory add-ons, and any add-on is selected
+    }
+
+    // Case 3: Portions and Add-ons (both portions and add-ons exist)
+    if (selectedDish?.portions?.length > 0 && compulsoryAddOns.length > 0) {
+      // Ensure all compulsory add-ons are selected (check every compulsory add-on)
+      const allCompulsorySelected = compulsoryAddOns.every((addOn) => {
+
+        // Check if any choice within the add-on has been selected
+        const isSelected = addOn.choices?.some((choice) => {
+          return selectedChoices?.some(
+            (selectedChoice) =>
+              selectedChoice?.id === choice._id && selectedChoice?.quantity > 0,
+          );
+        });
+
+        return isSelected;
+      });
+
+      // The button will be enabled if both portion and all compulsory add-ons are selected
+      return !(isPortionSelected && allCompulsorySelected);
+    }
+
+    // Case 4: Optional Add-ons (compulsory = 0)
+    if (
+      selectedDish?.addOnIds?.length > 0 &&
+      selectedDish?.portions?.length === 0
+    ) {
+      return !isAddOnSelected; // Disable if no add-on is selected, for optional add-ons
+    }
+
+    // Default return: The button should not be disabled in all other cases
+    return false;
+  }, [selectedDish, selectedPortion, selectedChoices]);
+
   return (
     <>
       <div className={cn("relative w-24 h-10", className)}>
@@ -246,10 +325,7 @@ const MemoDishQuantityButton = ({
                     text: "Add Item To Cart",
                     onClick: handleAddToCart,
                     type: "button" as const,
-                    disable:
-                      selectedDish?.price === 0 &&
-                      selectedDish.portions?.length > 0 &&
-                      selectedPortion === null,
+                    disable: isAddButtonDisabled(),
                   },
                 ]}
               />
