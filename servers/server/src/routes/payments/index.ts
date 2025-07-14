@@ -1,6 +1,7 @@
 import { createHmac } from "node:crypto";
 // books.ts
 import {
+  BillQueue,
   BusinessPosConfig,
   BusinessSettings,
   CouponClaim,
@@ -61,6 +62,7 @@ import { getMerchantConfig } from "../../utils/cacheHelper";
 import getDefault4AMToNext4AM from "../../utils/defaultBillingTime";
 import { convertToPetpoojaCart } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
+import { billQueue } from "../../utils/queue/queueClient";
 import {
   type MerchantConfig,
   razorpayWrapper,
@@ -1388,96 +1390,51 @@ const paymentsRouter = new Hono()
               pin: tableSession?.pin,
               tableNo: getOrder.tableName,
             };
-            setTimeout(() => {
-              (async () => {
-                try {
-                  // 1. Request the bill
-                  const {
-                    data: { bill_request_id },
-                  } = await axios.post(posApiPaths.requestBill, pay, {
-                    headers: { "Content-Type": "application/json" },
-                  });
-                } catch (err) {
-                  console.error("Failed to request/settle bill:", err);
-                }
-              })();
-            }, 8000);
 
-            setTimeout(() => {
-              (async () => {
-                try {
-                  // 1. Request the bill
-                  const {
-                    data: { bill_request_id },
-                  } = await axios.post(posApiPaths.requestBill, pay, {
-                    headers: { "Content-Type": "application/json" },
-                  });
+            const saveOrderData = getOrder.toObject();
 
-                  console.log("2", bill_request_id);
+            const job1 = await billQueue.add(
+              "request-only",
+              { pay, saveOrderData, pos, tableSession },
+              { delay: 9_000 },
+            );
 
-                  // 2. Settle the table
-                  const { data: settleData } = await axios.post(
-                    posApiPaths.settleTable,
-                    {
-                      app_key: pos.accessKey,
-                      app_secret: pos.secretKey,
-                      access_token: pos.authToken,
-                      restID: pos.restId,
-                      bill_request_id,
-                      amount_paid: getOrder.total,
-                      pin: tableSession?.pin,
-                    },
-                  );
+            await BillQueue.findOneAndUpdate(
+              { jobId: job1.id },
+              {
+                $set: {
+                  businessId: tableSession?.businessId,
+                  tableName: tableSession?.tableName,
+                  date: Date.now(),
+                  log: "Queued",
+                },
+              },
+              {
+                new: true,
+                upsert: true,
+              },
+            );
 
-                  console.log("3", settleData);
-
-                  // 3. If settlement failed (success === "0"), upsert into UnsettleTable
-                  if (settleData.success === "0") {
-                    await UnsettleTable.findOneAndUpdate(
-                      {
-                        businessId: getOrder.businessId,
-                        tableName: getOrder.tableName,
-                        pin: tableSession?.pin,
-                      },
-                      {
-                        sync: false,
-                        // <-- use settleData.request_id, not response.data.request_id
-                        requestId: settleData.request_id,
-                        pin: tableSession?.pin,
-                        restId: pos.restId,
-                        date: Date.now(),
-                        total: getOrder.total,
-                      },
-                      { new: true, upsert: true },
-                    );
-                  }
-                  const unsettleTable = await UnsettleTable.find({
-                    businessId: getOrder.businessId,
-                    restId: pos.restId,
-                    sync: false,
-                  });
-
-                  for (const table of unsettleTable) {
-                    const payload = {
-                      app_key: pos.accessKey,
-                      app_secret: pos.secretKey,
-                      access_token: pos.authToken,
-                      restID: pos.restId,
-                      pin: table?.pin,
-                      tableNo: table?.tableName,
-                    };
-
-                    await axios.post(posApiPaths.requestBill, payload, {
-                      headers: {
-                        "Content-Type": "application/json",
-                      },
-                    });
-                  }
-                } catch (err) {
-                  console.error("Failed to request/settle bill:", err);
-                }
-              })();
-            }, 32000);
+            const job2 = await billQueue.add(
+              "request-and-settle",
+              { pay, saveOrderData, pos, tableSession },
+              { delay: 35_000 },
+            );
+            await BillQueue.findOneAndUpdate(
+              { jobId: job2.id },
+              {
+                $set: {
+                  businessId: tableSession?.businessId,
+                  tableName: tableSession?.tableName,
+                  date: Date.now(),
+                  log: "Queued",
+                },
+              },
+              {
+                new: true,
+                upsert: true,
+              },
+            );
 
             await TempTableSettle.create(
               [
@@ -2163,92 +2120,50 @@ const paymentsRouter = new Hono()
                   tableNo: tableSession?.tableName,
                 };
 
-                setTimeout(() => {
-                  (async () => {
-                    try {
-                      // 1. Request the bill
-                      const {
-                        data: { bill_request_id },
-                      } = await axios.post(posApiPaths.requestBill, payload, {
-                        headers: { "Content-Type": "application/json" },
-                      });
-                    } catch (err) {
-                      console.error("Failed to request/settle bill:", err);
-                    }
-                  })();
-                }, 8000);
+                const saveOrderData = order.toObject();
 
-                setTimeout(() => {
-                  (async () => {
-                    try {
-                      // 1. Request the bill
-                      const {
-                        data: { bill_request_id },
-                      } = await axios.post(posApiPaths.requestBill, payload, {
-                        headers: { "Content-Type": "application/json" },
-                      });
+                const job1 = await billQueue.add(
+                  "request-only",
+                  { payload, saveOrderData, isHavePos, tableSession },
+                  { delay: 9_000 },
+                );
 
-                      // 2. Settle the table
-                      const { data: settleData } = await axios.post(
-                        posApiPaths.settleTable,
-                        {
-                          app_key: isHavePos.accessKey,
-                          app_secret: isHavePos.secretKey,
-                          access_token: isHavePos.authToken,
-                          restID: isHavePos.restId,
-                          bill_request_id,
-                          amount_paid: modifyTotal,
-                          pin: tableSession?.pin,
-                        },
-                      );
+                await BillQueue.findOneAndUpdate(
+                  { jobId: job1.id },
+                  {
+                    $set: {
+                      businessId: tableSession?.businessId,
+                      tableName: tableSession?.tableName,
+                      date: Date.now(),
+                      log: "Queued",
+                    },
+                  },
+                  {
+                    new: true,
+                    upsert: true,
+                  },
+                );
 
-                      // 3. If settlement failed (success === "0"), upsert into UnsettleTable
-                      if (settleData.success === "0") {
-                        await UnsettleTable.findOneAndUpdate(
-                          {
-                            businessId: order.businessId,
-                            tableName: order.tableName,
-                            pin: tableSession?.pin,
-                          },
-                          {
-                            sync: false,
-                            // <-- use settleData.request_id, not response.data.request_id
-                            requestId: settleData.request_id,
-                            pin: tableSession?.pin,
-                            restId: isHavePos.restId,
-                            date: Date.now(),
-                            total: modifyTotal,
-                          },
-                          { new: true, upsert: true },
-                        );
-                      }
-                      const unsettleTable = await UnsettleTable.find({
-                        businessId: order.businessId,
-                        restId: isHavePos.restId,
-                        sync: false,
-                      });
-
-                      for (const table of unsettleTable) {
-                        const payload = {
-                          app_key: isHavePos.accessKey,
-                          app_secret: isHavePos.secretKey,
-                          access_token: isHavePos.authToken,
-                          restID: isHavePos.restId,
-                          pin: table?.pin,
-                          tableNo: table?.tableName,
-                        };
-
-                        await axios.post(posApiPaths.requestBill, payload, {
-                          headers: {
-                            "Content-Type": "application/json",
-                          },
-                        });
-                      }
-                    } catch (err) {
-                      console.error("Failed to request/settle bill:", err);
-                    }
-                  })();
-                }, 32000);
+                const job2 = await billQueue.add(
+                  "request-and-settle",
+                  { payload, saveOrderData, isHavePos, tableSession },
+                  { delay: 35_000 },
+                );
+                await BillQueue.findOneAndUpdate(
+                  { jobId: job2.id },
+                  {
+                    $set: {
+                      businessId: tableSession?.businessId,
+                      tableName: tableSession?.tableName,
+                      date: Date.now(),
+                      log: "Queued",
+                    },
+                  },
+                  {
+                    new: true,
+                    upsert: true,
+                  },
+                );
 
                 await KotOrder.updateMany(
                   {
