@@ -1,36 +1,47 @@
 // src/queueClient.ts
+import { BillQueue } from "@hi/db-models";
 import { Queue, QueueEvents } from "bullmq";
 import IORedis from "ioredis";
 
-const connection = new IORedis({
-  host: "redis-14878.c301.ap-south-1-1.ec2.redns.redis-cloud.com",
-  port: 14878,
-  password: "AzkxwkrnhjcsQGMdTz3AUk3tOxAsVC4I",
-  maxRetriesPerRequest: null,
-});
+export const redisConnection = new IORedis(
+  "redis://default:AzkxwkrnhjcsQGMdTz3AUk3tOxAsVC4I@redis-14878.c301.ap-south-1-1.ec2.redns.redis-cloud.com:14878",
+);
 
 export const billQueue = new Queue("billQueue", {
-  connection,
+  connection: redisConnection,
   defaultJobOptions: {
-    attempts: 1, // only run once
+    attempts: 1,
     backoff: { type: "fixed", delay: 0 },
-    removeOnComplete: { age: 50 }, // remove 50s after success
-    removeOnFail: true, // remove immediately on failure
+    removeOnComplete: { age: 50 },
+    removeOnFail: true,
   },
 });
 
-// Broad‐scope event emitter for monitoring
-export const billQueueEvents = new QueueEvents("billQueue", { connection });
+export const billQueueEvents = new QueueEvents("billQueue", {
+  connection: redisConnection,
+});
 
-billQueueEvents.on("waiting", ({ jobId }) =>
-  console.log(`⏳ Job ${jobId} enqueued and waiting`),
-);
-billQueueEvents.on("active", ({ jobId }) =>
-  console.log(`🚀 Job ${jobId} started processing`),
-);
-billQueueEvents.on("completed", ({ jobId, returnvalue }) =>
-  console.log(`✅ Job ${jobId} completed, return=${returnvalue}`),
-);
-billQueueEvents.on("failed", ({ jobId, failedReason }) =>
-  console.log(`❌ Job ${jobId} failed: ${failedReason}`),
-);
+billQueueEvents.on("waiting", async ({ jobId }) => {
+  try {
+    await BillQueue.findOneAndUpdate(
+      { jobId },
+      { $set: { log: "waiting", jobId } },
+      { upsert: true, new: true },
+    );
+  } catch (err) {}
+});
+
+billQueueEvents.on("active", async ({ jobId }) => {
+  await BillQueue.findOneAndUpdate({ jobId }, { log: "active" });
+});
+billQueueEvents.on("completed", async ({ jobId }) => {
+  await BillQueue.findOneAndUpdate({ jobId }, { log: "completed" });
+});
+billQueueEvents.on("failed", async ({ jobId, failedReason }) => {
+  await BillQueue.findOneAndUpdate(
+    { jobId },
+    {
+      log: failedReason,
+    },
+  );
+});

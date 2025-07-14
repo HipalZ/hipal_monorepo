@@ -1,4 +1,5 @@
 import {
+  BillQueue,
   BillUrlModel,
   Business,
   BusinessPosConfig,
@@ -522,17 +523,44 @@ const tableRouter = new Hono()
         const job1 = await billQueue.add(
           "request-only",
           { payload, saveOrderData, pos, tableSession },
-          { delay: 8_000 },
-        );
-        console.log(
-          `🟢 Enqueued job1: id=${job1.id}, name=${job1.name}, delay=8s`,
+          { delay: 9_000 },
         );
 
-        // Enqueue the “request-and-settle” job
+        await BillQueue.findOneAndUpdate(
+          { jobId: job1.id },
+          {
+            $set: {
+              businessId: tableSession.businessId,
+              tableName: tableSession.tableName,
+              date: Date.now(),
+              log: "Queued",
+            },
+          },
+          {
+            new: true,
+            upsert: true,
+          },
+        );
+
         const job2 = await billQueue.add(
           "request-and-settle",
           { payload, saveOrderData, pos, tableSession },
-          { delay: 32_000 },
+          { delay: 35_000 },
+        );
+        await BillQueue.findOneAndUpdate(
+          { jobId: job2.id },
+          {
+            $set: {
+              businessId: tableSession.businessId,
+              tableName: tableSession.tableName,
+              date: Date.now(),
+              log: "Queued",
+            },
+          },
+          {
+            new: true,
+            upsert: true,
+          },
         );
 
         await UserSession.deleteOne(
