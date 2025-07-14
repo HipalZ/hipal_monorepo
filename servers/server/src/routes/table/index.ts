@@ -519,14 +519,18 @@ const tableRouter = new Hono()
 
         const saveOrderData = saveOrder[0];
 
-        await billQueue.add(
-          `request-only-${tableSession._id.toString()}`,
+        const job1 = await billQueue.add(
+          "request-only",
           { payload, saveOrderData, pos, tableSession },
           { delay: 8_000 },
         );
+        console.log(
+          `🟢 Enqueued job1: id=${job1.id}, name=${job1.name}, delay=8s`,
+        );
 
-        await billQueue.add(
-          `request-and-settle-${tableSession._id.toString()}`,
+        // Enqueue the “request-and-settle” job
+        const job2 = await billQueue.add(
+          "request-and-settle",
           { payload, saveOrderData, pos, tableSession },
           { delay: 32_000 },
         );
