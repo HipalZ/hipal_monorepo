@@ -5,6 +5,9 @@ import IORedis from "ioredis";
 
 export const redisConnection = new IORedis(
   "redis://default:AzkxwkrnhjcsQGMdTz3AUk3tOxAsVC4I@redis-14878.c301.ap-south-1-1.ec2.redns.redis-cloud.com:14878",
+  {
+    maxRetriesPerRequest: null,
+  },
 );
 
 export const billQueue = new Queue("billQueue", {
