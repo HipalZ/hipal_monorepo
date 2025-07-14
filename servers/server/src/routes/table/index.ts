@@ -1114,24 +1114,32 @@ const tableRouter = new Hono()
 
   .post(
     "/save_unsettle_table",
-    zValidator(
-      "json",
-      z.object({
-        businessId: z.string().min(1).max(500),
-        restId: z.string().min(1).max(500),
-        pin: z.string().min(1).max(500),
-        tableName: z.string().min(1).max(500),
-        requestId: z.string().min(1).max(500),
-        total: z.number().min(1).max(500),
-      }),
-    ),
+    // zValidator(
+    //   "json",
+    //   z.object({
+    //     businessId: z.string().min(1).max(500),
+    //     restId: z.string().min(1).max(500),
+    //     pin: z.string().min(1).max(500),
+    //     tableName: z.string().min(1).max(500),
+    //     requestId: z.string().min(1).max(500),
+    //     total: z.number().min(1).max(500),
+    //   }),
+    // ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const { businessId, restId, pin, tableName, requestId, total } =
           await c.req.json();
 
-        await UnsettleTable.findOneAndUpdate(
+        console.log("requestId", requestId);
+        console.log("pin", pin);
+        console.log("tableName", tableName);
+        console.log("total", total);
+        console.log("restId", restId);
+        console.log("businessId", businessId);
+        console.log("session", session);
+
+        const data = await UnsettleTable.findOneAndUpdate(
           {
             businessId: businessId,
             tableName: tableName,
@@ -1145,8 +1153,10 @@ const tableRouter = new Hono()
             date: Date.now(),
             total: total,
           },
-          { new: true, upsert: true },
+          { new: true, upsert: true, session },
         );
+
+        console.log("data", data);
 
         return respond(c, "updated successfully", false, 200, {});
       });
