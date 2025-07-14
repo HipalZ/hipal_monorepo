@@ -8,14 +8,9 @@ import useBusinessData from "@/components/store/useBusinessData";
 import { InfoCard } from "./InfoCard";
 import { PieChart } from "./PieCharts";
 import { motion } from "framer-motion";
-import {
-  DollarSign,
-  CreditCard,
-  Gift,
-  AlertTriangle,
-  IndianRupee,
-} from "lucide-react";
+import { CreditCard, Gift, AlertTriangle, IndianRupee } from "lucide-react";
 import { BarChart } from "./BarChart";
+import { useMemo } from "react";
 
 export interface SalesData {
   overAllAmount: number;
@@ -49,15 +44,38 @@ interface SalesExceptionData {
     totalCoinsGiven: number;
     totalCoinUsed: number;
     totalCouponUsed: number;
+    totalCouponDiscount: number;
+    totalCoinsUsed: number;
   };
+}
+
+export interface TableData {
+  active: string;
+  businessId: string;
+  createdAt: string;
+  currentTableAmount: number;
+  capacity?: number;
+  displayForCaptains: boolean;
+  isDeleted: boolean;
+  name: string;
+  rank: string;
+  staffIds: string[];
+  isTransfer?: boolean;
+  status: string;
+  tableId: string;
+  updatedAt: string;
+  tableItemCount: number;
+  userIds: string[];
+  zoneId: string;
+  hiCode?: string;
+  _id: string;
 }
 
 const Overview = () => {
   const business = useBusinessData((s) => s.businessData);
-  const { timeStampStart, timeStampEnd } = useTimings((s) => ({
-    timeStampStart: s.timeStampStart,
-    timeStampEnd: s.timeStampEnd,
-  }));
+
+  const timeStampStart = useTimings((s) => s.timeStampStart);
+  const timeStampEnd = useTimings((s) => s.timeStampEnd);
 
   const handleHistoryData = async (): Promise<SalesData> => {
     try {
@@ -114,6 +132,14 @@ const Overview = () => {
     enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
   });
 
+  const fetchTables = async (businessId: string): Promise<TableData[]> => {
+    const response = await apiRpc.table.all[":businessId"].$get({
+      param: { businessId },
+    });
+    const json = await response.json();
+    return json.data || [];
+  };
+
   const { data: otherData } = useQuery<OtherAndWarningData, Error>({
     queryKey: ["otherAndWarning", business?._id, timeStampStart, timeStampEnd],
     queryFn: otherAndWarning,
@@ -125,6 +151,26 @@ const Overview = () => {
     queryFn: salesException,
     enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
   });
+
+  const { isLoading: tablesLoading, data: tablesData } = useQuery({
+    queryKey: ["tables", business?._id],
+    queryFn: () => fetchTables(business?._id || ""),
+    enabled: !!business?._id,
+    refetchInterval: 1000 * 30,
+  });
+
+  const runningTablesBreakdown = useMemo(() => {
+    return tablesData
+      ? tablesData
+          .filter((table) => table.active && table.currentTableAmount > 0)
+          .map((table) => ({
+            label: ` ${table.name}`,
+            value: table.currentTableAmount,
+          }))
+      : [];
+  }, [tablesData]);
+
+  console.log("tablesData", tablesData);
 
   if (isLoading) {
     return <OverviewSkeleton />;
@@ -266,6 +312,7 @@ const Overview = () => {
           value={salesData.totalActiveTableValue}
           icon={<CreditCard className="w-4 h-4" />}
           gradient="from-blue-600 to-blue-200"
+          breakdown={runningTablesBreakdown}
         />
       </div>
 
