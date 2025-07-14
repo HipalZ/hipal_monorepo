@@ -8,7 +8,13 @@ import useBusinessData from "@/components/store/useBusinessData";
 import { InfoCard } from "./InfoCard";
 import { PieChart } from "./PieCharts";
 import { motion } from "framer-motion";
-import { DollarSign, CreditCard, Gift, AlertTriangle } from "lucide-react";
+import {
+  DollarSign,
+  CreditCard,
+  Gift,
+  AlertTriangle,
+  IndianRupee,
+} from "lucide-react";
 import { BarChart } from "./BarChart";
 
 export interface SalesData {
@@ -140,58 +146,121 @@ const Overview = () => {
     (acc, curr) => acc + curr,
     0,
   );
+
   const totalExceptionAndReward = salesExceptionData
-    ? Object.values(salesExceptionData.exceptionSale).reduce(
-        (acc, curr) => acc + curr,
-        0,
-      ) +
-      Object.values(salesExceptionData.rewardSale).reduce(
-        (acc, curr) => acc + curr,
-        0,
-      )
+    ? salesExceptionData.exceptionSale.totalComplementary +
+      salesExceptionData.exceptionSale.totalDiscount +
+      salesExceptionData.rewardSale.totalCoinsGiven +
+      salesExceptionData.rewardSale.totalCoinsUsed +
+      salesExceptionData.rewardSale.totalCouponDiscount
     : 0;
+
   const totalOtherAndWarning = otherData
-    ? Object.values(otherData.otherSale).reduce((acc, curr) => acc + curr, 0) +
-      Object.values(otherData.warningSale).reduce((acc, curr) => acc + curr, 0)
+    ? otherData.otherSale.totalTax +
+      otherData.otherSale.totalTip +
+      otherData.otherSale.totalServiceCharge
     : 0;
+
+  // Create breakdown data
+  const totalSalesBreakdown = [
+    { label: "Hipalz Razorpay Sales", value: salesData.onlineSale.online },
+    { label: "Pay To Captain Sales", value: totalOfflineSale },
+  ];
+
+  const onlineSalesBreakdown = [
+    { label: "Online Payment", value: salesData.onlineSale.online },
+  ];
+
+  const offlineSalesBreakdown = Object.entries(salesData.offlineSale).map(
+    ([method, amount]) => ({
+      label: method.charAt(0).toUpperCase() + method.slice(1),
+      value: amount,
+    }),
+  );
+
+  const loyaltyRewardsBreakdown = salesExceptionData
+    ? [
+        {
+          label: "Total Complementary",
+          value: salesExceptionData.exceptionSale.totalComplementary,
+        },
+        {
+          label: "Total Discount",
+          value: salesExceptionData.exceptionSale.totalDiscount,
+        },
+        {
+          label: "Total Coins Given",
+          value: salesExceptionData.rewardSale.totalCoinsGiven,
+        },
+        {
+          label: "Total Coins Used",
+          value: salesExceptionData.rewardSale.totalCoinsUsed,
+        },
+        {
+          label: "Total Coupon Discount",
+          value: salesExceptionData.rewardSale.totalCouponDiscount,
+        },
+      ]
+    : [];
+
+  const taxesServiceBreakdown = otherData
+    ? [
+        { label: "Total Tax", value: otherData.otherSale.totalTax },
+        { label: "Total Tip", value: otherData.otherSale.totalTip },
+        {
+          label: "Total Service Charge",
+          value: otherData.otherSale.totalServiceCharge,
+        },
+      ]
+    : [];
 
   return (
     <div className="container mx-auto">
-      <section className="col-span-2 grid gap-4 px-4 mt-4 ">
+      <section className="col-span-2 grid gap-4 px-4 mt-4">
         <InfoCard
           title="Total Sales"
           value={salesData.overAllAmount}
-          icon={<DollarSign className="w-4 h-4" />}
+          icon={<IndianRupee className="w-4 h-4" />}
           gradient="from-blue-600 to-blue-200"
+          breakdown={totalSalesBreakdown}
         />
       </section>
+
       <div className="grid grid-cols-2 gap-4 px-4 mt-4 md:grid-cols-4 lg:grid-cols-4">
         <section className="col-span-2">
           <InfoCard
             title="Hipalz Razorpay Sales"
             value={salesData.onlineSale.online}
-            icon={<DollarSign className="w-4 h-4" />}
+            icon={<IndianRupee className="w-4 h-4" />}
             gradient="from-black to-gray-100"
+            breakdown={onlineSalesBreakdown}
           />
         </section>
+
         <InfoCard
           title="Pay To Captain Sales"
           value={totalOfflineSale}
           icon={<CreditCard className="w-4 h-4" />}
           gradient="from-green-600 to-green-100"
+          breakdown={offlineSalesBreakdown}
         />
+
         <InfoCard
           title="Loyalty & Rewards"
           value={totalExceptionAndReward}
           icon={<Gift className="w-4 h-4" />}
           gradient="from-purple-600 to-purple-100"
+          breakdown={loyaltyRewardsBreakdown}
         />
+
         <InfoCard
           title="Taxes & Service Charges"
           value={totalOtherAndWarning}
           icon={<AlertTriangle className="w-4 h-4" />}
           gradient="from-red-900 to-red-200"
+          breakdown={taxesServiceBreakdown}
         />
+
         <InfoCard
           title="Running Tables"
           value={salesData.totalActiveTableValue}

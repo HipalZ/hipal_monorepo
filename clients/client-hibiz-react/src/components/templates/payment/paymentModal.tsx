@@ -1,104 +1,131 @@
-import { memo, useState } from "react"
-import { MdOutlineCall } from "react-icons/md"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import type { IExistingPayments } from "@/components/types/businessData"
-import { timestampToDateTime } from "@/components/utils/helper"
-import { apiRpc } from "@hi/common"
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import LoadingSpinner from "@/components/atom/loadingSpinner"
-import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton"
-import { Download, EditIcon } from "lucide-react";
-import { motion, useAnimation } from "framer-motion"
-import toast from "react-hot-toast"
-import { useAllModes } from "@/hooks/useMode"
-import { useSalesStore } from "@/components/store/useSalesStore"
+import { memo, useState } from "react";
+import { MdOutlineCall } from "react-icons/md";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import type { IExistingPayments } from "@/components/types/businessData";
+import { timestampToDateTime } from "@/components/utils/helper";
+import { apiRpc } from "@hi/common";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
+import {
+  Download,
+  EditIcon,
+  User,
+  CreditCard,
+  Receipt,
+  MessageSquare,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { motion, useAnimation } from "framer-motion";
+import toast from "react-hot-toast";
+import { useAllModes } from "@/hooks/useMode";
 
 export interface Extra {
-  name: string
-  price: number
-  quantity: number
+  name: string;
+  price: number;
+  quantity: number;
 }
 
 export interface DishItem {
-  name: string
-  price: number
-  quantity: number
+  name: string;
+  price: number;
+  quantity: number;
 }
 
 export interface BillItem {
-  dish: DishItem
-  extras: Extra[]
+  dish: DishItem;
+  extras: Extra[];
 }
 
 interface PaymentModalProps {
-  salesData: IExistingPayments | undefined
-  onClose?: () => void
-  allSalesData: IExistingPayments[] // Array of all sales data
-  currentIndex: number // Current index in the array
-  onNavigate: (newIndex: number) => void // Function to update the current index
+  salesData: IExistingPayments | undefined;
+  onClose?: () => void;
+  allSalesData: IExistingPayments[];
+  currentIndex: number;
+  onNavigate: (newIndex: number) => void;
 }
 
-const InfoRow = ({ label, value }: { label: string; value: string | number | undefined }) => (
-  <div className="flex items-center justify-between py-2">
-    <span className="text-sm text-gray-600">{label}</span>
-    <span className="font-medium">{value}</span>
-  </div>
-)
+const InfoRow = ({
+  label,
+  value,
+  highlight = false,
+}: {
+  label: string;
+  value: string | number | undefined;
+  highlight?: boolean;
+}) => {
+  if (typeof value === "string" && value === "0") {
+    return null;
+  }
+  if (value === 0) return null;
 
+  return (
+    <div
+      className={`flex items-center justify-between py-2 ${
+        highlight ? "bg-blue-50 px-3 rounded-lg" : ""
+      }`}
+    >
+      <span className="text-sm text-gray-600">{label}</span>
+      <span
+        className={`font-medium ${
+          highlight ? "text-blue-700 font-semibold" : ""
+        }`}
+      >
+        {value}
+      </span>
+    </div>
+  );
+};
 const hideMiddleNumbers = (phone: string) => {
-  if (phone?.length <= 4) return phone
-  const firstPart = phone?.slice(0, 3)
-  const lastPart = phone?.slice(-3)
-  return `${firstPart}****${lastPart}`
-}
+  if (phone?.length <= 4) return phone;
+  const firstPart = phone?.slice(0, 3);
+  const lastPart = phone?.slice(-3);
+  return `${firstPart}****${lastPart}`;
+};
 
-const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNavigate }: PaymentModalProps) => {
+const PaymentModal = ({
+  salesData,
+  onClose,
+  allSalesData,
+  currentIndex,
+  onNavigate,
+}: PaymentModalProps) => {
   const [isEditingMode, setIsEditingMode] = useState(false);
   const [selectedMode, setSelectedMode] = useState(salesData?.mode || "");
   const queryClient = useQueryClient();
   const { data: modes } = useAllModes();
-  const controls = useAnimation()
-  const setOpen = useSalesStore((s) => s.setOpen)
-  const [dragDirection, setDragDirection] = useState<number>(0)
-
-  const getBillItems = async (): Promise<BillItem[]> => {
-    const response = await apiRpc.kot.get_pos_bill[":billRequestId"].$get({
-      param: {
-        billRequestId: salesData?.posBillRequestId,
-      },
-    })
-
-    const res = await response.json()
-    return res.data as BillItem[]
-  }
-
-  const { isLoading, data: itemsData } = useQuery<BillItem[]>({
-    queryKey: ["getBillItems", salesData?.posBillRequestId],
-    queryFn: getBillItems,
-    enabled: !!salesData?.posBillRequestId,
-  })
+  const controls = useAnimation();
+  const [dragDirection, setDragDirection] = useState<number>(0);
 
   const { isPending, mutateAsync } = useMutation({
     mutationFn: async (billId: string) => {
-      const response = await apiRpc.download.download_bill_pdf[":paymentId"].$get({
+      const response = await apiRpc.download.download_bill_pdf[
+        ":paymentId"
+      ].$get({
         param: {
           paymentId: billId,
         },
-      })
-      return response
+      });
+      return response;
     },
     onSuccess: async (data) => {
-      const result = await data.json()
-      const downloadUrl = result.data.url
-      window.open(downloadUrl, "_blank")
+      const result = await data.json();
+      const downloadUrl = result.data.url;
+      window.open(downloadUrl, "_blank");
     },
     onError: (error) => {
-      console.log(error)
+      console.log(error);
     },
-  })
+  });
 
   const { mutateAsync: updateMode, isPending: isUpdatingMode } = useMutation({
     mutationFn: async (newMode: string) => {
@@ -113,51 +140,84 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
     },
     onSuccess: () => {
       toast.success("Payment mode updated!");
-      queryClient.invalidateQueries({ queryKey: ["allSalesDataByGet"] })
+      queryClient.invalidateQueries({ queryKey: ["allSalesDataByGet"] });
+      setIsEditingMode(false);
     },
     onError: () => {
       toast.error("Failed to update mode.");
     },
-  })
+  });
 
   const goToNext = () => {
     if (currentIndex < allSalesData.length - 1) {
-      onNavigate(currentIndex + 1)
-      // Animate from right to left (next)
+      onNavigate(currentIndex + 1);
       controls.start({
         x: [-300, 0],
         opacity: [0, 1],
         transition: { duration: 0.3 },
-      })
+      });
     } else {
-      toast.error('No more bills')
+      toast.error("No more bills");
     }
-  }
+  };
 
   const goToPrevious = () => {
     if (currentIndex > 0) {
-      onNavigate(currentIndex - 1)
-      // Animate from left to right (previous)
+      onNavigate(currentIndex - 1);
       controls.start({
         x: [300, 0],
         opacity: [0, 1],
         transition: { duration: 0.3 },
-      })
+      });
     } else {
-      toast.error("No previous bills")
+      toast.error("No previous bills");
     }
-  }
+  };
 
-  // Handle drag end
   const handleDragEnd = () => {
     if (dragDirection > 100) {
-      goToPrevious()
+      goToPrevious();
     } else if (dragDirection < -100) {
-      goToNext()
+      goToNext();
     }
-    // Reset drag direction
-    setDragDirection(0)
-  }
+    setDragDirection(0);
+  };
+
+  const getPaymentModeColor = (mode: string) => {
+    switch (mode?.toLowerCase()) {
+      case "cash":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "upi":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "card":
+        return "bg-purple-100 text-purple-800 border-purple-200";
+      case "npc":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      case "complementary":
+        return "bg-pink-100 text-pink-800 border-pink-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getSettleTypeColor = (settleType: string) => {
+    switch (settleType?.toLowerCase()) {
+      case "normal_settle":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "force_settle":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "hi_settle":
+        return "bg-purple-100 text-purple-800 border-purple-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const totalItemsCount =
+    salesData?.billItems?.reduce(
+      (total, item) => total + item.dish.quantity,
+      0,
+    ) || 0;
 
   return (
     <Card className="relative w-full overflow-hidden border-none shadow-none">
@@ -169,50 +229,140 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
         animate={controls}
         initial={{ opacity: 1 }}
       >
-        <section className="flex items-center justify-between px-4 py-2">
-          <h3 className="pt-2 text-lg font-semibold text-center">Payment Details</h3>
-          <Badge className="text-xl font-semibold text-white bg-black">{salesData?.mode}</Badge>
-        </section>
-
-        <CardContent className="overflow-y-auto max-h-[90vh]">
-          <div className="space-y-4 mb-[12rem]">
-            {/* Bill navigation indicator */}
-            <div className="flex items-center justify-center mb-2">
-              <span className="text-sm text-muted-foreground">
+        {/* Header */}
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg font-semibold">
+                Payment Details
+              </CardTitle>
+              <p className="text-sm text-gray-500 mt-1">
+                {timestampToDateTime(salesData?.date || 0)}
+              </p>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              <Badge
+                className={`px-3 py-1 font-medium border ${getPaymentModeColor(
+                  salesData?.mode || "",
+                )}`}
+              >
+                {salesData?.mode?.toUpperCase()}
+              </Badge>
+              <span className="text-xs text-gray-500">
                 Bill {currentIndex + 1} of {allSalesData.length}
               </span>
             </div>
+          </div>
 
-            {/* Sales Data Information */}
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-500">{timestampToDateTime(salesData?.date || 0)}</span>
-              <span className="text-sm font-medium">Order ID: {salesData?._id.slice(-5)}</span>
+          {/* Navigation indicators */}
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToPrevious}
+              disabled={currentIndex === 0}
+              className="h-8 w-8 p-0 bg-transparent"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex gap-1">
+              {allSalesData.map((_, index) => (
+                <div
+                  key={index}
+                  className={`h-2 w-2 rounded-full transition-colors ${
+                    index === currentIndex ? "bg-blue-600" : "bg-gray-300"
+                  }`}
+                />
+              ))}
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToNext}
+              disabled={currentIndex === allSalesData.length - 1}
+              className="h-8 w-8 p-0 bg-transparent"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardHeader>
 
-            <div className="">
-              <InfoRow label="Paid Amount" value={`₹ ${salesData?.order_id?.total}`} />
-              <InfoRow label="Bill Value Entered" value={`₹ ${salesData?.order_id?.billValue}`} />
-              <InfoRow label="Including Tips" value={`₹ ${salesData?.order_id?.tips}`} />
-              <InfoRow label="Discount" value={`${salesData?.order_id?.claimedCoins} Coins used`} />
+        <CardContent className="overflow-y-auto max-h-[75vh] hide-scrollbar space-y-6 pb-[8rem]">
+          {/* Payment Summary Card */}
+          <Card className="bg-gradient-to-r from-green-50 to-green-100 border-green-200">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-green-700">Total Paid</p>
+                  <p className="text-2xl font-bold text-green-800">
+                    ₹{salesData?.order_id?.total}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-green-700">Order ID</p>
+                  <p className="text-lg font-semibold text-green-800">
+                    {salesData?._id.slice(-8)}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Payment Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <CreditCard className="w-4 h-4" />
+                Payment Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <InfoRow
+                label="Bill Value Entered"
+                value={`₹${salesData?.order_id?.billValue}`}
+              />
+              <InfoRow label="Including Tips" value={`₹${salesData?.tips}`} />
+              <InfoRow
+                label="Discount"
+                value={`${salesData?.order_id?.claimedCoins} Coins used`}
+              />
+              <InfoRow
+                label="couponDiscount"
+                value={salesData?.order_id?.couponDiscount}
+              />
+              <InfoRow label="Gst" value={salesData?.order_id?.gst} />
+              <InfoRow
+                label="Service Charge"
+                value={salesData?.serviceCharge}
+              />
+
               <div className="flex items-center justify-between py-2">
                 <span className="text-sm text-gray-600">Payment Mode</span>
                 {isEditingMode ? (
                   <div className="flex items-center gap-2">
                     <select
-                      className="border px-2 py-1 text-sm rounded"
+                      className="border px-2 py-1 text-sm rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={selectedMode}
                       onChange={(e) => setSelectedMode(e.target.value)}
                     >
                       {Array.isArray(modes) && modes.length > 0 ? (
                         modes.map((mode) => (
-                          <option disabled={["npc", "complementary", "dues", "split"].includes(mode?.name?.toLowerCase())} key={mode?._id} value={mode?.name}>
+                          <option
+                            disabled={[
+                              "npc",
+                              "complementary",
+                              "dues",
+                              "split",
+                            ].includes(mode?.name?.toLowerCase())}
+                            key={mode?._id}
+                            value={mode?.name}
+                          >
                             {mode?.name}
                           </option>
                         ))
                       ) : (
                         <option disabled>Loading...</option>
                       )}
-
                     </select>
                     <Button
                       size="sm"
@@ -220,109 +370,239 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
                       onClick={() => updateMode(selectedMode)}
                       disabled={isUpdatingMode}
                     >
-                      Update
+                      {isUpdatingMode ? "Updating..." : "Update"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-xs bg-transparent"
+                      onClick={() => setIsEditingMode(false)}
+                    >
+                      Cancel
                     </Button>
                   </div>
                 ) : (
-                  <div className="flex items-center">
-                    <span className="font-medium">{salesData?.mode}</span>
-                    {!["npc", "complementary", "dues", "split"].includes(salesData?.mode?.toLowerCase() || "") && (
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      className={`${getPaymentModeColor(
+                        salesData?.mode || "",
+                      )} border`}
+                    >
+                      {salesData?.mode}
+                    </Badge>
+                    {!["npc", "complementary", "dues", "split"].includes(
+                      salesData?.mode?.toLowerCase() || "",
+                    ) && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-xs"
+                        className="h-6 w-6 p-0"
                         onClick={() => setIsEditingMode(true)}
                       >
-                        <EditIcon className="h-6 w-6 text-red-500" />
+                        <EditIcon className="h-3 w-3 text-gray-500" />
                       </Button>
                     )}
                   </div>
                 )}
               </div>
 
-              <InfoRow label="Mode of Settle" value={salesData?.settleType} />
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm text-gray-600">Settle Type</span>
+                <Badge
+                  className={`${getSettleTypeColor(
+                    salesData?.settleType || "",
+                  )} border`}
+                >
+                  {salesData?.settleType?.replace("_", " ")}
+                </Badge>
+              </div>
+
               {salesData?.settleType === "FORCE_SETTLE" && (
-                <InfoRow label="Force Settle Reason" value={salesData?.comment || ""} />
+                <InfoRow
+                  label="Force Settle Reason"
+                  value={salesData?.comment || "No reason provided"}
+                  highlight={true}
+                />
               )}
-            </div>
+            </CardContent>
+          </Card>
 
-            <Separator />
-
-            {/* User and Table Information */}
-            <div className="">
-              <InfoRow label="User" value={salesData?.userId?.name} />
+          {/* Customer Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <User className="w-4 h-4" />
+                Customer Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              <InfoRow label="Customer Name" value={salesData?.userId?.name} />
               <InfoRow label="Table" value={salesData?.order_id?.tableName} />
               <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-gray-600">Number</span>
-                <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">Phone Number</span>
+                <div className="flex items-center gap-2">
                   <span className="font-medium">
-                    {salesData?.userId?.phone ? hideMiddleNumbers(salesData?.userId?.phone) : ""}
+                    {salesData?.userId?.phone
+                      ? hideMiddleNumbers(salesData?.userId?.phone)
+                      : "N/A"}
                   </span>
-                  <Button variant="outline" size="sm" className="flex items-center space-x-1" asChild>
-                    <a href={`tel:+91${salesData?.userId?.phone}`}>
-                      <MdOutlineCall size={16} />
-                      <span className="text-sm">Call</span>
-                    </a>
-                  </Button>
+                  {salesData?.userId?.phone && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2 text-xs bg-transparent"
+                      asChild
+                    >
+                      <a href={`tel:+91${salesData?.userId?.phone}`}>
+                        <MdOutlineCall className="h-3 w-3 mr-1" />
+                        Call
+                      </a>
+                    </Button>
+                  )}
                 </div>
               </div>
-            </div>
-            {/* Items List */}
-            {
-              isLoading ? <LoadingSpinner /> :
-                <>
-                  {itemsData && itemsData?.length > 0 && <div className="">
-                    <h2 className="font-semibold">Bill Items</h2>
-                    <Card>
-                      <CardContent className="p-4 space-y-2">
-                        {itemsData?.slice(0, -2).map((item, index) => (
-                          <div key={index} className="space-y-2">
-                            <div className="flex justify-between">
-                              <div>
-                                <p className="font-medium">{item.dish.name}</p>
-                                <p className="text-sm text-gray-500">
-                                  Qty: {item.dish.quantity} × ₹{item.dish.price.toFixed(2)}
-                                </p>
-                              </div>
-                              <p className="font-medium">₹{(item.dish.price * item.dish.quantity).toFixed(2)}</p>
-                            </div>
-                            {item.extras.length > 0 && (
-                              <div className="pl-4 space-y-1">
-                                {item.extras.map((extra, extraIndex) => (
-                                  <div key={extraIndex} className="flex justify-between text-sm">
-                                    <span>{extra.name}</span>
-                                    <span>
-                                      {extra.quantity} × ₹{extra.price.toFixed(2)} = ₹
-                                      {(extra.quantity * extra.price).toFixed(2)}
-                                    </span>
+            </CardContent>
+          </Card>
+
+          {/* Bill Items Accordion */}
+          {salesData?.billItems && salesData?.billItems?.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Receipt className="w-4 h-4" />
+                  Bill Items
+                  <Badge variant="secondary" className="ml-2">
+                    {totalItemsCount} items
+                  </Badge>
+                </CardTitle>
+                <p className="text-sm text-gray-600">
+                  Total Value: ₹{salesData.order_id.total}
+                </p>
+              </CardHeader>
+              <CardContent>
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="bill-items" className="border-none">
+                    <AccordionTrigger className="hover:no-underline py-2">
+                      <span className="text-sm font-medium">
+                        View {salesData?.billItems.length} item
+                        {salesData?.billItems.length > 1 ? "s" : ""} details
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2">
+                      <div className="">
+                        {salesData?.billItems.map((item, index) => (
+                          <Card
+                            key={index}
+                            className=" shadow-none border-none"
+                          >
+                            <CardContent className="p-1 border-b pb-2">
+                              <div className="space-y-3">
+                                {/* Main dish */}
+                                <div className="flex justify-between items-start">
+                                  <div className="flex-1">
+                                    <h4 className="font-medium text-gray-900">
+                                      {item.dish.name}
+                                    </h4>
+                                    <p className="text-sm text-gray-500 mt-1">
+                                      Quantity: {item.quantity} × ₹
+                                      {item.dish.price}
+                                    </p>
                                   </div>
-                                ))}
+                                  <div className="text-right">
+                                    <p className="font-semibold text-gray-900">
+                                      ₹{item.dish.price * item.quantity}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Extras */}
+                                {item.extras.length > 0 && (
+                                  <div className="border-t pt-3">
+                                    <h5 className="text-sm font-medium text-gray-700 mb-2">
+                                      Add-ons:
+                                    </h5>
+                                    <div className="space-y-2">
+                                      {item.extras.map((extra, extraIndex) => (
+                                        <div
+                                          key={extraIndex}
+                                          className="flex justify-between items-center text-sm bg-gray-50 p-2 rounded"
+                                        >
+                                          <span className="text-gray-700">
+                                            {extra.name}
+                                          </span>
+                                          <span className="font-medium">
+                                            {extra.quantity} × ₹
+                                            {extra.price.toFixed(2)} = ₹
+                                            {(
+                                              extra.quantity * extra.price
+                                            ).toFixed(2)}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                    <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200">
+                                      <span className="text-sm font-medium">
+                                        Item Total:
+                                      </span>
+                                      <span className="font-semibold">
+                                        ₹
+                                        {(
+                                          item.dish.price * item.quantity +
+                                          item.extras.reduce(
+                                            (sum, extra) =>
+                                              sum +
+                                              extra.price * extra.quantity,
+                                            0,
+                                          )
+                                        ).toFixed(2)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
+                            </CardContent>
+                          </Card>
                         ))}
-                      </CardContent>
-                    </Card>
-                  </div>}
-                </>
-            }
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </CardContent>
+            </Card>
+          )}
 
+          {/* Comments Section */}
+          {salesData?.comment && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <MessageSquare className="w-4 h-4" />
+                  Comments
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg">
+                  {salesData.comment}
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
-
-            {/* Optional Sections */}
-            {salesData?.comment && (
-              <div className="space-y-2">
-                <h2 className="font-semibold">Added Comment</h2>
-                <Card>
-                  <CardContent className="p-4">
-                    <p className="text-sm">{salesData?.comment}</p>
-                  </CardContent>
-                </Card>
+          {/* Timestamp */}
+          <Card className="bg-gray-50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Clock className="w-4 h-4" />
+                <span>
+                  Transaction completed on{" "}
+                  {timestampToDateTime(salesData?.date || 0)}
+                </span>
               </div>
-            )}
-          </div>
+            </CardContent>
+          </Card>
         </CardContent>
       </motion.div>
+
       <AdvancedBottomButton
         fixed={true}
         maxWidth="30rem"
@@ -334,14 +614,16 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
             isBackButton: true,
           },
           {
-            text: "prev",
+            text: "Prev",
             onClick: goToPrevious,
             className: "rounded-md !flex-none w-[4rem]",
+            disable: currentIndex === 0,
           },
           {
-            text: "next",
+            text: "Next",
             onClick: goToNext,
             className: "rounded-md !flex-none w-[4rem]",
+            disable: currentIndex === allSalesData.length - 1,
           },
           {
             text: "Invoice",
@@ -354,9 +636,8 @@ const PaymentModal = ({ salesData, onClose, allSalesData, currentIndex, onNaviga
         ]}
       />
     </Card>
-  )
-}
+  );
+};
 
-const MemoizedPaymentModal = memo(PaymentModal)
-export default MemoizedPaymentModal
-
+const MemoizedPaymentModal = memo(PaymentModal);
+export default MemoizedPaymentModal;

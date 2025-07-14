@@ -149,23 +149,6 @@ const SalesFilters = () => {
         </div>
       </div>
 
-      <div>
-        <h2 className="mb-2 text-lg font-semibold">Warnings</h2>
-        <div className="flex flex-wrap gap-2">
-          {["Force Settle", "Free Tables"].map((warning) => (
-            <Button
-              key={warning}
-              variant={selectedWarnings.includes(warning) ? "default" : "outline"}
-              className="flex items-center gap-2"
-              onClick={() => toggleSelection(warning, selectedWarnings, setSelectedWarnings)}
-            >
-              {warning}
-              {selectedWarnings.includes(warning) && <X className="w-4 h-4 ml-1" />}
-            </Button>
-          ))}
-        </div>
-      </div>
-
       <AdvancedBottomButton
         fixed={true}
         maxWidth="30rem"
