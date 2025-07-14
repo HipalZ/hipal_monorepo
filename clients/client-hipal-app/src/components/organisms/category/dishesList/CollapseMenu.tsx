@@ -17,9 +17,9 @@ interface CollapseMenuProps {
 const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
   const typeMap: Record<string, string[]> = {
     all: [],
-    nonveg: ["NON_VEG", "ALCOHOL", "NON_ALCOHOL"],
-    veg: ["VEG", "ALCOHOL", "NON_ALCOHOL"],
-    vegan: ["VEGAN", "ALCOHOL", "NON_ALCOHOL"],
+    non_veg: ["NON_VEG"],
+    veg: ["VEG"],
+    vegan: ["VEGAN"],
     alcohol: ["ALCOHOL"],
     nonalcohol: ["NON_ALCOHOL"],
     egg: ["EGG"],
@@ -129,92 +129,102 @@ const CollapseMenu: FC<CollapseMenuProps> = ({
 
       {/* Accordions for sub-categories */}
       <div className="pb-4 px-4 bg-gray-100/30 space-y-3">
-        {filteredSubCategories.map((category) => {
-          const visibleDishes = category.dishIds.filter((d) => d.visibility);
-          const dishes = filterDishes(visibleDishes, isActiveDishType);
-          const isOpen = openCategoryId === category._id;
+        {filteredSubCategories?.length > 0 ? (
+          filteredSubCategories.map((category) => {
+            const visibleDishes = category.dishIds.filter((d) => d.visibility);
+            const dishes = filterDishes(visibleDishes, isActiveDishType);
+            const isOpen = openCategoryId === category._id;
 
-          if (dishes.length === 0) return null;
+            if (dishes.length === 0) return null;
 
-          return (
-            <div
-              key={category._id}
-              className="bg-white rounded-xl shadow-md transition-all duration-300"
-            >
-              {/* Subcategory Tile */}
-              <button
-                type="button"
-                onClick={() => setOpenCategoryId(isOpen ? null : category._id)}
-                className="w-full flex items-center justify-between p-2"
-                style={{
-                  color: primaryColor,
-                  borderBottom: isOpen ? `1px solid ${primaryColor}30` : "none",
-                }}
+            return (
+              <div
+                key={category._id}
+                className="bg-white rounded-xl shadow-md transition-all duration-300"
               >
-                <div
-                  className={`flex items-center transition-all duration-300 ${
-                    isOpen ? "h-[2rem]" : "h-[4rem]"
-                  } gap-3`}
+                {/* Subcategory Tile */}
+                <button
+                  type="button"
+                  onClick={() =>
+                    setOpenCategoryId(isOpen ? null : category._id)
+                  }
+                  className="w-full flex items-center justify-between p-2"
+                  style={{
+                    color: primaryColor,
+                    borderBottom: isOpen
+                      ? `1px solid ${primaryColor}30`
+                      : "none",
+                  }}
                 >
-                  {category.coverImage && (
-                    <Image
-                      src={category.coverImage}
-                      alt={category.name}
-                      width={44}
-                      height={44}
-                      className={`rounded-md object-cover transition-all duration-300 ${
-                        isOpen ? "w-0 h-0" : "w-16 h-16"
-                      } `}
-                    />
-                  )}
-                  <span
-                    className={`text-sm font-medium poppins ${
-                      isOpen ? "font-semibold" : ""
-                    }`}
+                  <div
+                    className={`flex items-center transition-all duration-300 ${
+                      isOpen ? "h-[2rem]" : "h-[4rem]"
+                    } gap-3`}
                   >
-                    {category.name}
-                  </span>
-                </div>
-                <article className="flex items-center gap-2">
-                  <p className="text-sm bg-gray-50 rounded-full px-2 py-1 text-primary">
-                    {dishes.length}
-                  </p>
-                  <svg
-                    className={cn(
-                      "w-5 h-5 transform transition-transform",
-                      isOpen && "rotate-180",
+                    {category.coverImage && (
+                      <Image
+                        src={category.coverImage}
+                        alt={category.name}
+                        width={44}
+                        height={44}
+                        className={`rounded-md object-cover transition-all duration-300 ${
+                          isOpen ? "w-0 h-0" : "w-16 h-16"
+                        } `}
+                      />
                     )}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </article>
-              </button>
+                    <span
+                      className={`text-sm font-medium poppins ${
+                        isOpen ? "font-semibold" : ""
+                      }`}
+                    >
+                      {category.name}
+                    </span>
+                  </div>
+                  <article className="flex items-center gap-2">
+                    <p className="text-sm bg-gray-50 rounded-full px-2 py-1 text-primary">
+                      {dishes.length}
+                    </p>
+                    <svg
+                      className={cn(
+                        "w-5 h-5 transform transition-transform",
+                        isOpen && "rotate-180",
+                      )}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </article>
+                </button>
 
-              {/* Dish List */}
-              {isOpen && (
-                <>
-                  {dishes.map((dish) => (
-                    <HorizontalTileCard
-                      key={dish._id}
-                      dishData={dish}
-                      primaryColor={primaryColor}
-                      secondaryColor={secondaryColor}
-                    />
-                  ))}
-                </>
-              )}
-            </div>
-          );
-        })}
+                {/* Dish List */}
+                {isOpen && (
+                  <>
+                    {dishes.map((dish) => (
+                      <HorizontalTileCard
+                        key={dish._id}
+                        dishData={dish}
+                        primaryColor={primaryColor}
+                        secondaryColor={secondaryColor}
+                      />
+                    ))}
+                  </>
+                )}
+              </div>
+            );
+          })
+        ) : (
+          <center className="text-gray-500 text-sm poppins-regular mt-20">
+            No Dishes Found
+          </center>
+        )}
       </div>
     </div>
   );
