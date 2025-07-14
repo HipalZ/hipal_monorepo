@@ -29,7 +29,7 @@ export function TableView({ data, onRowClick }: TableViewProps) {
               className="transition-colors cursor-pointer hover:bg-muted/50" 
               onClick={() => onRowClick(item)}
             >
-              <TableCell className="font-medium">{item?.posBillId}</TableCell>
+              <TableCell className="font-medium">{item?.billId?.slice(-6)}</TableCell>
               <TableCell>{new Date(item?.createdAt).toLocaleString("en-In")}</TableCell>
               <TableCell>
                 {item?.userId?.name || "Anonymous"}
