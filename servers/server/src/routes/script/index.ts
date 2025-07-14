@@ -36,6 +36,7 @@ import { schedule } from "node-cron";
 import { z } from "zod";
 import { cache } from "../../utils/cacheHelper";
 import { petpoojaPosConfig } from "../../utils/posConfig/petPooja";
+import { billQueue } from "../../utils/queue/queueClient";
 import { razorpayWrapper } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 import { whatsAppConfig } from "../../utils/whatAppTemplate";
@@ -2517,6 +2518,46 @@ const scriptRouter = new Hono()
         200,
         {},
       );
+    },
+  )
+
+  .post(
+    "/queue",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      const payload = await c.req.json();
+
+      console.log("queue", payload);
+      return respond(
+        c,
+        "All pos dishes, addons and categories deleted",
+        false,
+        200,
+        {},
+      );
+    },
+  )
+
+  .post(
+    "/send_queue",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      const payload = await c.req.json();
+      await billQueue.add("request-only", { payload }, { delay: 8_000 });
+
+      return respond(c, "queue sent", false, 200, {});
     },
   );
 
