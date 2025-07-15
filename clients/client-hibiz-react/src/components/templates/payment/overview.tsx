@@ -152,7 +152,7 @@ const Overview = () => {
     enabled: !!business?._id && !!timeStampStart && !!timeStampEnd,
   });
 
-  const { isLoading: tablesLoading, data: tablesData } = useQuery({
+  const {  data: tablesData } = useQuery({
     queryKey: ["tables", business?._id],
     queryFn: () => fetchTables(business?._id || ""),
     enabled: !!business?._id,
@@ -169,8 +169,6 @@ const Overview = () => {
           }))
       : [];
   }, [tablesData]);
-
-  console.log("tablesData", tablesData);
 
   if (isLoading) {
     return <OverviewSkeleton />;

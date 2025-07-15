@@ -1,63 +1,64 @@
-import { memo } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { useHiClientZ } from "@/components/store/useHiClientzData"
-import useTimings from "@/components/store/useTimings"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { apiRpc } from "@hi/common"
-import DateRangePickerMemo from "../dateRangePicker"
-import { InfoCard } from "./InfoCard"
-import { PieChart } from "./PieCharts"
-import { BarChart } from "./BarChart"
-import { LineChart } from "./LineChart"
-import { motion } from "framer-motion"
-import { DollarSign, CreditCard, Gift, AlertTriangle } from "lucide-react"
+import { memo, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useHiClientZ } from "@/components/store/useHiClientzData";
+import useTimings from "@/components/store/useTimings";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { apiRpc } from "@hi/common";
+import DateRangePickerMemo from "../dateRangePicker";
+import { InfoCard } from "./InfoCard";
+import { PieChart } from "./PieCharts";
+import { BarChart } from "./BarChart";
+import { LineChart } from "./LineChart";
+import { motion } from "framer-motion";
+import { CreditCard, Gift, AlertTriangle, IndianRupee } from "lucide-react";
+import type { TableData } from "@/components/store/useZonesAndTable.ts";
 
 export interface SalesData {
-  overAllAmount: number
-  onlineSale: Record<string, number>
-  offlineSale: Record<string, number>
-  totalOrders: number
-  totalActiveTableValue: number
+  overAllAmount: number;
+  onlineSale: Record<string, number>;
+  offlineSale: Record<string, number>;
+  totalOrders: number;
+  totalActiveTableValue: number;
 }
 
 interface OtherAndWarningData {
   otherSale: {
-    totalTax: number
-    totalTip: number
-    totalServiceCharge: number
-  }
+    totalTax: number;
+    totalTip: number;
+    totalServiceCharge: number;
+  };
   warningSale: {
-    totalForceSettle: number
-    totalFreeSettle: number
-  }
+    totalForceSettle: number;
+    totalFreeSettle: number;
+  };
 }
 
 interface SalesExceptionData {
   exceptionSale: {
-    totalDuesReceived: number
-    totalDuesGiven: number
-    totalNpc: number
-    totalComplementary: number
-    totalDiscount: number
-  }
+    totalDuesReceived: number;
+    totalDuesGiven: number;
+    totalNpc: number;
+    totalComplementary: number;
+    totalDiscount: number;
+  };
   rewardSale: {
-    totalCoinsGiven: number
-    totalCoinUsed: number
-    totalCouponUsed: number
-  }
+    totalCoinsGiven: number;
+    totalCoinUsed: number;
+    totalCouponUsed: number;
+  };
 }
 
 const SalesLite = () => {
   const { selectedBiz } = useHiClientZ((s) => ({
     selectedBiz: s.selectedBiz,
-  }))
-  const businessId = selectedBiz?.businessId?._id
+  }));
+  const businessId = selectedBiz?.businessId?._id;
 
   const { timeStampStart, timeStampEnd } = useTimings((s) => ({
     timeStampStart: s.timeStampStart,
     timeStampEnd: s.timeStampEnd,
-  }))
+  }));
 
   const handleHistoryData = async (): Promise<SalesData> => {
     try {
@@ -68,17 +69,17 @@ const SalesLite = () => {
           to: timeStampEnd.toString(),
         },
         param: { id: businessId || "" },
-      })
-      const data = (await response.json()).data as SalesData
+      });
+      const data = (await response.json()).data as SalesData;
       if (response.status === 200) {
-        return data
+        return data;
       }
-      throw new Error("Failed to fetch sales data")
+      throw new Error("Failed to fetch sales data");
     } catch (err) {
-      console.error(err)
-      throw err
+      console.error(err);
+      throw err;
     }
-  }
+  };
 
   const otherAndWarning = async (): Promise<OtherAndWarningData> => {
     const response = await apiRpc.payments.sale.other_and_warnings.$get({
@@ -87,10 +88,10 @@ const SalesLite = () => {
         from: timeStampStart.toString(),
         to: timeStampEnd.toString(),
       },
-    })
-    const data = (await response.json()).data as OtherAndWarningData
-    return data
-  }
+    });
+    const data = (await response.json()).data as OtherAndWarningData;
+    return data;
+  };
 
   const salesException = async (): Promise<SalesExceptionData> => {
     const response = await apiRpc.payments.sale.exception_and_rewards.$get({
@@ -99,10 +100,18 @@ const SalesLite = () => {
         from: timeStampStart.toString(),
         to: timeStampEnd.toString(),
       },
-    })
-    const data = (await response.json()).data as SalesExceptionData
-    return data
-  }
+    });
+    const data = (await response.json()).data as SalesExceptionData;
+    return data;
+  };
+
+ const fetchTables = async (businessId: string): Promise<TableData[]> => {
+    const response = await apiRpc.table.all[":businessId"].$get({
+      param: { businessId },
+    });
+    const json = await response.json();
+    return json.data || [];
+  };
 
   const {
     data: salesData,
@@ -112,22 +121,40 @@ const SalesLite = () => {
     queryKey: ["salesData", businessId, timeStampStart, timeStampEnd],
     queryFn: handleHistoryData,
     enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
-  })
+  });
 
   const { data: otherData } = useQuery<OtherAndWarningData, Error>({
     queryKey: ["otherAndWarning", businessId, timeStampStart, timeStampEnd],
     queryFn: otherAndWarning,
     enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
-  })
+  });
 
   const { data: salesExceptionData } = useQuery<SalesExceptionData, Error>({
     queryKey: ["salesException", businessId, timeStampStart, timeStampEnd],
     queryFn: salesException,
     enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
-  })
+  });
+
+    const {  data: tablesData } = useQuery({
+      queryKey: ["tables", businessId],
+      queryFn: () => fetchTables(businessId || ""),
+      enabled: !!businessId,
+      refetchInterval: 1000 * 30,
+    });
+  
+    const runningTablesBreakdown = useMemo(() => {
+      return tablesData
+        ? tablesData
+            .filter((table) => table.active && table.currentTableAmount > 0)
+            .map((table) => ({
+              label: ` ${table.name}`,
+              value: table.currentTableAmount,
+            }))
+        : [];
+    }, [tablesData]);
 
   if (isLoading) {
-    return <OverviewSkeleton />
+    return <OverviewSkeleton />;
   }
 
   if (error || !salesData) {
@@ -135,21 +162,85 @@ const SalesLite = () => {
       <Card className="w-full h-[70vh] px-4 mx-auto xl:container">
         <DateRangePickerMemo />
         <CardContent>
-          <p className="text-center text-muted-foreground">No sales data found</p>
+          <p className="text-center text-muted-foreground">
+            No sales data found
+          </p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
-  const totalOfflineSale = Object.values(salesData.offlineSale).reduce((acc, curr) => acc + curr, 0)
+ const totalOfflineSale = Object.values(salesData.offlineSale).reduce(
+    (acc, curr) => acc + curr,
+    0,
+  );
+
   const totalExceptionAndReward = salesExceptionData
-    ? Object.values(salesExceptionData.exceptionSale).reduce((acc, curr) => acc + curr, 0) +
-    Object.values(salesExceptionData.rewardSale).reduce((acc, curr) => acc + curr, 0)
-    : 0
+    ? salesExceptionData.exceptionSale.totalComplementary +
+      salesExceptionData.exceptionSale.totalDiscount +
+      salesExceptionData.rewardSale.totalCoinsGiven +
+      salesExceptionData.rewardSale.totalCoinsUsed +
+      salesExceptionData.rewardSale.totalCouponDiscount
+    : 0;
+
   const totalOtherAndWarning = otherData
-    ? Object.values(otherData.otherSale).reduce((acc, curr) => acc + curr, 0) +
-    Object.values(otherData.warningSale).reduce((acc, curr) => acc + curr, 0)
-    : 0
+    ? otherData.otherSale.totalTax +
+      otherData.otherSale.totalTip +
+      otherData.otherSale.totalServiceCharge
+    : 0;
+
+  // Create breakdown data
+  const totalSalesBreakdown = [
+    { label: "Hipalz Razorpay Sales", value: salesData.onlineSale.online },
+    { label: "Pay To Captain Sales", value: totalOfflineSale },
+  ];
+
+  const onlineSalesBreakdown = [
+    { label: "Online Payment", value: salesData.onlineSale.online },
+  ];
+
+  const offlineSalesBreakdown = Object.entries(salesData.offlineSale).map(
+    ([method, amount]) => ({
+      label: method.charAt(0).toUpperCase() + method.slice(1),
+      value: amount,
+    }),
+  );
+
+  const loyaltyRewardsBreakdown = salesExceptionData
+    ? [
+        {
+          label: "Total Complementary",
+          value: salesExceptionData.exceptionSale.totalComplementary,
+        },
+        {
+          label: "Total Discount",
+          value: salesExceptionData.exceptionSale.totalDiscount,
+        },
+        {
+          label: "Total Coins Given",
+          value: salesExceptionData.rewardSale.totalCoinsGiven,
+        },
+        {
+          label: "Total Coins Used",
+          value: salesExceptionData.rewardSale.totalCoinsUsed,
+        },
+        {
+          label: "Total Coupon Discount",
+          value: salesExceptionData.rewardSale.totalCouponDiscount,
+        },
+      ]
+    : [];
+
+  const taxesServiceBreakdown = otherData
+    ? [
+        { label: "Total Tax", value: otherData.otherSale.totalTax },
+        { label: "Total Tip", value: otherData.otherSale.totalTip },
+        {
+          label: "Total Service Charge",
+          value: otherData.otherSale.totalServiceCharge,
+        },
+      ]
+    : [];
 
   return (
     <div className="mx-auto lg:px-4 xl:container">
@@ -157,45 +248,47 @@ const SalesLite = () => {
 
       <div className="grid grid-cols-2 gap-4 p-4 md:grid-cols-4 lg:grid-cols-4">
         <section className="col-span-2">
-
           <InfoCard
             title="Total Sales"
             value={salesData.overAllAmount}
-            icon={<DollarSign className="w-4 h-4" />}
-            gradient="from-blue-600 to-blue-200"
+            icon={<IndianRupee className="w-4 h-4" />}
+            breakdown={totalSalesBreakdown}
           />
         </section>
         <section className="col-span-2">
-          <InfoCard
-            title="Online Sales"
-            value={salesData.onlineSale.online}
-            icon={<DollarSign className="w-4 h-4" />}
-            gradient="from-black to-gray-100"
-          />
+        <InfoCard
+                    title="Hipalz Razorpay Sales"
+                    value={salesData.onlineSale.online}
+                    icon={<IndianRupee className="w-4 h-4" />}
+                    breakdown={onlineSalesBreakdown}
+                  />
         </section>
-        <InfoCard
-          title="Offline Sales"
-          value={totalOfflineSale}
-          icon={<CreditCard className="w-4 h-4" />}
-          gradient="from-green-600 to-green-100"
-        />
-        <InfoCard
-          title="Exception & Reward"
+       
+               <InfoCard
+                 title="Pay To Captain Sales"
+                 value={totalOfflineSale}
+                 icon={<CreditCard className="w-4 h-4" />}
+                 breakdown={offlineSalesBreakdown}
+               />
+          <InfoCard
+          title="Loyalty & Rewards"
           value={totalExceptionAndReward}
           icon={<Gift className="w-4 h-4" />}
-          gradient="from-purple-600 to-purple-100"
+          breakdown={loyaltyRewardsBreakdown}
         />
+
         <InfoCard
-          title="Other & Warning"
+          title="Taxes & Service Charges"
           value={totalOtherAndWarning}
           icon={<AlertTriangle className="w-4 h-4" />}
-          gradient="from-red-900 to-red-100"
+          breakdown={taxesServiceBreakdown}
         />
+
         <InfoCard
-          title="Total Active Table Value"
+          title="Running Tables"
           value={salesData.totalActiveTableValue}
           icon={<CreditCard className="w-4 h-4" />}
-          gradient="from-blue-600 to-blue-200"
+          breakdown={runningTablesBreakdown}
         />
       </div>
 
@@ -212,7 +305,9 @@ const SalesLite = () => {
             <CardContent>
               <PieChart
                 data={[
-                  ...Object.entries(salesData.offlineSale).map(([mode, amount]) => ({ name: mode, value: amount })),
+                  ...Object.entries(salesData.offlineSale).map(
+                    ([mode, amount]) => ({ name: mode, value: amount }),
+                  ),
                 ]}
               />
             </CardContent>
@@ -230,7 +325,9 @@ const SalesLite = () => {
             </CardHeader>
             <CardContent>
               <BarChart
-                data={Object.entries(salesData.offlineSale).map(([mode, amount]) => ({ name: mode, value: amount }))}
+                data={Object.entries(salesData.offlineSale).map(
+                  ([mode, amount]) => ({ name: mode, value: amount }),
+                )}
               />
             </CardContent>
           </Card>
@@ -244,13 +341,17 @@ const SalesLite = () => {
           >
             <Card>
               <CardHeader>
-                <CardTitle>Exception & Reward Sales</CardTitle>
+                <CardTitle>Loyalty & Rewards</CardTitle>
               </CardHeader>
               <CardContent>
                 <LineChart
                   data={[
-                    ...Object.entries(salesExceptionData.exceptionSale).map(([key, value]) => ({ name: key, value })),
-                    ...Object.entries(salesExceptionData.rewardSale).map(([key, value]) => ({ name: key, value })),
+                    ...Object.entries(salesExceptionData.exceptionSale).map(
+                      ([key, value]) => ({ name: key, value }),
+                    ),
+                    ...Object.entries(salesExceptionData.rewardSale).map(
+                      ([key, value]) => ({ name: key, value }),
+                    ),
                   ]}
                 />
               </CardContent>
@@ -266,13 +367,17 @@ const SalesLite = () => {
           >
             <Card>
               <CardHeader>
-                <CardTitle>Other & Warning Sales</CardTitle>
+                <CardTitle>Taxes & Service Charges</CardTitle>
               </CardHeader>
               <CardContent>
                 <BarChart
                   data={[
-                    ...Object.entries(otherData.otherSale).map(([key, value]) => ({ name: key, value })),
-                    ...Object.entries(otherData.warningSale).map(([key, value]) => ({ name: key, value })),
+                    ...Object.entries(otherData.otherSale).map(
+                      ([key, value]) => ({ name: key, value }),
+                    ),
+                    ...Object.entries(otherData.warningSale).map(
+                      ([key, value]) => ({ name: key, value }),
+                    ),
                   ]}
                 />
               </CardContent>
@@ -281,8 +386,8 @@ const SalesLite = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 const OverviewSkeleton = () => (
   <div className="container p-4 mx-auto space-y-6">
@@ -295,8 +400,7 @@ const OverviewSkeleton = () => (
       <Skeleton className="col-span-1 h-80 sm:col-span-2" />
     </div>
   </div>
-)
+);
 
-const SalesLiteMemo = memo(SalesLite)
-export default SalesLiteMemo
-
+const SalesLiteMemo = memo(SalesLite);
+export default SalesLiteMemo;
