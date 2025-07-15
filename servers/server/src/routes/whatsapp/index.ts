@@ -2126,14 +2126,14 @@ const whatsappRouter = new Hono()
             }
           }
           if (userText) {
-            const tableCodeMatch = userText.match(/table[-\s]*([a-zA-Z0-9]+)/i);
+            const tableCodeMatch = userText.match(/table\s*(.*)/i);
             const tableCode = tableCodeMatch?.[1];
 
             console.log("Extracted Table Code:", tableCode);
 
             if (tableCode) {
               const findLongUrl = await UrlModel.findOne({
-                urlCode: tableCode,
+                longUrl: { $regex: `tableName=${tableCode}`, $options: "i" },
               });
 
               if (findLongUrl) {
