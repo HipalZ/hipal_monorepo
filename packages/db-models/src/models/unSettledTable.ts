@@ -26,7 +26,7 @@ const unsettledTableSchema = new mongoose.Schema<UnsettleTableType>(
     },
     requestId: {
       type: String,
-      required: true,
+      required: false,
     },
     pin: {
       type: String,

@@ -1,4 +1,5 @@
 import {
+  BillQueue,
   BillUrlModel,
   Business,
   BusinessPosConfig,
@@ -32,6 +33,7 @@ import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { calculateCartBill } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
+import { billQueue } from "../../utils/queue/queueClient";
 import { respond } from "../../utils/response";
 import { addCoins, calculatedCashbackCoins, removeCoins } from "../payments";
 import { generateTenDigitCode } from "../pos";
@@ -516,94 +518,50 @@ const tableRouter = new Hono()
           { session },
         );
 
-        setTimeout(() => {
-          (async () => {
-            try {
-              // 1. Request the bill
-              const {
-                data: { bill_request_id },
-              } = await axios.post(posApiPaths.requestBill, payload, {
-                headers: { "Content-Type": "application/json" },
-              });
-            } catch (err) {
-              console.error("Failed to request/settle bill:", err);
-            }
-          })();
-        }, 8000);
+        const saveOrderData = saveOrder[0];
 
-        setTimeout(() => {
-          (async () => {
-            try {
-              // 1. Request the bill
-              const {
-                data: { bill_request_id },
-              } = await axios.post(posApiPaths.requestBill, payload, {
-                headers: { "Content-Type": "application/json" },
-              });
+        const job1 = await billQueue.add(
+          "request-only",
+          { payload, saveOrderData, pos, tableSession },
+          { delay: 9_000 },
+        );
 
-              // 2. Settle the table
-              const { data: settleData } = await axios.post(
-                posApiPaths.settleTable,
-                {
-                  app_key: pos.accessKey,
-                  app_secret: pos.secretKey,
-                  access_token: pos.authToken,
-                  restID: pos.restId,
-                  bill_request_id,
-                  amount_paid: saveOrder[0].total,
-                  pin: tableSession?.pin,
-                },
-              );
-
-              // 3. If settlement failed (success === "0"), upsert into UnsettleTable
-              if (settleData.success === "0") {
-                await UnsettleTable.findOneAndUpdate(
-                  {
-                    businessId: saveOrder[0].businessId,
-                    tableName: saveOrder[0].tableName,
-                    pin: tableSession?.pin,
-                  },
-                  {
-                    sync: false,
-                    // <-- use settleData.request_id, not response.data.request_id
-                    requestId: settleData.request_id,
-                    pin: tableSession?.pin,
-                    restId: pos.restId,
-                    date: Date.now(),
-                    total: saveOrder[0].total,
-                  },
-                  { new: true, upsert: true },
-                );
-              }
-              
-        const unsettleTable = await UnsettleTable.find({
-          businessId: saveOrder[0]?.businessId,
-          restId: pos.restId,
-          sync: false,
-        });
-
-        for (const table of unsettleTable) {
-          const payload = {
-            app_key: pos.accessKey,
-            app_secret: pos.secretKey,
-            access_token: pos.authToken,
-            restID: pos.restId,
-            pin: table?.pin,
-            tableNo: table?.tableName,
-          };
-
-          await axios.post(posApiPaths.requestBill, payload, {
-            headers: {
-              "Content-Type": "application/json",
+        await BillQueue.findOneAndUpdate(
+          { jobId: job1.id },
+          {
+            $set: {
+              businessId: tableSession.businessId,
+              tableName: tableSession.tableName,
+              date: Date.now(),
+              log: "Queued",
             },
-          });
-        }
+          },
+          {
+            new: true,
+            upsert: true,
+          },
+        );
 
-            } catch (err) {
-              console.error("Failed to request/settle bill:", err);
-            }
-          })();
-        }, 32000);
+        const job2 = await billQueue.add(
+          "request-and-settle",
+          { payload, saveOrderData, pos, tableSession },
+          { delay: 35_000 },
+        );
+        await BillQueue.findOneAndUpdate(
+          { jobId: job2.id },
+          {
+            $set: {
+              businessId: tableSession.businessId,
+              tableName: tableSession.tableName,
+              date: Date.now(),
+              log: "Queued",
+            },
+          },
+          {
+            new: true,
+            upsert: true,
+          },
+        );
 
         await UserSession.deleteOne(
           {
@@ -643,7 +601,6 @@ const tableRouter = new Hono()
           ],
           { session },
         );
-
 
         return c.json(
           {
@@ -1153,6 +1110,72 @@ const tableRouter = new Hono()
         );
       }
     });
-  });
+  })
+
+  .post(
+    "/save_unsettle_table",
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, restId, pin, tableName, requestId, total } =
+          await c.req.json();
+
+        const data = await UnsettleTable.findOneAndUpdate(
+          {
+            businessId: businessId,
+            tableName: tableName,
+            pin: pin,
+          },
+          {
+            sync: false,
+            requestId: requestId,
+            pin: pin,
+            restId: restId,
+            date: Date.now(),
+            total: total,
+          },
+          { new: true, upsert: true, session },
+        );
+
+        return respond(c, "updated successfully", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/settle_unsettle_table",
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, pos } = await c.req.json();
+        const unsettleTable = await UnsettleTable.find({
+          businessId: businessId,
+          restId: pos.restId,
+          sync: false,
+        });
+
+        for (const table of unsettleTable) {
+          const payload = {
+            app_key: pos.accessKey,
+            app_secret: pos.secretKey,
+            access_token: pos.authToken,
+            restID: pos.restId,
+            pin: table?.pin,
+            tableNo: table?.tableName,
+          };
+
+          await axios.post(posApiPaths.requestBill, payload, {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+        }
+
+        return respond(c, "updated successfully", false, 200, {});
+      });
+    },
+  );
 
 export default tableRouter;

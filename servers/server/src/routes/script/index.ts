@@ -2532,6 +2532,8 @@ const scriptRouter = new Hono()
 
     async (c) => {
       const payload = await c.req.json();
+      const header = c.req.header();
+      console.log("queue", payload, header);
 
       console.log("queue", payload);
       return respond(
@@ -2555,6 +2557,7 @@ const scriptRouter = new Hono()
 
     async (c) => {
       const payload = await c.req.json();
+      console.log(payload);
       await billQueue.add("request-only", { payload }, { delay: 8_000 });
 
       return respond(c, "queue sent", false, 200, {});

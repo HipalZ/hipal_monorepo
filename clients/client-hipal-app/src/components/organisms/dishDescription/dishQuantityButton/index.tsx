@@ -174,7 +174,16 @@ const MemoDishQuantityButton = ({
       return !isPortionSelected; // Disable if no portion is selected
     }
 
-    // Case 2: Only Add-ons (no portions)
+    // Case 2a: Only Add-ons (no portions)
+    // If all add-ons are optional (compulsory === 0 for every add-on), enable the button by default
+    if (
+      Array.isArray(selectedDish?.addOnIds) &&
+      selectedDish.addOnIds.length > 0 &&
+      selectedDish.addOnIds.every((addOn) => addOn.compulsory === 0)
+    ) {
+      return false; // Button should NOT be disabled
+    }
+    // Case 2b: Only Add-ons (no portions)
     if (
       selectedDish?.addOnIds?.length > 0 &&
       selectedDish?.portions?.length === 0
@@ -183,7 +192,6 @@ const MemoDishQuantityButton = ({
       if (compulsoryAddOns.length > 0) {
         // Check if all compulsory add-ons are selected
         const allCompulsorySelected = compulsoryAddOns.every((addOn) => {
-
           // Check if any choice within the add-on has been selected
           const isSelected = addOn.choices?.some((choice) => {
             return selectedChoices?.some(
@@ -206,7 +214,6 @@ const MemoDishQuantityButton = ({
     if (selectedDish?.portions?.length > 0 && compulsoryAddOns.length > 0) {
       // Ensure all compulsory add-ons are selected (check every compulsory add-on)
       const allCompulsorySelected = compulsoryAddOns.every((addOn) => {
-
         // Check if any choice within the add-on has been selected
         const isSelected = addOn.choices?.some((choice) => {
           return selectedChoices?.some(
