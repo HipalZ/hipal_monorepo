@@ -71,7 +71,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
     const zoneGroups = new Map();
 
     for (const table of allTables) {
-      const zoneId = table.internalZoneId;
+      const zoneId = table.zoneId;
       if (!zoneGroups.has(zoneId)) {
         zoneGroups.set(zoneId, []);
       }
@@ -93,7 +93,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
     const tablesWithoutZone = [];
     for (const table of allTables) {
       const belongsToZone = zones.some(
-        (zone) => zone._id === table.internalZoneId,
+        (zone) => zone._id === table.zoneId,
       );
       if (!belongsToZone) {
         tablesWithoutZone.push(table);
@@ -117,7 +117,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
 
     // Group tables by their zone
     for (const table of allTables) {
-      const zoneId = table.internalZoneId;
+      const zoneId = table.zoneId;
       if (!zoneGroups.has(zoneId)) {
         zoneGroups.set(zoneId, []);
       }
@@ -142,7 +142,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
       const tablesWithoutZone = [];
       for (const table of allTables) {
         const belongsToZone = zones.some(
-          (zone) => zone._id === table.internalZoneId,
+          (zone) => zone._id === table.zoneId,
         );
         if (!belongsToZone) {
           tablesWithoutZone.push(table);
@@ -162,7 +162,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
         const tablesWithoutZone = [];
         for (const table of allTables) {
           const belongsToZone = zones.some(
-            (zone) => zone._id === table.internalZoneId,
+            (zone) => zone._id === table.zoneId,
           );
           if (!belongsToZone) {
             tablesWithoutZone.push(table);
