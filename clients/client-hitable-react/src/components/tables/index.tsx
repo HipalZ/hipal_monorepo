@@ -129,7 +129,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
     if (selectedZoneId === null) {
       // Show all zones
       for (const zone of zones) {
-        const zoneTables = zoneGroups.get(zone._id);
+        const zoneTables = zoneGroups.get(zone.zoneId);
         if (zoneTables && zoneTables.length > 0) {
           result.push({
             zone,
@@ -142,7 +142,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
       const tablesWithoutZone = [];
       for (const table of allTables) {
         const belongsToZone = zones.some(
-          (zone) => zone._id === table.zoneId,
+          (zone) => zone.zoneId === table.zoneId,
         );
         if (!belongsToZone) {
           tablesWithoutZone.push(table);
@@ -162,7 +162,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
         const tablesWithoutZone = [];
         for (const table of allTables) {
           const belongsToZone = zones.some(
-            (zone) => zone._id === table.zoneId,
+            (zone) => zone.zoneId === table.zoneId,
           );
           if (!belongsToZone) {
             tablesWithoutZone.push(table);
@@ -177,7 +177,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
         }
       } else {
         // Show specific zone
-        const selectedZone = zones.find((zone) => zone._id === selectedZoneId);
+        const selectedZone = zones.find((zone) => zone.zoneId === selectedZoneId);
         if (selectedZone) {
           const zoneTables = zoneGroups.get(selectedZoneId);
           if (zoneTables && zoneTables.length > 0) {
@@ -309,7 +309,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
                           selectedZoneId === zone._id ? "default" : "outline"
                         }
                         size="sm"
-                        onClick={() => handleZoneSelect(zone._id)}
+                        onClick={() => handleZoneSelect(zone.zoneId)}
                         className={`flex-shrink-0 transition-colors ${
                           selectedZoneId === zone._id
                             ? "bg-blue-500 hover:bg-blue-600 text-white"
