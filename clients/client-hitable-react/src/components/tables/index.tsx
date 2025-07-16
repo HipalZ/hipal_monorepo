@@ -1,5 +1,5 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { memo, useCallback,useEffect, useMemo, useState, useRef } from "react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import SpinnerMemo from "../atoms/loadingSpinner";
@@ -22,9 +22,14 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
   const { businessId } = useParams();
   const { setIsPlacingNewOrder } = useCart();
   const { selectedTable, selectedItems } = useOrderStore();
-  const { isLoading,filteredTables, searchTerm, setSearchTerm } = useTableData();
+  const { isLoading, filteredTables, searchTerm, setSearchTerm } =
+    useTableData();
   const zones = useZonesAndTablesStore((s) => s.zones);
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null); // null means "All"
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
   const {
     toTable,
     setToTable,
@@ -34,9 +39,6 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
     closeTransferModal,
     confirmTransfer,
   } = useTableTransfer(businessId || "");
-    const [canScrollLeft, setCanScrollLeft] = useState(false)
-  const [canScrollRight, setCanScrollRight] = useState(false)
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   const tables = useZonesAndTablesStore((s) => s.tables);
 
@@ -70,6 +72,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
   const availableZones = useMemo(() => {
     const zoneGroups = new Map();
 
+    // Group tables by their zoneId
     for (const table of allTables) {
       const zoneId = table.zoneId;
       if (!zoneGroups.has(zoneId)) {
@@ -78,34 +81,16 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
       zoneGroups.get(zoneId).push(table);
     }
 
+    // Return zones that have tables, with table counts
     const result = [];
     for (const zone of zones) {
-      const zoneTables = zoneGroups.get(zone._id);
+      const zoneTables = zoneGroups.get(zone.zoneId);
       if (zoneTables && zoneTables.length > 0) {
         result.push({
           ...zone,
           tableCount: zoneTables.length,
         });
       }
-    }
-
-    // Add "Other Tables" if there are tables without zones
-    const tablesWithoutZone = [];
-    for (const table of allTables) {
-      const belongsToZone = zones.some(
-        (zone) => zone._id === table.zoneId,
-      );
-      if (!belongsToZone) {
-        tablesWithoutZone.push(table);
-      }
-    }
-
-    if (tablesWithoutZone.length > 0) {
-      result.push({
-        _id: "no-zone",
-        name: "Other Tables",
-        tableCount: tablesWithoutZone.length,
-      });
     }
 
     return result;
@@ -115,7 +100,7 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
   const zonesWithTables = useMemo(() => {
     const zoneGroups = new Map();
 
-    // Group tables by their zone
+    // Group tables by their zoneId
     for (const table of allTables) {
       const zoneId = table.zoneId;
       if (!zoneGroups.has(zoneId)) {
@@ -137,94 +122,55 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
           });
         }
       }
-
-      // Handle tables that don't belong to any zone
-      const tablesWithoutZone = [];
-      for (const table of allTables) {
-        const belongsToZone = zones.some(
-          (zone) => zone.zoneId === table.zoneId,
-        );
-        if (!belongsToZone) {
-          tablesWithoutZone.push(table);
-        }
-      }
-
-      if (tablesWithoutZone.length > 0) {
-        result.push({
-          zone: { name: "Other Tables", _id: "no-zone" },
-          tables: sortByName(tablesWithoutZone),
-        });
-      }
     } else {
       // Show only selected zone
-      if (selectedZoneId === "no-zone") {
-        // Show tables without zone
-        const tablesWithoutZone = [];
-        for (const table of allTables) {
-          const belongsToZone = zones.some(
-            (zone) => zone.zoneId === table.zoneId,
-          );
-          if (!belongsToZone) {
-            tablesWithoutZone.push(table);
-          }
-        }
-
-        if (tablesWithoutZone.length > 0) {
+      const selectedZone = zones.find((zone) => zone.zoneId === selectedZoneId);
+      if (selectedZone) {
+        const zoneTables = zoneGroups.get(selectedZone.zoneId);
+        if (zoneTables && zoneTables.length > 0) {
           result.push({
-            zone: { name: "Other Tables", _id: "no-zone" },
-            tables: sortByName(tablesWithoutZone),
+            zone: selectedZone,
+            tables: sortByName(zoneTables),
           });
-        }
-      } else {
-        // Show specific zone
-        const selectedZone = zones.find((zone) => zone.zoneId === selectedZoneId);
-        if (selectedZone) {
-          const zoneTables = zoneGroups.get(selectedZoneId);
-          if (zoneTables && zoneTables.length > 0) {
-            result.push({
-              zone: selectedZone,
-              tables: sortByName(zoneTables),
-            });
-          }
         }
       }
     }
 
     return result;
   }, [allTables, zones, sortByName, selectedZoneId]);
+  console.log("zonesWithTables", zonesWithTables);
 
   const handleZoneSelect = (zoneId: string | null) => {
     setSelectedZoneId(zoneId);
   };
 
-  
   const checkScrollButtons = useCallback(() => {
     if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current
-      setCanScrollLeft(scrollLeft > 0)
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1)
+      const { scrollLeft, scrollWidth, clientWidth } =
+        scrollContainerRef.current;
+      setCanScrollLeft(scrollLeft > 0);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
     }
-  }, [])
+  }, []);
 
   const scrollLeft = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: -200, behavior: "smooth" })
+      scrollContainerRef.current.scrollBy({ left: -200, behavior: "smooth" });
     }
-  }
+  };
 
   const scrollRight = () => {
     if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({ left: 200, behavior: "smooth" })
+      scrollContainerRef.current.scrollBy({ left: 200, behavior: "smooth" });
     }
-  }
+  };
 
-  // Add useEffect to check scroll buttons on mount and when zones change
   useEffect(() => {
-    checkScrollButtons()
-    const handleResize = () => checkScrollButtons()
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [checkScrollButtons, availableZones])
+    checkScrollButtons();
+    const handleResize = () => checkScrollButtons();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [checkScrollButtons]);
 
   const handleTableClick = (table: TableData) => {
     if (transfer) {
@@ -306,12 +252,12 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
                       <Button
                         key={zone._id}
                         variant={
-                          selectedZoneId === zone._id ? "default" : "outline"
+                          selectedZoneId === zone.zoneId ? "default" : "outline"
                         }
                         size="sm"
                         onClick={() => handleZoneSelect(zone.zoneId)}
                         className={`flex-shrink-0 transition-colors ${
-                          selectedZoneId === zone._id
+                          selectedZoneId === zone.zoneId
                             ? "bg-blue-500 hover:bg-blue-600 text-white"
                             : "bg-white hover:bg-gray-50 text-gray-700 border-gray-300"
                         }`}
