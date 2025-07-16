@@ -8,6 +8,17 @@ export enum NavItemTypesEnum {
   TABLES = "Tables",
 }
 
+export interface Ipermissions {
+  sale_summary: boolean;
+  bill: boolean;
+  order_accept: boolean;
+  place_order: boolean;
+  normal_settle: boolean;
+  force_settle: boolean;
+  resolve_table: boolean;
+  free_table: boolean;
+}
+
 export interface HiClientzData {
   address: string | undefined;
   logoUrl: string;
@@ -30,7 +41,7 @@ export interface CustomRole {
   customRoleId: string;
   role: string;
   accessControl: AccessControl;
-  permissions: string[];
+  permissions: Ipermissions
   permissionIds: string[];
   permissionGroupIds: string[];
   bookMark: boolean;
