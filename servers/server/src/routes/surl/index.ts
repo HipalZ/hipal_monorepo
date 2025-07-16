@@ -20,25 +20,10 @@ const surlRouter = new Hono()
       const { urlCode } = c.req.param();
       const { q, id } = c.req.query();
 
-      if (!q) {
-        const Bid = await UrlModel.findOne({
-          urlCode,
-        }).select("businessId");
+      const result = await UrlModel.findOne({ urlCode }).select(
+        "businessId longUrl",
+      );
 
-        const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
-          businessId: Bid?.businessId,
-        });
-
-        const menuRedirection = whatsAppBusinessConfig?.menuRedirection;
-
-        if (menuRedirection && menuRedirection === "WA") {
-          const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, I'm interested in your menu. Could you share more details? I am sitting at T-${urlCode}`;
-
-          return c.redirect(redirectUrl);
-        }
-      }
-
-      const result = await UrlModel.findOne({ urlCode });
       if (!result) {
         return c.json(
           {
@@ -48,6 +33,28 @@ const surlRouter = new Hono()
           },
           404,
         );
+      }
+
+      if (!q) {
+        const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
+          businessId: result.businessId,
+        });
+
+        if (whatsAppBusinessConfig?.menuRedirection === "WA") {
+          let tableNumber = urlCode;
+          const tableMatch = result.longUrl.match(/tableName=([^&]+)/);
+
+          if (tableMatch?.[1]) {
+            tableNumber = decodeURIComponent(tableMatch[1]);
+          }
+
+          const message = `Hi, I'm interested in your menu. Could you share more details? I am sitting at Table-${tableNumber}`;
+          const redirectUrl = `https://wa.me/${
+            whatsAppBusinessConfig.whatsAppPhone
+          }?text=${encodeURIComponent(message)}`;
+
+          return c.redirect(redirectUrl);
+        }
       }
 
       setShortUrl(urlCode, result.longUrl);
@@ -72,7 +79,7 @@ const surlRouter = new Hono()
                 400,
               );
             }
-          } catch (error) {
+          } catch {
             return c.json(
               {
                 message: "Invalid token",
@@ -98,7 +105,6 @@ const surlRouter = new Hono()
         });
       }
 
-      // Redirect to the original URL
       return c.redirect(`${result.longUrl}${id ? `&id=${id}` : ""}`);
     },
   )

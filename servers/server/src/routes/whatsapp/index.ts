@@ -2126,24 +2126,31 @@ const whatsappRouter = new Hono()
             }
           }
           if (userText) {
-            const tableCode = userText.slice(-5);
+            const tableCodeMatch = userText.match(/table\s*(.*)/i);
+            const tableCode = tableCodeMatch?.[1];
 
-            const findLongUrl = await UrlModel.findOne({
-              urlCode: tableCode,
-            });
+            console.log("Extracted Table Code:", tableCode);
 
-            if (findLongUrl) {
-              const idParam = userObj?._id.toString();
+            if (tableCode) {
+              const findLongUrl = await UrlModel.findOne({
+                longUrl: { $regex: `tableName=${tableCode}`, $options: "i" },
+              });
 
-              longUrl = encodeURI(`${findLongUrl.shortUrl}?q=wa&id=${idParam}`);
-              updateLongUrl = encodeURI(`${findLongUrl.longUrl}&id=${idParam}`);
-              shortUrlType = findLongUrl.shortUrlType || "";
-              urlObj = findLongUrl;
-              console.log("longUrl", longUrl);
-              console.log("short", shortUrlType);
-              console.log("urlObj", urlObj);
+              if (findLongUrl) {
+                const idParam = userObj?._id.toString();
+
+                longUrl = encodeURI(
+                  `${findLongUrl.shortUrl}?q=wa&id=${idParam}`,
+                );
+                updateLongUrl = encodeURI(
+                  `${findLongUrl.longUrl}&id=${idParam}`,
+                );
+                shortUrlType = findLongUrl.shortUrlType || "";
+                urlObj = findLongUrl;
+              }
             }
           }
+
           if (phon_no_id && from && urlObj) {
             if (shortUrlType === "COUPON") {
               await axios({
