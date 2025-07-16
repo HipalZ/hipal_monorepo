@@ -141,9 +141,11 @@ function calculateBillDishIds(
 ): {
   totalDishTotal: number;
   totalGst: number;
+  dishIds: string[];
 } {
   let totalDishTotal = 0;
   let totalGst = 0;
+  let dishIds: string[] = [];
 
   // for faster lookups
   const allowed = new Set(itemIds);
@@ -155,6 +157,7 @@ function calculateBillDishIds(
         if (item.isDeleted) continue;
         // Only include if this item's id is in our list
         if (!allowed.has(item._id.toString())) continue;
+        dishIds.push(item.dish._id.toString());
 
         // Base price comes from portion if present, otherwise dish.price
         const basePrice = item.portion?.price ?? item.dish.price;
@@ -179,7 +182,7 @@ function calculateBillDishIds(
     throw new Error("Invalid data structure in KOTs");
   }
 
-  return { totalDishTotal, totalGst };
+  return { totalDishTotal, totalGst, dishIds };
 }
 
 const calculateTotalDiscount = (

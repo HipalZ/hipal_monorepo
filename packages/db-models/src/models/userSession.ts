@@ -212,6 +212,10 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: 0,
   },
+  dishIds: {
+    type: [String],
+    required: false,
+  },
 });
 
 userSessionSchema.index({ businessId: 1, tableName: 1 }, { unique: true });

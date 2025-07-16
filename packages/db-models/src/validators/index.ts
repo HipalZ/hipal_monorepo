@@ -103,5 +103,6 @@ export * from "./whatsAppWallet";
 export * from "./whatsAppWalletHistory";
 export * from "./zone";
 
+export * from "./discount";
 export * from "./qrs";
 export * from "./termsAndConditions";

@@ -2546,6 +2546,8 @@ const posRouter = new Hono()
           discountAppliedBy,
         } = await c.req.json();
 
+        let dishIdsArray: string[] = [];
+
         // Fetch the table session
         const tableSession = await UserSession.findOne({
           businessId,
@@ -2581,10 +2583,11 @@ const posRouter = new Hono()
             accepted: true,
           }).lean()) as KotOrderTypes[];
 
-          const { totalDishTotal, totalGst } = calculateBillDishIds(
+          const { totalDishTotal, totalGst, dishIds } = calculateBillDishIds(
             kotOrder,
             itemIds,
           );
+          dishIdsArray = dishIds;
 
           const dishDis = Math.round((value / 100) * totalDishTotal);
           discountAmount = Math.min(dishDis, totalDishTotal);
@@ -2619,6 +2622,7 @@ const posRouter = new Hono()
           isDiscountApplied: true,
           discountRemovedBy: null,
           discount: discountAmount,
+          dishIds: dishIdsArray,
         });
 
         return respond(c, "Success", true, 200, {});

@@ -37,6 +37,10 @@ const KotItemSchema = new Schema<KotOrderItemType>({
     type: String,
     maxlength: 500,
   },
+  discount: {
+    type: Number,
+    default: 0,
+  },
 });
 
 // Main Cart Schema
