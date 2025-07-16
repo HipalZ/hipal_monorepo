@@ -3563,7 +3563,7 @@ const paymentsRouter = new Hono()
           }
         }
 
-        totalCoinsGiven += payment.earnCoins ?? 0;
+        
 
         if (payment.claimedCoins && !payment.couponId) {
           totalCoinsUsed += payment.claimedCoins ?? 0;
