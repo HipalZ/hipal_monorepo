@@ -338,29 +338,6 @@ const posRouter = new Hono()
           return respond(c, "Table session not found", true, 404, {});
         }
 
-        if (tableSession.billPrintCount <= 1) {
-          sendBillPrintEvent({
-            tableName: tableName,
-            businessId: businessId,
-            customerName: kotOrders[0].name,
-            customerPhone: kotOrders[0].phone,
-            items: billItems,
-            posRestName: businessPosConfig.restName,
-            generatedBy: tableSession?.billGeneratedBy || generatedBy,
-            date: Date.now(),
-            serviceCharge: tableSession?.serviceCharge || 0,
-            discount: tableSession?.discount || 0,
-            tax: tableSession?.gst || 0,
-            total: tableSession?.total || 0,
-            billRequestId: tableSession?._id.toString() || "",
-            subTotal: tableSession?.subTotal || 0,
-            tips: tableSession?.tips || 0,
-            claimedCoins: tableSession?.claimedCoins || 0,
-            couponDiscount: tableSession?.couponDiscount || 0,
-            fssai: outLetInfo?.fssai || "",
-            gst: outLetInfo?.gst || "",
-          });
-        }
 
         return c.json(
           {
