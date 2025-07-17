@@ -2126,10 +2126,10 @@ const whatsappRouter = new Hono()
             }
           }
           if (userText) {
-            const tableCodeMatch = userText.match(/table\s*(.*)/i);
+            const tableCodeMatch = userText.match(
+              /table\s*[-\s]?([a-zA-Z0-9-]+)/i,
+            );
             const tableCode = tableCodeMatch?.[1];
-
-            console.log("Extracted Table Code:", tableCode);
 
             if (tableCode) {
               const findLongUrl = await UrlModel.findOne({
@@ -2150,7 +2150,6 @@ const whatsappRouter = new Hono()
               }
             }
           }
-
           if (phon_no_id && from && urlObj) {
             if (shortUrlType === "COUPON") {
               await axios({
