@@ -88,6 +88,7 @@ export * from "./zone";
 export * from "./discount";
 export * from "./passwordManager/passwordManager";
 export * from "./printerConfig";
+export * from "./printSection";
 export * from "./qrs";
 export * from "./queueLog";
 export * from "./termsAndConditions";
