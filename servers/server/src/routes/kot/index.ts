@@ -11,6 +11,7 @@ import { kotOrderAcceptSchema } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { nanoid } from "nanoid";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { calculateCartBill } from "../../utils/helper";
@@ -323,7 +324,7 @@ const kotRouter = new Hono()
             cart: deletedItems.map((it) => ({ ...it, quantity: it.quantity })),
             deletedBy: user.name,
             acceptedBy: captain?.name || user.name,
-            kotId: kotId.toString(),
+            kotId: nanoid(10),
             date: Date.now(),
             posRestName: pos?.restName,
           });

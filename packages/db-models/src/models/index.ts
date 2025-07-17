@@ -88,5 +88,6 @@ export * from "./zone";
 export * from "./passwordManager/passwordManager";
 export * from "./petpoojaCartItem";
 export * from "./printerConfig";
+export * from "./printSection";
 export * from "./qrs";
 export * from "./termsAndConditions";
