@@ -3,6 +3,7 @@ import {
   useFooterSection,
   useImageChange,
 } from "@/components/helpers/explorePageHelpers";
+import useBusinessData from "@/components/store/useBusinessData";
 import { useExploreStore } from "@/components/store/useExploreStore";
 import { cn, handleClick } from "@/components/utils/helper";
 import { lazy, memo, useRef } from "react";
@@ -19,54 +20,57 @@ const MemoFooterSection = () => {
   const { handleImageChange } = useImageChange();
   const { handleFooterComment, handleFssaiNumber, handlegst } =
     useFooterSection();
+  const outletInfo = useBusinessData((s) => s.outletInfo);
 
   return (
     <>
-      <section className="flex-1 mt-4">
-        <SubHeader text="Footer Banner" />
-        <article
-          className={cn(
-            "relative rounded-xl w-full h-[110px]",
-            img?.footer?.length > 0
-              ? ""
-              : "border-dashed border-2 border-[#8C63FF]",
-          )}
-        >
-          <input
-            ref={footerInputRef}
-            onClick={(e) => handleClick(e, footerInputRef)}
-            type="file"
-            id="footerInput"
-            style={{ display: "none" }}
-            onChange={handleImageChange}
-            data-type="footer"
-            accept="*"
-          />
-          <figure className="w-full max-w-[28rem] h-[10px] mx-auto lg:mx-0 ">
-            <label
-              htmlFor="footerInput"
-              className="flex items-center justify-center overflow-hidden cursor-pointer rounded-xl"
-            >
-              <figure className="w-full max-w-[28rem] h-[110px]">
-                {img.footer ? (
-                  <div className="relative w-full max-w-[28rem] h-[110px]">
-                    <figure className="w-full h-full">
-                      <img
-                        src={img.footer}
-                        alt="Footer"
-                        className="object-cover w-full h-full rounded-2xl"
-                      />
-                    </figure>
-                    <CiEdit className="absolute top-0 right-0 w-8 h-8 p-1 text-black bg-white rounded-full cursor-pointer" />
-                  </div>
-                ) : (
-                  <PlusButton />
-                )}
-              </figure>
-            </label>
-          </figure>
-        </article>
-      </section>
+      {outletInfo?.outLetType === "HOTEL" ? (
+        <section className="flex-1 mt-4">
+          <SubHeader text="Footer Banner" />
+          <article
+            className={cn(
+              "relative rounded-xl w-full h-[110px]",
+              img?.footer?.length > 0
+                ? ""
+                : "border-dashed border-2 border-[#8C63FF]",
+            )}
+          >
+            <input
+              ref={footerInputRef}
+              onClick={(e) => handleClick(e, footerInputRef)}
+              type="file"
+              id="footerInput"
+              style={{ display: "none" }}
+              onChange={handleImageChange}
+              data-type="footer"
+              accept="*"
+            />
+            <figure className="w-full max-w-[28rem] h-[10px] mx-auto lg:mx-0 ">
+              <label
+                htmlFor="footerInput"
+                className="flex items-center justify-center overflow-hidden cursor-pointer rounded-xl"
+              >
+                <figure className="w-full max-w-[28rem] h-[110px]">
+                  {img.footer ? (
+                    <div className="relative w-full max-w-[28rem] h-[110px]">
+                      <figure className="w-full h-full">
+                        <img
+                          src={img.footer}
+                          alt="Footer"
+                          className="object-cover w-full h-full rounded-2xl"
+                        />
+                      </figure>
+                      <CiEdit className="absolute top-0 right-0 w-8 h-8 p-1 text-black bg-white rounded-full cursor-pointer" />
+                    </div>
+                  ) : (
+                    <PlusButton />
+                  )}
+                </figure>
+              </label>
+            </figure>
+          </article>
+        </section>
+      ) : null}
       <section className="md:flex md:space-x-10">
         <section className="flex-1 mt-10 md:mt-4 w-full">
           <SubHeader text="Footer Section" />
