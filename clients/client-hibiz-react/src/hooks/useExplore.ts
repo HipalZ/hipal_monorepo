@@ -37,13 +37,13 @@ export const useOutletInfo = () => {
     socialMediaLinks: s.socialMediaLinks,
     setSocialMediaLinks: s.setSocialMediaLinks,
   }));
-  const { setBizInfo, setToggleExplorePages, setImg } = useExploreStore(
-    (state) => ({
+  const { setBizInfo, setToggleExplorePages, setImg, setHotelBanners } =
+    useExploreStore((state) => ({
       setBizInfo: state.setBizInfo,
       setToggleExplorePages: state.setToggleExplorePages,
       setImg: state.setImg,
-    }),
-  );
+      setHotelBanners: state.setHotelBanners,
+    }));
   const getAllBizInfo = async () => {
     return await apiRpc.businesses.outletInfo[":businessId"].$get({
       param: {
@@ -80,6 +80,7 @@ export const useOutletInfo = () => {
     }
     setBizInfo(response?.data as IBizInfo);
     setToggleExplorePages(ExplorePages.MAINFORM);
+    setHotelBanners(response?.data?.hotelBanners);
 
     const updatedSocialMediaLinks = socialMediaLinks.map((link) => {
       const matchedLink = response?.data?.socialMediaLinks?.find(
@@ -96,7 +97,7 @@ export const useOutletInfo = () => {
   };
   const { isLoading: isBizLoading } = useQuery({
     queryKey: ["bizInfo"],
-    queryFn: () => fetchBizInfo(),
+    queryFn: fetchBizInfo,
     enabled: !!businessId || !!hotelId,
   });
   return { isBizLoading };
