@@ -59,7 +59,7 @@ function MemoRoomsHotel() {
   }, []);
 
   const filteredRooms = useMemo(() => {
-    return allRooms?.filter((room) => {
+    const filtered = allRooms?.filter((room) => {
       const matchesSearch = room.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase());
@@ -69,6 +69,10 @@ function MemoRoomsHotel() {
 
       return matchesSearch && matchesStatus;
     });
+
+    return filtered?.sort(
+      (a, b) => Number.parseInt(a.name) - Number.parseInt(b.name),
+    );
   }, [allRooms, searchQuery, statusFilters]);
 
   const statusOptions = ["AVAILABLE", "OCCUPIED", "BOOKED", "MAINTENANCE"];
