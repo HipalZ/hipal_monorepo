@@ -2129,11 +2129,32 @@ const whatsappRouter = new Hono()
             const tableCodeMatch = userText.match(
               /table\s*[-\s]?([a-zA-Z0-9-]+)/i,
             );
+            const roomCodeMatch = userText.match(
+              /room\s*[-\s]?([a-zA-Z0-9-]+)/i,
+            );
             const tableCode = tableCodeMatch?.[1];
-
+            const roomCode = roomCodeMatch?.[1];
             if (tableCode) {
               const findLongUrl = await UrlModel.findOne({
                 longUrl: { $regex: `tableName=${tableCode}`, $options: "i" },
+              });
+
+              if (findLongUrl) {
+                const idParam = userObj?._id.toString();
+
+                longUrl = encodeURI(
+                  `${findLongUrl.shortUrl}?q=wa&id=${idParam}`,
+                );
+                updateLongUrl = encodeURI(
+                  `${findLongUrl.longUrl}&id=${idParam}`,
+                );
+                shortUrlType = findLongUrl.shortUrlType || "";
+                urlObj = findLongUrl;
+              }
+            }
+            if (roomCode) {
+              const findLongUrl = await UrlModel.findOne({
+                longUrl: { $regex: `room=${roomCode}`, $options: "i" },
               });
 
               if (findLongUrl) {
@@ -2238,6 +2259,7 @@ const whatsappRouter = new Hono()
               const user = await User.findOne({
                 phone: userPhone,
               }).select("_id name phone");
+              // Check if user analytics exists, if not, create new user analytics
               const userAnalytics = await UserAnalytic.exists({
                 userId: user?._id,
               });
@@ -2256,92 +2278,53 @@ const whatsappRouter = new Hono()
                   visitCount: 1,
                 });
               }
+
+              // Extract room number from urlCode (if URL is passed directly by the user)
               const authCode = nanoid(4).toUpperCase();
               const room = await HotelRoom.findOne({
-                slug: urlObj?.urlCode,
+                slug: urlObj?.urlCode, // assuming that room number is stored in slug
               });
 
+              // If the room is found and no users are assigned, mark it as occupied
               if (room && room.userIds.length === 0) {
-                const a = await HotelRoom.findOneAndUpdate(
+                const updatedRoom = await HotelRoom.findOneAndUpdate(
                   {
                     businessId: config?.businessId,
                     name: room?.name,
                     slug: urlObj?.urlCode,
                   },
                   {
-                    $addToSet: {
-                      userIds: user?._id,
-                    },
+                    $addToSet: { userIds: user?._id },
                     source: "",
                     roomStatus: "OCCUPIED",
                   },
                 );
 
+                // Create a session if none exists for the room
                 const roomSession = await HotelRoomSession.findOne({
-                  roomId: a?._id.toString(),
+                  roomId: updatedRoom?._id.toString(),
                 });
 
                 if (!roomSession) {
                   const roomSession = await HotelRoomSession.create({
-                    roomId: a?._id,
+                    roomId: updatedRoom?._id,
                     name: room?.name,
                     userIds: [user?._id],
                     date: Date.now(),
                     checkIn: Date.now(),
-                    authCode,
+                    authCode, // Use nanoid for auth code generation
                   });
 
+                  // Update the room with the generated authCode
                   await HotelRoom.findOneAndUpdate(
                     {
-                      _id: a?._id,
+                      _id: updatedRoom?._id,
                     },
                     {
                       authCode: roomSession.authCode,
                     },
                   );
                 }
-                // try {
-                //   const res = await axios.post(
-                //     `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
-                //     {
-                //       messaging_product: "whatsapp",
-                //       to: user?.phone?.toString(),
-                //       type: "template",
-                //       template: {
-                //         name: "test_checkin_template",
-                //         language: { code: "en" },
-                //         components: [
-                //           {
-                //             type: "body",
-                //             parameters: [
-                //               {
-                //                 type: "text",
-                //                 text: user?.name,
-                //               },
-
-                //               {
-                //                 type: "text",
-                //                 text: authCode,
-                //               },
-
-                //               {
-                //                 type: "text",
-                //                 text: room?.name,
-                //               },
-                //             ],
-                //           },
-                //         ],
-                //       },
-                //     },
-                //     {
-                //       headers: {
-                //         Authorization: `Bearer ${config.token}`,
-                //       },
-                //     },
-                //   );
-                // } catch (error) {
-                //   console.log("error", error);
-                // }
               }
 
               const res = await axios.post(
@@ -2393,6 +2376,7 @@ const whatsappRouter = new Hono()
                 },
               );
             } else if (shortUrlType === "CHECK_IN") {
+              console.log("shortUrlType2", shortUrlType);
               let user = await User.findOne({
                 phone: userPhone,
               });
@@ -2444,7 +2428,7 @@ const whatsappRouter = new Hono()
                   { new: true },
                 );
               }
-
+              console.log("longUrl", longUrl);
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
