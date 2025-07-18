@@ -194,7 +194,7 @@ const MemoMainForm = () => {
         <UniquelyYoursSection />
       )}
       {outletInfo?.outLetType !== "HOTEL" && <CategoryTopBanner />}
-      {outletInfo?.outLetType === "HOTEL" ? <FooterSection /> : null}
+      <FooterSection />
       <SocialMediaLinks />
       <button type="submit" className="cursor-pointer bottom_btn">
         Save
