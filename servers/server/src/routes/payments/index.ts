@@ -69,7 +69,7 @@ import {
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 import { applyItemDiscountsIndividually } from "../../utils/services/discountItem";
-import { generateTenDigitCode } from "../pos/index.js";
+import { generateTenDigitCode, sendPushNotification } from "../pos/index.js";
 const admin = require("firebase-admin");
 // Hash a passwordss
 
@@ -1742,6 +1742,13 @@ const paymentsRouter = new Hono()
       const registrationToken = await DeviceToken.find({
         businessId: businessId,
       });
+      if (registrationToken.length > 0) {
+        for (const obj of registrationToken) {
+          if (obj.notification) {
+            sendPushNotification(obj.token, "customer", tableName);
+          }
+        }
+      }
 
       return respond(c, "Alert created successfully", false, 200, alert);
     },
