@@ -2132,8 +2132,12 @@ const whatsappRouter = new Hono()
             const roomCodeMatch = userText.match(
               /room\s*[-\s]?([a-zA-Z0-9-]+)/i,
             );
+            const linkCodeMatch = userText.match(
+              /link\s*[-\s]?([a-zA-Z0-9-]+)/i,
+            );
             const tableCode = tableCodeMatch?.[1];
             const roomCode = roomCodeMatch?.[1];
+            const couponCode = linkCodeMatch?.[1];
             if (tableCode) {
               const findLongUrl = await UrlModel.findOne({
                 longUrl: { $regex: `tableName=${tableCode}`, $options: "i" },
@@ -2170,6 +2174,23 @@ const whatsappRouter = new Hono()
                 urlObj = findLongUrl;
               }
             }
+            if (couponCode) {
+              const findLongUrl = await UrlModel.findOne({
+                urlCode: couponCode,
+              });
+              if (findLongUrl) {
+                const idParam = userObj?._id.toString();
+
+                longUrl = encodeURI(
+                  `${findLongUrl.shortUrl}?q=wa&id=${idParam}`,
+                );
+                updateLongUrl = encodeURI(
+                  `${findLongUrl.longUrl}&id=${idParam}`,
+                );
+                shortUrlType = findLongUrl.shortUrlType || "";
+                urlObj = findLongUrl;
+              }
+            }
           }
           if (phon_no_id && from && urlObj) {
             if (shortUrlType === "COUPON") {
@@ -2180,80 +2201,13 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: `Welcome to ${bName?.name} 🌿
-              
-              Hey there! Thanks for stopping by at the Lala Land Flea Market! 🎉
-              
-              We’re excited to introduce Urban Nemo – where great coffee, delicious food, and a peaceful ambiance come together. Here's a special treat just for you!
-              
-              🎁 Grab Coupon: ${longUrl}
-              
-              ✅ Enjoy Flat 20% OFF  
-              👉 At our stall in the flea market  
-              👉 At Urban Nemo Garden Cafe near Jubilee Hills Checkpost  
-              
-              📍 Find us here: https://g.co/kgs/9dszAqh  
-              📸 Follow us for more perks: https://www.instagram.com/urbannemocafehyd  
-              
-              Show this message to claim your discount! Looking forward to serving you! ☕`,
+                    body: `🎉 Enjoy exclusive benefits from ${bName?.name}.\n🔗 Click below to grab your special coupon and avail discount curated just for you. \n${longUrl}`,
                   },
                 },
                 headers: {
                   "Content-Type": "application/json",
                 },
               });
-
-              try {
-                const res = await axios.post(
-                  `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
-                  {
-                    messaging_product: "whatsapp",
-                    to: from,
-                    type: "template",
-                    template: {
-                      name: "coupon_template",
-                      language: { code: "en" },
-                      components: [
-                        {
-                          type: "body",
-                          parameters: [
-                            {
-                              type: "text",
-                              text: config?.businessName,
-                            },
-
-                            {
-                              type: "text",
-                              text: `${config.couponShortUrl}?q=wa`,
-                            },
-
-                            {
-                              type: "text",
-                              text: config?.couponDiscount,
-                            },
-                            {
-                              type: "text",
-                              text: config?.direction,
-                            },
-                            {
-                              type: "text",
-                              text: config?.socialLink,
-                            },
-                          ],
-                        },
-                      ],
-                    },
-                  },
-                  {
-                    headers: {
-                      Authorization: `Bearer ${config.token}`,
-                    },
-                  },
-                );
-              } catch (error) {
-                console.log("coupons error", error);
-              }
-
               //coupon template
             } else if (shortUrlType === "ROOM") {
               const user = await User.findOne({
@@ -2376,7 +2330,6 @@ const whatsappRouter = new Hono()
                 },
               );
             } else if (shortUrlType === "CHECK_IN") {
-              console.log("shortUrlType2", shortUrlType);
               let user = await User.findOne({
                 phone: userPhone,
               });
@@ -2428,7 +2381,6 @@ const whatsappRouter = new Hono()
                   { new: true },
                 );
               }
-              console.log("longUrl", longUrl);
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
@@ -2476,7 +2428,7 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: `Welcome to ${bName?.name}! ☕\nWe’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${longUrl}\n🍽️ View our curated menu featuring handcrafted delights.`,
+                    body: `Welcome to ${bName?.name}! \nWe’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${longUrl}\n🍽️ View our curated menu featuring handcrafted delights.`,
                   },
                 },
                 headers: {

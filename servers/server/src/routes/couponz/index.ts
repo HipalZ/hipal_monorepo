@@ -334,6 +334,8 @@ const couponzRouter = new Hono()
           longUrl: longUrl,
           shortUrl: `https://api.test.hipalz.com/hipalz/${uniqueOrderId}`,
           urlCode: uniqueOrderId,
+          shortUrlType: "COUPON",
+          businessId: createdCoupon.businessId,
         });
 
         if (!createShortUrl) {
