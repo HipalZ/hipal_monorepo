@@ -2201,7 +2201,7 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: `🎉 Enjoy exclusive benefits from ${bName?.name}.\n🔗 Click below to grab your special coupon and avail discount curated just for you. \n${longUrl}`,
+                    body: `🎉 Enjoy exclusive benefits from ${bName?.name}.\n🔗 Click below to grab your special coupon curated just for you. \n${longUrl}`,
                   },
                 },
                 headers: {
