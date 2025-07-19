@@ -36,7 +36,6 @@ import { schedule } from "node-cron";
 import { z } from "zod";
 import { cache } from "../../utils/cacheHelper";
 import { petpoojaPosConfig } from "../../utils/posConfig/petPooja";
-import { billQueue } from "../../utils/queue/queueClient";
 import { razorpayWrapper } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 import { whatsAppConfig } from "../../utils/whatAppTemplate";
@@ -2558,7 +2557,7 @@ const scriptRouter = new Hono()
     async (c) => {
       const payload = await c.req.json();
       console.log(payload);
-      await billQueue.add("request-only", { payload }, { delay: 8_000 });
+      // await billQueue.add("request-only", { payload }, { delay: 8_000 });
 
       return respond(c, "queue sent", false, 200, {});
     },

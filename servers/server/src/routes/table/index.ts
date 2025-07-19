@@ -1,5 +1,4 @@
 import {
-  BillQueue,
   BillUrlModel,
   Business,
   BusinessPosConfig,
@@ -33,7 +32,6 @@ import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { calculateCartBill } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
-import { billQueue } from "../../utils/queue/queueClient";
 import { respond } from "../../utils/response";
 import { applyItemDiscountsIndividually } from "../../utils/services/discountItem";
 import { addCoins, calculatedCashbackCoins, removeCoins } from "../payments";
@@ -521,48 +519,48 @@ const tableRouter = new Hono()
 
         const saveOrderData = saveOrder[0];
 
-        const job1 = await billQueue.add(
-          "request-only",
-          { payload, saveOrderData, pos, tableSession },
-          { delay: 9_000 },
-        );
+        // const job1 = await billQueue.add(
+        //   "request-only",
+        //   { payload, saveOrderData, pos, tableSession },
+        //   { delay: 9_000 },
+        // );
 
-        await BillQueue.findOneAndUpdate(
-          { jobId: job1.id },
-          {
-            $set: {
-              businessId: tableSession.businessId,
-              tableName: tableSession.tableName,
-              date: Date.now(),
-              log: "Queued",
-            },
-          },
-          {
-            new: true,
-            upsert: true,
-          },
-        );
+        // await BillQueue.findOneAndUpdate(
+        //   { jobId: job1.id },
+        //   {
+        //     $set: {
+        //       businessId: tableSession.businessId,
+        //       tableName: tableSession.tableName,
+        //       date: Date.now(),
+        //       log: "Queued",
+        //     },
+        //   },
+        //   {
+        //     new: true,
+        //     upsert: true,
+        //   },
+        // );
 
-        const job2 = await billQueue.add(
-          "request-and-settle",
-          { payload, saveOrderData, pos, tableSession },
-          { delay: 35_000 },
-        );
-        await BillQueue.findOneAndUpdate(
-          { jobId: job2.id },
-          {
-            $set: {
-              businessId: tableSession.businessId,
-              tableName: tableSession.tableName,
-              date: Date.now(),
-              log: "Queued",
-            },
-          },
-          {
-            new: true,
-            upsert: true,
-          },
-        );
+        // const job2 = await billQueue.add(
+        //   "request-and-settle",
+        //   { payload, saveOrderData, pos, tableSession },
+        //   { delay: 35_000 },
+        // );
+        // await BillQueue.findOneAndUpdate(
+        //   { jobId: job2.id },
+        //   {
+        //     $set: {
+        //       businessId: tableSession.businessId,
+        //       tableName: tableSession.tableName,
+        //       date: Date.now(),
+        //       log: "Queued",
+        //     },
+        //   },
+        //   {
+        //     new: true,
+        //     upsert: true,
+        //   },
+        // );
 
         if (
           tableSession?.dishIds &&

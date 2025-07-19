@@ -28,6 +28,7 @@ import posRouter from "./pos";
 import posConfigurationRouter from "./posConfiguration";
 import printSectionRouter from "./printSection";
 import qrRouter from "./qrs";
+import reportRouter from "./report";
 import googleReview from "./reviews";
 import scriptRouter from "./script";
 import settingsRouter from "./settings";
@@ -89,6 +90,7 @@ export const routes = app
   .route("/qrs", qrRouter)
   .route("/kitchen", kitchenRouter)
   .route("/password_manager", passwordManagerRouter)
-  .route("/print_section", printSectionRouter);
+  .route("/print_section", printSectionRouter)
+  .route("/report", reportRouter);
 
 export type AppType = typeof routes;

@@ -1,7 +1,6 @@
 import { createHmac } from "node:crypto";
 // books.ts
 import {
-  BillQueue,
   BusinessPosConfig,
   BusinessSettings,
   CouponClaim,
@@ -62,7 +61,6 @@ import { getMerchantConfig } from "../../utils/cacheHelper";
 import getDefault4AMToNext4AM from "../../utils/defaultBillingTime";
 import { convertToPetpoojaCart } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
-import { billQueue } from "../../utils/queue/queueClient";
 import {
   type MerchantConfig,
   razorpayWrapper,
@@ -1394,48 +1392,48 @@ const paymentsRouter = new Hono()
 
             const saveOrderData = getOrder.toObject();
 
-            const job1 = await billQueue.add(
-              "request-only",
-              { pay, saveOrderData, pos, tableSession },
-              { delay: 9_000 },
-            );
+            // const job1 = await billQueue.add(
+            //   "request-only",
+            //   { pay, saveOrderData, pos, tableSession },
+            //   { delay: 9_000 },
+            // );
 
-            await BillQueue.findOneAndUpdate(
-              { jobId: job1.id },
-              {
-                $set: {
-                  businessId: tableSession?.businessId,
-                  tableName: tableSession?.tableName,
-                  date: Date.now(),
-                  log: "Queued",
-                },
-              },
-              {
-                new: true,
-                upsert: true,
-              },
-            );
+            // await BillQueue.findOneAndUpdate(
+            //   { jobId: job1.id },
+            //   {
+            //     $set: {
+            //       businessId: tableSession?.businessId,
+            //       tableName: tableSession?.tableName,
+            //       date: Date.now(),
+            //       log: "Queued",
+            //     },
+            //   },
+            //   {
+            //     new: true,
+            //     upsert: true,
+            //   },
+            // );
 
-            const job2 = await billQueue.add(
-              "request-and-settle",
-              { pay, saveOrderData, pos, tableSession },
-              { delay: 35_000 },
-            );
-            await BillQueue.findOneAndUpdate(
-              { jobId: job2.id },
-              {
-                $set: {
-                  businessId: tableSession?.businessId,
-                  tableName: tableSession?.tableName,
-                  date: Date.now(),
-                  log: "Queued",
-                },
-              },
-              {
-                new: true,
-                upsert: true,
-              },
-            );
+            // const job2 = await billQueue.add(
+            //   "request-and-settle",
+            //   { pay, saveOrderData, pos, tableSession },
+            //   { delay: 35_000 },
+            // );
+            // await BillQueue.findOneAndUpdate(
+            //   { jobId: job2.id },
+            //   {
+            //     $set: {
+            //       businessId: tableSession?.businessId,
+            //       tableName: tableSession?.tableName,
+            //       date: Date.now(),
+            //       log: "Queued",
+            //     },
+            //   },
+            //   {
+            //     new: true,
+            //     upsert: true,
+            //   },
+            // );
 
             await TempTableSettle.create(
               [
@@ -2138,48 +2136,48 @@ const paymentsRouter = new Hono()
 
                 const saveOrderData = order.toObject();
 
-                const job1 = await billQueue.add(
-                  "request-only",
-                  { payload, saveOrderData, isHavePos, tableSession },
-                  { delay: 9_000 },
-                );
+                // const job1 = await billQueue.add(
+                //   "request-only",
+                //   { payload, saveOrderData, isHavePos, tableSession },
+                //   { delay: 9_000 },
+                // );
 
-                await BillQueue.findOneAndUpdate(
-                  { jobId: job1.id },
-                  {
-                    $set: {
-                      businessId: tableSession?.businessId,
-                      tableName: tableSession?.tableName,
-                      date: Date.now(),
-                      log: "Queued",
-                    },
-                  },
-                  {
-                    new: true,
-                    upsert: true,
-                  },
-                );
+                // await BillQueue.findOneAndUpdate(
+                //   { jobId: job1.id },
+                //   {
+                //     $set: {
+                //       businessId: tableSession?.businessId,
+                //       tableName: tableSession?.tableName,
+                //       date: Date.now(),
+                //       log: "Queued",
+                //     },
+                //   },
+                //   {
+                //     new: true,
+                //     upsert: true,
+                //   },
+                // );
 
-                const job2 = await billQueue.add(
-                  "request-and-settle",
-                  { payload, saveOrderData, isHavePos, tableSession },
-                  { delay: 35_000 },
-                );
-                await BillQueue.findOneAndUpdate(
-                  { jobId: job2.id },
-                  {
-                    $set: {
-                      businessId: tableSession?.businessId,
-                      tableName: tableSession?.tableName,
-                      date: Date.now(),
-                      log: "Queued",
-                    },
-                  },
-                  {
-                    new: true,
-                    upsert: true,
-                  },
-                );
+                // const job2 = await billQueue.add(
+                //   "request-and-settle",
+                //   { payload, saveOrderData, isHavePos, tableSession },
+                //   { delay: 35_000 },
+                // );
+                // await BillQueue.findOneAndUpdate(
+                //   { jobId: job2.id },
+                //   {
+                //     $set: {
+                //       businessId: tableSession?.businessId,
+                //       tableName: tableSession?.tableName,
+                //       date: Date.now(),
+                //       log: "Queued",
+                //     },
+                //   },
+                //   {
+                //     new: true,
+                //     upsert: true,
+                //   },
+                // );
 
                 await KotOrder.updateMany(
                   {
