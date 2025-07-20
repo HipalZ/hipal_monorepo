@@ -2127,18 +2127,18 @@ const whatsappRouter = new Hono()
           }
           if (userText) {
             const tableCodeMatch = userText.match(
-              /table\s*[-\s]?([a-zA-Z0-9-]+)/i,
+              /table\s*[-\s]?([a-zA-Z0-9\s-]+)/i,
             );
+            console.log("tableCodeMatch", tableCodeMatch);
             const roomCodeMatch = userText.match(
-              /room\s*[-\s]?([a-zA-Z0-9-]+)/i,
+              /room\s*[-\s]?([a-zA-Z0-9\s-]+)/i,
             );
             const linkCodeMatch = userText.match(
-              /link\s*[-\s]?([a-zA-Z0-9-]+)/i,
+              /link\s*[-\s]?([a-zA-Z0-9\s-]+)/i,
             );
             const checkInCodeMatch = userText.match(
-              /QR\s*[-\s]?([a-zA-Z0-9-]+)/i,
+              /QR\s*[-\s]?([a-zA-Z0-9\s-]+)/i,
             );
-            console.log("checkInCodeMatch", checkInCodeMatch);
             const tableCode = tableCodeMatch?.[1];
             const roomCode = roomCodeMatch?.[1];
             const couponCode = linkCodeMatch?.[1];
@@ -2147,6 +2147,7 @@ const whatsappRouter = new Hono()
             if (tableCode) {
               const findLongUrl = await UrlModel.findOne({
                 longUrl: { $regex: `tableName=${tableCode}`, $options: "i" },
+                businessId: config?.businessId,
               });
 
               if (findLongUrl) {
@@ -2165,6 +2166,7 @@ const whatsappRouter = new Hono()
             if (roomCode) {
               const findLongUrl = await UrlModel.findOne({
                 longUrl: { $regex: `room=${roomCode}`, $options: "i" },
+                businessId: config?.businessId,
               });
 
               if (findLongUrl) {
@@ -2193,6 +2195,7 @@ const whatsappRouter = new Hono()
             if (checkInCode) {
               const findLongUrl = await UrlModel.findOne({
                 longUrl: { $regex: `tag=${checkInCode}`, $options: "i" },
+                businessId: config?.businessId,
               });
               if (findLongUrl) {
                 const idParam = userObj?._id.toString();
