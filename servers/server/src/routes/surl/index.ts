@@ -20,25 +20,10 @@ const surlRouter = new Hono()
       const { urlCode } = c.req.param();
       const { q, id } = c.req.query();
 
-      if (!q) {
-        const Bid = await UrlModel.findOne({
-          urlCode,
-        }).select("businessId");
+      const result = await UrlModel.findOne({ urlCode }).select(
+        "businessId longUrl",
+      );
 
-        const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
-          businessId: Bid?.businessId,
-        });
-
-        const menuRedirection = whatsAppBusinessConfig?.menuRedirection;
-
-        if (menuRedirection && menuRedirection === "WA") {
-          const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, I'm interested in your menu. Could you share more details? I am sitting at T-${urlCode}`;
-
-          return c.redirect(redirectUrl);
-        }
-      }
-
-      const result = await UrlModel.findOne({ urlCode });
       if (!result) {
         return c.json(
           {
@@ -50,52 +35,29 @@ const surlRouter = new Hono()
         );
       }
 
-      // Redirect to the original URL
-      return c.redirect(result.longUrl);
-    },
-  )
-
-  .get(
-    "/check_in/:urlCode",
-    zValidator(
-      "param",
-      z.object({
-        urlCode: z.string().min(1).max(500),
-      }),
-    ),
-    async (c) => {
-      const { urlCode } = c.req.param();
-      const { q, id } = c.req.query();
-
       if (!q) {
-        const Bid = await UrlModel.findOne({
-          urlCode,
-        }).select("businessId");
-
         const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
-          businessId: Bid?.businessId,
+          businessId: result.businessId,
         });
 
-        const menuRedirection = whatsAppBusinessConfig?.menuRedirection;
+        if (whatsAppBusinessConfig?.menuRedirection === "WA") {
+          let tableNumber = urlCode;
+          const tableMatch = result.longUrl.match(/tableName=([^&]+)/);
 
-        if (menuRedirection && menuRedirection === "WA") {
-          const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, I have ve checked in via QR at T-${urlCode}`;
+          if (tableMatch?.[1]) {
+            tableNumber = decodeURIComponent(tableMatch[1]);
+          }
+
+          const message = `Hi! I’m interested. Could you share more details? I am at Table-${tableNumber}`;
+          const redirectUrl = `https://wa.me/${
+            whatsAppBusinessConfig.whatsAppPhone
+          }?text=${encodeURIComponent(message)}`;
 
           return c.redirect(redirectUrl);
         }
       }
 
-      const result = await UrlModel.findOne({ urlCode });
-      if (!result) {
-        return c.json(
-          {
-            message: "URL not found",
-            err: true,
-            data: {},
-          },
-          404,
-        );
-      }
+      setShortUrl(urlCode, result.longUrl);
 
       if (id) {
         const getToken = getCookie(c, "token");
@@ -117,7 +79,7 @@ const surlRouter = new Hono()
                 400,
               );
             }
-          } catch (error) {
+          } catch {
             return c.json(
               {
                 message: "Invalid token",
@@ -143,7 +105,6 @@ const surlRouter = new Hono()
         });
       }
 
-      // Redirect to the original URL
       return c.redirect(`${result.longUrl}${id ? `&id=${id}` : ""}`);
     },
   )
@@ -158,27 +119,10 @@ const surlRouter = new Hono()
     ),
     async (c) => {
       const { urlCode } = c.req.param();
-      const { q, id } = c.req.query();
-
-      if (!q) {
-        const Bid = await UrlModel.findOne({
-          urlCode,
-        }).select("businessId");
-
-        const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
-          businessId: Bid?.businessId,
-        });
-
-        const menuRedirection = whatsAppBusinessConfig?.menuRedirection;
-
-        if (menuRedirection && menuRedirection === "WA") {
-          const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, I have ve checked in via QR at T-${urlCode}`;
-
-          return c.redirect(redirectUrl);
-        }
-      }
-
-      const result = await UrlModel.findOne({ urlCode });
+      const { q } = c.req.query();
+      const result = await UrlModel.findOne({ urlCode }).select(
+        "businessId longUrl",
+      );
       if (!result) {
         return c.json(
           {
@@ -189,9 +133,81 @@ const surlRouter = new Hono()
           404,
         );
       }
+      if (!q) {
+        const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
+          businessId: result.businessId,
+        });
 
+        if (whatsAppBusinessConfig?.menuRedirection === "WA") {
+          let tableNumber = urlCode;
+          const tableMatch = result.longUrl.match(/tag=([^&]+)/);
+
+          if (tableMatch?.[1]) {
+            tableNumber = decodeURIComponent(tableMatch[1]);
+          }
+
+          const message = `Hi, I have ve checked in via QR-${tableNumber}`;
+          const redirectUrl = `https://wa.me/${
+            whatsAppBusinessConfig.whatsAppPhone
+          }?text=${encodeURIComponent(message)}`;
+
+          return c.redirect(redirectUrl);
+        }
+      }
       // Redirect to the original URL
       return c.redirect(result.longUrl);
+    },
+  )
+
+  .get(
+    "/r/:urlCode",
+    zValidator(
+      "param",
+      z.object({
+        urlCode: z.string().min(1).max(500),
+      }),
+    ),
+    async (c) => {
+      const { urlCode } = c.req.param();
+      const { q, id } = c.req.query();
+      const result = await UrlModel.findOne({ urlCode }).select(
+        "businessId longUrl",
+      );
+      if (!result) {
+        return c.json(
+          {
+            message: "URL not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
+      if (!q) {
+        const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
+          businessId: result.businessId,
+        });
+        if (whatsAppBusinessConfig?.menuRedirection === "WA") {
+          let roomNumber = urlCode;
+          const tableMatch = result.longUrl.match(/room=([^&]+)/);
+
+          if (tableMatch?.[1]) {
+            roomNumber = decodeURIComponent(tableMatch[1]);
+          }
+
+          const message = `Hi, I'm interested in your services. Can you share more details? I'm in room-${roomNumber}.`;
+          const redirectUrl = `https://wa.me/${
+            whatsAppBusinessConfig.whatsAppPhone
+          }?text=${encodeURIComponent(message)}`;
+
+          return c.redirect(redirectUrl);
+        }
+      }
+
+      // Redirect to the original URL
+      return c.redirect(
+        `${result.longUrl} ${q ? `?${q}` : ""}${id ? `&id=${id}` : ""}`,
+      );
     },
   )
 

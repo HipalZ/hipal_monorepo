@@ -1941,7 +1941,6 @@ const whatsappRouter = new Hono()
         const statuses = value?.statuses;
 
         const phon_no_id = value?.metadata?.phone_number_id;
-        console.log("phon_no_id", phon_no_id);
         const config = await WhatsAppBusinessConfig.findOne({
           phoneId: phon_no_id,
         });
@@ -1956,11 +1955,10 @@ const whatsappRouter = new Hono()
           };
 
           const wamid = firstStatus.id;
-
           const userPhoneNumber = firstStatus?.recipient_id
             .toString()
             .slice(sliceNumber);
-          console.log("userPhoneNumber", userPhoneNumber);
+
           const getTemplateIdInfo = (await getTemplateId(
             wamid,
           )) as CampaignConfig;
@@ -2020,7 +2018,6 @@ const whatsappRouter = new Hono()
           const from = messages?.from;
           const userName = contacts?.profile?.name;
           let userPhone = contacts?.wa_id;
-          console.log("userPhone", userPhone);
           const userText = messages?.text?.body;
 
           let longUrl = "";
@@ -2082,7 +2079,6 @@ const whatsappRouter = new Hono()
           let userObj;
           if (userPhone) {
             userPhone = userPhone.toString().slice(sliceNumber);
-            console.log("userPhone2", userPhone);
             if (userPhone.length === 10) {
               const userData = await User.findOneAndUpdate(
                 {
@@ -2126,85 +2122,108 @@ const whatsappRouter = new Hono()
             }
           }
           if (userText) {
-            const tableCode = userText.slice(-5);
-            console.log("tableCode", tableCode);
+            const tableCodeMatch = userText.match(
+              /table\s*[-\s]?([a-zA-Z0-9-]+)/i,
+            );
+            const roomCodeMatch = userText.match(
+              /room\s*[-\s]?([a-zA-Z0-9-]+)/i,
+            );
+            const linkCodeMatch = userText.match(
+              /link\s*[-\s]?([a-zA-Z0-9-]+)/i,
+            );
+            const checkInCodeMatch = userText.match(
+              /QR\s*[-\s]?([a-zA-Z0-9-]+)/i,
+            );
+            const tableCode = tableCodeMatch?.[1];
+            const roomCode = roomCodeMatch?.[1];
+            const couponCode = linkCodeMatch?.[1];
+            const checkInCode = checkInCodeMatch?.[1];
+            if (tableCode) {
+              const findLongUrl = await UrlModel.findOne({
+                longUrl: { $regex: `tableName=${tableCode}`, $options: "i" },
+              });
 
-            const findLongUrl = await UrlModel.findOne({
-              urlCode: tableCode,
-            });
+              if (findLongUrl) {
+                const idParam = userObj?._id.toString();
 
-            if (findLongUrl) {
-              const idParam = userObj?._id.toString();
+                longUrl = encodeURI(
+                  `${findLongUrl.shortUrl}?q=wa&id=${idParam}`,
+                );
+                updateLongUrl = encodeURI(
+                  `${findLongUrl.longUrl}&id=${idParam}`,
+                );
+                shortUrlType = findLongUrl.shortUrlType || "";
+                urlObj = findLongUrl;
+              }
+            }
+            if (roomCode) {
+              const findLongUrl = await UrlModel.findOne({
+                longUrl: { $regex: `room=${roomCode}`, $options: "i" },
+              });
 
-              longUrl = encodeURI(`${findLongUrl.shortUrl}?q=wa&id=${idParam}`);
-              updateLongUrl = encodeURI(`${findLongUrl.longUrl}&id=${idParam}`);
-              shortUrlType = findLongUrl.shortUrlType || "";
-              urlObj = findLongUrl;
-              console.log("longUrl", longUrl);
-              console.log("short", shortUrlType);
-              console.log("urlObj", urlObj);
+              if (findLongUrl) {
+                const idParam = userObj?._id.toString();
+
+                longUrl = encodeURI(
+                  `${findLongUrl.shortUrl}?q=wa&id=${idParam}`,
+                );
+                updateLongUrl = encodeURI(
+                  `${findLongUrl.longUrl}&id=${idParam}`,
+                );
+                shortUrlType = findLongUrl.shortUrlType || "";
+                urlObj = findLongUrl;
+              }
+            }
+            if (couponCode) {
+              const findLongUrl = await UrlModel.findOne({
+                urlCode: couponCode,
+              });
+              if (findLongUrl) {
+                longUrl = encodeURI(`${findLongUrl.longUrl}`);
+                shortUrlType = findLongUrl.shortUrlType || "";
+                urlObj = findLongUrl.shortUrl;
+              }
+            }
+            if (checkInCode) {
+              const findLongUrl = await UrlModel.findOne({
+                longUrl: { $regex: `tag=${checkInCode}`, $options: "i" },
+              });
+              if (findLongUrl) {
+                const idParam = userObj?._id.toString();
+
+                longUrl = encodeURI(
+                  `${findLongUrl.shortUrl}?q=wa&id=${idParam}`,
+                );
+                updateLongUrl = encodeURI(
+                  `${findLongUrl.longUrl}&id=${idParam}`,
+                );
+                shortUrlType = findLongUrl.shortUrlType || "";
+                urlObj = findLongUrl;
+              }
             }
           }
           if (phon_no_id && from && urlObj) {
             if (shortUrlType === "COUPON") {
-              console.log("yaha tk");
-              try {
-                const res = await axios.post(
-                  `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
-                  {
-                    messaging_product: "whatsapp",
-                    to: from,
-                    type: "template",
-                    template: {
-                      name: "coupon_template",
-                      language: { code: "en" },
-                      components: [
-                        {
-                          type: "body",
-                          parameters: [
-                            {
-                              type: "text",
-                              text: config?.businessName,
-                            },
-
-                            {
-                              type: "text",
-                              text: `${config.couponShortUrl}?q=wa`,
-                            },
-
-                            {
-                              type: "text",
-                              text: config?.couponDiscount,
-                            },
-                            {
-                              type: "text",
-                              text: config?.direction,
-                            },
-                            {
-                              type: "text",
-                              text: config?.socialLink,
-                            },
-                          ],
-                        },
-                      ],
-                    },
+              await axios({
+                method: "POST",
+                url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
+                data: {
+                  messaging_product: "whatsapp",
+                  to: from,
+                  text: {
+                    body: `🎉 Enjoy exclusive benefits from ${bName?.name}.\n🔗 Click below to grab your special coupon curated just for you. \n${longUrl}`,
                   },
-                  {
-                    headers: {
-                      Authorization: `Bearer ${config.token}`,
-                    },
-                  },
-                );
-                console.log("res", res.data);
-              } catch (error) {
-                console.log("coupons error", error);
-              }
-
+                },
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
               //coupon template
             } else if (shortUrlType === "ROOM") {
               const user = await User.findOne({
                 phone: userPhone,
               }).select("_id name phone");
+              // Check if user analytics exists, if not, create new user analytics
               const userAnalytics = await UserAnalytic.exists({
                 userId: user?._id,
               });
@@ -2223,92 +2242,53 @@ const whatsappRouter = new Hono()
                   visitCount: 1,
                 });
               }
+
+              // Extract room number from urlCode (if URL is passed directly by the user)
               const authCode = nanoid(4).toUpperCase();
               const room = await HotelRoom.findOne({
-                slug: urlObj?.urlCode,
+                slug: urlObj?.urlCode, // assuming that room number is stored in slug
               });
 
+              // If the room is found and no users are assigned, mark it as occupied
               if (room && room.userIds.length === 0) {
-                const a = await HotelRoom.findOneAndUpdate(
+                const updatedRoom = await HotelRoom.findOneAndUpdate(
                   {
                     businessId: config?.businessId,
                     name: room?.name,
                     slug: urlObj?.urlCode,
                   },
                   {
-                    $addToSet: {
-                      userIds: user?._id,
-                    },
+                    $addToSet: { userIds: user?._id },
                     source: "",
                     roomStatus: "OCCUPIED",
                   },
                 );
 
+                // Create a session if none exists for the room
                 const roomSession = await HotelRoomSession.findOne({
-                  roomId: a?._id.toString(),
+                  roomId: updatedRoom?._id.toString(),
                 });
 
                 if (!roomSession) {
                   const roomSession = await HotelRoomSession.create({
-                    roomId: a?._id,
+                    roomId: updatedRoom?._id,
                     name: room?.name,
                     userIds: [user?._id],
                     date: Date.now(),
                     checkIn: Date.now(),
-                    authCode,
+                    authCode, // Use nanoid for auth code generation
                   });
 
+                  // Update the room with the generated authCode
                   await HotelRoom.findOneAndUpdate(
                     {
-                      _id: a?._id,
+                      _id: updatedRoom?._id,
                     },
                     {
                       authCode: roomSession.authCode,
                     },
                   );
                 }
-                // try {
-                //   const res = await axios.post(
-                //     `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
-                //     {
-                //       messaging_product: "whatsapp",
-                //       to: user?.phone?.toString(),
-                //       type: "template",
-                //       template: {
-                //         name: "test_checkin_template",
-                //         language: { code: "en" },
-                //         components: [
-                //           {
-                //             type: "body",
-                //             parameters: [
-                //               {
-                //                 type: "text",
-                //                 text: user?.name,
-                //               },
-
-                //               {
-                //                 type: "text",
-                //                 text: authCode,
-                //               },
-
-                //               {
-                //                 type: "text",
-                //                 text: room?.name,
-                //               },
-                //             ],
-                //           },
-                //         ],
-                //       },
-                //     },
-                //     {
-                //       headers: {
-                //         Authorization: `Bearer ${config.token}`,
-                //       },
-                //     },
-                //   );
-                // } catch (error) {
-                //   console.log("error", error);
-                // }
               }
 
               const res = await axios.post(
@@ -2419,7 +2399,7 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: `Welcome to ${bName?.name}! 👋\n\nThank you for checking in — we're truly grateful to have you with us today. 🙏\nYour code: *${code}*\n\n🍽️ *Explore Our Menu*: ${updateLongUrl}\nDiscover handcrafted dishes, seasonal specials, and guest favorites.\n\nWe hope you have a delightful experience! 😊`,
+                    body: `Welcome to ${bName?.name}! 👋\n\nThank you for checking in — we're grateful to have you with us today. 🙏\nYour code: *${code}*\n\n *Discover Our Services*: ${longUrl}\n\nWe hope you have a delightful experience! 😊`,
                   },
                 },
                 headers: {
@@ -2460,7 +2440,7 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: `Welcome to ${bName?.name}! ☕\nWe’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${updateLongUrl}\n🍽️ View our curated menu featuring handcrafted delights.`,
+                    body: `Welcome to ${bName?.name}! \nWe’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${longUrl}\n🍽️ View our curated menu featuring handcrafted delights.`,
                   },
                 },
                 headers: {
