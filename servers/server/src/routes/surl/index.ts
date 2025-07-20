@@ -123,7 +123,6 @@ const surlRouter = new Hono()
       const result = await UrlModel.findOne({ urlCode }).select(
         "businessId longUrl",
       );
-      console.log("result", result);
       if (!result) {
         return c.json(
           {
@@ -147,7 +146,7 @@ const surlRouter = new Hono()
             tableNumber = decodeURIComponent(tableMatch[1]);
           }
 
-          const message = `Hi, I have ve checked in via QR-${urlCode}`;
+          const message = `Hi, I have ve checked in via QR-${tableNumber}`;
           const redirectUrl = `https://wa.me/${
             whatsAppBusinessConfig.whatsAppPhone
           }?text=${encodeURIComponent(message)}`;
