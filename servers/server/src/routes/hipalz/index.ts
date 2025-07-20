@@ -14,8 +14,9 @@ const hipalzRouter = new Hono().get(
   async (c) => {
     const { urlCode } = c.req.param();
     const { q, id } = c.req.query();
-
-    const result = await UrlModel.findOne({ urlCode });
+    const result = await UrlModel.findOne({ urlCode }).select(
+      "businessId longUrl",
+    );
     if (!result) {
       return c.json(
         {
@@ -28,27 +29,29 @@ const hipalzRouter = new Hono().get(
     }
     if (!q) {
       const whatsAppBusinessConfig = await WhatsAppBusinessConfig.findOne({
-        businessId: result?.businessId,
+        businessId: result.businessId,
       });
+      if (whatsAppBusinessConfig?.menuRedirection === "WA") {
+        let linkNumber = urlCode;
+        const linkMatch = result.longUrl.match(/link=([^&]+)/);
 
-      const menuRedirection = whatsAppBusinessConfig?.menuRedirection;
+        if (linkMatch?.[1]) {
+          linkNumber = decodeURIComponent(linkMatch[1]);
+        }
 
-      const business = await Business.findOne({
-        _id: result.businessId,
-      });
+        const message = `Hi, I'm interested to know coupon, can you share me link-${urlCode}`;
+        const redirectUrl = `https://wa.me/${
+          whatsAppBusinessConfig.whatsAppPhone
+        }?text=${encodeURIComponent(message)}`;
 
-      if (
-        menuRedirection &&
-        menuRedirection === "WA" &&
-        whatsAppBusinessConfig.campaign
-      ) {
-        const redirectUrl = `https://wa.me/${whatsAppBusinessConfig.whatsAppPhone}?text=Hi, ${business?.name}. I'm interested to know coupon, can you share me link:${urlCode}`;
-
-        return c.redirect(`${redirectUrl}`);
+        return c.redirect(redirectUrl);
       }
     }
-    // Redirect to the original UR
-    return c.redirect(`${result.longUrl}${id ? `&id=${id}` : ""}`);
+
+    // Redirect to the original URL
+    return c.redirect(
+      `${result.longUrl} ${q ? `?${q}` : ""}${id ? `&id=${id}` : ""}`,
+    );
   },
 );
 
