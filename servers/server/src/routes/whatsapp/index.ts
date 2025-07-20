@@ -2135,9 +2135,13 @@ const whatsappRouter = new Hono()
             const linkCodeMatch = userText.match(
               /link\s*[-\s]?([a-zA-Z0-9-]+)/i,
             );
+            const checkInCodeMatch = userText.match(
+              /QR\s*[-\s]?([a-zA-Z0-9-]+)/i,
+            );
             const tableCode = tableCodeMatch?.[1];
             const roomCode = roomCodeMatch?.[1];
             const couponCode = linkCodeMatch?.[1];
+            const checkInCode = checkInCodeMatch?.[1];
             if (tableCode) {
               const findLongUrl = await UrlModel.findOne({
                 longUrl: { $regex: `tableName=${tableCode}`, $options: "i" },
@@ -2178,6 +2182,17 @@ const whatsappRouter = new Hono()
               const findLongUrl = await UrlModel.findOne({
                 urlCode: couponCode,
               });
+              if (findLongUrl) {
+                longUrl = encodeURI(`${findLongUrl.longUrl}`);
+                shortUrlType = findLongUrl.shortUrlType || "";
+                urlObj = findLongUrl.shortUrl;
+              }
+            }
+            if (checkInCode) {
+              const findLongUrl = await UrlModel.findOne({
+                longUrl: { $regex: `tag=${roomCode}`, $options: "i" },
+              });
+
               if (findLongUrl) {
                 const idParam = userObj?._id.toString();
 
