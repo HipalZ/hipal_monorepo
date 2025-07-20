@@ -2192,7 +2192,7 @@ const whatsappRouter = new Hono()
             }
             if (checkInCode) {
               const findLongUrl = await UrlModel.findOne({
-                longUrl: { $regex: `tag=${roomCode}`, $options: "i" },
+                longUrl: { $regex: `tag=${checkInCode}`, $options: "i" },
               });
               if (findLongUrl) {
                 const idParam = userObj?._id.toString();
@@ -2404,7 +2404,7 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: `Welcome to ${bName?.name}! 👋\n\nThank you for checking in — we're truly grateful to have you with us today. 🙏\nYour code: *${code}*\n\n🍽️ *Explore Our Menu*: ${longUrl}\nDiscover handcrafted dishes, seasonal specials, and guest favorites.\n\nWe hope you have a delightful experience! 😊`,
+                    body: `Welcome to ${bName?.name}! 👋\n\nThank you for checking in — we're grateful to have you with us today. 🙏\nYour code: *${code}*\n\n *Discover Our Services*: ${longUrl}\n\nWe hope you have a delightful experience! 😊`,
                   },
                 },
                 headers: {

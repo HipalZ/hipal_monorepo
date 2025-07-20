@@ -48,7 +48,7 @@ const surlRouter = new Hono()
             tableNumber = decodeURIComponent(tableMatch[1]);
           }
 
-          const message = `Hi, I'm interested in your menu. Could you share more details? I am sitting at Table-${tableNumber}`;
+          const message = `Hi! I’m interested. Could you share more details? I am at Table-${tableNumber}`;
           const redirectUrl = `https://wa.me/${
             whatsAppBusinessConfig.whatsAppPhone
           }?text=${encodeURIComponent(message)}`;
@@ -195,7 +195,7 @@ const surlRouter = new Hono()
             roomNumber = decodeURIComponent(tableMatch[1]);
           }
 
-          const message = `Hi, I'm interested in your room. Could you share more details? I am in room-${roomNumber}`;
+          const message = `Hi, I'm interested in your services. Can you share more details? I'm in room-${roomNumber}.`;
           const redirectUrl = `https://wa.me/${
             whatsAppBusinessConfig.whatsAppPhone
           }?text=${encodeURIComponent(message)}`;
