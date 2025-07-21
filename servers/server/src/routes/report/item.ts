@@ -7,16 +7,13 @@ import aggregateBillItems from "../../utils/reportHelper/itemReport";
 import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
 import { respond } from "../../utils/response";
 
-const itemRouter = new Hono();
-
 const bodySchema = z.object({
   businessIds: z.array(z.string()).min(1),
   from: z.number(),
   to: z.number(),
 });
 
-itemRouter
-  // JSON report
+const itemRouter = new Hono()
   .post("/", zValidator("json", bodySchema), async (c) => {
     const { businessIds, from, to } = await c.req.json();
 

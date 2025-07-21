@@ -10,16 +10,14 @@ import { formatToIST } from "../../utils/reportHelper/dateFormater";
 import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
 import { respond } from "../../utils/response";
 
-const categoryRouter = new Hono();
-
 const bodySchema = z.object({
   businessIds: z.array(z.string()).min(1),
   from: z.number(),
   to: z.number(),
 });
 
-categoryRouter
-  // JSON report
+const categoryRouter = new Hono()
+
   .post("/", zValidator("json", bodySchema), async (c) => {
     const { businessIds, from, to } = await c.req.json();
 
