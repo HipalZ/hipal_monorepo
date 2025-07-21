@@ -4,10 +4,11 @@ export interface AggregatedItem {
   categoryId: string | null;
   itemName: string;
   itemCount: number;
-  quantity: number;
   amount: number;
   discount: number;
   tax: number;
+  // quantity: number;
+  totalSales: number;
 }
 
 export function aggregateBillItems(payments: Payment[]): AggregatedItem[] {
@@ -32,18 +33,23 @@ export function aggregateBillItems(payments: Payment[]): AggregatedItem[] {
           categoryId: dish.categoryIds[0] || null,
           itemName: dish.name,
           itemCount: 0,
-          quantity: 0,
+          // quantity: 0,
           amount: 0,
           discount: 0,
           tax: 0,
+          totalSales: 0,
         };
       }
 
       const grp = acc[key];
       grp.itemCount += 1;
-      grp.quantity += quantity;
+      // grp.quantity += quantity;
       grp.discount += discount;
       grp.tax += Number(lineTax?.toFixed(2));
+      grp.amount += Number(lineAmountExclTax?.toFixed(2));
+      grp.totalSales += Number(
+        (lineAmountExclTax - discount + lineTax)?.toFixed(2),
+      );
 
       return acc;
     }, {});

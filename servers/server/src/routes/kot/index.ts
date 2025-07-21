@@ -1,6 +1,7 @@
 import {
   BusinessPosConfig,
   KotOrder,
+  PasswordManager,
   PaymentAlert,
   Table,
   User,
@@ -180,12 +181,14 @@ const kotRouter = new Hono()
         ),
         deletedBy: z.string().min(1).max(50),
         reasonOfDeletion: z.string().min(1).max(500),
+        password: z.string().min(4).max(50).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { kotItems, deletedBy, reasonOfDeletion } = await c.req.json();
+        const { kotItems, deletedBy, reasonOfDeletion, password } =
+          await c.req.json();
 
         // 1. Load and validate user
         const user = await User.findById(deletedBy).session(session);
@@ -206,6 +209,25 @@ const kotRouter = new Hono()
             isDeleted: 1,
           },
         ).session(session);
+
+        if (password) {
+          const passwordManager = await PasswordManager.findOne({
+            businessId: kotDocs[0].businessId,
+            name: "DELETE_KOT",
+            isActive: true,
+            password: password,
+          });
+
+          if (!passwordManager) {
+            return respond(
+              c,
+              "Please enter the correct delete kot password.",
+              true,
+              400,
+              {},
+            );
+          }
+        }
 
         const deletedOrders = kotDocs.filter((d) => d.isDeleted);
         if (deletedOrders.length) {

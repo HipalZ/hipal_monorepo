@@ -91,11 +91,11 @@ const itemRouter = new Hono()
 
     const header = [
       "Name",
-      "ItemCount",
-      "Quantity",
-      "Amount",
-      "Discount",
-      "Tax",
+      "No.of Orders",
+      "Net Amount",
+      "Total Discount",
+      "Total Tax",
+      "Total Sales",
     ].join(",");
     const csvLines: string[] = [];
 
@@ -111,10 +111,10 @@ const itemRouter = new Hono()
         const cols = [
           `"${it.itemName.replace(/"/g, '""')}"`,
           it.itemCount,
-          it.quantity,
           it.amount,
           it.discount,
           it.tax,
+          it.totalSales,
         ];
         csvLines.push(cols.join(","));
       }

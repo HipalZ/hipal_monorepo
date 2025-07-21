@@ -106,11 +106,13 @@ const categoryRouter = new Hono()
 
     const csvLines: string[] = [];
     const header = [
-      "Name",
-      "CategoryCount",
-      "TotalAmount",
-      "TotalDiscount",
-      "TotalTax",
+      "Category",
+      "No.of Orders",
+      "Total Items Orders",
+      "Net Amount",
+      "Total Discount",
+      "Total Tax",
+      "Total Sales",
     ].join(",");
 
     for (const biz of businessIds) {
@@ -128,9 +130,11 @@ const categoryRouter = new Hono()
           [
             `"${cat.categoryName.replace(/"/g, '""')}"`,
             cat.categoryCount,
+            cat.itemCount,
             cat.totalAmount,
             cat.totalDiscount,
             cat.totalTax,
+            cat.totalSales,
           ].join(","),
         );
       }
