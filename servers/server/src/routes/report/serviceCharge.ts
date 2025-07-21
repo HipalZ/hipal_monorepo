@@ -37,6 +37,8 @@ const serviceChargeRouter = new Hono()
     const serviceChargeData = await buildServiceChargeReport(
       allPayments,
       businessIds,
+      from,
+      to,
     );
 
     return respond(
@@ -71,6 +73,8 @@ const serviceChargeRouter = new Hono()
     const serviceChargeData = await buildServiceChargeReport(
       allPayments,
       businessIds,
+      from,
+      to,
     );
 
     // CSV header

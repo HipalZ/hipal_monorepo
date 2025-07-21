@@ -1,5 +1,6 @@
 import { Business } from "@hi/db-models";
 import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
+import { formatDateToIST } from "./dateFormater";
 
 interface AddOnReport {
   businessId: string;
@@ -17,6 +18,8 @@ interface AddOnDetails {
 export async function buildAddOnReport(
   payments: PaymentType[],
   businessIds: string[],
+  from: number,
+  to: number,
 ): Promise<AddOnReport[]> {
   // Fetch business names using the provided businessIds
   const bizDocs = await Business.find({ _id: { $in: businessIds } })
@@ -78,10 +81,13 @@ export async function buildAddOnReport(
     // Sort the add-ons by addOnCount in descending order
     addOns.sort((a, b) => b.addOnCount - a.addOnCount);
 
-    // Return the grouped report for this business
+    const fromIST = formatDateToIST(from);
+    const toIST = formatDateToIST(to);
     return {
       businessId: biz,
       businessName: nameMap[biz] ?? "Unknown",
+      from: fromIST,
+      to: toIST,
       addOns,
     };
   });

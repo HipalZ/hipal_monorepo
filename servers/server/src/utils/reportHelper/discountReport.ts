@@ -1,5 +1,6 @@
 import { Business } from "@hi/db-models";
 import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
+import { formatDateToIST } from "./dateFormater";
 
 interface DiscountReport {
   businessId: string;
@@ -16,6 +17,8 @@ interface DiscountDetails {
 export async function buildDiscountReport(
   payments: PaymentType[],
   businessIds: string[],
+  from: number,
+  to: number,
 ): Promise<DiscountReport[]> {
   // Fetch business names
   const bizDocs = await Business.find({ _id: { $in: businessIds } })
@@ -59,10 +62,13 @@ export async function buildDiscountReport(
       }
     }
 
-    // Map the data into the desired structure
+    const fromIST = formatDateToIST(from);
+    const toIST = formatDateToIST(to);
     return {
       businessId: biz,
       businessName: nameMap[biz] ?? "Unknown",
+      from: fromIST,
+      to: toIST,
       discounts: Object.entries(discountTypes).map(
         ([discountName, { discountCount, amount }]) => ({
           discountName,

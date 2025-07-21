@@ -33,7 +33,7 @@ const addOnRouter = new Hono()
     })) as PaymentType[];
 
     // Build Add-On report
-    const report = await buildAddOnReport(allPayments, businessIds);
+    const report = await buildAddOnReport(allPayments, businessIds, from, to);
 
     return respond(c, "Add-on report fetched successfully", false, 200, report);
   })
@@ -59,7 +59,7 @@ const addOnRouter = new Hono()
     })) as PaymentType[];
 
     // Build Add-On report
-    const report = await buildAddOnReport(allPayments, businessIds);
+    const report = await buildAddOnReport(allPayments, businessIds, from, to);
 
     // CSV header
     const header = ["AddOnName", "AddOnCount", "Quantity", "Amount"].join(",");

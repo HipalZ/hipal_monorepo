@@ -34,7 +34,12 @@ const discountRouter = new Hono()
       claimedCoins: { $exists: true },
     })) as PaymentType[];
 
-    const discountReport = await buildDiscountReport(allPayments, businessIds);
+    const discountReport = await buildDiscountReport(
+      allPayments,
+      businessIds,
+      from,
+      to,
+    );
 
     return respond(
       c,
@@ -66,7 +71,12 @@ const discountRouter = new Hono()
       claimedCoins: { $exists: true },
     })) as PaymentType[];
 
-    const discountReport = await buildDiscountReport(allPayments, businessIds);
+    const discountReport = await buildDiscountReport(
+      allPayments,
+      businessIds,
+      from,
+      to,
+    );
 
     const header = ["DiscountName", "DiscountCount", "Amount"].join(",");
     const csvLines: string[] = [];

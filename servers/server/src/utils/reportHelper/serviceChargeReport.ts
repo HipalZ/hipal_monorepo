@@ -1,5 +1,6 @@
 import { Business } from "@hi/db-models";
 import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
+import { formatDateToIST } from "./dateFormater";
 
 interface ServiceChargeReport {
   businessId: string;
@@ -10,6 +11,8 @@ interface ServiceChargeReport {
 export async function buildServiceChargeReport(
   payments: PaymentType[],
   businessIds: string[],
+  from: number,
+  to: number,
 ): Promise<ServiceChargeReport[]> {
   // 1) Fetch business names using businessIds
   const bizDocs = await Business.find({ _id: { $in: businessIds } })
@@ -34,10 +37,14 @@ export async function buildServiceChargeReport(
       (total, payment) => total + (payment.serviceCharge || 0),
       0,
     );
+    const fromIST = formatDateToIST(from);
+    const toIST = formatDateToIST(to);
 
     return {
       businessId: biz,
       businessName: nameMap[biz] ?? "Unknown",
+      from: fromIST,
+      to: toIST,
       serviceCharge: totalServiceCharge,
     };
   });

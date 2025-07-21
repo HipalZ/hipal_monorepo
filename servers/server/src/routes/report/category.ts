@@ -6,7 +6,10 @@ import {
   type CategoryReport,
   buildCategoryReport,
 } from "../../utils/reportHelper/categoryReport";
-import { formatToIST } from "../../utils/reportHelper/dateFormater";
+import {
+  formatDateToIST,
+  formatToIST,
+} from "../../utils/reportHelper/dateFormater";
 import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
 import { respond } from "../../utils/response";
 
@@ -52,11 +55,14 @@ const categoryRouter = new Hono()
       paymentsByBiz[p.businessId]?.push(p);
     }
 
-    // 4) build report per biz
+    const fromIST = formatDateToIST(from);
+    const toIST = formatDateToIST(to);
     const grouped = await Promise.all(
       businessIds.map(async (biz) => ({
         businessId: biz,
         businessName: nameMap[biz] ?? "Unknown",
+        from: fromIST,
+        to: toIST,
         categories: await buildCategoryReport(paymentsByBiz[biz]),
       })),
     );

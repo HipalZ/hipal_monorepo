@@ -2,7 +2,10 @@ import { Business, Payment } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
-import { formatToIST } from "../../utils/reportHelper/dateFormater";
+import {
+  formatDateToIST,
+  formatToIST,
+} from "../../utils/reportHelper/dateFormater";
 import aggregateBillItems from "../../utils/reportHelper/itemReport";
 import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
 import { respond } from "../../utils/response";
@@ -46,9 +49,14 @@ const itemRouter = new Hono()
       paymentsByBiz[p.businessId]?.push(p);
     }
 
+    const fromIST = formatDateToIST(from);
+    const toIST = formatDateToIST(to);
+
     // 4) build final array
     const grouped = businessIds.map((biz) => ({
       businessId: biz,
+      form: fromIST,
+      to: toIST,
       businessName: nameMap[biz] ?? "Unknown",
       items: aggregateBillItems(paymentsByBiz[biz]),
     }));
