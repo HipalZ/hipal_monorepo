@@ -35,7 +35,6 @@ export async function buildDiscountReport(
     paymentsByBiz[p.businessId]?.push(p);
   }
 
-  // Process discount types for each businessId
   const report = businessIds.map((biz) => {
     let discountTypes: Record<
       string,
@@ -46,7 +45,6 @@ export async function buildDiscountReport(
       discount: { discountCount: 0, amount: 0 },
     };
 
-    // Calculate totals for each discount type
     for (const payment of paymentsByBiz[biz]) {
       if (payment.claimedCoins) {
         discountTypes.claimedCoins.discountCount++;

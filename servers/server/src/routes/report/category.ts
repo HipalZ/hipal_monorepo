@@ -31,7 +31,6 @@ const categoryRouter = new Hono()
       );
     }
 
-    // 1) fetch payments
     const allPayments = (await Payment.find({
       businessId: { $in: businessIds },
       isDeleted: false,
@@ -39,7 +38,6 @@ const categoryRouter = new Hono()
       "billItems.0": { $exists: true },
     })) as PaymentType[];
 
-    // 2) fetch business names
     const bizDocs = await Business.find({ _id: { $in: businessIds } })
       .lean()
       .select({ name: 1 });
@@ -48,7 +46,6 @@ const categoryRouter = new Hono()
       nameMap[b._id.toString()] = b.name;
     }
 
-    // 3) group payments by biz
     const paymentsByBiz: Record<string, PaymentType[]> = {};
     for (const id of businessIds) paymentsByBiz[id] = [];
     for (const p of allPayments) {
@@ -76,7 +73,6 @@ const categoryRouter = new Hono()
     );
   })
 
-  // CSV download
   .post("/download_csv", zValidator("json", bodySchema), async (c) => {
     const { businessIds, from, to } = await c.req.json();
 
@@ -87,7 +83,6 @@ const categoryRouter = new Hono()
       );
     }
 
-    // fetch payments
     const allPayments = (await Payment.find({
       businessId: { $in: businessIds },
       isDeleted: false,
@@ -95,7 +90,6 @@ const categoryRouter = new Hono()
       "billItems.0": { $exists: true },
     })) as PaymentType[];
 
-    // fetch business names
     const bizDocs = await Business.find({ _id: { $in: businessIds } })
       .lean()
       .select({ name: 1 });
@@ -104,14 +98,12 @@ const categoryRouter = new Hono()
       nameMap[b._id.toString()] = b.name;
     }
 
-    // group payments
     const paymentsByBiz: Record<string, PaymentType[]> = {};
     for (const id of businessIds) paymentsByBiz[id] = [];
     for (const p of allPayments) {
       paymentsByBiz[p.businessId]?.push(p);
     }
 
-    // build CSV blocks
     const csvLines: string[] = [];
     const header = [
       "Name",
@@ -124,11 +116,9 @@ const categoryRouter = new Hono()
     for (const biz of businessIds) {
       const bizName = nameMap[biz] ?? "Unknown";
 
-      // BusinessId and BusinessName rows
       csvLines.push(`BusinessId,${biz}`);
       csvLines.push(`BusinessName,"${bizName.replace(/"/g, '""')}"`);
 
-      // header + data rows
       csvLines.push(header);
       const categories: CategoryReport[] = await buildCategoryReport(
         paymentsByBiz[biz],
@@ -145,7 +135,6 @@ const categoryRouter = new Hono()
         );
       }
 
-      // blank line
       csvLines.push("");
     }
 

@@ -7,7 +7,6 @@ import type { Payment as PaymentType } from "../../utils/reportHelper/itemType";
 import { buildServiceChargeReport } from "../../utils/reportHelper/serviceChargeReport"; // Import helper function
 import { respond } from "../../utils/response";
 
-// Define the schema for incoming data
 const bodySchema = z.object({
   businessIds: z.array(z.string()).min(1),
   from: z.number(),
@@ -25,7 +24,6 @@ const serviceChargeRouter = new Hono()
       );
     }
 
-    // Fetch all payments that have a service charge and are within the specified date range
     const allPayments = (await Payment.find({
       businessId: { $in: businessIds },
       isDeleted: false,
@@ -33,7 +31,6 @@ const serviceChargeRouter = new Hono()
       serviceCharge: { $exists: true },
     })) as PaymentType[];
 
-    // Get the service charge report
     const serviceChargeData = await buildServiceChargeReport(
       allPayments,
       businessIds,
@@ -50,7 +47,6 @@ const serviceChargeRouter = new Hono()
     );
   })
 
-  // CSV download
   .post("/download_csv", zValidator("json", bodySchema), async (c) => {
     const { businessIds, from, to } = await c.req.json();
 
@@ -61,7 +57,6 @@ const serviceChargeRouter = new Hono()
       );
     }
 
-    // Fetch all payments with service charge
     const allPayments = (await Payment.find({
       businessId: { $in: businessIds },
       isDeleted: false,
@@ -69,7 +64,6 @@ const serviceChargeRouter = new Hono()
       serviceCharge: { $exists: true },
     })) as PaymentType[];
 
-    // Get the service charge report
     const serviceChargeData = await buildServiceChargeReport(
       allPayments,
       businessIds,
@@ -77,11 +71,9 @@ const serviceChargeRouter = new Hono()
       to,
     );
 
-    // CSV header
     const header = ["BusinessId", "BusinessName", "ServiceCharge"].join(",");
     const csvLines: string[] = [header];
 
-    // Add rows to CSV
     for (const item of serviceChargeData) {
       const cols = [
         item.businessId,

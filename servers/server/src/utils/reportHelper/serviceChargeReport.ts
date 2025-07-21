@@ -14,7 +14,6 @@ export async function buildServiceChargeReport(
   from: number,
   to: number,
 ): Promise<ServiceChargeReport[]> {
-  // 1) Fetch business names using businessIds
   const bizDocs = await Business.find({ _id: { $in: businessIds } })
     .lean()
     .select({ name: 1 });
@@ -22,14 +21,12 @@ export async function buildServiceChargeReport(
   const nameMap: Record<string, string> = {};
   for (const b of bizDocs) nameMap[b._id.toString()] = b.name;
 
-  // 2) Group payments by businessId
   const paymentsByBiz: Record<string, PaymentType[]> = {};
   for (const id of businessIds) paymentsByBiz[id] = [];
   for (const p of payments) {
     paymentsByBiz[p.businessId]?.push(p);
   }
 
-  // 3) Process each business and calculate total service charge
   const report = businessIds.map((biz) => {
     const paymentsForBiz = paymentsByBiz[biz];
 

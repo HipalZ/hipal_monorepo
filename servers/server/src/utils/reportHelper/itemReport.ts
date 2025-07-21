@@ -17,20 +17,16 @@ export function aggregateBillItems(payments: Payment[]): AggregatedItem[] {
       const { dish, portion, extras = [], quantity, discount = 0 } = item;
       const key = dish._id.toString();
 
-      // pick the correct per‑unit price
       const unitPrice = portion ? portion.price : dish.price;
 
-      // include each extra’s quantity
       const extrasTotal = extras.reduce(
         (sum, e) => sum + (e.price || 0) * (e.quantity || 1),
         0,
       );
 
-      // compute line totals
       const lineAmountExclTax = (unitPrice + extrasTotal) * quantity;
       const lineTax = lineAmountExclTax * (dish.gst / 100);
 
-      // initialize if first time we see this dish
       if (!acc[key]) {
         acc[key] = {
           categoryId: dish.categoryIds[0] || null,
@@ -44,16 +40,14 @@ export function aggregateBillItems(payments: Payment[]): AggregatedItem[] {
       }
 
       const grp = acc[key];
-      grp.itemCount += 1; // count of lines
-      grp.quantity += quantity; // sum of quantities
-      grp.amount += lineAmountExclTax;
+      grp.itemCount += 1;
+      grp.quantity += quantity;
       grp.discount += discount;
       grp.tax += Number(lineTax?.toFixed(2));
 
       return acc;
     }, {});
 
-  // return as array
   return Object.values(groups).sort((a, b) => b.itemCount - a.itemCount);
 }
 

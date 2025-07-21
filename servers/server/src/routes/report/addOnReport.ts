@@ -24,7 +24,6 @@ const addOnRouter = new Hono()
       );
     }
 
-    // Fetch all payments
     const allPayments = (await Payment.find({
       businessId: { $in: businessIds },
       isDeleted: false,
@@ -32,14 +31,11 @@ const addOnRouter = new Hono()
       "billItems.extras": { $exists: true, $ne: [] },
     })) as PaymentType[];
 
-    // Build Add-On report
     const report = await buildAddOnReport(allPayments, businessIds, from, to);
 
     return respond(c, "Add-on report fetched successfully", false, 200, report);
   })
 
-  // CSV download for Add-On Report
-  // CSV download for Add-On Report
   .post("/download_csv", zValidator("json", bodySchema), async (c) => {
     const { businessIds, from, to } = await c.req.json();
 
@@ -50,7 +46,6 @@ const addOnRouter = new Hono()
       );
     }
 
-    // Fetch all payments
     const allPayments = (await Payment.find({
       businessId: { $in: businessIds },
       isDeleted: false,
@@ -58,21 +53,16 @@ const addOnRouter = new Hono()
       "billItems.extras": { $exists: true, $ne: [] },
     })) as PaymentType[];
 
-    // Build Add-On report
     const report = await buildAddOnReport(allPayments, businessIds, from, to);
 
-    // CSV header
     const header = ["AddOnName", "AddOnCount", "Quantity", "Amount"].join(",");
     const csvLines: string[] = [];
 
-    // Add rows to CSV
     for (const item of report) {
-      // Add businessId and businessName as a header for each business block
       csvLines.push(`businessId: ${item.businessId}`);
       csvLines.push(`businessName: "${item.businessName.replace(/"/g, '""')}"`);
-      csvLines.push(header); // Add header row after business information
+      csvLines.push(header);
 
-      // Add the AddOn data for this business
       for (const addOn of item.addOns) {
         const cols = [
           `"${addOn.addOnName.replace(/"/g, '""')}"`,
@@ -83,7 +73,7 @@ const addOnRouter = new Hono()
         csvLines.push(cols.join(","));
       }
 
-      csvLines.push(""); // Blank line to separate different businesses
+      csvLines.push("");
     }
 
     const csv = csvLines.join("\r\n");

@@ -27,7 +27,6 @@ const itemRouter = new Hono()
       );
     }
 
-    // 1) fetch all payments
     const allPayments = (await Payment.find({
       businessId: { $in: businessIds },
       isDeleted: false,
@@ -35,14 +34,12 @@ const itemRouter = new Hono()
       "billItems.0": { $exists: true },
     })) as PaymentType[];
 
-    // 2) fetch business names
     const bizDocs = await Business.find({ _id: { $in: businessIds } })
       .lean()
       .select({ name: 1 });
     const nameMap: Record<string, string> = {};
     for (const b of bizDocs) nameMap[b._id.toString()] = b.name;
 
-    // 3) group payments per biz
     const paymentsByBiz: Record<string, PaymentType[]> = {};
     for (const id of businessIds) paymentsByBiz[id] = [];
     for (const p of allPayments) {
@@ -52,7 +49,6 @@ const itemRouter = new Hono()
     const fromIST = formatDateToIST(from);
     const toIST = formatDateToIST(to);
 
-    // 4) build final array
     const grouped = businessIds.map((biz) => ({
       businessId: biz,
       form: fromIST,
@@ -64,7 +60,6 @@ const itemRouter = new Hono()
     return respond(c, "Item report fetched successfully", false, 200, grouped);
   })
 
-  // CSV download
   .post("/download_csv", zValidator("json", bodySchema), async (c) => {
     const { businessIds, from, to } = await c.req.json();
 
@@ -75,7 +70,6 @@ const itemRouter = new Hono()
       );
     }
 
-    // fetch all payments
     const allPayments = (await Payment.find({
       businessId: { $in: businessIds },
       isDeleted: false,
@@ -83,21 +77,18 @@ const itemRouter = new Hono()
       "billItems.0": { $exists: true },
     })) as PaymentType[];
 
-    // fetch business names
     const bizDocs = await Business.find({ _id: { $in: businessIds } })
       .lean()
       .select({ name: 1 });
     const nameMap: Record<string, string> = {};
     for (const b of bizDocs) nameMap[b._id.toString()] = b.name;
 
-    // group payments per biz
     const paymentsByBiz: Record<string, PaymentType[]> = {};
     for (const id of businessIds) paymentsByBiz[id] = [];
     for (const p of allPayments) {
       paymentsByBiz[p.businessId]?.push(p);
     }
 
-    // build CSV lines
     const header = [
       "Name",
       "ItemCount",
@@ -128,7 +119,7 @@ const itemRouter = new Hono()
         csvLines.push(cols.join(","));
       }
 
-      csvLines.push(""); // blank line
+      csvLines.push("");
     }
 
     const csv = csvLines.join("\r\n");

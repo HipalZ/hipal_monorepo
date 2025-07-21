@@ -21,7 +21,6 @@ export async function buildAddOnReport(
   from: number,
   to: number,
 ): Promise<AddOnReport[]> {
-  // Fetch business names using the provided businessIds
   const bizDocs = await Business.find({ _id: { $in: businessIds } })
     .lean()
     .select({ name: 1 });
@@ -29,21 +28,18 @@ export async function buildAddOnReport(
   const nameMap: Record<string, string> = {};
   for (const b of bizDocs) nameMap[b._id.toString()] = b.name;
 
-  // Group payments by businessId
   const paymentsByBiz: Record<string, PaymentType[]> = {};
   for (const id of businessIds) paymentsByBiz[id] = [];
   for (const p of payments) {
     paymentsByBiz[p.businessId]?.push(p);
   }
 
-  // Process the payments to gather the add-on data for each businessId
   const report = businessIds.map((biz) => {
     const addOnMap: Record<
       string,
       { addOnCount: number; quantity: number; amount: number }
     > = {};
 
-    // Process each payment's billItems and their extras
     for (const payment of paymentsByBiz[biz]) {
       for (const billItem of payment.billItems) {
         if (billItem.extras) {
@@ -68,7 +64,6 @@ export async function buildAddOnReport(
       }
     }
 
-    // Convert the map to an array of AddOnDetails
     const addOns = Object.entries(addOnMap).map(
       ([addOnName, { addOnCount, quantity, amount }]) => ({
         addOnName,
@@ -78,7 +73,6 @@ export async function buildAddOnReport(
       }),
     );
 
-    // Sort the add-ons by addOnCount in descending order
     addOns.sort((a, b) => b.addOnCount - a.addOnCount);
 
     const fromIST = formatDateToIST(from);

@@ -23,10 +23,8 @@ type CatGroup = {
 export async function buildCategoryReport(
   payments: PaymentType[],
 ): Promise<CategoryReport[]> {
-  // 1) get per‑dish aggregations
   const items: AggregatedItem[] = aggregateBillItems(payments);
 
-  // 2) bucket into categories
   const catMap = items.reduce<Record<string, CatGroup>>((acc, it) => {
     const catId = it.categoryId ?? "uncategorized";
     if (!acc[catId]) {
@@ -45,7 +43,6 @@ export async function buildCategoryReport(
     return acc;
   }, {});
 
-  // 3) fetch category names in one go
   const catIds = Object.keys(catMap).filter((id) => id !== "uncategorized");
   const categories = await Category.find({ _id: { $in: catIds } })
     .lean()
@@ -56,7 +53,6 @@ export async function buildCategoryReport(
     return m;
   }, {});
 
-  // 4) shape final array (no items), sorted desc by categoryCount
   return Object.entries(catMap)
     .map<CategoryReport>(([catId, grp]) => ({
       categoryId: catId,

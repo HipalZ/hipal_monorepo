@@ -24,7 +24,6 @@ const discountRouter = new Hono()
       );
     }
 
-    // Fetch all payments
     const allPayments = (await Payment.find({
       businessId: { $in: businessIds },
       isDeleted: false,
@@ -50,7 +49,6 @@ const discountRouter = new Hono()
     );
   })
 
-  // CSV download
   .post("/download_csv", zValidator("json", bodySchema), async (c) => {
     const { businessIds, from, to } = await c.req.json();
 
@@ -61,7 +59,6 @@ const discountRouter = new Hono()
       );
     }
 
-    // Fetch all payments
     const allPayments = (await Payment.find({
       businessId: { $in: businessIds },
       isDeleted: false,
@@ -99,7 +96,6 @@ const discountRouter = new Hono()
         csvLines.push(cols.join(","));
       }
 
-      // Add blank line after each business's data
       csvLines.push("");
     }
 
