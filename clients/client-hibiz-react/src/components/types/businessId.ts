@@ -15,6 +15,8 @@ import Zones from "@/assets/services/zones.png";
 import Events from "@/assets/services/events.jpg";
 import ImageGrid from "@/assets/services/ImageGrid.png";
 import PosImage from "@/assets/services/posImage.png";
+import PasswordImage from "@/assets/services/password.png";
+import Reports from "@/assets/services/reports.png";
 
 export interface ILiteVersionCardButton {
   image: string;
@@ -35,6 +37,18 @@ export const getButtons = (
       navigateTo: "themes",
     },
     {
+      image: BillsImage,
+      text: "Payments",
+      description: "All payment related stuff",
+      navigateTo: "payments",
+    },
+    {
+      image: Reports,
+      text: "Reports",
+      description: "Download your Reports",
+      navigateTo: "reports",
+    },
+    {
       image: PosImage,
       text: "Point on Sale",
       description: "Manage your POS",
@@ -46,23 +60,18 @@ export const getButtons = (
       description: "Create your Team",
       navigateTo: "staff",
     },
+
+    {
+      image: PasswordImage,
+      text: "Password Management",
+      description: "setup all password",
+      navigateTo: "password",
+    },
     {
       image: Settings,
       text: "Settings",
       description: "All settings in one place",
       navigateTo: "settings",
-    },
-    {
-      image: BillsImage,
-      text: "Payments",
-      description: "All payment related stuff",
-      navigateTo: "payments",
-    },
-    {
-      image: Events,
-      text: "Birthday Events",
-      description: "Add your offers for Birthday",
-      navigateTo: "events",
     },
   ],
   services: [
@@ -96,6 +105,13 @@ export const getButtons = (
             navigateTo: "services",
           },
         ]),
+
+    {
+      image: Events,
+      text: "Birthday Events",
+      description: "Add your offers for Birthday",
+      navigateTo: "events",
+    },
     {
       image: ImageGrid,
       text: "My Gallery",

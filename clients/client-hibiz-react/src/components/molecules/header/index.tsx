@@ -42,7 +42,6 @@ const Header: React.FC<HeaderProps> = memo(
       navigate("/");
     }, [navigate]);
 
-
     return (
       <>
         <div className="flex items-center justify-between px-4 pt-6">
@@ -63,18 +62,16 @@ const Header: React.FC<HeaderProps> = memo(
             )}
           >
             <span
-              style={{
-                color: headingColor ? headingColor : "#000000",
-              }}
+              style={{ color: headingColor ?? "#000000" }}
               onClick={logoutUser}
               onKeyDown={logoutUser}
               className={cn(
                 centerImage
                   ? "mr-8"
                   : "absolute transform -translate-x-1/2 left-1/2 top-6",
-                "text-2xl font-medium truncate",
+                "text-2xl font-medium truncate max-w-[16ch] md:max-w-[15rem]",
+                "md:overflow-visible md:whitespace-normal md:max-w-full",
                 headingColor && `text-[${headingColor}]`,
-                "max-w-[16ch]",
               )}
             >
               {title}
