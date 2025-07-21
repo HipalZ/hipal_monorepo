@@ -55,7 +55,9 @@ const addOnRouter = new Hono()
 
     const report = await buildAddOnReport(allPayments, businessIds, from, to);
 
-    const header = ["AddOnName", "AddOnCount", "Quantity", "Amount"].join(",");
+    const header = ["Name", "No.of Orders", "Net Amount", "Total Sales"].join(
+      ",",
+    );
     const csvLines: string[] = [];
 
     for (const item of report) {
@@ -67,8 +69,8 @@ const addOnRouter = new Hono()
         const cols = [
           `"${addOn.addOnName.replace(/"/g, '""')}"`,
           addOn.addOnCount,
-          addOn.quantity,
           addOn.amount,
+          addOn.totalSales,
         ];
         csvLines.push(cols.join(","));
       }
