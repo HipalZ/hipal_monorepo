@@ -54,6 +54,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "d3d6xjnqepzgsw.cloudfront.net",
       },
+      {
+        protocol: "https",
+        hostname: "dineinpetweb.gumlet.io",
+      },
     ],
   },
   async redirects() {
