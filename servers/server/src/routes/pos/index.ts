@@ -10,6 +10,7 @@ import {
   KotOrder,
   Menu,
   OutLetInfo,
+  PasswordManager,
   PaymentAlert,
   Pos,
   Table,
@@ -337,7 +338,6 @@ const posRouter = new Hono()
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
-
 
         return c.json(
           {
@@ -2498,6 +2498,7 @@ const posRouter = new Hono()
           discountAppliedOn: z.enum(["ON_BILL", "ON_DISH"]),
           itemIds: z.array(z.string().min(1).max(200)).optional(),
           discountAppliedBy: z.string().min(1).max(50),
+          password: z.string().min(4).max(50).optional(),
         })
         .refine(
           (data) =>
@@ -2521,7 +2522,27 @@ const posRouter = new Hono()
           discountAppliedOn,
           itemIds,
           discountAppliedBy,
+          password,
         } = await c.req.json();
+
+        if (password) {
+          const passwordManager = await PasswordManager.findOne({
+            businessId,
+            name: "DISCOUNT",
+            isActive: true,
+            password: password,
+          });
+
+          if (!passwordManager) {
+            return respond(
+              c,
+              "Please enter the correct discount password.",
+              true,
+              400,
+              {},
+            );
+          }
+        }
 
         let dishIdsArray: string[] = [];
 
@@ -3065,6 +3086,7 @@ const posRouter = new Hono()
         tableName: z.string().min(1).max(200),
         serviceChargeRemovedBy: z.string().min(1).max(50),
         reasonOfServiceCharge: z.string().min(1).max(100).optional(),
+        password: z.string().min(4).max(50).optional(),
       }),
     ),
     async (c) => {
@@ -3075,7 +3097,27 @@ const posRouter = new Hono()
           tableName,
           serviceChargeRemovedBy,
           reasonOfServiceCharge,
+          password,
         } = await c.req.json();
+
+        if (password) {
+          const passwordManager = await PasswordManager.findOne({
+            businessId,
+            name: "SERVICE_CHARGE",
+            isActive: true,
+            password: password,
+          });
+
+          if (!passwordManager) {
+            return respond(
+              c,
+              "Please enter the correct service charge removal password.",
+              true,
+              400,
+              {},
+            );
+          }
+        }
 
         const tableSession = await UserSession.findOne({
           businessId,
