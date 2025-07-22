@@ -14,6 +14,7 @@ import {
   useUpdateDiscountPassword,
   useUpdateDeleteKotPassword,
   type Password,
+  useUpdateServiceChargePassword,
 } from "@/hooks/usePassword";
 
 interface PasswordItemProps {
@@ -63,7 +64,6 @@ const PasswordItem = memo(
       if (value.length > 15) {
         return "Password cannot exceed 15 characters";
       }
-      // no more alphanumeric-only check
       return "";
     }, []);
 
@@ -216,6 +216,8 @@ const MemoPassword = () => {
     useUpdateDiscountPassword();
   const { updateKotPassword, updatingKotPassword } =
     useUpdateDeleteKotPassword();
+  const { updateServiceChargePassword, updatingServiceChargePassword } =
+    useUpdateServiceChargePassword();
 
   const goBack = useCallback(() => {
     navigate(`/app/business/${businessId}`);
@@ -224,6 +226,7 @@ const MemoPassword = () => {
   const handlePasswordUpdate = useCallback(
     async (passwordId: string, newPassword: string, isActive: boolean) => {
       const password = passwords?.find((p) => p._id === passwordId);
+      console.log(password);
       if (!password) return;
 
       if (password.name === "DISCOUNT") {
@@ -238,9 +241,20 @@ const MemoPassword = () => {
           password: newPassword,
           isActive,
         });
+      } else if (password.name === "SERVICE_CHARGE") {
+        await updateServiceChargePassword({
+          serviceChargePasswordId: passwordId,
+          password: newPassword,
+          isActive,
+        });
       }
     },
-    [passwords, updateDiscountPassword, updateKotPassword],
+    [
+      passwords,
+      updateDiscountPassword,
+      updateKotPassword,
+      updateServiceChargePassword,
+    ],
   );
 
   if (isLoading) {
@@ -278,7 +292,11 @@ const MemoPassword = () => {
                 key={password._id}
                 password={password}
                 onUpdate={handlePasswordUpdate}
-                isUpdating={updatingDiscountPassword || updatingKotPassword}
+                isUpdating={
+                  updatingDiscountPassword ||
+                  updatingKotPassword ||
+                  updatingServiceChargePassword
+                }
               />
             ))
           ) : (

@@ -2,18 +2,22 @@ import { Card, CardContent } from "@/components/ui/card.tsx";
 import { Calendar, MousePointer, TrendingUp, BarChart3 } from "lucide-react";
 import { memo } from "react";
 
-const MemoEmptyStateInstructions = () => {
+interface CategoryReportProps {
+  text: string;
+}
+
+const MemoEmptyStateInstructions = ({ text }: CategoryReportProps) => {
   return (
     <Card className="w-full pb-[5rem]">
       <CardContent className="flex flex-col items-center justify-center py-12">
-        <section className="flex ">
+        <section className="flex items-center">
           <BarChart3 className="w-16 h-16 text-muted-foreground mb-6" />
           <h3 className="text-xl font-semibold mb-4">
-            Generate Your Category Report
+            Generate Your {text} Report
           </h3>
         </section>
         <p className="text-muted-foreground text-center mb-8 max-w-md">
-          Follow these simple steps to generate your category analytics report
+          Follow these simple steps to generate your {text} analytics report
         </p>
 
         {/* Step-by-step instructions */}
@@ -58,7 +62,7 @@ const MemoEmptyStateInstructions = () => {
                 <h4 className="font-semibold">View Analytics</h4>
               </div>
               <p className="text-sm text-muted-foreground">
-                Analyze your category performance with detailed insights
+                Analyze your {text} performance with detailed insights
               </p>
             </div>
           </div>

@@ -134,7 +134,7 @@ const MemoCategoryReports = () => {
           </div>
         )}
 
-        {!hasReports && !isPending && <EmptyStateInstructions />}
+        {!hasReports && !isPending && <EmptyStateInstructions text="Category" />}
       </div>
 
       <AdvancedBottomButton

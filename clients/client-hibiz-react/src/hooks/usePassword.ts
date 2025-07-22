@@ -132,5 +132,48 @@ export const useUpdateDeleteKotPassword = () => {
     return { updateKotPassword, updatingKotPassword }
 }
 
+export interface UpdateServiceChargePasswordPayload {
+    serviceChargePasswordId: string
+    password: string
+    isActive?: boolean
+}
+
+export const useUpdateServiceChargePassword = () => {
+    const businessId = useParams().businessId as string
+    const queryClient = useQueryClient()
+    const {setError,setOpenErrorModal} = useError()
+    const {isPending:updatingServiceChargePassword,mutateAsync:updateServiceChargePassword} = useMutation({
+        mutationFn: async (payload: UpdateServiceChargePasswordPayload) => {
+            const response = await apiRpc.password_manager.service_charge.$put({
+                json: payload,
+            })
+            return response
+        },
+        onSuccess: (data) => {
+            if (data.status === 400 || data.status === 401) {
+                setOpenErrorModal(true)
+                setError("Service Charge password update failed")
+                return toast.error("Service Charge password update failed")
+            }
+            if (data.status === 409) {
+                setOpenErrorModal(true)
+                setError("Service Charge password already exists")
+                return toast.error("Service Charge password already exists")
+            }
+            if (data.status === 200 || data.status === 201) {
+                toast.success("Service Charge password updated successfully")
+                queryClient.invalidateQueries({
+                    queryKey: ["getAllPasswords", businessId],
+                })
+                return toast.success("Service Charge password updated successfully")
+            }
+        }, 
+        onError: (data) => {
+            console.log(data)
+        }
+    })
+    return { updateServiceChargePassword, updatingServiceChargePassword }
+}
+
 
 

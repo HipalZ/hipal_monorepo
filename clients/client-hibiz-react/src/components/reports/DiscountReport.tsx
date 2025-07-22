@@ -22,6 +22,7 @@ import DiscountTableLayout from "./discountLayouts/DiscountTableLayout.tsx"
 import DiscountCompactLayout from "./discountLayouts/DiscountCompactLayout.tsx"
 import AdvancedBottomButton from "../atom/bottomButton/advancedBottomButton.tsx"
 import useReports from "../store/useReports.ts"
+import EmptyStateInstructions from "./categoryLayouts/EmptyStateInstructions.tsx"
 
 type LayoutType = "cards" | "table" | "compact"
 
@@ -126,63 +127,7 @@ const MemoDiscountReports = () => {
         )}
 
         {!hasReports && !isPending && (
-          <Card className="w-full">
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <BarChart3 className="w-16 h-16 text-muted-foreground mb-6" />
-              <h3 className="text-xl font-semibold mb-4">Generate Your Discount Report</h3>
-              <p className="text-muted-foreground text-center mb-8 max-w-md">
-                Follow these simple steps to generate your discount analytics report
-              </p>
-
-              {/* Step-by-step instructions */}
-              <div className="w-full max-w-md space-y-4">
-                <div className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg">
-                  <div className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full text-sm font-semibold">
-                    1
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Calendar className="w-4 h-4 text-primary" />
-                      <h4 className="font-semibold">Select Date Range</h4>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Choose your desired date range using the date picker above
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg">
-                  <div className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full text-sm font-semibold">
-                    2
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <MousePointer className="w-4 h-4 text-primary" />
-                      <h4 className="font-semibold">Generate Report</h4>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Click the "Generate Report" button below to fetch your data
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-4 p-4 bg-muted/30 rounded-lg">
-                  <div className="flex items-center justify-center w-8 h-8 bg-primary text-primary-foreground rounded-full text-sm font-semibold">
-                    3
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <TrendingUp className="w-4 h-4 text-primary" />
-                      <h4 className="font-semibold">View Analytics</h4>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Analyze your discount performance with detailed insights
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <EmptyStateInstructions text="Discount" />
         )}
       </div>
 
