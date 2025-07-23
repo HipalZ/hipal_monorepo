@@ -17,6 +17,21 @@ const printerConfigSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  printerWidth: {
+    type: String,
+    default: "72mm",
+    required: false,
+  },
+  pageWidth: {
+    type: Number,
+    default: 72000,
+    required: false,
+  },
+  isPageWidthRequired: {
+    type: Boolean,
+    default: false,
+    required: true,
+  },
 });
 
 const PrinterConfig = mongoose.model("printerconfig", printerConfigSchema);
