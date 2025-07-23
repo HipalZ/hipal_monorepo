@@ -14,6 +14,8 @@ export type ReportsTypes =
   | "serviceCharge"
   | "addOn";
 
+export type LayoutType = "cards" | "table" | "compact";
+
 interface ReportsState {
   reportPage: ReportsTypes;
   setReportPage: (reportPage: ReportsTypes) => void;
@@ -32,6 +34,10 @@ interface ReportsState {
 
   serviceChargeReports: ServiceChargeReport[];
   setServiceChargeReports: (reports: ServiceChargeReport[]) => void;
+
+  layoutType: LayoutType;
+  setLayoutType: (layoutType: LayoutType) => void;
+
 }
 
 const useReports = create<ReportsState>((set) => ({
@@ -57,6 +63,10 @@ const useReports = create<ReportsState>((set) => ({
   serviceChargeReports: [],
   setServiceChargeReports: (reports: ServiceChargeReport[]) =>
     set({ serviceChargeReports: reports }),
+
+  layoutType: "cards",
+  setLayoutType: (layoutType: LayoutType) => set({ layoutType }),
+
 }));
 
 export default useReports;

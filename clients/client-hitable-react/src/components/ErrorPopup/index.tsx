@@ -1,28 +1,31 @@
 import { memo } from "react";
-import BottomPopUp from "../atoms/universalPopup";
 import { useError } from "../store/useError";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const MemoErrorPopup = () => {
-  const { openErrorModal, error, resetErrorStates } = useError();
+  const openErrorModal = useError((s) => s.openErrorModal);
+  const error = useError((s) => s.error);
+  const resetErrorStates = useError((s) => s.resetErrorStates);
 
   const onClose = () => {
     resetErrorStates();
   };
 
   return (
-    <BottomPopUp height="h-[30dvh]" onClose={onClose} show={openErrorModal} bottomCross hide>
-      <Card className="w-full max-w-md mx-auto mt-12 text-center border-none shadow-none">
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold text-red-600">
-            You are not authorized to this service
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">{error || "Access denied. Please contact your administrator."}</p>
-        </CardContent>
-      </Card>
-    </BottomPopUp>
+    <Dialog open={openErrorModal} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md min-h-[10rem]">
+        <DialogHeader>
+          <DialogTitle className="text-xl mt-6 font-semibold text-red-600">
+            {error || "Access denied. Please contact your administrator."}
+          </DialogTitle>
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
   );
 };
 

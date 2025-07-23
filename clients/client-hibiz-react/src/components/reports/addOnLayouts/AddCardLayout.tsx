@@ -9,12 +9,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card.tsx";
-import { IndianRupee, Hash, Package2, Calculator } from "lucide-react";
+import { IndianRupee, Hash, Package2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge.tsx";
 import {
   formatCurrency,
-  formatNumber,
-  calculateAveragePrice,
+  formatNumber
 } from "./addOnHelper.ts";
 
 interface AddonCardLayoutProps {
@@ -33,7 +32,7 @@ const MemoAddonCardLayout = ({ business }: AddonCardLayoutProps) => {
             <CardTitle className="text-lg flex items-center justify-between">
               <span className="truncate">{addon.addOnName}</span>
               <Badge variant="secondary" className="ml-2 shrink-0">
-                {formatNumber(addon.quantity)} qty
+                {formatNumber(addon.addOnCount)} qty
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -50,10 +49,10 @@ const MemoAddonCardLayout = ({ business }: AddonCardLayoutProps) => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Package2 className="w-4 h-4" />
-                Total Quantity
+                Price
               </div>
               <span className="font-semibold">
-                {formatNumber(addon.quantity)}
+                {formatNumber(addon.amount)}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -62,20 +61,10 @@ const MemoAddonCardLayout = ({ business }: AddonCardLayoutProps) => {
                 Total Amount
               </div>
               <span className="font-semibold text-green-600">
-                {formatCurrency(addon.amount)}
+                {formatCurrency(addon.totalSales)}
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calculator className="w-4 h-4" />
-                Avg Price
-              </div>
-              <span className="font-semibold text-blue-600">
-                {formatCurrency(
-                  calculateAveragePrice(addon.amount, addon.quantity),
-                )}
-              </span>
-            </div>
+           
             {addon.amount === 0 && (
               <div className="pt-2 border-t">
                 <div className="text-center">

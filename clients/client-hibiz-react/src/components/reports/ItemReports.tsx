@@ -1,20 +1,12 @@
-import { memo, useState } from "react";
+import { memo } from "react";
 import useTimings from "../store/useTimings.ts";
 import { useParams } from "react-router-dom";
 import { useItemReports, useGetItemReportsCsv } from "@/hooks/useReportHook.ts";
-import { Button } from "../ui/button.tsx";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card.tsx";
 import {
   TrendingUp,
-  Package,
-  Grid3X3,
-  List,
-  LayoutGrid,
-  RefreshCw,
-  Download,
-  Calendar,
-  MousePointer,
-  BarChart3,
+  Package, RefreshCw,
+  Download
 } from "lucide-react";
 import ItemTableLayout from "./itemLayouts/ItemTableLayout.tsx";
 import ItemCompactLayout from "./itemLayouts/ItemCompactLayout.tsx";
@@ -22,8 +14,7 @@ import AdvancedBottomButton from "../atom/bottomButton/advancedBottomButton.tsx"
 import useReports from "../store/useReports.ts";
 import ItemCardLayout from "./itemLayouts/ItemCardLayout.tsx";
 import EmptyStateInstructions from "./categoryLayouts/EmptyStateInstructions.tsx";
-
-type LayoutType = "cards" | "table" | "compact";
+import LayoutToggleButtons from "./LayoutToggleButtons.tsx";
 
 const MemoItemReports = () => {
   const businessId = useParams().businessId;
@@ -32,7 +23,7 @@ const MemoItemReports = () => {
   const itemReports = useReports((s) => s.itemReports);
   const { isPending, getItemReports } = useItemReports();
   const { isPending: isPendingCsv, getItemReportsCsv } = useGetItemReportsCsv();
-  const [layout, setLayout] = useState<LayoutType>("cards");
+  const layout = useReports((s) => s.layoutType);
 
   const hasReports = itemReports.length > 0;
   const hasItems =
@@ -60,38 +51,7 @@ const MemoItemReports = () => {
         <div className="flex justify-between items-center">
           <h2 className="text-2xl font-bold">Item Reports</h2>
           {hasItems && (
-            <div className="flex items-center gap-2">
-              {/* Layout Toggle Buttons */}
-              <div className="flex items-center border rounded-lg p-1">
-                <Button
-                  variant={layout === "cards" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setLayout("cards")}
-                  className="h-8 px-2"
-                  title="Card View"
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={layout === "table" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setLayout("table")}
-                  className="h-8 px-2"
-                  title="Table View"
-                >
-                  <List className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant={layout === "compact" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setLayout("compact")}
-                  className="h-8 px-2"
-                  title="Compact View"
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
+            <LayoutToggleButtons />
           )}
         </div>
 

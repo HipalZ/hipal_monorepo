@@ -26,7 +26,7 @@ const MemoItemCardLayout = ({ business }: ItemCardLayoutProps) => {
             <CardTitle className="text-lg flex items-center justify-between">
               <span className="truncate">{item.itemName}</span>
               <Badge variant="secondary" className="ml-2 shrink-0">
-                {formatNumber(item.quantity)} qty
+                {formatNumber(item.itemCount)} qty
               </Badge>
             </CardTitle>
           </CardHeader>

@@ -95,7 +95,7 @@ const MemoBillOptions = ({ data }: BillOptionsProps) => {
       {activeModal === "serviceCharge" && (
         <BottomPopUp
           rightTopBack
-          height="h-[50dvh]"
+          height="h-[70dvh]"
           width="w-[30rem]"
           show={true}
           onClose={closeModal}

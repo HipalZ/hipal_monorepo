@@ -15,8 +15,7 @@ import { Plus } from "lucide-react";
 import { memo } from "react";
 import {
   formatCurrency,
-  formatNumber,
-  calculateAveragePrice,
+  formatNumber
 } from "./addOnHelper.ts";
 
 interface AddonTableLayoutProps {
@@ -30,15 +29,12 @@ const MemoAddonTableLayout = ({ business }: AddonTableLayoutProps) => {
         <TableHeader>
           <TableRow>
             <TableHead className="font-semibold">Addon Name</TableHead>
-            <TableHead className="text-center font-semibold">Count</TableHead>
             <TableHead className="text-center font-semibold">
               Quantity
             </TableHead>
+            <TableHead className="text-right font-semibold">Amount</TableHead>
             <TableHead className="text-right font-semibold">
-              Total Amount
-            </TableHead>
-            <TableHead className="text-right font-semibold">
-              Avg Price
+              Total Sales
             </TableHead>
             <TableHead className="text-center font-semibold">Type</TableHead>
           </TableRow>
@@ -58,23 +54,17 @@ const MemoAddonTableLayout = ({ business }: AddonTableLayoutProps) => {
                 </div>
               </TableCell>
               <TableCell className="text-center">
-                <Badge variant="outline">
-                  {formatNumber(addon.addOnCount)}
-                </Badge>
-              </TableCell>
-              <TableCell className="text-center">
                 <Badge variant="secondary">
-                  {formatNumber(addon.quantity)}
+                  {formatNumber(addon.addOnCount)}
                 </Badge>
               </TableCell>
               <TableCell className="text-right font-semibold text-green-600">
                 {formatCurrency(addon.amount)}
               </TableCell>
-              <TableCell className="text-right font-semibold text-blue-600">
-                {formatCurrency(
-                  calculateAveragePrice(addon.amount, addon.quantity),
-                )}
+              <TableCell className="text-right font-semibold text-green-600">
+                {formatCurrency(addon.totalSales)}
               </TableCell>
+
               <TableCell className="text-center">
                 {addon.amount === 0 ? (
                   <Badge

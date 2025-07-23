@@ -6,6 +6,7 @@ import { useCart } from "@/components/store/useCart";
 import { useOrderStore } from "@/components/store/useOrderData";
 import toast from "react-hot-toast";
 import type { OrderData } from "../types/hiClientzData.ts";
+import { useError } from "../store/useError.ts";
 
 export const useGetAllOrders = () => {
   const { tableId } = useParams();
@@ -41,12 +42,14 @@ interface DeleteKotPayload {
   kotItems: DeleteKotItems[];
   deletedBy: string;
   reasonOfDeletion: string;
+  password?: string;
 }
 
 export const useDeleteKot = () => {
   const queryClient = useQueryClient();
   const { tableId } = useParams();
-  const { isPending, mutateAsync } = useMutation({
+  const { setError, setOpenErrorModal } = useError();
+  const { isPending, mutateAsync, isError } = useMutation({
     mutationFn: async (payload: DeleteKotPayload) => {
       const response = await apiRpc.kot.delete_kot.$post({
         json: payload,
@@ -56,8 +59,10 @@ export const useDeleteKot = () => {
     onSuccess: async (data) => {
       const extraData = await data.json();
       if (data.status === 400 || data.status === 401) {
+        setError(extraData?.message);
+        setOpenErrorModal(true);
         toast.error(extraData?.message);
-        throw new Error(extraData?.error?.issues[0]?.message);
+        return;
       }
       if (data.status === 200 || data.status === 201) {
         queryClient.invalidateQueries({
@@ -71,5 +76,5 @@ export const useDeleteKot = () => {
       throw new Error(error.message);
     },
   });
-  return { isPending, mutateAsync };
+  return { isPending, mutateAsync, isError };
 };

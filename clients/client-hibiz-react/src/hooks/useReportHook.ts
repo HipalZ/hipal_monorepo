@@ -372,13 +372,6 @@ export const useGetDiscountReportsCsv = () => {
   };
 };
 
-import { useError } from "@/components/store/useError.ts"
-import { apiRpc } from "@hi/common"
-import { useMutation } from "@tanstack/react-query"
-import toast from "react-hot-toast"
-import useReports from "@/components/store/useReports.ts"
-import { formatDate } from "@/components/utils/helper.ts"
-
 interface GetReportsPayload {
   from: string
   to: string
@@ -390,6 +383,7 @@ export interface AddonReport {
   addOnCount: number
   quantity: number
   amount: number
+  totalSales: number
 }
 
 export interface BusinessAddonReport {
