@@ -125,7 +125,7 @@ const dishesRouter = new Hono()
         } = dish;
 
         const businessPosConfig = await BusinessPosConfig.findOne({
-          businessId: dish.businessId,
+          businessId: "58825a290eb4d4271a54f188",
           isDeleted: false,
           active: true,
         });
