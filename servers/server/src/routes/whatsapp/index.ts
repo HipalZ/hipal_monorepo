@@ -2123,7 +2123,7 @@ const whatsappRouter = new Hono()
           }
           if (userText) {
             const tableCodeMatch = userText.match(
-              /table\s*[-\s]?([a-zA-Z0-9\s-]+)/i,
+              /table\s*[-\s]?([a-zA-Z0-9\s-_]+)/i,
             );
             console.log("tableCodeMatch", tableCodeMatch);
             const roomCodeMatch = userText.match(
@@ -2156,6 +2156,26 @@ const whatsappRouter = new Hono()
                 );
                 shortUrlType = findLongUrl.shortUrlType || "";
                 urlObj = findLongUrl;
+              } else {
+                const findLongUrlFallback = await UrlModel.findOne({
+                  urlCode: tableCode,
+                });
+                if (findLongUrlFallback) {
+                  const idParam = userObj?._id.toString();
+                  const urlSeparator = "?";
+
+                  // Construct the longUrl and update it properly
+                  longUrl = encodeURI(
+                    `${findLongUrlFallback.longUrl}${urlSeparator}id=${idParam}`,
+                  );
+
+                  updateLongUrl = encodeURI(
+                    `${findLongUrlFallback.longUrl}${urlSeparator}id=${idParam}`,
+                  );
+
+                  shortUrlType = findLongUrlFallback.shortUrlType || "";
+                  urlObj = findLongUrlFallback;
+                }
               }
             }
             if (roomCode) {
