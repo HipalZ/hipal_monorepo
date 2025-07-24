@@ -561,51 +561,39 @@ const paymentsRouter = new Hono()
               businessPosConfig.authToken,
             );
 
-            const saveCart = new PetpoojaCartItem({
-              petpoojaCart,
-              tableName,
-              cartItems,
-              businessId: businessPosConfig.businessId,
-            });
+            await KotOrder.updateMany(
+              {
+                tableName,
+                settled: false,
+                accepted: true,
+                businessId,
+              },
+              {
+                $set: {
+                  isSync: true,
+                },
+              },
+            );
 
-            await saveCart.save({ session });
+            await UserSession.findOneAndUpdate(
+              {
+                tableName,
+                businessId,
+              },
+              {
+                $set: {
+                  isUserRegistered: true,
+                  billRequest: true,
+                },
+              },
+            );
 
             const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
 
             if (saveKot.data.success === "0") {
-              throw new Error("Error in saving kot");
+              return respond(c, "KOT not saved", true, 400, {});
             }
           }
-
-          await KotOrder.updateMany(
-            {
-              tableName,
-              settled: false,
-              businessId,
-            },
-            {
-              $set: {
-                isSync: true,
-              },
-            },
-            {
-              session,
-            },
-          );
-
-          await UserSession.findOneAndUpdate(
-            {
-              tableName,
-              businessId,
-            },
-            {
-              $set: {
-                isUserRegistered: true,
-                billRequest: true,
-              },
-            },
-            { session },
-          );
         }
 
         const client = await razorpayWrapper.getClient(merchantId);
@@ -847,51 +835,39 @@ const paymentsRouter = new Hono()
               businessPosConfig.authToken,
             );
 
+            await KotOrder.updateMany(
+              {
+                tableName,
+                settled: false,
+                accepted: true,
+                businessId,
+              },
+              {
+                $set: {
+                  isSync: true,
+                },
+              },
+            );
+
+            await UserSession.findOneAndUpdate(
+              {
+                tableName,
+                businessId,
+              },
+              {
+                $set: {
+                  isUserRegistered: true,
+                  billRequest: true,
+                },
+              },
+            );
+
             const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
 
-            const saveCart = new PetpoojaCartItem({
-              petpoojaCart,
-              tableName,
-              cartItems,
-              businessId: businessPosConfig.businessId,
-            });
-
-            await saveCart.save({ session });
-
             if (saveKot.data.success === "0") {
-              throw new Error("Error in saving kot");
+              return respond(c, "Error in saving kot", true, 400, {});
             }
           }
-
-          await KotOrder.updateMany(
-            {
-              tableName,
-              settled: false,
-              businessId,
-            },
-            {
-              $set: {
-                isSync: true,
-              },
-            },
-            {
-              session,
-            },
-          );
-
-          await UserSession.findOneAndUpdate(
-            {
-              tableName,
-              businessId,
-            },
-            {
-              $set: {
-                isUserRegistered: true,
-                billRequest: true,
-              },
-            },
-            { session },
-          );
         }
 
         const saveOrder = await Order.create(
