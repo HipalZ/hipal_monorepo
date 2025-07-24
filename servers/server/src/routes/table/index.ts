@@ -32,6 +32,7 @@ import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import { calculateCartBill } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
+// import { queueClient } from "../../utils/queue/queueClient";
 import { respond } from "../../utils/response";
 import { applyItemDiscountsIndividually } from "../../utils/services/discountItem";
 import { addCoins, calculatedCashbackCoins, removeCoins } from "../payments";
@@ -518,6 +519,7 @@ const tableRouter = new Hono()
         );
 
         const saveOrderData = saveOrder[0];
+        // const { billQueue } = queueClient;
 
         // const job1 = await billQueue.add(
         //   "request-only",
@@ -1173,12 +1175,39 @@ const tableRouter = new Hono()
             tableNo: table?.tableName,
           };
 
-          await axios.post(posApiPaths.requestBill, payload, {
+          const s = await axios.post(posApiPaths.requestBill, payload, {
             headers: {
               "Content-Type": "application/json",
             },
           });
+          console.log("s", s.data);
         }
+
+        return respond(c, "updated successfully", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/sync_unsettle_table",
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { businessId, pos, tableName } = await c.req.json();
+        await UnsettleTable.updateMany(
+          {
+            businessId: businessId,
+            restId: pos.restId,
+            sync: false,
+            tableName: tableName,
+          },
+          {
+            $set: {
+              sync: true,
+            },
+          },
+        );
 
         return respond(c, "updated successfully", false, 200, {});
       });
