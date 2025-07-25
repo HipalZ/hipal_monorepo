@@ -24,6 +24,7 @@ const HorizontalTileCard = ({
   primaryColor = "#ec4899",
   secondaryColor = "#fce7f3",
 }: HorizontalDishCardProps) => {
+  if (!dishData?.availability) return null;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { cart } = useCartStore();
   const { setSelectedDish, isSelectedDish } = useActiveClass();
