@@ -34,7 +34,6 @@ import { calculateCartBill } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 // import { queueClient } from "../../utils/queue/queueClient";
 import { respond } from "../../utils/response";
-import { applyItemDiscountsIndividually } from "../../utils/services/discountItem";
 import { addCoins, calculatedCashbackCoins, removeCoins } from "../payments";
 import { generateTenDigitCode } from "../pos";
 //
@@ -563,14 +562,6 @@ const tableRouter = new Hono()
         //     upsert: true,
         //   },
         // );
-
-        if (
-          tableSession?.dishIds &&
-          tableSession.dishIds.length > 0 &&
-          tableSession.discount > 0
-        ) {
-          await applyItemDiscountsIndividually(tableSession);
-        }
 
         await UserSession.deleteOne(
           {

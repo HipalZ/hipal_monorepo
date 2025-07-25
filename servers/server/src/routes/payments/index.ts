@@ -67,7 +67,6 @@ import {
   razorpayWrapper,
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
-import { applyItemDiscountsIndividually } from "../../utils/services/discountItem";
 import { generateTenDigitCode, sendPushNotification } from "../pos/index.js";
 const admin = require("firebase-admin");
 // Hash a passwordss
@@ -1460,14 +1459,6 @@ const paymentsRouter = new Hono()
               },
             );
 
-            if (
-              tableSession?.dishIds &&
-              tableSession.dishIds.length > 0 &&
-              tableSession.discount > 0
-            ) {
-              await applyItemDiscountsIndividually(tableSession);
-            }
-
             await UserSession.deleteOne(
               {
                 tableName: getOrder.tableName,
@@ -2224,13 +2215,7 @@ const paymentsRouter = new Hono()
                     session,
                   },
                 );
-                if (
-                  tableSession?.dishIds &&
-                  tableSession.dishIds.length > 0 &&
-                  tableSession.discount > 0
-                ) {
-                  await applyItemDiscountsIndividually(tableSession);
-                }
+
                 await UserSession.deleteOne(
                   {
                     tableName: order.tableName,
