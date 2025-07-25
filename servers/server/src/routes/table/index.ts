@@ -850,267 +850,249 @@ const tableRouter = new Hono()
     },
   )
 
-  .post("/transfer_table", zValidator("json", switchTableschema), async (c) => {
-    //@ts-ignore
-    return runInTransaction(async (session: ClientSession) => {
-      const {
-        businessId,
-        transferBy,
-        transferType,
-        fromTableId,
-        toTableId,
-        itemIds = [],
-      } = (await c.req.json()) as SwitchTableType;
-      const sourceTable = await Table.findById(fromTableId); // from table
-      const destinationTable = await Table.findById(toTableId); // to table
+ .post("/transfer_table", zValidator("json", switchTableschema), async (c) => {
+  //@ts-ignore
+  return runInTransaction(async (session: ClientSession) => {
+    const {
+      businessId,
+      transferBy,
+      transferType,
+      fromTableId,
+      toTableId,
+      itemIds = [],
+    } = (await c.req.json()) as SwitchTableType;
 
-      if (sourceTable === destinationTable) {
-        return respond(
-          c,
-          "Cannot switch tables to the same table",
-          true,
-          400,
-          {},
-        );
-      }
+    const sourceTable = await Table.findById(fromTableId);
+    const destinationTable = await Table.findById(toTableId);
 
-      const posConfigData = await BusinessPosConfig.findOne({
-        businessId,
-        isDeleted: false,
-        active: true,
-      });
+    if (sourceTable === destinationTable) {
+      return respond(c, "Cannot switch tables to the same table", true, 400, {});
+    }
 
-      if (!posConfigData) {
-        return respond(c, "Pos not found", true, 400, {});
-      }
+    const posConfigData = await BusinessPosConfig.findOne({
+      businessId,
+      isDeleted: false,
+      active: true,
+    });
 
-      if (!sourceTable || !destinationTable) {
-        return respond(c, "Table not found", true, 404, {});
-      }
-      // check if table have any active session
-      const tableSession = await UserSession.findOne({
-        tableName: sourceTable.name,
-        businessId: businessId,
-      });
+    if (!posConfigData) {
+      return respond(c, "Pos not found", true, 400, {});
+    }
 
-      if (!tableSession || sourceTable.status === "EMPTY") {
-        return respond(
-          c,
-          `No active session found for table ${sourceTable.name}`,
-          true,
-          400,
-          {},
-        );
-      }
+    if (!sourceTable || !destinationTable) {
+      return respond(c, "Table not found", true, 404, {});
+    }
 
-      if (transferType === "TABLE") {
-        await KotOrder.updateMany(
-          {
-            tableName: sourceTable.name,
-            settled: false,
-            accepted: true,
-            businessId,
+    const tableSession = await UserSession.findOne({
+      tableName: sourceTable.name,
+      businessId,
+    });
+
+    if (!tableSession || sourceTable.status === "EMPTY") {
+      return respond(
+        c,
+        `No active session found for table ${sourceTable.name}`,
+        true,
+        400,
+        {},
+      );
+    }
+
+    if (transferType === "TABLE") {
+      await KotOrder.updateMany(
+        {
+          tableName: sourceTable.name,
+          settled: false,
+          accepted: true,
+          businessId,
+        },
+        {
+          $set: {
+            tableName: destinationTable.name,
+            tableId: destinationTable._id,
+            transferd: true,
+            transferedBy: transferBy,
+            fromTable: sourceTable.name,
+            toTable: destinationTable.name,
           },
-          {
-            $set: {
+        },
+        { session },
+      );
+
+      await UserSession.findOneAndUpdate(
+        {
+          tableName: sourceTable.name,
+          businessId,
+        },
+        {
+          $set: {
+            tableName: destinationTable.name,
+            transferTableFrom: sourceTable._id,
+            transferTableTo: destinationTable._id,
+            isTransfer: true,
+            transferBy,
+            transferType: "TABLE",
+          },
+        },
+        { session },
+      );
+
+      await Table.findByIdAndUpdate(
+        fromTableId,
+        {
+          status: "EMPTY",
+          capacity: 0,
+          hiCode: "",
+          transferTableFrom: "",
+          transferTableTo: "",
+          currentTableAmount: 0,
+          totalItemCount: 0,
+          userIds: [],
+          isTransfer: false,
+        },
+        { session },
+      );
+
+      await Table.findByIdAndUpdate(
+        toTableId,
+        {
+          status: sourceTable.status,
+          capacity: sourceTable?.capacity,
+          hiCode: sourceTable?.hiCode,
+          currentTableAmount: sourceTable?.currentTableAmount,
+          totalItemCount: sourceTable?.totalItemCount,
+          userIds: sourceTable?.userIds,
+          isTransfer: true,
+        },
+        { session },
+      );
+
+      return c.json({ message: "Table transfer successfully", err: false, data: {} }, 200);
+    }
+
+    if (transferType === "ITEM") {
+      const kotOrders = await KotOrder.find({
+        cart: { $elemMatch: { _id: { $in: itemIds } } },
+        settled: false,
+        accepted: true,
+        tableName: sourceTable.name,
+      });
+
+      if (kotOrders.length === 0) {
+        return respond(c, "No items found in the KotOrder", true, 400, {});
+      }
+
+      const destinationTableSession = await UserSession.findOne({
+        tableName: destinationTable.name,
+        businessId,
+      });
+
+      for (const kotOrder of kotOrders) {
+        const removedItems = kotOrder.cart.filter((item) =>
+          itemIds.includes(item._id.toString()),
+        );
+
+        kotOrder.cart = kotOrder.cart.filter(
+          (item) => !itemIds.includes(item._id.toString()),
+        );
+
+        if (kotOrder.cart.length === 0) {
+          await KotOrder.deleteOne({ _id: kotOrder._id }, { session });
+        } else {
+          await kotOrder.save({ session });
+        }
+
+        const { _id, ...newKotOrderData } = kotOrder.toObject();
+
+        const calculateBillDishIds = removedItems.filter((item) => !item.dish.isDeleted);
+        const totalBill = calculateCartBill(calculateBillDishIds);
+
+        await KotOrder.create(
+          [
+            {
+              ...newKotOrderData,
+              cart: removedItems,
               tableName: destinationTable.name,
               tableId: destinationTable._id,
               transferd: true,
               transferedBy: transferBy,
+              businessId,
+              date: Date.now(),
               fromTable: sourceTable.name,
               toTable: destinationTable.name,
             },
-          },
+          ],
           { session },
         );
-        // transfer the user session to the destination user table session
-        await UserSession.findOneAndUpdate(
-          {
-            tableName: sourceTable.name,
-            businessId,
-          },
-          {
-            $set: {
-              tableName: destinationTable.name,
-              transferTableFrom: sourceTable._id,
-              transferTableTo: destinationTable._id,
-              isTransfer: true,
-              transferBy,
-              transferType: "TABLE",
+
+        let hiCode = "";
+        if (!destinationTableSession || destinationTable.status === "EMPTY") {
+          hiCode = Math.floor(1000 + Math.random() * 9000).toString();
+          const tenDigitCode = generateTenDigitCode();
+
+          await UserSession.findOneAndUpdate(
+            { businessId, tableName: destinationTable.name },
+            {
+              $setOnInsert: {
+                customerName: tableSession?.customerName || "Guest",
+                hiCode,
+                pin: tenDigitCode,
+                date: Date.now(),
+              },
+              $set: {
+                transferTableFrom: sourceTable._id,
+                transferTableTo: destinationTable._id,
+                isTransfer: true,
+                transferBy,
+                transferType: "ITEM",
+              },
             },
-          },
-          { session },
-        );
-        // update the table status of  source and destination table
+            {
+              upsert: true,
+              session,
+              new: true,
+            },
+          );
+        }
+
         await Table.findByIdAndUpdate(
           fromTableId,
           {
-            status: "EMPTY",
-            capacity: 0,
-            hiCode: "",
-            transferTableFrom: "",
-            transferTableTo: "",
-            currentTableAmount: 0,
-            totalItemCount: 0,
-            userIds: [],
-            isTransfer: false,
+            $inc: {
+              currentTableAmount: -totalBill,
+              totalItemCount: -removedItems.length,
+            },
           },
           { session },
         );
+
         await Table.findByIdAndUpdate(
           toTableId,
           {
-            status: sourceTable.status,
-            capacity: sourceTable?.capacity,
-            hiCode: sourceTable?.hiCode,
-            currentTableAmount: sourceTable?.currentTableAmount,
-            totalItemCount: sourceTable?.totalItemCount,
-            userIds: sourceTable?.userIds,
+            $inc: {
+              currentTableAmount: totalBill,
+              totalItemCount: removedItems.length,
+            },
+            hiCode: destinationTableSession?.hiCode || hiCode,
+            status: "ACTIVE",
             isTransfer: true,
+            transferType: "ITEM",
           },
           { session },
         );
-
-        return c.json(
-          {
-            message: "Table transfer successfully",
-            err: false,
-            data: {},
-          },
-          200,
-        );
       }
 
-      if (transferType === "ITEM") {
-        const kotOrders = await KotOrder.find({
-          cart: { $elemMatch: { _id: { $in: itemIds } } },
-          settled: false,
-          accepted: true,
-          tableName: sourceTable.name,
-        });
-
-        if (kotOrders.length === 0) {
-          return respond(c, "No items found in the KotOrder", true, 400, {});
-        }
-
-        const destinationTableSession = await UserSession.findOne({
-          tableName: destinationTable.name,
-          businessId,
-        });
-
-        for (const kotOrder of kotOrders) {
-          // Find the items to be removed from the cart
-          const removedItems = [];
-          for (const item of kotOrder.cart) {
-            if (itemIds.includes(item._id.toString())) {
-              // Assuming `transferBy` contains the user ID
-              removedItems.push(item);
-            }
-          }
-
-          // Filter out items to be removed from the cart
-          kotOrder.cart = kotOrder.cart.filter(
-            (item) => !itemIds.includes(item._id.toString()),
-          );
-
-          if (kotOrder.cart.length === 0) {
-            // Delete the KotOrder if the cart is empty
-            await KotOrder.deleteOne({ _id: kotOrder._id }, { session });
-          } else {
-            // Save the updated `kotOrder` with modified cart
-            await kotOrder.save({ session });
-          }
-
-          const { _id, ...newKotOrderData } = kotOrder.toObject();
-
-          const calculateBillDishIds = removedItems.filter((item) => {
-            return item.dish.isDeleted === false;
-          });
-          // Filter out items that are not in the `calculateBillDishIds`
-
-          const totalBill = calculateCartBill(calculateBillDishIds);
-
-          await KotOrder.create(
-            [
-              {
-                ...newKotOrderData,
-                cart: removedItems,
-                tableName: destinationTable.name,
-                tableId: destinationTable._id,
-                transferd: true,
-                transferedBy: transferBy,
-                businessId,
-                date: Date.now(),
-                fromTable: sourceTable.name,
-                toTable: destinationTable.name,
-              },
-            ],
-            { session },
-          );
-
-          let hiCode = "";
-          if (!destinationTableSession || destinationTable.status === "EMPTY") {
-            hiCode = Math.floor(1000 + Math.random() * 9000).toString();
-
-            const tenDigitCode = generateTenDigitCode();
-
-            const sessionUpdate = await UserSession.findOneAndUpdate(
-              { businessId, tableName: destinationTable.name },
-              {
-                $set: {
-                  transferTableFrom: sourceTable._id,
-                  transferTableTo: destinationTable._id,
-                  isTransfer: true,
-                  customerName: tableSession?.customerName || "Guest",
-                  transferBy,
-                  transferType: "ITEM",
-                  hiCode,
-                  pin: tenDigitCode,
-                  date: Date.now(),
-                },
-              },
-              { upsert: true, session },
-            );
-          }
-
-          await Table.findByIdAndUpdate(
-            fromTableId,
-            {
-              $inc: {
-                currentTableAmount: -totalBill,
-                totalItemCount: -removedItems.length,
-              },
-            },
-            { session },
-          );
-
-          await Table.findByIdAndUpdate(
-            toTableId,
-            {
-              $inc: {
-                currentTableAmount: totalBill,
-                totalItemCount: removedItems.length,
-              },
-              hiCode: destinationTableSession?.hiCode || hiCode,
-              status: "ACTIVE",
-              isTransfer: true,
-              transferType: "ITEM",
-            },
-            { session },
-          );
-        }
-
-        return c.json(
-          {
-            message: "items transfer successfully",
-            err: false,
-            data: {},
-          },
-          200,
-        );
-      }
-    });
-  })
+      return c.json(
+        {
+          message: "Items transferred successfully",
+          err: false,
+          data: {},
+        },
+        200,
+      );
+    }
+  });
+})
 
   .post(
     "/save_unsettle_table",
