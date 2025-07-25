@@ -3158,156 +3158,155 @@ const posRouter = new Hono()
     ),
     async (c) => {
       //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, settledBy } = await c.req.json();
 
-        const tableSession = await UserSession.findOne({
-          businessId,
-          tableName,
-        });
+      const { businessId, tableName, settledBy } = await c.req.json();
 
-        if (!tableSession) {
-          return respond(c, "Table session not found", true, 404, {});
-        }
+      const tableSession = await UserSession.findOne({
+        businessId,
+        tableName,
+      });
 
-        const pos = await BusinessPosConfig.findOne({
-          businessId,
-          isDeleted: false,
-          active: true,
-        });
+      if (!tableSession) {
+        return respond(c, "Table session not found", true, 404, {});
+      }
 
-        if (!pos) {
-          return respond(c, "Pos not found", true, 400, {});
-        }
-        const unsettleTable = await UnsettleTable.find({
-          businessId,
-          restId: pos.restId,
-          sync: false,
-        });
+      const pos = await BusinessPosConfig.findOne({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
 
-        for (const table of unsettleTable) {
-          const payload = {
-            app_key: pos.accessKey,
-            app_secret: pos.secretKey,
-            access_token: pos.authToken,
-            restID: pos.restId,
-            pin: table?.pin,
-            tableNo: table?.tableName,
-          };
+      if (!pos) {
+        return respond(c, "Pos not found", true, 400, {});
+      }
+      const unsettleTable = await UnsettleTable.find({
+        businessId,
+        restId: pos.restId,
+        sync: false,
+      });
 
-          const response = await axios.post(posApiPaths.requestBill, payload, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-
-          if (
-            response.data.success === "1" &&
-            response.data?.bill_request_id?.length > 2
-          ) {
-            const updateSettleTable = await UnsettleTable.findOneAndUpdate(
-              { _id: table._id },
-              {
-                $set: {
-                  sync: true,
-                },
-              },
-              { new: true },
-            );
-            const res = await axios.post(posApiPaths.settleTable, {
-              app_key: pos.accessKey,
-              app_secret: pos.secretKey,
-              access_token: pos.authToken,
-              restID: pos.restId,
-              bill_request_id: response.data.bill_request_id,
-              amount_paid: table?.total,
-              pin: table?.pin,
-            });
-          }
-        }
-
-        const newPin = generateTenDigitCode();
-        const registerUser = await axios.post(posApiPaths.registerUser, {
+      for (const table of unsettleTable) {
+        const payload = {
           app_key: pos.accessKey,
           app_secret: pos.secretKey,
           access_token: pos.authToken,
           restID: pos.restId,
-          phone: newPin,
+          pin: table?.pin,
+          tableNo: table?.tableName,
+        };
+
+        const response = await axios.post(posApiPaths.requestBill, payload, {
+          headers: {
+            "Content-Type": "application/json",
+          },
         });
 
-        await UserSession.findOneAndUpdate(
+        if (
+          response.data.success === "1" &&
+          response.data?.bill_request_id?.length > 2
+        ) {
+          const updateSettleTable = await UnsettleTable.findOneAndUpdate(
+            { _id: table._id },
+            {
+              $set: {
+                sync: true,
+              },
+            },
+            { new: true },
+          );
+          const res = await axios.post(posApiPaths.settleTable, {
+            app_key: pos.accessKey,
+            app_secret: pos.secretKey,
+            access_token: pos.authToken,
+            restID: pos.restId,
+            bill_request_id: response.data.bill_request_id,
+            amount_paid: table?.total,
+            pin: table?.pin,
+          });
+        }
+      }
+
+      const newPin = generateTenDigitCode();
+      const registerUser = await axios.post(posApiPaths.registerUser, {
+        app_key: pos.accessKey,
+        app_secret: pos.secretKey,
+        access_token: pos.authToken,
+        restID: pos.restId,
+        phone: newPin,
+      });
+
+      await UserSession.findOneAndUpdate(
+        {
+          tableName: tableName,
+          businessId: businessId,
+        },
+        {
+          $set: {
+            pin: newPin,
+          },
+        },
+        { new: true },
+      );
+
+      const kotOrders = (await KotOrder.find({
+        tableName,
+        settled: false,
+        accepted: true,
+        businessId,
+        isSync: false,
+      }).lean()) as KotOrderTypes[];
+
+      const cartItems = kotOrders.flatMap((order) =>
+        order.cart.filter((item) => !item.isDeleted),
+      );
+
+      if (kotOrders.length > 0) {
+        const petpoojaCart = convertToPetpoojaCart(
+          cartItems,
+          pos.restId,
+          tableSession?.customerName,
+          tableSession?.pin,
+          tableName,
+          pos.accessKey,
+          pos.secretKey,
+
+          pos.authToken,
+        );
+
+        await KotOrder.updateMany(
           {
-            tableName: tableName,
-            businessId: businessId,
+            tableName,
+            settled: false,
+            businessId,
           },
           {
             $set: {
-              pin: newPin,
+              isSync: true,
             },
           },
-          { new: true },
         );
 
-        const kotOrders = (await KotOrder.find({
-          tableName,
-          settled: false,
-          accepted: true,
-          businessId,
-          isSync: false,
-        }).lean()) as KotOrderTypes[];
-
-        const cartItems = kotOrders.flatMap((order) =>
-          order.cart.filter((item) => !item.isDeleted),
-        );
-
-        if (kotOrders.length > 0) {
-          const petpoojaCart = convertToPetpoojaCart(
-            cartItems,
-            pos.restId,
-            tableSession?.customerName,
-            tableSession?.pin,
+        await UserSession.findOneAndUpdate(
+          {
             tableName,
-            pos.accessKey,
-            pos.secretKey,
-
-            pos.authToken,
-          );
-
-          await KotOrder.updateMany(
-            {
-              tableName,
-              settled: false,
-              businessId,
+            businessId,
+          },
+          {
+            $set: {
+              isUserRegistered: true,
+              billRequest: true,
             },
-            {
-              $set: {
-                isSync: true,
-              },
-            },
-          );
+          },
+        );
 
-          await UserSession.findOneAndUpdate(
-            {
-              tableName,
-              businessId,
-            },
-            {
-              $set: {
-                isUserRegistered: true,
-                billRequest: true,
-              },
-            },
-          );
+        const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
 
-          const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
-
-          if (saveKot.data.success === "0") {
-            return respond(c, "Error in saving kot", true, 400, {});
-          }
+        if (saveKot.data.success === "0") {
+          return respond(c, "Error in saving kot", true, 400, {});
         }
+      }
 
-        return respond(c, "Success", true, 200, {});
-      });
+      return respond(c, "Success", true, 200, {});
     },
   )
 
