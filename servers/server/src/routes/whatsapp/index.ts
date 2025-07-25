@@ -9,6 +9,7 @@ import {
   GroupModel,
   HotelRoom,
   HotelRoomSession,
+  OutLetInfo,
   RecentCampaign,
   Subscriber,
   TagModel,
@@ -2127,7 +2128,7 @@ const whatsappRouter = new Hono()
           }
           if (userText) {
             const tableCodeMatch = userText.match(
-              /table\s*[-\s]?([a-zA-Z0-9\s-_]+)/i,
+              /details\s*[-\s]?([a-zA-Z0-9\s-_]+)/i,
             );
             console.log("tableCodeMatch", tableCodeMatch);
             const roomCodeMatch = userText.match(
@@ -2239,7 +2240,7 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: `🎉 Enjoy exclusive benefits from ${bName?.name}.\n🔗 Click below to grab your special coupon curated just for you. \n${longUrl}`,
+                    body: `🎉 *${bName?.name}* offers you exclusive benefits.\n🔗 Click below to grab your special coupon curated just for you. \n${longUrl}`,
                   },
                 },
                 headers: {
@@ -2319,7 +2320,7 @@ const whatsappRouter = new Hono()
                 }
               }
 
-              const res = await axios.post(
+              await axios.post(
                 `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
                 {
                   messaging_product: "whatsapp",
@@ -2387,7 +2388,7 @@ const whatsappRouter = new Hono()
               }
               const code = Math.floor(1000 + Math.random() * 9000).toString();
 
-              const checkInUser = await CheckInQrUser.findOneAndUpdate(
+              await CheckInQrUser.findOneAndUpdate(
                 {
                   userId: user?._id,
                   businessId: config?.businessId,
@@ -2419,6 +2420,7 @@ const whatsappRouter = new Hono()
                   { new: true },
                 );
               }
+              const checkInBody = `Welcome to ${bName?.name}! 👋\n\nThank you for checking in — we're grateful to have you with us today. 🙏\nYour code: *${code}*\n\n *Discover Our Services*: ${longUrl}\n\nWe hope you have a delightful experience! 😊`;
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
@@ -2426,7 +2428,7 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: `Welcome to ${bName?.name}! 👋\n\nThank you for checking in — we're grateful to have you with us today. 🙏\nYour code: *${code}*\n\n *Discover Our Services*: ${longUrl}\n\nWe hope you have a delightful experience! 😊`,
+                    body: checkInBody
                   },
                 },
                 headers: {
@@ -2459,6 +2461,13 @@ const whatsappRouter = new Hono()
                   new: true,
                 },
               );
+              const menuTemplate = `Welcome to ${bName?.name}! \n\n We’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${longUrl}\n\n🍽️ View our curated menu featuring handcrafted delights.`
+              const otherTemplate = `Welcome to ${bName?.name}! \n\n🔗 Explore our offerings: ${longUrl}\n\n🌟 Discover our curated services/products crafted with care.`;
+              const outletInfo = await OutLetInfo.findOne({
+                businessId: config?.businessId,
+              });
+              const outletType = outletInfo?.outLetType;
+                const FoodCondition = outletType === "FOOD" || outletType === "RESTAURANT" || outletType === "MENU";
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
@@ -2466,7 +2475,7 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: `Welcome to ${bName?.name}! \nWe’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${longUrl}\n🍽️ View our curated menu featuring handcrafted delights.`,
+                    body: FoodCondition ? menuTemplate : otherTemplate
                   },
                 },
                 headers: {
