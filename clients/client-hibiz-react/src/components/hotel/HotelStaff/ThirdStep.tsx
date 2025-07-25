@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import {
   Accordion,
   AccordionItem,
@@ -10,31 +10,52 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGetCatServices } from "@/hooks/useHotelStaff";
 import useBusinessData from "@/components/store/useBusinessData";
-import useStaffStore from "@/components/store/hotel/useHotelStaff";
+import useStaffStore, { useStaffDataStore } from "@/components/store/hotel/useHotelStaff";
 
 const ThirdStep = () => {
-  // Mock state management
-  const { selectedServices, toggleService } = useStaffStore((state) => ({
+  const { selectedServices, toggleService, setSelectedServices } = useStaffStore((state) => ({
     selectedServices: state.selectedServices,
     toggleService: state.toggleService,
+    setSelectedServices: state.setSelectedServices,
   }));
+
+  const staffData = useStaffDataStore((s) => s.staffData);
   const businessId = useBusinessData((s) => s.businessData?._id);
   const { hotelServicesData } = useGetCatServices(businessId as string);
+
+  // Modify initialSelectedServices to be an array of objects with availability, _id, and name
+  const initialSelectedServices = staffData?.flatMap((staff) =>
+    staff.customRole?.[0]?.serviceIds?.map((serviceId) => {
+      const service = hotelServicesData?.flatMap((category) =>
+        category.serviceIds.filter((service) => service._id === serviceId)
+      );
+      if (service && service[0]) {
+        return {
+          _id: service[0]._id,
+          name: service[0].name,
+          availability: service[0].availability,
+        };
+      }
+      return null;
+    }).filter(Boolean) || []
+  );
+
+  useEffect(() => {
+    setSelectedServices(initialSelectedServices || []);
+  }, [staffData, setSelectedServices]);
 
   // Use array for multiple open accordions
   const [openCategories, setOpenCategories] = useState<string[]>([]);
 
+  // Highlight services based on matching categoryId
   const handleCategoryCheckbox = (
     categoryId: string,
     isChecked: boolean,
-    event: React.MouseEvent,
+    event: React.MouseEvent
   ) => {
-    // Prevent event from bubbling to accordion trigger
     event.stopPropagation();
 
-    const category = hotelServicesData?.find(
-      (category) => category._id === categoryId,
-    );
+    const category = hotelServicesData?.find((category) => category._id === categoryId);
     if (category) {
       category.serviceIds.forEach((service) => {
         if (isChecked && !isServiceSelected(service._id)) {
@@ -55,35 +76,35 @@ const ThirdStep = () => {
     setOpenCategories(value);
   };
 
+  const handleServiceToggle = (service: any) => {
+    toggleService(service);
+  };
+
   return (
-    <div className="space-y-4 p-6">
+    <div className="p-3">
       <h2 className="text-xl font-semibold">Assign Services</h2>
       <p className="text-sm text-muted-foreground">
         Select the services this staff member will be responsible for
       </p>
 
       <div className="space-y-3 max-h-[60dvh] overflow-y-auto pr-2">
-        <Accordion
-          type="multiple"
-          value={openCategories}
-          onValueChange={handleAccordionValueChange}
-        >
+        <Accordion type="multiple" value={openCategories} onValueChange={handleAccordionValueChange}>
           {hotelServicesData?.map((category) => (
             <AccordionItem key={category._id} value={category._id}>
               <AccordionTrigger className="cursor-pointer flex justify-between items-center">
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id={`category-${category._id}`}
-                    checked={category.serviceIds.every((service) =>
-                      isServiceSelected(service._id),
+                    checked={category?.serviceIds.every((service) =>
+                      isServiceSelected(service._id)
                     )}
                     onClick={(e) =>
                       handleCategoryCheckbox(
                         category._id,
-                        !category.serviceIds.every((service) =>
-                          isServiceSelected(service._id),
+                        !category?.serviceIds.every((service) =>
+                          isServiceSelected(service._id)
                         ),
-                        e,
+                        e
                       )
                     }
                   />
@@ -99,24 +120,19 @@ const ThirdStep = () => {
 
               <AccordionContent>
                 <div className="space-y-2">
-                  {category.serviceIds.map((service) => (
+                  {category?.serviceIds.map((service) => (
                     <Card
                       key={service._id}
-                      className={`border ${
-                        isServiceSelected(service._id) ? "border-primary" : ""
-                      }`}
+                      className={`border ${isServiceSelected(service._id) ? "border-primary" : ""}`}
                     >
                       <CardContent className="flex items-center justify-between p-3">
                         <div className="flex items-center space-x-2">
                           <Checkbox
                             id={service._id}
                             checked={isServiceSelected(service._id)}
-                            onCheckedChange={() => toggleService(service)}
+                            onCheckedChange={() => handleServiceToggle(service)}
                           />
-                          <Label
-                            htmlFor={service._id}
-                            className="cursor-pointer"
-                          >
+                          <Label htmlFor={service._id} className="cursor-pointer">
                             {service.name}
                           </Label>
                         </div>
@@ -131,19 +147,7 @@ const ThirdStep = () => {
       </div>
 
       <div className="pt-2">
-        <p className="text-sm font-medium">
-          Selected services: {selectedServices.length}
-        </p>
-        {selectedServices.length > 0 && (
-          <div className="mt-2">
-            <p className="text-xs text-muted-foreground">Selected:</p>
-            <ul className="text-xs text-muted-foreground">
-              {selectedServices.map((service) => (
-                <li key={service._id}>• {service.name}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <p className="text-sm font-medium">Selected services: {selectedServices.length}</p>
       </div>
     </div>
   );

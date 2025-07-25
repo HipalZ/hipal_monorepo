@@ -50,6 +50,7 @@ interface StaffFormState {
   };
   selectedRole: IHotel_Roll | null;
   selectedServices: IService[];
+  setSelectedServices: (value:IService[])=>void;
 
   // Form state
   currentStep: number;
@@ -94,6 +95,7 @@ const useStaffStore = create<StaffFormState>((set, get) => ({
   },
   selectedRole: null,
   selectedServices: [],
+  setSelectedServices:(value)=>set({selectedServices:value}),
   currentStep: 1,
   errors: {
     name: "",
