@@ -3212,7 +3212,7 @@ const posRouter = new Hono()
                   sync: true,
                 },
               },
-              { session, new: true },
+              { new: true },
             );
             const res = await axios.post(posApiPaths.settleTable, {
               app_key: pos.accessKey,
@@ -3245,7 +3245,7 @@ const posRouter = new Hono()
               pin: newPin,
             },
           },
-          { session, new: true },
+          { new: true },
         );
 
         const kotOrders = (await KotOrder.find({
@@ -3260,57 +3260,51 @@ const posRouter = new Hono()
           order.cart.filter((item) => !item.isDeleted),
         );
 
-        if (!kotOrders.length) {
-          return respond(c, "No Items in cart", true, 200, {});
-        }
-
-        const petpoojaCart = convertToPetpoojaCart(
-          cartItems,
-          pos.restId,
-          tableSession?.customerName,
-          tableSession?.pin,
-          tableName,
-          pos.accessKey,
-          pos.secretKey,
-
-          pos.authToken,
-        );
-
-        const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
-
-        if (saveKot.data.success === "0") {
-          throw new Error("Error in saving kot");
-        }
-
-        await KotOrder.updateMany(
-          {
+        if (kotOrders.length > 0) {
+          const petpoojaCart = convertToPetpoojaCart(
+            cartItems,
+            pos.restId,
+            tableSession?.customerName,
+            tableSession?.pin,
             tableName,
-            settled: false,
-            businessId,
-          },
-          {
-            $set: {
-              isSync: true,
-            },
-          },
-          {
-            session,
-          },
-        );
+            pos.accessKey,
+            pos.secretKey,
 
-        await UserSession.findOneAndUpdate(
-          {
-            tableName,
-            businessId,
-          },
-          {
-            $set: {
-              isUserRegistered: true,
-              billRequest: true,
+            pos.authToken,
+          );
+
+          await KotOrder.updateMany(
+            {
+              tableName,
+              settled: false,
+              businessId,
             },
-          },
-          { session },
-        );
+            {
+              $set: {
+                isSync: true,
+              },
+            },
+          );
+
+          await UserSession.findOneAndUpdate(
+            {
+              tableName,
+              businessId,
+            },
+            {
+              $set: {
+                isUserRegistered: true,
+                billRequest: true,
+              },
+            },
+          );
+
+          const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
+
+          if (saveKot.data.success === "0") {
+            return respond(c, "Error in saving kot", true, 400, {});
+          }
+        }
 
         return respond(c, "Success", true, 200, {});
       });

@@ -61,6 +61,7 @@ import { getMerchantConfig } from "../../utils/cacheHelper";
 import getDefault4AMToNext4AM from "../../utils/defaultBillingTime";
 import { convertToPetpoojaCart } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
+// import { queueClient } from "../../utils/queue/queueClient";
 import {
   type MerchantConfig,
   razorpayWrapper,
@@ -561,42 +562,39 @@ const paymentsRouter = new Hono()
               businessPosConfig.authToken,
             );
 
+            await KotOrder.updateMany(
+              {
+                tableName,
+                settled: false,
+                accepted: true,
+                businessId,
+              },
+              {
+                $set: {
+                  isSync: true,
+                },
+              },
+            );
+
+            await UserSession.findOneAndUpdate(
+              {
+                tableName,
+                businessId,
+              },
+              {
+                $set: {
+                  isUserRegistered: true,
+                  billRequest: true,
+                },
+              },
+            );
+
             const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
 
             if (saveKot.data.success === "0") {
-              throw new Error("Error in saving kot");
+              return respond(c, "KOT not saved", true, 400, {});
             }
           }
-
-          await KotOrder.updateMany(
-            {
-              tableName,
-              settled: false,
-              businessId,
-            },
-            {
-              $set: {
-                isSync: true,
-              },
-            },
-            {
-              session,
-            },
-          );
-
-          await UserSession.findOneAndUpdate(
-            {
-              tableName,
-              businessId,
-            },
-            {
-              $set: {
-                isUserRegistered: true,
-                billRequest: true,
-              },
-            },
-            { session },
-          );
         }
 
         const client = await razorpayWrapper.getClient(merchantId);
@@ -838,42 +836,39 @@ const paymentsRouter = new Hono()
               businessPosConfig.authToken,
             );
 
+            await KotOrder.updateMany(
+              {
+                tableName,
+                settled: false,
+                accepted: true,
+                businessId,
+              },
+              {
+                $set: {
+                  isSync: true,
+                },
+              },
+            );
+
+            await UserSession.findOneAndUpdate(
+              {
+                tableName,
+                businessId,
+              },
+              {
+                $set: {
+                  isUserRegistered: true,
+                  billRequest: true,
+                },
+              },
+            );
+
             const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
 
             if (saveKot.data.success === "0") {
-              throw new Error("Error in saving kot");
+              return respond(c, "Error in saving kot", true, 400, {});
             }
           }
-
-          await KotOrder.updateMany(
-            {
-              tableName,
-              settled: false,
-              businessId,
-            },
-            {
-              $set: {
-                isSync: true,
-              },
-            },
-            {
-              session,
-            },
-          );
-
-          await UserSession.findOneAndUpdate(
-            {
-              tableName,
-              businessId,
-            },
-            {
-              $set: {
-                isUserRegistered: true,
-                billRequest: true,
-              },
-            },
-            { session },
-          );
         }
 
         const saveOrder = await Order.create(
@@ -1391,6 +1386,7 @@ const paymentsRouter = new Hono()
             };
 
             const saveOrderData = getOrder.toObject();
+            // const { billQueue } = queueClient;
 
             // const job1 = await billQueue.add(
             //   "request-only",
@@ -2135,6 +2131,7 @@ const paymentsRouter = new Hono()
                 };
 
                 const saveOrderData = order.toObject();
+                // const { billQueue } = queueClient;
 
                 // const job1 = await billQueue.add(
                 //   "request-only",
