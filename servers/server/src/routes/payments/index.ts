@@ -1728,10 +1728,7 @@ const paymentsRouter = new Hono()
       const requestData = await c.req.json();
       const { businessId, tableName, message, userId } = requestData;
 
-      const appInfo = await DeviceToken.findOne({
-        token: { $exists: true },
-        v: { $exists: true },
-      });
+     
 
       const tableInfo = await Table.findOne({ businessId, name: tableName });
 
@@ -1751,17 +1748,55 @@ const paymentsRouter = new Hono()
         date: Date.now(),
         order_id: new ObjectId(),
         hiCode: hiCode,
-        v: appInfo?.v,
-        appUrl: appInfo?.appUrl,
-        updateFeature: appInfo?.updateFeature,
       });
 
       const registrationToken = await DeviceToken.find({
         businessId: businessId,
       });
 
+      if (registrationToken.length > 0) {
+        for (const obj of registrationToken) {
+          if (obj.notification) {
+            const pushMessage = {
+              token: obj.token, // or use 'topic' if you're sending to a topic
+              notification: {
+                title: "Hi Captain !!",
+                body: `T-${tableName?.slice(-2)} : ${message}`,
+              },
+              android: {
+                notification: {
+                  channel_id: "custom_channel_id",
+                  sound: "order",
+                },
+              },
+            };
+
+            admin
+              .messaging()
+              .send(pushMessage)
+              .then((response: unknown) => {
+                return c.json({
+                  message: "FCM message sent successfully",
+                  err: false,
+                  data: response,
+                });
+              })
+              .catch((err: Error) => {
+                return c.json(
+                  {
+                    message: "Error sending FCM message",
+                    err: true,
+                    data: {},
+                  },
+                  400,
+                );
+              });
+          }
+        }
+      }
+
       return respond(c, "Alert created successfully", false, 200, alert);
-    },
+    }
   )
   .get(
     "/:id/paymentAlerts",
