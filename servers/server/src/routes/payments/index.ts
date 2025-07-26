@@ -67,7 +67,8 @@ import {
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 import { generateTenDigitCode, sendPushNotification } from "../pos/index.js";
-import adjustFromToTimestamps from "../../utils/defaultBillingTime";
+import { adjustFromToTimestamps } from "../../utils/defaultBillingTime";
+import getDefault4AMToNext4AM from "../../utils/defaultBillingTime";
 const admin = require("firebase-admin");
 // Hash a passwordss
 
@@ -3614,94 +3615,104 @@ const paymentsRouter = new Hono()
         _id: updatedPayment._id,
       });
     },
-  ).get(
-  "/:id/test_salesDashboard",
-  zValidator("query", paramsSchema),
-  async (c) => {
-    const { businessId, from, to } = c.req.query();
+  )
+  .get(
+    "/:id/test_salesDashboard",
+    zValidator("query", paramsSchema),
+    async (c) => {
+      const { businessId, from, to } = c.req.query();
 
-const { adjustedFrom, adjustedTo } = adjustFromToTimestamps(Number(from), Number(to));
-    // Use query parameters or fallback to the default 4 AM timestamps
-    console.log('defaultFromDate',new Date(adjustedFrom).toLocaleString(),new Date(Number(from)).toLocaleString())
-    console.log('defaultToDate',new Date(adjustedTo).toLocaleString(), new Date(Number(to)).toLocaleString())
-    const fromDate = adjustedFrom;
-    const toDate = adjustedTo;
-    // Ensure `fromDate` is less than `toDate`
-    if (fromDate > toDate) {
-      return c.json({
-        err: true,
-        data: {},
-        message: "from date should be less than to date",
+      const { adjustedFrom, adjustedTo } = adjustFromToTimestamps(
+        Number(from),
+        Number(to),
+      );
+      // Use query parameters or fallback to the default 4 AM timestamps
+      console.log(
+        "defaultFromDate",
+        new Date(adjustedFrom).toLocaleString(),
+        new Date(Number(from)).toLocaleString(),
+      );
+      console.log(
+        "defaultToDate",
+        new Date(adjustedTo).toLocaleString(),
+        new Date(Number(to)).toLocaleString(),
+      );
+      const fromDate = adjustedFrom;
+      const toDate = adjustedTo;
+      // Ensure `fromDate` is less than `toDate`
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
+      // Proceed with querying payments using `fromDate` and `toDate`
+      const payments = await Payment.find({
+        businessId,
+        isDeleted: false,
+        date: { $gte: fromDate, $lte: toDate },
       });
-    }
 
-    // Proceed with querying payments using `fromDate` and `toDate`
-    const payments = await Payment.find({
-      businessId,
-      isDeleted: false,
-      date: { $gte: fromDate, $lte: toDate },
-    });
+      const totalOrders = payments.length;
 
-    const totalOrders = payments.length;
+      let overAllAmount = 0;
+      let totalOnlineSale = 0;
+      const offlineSales: Record<string, number> = {};
 
-    let overAllAmount = 0;
-    let totalOnlineSale = 0;
-    const offlineSales: Record<string, number> = {};
+      // Fetch active tables
+      const activeTable = await Table.find({
+        businessId: businessId,
+        status: "ACTIVE",
+      });
 
-    // Fetch active tables
-    const activeTable = await Table.find({
-      businessId: businessId,
-      status: "ACTIVE",
-    });
+      const totalActiveTableValue = activeTable.reduce((acc, table) => {
+        return acc + (table?.currentTableAmount ?? 0);
+      }, 0);
 
-    const totalActiveTableValue = activeTable.reduce((acc, table) => {
-      return acc + (table?.currentTableAmount ?? 0);
-    }, 0);
+      // Process the payments
+      for (const payment of payments) {
+        const { total = 0, paymentMode, mode, splitModes } = payment;
 
-    // Process the payments
-    for (const payment of payments) {
-      const { total = 0, paymentMode, mode, splitModes } = payment;
+        if (mode === "split" && Array.isArray(splitModes)) {
+          let splitTotal = 0;
 
-      if (mode === "split" && Array.isArray(splitModes)) {
-        let splitTotal = 0;
-
-        for (const settle of splitModes) {
-          if (settle.name !== "complementary") {
-            splitTotal += settle.amount ?? 0;
-            offlineSales[settle.name] =
-              (offlineSales[settle.name] || 0) + (settle.amount ?? 0);
+          for (const settle of splitModes) {
+            if (settle.name !== "complementary") {
+              splitTotal += settle.amount ?? 0;
+              offlineSales[settle.name] =
+                (offlineSales[settle.name] || 0) + (settle.amount ?? 0);
+            }
           }
+
+          overAllAmount += splitTotal; // Only add non-complementary split values
+        } else if (!["dues", "npc", "complementary"].includes(mode)) {
+          overAllAmount += total; // Add total if it's not dues, npc, or complementary
         }
 
-        overAllAmount += splitTotal; // Only add non-complementary split values
-      } else if (!["dues", "npc", "complementary"].includes(mode)) {
-        overAllAmount += total; // Add total if it's not dues, npc, or complementary
+        if (paymentMode === "online") {
+          totalOnlineSale += total;
+        } else if (!["dues", "npc", "complementary"].includes(paymentMode)) {
+          offlineSales[mode] = (offlineSales[mode] || 0) + total;
+        }
       }
 
-      if (paymentMode === "online") {
-        totalOnlineSale += total;
-      } else if (!["dues", "npc", "complementary"].includes(paymentMode)) {
-        offlineSales[mode] = (offlineSales[mode] || 0) + total;
-      }
-    }
+      delete offlineSales["complementary"];
+      delete offlineSales["split"];
 
-    delete offlineSales["complementary"];
-    delete offlineSales["split"];
-
-    // Return the response with the data
-    return c.json({
-      err: false,
-      data: {
-        overAllAmount, // Excludes complementary but includes cash in split modes
-        onlineSale: { online: totalOnlineSale },
-        offlineSale: offlineSales,
-        totalOrders,
-        totalActiveTableValue,
-      },
-    });
-  }
-);
-
-
+      // Return the response with the data
+      return c.json({
+        err: false,
+        data: {
+          overAllAmount, // Excludes complementary but includes cash in split modes
+          onlineSale: { online: totalOnlineSale },
+          offlineSale: offlineSales,
+          totalOrders,
+          totalActiveTableValue,
+        },
+      });
+    },
+  );
 
 export default paymentsRouter;
