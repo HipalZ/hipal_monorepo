@@ -26,7 +26,7 @@ function App() {
   const pathName = useLocation().pathname;
   const businessIdMatch = pathName.match(/^\/([^/]+)\/alerts/);
   const businessId = businessIdMatch ? businessIdMatch[1] : null;
-  const outletInfo = useBusinessData(s => s.outletInfo);
+  const outletInfo = useBusinessData((s) => s.outletInfo);
   const version = import.meta.env.VITE_APP_VERSION;
   const { errorText } = useErrorHandling();
   const {
@@ -46,25 +46,34 @@ function App() {
   } = useLiteStore();
   const { initializePushNotifications, initializedRef } =
     usePushNotifications();
-  const { selectedBiz, pushToken, captainData } = useHiClientZ(
-    (s) => ({
-      selectedBiz: s.selectedBiz,
-      pushToken: s.pushToken,
-      captainData: s.captainData,
-    }),
-  );
-
+  const { selectedBiz, pushToken, captainData } = useHiClientZ((s) => ({
+    selectedBiz: s.selectedBiz,
+    pushToken: s.pushToken,
+    captainData: s.captainData,
+  }));
 
   const checkAllowRedirectionConditions = () => {
     const isValidBusiness = captainData?.customRole?.some(
-      (role) => role.businessId?._id === selectedBiz?.businessId?._id
+      (role) => role.businessId?._id === selectedBiz?.businessId?._id,
     );
-    if (accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType !== "HOTEL") {
+    if (
+      accessToken &&
+      pushToken &&
+      selectedBiz?.businessId?.name &&
+      isValidBusiness &&
+      outletInfo?.outLetType !== "HOTEL"
+    ) {
       navigate(`/${selectedBiz?.businessId?._id}/alerts`);
-    } else if (accessToken && pushToken && selectedBiz?.businessId?.name && isValidBusiness && outletInfo?.outLetType === "HOTEL") {
+    } else if (
+      accessToken &&
+      pushToken &&
+      selectedBiz?.businessId?.name &&
+      isValidBusiness &&
+      outletInfo?.outLetType === "HOTEL"
+    ) {
       navigate(`hotel/${selectedBiz?.businessId?._id}/`);
     }
-  }
+  };
 
   useEffect(() => {
     checkAllowRedirectionConditions();
@@ -89,7 +98,7 @@ function App() {
     setOfflineAlertData(data);
     setIsVersionPopup(Number(version) !== data[0]?.v);
     setUpdateUrl(data[0]?.appUrl);
-    console.log('alert version', data[0]?.v, 'env version', version);
+    console.log("alert version", data[0]?.v, "env version", version);
     if (data[0]?.v !== Number(version)) {
       setUpdateFeature(data[0]?.updateFeature);
     }
@@ -176,7 +185,7 @@ function App() {
           </button>
         </div>
       )} */}
-      <UpdateApp />
+      {/* <UpdateApp /> */}
       {loading ? <SpinnerMemo /> : null}
       <MainRouter />
       <ErrorPopup />
