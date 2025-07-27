@@ -3622,23 +3622,30 @@ const paymentsRouter = new Hono()
     async (c) => {
       const { businessId, from, to } = c.req.query();
 
+      // Adjust `from` and `to` timestamps based on whether they are today's date or not
       const { adjustedFrom, adjustedTo } = adjustFromToTimestamps(
         Number(from),
         Number(to),
       );
-      // Use query parameters or fallback to the default 4 AM timestamps
+
+      // Log the adjusted timestamps and formatted dates for clarity
       console.log(
-        "defaultFromDate",
+        "Adjusted From (4 AM if today):",
         new Date(adjustedFrom).toLocaleString(),
+        "Original From:",
         new Date(Number(from)).toLocaleString(),
       );
       console.log(
-        "defaultToDate",
+        "Adjusted To (4 AM if today):",
         new Date(adjustedTo).toLocaleString(),
+        "Original To:",
         new Date(Number(to)).toLocaleString(),
       );
+
+      // Use the adjusted timestamps as `fromDate` and `toDate`
       const fromDate = adjustedFrom;
       const toDate = adjustedTo;
+
       // Ensure `fromDate` is less than `toDate`
       if (fromDate > toDate) {
         return c.json({
@@ -3648,7 +3655,7 @@ const paymentsRouter = new Hono()
         });
       }
 
-      // Proceed with querying payments using `fromDate` and `toDate`
+      // Query for payments within the adjusted date range
       const payments = await Payment.find({
         businessId,
         isDeleted: false,
@@ -3698,6 +3705,7 @@ const paymentsRouter = new Hono()
         }
       }
 
+      // Clean up complementary and split modes
       delete offlineSales["complementary"];
       delete offlineSales["split"];
 
