@@ -2424,7 +2424,7 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: checkInBody
+                    body: checkInBody,
                   },
                 },
                 headers: {
@@ -2457,13 +2457,16 @@ const whatsappRouter = new Hono()
                   new: true,
                 },
               );
-              const menuTemplate = `Welcome to *${bName?.name}* \n\n We’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${longUrl}\n\n🍽️ View our curated menu featuring handcrafted delights.`
-              const otherTemplate = `Welcome to *${bName?.name}* \n\n🔗 Explore Services: ${longUrl}\n\n🌟 Discover our offerings crafted with care.`;
+              const menuTemplate = `Welcome to ${bName?.name}! \n\n We’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${updateLongUrl}\n\n🍽️ View our curated menu featuring handcrafted delights.`;
+              const otherTemplate = `Welcome to ${bName?.name}! \n\n🔗 Explore our offerings: ${updateLongUrl}\n\n🌟 Discover our curated services/products crafted with care.`;
               const outletInfo = await OutLetInfo.findOne({
                 businessId: config?.businessId,
               });
               const outletType = outletInfo?.outLetType;
-                const FoodCondition = outletType === "FOOD" || outletType === "RESTAURANT" || outletType === "MENU";
+              const FoodCondition =
+                outletType === "FOOD" ||
+                outletType === "RESTAURANT" ||
+                outletType === "MENU";
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
@@ -2471,7 +2474,7 @@ const whatsappRouter = new Hono()
                   messaging_product: "whatsapp",
                   to: from,
                   text: {
-                    body: FoodCondition ? menuTemplate : otherTemplate
+                    body: FoodCondition ? menuTemplate : otherTemplate,
                   },
                 },
                 headers: {
