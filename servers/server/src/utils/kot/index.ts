@@ -45,6 +45,7 @@ interface BillPayload {
   couponDiscount: number;
   gst: string;
   fssai: string;
+  address: string;
 }
 
 export const sendKOTPrintEvent = ({
@@ -186,6 +187,7 @@ export const sendBillPrintEvent = ({
   couponDiscount,
   gst,
   fssai,
+  address,
 }: BillPayload): void => {
   axios
     .post(
@@ -212,6 +214,7 @@ export const sendBillPrintEvent = ({
           couponDiscount,
           gst,
           fssai,
+          address,
         },
       },
       {

@@ -2480,6 +2480,78 @@ const posRouter = new Hono()
           claimedCoins: tableSession?.claimedCoins || 0,
           couponDiscount: tableSession?.couponDiscount || 0,
           gst: outLetInfo?.gst || "",
+          address: outLetInfo?.address || "",
+          fssai: outLetInfo?.fssai || "",
+        });
+
+        return respond(c, "sucess", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/settle_bill_print",
+    zValidator(
+      "json",
+      z.object({
+        orderId: z.string().min(24).max(24),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { orderId } = await c.req.json();
+
+        const payment = await Payment.findOne({
+          order_id: orderId,
+          "billItems.0": { $exists: true },
+        }).populate({
+          path: "userId",
+          select: "name",
+        });
+
+        if (!payment) {
+          return respond(c, "Payment not found", true, 404, {});
+        }
+
+        const businessPosConfig = await BusinessPosConfig.findOne({
+          businessId: payment.businessId,
+          isDeleted: false,
+          active: true,
+        });
+
+        if (!businessPosConfig) {
+          return respond(c, "Pos not found", true, 400, {});
+        }
+
+        const outLetInfo = await OutLetInfo.findOne({
+          businessId: payment.businessId,
+        });
+
+        const cartItems = payment.billItems as Item[];
+
+        const billItems = groupItemsByGST(cartItems);
+
+        sendBillPrintEvent({
+          tableName: payment.tableName,
+          businessId: payment.businessId,
+          customerName: payment.userId.name || payment?.waiterName,
+          customerPhone: payment.userId.phone || payment?.pin,
+          items: billItems,
+          posRestName: businessPosConfig.restName,
+          generatedBy: payment.userId.name || payment?.waiterName,
+          date: Date.now(),
+          serviceCharge: payment.serviceCharge || 0,
+          discount: payment.discount || 0,
+          tax: payment.tax || 0,
+          total: payment.total || 0,
+          billRequestId: payment?.posBillId || "",
+          subTotal: payment?.billValue || 0,
+          tips: payment?.tips || 0,
+          claimedCoins: payment?.claimedCoins || 0,
+          couponDiscount: payment?.couponDiscount || 0,
+          gst: outLetInfo?.gst || "",
+          address: outLetInfo?.address || "",
 
           fssai: outLetInfo?.fssai || "",
         });
