@@ -49,6 +49,7 @@ export const kotSchema = z.object({
   bill: z.boolean().default(false).optional(),
   isDeleted: z.boolean().default(false).optional(),
   isSync: z.boolean().default(false).optional(),
+  kotInvoiceNumber: z.number().default(0).optional(),
 });
 
 export type KotOrderType = z.infer<typeof kotSchema>;

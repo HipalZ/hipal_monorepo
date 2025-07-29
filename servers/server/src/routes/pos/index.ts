@@ -100,6 +100,7 @@ const saveKotOrder = async (
 
   return {
     kotId: saveKot[0]._id,
+    kotInvoiceNumber: saveKot[0].kotInvoiceNumber,
   };
 };
 
@@ -189,6 +190,7 @@ const saveOrder = async (
       name: customerName,
       phone: customerPhone,
       kotId: resData?.kotId?.toString(),
+      kotInvoiceNumber: resData?.kotInvoiceNumber,
     },
   };
 };
@@ -1481,6 +1483,7 @@ const posRouter = new Hono()
               kotId: result?.data?.kotId?.toString() ?? "",
               date: Date.now(),
               posRestName: posConfigData?.restName,
+              kotInvoiceNumber: result?.data?.kotInvoiceNumber,
             });
 
             return c.json(result, 200);
@@ -1541,6 +1544,7 @@ const posRouter = new Hono()
             kotId: result?.data?.kotId?.toString() ?? "",
             date: Date.now(),
             posRestName: posConfigData?.restName,
+            kotInvoiceNumber: result?.data?.kotInvoiceNumber,
           });
 
           return c.json(result, 200);
@@ -1784,6 +1788,7 @@ const posRouter = new Hono()
             kotId: res?.kotId?.toString() ?? "",
             date: Date.now(),
             posRestName: pos?.restName,
+            kotInvoiceNumber: res?.kotInvoiceNumber,
           });
 
           return respond(c, "Data fetched successfully", false, 200, {
@@ -1838,6 +1843,7 @@ const posRouter = new Hono()
           kotId: res?.kotId?.toString() ?? "",
           date: Date.now(),
           posRestName: pos?.restName,
+          kotInvoiceNumber: res?.kotInvoiceNumber,
         });
         return respond(c, "Data fetched successfully", false, 200, {
           success: true,
@@ -2479,6 +2485,7 @@ const posRouter = new Hono()
           gst: outLetInfo?.gst || "",
           address: outLetInfo?.address || "",
           fssai: outLetInfo?.fssai || "",
+          billInvoiceNumber: tableSession?.billInvoiceNumber || 0,
         });
 
         return respond(c, "sucess", true, 200, {});
@@ -2551,6 +2558,7 @@ const posRouter = new Hono()
           address: outLetInfo?.address || "",
 
           fssai: outLetInfo?.fssai || "",
+          billInvoiceNumber: payment?.billInvoiceNumber || 0,
         });
 
         return respond(c, "sucess", true, 200, {});

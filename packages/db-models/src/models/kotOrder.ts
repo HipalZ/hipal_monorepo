@@ -1,6 +1,7 @@
 import mongoose, { Schema, type Model } from "mongoose";
+import autoIncrement from "mongoose-auto-increment";
 import type { KotOrderItemType, KotOrderType } from "../validators";
-
+autoIncrement.initialize(mongoose.connection);
 // Define ObjectId for convenience
 const ObjectId = Schema.Types.ObjectId;
 
@@ -149,11 +150,22 @@ const KotOrderSchema = new Schema<KotOrderType>(
       type: Boolean,
       default: false,
     },
+    kotInvoiceNumber: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,
   },
 );
+
+KotOrderSchema.plugin(autoIncrement.plugin, {
+  model: "kotorder",
+  field: "kotInvoiceNumber", // <-- Will be added automatically
+  startAt: 1,
+  incrementBy: 1,
+});
 
 const KotOrder: Model<KotOrderType> = mongoose.model<KotOrderType>(
   "kotorder",

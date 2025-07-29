@@ -1,6 +1,8 @@
 import type { Model } from "mongoose";
 import mongoose from "mongoose";
+import autoIncrement from "mongoose-auto-increment";
 import type { UserSessionSchemaType } from "../validators";
+autoIncrement.initialize(mongoose.connection);
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
   businessId: {
@@ -216,6 +218,18 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     type: [String],
     required: false,
   },
+  billInvoiceNumber: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+});
+
+userSessionSchema.plugin(autoIncrement.plugin, {
+  model: "usersession",
+  field: "billInvoiceNumber", // <-- Will be added automatically
+  startAt: 1,
+  incrementBy: 1,
 });
 
 userSessionSchema.index({ businessId: 1, tableName: 1 }, { unique: true });

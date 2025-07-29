@@ -154,6 +154,7 @@ const kotRouter = new Hono()
           kotId: kot.id.toString(),
           date: Date.now(),
           posRestName: kot.businessId.name,
+          kotInvoiceNumber: kot.kotInvoiceNumber,
         });
 
         return c.json(
@@ -349,6 +350,7 @@ const kotRouter = new Hono()
             kotId: nanoid(10),
             date: Date.now(),
             posRestName: pos?.restName,
+            kotInvoiceNumber: kotDoc.kotInvoiceNumber,
           });
         }
 
@@ -468,6 +470,7 @@ const kotRouter = new Hono()
             kotId: kot._id.toString(),
             date: Date.now(),
             posRestName: pos?.restName,
+            kotInvoiceNumber: kot.kotInvoiceNumber,
           });
 
           return respond(c, "Data fetched successfully", false, 200, {

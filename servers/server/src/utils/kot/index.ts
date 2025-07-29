@@ -10,6 +10,7 @@ interface KOTPayload {
   posRestName?: string;
   acceptedBy: string;
   date: number;
+  kotInvoiceNumber?: number;
 }
 
 interface DeleteKOTPayload {
@@ -23,6 +24,7 @@ interface DeleteKOTPayload {
   acceptedBy: string;
   deletedBy: string;
   date: number;
+  kotInvoiceNumber?: number;
 }
 
 interface BillPayload {
@@ -46,6 +48,7 @@ interface BillPayload {
   gst: string;
   fssai: string;
   address: string;
+  billInvoiceNumber: number;
 }
 
 export const sendKOTPrintEvent = ({
@@ -58,6 +61,7 @@ export const sendKOTPrintEvent = ({
   kotId,
   date,
   posRestName,
+  kotInvoiceNumber,
 }: KOTPayload): void => {
   axios
     .post(
@@ -74,6 +78,7 @@ export const sendKOTPrintEvent = ({
           kotId,
           date,
           businessName: posRestName,
+          kotInvoiceNumber,
         },
       },
       {
@@ -97,6 +102,7 @@ export const sendReKOTPrintEvent = ({
   kotId,
   date,
   posRestName,
+  kotInvoiceNumber,
 }: KOTPayload): void => {
   axios
     .post(
@@ -113,6 +119,7 @@ export const sendReKOTPrintEvent = ({
           kotId,
           date,
           businessName: posRestName,
+          kotInvoiceNumber,
         },
       },
       {
@@ -137,6 +144,7 @@ export const deleteKOTPrintEvent = ({
   kotId,
   date,
   posRestName,
+  kotInvoiceNumber,
 }: DeleteKOTPayload): void => {
   axios
     .post(
@@ -154,6 +162,7 @@ export const deleteKOTPrintEvent = ({
           date,
           businessName: posRestName,
           acceptedBy,
+          kotInvoiceNumber,
         },
       },
       {
@@ -188,6 +197,7 @@ export const sendBillPrintEvent = ({
   gst,
   fssai,
   address,
+  billInvoiceNumber,
 }: BillPayload): void => {
   axios
     .post(
@@ -215,6 +225,7 @@ export const sendBillPrintEvent = ({
           gst,
           fssai,
           address,
+          billInvoiceNumber,
         },
       },
       {
