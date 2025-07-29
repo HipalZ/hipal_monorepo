@@ -2558,7 +2558,7 @@ const posRouter = new Hono()
           address: outLetInfo?.address || "",
 
           fssai: outLetInfo?.fssai || "",
-          billInvoiceNumber: payment?.billInvoiceNumber || 0,
+          billInvoiceNumber: payment?.billInvoice || 0,
         });
 
         return respond(c, "sucess", true, 200, {});

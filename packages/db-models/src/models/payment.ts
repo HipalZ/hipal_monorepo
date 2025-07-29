@@ -238,7 +238,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: String,
       required: false,
     },
-    billInvoiceNumber: {
+    billInvoice: {
       type: Number,
       default: 0,
     },
@@ -249,7 +249,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
 
 paymentSchema.plugin(autoIncrement.plugin, {
   model: "Payment",
-  field: "billInvoiceNumber", // <-- Will be added automatically
+  field: "billInvoice", // <-- Will be added automatically
   startAt: 1,
   incrementBy: 1,
 });

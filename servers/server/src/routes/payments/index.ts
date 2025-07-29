@@ -58,6 +58,9 @@ import {
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import type { KotOrderTypes } from "../../utils/bill";
 import { getMerchantConfig } from "../../utils/cacheHelper";
+import getDefault4AMToNext4AM, {
+  adjustFromToTimestamps,
+} from "../../utils/defaultBillingTime";
 import { convertToPetpoojaCart } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 // import { queueClient } from "../../utils/queue/queueClient";
@@ -67,8 +70,6 @@ import {
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 import { generateTenDigitCode, sendPushNotification } from "../pos/index.js";
-import { adjustFromToTimestamps } from "../../utils/defaultBillingTime";
-import getDefault4AMToNext4AM from "../../utils/defaultBillingTime";
 const admin = require("firebase-admin");
 // Hash a passwordss
 
@@ -2691,6 +2692,8 @@ const paymentsRouter = new Hono()
       let totalClaimedCoins = 0;
       let totalEarnCoins = 0;
       let totalDiscount = 0;
+      let totalCouponDiscount = 0;
+      let totalSubtotal = 0;
 
       const rows = existingPayments.map((payment: any) => {
         const {
@@ -2712,7 +2715,7 @@ const paymentsRouter = new Hono()
           finalSubTotal = 0,
           tax = 0,
           serviceCharge = 0,
-          total: finalTotal = 0,
+          total,
           order_id,
           waiterName,
           posBillId,
@@ -2720,6 +2723,9 @@ const paymentsRouter = new Hono()
           settleType,
           comment,
           splitModes = [],
+          billInvoice,
+          couponDiscount,
+          subTotal,
         } = payment;
 
         // aggregate totals
@@ -2730,11 +2736,13 @@ const paymentsRouter = new Hono()
         totalFinalSubTotal += finalSubTotal;
         totalTax += tax;
         totalServiceCharge += serviceCharge;
-        totalAmount += finalTotal;
+        totalAmount += total;
         totalTips += tips;
         totalClaimedCoins += claimedCoins;
         totalEarnCoins += earnCoins;
         totalDiscount += discount;
+        totalCouponDiscount += couponDiscount;
+        totalSubtotal += billValue;
 
         // flatten splitModes
         const splitInfo = Array.isArray(splitModes)
@@ -2753,7 +2761,7 @@ const paymentsRouter = new Hono()
           INITIAL_SUBTOTAL: initialSubTotal,
           INITIAL_TAX: initialTax,
           INITIAL_TOTAL: initialTotal,
-          SUBTOTAL: finalSubTotal === 0 ? initialSubTotal : finalSubTotal,
+          SUBTOTAL: billValue,
           CLAIMED_COINS: claimedCoins,
           EARNED_COINS: earnCoins,
           DISCOUNT: discount,
@@ -2761,7 +2769,7 @@ const paymentsRouter = new Hono()
           TAX: tax,
           SERVICE_CHARGE: serviceCharge,
           TIPS: tips,
-          TOTAL: finalTotal,
+          TOTAL: total,
           MODES: splitInfo,
           SETTLE_TYPE: settleType,
           COMMENT: comment,
@@ -2769,6 +2777,8 @@ const paymentsRouter = new Hono()
           POS_BILL_ID: posBillId,
           POS_BILL_REQUEST_ID: posBillRequestId,
           ORDER_ID: order_id?._id.toString() ?? "",
+          COUPON_DISCOUNT: couponDiscount,
+          BILL_INVOICE: billInvoice,
         };
       });
 
@@ -2801,6 +2811,8 @@ const paymentsRouter = new Hono()
         POS_BILL_ID: "",
         POS_BILL_REQUEST_ID: "",
         ORDER_ID: "",
+        COUPON_DISCOUNT: "",
+        BILL_INVOICE: 0,
       });
 
       const csvString = Papa.unparse(rows, {
