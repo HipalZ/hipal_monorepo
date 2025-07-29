@@ -45,6 +45,7 @@ import {
 } from "@/components/hooks/useBill";
 import { BiSync } from "react-icons/bi";
 import EBill from "./ebill.tsx";
+import type { IBillData } from "@/components/types/hiClientzData.ts";
 
 const MemoGetBill = () => {
   const { businessId } = useParams();
@@ -69,6 +70,7 @@ const MemoGetBill = () => {
   const { removingServiceChargeLoader, removingServiceCharge } =
     useRemoveServiceCharge();
   const existingLoyalty = useBusinessData((s) => s.existingLoyalty);
+  const setActiveModal = useOrderStore((s) => s.setActiveModal);
 
   const closeOrderModalHandler = useCallback(() => {
     setOpenOrderModal(false);
@@ -93,6 +95,7 @@ const MemoGetBill = () => {
 
   const closeMoreOptions = () => {
     setShowMoreOption(false);
+    setActiveModal("options");
   };
 
   const openNormalSettle = useCallback(async () => {
@@ -155,18 +158,10 @@ const MemoGetBill = () => {
     });
   };
 
-  const removeServiceCharge = () => {
-    const confirmReplace = window.confirm(
-      "Applying this will remove your Service Charge. Continue?",
-    );
-    if (!confirmReplace) return;
-    removingServiceCharge({
-      businessId: businessId || "",
-      tableName: billData?.tableName,
-      serviceChargeRemovedBy: userData?._id || "",
-      reasonOfServiceCharge: "Service Charge Removed by Customer",
-    });
-  };
+  const openServiceChargeModal = useCallback(() => {
+    setShowMoreOption(true);
+    setActiveModal("serviceCharge");
+  }, []);
 
   // Helper function to calculate item total price
   const calculateItemTotal = (item: IBillData["billItems"][0]["items"][0]) => {
@@ -525,14 +520,11 @@ const MemoGetBill = () => {
                       }}
                       className="flex justify-between items-center text-sm"
                     >
-                        <p className="text-gray-700 capitalize flex gap-2 items-center">
+                      <p className="text-gray-700 capitalize flex gap-2 items-center">
                         {key
                           .replace(/([A-Z])/g, " $1")
                           .replace(/^./, (str) => str.toUpperCase())}
-                        {(key === "serviceCharge" || key === "discount") && (
-                          <Edit size={16} />
-                        )}
-                        </p>
+                      </p>
                       <div className="flex items-center space-x-2">
                         <p
                           className={`font-medium ${
@@ -556,6 +548,24 @@ const MemoGetBill = () => {
                           <button
                             type="button"
                             onClick={removeCoupon}
+                            className="text-red-600 text-2xl hover:underline"
+                          >
+                            <IoClose />
+                          </button>
+                        )}
+                        {key === "serviceCharge" && (
+                          <button
+                            type="button"
+                            onClick={openServiceChargeModal}
+                            className="text-red-600 text-2xl hover:underline"
+                          >
+                            <IoClose />
+                          </button>
+                        )}
+                        {key === "discount" && (
+                          <button
+                            type="button"
+                            onClick={() => setActiveModal("discount")}
                             className="text-red-600 text-2xl hover:underline"
                           >
                             <IoClose />

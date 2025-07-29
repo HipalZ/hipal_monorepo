@@ -268,6 +268,7 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
       };
 
       await removingDiscount(payload);
+
       onClose();
     } catch (err: any) {
       toast.error(err.message || "Failed to remove discount.");
