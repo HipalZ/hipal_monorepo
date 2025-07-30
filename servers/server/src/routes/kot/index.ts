@@ -208,6 +208,7 @@ const kotRouter = new Hono()
             name: 1,
             phone: 1,
             isDeleted: 1,
+            kotInvoiceNumber: 1,
           },
         ).session(session);
 
