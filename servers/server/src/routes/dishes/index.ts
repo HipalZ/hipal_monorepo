@@ -140,7 +140,7 @@ const dishesRouter = new Hono()
             )
             .lean();
 
-            console.log("posDishEditFields", posDishEditFields);
+          console.log("posDishEditFields", posDishEditFields);
 
           if (!posDishEditFields) {
             return respond(c, "POS dish config not found", true, 400, {});
@@ -535,6 +535,60 @@ const dishesRouter = new Hono()
           message: "Created successfully",
           data: {},
         });
+      });
+    },
+  )
+
+  .put(
+    "/availability/bulk",
+    zValidator(
+      "json",
+      z.object({
+        dishIds: z.array(z.string()).min(1).max(26),
+        availability: z.boolean(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { dishIds, availability } = await c.req.json();
+
+        const updateDishes = await Dish.updateMany(
+          { _id: { $in: dishIds } },
+          { $set: { availability } },
+        );
+
+        if (!updateDishes)
+          return respond(c, "Error in updating", true, 400, {});
+        return respond(c, "Updated successfully", false, 200, {});
+      });
+    },
+  )
+
+  .put(
+    "/visibility/bulk",
+    zValidator(
+      "json",
+      z.object({
+        dishIds: z.array(z.string()).min(1).max(26),
+        visibility: z.boolean(),
+      }),
+    ),
+
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { dishIds, visibility } = await c.req.json();
+
+        const updateDishes = await Dish.updateMany(
+          { _id: { $in: dishIds } },
+          { $set: { visibility } },
+        );
+
+        if (!updateDishes)
+          return respond(c, "Error in updating", true, 400, {});
+        return respond(c, "Updated successfully", false, 200, {});
       });
     },
   );
