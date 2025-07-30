@@ -3733,6 +3733,39 @@ const paymentsRouter = new Hono()
         },
       });
     },
+  )
+
+  .get(
+    "/fetch_bill_by_order_id",
+
+    zValidator(
+      "query",
+      z.object({
+        orderId: z.string(),
+      }),
+    ),
+
+    async (c) => {
+      const { orderId } = c.req.query();
+
+      const payment = await Payment.findOne({
+        order_id: orderId,
+      });
+
+      if (!payment) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "Payment not found",
+        });
+      }
+
+      return c.json({
+        err: false,
+        data: payment,
+        message: "Payment found",
+      });
+    },
   );
 
 export default paymentsRouter;
