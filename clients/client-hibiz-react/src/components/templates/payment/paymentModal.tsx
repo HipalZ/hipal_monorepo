@@ -106,7 +106,7 @@ const PaymentModal = ({
   const { data: modes } = useAllModes();
   const controls = useAnimation();
   const [dragDirection, setDragDirection] = useState<number>(0);
-  const { billPrinting, reprintBill } = useReprintBill();
+  const { reprintBill } = useReprintBill();
 
   const { isPending, mutateAsync } = useMutation({
     mutationFn: async (billId: string) => {
