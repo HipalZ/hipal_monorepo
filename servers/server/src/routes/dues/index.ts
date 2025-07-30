@@ -3,6 +3,7 @@ import {
   DuesUser,
   Order,
   Payment,
+  PendingDues,
   UpiMode,
   User,
 } from "@hi/db-models";
@@ -151,13 +152,13 @@ const duesRouter = new Hono()
       const { duesUserId, businessId } = c.req.param();
 
       let duesHistory = await DuesHistory.find({
-        userId: duesUserId,
+        duesUserId: duesUserId,
       });
 
       // If no dues history, create a new one
       if (duesHistory.length === 0) {
         const newHistory = await DuesHistory.create({
-          userId: duesUserId,
+          duesUserId: duesUserId,
           billInvoiceNumber: 0,
           settleAmount: 0,
           orderId: null,
@@ -166,10 +167,18 @@ const duesRouter = new Hono()
         duesHistory = [newHistory]; // Wrap in array to match return type
       }
 
+      const pendingDues = await PendingDues.find({
+        duesUserId: duesUserId,
+        isSettled: false,
+        businessId,
+      });
+
+      const billIds = pendingDues.map((due) => due.billId);
+
       const payments = await Payment.find({
         businessId,
         mode: "dues",
-        userId: duesUserId,
+        _id: { $in: billIds },
       });
 
       const Obj: {
@@ -283,7 +292,7 @@ const duesRouter = new Hono()
         orderId: saveOrder[0]._id,
         billInvoiceNumber: savePayment[0].billInvoice,
         settleAmount: totalAmount,
-        userId: duesUser?.userId,
+        duesUserId: duesUser?._id.toString(),
         date: Date.now(),
       });
 

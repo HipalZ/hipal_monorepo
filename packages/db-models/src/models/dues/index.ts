@@ -18,10 +18,11 @@ const duesHistorySchema = new mongoose.Schema({
     required: false,
     default: 0,
   },
-  userId: {
+  duesUserId: {
     type: ObjectId,
     required: false,
-    ref: "User",
+    ref: "duesuser",
+    default: null,
   },
   date: {
     type: Number,
