@@ -237,6 +237,34 @@ const passwordManagerRouter = new Hono()
         );
       });
     },
+  )
+
+  .get(
+    "/fetch_without_password",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(1).max(24),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const { businessId } = c.req.query();
+
+        const passwords = await PasswordManager.find({ businessId }).select(
+          "name isActive",
+        );
+
+        return respond(
+          c,
+          "Passwords fetched successfully",
+          false,
+          200,
+          passwords,
+        );
+      });
+    },
   );
 
 export default passwordManagerRouter;
