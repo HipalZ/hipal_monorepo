@@ -432,169 +432,166 @@ const paymentsRouter = new Hono()
     zValidator("param", z.object({ merchantId: z.string() })),
 
     async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
-        const {
-          total,
-          billValue,
-          tableName,
-          tips,
-          currency,
-          userId,
-          claimedCoins,
-          businessId,
-          couponId,
-          channelId,
-          cashbackAvailable,
-          posBillId,
-        } = requestData;
-        const { merchantId } = c.req.param();
-        const uniqueOrderId = nanoid(15);
+      const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
+      const {
+        total,
+        billValue,
+        tableName,
+        tips,
+        currency,
+        userId,
+        claimedCoins,
+        businessId,
+        couponId,
+        channelId,
+        cashbackAvailable,
+        posBillId,
+      } = requestData;
 
-        const tableSession = await UserSession.findOne({
-          businessId,
+      const tableSession = await UserSession.findOne({
+        businessId,
+        tableName,
+      });
+
+      const businessPosConfig = await BusinessPosConfig.findOne({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
+
+      if (businessPosConfig) {
+        const kotOrders = (await KotOrder.find({
           tableName,
+          settled: false,
+          accepted: true,
+          businessId,
+          isSync: false,
+        }).lean()) as KotOrderTypes[];
+
+        const cartItems = kotOrders.flatMap((order) =>
+          order.cart.filter((item) => !item.isDeleted),
+        );
+
+        const unsettleTable = await UnsettleTable.find({
+          businessId,
+          restId: businessPosConfig.restId,
+          sync: false,
         });
 
-        const businessPosConfig = await BusinessPosConfig.findOne({
-          businessId,
-          isDeleted: false,
-          active: true,
-        });
-
-        if (businessPosConfig) {
-          const kotOrders = (await KotOrder.find({
-            tableName,
-            settled: false,
-            accepted: true,
-            businessId,
-            isSync: false,
-          }).lean()) as KotOrderTypes[];
-
-          const cartItems = kotOrders.flatMap((order) =>
-            order.cart.filter((item) => !item.isDeleted),
-          );
-
-          const unsettleTable = await UnsettleTable.find({
-            businessId,
-            restId: businessPosConfig.restId,
-            sync: false,
-          });
-
-          for (const table of unsettleTable) {
-            const payload = {
-              app_key: businessPosConfig.accessKey,
-              app_secret: businessPosConfig.secretKey,
-              access_token: businessPosConfig.authToken,
-              restID: businessPosConfig.restId,
-              pin: table?.pin,
-              tableNo: table?.tableName,
-            };
-
-            const response = await axios.post(
-              posApiPaths.requestBill,
-              payload,
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              },
-            );
-
-            if (
-              response.data.success === "1" &&
-              response.data?.bill_request_id?.length > 2
-            ) {
-              const updateSettleTable = await UnsettleTable.findOneAndUpdate(
-                { _id: table._id },
-                {
-                  $set: {
-                    sync: true,
-                  },
-                },
-                { session, new: true },
-              );
-              const res = await axios.post(posApiPaths.settleTable, {
-                app_key: businessPosConfig.accessKey,
-                app_secret: businessPosConfig.secretKey,
-                access_token: businessPosConfig.authToken,
-                restID: businessPosConfig.restId,
-                bill_request_id: response.data.bill_request_id,
-                amount_paid: table?.total,
-                pin: table?.pin,
-              });
-            }
-          }
-
-          const newPin = generateTenDigitCode();
-          const registerUser = await axios.post(posApiPaths.registerUser, {
+        for (const table of unsettleTable) {
+          const payload = {
             app_key: businessPosConfig.accessKey,
             app_secret: businessPosConfig.secretKey,
             access_token: businessPosConfig.authToken,
             restID: businessPosConfig.restId,
-            phone: newPin,
+            pin: table?.pin,
+            tableNo: table?.tableName,
+          };
+
+          const response = await axios.post(posApiPaths.requestBill, payload, {
+            headers: {
+              "Content-Type": "application/json",
+            },
           });
 
-          await UserSession.findOneAndUpdate(
+          if (
+            response.data.success === "1" &&
+            response.data?.bill_request_id?.length > 2
+          ) {
+            const updateSettleTable = await UnsettleTable.findOneAndUpdate(
+              { _id: table._id },
+              {
+                $set: {
+                  sync: true,
+                },
+              },
+              { new: true },
+            );
+            const res = await axios.post(posApiPaths.settleTable, {
+              app_key: businessPosConfig.accessKey,
+              app_secret: businessPosConfig.secretKey,
+              access_token: businessPosConfig.authToken,
+              restID: businessPosConfig.restId,
+              bill_request_id: response.data.bill_request_id,
+              amount_paid: table?.total,
+              pin: table?.pin,
+            });
+          }
+        }
+
+        const newPin = generateTenDigitCode();
+        const registerUser = await axios.post(posApiPaths.registerUser, {
+          app_key: businessPosConfig.accessKey,
+          app_secret: businessPosConfig.secretKey,
+          access_token: businessPosConfig.authToken,
+          restID: businessPosConfig.restId,
+          phone: newPin,
+        });
+
+        await UserSession.findOneAndUpdate(
+          {
+            tableName: tableName,
+            businessId: businessId,
+          },
+          {
+            $set: {
+              pin: newPin,
+            },
+          },
+          { new: true },
+        );
+
+        if (kotOrders.length > 0) {
+          const petpoojaCart = convertToPetpoojaCart(
+            cartItems,
+            businessPosConfig.restId,
+            tableSession?.customerName,
+            tableSession?.pin,
+            tableName,
+            businessPosConfig.accessKey,
+            businessPosConfig.secretKey,
+            businessPosConfig.authToken,
+          );
+
+          await KotOrder.updateMany(
             {
-              tableName: tableName,
-              businessId: businessId,
+              tableName,
+              settled: false,
+              accepted: true,
+              businessId,
             },
             {
               $set: {
-                pin: newPin,
+                isSync: true,
               },
             },
-            { session, new: true },
           );
 
-          if (kotOrders.length > 0) {
-            const petpoojaCart = convertToPetpoojaCart(
-              cartItems,
-              businessPosConfig.restId,
-              tableSession?.customerName,
-              tableSession?.pin,
+          await UserSession.findOneAndUpdate(
+            {
               tableName,
-              businessPosConfig.accessKey,
-              businessPosConfig.secretKey,
-              businessPosConfig.authToken,
-            );
-
-            await KotOrder.updateMany(
-              {
-                tableName,
-                settled: false,
-                accepted: true,
-                businessId,
+              businessId,
+            },
+            {
+              $set: {
+                isUserRegistered: true,
+                billRequest: true,
               },
-              {
-                $set: {
-                  isSync: true,
-                },
-              },
-            );
+            },
+          );
 
-            await UserSession.findOneAndUpdate(
-              {
-                tableName,
-                businessId,
-              },
-              {
-                $set: {
-                  isUserRegistered: true,
-                  billRequest: true,
-                },
-              },
-            );
+          const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
 
-            const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
-
-            if (saveKot.data.success === "0") {
-              return respond(c, "KOT not saved", true, 400, {});
-            }
+          if (saveKot.data.success === "0") {
+            return respond(c, "KOT not saved", true, 400, {});
           }
         }
+      }
+
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { merchantId } = c.req.param();
+        const uniqueOrderId = nanoid(15);
 
         const client = await razorpayWrapper.getClient(merchantId);
         const response = await client.orders.create({
@@ -690,185 +687,182 @@ const paymentsRouter = new Hono()
     zValidator("json", razorpayOrderSchema),
 
     async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
-        const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
-        const {
-          total,
-          billValue,
-          tableName,
-          tips,
-          currency,
-          userId,
-          claimedCoins,
-          businessId,
-          couponId,
-          channelId,
-          cashbackAvailable,
-          posBillId,
-        } = requestData;
-        const uniqueOrderId = nanoid(15);
+      const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
+      const {
+        total,
+        billValue,
+        tableName,
+        tips,
+        currency,
+        userId,
+        claimedCoins,
+        businessId,
+        couponId,
+        channelId,
+        cashbackAvailable,
+        posBillId,
+      } = requestData;
 
-        const tableSession = await UserSession.findOne({
+      const tableSession = await UserSession.findOne({
+        tableName,
+        businessId,
+      });
+
+      const orderAlreadyExist = await PaymentAlert.findOne({
+        businessId,
+        tableName,
+        alertType: "OFFLINE",
+        isAccepted: false,
+      });
+
+      if (orderAlreadyExist)
+        return respond(
+          c,
+          "A request for this service is already in progress. Please wait for the staff to take action",
+          true,
+          400,
+          {},
+        );
+
+      const businessPosConfig = await BusinessPosConfig.findOne({
+        businessId,
+        isDeleted: false,
+        active: true,
+      });
+
+      if (businessPosConfig) {
+        const kotOrders = (await KotOrder.find({
           tableName,
+          settled: false,
+          accepted: true,
           businessId,
+          isSync: false,
+        }).lean()) as KotOrderTypes[];
+
+        const cartItems = kotOrders.flatMap((order) =>
+          order.cart.filter((item) => !item.isDeleted),
+        );
+
+        const unsettleTable = await UnsettleTable.find({
+          businessId,
+          restId: businessPosConfig.restId,
+          sync: false,
         });
 
-        const orderAlreadyExist = await PaymentAlert.findOne({
-          businessId,
-          tableName,
-          alertType: "OFFLINE",
-          isAccepted: false,
-        });
-
-        if (orderAlreadyExist)
-          return respond(
-            c,
-            "A request for this service is already in progress. Please wait for the staff to take action",
-            true,
-            400,
-            {},
-          );
-
-        const businessPosConfig = await BusinessPosConfig.findOne({
-          businessId,
-          isDeleted: false,
-          active: true,
-        });
-
-        if (businessPosConfig) {
-          const kotOrders = (await KotOrder.find({
-            tableName,
-            settled: false,
-            accepted: true,
-            businessId,
-            isSync: false,
-          }).lean()) as KotOrderTypes[];
-
-          const cartItems = kotOrders.flatMap((order) =>
-            order.cart.filter((item) => !item.isDeleted),
-          );
-
-          const unsettleTable = await UnsettleTable.find({
-            businessId,
-            restId: businessPosConfig.restId,
-            sync: false,
-          });
-
-          for (const table of unsettleTable) {
-            const payload = {
-              app_key: businessPosConfig.accessKey,
-              app_secret: businessPosConfig.secretKey,
-              access_token: businessPosConfig.authToken,
-              restID: businessPosConfig.restId,
-              pin: table?.pin,
-              tableNo: table?.tableName,
-            };
-
-            const response = await axios.post(
-              posApiPaths.requestBill,
-              payload,
-              {
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              },
-            );
-
-            if (
-              response.data.success === "1" &&
-              response.data?.bill_request_id?.length > 2
-            ) {
-              const updateSettleTable = await UnsettleTable.findOneAndUpdate(
-                { _id: table._id },
-                {
-                  $set: {
-                    sync: true,
-                  },
-                },
-                { session, new: true },
-              );
-              const res = await axios.post(posApiPaths.settleTable, {
-                app_key: businessPosConfig.accessKey,
-                app_secret: businessPosConfig.secretKey,
-                access_token: businessPosConfig.authToken,
-                restID: businessPosConfig.restId,
-                bill_request_id: response.data.bill_request_id,
-                amount_paid: table?.total,
-                pin: table?.pin,
-              });
-            }
-          }
-
-          const newPin = generateTenDigitCode();
-          const registerUser = await axios.post(posApiPaths.registerUser, {
+        for (const table of unsettleTable) {
+          const payload = {
             app_key: businessPosConfig.accessKey,
             app_secret: businessPosConfig.secretKey,
             access_token: businessPosConfig.authToken,
             restID: businessPosConfig.restId,
-            phone: newPin,
+            pin: table?.pin,
+            tableNo: table?.tableName,
+          };
+
+          const response = await axios.post(posApiPaths.requestBill, payload, {
+            headers: {
+              "Content-Type": "application/json",
+            },
           });
 
-          await UserSession.findOneAndUpdate(
+          if (
+            response.data.success === "1" &&
+            response.data?.bill_request_id?.length > 2
+          ) {
+            const updateSettleTable = await UnsettleTable.findOneAndUpdate(
+              { _id: table._id },
+              {
+                $set: {
+                  sync: true,
+                },
+              },
+              { new: true },
+            );
+            const res = await axios.post(posApiPaths.settleTable, {
+              app_key: businessPosConfig.accessKey,
+              app_secret: businessPosConfig.secretKey,
+              access_token: businessPosConfig.authToken,
+              restID: businessPosConfig.restId,
+              bill_request_id: response.data.bill_request_id,
+              amount_paid: table?.total,
+              pin: table?.pin,
+            });
+          }
+        }
+
+        const newPin = generateTenDigitCode();
+        const registerUser = await axios.post(posApiPaths.registerUser, {
+          app_key: businessPosConfig.accessKey,
+          app_secret: businessPosConfig.secretKey,
+          access_token: businessPosConfig.authToken,
+          restID: businessPosConfig.restId,
+          phone: newPin,
+        });
+
+        await UserSession.findOneAndUpdate(
+          {
+            tableName: tableName,
+            businessId: businessId,
+          },
+          {
+            $set: {
+              pin: newPin,
+            },
+          },
+          { new: true },
+        );
+
+        if (kotOrders.length > 0) {
+          const petpoojaCart = convertToPetpoojaCart(
+            cartItems,
+            businessPosConfig.restId,
+            kotOrders[0].name,
+            tableSession?.pin,
+            tableName,
+            businessPosConfig.accessKey,
+            businessPosConfig.secretKey,
+
+            businessPosConfig.authToken,
+          );
+
+          await KotOrder.updateMany(
             {
-              tableName: tableName,
-              businessId: businessId,
+              tableName,
+              settled: false,
+              accepted: true,
+              businessId,
             },
             {
               $set: {
-                pin: newPin,
+                isSync: true,
               },
             },
-            { session, new: true },
           );
 
-          if (kotOrders.length > 0) {
-            const petpoojaCart = convertToPetpoojaCart(
-              cartItems,
-              businessPosConfig.restId,
-              kotOrders[0].name,
-              tableSession?.pin,
+          await UserSession.findOneAndUpdate(
+            {
               tableName,
-              businessPosConfig.accessKey,
-              businessPosConfig.secretKey,
-
-              businessPosConfig.authToken,
-            );
-
-            await KotOrder.updateMany(
-              {
-                tableName,
-                settled: false,
-                accepted: true,
-                businessId,
+              businessId,
+            },
+            {
+              $set: {
+                isUserRegistered: true,
+                billRequest: true,
               },
-              {
-                $set: {
-                  isSync: true,
-                },
-              },
-            );
+            },
+          );
 
-            await UserSession.findOneAndUpdate(
-              {
-                tableName,
-                businessId,
-              },
-              {
-                $set: {
-                  isUserRegistered: true,
-                  billRequest: true,
-                },
-              },
-            );
+          const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
 
-            const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
-
-            if (saveKot.data.success === "0") {
-              return respond(c, "Error in saving kot", true, 400, {});
-            }
+          if (saveKot.data.success === "0") {
+            return respond(c, "Error in saving kot", true, 400, {});
           }
         }
+      }
+
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const uniqueOrderId = nanoid(15);
 
         const saveOrder = await Order.create(
           [
@@ -1734,10 +1728,7 @@ const paymentsRouter = new Hono()
       const requestData = await c.req.json();
       const { businessId, tableName, message, userId } = requestData;
 
-      const appInfo = await DeviceToken.findOne({
-        token: { $exists: true },
-        v: { $exists: true },
-      });
+     
 
       const tableInfo = await Table.findOne({ businessId, name: tableName });
 
@@ -1757,17 +1748,55 @@ const paymentsRouter = new Hono()
         date: Date.now(),
         order_id: new ObjectId(),
         hiCode: hiCode,
-        v: appInfo?.v,
-        appUrl: appInfo?.appUrl,
-        updateFeature: appInfo?.updateFeature,
       });
 
       const registrationToken = await DeviceToken.find({
         businessId: businessId,
       });
 
+      if (registrationToken.length > 0) {
+        for (const obj of registrationToken) {
+          if (obj.notification) {
+            const pushMessage = {
+              token: obj.token, // or use 'topic' if you're sending to a topic
+              notification: {
+                title: "Hi Captain !!",
+                body: `T-${tableName?.slice(-2)} : ${message}`,
+              },
+              android: {
+                notification: {
+                  channel_id: "custom_channel_id",
+                  sound: "order",
+                },
+              },
+            };
+
+            admin
+              .messaging()
+              .send(pushMessage)
+              .then((response: unknown) => {
+                return c.json({
+                  message: "FCM message sent successfully",
+                  err: false,
+                  data: response,
+                });
+              })
+              .catch((err: Error) => {
+                return c.json(
+                  {
+                    message: "Error sending FCM message",
+                    err: true,
+                    data: {},
+                  },
+                  400,
+                );
+              });
+          }
+        }
+      }
+
       return respond(c, "Alert created successfully", false, 200, alert);
-    },
+    }
   )
   .get(
     "/:id/paymentAlerts",

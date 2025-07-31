@@ -47,8 +47,7 @@ const surlRouter = new Hono()
           if (tableMatch?.[1]) {
             tableNumber = decodeURIComponent(tableMatch[1]);
           }
-
-          const message = `Hi! I’m interested. Could you share more details? I am at Table-${tableNumber}`;
+          const message = `Hi! I’m interested. Could you share more details-${tableNumber}`;
           const redirectUrl = `https://wa.me/${
             whatsAppBusinessConfig.whatsAppPhone
           }?text=${encodeURIComponent(message)}`;
