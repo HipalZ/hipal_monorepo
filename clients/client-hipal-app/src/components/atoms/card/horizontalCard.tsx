@@ -1,5 +1,5 @@
 "use client";
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useMemo } from "react";
 import type { DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
 import { useCartStore } from "@/components/store/useCartStore";
@@ -57,6 +57,16 @@ const HorizontalCard = ({
     setShowCart(true);
   }, [setShowCart, setCartPage, setSelectedDish]);
 
+  const portions = useMemo(() => {
+    return dishData?.portions?.map((portion) => ({
+      name: portion.name,
+      price: portion.price,
+      default: portion.default,
+      portionTypes: portion.portionTypes,
+      _id: portion._id,
+    }));
+  }, [dishData]);
+
   // Determine if we should use a more compact layout
   const compactLayout = isEdgeLayout;
 
@@ -96,7 +106,9 @@ const HorizontalCard = ({
             style={{ color: primaryColor }}
           >
             {outletInfo?.currencySymbol}
-            {dishData.price.toFixed(2)}
+            {portions?.length > 0
+              ? portions?.[0]?.price.toFixed(2)
+              : dishData?.price.toFixed(2)}
           </p>
           {dishData.description && (
             <p
