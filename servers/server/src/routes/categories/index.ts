@@ -23,7 +23,7 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
-import { currentDay, currentMinute } from "../../utils/helper";
+import indianHoursInMinutes from "../../utils/indianHoursInMinutes";
 import { respond } from "../../utils/response";
 
 //updateCategories
@@ -345,6 +345,7 @@ const categoriesRouter = new Hono()
         active: true,
       });
       if (menu) {
+        const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
         const query = {
           businessId,
           isDeleted: false,
@@ -391,15 +392,7 @@ const categoriesRouter = new Hono()
           ],
         });
 
-        const indianDate = new Date(
-          new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
-        );
-
-        let currentDay = indianDate.getDay();
-        currentDay = currentDay === 0 ? 7 : currentDay;
-
-        const currentTimeInMinutes =
-          indianDate.getHours() * 60 + indianDate.getMinutes();
+        const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
 
         // Find the active menu for the zone and business
         const menu = await Menu.findOne({
@@ -458,15 +451,7 @@ const categoriesRouter = new Hono()
           ],
         });
 
-        const indianDate = new Date(
-          new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
-        );
-
-        let currentDay = indianDate.getDay();
-        currentDay = currentDay === 0 ? 7 : currentDay;
-
-        const currentTimeInMinutes =
-          indianDate.getHours() * 60 + indianDate.getMinutes();
+        const currentTimeInMinutes = indianHoursInMinutes();
 
         // Find the active menu for the zone and business
         const menu = await Menu.findOne({
