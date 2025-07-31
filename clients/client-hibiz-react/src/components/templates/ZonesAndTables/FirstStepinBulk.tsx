@@ -12,7 +12,7 @@ const FirstStepBulkupload = () => {
   const [baseTableName, setBaseTableName] = useState("")
 
   useEffect(() => {
-    if (baseTableName && startNumber && endNumber && endNumber >= startNumber) {
+    if ( startNumber && endNumber && endNumber >= startNumber) {
       setTableName(`${baseTableName}${startNumber}-${endNumber}`)
     } else {
       setTableName(baseTableName)

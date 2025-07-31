@@ -652,13 +652,13 @@ export const formatMinutesToTime = (minutes: number) => {
 // Get day names from array of day numbers
 export const getDayNames = (days: number[]) => {
   const dayMap: Record<number, string> = {
-    1: "Sun",
-    2: "Mon",
-    3: "Tue",
-    4: "Wed",
-    5: "Thu",
-    6: "Fri",
-    7: "Sat",
+    1: "Mon",
+    2: "Tue",
+    3: "Wed",
+    4: "Thu",
+    5: "Fri",
+    6: "Sat",
+    7: "Sun",
   };
 
   if (days.length === 7) return "All days";
