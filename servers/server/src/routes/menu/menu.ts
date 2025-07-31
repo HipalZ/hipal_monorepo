@@ -486,15 +486,6 @@ const menuRouter = new Hono()
         active: true,
       });
 
-      if (businessPosConfig) {
-        return respond(
-          c,
-          "POS is active for this business please deactivate it first",
-          true,
-          400,
-        );
-      }
-
       const activeMenus = await Menu.find({
         businessId: businessId || menu.businessId,
         isActive: true,
@@ -515,6 +506,39 @@ const menuRouter = new Hono()
             409,
           );
         }
+      }
+
+      if (businessPosConfig) {
+        if (requestData.categoryLayout === 3) {
+          const currentMenuType = menu.menuType;
+          if (currentMenuType === 2) {
+            return respond(
+              c,
+              "You cannot change the category layout for this menu required for main sub category",
+              true,
+              400,
+            );
+          }
+        }
+        const updatedMenu = await Menu.findByIdAndUpdate(
+          menuId,
+          {
+            name: requestData.name,
+            categoryLayout: requestData.categoryLayout,
+            cardLayout: requestData.cardLayout,
+            primaryColor: requestData.primaryColor,
+            secondaryColor: requestData.secondaryColor,
+          },
+          { new: true, session },
+        );
+
+        if (!updatedMenu) {
+          return respond(c, "Menu not updated", true, 404);
+        }
+
+        return respond(c, "Menu updated successfully", false, 200, {
+          _id: updatedMenu._id,
+        });
       }
 
       const updatedMenu = await Menu.findByIdAndUpdate(

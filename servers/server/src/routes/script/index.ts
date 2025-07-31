@@ -14,6 +14,7 @@ import {
   LoyaltySettings,
   Menu,
   OutLetInfo,
+  PasswordManager,
   Payment,
   PaymentAlert,
   Reviews,
@@ -2518,6 +2519,87 @@ const scriptRouter = new Hono()
         200,
         {},
       );
+    },
+  )
+
+  .post(
+    "/queue",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      const payload = await c.req.json();
+      const header = c.req.header();
+      console.log("queue", payload, header);
+
+      console.log("queue", payload);
+      return respond(
+        c,
+        "All pos dishes, addons and categories deleted",
+        false,
+        200,
+        {},
+      );
+    },
+  )
+
+  .post(
+    "/send_queue",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      const payload = await c.req.json();
+      console.log(payload);
+      // await billQueue.add("request-only", { payload }, { delay: 8_000 });
+
+      return respond(c, "queue sent", false, 200, {});
+    },
+  )
+
+  .post(
+    "/update_passwords",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      const allBusinesses = await Business.find();
+      for (const business of allBusinesses) {
+        const defaultPasswords = [
+          {
+            businessId: business._id,
+            name: "DISCOUNT",
+            password: "1234",
+            isActive: false,
+          },
+          {
+            businessId: business._id,
+            name: "DELETE_KOT",
+            password: "1234",
+            isActive: false,
+          },
+          {
+            businessId: business._id,
+            name: "SERVICE_CHARGE",
+            password: "1234",
+            isActive: false,
+          },
+        ];
+
+        await PasswordManager.insertMany(defaultPasswords);
+      }
     },
   );
 

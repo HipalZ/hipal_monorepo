@@ -2416,7 +2416,7 @@ const whatsappRouter = new Hono()
                   { new: true },
                 );
               }
-              const checkInBody = `Welcome to *${bName?.name}* 👋\n\nThank you for checking in — we're grateful to have you with us today. 🙏\nYour code: *${code}*\n\n *Discover Our Services*: ${longUrl}\n\nWe hope you have a delightful experience! 😊`;
+              const checkInBody = `Welcome to ${bName?.name}! 👋\n\nThank you for checking in — we're grateful to have you with us today. 🙏\nYour code: *${code}*\n\n *Discover Our Services*: ${longUrl}\n\nWe hope you have a delightful experience! 😊`;
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,

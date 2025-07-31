@@ -56,10 +56,10 @@ export interface DiscountPayload {
   businessId: string;
   tableName: string;
   value: number;
-  reasonOfDiscount: string;
+  reasonOfDiscount?: string;
   discountAppliedBy: string;
   discountAppliedOn: DiscountType;
-  dishIds: string[];
+  itemIds?: string[];
 }
 
 export const useAddDiscount = () => {
@@ -77,7 +77,7 @@ export const useAddDiscount = () => {
         const extraData = await data.json();
         if (data.status === 400 || data.status === 401) {
           setError(
-            extraData.error?.issues[0]?.message || "Failed to add discount",
+            extraData.message || "Failed to add discount",
           );
           setOpenErrorModal(true);
           toast.error("Failed to add discount");
@@ -125,7 +125,7 @@ export const useRemoveDiscount = () => {
         const extraData = await data.json();
         if (data.status === 400 || data.status === 401) {
           setError(
-            extraData.error?.issues[0]?.message || "Failed to remove discount",
+            extraData.message || "Failed to remove discount",
           );
           setOpenErrorModal(true);
           toast.error("Failed to remove discount");
@@ -173,7 +173,7 @@ export const useAddCoinz = () => {
         const extraData = await data.json();
         if (data.status === 400 || data.status === 401) {
           setError(
-            extraData.error?.issues[0]?.message || "Failed to add coinz",
+            extraData.message || "Failed to add coinz",
           );
           setOpenErrorModal(true);
           toast.error("Failed to add coinz");
@@ -221,7 +221,7 @@ export const useRemoveCoinz = () => {
         const extraData = await data.json();
         if (data.status === 400 || data.status === 401) {
           setError(
-            extraData.error?.issues[0]?.message || "Failed to remove coinz",
+            extraData.message || "Failed to remove coinz",
           );
           setOpenErrorModal(true);
           toast.error("Failed to remove coinz");
@@ -314,7 +314,7 @@ export const useRemoveCoupon = () => {
         const extraData = await data.json();
         if (data.status === 400 || data.status === 401) {
           setError(
-            extraData.error?.issues[0]?.message || "Failed to remove coupon",
+            extraData.message || "Failed to remove coupon",
           );
           setOpenErrorModal(true);
           toast.error("Failed to remove coupon");
@@ -364,7 +364,7 @@ export const useAddServiceCharge = () => {
       const extraData = await data.json();
       if (data.status === 400 || data.status === 401) {
         setError(
-          extraData.error?.issues[0]?.message || "Failed to add service charge",
+          extraData.message || "Failed to add service charge",
         );
         setOpenErrorModal(true);
         toast.error("Failed to add service charge");
@@ -415,7 +415,7 @@ export const useRemoveServiceCharge = () => {
       const extraData = await data.json();
       if (data.status === 400 || data.status === 401) {
         setError(
-          extraData.error?.issues[0]?.message ||
+          extraData.message ||
             "Failed to remove service charge",
         );
         setOpenErrorModal(true);
@@ -501,7 +501,7 @@ export const useReprintBill = () => {
             const extraData = await data.json();
             if (data.status === 400 || data.status === 401) {
                 setError(
-                    extraData.error?.issues[0]?.message || "Failed to reprint bill",
+                    extraData.message || "Failed to reprint bill",
                 );
                 setOpenErrorModal(true);
                 toast.error("Failed to reprint bill");

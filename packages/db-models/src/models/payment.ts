@@ -1,7 +1,8 @@
 import mongoose, { type Model } from "mongoose";
+import autoIncrement from "mongoose-auto-increment";
 import type { PaymentType } from "../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
-
+autoIncrement.initialize(mongoose.connection);
 const paymentSchema = new mongoose.Schema<PaymentType>(
   {
     businessId: {
@@ -237,10 +238,21 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: String,
       required: false,
     },
+    billInvoice: {
+      type: Number,
+      default: 0,
+    },
   },
 
   { timestamps: true },
 );
+
+paymentSchema.plugin(autoIncrement.plugin, {
+  model: "Payment",
+  field: "billInvoice", // <-- Will be added automatically
+  startAt: 1,
+  incrementBy: 1,
+});
 
 const Payment: Model<PaymentType> = mongoose.model<PaymentType>(
   "Payment",

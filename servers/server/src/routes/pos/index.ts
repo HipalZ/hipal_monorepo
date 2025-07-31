@@ -10,8 +10,9 @@ import {
   KotOrder,
   Menu,
   OutLetInfo,
+  PasswordManager,
+  Payment,
   PaymentAlert,
-  PetpoojaCartItem,
   Pos,
   Table,
   Tax,
@@ -99,6 +100,7 @@ const saveKotOrder = async (
 
   return {
     kotId: saveKot[0]._id,
+    kotInvoiceNumber: saveKot[0].kotInvoiceNumber,
   };
 };
 
@@ -188,6 +190,7 @@ const saveOrder = async (
       name: customerName,
       phone: customerPhone,
       kotId: resData?.kotId?.toString(),
+      kotInvoiceNumber: resData?.kotInvoiceNumber,
     },
   };
 };
@@ -338,7 +341,6 @@ const posRouter = new Hono()
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
-
 
         return c.json(
           {
@@ -1484,6 +1486,7 @@ const posRouter = new Hono()
               kotId: result?.data?.kotId?.toString() ?? "",
               date: Date.now(),
               posRestName: posConfigData?.restName,
+              kotInvoiceNumber: result?.data?.kotInvoiceNumber,
             });
 
             return c.json(result, 200);
@@ -1544,6 +1547,7 @@ const posRouter = new Hono()
             kotId: result?.data?.kotId?.toString() ?? "",
             date: Date.now(),
             posRestName: posConfigData?.restName,
+            kotInvoiceNumber: result?.data?.kotInvoiceNumber,
           });
 
           return c.json(result, 200);
@@ -1787,6 +1791,7 @@ const posRouter = new Hono()
             kotId: res?.kotId?.toString() ?? "",
             date: Date.now(),
             posRestName: pos?.restName,
+            kotInvoiceNumber: res?.kotInvoiceNumber,
           });
 
           return respond(c, "Data fetched successfully", false, 200, {
@@ -1841,6 +1846,7 @@ const posRouter = new Hono()
           kotId: res?.kotId?.toString() ?? "",
           date: Date.now(),
           posRestName: pos?.restName,
+          kotInvoiceNumber: res?.kotInvoiceNumber,
         });
         return respond(c, "Data fetched successfully", false, 200, {
           success: true,
@@ -2482,6 +2488,7 @@ const posRouter = new Hono()
           gst: outLetInfo?.gst || "",
           address: outLetInfo?.address || "",
           fssai: outLetInfo?.fssai || "",
+          billInvoiceNumber: tableSession?.billInvoiceNumber || 0,
         });
 
         return respond(c, "sucess", true, 200, {});
@@ -2554,6 +2561,7 @@ const posRouter = new Hono()
           address: outLetInfo?.address || "",
 
           fssai: outLetInfo?.fssai || "",
+          billInvoiceNumber: payment?.billInvoice || 0,
         });
 
         return respond(c, "sucess", true, 200, {});
@@ -2574,6 +2582,7 @@ const posRouter = new Hono()
           discountAppliedOn: z.enum(["ON_BILL", "ON_DISH"]),
           itemIds: z.array(z.string().min(1).max(200)).optional(),
           discountAppliedBy: z.string().min(1).max(50),
+          password: z.string().min(4).max(50).optional(),
         })
         .refine(
           (data) =>
@@ -2597,7 +2606,27 @@ const posRouter = new Hono()
           discountAppliedOn,
           itemIds,
           discountAppliedBy,
+          password,
         } = await c.req.json();
+
+        if (password) {
+          const passwordManager = await PasswordManager.findOne({
+            businessId,
+            name: "DISCOUNT",
+            isActive: true,
+            password: password,
+          });
+
+          if (!passwordManager) {
+            return respond(
+              c,
+              "Please enter the correct discount password.",
+              true,
+              400,
+              {},
+            );
+          }
+        }
 
         // Fetch the table session
         const tableSession = await UserSession.findOne({
@@ -3137,6 +3166,7 @@ const posRouter = new Hono()
         tableName: z.string().min(1).max(200),
         serviceChargeRemovedBy: z.string().min(1).max(50),
         reasonOfServiceCharge: z.string().min(1).max(100).optional(),
+        password: z.string().min(4).max(50).optional(),
       }),
     ),
     async (c) => {
@@ -3147,7 +3177,27 @@ const posRouter = new Hono()
           tableName,
           serviceChargeRemovedBy,
           reasonOfServiceCharge,
+          password,
         } = await c.req.json();
+
+        if (password) {
+          const passwordManager = await PasswordManager.findOne({
+            businessId,
+            name: "SERVICE_CHARGE",
+            isActive: true,
+            password: password,
+          });
+
+          if (!passwordManager) {
+            return respond(
+              c,
+              "Please enter the correct service charge removal password.",
+              true,
+              400,
+              {},
+            );
+          }
+        }
 
         const tableSession = await UserSession.findOne({
           businessId,
@@ -3307,7 +3357,7 @@ const posRouter = new Hono()
           {
             tableName,
             settled: false,
-            accepted:true,
+            accepted: true,
             businessId,
           },
           {

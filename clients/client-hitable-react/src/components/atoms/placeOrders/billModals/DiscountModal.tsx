@@ -1,3 +1,5 @@
+"use client";
+
 import { memo, useState, useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Lock } from "lucide-react";
 import { useOrderStore } from "@/components/store/useOrderData";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import {
@@ -20,7 +23,9 @@ import {
   useRemoveDiscount,
   type DiscountType,
 } from "@/components/hooks/useBill";
+import { useIsPasswordActive } from "@/components/hooks/usePasswordManager";
 import type { IBillData } from "@/components/types/hiClientzData.ts";
+import toast from "react-hot-toast";
 
 interface BillItem {
   _id: string;
@@ -33,8 +38,8 @@ interface BillItem {
     posDishId: string;
     description: string;
     dishTypes: string[];
-    ignoreDiscount: string; // Changed from boolean to string
-    ignoreTax: string; // Changed from boolean to string
+    ignoreDiscount: string;
+    ignoreTax: string;
     images: string[];
     isDeleted: boolean;
     menuId: string;
@@ -70,7 +75,7 @@ interface BillItem {
     quantity: number;
   }>;
   quantity: number;
-  isDeleted: boolean; // Added isDeleted field
+  isDeleted: boolean;
 }
 
 interface DiscountModalProps {
@@ -85,12 +90,19 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const { captainData: userData } = useHiClientZ();
 
+  // Password management hooks
+  const { isLoading: isAddPasswordLoading, isActive: isAddPasswordActive } =
+    useIsPasswordActive("DISCOUNT");
+
   const [discountValue, setDiscountValue] = useState<number>(0);
   const [discountReason, setDiscountReason] = useState<string>("");
   const [discountType, setDiscountType] = useState<DiscountType>("ON_BILL");
   const [discountValueType, setDiscountValueType] =
     useState<DiscountValueType>("percentage");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+
+  // Password states
+  const [addDiscountPassword, setAddDiscountPassword] = useState<string>("");
 
   const { addingDiscountLoader, addingDiscount } = useAddDiscount();
   const { removingDiscountLoader, removingDiscount } = useRemoveDiscount();
@@ -130,7 +142,6 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
       const selectedItemsTotal = discountableItems
         .filter((item) => selectedItems.includes(item._id))
         .reduce((sum, item) => sum + getItemTotalPrice(item), 0);
-
       if (discountValueType === "percentage") {
         return (selectedItemsTotal * discountValue) / 100;
       } else {
@@ -154,7 +165,6 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
       const selectedItemsTotal = discountableItems
         .filter((item) => selectedItems.includes(item._id))
         .reduce((sum, item) => sum + getItemTotalPrice(item), 0);
-
       return discountValueType === "percentage" ? 100 : selectedItemsTotal;
     }
   }, [
@@ -177,6 +187,12 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
       return;
     }
 
+    // Check if password is required and validate
+    if (isAddPasswordActive && !addDiscountPassword.trim()) {
+      toast.error("Please enter the add discount password.");
+      return;
+    }
+
     // For item-wise discount, send the actual item IDs (not dish IDs)
     const itemIds = discountType === "ON_DISH" ? selectedItems : [];
 
@@ -193,22 +209,34 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
         const selectedItemsTotal = discountableItems
           .filter((item) => selectedItems.includes(item._id))
           .reduce((sum, item) => sum + getItemTotalPrice(item), 0);
-
         finalDiscountValue = (discountValue / selectedItemsTotal) * 100;
       }
     }
 
-    await addingDiscount({
-      businessId,
-      tableName: selectedTable.name,
-      value: finalDiscountValue,
-      reasonOfDiscount: discountReason,
-      discountAppliedBy: userData._id,
-      discountAppliedOn: discountType,
-      itemIds, // Changed from dishIds to itemIds to include complete items
-    });
+    try {
+      const payload = {
+        businessId,
+        tableName: selectedTable.name,
+        value: finalDiscountValue,
+        reasonOfDiscount: discountReason,
+        discountAppliedBy: userData._id,
+        discountAppliedOn: discountType,
+        itemIds,
+        ...(isAddPasswordActive && { password: addDiscountPassword }), // Include password only if required
+      };
 
-    onClose();
+      const res = await addingDiscount(payload);
+      if (res.status === 200) {
+        // Reset form after successful addition
+        setDiscountValue(0);
+        setDiscountReason("");
+        setSelectedItems([]);
+        setAddDiscountPassword("");
+        onClose();
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to add discount.");
+    }
   }, [
     businessId,
     selectedTable?.name,
@@ -222,6 +250,8 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
     discountableItems,
     getItemTotalPrice,
     addingDiscount,
+    isAddPasswordActive,
+    addDiscountPassword,
     onClose,
   ]);
 
@@ -230,13 +260,19 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
       return;
     }
 
-    await removingDiscount({
-      businessId,
-      tableName: selectedTable.name,
-      discountRemovedBy: userData._id,
-    });
+    try {
+      const payload = {
+        businessId,
+        tableName: selectedTable.name,
+        discountRemovedBy: userData._id,
+      };
 
-    onClose();
+      await removingDiscount(payload);
+
+      onClose();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to remove discount.");
+    }
   }, [
     businessId,
     selectedTable?.name,
@@ -279,13 +315,11 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
         const selectedItemsTotal = discountableItems
           .filter((item) => selectedItems.includes(item._id))
           .reduce((sum, item) => sum + getItemTotalPrice(item), 0);
-
         if (selectedItemsTotal > 0) {
           return ((discountValue / selectedItemsTotal) * 100).toFixed(2);
         }
       }
     }
-
     return null;
   }, [
     discountValueType,
@@ -296,6 +330,15 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
     selectedItems,
     getItemTotalPrice,
   ]);
+
+  // Show loading spinner if password validation is in progress
+  if (isAddPasswordLoading) {
+    return (
+      <div className="p-4 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 space-y-4">
@@ -314,7 +357,6 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
             </SelectContent>
           </Select>
         </div>
-
         <div>
           <Label>Value Type</Label>
           <RadioGroup
@@ -379,7 +421,6 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
                 <div className="bg-gray-100 p-2 rounded text-sm font-medium">
                   GST {billGroup.gst}% Items
                 </div>
-
                 {/* Items in this GST group */}
                 {billGroup.items
                   .filter((item) => !item.isDeleted) // Filter out deleted items
@@ -387,7 +428,6 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
                     const canApplyDiscount =
                       item.dish.ignoreDiscount !== "true";
                     const itemTotal = getItemTotalPrice(item);
-
                     return (
                       <div
                         key={item._id}
@@ -416,7 +456,6 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
                                 Qty: {item.quantity}
                               </span>
                             </div>
-
                             {/* Show portion details */}
                             {item.portion && (
                               <div className="text-xs text-blue-600 pl-2">
@@ -424,7 +463,6 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
                                 {item.portion.price})
                               </div>
                             )}
-
                             {/* Show extras details */}
                             {item.extras && item.extras.length > 0 && (
                               <div className="text-xs text-green-600 pl-2">
@@ -437,14 +475,12 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
                                   .join(", ")}
                               </div>
                             )}
-
                             {/* Show dish instruction if any */}
                             {item.dish.instruction && (
                               <div className="text-xs text-orange-600 pl-2 italic">
                                 Note: {item.dish.instruction}
                               </div>
                             )}
-
                             {!canApplyDiscount && (
                               <div className="text-xs text-red-500 pl-2">
                                 (Discount not allowed)
@@ -458,7 +494,6 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
               </div>
             ))}
           </div>
-
           {selectedItems.length > 0 && (
             <div className="text-xs text-gray-600 space-y-1">
               <p className="font-medium">
@@ -495,6 +530,27 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
         />
       </div>
 
+      {/* Add Discount Password Input - Only show if password is required */}
+      {isAddPasswordActive && (
+        <div>
+          <Label
+            htmlFor="add-discount-password"
+            className="flex items-center gap-2"
+          >
+            <Lock className="h-4 w-4" />
+            Add Discount Password
+          </Label>
+          <Input
+            id="add-discount-password"
+            type="password"
+            value={addDiscountPassword}
+            onChange={(e) => setAddDiscountPassword(e.target.value)}
+            placeholder="Enter add discount password"
+            className="mt-1"
+          />
+        </div>
+      )}
+
       <div className="flex gap-2">
         <Button
           onClick={handleAddDiscount}
@@ -502,17 +558,19 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
             addingDiscountLoader ||
             !discountValue ||
             !discountReason ||
-            (discountType === "ON_DISH" && selectedItems.length === 0)
+            (discountType === "ON_DISH" && selectedItems.length === 0) ||
+            (isAddPasswordActive && !addDiscountPassword.trim()) // Disable if password required but not provided
           }
           className="flex-1"
         >
           {addingDiscountLoader ? "Adding..." : "Add Discount"}
         </Button>
-
         <Button
           variant="outline"
           onClick={handleRemoveDiscount}
-          disabled={removingDiscountLoader}
+          disabled={
+            removingDiscountLoader // Disable if password required but not provided
+          }
           className="flex-1 bg-transparent"
         >
           {removingDiscountLoader ? "Removing..." : "Remove Discount"}
@@ -523,5 +581,4 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
 };
 
 const DiscountModal = memo(MemoDiscountModal);
-
 export default DiscountModal;

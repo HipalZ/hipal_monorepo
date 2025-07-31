@@ -28,16 +28,14 @@ const DateRangePicker: React.FC = memo(() => {
     setOutTime,
     selectedRange,
     setSelectedRange,
-  } = useTimings(
-    (s) => ({
-      setInTime: s.setInTime,
-      setTimeStampStart: s.setTimeStampStart,
-      setTimeStampEnd: s.setTimeStampEnd,
-      setOutTime: s.setOutTime,
-      selectedRange: s.selectedRange,
-      setSelectedRange: s.setSelectedRange,
-    }),
-  );
+  } = useTimings((s) => ({
+    setInTime: s.setInTime,
+    setTimeStampStart: s.setTimeStampStart,
+    setTimeStampEnd: s.setTimeStampEnd,
+    setOutTime: s.setOutTime,
+    selectedRange: s.selectedRange,
+    setSelectedRange: s.setSelectedRange,
+  }));
   const { setPageNumber } = usePaginationStore((s) => ({
     setPageNumber: s.setPageNumber,
   }));
@@ -84,10 +82,10 @@ const DateRangePicker: React.FC = memo(() => {
   const dateRangeDisplay = useMemo(() => {
     if (startDate && endDate) {
       return (
-        <center className="font-semibold text-[#8C63FF] bg-[#8C63FF30] text-sm py-1">
+        <center className="font-semibold text-[#8C63FF] bg-[#8C63FF30] text-sm py-1 w-full md:w-[21.25rem] md:ml-4 md:text-base">
           selected date range: {formatDate(startDate)} - {formatDate(endDate)}
         </center>
-      )
+      );
     }
     return "";
   }, [startDate, endDate]);
@@ -114,38 +112,44 @@ const DateRangePicker: React.FC = memo(() => {
           <div className="flex flex-wrap items-center justify-start space-x-2">
             <button
               type="button"
-              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === "today" ? "bg-[#000000] text-white" : "bg-white"
-                }`}
+              className={`rounded-md border px-2 py-1 text-xs ${
+                selectedRange === "today"
+                  ? "bg-[#000000] text-white"
+                  : "bg-white"
+              }`}
               onClick={handleTodayClick}
             >
               Today
             </button>
             <button
               type="button"
-              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === "yesterday"
-                ? "bg-[#000000] text-white"
-                : "bg-white"
-                }`}
+              className={`rounded-md border px-2 py-1 text-xs ${
+                selectedRange === "yesterday"
+                  ? "bg-[#000000] text-white"
+                  : "bg-white"
+              }`}
               onClick={handleYesterdayClick}
             >
               Yesterday
             </button>
             <button
               type="button"
-              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === "thisMonth"
-                ? "bg-[#000000] text-white"
-                : "bg-white"
-                }`}
+              className={`rounded-md border px-2 py-1 text-xs ${
+                selectedRange === "thisMonth"
+                  ? "bg-[#000000] text-white"
+                  : "bg-white"
+              }`}
               onClick={handleThisMonthClick}
             >
               This Month
             </button>
             <button
               type="button"
-              className={`rounded-md border px-2 py-1 text-xs ${selectedRange === "custom"
-                ? "bg-[#000000] text-white"
-                : "bg-white"
-                }`}
+              className={`rounded-md border px-2 py-1 text-xs ${
+                selectedRange === "custom"
+                  ? "bg-[#000000] text-white"
+                  : "bg-white"
+              }`}
               onClick={handleCustomDatesClick}
             >
               Custom dates
@@ -229,7 +233,6 @@ const DateRangePicker: React.FC = memo(() => {
         </div>
       </div>
       <div className="mt-4 w-full max-w-[28rem]">{dateRangeDisplay}</div>
-
     </>
   );
 });

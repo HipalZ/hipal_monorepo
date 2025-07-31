@@ -11,6 +11,7 @@ export interface Zone {
   rank: string;
   staffIds: string[];
   updatedAt: string;
+  tableCount: number;
 }
 
 export interface TableData {

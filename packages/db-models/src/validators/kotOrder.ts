@@ -18,6 +18,7 @@ const KotOrderSchema = z.object({
   isDeleted: z.boolean().default(false),
   deletedBy: z.string().min(2).max(150).optional(),
   reasonOfDeletion: z.string().min(1).max(500).optional(),
+  discount: z.number().default(0).optional(),
 });
 
 // Define the main cart schema
@@ -48,6 +49,7 @@ export const kotSchema = z.object({
   bill: z.boolean().default(false).optional(),
   isDeleted: z.boolean().default(false).optional(),
   isSync: z.boolean().default(false).optional(),
+  kotInvoiceNumber: z.number().default(0).optional(),
 });
 
 export type KotOrderType = z.infer<typeof kotSchema>;

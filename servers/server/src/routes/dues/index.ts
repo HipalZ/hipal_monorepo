@@ -1,4 +1,5 @@
 import {
+  DuesHistory,
   DuesUser,
   Order,
   Payment,
@@ -139,7 +140,7 @@ const duesRouter = new Hono()
   )
 
   .get(
-    "/pending_dues/:duesUserId/:businessId",
+    "/dues_history/:duesUserId/:businessId",
     zValidator(
       "param",
       z.object({
@@ -150,22 +151,47 @@ const duesRouter = new Hono()
     async (c) => {
       const { duesUserId, businessId } = c.req.param();
 
-      const pendingDues = await PendingDues.find({
-        duesUserId,
-        businessId,
-      })
-        .select("billId date isSettled")
-        .populate("billId");
+      let duesHistory = await DuesHistory.find({
+        duesUserId: duesUserId,
+      });
 
-      const duesUser = await DuesUser.findById(duesUserId);
+      // If no dues history, create a new one
+      if (duesHistory.length === 0) {
+        const newHistory = await DuesHistory.create({
+          duesUserId: duesUserId,
+          billInvoiceNumber: 0,
+          settleAmount: 0,
+          orderId: null,
+          date: null,
+        });
+        duesHistory = [newHistory]; // Wrap in array to match return type
+      }
+
+      const pendingDues = await PendingDues.find({
+        duesUserId: duesUserId,
+        isSettled: false,
+        businessId,
+      });
+
+      const billIds = pendingDues.map((due) => due.billId);
+
+      const payments = await Payment.find({
+        businessId,
+        mode: "dues",
+        _id: { $in: billIds },
+      });
+
+      const Obj: {
+        duesHistory: typeof duesHistory;
+        payments: typeof payments;
+      } = {
+        duesHistory,
+        payments,
+      };
 
       return c.json({
-        message: "Pending Dues",
-        data: {
-          totalDuesAmount: duesUser?.totalDuesAmount,
-          duesUserId,
-          bill: pendingDues,
-        },
+        message: "Dues History",
+        data: Obj,
         err: false,
       });
     },
@@ -234,7 +260,7 @@ const duesRouter = new Hono()
         { session },
       );
 
-      await Payment.create(
+      const savePayment = await Payment.create(
         [
           {
             businessId: businessId,
@@ -261,6 +287,16 @@ const duesRouter = new Hono()
         ],
         { session },
       );
+
+      const newDuesHistory = new DuesHistory({
+        orderId: saveOrder[0]._id,
+        billInvoiceNumber: savePayment[0].billInvoice,
+        settleAmount: totalAmount,
+        duesUserId: duesUser?._id.toString(),
+        date: Date.now(),
+      });
+
+      await newDuesHistory.save({ session });
 
       return c.json({
         message: "Dues Settled",

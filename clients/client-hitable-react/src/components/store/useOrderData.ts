@@ -19,6 +19,8 @@ export type orderModal =
   | "alerts"
   | "addItem";
 
+type ModalType = "discount" | "serviceCharge" | "coupon" | "coinz" | "options" ;
+
 interface ISettleMode {
   _id: string;
   name: string;
@@ -34,6 +36,9 @@ export interface IDuesPersonsData {
 interface OrderState {
   currentPage: orderPages;
   setCurrentPage: (page: orderPages) => void;
+
+  activeModal: ModalType;
+  setActiveModal: (modal: ModalType) => void;
 
   showMoreOption: boolean;
   setShowMoreOption: (show: boolean) => void;
@@ -115,6 +120,9 @@ interface OrderState {
 export const useOrderStore = create<OrderState>((set, get) => ({
   currentPage: "",
   setCurrentPage: (page) => set({ currentPage: page }),
+
+  activeModal: "options",
+  setActiveModal: (modal) => set({ activeModal: modal }),
 
   openDues: false,
   setOpenDues: (open) => set({ openDues: open }),

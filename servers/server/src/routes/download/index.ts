@@ -128,55 +128,6 @@ const downloadRouter = new Hono().get(
 
     // Items Section
     let posY = y + 100;
-    if (posBill?.items?.length) {
-      doc
-        .fontSize(14)
-        .font("Helvetica-Bold")
-        .text("ITEMS PURCHASED", 50, posY)
-        .moveDown(0.5);
-
-      // Table Header
-      doc
-        .fillColor("#444444")
-        .font("Helvetica-Bold")
-        .text("Item", 50, posY + 20)
-        .text("Price", 300, posY + 20, { width: 100, align: "right" })
-        .text("Qty", 400, posY + 20, { width: 50, align: "right" })
-        .text("Total", 450, posY + 20, { width: 100, align: "right" });
-
-      posY += 40;
-      doc.font("Helvetica").fontSize(12);
-
-      posBill.items.forEach((item) => {
-        const price = item?.dish?.price || 0;
-        const qty = item?.dish?.quantity || 0;
-        const total = price * qty;
-
-        doc
-          .text(item?.dish?.name || "Unknown", 50, posY)
-          .text(`${price.toFixed(2)}`, 300, posY, {
-            width: 100,
-            align: "right",
-          })
-          .text(qty.toString(), 400, posY, { width: 50, align: "right" })
-          .text(`${total.toFixed(2)}`, 450, posY, {
-            width: 100,
-            align: "right",
-          });
-
-        // Item separator
-        doc
-          .strokeColor("#333333")
-          .lineWidth(1)
-          .moveTo(50, posY + 10)
-          .lineTo(550, posY + 10)
-          .stroke();
-
-        posY += 20;
-      });
-    } else {
-      posY += 20;
-    }
 
     // Summary Section
     posY += 30;
@@ -187,24 +138,28 @@ const downloadRouter = new Hono().get(
       .moveDown(0.5);
 
     const summary = [
-      { label: "Subtotal:", value: payment.initialSubTotal },
-      { label: `Discount:`, value: payment.claimedCoins },
+      { label: "Subtotal:", value: payment.billValue },
+      { label: "Discount:", value: payment.discount },
+      { label: "ClaimedCoins:", value: payment.claimedCoins },
+      { label: "CouponDiscount:", value: payment.couponDiscount },
       { label: `Tax (${outLetInfo.gstPercentage}%):`, value: payment.tax },
       {
         label: `Service Charge (${outLetInfo.serviceChargePercentage}%):`,
         value: payment.serviceCharge,
       },
+      { label: "Tips:", value: payment.tips },
+
       { label: "Total Amount:", value: payment.total },
     ];
 
-    summary.forEach((item) => {
+    for (const item of summary) {
       doc
         .font("Helvetica-Bold")
         .text(item.label, 375, posY)
         .font("Helvetica")
-        .text(`${item.value.toFixed(2)}`, 500, posY, { align: "right" });
+        .text(`${(item.value ?? 0).toFixed(2)}`, 500, posY, { align: "right" });
       posY += 20;
-    });
+    }
 
     // Payment Methods Section
     posY += 30;
@@ -215,14 +170,14 @@ const downloadRouter = new Hono().get(
       .moveDown(0.5);
 
     if (payment.splitModes?.length) {
-      payment.splitModes.forEach((mode) => {
+      for (const mode of payment.splitModes) {
         posY += 20;
         doc
           .font("Helvetica-Bold")
           .text(`${mode.name.toUpperCase()}:`, 50, posY)
           .font("Helvetica")
           .text(`${mode.amount.toFixed(2)}`, 500, posY, { align: "right" });
-      });
+      }
     } else {
       posY += 20;
       doc.font("Helvetica").text(`Payment Mode: ${payment.mode}`, 50, posY);

@@ -1,4 +1,4 @@
-import { memo, useMemo, useState, useCallback } from "react";
+import { memo, useMemo, useState, useCallback, Fragment } from "react";
 import { useOrderStore } from "@/components/store/useOrderData";
 import {
   Dialog,
@@ -13,17 +13,19 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Info, User, MessageSquare } from "lucide-react";
+import { Info, User, MessageSquare, Lock } from "lucide-react";
 import toast from "react-hot-toast";
 import { useDeleteKot } from "@/components/hooks/useOrder";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import type { OrderData } from "@/components/types/hiClientzData";
 import CommonBottomButton from "../atoms/bottomButton/index.tsx";
+import { useIsPasswordActive } from "../hooks/usePasswordManager.ts";
+import SpinnerMemo from "../atoms/loadingSpinner/index.tsx";
 
 interface SelectedItemWithQuantity {
   itemId: string;
   quantity: number;
-  maxQuantity: number; 
+  maxQuantity: number;
 }
 
 interface SelectedMap {
@@ -32,8 +34,11 @@ interface SelectedMap {
 
 const MemoDeleteKot = () => {
   const ordersData = useOrderStore((s) => s.orderDataStore);
-  const { isPending, mutateAsync } = useDeleteKot();
+  const { isPending, mutateAsync, isError } = useDeleteKot();
+  const { isLoading, isActive } = useIsPasswordActive("DELETE_KOT");
   const userId = useHiClientZ((s) => s.captainData._id);
+
+  console.log(isError);
 
   const ordersWithActiveItems = useMemo(() => {
     return ordersData.filter((order) => order.cart);
@@ -42,6 +47,7 @@ const MemoDeleteKot = () => {
   const [selected, setSelected] = useState<SelectedMap>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [reason, setReason] = useState("");
+  const [password, setPassword] = useState(""); // Add password state
 
   const totalSelectedItems = useMemo(() => {
     let count = 0;
@@ -71,21 +77,18 @@ const MemoDeleteKot = () => {
       setSelected((prev) => {
         const clone = { ...prev };
         if (!clone[orderId]) clone[orderId] = new Map();
-
         if (checked) {
           clone[orderId].set(itemId, {
             itemId,
-            quantity: maxQuantity, // Default to full quantity
+            quantity: maxQuantity,
             maxQuantity,
           });
         } else {
           clone[orderId].delete(itemId);
         }
-
         if (clone[orderId].size === 0) {
           delete clone[orderId];
         }
-
         return clone;
       });
     },
@@ -141,12 +144,12 @@ const MemoDeleteKot = () => {
       return;
     }
     setReason("");
+    setPassword(""); // Reset password when opening dialog
     setIsDialogOpen(true);
   }, [totalSelectedItems]);
 
   const handleConfirmGlobalDelete = useCallback(async () => {
     const kotItems: Array<{ itemId: string; quantity: number }> = [];
-
     for (const orderId in selected) {
       for (const [, itemData] of selected[orderId]) {
         kotItems.push({
@@ -166,27 +169,42 @@ const MemoDeleteKot = () => {
       return;
     }
 
+    // Check if password is required and validate
+    if (isActive && !password.trim()) {
+      toast.error("Please enter the delete KOT password.");
+      return;
+    }
+
     try {
-      await mutateAsync({
+      const payload = {
         kotItems,
         deletedBy: userId,
         reasonOfDeletion: reason,
-      });
-      setSelected({});
-      setIsDialogOpen(false);
-      toast.success("Selected KOT items deleted successfully!");
+        ...(isActive && { password }),
+      };
+
+      const res = await mutateAsync(payload);
+      if (res.status === 200) {
+        toast.success("Selected KOT items deleted successfully!");
+        setSelected({});
+        setIsDialogOpen(false);
+        setPassword("");
+      }
     } catch (err: any) {
       toast.error(err.message || "Failed to delete KOT items.");
     }
-  }, [selected, reason, userId, mutateAsync]);
+  }, [selected, reason, password, userId, mutateAsync, isActive]);
 
   const handleCloseDialog = useCallback(() => {
     setIsDialogOpen(false);
+    setPassword(""); // Clear password when closing dialog
   }, []);
+
+  if (isLoading) return <SpinnerMemo />;
 
   return (
     <>
-      <ScrollArea className="h-[100dvh] pb-20">
+      <ScrollArea className="h-[100dvh] lg:h-[90dvh] pb-20">
         <div className="space-y-6 pb-20">
           {ordersWithActiveItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center min-h-[60dvh] text-center text-gray-500">
@@ -212,7 +230,10 @@ const MemoDeleteKot = () => {
                 availableCartItems.every((item) => checkedMap.has(item._id));
 
               return (
-                <Card key={order._id} className="w-full border-none shadow-none">
+                <Card
+                  key={order._id}
+                  className="w-full border-none shadow-none"
+                >
                   <CardHeader className="pb-3">
                     <CardTitle className="text-lg flex items-center justify-between">
                       <span>
@@ -240,6 +261,7 @@ const MemoDeleteKot = () => {
                         </span>
                       </label>
                     )}
+
                     {availableCartItems.length === 0 && (
                       <p className="text-sm text-gray-500 italic p-2">
                         All items in this KOT have been deleted.
@@ -248,16 +270,18 @@ const MemoDeleteKot = () => {
 
                     <div className="space-y-2">
                       {order.cart.map((item) => {
-                        const itemTotal =
-                          item.dish.price * item.quantity +
-                          (item.portion
-                            ? item.portion.price * item.quantity
-                            : 0) +
-                          (item.extras?.reduce(
-                            (sum, ext) => sum + ext.price * ext.quantity,
+                        const baseTotal = item.dish.price * item.quantity;
+                        const portionTotal = item.portion
+                          ? item.portion.price * item.quantity
+                          : 0;
+                        const extrasTotal =
+                          item.extras?.reduce(
+                            (sum, ext) =>
+                              sum + ext.price * ext.quantity * item.quantity,
                             0,
-                          ) || 0);
-
+                          ) ?? 0;
+                        const itemTotal =
+                          baseTotal + portionTotal + extrasTotal;
                         const isItemDeleted = item.isDeleted;
                         const isSelected = checkedMap.has(item._id);
                         const selectedItemData = checkedMap.get(item._id);
@@ -310,20 +334,22 @@ const MemoDeleteKot = () => {
                                     {item.extras && item.extras.length > 0 && (
                                       <span className="text-xs text-gray-500 ml-1">
                                         (+
-                                        {item.extras
-                                          .map((e) => (
+                                        {item.extras.map((e, i) => (
+                                          <Fragment key={e.id}>
                                             <span
-                                              key={e.id}
-                                              className={`${
+                                              className={
                                                 isItemDeleted
                                                   ? "line-through"
                                                   : ""
-                                              }`}
+                                              }
                                             >
                                               {e.name}
+                                              {e.quantity > 1 &&
+                                                ` x${e.quantity}`}
                                             </span>
-                                          ))
-                                          .join(", ")}
+                                            {i < item.extras.length - 1 && ", "}
+                                          </Fragment>
+                                        ))}
                                         )
                                       </span>
                                     )}
@@ -354,7 +380,6 @@ const MemoDeleteKot = () => {
                                   </Badge>
                                 )}
                               </div>
-
                               {/* Quantity Selector for Selected Items */}
                               {isSelected &&
                                 selectedItemData &&
@@ -439,21 +464,41 @@ const MemoDeleteKot = () => {
         ]}
       />
 
-      {/* Reason Modal */}
+      {/* Reason and Password Modal */}
       <Dialog open={isDialogOpen} onOpenChange={handleCloseDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirm Delete KOT Items</DialogTitle>
           </DialogHeader>
-
           <div className="space-y-4">
-            <Label htmlFor="reason">Reason for deletion</Label>
-            <Input
-              id="reason"
-              value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              placeholder="Describe why you're deleting these items"
-            />
+            <div>
+              <Label htmlFor="reason">Reason for deletion</Label>
+              <Input
+                id="reason"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Describe why you're deleting these items"
+              />
+            </div>
+
+            {/* Password Input - Only show if password is required */}
+            {isActive && (
+              <div>
+                <Label htmlFor="password" className="flex items-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  Delete KOT Password
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter delete KOT password"
+                  className="mt-1"
+                />
+              </div>
+            )}
+
             <div className="p-3 bg-gray-50 rounded-md">
               <p className="text-sm text-muted-foreground mb-2">
                 You are about to delete {totalSelectedItems} item(s) with a
@@ -475,14 +520,15 @@ const MemoDeleteKot = () => {
               </div>
             </div>
           </div>
-
           <div className="mt-6 flex justify-end space-x-2">
             <Button variant="outline" onClick={handleCloseDialog}>
               Cancel
             </Button>
             <Button
               type="button"
-              disabled={isPending || !reason.trim()}
+              disabled={
+                isPending || !reason.trim() || (isActive && !password.trim()) // Disable if password required but not provided
+              }
               onClick={handleConfirmGlobalDelete}
               className="bg-destructive hover:bg-destructive/90 text-white"
             >

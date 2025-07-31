@@ -16,7 +16,6 @@ import {
   Payment,
   PaymentAlert,
   PendingDues,
-  PetpoojaCartItem,
   QrBill,
   Reviews,
   Subscriber,
@@ -59,15 +58,18 @@ import {
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import type { KotOrderTypes } from "../../utils/bill";
 import { getMerchantConfig } from "../../utils/cacheHelper";
-import getDefault4AMToNext4AM from "../../utils/defaultBillingTime";
+import getDefault4AMToNext4AM, {
+  adjustFromToTimestamps,
+} from "../../utils/defaultBillingTime";
 import { convertToPetpoojaCart } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
+// import { queueClient } from "../../utils/queue/queueClient";
 import {
   type MerchantConfig,
   razorpayWrapper,
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
-import { generateTenDigitCode } from "../pos/index.js";
+import { generateTenDigitCode, sendPushNotification } from "../pos/index.js";
 const admin = require("firebase-admin");
 // Hash a passwordss
 
@@ -1728,8 +1730,6 @@ const paymentsRouter = new Hono()
       const requestData = await c.req.json();
       const { businessId, tableName, message, userId } = requestData;
 
-     
-
       const tableInfo = await Table.findOne({ businessId, name: tableName });
 
       let hiCode = "";
@@ -1753,6 +1753,13 @@ const paymentsRouter = new Hono()
       const registrationToken = await DeviceToken.find({
         businessId: businessId,
       });
+      if (registrationToken.length > 0) {
+        for (const obj of registrationToken) {
+          if (obj.notification) {
+            sendPushNotification(obj.token, "customer", tableName);
+          }
+        }
+      }
 
       if (registrationToken.length > 0) {
         for (const obj of registrationToken) {
@@ -1796,7 +1803,7 @@ const paymentsRouter = new Hono()
       }
 
       return respond(c, "Alert created successfully", false, 200, alert);
-    }
+    },
   )
   .get(
     "/:id/paymentAlerts",
@@ -2316,6 +2323,7 @@ const paymentsRouter = new Hono()
                     session,
                   },
                 );
+
                 await UserSession.deleteOne(
                   {
                     tableName: order.tableName,
@@ -2796,6 +2804,8 @@ const paymentsRouter = new Hono()
       let totalClaimedCoins = 0;
       let totalEarnCoins = 0;
       let totalDiscount = 0;
+      let totalCouponDiscount = 0;
+      let totalSubtotal = 0;
 
       const rows = existingPayments.map((payment: any) => {
         const {
@@ -2817,7 +2827,7 @@ const paymentsRouter = new Hono()
           finalSubTotal = 0,
           tax = 0,
           serviceCharge = 0,
-          total: finalTotal = 0,
+          total,
           order_id,
           waiterName,
           posBillId,
@@ -2825,6 +2835,9 @@ const paymentsRouter = new Hono()
           settleType,
           comment,
           splitModes = [],
+          billInvoice,
+          couponDiscount,
+          subTotal,
         } = payment;
 
         // aggregate totals
@@ -2835,11 +2848,13 @@ const paymentsRouter = new Hono()
         totalFinalSubTotal += finalSubTotal;
         totalTax += tax;
         totalServiceCharge += serviceCharge;
-        totalAmount += finalTotal;
+        totalAmount += total;
         totalTips += tips;
         totalClaimedCoins += claimedCoins;
         totalEarnCoins += earnCoins;
         totalDiscount += discount;
+        totalCouponDiscount += couponDiscount;
+        totalSubtotal += billValue;
 
         // flatten splitModes
         const splitInfo = Array.isArray(splitModes)
@@ -2858,7 +2873,7 @@ const paymentsRouter = new Hono()
           INITIAL_SUBTOTAL: initialSubTotal,
           INITIAL_TAX: initialTax,
           INITIAL_TOTAL: initialTotal,
-          SUBTOTAL: finalSubTotal === 0 ? initialSubTotal : finalSubTotal,
+          SUBTOTAL: billValue,
           CLAIMED_COINS: claimedCoins,
           EARNED_COINS: earnCoins,
           DISCOUNT: discount,
@@ -2866,7 +2881,7 @@ const paymentsRouter = new Hono()
           TAX: tax,
           SERVICE_CHARGE: serviceCharge,
           TIPS: tips,
-          TOTAL: finalTotal,
+          TOTAL: total,
           MODES: splitInfo,
           SETTLE_TYPE: settleType,
           COMMENT: comment,
@@ -2874,6 +2889,8 @@ const paymentsRouter = new Hono()
           POS_BILL_ID: posBillId,
           POS_BILL_REQUEST_ID: posBillRequestId,
           ORDER_ID: order_id?._id.toString() ?? "",
+          COUPON_DISCOUNT: couponDiscount,
+          BILL_INVOICE: billInvoice,
         };
       });
 
@@ -2906,6 +2923,8 @@ const paymentsRouter = new Hono()
         POS_BILL_ID: "",
         POS_BILL_REQUEST_ID: "",
         ORDER_ID: "",
+        COUPON_DISCOUNT: "",
+        BILL_INVOICE: 0,
       });
 
       const csvString = Papa.unparse(rows, {
@@ -3568,8 +3587,6 @@ const paymentsRouter = new Hono()
           }
         }
 
-        
-
         if (payment.claimedCoins && !payment.couponId) {
           totalCoinsUsed += payment.claimedCoins ?? 0;
         }
@@ -3718,6 +3735,145 @@ const paymentsRouter = new Hono()
 
       return respond(c, "Payment mode updated successfully", false, 200, {
         _id: updatedPayment._id,
+      });
+    },
+  )
+  .get(
+    "/:id/test_salesDashboard",
+    zValidator("query", paramsSchema),
+    async (c) => {
+      const { businessId, from, to } = c.req.query();
+
+      // Adjust `from` and `to` timestamps based on whether they are today's date or not
+      const { adjustedFrom, adjustedTo } = adjustFromToTimestamps(
+        Number(from),
+        Number(to),
+      );
+
+      // Log the adjusted timestamps and formatted dates for clarity
+      console.log(
+        "Adjusted From (4 AM if today):",
+        new Date(adjustedFrom).toLocaleString(),
+        "Original From:",
+        new Date(Number(from)).toLocaleString(),
+      );
+      console.log(
+        "Adjusted To (4 AM if today):",
+        new Date(adjustedTo).toLocaleString(),
+        "Original To:",
+        new Date(Number(to)).toLocaleString(),
+      );
+
+      // Use the adjusted timestamps as `fromDate` and `toDate`
+      const fromDate = adjustedFrom;
+      const toDate = adjustedTo;
+
+      // Ensure `fromDate` is less than `toDate`
+      if (fromDate > toDate) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "from date should be less than to date",
+        });
+      }
+
+      // Query for payments within the adjusted date range
+      const payments = await Payment.find({
+        businessId,
+        isDeleted: false,
+        date: { $gte: fromDate, $lte: toDate },
+      });
+
+      const totalOrders = payments.length;
+
+      let overAllAmount = 0;
+      let totalOnlineSale = 0;
+      const offlineSales: Record<string, number> = {};
+
+      // Fetch active tables
+      const activeTable = await Table.find({
+        businessId: businessId,
+        status: "ACTIVE",
+      });
+
+      const totalActiveTableValue = activeTable.reduce((acc, table) => {
+        return acc + (table?.currentTableAmount ?? 0);
+      }, 0);
+
+      // Process the payments
+      for (const payment of payments) {
+        const { total = 0, paymentMode, mode, splitModes } = payment;
+
+        if (mode === "split" && Array.isArray(splitModes)) {
+          let splitTotal = 0;
+
+          for (const settle of splitModes) {
+            if (settle.name !== "complementary") {
+              splitTotal += settle.amount ?? 0;
+              offlineSales[settle.name] =
+                (offlineSales[settle.name] || 0) + (settle.amount ?? 0);
+            }
+          }
+
+          overAllAmount += splitTotal; // Only add non-complementary split values
+        } else if (!["dues", "npc", "complementary"].includes(mode)) {
+          overAllAmount += total; // Add total if it's not dues, npc, or complementary
+        }
+
+        if (paymentMode === "online") {
+          totalOnlineSale += total;
+        } else if (!["dues", "npc", "complementary"].includes(paymentMode)) {
+          offlineSales[mode] = (offlineSales[mode] || 0) + total;
+        }
+      }
+
+      // Clean up complementary and split modes
+      delete offlineSales["complementary"];
+      delete offlineSales["split"];
+
+      // Return the response with the data
+      return c.json({
+        err: false,
+        data: {
+          overAllAmount, // Excludes complementary but includes cash in split modes
+          onlineSale: { online: totalOnlineSale },
+          offlineSale: offlineSales,
+          totalOrders,
+          totalActiveTableValue,
+        },
+      });
+    },
+  )
+
+  .get(
+    "/fetch_bill_by_order_id",
+
+    zValidator(
+      "query",
+      z.object({
+        orderId: z.string(),
+      }),
+    ),
+
+    async (c) => {
+      const { orderId } = c.req.query();
+
+      const payment = await Payment.findOne({
+        order_id: orderId,
+      });
+
+      if (!payment) {
+        return c.json({
+          err: true,
+          data: {},
+          message: "Payment not found",
+        });
+      }
+
+      return c.json({
+        err: false,
+        data: payment,
+        message: "Payment found",
       });
     },
   );

@@ -28,6 +28,7 @@ import {
 import { motion, useAnimation } from "framer-motion";
 import toast from "react-hot-toast";
 import { useAllModes } from "@/hooks/useMode";
+import { useReprintBill } from "@/hooks/useBill.ts";
 
 export interface Extra {
   name: string;
@@ -105,6 +106,7 @@ const PaymentModal = ({
   const { data: modes } = useAllModes();
   const controls = useAnimation();
   const [dragDirection, setDragDirection] = useState<number>(0);
+  const { reprintBill } = useReprintBill();
 
   const { isPending, mutateAsync } = useMutation({
     mutationFn: async (billId: string) => {
@@ -213,6 +215,12 @@ const PaymentModal = ({
     }
   };
 
+  const printBill = (orderId: string) => {
+    reprintBill({
+      orderId: orderId,
+    });
+  };
+
   const totalItemsCount =
     salesData?.billItems?.reduce(
       (total, item) => total + item.dish.quantity,
@@ -314,6 +322,13 @@ const PaymentModal = ({
               <CardTitle className="flex items-center gap-2 text-base">
                 <CreditCard className="w-4 h-4" />
                 Payment Information
+                <Button
+                  onClick={() => printBill(salesData?.order_id?._id)}
+                  variant="outline"
+                  className="px-6"
+                >
+                  Print
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">

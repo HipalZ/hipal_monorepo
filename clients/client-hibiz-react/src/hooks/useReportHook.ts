@@ -1,0 +1,637 @@
+import { useError } from "@/components/store/useError.ts";
+import { apiRpc } from "@hi/common";
+import { useMutation } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import useReports from "@/components/store/useReports.ts";
+import { formatDate } from "@/components/utils/helper.ts";
+
+interface GetReportsPayload {
+  from: string;
+  to: string;
+  businessIds: string[];
+}
+
+export interface CategoryReport {
+  categoryId: string;
+  categoryName: string;
+  categoryCount: number;
+  totalAmount: number;
+  totalDiscount: number;
+  totalTax: number;
+}
+
+export interface BusinessCategoryReport {
+  businessId: string;
+  businessName: string;
+  categories: CategoryReport[];
+}
+
+export const useCategoryReports = () => {
+  const { setError, setOpenErrorModal } = useError();
+  const setCategoryReports = useReports((s) => s.setCategoryReports);
+
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      const response = await apiRpc.report.category.$post({
+        json: payload,
+      });
+      return response;
+    },
+    onSuccess: async (data) => {
+      if (data.status === 400 || data.status === 401) {
+        setOpenErrorModal(true);
+        setError("Report generation failed");
+        return toast.error("Report generation failed");
+      }
+      if (data.status === 200 || data.status === 201) {
+        const response = await data.json();
+        const categoryData = response.data as BusinessCategoryReport[];
+        setCategoryReports(categoryData || []);
+        return toast.success("Report generated successfully");
+      }
+    },
+    onError: (data) => {
+      console.log(data);
+      toast.error("Failed to fetch reports");
+    },
+  });
+
+  return {
+    isPending,
+    getCategoryReports: mutateAsync,
+    clearReportData: () => setCategoryReports([]),
+  };
+};
+
+export const useGetReportsCsv = () => {
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      const response = await apiRpc.report.category.download_csv.$post({
+        json: payload,
+      });
+      return response.blob();
+    },
+    onSuccess: async (blob, variables) => {
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement("a");
+      const fromStr = formatDate(Number(variables.from));
+      const toStr = formatDate(Number(variables.to));
+      const fileName = `category reports ${fromStr} to ${toStr}.csv`;
+
+      link.href = url;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    },
+    onError: (error) => {
+      console.log(error);
+    },
+  });
+  return { isPending, getReportsCsv: mutateAsync };
+};
+
+interface GetReportsPayload {
+  from: string;
+  to: string;
+  businessIds: string[];
+}
+
+export interface ItemReport {
+  categoryId: string;
+  itemName: string;
+  itemCount: number;
+  quantity: number;
+  amount: number;
+  discount: number;
+  tax: number;
+}
+
+export interface BusinessItemReport {
+  businessId: string;
+  form: string;
+  to: string;
+  businessName: string;
+  items: ItemReport[];
+}
+
+export const useItemReports = () => {
+  const { setError, setOpenErrorModal } = useError();
+  const setItemReports = useReports((s) => s.setItemReports);
+
+  const { isPending, mutateAsync, reset } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      const response = await apiRpc.report.item.$post({
+        json: payload,
+      });
+      return response;
+    },
+    onSuccess: async (data) => {
+      if (data.status === 400 || data.status === 401) {
+        setOpenErrorModal(true);
+        setError("Report generation failed");
+        return toast.error("Report generation failed");
+      }
+      if (data.status === 200 || data.status === 201) {
+        try {
+          const response = await data.json();
+          const itemData = response.data as BusinessItemReport[];
+
+          // Validate data structure
+          if (!itemData || !Array.isArray(itemData)) {
+            throw new Error("Invalid data format received");
+          }
+
+          setItemReports(itemData);
+
+          // Calculate total items for success message
+          const totalItems = itemData.reduce(
+            (acc, business) => acc + business.items.length,
+            0,
+          );
+
+          return toast.success(
+            `Report generated successfully! Found ${totalItems} items.`,
+          );
+        } catch (parseError) {
+          console.error("Error parsing response:", parseError);
+          setOpenErrorModal(true);
+          setError("Failed to process report data");
+          return toast.error("Failed to process report data");
+        }
+      }
+    },
+    onError: (error) => {
+      console.error("Report generation error:", error);
+      setOpenErrorModal(true);
+      setError("Failed to fetch reports. Please try again.");
+      toast.error("Failed to fetch reports. Please try again.");
+    },
+  });
+
+  return {
+    isPending,
+    getItemReports: mutateAsync,
+    clearReportData: () => setItemReports([]),
+    resetError: reset,
+  };
+};
+
+export const useGetItemReportsCsv = () => {
+  const { isPending, mutateAsync, reset } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      const response = await apiRpc.report.item.download_csv.$post({
+        json: payload,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.blob();
+    },
+    onSuccess: async (blob, variables) => {
+      try {
+        // Validate blob
+        if (!blob || blob.size === 0) {
+          throw new Error("Empty file received");
+        }
+
+        const url = window.URL.createObjectURL(new Blob([blob]));
+        const link = document.createElement("a");
+        const fromStr = formatDate(Number(variables.from));
+        const toStr = formatDate(Number(variables.to));
+        const fileName = `item-reports-${fromStr}-to-${toStr}.csv`;
+
+        link.href = url;
+        link.setAttribute("download", fileName);
+        document.body.appendChild(link);
+        link.click();
+
+        // Cleanup
+        if (link.parentNode) {
+          link.parentNode.removeChild(link);
+        }
+        window.URL.revokeObjectURL(url);
+
+        toast.success(`CSV file "${fileName}" downloaded successfully!`);
+      } catch (downloadError) {
+        console.error("Download error:", downloadError);
+        toast.error("Failed to download CSV file");
+      }
+    },
+    onError: (error) => {
+      console.error("CSV generation error:", error);
+      toast.error("Failed to generate CSV file. Please try again.");
+    },
+  });
+
+  return {
+    isPending,
+    getItemReportsCsv: mutateAsync,
+    resetError: reset,
+  };
+};
+
+interface GetReportsPayload {
+  from: string;
+  to: string;
+  businessIds: string[];
+}
+
+export interface DiscountReport {
+  discountName: string;
+  discountCount: number;
+  amount: number;
+}
+
+export interface BusinessDiscountReport {
+  businessId: string;
+  businessName: string;
+  from: string;
+  to: string;
+  discounts: DiscountReport[];
+}
+
+export const useDiscountReports = () => {
+  const { setError, setOpenErrorModal } = useError();
+  const setDiscountReports = useReports((s) => s.setDiscountReports);
+
+  const { isPending, mutateAsync, reset } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      const response = await apiRpc.report.discount.$post({
+        json: payload,
+      });
+      return response;
+    },
+    onSuccess: async (data) => {
+      if (data.status === 400 || data.status === 401) {
+        setOpenErrorModal(true);
+        setError("Report generation failed");
+        return toast.error("Report generation failed");
+      }
+      if (data.status === 200 || data.status === 201) {
+        try {
+          const response = await data.json();
+          const discountData = response.data as BusinessDiscountReport[];
+
+          // Validate data structure
+          if (!discountData || !Array.isArray(discountData)) {
+            throw new Error("Invalid data format received");
+          }
+
+          setDiscountReports(discountData);
+
+          // Calculate total discounts for success message
+          const totalDiscounts = discountData.reduce(
+            (acc, business) => acc + business.discounts.length,
+            0,
+          );
+
+          return toast.success(
+            `Report generated successfully! Found ${totalDiscounts} discount types.`,
+          );
+        } catch (parseError) {
+          console.error("Error parsing response:", parseError);
+          setOpenErrorModal(true);
+          setError("Failed to process report data");
+          return toast.error("Failed to process report data");
+        }
+      }
+    },
+    onError: (error) => {
+      console.error("Report generation error:", error);
+      setOpenErrorModal(true);
+      setError("Failed to fetch reports. Please try again.");
+      toast.error("Failed to fetch reports. Please try again.");
+    },
+  });
+
+  return {
+    isPending,
+    getDiscountReports: mutateAsync,
+    clearReportData: () => setDiscountReports([]),
+    resetError: reset,
+  };
+};
+
+export const useGetDiscountReportsCsv = () => {
+  const { isPending, mutateAsync, reset } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      const response = await apiRpc.report.discount.download_csv.$post({
+        json: payload,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.blob();
+    },
+    onSuccess: async (blob, variables) => {
+      try {
+        // Validate blob
+        if (!blob || blob.size === 0) {
+          throw new Error("Empty file received");
+        }
+
+        const url = window.URL.createObjectURL(new Blob([blob]));
+        const link = document.createElement("a");
+        const fromStr = formatDate(Number(variables.from));
+        const toStr = formatDate(Number(variables.to));
+        const fileName = `discount-reports-${fromStr}-to-${toStr}.csv`;
+
+        link.href = url;
+        link.setAttribute("download", fileName);
+        document.body.appendChild(link);
+        link.click();
+
+        // Cleanup
+        if (link.parentNode) {
+          link.parentNode.removeChild(link);
+        }
+        window.URL.revokeObjectURL(url);
+
+        toast.success(`CSV file "${fileName}" downloaded successfully!`);
+      } catch (downloadError) {
+        console.error("Download error:", downloadError);
+        toast.error("Failed to download CSV file");
+      }
+    },
+    onError: (error) => {
+      console.error("CSV generation error:", error);
+      toast.error("Failed to generate CSV file. Please try again.");
+    },
+  });
+
+  return {
+    isPending,
+    getDiscountReportsCsv: mutateAsync,
+    resetError: reset,
+  };
+};
+
+interface GetReportsPayload {
+  from: string
+  to: string
+  businessIds: string[]
+}
+
+export interface AddonReport {
+  addOnName: string
+  addOnCount: number
+  quantity: number
+  amount: number
+  totalSales: number
+}
+
+export interface BusinessAddonReport {
+  businessId: string
+  businessName: string
+  from: string
+  to: string
+  addOns: AddonReport[]
+}
+
+export const useAddonReports = () => {
+  const { setError, setOpenErrorModal } = useError()
+  const setAddonReports = useReports((s) => s.setAddonReports)
+
+  const { isPending, mutateAsync, reset } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      const response = await apiRpc.report.add_on.$post({
+        json: payload,
+      })
+      return response
+    },
+    onSuccess: async (data) => {
+      if (data.status === 400 || data.status === 401) {
+        setOpenErrorModal(true)
+        setError("Report generation failed")
+        return toast.error("Report generation failed")
+      }
+      if (data.status === 200 || data.status === 201) {
+        try {
+          const response = await data.json()
+          const addonData = response.data as BusinessAddonReport[]
+
+          // Validate data structure
+          if (!addonData || !Array.isArray(addonData)) {
+            throw new Error("Invalid data format received")
+          }
+
+          setAddonReports(addonData)
+
+          // Calculate total addons for success message
+          const totalAddons = addonData.reduce((acc, business) => acc + business.addOns.length, 0)
+
+          return toast.success(`Report generated successfully! Found ${totalAddons} addon types.`)
+        } catch (parseError) {
+          console.error("Error parsing response:", parseError)
+          setOpenErrorModal(true)
+          setError("Failed to process report data")
+          return toast.error("Failed to process report data")
+        }
+      }
+    },
+    onError: (error) => {
+      console.error("Report generation error:", error)
+      setOpenErrorModal(true)
+      setError("Failed to fetch reports. Please try again.")
+      toast.error("Failed to fetch reports. Please try again.")
+    },
+  })
+
+  return {
+    isPending,
+    getAddonReports: mutateAsync,
+    clearReportData: () => setAddonReports([]),
+    resetError: reset,
+  }
+}
+
+export const useGetAddonReportsCsv = () => {
+  const { isPending, mutateAsync, reset } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      const response = await apiRpc.report.add_on.download_csv.$post({
+        json: payload,
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return response.blob()
+    },
+    onSuccess: async (blob, variables) => {
+      try {
+        // Validate blob
+        if (!blob || blob.size === 0) {
+          throw new Error("Empty file received")
+        }
+
+        const url = window.URL.createObjectURL(new Blob([blob]))
+        const link = document.createElement("a")
+        const fromStr = formatDate(Number(variables.from))
+        const toStr = formatDate(Number(variables.to))
+        const fileName = `addon-reports-${fromStr}-to-${toStr}.csv`
+
+        link.href = url
+        link.setAttribute("download", fileName)
+        document.body.appendChild(link)
+        link.click()
+
+        // Cleanup
+        if (link.parentNode) {
+          link.parentNode.removeChild(link)
+        }
+        window.URL.revokeObjectURL(url)
+
+        toast.success(`CSV file "${fileName}" downloaded successfully!`)
+      } catch (downloadError) {
+        console.error("Download error:", downloadError)
+        toast.error("Failed to download CSV file")
+      }
+    },
+    onError: (error) => {
+      console.error("CSV generation error:", error)
+      toast.error("Failed to generate CSV file. Please try again.")
+    },
+  })
+
+  return {
+    isPending,
+    getAddonReportsCsv: mutateAsync,
+    resetError: reset,
+  }
+}
+
+interface GetReportsPayload {
+  from: string
+  to: string
+  businessIds: string[]
+}
+
+export interface ServiceChargeReport {
+  businessId: string
+  businessName: string
+  from: string
+  to: string
+  serviceCharge: number
+}
+
+export const useServiceChargeReports = () => {
+  const { setError, setOpenErrorModal } = useError()
+  const setServiceChargeReports = useReports((s) => s.setServiceChargeReports)
+
+  const { isPending, mutateAsync, reset } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      const response = await apiRpc.report.service_charge.$post({
+        json: payload,
+      })
+      return response
+    },
+    onSuccess: async (data) => {
+      if (data.status === 400 || data.status === 401) {
+        setOpenErrorModal(true)
+        setError("Report generation failed")
+        return toast.error("Report generation failed")
+      }
+      if (data.status === 200 || data.status === 201) {
+        try {
+          const response = await data.json()
+          const serviceChargeData = response.data as ServiceChargeReport[]
+
+          // Validate data structure
+          if (!serviceChargeData || !Array.isArray(serviceChargeData)) {
+            throw new Error("Invalid data format received")
+          }
+
+          setServiceChargeReports(serviceChargeData)
+
+          // Calculate total service charge for success message
+          const totalServiceCharge = serviceChargeData.reduce((acc, business) => acc + business.serviceCharge, 0)
+
+          return toast.success(
+            `Report generated successfully! Total service charge: ${new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(totalServiceCharge)}.`,
+          )
+        } catch (parseError) {
+          console.error("Error parsing response:", parseError)
+          setOpenErrorModal(true)
+          setError("Failed to process report data")
+          return toast.error("Failed to process report data")
+        }
+      }
+    },
+    onError: (error) => {
+      console.error("Report generation error:", error)
+      setOpenErrorModal(true)
+      setError("Failed to fetch reports. Please try again.")
+      toast.error("Failed to fetch reports. Please try again.")
+    },
+  })
+
+  return {
+    isPending,
+    getServiceChargeReports: mutateAsync,
+    clearReportData: () => setServiceChargeReports([]),
+    resetError: reset,
+  }
+}
+
+export const useGetServiceChargeReportsCsv = () => {
+  const { isPending, mutateAsync, reset } = useMutation({
+    mutationFn: async (payload: GetReportsPayload) => {
+      const response = await apiRpc.report.service_charge.download_csv.$post({
+        json: payload,
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      return response.blob()
+    },
+    onSuccess: async (blob, variables) => {
+      try {
+        // Validate blob
+        if (!blob || blob.size === 0) {
+          throw new Error("Empty file received")
+        }
+
+        const url = window.URL.createObjectURL(new Blob([blob]))
+        const link = document.createElement("a")
+        const fromStr = formatDate(Number(variables.from))
+        const toStr = formatDate(Number(variables.to))
+        const fileName = `service-charge-reports-${fromStr}-to-${toStr}.csv`
+
+        link.href = url
+        link.setAttribute("download", fileName)
+        document.body.appendChild(link)
+        link.click()
+
+        // Cleanup
+        if (link.parentNode) {
+          link.parentNode.removeChild(link)
+        }
+        window.URL.revokeObjectURL(url)
+
+        toast.success(`CSV file "${fileName}" downloaded successfully!`)
+      } catch (downloadError) {
+        console.error("Download error:", downloadError)
+        toast.error("Failed to download CSV file")
+      }
+    },
+    onError: (error) => {
+      console.error("CSV generation error:", error)
+      toast.error("Failed to generate CSV file. Please try again.")
+    },
+  })
+
+  return {
+    isPending,
+    getServiceChargeReportsCsv: mutateAsync,
+    resetError: reset,
+  }
+}
