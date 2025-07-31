@@ -340,7 +340,6 @@ const MemoMainTypes = (props: IMainTypes) => {
               </div>
             ),
           )}
-
           {standaloneCategories.length > 0 && (
             <div className="min-h-screen mb-4">
               <div
