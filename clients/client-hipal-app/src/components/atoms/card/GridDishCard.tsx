@@ -1,5 +1,5 @@
 "use client";
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useMemo } from "react";
 import type { DishType } from "@hi/db-models/src/validators";
 import { cn } from "@hi/common";
 import { useCartStore } from "@/components/store/useCartStore";
@@ -29,7 +29,9 @@ const GridDishCard = ({
   secondaryColor = "#fce7f3",
   isEdgeLayout,
 }: GridDishCardProps) => {
-  const currencySymbol = _useAllBusiness((s) => s.data.outletInfo?.currencySymbol);
+  const currencySymbol = _useAllBusiness(
+    (s) => s.data.outletInfo?.currencySymbol,
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { cart } = useCartStore();
   const { setSelectedDish, isSelectedDish } = useActiveClass();
@@ -55,6 +57,16 @@ const GridDishCard = ({
   const cartItems = cart.filter((item) => item.dish?._id === dishData._id);
   const isDishInCart = cartItems.length > 0;
   const recommendations = isDishInCart ? dishData.recommendationIds || [] : [];
+
+  const portions = useMemo(() => {
+    return dishData?.portions?.map((portion) => ({
+      name: portion.name,
+      price: portion.price,
+      default: portion.default,
+      portionTypes: portion.portionTypes,
+      _id: portion._id,
+    }));
+  }, [dishData]);
 
   return (
     <div className="flex flex-col">
@@ -109,7 +121,10 @@ const GridDishCard = ({
           </h3>
 
           <p className="mt-2 font-semibold text-black opacity-60">
-            {currencySymbol} {dishData.price.toFixed(2)}
+            {currencySymbol}{" "}
+            {portions?.length > 0
+              ? portions?.[0]?.price.toFixed(2)
+              : dishData?.price.toFixed(2)}
           </p>
 
           {dishData.description && (

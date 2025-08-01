@@ -313,7 +313,7 @@ const MemoMainTypes = (props: IMainTypes) => {
                           />
                         ) : (
                           <div
-                            className="flex items-center justify-center w-full h-full"
+                            className="flex items-center justify-center w-full h-full capitalize"
                             style={{
                               backgroundColor: generatePastelColor(
                                 category.name,
@@ -330,7 +330,7 @@ const MemoMainTypes = (props: IMainTypes) => {
                         style={{
                           color: primaryColor,
                         }}
-                        className="max-w-full text-base font-medium capitalize proper-case poppins-regular  line-clamp-3"
+                        className="max-w-full text-base font-medium capitalize poppins-regular  line-clamp-3"
                       >
                         {category.name}
                       </span>
@@ -340,7 +340,6 @@ const MemoMainTypes = (props: IMainTypes) => {
               </div>
             ),
           )}
-
           {standaloneCategories.length > 0 && (
             <div className="min-h-screen mb-4">
               <div
@@ -387,7 +386,7 @@ const MemoMainTypes = (props: IMainTypes) => {
                       style={{
                         color: primaryColor,
                       }}
-                      className="max-w-full text-base font-medium proper-case line-clamp-3 poppins-regular "
+                      className="max-w-full text-base font-medium capitalize line-clamp-3 poppins-regular "
                     >
                       {category.name}
                     </span>
