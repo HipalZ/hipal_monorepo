@@ -47,4 +47,3 @@ vercel json filed testings vercel removed build
 pnpm lock trigger to
 Trigger HIpalz2
 VM layer
-Trigger push
