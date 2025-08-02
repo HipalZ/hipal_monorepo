@@ -58,9 +58,7 @@ import {
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import type { KotOrderTypes } from "../../utils/bill";
 import { getMerchantConfig } from "../../utils/cacheHelper";
-import getDefault4AMToNext4AM, {
-  adjustFromToTimestamps,
-} from "../../utils/defaultBillingTime";
+import { adjustFromToTimestamps } from "../../utils/defaultBillingTime";
 import { convertToPetpoojaCart } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 // import { queueClient } from "../../utils/queue/queueClient";
@@ -2372,13 +2370,18 @@ const paymentsRouter = new Hono()
     zValidator("query", paramsSchema),
     async (c) => {
       const { businessId, from, to } = c.req.query();
-      const { fromDate: defaultFromDate, toDate: defaultToDate } =
-        getDefault4AMToNext4AM();
-      const fromDate = from ? Number(from) : defaultFromDate;
-      const toDate = to
-        ? Number(to) // Add 24 hours in milliseconds
-        : defaultToDate;
 
+      // Adjust `from` and `to` timestamps based on whether they are today's date or not
+      const { adjustedFrom, adjustedTo } = adjustFromToTimestamps(
+        Number(from),
+        Number(to),
+      );
+      console.log("original", new Date(Number(from)).toLocaleString(), "From:", new Date(adjustedFrom).toLocaleString());
+      console.log("original", new Date(Number(to)).toLocaleString(),"To :", new Date(adjustedTo).toLocaleString());
+
+      // Use the adjusted timestamps as `fromDate` and `toDate`
+      const fromDate = adjustedFrom;
+      const toDate = adjustedTo;
       if (fromDate > toDate) {
         return c.json({
           err: true,
@@ -2463,10 +2466,18 @@ const paymentsRouter = new Hono()
     async (c) => {
       let { appliedFilter } = c.req.query();
       const { businessId, from, to } = c.req.query();
-      const { fromDate: defaultFromDate, toDate: defaultToDate } =
-        getDefault4AMToNext4AM();
-      const fromDate = from ? Number(from) : defaultFromDate;
-      const toDate = to ? Number(to) : defaultToDate;
+
+      // Adjust `from` and `to` timestamps based on whether they are today's date or not
+      const { adjustedFrom, adjustedTo } = adjustFromToTimestamps(
+        Number(from),
+        Number(to),
+      );
+      console.log("original", new Date(Number(from)).toLocaleString(), "From:", new Date(adjustedFrom).toLocaleString());
+      console.log("original", new Date(Number(to)).toLocaleString(),"To :", new Date(adjustedTo).toLocaleString());
+
+      // Use the adjusted timestamps as `fromDate` and `toDate`
+      const fromDate = adjustedFrom;
+      const toDate = adjustedTo;
 
       if (fromDate > toDate) {
         return c.json({
@@ -3422,10 +3433,18 @@ const paymentsRouter = new Hono()
     ),
     async (c) => {
       const { businessId, from, to } = c.req.query();
-      const { fromDate: defaultFromDate, toDate: defaultToDate } =
-        getDefault4AMToNext4AM();
-      const fromDate = from ? Number(from) : defaultFromDate;
-      const toDate = to ? Number(to) : defaultToDate;
+
+      // Adjust `from` and `to` timestamps based on whether they are today's date or not
+      const { adjustedFrom, adjustedTo } = adjustFromToTimestamps(
+        Number(from),
+        Number(to),
+      );
+      console.log("original", new Date(Number(from)).toLocaleString(), "From:", new Date(adjustedFrom).toLocaleString());
+      console.log("original", new Date(Number(to)).toLocaleString(),"To :", new Date(adjustedTo).toLocaleString());
+
+      // Use the adjusted timestamps as `fromDate` and `toDate`
+      const fromDate = adjustedFrom;
+      const toDate = adjustedTo;
 
       if (fromDate > toDate) {
         return c.json({
@@ -3523,10 +3542,18 @@ const paymentsRouter = new Hono()
     ),
     async (c) => {
       const { businessId, from, to } = c.req.query();
-      const { fromDate: defaultFromDate, toDate: defaultToDate } =
-        getDefault4AMToNext4AM();
-      const fromDate = from ? Number(from) : defaultFromDate;
-      const toDate = to ? Number(to) : defaultToDate;
+
+      // Adjust `from` and `to` timestamps based on whether they are today's date or not
+      const { adjustedFrom, adjustedTo } = adjustFromToTimestamps(
+        Number(from),
+        Number(to),
+      );
+      console.log("original", new Date(Number(from)).toLocaleString(), "From:", new Date(adjustedFrom).toLocaleString());
+      console.log("original", new Date(Number(to)).toLocaleString(),"To :", new Date(adjustedTo).toLocaleString());
+
+      // Use the adjusted timestamps as `fromDate` and `toDate`
+      const fromDate = adjustedFrom;
+      const toDate = adjustedTo;
 
       if (fromDate > toDate) {
         return c.json({
@@ -3639,20 +3666,8 @@ const paymentsRouter = new Hono()
         Number(from),
         Number(to),
       );
-
-      // Log the adjusted timestamps and formatted dates for clarity
-      console.log(
-        "Adjusted From (4 AM if today):",
-        new Date(adjustedFrom).toLocaleString(),
-        "Original From:",
-        new Date(Number(from)).toLocaleString(),
-      );
-      console.log(
-        "Adjusted To (4 AM if today):",
-        new Date(adjustedTo).toLocaleString(),
-        "Original To:",
-        new Date(Number(to)).toLocaleString(),
-      );
+      console.log("original", new Date(Number(from)).toLocaleString(), "From:", new Date(adjustedFrom).toLocaleString());
+      console.log("original", new Date(Number(to)).toLocaleString(),"To :", new Date(adjustedTo).toLocaleString());
 
       // Use the adjusted timestamps as `fromDate` and `toDate`
       const fromDate = adjustedFrom;

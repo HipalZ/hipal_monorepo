@@ -1,5 +1,5 @@
 To install dependencies:
-/
+//
 
 ```sh
 bun install
@@ -19,3 +19,4 @@ open http://localhost:3000
 ````
 
 WABA ID templates
+Test
