@@ -19,6 +19,7 @@ interface ButtonConfig {
   highlight?: boolean;
   borderClasses?: string;
   swipe?: boolean;
+  icon?: React.ReactNode;
 }
 
 interface MemoBottomButtonProps {
@@ -39,7 +40,14 @@ const buttonVariants = {
 
 // Helper to return the inside label/spinner/back arrow
 function getButtonInnerContent(button: ButtonConfig) {
-  const { highlight, borderClasses, isBackButton, isLoading, text } = button;
+  const {
+    highlight,
+    borderClasses,
+    isBackButton,
+    isLoading,
+    text,
+    icon: Icon,
+  } = button;
 
   if (highlight) {
     return (
@@ -54,7 +62,10 @@ function getButtonInnerContent(button: ButtonConfig) {
         ) : isLoading ? (
           <SpinnerMemo />
         ) : (
-          text
+          <div className="flex items-center justify-center gap-2 truncate">
+            {Icon && <h3 className="inline-flex items-center">{Icon}</h3>}
+            <h3 className="truncate">{text}</h3>
+          </div>
         )}
       </ShineBorder>
     );
@@ -68,7 +79,12 @@ function getButtonInnerContent(button: ButtonConfig) {
     return <SpinnerMemo />;
   }
 
-  return text;
+  return (
+    <div className="flex items-center justify-center gap-2 truncate">
+      {Icon && <h3 className="inline-flex items-center">{Icon}</h3>}
+      <h3 className="truncate">{text}</h3>
+    </div>
+  );
 }
 
 // SwipeButton - only used when button.swipe === true
@@ -103,7 +119,7 @@ function SwipeButton({
           "flex-1": buttonsLength > 1 && !button.isBackButton,
           "w-[54px]": button.isBackButton && index === 0,
           "ml-4": index > 0 && !button.isBackButton,
-        }
+        },
       )}
       style={{
         backgroundColor: button.disable ? "#cccccc" : button.color ?? "#000000",
@@ -153,7 +169,7 @@ const MemoBottomButton = (props: MemoBottomButtonProps) => {
           "mx-auto": position === "mid",
           "w-full": position === "mid",
         },
-        shadow ? "shadow-[0_-2px_15px_rgba(0,0,0,0.1)]" : ""
+        shadow ? "shadow-[0_-2px_15px_rgba(0,0,0,0.1)]" : "",
       )}
       style={{
         backgroundColor: backgroundColor,
@@ -182,15 +198,15 @@ const MemoBottomButton = (props: MemoBottomButtonProps) => {
               <motion.button
                 key={button.text}
                 className={cn(
-                  "rounded-full text-center py-3 transition-all duration-300 relative overflow-hidden",
+                  "rounded-full w-full text-center py-3 transition-all duration-300 relative overflow-hidden",
                   button.className,
                   button?.isLoading ? "pointer-events-none" : "",
                   {
                     "opacity-50 cursor-not-allowed": button.disable,
-                    "flex-1": buttons.length > 1 && !button.isBackButton,
+                    // "flex-1": buttons.length > 1 && !button.isBackButton,
                     "w-[54px]": button.isBackButton && index === 0,
                     "ml-4": index > 0 && !button.isBackButton,
-                  }
+                  },
                 )}
                 style={{
                   backgroundColor: button.disable
@@ -210,7 +226,7 @@ const MemoBottomButton = (props: MemoBottomButtonProps) => {
                 {getButtonInnerContent(button)}
               </motion.button>
             )
-          ) : null
+          ) : null,
         )}
       </div>
     </article>

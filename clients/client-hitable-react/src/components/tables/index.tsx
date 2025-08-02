@@ -138,7 +138,6 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
 
     return result;
   }, [allTables, zones, sortByName, selectedZoneId]);
-  console.log("zonesWithTables", zonesWithTables);
 
   const handleZoneSelect = (zoneId: string | null) => {
     setSelectedZoneId(zoneId);

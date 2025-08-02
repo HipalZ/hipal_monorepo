@@ -167,7 +167,6 @@ const MemoNormalSettle = ({
   });
 
   const handleConfirm = async (alertData: Alert) => {
-    console.log("step 1");
     try {
       if (settleModes.length === 0) {
         toast.error("Please select at least one payment mode.");
@@ -194,7 +193,6 @@ const MemoNormalSettle = ({
       );
 
       if (alertData?.alertType === "OFFLINE") {
-        console.log("alertData aaya dekh", alertData);
         const payload = {
           id: alertData._id,
           waiterName: captainData?.name,
@@ -213,7 +211,6 @@ const MemoNormalSettle = ({
 
         await confirmAlert(payload);
       } else {
-        console.log("idhar ku aaya tu");
         const payload = {
           tableId: selectedTable?._id || "",
           billId: billData?.billId || "",
@@ -321,7 +318,7 @@ const MemoNormalSettle = ({
                   closeNormalSettle();
                 }
               },
-              className: "w-full rounded-md pl-3",
+              className: " rounded-md pl-3 !w-[8rem]",
               isBackButton: true,
             },
             {
@@ -352,7 +349,7 @@ const MemoNormalSettle = ({
                 setSettleModes([]);
                 setSaveDueUser(null);
               },
-              className: "w-full rounded-md pl-3",
+              className: "w-full rounded-md pl-3 ",
               isBackButton: true,
             },
             {

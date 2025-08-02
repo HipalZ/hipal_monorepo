@@ -38,8 +38,6 @@ const MemoDeleteKot = () => {
   const { isLoading, isActive } = useIsPasswordActive("DELETE_KOT");
   const userId = useHiClientZ((s) => s.captainData._id);
 
-  console.log(isError);
-
   const ordersWithActiveItems = useMemo(() => {
     return ordersData.filter((order) => order.cart);
   }, [ordersData]);

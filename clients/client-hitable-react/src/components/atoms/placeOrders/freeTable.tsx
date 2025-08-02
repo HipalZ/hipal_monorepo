@@ -45,7 +45,6 @@ const MemoFreeTable = () => {
       return response;
     },
     onSuccess: (data) => {
-      console.log(data);
       if (!data?.ok) {
         setOpenErrorModal(true);
         setError("You are not authorized to perform this action");
