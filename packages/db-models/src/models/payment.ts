@@ -242,6 +242,16 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
       type: Number,
       default: 0,
     },
+    isSplit: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    isSplitBillVariant: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
 
   { timestamps: true },

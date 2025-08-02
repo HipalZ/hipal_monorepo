@@ -1,4 +1,4 @@
-import { UserSession } from "@hi/db-models";
+import { SplitBillTableSession, UserSession } from "@hi/db-models";
 import type { ClientSession } from "mongoose";
 import type { BillGroup, Item } from "../billTypes";
 
@@ -135,6 +135,40 @@ function calculateBillTotals(kots: KotOrderTypes[]): {
   return { totalDishTotal, totalGst };
 }
 
+function calculateSplitBillTotals(cartItems: Item[]): {
+  totalDishTotal: number;
+  totalGst: number;
+} {
+  let totalDishTotal = 0;
+  let totalGst = 0;
+
+  try {
+    for (const item of cartItems) {
+      // Skip deleted items
+      if (item.isDeleted) continue;
+
+      // Base price comes from portion if present, otherwise dish.price
+      const basePrice = item.portion?.price ?? item.dish.price;
+
+      // Sum up all extras (price * quantity)
+      const extrasTotal = item.extras.reduce((sum, ex) => sum + ex.price, 0);
+
+      // Line total for this item
+      const lineTotal = basePrice + extrasTotal;
+      totalDishTotal += lineTotal;
+      console.log("basePrice", totalDishTotal);
+
+      // Determine GST percentage (prefer gst field)
+      totalGst += item.dish.gst || 0;
+    }
+  } catch (err) {
+    console.error("Error calculating bill totals:", err);
+    throw new Error("Invalid data structure in KOTs");
+  }
+
+  return { totalDishTotal, totalGst };
+}
+
 function calculateBillDishIds(
   kots: KotOrderTypes[],
   itemIds: string[],
@@ -232,6 +266,18 @@ const updateTableSession = async (
   );
 };
 
+const updateSplitTableSession = async (
+  splitTableSessionId: string,
+
+  updatedFields: object,
+) => {
+  return await SplitBillTableSession.findByIdAndUpdate(
+    splitTableSessionId,
+    { $set: updatedFields },
+    { new: true },
+  );
+};
+
 const billPrintItems = (cartItems: CartItem[]) => {
   return cartItems.map((item) => {
     // pick the correct price
@@ -301,12 +347,54 @@ export function groupItemsByGST(items: Item[]): BillGroup[] {
   }));
 }
 
+function groupSplitItemsByGST(items: Item[]): BillGroup[] {
+  const map = items.reduce<Record<number, BillGroup>>((acc, item) => {
+    const rate = item.dish.gst ?? 0;
+
+    if (!acc[rate]) {
+      acc[rate] = {
+        gst: rate,
+        subTotal: 0,
+        totalGst: 0,
+        items: [],
+      };
+    }
+
+    // Pick the right base price
+    const basePrice = item.portion?.price ?? item.dish.price;
+
+    // Compute total extras per unit
+    const extrasPerUnit = item.extras.reduce((sum, ex) => sum + ex.price, 0);
+
+    // Net total for this item (without tax)
+    const netTotal = basePrice + extrasPerUnit;
+
+    // Accumulate
+    acc[rate].subTotal += netTotal;
+    acc[rate].totalGst += item.dish.gst || 0;
+    acc[rate].items.push(item);
+
+    return acc;
+  }, {});
+
+  // Round to two decimal places
+  return Object.values(map).map((group) => ({
+    gst: group.gst,
+    subTotal: Number(group.subTotal.toFixed(2)),
+    totalGst: Number(group.totalGst.toFixed(2)),
+    items: group.items,
+  }));
+}
+
 export {
   billPrintItems,
   calculateBillDishIds,
   calculateBillTotals,
   calculateFinalTotal,
   calculateGst,
+  calculateSplitBillTotals,
   calculateTotalDiscount,
+  groupSplitItemsByGST,
+  updateSplitTableSession,
   updateTableSession,
 };

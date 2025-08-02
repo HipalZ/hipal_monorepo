@@ -23,7 +23,11 @@ import {
   UserSession,
   Zone,
 } from "@hi/db-models";
-import { OrderVerificationTypeEnum } from "@hi/db-models/src/validators";
+import {
+  OrderVerificationTypeEnum,
+  type UserSessionSchemaType,
+} from "@hi/db-models/src/validators";
+
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
@@ -32,6 +36,10 @@ import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
+import {
+  checkOriginBillIsSplit,
+  returnSplitBillVariants,
+} from "../../services/splitBill";
 import type { KotOrderTypes } from "../../utils/bill";
 import {
   calculateBillDishIds,
@@ -221,7 +229,7 @@ const posRouter = new Hono()
     ),
     async (c) => {
       //@ts-ignore
-      return runInTransaction(async (session: ClientSession) => {
+      return runInTransaction(async (session) => {
         const { businessId, tableName, generatedBy } = c.req.query();
         const businessPosConfig = await BusinessPosConfig.findOne({
           businessId,
@@ -232,10 +240,6 @@ const posRouter = new Hono()
         if (!businessPosConfig) {
           return respond(c, "Pos not found", true, 400, {});
         }
-
-        const outLetInfo = await OutLetInfo.findOne({
-          businessId,
-        }).select("gst fssai");
 
         // Get the table session
         let tableSession = await UserSession.findOne({
@@ -248,6 +252,17 @@ const posRouter = new Hono()
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
+        }
+
+        if (tableSession.isSplit) {
+          console.log("yeto");
+          const splitBillVariants = await returnSplitBillVariants(
+            tableSession._id.toString(),
+            tableSession.businessId.toString(),
+            tableSession.tableName,
+          );
+
+          return respond(c, "success", false, 200, splitBillVariants);
         }
         const kotOrders = (await KotOrder.find({
           tableName,
@@ -1366,6 +1381,21 @@ const posRouter = new Hono()
         const registrationToken = await DeviceToken.find({
           businessId: businessId,
         });
+        const userTableSession = (await UserSession.findOne({
+          tableName: tableName,
+          businessId: businessId,
+        })) as UserSessionSchemaType;
+
+        const billAlreadySplit = checkOriginBillIsSplit(userTableSession);
+        if (billAlreadySplit) {
+          return respond(
+            c,
+            "Bill already split you cannot place order",
+            true,
+            400,
+            {},
+          );
+        }
 
         if (registrationToken.length > 0) {
           for (const obj of registrationToken) {
@@ -1378,11 +1408,6 @@ const posRouter = new Hono()
             }
           }
         }
-
-        const userTableSession = await UserSession.findOne({
-          tableName: tableName,
-          businessId: businessId,
-        });
 
         if (userTableSession && userTableSession?.tableName !== tableName) {
           return c.json(
@@ -1700,10 +1725,21 @@ const posRouter = new Hono()
           return respond(c, "POS not found", true, 404, {});
         }
 
-        const tableSession = await UserSession.findOne({
+        const tableSession = (await UserSession.findOne({
           tableName: tableName,
           businessId: businessId,
-        });
+        })) as UserSessionSchemaType;
+
+        const billAlreadySplit = checkOriginBillIsSplit(tableSession);
+        if (billAlreadySplit) {
+          return respond(
+            c,
+            "Bill already split you cannot place order",
+            true,
+            400,
+            {},
+          );
+        }
 
         const orderAlreadyExist = await PaymentAlert.findOne({
           businessId,

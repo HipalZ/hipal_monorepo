@@ -30,6 +30,7 @@ import type { ClientSession } from "mongodb";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
+import { checkOriginBillIsSplit } from "../../services/splitBill";
 import { calculateCartBill } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 // import { queueClient } from "../../utils/queue/queueClient";
@@ -898,6 +899,17 @@ const tableRouter = new Hono()
         return respond(
           c,
           `No active session found for table ${sourceTable.name}`,
+          true,
+          400,
+          {},
+        );
+      }
+
+      const billAlreadySplit = checkOriginBillIsSplit(tableSession);
+      if (billAlreadySplit) {
+        return respond(
+          c,
+          "Bill already split you cannot transfer the table and items",
           true,
           400,
           {},

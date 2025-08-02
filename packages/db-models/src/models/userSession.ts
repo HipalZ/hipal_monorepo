@@ -223,6 +223,11 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: 0,
   },
+  isSplit: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
 });
 
 userSessionSchema.plugin(autoIncrement.plugin, {
