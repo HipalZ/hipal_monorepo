@@ -96,7 +96,6 @@ const PasswordModal = memo(
                 error ? "border-red-500" : "border-gray-300"
               }`}
               disabled={isLoading}
-              autoFocus
             />
             <button
               type="button"

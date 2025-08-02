@@ -13,7 +13,6 @@ const MemoDues = () => {
 
     const { businessId } = useParams()
     const settleModes = useOrderStore((s) => s.settleModes)
-    console.log(settleModes)
 
     const { isLoading, data } = useAllDueUsers(businessId)
 

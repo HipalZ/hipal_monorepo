@@ -16,7 +16,7 @@ export const usePasswordStore = create<PasswordState>((set, get) => ({
   revealedNumbers: new Set(),
 
   verifyPassword: (password: string) => {
-    const isCorrect = password === "2701"
+    const isCorrect = password === "admin123"
     set({ isVerified: isCorrect })
     return isCorrect
   },

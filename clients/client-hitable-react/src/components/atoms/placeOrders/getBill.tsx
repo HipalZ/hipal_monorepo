@@ -14,8 +14,11 @@ import {
   AlertCircle,
   ReceiptText,
   Salad,
-  Edit,
+  HomeIcon,
 } from "lucide-react";
+import { FiCopy } from "react-icons/fi";
+import { MdOutlineCall } from "react-icons/md";
+import { cn } from "@/lib/utils";
 import SpinnerMemo from "@/components/atoms/loadingSpinner";
 import { MdTableBar } from "react-icons/md";
 import CommonBottomButton from "../bottomButton";
@@ -46,6 +49,8 @@ import {
 import { BiSync } from "react-icons/bi";
 import EBill from "./ebill.tsx";
 import type { IBillData } from "@/components/types/hiClientzData.ts";
+import PasswordModal from "../cartItem/PasswordModal.tsx";
+import { useHomeNavigation } from "@/components/hooks/useNavigateHome.ts";
 
 const MemoGetBill = () => {
   const { businessId } = useParams();
@@ -62,13 +67,24 @@ const MemoGetBill = () => {
   const screenSize = useScreenSize();
   const { captainData: userData } = useHiClientZ();
   const { reprintBill, isPrinting } = useReprintBill();
+  const { goHome } = useHomeNavigation();
   const { removingCouponLoader, removingCoupon } = useRemoveCoupon();
   const { removingCoinzLoader, removingCoinz } = useRemoveCoinz();
+
+  // Existing states
   const [qrBillId, setQrBillId] = useState<string | null>(null);
   const [showqr, setShowqr] = useState<boolean>(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
-  const { removingServiceChargeLoader, removingServiceCharge } =
-    useRemoveServiceCharge();
+
+  // Password protection states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"copy" | "call" | null>(
+    null,
+  );
+  const [copyTick, setCopyTick] = useState(false);
+
+  const { removingServiceChargeLoader } = useRemoveServiceCharge();
   const existingLoyalty = useBusinessData((s) => s.existingLoyalty);
   const setActiveModal = useOrderStore((s) => s.setActiveModal);
 
@@ -77,6 +93,64 @@ const MemoGetBill = () => {
   }, [setOpenOrderModal]);
 
   const { isLoading, data: billData } = useGetBill();
+
+  // Phone protection functions
+  const hideMiddleNumbers = useCallback((phone: string) => {
+    if (!phone) return "";
+    if (phone.length <= 2) return phone;
+    const firstPart = phone.slice(0, 2);
+    const lastPart = phone.slice(-1);
+    return `${firstPart}****${lastPart}`;
+  }, []);
+
+  const handleProtectedAction = useCallback(
+    (action: "copy" | "call") => {
+      if (isPhoneVerified) {
+        executePhoneAction(action);
+      } else {
+        setPendingAction(action);
+        setIsModalOpen(true);
+      }
+    },
+    [isPhoneVerified],
+  );
+
+  const executePhoneAction = useCallback(
+    (action: "copy" | "call") => {
+      const phone = billData?.customerPhone;
+      if (!phone) return;
+
+      if (action === "copy") {
+        navigator.clipboard.writeText(phone).then(() => {
+          setCopyTick(true);
+          setTimeout(() => setCopyTick(false), 3000);
+        });
+      } else if (action === "call") {
+        window.location.href = `tel:+91${phone}`;
+      }
+    },
+    [billData?.customerPhone],
+  );
+
+  const handlePasswordVerify = useCallback(
+    (isCorrect: boolean) => {
+      if (isCorrect) {
+        setIsPhoneVerified(true);
+        if (pendingAction) {
+          executePhoneAction(pendingAction);
+          setPendingAction(null);
+        }
+        // Auto-lock after 5 minutes for security
+        setTimeout(() => setIsPhoneVerified(false), 5 * 60 * 1000);
+      }
+    },
+    [pendingAction, executePhoneAction],
+  );
+
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false);
+    setPendingAction(null);
+  }, []);
 
   // Memoized flattened items array
   const allItems = useMemo(() => {
@@ -183,7 +257,6 @@ const MemoGetBill = () => {
   // Helper function to render action history
   const renderActionHistory = () => {
     if (!billData) return null;
-
     const actions = [];
 
     if (billData.discountAppliedBy) {
@@ -347,14 +420,42 @@ const MemoGetBill = () => {
               </section>
             </CardTitle>
           </CardHeader>
-
           <CardContent>
             <div className="mb-4 space-y-2">
               <div className="flex items-center gap-2">
                 <Phone className="w-5 h-5 text-gray-600" />
-                <p className="text-sm text-gray-700">
-                  {billData?.customerName} ({billData?.customerPhone})
-                </p>
+                <div className="flex items-center gap-2 flex-1">
+                  <p className="text-sm text-gray-700">
+                    {billData?.customerName} (
+                    {isPhoneVerified
+                      ? billData?.customerPhone
+                      : hideMiddleNumbers(billData?.customerPhone || "")}
+                    )
+                  </p>
+                  {billData?.customerPhone && (
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        className={cn(
+                          "p-1 rounded text-xs",
+                          copyTick
+                            ? "bg-green-100 text-green-600"
+                            : "bg-purple-100 text-purple-600",
+                        )}
+                        onClick={() => handleProtectedAction("copy")}
+                      >
+                        <FiCopy className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        className="p-1 rounded bg-blue-100 text-blue-600"
+                        onClick={() => handleProtectedAction("call")}
+                      >
+                        <MdOutlineCall className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <MdTableBar className="w-5 h-5 text-gray-600" />
@@ -363,12 +464,9 @@ const MemoGetBill = () => {
                 </p>
               </div>
             </div>
-
             <Separator className="my-4" />
-
             {/* Action History */}
             {renderActionHistory()}
-
             <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
               <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="justify-between w-full">
@@ -394,7 +492,6 @@ const MemoGetBill = () => {
                         {billGroup.items.length} items
                       </span>
                     </div>
-
                     {/* Items in this GST group */}
                     <div className=" pl-2 pt-2">
                       {billGroup.items.map((item, index) => (
@@ -442,7 +539,6 @@ const MemoGetBill = () => {
                         </div>
                       ))}
                     </div>
-
                     {/* Section Totals */}
                     <div className="bg-gray-50 p-2 rounded-md border">
                       <div className="flex justify-between text-sm">
@@ -464,7 +560,6 @@ const MemoGetBill = () => {
                         </div>
                       )}
                     </div>
-
                     {/* Divider between sections (except for last section) */}
                     {groupIndex < (billData?.billItems?.length || 0) - 1 && (
                       <Separator className="my-3" />
@@ -473,9 +568,7 @@ const MemoGetBill = () => {
                 ))}
               </CollapsibleContent>
             </Collapsible>
-
             <Separator className="my-4" />
-
             {existingLoyalty?.loyaltyId && (
               <>
                 <CardTitle className="flex items-center justify-between">
@@ -491,7 +584,6 @@ const MemoGetBill = () => {
                 <Separator className="my-4" />
               </>
             )}
-
             <div className="mb-4 space-y-3">
               {[
                 ["subTotal", billData.subTotal],
@@ -582,7 +674,6 @@ const MemoGetBill = () => {
                 </p>
               </div>
             </div>
-
             <Separator className="my-4" />
           </CardContent>
         </Card>
@@ -654,15 +745,29 @@ const MemoGetBill = () => {
         </BottomPopUp>
       )}
 
+      {/* Password Modal */}
+      <PasswordModal
+        isOpen={isModalOpen}
+        onVerify={handlePasswordVerify}
+        onClose={handleModalClose}
+      />
+
       <CommonBottomButton
         maxWidth={screenSize === "xs" ? "30rem" : "48rem"}
         backgroundColor={screenSize === "xs" ? "" : "white"}
+        fixed={true}
         buttons={[
+          {
+            text: " ",
+            onClick: goHome,
+            icon: <HomeIcon />,
+            className: "rounded-md !w-[8rem] pl-2 ",
+          },
           {
             text: "",
             isBackButton: true,
             onClick: closeOrderModalHandler,
-            className: "rounded-md pl-3",
+            className: "rounded-md pl-3 md:pl-4 !w-[8rem] ml-4",
           },
           {
             text: "Normal Settle",

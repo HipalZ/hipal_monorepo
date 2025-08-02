@@ -15,6 +15,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import SpinnerMemo from "@/components/atoms/loadingSpinner";
 import DeleteKotPanel from "@/components/delete/DeleteKot.tsx";
 import TableHeader from "@/components/atoms/placeOrders/TableHeader.tsx";
+import { useHomeNavigation } from "@/components/hooks/useNavigateHome.ts";
+import { HomeIcon } from "lucide-react";
 
 // Lazy loaded components
 const PlaceOrders = lazy(() => import("@/components/atoms/placeOrders"));
@@ -49,7 +51,7 @@ const MemoTablePos = () => {
   const { tableId, businessId } = useParams();
   const navigate = useNavigate();
   const { isPlacingNewOrder } = useCart();
-
+  const { goHome } = useHomeNavigation();
   const setSelectedTable = useOrderStore((s) => s.setSelectedTable);
   const setModalType = useOrderStore((s) => s.setModalType);
   const selectedTable = useOrderStore((s) => s.selectedTable);
@@ -154,15 +156,21 @@ const MemoTablePos = () => {
           maxWidth="30rem"
           buttons={[
             {
+              text: " ",
+              onClick: goHome,
+              icon: <HomeIcon />,
+              className: "rounded-md !w-[4rem] pl-2",
+            },
+            {
               text: "",
               onClick: goToAlerts,
               isBackButton: true,
-              className: "rounded-md pl-3",
+              className: "rounded-md pl-3 ml-4 !w-[4rem]",
             },
             {
               text: "Add items",
               onClick: () => openOrderModalHandler("addItem"),
-              className: "w-1/2 ml-4 rounded-md",
+              className: " ml-4 rounded-md",
             },
           ]}
         />

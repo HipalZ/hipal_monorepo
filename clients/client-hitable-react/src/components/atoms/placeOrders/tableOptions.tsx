@@ -4,9 +4,9 @@ import { CardContent } from "@/components/ui/card";
 import {
   Users,
   UserCheck,
-  ReceiptText,
   CookingPot,
   BookmarkX,
+  HomeIcon,
 } from "lucide-react";
 import {
   type orderModal,
@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { MdTableBar } from "react-icons/md";
 import CommonBottomButton from "../bottomButton";
 import { useScreenSize } from "@/hooks/useScreenSize";
+import { useHomeNavigation } from "@/components/hooks/useNavigateHome.ts";
 
 const MemoTableOptions = () => {
   const setModalType = useOrderStore((s) => s.setModalType);
@@ -26,6 +27,7 @@ const MemoTableOptions = () => {
   const transferModal = useOrderStore((s) => s.transferModal);
   const setTransferModal = useOrderStore((s) => s.setTransferModal);
   const setOpenOrderModal = useOrderStore((s) => s.setOpenOrderModal);
+  const { goHome } = useHomeNavigation()
 
   const screenSize = useScreenSize();
   const toggleModalType = useCallback(
@@ -47,7 +49,6 @@ const MemoTableOptions = () => {
     setOpenOrderModal(false);
   }, [setOpenOrderModal]);
 
-  console.log("this is table data",selectedTable);
 
   return (
     <section className="min-h-[90dvh] flex justify-center md:py-[8rem] px-4 mx-auto">
@@ -111,6 +112,12 @@ const MemoTableOptions = () => {
         maxWidth={screenSize === "xs" ? "30rem" : "48rem"}
         backgroundColor={screenSize === "xs" ? "" : "white"}
         buttons={[
+          {
+            text: " ",
+            onClick: goHome,
+            icon: <HomeIcon />,
+            className: "rounded-md !w-[4rem] pl-2",
+          },
           {
             text: "Back",
             onClick: closeOrderModalHandler,

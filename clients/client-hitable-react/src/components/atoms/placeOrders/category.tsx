@@ -34,7 +34,6 @@ const MemoCategory = () => {
     return response.data as CategoryType[];
   };
 
-  console.log("MemoCategory");
   const { isLoading, error } = useQuery({
     queryKey: ["getChildCategories", businessId],
     queryFn: getChildCategories,

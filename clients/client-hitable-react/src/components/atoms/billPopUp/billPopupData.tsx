@@ -13,6 +13,7 @@ import {
 import { memo, useCallback, useState } from "react";
 import { FiCopy } from "react-icons/fi";
 import { MdOutlineCall } from "react-icons/md";
+import PasswordModal from "../cartItem/PasswordModal.tsx";
 
 interface BillPopupDataProps {
   viewData: Alert;
@@ -21,6 +22,13 @@ interface BillPopupDataProps {
 const MemoBillPopupData = ({ viewData }: BillPopupDataProps) => {
   const [textTick, setTextTick] = useState(false);
   const [numberTick, setNumberTick] = useState(false);
+
+  // Password protection states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"copy" | "call" | null>(
+    null,
+  );
 
   const copyText = useCallback((id: string, value?: string) => {
     let text: string;
@@ -49,11 +57,59 @@ const MemoBillPopupData = ({ viewData }: BillPopupDataProps) => {
         console.error("Failed to copy text: ", err);
       });
   }, []);
+
   const hideMiddleNumbers = useCallback((phone: string) => {
     if (phone.length <= 2) return phone;
     const firstPart = phone.slice(0, 2);
     const lastPart = phone.slice(-1);
     return `${firstPart}****${lastPart}`;
+  }, []);
+
+  // Password protection handlers
+  const handleProtectedAction = useCallback(
+    (action: "copy" | "call") => {
+      if (isPhoneVerified) {
+        executePhoneAction(action);
+      } else {
+        setPendingAction(action);
+        setIsModalOpen(true);
+      }
+    },
+    [isPhoneVerified],
+  );
+
+  const executePhoneAction = useCallback(
+    (action: "copy" | "call") => {
+      const phone = viewData?.userId?.phone;
+      if (!phone) return;
+
+      if (action === "copy") {
+        copyText("", phone);
+      } else if (action === "call") {
+        window.location.href = `tel:+91${phone}`;
+      }
+    },
+    [viewData?.userId?.phone, copyText],
+  );
+
+  const handlePasswordVerify = useCallback(
+    (isCorrect: boolean) => {
+      if (isCorrect) {
+        setIsPhoneVerified(true);
+        if (pendingAction) {
+          executePhoneAction(pendingAction);
+          setPendingAction(null);
+        }
+        // Auto-lock after 5 minutes for security
+        setTimeout(() => setIsPhoneVerified(false), 5 * 60 * 1000);
+      }
+    },
+    [pendingAction, executePhoneAction],
+  );
+
+  const handleModalClose = useCallback(() => {
+    setIsModalOpen(false);
+    setPendingAction(null);
   }, []);
 
   const getStatusColor = (status: string) => {
@@ -160,7 +216,9 @@ const MemoBillPopupData = ({ viewData }: BillPopupDataProps) => {
             <span className="text-gray-600">Phone:</span>
             <div className="flex items-center gap-2">
               <span className="font-medium">
-                {hideMiddleNumbers(viewData?.userId?.phone || "")}
+                {isPhoneVerified
+                  ? viewData?.userId?.phone
+                  : hideMiddleNumbers(viewData?.userId?.phone || "")}
               </span>
               <button
                 type="button"
@@ -170,16 +228,17 @@ const MemoBillPopupData = ({ viewData }: BillPopupDataProps) => {
                     ? "bg-green-100 text-green-600"
                     : "bg-purple-100 text-purple-600",
                 )}
-                onClick={() => copyText("#phone", viewData?.userId?.phone)}
+                onClick={() => handleProtectedAction("copy")}
               >
                 <FiCopy className="w-3 h-3" />
               </button>
-              <a
-                href={`tel:+91${viewData?.userId?.phone}`}
+              <button
+                type="button"
                 className="p-1 rounded bg-blue-100 text-blue-600"
+                onClick={() => handleProtectedAction("call")}
               >
                 <MdOutlineCall className="w-3 h-3" />
-              </a>
+              </button>
             </div>
           </div>
           <div className="flex justify-between">
@@ -240,14 +299,12 @@ const MemoBillPopupData = ({ viewData }: BillPopupDataProps) => {
             <span className="text-gray-600">Bill Value:</span>
             <span className="font-medium">₹{orderData?.billValue}</span>
           </div>
-
           {gstAmount > 0 && (
             <div className="flex justify-between">
               <span className="text-gray-600">GST:</span>
               <span className="font-medium">₹{gstAmount}</span>
             </div>
           )}
-
           {orderData?.discount > 0 && (
             <div className="flex justify-between">
               <span className="text-gray-600">General Discount:</span>
@@ -256,7 +313,6 @@ const MemoBillPopupData = ({ viewData }: BillPopupDataProps) => {
               </span>
             </div>
           )}
-
           {orderData?.couponDiscount > 0 && (
             <div className="flex justify-between">
               <span className="text-gray-600">Coupon Discount:</span>
@@ -265,7 +321,6 @@ const MemoBillPopupData = ({ viewData }: BillPopupDataProps) => {
               </span>
             </div>
           )}
-
           {orderData?.claimedCoins > 0 && (
             <div className="flex justify-between">
               <span className="text-gray-600">Loyalty Coins:</span>
@@ -274,14 +329,12 @@ const MemoBillPopupData = ({ viewData }: BillPopupDataProps) => {
               </span>
             </div>
           )}
-
           {orderData?.tips > 0 && (
             <div className="flex justify-between">
               <span className="text-gray-600">Tips:</span>
               <span className="font-medium">₹{orderData.tips}</span>
             </div>
           )}
-
           {viewData?.posDiscount > 0 && (
             <div className="flex justify-between">
               <span className="text-gray-600">POS Discount:</span>
@@ -290,7 +343,6 @@ const MemoBillPopupData = ({ viewData }: BillPopupDataProps) => {
               </span>
             </div>
           )}
-
           <hr className="my-2" />
           <div className="flex justify-between bg-green-50 p-2 rounded">
             <span className="font-semibold text-green-800">Final Amount:</span>
@@ -426,7 +478,10 @@ const MemoBillPopupData = ({ viewData }: BillPopupDataProps) => {
           </p>
           <p className="text-sm">
             Customer: <strong>{viewData?.userId?.name}</strong> (
-            {viewData?.userId?.phone})
+            {isPhoneVerified
+              ? viewData?.userId?.phone
+              : hideMiddleNumbers(viewData?.userId?.phone || "")}
+            )
           </p>
           <p className="text-sm">
             Transaction ID: <strong>{viewData?._id}</strong>
@@ -462,7 +517,6 @@ const MemoBillPopupData = ({ viewData }: BillPopupDataProps) => {
           <p className="text-sm">
             Date: <strong>{timestampToDateTime(viewData?.date)}</strong>
           </p>
-
           {viewData?.posDiscount > 0 && (
             <p className="text-base font-bold text-black mt-3">
               POS Discount Applied: <strong>₹{viewData.posDiscount}</strong>
@@ -484,6 +538,13 @@ const MemoBillPopupData = ({ viewData }: BillPopupDataProps) => {
           </button>
         </div>
       </div>
+
+      {/* Password Modal */}
+      <PasswordModal
+        isOpen={isModalOpen}
+        onVerify={handlePasswordVerify}
+        onClose={handleModalClose}
+      />
     </div>
   );
 };
