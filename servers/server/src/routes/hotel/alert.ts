@@ -13,6 +13,7 @@ import {
 } from "@hi/db-models";
 import {
   type AcceptHotelAlertType,
+  HotelServiceType,
   type UpdateAlertCartType,
   acceptHotelAlert,
   hotelAlert,
@@ -29,12 +30,16 @@ import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
 const admin = require("firebase-admin");
 
-const sendPushNotification = async (token: string, hotelNo: string) => {
+const sendPushNotification = async (
+  token: string,
+  hotelNo: string,
+  serviceName: string,
+) => {
   const pushMessage = {
     token: token, // or use 'topic' if you're sending to a topic
     notification: {
       title: "Room Attention Required",
-      body: `Room ${hotelNo} requires your attention. Please check and address any necessary tasks as soon as possible. Thank you for your prompt action!`,
+      body: `Room ${hotelNo} requires your attention for ${serviceName}. kindly respond to the alert!`,
     },
     android: {
       notification: {
@@ -57,6 +62,7 @@ const scheduleAlertUpdate = (
   newProgress: string,
   businessId: string,
   roomName: string,
+  serviceName: string,
 ) => {
   if (avgTime > 0) {
     // Calculate the run time: current time + avgTime minutes
@@ -145,7 +151,7 @@ const scheduleAlertUpdate = (
 
         registrationTokens.map(async (obj) => {
           if (obj.notification) {
-            await sendPushNotification(obj.token, roomName);
+            await sendPushNotification(obj.token, roomName, serviceName);
           }
         });
       }
@@ -154,40 +160,31 @@ const scheduleAlertUpdate = (
 };
 
 const scheduleAlert = (
-  intervals: number[], // Array of intervals in seconds
+  intervals: number[],
   businessId: string,
   roomName: string,
   alertId: string,
+  serviceName: string,
 ) => {
   for (const interval of intervals) {
     if (interval > 0) {
-      // Calculate the run time: current time + interval seconds
       const runTime = new Date(Date.now() + interval * 1000);
       const cronExpression = `${runTime.getSeconds()} ${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${
         runTime.getMonth() + 1
       } *`;
 
-      schedule(
-        cronExpression,
-        async () => {
-          const alert = await HotelAlert.findById(alertId);
+      schedule(cronExpression, async () => {
+        await HotelAlert.findById(alertId);
 
-          const registrationTokens = await DeviceToken.find({
-            businessId: businessId,
-          });
-
-          for (const obj of registrationTokens) {
-            if (obj.notification) {
-              await sendPushNotification(obj.token, roomName);
-            }
+        const registrationTokens = await DeviceToken.find({
+          businessId,
+        });
+        for (const obj of registrationTokens) {
+          if (obj.notification) {
+            await sendPushNotification(obj.token, roomName, serviceName);
           }
-        },
-        // // Uncomment and configure timezone if needed
-        // {
-        //   scheduled: true,
-        //   timezone: "Asia/Kolkata",
-        // },
-      );
+        }
+      });
     }
   }
 };
@@ -477,8 +474,20 @@ const hotelAlertRouter = new Hono()
     //@ts-ignore
     return runInTransaction(async (session) => {
       const requestData = await c.req.json();
-
-      const roomData = await HotelRoom.findById(requestData.roomId);
+      let validStaffIds: string[] = [];
+      let serviceData: HotelServiceType = {
+        businessId: "",
+        name: "",
+        availability: false,
+        categoryId: "",
+        avgCompletionTime: 0,
+        avgAcceptanceTime: 0,
+        avgDeliveryTime: 0,
+        image: "",
+      };
+      const roomData = await HotelRoom.findOne({
+        _id: requestData.roomId,
+      });
       if (!roomData) {
         return respond(c, "Room not found", true, 404, {});
       }
@@ -489,13 +498,13 @@ const hotelAlertRouter = new Hono()
       }
 
       const serviceIds = requestData.serviceIds || [];
-
       for (const serviceId of serviceIds) {
         const alert = new HotelAlert({
           ...requestData,
           serviceIds: [serviceId],
           createdAt: Date.now(),
           createdBy: requestData.userId,
+          roomData,
         });
 
         await alert.save({ session });
@@ -535,11 +544,48 @@ const hotelAlertRouter = new Hono()
           }
         }
 
-        const serviceData = await HotelService.findById(serviceId);
+        serviceData = await HotelService.findById(serviceId).lean();
         const avgCompletionTime = serviceData?.avgCompletionTime || 0;
         const avgAcceptanceTime = serviceData?.avgAcceptanceTime || 0;
         const avgDeliveryTime = serviceData?.avgDeliveryTime || 0;
 
+        const validStaff = await User.find({
+          _id: { $in: roomData.staffIds },
+          "customRole.businessId": requestData.businessId,
+          "customRole.servicesHandled": { $in: [serviceId] },
+        })
+          .select("_id")
+          .lean();
+        if (!validStaff.length) {
+          return respond(
+            c,
+            "No valid staff found for this room and service",
+            true,
+            400,
+            {},
+          );
+        }
+        validStaffIds = validStaff.map((u) => u._id);
+        const matchedStaff = await User.find({
+          _id: { $in: roomData.staffIds },
+          customRole: {
+            $elemMatch: {
+              businessId: requestData.businessId,
+              serviceIds: { $in: requestData.serviceIds },
+            },
+          },
+        })
+          .select("_id")
+          .lean();
+        const matchedStaffIds = matchedStaff.map((staff) => staff._id);
+        if (matchedStaffIds?.length === 0)
+          return respond(
+            c,
+            "No valid staff found for this room and service",
+            true,
+            400,
+            {},
+          );
         if (avgCompletionTime > 0) {
           // Schedule updates based on average times
           scheduleAlertUpdate(
@@ -549,6 +595,7 @@ const hotelAlertRouter = new Hono()
             "ESCALATION",
             requestData.businessId,
             roomData.name,
+            serviceData?.name,
           );
 
           scheduleAlertUpdate(
@@ -558,6 +605,7 @@ const hotelAlertRouter = new Hono()
             "WARNING",
             requestData.businessId,
             roomData.name,
+            serviceData?.name,
           );
           scheduleAlertUpdate(
             alert._id.toString(),
@@ -566,6 +614,7 @@ const hotelAlertRouter = new Hono()
             "WARNING",
             requestData.businessId,
             roomData.name,
+            serviceData?.name,
           );
         }
 
@@ -574,30 +623,24 @@ const hotelAlertRouter = new Hono()
           requestData.businessId,
           roomData.name,
           alert._id.toString(),
+          serviceData?.name,
         );
       }
-
-      const validStaff = await User.find({
-        _id: { $in: roomData.staffIds },
-        "customRole.businessId": requestData.businessId,
-      })
-        .select("_id")
-        .lean();
-
-      const validStaffIds = validStaff.map((u) => u._id);
-      console.log("validStaffIds", validStaffIds);
-
       // Step 2: Get device tokens only for those staff
       const registrationTokens = await DeviceToken.find({
         businessId: requestData.businessId,
         userId: { $in: validStaffIds },
       });
-      console.log("registrationTokens", registrationTokens);
+
       // Step 3: Send push notifications
       await Promise.all(
         registrationTokens.map(async (obj) => {
           if (obj.notification) {
-            await sendPushNotification(obj.token, roomData.name);
+            await sendPushNotification(
+              obj.token,
+              roomData.name,
+              serviceData?.name,
+            );
           }
         }),
       );
