@@ -619,7 +619,7 @@ const hotelAlertRouter = new Hono()
         }
 
         scheduleAlert(
-          [2, 60],
+          [60],
           requestData.businessId,
           roomData.name,
           alert._id.toString(),
