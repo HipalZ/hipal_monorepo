@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import {
   Accordion,
   AccordionItem,
@@ -10,71 +10,104 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useGetCatServices } from "@/hooks/useHotelStaff";
 import useBusinessData from "@/components/store/useBusinessData";
-import useStaffStore, { useStaffDataStore } from "@/components/store/hotel/useHotelStaff";
+import useStaffStore, {
+  useStaffDataStore,
+} from "@/components/store/hotel/useHotelStaff";
 
 const ThirdStep = () => {
-  const { selectedServices, toggleService, setSelectedServices } = useStaffStore((state) => ({
-    selectedServices: state.selectedServices,
-    toggleService: state.toggleService,
-    setSelectedServices: state.setSelectedServices,
-  }));
+  const { selectedServices, toggleService, setSelectedServices } =
+    useStaffStore((state) => ({
+      selectedServices: state.selectedServices,
+      toggleService: state.toggleService,
+      setSelectedServices: state.setSelectedServices,
+    }));
 
   const staffData = useStaffDataStore((s) => s.staffData);
   const businessId = useBusinessData((s) => s.businessData?._id);
   const { hotelServicesData } = useGetCatServices(businessId as string);
 
-  // Modify initialSelectedServices to be an array of objects with availability, _id, and name
-  const initialSelectedServices = staffData?.flatMap((staff) =>
-    staff.customRole?.[0]?.serviceIds?.map((serviceId) => {
-      const service = hotelServicesData?.flatMap((category) =>
-        category.serviceIds.filter((service) => service._id === serviceId)
-      );
-      if (service && service[0]) {
-        return {
-          _id: service[0]._id,
-          name: service[0].name,
-          availability: service[0].availability,
-        };
-      }
-      return null;
-    }).filter(Boolean) || []
+  const allServices = useMemo(
+    () => hotelServicesData?.flatMap((category) => category.serviceIds) || [],
+    [hotelServicesData],
   );
 
-  useEffect(() => {
-    setSelectedServices(initialSelectedServices || []);
-  }, [staffData, setSelectedServices]);
+  const initialSelectedServices = useMemo(() => {
+    if (!staffData || !hotelServicesData) return [];
 
-  // Use array for multiple open accordions
+    const result = staffData.flatMap((staff) => {
+      return (
+        staff.customRole?.[0]?.serviceIds
+          ?.map((serviceId) => {
+            const match = hotelServicesData
+              .flatMap((cat) => cat.serviceIds)
+              .find((s) => s._id === serviceId);
+            return match
+              ? {
+                  _id: match._id,
+                  name: match.name,
+                  availability: match.availability,
+                }
+              : null;
+          })
+          .filter(Boolean) || []
+      );
+    });
+
+    // Remove duplicates by _id
+    const uniqueMap = new Map();
+    for (const s of result) {
+      if (s?._id) {
+        uniqueMap.set(s._id, s);
+      }
+    }
+    return Array.from(uniqueMap.values());
+  }, [staffData, hotelServicesData]);
+
+  useEffect(() => {
+    setSelectedServices(initialSelectedServices);
+  }, [hotelServicesData]);
+
   const [openCategories, setOpenCategories] = useState<string[]>([]);
 
-  // Highlight services based on matching categoryId
+  const isServiceSelected = (serviceId: string) =>
+    selectedServices.some((service) => service._id === serviceId);
+
+  const areAllServicesSelected = useMemo(() => {
+    return (
+      allServices.length > 0 &&
+      allServices.every((service) => isServiceSelected(service._id))
+    );
+  }, [allServices, selectedServices]);
+
+  const handleSelectAll = (isChecked: boolean) => {
+    allServices.forEach((service) => {
+      const isSelected = isServiceSelected(service._id);
+      if (isChecked && !isSelected) toggleService(service);
+      if (!isChecked && isSelected) toggleService(service);
+    });
+  };
+
   const handleCategoryCheckbox = (
     categoryId: string,
     isChecked: boolean,
-    event: React.MouseEvent
+    event: React.MouseEvent,
   ) => {
     event.stopPropagation();
 
-    const category = hotelServicesData?.find((category) => category._id === categoryId);
+    const category = hotelServicesData?.find(
+      (category) => category._id === categoryId,
+    );
     if (category) {
       category.serviceIds.forEach((service) => {
-        if (isChecked && !isServiceSelected(service._id)) {
-          toggleService(service);
-        }
-        if (!isChecked && isServiceSelected(service._id)) {
-          toggleService(service);
-        }
+        const isSelected = isServiceSelected(service._id);
+        if (isChecked && !isSelected) toggleService(service);
+        if (!isChecked && isSelected) toggleService(service);
       });
     }
   };
 
-  const isServiceSelected = (serviceId: string) => {
-    return selectedServices.some((service) => service._id === serviceId);
-  };
-
-  const handleAccordionValueChange = (value: string[]) => {
+  const handleAccordionValueChange = (value: string[]) =>
     setOpenCategories(value);
-  };
 
   const handleServiceToggle = (service: any) => {
     toggleService(service);
@@ -87,24 +120,45 @@ const ThirdStep = () => {
         Select the services this staff member will be responsible for
       </p>
 
+      {/* Select All */}
+      <div className="flex items-center space-x-2 my-2">
+        <Checkbox
+          id="select-all"
+          checked={areAllServicesSelected}
+          onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
+        />
+        <Label
+          htmlFor="select-all"
+          className={`font-semibold cursor-pointer ${
+            areAllServicesSelected ? "text-primary" : ""
+          }`}
+        >
+          Select All Services
+        </Label>
+      </div>
+      <hr />
       <div className="space-y-3 max-h-[60dvh] overflow-y-auto pr-2">
-        <Accordion type="multiple" value={openCategories} onValueChange={handleAccordionValueChange}>
+        <Accordion
+          type="multiple"
+          value={openCategories}
+          onValueChange={handleAccordionValueChange}
+        >
           {hotelServicesData?.map((category) => (
             <AccordionItem key={category._id} value={category._id}>
               <AccordionTrigger className="cursor-pointer flex justify-between items-center">
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id={`category-${category._id}`}
-                    checked={category?.serviceIds.every((service) =>
-                      isServiceSelected(service._id)
+                    checked={category.serviceIds.every((s) =>
+                      isServiceSelected(s._id),
                     )}
                     onClick={(e) =>
                       handleCategoryCheckbox(
                         category._id,
-                        !category?.serviceIds.every((service) =>
-                          isServiceSelected(service._id)
+                        !category.serviceIds.every((s) =>
+                          isServiceSelected(s._id),
                         ),
-                        e
+                        e,
                       )
                     }
                   />
@@ -120,10 +174,12 @@ const ThirdStep = () => {
 
               <AccordionContent>
                 <div className="space-y-2">
-                  {category?.serviceIds.map((service) => (
+                  {category.serviceIds.map((service) => (
                     <Card
                       key={service._id}
-                      className={`border ${isServiceSelected(service._id) ? "border-primary" : ""}`}
+                      className={`border ${
+                        isServiceSelected(service._id) ? "border-primary" : ""
+                      }`}
                     >
                       <CardContent className="flex items-center justify-between p-3">
                         <div className="flex items-center space-x-2">
@@ -132,7 +188,10 @@ const ThirdStep = () => {
                             checked={isServiceSelected(service._id)}
                             onCheckedChange={() => handleServiceToggle(service)}
                           />
-                          <Label htmlFor={service._id} className="cursor-pointer">
+                          <Label
+                            htmlFor={service._id}
+                            className="cursor-pointer"
+                          >
                             {service.name}
                           </Label>
                         </div>
@@ -147,7 +206,9 @@ const ThirdStep = () => {
       </div>
 
       <div className="pt-2">
-        <p className="text-sm font-medium">Selected services: {selectedServices.length}</p>
+        <p className="text-sm font-medium">
+          Selected services: {selectedServices.length}
+        </p>
       </div>
     </div>
   );
