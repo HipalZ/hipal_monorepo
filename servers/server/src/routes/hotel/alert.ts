@@ -205,9 +205,10 @@ const hotelAlertRouter = new Hono()
     async (c) => {
       const { businessId, userId } = c.req.query();
 
+      // Step 1: Validate Staff and Role
       const staff = await User.findOne(
         { _id: userId, "customRole.businessId": businessId },
-        { customRole: 1 }, // Fetch only required fields
+        { customRole: 1 },
       ).lean();
 
       if (!staff) {
@@ -217,14 +218,35 @@ const hotelAlertRouter = new Hono()
       const customRole = staff.customRole?.find(
         (role) => role.businessId.toString() === businessId,
       );
+
       if (!customRole) {
         return respond(c, "Role not found for this business", true, 404, {});
       }
-      //
 
       const { role, serviceIds } = customRole;
 
-      const alertQuery = {
+      // Step 2: Get all room IDs assigned to this staff
+      const rooms = await HotelRoom.find({
+        businessId,
+        staffIds: { $in: [userId] },
+      })
+        .select("_id")
+        .lean();
+
+      const roomIds = rooms.map((room) => room._id);
+
+      if (roomIds.length === 0) {
+        return respond(
+          c,
+          "Staff is not assigned to any room in this business",
+          true,
+          403,
+          {},
+        );
+      }
+
+      // Step 3: Build alert query with both roomId & staffId conditions
+      const alertQuery: any = {
         businessId,
         alertProgress: {
           $in: [
@@ -237,6 +259,7 @@ const hotelAlertRouter = new Hono()
           ],
         },
         staffIds: { $in: [userId] },
+        roomId: { $in: roomIds },
       };
 
       if (role !== "FRONT_OFFICE") {
@@ -252,6 +275,7 @@ const hotelAlertRouter = new Hono()
         alertQuery.serviceIds = { $in: serviceIds };
       }
 
+      // Step 4: Fetch and populate alerts
       const alerts = await HotelAlert.find(alertQuery)
         .populate({ path: "serviceIds", select: "name" })
         .populate({ path: "createdBy", select: "name phone" })
@@ -262,7 +286,6 @@ const hotelAlertRouter = new Hono()
       return respond(c, "Alerts fetched successfully", false, 200, alerts);
     },
   )
-
   .get(
     "/fetch_escalation_alerts",
     zValidator(
@@ -547,26 +570,38 @@ const hotelAlertRouter = new Hono()
         }
 
         scheduleAlert(
-          [60, 120],
+          [2, 60],
           requestData.businessId,
           roomData.name,
           alert._id.toString(),
         );
       }
 
+      const validStaff = await User.find({
+        _id: { $in: roomData.staffIds },
+        "customRole.businessId": requestData.businessId,
+      })
+        .select("_id")
+        .lean();
+
+      const validStaffIds = validStaff.map((u) => u._id);
+      console.log("validStaffIds", validStaffIds);
+
+      // Step 2: Get device tokens only for those staff
       const registrationTokens = await DeviceToken.find({
         businessId: requestData.businessId,
-        userId: roomData.staffIds,
+        userId: { $in: validStaffIds },
       });
-      for (const obj of registrationTokens) {
-        await Promise.all(
-          registrationTokens.map(async (obj) => {
-            if (obj.notification) {
-              await sendPushNotification(obj.token, roomData.name);
-            }
-          }),
-        );
-      }
+      console.log("registrationTokens", registrationTokens);
+      // Step 3: Send push notifications
+      await Promise.all(
+        registrationTokens.map(async (obj) => {
+          if (obj.notification) {
+            await sendPushNotification(obj.token, roomData.name);
+          }
+        }),
+      );
+
       return respond(c, "Alert created successfully", false, 201, {});
     });
   })
