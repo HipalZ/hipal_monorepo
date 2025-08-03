@@ -556,15 +556,17 @@ const hotelAlertRouter = new Hono()
 
       const registrationTokens = await DeviceToken.find({
         businessId: requestData.businessId,
+        userId: roomData.staffIds,
       });
-      await Promise.all(
-        registrationTokens.map(async (obj) => {
-          if (obj.notification) {
-            await sendPushNotification(obj.token, roomData.name);
-          }
-        }),
-      );
-
+      for (const obj of registrationTokens) {
+        await Promise.all(
+          registrationTokens.map(async (obj) => {
+            if (obj.notification) {
+              await sendPushNotification(obj.token, roomData.name);
+            }
+          }),
+        );
+      }
       return respond(c, "Alert created successfully", false, 201, {});
     });
   })
