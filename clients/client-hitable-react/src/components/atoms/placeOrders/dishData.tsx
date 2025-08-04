@@ -1,18 +1,17 @@
-
-import { memo } from 'react'
-import { motion } from 'framer-motion'
-import { Card, CardContent } from "@/components/ui/card"
-import type { DishType } from '@hi/db-models/src/validators'
-import FoodType from '../dishType'
-import DishQuantityButton from './dishQuantityBtn'
+import { memo } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent } from "@/components/ui/card";
+import type { DishType } from "@hi/db-models/src/validators";
+import FoodType from "../dishType";
+import DishQuantityButton from "./dishQuantityBtn";
 
 interface CompactDishGridProps {
-    selectedCategory: {
-        dishIds: DishType[]
-    }
+  selectedCategory: {
+    dishIds: DishType[];
+  };
 }
 
-const MemoCompactDishGrid: React.FC<CompactDishGridProps> = ({ selectedCategory }) => {
+const MemoCompactDishGrid = ({ selectedCategory }:CompactDishGridProps) => {
     return (
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 pb-[7rem]">
             {selectedCategory?.dishIds?.map((dish: DishType, index: number) => (
@@ -33,7 +32,7 @@ const MemoCompactDishGrid: React.FC<CompactDishGridProps> = ({ selectedCategory 
                                         <FoodType types={dish.dishTypes} />
                                     </div>
                                 )}
-                                <span className="text-sm font-semibold">₹{dish.price}</span>
+                                <span className="text-sm font-semibold">₹{dish.portions?.length ? dish.portions[0].price : dish.price}</span>
                             </div>
 
                             {dish.availability && (
@@ -55,6 +54,5 @@ const MemoCompactDishGrid: React.FC<CompactDishGridProps> = ({ selectedCategory 
     )
 }
 
-const CompactDishGrid = memo(MemoCompactDishGrid)
-export default CompactDishGrid
-
+const CompactDishGrid = memo(MemoCompactDishGrid);
+export default CompactDishGrid;
