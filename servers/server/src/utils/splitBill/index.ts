@@ -84,6 +84,14 @@ function calculateBillWithPortionAndPercentage(
     settleType: mainTableSession.settleType,
     date: Date.now(),
 
+    // Calculated fields
+    subTotal: safeMultiply(mainTableSession.subTotal, percentage),
+    gst: safeMultiply(mainTableSession.gst, percentage),
+    discount: safeMultiply(mainTableSession.discount, percentage),
+    tips: safeMultiply(mainTableSession.tips, percentage),
+    claimedCoins: safeMultiply(mainTableSession.claimedCoins, percentage),
+    couponDiscount: safeMultiply(mainTableSession.couponDiscount, percentage),
+
     // Direct copy
     couponId: mainTableSession.couponId,
     isDiscountApplied: mainTableSession.isDiscountApplied,
@@ -99,6 +107,10 @@ function calculateBillWithPortionAndPercentage(
     newDishGst: mainTableSession.newDishGst,
     isServiceChargeRemoved: mainTableSession.isServiceChargeRemoved,
     customerIds: mainTableSession.customerIds,
+    customerName: mainTableSession.customerName,
+    phoneNumbers: mainTableSession.phoneNumbers,
+    totalDishTotal: safeMultiply(mainTableSession.subTotal, percentage),
+    totalGst: safeMultiply(mainTableSession.gst, percentage),
 
     originTableSessionId: mainTableSession._id,
     variantName,

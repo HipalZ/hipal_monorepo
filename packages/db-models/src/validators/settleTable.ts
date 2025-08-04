@@ -69,6 +69,7 @@ export const normalSettleSchema = z
     split: z.boolean().default(false).optional(),
     duesUserId: z.string().max(100).optional(),
     npcUserId: z.string().max(100).optional(),
+    variantId: z.string().min(24).max(24).optional(),
   })
   .refine(
     (data) => {

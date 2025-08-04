@@ -8,10 +8,9 @@ import {
   UserAnalytic,
   UserSession,
 } from "@hi/db-models";
-import {
-  UserSessionSchemaType,
-  kotOrderAcceptSchema,
-} from "@hi/db-models/src/validators";
+import type { UserSessionSchemaType } from "@hi/db-models/src/validators";
+
+import { kotOrderAcceptSchema } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";

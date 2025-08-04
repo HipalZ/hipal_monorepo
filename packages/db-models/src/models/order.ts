@@ -27,6 +27,11 @@ const orderSchema = new mongoose.Schema<OrderType>(
     posBillId: { type: String, required: false },
     couponDiscount: { type: Number, default: 0 },
     gst: { type: Number, default: 0 },
+    variantId: {
+      type: String,
+      required: false,
+      default: null,
+    },
   },
   {
     timestamps: true,

@@ -50,6 +50,7 @@ export const userSessionSchema = z.object({
   billInvoiceNumber: z.coerce.number().optional().default(0),
   isSplit: z.boolean().optional().default(false),
   _id: z.string().optional(),
+  variantsCounts: z.number().optional().default(0),
 });
 
 export type UserSessionSchemaType = z.infer<typeof userSessionSchema>;

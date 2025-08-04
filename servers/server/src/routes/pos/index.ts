@@ -14,6 +14,7 @@ import {
   Payment,
   PaymentAlert,
   Pos,
+  SplitBillTableSession,
   Table,
   Tax,
   UnsettleTable,
@@ -37,7 +38,13 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
 import {
+  applyCoinToVariantBill,
+  applyCouponToVariantBill,
+  applyDiscountToVariantBill,
   checkOriginBillIsSplit,
+  removeCoinFromVariantBill,
+  removeCouponFromVariantBill,
+  removeDiscountFromVariantBill,
   returnSplitBillVariants,
 } from "../../services/splitBill";
 import type { KotOrderTypes } from "../../utils/bill";
@@ -48,6 +55,8 @@ import {
   calculateGst,
   calculateTotalDiscount,
   groupItemsByGST,
+  groupSplitItemsByGST,
+  updateSplitTableSession,
   updateTableSession,
 } from "../../utils/bill";
 import type { Item } from "../../utils/billTypes";
@@ -255,7 +264,6 @@ const posRouter = new Hono()
         }
 
         if (tableSession.isSplit) {
-          console.log("yeto");
           const splitBillVariants = await returnSplitBillVariants(
             tableSession._id.toString(),
             tableSession.businessId.toString(),
@@ -486,31 +494,41 @@ const posRouter = new Hono()
       return runInTransaction(async (session: ClientSession) => {
         const { orderId } = c.req.query();
 
-        const tableSession = await UserSession.findById(orderId);
+        let tableSessionData;
 
-        if (!tableSession) {
+        tableSessionData = await UserSession.findById(orderId);
+
+        if (!tableSessionData) {
           return respond(c, "Session not found", true, 404, {});
         }
 
+        if (tableSessionData.isSplit) {
+          const variantData = await SplitBillTableSession.findById(orderId);
+          if (!variantData) {
+            return respond(c, "Variant not found", true, 404, {});
+          }
+          tableSessionData = variantData;
+        }
+
         return respond(c, "Data fetch", false, 200, {
-          customerName: tableSession.customerName,
-          customerPhone: tableSession.phoneNumbers[0],
-          tableName: tableSession.tableName,
-          couponId: tableSession.couponId,
-          discountAppliedOn: tableSession.discountAppliedOn,
-          reasonOfDiscount: tableSession.reasonOfDiscount,
-          reasonOfServiceCharge: tableSession.reasonOfServiceCharge,
-          billItems: tableSession.items,
-          subTotal: tableSession.subTotal,
-          gst: tableSession.gst,
-          discount: tableSession.discount,
-          claimedCoins: tableSession.claimedCoins,
-          couponDiscount: tableSession.couponDiscount,
-          serviceCharge: tableSession.serviceCharge,
-          otherTax: tableSession.otherTax,
-          tips: tableSession.tips,
-          total: tableSession.total,
-          billId: tableSession._id.toString(),
+          customerName: tableSessionData.customerName,
+          customerPhone: tableSessionData?.phoneNumbers?.[0] || "",
+          tableName: tableSessionData.tableName,
+          couponId: tableSessionData.couponId,
+          discountAppliedOn: tableSessionData.discountAppliedOn,
+          reasonOfDiscount: tableSessionData.reasonOfDiscount,
+          reasonOfServiceCharge: tableSessionData.reasonOfServiceCharge,
+          billItems: tableSessionData.items,
+          subTotal: tableSessionData.subTotal,
+          gst: tableSessionData.gst,
+          discount: tableSessionData.discount,
+          claimedCoins: tableSessionData.claimedCoins,
+          couponDiscount: tableSessionData.couponDiscount,
+          serviceCharge: tableSessionData.serviceCharge,
+          tips: tableSessionData.tips,
+          total: tableSessionData.total,
+          billId: tableSessionData._id.toString(),
+          variantId: tableSessionData._id.toString(),
         });
       });
     },
@@ -2457,12 +2475,14 @@ const posRouter = new Hono()
       z.object({
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
+        variantId: z.string().min(1).max(200).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, generatedBy } = await c.req.json();
+        const { businessId, tableName, generatedBy, variantId } =
+          await c.req.json();
 
         const businessPosConfig = await BusinessPosConfig.findOne({
           businessId,
@@ -2485,6 +2505,54 @@ const posRouter = new Hono()
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const billAlreadySplit = checkOriginBillIsSplit(tableSession);
+
+        if (billAlreadySplit) {
+          if (!variantId) {
+            return respond(
+              c,
+              "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+
+          const variant = await SplitBillTableSession.findById(variantId);
+          if (!variant) {
+            return respond(c, "Variant not found", true, 404, {});
+          }
+
+          const cartItems = variant.items as Item[];
+          const billItems = groupSplitItemsByGST(cartItems);
+
+          sendBillPrintEvent({
+            tableName: tableName,
+            businessId: businessId,
+            customerName:
+              variant.customerName || tableSession?.customerName || "customer",
+            customerPhone: tableSession?.phoneNumbers?.[0] || "customer",
+            items: billItems,
+            posRestName: businessPosConfig.restName,
+            generatedBy: tableSession?.billGeneratedBy || generatedBy,
+            date: Date.now(),
+            serviceCharge: variant?.serviceCharge || 0,
+            discount: variant?.discount || 0,
+            tax: variant?.gst || 0,
+            total: variant?.total || 0,
+            billRequestId: variant?._id.toString() || "",
+            subTotal: variant?.subTotal || 0,
+            tips: variant?.tips || 0,
+            claimedCoins: variant?.claimedCoins || 0,
+            couponDiscount: variant?.couponDiscount || 0,
+            gst: outLetInfo?.gst || "",
+            address: outLetInfo?.address || "",
+            fssai: outLetInfo?.fssai || "",
+            billInvoiceNumber: variant?.variantInvoiceNumber || 0,
+          });
+          return respond(c, "sucess", true, 200, {});
         }
 
         const KotOrders = (await KotOrder.find({
@@ -2616,6 +2684,7 @@ const posRouter = new Hono()
           itemIds: z.array(z.string().min(1).max(200)).optional(),
           discountAppliedBy: z.string().min(1).max(50),
           password: z.string().min(4).max(50).optional(),
+          variantId: z.string().min(24).max(24).optional(),
         })
         .refine(
           (data) =>
@@ -2640,6 +2709,7 @@ const posRouter = new Hono()
           itemIds,
           discountAppliedBy,
           password,
+          variantId,
         } = await c.req.json();
 
         if (password) {
@@ -2670,6 +2740,34 @@ const posRouter = new Hono()
         });
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const checkOriginBillIs = await checkOriginBillIsSplit(tableSession);
+
+        if (checkOriginBillIs) {
+          if (!variantId) {
+            return respond(
+              c,
+              "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+          const applyDiscount = await applyDiscountToVariantBill({
+            variantId,
+            value,
+            discountAppliedOn,
+            reasonOfDiscount,
+            discountAppliedBy,
+            itemIds,
+            session,
+          });
+
+          if (!applyDiscount) {
+            return respond(c, "Failed to apply discount", true, 400, {});
+          }
+          return respond(c, "Discount applied successfully", false, 200, {});
         }
 
         let discountAmount = 0;
@@ -2753,12 +2851,13 @@ const posRouter = new Hono()
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
         value: z.number().positive(),
+        variantId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, value } = await c.req.json();
+        const { businessId, tableName, value, variantId } = await c.req.json();
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
@@ -2776,6 +2875,30 @@ const posRouter = new Hono()
             400,
             {},
           );
+        }
+
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+
+        if (originBillIsSplit) {
+          if (!variantId) {
+            return respond(
+              c,
+              "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+
+          const applyCoins = await applyCoinToVariantBill(
+            variantId,
+            value,
+            session,
+          );
+          if (!applyCoins) {
+            return respond(c, "Failed to apply coins", true, 400, {});
+          }
+          return respond(c, "Coins applied successfully", false, 200, {});
         }
 
         const coins = Math.min(
@@ -2807,14 +2930,12 @@ const posRouter = new Hono()
           tableSession.tips,
         );
 
-        const f = await updateTableSession(businessId, tableName, session, {
+        await updateTableSession(businessId, tableName, session, {
           gst: newGst.toFixed(2),
           total: newTotal,
           isDiscountApplied: true,
           claimedCoins: coins,
         });
-
-        console.log("updateTableSession", f);
 
         return respond(c, "Success", true, 200, {});
       });
@@ -2829,22 +2950,23 @@ const posRouter = new Hono()
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
         couponId: z.string().min(1).max(200),
+        variantId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, couponId } = await c.req.json();
+        const { businessId, tableName, couponId, variantId } =
+          await c.req.json();
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
         });
-
-        let couponDiscount = 0;
-
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
+
+        let couponDiscount = 0;
 
         const coupon = await Couponz.findById(couponId);
 
@@ -2860,6 +2982,30 @@ const posRouter = new Hono()
             400,
             {},
           );
+        }
+
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+
+        if (originBillIsSplit) {
+          if (!variantId) {
+            return respond(
+              c,
+              "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+
+          const applyCoupon = await applyCouponToVariantBill(
+            variantId,
+            couponId,
+            session,
+          );
+          if (!applyCoupon) {
+            return respond(c, "Failed to apply coupon", true, 400, {});
+          }
+          return respond(c, "Coupon applied successfully", false, 200, {});
         }
 
         const couponType = coupon?.config?.discountType;
@@ -2926,13 +3072,19 @@ const posRouter = new Hono()
         tableName: z.string().min(1).max(200),
         reasonOfDiscount: z.string().min(1).max(100).optional(),
         discountRemovedBy: z.string().min(1).max(50),
+        variantId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, discountRemovedBy, reasonOfDiscount } =
-          await c.req.json();
+        const {
+          businessId,
+          tableName,
+          discountRemovedBy,
+          reasonOfDiscount,
+          variantId,
+        } = await c.req.json();
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
@@ -2940,6 +3092,30 @@ const posRouter = new Hono()
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+        if (originBillIsSplit) {
+          if (!variantId) {
+            return respond(
+              c,
+              "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+
+          const removeDiscount = await removeDiscountFromVariantBill(
+            variantId.toString(),
+            reasonOfDiscount,
+            discountRemovedBy,
+            session,
+          );
+          if (!removeDiscount) {
+            return respond(c, "Failed to remove discount", true, 400, {});
+          }
+          return respond(c, "Discount removed successfully", false, 200, {});
         }
 
         const newSubTotal =
@@ -2989,12 +3165,13 @@ const posRouter = new Hono()
       z.object({
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
+        variantId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName } = await c.req.json();
+        const { businessId, tableName, variantId } = await c.req.json();
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
@@ -3002,6 +3179,29 @@ const posRouter = new Hono()
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+        if (originBillIsSplit) {
+          if (!variantId) {
+            return respond(
+              c,
+              "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+
+          const removeDiscount = await removeCoinFromVariantBill(
+            variantId.toString(),
+
+            session,
+          );
+          if (!removeDiscount) {
+            return respond(c, "Failed to remove discount", true, 400, {});
+          }
+          return respond(c, "coins removed successfully", false, 200, {});
         }
 
         const isDiscountApplied =
@@ -3047,12 +3247,13 @@ const posRouter = new Hono()
       z.object({
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
+        variantId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName } = await c.req.json();
+        const { businessId, tableName, variantId } = await c.req.json();
 
         const tableSession = await UserSession.findOne({
           businessId,
@@ -3061,6 +3262,29 @@ const posRouter = new Hono()
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+        if (originBillIsSplit) {
+          if (!variantId) {
+            return respond(
+              c,
+              "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+
+          const removeDiscount = await removeCouponFromVariantBill(
+            variantId.toString(),
+
+            session,
+          );
+          if (!removeDiscount) {
+            return respond(c, "Failed to remove discount", true, 400, {});
+          }
+          return respond(c, "Discount removed successfully", false, 200, {});
         }
 
         const isDiscountApplied =
@@ -3166,12 +3390,13 @@ const posRouter = new Hono()
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
         serviceChargeAppliedBy: z.string().min(1).max(50),
+        variantId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, serviceChargeAppliedBy } =
+        const { businessId, tableName, serviceChargeAppliedBy, variantId } =
           await c.req.json();
 
         const tableSession = await UserSession.findOne({
@@ -3181,6 +3406,28 @@ const posRouter = new Hono()
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+
+        if (originBillIsSplit) {
+          if (!variantId) {
+            return respond(
+              c,
+              "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+
+          await updateSplitTableSession(variantId, {
+            serviceChargeAppliedBy,
+            isServiceChargeRemoved: false,
+            serviceChargeRemovedBy: null,
+          });
+
+          return respond(c, "Success", true, 200, {});
         }
 
         await updateTableSession(businessId, tableName, session, {
@@ -3204,6 +3451,7 @@ const posRouter = new Hono()
         serviceChargeRemovedBy: z.string().min(1).max(50),
         reasonOfServiceCharge: z.string().min(1).max(100).optional(),
         password: z.string().min(4).max(50).optional(),
+        variantId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
@@ -3215,6 +3463,7 @@ const posRouter = new Hono()
           serviceChargeRemovedBy,
           reasonOfServiceCharge,
           password,
+          variantId,
         } = await c.req.json();
 
         if (password) {
@@ -3243,6 +3492,49 @@ const posRouter = new Hono()
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
+        }
+
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+        if (originBillIsSplit) {
+          if (!variantId) {
+            return respond(
+              c,
+              "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+
+          const removeServiceChargeFromAllVariants =
+            await SplitBillTableSession.updateMany(
+              {
+                originTableSessionId: tableSession._id.toString(),
+              },
+              {
+                $set: {
+                  serviceCharge: 0,
+                  serviceChargeRemovedBy,
+                  reasonOfServiceCharge,
+                  isServiceChargeRemoved: true,
+                  serviceChargeAppliedBy: null,
+                },
+              },
+              {
+                session,
+              },
+            );
+
+          if (!removeServiceChargeFromAllVariants) {
+            return respond(c, "Failed to remove service charge", true, 400, {});
+          }
+          return respond(
+            c,
+            "Service charge removed successfully",
+            false,
+            200,
+            {},
+          );
         }
 
         await UserSession.findOneAndUpdate(
@@ -3285,6 +3577,13 @@ const posRouter = new Hono()
 
       if (!tableSession) {
         return respond(c, "Table session not found", true, 404, {});
+      }
+
+      const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+      if (originBillIsSplit) {
+        if (tableSession.variantsCounts > 1) {
+          return respond(c, "Success", true, 200, {});
+        }
       }
 
       const pos = await BusinessPosConfig.findOne({
@@ -3435,12 +3734,13 @@ const posRouter = new Hono()
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
         value: z.number().positive(),
+        variantId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName, value } = await c.req.json();
+        const { businessId, tableName, value, variantId } = await c.req.json();
 
         const tableSession = await UserSession.findOne({
           businessId,
@@ -3459,6 +3759,26 @@ const posRouter = new Hono()
 
         if (!pos) {
           return respond(c, "Pos not found", true, 400, {});
+        }
+
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+
+        if (originBillIsSplit) {
+          if (!variantId) {
+            return respond(
+              c,
+              "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+
+          await updateSplitTableSession(variantId, {
+            tips: value,
+          });
+
+          return respond(c, "Success", true, 200, {});
         }
 
         await UserSession.findOneAndUpdate(
@@ -3483,12 +3803,13 @@ const posRouter = new Hono()
       z.object({
         businessId: z.string().min(3).max(200),
         tableName: z.string().min(1).max(200),
+        variantId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { businessId, tableName } = await c.req.json();
+        const { businessId, tableName, variantId } = await c.req.json();
 
         const tableSession = await UserSession.findOne({
           businessId,
@@ -3507,6 +3828,30 @@ const posRouter = new Hono()
 
         if (!pos) {
           return respond(c, "Pos not found", true, 400, {});
+        }
+
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+        if (originBillIsSplit) {
+          if (!variantId) {
+            return respond(
+              c,
+              "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+          await SplitBillTableSession.findByIdAndUpdate(
+            variantId,
+            {
+              $set: {
+                tips: 0,
+              },
+            },
+            { session, new: true },
+          );
+
+          return respond(c, "Success", true, 200, {});
         }
 
         await UserSession.findOneAndUpdate(
