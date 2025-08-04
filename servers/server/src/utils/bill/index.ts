@@ -219,6 +219,47 @@ function calculateBillDishIds(
   return { totalDishTotal, totalGst, dishIds };
 }
 
+function calculateSplitBillDishIds(
+  cartItems: Item[],
+  itemIds: string[],
+): {
+  totalDishTotal: number;
+  totalGst: number;
+} {
+  let totalDishTotal = 0;
+  let totalGst = 0;
+
+  // for faster lookups
+  const allowed = new Set(itemIds);
+
+  try {
+    for (const item of cartItems) {
+      // Skip deleted items
+      if (item.isDeleted) continue;
+      // Only include if this item's id is in our list
+      if (!allowed.has(item._id.toString())) continue;
+
+      // Base price comes from portion if present, otherwise dish.price
+      const basePrice = item.portion?.price ?? item.dish.price;
+
+      const extrasTotal = item.extras.reduce((sum, ex) => sum + ex.price, 0);
+
+      // Line total for this item
+      const lineTotal = basePrice + extrasTotal;
+      totalDishTotal += lineTotal;
+
+      // Determine GST percentage (prefer gst field)
+      const gstPercent = item.dish.gst ?? item.dish.tax ?? 0;
+      totalGst += (lineTotal * gstPercent) / 100;
+    }
+  } catch (err) {
+    console.error("Error calculating bill totals:", err);
+    throw new Error("Invalid data structure in KOTs");
+  }
+
+  return { totalDishTotal, totalGst };
+}
+
 const calculateTotalDiscount = (
   discount: number,
   claimedCoins: number,
@@ -371,7 +412,7 @@ function groupSplitItemsByGST(items: Item[]): BillGroup[] {
 
     // Accumulate
     acc[rate].subTotal += netTotal;
-    acc[rate].totalGst += item.dish.gst || 0;
+    acc[rate].totalGst += netTotal * (rate / 100);
     acc[rate].items.push(item);
 
     return acc;
@@ -392,6 +433,7 @@ export {
   calculateBillTotals,
   calculateFinalTotal,
   calculateGst,
+  calculateSplitBillDishIds,
   calculateSplitBillTotals,
   calculateTotalDiscount,
   groupSplitItemsByGST,

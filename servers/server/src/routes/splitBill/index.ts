@@ -8,7 +8,7 @@ import {
   checkOfflinePaymentRequest,
   isOriginBillChanged,
 } from "../../services/splitBill";
-import { type CartItem } from "../../utils/bill";
+import type { CartItem } from "../../utils/bill";
 import { respond } from "../../utils/response";
 import {
   calculateBillWithPortionAndPercentage,
@@ -101,6 +101,7 @@ const splitBillRouter = new Hono()
 
         for (let i = 0; i < variants.length; i++) {
           const portionPercentage = variants[i].percentage;
+          // split items with percentage
           const updatedItems = calculateItemWithPortionAndPercentage(
             originalCartItems,
             portionPercentage,
@@ -117,6 +118,8 @@ const splitBillRouter = new Hono()
             items: updatedItems,
           };
 
+          //
+
           const saveTableSession = await saveSplitBillSessionVariant(
             updatedObject,
             session,
@@ -132,6 +135,7 @@ const splitBillRouter = new Hono()
           {
             $set: {
               isSplit: true,
+              variantsCounts: variantCount,
             },
           },
           { session, new: true },
@@ -140,16 +144,6 @@ const splitBillRouter = new Hono()
         if (!updateOriginTableSession) {
           throw new Error("Origin table session not updated");
         }
-
-        // const fetchVariants = await SplitBillTableSession.find({
-        //   businessId: businessId,
-        //   tableName: tableName,
-        //   originTableSessionId: fetchOriginalTableSession._id.toString(),
-        // }).session(session);
-
-        // const formattedBills = fetchVariants.map((variant) =>
-        //   formatBillOutput(fetchOriginalTableSession, variant),
-        // );
 
         return respond(c, "success", true, 200, {});
       });

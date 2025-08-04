@@ -18,6 +18,7 @@ import {
   PendingDues,
   QrBill,
   Reviews,
+  SplitBillTableSession,
   Subscriber,
   Table,
   TempTableSettle,
@@ -56,6 +57,10 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
+import {
+  checkOriginBillIsSplit,
+  processOfflineOrderPayment,
+} from "../../services/splitBill";
 import type { KotOrderTypes } from "../../utils/bill";
 import { getMerchantConfig } from "../../utils/cacheHelper";
 import { adjustFromToTimestamps } from "../../utils/defaultBillingTime";
@@ -446,6 +451,7 @@ const paymentsRouter = new Hono()
         channelId,
         cashbackAvailable,
         posBillId,
+        variantId,
       } = requestData;
 
       const tableSession = await UserSession.findOne({
@@ -460,130 +466,154 @@ const paymentsRouter = new Hono()
       });
 
       if (businessPosConfig) {
-        const kotOrders = (await KotOrder.find({
-          tableName,
-          settled: false,
-          accepted: true,
-          businessId,
-          isSync: false,
-        }).lean()) as KotOrderTypes[];
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
 
-        const cartItems = kotOrders.flatMap((order) =>
-          order.cart.filter((item) => !item.isDeleted),
-        );
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
 
-        const unsettleTable = await UnsettleTable.find({
-          businessId,
-          restId: businessPosConfig.restId,
-          sync: false,
-        });
+        if (originBillIsSplit) {
+          if (!variantId) {
+            return respond(
+              c,
+              "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+        }
 
-        for (const table of unsettleTable) {
-          const payload = {
-            app_key: businessPosConfig.accessKey,
-            app_secret: businessPosConfig.secretKey,
-            access_token: businessPosConfig.authToken,
-            restID: businessPosConfig.restId,
-            pin: table?.pin,
-            tableNo: table?.tableName,
-          };
+        if (tableSession && tableSession.variantsCounts === 1) {
+          const kotOrders = (await KotOrder.find({
+            tableName,
+            settled: false,
+            accepted: true,
+            businessId,
+            isSync: false,
+          }).lean()) as KotOrderTypes[];
 
-          const response = await axios.post(posApiPaths.requestBill, payload, {
-            headers: {
-              "Content-Type": "application/json",
-            },
+          const cartItems = kotOrders.flatMap((order) =>
+            order.cart.filter((item) => !item.isDeleted),
+          );
+
+          const unsettleTable = await UnsettleTable.find({
+            businessId,
+            restId: businessPosConfig.restId,
+            sync: false,
           });
 
-          if (
-            response.data.success === "1" &&
-            response.data?.bill_request_id?.length > 2
-          ) {
-            const updateSettleTable = await UnsettleTable.findOneAndUpdate(
-              { _id: table._id },
-              {
-                $set: {
-                  sync: true,
-                },
-              },
-              { new: true },
-            );
-            const res = await axios.post(posApiPaths.settleTable, {
+          for (const table of unsettleTable) {
+            const payload = {
               app_key: businessPosConfig.accessKey,
               app_secret: businessPosConfig.secretKey,
               access_token: businessPosConfig.authToken,
               restID: businessPosConfig.restId,
-              bill_request_id: response.data.bill_request_id,
-              amount_paid: table?.total,
               pin: table?.pin,
-            });
-          }
-        }
+              tableNo: table?.tableName,
+            };
 
-        const newPin = generateTenDigitCode();
-        const registerUser = await axios.post(posApiPaths.registerUser, {
-          app_key: businessPosConfig.accessKey,
-          app_secret: businessPosConfig.secretKey,
-          access_token: businessPosConfig.authToken,
-          restID: businessPosConfig.restId,
-          phone: newPin,
-        });
-
-        await UserSession.findOneAndUpdate(
-          {
-            tableName: tableName,
-            businessId: businessId,
-          },
-          {
-            $set: {
-              pin: newPin,
-            },
-          },
-          { new: true },
-        );
-
-        if (kotOrders.length > 0) {
-          const petpoojaCart = convertToPetpoojaCart(
-            cartItems,
-            businessPosConfig.restId,
-            tableSession?.customerName,
-            tableSession?.pin,
-            tableName,
-            businessPosConfig.accessKey,
-            businessPosConfig.secretKey,
-            businessPosConfig.authToken,
-          );
-
-          await KotOrder.updateMany(
-            {
-              tableName,
-              settled: false,
-              accepted: true,
-              businessId,
-            },
-            {
-              $set: {
-                isSync: true,
+            const response = await axios.post(
+              posApiPaths.requestBill,
+              payload,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                },
               },
-            },
-          );
+            );
+
+            if (
+              response.data.success === "1" &&
+              response.data?.bill_request_id?.length > 2
+            ) {
+              const updateSettleTable = await UnsettleTable.findOneAndUpdate(
+                { _id: table._id },
+                {
+                  $set: {
+                    sync: true,
+                  },
+                },
+                { new: true },
+              );
+              const res = await axios.post(posApiPaths.settleTable, {
+                app_key: businessPosConfig.accessKey,
+                app_secret: businessPosConfig.secretKey,
+                access_token: businessPosConfig.authToken,
+                restID: businessPosConfig.restId,
+                bill_request_id: response.data.bill_request_id,
+                amount_paid: table?.total,
+                pin: table?.pin,
+              });
+            }
+          }
+
+          const newPin = generateTenDigitCode();
+          const registerUser = await axios.post(posApiPaths.registerUser, {
+            app_key: businessPosConfig.accessKey,
+            app_secret: businessPosConfig.secretKey,
+            access_token: businessPosConfig.authToken,
+            restID: businessPosConfig.restId,
+            phone: newPin,
+          });
 
           await UserSession.findOneAndUpdate(
             {
-              tableName,
-              businessId,
+              tableName: tableName,
+              businessId: businessId,
             },
             {
               $set: {
-                isUserRegistered: true,
-                billRequest: true,
+                pin: newPin,
               },
             },
+            { new: true },
           );
 
-          const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
+          if (kotOrders.length > 0) {
+            const petpoojaCart = convertToPetpoojaCart(
+              cartItems,
+              businessPosConfig.restId,
+              tableSession?.customerName,
+              tableSession?.pin,
+              tableName,
+              businessPosConfig.accessKey,
+              businessPosConfig.secretKey,
+              businessPosConfig.authToken,
+            );
 
-          if (saveKot.data.success === "0") {
-            return respond(c, "KOT not saved", true, 400, {});
+            await KotOrder.updateMany(
+              {
+                tableName,
+                settled: false,
+                accepted: true,
+                businessId,
+              },
+              {
+                $set: {
+                  isSync: true,
+                },
+              },
+            );
+
+            await UserSession.findOneAndUpdate(
+              {
+                tableName,
+                businessId,
+              },
+              {
+                $set: {
+                  isUserRegistered: true,
+                  billRequest: true,
+                },
+              },
+            );
+
+            const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
+
+            if (saveKot.data.success === "0") {
+              return respond(c, "KOT not saved", true, 400, {});
+            }
           }
         }
       }
@@ -594,11 +624,93 @@ const paymentsRouter = new Hono()
         const uniqueOrderId = nanoid(15);
 
         const client = await razorpayWrapper.getClient(merchantId);
+
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+        if (originBillIsSplit) {
+          const splitBillTableSession =
+            await SplitBillTableSession.findById(variantId);
+
+          if (!splitBillTableSession) {
+            return respond(c, "Split bill session not found", true, 404, {});
+          }
+          const response = await client.orders.create({
+            amount: splitBillTableSession.total * 100, // Fixed multiplication logic
+            currency: currency,
+            receipt: uniqueOrderId,
+          });
+
+          const saveOrder = await Order.create(
+            [
+              {
+                total: splitBillTableSession?.total || total,
+                currency,
+                billValue: splitBillTableSession?.subTotal || billValue,
+                businessId,
+                receipt: uniqueOrderId,
+                userId,
+                claimedCoins:
+                  splitBillTableSession?.claimedCoins || claimedCoins,
+                tableName,
+                order_id: response.id,
+                tips: splitBillTableSession?.tips || tips,
+                couponId,
+                channelId,
+                cashbackAvailable,
+                date: Date.now(),
+                billId: splitBillTableSession?._id.toString(),
+                discount: splitBillTableSession?.discount,
+                couponDiscount: splitBillTableSession?.couponDiscount,
+                gst: splitBillTableSession?.gst,
+                variantId: splitBillTableSession?._id.toString(),
+              },
+            ],
+            { session },
+          );
+          if (!saveOrder || !response)
+            return respond(c, "Order not created", true, 400, {});
+
+          if (tableSession.variantsCounts === 1) {
+            const saveOrder = await Order.create(
+              [
+                {
+                  total: tableSession?.total || total,
+                  currency,
+                  billValue: tableSession?.subTotal || billValue,
+                  businessId,
+                  receipt: uniqueOrderId,
+                  userId,
+                  claimedCoins: tableSession?.claimedCoins || claimedCoins,
+                  tableName,
+                  order_id: response.id,
+                  tips: tableSession?.tips || tips,
+                  couponId,
+                  channelId,
+                  cashbackAvailable,
+                  date: Date.now(),
+                  billId: tableSession?._id.toString(),
+                  discount: tableSession?.discount,
+                  couponDiscount: tableSession?.couponDiscount,
+                  gst: tableSession?.gst,
+                },
+              ],
+              { session },
+            );
+
+            if (!saveOrder || !response)
+              return respond(c, "Order not created", true, 400, {});
+          }
+
+          return respond(c, "Order created successfully", false, 200, {
+            order_id: response.id,
+          });
+        }
+
         const response = await client.orders.create({
-          amount: total * 100, // Fixed multiplication logic
+          amount: tableSession?.total ? tableSession.total * 100 : total * 100,
           currency: currency,
           receipt: uniqueOrderId,
         });
+
         const saveOrder = await Order.create(
           [
             {
@@ -701,6 +813,7 @@ const paymentsRouter = new Hono()
         channelId,
         cashbackAvailable,
         posBillId,
+        variantId,
       } = requestData;
 
       const tableSession = await UserSession.findOne({
@@ -731,131 +844,154 @@ const paymentsRouter = new Hono()
       });
 
       if (businessPosConfig) {
-        const kotOrders = (await KotOrder.find({
-          tableName,
-          settled: false,
-          accepted: true,
-          businessId,
-          isSync: false,
-        }).lean()) as KotOrderTypes[];
+        if (!tableSession) {
+          return respond(c, "Table session not found", true, 404, {});
+        }
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
 
-        const cartItems = kotOrders.flatMap((order) =>
-          order.cart.filter((item) => !item.isDeleted),
-        );
+        if (originBillIsSplit) {
+          if (!variantId) {
+            return respond(
+              c,
+              "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+        }
 
-        const unsettleTable = await UnsettleTable.find({
-          businessId,
-          restId: businessPosConfig.restId,
-          sync: false,
-        });
+        if (tableSession && tableSession.variantsCounts === 1) {
+          const kotOrders = (await KotOrder.find({
+            tableName,
+            settled: false,
+            accepted: true,
+            businessId,
+            isSync: false,
+          }).lean()) as KotOrderTypes[];
 
-        for (const table of unsettleTable) {
-          const payload = {
-            app_key: businessPosConfig.accessKey,
-            app_secret: businessPosConfig.secretKey,
-            access_token: businessPosConfig.authToken,
-            restID: businessPosConfig.restId,
-            pin: table?.pin,
-            tableNo: table?.tableName,
-          };
+          const cartItems = kotOrders.flatMap((order) =>
+            order.cart.filter((item) => !item.isDeleted),
+          );
 
-          const response = await axios.post(posApiPaths.requestBill, payload, {
-            headers: {
-              "Content-Type": "application/json",
-            },
+          const unsettleTable = await UnsettleTable.find({
+            businessId,
+            restId: businessPosConfig.restId,
+            sync: false,
           });
 
-          if (
-            response.data.success === "1" &&
-            response.data?.bill_request_id?.length > 2
-          ) {
-            const updateSettleTable = await UnsettleTable.findOneAndUpdate(
-              { _id: table._id },
-              {
-                $set: {
-                  sync: true,
-                },
-              },
-              { new: true },
-            );
-            const res = await axios.post(posApiPaths.settleTable, {
+          for (const table of unsettleTable) {
+            const payload = {
               app_key: businessPosConfig.accessKey,
               app_secret: businessPosConfig.secretKey,
               access_token: businessPosConfig.authToken,
               restID: businessPosConfig.restId,
-              bill_request_id: response.data.bill_request_id,
-              amount_paid: table?.total,
               pin: table?.pin,
-            });
-          }
-        }
+              tableNo: table?.tableName,
+            };
 
-        const newPin = generateTenDigitCode();
-        const registerUser = await axios.post(posApiPaths.registerUser, {
-          app_key: businessPosConfig.accessKey,
-          app_secret: businessPosConfig.secretKey,
-          access_token: businessPosConfig.authToken,
-          restID: businessPosConfig.restId,
-          phone: newPin,
-        });
-
-        await UserSession.findOneAndUpdate(
-          {
-            tableName: tableName,
-            businessId: businessId,
-          },
-          {
-            $set: {
-              pin: newPin,
-            },
-          },
-          { new: true },
-        );
-
-        if (kotOrders.length > 0) {
-          const petpoojaCart = convertToPetpoojaCart(
-            cartItems,
-            businessPosConfig.restId,
-            kotOrders[0].name,
-            tableSession?.pin,
-            tableName,
-            businessPosConfig.accessKey,
-            businessPosConfig.secretKey,
-
-            businessPosConfig.authToken,
-          );
-
-          await KotOrder.updateMany(
-            {
-              tableName,
-              settled: false,
-              accepted: true,
-              businessId,
-            },
-            {
-              $set: {
-                isSync: true,
+            const response = await axios.post(
+              posApiPaths.requestBill,
+              payload,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                },
               },
-            },
-          );
+            );
+
+            if (
+              response.data.success === "1" &&
+              response.data?.bill_request_id?.length > 2
+            ) {
+              const updateSettleTable = await UnsettleTable.findOneAndUpdate(
+                { _id: table._id },
+                {
+                  $set: {
+                    sync: true,
+                  },
+                },
+                { new: true },
+              );
+              const res = await axios.post(posApiPaths.settleTable, {
+                app_key: businessPosConfig.accessKey,
+                app_secret: businessPosConfig.secretKey,
+                access_token: businessPosConfig.authToken,
+                restID: businessPosConfig.restId,
+                bill_request_id: response.data.bill_request_id,
+                amount_paid: table?.total,
+                pin: table?.pin,
+              });
+            }
+          }
+
+          const newPin = generateTenDigitCode();
+          const registerUser = await axios.post(posApiPaths.registerUser, {
+            app_key: businessPosConfig.accessKey,
+            app_secret: businessPosConfig.secretKey,
+            access_token: businessPosConfig.authToken,
+            restID: businessPosConfig.restId,
+            phone: newPin,
+          });
 
           await UserSession.findOneAndUpdate(
             {
-              tableName,
-              businessId,
+              tableName: tableName,
+              businessId: businessId,
             },
             {
               $set: {
-                isUserRegistered: true,
-                billRequest: true,
+                pin: newPin,
               },
             },
+            { new: true },
           );
 
-          const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
+          if (kotOrders.length > 0) {
+            const petpoojaCart = convertToPetpoojaCart(
+              cartItems,
+              businessPosConfig.restId,
+              kotOrders[0].name,
+              tableSession?.pin,
+              tableName,
+              businessPosConfig.accessKey,
+              businessPosConfig.secretKey,
 
-          if (saveKot.data.success === "0") {
-            return respond(c, "Error in saving kot", true, 400, {});
+              businessPosConfig.authToken,
+            );
+
+            await KotOrder.updateMany(
+              {
+                tableName,
+                settled: false,
+                accepted: true,
+                businessId,
+              },
+              {
+                $set: {
+                  isSync: true,
+                },
+              },
+            );
+
+            await UserSession.findOneAndUpdate(
+              {
+                tableName,
+                businessId,
+              },
+              {
+                $set: {
+                  isUserRegistered: true,
+                  billRequest: true,
+                },
+              },
+            );
+
+            const saveKot = await axios.post(posApiPaths.saveKot, petpoojaCart);
+
+            if (saveKot.data.success === "0") {
+              return respond(c, "Error in saving kot", true, 400, {});
+            }
           }
         }
       }
@@ -863,6 +999,103 @@ const paymentsRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const uniqueOrderId = nanoid(15);
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+
+        if (originBillIsSplit) {
+          const splitBillTableSession =
+            await SplitBillTableSession.findById(variantId);
+
+          if (!splitBillTableSession) {
+            return respond(c, "Split bill session not found", true, 404, {});
+          }
+
+          const saveOrder = await Order.create(
+            [
+              {
+                total: splitBillTableSession?.total || total,
+                currency,
+                receipt: uniqueOrderId,
+                userId,
+                claimedCoins:
+                  splitBillTableSession?.claimedCoins || claimedCoins,
+                tableName,
+                tips: splitBillTableSession?.tips || tips,
+                billValue: splitBillTableSession?.subTotal || billValue,
+                businessId,
+                order_id: uniqueOrderId,
+                couponId,
+                channelId,
+                cashbackAvailable,
+                date: Date.now(),
+                billId: splitBillTableSession?._id.toString(),
+                discount: splitBillTableSession?.discount,
+                couponDiscount: splitBillTableSession?.couponDiscount,
+                gst: splitBillTableSession?.gst,
+                variantId: splitBillTableSession?._id.toString(),
+              },
+            ],
+            { session },
+          );
+          if (!saveOrder) return respond(c, "Order not created", true, 400, {});
+
+          await PaymentAlert.create(
+            [
+              {
+                businessId: businessId,
+                userId: userId,
+                alertType: "OFFLINE",
+                order_id: saveOrder?.[0]._id,
+                status: "SUCCESS",
+                tableName: tableName,
+                coinsApplied: !!(
+                  splitBillTableSession?.claimedCoins &&
+                  splitBillTableSession.claimedCoins > 0
+                ),
+                message: `Paid ${total}`,
+                date: Date.now(),
+                billId: splitBillTableSession?._id.toString(),
+                mode: "OFFLINE",
+              },
+            ],
+            { session },
+          );
+
+          if (tableSession.variantsCounts === 1) {
+            const saveOrder = await Order.create(
+              [
+                {
+                  total: tableSession?.total || total,
+                  currency,
+                  receipt: uniqueOrderId,
+                  userId,
+                  claimedCoins: tableSession?.claimedCoins || claimedCoins,
+                  tableName,
+                  tips: tableSession?.tips || tips,
+                  billValue: tableSession?.subTotal || billValue,
+                  businessId,
+                  order_id: uniqueOrderId,
+                  couponId,
+                  channelId,
+                  cashbackAvailable,
+                  date: Date.now(),
+                  billId: tableSession?._id.toString(),
+                  discount: tableSession?.discount,
+                  couponDiscount: tableSession?.couponDiscount,
+                  gst: tableSession?.gst,
+                },
+              ],
+              { session },
+            );
+
+            if (!saveOrder) {
+              return respond(c, "Order not created", true, 400, {});
+            }
+          }
+
+          return respond(c, "Order created successfully", false, 200, {
+            order_id: saveOrder?.[0]._id,
+          });
+        }
 
         const saveOrder = await Order.create(
           [
@@ -911,9 +1144,6 @@ const paymentsRouter = new Hono()
           ],
           { session },
         );
-        const registrationToken = await DeviceToken.find({
-          businessId: businessId,
-        });
 
         return respond(c, "Order created successfully", false, 200, {
           order_id: saveOrder?.[0]._id,
@@ -1172,7 +1402,6 @@ const paymentsRouter = new Hono()
       }
 
       if (!RAZORPAY_WEBHOOK_SECRET) {
-        console.log("razorpay_webhook_secret missing");
       }
 
       const headersResult = RazorpayWebhookHeadersSchema.safeParse(
@@ -1180,6 +1409,7 @@ const paymentsRouter = new Hono()
       );
       if (!headersResult.success) {
         console.log("Invalid headers");
+
         return respond(c, "Invalid headers", true, 200, {});
       }
 
@@ -1215,8 +1445,175 @@ const paymentsRouter = new Hono()
         tableName: getOrder?.tableName,
       });
 
+      const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+      if (originBillIsSplit) {
+        if (event === "payment.failed") {
+          const claimCoins = Number(getOrder?.claimedCoins) || 0;
+          const alertExist = await PaymentAlert.findOne({
+            order_id: getOrder?._id,
+            status: "FAIL",
+            alertType: "ONLINE",
+          });
+          if (!alertExist) {
+            const splitBillTableSession = await SplitBillTableSession.findOne({
+              _id: getOrder?.variantId,
+            });
+            await PaymentAlert.create(
+              [
+                {
+                  errorReason: payload.payment.entity.error_reason,
+                  errorDescription: payload.payment.entity.error_description,
+                  businessId: getOrder?.businessId,
+                  alertType: "ONLINE",
+                  order_id: getOrder?._id,
+                  userId: getOrder?.userId,
+                  status: "FAIL",
+                  tableName: getOrder?.tableName,
+                  coinsApplied:
+                    splitBillTableSession?.claimedCoins || claimCoins > 0,
+                  isAccepted: false,
+                  date: Date.now(),
+                  message: `Fail ${getOrder?.total}`,
+                  couponId: payload?.payment?.entity.notes?.couponId,
+                  mode: payload?.payment?.entity?.method,
+                },
+              ],
+              { session },
+            );
+
+            QrBill.findOneAndUpdate(
+              { billId: splitBillTableSession?._id.toString() },
+              { status: "FAILED" },
+              { session },
+            );
+          }
+        }
+
+        if (event === "payment.captured") {
+          const paymentAlreadyExist = await Payment.findOne({
+            razorpayEventId: razorpayEventId,
+          });
+
+          const splitBillTableSession = await SplitBillTableSession.findOne({
+            _id: getOrder?.variantId,
+          });
+
+          if (!paymentAlreadyExist && getOrder) {
+            const pos = await BusinessPosConfig.findOne({
+              businessId: getOrder?.businessId,
+              isDeleted: false,
+              active: true,
+            });
+            const claimCoins = Number(getOrder?.claimedCoins) || 0;
+            await PaymentAlert.updateOne(
+              {
+                tableName: getOrder?.tableName,
+                isAccepted: false,
+                alertType: "OFFLINE",
+              },
+              { isAccepted: true, isRejected: true },
+              { session },
+            );
+
+            const createPayment = await Payment.create(
+              [
+                {
+                  businessId: getOrder?.businessId,
+                  total: getOrder?.total,
+                  billValue: getOrder?.billValue,
+                  mode: payload.payment.entity.method,
+                  userId: getOrder?.userId,
+                  order_id: getOrder?._id,
+                  paymentMode: "online",
+                  tableName: getOrder?.tableName,
+                  claimedCoins: getOrder?.claimedCoins,
+                  tips: getOrder?.tips,
+                  razorpayPaymentId: payload.payment.entity.id,
+                  razorpayOrderId: payload.payment.entity.order_id,
+                  razorpayAcquirerData: payload.payment.entity.acquirer_data,
+                  razorpayEventId: razorpayEventId,
+                  couponId: getOrder?.couponId,
+                  channelId: getOrder?.channelId,
+                  earnCoins: 0,
+                  date: Date.now(),
+                  tax: splitBillTableSession?.gst,
+                  serviceCharge: splitBillTableSession?.serviceCharge,
+                  billId: splitBillTableSession?._id.toString(),
+                  settleType:
+                    splitBillTableSession?.settleType || "PAYMENT_GATEWAY",
+                  discount: splitBillTableSession?.discount,
+                  couponDiscount: splitBillTableSession?.couponDiscount,
+                  billItems: splitBillTableSession?.items || [],
+                },
+              ],
+              { session },
+            );
+
+            await PaymentAlert.create(
+              [
+                {
+                  businessId: getOrder?.businessId,
+                  alertType: "ONLINE",
+                  payment_id: createPayment[0]._id,
+                  coinsApplied: claimCoins > 0,
+                  status: "SUCCESS",
+                  order_id: getOrder?._id,
+                  message: `Paid ${getOrder?.total}`,
+                  tableName: `T-${getOrder?.tableName?.slice(-2)}`,
+                  isAccepted: false,
+                  userId: getOrder?.userId,
+                  date: Date.now(),
+                  mode: payload.payment.entity.method,
+                },
+              ],
+              { session },
+            );
+
+            if (pos) {
+              await QrBill.findOneAndUpdate(
+                {
+                  billId: splitBillTableSession?._id.toString(),
+                },
+                {
+                  $set: {
+                    status: "SUCCESS",
+                  },
+                },
+                {
+                  session,
+                },
+              );
+            }
+
+            await SplitBillTableSession.findOneAndUpdate(
+              { _id: getOrder?.variantId },
+              {
+                $set: {
+                  isPaid: true,
+                },
+              },
+              { new: true },
+            );
+
+            await UserSession.findOneAndUpdate(
+              {
+                businessId: getOrder?.businessId,
+                tableName: getOrder?.tableName,
+              },
+              {
+                $inc: {
+                  variantsCounts: -1,
+                },
+              },
+            );
+          }
+        }
+        if (tableSession && tableSession.variantsCounts > 1) {
+          return respond(c, "Webhook received successfully", false, 200, {});
+        }
+      }
+
       if (event === "payment.failed") {
-        console.log("Payment failed");
         const claimCoins = Number(getOrder?.claimedCoins) || 0;
         const alertExist = await PaymentAlert.findOne({
           order_id: getOrder?._id,
@@ -1358,7 +1755,7 @@ const paymentsRouter = new Hono()
                 status: "SUCCESS",
                 order_id: getOrder?._id,
                 message: `Paid ${getOrder?.total}`,
-                tableName: getOrder?.tableName,
+                tableName: `T-${getOrder?.tableName?.slice(-2)}`,
                 isAccepted: false,
                 userId: getOrder?.userId,
                 date: Date.now(),
@@ -1377,52 +1774,96 @@ const paymentsRouter = new Hono()
               pin: tableSession?.pin,
               tableNo: getOrder.tableName,
             };
+            setTimeout(() => {
+              (async () => {
+                try {
+                  // 1. Request the bill
+                  const {
+                    data: { bill_request_id },
+                  } = await axios.post(posApiPaths.requestBill, pay, {
+                    headers: { "Content-Type": "application/json" },
+                  });
+                } catch (err) {
+                  console.error("Failed to request/settle bill:", err);
+                }
+              })();
+            }, 8000);
 
-            const saveOrderData = getOrder.toObject();
-            // const { billQueue } = queueClient;
+            setTimeout(() => {
+              (async () => {
+                try {
+                  // 1. Request the bill
+                  const {
+                    data: { bill_request_id },
+                  } = await axios.post(posApiPaths.requestBill, pay, {
+                    headers: { "Content-Type": "application/json" },
+                  });
 
-            // const job1 = await billQueue.add(
-            //   "request-only",
-            //   { pay, saveOrderData, pos, tableSession },
-            //   { delay: 9_000 },
-            // );
+                  console.log("2", bill_request_id);
 
-            // await BillQueue.findOneAndUpdate(
-            //   { jobId: job1.id },
-            //   {
-            //     $set: {
-            //       businessId: tableSession?.businessId,
-            //       tableName: tableSession?.tableName,
-            //       date: Date.now(),
-            //       log: "Queued",
-            //     },
-            //   },
-            //   {
-            //     new: true,
-            //     upsert: true,
-            //   },
-            // );
+                  // 2. Settle the table
+                  const { data: settleData } = await axios.post(
+                    posApiPaths.settleTable,
+                    {
+                      app_key: pos.accessKey,
+                      app_secret: pos.secretKey,
+                      access_token: pos.authToken,
+                      restID: pos.restId,
+                      bill_request_id,
+                      amount_paid: getOrder.total,
+                      pin: tableSession?.pin,
+                    },
+                  );
 
-            // const job2 = await billQueue.add(
-            //   "request-and-settle",
-            //   { pay, saveOrderData, pos, tableSession },
-            //   { delay: 35_000 },
-            // );
-            // await BillQueue.findOneAndUpdate(
-            //   { jobId: job2.id },
-            //   {
-            //     $set: {
-            //       businessId: tableSession?.businessId,
-            //       tableName: tableSession?.tableName,
-            //       date: Date.now(),
-            //       log: "Queued",
-            //     },
-            //   },
-            //   {
-            //     new: true,
-            //     upsert: true,
-            //   },
-            // );
+                  console.log("3", settleData);
+
+                  // 3. If settlement failed (success === "0"), upsert into UnsettleTable
+                  if (settleData.success === "0") {
+                    await UnsettleTable.findOneAndUpdate(
+                      {
+                        businessId: getOrder.businessId,
+                        tableName: getOrder.tableName,
+                        pin: tableSession?.pin,
+                      },
+                      {
+                        sync: false,
+                        // <-- use settleData.request_id, not response.data.request_id
+                        requestId: settleData.request_id,
+                        pin: tableSession?.pin,
+                        restId: pos.restId,
+                        date: Date.now(),
+                        total: getOrder.total,
+                      },
+                      { new: true, upsert: true },
+                    );
+                  }
+                  const unsettleTable = await UnsettleTable.find({
+                    businessId: getOrder.businessId,
+                    restId: pos.restId,
+                    sync: false,
+                  });
+
+                  for (const table of unsettleTable) {
+                    const payload = {
+                      app_key: pos.accessKey,
+                      app_secret: pos.secretKey,
+                      access_token: pos.authToken,
+                      restID: pos.restId,
+                      pin: table?.pin,
+                      tableNo: table?.tableName,
+                    };
+
+                    await axios.post(posApiPaths.requestBill, payload, {
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                    });
+                  }
+                } catch (err) {
+                  console.error("Failed to request/settle bill:", err);
+                }
+              })();
+            }, 32000);
 
             await TempTableSettle.create(
               [
@@ -2105,6 +2546,55 @@ const paymentsRouter = new Hono()
                 );
               }
 
+              const originBillIsSplit =
+                await checkOriginBillIsSplit(tableSession);
+
+              if (originBillIsSplit) {
+                processOfflineOrderPayment({
+                  order,
+                  alert,
+                  settleModes,
+                  paymentMode,
+                  npcUserId,
+                  duesUserId,
+                  existingLoyalty,
+                  waiterName,
+                  session,
+                });
+
+                await SplitBillTableSession.findOneAndUpdate(
+                  { _id: order.variantId },
+                  {
+                    $set: {
+                      isPaid: true,
+                    },
+                  },
+                  { new: true },
+                );
+
+                await UserSession.findOneAndUpdate(
+                  {
+                    businessId: order?.businessId,
+                    tableName: order?.tableName,
+                  },
+                  {
+                    $inc: {
+                      variantsCounts: -1,
+                    },
+                  },
+                );
+
+                if (tableSession.variantsCounts > 1) {
+                  return respond(
+                    c,
+                    "Table settled successfully",
+                    false,
+                    200,
+                    {},
+                  );
+                }
+              }
+
               if (isHavePos) {
                 const payload = {
                   app_key: isHavePos.accessKey,
@@ -2115,51 +2605,92 @@ const paymentsRouter = new Hono()
                   tableNo: tableSession?.tableName,
                 };
 
-                const saveOrderData = order.toObject();
-                // const { billQueue } = queueClient;
+                setTimeout(() => {
+                  (async () => {
+                    try {
+                      // 1. Request the bill
+                      const {
+                        data: { bill_request_id },
+                      } = await axios.post(posApiPaths.requestBill, payload, {
+                        headers: { "Content-Type": "application/json" },
+                      });
+                    } catch (err) {
+                      console.error("Failed to request/settle bill:", err);
+                    }
+                  })();
+                }, 8000);
 
-                // const job1 = await billQueue.add(
-                //   "request-only",
-                //   { payload, saveOrderData, isHavePos, tableSession },
-                //   { delay: 9_000 },
-                // );
+                setTimeout(() => {
+                  (async () => {
+                    try {
+                      // 1. Request the bill
+                      const {
+                        data: { bill_request_id },
+                      } = await axios.post(posApiPaths.requestBill, payload, {
+                        headers: { "Content-Type": "application/json" },
+                      });
 
-                // await BillQueue.findOneAndUpdate(
-                //   { jobId: job1.id },
-                //   {
-                //     $set: {
-                //       businessId: tableSession?.businessId,
-                //       tableName: tableSession?.tableName,
-                //       date: Date.now(),
-                //       log: "Queued",
-                //     },
-                //   },
-                //   {
-                //     new: true,
-                //     upsert: true,
-                //   },
-                // );
+                      // 2. Settle the table
+                      const { data: settleData } = await axios.post(
+                        posApiPaths.settleTable,
+                        {
+                          app_key: isHavePos.accessKey,
+                          app_secret: isHavePos.secretKey,
+                          access_token: isHavePos.authToken,
+                          restID: isHavePos.restId,
+                          bill_request_id,
+                          amount_paid: modifyTotal,
+                          pin: tableSession?.pin,
+                        },
+                      );
 
-                // const job2 = await billQueue.add(
-                //   "request-and-settle",
-                //   { payload, saveOrderData, isHavePos, tableSession },
-                //   { delay: 35_000 },
-                // );
-                // await BillQueue.findOneAndUpdate(
-                //   { jobId: job2.id },
-                //   {
-                //     $set: {
-                //       businessId: tableSession?.businessId,
-                //       tableName: tableSession?.tableName,
-                //       date: Date.now(),
-                //       log: "Queued",
-                //     },
-                //   },
-                //   {
-                //     new: true,
-                //     upsert: true,
-                //   },
-                // );
+                      // 3. If settlement failed (success === "0"), upsert into UnsettleTable
+                      if (settleData.success === "0") {
+                        await UnsettleTable.findOneAndUpdate(
+                          {
+                            businessId: order.businessId,
+                            tableName: order.tableName,
+                            pin: tableSession?.pin,
+                          },
+                          {
+                            sync: false,
+                            // <-- use settleData.request_id, not response.data.request_id
+                            requestId: settleData.request_id,
+                            pin: tableSession?.pin,
+                            restId: isHavePos.restId,
+                            date: Date.now(),
+                            total: modifyTotal,
+                          },
+                          { new: true, upsert: true },
+                        );
+                      }
+                      const unsettleTable = await UnsettleTable.find({
+                        businessId: order.businessId,
+                        restId: isHavePos.restId,
+                        sync: false,
+                      });
+
+                      for (const table of unsettleTable) {
+                        const payload = {
+                          app_key: isHavePos.accessKey,
+                          app_secret: isHavePos.secretKey,
+                          access_token: isHavePos.authToken,
+                          restID: isHavePos.restId,
+                          pin: table?.pin,
+                          tableNo: table?.tableName,
+                        };
+
+                        await axios.post(posApiPaths.requestBill, payload, {
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                        });
+                      }
+                    } catch (err) {
+                      console.error("Failed to request/settle bill:", err);
+                    }
+                  })();
+                }, 32000);
 
                 await KotOrder.updateMany(
                   {
@@ -2376,8 +2907,18 @@ const paymentsRouter = new Hono()
         Number(from),
         Number(to),
       );
-      console.log("original", new Date(Number(from)).toLocaleString(), "From:", new Date(adjustedFrom).toLocaleString());
-      console.log("original", new Date(Number(to)).toLocaleString(),"To :", new Date(adjustedTo).toLocaleString());
+      console.log(
+        "original",
+        new Date(Number(from)).toLocaleString(),
+        "From:",
+        new Date(adjustedFrom).toLocaleString(),
+      );
+      console.log(
+        "original",
+        new Date(Number(to)).toLocaleString(),
+        "To :",
+        new Date(adjustedTo).toLocaleString(),
+      );
 
       // Use the adjusted timestamps as `fromDate` and `toDate`
       const fromDate = adjustedFrom;
@@ -2472,8 +3013,18 @@ const paymentsRouter = new Hono()
         Number(from),
         Number(to),
       );
-      console.log("original", new Date(Number(from)).toLocaleString(), "From:", new Date(adjustedFrom).toLocaleString());
-      console.log("original", new Date(Number(to)).toLocaleString(),"To :", new Date(adjustedTo).toLocaleString());
+      console.log(
+        "original",
+        new Date(Number(from)).toLocaleString(),
+        "From:",
+        new Date(adjustedFrom).toLocaleString(),
+      );
+      console.log(
+        "original",
+        new Date(Number(to)).toLocaleString(),
+        "To :",
+        new Date(adjustedTo).toLocaleString(),
+      );
 
       // Use the adjusted timestamps as `fromDate` and `toDate`
       const fromDate = adjustedFrom;
@@ -3439,8 +3990,18 @@ const paymentsRouter = new Hono()
         Number(from),
         Number(to),
       );
-      console.log("original", new Date(Number(from)).toLocaleString(), "From:", new Date(adjustedFrom).toLocaleString());
-      console.log("original", new Date(Number(to)).toLocaleString(),"To :", new Date(adjustedTo).toLocaleString());
+      console.log(
+        "original",
+        new Date(Number(from)).toLocaleString(),
+        "From:",
+        new Date(adjustedFrom).toLocaleString(),
+      );
+      console.log(
+        "original",
+        new Date(Number(to)).toLocaleString(),
+        "To :",
+        new Date(adjustedTo).toLocaleString(),
+      );
 
       // Use the adjusted timestamps as `fromDate` and `toDate`
       const fromDate = adjustedFrom;
@@ -3548,8 +4109,18 @@ const paymentsRouter = new Hono()
         Number(from),
         Number(to),
       );
-      console.log("original", new Date(Number(from)).toLocaleString(), "From:", new Date(adjustedFrom).toLocaleString());
-      console.log("original", new Date(Number(to)).toLocaleString(),"To :", new Date(adjustedTo).toLocaleString());
+      console.log(
+        "original",
+        new Date(Number(from)).toLocaleString(),
+        "From:",
+        new Date(adjustedFrom).toLocaleString(),
+      );
+      console.log(
+        "original",
+        new Date(Number(to)).toLocaleString(),
+        "To :",
+        new Date(adjustedTo).toLocaleString(),
+      );
 
       // Use the adjusted timestamps as `fromDate` and `toDate`
       const fromDate = adjustedFrom;
@@ -3666,8 +4237,18 @@ const paymentsRouter = new Hono()
         Number(from),
         Number(to),
       );
-      console.log("original", new Date(Number(from)).toLocaleString(), "From:", new Date(adjustedFrom).toLocaleString());
-      console.log("original", new Date(Number(to)).toLocaleString(),"To :", new Date(adjustedTo).toLocaleString());
+      console.log(
+        "original",
+        new Date(Number(from)).toLocaleString(),
+        "From:",
+        new Date(adjustedFrom).toLocaleString(),
+      );
+      console.log(
+        "original",
+        new Date(Number(to)).toLocaleString(),
+        "To :",
+        new Date(adjustedTo).toLocaleString(),
+      );
 
       // Use the adjusted timestamps as `fromDate` and `toDate`
       const fromDate = adjustedFrom;

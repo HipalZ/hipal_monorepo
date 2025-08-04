@@ -1,13 +1,32 @@
-import { PaymentAlert, SplitBillTableSession, Tax } from "@hi/db-models";
+import {
+  Couponz,
+  DuesUser,
+  NpcUser,
+  Order,
+  Payment,
+  PaymentAlert,
+  PendingDues,
+  SplitBillTableSession,
+  Tax,
+  UserSession,
+} from "@hi/db-models";
 import type { UserSessionSchemaType } from "@hi/db-models/src/validators";
+import type { ClientSession } from "mongoose";
 import {
   calculateFinalTotal,
-  calculateSplitBillTotals,
+  calculateGst,
+  calculateSplitBillDishIds,
   calculateTotalDiscount,
   groupSplitItemsByGST,
   updateSplitTableSession,
 } from "../../utils/bill";
 
+import { nanoid } from "nanoid";
+import {
+  addCoins,
+  calculatedCashbackCoins,
+  removeCoins,
+} from "../../routes/payments";
 import type { Item } from "../../utils/billTypes";
 
 const isOriginBillChanged = (original: UserSessionSchemaType) => {
@@ -53,57 +72,64 @@ const returnSplitBillVariants = async (
   tableName: string,
 ) => {
   const fetchVariants = await SplitBillTableSession.find({
-    businessId: businessId,
-    tableName: tableName,
-    originTableSessionId: originalTableSessionId,
+    businessId,
+    tableName,
+    originalTableSessionId,
   }).populate({
     path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy",
     select: "name phone",
   });
+
   const billVariants = [];
 
-  for (const variant of fetchVariants) {
-    const cartItem = variant.items as Item[];
+  for (let variant of fetchVariants) {
+    const cartItems = variant.items as Item[];
+    if (!cartItems?.length) continue;
 
-    const { totalDishTotal, totalGst } = calculateSplitBillTotals(cartItem);
+    const totalDishTotal = variant.totalDishTotal || 0;
+    const totalGst = variant.totalGst || 0;
 
-    const billItems = groupSplitItemsByGST(cartItem);
+    const billItems = groupSplitItemsByGST(cartItems);
 
     const discountAppliedBy = variant.discountAppliedBy?.name || "";
     const discountRemovedBy = variant.discountRemovedBy?.name || "";
     const serviceChargeAppliedBy = variant.serviceChargeAppliedBy?.name || "";
     const serviceChargeRemovedBy = variant.serviceChargeRemovedBy?.name || "";
 
-    // Get service charge info
-    const serviceCharge = await Tax.findOne({
-      businessId,
-      menuId: cartItem[0].dish.menuId,
-      isActive: true,
-      name: "servicecharge",
-    });
+    // Get service charge
+    let serviceChargeAmount = 0;
+    const menuId = cartItems[0]?.dish?.menuId;
 
-    const serviceChargePercentage = serviceCharge?.value || 0;
+    if (menuId) {
+      const serviceCharge = await Tax.findOne({
+        businessId,
+        menuId,
+        isActive: true,
+        name: "servicecharge",
+      });
 
-    let serviceChargeAmount = Math.round(
-      (serviceChargePercentage / 100) * totalDishTotal,
-    );
-    if (variant.isServiceChargeRemoved) serviceChargeAmount = 0;
+      const percentage = serviceCharge?.value || 0;
+      serviceChargeAmount = Math.round((percentage / 100) * totalDishTotal);
+    }
 
-    // Calculate GST
-    let newGst = 0;
+    if (variant.isServiceChargeRemoved) {
+      serviceChargeAmount = 0;
+    }
+
+    // Recalculate GST if needed
     const newSubTotal =
       totalDishTotal -
       variant.discount -
       variant.claimedCoins -
       variant.couponDiscount;
 
-    if (variant.isDiscountApplied && variant.discountAppliedOn === "ON_DISH") {
+    let newGst = totalGst;
+
+    if (variant.isDiscountApplied) {
       newGst = (variant.gstPercentage / 100) * newSubTotal;
-      newGst -= variant.newDishGst;
-    } else if (variant.isDiscountApplied) {
-      newGst = (variant.gstPercentage / 100) * newSubTotal;
-    } else {
-      newGst = totalGst;
+      if (variant.discountAppliedOn === "ON_DISH") {
+        newGst -= variant.newDishGst;
+      }
     }
 
     const totalDis = calculateTotalDiscount(
@@ -112,7 +138,6 @@ const returnSplitBillVariants = async (
       variant.couponDiscount,
     );
 
-    // Final total
     const newTotal = calculateFinalTotal(
       totalDishTotal,
       totalDis,
@@ -122,53 +147,806 @@ const returnSplitBillVariants = async (
       variant.tips,
     );
 
-    // Update table session with new values
-    const update = await updateSplitTableSession(variant._id.toString(), {
-      gst: Number(newGst).toFixed(2),
+    // Update table session
+    variant = await updateSplitTableSession(variant._id.toString(), {
+      gst: newGst.toFixed(2),
       total: newTotal,
       serviceCharge: serviceChargeAmount,
-      billGeneratedBy: variant?.generatedBy || "datta",
+      billGeneratedBy: variant.generatedBy || "system",
       subTotal: totalDishTotal,
-      items: cartItem,
-      billPrintCount: variant.billPrintCount + 1,
+      items: cartItems,
+      billPrintCount: (variant.billPrintCount || 0) + 1,
     });
 
-    const bill = {
+    billVariants.push({
       customerName: variant.customerName,
-      customerPhone: variant.phoneNumbers?.[0],
+      customerPhone: variant.phoneNumbers?.[0] || "",
       tableName: variant.tableName,
       couponId: variant.couponId,
       discountAppliedOn: variant.discountAppliedOn,
       reasonOfDiscount: variant.reasonOfDiscount,
       reasonOfServiceCharge: variant.reasonOfServiceCharge,
-      serviceChargeAppliedBy: serviceChargeAppliedBy,
-      serviceChargeRemovedBy: serviceChargeRemovedBy,
-      discountAppliedBy: discountAppliedBy,
-      discountRemovedBy: discountRemovedBy,
+      serviceChargeAppliedBy,
+      serviceChargeRemovedBy,
+      discountAppliedBy,
+      discountRemovedBy,
 
       billItems,
       subTotal: totalDishTotal,
-      gst: variant.gst,
+      gst: Number(newGst.toFixed(2)),
       discount: variant.discount,
       claimedCoins: variant.claimedCoins,
       couponDiscount: variant.couponDiscount,
-      serviceCharge: variant.serviceCharge,
+      serviceCharge: serviceChargeAmount,
       tips: variant.tips,
-      total: variant.total,
+      total: newTotal,
       billId: variant.originTableSessionId,
       variantId: variant._id.toString(),
       variantName: variant.variantName,
-    };
-
-    billVariants.push(bill);
+    });
   }
 
   return billVariants;
 };
 
+const applyDiscountToVariantBill = async ({
+  variantId,
+  value,
+  discountAppliedOn,
+  reasonOfDiscount,
+  discountAppliedBy,
+  itemIds,
+}: {
+  variantId: string;
+  value: number;
+  discountAppliedOn: "ON_DISH" | "ON_BILL";
+  reasonOfDiscount: string;
+  discountAppliedBy: string;
+  itemIds: string[];
+  session: ClientSession;
+}) => {
+  const splitTableSession = await SplitBillTableSession.findById(variantId);
+  if (!splitTableSession) {
+    throw new Error("Variant not found");
+  }
+
+  const cartItems = splitTableSession.items as Item[];
+
+  let discountAmount = 0;
+  let newSubTotal = splitTableSession.subTotal;
+
+  if (discountAppliedOn === "ON_BILL") {
+    const dis = Math.round((value / 100) * newSubTotal);
+
+    // Calculate discount on the bill
+    discountAmount = Math.min(
+      dis,
+      newSubTotal -
+        splitTableSession.claimedCoins -
+        splitTableSession.couponDiscount,
+    );
+    newSubTotal -= discountAmount;
+  }
+
+  if (discountAppliedOn === "ON_DISH") {
+    // Calculate discount on selected dishes
+
+    const { totalDishTotal, totalGst } = calculateSplitBillDishIds(
+      cartItems,
+      itemIds,
+    );
+
+    const dishDis = Math.round((value / 100) * totalDishTotal);
+    discountAmount = Math.min(dishDis, totalDishTotal);
+    newSubTotal -= discountAmount;
+  }
+
+  // GST Calculation
+  const newGst = calculateGst(splitTableSession.gstPercentage, newSubTotal);
+
+  // Calculate final total
+  const totalDis = calculateTotalDiscount(
+    discountAmount,
+    splitTableSession.claimedCoins,
+    splitTableSession.couponDiscount,
+  );
+  const newTotal = calculateFinalTotal(
+    splitTableSession.subTotal,
+    totalDis,
+    newGst,
+    splitTableSession.serviceCharge,
+    0,
+    splitTableSession.tips,
+  );
+
+  // Update session after applying the discount
+  const update = await updateSplitTableSession(
+    splitTableSession._id.toString(),
+    {
+      gst: Number(newGst.toFixed(2)),
+      total: newTotal,
+      reasonOfDiscount,
+      discountAppliedOn,
+      discountAppliedBy,
+      isDiscountApplied: true,
+      discountRemovedBy: null,
+      discount: discountAmount,
+    },
+  );
+
+  if (!update) {
+    throw new Error("Failed to update split table session");
+  }
+
+  return true;
+};
+
+const applyCoinToVariantBill = async (
+  variantId: string,
+  value: number,
+  session: ClientSession,
+) => {
+  const splitTableSession = await SplitBillTableSession.findById(variantId);
+  if (!splitTableSession) {
+    throw new Error("Variant not found");
+  }
+
+  if (splitTableSession.couponDiscount > 0) {
+    throw new Error("Cannot apply coins when coupon discount is applied");
+  }
+
+  const coins = Math.min(
+    value,
+    splitTableSession.subTotal -
+      splitTableSession.discount -
+      splitTableSession.couponDiscount,
+  );
+
+  const newSubTotal =
+    splitTableSession.subTotal -
+    coins -
+    splitTableSession.discount -
+    splitTableSession.couponDiscount;
+
+  const newGst = (splitTableSession.gstPercentage / 100) * newSubTotal;
+
+  const totalDis = calculateTotalDiscount(
+    splitTableSession.discount,
+    coins,
+    splitTableSession.couponDiscount,
+  );
+  const newTotal = calculateFinalTotal(
+    splitTableSession.subTotal,
+    totalDis,
+    newGst,
+    splitTableSession.serviceCharge,
+    0,
+    splitTableSession.tips,
+  );
+
+  const updateSpliBillTableSession = await updateSplitTableSession(
+    splitTableSession._id.toString(),
+    {
+      gst: newGst.toFixed(2),
+      total: newTotal,
+      isDiscountApplied: true,
+      claimedCoins: coins,
+    },
+  );
+
+  if (!updateSpliBillTableSession) {
+    throw new Error("Failed to update split bill table session");
+  }
+
+  return true;
+};
+
+const applyCouponToVariantBill = async (
+  variantId: string,
+  couponId: string,
+
+  session: ClientSession,
+) => {
+  const splitTableSession = await SplitBillTableSession.findById(variantId);
+  if (!splitTableSession) {
+    throw new Error("Variant not found");
+  }
+  let couponDiscount = 0;
+
+  const coupon = await Couponz.findById(couponId);
+
+  if (!coupon) {
+    throw new Error("Coupon not found");
+  }
+
+  if (splitTableSession.claimedCoins > 0) {
+    throw new Error("Coins already claimed for this table");
+  }
+
+  const couponType = coupon?.config?.discountType;
+
+  if (couponType === "PERCENTAGE") {
+    const percentValue =
+      ((coupon?.config?.value || 0) / 100) * (splitTableSession?.subTotal || 0);
+    couponDiscount = Math.min(
+      percentValue,
+      coupon?.config?.upto || Number.POSITIVE_INFINITY,
+    );
+  } else {
+    couponDiscount = coupon?.config?.value as number;
+  }
+
+  couponDiscount = Math.min(
+    couponDiscount,
+    splitTableSession.subTotal -
+      splitTableSession.discount -
+      splitTableSession.claimedCoins,
+  );
+
+  const newSubTotal =
+    splitTableSession.subTotal -
+    splitTableSession.claimedCoins -
+    splitTableSession.discount -
+    couponDiscount;
+  const newGst = (splitTableSession.gstPercentage / 100) * newSubTotal;
+
+  const totalDis = calculateTotalDiscount(
+    splitTableSession.discount,
+    splitTableSession.claimedCoins,
+    couponDiscount,
+  );
+  const newTotal = calculateFinalTotal(
+    splitTableSession.subTotal,
+    totalDis,
+    newGst,
+    splitTableSession.serviceCharge,
+    0,
+    splitTableSession.tips,
+  );
+
+  const updateSplitBillTableSession = await updateSplitTableSession(
+    splitTableSession._id.toString(),
+    {
+      gst: Number(newGst).toFixed(2),
+      total: newTotal,
+      isDiscountApplied: true,
+      couponDiscount,
+      couponId,
+    },
+  );
+
+  if (!updateSplitBillTableSession) {
+    throw new Error("Failed to update split bill table session");
+  }
+
+  return true;
+};
+
+const removeDiscountFromVariantBill = async (
+  variantId: string,
+  reasonOfDiscount: string,
+  discountRemovedBy: string,
+  session: ClientSession,
+) => {
+  const splitTableSession = await SplitBillTableSession.findById(variantId);
+  if (!splitTableSession) {
+    throw new Error("Variant not found");
+  }
+
+  const newSubTotal =
+    splitTableSession.subTotal -
+    0 -
+    splitTableSession.claimedCoins -
+    splitTableSession.couponDiscount;
+  const newGst = (splitTableSession.gstPercentage / 100) * newSubTotal;
+
+  const totalDis = calculateTotalDiscount(
+    0,
+    splitTableSession.claimedCoins,
+    splitTableSession.couponDiscount,
+  );
+  const newTotal = calculateFinalTotal(
+    splitTableSession.subTotal,
+    totalDis,
+    newGst,
+    splitTableSession.serviceCharge,
+    0,
+    splitTableSession.tips,
+  );
+
+  const isDiscountApplied =
+    splitTableSession.claimedCoins > 0 || splitTableSession.couponDiscount > 0;
+
+  const updateSplitTable = await updateSplitTableSession(
+    splitTableSession._id.toString(),
+    {
+      gst: Number(newGst.toFixed(2)),
+      total: newTotal,
+      reasonOfDiscount,
+      isDiscountApplied,
+      discount: 0,
+      discountAppliedBy: null,
+      discountRemovedBy,
+      newDishGst: 0,
+    },
+  );
+
+  if (!updateSplitTable) {
+    throw new Error("Failed to update split bill table session");
+  }
+
+  return true;
+};
+
+const removeCoinFromVariantBill = async (
+  variantId: string,
+  session: ClientSession,
+) => {
+  const splitTableSession = await SplitBillTableSession.findById(variantId);
+  if (!splitTableSession) {
+    throw new Error("Variant not found");
+  }
+
+  const isDiscountApplied =
+    splitTableSession.discount > 0 || splitTableSession.couponDiscount > 0;
+
+  const newSubTotal =
+    splitTableSession.subTotal -
+    splitTableSession.discount -
+    0 -
+    splitTableSession.couponDiscount;
+  const newGst = (splitTableSession.gstPercentage / 100) * newSubTotal;
+
+  const totalDis = calculateTotalDiscount(
+    splitTableSession.discount,
+    0,
+    splitTableSession.couponDiscount,
+  );
+  const newTotal = calculateFinalTotal(
+    splitTableSession.subTotal,
+    totalDis,
+    newGst,
+    splitTableSession.serviceCharge,
+    0,
+    splitTableSession.tips,
+  );
+
+  const updateSplitTable = await updateSplitTableSession(
+    splitTableSession._id.toString(),
+    {
+      gst: Number(newGst.toFixed(2)),
+      total: newTotal,
+      isDiscountApplied,
+      claimedCoins: 0,
+    },
+  );
+
+  if (!updateSplitTable) {
+    throw new Error("Failed to update split bill table session");
+  }
+  return true;
+};
+
+const removeCouponFromVariantBill = async (
+  variantId: string,
+
+  session: ClientSession,
+) => {
+  const splitTableSession = await SplitBillTableSession.findById(variantId);
+  if (!splitTableSession) {
+    throw new Error("Variant not found");
+  }
+  const isDiscountApplied =
+    splitTableSession.discount > 0 || splitTableSession.claimedCoins > 0;
+
+  const newSubTotal =
+    splitTableSession.subTotal -
+    splitTableSession.discount -
+    splitTableSession.claimedCoins -
+    0;
+  const newGst = (splitTableSession.gstPercentage / 100) * newSubTotal;
+
+  const totalDis = calculateTotalDiscount(
+    splitTableSession.discount,
+    splitTableSession.claimedCoins,
+    0,
+  );
+  const newTotal = calculateFinalTotal(
+    splitTableSession.subTotal,
+    totalDis,
+    newGst,
+    splitTableSession.serviceCharge,
+    0,
+    splitTableSession.tips,
+  );
+
+  const updateSplitTable = await updateSplitTableSession(
+    splitTableSession._id.toString(),
+    {
+      gst: newGst.toFixed(2),
+      total: newTotal,
+      couponId: null,
+      isDiscountApplied,
+      couponDiscount: 0,
+    },
+  );
+
+  if (!updateSplitTable) {
+    throw new Error("Failed to update split bill table session");
+  }
+
+  return true;
+};
+
+export const handleNormalBillSettlement = async ({
+  table,
+
+  captain,
+  paymentMode,
+  settleModes,
+  businessLoyalty,
+  npcUser,
+  duesUserId,
+  npcUserId,
+
+  session,
+  variantId,
+}: {
+  table: any;
+
+  captain: any;
+  paymentMode: any;
+  settleModes: any[];
+  businessLoyalty: any;
+  npcUser?: any;
+  duesUserId?: string;
+  npcUserId?: string;
+
+  variantId?: string;
+  session: ClientSession;
+}) => {
+  const splitBillTableSession = await SplitBillTableSession.findById(variantId);
+  if (!splitBillTableSession) {
+    throw new Error("Split bill session not found");
+  }
+  const uniqueOrderId = nanoid(15);
+
+  let modifyTotal = 0;
+  if (["npc", "dues", "complementary"].includes(paymentMode?.name)) {
+    modifyTotal = 0;
+  } else {
+    modifyTotal = splitBillTableSession?.total || 0;
+
+    if (settleModes.length > 1) {
+      for (const settle of settleModes) {
+        if (settle.name === "complementary") {
+          modifyTotal -= settle.amount ?? 0;
+        }
+      }
+    }
+  }
+
+  const saveOrder = await Order.create(
+    [
+      {
+        total: ["npc", "complementary"].includes(paymentMode?.name)
+          ? 0
+          : splitBillTableSession?.total || 0,
+        currency: "INR",
+        receipt: uniqueOrderId,
+        userId:
+          paymentMode?.name === "npc"
+            ? npcUser?.userId
+            : splitBillTableSession?.customerIds?.[0] || captain._id,
+        claimedCoins: splitBillTableSession?.claimedCoins || 0,
+        tableName: table?.name,
+        tips: splitBillTableSession?.tips || 0,
+        billValue: splitBillTableSession?.subTotal || 0,
+        businessId: table?.businessId,
+        order_id: uniqueOrderId,
+        discount: splitBillTableSession?.discount || 0,
+        couponDiscount: splitBillTableSession?.couponDiscount || 0,
+        gst: splitBillTableSession?.gst || 0,
+        date: Date.now(),
+      },
+    ],
+    { session },
+  );
+
+  const order = saveOrder[0];
+
+  // Loyalty handling
+  const cashBack = await calculatedCashbackCoins(
+    order.businessId.toString(),
+    Number(order.billValue),
+    Number(order.claimedCoins),
+  );
+
+  if (
+    order.claimedCoins > 0 &&
+    !["complementary", "npc"].includes(paymentMode?.name)
+  ) {
+    await removeCoins(
+      Number(order.claimedCoins),
+      order.tableName,
+      businessLoyalty?.loyaltyId?.toString() || "",
+      order._id.toString(),
+      order.userId.toString(),
+      session,
+    );
+  }
+
+  const finalCashBack = await addCoins(
+    cashBack,
+    order.userId.toString(),
+    order._id.toString(),
+    order.tableName || "",
+    order.businessId.toString(),
+    businessLoyalty?.loyaltyId?.toString() || "",
+    session,
+  );
+
+  const createPayment = await Payment.create(
+    [
+      {
+        businessId: table?.businessId,
+        order_id: order._id,
+        total: order.total,
+        mode: settleModes.length > 1 ? "split" : paymentMode?.name,
+        status: "SUCCESS",
+        paymentMode: settleModes.length > 1 ? "split" : paymentMode?.name,
+        userId: order.userId,
+        claimedCoins: order.claimedCoins,
+        billValue: order.billValue,
+        tips: order.tips,
+        tableName: order.tableName,
+        earnCoins: finalCashBack,
+        razorpayEventId: nanoid(15),
+        razorpayOrderId: nanoid(15),
+        razorpayPaymentId: nanoid(15),
+        settleType: "NORMAL_SETTLE",
+        comment: "NORMAL SETTLE",
+        posBillId: splitBillTableSession?._id,
+        tax: ["npc", "complementary"].includes(paymentMode?.name)
+          ? 0
+          : splitBillTableSession?.gst,
+        serviceCharge: ["npc", "complementary"].includes(paymentMode?.name)
+          ? 0
+          : splitBillTableSession?.serviceCharge,
+        waiterName: captain?.name,
+        splitModes: settleModes,
+        date: Date.now(),
+        discount: splitBillTableSession?.discount,
+        couponDiscount: splitBillTableSession?.couponDiscount,
+        billId: splitBillTableSession?._id.toString(),
+        billItems: splitBillTableSession?.items || [],
+        isSplitBillVariant: true,
+      },
+    ],
+    { session },
+  );
+
+  // Dues or NPC tracking
+  if (duesUserId && paymentMode?.name === "dues") {
+    await PendingDues.create(
+      [
+        {
+          billId: createPayment[0]._id,
+          businessId: order.businessId,
+          date: Date.now(),
+          duesUserId,
+          isSettled: false,
+        },
+      ],
+      { session },
+    );
+
+    await DuesUser.findByIdAndUpdate(
+      duesUserId,
+      {
+        $inc: {
+          totalDuesAmount: order.total,
+        },
+      },
+      { session },
+    );
+  }
+
+  if (npcUserId && paymentMode?.name === "npc") {
+    await NpcUser.findByIdAndUpdate(
+      npcUserId,
+      {
+        $inc: {
+          totalNpcAmount: order.billValue,
+        },
+      },
+      { session },
+    );
+  }
+
+  await UserSession.findOneAndUpdate(
+    {
+      businessId: splitBillTableSession.businessId,
+      tableName: splitBillTableSession.tableName,
+    },
+    {
+      $inc: {
+        variantsCounts: -1,
+      },
+    },
+    { session, new: true },
+  );
+
+  return true;
+};
+
+const processOfflineOrderPayment = async ({
+  order,
+
+  alert,
+  settleModes,
+  paymentMode,
+  npcUserId,
+  duesUserId,
+  loyaltySettings,
+  waiterName,
+  session,
+}: {
+  order: any;
+  alert: any;
+  settleModes: any[];
+  paymentMode: any;
+  npcUserId?: string;
+  duesUserId?: string;
+  loyaltySettings: any;
+  waiterName: string;
+  session: ClientSession;
+}) => {
+  let finalCashBack = 0;
+
+  const splitBillTableSession = await SplitBillTableSession.findById(
+    order.variantId,
+  ).session(session);
+
+  if (!splitBillTableSession) {
+    throw new Error("Split bill session not found");
+  }
+
+  const npcUser = npcUserId
+    ? await NpcUser.findById(npcUserId).session(session)
+    : null;
+
+  if (!["complementary", "npc"].includes(paymentMode?.name)) {
+    let cashBack = await calculatedCashbackCoins(
+      order.businessId.toString(),
+      Number(order.billValue),
+      Number(order.claimedCoins),
+    );
+
+    if (loyaltySettings?.loyaltyId && order.claimedCoins > 0) {
+      await removeCoins(
+        Number(order.claimedCoins),
+        order.tableName,
+        loyaltySettings.loyaltyId.toString(),
+        order._id.toString(),
+        order.userId.toString(),
+        session,
+      );
+
+      if (order.cashbackAvailable === false) {
+        cashBack = 0;
+      }
+    }
+
+    finalCashBack = await addCoins(
+      cashBack,
+      order.userId.toString(),
+      order._id.toString(),
+      order.tableName || "",
+      order.businessId.toString(),
+      loyaltySettings?.loyaltyId.toString() || "",
+      session,
+    );
+  }
+
+  let modifyTotal = ["npc", "dues", "complementary"].includes(paymentMode?.name)
+    ? 0
+    : order.total;
+
+  if (settleModes.length > 1) {
+    for (const settle of settleModes) {
+      if (settle.name === "complementary") {
+        modifyTotal -= settle.amount ?? 0;
+      }
+    }
+  }
+
+  const payment = await Payment.create(
+    [
+      {
+        businessId: alert.businessId,
+        order_id: order._id,
+        total: modifyTotal,
+        mode: settleModes.length > 1 ? "split" : paymentMode?.name,
+        status: "SUCCESS",
+        paymentMode: settleModes.length > 1 ? "split" : paymentMode?.name,
+        userId: paymentMode?.name === "npc" ? npcUser?.userId : order.userId,
+        claimedCoins: ["npc", "complementary"].includes(paymentMode?.name)
+          ? 0
+          : order.claimedCoins,
+        billValue: order.billValue,
+        tips: order.tips,
+        tableName: order.tableName,
+        earnCoins: ["npc", "complementary"].includes(paymentMode?.name)
+          ? 0
+          : finalCashBack,
+        razorpayEventId: nanoid(15),
+        razorpayOrderId: nanoid(15),
+        razorpayPaymentId: nanoid(15),
+        couponId: order.couponId,
+        channelId: order.channelId,
+        billId: splitBillTableSession?._id.toString(),
+        tax: ["npc", "complementary"].includes(paymentMode?.name)
+          ? 0
+          : splitBillTableSession?.gst,
+        serviceCgarge: ["npc", "complementary"].includes(paymentMode?.name)
+          ? 0
+          : splitBillTableSession?.serviceCharge,
+        splitModes: settleModes,
+        waiterName,
+        date: Date.now(),
+        discount: splitBillTableSession?.discount,
+        couponDiscount: splitBillTableSession?.couponDiscount,
+        billItems: splitBillTableSession?.items || [],
+      },
+    ],
+    { session },
+  );
+
+  // Handle dues
+  if (duesUserId && paymentMode?.name === "dues") {
+    await PendingDues.create(
+      [
+        {
+          billId: payment[0]._id,
+          businessId: order.businessId,
+          date: Date.now(),
+          duesUserId,
+          isSettled: false,
+        },
+      ],
+      { session },
+    );
+
+    await DuesUser.findByIdAndUpdate(
+      duesUserId,
+      { $inc: { totalDuesAmount: order.total } },
+      { session },
+    );
+  }
+
+  // Handle NPC
+  if (npcUserId && paymentMode?.name === "npc") {
+    await NpcUser.findByIdAndUpdate(
+      npcUserId,
+      { $inc: { totalNpcAmount: order.total } },
+      { session },
+    );
+  }
+
+  return true;
+};
+
 export {
+  applyCoinToVariantBill,
+  applyCouponToVariantBill,
+  applyDiscountToVariantBill,
   checkOfflinePaymentRequest,
   checkOriginBillIsSplit,
   isOriginBillChanged,
+  processOfflineOrderPayment,
+  removeCoinFromVariantBill,
+  removeCouponFromVariantBill,
+  removeDiscountFromVariantBill,
   returnSplitBillVariants,
 };

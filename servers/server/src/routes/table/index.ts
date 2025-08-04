@@ -11,6 +11,7 @@ import {
   PaymentAlert,
   PendingDues,
   QrBill,
+  SplitBillTableSession,
   Table,
   UnsettleTable,
   UpiMode,
@@ -30,7 +31,10 @@ import type { ClientSession } from "mongodb";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
-import { checkOriginBillIsSplit } from "../../services/splitBill";
+import {
+  checkOriginBillIsSplit,
+  handleNormalBillSettlement,
+} from "../../services/splitBill";
 import { calculateCartBill } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 // import { queueClient } from "../../utils/queue/queueClient";
@@ -280,6 +284,7 @@ const tableRouter = new Hono()
           settleModes = [],
           duesUserId,
           npcUserId,
+          variantId,
         } = await c.req.json();
         const paymentMode = await UpiMode.findById(settleModes[0]?._id);
 
@@ -288,7 +293,7 @@ const tableRouter = new Hono()
         }
 
         const billAlreadySettled = await Payment.findOne({
-          billId: billId,
+          billId: variantId ? variantId : billId,
         });
 
         if (billAlreadySettled) {
@@ -318,6 +323,64 @@ const tableRouter = new Hono()
         }
 
         const npcUser = await NpcUser.findById(npcUserId);
+        //no
+
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+        if (originBillIsSplit) {
+          if (!variantId) {
+            return respond(
+              c,
+              "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+          await handleNormalBillSettlement({
+            table,
+            captain,
+            paymentMode,
+            settleModes,
+            businessLoyalty,
+            npcUser,
+            duesUserId,
+            npcUserId,
+            session,
+            variantId,
+          });
+
+          await SplitBillTableSession.findOneAndUpdate(
+            { _id: variantId },
+            {
+              $set: {
+                isPaid: true,
+              },
+            },
+            { new: true },
+          );
+
+          await UserSession.findOneAndUpdate(
+            {
+              businessId: table?.businessId,
+              tableName: table?.name,
+            },
+            {
+              $inc: {
+                variantsCounts: -1,
+              },
+            },
+          );
+
+          if (tableSession.variantsCounts > 1) {
+            return c.json(
+              {
+                message: "Table settled successfully",
+                err: false,
+              },
+              200,
+            );
+          }
+        }
 
         await KotOrder.updateMany(
           {
@@ -518,51 +581,93 @@ const tableRouter = new Hono()
           { session },
         );
 
-        const saveOrderData = saveOrder[0];
-        // const { billQueue } = queueClient;
+        setTimeout(() => {
+          (async () => {
+            try {
+              // 1. Request the bill
+              const {
+                data: { bill_request_id },
+              } = await axios.post(posApiPaths.requestBill, payload, {
+                headers: { "Content-Type": "application/json" },
+              });
+            } catch (err) {
+              console.error("Failed to request/settle bill:", err);
+            }
+          })();
+        }, 8000);
 
-        // const job1 = await billQueue.add(
-        //   "request-only",
-        //   { payload, saveOrderData, pos, tableSession },
-        //   { delay: 9_000 },
-        // );
+        setTimeout(() => {
+          (async () => {
+            try {
+              // 1. Request the bill
+              const {
+                data: { bill_request_id },
+              } = await axios.post(posApiPaths.requestBill, payload, {
+                headers: { "Content-Type": "application/json" },
+              });
 
-        // await BillQueue.findOneAndUpdate(
-        //   { jobId: job1.id },
-        //   {
-        //     $set: {
-        //       businessId: tableSession.businessId,
-        //       tableName: tableSession.tableName,
-        //       date: Date.now(),
-        //       log: "Queued",
-        //     },
-        //   },
-        //   {
-        //     new: true,
-        //     upsert: true,
-        //   },
-        // );
+              // 2. Settle the table
+              const { data: settleData } = await axios.post(
+                posApiPaths.settleTable,
+                {
+                  app_key: pos.accessKey,
+                  app_secret: pos.secretKey,
+                  access_token: pos.authToken,
+                  restID: pos.restId,
+                  bill_request_id,
+                  amount_paid: saveOrder[0].total,
+                  pin: tableSession?.pin,
+                },
+              );
 
-        // const job2 = await billQueue.add(
-        //   "request-and-settle",
-        //   { payload, saveOrderData, pos, tableSession },
-        //   { delay: 35_000 },
-        // );
-        // await BillQueue.findOneAndUpdate(
-        //   { jobId: job2.id },
-        //   {
-        //     $set: {
-        //       businessId: tableSession.businessId,
-        //       tableName: tableSession.tableName,
-        //       date: Date.now(),
-        //       log: "Queued",
-        //     },
-        //   },
-        //   {
-        //     new: true,
-        //     upsert: true,
-        //   },
-        // );
+              // 3. If settlement failed (success === "0"), upsert into UnsettleTable
+              if (settleData.success === "0") {
+                await UnsettleTable.findOneAndUpdate(
+                  {
+                    businessId: saveOrder[0].businessId,
+                    tableName: saveOrder[0].tableName,
+                    pin: tableSession?.pin,
+                  },
+                  {
+                    sync: false,
+                    // <-- use settleData.request_id, not response.data.request_id
+                    requestId: settleData.request_id,
+                    pin: tableSession?.pin,
+                    restId: pos.restId,
+                    date: Date.now(),
+                    total: saveOrder[0].total,
+                  },
+                  { new: true, upsert: true },
+                );
+              }
+
+              const unsettleTable = await UnsettleTable.find({
+                businessId: saveOrder[0]?.businessId,
+                restId: pos.restId,
+                sync: false,
+              });
+
+              for (const table of unsettleTable) {
+                const payload = {
+                  app_key: pos.accessKey,
+                  app_secret: pos.secretKey,
+                  access_token: pos.authToken,
+                  restID: pos.restId,
+                  pin: table?.pin,
+                  tableNo: table?.tableName,
+                };
+
+                await axios.post(posApiPaths.requestBill, payload, {
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                });
+              }
+            } catch (err) {
+              console.error("Failed to request/settle bill:", err);
+            }
+          })();
+        }, 32000);
 
         await UserSession.deleteOne(
           {
@@ -621,12 +726,13 @@ const tableRouter = new Hono()
         tableId: z.string().min(1).max(500),
         captainId: z.string().min(1).max(500),
         billId: z.string().min(24).max(24),
+        variantId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { tableId, captainId, billId } = await c.req.json();
+        const { tableId, captainId, billId, variantId } = await c.req.json();
 
         const table = await Table.findById(tableId);
 
@@ -654,12 +760,38 @@ const tableRouter = new Hono()
         }
 
         const alreadySetlle = await Payment.findOne({
-          billId: billId,
+          billId: variantId ? variantId : billId,
         });
 
         if (alreadySetlle) {
           return respond(c, "Bill already settled", true, 409, {});
         }
+
+        const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+        if (originBillIsSplit) {
+          if (!variantId) {
+            return respond(
+              c,
+              "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+
+          await SplitBillTableSession.findOneAndUpdate(
+            {
+              _id: variantId,
+            },
+            {
+              $set: {
+                settleType: "HI_SETTLE",
+              },
+            },
+            { session },
+          );
+        }
+
         await UserSession.findOneAndUpdate(
           {
             businessId: table?.businessId,
@@ -677,7 +809,7 @@ const tableRouter = new Hono()
 
         const updateQrBill = await QrBill.findOneAndUpdate(
           {
-            billId: billId,
+            billId: variantId ? variantId : billId,
           },
           {
             $set: {
@@ -736,13 +868,14 @@ const tableRouter = new Hono()
         businessId: z.string().min(1).max(500),
         tableId: z.string().min(1).max(500),
         userIds: z.array(z.string().min(1).max(500)).optional(),
+        variantId: z.string().min(1).max(500).optional(),
       }),
     ),
     async (c) => {
       const {
         phoneNumbers = [],
         businessId,
-
+        variantId,
         tableId,
       } = await c.req.json();
       const business = await Business.findById(businessId);
@@ -751,6 +884,29 @@ const tableRouter = new Hono()
         businessId: businessId,
         tableName: tableData?.name,
       });
+      if (!tableSession) {
+        return respond(c, "Table session not found", true, 404, {});
+      }
+
+      const billAlreadySplit = checkOriginBillIsSplit(tableSession);
+      if (billAlreadySplit) {
+        if (!variantId) {
+          return respond(
+            c,
+            "variantId is required for split bill",
+            true,
+            400,
+            {},
+          );
+        }
+      }
+
+      let billId: string;
+      if (billAlreadySplit) {
+        billId = variantId;
+      } else {
+        billId = tableSession?._id.toString();
+      }
 
       const longUrl = `https://hipal-test.hipalz.com/${
         business?.customLink

@@ -198,6 +198,16 @@ const splitBillTableSessionSchema =
       type: [String],
       required: false,
     },
+    totalDishTotal: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    totalGst: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   });
 
 splitBillTableSessionSchema.index(
