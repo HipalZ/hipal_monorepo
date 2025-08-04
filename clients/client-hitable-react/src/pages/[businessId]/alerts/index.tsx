@@ -5,6 +5,7 @@ import { useScreenSize } from "@/hooks/useScreenSize";
 import { useFilters } from "@/components/store/useFilters";
 import SpinnerMemo from "@/components/atoms/loadingSpinner";
 import { NavItemTypesEnum } from "@/components/types/hiClientzData";
+import { useParams } from "react-router-dom";
 
 // Lazy loaded components
 const HeaderAlerts = lazy(() => import("@/components/liteAlerts/headerAlerts"));
@@ -25,13 +26,19 @@ const CallCaptanMainComp = lazy(
   () => import("@/components/liteAlerts/callWaiter"),
 );
 
+const a19BusinesId = "67fcedb208625bf313027ee6";
+
 const AlertsMemo = () => {
   const { selectedNavItem } = useLiteStore();
+  const businessId = useParams<{ businessId: string }>().businessId;
   const clickViewMore = useLiteStore((s) => s.clickViewMore);
   const { setIsFilterOpen, isFilterOpen } = useZonesAndTablesStore((s) => ({
     setIsFilterOpen: s.setIsFilterOpen,
     isFilterOpen: s.isFilterOpen,
   }));
+
+  const hideAlerts = businessId === a19BusinesId;
+
   const [openTable, setOpenTable] = useState<boolean>(false);
   const { payFilter } = useFilters((s) => ({
     payFilter: s.payFilter,
@@ -78,10 +85,13 @@ const AlertsMemo = () => {
             <HistoryMemo />
           </Suspense>
         )}
-        {selectedNavItem === NavItemTypesEnum.SALES && (
+        {selectedNavItem === NavItemTypesEnum.SALES && !hideAlerts && (
           <Suspense fallback={<SpinnerMemo />}>
             <SalesLiteMemo />
           </Suspense>
+        )}
+        {selectedNavItem === NavItemTypesEnum.SALES && hideAlerts && (
+          <section>U Dont have access to this</section>
         )}
         {selectedNavItem === NavItemTypesEnum.CART && (
           <Suspense fallback={<SpinnerMemo />}>
