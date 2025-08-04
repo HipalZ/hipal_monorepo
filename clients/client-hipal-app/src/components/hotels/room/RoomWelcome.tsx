@@ -37,7 +37,6 @@ export default function HotelWelcomeCard({
   const [verificationCode, setVerificationCode] = useState("");
   const [codeError, setCodeError] = useState("");
   const accessToken = useUserToken.getState().accessToken;
-  const guestName = useLogin((s) => s.userDetails?.name);
   const { checkRoom } = useCheckRoomStatus(
     businessId || "",
     room || "",
@@ -87,7 +86,6 @@ export default function HotelWelcomeCard({
   });
   const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    ///^[a-zA-Z0-9]*$/.test(value) &&
     if (value.length <= 4) {
       setVerificationCode(value);
       setCodeError("");
@@ -104,17 +102,7 @@ export default function HotelWelcomeCard({
 
   return (
     <>
-      <div
-        className={`relative w-full px-4 mt-2 overflow-hidden ${
-          className || ""
-        }`}
-      >
-        <center>
-          <h2 className="text-xl text-h-primary text-center inter">
-            Welcome, {guestName}!
-          </h2>
-        </center>
-      </div>
+    
       {accessToken === "" && userID && <AutoLogin userID={userID} />}
 
       {showPopup && (

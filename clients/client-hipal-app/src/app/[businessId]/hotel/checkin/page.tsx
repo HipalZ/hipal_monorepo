@@ -1,6 +1,7 @@
 import { getBusinessData } from "@/apis/commonApis";
 import { getThemeSettings } from "@/apis/hotel";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
+import QuickCard from "@/components/hotels/room/QuickCard";
 
 import type { BusinessDetails } from "@/components/types/businessData";
 import dynamic from "next/dynamic";
@@ -128,7 +129,7 @@ const page = async ({
   const themeData = await getThemeSettings(businessData?.businessId);
   return (
     <HotelBackgroundContainer overlayOpacity={50}>
-      <ViewPortContainer className="relative mx-auto max-w-[30rem] pb-[5rem]">
+      <ViewPortContainer className="relative mx-auto max-w-[30rem] pb-[5rem] bg-gradient-to-br from-[#FEB67680] via-[#FEB67610] to-[#f3ede710]">
         <section className="p-3">
           <RoomCard
             roomNumber={room}
@@ -158,13 +159,20 @@ const page = async ({
           <ServiceCategoriesSection
             menuId={businessData?.menuId}
             businessId={businessData.businessId}
+            room={room}
           />
         </section>
-        <ChatCardSection />
-        <CheckOutRequest
+        {/* <section>
+          <QuickCard />
+        </section> */}
+        <ChatCardSection
+          themeData={themeData}
+          businessId={businessData.businessId}
+        />
+        {/* <CheckOutRequest
           businessId={businessData.businessId}
           themeData={themeData}
-        />
+        /> */}
       </ViewPortContainer>
     </HotelBackgroundContainer>
   );
