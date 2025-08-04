@@ -1,18 +1,18 @@
-import { useCallback, useMemo, useState } from "react"
-import { Bed, Save, Layers } from "lucide-react"
-import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton"
-import LoadingSpinner from "@/components/atom/loadingSpinner"
-import useBusinessData from "@/components/store/useBusinessData"
-import { useRoomCreation } from "@/components/store/hotel/useRoomCreation"
-import { useBulkRoomCreation } from "@/components/store/hotel/useBulkRoomCreation"
-import BasicInfoStep from "./Room/BasicInfoStep"
-import FloorSelectionStep from "./Room/FloorSelectionStep"
-import PreviewStep from "./Room/PreviewStep"
-import StaffSelectionStep from "./Room/StaffSelectionStep"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import StepIndicatior from "../HotelStaff/StepIndicatior"
-import BulkRoomNamingStep from "./Room/BulkRoomNamingStep"
-import BulkPreviewStep from "./Room/BulkPreviewStep"
+import { useCallback, useMemo, useState } from "react";
+import { Bed, Save, Layers } from "lucide-react";
+import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
+import useBusinessData from "@/components/store/useBusinessData";
+import { useRoomCreation } from "@/components/store/hotel/useRoomCreation";
+import { useBulkRoomCreation } from "@/components/store/hotel/useBulkRoomCreation";
+import BasicInfoStep from "./Room/BasicInfoStep";
+import FloorSelectionStep from "./Room/FloorSelectionStep";
+import PreviewStep from "./Room/PreviewStep";
+import StaffSelectionStep from "./Room/StaffSelectionStep";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import StepIndicatior from "../HotelStaff/StepIndicatior";
+import BulkRoomNamingStep from "./Room/BulkRoomNamingStep";
+import BulkPreviewStep from "./Room/BulkPreviewStep";
 
 // Step configuration
 const STEPS = [
@@ -20,15 +20,15 @@ const STEPS = [
   { id: 2, label: "Staff" },
   { id: 3, label: "Floor" },
   { id: 4, label: "Preview" },
-]
+];
 
 interface NewRoomCreationProps {
-  onClose?: () => void
+  onClose?: () => void;
 }
 
 const NewRoomCreation = ({ onClose }: NewRoomCreationProps) => {
-  const businessId = useBusinessData((s) => s.businessData?._id) as string
-  const [creationMode, setCreationMode] = useState<"single" | "bulk">("single")
+  const businessId = useBusinessData((s) => s.businessData?._id) as string;
+  const [creationMode, setCreationMode] = useState<"single" | "bulk">("single");
 
   const {
     currentStep: singleStep,
@@ -40,7 +40,7 @@ const NewRoomCreation = ({ onClose }: NewRoomCreationProps) => {
     handleNext: singleHandleNext,
     handleBack: singleHandleBack,
     handleSubmit: singleHandleSubmit,
-  } = useRoomCreation(businessId, onClose)
+  } = useRoomCreation(businessId, onClose);
 
   // Bulk room creation hook
   const {
@@ -62,22 +62,21 @@ const NewRoomCreation = ({ onClose }: NewRoomCreationProps) => {
     rangeEnd,
     setRangeEnd,
     previewNames,
-  } = useBulkRoomCreation(businessId, onClose)
+  } = useBulkRoomCreation(businessId, onClose);
 
   const handleModeChange = useCallback((value: string) => {
-    setCreationMode(value as "single" | "bulk")
-  }, [])
+    setCreationMode(value as "single" | "bulk");
+  }, []);
 
   const currentStep = useMemo(
     () => (creationMode === "single" ? singleStep : bulkStep),
     [creationMode, singleStep, bulkStep],
-  )
+  );
   const isLoading = useMemo(
     () => (creationMode === "single" ? singleIsLoading : bulkIsLoading),
     [creationMode, singleIsLoading, bulkIsLoading],
-  )
+  );
   // Single room creation hook
-
 
   // Memoized single step props
   const singleStepProps = useMemo(
@@ -88,7 +87,7 @@ const NewRoomCreation = ({ onClose }: NewRoomCreationProps) => {
       toggleStaff: singleToggleStaff,
     }),
     [singleFormData, singleErrors, singleHandleChange, singleToggleStaff],
-  )
+  );
 
   // Memoized bulk step props for staff and floor selection
   const bulkStepCommonProps = useMemo(
@@ -103,7 +102,7 @@ const NewRoomCreation = ({ onClose }: NewRoomCreationProps) => {
       handleChange: bulkHandleChange,
     }),
     [bulkFormData, bulkErrors, bulkHandleChange],
-  )
+  );
 
   // Memoized bulk naming step props
   const bulkNamingStepProps = useMemo(
@@ -135,7 +134,7 @@ const NewRoomCreation = ({ onClose }: NewRoomCreationProps) => {
       bulkFormData,
       bulkHandleChange,
     ],
-  )
+  );
 
   // Memoized bulk preview step props
   const bulkPreviewStepProps = useMemo(
@@ -145,38 +144,47 @@ const NewRoomCreation = ({ onClose }: NewRoomCreationProps) => {
       selectedFloorId: bulkFormData.zoneId,
       selectedStaffIds: bulkFormData.staffIds,
     }),
-    [previewNames, bulkFormData.roomTypeId, bulkFormData.zoneId, bulkFormData.staffIds],
-  )
+    [
+      previewNames,
+      bulkFormData.roomTypeId,
+      bulkFormData.zoneId,
+      bulkFormData.staffIds,
+    ],
+  );
 
   // Render current step content
   const renderStepContent = useCallback(() => {
     if (creationMode === "single") {
       switch (singleStep) {
         case 1:
-          return <BasicInfoStep {...singleStepProps} />
+          return <BasicInfoStep {...singleStepProps} />;
         case 2:
-          return <StaffSelectionStep {...singleStepProps} />
+          return <StaffSelectionStep {...singleStepProps} />;
         case 3:
-          return <FloorSelectionStep {...singleStepProps} />
+          return <FloorSelectionStep {...singleStepProps} />;
         case 4:
-          return <PreviewStep {...singleStepProps} />
+          return <PreviewStep {...singleStepProps} />;
         default:
-          return null
+          return null;
       }
     }
     if (creationMode === "bulk") {
       // Bulk creation mode
       switch (bulkStep) {
         case 1:
-          return <BulkRoomNamingStep {...bulkNamingStepProps} />
+          return <BulkRoomNamingStep {...bulkNamingStepProps} />;
         case 2:
-          return <StaffSelectionStep {...{ ...bulkStepCommonProps, toggleStaff: bulkToggleStaff }} />
+          return (
+            <StaffSelectionStep
+              {...{ ...bulkStepCommonProps, toggleStaff: bulkToggleStaff }}
+            />
+          );
         case 3:
-          return <FloorSelectionStep {...bulkStepCommonProps} />
+          return <FloorSelectionStep {...bulkStepCommonProps} />;
         case 4:
-          return <BulkPreviewStep {...bulkPreviewStepProps} />
+          return <BulkPreviewStep {...bulkPreviewStepProps} />;
         default:
-          return null
+          return null;
       }
     }
   }, [
@@ -188,7 +196,7 @@ const NewRoomCreation = ({ onClose }: NewRoomCreationProps) => {
     bulkStepCommonProps,
     bulkPreviewStepProps,
     bulkToggleStaff,
-  ])
+  ]);
 
   const buttons = useMemo(
     () => [
@@ -200,18 +208,26 @@ const NewRoomCreation = ({ onClose }: NewRoomCreationProps) => {
       },
       currentStep < 4
         ? {
-          text: "Next",
-          onClick: creationMode === "single" ? singleHandleNext : bulkHandleNext,
-          className: "rounded-md",
-        }
+            text: "Next",
+            onClick:
+              creationMode === "single" ? singleHandleNext : bulkHandleNext,
+            className: "rounded-md",
+          }
         : {
-          text: isLoading ? "Creating..." : creationMode === "single" ? "Create Room" : "Create Bulk Rooms",
-          onClick: creationMode === "single" ? singleHandleSubmit : bulkHandleSubmit,
-          icon: <Save className="w-4 h-4 mr-2" />,
-          className: "rounded-md",
-          highlight: true,
-          disable: isLoading || (creationMode === "bulk" && previewNames.length === 0),
-        },
+            text: isLoading
+              ? "Creating..."
+              : creationMode === "single"
+                ? "Create Room"
+                : "Create Bulk Rooms",
+            onClick:
+              creationMode === "single" ? singleHandleSubmit : bulkHandleSubmit,
+            icon: <Save className="w-4 h-4 mr-2" />,
+            className: "rounded-md",
+            highlight: true,
+            disable:
+              isLoading ||
+              (creationMode === "bulk" && previewNames.length === 0),
+          },
     ],
     [
       creationMode,
@@ -225,20 +241,25 @@ const NewRoomCreation = ({ onClose }: NewRoomCreationProps) => {
       singleHandleSubmit,
       bulkHandleSubmit,
     ],
-  )
+  );
 
   if (isLoading) {
-    return <LoadingSpinner />
+    return <LoadingSpinner />;
   }
 
   return (
     <div className="w-full max-w-md p-4 mx-auto">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">{creationMode === "single" ? "Create Room" : "Bulk Create Rooms"}</h1>
-        <Bed className="w-5 h-5 text-primary" />
+        <h1 className="text-2xl font-bold">
+          {creationMode === "single" ? "Create Room" : "Bulk Create Rooms"}
+        </h1>
       </div>
 
-      <Tabs value={creationMode} onValueChange={handleModeChange} className="mb-4">
+      <Tabs
+        value={creationMode}
+        onValueChange={handleModeChange}
+        className="mb-4"
+      >
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="single" className="flex items-center gap-1">
             <Bed className="w-4 h-4" />
@@ -253,12 +274,13 @@ const NewRoomCreation = ({ onClose }: NewRoomCreationProps) => {
 
       <StepIndicatior currentStep={currentStep} steps={STEPS} />
 
-      <div className="mb-6 hide-scrollbar h-[100dvh] overflow-auto pb-[17rem]">{renderStepContent()}</div>
+      <div className="mb-6 hide-scrollbar h-[100dvh] overflow-auto pb-[17rem]">
+        {renderStepContent()}
+      </div>
 
       <AdvancedBottomButton fixed={true} maxWidth="30rem" buttons={buttons} />
     </div>
-  )
-}
+  );
+};
 
-export default NewRoomCreation
-
+export default NewRoomCreation;
