@@ -1,4 +1,4 @@
-import { UserSession } from "@hi/db-models";
+import { SplitBillTableSession, UserSession } from "@hi/db-models";
 import { splitBillPortionAndPercentageSchema } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
@@ -144,6 +144,46 @@ const splitBillRouter = new Hono()
         if (!updateOriginTableSession) {
           throw new Error("Origin table session not updated");
         }
+
+        return respond(c, "success", true, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/club_bill",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(1).max(100),
+        tableName: z.string().min(1).max(100),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const requestData = await c.req.json();
+        const { businessId, tableName } = requestData;
+
+        const tableSession = await UserSession.findOneAndUpdate(
+          {
+            businessId,
+            tableName,
+          },
+          {
+            $set: {
+              isSplit: false,
+              variantsCounts: 0,
+            },
+          },
+        );
+
+        await SplitBillTableSession.deleteMany(
+          {
+            originTableSessionId: tableSession?._id,
+          },
+          { session },
+        );
 
         return respond(c, "success", true, 200, {});
       });
