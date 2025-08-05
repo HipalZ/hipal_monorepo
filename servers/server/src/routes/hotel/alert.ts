@@ -13,7 +13,7 @@ import {
 } from "@hi/db-models";
 import {
   type AcceptHotelAlertType,
-  HotelServiceType,
+  type HotelServiceType,
   type UpdateAlertCartType,
   acceptHotelAlert,
   hotelAlert,
@@ -149,6 +149,7 @@ const scheduleAlertUpdate = (
         const registrationTokens = await DeviceToken.find({
           businessId: businessId,
           userId: { $in: validStaffIds },
+          notification: true,
         });
         registrationTokens.map(async (obj) => {
           if (obj.notification) {
@@ -180,6 +181,7 @@ const scheduleAlert = (
         const registrationTokens = await DeviceToken.find({
           businessId,
           userId: { $in: validStaffIds },
+          notification: true,
         });
         for (const obj of registrationTokens) {
           if (obj.notification) {
@@ -636,6 +638,7 @@ const hotelAlertRouter = new Hono()
       const registrationTokens = await DeviceToken.find({
         businessId: requestData.businessId,
         userId: { $in: validStaffIds },
+        notification: true,
       });
 
       // Step 3: Send push notifications
