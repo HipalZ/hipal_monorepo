@@ -76,6 +76,19 @@ const Overview = () => {
 
   const timeStampStart = useTimings((s) => s.timeStampStart);
   const timeStampEnd = useTimings((s) => s.timeStampEnd);
+  const isToday = (timestamp: string | number | Date) => {
+    const date = new Date(timestamp);
+    const today = new Date();
+
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  };
+
+  const shouldShowCard =
+    isToday(timeStampStart) && isToday(timeStampEnd);
 
   const handleHistoryData = async (): Promise<SalesData> => {
     try {
@@ -305,13 +318,13 @@ const Overview = () => {
           breakdown={taxesServiceBreakdown}
         />
 
-        <InfoCard
+        {shouldShowCard && <InfoCard
           title="Running Tables"
           value={salesData.totalActiveTableValue}
           icon={<CreditCard className="w-4 h-4" />}
           gradient="from-blue-600 to-blue-200"
           breakdown={runningTablesBreakdown}
-        />
+        />}
       </div>
 
       <div className="grid grid-cols-1 gap-6 p-4 md:pb-4 md:grid-cols-1">
