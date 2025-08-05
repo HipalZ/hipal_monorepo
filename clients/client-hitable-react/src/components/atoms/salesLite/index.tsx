@@ -55,10 +55,23 @@ const SalesLite = () => {
   }));
   const businessId = selectedBiz?.businessId?._id;
 
-  const { timeStampStart, timeStampEnd } = useTimings((s) => ({
-    timeStampStart: s.timeStampStart,
-    timeStampEnd: s.timeStampEnd,
-  }));
+  const timeStampStart = useTimings((s) => s.timeStampStart);
+  const timeStampEnd = useTimings((s) => s.timeStampEnd);
+
+    const isToday = (timestamp: string | number | Date) => {
+    const date = new Date(timestamp);
+    const today = new Date();
+
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  };
+
+  const shouldShowCard =
+  isToday(timeStampStart) && isToday(timeStampEnd);
+
 
   const handleHistoryData = async (): Promise<SalesData> => {
     try {
@@ -284,12 +297,12 @@ const SalesLite = () => {
           breakdown={taxesServiceBreakdown}
         />
 
-        <InfoCard
+        {shouldShowCard && <InfoCard
           title="Running Tables"
           value={salesData.totalActiveTableValue}
           icon={<CreditCard className="w-4 h-4" />}
           breakdown={runningTablesBreakdown}
-        />
+        />}
       </div>
 
       <div className="grid grid-cols-1 gap-6 p-4">
