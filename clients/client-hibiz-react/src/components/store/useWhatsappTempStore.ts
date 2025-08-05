@@ -9,6 +9,7 @@ import { ISelectedFlowType } from "../helpers/whatzAppHelpers";
 export enum Tabs {
   TEMPLATES = "templates",
   CAMPAIGNS = "campaigns",
+  FLOWS = "flows",
   AUTOMATION = "automation",
   CHATS = "chats",
 }
@@ -183,6 +184,9 @@ interface ITempStore {
 
   editFlowObject: IWhatsAppFlows | null;
   setEditFlowObject: (value: IWhatsAppFlows | null) => void;
+
+  flowBuilderOpen: boolean;
+  setFlowBuilderOpen: (value: boolean) => void;
 }
 
 export const useWhatsappTempStore = create<ITempStore>((set) => ({
@@ -343,4 +347,7 @@ export const useWhatsappTempStore = create<ITempStore>((set) => ({
   editFlowObject: null,
   setEditFlowObject: (value: IWhatsAppFlows | null) =>
     set({ editFlowObject: value }),
+
+  flowBuilderOpen: false,
+  setFlowBuilderOpen: (value: boolean) => set({ flowBuilderOpen: value }),
 }));

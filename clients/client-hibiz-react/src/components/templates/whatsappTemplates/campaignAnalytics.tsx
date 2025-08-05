@@ -65,6 +65,7 @@ const MemoCampaignAnalytics: React.FC = () => {
     },
     [setTemplateData, setActiveTab, allTemplates, setTemplateSteps, setStep],
   );
+  if (!Array.isArray(allTemplates)) return [];
 
   return (
     <div className="w-full mx-auto overflow-hidden bg-white border border-gray-100 shadow-sm rounded-xl">

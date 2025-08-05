@@ -61,7 +61,7 @@ const MemoWhatzapp = () => {
     openAnalytics: s.openAnalytics,
     setCreateEditFlow: s.setCreateEditFlow,
     createEditFlow: s.createEditFlow,
-  }))
+  }));
 
   const navigate = useNavigate();
 
@@ -117,8 +117,7 @@ const MemoWhatzapp = () => {
             setOpenAnalytics(false);
             setCreateEditFlow(false);
             console.log("createEditFlow", createEditFlow);
-          }
-          else {
+          } else {
             navigate(-1);
           }
           break;
@@ -152,7 +151,7 @@ const MemoWhatzapp = () => {
       {isLoading ? (
         <WhatsAppLoader />
       ) : (
-        <main>
+        <main className="lg:max-w-full">
           {!whatzappFormEnabled && <WhatsAppRegistration />}
           {whatzappFormEnabled && !whatzappStatus && (
             <>
@@ -166,7 +165,7 @@ const MemoWhatzapp = () => {
             </>
           )}
           {whatzappFormEnabled && whatzappStatus && (
-            <div className="mx-auto">
+            <div>
               {/* Header */}
               <div className="absolute top-20 z-50 w-full rounded-lg whatzapp_gradient_background">
                 <MemoizedHeader
