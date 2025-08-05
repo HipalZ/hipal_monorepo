@@ -262,9 +262,9 @@ const roomRouter = new Hono()
         return respond(c, "Room not found", true, 404, {});
       }
 
-      if (room.availability && room.roomStatus !== "AVAILABLE") {
-        return respond(c, "Room is already booked", true, 400, {});
-      }
+      // if (room.availability && room.roomStatus !== "AVAILABLE") {
+      //   return respond(c, "Room is already booked", true, 400, {});
+      // }
 
       const updatedRoom = await HotelRoom.findByIdAndUpdate(
         roomId,

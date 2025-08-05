@@ -63,6 +63,7 @@ const scheduleAlertUpdate = (
   businessId: string,
   roomName: string,
   serviceName: string,
+  validStaffIds: string[],
 ) => {
   if (avgTime > 0) {
     // Calculate the run time: current time + avgTime minutes
@@ -144,11 +145,11 @@ const scheduleAlertUpdate = (
             }
           }
         }
-
+        console.log("validStaffIds scheduleAlertUpdate", validStaffIds);
         const registrationTokens = await DeviceToken.find({
           businessId: businessId,
+          userId: { $in: validStaffIds },
         });
-
         registrationTokens.map(async (obj) => {
           if (obj.notification) {
             await sendPushNotification(obj.token, roomName, serviceName);
@@ -165,6 +166,7 @@ const scheduleAlert = (
   roomName: string,
   alertId: string,
   serviceName: string,
+  validStaffIds: string[],
 ) => {
   for (const interval of intervals) {
     if (interval > 0) {
@@ -175,9 +177,9 @@ const scheduleAlert = (
 
       schedule(cronExpression, async () => {
         await HotelAlert.findById(alertId);
-
         const registrationTokens = await DeviceToken.find({
           businessId,
+          userId: { $in: validStaffIds },
         });
         for (const obj of registrationTokens) {
           if (obj.notification) {
@@ -596,6 +598,7 @@ const hotelAlertRouter = new Hono()
             requestData.businessId,
             roomData.name,
             serviceData?.name,
+            validStaffIds,
           );
 
           scheduleAlertUpdate(
@@ -606,6 +609,7 @@ const hotelAlertRouter = new Hono()
             requestData.businessId,
             roomData.name,
             serviceData?.name,
+            validStaffIds,
           );
           scheduleAlertUpdate(
             alert._id.toString(),
@@ -615,15 +619,17 @@ const hotelAlertRouter = new Hono()
             requestData.businessId,
             roomData.name,
             serviceData?.name,
+            validStaffIds,
           );
         }
 
         scheduleAlert(
-          [2, 60],
+          [0, 60],
           requestData.businessId,
           roomData.name,
           alert._id.toString(),
           serviceData?.name,
+          validStaffIds,
         );
       }
       // Step 2: Get device tokens only for those staff
