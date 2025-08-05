@@ -1,10 +1,16 @@
-import { SplitBillTableSession } from "@hi/db-models";
+import { SplitBillTableSession, Tax } from "@hi/db-models";
 import type {
   SplitBillTableSessionValidator,
   UserSessionSchemaType,
 } from "@hi/db-models/src/validators";
 import type { ClientSession } from "mongoose";
-import type { CartItem } from "../bill";
+import {
+  type CartItem,
+  calculateFinalTotal,
+  calculateGst,
+  calculateSplitTotalsFromItems,
+  calculateTotalDiscount,
+} from "../bill";
 function roundToTwoDecimals(value: number): number {
   const rounded = Math.round((value + Number.EPSILON) * 100) / 100;
   return value > 0 && rounded < 0.01 ? 0.01 : rounded;
@@ -36,23 +42,13 @@ function calculateItemWithPortionAndPercentage(
       extras: item.extras?.map((extra) => ({ ...extra })) || [],
     };
 
-    updatedItem.dish.price = roundToTwoDecimals(
-      (updatedItem.dish?.price ?? 0) * factor,
-    );
-
-    if (updatedItem.portion?.price != null) {
-      updatedItem.portion.price = roundToTwoDecimals(
-        updatedItem.portion.price * factor,
-      );
-    }
-
     updatedItem.quantity = roundToTwoDecimals(
       (updatedItem.quantity ?? 1) * factor,
     );
 
     updatedItem.extras = updatedItem.extras.map((extra) => ({
       ...extra,
-      price: roundToTwoDecimals((extra.price ?? 0) * factor),
+
       quantity: roundToTwoDecimals((extra.quantity ?? 1) * factor),
     }));
 
@@ -140,6 +136,133 @@ async function saveSplitBillSessionVariant(
   return saveTableSession._id;
 }
 
+async function saveItemWiseSplitBillSessionVariant(
+  items: CartItem[],
+  originBillSession: UserSessionSchemaType,
+  variantName: number,
+  session: ClientSession,
+) {
+  const checkAlreadyExist = await SplitBillTableSession.exists({
+    originTableSessionId: originBillSession._id,
+    variantName: variantName,
+  });
+
+  if (checkAlreadyExist) {
+    throw new Error("Split bill session already exist");
+  }
+  const discountPercentage = originBillSession.discountPercentage || 0;
+  const coins =
+    originBillSession.items && originBillSession.items.length > 0
+      ? (originBillSession.claimedCoins / originBillSession.items.length) *
+        items.length
+      : 0;
+  const couponDiscount =
+    originBillSession.items && originBillSession.items.length > 0
+      ? (originBillSession.couponDiscount / originBillSession.items.length) *
+        items.length
+      : 0;
+  const tips =
+    originBillSession.items && originBillSession.items.length > 0
+      ? (originBillSession.tips / originBillSession.items.length) * items.length
+      : 0;
+
+  const { totalDishTotal, totalGst } = calculateSplitTotalsFromItems(items);
+
+  // const billItems = itemsGroupedByGst(items);
+
+  const discountAppliedBy = originBillSession.discountAppliedBy;
+  const discountRemovedBy = originBillSession.discountRemovedBy;
+  const serviceChargeAppliedBy = originBillSession.serviceChargeAppliedBy;
+  const serviceChargeRemovedBy = originBillSession.serviceChargeRemovedBy;
+
+  const serviceCharge = await Tax.findOne({
+    businessId: originBillSession.businessId,
+    menuId: items[0].dish.menuId,
+    isActive: true,
+    name: "servicecharge",
+  });
+
+  const serviceChargePercentage = serviceCharge?.value || 0;
+
+  let serviceChargeAmount = Math.round(
+    (serviceChargePercentage / 100) * totalDishTotal,
+  );
+  if (originBillSession.isServiceChargeRemoved) serviceChargeAmount = 0;
+
+  const dis = Math.round((discountPercentage / 100) * totalDishTotal);
+
+  // Calculate discount on the bill
+  const discountAmount = Math.min(dis, totalDishTotal - coins - couponDiscount);
+
+  // Calculate GST
+
+  const newSubTotal = totalDishTotal - discountAmount - coins - couponDiscount;
+  const newGst = calculateGst(originBillSession.gstPercentage, newSubTotal);
+
+  const totalDis = calculateTotalDiscount(
+    discountAmount,
+    coins,
+    couponDiscount,
+  );
+
+  const newTotal = calculateFinalTotal(
+    totalDishTotal,
+    totalDis,
+    newGst,
+    serviceChargeAmount,
+    0,
+    tips,
+  );
+
+  const updatePayloadToSaveVariant = {
+    businessId: originBillSession.businessId,
+    tableName: originBillSession.tableName,
+    settleType: originBillSession.settleType,
+    date: Date.now(),
+    variantName: variantName,
+    customerIds: originBillSession.customerIds,
+    customerName: originBillSession.customerName,
+    phoneNumbers: originBillSession.phoneNumbers,
+    gst: Number(newGst.toFixed(2)),
+    serviceCharge: Number(serviceChargeAmount.toFixed(2)),
+    discount: Number(discountAmount.toFixed(2)),
+    tips,
+    claimedCoins: Number(coins.toFixed(2)),
+    couponId: originBillSession.couponId,
+    couponDiscount: Number(couponDiscount.toFixed(2)),
+    isDiscountApplied: originBillSession.isDiscountApplied,
+    reasonOfDiscount: originBillSession.reasonOfDiscount,
+    serviceChargeAppliedBy,
+    serviceChargeRemovedBy,
+    discountAppliedBy: discountAppliedBy || null,
+    discountRemovedBy: discountRemovedBy || null,
+    reasonOfServiceCharge: originBillSession.reasonOfServiceCharge,
+    discountAppliedOn: originBillSession.discountAppliedOn,
+    subTotal: Number(totalDishTotal.toFixed(2)),
+    total: newTotal,
+    gstPercentage: originBillSession.gstPercentage,
+    serviceChargePercentage: serviceChargePercentage,
+    items,
+    isUserRegistered: originBillSession.isUserRegistered,
+    billRequest: originBillSession.billRequest,
+    originTableSessionId: originBillSession._id,
+    generatedBy: originBillSession.billGeneratedBy,
+    totalDishTotal: Number(totalDishTotal.toFixed(2)),
+    totalGst: Number(totalGst.toFixed(2)),
+  };
+
+  const splitBillTableSession = new SplitBillTableSession(
+    updatePayloadToSaveVariant,
+  );
+
+  await splitBillTableSession.save({ session });
+  if (!splitBillTableSession) {
+    throw new Error("Split bill session not created");
+  }
+
+  return splitBillTableSession._id;
+}
+
 function formatBillOutput(original: UserSessionSchemaType, variant: any) {
   return {
     customerName: original.customerName,
@@ -173,5 +296,6 @@ export {
   calculateBillWithPortionAndPercentage,
   calculateItemWithPortionAndPercentage,
   formatBillOutput,
+  saveItemWiseSplitBillSessionVariant,
   saveSplitBillSessionVariant,
 };

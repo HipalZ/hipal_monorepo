@@ -233,6 +233,18 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: 0,
   },
+
+  discountPercentage: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  splitType: {
+    type: String,
+    enum: ["PORTION", "ITEM"],
+    required: false,
+    default: "PORTION",
+  },
 });
 
 userSessionSchema.plugin(autoIncrement.plugin, {

@@ -13,11 +13,14 @@ import {
 import type { UserSessionSchemaType } from "@hi/db-models/src/validators";
 import type { ClientSession } from "mongoose";
 import {
+  CartItem,
   calculateFinalTotal,
   calculateGst,
   calculateSplitBillDishIds,
+  calculateSplitTotalsFromItems,
   calculateTotalDiscount,
   groupSplitItemsByGST,
+  itemsGroupedByGst,
   updateSplitTableSession,
 } from "../../utils/bill";
 
@@ -66,6 +69,15 @@ const checkOriginBillIsSplit = (original?: UserSessionSchemaType) => {
   return original?.isSplit ?? false;
 };
 
+const checkVariantIsPaid = async (originalTableSessionId: string) => {
+  const isPaid = await SplitBillTableSession.exists?.({
+    originTableSessionId: originalTableSessionId,
+    isPaid: true,
+  });
+
+  return !!isPaid;
+};
+
 const returnSplitBillVariants = async (
   originalTableSessionId: string,
   businessId: string,
@@ -90,6 +102,129 @@ const returnSplitBillVariants = async (
     const totalGst = variant.totalGst || 0;
 
     const billItems = groupSplitItemsByGST(cartItems);
+
+    const discountAppliedBy = variant.discountAppliedBy?.name || "";
+    const discountRemovedBy = variant.discountRemovedBy?.name || "";
+    const serviceChargeAppliedBy = variant.serviceChargeAppliedBy?.name || "";
+    const serviceChargeRemovedBy = variant.serviceChargeRemovedBy?.name || "";
+
+    // Get service charge
+    let serviceChargeAmount = 0;
+    const menuId = cartItems[0]?.dish?.menuId;
+
+    if (menuId) {
+      const serviceCharge = await Tax.findOne({
+        businessId,
+        menuId,
+        isActive: true,
+        name: "servicecharge",
+      });
+
+      const percentage = serviceCharge?.value || 0;
+      serviceChargeAmount = Math.round((percentage / 100) * totalDishTotal);
+    }
+
+    if (variant.isServiceChargeRemoved) {
+      serviceChargeAmount = 0;
+    }
+
+    // Recalculate GST if needed
+    const newSubTotal =
+      totalDishTotal -
+      variant.discount -
+      variant.claimedCoins -
+      variant.couponDiscount;
+
+    let newGst = totalGst;
+
+    if (variant.isDiscountApplied) {
+      newGst = (variant.gstPercentage / 100) * newSubTotal;
+      if (variant.discountAppliedOn === "ON_DISH") {
+        newGst -= variant.newDishGst;
+      }
+    }
+
+    const totalDis = calculateTotalDiscount(
+      variant.discount,
+      variant.claimedCoins,
+      variant.couponDiscount,
+    );
+
+    const newTotal = calculateFinalTotal(
+      totalDishTotal,
+      totalDis,
+      newGst,
+      serviceChargeAmount,
+      0,
+      variant.tips,
+    );
+
+    // Update table session
+    variant = await updateSplitTableSession(variant._id.toString(), {
+      gst: newGst.toFixed(2),
+      total: newTotal,
+      serviceCharge: serviceChargeAmount,
+      billGeneratedBy: variant.generatedBy || "system",
+      subTotal: totalDishTotal,
+      items: cartItems,
+      billPrintCount: (variant.billPrintCount || 0) + 1,
+    });
+
+    billVariants.push({
+      customerName: variant.customerName,
+      customerPhone: variant.phoneNumbers?.[0] || "",
+      tableName: variant.tableName,
+      couponId: variant.couponId,
+      discountAppliedOn: variant.discountAppliedOn,
+      reasonOfDiscount: variant.reasonOfDiscount,
+      reasonOfServiceCharge: variant.reasonOfServiceCharge,
+      serviceChargeAppliedBy,
+      serviceChargeRemovedBy,
+      discountAppliedBy,
+      discountRemovedBy,
+
+      billItems,
+      subTotal: totalDishTotal,
+      gst: Number(newGst.toFixed(2)),
+      discount: variant.discount,
+      claimedCoins: variant.claimedCoins,
+      couponDiscount: variant.couponDiscount,
+      serviceCharge: serviceChargeAmount,
+      tips: variant.tips,
+      total: newTotal,
+      billId: variant.originTableSessionId,
+      variantId: variant._id.toString(),
+      variantName: variant.variantName,
+    });
+  }
+
+  return billVariants;
+};
+
+const returnSplitBillVariantsForItemWise = async (
+  originalTableSessionId: string,
+  businessId: string,
+  tableName: string,
+) => {
+  const fetchVariants = await SplitBillTableSession.find({
+    businessId,
+    tableName,
+    originalTableSessionId,
+  }).populate({
+    path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy",
+    select: "name phone",
+  });
+
+  const billVariants = [];
+
+  for (let variant of fetchVariants) {
+    const cartItems = variant.items as CartItem[];
+    if (!cartItems?.length) continue;
+
+    const { totalDishTotal, totalGst } =
+      calculateSplitTotalsFromItems(cartItems);
+
+    const billItems = itemsGroupedByGst(cartItems);
 
     const discountAppliedBy = variant.discountAppliedBy?.name || "";
     const discountRemovedBy = variant.discountRemovedBy?.name || "";
@@ -943,10 +1078,12 @@ export {
   applyDiscountToVariantBill,
   checkOfflinePaymentRequest,
   checkOriginBillIsSplit,
+  checkVariantIsPaid,
   isOriginBillChanged,
   processOfflineOrderPayment,
   removeCoinFromVariantBill,
   removeCouponFromVariantBill,
   removeDiscountFromVariantBill,
   returnSplitBillVariants,
+  returnSplitBillVariantsForItemWise,
 };

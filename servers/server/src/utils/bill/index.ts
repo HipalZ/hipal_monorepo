@@ -135,6 +135,43 @@ function calculateBillTotals(kots: KotOrderTypes[]): {
   return { totalDishTotal, totalGst };
 }
 
+function calculateSplitTotalsFromItems(items: CartItem[]): {
+  totalDishTotal: number;
+  totalGst: number;
+} {
+  let totalDishTotal = 0;
+  let totalGst = 0;
+
+  try {
+    for (const item of items) {
+      // Skip deleted items
+      if (item.isDeleted) continue;
+
+      // Base price comes from portion if present, otherwise dish.price
+      const basePrice = item.portion?.price ?? item.dish.price;
+
+      // Sum up all extras (price * quantity)
+      const extrasTotal = item.extras.reduce(
+        (sum, ex) => sum + ex.price * ex.quantity,
+        0,
+      );
+
+      // Line total for this item
+      const lineTotal = (basePrice + extrasTotal) * item.quantity;
+      totalDishTotal += lineTotal;
+
+      // Determine GST percentage (prefer gst field)
+      const gstPercent = item.dish.gst || 0;
+      totalGst += (lineTotal * gstPercent) / 100;
+    }
+  } catch (err) {
+    console.error("Error calculating bill totals:", err);
+    throw new Error("Invalid data structure in KOTs");
+  }
+
+  return { totalDishTotal, totalGst };
+}
+
 function calculateSplitBillTotals(cartItems: Item[]): {
   totalDishTotal: number;
   totalGst: number;
@@ -242,10 +279,13 @@ function calculateSplitBillDishIds(
       // Base price comes from portion if present, otherwise dish.price
       const basePrice = item.portion?.price ?? item.dish.price;
 
-      const extrasTotal = item.extras.reduce((sum, ex) => sum + ex.price, 0);
+      const extrasTotal = item.extras.reduce(
+        (sum, ex) => sum + ex.price * ex.quantity,
+        0,
+      );
 
       // Line total for this item
-      const lineTotal = basePrice + extrasTotal;
+      const lineTotal = (basePrice + extrasTotal) * item.quantity;
       totalDishTotal += lineTotal;
 
       // Determine GST percentage (prefer gst field)
@@ -273,7 +313,7 @@ const calculateTotalDiscount = (
 // Calculate the GST for a given subtotal
 const calculateGst = (gstPercentage: number, subtotal: number) => {
   const gst = (gstPercentage / 100) * subtotal;
-  if (gst < 0.5) return 0;
+  if (gst < 0.1) return 0;
   return gst;
 };
 
@@ -388,6 +428,48 @@ export function groupItemsByGST(items: Item[]): BillGroup[] {
   }));
 }
 
+export function itemsGroupedByGst(items: CartItem[]): BillGroup[] {
+  const map = items.reduce<Record<number, BillGroup>>((acc, item) => {
+    const rate = item.dish.gst ?? 0;
+
+    if (!acc[rate]) {
+      acc[rate] = {
+        gst: rate,
+        subTotal: 0,
+        totalGst: 0,
+        items: [],
+      };
+    }
+
+    // Pick the right base price
+    const basePrice = item.portion?.price ?? item.dish.price;
+
+    // Compute total extras per unit
+    const extrasPerUnit = item.extras.reduce(
+      (sum, ex) => sum + ex.price * ex.quantity,
+      0,
+    );
+
+    // Net total for this item (without tax)
+    const netTotal = (basePrice + extrasPerUnit) * item.quantity;
+
+    // Accumulate
+    acc[rate].subTotal += netTotal;
+    acc[rate].totalGst += netTotal * (rate / 100);
+    acc[rate].items.push(item);
+
+    return acc;
+  }, {});
+
+  // Round to two decimal places
+  return Object.values(map).map((group) => ({
+    gst: group.gst,
+    subTotal: Number(group.subTotal.toFixed(2)),
+    totalGst: Number(group.totalGst.toFixed(2)),
+    items: group.items,
+  }));
+}
+
 function groupSplitItemsByGST(items: Item[]): BillGroup[] {
   const map = items.reduce<Record<number, BillGroup>>((acc, item) => {
     const rate = item.dish.gst ?? 0;
@@ -405,10 +487,13 @@ function groupSplitItemsByGST(items: Item[]): BillGroup[] {
     const basePrice = item.portion?.price ?? item.dish.price;
 
     // Compute total extras per unit
-    const extrasPerUnit = item.extras.reduce((sum, ex) => sum + ex.price, 0);
+    const extrasPerUnit = item.extras.reduce(
+      (sum, ex) => sum + ex.price * ex.quantity,
+      0,
+    );
 
     // Net total for this item (without tax)
-    const netTotal = basePrice + extrasPerUnit;
+    const netTotal = (basePrice + extrasPerUnit) * item.quantity;
 
     // Accumulate
     acc[rate].subTotal += netTotal;
@@ -435,6 +520,7 @@ export {
   calculateGst,
   calculateSplitBillDishIds,
   calculateSplitBillTotals,
+  calculateSplitTotalsFromItems,
   calculateTotalDiscount,
   groupSplitItemsByGST,
   updateSplitTableSession,

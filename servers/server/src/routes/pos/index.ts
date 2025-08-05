@@ -42,10 +42,12 @@ import {
   applyCouponToVariantBill,
   applyDiscountToVariantBill,
   checkOriginBillIsSplit,
+  checkVariantIsPaid,
   removeCoinFromVariantBill,
   removeCouponFromVariantBill,
   removeDiscountFromVariantBill,
   returnSplitBillVariants,
+  returnSplitBillVariantsForItemWise,
 } from "../../services/splitBill";
 import type { KotOrderTypes } from "../../utils/bill";
 import {
@@ -264,6 +266,15 @@ const posRouter = new Hono()
         }
 
         if (tableSession.isSplit) {
+          if (tableSession.splitType === "ITEM") {
+            const splitBillVariants = await returnSplitBillVariantsForItemWise(
+              tableSession._id.toString(),
+              tableSession.businessId.toString(),
+              tableSession.tableName,
+            );
+
+            return respond(c, "success", false, 200, splitBillVariants);
+          }
           const splitBillVariants = await returnSplitBillVariants(
             tableSession._id.toString(),
             tableSession.businessId.toString(),
@@ -2745,6 +2756,17 @@ const posRouter = new Hono()
         const checkOriginBillIs = await checkOriginBillIsSplit(tableSession);
 
         if (checkOriginBillIs) {
+          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
+          if (variantIsPaid) {
+            return respond(
+              c,
+              "You cannot apply discount on paid variant",
+              true,
+              400,
+              {},
+            );
+          }
+
           if (!variantId) {
             return respond(
               c,
@@ -2836,6 +2858,7 @@ const posRouter = new Hono()
           discountRemovedBy: null,
           discount: discountAmount,
           dishIds: dishIdsArray,
+          discountPercentage: value,
         });
 
         return respond(c, "Success", true, 200, {});
@@ -2884,6 +2907,17 @@ const posRouter = new Hono()
             return respond(
               c,
               "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+
+          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
+          if (variantIsPaid) {
+            return respond(
+              c,
+              "You cannot apply discount on paid variant",
               true,
               400,
               {},
@@ -2991,6 +3025,16 @@ const posRouter = new Hono()
             return respond(
               c,
               "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
+          if (variantIsPaid) {
+            return respond(
+              c,
+              "You cannot apply discount on paid variant",
               true,
               400,
               {},
@@ -3106,6 +3150,17 @@ const posRouter = new Hono()
             );
           }
 
+          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
+          if (variantIsPaid) {
+            return respond(
+              c,
+              "You cannot apply discount on paid variant",
+              true,
+              400,
+              {},
+            );
+          }
+
           const removeDiscount = await removeDiscountFromVariantBill(
             variantId.toString(),
             reasonOfDiscount,
@@ -3151,6 +3206,7 @@ const posRouter = new Hono()
           discountAppliedBy: null,
           discountRemovedBy,
           newDishGst: 0,
+          discountPercentage: 0,
         });
 
         return respond(c, "Success", true, 200, {});
@@ -3187,6 +3243,17 @@ const posRouter = new Hono()
             return respond(
               c,
               "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+
+          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
+          if (variantIsPaid) {
+            return respond(
+              c,
+              "You cannot apply discount on paid variant",
               true,
               400,
               {},
@@ -3270,6 +3337,16 @@ const posRouter = new Hono()
             return respond(
               c,
               "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
+          if (variantIsPaid) {
+            return respond(
+              c,
+              "You cannot apply discount on paid variant",
               true,
               400,
               {},
@@ -3421,6 +3498,17 @@ const posRouter = new Hono()
             );
           }
 
+          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
+          if (variantIsPaid) {
+            return respond(
+              c,
+              "You cannot apply discount on paid variant",
+              true,
+              400,
+              {},
+            );
+          }
+
           await updateSplitTableSession(variantId, {
             serviceChargeAppliedBy,
             isServiceChargeRemoved: false,
@@ -3500,6 +3588,16 @@ const posRouter = new Hono()
             return respond(
               c,
               "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
+          if (variantIsPaid) {
+            return respond(
+              c,
+              "You cannot apply discount on paid variant",
               true,
               400,
               {},
@@ -3774,6 +3872,17 @@ const posRouter = new Hono()
             );
           }
 
+          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
+          if (variantIsPaid) {
+            return respond(
+              c,
+              "You cannot apply discount on paid variant",
+              true,
+              400,
+              {},
+            );
+          }
+
           await updateSplitTableSession(variantId, {
             tips: value,
           });
@@ -3836,6 +3945,17 @@ const posRouter = new Hono()
             return respond(
               c,
               "variantId is required for split bill",
+              true,
+              400,
+              {},
+            );
+          }
+
+          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
+          if (variantIsPaid) {
+            return respond(
+              c,
+              "You cannot apply discount on paid variant",
               true,
               400,
               {},
