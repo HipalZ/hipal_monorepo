@@ -10,7 +10,6 @@ import { z } from "zod";
 import {
   checkOfflinePaymentRequest,
   checkVariantIsPaid,
-  isOriginBillChanged,
 } from "../../services/splitBill";
 import type { CartItem } from "../../utils/bill";
 import { respond } from "../../utils/response";
@@ -63,19 +62,19 @@ const splitBillRouter = new Hono()
           );
         }
 
-        const checkOriginBillChanged = await isOriginBillChanged(
-          fetchOriginalTableSession,
-        );
+        // const checkOriginBillChanged = await isOriginBillChanged(
+        //   fetchOriginalTableSession,
+        // );
 
-        if (checkOriginBillChanged) {
-          return respond(
-            c,
-            "Origin bill changed you cannot a split bill",
-            true,
-            400,
-            {},
-          );
-        }
+        // if (checkOriginBillChanged) {
+        //   return respond(
+        //     c,
+        //     "Origin bill changed you cannot a split bill",
+        //     true,
+        //     400,
+        //     {},
+        //   );
+        // }
 
         const checkOfflinePaymentReq = await checkOfflinePaymentRequest(
           businessId,

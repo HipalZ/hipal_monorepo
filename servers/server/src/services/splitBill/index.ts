@@ -195,6 +195,7 @@ const returnSplitBillVariants = async (
       billId: variant.originTableSessionId,
       variantId: variant._id.toString(),
       variantName: variant.variantName,
+      isPaid: variant.isPaid,
     });
   }
 
@@ -318,6 +319,7 @@ const returnSplitBillVariantsForItemWise = async (
       billId: variant.originTableSessionId,
       variantId: variant._id.toString(),
       variantName: variant.variantName,
+      isPaid: variant.isPaid,
     });
   }
 
