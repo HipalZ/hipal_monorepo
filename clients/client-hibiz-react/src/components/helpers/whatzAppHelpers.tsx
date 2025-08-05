@@ -1,12 +1,13 @@
 import { useCallback } from "react";
 import useWhatsapp from "../store/useWhatsapp";
 import type { CropperRef } from "../types/businessData";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { parse } from "papaparse";
 import toast from "react-hot-toast";
 import { useMessageRecipientsStore } from "../store/useMessageRecipientsStore";
 import { apiRpc } from "@hi/common";
 import useBusinessData from "../store/useBusinessData";
+import { WHATSAPP_ID, WHATSAPP_TOKEN } from "@/configs";
 
 export const useWhatzappCroppedImg = () => {
   const {
@@ -317,7 +318,6 @@ export const useGetAllGroups = () => {
   return { fetchAllGroups };
 };
 
-
 export enum ISelectedFlowType {
   SAME_DAY = "sameday",
   COME_BACK = "comeback",
@@ -328,16 +328,102 @@ export const flowOptions = [
   { id: ISelectedFlowType.SAME_DAY, label: "Same Day Flow" },
   { id: ISelectedFlowType.COME_BACK, label: "Comeback Day Flow" },
   { id: ISelectedFlowType.SCAN, label: "Scan Flow" },
-]
+];
 
-export const formatTriggerTime = (triggerAt: number, selectedFlowType: string) => {
+export const formatTriggerTime = (
+  triggerAt: number,
+  selectedFlowType: string,
+) => {
   if (selectedFlowType === ISelectedFlowType.COME_BACK) {
     const weeks = triggerAt / (24 * 60 * 60 * 1000);
     return `${weeks.toFixed(2)} week${weeks > 1 ? "s" : ""}`;
-  } if (triggerAt >= 3600 * 1000) {
+  }
+  if (triggerAt >= 3600 * 1000) {
     const hours = triggerAt / (60 * 60 * 1000);
     return `${hours.toFixed(2)} hour${hours > 1 ? "s" : ""}`;
   }
   const minutes = triggerAt / (60 * 1000);
   return `${minutes.toFixed(2)} minute${minutes > 1 ? "s" : ""}`;
+};
+
+export async function publishWhatsAppFlow(flowJson: any, flowName: string) {
+  if (!WHATSAPP_ID || !WHATSAPP_TOKEN) {
+    return {
+      success: false,
+      error:
+        "Missing WhatsApp Business Account ID or Access Token in environment variables.",
+    };
+  }
+
+  const apiUrl = `https://graph.facebook.com/v19.0/${WHATSAPP_ID}/flows`;
+
+  const requestBody = {
+    name: flowName.replace(/\s+/g, "_").toLowerCase(),
+    categories: ["LEAD_GENERATION"],
+    flow_json: JSON.stringify(flowJson),
+  };
+
+  try {
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    });
+
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      console.error("API Error:", responseData);
+      const errorMessage =
+        responseData.error?.error_user_title &&
+        responseData.error?.error_user_msg
+          ? `${responseData.error.error_user_title}: ${responseData.error.error_user_msg}`
+          : responseData.error?.message || "An unknown API error occurred.";
+      return { success: false, error: errorMessage };
+    }
+
+    return { success: true, data: responseData };
+  } catch (error: any) {
+    console.error("Fetch Error:", error);
+    return {
+      success: false,
+      error: error.message || "Failed to connect to the API.",
+    };
+  }
+}
+
+export const useGetFlows = () => {
+  const getFlows = async () => {
+    const res = await fetch(
+      `https://graph.facebook.com/v19.0/${WHATSAPP_ID}/flows`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData?.error?.message || "Failed to fetch flows");
+    }
+
+    const data = await res.json();
+    return data.data;
+  };
+
+  const {
+    data: flows,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["whatsapp-flows"],
+    queryFn: getFlows,
+  });
+  return { flows, isLoading, error };
 };

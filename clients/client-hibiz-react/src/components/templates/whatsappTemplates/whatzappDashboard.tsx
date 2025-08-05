@@ -15,11 +15,13 @@ import {
   Tabs,
   useWhatsappTempStore,
 } from "@/components/store/useWhatsappTempStore";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Workflow } from "lucide-react";
 import { TbSettingsAutomation } from "react-icons/tb";
-import WhatsappFlows from "./whatsappFlows";
-import WhatsAppAutomationFlow from "./whatsappAutomation";
 
+const WhatsappFlowSection = lazy(() => import("./whatsappFlows"));
+const WhatsAppAutomationFlow = lazy(() => import("./whatsappAutomation"));
+const FlowBuilderPage = lazy(() => import("./whatsappFlowBuilder"));
+const WhatzappFlowsList = lazy(() => import("./WhatzappFlowsList"));
 const WhatsappChats = lazy(() => import("./whatsappChats"));
 const CampaignAdvancedAnalytics = lazy(
   () => import("./campaignAdvancedAnalytics"),
@@ -41,14 +43,12 @@ const MemoWhatzappDashboard = () => {
     resetTemplateData: s.resetTemplateData,
     setShowSuccessPopup: s.setShowSuccessPopup,
   }));
-  const { activeTab, setActiveTab, openAnalytics, createEditFlow } = useWhatsappTempStore(
-    (s) => ({
-      setActiveTab: s.setActiveTab,
-      activeTab: s.activeTab,
-      openAnalytics: s.openAnalytics,
-      createEditFlow: s.createEditFlow,
-    }),
-  );
+  const activeTab = useWhatsappTempStore((s) => s.activeTab);
+  const setActiveTab = useWhatsappTempStore((s) => s.setActiveTab);
+  const openAnalytics = useWhatsappTempStore((s) => s.openAnalytics);
+  const createEditFlow = useWhatsappTempStore((s) => s.createEditFlow);
+  const flowBuilderOpen = useWhatsappTempStore((s) => s.flowBuilderOpen);
+  const setFlowBuilderOpen = useWhatsappTempStore((s) => s.setFlowBuilderOpen);
 
   const businessId = useBusinessData((s) => s.businessData?._id);
 
@@ -78,6 +78,8 @@ const MemoWhatzappDashboard = () => {
         return <MdCampaign className="w-5 h-5 mr-2" />;
       case Tabs.TEMPLATES:
         return <HiOutlineTemplate className="w-5 h-5 mr-2" />;
+      case Tabs.FLOWS:
+        return <Workflow className="w-5 h-5 mr-2" />;
       case Tabs.AUTOMATION:
         return <TbSettingsAutomation className="w-5 h-5 mr-2" />;
       case Tabs.CHATS:
@@ -95,17 +97,18 @@ const MemoWhatzappDashboard = () => {
 
   return (
     <main className="container relative mx-auto my-4">
-      {!openAnalytics && !createEditFlow && (
+      {!openAnalytics && !createEditFlow && !flowBuilderOpen && (
         <nav className="border overflow-auto hide-scrollbar sticky top-20 z-50 w-full flex items-center justify-between px-2 py-4 mb-2 bg-gray-100">
           <ul className="flex space-x-2">
             {Object.values(Tabs).map((tab) => (
               <li key={tab}>
                 <button
                   type="button"
-                  className={`flex items-center capitalize px-4 py-2 rounded-lg transition-colors duration-300 ${activeTab === tab
-                    ? "bg-[#075E54] text-white shadow-lg"
-                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
-                    }`}
+                  className={`flex items-center capitalize px-4 py-2 rounded-lg transition-colors duration-300 ${
+                    activeTab === tab
+                      ? "bg-[#075E54] text-white shadow-lg"
+                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+                  }`}
                   onClick={() => setActiveTab(tab)}
                 >
                   {getTabIcon(tab)}
@@ -114,7 +117,12 @@ const MemoWhatzappDashboard = () => {
               </li>
             ))}
           </ul>
-          {activeTab === Tabs.TEMPLATES && (
+        </nav>
+      )}
+      {activeTab === Tabs.TEMPLATES && !openAnalytics && (
+        <section className="p-4 mb-20 bg-white shadow-sm rounded-xl">
+          <section className="flex justify-between">
+            <h2 className="text-2xl font-semibold text-gray-900">Templates</h2>
             <ul className="hidden gap-2 md:flex">
               <li>
                 <button
@@ -135,16 +143,11 @@ const MemoWhatzappDashboard = () => {
                 </button>
               </li>
             </ul>
-          )}
-        </nav>
-      )}
-      {activeTab === Tabs.TEMPLATES && !openAnalytics && (
-        <section className="p-4 mb-20 bg-white shadow-sm rounded-xl">
-          <h2 className="text-2xl font-semibold text-gray-900">Templates</h2>
+          </section>
           <p className="mt-1 mb-6 text-sm text-gray-500">
             Use these templates for sending to your customers instantly
           </p>
-          <div className="relative grid gap-4 transition-transform duration-300 ease-in-out md:h-full md:grid-cols-4 md:transform-none">
+          <div className="relative grid gap-4 transition-transform duration-300 ease-in-out md:h-full md:grid-cols-4 lg:grid-cols-5 md:transform-none">
             {isPending ? <LoadingSpinner /> : <TemplatesCarousel />}
           </div>
           <article className="md:hidden">
@@ -167,7 +170,28 @@ const MemoWhatzappDashboard = () => {
           </article>
         </section>
       )}
-      {activeTab === Tabs.AUTOMATION && !createEditFlow && <WhatsappFlows />}
+      {activeTab === Tabs.AUTOMATION && !createEditFlow && (
+        <WhatsappFlowSection />
+      )}
+      {activeTab === Tabs.FLOWS && (
+        <>
+          {!flowBuilderOpen ? (
+            <div className="p-4 mb-6">
+              <button
+                type="button"
+                onClick={() => setFlowBuilderOpen(true)}
+                className="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 shadow-md"
+              >
+                + Create New WhatsApp Flow
+              </button>
+              <WhatzappFlowsList />
+            </div>
+          ) : (
+            <FlowBuilderPage />
+          )}
+        </>
+      )}
+
       {activeTab === Tabs.AUTOMATION && createEditFlow && (
         <WhatsAppAutomationFlow />
       )}
