@@ -14,28 +14,16 @@ import {
 import type { CartItem } from "../../utils/bill";
 import { respond } from "../../utils/response";
 import {
-  calculateBillWithPortionAndPercentage,
-  calculateItemWithPortionAndPercentage,
   saveItemWiseSplitBillSessionVariant,
   saveSplitBillSessionVariant,
+  splitBillWithPortionAndPercentage,
+  splitItemQuantityWithPortionAndPercentage,
 } from "../../utils/splitBill";
 //
 const splitBillRouter = new Hono()
 
-  .get(
-    "/test",
-    zValidator(
-      "query",
-      z.object({
-        urlCode: z.string().min(1).max(500).optional(),
-      }),
-    ),
-    async (c) => {
-      return respond(c, "test", true, 200, {});
-    },
-  )
   .post(
-    "/portion_and_percenatge",
+    "/portion_and_percentage",
     zValidator("json", splitBillPortionAndPercentageSchema),
     async (c) => {
       //@ts-ignore
@@ -61,20 +49,6 @@ const splitBillRouter = new Hono()
             {},
           );
         }
-
-        // const checkOriginBillChanged = await isOriginBillChanged(
-        //   fetchOriginalTableSession,
-        // );
-
-        // if (checkOriginBillChanged) {
-        //   return respond(
-        //     c,
-        //     "Origin bill changed you cannot a split bill",
-        //     true,
-        //     400,
-        //     {},
-        //   );
-        // }
 
         const checkOfflinePaymentReq = await checkOfflinePaymentRequest(
           businessId,
@@ -105,13 +79,13 @@ const splitBillRouter = new Hono()
 
         for (let i = 0; i < variants.length; i++) {
           const portionPercentage = variants[i].percentage;
-          // split items with percentage
-          const updatedItems = calculateItemWithPortionAndPercentage(
+          // split items quantity with percentage
+          const updatedItems = splitItemQuantityWithPortionAndPercentage(
             originalCartItems,
             portionPercentage,
           );
 
-          const updateBill = calculateBillWithPortionAndPercentage(
+          const updateBill = splitBillWithPortionAndPercentage(
             fetchOriginalTableSession,
             portionPercentage,
             i + 1,
@@ -121,15 +95,14 @@ const splitBillRouter = new Hono()
             ...updateBill,
             items: updatedItems,
           };
-
-          //
-
-          const saveTableSession = await saveSplitBillSessionVariant(
+          // save split bill session variant
+          const saveSplitTableSession = await saveSplitBillSessionVariant(
+            //@ts-ignore
             updatedObject,
             session,
           );
 
-          if (!saveTableSession) {
+          if (!saveSplitTableSession) {
             throw new Error("Split bill session not created");
           }
         }

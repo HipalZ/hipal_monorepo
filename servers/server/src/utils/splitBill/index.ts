@@ -16,7 +16,7 @@ function roundToTwoDecimals(value: number): number {
   return value > 0 && rounded < 0.01 ? 0.01 : rounded;
 }
 
-function calculateItemWithPortionAndPercentage(
+function splitItemQuantityWithPortionAndPercentage(
   items: CartItem[],
   percentage: number,
 ): CartItem[] {
@@ -29,7 +29,6 @@ function calculateItemWithPortionAndPercentage(
       "Invalid input: items must be an array and percentage must be a positive number",
     );
   }
-
   const factor = percentage / 100;
 
   return items.map((item) => {
@@ -61,7 +60,7 @@ function safeMultiply(value: number | undefined, percentage: number): number {
   return roundToTwoDecimals(value * (percentage / 100));
 }
 
-function calculateBillWithPortionAndPercentage(
+function splitBillWithPortionAndPercentage(
   mainTableSession: UserSessionSchemaType,
   percentage: number,
   variantName: number,
@@ -87,6 +86,7 @@ function calculateBillWithPortionAndPercentage(
     tips: safeMultiply(mainTableSession.tips, percentage),
     claimedCoins: safeMultiply(mainTableSession.claimedCoins, percentage),
     couponDiscount: safeMultiply(mainTableSession.couponDiscount, percentage),
+    serviceCharge: safeMultiply(mainTableSession.serviceCharge, percentage),
 
     // Direct copy
     couponId: mainTableSession.couponId,
@@ -293,9 +293,9 @@ function formatBillOutput(original: UserSessionSchemaType, variant: any) {
 }
 
 export {
-  calculateBillWithPortionAndPercentage,
-  calculateItemWithPortionAndPercentage,
   formatBillOutput,
   saveItemWiseSplitBillSessionVariant,
   saveSplitBillSessionVariant,
+  splitBillWithPortionAndPercentage,
+  splitItemQuantityWithPortionAndPercentage,
 };

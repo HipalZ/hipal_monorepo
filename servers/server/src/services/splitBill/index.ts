@@ -82,6 +82,7 @@ const returnSplitBillVariants = async (
   originalTableSessionId: string,
   businessId: string,
   tableName: string,
+  session: ClientSession,
 ) => {
   const fetchVariants = await SplitBillTableSession.find({
     businessId,
@@ -160,15 +161,22 @@ const returnSplitBillVariants = async (
     );
 
     // Update table session
-    variant = await updateSplitTableSession(variant._id.toString(), {
-      gst: newGst.toFixed(2),
-      total: newTotal,
-      serviceCharge: serviceChargeAmount,
-      billGeneratedBy: variant.generatedBy || "system",
-      subTotal: totalDishTotal,
-      items: cartItems,
-      billPrintCount: (variant.billPrintCount || 0) + 1,
-    });
+    variant = await updateSplitTableSession(
+      variant._id.toString(),
+      {
+        gst: newGst.toFixed(2),
+        total: newTotal,
+        serviceCharge: serviceChargeAmount,
+        billGeneratedBy: variant.generatedBy || "system",
+        subTotal: totalDishTotal,
+        items: cartItems,
+      },
+      session,
+    );
+
+    if (!variant) {
+      throw new Error("Failed to update split table session");
+    }
 
     billVariants.push({
       customerName: variant.customerName,
@@ -206,6 +214,7 @@ const returnSplitBillVariantsForItemWise = async (
   originalTableSessionId: string,
   businessId: string,
   tableName: string,
+  session: ClientSession,
 ) => {
   const fetchVariants = await SplitBillTableSession.find({
     businessId,
@@ -284,16 +293,22 @@ const returnSplitBillVariantsForItemWise = async (
     );
 
     // Update table session
-    variant = await updateSplitTableSession(variant._id.toString(), {
-      gst: newGst.toFixed(2),
-      total: newTotal,
-      serviceCharge: serviceChargeAmount,
-      billGeneratedBy: variant.generatedBy || "system",
-      subTotal: totalDishTotal,
-      items: cartItems,
-      billPrintCount: (variant.billPrintCount || 0) + 1,
-    });
-
+    variant = await updateSplitTableSession(
+      variant._id.toString(),
+      {
+        gst: newGst.toFixed(2),
+        total: newTotal,
+        serviceCharge: serviceChargeAmount,
+        billGeneratedBy: variant.generatedBy || "system",
+        subTotal: totalDishTotal,
+        items: cartItems,
+        billPrintCount: (variant.billPrintCount || 0) + 1,
+      },
+      session,
+    );
+    if (!variant) {
+      throw new Error("Failed to update split table session");
+    }
     billVariants.push({
       customerName: variant.customerName,
       customerPhone: variant.phoneNumbers?.[0] || "",

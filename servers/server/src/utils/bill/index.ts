@@ -349,13 +349,13 @@ const updateTableSession = async (
 
 const updateSplitTableSession = async (
   splitTableSessionId: string,
-
   updatedFields: object,
+  session: ClientSession,
 ) => {
   return await SplitBillTableSession.findByIdAndUpdate(
     splitTableSessionId,
     { $set: updatedFields },
-    { new: true },
+    { new: true, session },
   );
 };
 
@@ -385,6 +385,43 @@ const billPrintItems = (cartItems: CartItem[]) => {
 };
 
 ///
+
+function calculateUpdatedGstAfterDiscount(
+  items: CartItem[],
+  discountPercentage: number,
+): {
+  newGst: number;
+} {
+  let newGst = 0;
+
+  try {
+    for (const item of items) {
+      if (item.isDeleted) continue;
+
+      const basePrice = item.portion?.price ?? item.dish.price;
+
+      const extrasTotal = item.extras.reduce(
+        (sum, ex) => sum + ex.price * ex.quantity,
+        0,
+      );
+
+      const lineTotal = (basePrice + extrasTotal) * item.quantity;
+
+      const discountedLineTotal = lineTotal * (1 - discountPercentage / 100);
+
+      const gstRate = item.dish.gst ?? 0;
+
+      const gstForItem = discountedLineTotal * (gstRate / 100);
+
+      newGst += gstForItem;
+    }
+  } catch (err) {
+    console.error("Error calculating GST:", err);
+    throw new Error("Invalid data structure in items");
+  }
+
+  return { newGst: Number(newGst.toFixed(2)) };
+}
 
 export function groupItemsByGST(items: Item[]): BillGroup[] {
   const map = items.reduce<Record<number, BillGroup>>((acc, item) => {
@@ -522,6 +559,7 @@ export {
   calculateSplitBillTotals,
   calculateSplitTotalsFromItems,
   calculateTotalDiscount,
+  calculateUpdatedGstAfterDiscount,
   groupSplitItemsByGST,
   updateSplitTableSession,
   updateTableSession,

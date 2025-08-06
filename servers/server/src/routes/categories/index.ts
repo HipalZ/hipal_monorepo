@@ -169,6 +169,7 @@ const categoriesRouter = new Hono()
             coverImage: requestData.coverImage,
             visibility: requestData.visibility,
             availability: requestData.availability,
+            timings: requestData.timings,
           },
           { session },
         );
@@ -508,6 +509,10 @@ const categoriesRouter = new Hono()
           return respond(c, "MenuId is required", true, 400, {});
         }
         const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
+
+        console.log("Current Day:", currentDay);
+        console.log("Current Time in Minutes:", currentTimeInMinutes);
+
         const query = {
           businessId,
           hierarchy: "CHILD",
@@ -526,7 +531,7 @@ const categoriesRouter = new Hono()
 
         const existingCategories = await Category.find(query)
           .select(
-            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId",
+            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId timings",
           )
           .sort({ sequence: 1 });
 
