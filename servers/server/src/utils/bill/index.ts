@@ -257,7 +257,7 @@ function calculateBillDishIds(
 }
 
 function calculateSplitBillDishIds(
-  cartItems: Item[],
+  cartItems: CartItem[],
   itemIds: string[],
 ): {
   totalDishTotal: number;

@@ -15,10 +15,10 @@ import type { ClientSession } from "mongoose";
 import {
   CartItem,
   calculateFinalTotal,
-  calculateGst,
   calculateSplitBillDishIds,
   calculateSplitTotalsFromItems,
   calculateTotalDiscount,
+  calculateUpdatedGstAfterDiscount,
   groupSplitItemsByGST,
   itemsGroupedByGst,
   updateSplitTableSession,
@@ -136,14 +136,8 @@ const returnSplitBillVariants = async (
       variant.claimedCoins -
       variant.couponDiscount;
 
-    let newGst = totalGst;
-
-    if (variant.isDiscountApplied) {
-      newGst = (variant.gstPercentage / 100) * newSubTotal;
-      if (variant.discountAppliedOn === "ON_DISH") {
-        newGst -= variant.newDishGst;
-      }
-    }
+    const gst = variant.isDiscountApplied ? variant.gst : totalGst;
+    const newGst = gst;
 
     const totalDis = calculateTotalDiscount(
       variant.discount,
@@ -164,7 +158,7 @@ const returnSplitBillVariants = async (
     variant = await updateSplitTableSession(
       variant._id.toString(),
       {
-        gst: newGst.toFixed(2),
+        gst: Number(newGst.toFixed(2)),
         total: newTotal,
         serviceCharge: serviceChargeAmount,
         billGeneratedBy: variant.generatedBy || "system",
@@ -268,14 +262,8 @@ const returnSplitBillVariantsForItemWise = async (
       variant.claimedCoins -
       variant.couponDiscount;
 
-    let newGst = totalGst;
-
-    if (variant.isDiscountApplied) {
-      newGst = (variant.gstPercentage / 100) * newSubTotal;
-      if (variant.discountAppliedOn === "ON_DISH") {
-        newGst -= variant.newDishGst;
-      }
-    }
+    const gst = variant.isDiscountApplied ? variant.gst : totalGst;
+    const newGst = gst;
 
     const totalDis = calculateTotalDiscount(
       variant.discount,
@@ -296,7 +284,7 @@ const returnSplitBillVariantsForItemWise = async (
     variant = await updateSplitTableSession(
       variant._id.toString(),
       {
-        gst: newGst.toFixed(2),
+        gst: Number(newGst.toFixed(2)),
         total: newTotal,
         serviceCharge: serviceChargeAmount,
         billGeneratedBy: variant.generatedBy || "system",
@@ -348,6 +336,7 @@ const applyDiscountToVariantBill = async ({
   reasonOfDiscount,
   discountAppliedBy,
   itemIds,
+  session,
 }: {
   variantId: string;
   value: number;
@@ -362,10 +351,11 @@ const applyDiscountToVariantBill = async ({
     throw new Error("Variant not found");
   }
 
-  const cartItems = splitTableSession.items as Item[];
+  const cartItems = splitTableSession.items as CartItem[];
 
   let discountAmount = 0;
   let newSubTotal = splitTableSession.subTotal;
+  let itemGst = 0;
 
   if (discountAppliedOn === "ON_BILL") {
     const dis = Math.round((value / 100) * newSubTotal);
@@ -381,8 +371,6 @@ const applyDiscountToVariantBill = async ({
   }
 
   if (discountAppliedOn === "ON_DISH") {
-    // Calculate discount on selected dishes
-
     const { totalDishTotal, totalGst } = calculateSplitBillDishIds(
       cartItems,
       itemIds,
@@ -391,10 +379,23 @@ const applyDiscountToVariantBill = async ({
     const dishDis = Math.round((value / 100) * totalDishTotal);
     discountAmount = Math.min(dishDis, totalDishTotal);
     newSubTotal -= discountAmount;
+
+    const { newGst } = calculateUpdatedGstAfterDiscount(
+      cartItems,
+      Number(value.toFixed(2)),
+    );
+    if (value >= 100) {
+      itemGst = splitTableSession.gst - totalGst;
+    } else {
+      itemGst = splitTableSession.gst - newGst;
+    }
   }
 
   // GST Calculation
-  const newGst = calculateGst(splitTableSession.gstPercentage, newSubTotal);
+  const { newGst } = calculateUpdatedGstAfterDiscount(
+    cartItems,
+    Number(value.toFixed(2)),
+  );
 
   // Calculate final total
   const totalDis = calculateTotalDiscount(
@@ -405,7 +406,7 @@ const applyDiscountToVariantBill = async ({
   const newTotal = calculateFinalTotal(
     splitTableSession.subTotal,
     totalDis,
-    newGst,
+    itemGst || newGst,
     splitTableSession.serviceCharge,
     0,
     splitTableSession.tips,
@@ -415,7 +416,7 @@ const applyDiscountToVariantBill = async ({
   const update = await updateSplitTableSession(
     splitTableSession._id.toString(),
     {
-      gst: Number(newGst.toFixed(2)),
+      gst: Number(itemGst.toFixed(2) || newGst.toFixed(2)),
       total: newTotal,
       reasonOfDiscount,
       discountAppliedOn,
@@ -424,6 +425,7 @@ const applyDiscountToVariantBill = async ({
       discountRemovedBy: null,
       discount: discountAmount,
     },
+    session,
   );
 
   if (!update) {
@@ -454,13 +456,11 @@ const applyCoinToVariantBill = async (
       splitTableSession.couponDiscount,
   );
 
-  const newSubTotal =
-    splitTableSession.subTotal -
-    coins -
-    splitTableSession.discount -
-    splitTableSession.couponDiscount;
-
-  const newGst = (splitTableSession.gstPercentage / 100) * newSubTotal;
+  const items = splitTableSession.items as CartItem[];
+  const { newGst } = calculateUpdatedGstAfterDiscount(
+    items,
+    Number((splitTableSession.subTotal / value) * 100),
+  );
 
   const totalDis = calculateTotalDiscount(
     splitTableSession.discount,
@@ -484,6 +484,7 @@ const applyCoinToVariantBill = async (
       isDiscountApplied: true,
       claimedCoins: coins,
     },
+    session,
   );
 
   if (!updateSpliBillTableSession) {
@@ -535,12 +536,11 @@ const applyCouponToVariantBill = async (
       splitTableSession.claimedCoins,
   );
 
-  const newSubTotal =
-    splitTableSession.subTotal -
-    splitTableSession.claimedCoins -
-    splitTableSession.discount -
-    couponDiscount;
-  const newGst = (splitTableSession.gstPercentage / 100) * newSubTotal;
+  const items = splitTableSession.items as CartItem[];
+  const { newGst } = calculateUpdatedGstAfterDiscount(
+    items,
+    Number(((couponDiscount / splitTableSession.subTotal) * 100).toFixed(2)),
+  );
 
   const totalDis = calculateTotalDiscount(
     splitTableSession.discount,
@@ -559,12 +559,13 @@ const applyCouponToVariantBill = async (
   const updateSplitBillTableSession = await updateSplitTableSession(
     splitTableSession._id.toString(),
     {
-      gst: Number(newGst).toFixed(2),
+      gst: Number(newGst.toFixed(2)),
       total: newTotal,
       isDiscountApplied: true,
       couponDiscount,
       couponId,
     },
+    session,
   );
 
   if (!updateSplitBillTableSession) {
@@ -585,12 +586,7 @@ const removeDiscountFromVariantBill = async (
     throw new Error("Variant not found");
   }
 
-  const newSubTotal =
-    splitTableSession.subTotal -
-    0 -
-    splitTableSession.claimedCoins -
-    splitTableSession.couponDiscount;
-  const newGst = (splitTableSession.gstPercentage / 100) * newSubTotal;
+  const newGst = splitTableSession.totalGst;
 
   const totalDis = calculateTotalDiscount(
     0,
@@ -621,6 +617,7 @@ const removeDiscountFromVariantBill = async (
       discountRemovedBy,
       newDishGst: 0,
     },
+    session,
   );
 
   if (!updateSplitTable) {
@@ -642,12 +639,7 @@ const removeCoinFromVariantBill = async (
   const isDiscountApplied =
     splitTableSession.discount > 0 || splitTableSession.couponDiscount > 0;
 
-  const newSubTotal =
-    splitTableSession.subTotal -
-    splitTableSession.discount -
-    0 -
-    splitTableSession.couponDiscount;
-  const newGst = (splitTableSession.gstPercentage / 100) * newSubTotal;
+  const newGst = splitTableSession.totalGst;
 
   const totalDis = calculateTotalDiscount(
     splitTableSession.discount,
@@ -671,6 +663,7 @@ const removeCoinFromVariantBill = async (
       isDiscountApplied,
       claimedCoins: 0,
     },
+    session,
   );
 
   if (!updateSplitTable) {
@@ -691,12 +684,7 @@ const removeCouponFromVariantBill = async (
   const isDiscountApplied =
     splitTableSession.discount > 0 || splitTableSession.claimedCoins > 0;
 
-  const newSubTotal =
-    splitTableSession.subTotal -
-    splitTableSession.discount -
-    splitTableSession.claimedCoins -
-    0;
-  const newGst = (splitTableSession.gstPercentage / 100) * newSubTotal;
+  const newGst = splitTableSession.totalGst;
 
   const totalDis = calculateTotalDiscount(
     splitTableSession.discount,
@@ -721,6 +709,7 @@ const removeCouponFromVariantBill = async (
       isDiscountApplied,
       couponDiscount: 0,
     },
+    session,
   );
 
   if (!updateSplitTable) {
