@@ -49,13 +49,13 @@ import {
   returnSplitBillVariants,
   returnSplitBillVariantsForItemWise,
 } from "../../services/splitBill";
-import type { KotOrderTypes } from "../../utils/bill";
+import type { CartItem, KotOrderTypes } from "../../utils/bill";
 import {
   calculateBillDishIds,
   calculateBillTotals,
   calculateFinalTotal,
-  calculateGst,
   calculateTotalDiscount,
+  calculateUpdatedGstAfterDiscount,
   groupItemsByGST,
   groupSplitItemsByGST,
   updateSplitTableSession,
@@ -322,25 +322,10 @@ const posRouter = new Hono()
         );
         if (tableSession.isServiceChargeRemoved) serviceChargeAmount = 0;
 
-        // Calculate GST
-        let newGst = 0;
-        const newSubTotal =
-          totalDishTotal -
-          tableSession.discount -
-          tableSession.claimedCoins -
-          tableSession.couponDiscount;
-
-        if (
-          tableSession.isDiscountApplied &&
-          tableSession.discountAppliedOn === "ON_DISH"
-        ) {
-          newGst = (tableSession.gstPercentage / 100) * newSubTotal;
-          newGst -= tableSession.newDishGst;
-        } else if (tableSession.isDiscountApplied) {
-          newGst = (tableSession.gstPercentage / 100) * newSubTotal;
-        } else {
-          newGst = totalGst;
-        }
+        const gst = tableSession.isDiscountApplied
+          ? tableSession.gst
+          : totalGst;
+        const newGst = gst;
 
         const totalDis = calculateTotalDiscount(
           tableSession.discount,
@@ -364,13 +349,14 @@ const posRouter = new Hono()
           tableName,
           session,
           {
-            gst: Number(newGst).toFixed(2),
+            gst: Number(newGst.toFixed(2)),
             total: newTotal,
             serviceCharge: serviceChargeAmount,
             billGeneratedBy: generatedBy,
             subTotal: totalDishTotal,
             items: cartItems,
             billPrintCount: tableSession.billPrintCount + 1,
+            totalGst: totalGst,
           },
         );
 
@@ -2797,6 +2783,8 @@ const posRouter = new Hono()
         let discountAmount = 0;
         let newSubTotal = tableSession.subTotal;
 
+        let itemGst = 0;
+
         if (discountAppliedOn === "ON_BILL") {
           const dis = Math.round((value / 100) * newSubTotal);
 
@@ -2829,10 +2817,31 @@ const posRouter = new Hono()
           const dishDis = Math.round((value / 100) * totalDishTotal);
           discountAmount = Math.min(dishDis, totalDishTotal);
           newSubTotal -= discountAmount;
+          const cartItems = kotOrder.flatMap((order) =>
+            order.cart.filter(
+              (item) =>
+                !item.isDeleted && itemIds.includes(item._id.toString()),
+            ),
+          ) as CartItem[];
+
+          const { newGst } = calculateUpdatedGstAfterDiscount(
+            cartItems,
+            Number(value.toFixed(2)),
+          );
+          if (value >= 100) {
+            itemGst = tableSession.gst - totalGst;
+          } else {
+            itemGst = tableSession.gst - newGst;
+          }
         }
 
         // GST Calculation
-        const newGst = calculateGst(tableSession.gstPercentage, newSubTotal);
+
+        const items = tableSession.items as CartItem[];
+        const { newGst } = calculateUpdatedGstAfterDiscount(
+          items,
+          Number(value.toFixed(2)),
+        );
 
         // Calculate final total
         const totalDis = calculateTotalDiscount(
@@ -2843,7 +2852,7 @@ const posRouter = new Hono()
         const newTotal = calculateFinalTotal(
           tableSession.subTotal,
           totalDis,
-          newGst,
+          itemGst || newGst,
           tableSession.serviceCharge,
           tableSession.otherTax,
           tableSession.tips,
@@ -2851,7 +2860,7 @@ const posRouter = new Hono()
 
         // Update session after applying the discount
         await updateTableSession(businessId, tableName, session, {
-          gst: Number(newGst).toFixed(2),
+          gst: Number(itemGst.toFixed(2) || newGst.toFixed(2)),
           total: newTotal,
           reasonOfDiscount,
           discountAppliedOn,
@@ -2944,13 +2953,11 @@ const posRouter = new Hono()
             tableSession.couponDiscount,
         );
 
-        const newSubTotal =
-          tableSession.subTotal -
-          coins -
-          tableSession.discount -
-          tableSession.couponDiscount;
-
-        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+        const items = tableSession.items as CartItem[];
+        const { newGst } = calculateUpdatedGstAfterDiscount(
+          items,
+          Number((tableSession.subTotal / value) * 100),
+        );
 
         const totalDis = calculateTotalDiscount(
           tableSession.discount,
@@ -2967,7 +2974,7 @@ const posRouter = new Hono()
         );
 
         await updateTableSession(businessId, tableName, session, {
-          gst: newGst.toFixed(2),
+          gst: Number(newGst.toFixed(2)),
           total: newTotal,
           isDiscountApplied: true,
           claimedCoins: coins,
@@ -3075,12 +3082,11 @@ const posRouter = new Hono()
             tableSession.claimedCoins,
         );
 
-        const newSubTotal =
-          tableSession.subTotal -
-          tableSession.claimedCoins -
-          tableSession.discount -
-          couponDiscount;
-        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+        const items = tableSession.items as CartItem[];
+        const { newGst } = calculateUpdatedGstAfterDiscount(
+          items,
+          Number(((couponDiscount / tableSession.subTotal) * 100).toFixed(2)),
+        );
 
         const totalDis = calculateTotalDiscount(
           tableSession.discount,
@@ -3097,7 +3103,7 @@ const posRouter = new Hono()
         );
 
         await updateTableSession(businessId, tableName, session, {
-          gst: Number(newGst).toFixed(2),
+          gst: Number(newGst.toFixed(2)),
           total: newTotal,
           isDiscountApplied: true,
           couponDiscount,
@@ -3175,12 +3181,7 @@ const posRouter = new Hono()
           return respond(c, "Discount removed successfully", false, 200, {});
         }
 
-        const newSubTotal =
-          tableSession.subTotal -
-          0 -
-          tableSession.claimedCoins -
-          tableSession.couponDiscount;
-        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+        const newGst = tableSession.totalGst;
 
         const totalDis = calculateTotalDiscount(
           0,
@@ -3276,12 +3277,7 @@ const posRouter = new Hono()
         const isDiscountApplied =
           tableSession.discount > 0 || tableSession.couponDiscount > 0;
 
-        const newSubTotal =
-          tableSession.subTotal -
-          tableSession.discount -
-          0 -
-          tableSession.couponDiscount;
-        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+        const newGst = tableSession.totalGst;
 
         const totalDis = calculateTotalDiscount(
           tableSession.discount,
@@ -3369,12 +3365,7 @@ const posRouter = new Hono()
         const isDiscountApplied =
           tableSession.discount > 0 || tableSession.claimedCoins > 0;
 
-        const newSubTotal =
-          tableSession.subTotal -
-          tableSession.discount -
-          tableSession.claimedCoins -
-          0;
-        const newGst = (tableSession.gstPercentage / 100) * newSubTotal;
+        const newGst = tableSession.totalGst;
 
         const totalDis = calculateTotalDiscount(
           tableSession.discount,

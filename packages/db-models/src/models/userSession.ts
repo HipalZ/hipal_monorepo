@@ -245,6 +245,11 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: "PORTION",
   },
+  totalGst: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
 });
 
 userSessionSchema.plugin(autoIncrement.plugin, {
