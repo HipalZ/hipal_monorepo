@@ -46,6 +46,17 @@ export type DishStep =
   | "ALERT"
   | "SHOW_CROPPER";
 
+export const dayIndex = {
+  All: -1,
+  Sun: 0,
+  Mon: 1,
+  Tue: 2,
+  Wed: 3,
+  Thu: 4,
+  Fri: 5,
+  Sat: 6,
+};
+
 export enum DishSteps {
   DISH_STEP_1 = "DISH_STEP_1",
   DISH_STEP_2 = "DISH_STEP_2",
@@ -62,6 +73,12 @@ export type ImageFiles = {
   second: File | null;
   third: File | null;
 };
+
+interface Timing {
+  day: number;
+  start: number;
+  end: number;
+}
 
 export interface Choice {
   uuid: string;
@@ -316,6 +333,11 @@ interface MenuPageStore {
   setShowBulkUploadModal: (show: boolean) => void;
   showBulkUploadModal: boolean;
 
+  timings: Timing[];
+  setTimings: (t: Timing[]) => void;
+  updateTiming: (idx: number, t: Partial<Timing>) => void;
+  addTiming: (t: Timing) => void;
+  removeTiming: (idx: number) => void;
 }
 
 const useMenuPageStore = create<MenuPageStore>((set) => ({
@@ -439,6 +461,7 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
       linkedDishes: [],
       isCatDelete: false,
       selectSingleParentCat: [],
+      timings: [{ day: -1, start: 0, end: 1440 }],
     }),
 
   imagePreview: null,
@@ -704,10 +727,20 @@ const useMenuPageStore = create<MenuPageStore>((set) => ({
   isCatDelete: false,
   setIsCatDelete: (isDelete: boolean) => set({ isCatDelete: isDelete }),
 
-  setShowBulkUploadModal: (show: boolean) =>
-    set({ showBulkUploadModal: show }),
+  setShowBulkUploadModal: (show: boolean) => set({ showBulkUploadModal: show }),
   showBulkUploadModal: false,
 
+  timings: [{ day: -1, start: 0, end: 1440 }],
+  setTimings: (timings) => set({ timings }),
+  updateTiming: (idx, updates) =>
+    set((s) => ({
+      timings: s.timings.map((t, i) => (i === idx ? { ...t, ...updates } : t)),
+    })),
+  addTiming: (t) => set((s) => ({ timings: [...s.timings, t] })),
+  removeTiming: (idx) =>
+    set((s) => ({
+      timings: s.timings.filter((_, i) => i !== idx),
+    })),
 }));
 
 export default useMenuPageStore;

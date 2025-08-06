@@ -33,7 +33,8 @@ const MemoListOfChildCategory = () => {
     setRecommendationIds,
     setRemoveRecommendationIds,
     setSelectSingleParentCat,
-    isMenuManager
+    isMenuManager,
+    setTimings
   } = useMenuPageStore((state) => ({
     search: state.search,
     visibilityFilter: state.visibilityFilter,
@@ -51,6 +52,7 @@ const MemoListOfChildCategory = () => {
     setRecommendationIds: state.setRecommendationIds,
     setSelectSingleParentCat: state.setSelectSingleParentCat,
     isMenuManager: state.isMenuManager,
+    setTimings: state.setTimings,
   }));
   const queryClient = useQueryClient();
   const pathname = useLocation().pathname;
@@ -112,6 +114,7 @@ const MemoListOfChildCategory = () => {
     setCatId(category._id?.toString() ?? "");
     setOpenMenu(true);
     setEditingSubCat(true);
+    setTimings(category.timings ?? []);
   }, []);
 
   const { mutateAsync: saveSequenceToAPI } = useMutation({
