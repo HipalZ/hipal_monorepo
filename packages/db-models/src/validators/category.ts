@@ -4,9 +4,21 @@ import { ObjectIdSchema } from "./common";
 export const HierarchyEnum = ["PARENT", "CHILD"] as const;
 
 export const timingSchema = z.object({
-  day: z.string().optional(),
-  start: z.string().optional(),
-  end: z.string().optional(),
+  day: z
+    .number()
+    .int()
+    .min(-1, { message: "Day must be between -1 (All) and 6 (Sat)" })
+    .max(6, { message: "Day must be between -1 (All) and 6 (Sat)" }),
+  start: z
+    .number()
+    .int()
+    .min(0, { message: "Start time must be at least 0" })
+    .max(1440, { message: "Start time cannot exceed 1440" }),
+  end: z
+    .number()
+    .int()
+    .min(0, { message: "End time must be at least 0" })
+    .max(1440, { message: "End time cannot exceed 1440" }),
 });
 export const categorySchema = z.object({
   _id: ObjectIdSchema.optional(),
