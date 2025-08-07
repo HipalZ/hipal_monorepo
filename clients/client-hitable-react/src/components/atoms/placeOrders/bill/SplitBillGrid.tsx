@@ -134,6 +134,13 @@ const SplitBillGrid = memo<SplitBillGridProps>(
             onClick: onBack,
             className: "rounded-md !w-[8rem] pl-3 ml-4",
           },
+          !hasPaid && {
+            text: "Merge Bill",
+            onClick: handleClub,
+            isLoading: isClubbing,
+            disable: isClubbing,
+            className: "rounded-md w-full ml-4 !bg-purple-600",
+          },
           {
             text: "Print Bills",
             onClick: handleEnterSelect,
@@ -142,13 +149,6 @@ const SplitBillGrid = memo<SplitBillGridProps>(
             className: "rounded-md ml-4",
           },
           // Conditionally include Merge Bill
-          !hasPaid && {
-            text: "Merge Bill",
-            onClick: handleClub,
-            isLoading: isClubbing,
-            disable: isClubbing,
-            className: "rounded-md w-full ml-4",
-          },
         ].filter(Boolean as any);
 
     return (

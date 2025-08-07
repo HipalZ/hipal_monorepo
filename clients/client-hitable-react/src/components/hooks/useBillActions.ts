@@ -23,13 +23,19 @@ export const useBillActions = (currentBill: IBillData | null) => {
 
   const { isPending, mutate } = useMutation({
     mutationFn: async () => {
+      const payload = {
+        tableId: selectedTable?._id || "",
+        captainId: userData?._id,
+        billId: currentBill?.billId ?? "",
+      };
+      if (currentBill?.variantId) {
+        payload.variantId = currentBill.variantId;
+      }
+
       const response = await apiRpc.table.hi_settle.$post({
-        json: {
-          tableId: selectedTable?._id || "",
-          captainId: userData?._id,
-          billId: currentBill?.billId ?? "",
-        },
+        json: payload,
       });
+
       if (response.status === 200) {
         const result = await response.json();
         setQrBillId(result?.data?.path);

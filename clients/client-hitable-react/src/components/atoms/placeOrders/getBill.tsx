@@ -1,4 +1,4 @@
-import { memo, useCallback,  useMemo, lazy } from "react";
+import { memo, useCallback, useMemo, lazy } from "react";
 import { useParams } from "react-router-dom";
 import { HomeIcon } from "lucide-react";
 import { MdTableBar } from "react-icons/md";
@@ -38,6 +38,9 @@ import { useRemoveCoinz } from "@/components/hooks/api/useCoinz.ts";
 import { useRemoveCoupon } from "@/components/hooks/api/useCoupon.ts";
 import { useRemoveServiceCharge } from "@/components/hooks/api/useServiceCharge.ts";
 import { useReprintBill } from "@/components/hooks/api/useSettle.ts";
+import toast from "react-hot-toast";
+import { cn } from "@/lib/utils.ts";
+import { Badge } from "@/components/ui/badge.tsx";
 
 const MemoGetBill = () => {
   const { businessId } = useParams();
@@ -57,7 +60,6 @@ const MemoGetBill = () => {
   const { goHome } = useHomeNavigation();
   const existingLoyalty = useBusinessData((s) => s.existingLoyalty);
   const setActiveModal = useOrderStore((s) => s.setActiveModal);
-
   const isExpanded = useOrderStore((s) => s.isExpanded);
   const setIsExpanded = useOrderStore((s) => s.setIsExpanded);
   const selectedBill = useOrderStore((s) => s.selectedBill);
@@ -130,8 +132,11 @@ const MemoGetBill = () => {
   }, [setShowMoreOption, setActiveModal]);
 
   const openNormalSettle = useCallback(() => {
+    if (currentBill?.isPaid) {
+      return toast.error("This bill is already settled.");
+    }
     setNormalSettle(true);
-  }, [setNormalSettle]);
+  }, [setNormalSettle, currentBill]);
 
   const closeNormalSettle = useCallback(() => {
     setNormalSettle(false);
@@ -207,7 +212,14 @@ const MemoGetBill = () => {
   return (
     <>
       {!showqr && (
-        <Card className="max-w-lg py-[5rem] md:py-[8rem] h-[90dvh] mx-auto mb-8 border border-none shadow-none">
+        <Card
+          className={cn(
+            "max-w-lg py-[5rem] md:py-[8rem] h-[90dvh] mx-auto mb-8 border border-none shadow-none",
+            currentBill.isPaid
+              ? "bg-green-100 h-full overflow-auto"
+              : "bg-white",
+          )}
+        >
           <BillHeader
             isSplitBill={isSplitBill}
             selectedBill={selectedBill}
@@ -231,6 +243,14 @@ const MemoGetBill = () => {
                 Table: {currentBill?.tableName}
               </p>
             </div>
+            {currentBill.isPaid && (
+              <Badge
+                variant="outline"
+                className="flex items-center justify-center bg-green-900 text-white text-xl"
+              >
+                Bill Paid
+              </Badge>
+            )}
 
             <Separator className="my-4" />
 
@@ -245,16 +265,18 @@ const MemoGetBill = () => {
 
             <Separator className="my-4" />
 
-            <BillSummary
-              currentBill={currentBill}
-              existingLoyalty={existingLoyalty}
-              onTriggerAddCoinz={triggerAddCoinz}
-              onClickKey={clickOnKey}
-              onRemoveClaimedCoins={removeClaimedCoins}
-              onRemoveCoupon={removeCouponHandler}
-              onOpenServiceChargeModal={openServiceChargeModal}
-              onSetActiveModal={setActiveModal}
-            />
+            {!currentBill.isPaid && (
+              <BillSummary
+                currentBill={currentBill}
+                existingLoyalty={existingLoyalty}
+                onTriggerAddCoinz={triggerAddCoinz}
+                onClickKey={clickOnKey}
+                onRemoveClaimedCoins={removeClaimedCoins}
+                onRemoveCoupon={removeCouponHandler}
+                onOpenServiceChargeModal={openServiceChargeModal}
+                onSetActiveModal={setActiveModal}
+              />
+            )}
 
             <Separator className="my-4" />
           </CardContent>
@@ -352,7 +374,7 @@ const MemoGetBill = () => {
 
       <CommonBottomButton
         maxWidth={screenSize === "xs" ? "30rem" : "48rem"}
-        backgroundColor={screenSize === "xs" ? "" : "white"}
+        backgroundColor={screenSize === "xs" ? "white" : "white"}
         fixed={true}
         buttons={[
           {
@@ -373,11 +395,14 @@ const MemoGetBill = () => {
           {
             text: "Normal Settle",
             onClick: openNormalSettle,
-            className: "rounded-md",
+            className: "rounded-md !bg-purple-600",
           },
           {
             text: "Hi Settle",
             onClick: () => {
+              if(currentBill.isPaid) {
+                return toast.error("This bill is already settled.");
+              }
               mutate();
             },
             disable: isPending,

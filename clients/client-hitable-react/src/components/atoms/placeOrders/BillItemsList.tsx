@@ -29,7 +29,8 @@ const MemoBillItemsList = ({
       (sum, extra) => sum + extra.price * extra.quantity,
       0,
     );
-    return (dishPrice + portionPrice + extrasTotal) * item.quantity;
+    const finalPrice = (dishPrice + portionPrice + extrasTotal) * item.quantity;
+    return finalPrice.toFixed(2);
   };
   const totalItemsCount = useMemo(() => {
     return allItems.reduce((total, item) => total + item.quantity, 0);

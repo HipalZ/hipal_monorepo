@@ -2,7 +2,7 @@ import { apiRpc } from "@hi/common";
 import type { IBillData } from "../types/hiClientzData.ts";
 import { useError } from "../store/useError.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useOrderStore } from "../store/useOrderData.ts";
 import { useHiClientZ } from "../store/useHiClientzData.ts";
 import toast from "react-hot-toast";
@@ -14,8 +14,10 @@ import {
 
 export const useGetBill = () => {
   const { businessId } = useParams();
+  const navigate = useNavigate();
   const { setError, setOpenErrorModal } = useError();
   const selectedTable = useOrderStore((s) => s.selectedTable);
+  const setIsBillSplit = useOrderStore((s) => s.setIsBillSplit);
   const { captainData: userData } = useHiClientZ();
 
   const getTableBill = async () => {
@@ -40,11 +42,26 @@ export const useGetBill = () => {
     }
 
     const res = await response.json();
-    const payment = res?.data as IBillData;
+    const payment = res?.data as IBillData | IBillData[];
+
+    // 1. If it's a non-array and has no keys → empty object
+    if (!Array.isArray(payment) && Object.keys(payment).length === 0) {
+      navigate(`/${businessId}/alerts`);
+      return payment;
+    }
+
+    // 2. Otherwise, handle split vs. single as before
+    const isSplit = Array.isArray(payment);
+    setIsBillSplit(isSplit);
+
     return payment;
   };
 
-  const { isLoading, data } = useQuery({
+  const {
+    isLoading,
+    data,
+    refetch: getBillCall,
+  } = useQuery({
     queryKey: ["getTableBill", businessId, selectedTable?.name, userData?.name],
     queryFn: getTableBill,
     enabled: !!businessId && !!selectedTable && !!userData,
@@ -53,6 +70,7 @@ export const useGetBill = () => {
   return {
     isLoading,
     data,
+    getBillCall,
   };
 };
 
@@ -129,7 +147,7 @@ export const useClubBill = () => {
       setOpenErrorModal(true);
     },
   });
-  return {  isClubbing, clubBill };
+  return { isClubbing, clubBill };
 };
 
 export const useItemWiseSplit = () => {

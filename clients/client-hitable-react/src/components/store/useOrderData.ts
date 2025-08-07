@@ -19,7 +19,13 @@ export type orderModal =
   | "alerts"
   | "addItem";
 
-type ModalType = "discount" | "serviceCharge" | "coupon" | "coinz" | "options" | "split";
+type ModalType =
+  | "discount"
+  | "serviceCharge"
+  | "coupon"
+  | "coinz"
+  | "options"
+  | "split";
 
 interface ISettleMode {
   _id: string;
@@ -125,6 +131,9 @@ interface OrderState {
 
   selectedBill: null | IBillData;
   setSelectedBill: (bill: IBillData | null) => void;
+
+  isBillSplit: boolean;
+  setIsBillSplit: (isBillSplit: boolean) => void;
 }
 
 export const useOrderStore = create<OrderState>((set, get) => ({
@@ -245,4 +254,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   selectedBill: null,
   setSelectedBill: (bill) => set({ selectedBill: bill }),
+
+  isBillSplit: false,
+  setIsBillSplit: (isBillSplit) => set({ isBillSplit }),
 }));

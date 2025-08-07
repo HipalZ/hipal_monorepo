@@ -20,6 +20,7 @@ const MemoBillOptions = ({ data }: BillOptionsProps) => {
   const activeModal = useOrderStore((s) => s.activeModal);
   const setActiveModal = useOrderStore((s) => s.setActiveModal);
   const setShowMoreOption = useOrderStore((s) => s.setShowMoreOption);
+  const isSplitBill = useOrderStore((s) => s.isBillSplit);
 
   // Password protection states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -179,13 +180,15 @@ const MemoBillOptions = ({ data }: BillOptionsProps) => {
                   <p className="text-xs">Current: ₹{data.serviceCharge}</p>
                 </div>
               </Button>
-              <Button
-                onClick={() => setActiveModal("split")}
-                className="h-12 w-full"
-              >
-                <Split />
-                Split Bill
-              </Button>
+              {!isSplitBill && (
+                <Button
+                  onClick={() => setActiveModal("split")}
+                  className="h-12 w-full"
+                >
+                  <Split />
+                  Split Bill
+                </Button>
+              )}
             </div>
           </div>
         </>

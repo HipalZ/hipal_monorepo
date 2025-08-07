@@ -11,6 +11,8 @@ import { Plus, Minus, AlertCircle, Package } from "lucide-react";
 import type { IBillData } from "@/components/types/hiClientzData.ts";
 import { useItemWiseSplit } from "@/components/hooks/useBill.ts";
 import type { BillItem, ItemVariant } from "@/components/types/split.types.ts";
+import CommonBottomButton from "@/components/atoms/bottomButton/index.tsx";
+import { useOrderStore } from "@/components/store/useOrderData.ts";
 
 interface ItemWiseSplitProps {
   data: IBillData;
@@ -20,6 +22,7 @@ interface ItemWiseSplitProps {
 const ItemWiseSplit = memo(({ data, onClose }: ItemWiseSplitProps) => {
   const { businessId } = useParams();
   const { isSplittingItems, splitBillByItems } = useItemWiseSplit();
+  const setActiveModal = useOrderStore((s) => s.setActiveModal);
 
   // Flatten items directly to preserve extras, discount, isDeleted
   const allItems: BillItem[] = useMemo(
@@ -261,18 +264,25 @@ const ItemWiseSplit = memo(({ data, onClose }: ItemWiseSplitProps) => {
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-3 pt-4">
-        <Button variant="outline" onClick={onClose} className="flex-1">
-          Cancel
-        </Button>
-        <Button
-          onClick={handleSplit}
-          disabled={!isValidSplit || isSplittingItems}
-          className="flex-1"
-        >
-          {isSplittingItems ? "Splitting..." : "Confirm Split"}
-        </Button>
-      </div>
+      <section className="-ml-4">
+        <CommonBottomButton
+          fixed={true}
+          maxWidth="30rem"
+          buttons={[
+            {
+              text: "Back",
+              onClick: () => setActiveModal("options"),
+              isBackButton: true,
+              className: "rounded-md pl-2",
+            },
+            {
+              text: isSplittingItems ? "Splitting..." : "Confirm",
+              onClick: handleSplit,
+              disable: isSplittingItems || !isValidSplit,
+            },
+          ]}
+        />
+      </section>
     </div>
   );
 });

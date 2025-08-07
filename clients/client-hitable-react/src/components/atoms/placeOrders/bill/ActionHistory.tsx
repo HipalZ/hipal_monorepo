@@ -54,8 +54,8 @@ const ActionHistory: FC<ActionHistoryProps> = memo(({ currentBill }) => {
         user: currentBill.serviceChargeRemovedBy,
         details: "Service charge has been removed from the bill",
         reason: currentBill.reasonOfServiceCharge,
-        color: "bg-yellow-50 border-yellow-200 text-yellow-800",
-        badgeColor: "bg-yellow-100 text-yellow-800",
+        color: "bg-red-50 border-red-200 text-red-800",
+        badgeColor: "bg-red-100 text-red-800",
       })
     }
 

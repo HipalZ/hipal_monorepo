@@ -19,7 +19,7 @@ interface PortionSplitProps {
 }
 
 const PortionSplit = memo(({ data, onClose }: PortionSplitProps) => {
-  const { businessId } = useParams();
+  const { businessId } = useParams<{ businessId: string }>();
   const { isSplitting, splitBill } = useSplitBill();
   const setActiveModal = useOrderStore((s) => s.setActiveModal);
 
@@ -46,11 +46,8 @@ const PortionSplit = memo(({ data, onClose }: PortionSplitProps) => {
 
   const handleVariantCountChange = useCallback((newCount: number) => {
     setVariantCount(newCount);
-    if (newCount < 2 || newCount > 20) {
-      // out of valid range: skip recalculation
-      return;
-    }
-    // Rebuild all percentages on valid count change
+    if (newCount < 2 || newCount > 20) return;
+
     const equal = Math.floor(100 / newCount);
     const rem = 100 - equal * newCount;
     const newVariants = Array.from({ length: newCount }, (_, i) => ({
@@ -60,10 +57,30 @@ const PortionSplit = memo(({ data, onClose }: PortionSplitProps) => {
   }, []);
 
   const handlePercentageChange = useCallback((index: number, value: number) => {
-    if (value < 0 || value > 100) return;
     setVariants((prev) => {
       const next = [...prev];
-      next[index] = { percentage: value };
+
+      // Sum of percentages before the changed index
+      const sumBefore = prev
+        .slice(0, index)
+        .reduce((sum, v) => sum + v.percentage, 0);
+
+      // Clamp new value so total never exceeds 100%
+      const clamped = Math.max(0, Math.min(value, 100 - sumBefore));
+      next[index] = { percentage: clamped };
+
+      // Redistribute remainder equally across subsequent variants
+      const remainingCount = prev.length - index - 1;
+      if (remainingCount > 0) {
+        const remainder = 100 - sumBefore - clamped;
+        const perRemaining = parseFloat(
+          (remainder / remainingCount).toFixed(1),
+        );
+        for (let i = index + 1; i < prev.length; i++) {
+          next[i] = { percentage: perRemaining };
+        }
+      }
+
       return next;
     });
   }, []);
@@ -106,18 +123,18 @@ const PortionSplit = memo(({ data, onClose }: PortionSplitProps) => {
                 variant="outline"
                 size="sm"
                 onClick={() => handleVariantCountChange(variantCount - 1)}
-                disabled={variantCount <= 0}
+                disabled={variantCount <= 2}
               >
                 <Minus className="w-4 h-4" />
               </Button>
               <Input
                 id="variantCount"
                 type="number"
-                min={0}
+                min={2}
                 max={20}
                 value={variantCount}
                 onChange={(e) =>
-                  handleVariantCountChange(Number(e.target.value) || 0)
+                  handleVariantCountChange(Number(e.target.value) || 2)
                 }
                 className="w-20 text-center"
               />

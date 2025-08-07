@@ -29,14 +29,14 @@ const BillHeader: FC<BillHeaderProps> = memo(
             <span>Bill Summary</span>
             {isSplitBill && selectedBill && <Badge variant="secondary">#{selectedBill.variantName}</Badge>}
           </div>
-          <section className="space-x-2 flex items-center flex-nowrap">
-            <Button variant="outline" onClick={onReprintBill} size="sm">
-              <BiSync />
-              Print Bill
-            </Button>
+          <section className=" flex flex-col -mb-14 space-y-4 md:-mr-4">
             <Button size="sm" variant="outline" onClick={onShowEBill}>
               <ReceiptText />
               E-Bill
+            </Button>
+            <Button variant="outline" onClick={onReprintBill} size="sm">
+              <BiSync />
+              Print Bill
             </Button>
           </section>
         </CardTitle>
