@@ -33,7 +33,7 @@ const MemoCompactDishGrid = ({ selectedCategory }:CompactDishGridProps) => {
                                     </div>
                                 )}
                                 <span className="text-sm font-semibold">₹{dish.portions?.length ? dish.portions[0].price : dish.price}</span>
-                            </div>
+                            </div> 
 
                             {dish.availability && (
                                 <div className="flex items-center justify-end -mt-7">

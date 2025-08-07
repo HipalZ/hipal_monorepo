@@ -465,6 +465,7 @@ export interface IBillData {
   discountAppliedBy: string;
   discountRemovedBy: string;
   gst: number;
+  isPaid: boolean;
   reasonOfDiscount: string;
   reasonOfServiceCharge: string;
   serviceChargeAppliedBy: string;
@@ -475,9 +476,12 @@ export interface IBillData {
   tableName: string;
   subTotal: number;
   billId: string;
+  variantId?: string;
+  variantName?: number;
   _id?: string;
   otherTax: number;
   discountAppliedOn?: string;
+
   couponId?: string;
   billItems: Array<{
     gst: number;

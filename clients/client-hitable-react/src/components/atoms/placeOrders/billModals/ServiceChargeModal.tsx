@@ -1,4 +1,4 @@
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,12 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Lock } from "lucide-react";
 import { useOrderStore } from "@/components/store/useOrderData";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
+import { useIsPasswordActive } from "@/components/hooks/usePasswordManager";
+import toast from "react-hot-toast";
 import {
   useAddServiceCharge,
   useRemoveServiceCharge,
-} from "@/components/hooks/useBill";
-import { useIsPasswordActive } from "@/components/hooks/usePasswordManager";
-import toast from "react-hot-toast";
+} from "@/components/hooks/api/useServiceCharge.ts";
 
 interface BillData {
   serviceCharge: number;
@@ -28,7 +28,13 @@ interface ServiceChargeModalProps {
 const MemoServiceChargeModal = ({ data, onClose }: ServiceChargeModalProps) => {
   const { businessId } = useParams();
   const selectedTable = useOrderStore((s) => s.selectedTable);
+  const selectedBill = useOrderStore((s) => s.selectedBill);
   const { captainData: userData } = useHiClientZ();
+  const isSplitBill = useMemo(() => Array.isArray(data), [data]);
+  const currentBill = useMemo(
+    () => selectedBill || (isSplitBill ? null : data),
+    [selectedBill, isSplitBill, data],
+  );
 
   // Password management hook - only for removing service charge
   const { isLoading: isPasswordLoading, isActive: isPasswordActive } =
@@ -38,9 +44,9 @@ const MemoServiceChargeModal = ({ data, onClose }: ServiceChargeModalProps) => {
   const [removePassword, setRemovePassword] = useState<string>(""); // Password state for remove operation
 
   const { addingServiceChargeLoader, addingServiceCharge } =
-    useAddServiceCharge();
+    useAddServiceCharge(currentBill);
   const { removingServiceChargeLoader, removingServiceCharge } =
-    useRemoveServiceCharge();
+    useRemoveServiceCharge(currentBill);
 
   const isServiceChargeApplied = data.serviceCharge > 0;
 

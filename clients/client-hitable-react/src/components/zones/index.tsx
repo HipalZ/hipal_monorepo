@@ -17,9 +17,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 
 import { useCart } from "../store/useCart";
+import { useOrderStore } from "../store/useOrderData.ts";
 const MemoZones = () => {
   const params = useParams();
   const businessId = params.businessId as string;
+  const setSelectedBill = useOrderStore((s) => s.setSelectedBill);
   const navigate = useNavigate();
   const { setIsPlacingNewOrder } = useCart((s) => ({
     setIsPlacingNewOrder: s.setIsPlacingNewOrder,
@@ -121,6 +123,7 @@ const MemoZones = () => {
 
   const goToTable = (table: TableData) => {
     setIsPlacingNewOrder(true);
+    setSelectedBill(null);
     navigate(`/${businessId}/alerts/${table._id}`);
   };
 

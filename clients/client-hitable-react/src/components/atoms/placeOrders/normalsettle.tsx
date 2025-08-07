@@ -14,8 +14,8 @@ import SingleMode from "./singleMode";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import { useGetAllModes } from "@/components/hooks/useTableData";
 import { useError } from "@/components/store/useError";
-import { useConfirmSettle } from "@/components/hooks/useBill.ts";
 import { SettleConfirmationDialog } from "./SettleConfirmation.tsx";
+import { useConfirmSettle } from "@/components/hooks/api/useSettle.ts";
 
 export interface IMode {
   _id: string;
@@ -85,6 +85,7 @@ const MemoNormalSettle = ({
       }[];
       split?: boolean;
       duesUserId?: string;
+      variantId?: string;
     }) => {
       const response = await apiRpc.table.normal_settle.$post({
         json: payload,
@@ -225,6 +226,9 @@ const MemoNormalSettle = ({
         }
         if (hasNpcMode && saveDueUser?._id) {
           payload["npcUserId"] = saveDueUser?._id;
+        }
+        if(billData?.variantId){
+          payload["variantId"] = billData?.variantId;
         }
 
         // Call the API

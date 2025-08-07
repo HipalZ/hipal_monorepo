@@ -1,56 +1,43 @@
-import { memo, useCallback, useState, useMemo } from "react";
+import { memo, useCallback,  useMemo, lazy } from "react";
 import { useParams } from "react-router-dom";
-import { apiRpc } from "@hi/common";
-import { useHiClientZ } from "@/components/store/useHiClientzData";
-import { useOrderStore } from "@/components/store/useOrderData";
-import { useMutation } from "@tanstack/react-query";
-import { Separator } from "@/components/ui/separator";
-import {
-  Phone,
-  ChevronDown,
-  ChevronUp,
-  User,
-  Clock,
-  AlertCircle,
-  ReceiptText,
-  Salad,
-  HomeIcon,
-} from "lucide-react";
-import { FiCopy } from "react-icons/fi";
-import { MdOutlineCall } from "react-icons/md";
-import { cn } from "@/lib/utils";
-import SpinnerMemo from "@/components/atoms/loadingSpinner";
+import { HomeIcon } from "lucide-react";
 import { MdTableBar } from "react-icons/md";
+import { useOrderStore } from "@/components/store/useOrderData";
+import { Separator } from "@/components/ui/separator";
+import SpinnerMemo from "@/components/atoms/loadingSpinner";
 import CommonBottomButton from "../bottomButton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Card, CardContent } from "@/components/ui/card";
 import { useScreenSize } from "@/hooks/useScreenSize";
 import BottomPopUp from "../universalPopup";
-import QrCodePreview from "./qrCode";
-import NormalSettle from "./normalsettle";
-import AddCoinz from "./addCoinz";
-import { IoClose } from "react-icons/io5";
 import useBusinessData from "@/components/store/useBusinessData";
-import BillOptions from "./BillOptions";
-import {
-  useGetBill,
-  useRemoveCoinz,
-  useRemoveCoupon,
-  useRemoveServiceCharge,
-  useReprintBill,
-} from "@/components/hooks/useBill";
-import { BiSync } from "react-icons/bi";
-import EBill from "./ebill.tsx";
-import type { IBillData } from "@/components/types/hiClientzData.ts";
-import PasswordModal from "../cartItem/PasswordModal.tsx";
+import { useGetBill } from "@/components/hooks/useBill";
 import { useHomeNavigation } from "@/components/hooks/useNavigateHome.ts";
+import BillItemsList from "./BillItemsList.tsx";
+import type { IBillData } from "@/components/types/hiClientzData.ts";
+
+// Lazy imports
+const QrCodePreview = lazy(() => import("./qrCode"));
+const NormalSettle = lazy(() => import("./normalsettle"));
+const AddCoinz = lazy(() => import("./addCoinz"));
+const BillOptions = lazy(() => import("./BillOptions"));
+const EBill = lazy(() => import("./ebill.tsx"));
+const PasswordModal = lazy(() => import("../cartItem/PasswordModal.tsx"));
+
+// Component imports
+import LazyWrapper from "./bill/LazyWrapper";
+import SplitBillGrid from "./bill/SplitBillGrid";
+import ActionHistory from "./bill/ActionHistory";
+import BillHeader from "./bill/BillHeader";
+import PhoneActions from "./bill/PhoneActions";
+import BillSummary from "./bill/BillSummary";
+
+// Hook imports - Updated to use variant-aware hooks
+import { useBillActions } from "@/components/hooks/useBillActions";
+import { usePhoneActions } from "@/components/hooks/usePhoneActions";
+import { useRemoveCoinz } from "@/components/hooks/api/useCoinz.ts";
+import { useRemoveCoupon } from "@/components/hooks/api/useCoupon.ts";
+import { useRemoveServiceCharge } from "@/components/hooks/api/useServiceCharge.ts";
+import { useReprintBill } from "@/components/hooks/api/useSettle.ts";
 
 const MemoGetBill = () => {
   const { businessId } = useParams();
@@ -64,29 +51,17 @@ const MemoGetBill = () => {
   const setNormalSettle = useOrderStore((s) => s.setNormalSettle);
   const showEBill = useOrderStore((s) => s.showEBill);
   const setShowEBill = useOrderStore((s) => s.setShowEBill);
+  const showqr = useOrderStore((s) => s.showqr);
+  const setShowqr = useOrderStore((s) => s.setShowqr);
   const screenSize = useScreenSize();
-  const { captainData: userData } = useHiClientZ();
-  const { reprintBill, isPrinting } = useReprintBill();
   const { goHome } = useHomeNavigation();
-  const { removingCouponLoader, removingCoupon } = useRemoveCoupon();
-  const { removingCoinzLoader, removingCoinz } = useRemoveCoinz();
-
-  // Existing states
-  const [qrBillId, setQrBillId] = useState<string | null>(null);
-  const [showqr, setShowqr] = useState<boolean>(false);
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
-
-  // Password protection states
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
-  const [pendingAction, setPendingAction] = useState<"copy" | "call" | null>(
-    null,
-  );
-  const [copyTick, setCopyTick] = useState(false);
-
-  const { removingServiceChargeLoader } = useRemoveServiceCharge();
   const existingLoyalty = useBusinessData((s) => s.existingLoyalty);
   const setActiveModal = useOrderStore((s) => s.setActiveModal);
+
+  const isExpanded = useOrderStore((s) => s.isExpanded);
+  const setIsExpanded = useOrderStore((s) => s.setIsExpanded);
+  const selectedBill = useOrderStore((s) => s.selectedBill);
+  const setSelectedBill = useOrderStore((s) => s.setSelectedBill);
 
   const closeOrderModalHandler = useCallback(() => {
     setOpenOrderModal(false);
@@ -94,275 +69,79 @@ const MemoGetBill = () => {
 
   const { isLoading, data: billData } = useGetBill();
 
-  // Phone protection functions
-  const hideMiddleNumbers = useCallback((phone: string) => {
-    if (!phone) return "";
-    if (phone.length <= 2) return phone;
-    const firstPart = phone.slice(0, 2);
-    const lastPart = phone.slice(-1);
-    return `${firstPart}****${lastPart}`;
-  }, []);
-
-  const handleProtectedAction = useCallback(
-    (action: "copy" | "call") => {
-      if (isPhoneVerified) {
-        executePhoneAction(action);
-      } else {
-        setPendingAction(action);
-        setIsModalOpen(true);
-      }
-    },
-    [isPhoneVerified],
+  // Memoized values
+  const isSplitBill = useMemo(() => Array.isArray(billData), [billData]);
+  const currentBill = useMemo(
+    () => selectedBill || (isSplitBill ? null : billData),
+    [selectedBill, isSplitBill, billData],
   );
 
-  const executePhoneAction = useCallback(
-    (action: "copy" | "call") => {
-      const phone = billData?.customerPhone;
-      if (!phone) return;
-
-      if (action === "copy") {
-        navigator.clipboard.writeText(phone).then(() => {
-          setCopyTick(true);
-          setTimeout(() => setCopyTick(false), 3000);
-        });
-      } else if (action === "call") {
-        window.location.href = `tel:+91${phone}`;
-      }
-    },
-    [billData?.customerPhone],
-  );
-
-  const handlePasswordVerify = useCallback(
-    (isCorrect: boolean) => {
-      if (isCorrect) {
-        setIsPhoneVerified(true);
-        if (pendingAction) {
-          executePhoneAction(pendingAction);
-          setPendingAction(null);
-        }
-        // Auto-lock after 5 minutes for security
-        setTimeout(() => setIsPhoneVerified(false), 5 * 60 * 1000);
-      }
-    },
-    [pendingAction, executePhoneAction],
-  );
-
-  const handleModalClose = useCallback(() => {
-    setIsModalOpen(false);
-    setPendingAction(null);
-  }, []);
-
-  // Memoized flattened items array
   const allItems = useMemo(() => {
-    if (!billData?.billItems) return [];
-    return billData.billItems.flatMap((billGroup) => billGroup.items);
-  }, [billData?.billItems]);
+    if (!currentBill?.billItems) return [];
+    return currentBill.billItems.flatMap((billGroup) => billGroup.items);
+  }, [currentBill?.billItems]);
 
-  // Memoized total items count
-  const totalItemsCount = useMemo(() => {
-    return allItems.reduce((total, item) => total + item.quantity, 0);
-  }, [allItems]);
+  // Variant-aware hooks - Pass currentBill to get variant support
+  const { removingCoinzLoader } = useRemoveCoinz(currentBill);
+  const { removingCouponLoader } = useRemoveCoupon(currentBill);
+  const { removingServiceChargeLoader } = useRemoveServiceCharge(currentBill);
+  const { isPrinting, reprintBill } = useReprintBill(currentBill);
 
-  const toggleQr = () => {
-    setShowqr(!showqr);
-  };
+  // Custom hooks
+  const {
+    qrBillId,
+    isPending,
+    mutate,
+    removeClaimedCoins,
+    removeCouponHandler,
+    openServiceChargeModal,
+    clickOnKey,
+    toggleQr,
+  } = useBillActions(currentBill);
 
-  const closeMoreOptions = () => {
-    setShowMoreOption(false);
-    setActiveModal("options");
-  };
+  const {
+    isModalOpen,
+    isPhoneVerified,
+    copyTick,
+    handleProtectedAction,
+    handlePasswordVerify,
+    handleModalClose,
+  } = usePhoneActions(currentBill);
 
-  const openNormalSettle = useCallback(async () => {
-    setNormalSettle(true);
+  // Handlers
+  const handleSelectBill = useCallback((bill: IBillData) => {
+    setSelectedBill(bill);
   }, []);
 
-  const closeNormalSettle = () => {
-    setNormalSettle(false);
-  };
+  const handleBackToGrid = useCallback(() => {
+    setSelectedBill(null);
+  }, []);
 
-  const triggerAddCoinz = () => {
-    setOpenAddCoinz(true);
-  };
-
-  const reprintBillHandler = () => {
+  const reprintBillHandler = useCallback(() => {
     reprintBill({
       businessId: businessId || "",
       tableName: selectedTable?.name || "",
     });
-  };
+  }, [reprintBill, businessId, selectedTable?.name]);
 
-  const { isPending, mutate } = useMutation({
-    mutationFn: async () => {
-      const response = await apiRpc.table.hi_settle.$post({
-        json: {
-          tableId: selectedTable?._id || "",
-          captainId: userData?._id,
-          billId: billData?.billId ?? "",
-        },
-      });
-      if (response.status === 200) {
-        const result = await response.json();
-        setQrBillId(result?.data?.path);
-        setShowqr(true);
-      }
-      return response.json();
-    },
-  });
+  const closeMoreOptions = useCallback(() => {
+    setShowMoreOption(false);
+    setActiveModal("options");
+  }, [setShowMoreOption, setActiveModal]);
 
-  const removeClaimedCoins = () => {
-    const confirmReplace = window.confirm(
-      "Applying this will remove your Coinz/Coupon. Continue?",
-    );
-    if (!confirmReplace) return;
-    removingCoinz({
-      businessId: businessId || "",
-      tableName: billData?.tableName,
-      coinzRemovedBy: userData?.name || "",
-    });
-  };
+  const openNormalSettle = useCallback(() => {
+    setNormalSettle(true);
+  }, [setNormalSettle]);
 
-  const removeCoupon = () => {
-    const confirmReplace = window.confirm(
-      "Applying this will remove your Coupon. Continue?",
-    );
-    if (!confirmReplace) return;
-    removingCoupon({
-      businessId: businessId || "",
-      tableName: billData?.tableName,
-    });
-  };
+  const closeNormalSettle = useCallback(() => {
+    setNormalSettle(false);
+  }, [setNormalSettle]);
 
-  const openServiceChargeModal = useCallback(() => {
-    setShowMoreOption(true);
-    setActiveModal("serviceCharge");
-  }, []);
+  const triggerAddCoinz = useCallback(() => {
+    setOpenAddCoinz(true);
+  }, [setOpenAddCoinz]);
 
-  // Helper function to calculate item total price
-  const calculateItemTotal = (item: IBillData["billItems"][0]["items"][0]) => {
-    const dishPrice = item.dish.price;
-    const portionPrice = item.portion?.price || 0;
-    const extrasTotal = item.extras.reduce(
-      (sum, extra) => sum + extra.price * extra.quantity,
-      0,
-    );
-    return (dishPrice + portionPrice + extrasTotal) * item.quantity;
-  };
-
-  const clickOnKey = (key: string) => {
-    if (key === "discount" || key === "serviceCharge") {
-      setShowMoreOption(true);
-    }
-  };
-
-  // Helper function to render action history
-  const renderActionHistory = () => {
-    if (!billData) return null;
-    const actions = [];
-
-    if (billData.discountAppliedBy) {
-      actions.push({
-        type: "Discount Applied",
-        user: billData.discountAppliedBy,
-        details: `₹${billData.discount} discount applied ${
-          billData.discountAppliedOn === "ON_DISH"
-            ? "on specific items"
-            : "on entire bill"
-        }`,
-        reason: billData.reasonOfDiscount,
-        color: "bg-red-50 border-red-200 text-red-800",
-        badgeColor: "bg-red-100 text-red-800",
-      });
-    }
-
-    if (billData.discountRemovedBy) {
-      actions.push({
-        type: "Discount Removed",
-        user: billData.discountRemovedBy,
-        details: "Previous discount has been removed from the bill",
-        color: "bg-green-50 border-green-200 text-green-800",
-        badgeColor: "bg-green-100 text-green-800",
-      });
-    }
-
-    if (billData.serviceChargeAppliedBy) {
-      actions.push({
-        type: "Service Charge Applied",
-        user: billData.serviceChargeAppliedBy,
-        details: `₹${billData.serviceCharge} service charge added to the bill`,
-        color: "bg-blue-50 border-blue-200 text-blue-800",
-        badgeColor: "bg-blue-100 text-blue-800",
-      });
-    }
-
-    if (billData.serviceChargeRemovedBy) {
-      actions.push({
-        type: "Service Charge Removed",
-        user: billData.serviceChargeRemovedBy,
-        details: "Service charge has been removed from the bill",
-        reason: billData.reasonOfServiceCharge,
-        color: "bg-yellow-50 border-yellow-200 text-yellow-800",
-        badgeColor: "bg-yellow-100 text-yellow-800",
-      });
-    }
-
-    if (billData.claimedCoins > 0) {
-      actions.push({
-        type: "Loyalty Coins Applied",
-        user: "Customer",
-        details: `₹${billData.claimedCoins} loyalty coins redeemed`,
-        color: "bg-purple-50 border-purple-200 text-purple-800",
-        badgeColor: "bg-purple-100 text-purple-800",
-      });
-    }
-
-    if (billData.couponDiscount > 0) {
-      actions.push({
-        type: "Coupon Applied",
-        user: "System",
-        details: `₹${billData.couponDiscount} coupon discount applied`,
-        color: "bg-indigo-50 border-indigo-200 text-indigo-800",
-        badgeColor: "bg-indigo-100 text-indigo-800",
-      });
-    }
-
-    return actions.length > 0 ? (
-      <Card className="mb-4">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Clock className="w-5 h-5" />
-            Bill Modifications History
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {actions.map((action, index) => (
-            <Alert key={index} className={`${action.color} border-l-4`}>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold">{action.type}</span>
-                      <Badge className={action.badgeColor}>
-                        <User className="w-3 h-3 mr-1" />
-                        {action.user}
-                      </Badge>
-                    </div>
-                    <p className="text-sm">{action.details}</p>
-                    {action.reason && (
-                      <p className="text-xs mt-1 opacity-80">
-                        Reason: {action.reason}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </AlertDescription>
-            </Alert>
-          ))}
-        </CardContent>
-      </Card>
-    ) : null;
-  };
-
+  // Loading states
   if (
     isLoading ||
     removingServiceChargeLoader ||
@@ -393,293 +172,96 @@ const MemoGetBill = () => {
     );
   }
 
+  // Show split bill grid
+  if (isSplitBill && !selectedBill) {
+    return (
+      <SplitBillGrid
+        billData={billData as IBillData[]}
+        onSelectBill={handleSelectBill}
+        onBack={closeOrderModalHandler}
+        screenSize={screenSize}
+      />
+    );
+  }
+
+  if (!currentBill) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500">No bill selected.</p>
+        <CommonBottomButton
+          fixed={true}
+          maxWidth={screenSize === "xs" ? "30rem" : "48rem"}
+          backgroundColor={screenSize === "xs" ? "" : "white"}
+          buttons={[
+            {
+              text: "Back",
+              onClick: isSplitBill ? handleBackToGrid : closeOrderModalHandler,
+              className: "rounded-md w-full",
+            },
+          ]}
+        />
+      </div>
+    );
+  }
+
   return (
     <>
       {!showqr && (
         <Card className="max-w-lg py-[5rem] md:py-[8rem] h-[90dvh] mx-auto mb-8 border border-none shadow-none">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Bill Summary</span>
-              <section className="space-x-2">
-                <Button
-                  variant="outline"
-                  onClick={reprintBillHandler}
-                  size="sm"
-                >
-                  <BiSync />
-                  Print Bill
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowEBill(true)}
-                >
-                  <ReceiptText />
-                  E-Bill
-                </Button>
-              </section>
-            </CardTitle>
-          </CardHeader>
+          <BillHeader
+            isSplitBill={isSplitBill}
+            selectedBill={selectedBill}
+            onBackToGrid={handleBackToGrid}
+            onReprintBill={reprintBillHandler}
+            onShowEBill={() => setShowEBill(true)}
+          />
+
           <CardContent>
-            <div className="mb-4 space-y-2">
-              <div className="flex items-center gap-2">
-                <Phone className="w-5 h-5 text-gray-600" />
-                <div className="flex items-center gap-2 flex-1">
-                  <p className="text-sm text-gray-700">
-                    {billData?.customerName} (
-                    {isPhoneVerified
-                      ? billData?.customerPhone
-                      : hideMiddleNumbers(billData?.customerPhone || "")}
-                    )
-                  </p>
-                  {billData?.customerPhone && (
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        className={cn(
-                          "p-1 rounded text-xs",
-                          copyTick
-                            ? "bg-green-100 text-green-600"
-                            : "bg-purple-100 text-purple-600",
-                        )}
-                        onClick={() => handleProtectedAction("copy")}
-                      >
-                        <FiCopy className="w-3 h-3" />
-                      </button>
-                      <button
-                        type="button"
-                        className="p-1 rounded bg-blue-100 text-blue-600"
-                        onClick={() => handleProtectedAction("call")}
-                      >
-                        <MdOutlineCall className="w-3 h-3" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <MdTableBar className="w-5 h-5 text-gray-600" />
-                <p className="text-sm text-gray-700">
-                  Table: {billData?.tableName}
-                </p>
-              </div>
+            <PhoneActions
+              customerPhone={currentBill?.customerPhone}
+              customerName={currentBill?.customerName}
+              isPhoneVerified={isPhoneVerified}
+              copyTick={copyTick}
+              onProtectedAction={handleProtectedAction}
+            />
+
+            <div className="flex items-center gap-2 mb-4">
+              <MdTableBar className="w-5 h-5 text-gray-600" />
+              <p className="text-sm text-gray-700">
+                Table: {currentBill?.tableName}
+              </p>
             </div>
+
             <Separator className="my-4" />
-            {/* Action History */}
-            {renderActionHistory()}
-            <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-              <CollapsibleTrigger asChild>
-                <Button variant="ghost" className="justify-between w-full">
-                  <h3 className="font-semibold">
-                    Items: {totalItemsCount} ({allItems.length} unique)
-                  </h3>
-                  {isExpanded ? (
-                    <ChevronUp strokeWidth={4} className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown strokeWidth={4} className="w-4 h-4" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-4 overflow-auto max-h-[45rem] hide-scrollbar py-2">
-                {billData?.billItems?.map((billGroup, groupIndex) => (
-                  <div key={groupIndex} className="space-y-2">
-                    {/* GST Section Header */}
-                    <div className="flex items-center justify-between bg-gray-100 p-2 rounded-md">
-                      <h4 className="font-semibold text-sm">
-                        GST {billGroup.gst}% Items
-                      </h4>
-                      <span className="text-xs text-gray-600">
-                        {billGroup.items.length} items
-                      </span>
-                    </div>
-                    {/* Items in this GST group */}
-                    <div className=" pl-2 pt-2">
-                      {billGroup.items.map((item, index) => (
-                        <div
-                          key={`${item._id}-${index}`}
-                          className="px-2 text-sm"
-                        >
-                          <div className="flex items-start gap-1 justify-between">
-                            <Salad size={16} className="-ml-2" />
-                            <div className="flex-1">
-                              <p className="font-medium">{item?.dish?.name}</p>
-                              {item?.portion && (
-                                <p className="text-xs text-blue-600">
-                                  Portion: {item.portion.name} (+₹
-                                  {item.portion.price})
-                                </p>
-                              )}
-                              {item?.dish?.instruction && (
-                                <p className="text-xs text-orange-600 italic">
-                                  Note: {item.dish.instruction}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <p className="text-gray-600">
-                                Qty: {item?.quantity}
-                              </p>
-                              <p className="font-medium">
-                                ₹{calculateItemTotal(item)}
-                              </p>
-                            </div>
-                          </div>
-                          {item?.extras?.length > 0 && (
-                            <div className="mt-1 text-xs text-gray-600 ml-3">
-                              <p className="font-medium">Extras:</p>
-                              {item?.extras?.map((extra, idx) => (
-                                <p key={`${extra.id}-${idx}`}>
-                                  {extra?.name} - ₹{extra?.price} x{" "}
-                                  {extra?.quantity}
-                                </p>
-                              ))}
-                            </div>
-                          )}
-                          <Separator className="my-2" />
-                        </div>
-                      ))}
-                    </div>
-                    {/* Section Totals */}
-                    <div className="bg-gray-50 p-2 rounded-md border">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-700">
-                          Subtotal (GST {billGroup.gst}%)
-                        </span>
-                        <span className="font-medium">
-                          ₹{Number(billGroup.subTotal).toFixed(2)}
-                        </span>
-                      </div>
-                      {billGroup.gst > 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-700">
-                            GST ({billGroup.gst}%)
-                          </span>
-                          <span className="font-medium">
-                            ₹{Number(billGroup.totalGst).toFixed(2)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    {/* Divider between sections (except for last section) */}
-                    {groupIndex < (billData?.billItems?.length || 0) - 1 && (
-                      <Separator className="my-3" />
-                    )}
-                  </div>
-                ))}
-              </CollapsibleContent>
-            </Collapsible>
+
+            <ActionHistory currentBill={currentBill} />
+
+            <BillItemsList
+              billData={currentBill}
+              isExpanded={isExpanded}
+              setIsExpanded={setIsExpanded}
+              allItems={allItems}
+            />
+
             <Separator className="my-4" />
-            {existingLoyalty?.loyaltyId && (
-              <>
-                <CardTitle className="flex items-center justify-between">
-                  <span>Use customer Loyalty</span>
-                  <Button
-                    variant="default"
-                    className="flex justify-end ml-auto"
-                    onClick={triggerAddCoinz}
-                  >
-                    Use Coinz
-                  </Button>
-                </CardTitle>
-                <Separator className="my-4" />
-              </>
-            )}
-            <div className="mb-4 space-y-3">
-              {[
-                ["subTotal", billData.subTotal],
-                ["serviceCharge", billData.serviceCharge],
-                ["tips", billData.tips],
-                ["discount", billData.discount],
-                ["tax (GST)", billData.gst],
-                ["otherTax", billData.otherTax],
-                ["claimedCoins", billData.claimedCoins],
-                ["couponDiscount", billData.couponDiscount],
-              ]
-                .filter(([_, value]) => typeof value === "number" && value > 0)
-                .map(([key, value]) => {
-                  const isDeduction =
-                    key === "claimedCoins" ||
-                    key === "discount" ||
-                    key === "couponDiscount";
-                  return (
-                    <div
-                      key={key}
-                      onClick={() => clickOnKey(key)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          clickOnKey(key);
-                        }
-                      }}
-                      className="flex justify-between items-center text-sm"
-                    >
-                      <p className="text-gray-700 capitalize flex gap-2 items-center">
-                        {key
-                          .replace(/([A-Z])/g, " $1")
-                          .replace(/^./, (str) => str.toUpperCase())}
-                      </p>
-                      <div className="flex items-center space-x-2">
-                        <p
-                          className={`font-medium ${
-                            isDeduction ? "text-red-600" : "text-gray-900"
-                          }`}
-                        >
-                          {isDeduction
-                            ? `-₹${Number(value).toFixed(2)}`
-                            : `₹${Number(value).toFixed(2)}`}
-                        </p>
-                        {key === "claimedCoins" && (
-                          <button
-                            type="button"
-                            onClick={removeClaimedCoins}
-                            className="text-red-600 text-2xl hover:underline"
-                          >
-                            <IoClose />
-                          </button>
-                        )}
-                        {key === "couponDiscount" && (
-                          <button
-                            type="button"
-                            onClick={removeCoupon}
-                            className="text-red-600 text-2xl hover:underline"
-                          >
-                            <IoClose />
-                          </button>
-                        )}
-                        {key === "serviceCharge" && (
-                          <button
-                            type="button"
-                            onClick={openServiceChargeModal}
-                            className="text-red-600 text-2xl hover:underline"
-                          >
-                            <IoClose />
-                          </button>
-                        )}
-                        {key === "discount" && (
-                          <button
-                            type="button"
-                            onClick={() => setActiveModal("discount")}
-                            className="text-red-600 text-2xl hover:underline"
-                          >
-                            <IoClose />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              <div className="flex justify-between font-semibold text-base border-t pt-2">
-                <p className="text-black">Total</p>
-                <p className="text-black">
-                  ₹{Number(billData.total).toFixed(2)}
-                </p>
-              </div>
-            </div>
+
+            <BillSummary
+              currentBill={currentBill}
+              existingLoyalty={existingLoyalty}
+              onTriggerAddCoinz={triggerAddCoinz}
+              onClickKey={clickOnKey}
+              onRemoveClaimedCoins={removeClaimedCoins}
+              onRemoveCoupon={removeCouponHandler}
+              onOpenServiceChargeModal={openServiceChargeModal}
+              onSetActiveModal={setActiveModal}
+            />
+
             <Separator className="my-4" />
           </CardContent>
         </Card>
       )}
 
-      {/* All the popup modals remain the same */}
+      {/* Lazy loaded modals */}
       {showMoreOption && (
         <BottomPopUp
           width="w-[30rem]"
@@ -689,7 +271,9 @@ const MemoGetBill = () => {
           onClose={closeMoreOptions}
           rightTopBack
         >
-          <BillOptions data={billData} />
+          <LazyWrapper>
+            <BillOptions data={currentBill} />
+          </LazyWrapper>
         </BottomPopUp>
       )}
 
@@ -701,7 +285,9 @@ const MemoGetBill = () => {
           show={showEBill}
           onClose={() => setShowEBill(false)}
         >
-          <EBill />
+          <LazyWrapper>
+            <EBill />
+          </LazyWrapper>
         </BottomPopUp>
       )}
 
@@ -712,11 +298,13 @@ const MemoGetBill = () => {
           show={showqr}
           onClose={() => setShowqr(false)}
         >
-          <QrCodePreview
-            data={billData}
-            qrBillId={qrBillId}
-            toggleQr={toggleQr}
-          />
+          <LazyWrapper>
+            <QrCodePreview
+              data={currentBill}
+              qrBillId={qrBillId}
+              toggleQr={toggleQr}
+            />
+          </LazyWrapper>
         </BottomPopUp>
       )}
 
@@ -728,7 +316,12 @@ const MemoGetBill = () => {
           show={normalSettle}
           onClose={() => setNormalSettle(false)}
         >
-          <NormalSettle closeNormalSettle={closeNormalSettle} data={billData} />
+          <LazyWrapper>
+            <NormalSettle
+              closeNormalSettle={closeNormalSettle}
+              data={currentBill}
+            />
+          </LazyWrapper>
         </BottomPopUp>
       )}
 
@@ -741,16 +334,21 @@ const MemoGetBill = () => {
           show={openAddCoinz}
           onClose={() => setOpenAddCoinz(false)}
         >
-          <AddCoinz data={billData} />
+          <LazyWrapper>
+            <AddCoinz data={currentBill} />
+          </LazyWrapper>
         </BottomPopUp>
       )}
 
-      {/* Password Modal */}
-      <PasswordModal
-        isOpen={isModalOpen}
-        onVerify={handlePasswordVerify}
-        onClose={handleModalClose}
-      />
+      {isModalOpen && (
+        <LazyWrapper>
+          <PasswordModal
+            isOpen={isModalOpen}
+            onVerify={handlePasswordVerify}
+            onClose={handleModalClose}
+          />
+        </LazyWrapper>
+      )}
 
       <CommonBottomButton
         maxWidth={screenSize === "xs" ? "30rem" : "48rem"}
@@ -766,7 +364,10 @@ const MemoGetBill = () => {
           {
             text: "",
             isBackButton: true,
-            onClick: closeOrderModalHandler,
+            onClick:
+              isSplitBill && selectedBill
+                ? handleBackToGrid
+                : closeOrderModalHandler,
             className: "rounded-md pl-3 md:pl-4 !w-[8rem] ml-4",
           },
           {
