@@ -208,6 +208,16 @@ const splitBillTableSessionSchema =
       required: false,
       default: 0,
     },
+    coinPercentage: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    couponPercentage: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
   });
 
 splitBillTableSessionSchema.index(

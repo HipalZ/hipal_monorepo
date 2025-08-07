@@ -250,6 +250,28 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: 0,
   },
+
+  coinPercentage: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+
+  couponPercentage: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+
+  itemIds: {
+    type: [String],
+    required: false,
+  },
+  itemGst: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
 });
 
 userSessionSchema.plugin(autoIncrement.plugin, {

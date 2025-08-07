@@ -389,6 +389,8 @@ const billPrintItems = (cartItems: CartItem[]) => {
 function calculateUpdatedGstAfterDiscount(
   items: CartItem[],
   discountPercentage: number,
+  itemsIds: string[],
+  itemGst: number,
 ): {
   newGst: number;
 } {
@@ -396,7 +398,10 @@ function calculateUpdatedGstAfterDiscount(
 
   try {
     for (const item of items) {
-      if (item.isDeleted) continue;
+      if (item.isDeleted || itemsIds.includes(item._id)) continue;
+
+      console.log("itemGst", itemGst);
+      console.log("itemsIds", itemsIds);
 
       const basePrice = item.portion?.price ?? item.dish.price;
 
@@ -407,10 +412,10 @@ function calculateUpdatedGstAfterDiscount(
 
       const lineTotal = (basePrice + extrasTotal) * item.quantity;
 
-      const discountedLineTotal = lineTotal * (1 - discountPercentage / 100);
+      const discountAmount = lineTotal * (discountPercentage / 100);
+      const discountedLineTotal = lineTotal - discountAmount;
 
       const gstRate = item.dish.gst ?? 0;
-
       const gstForItem = discountedLineTotal * (gstRate / 100);
 
       newGst += gstForItem;
@@ -420,7 +425,12 @@ function calculateUpdatedGstAfterDiscount(
     throw new Error("Invalid data structure in items");
   }
 
-  return { newGst: Number(newGst.toFixed(2)) };
+  let updateGst = newGst - itemGst;
+  if (updateGst < 0) {
+    updateGst = 0;
+  }
+
+  return { newGst: Number(updateGst.toFixed(2)) };
 }
 
 export function groupItemsByGST(items: Item[]): BillGroup[] {

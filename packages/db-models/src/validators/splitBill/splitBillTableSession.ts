@@ -39,6 +39,8 @@ export const splitBillTableSessionSchema = z.object({
   phoneNumbers: z.array(z.string().min(1).max(50)).optional(),
   totalDishTotal: z.coerce.number().optional().default(0),
   totalGst: z.coerce.number().optional().default(0),
+  coinPercentage: z.coerce.number().optional().default(0),
+  couponPercentage: z.coerce.number().optional().default(0),
 });
 
 export type SplitBillTableSessionValidator = z.infer<

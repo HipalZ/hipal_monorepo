@@ -2796,6 +2796,8 @@ const posRouter = new Hono()
               tableSession.couponDiscount,
           );
           newSubTotal -= discountAmount;
+          itemGst = 0;
+          itemIds = []; // No specific items for bill discount
         }
 
         if (discountAppliedOn === "ON_DISH") {
@@ -2817,30 +2819,37 @@ const posRouter = new Hono()
           const dishDis = Math.round((value / 100) * totalDishTotal);
           discountAmount = Math.min(dishDis, totalDishTotal);
           newSubTotal -= discountAmount;
-          const cartItems = kotOrder.flatMap((order) =>
-            order.cart.filter(
-              (item) =>
-                !item.isDeleted && itemIds.includes(item._id.toString()),
-            ),
-          ) as CartItem[];
+          const cartItems = tableSession.items as CartItem[];
 
           const { newGst } = calculateUpdatedGstAfterDiscount(
             cartItems,
             Number(value.toFixed(2)),
+            itemIds.length > 0 ? itemIds : [],
+            tableSession.itemGst,
           );
-          if (value >= 100) {
-            itemGst = tableSession.gst - totalGst;
+
+          if (Number(value.toFixed(2)) >= 0) {
+            itemGst = tableSession.totalGst - totalGst;
           } else {
-            itemGst = tableSession.gst - newGst;
+            itemGst = newGst;
           }
         }
 
-        // GST Calculation
+        const totalDiscountPercenatge = Math.min(
+          100,
+          value + tableSession.coinPercentage + tableSession.couponPercentage,
+        );
 
         const items = tableSession.items as CartItem[];
         const { newGst } = calculateUpdatedGstAfterDiscount(
           items,
-          Number(value.toFixed(2)),
+          Number(totalDiscountPercenatge.toFixed(2)),
+          discountAppliedOn === "ON_DISH"
+            ? itemIds && itemIds.length > 0
+              ? itemIds
+              : []
+            : [],
+          discountAppliedOn === "ON_DISH" ? itemGst : 0,
         );
 
         // Calculate final total
@@ -2852,7 +2861,7 @@ const posRouter = new Hono()
         const newTotal = calculateFinalTotal(
           tableSession.subTotal,
           totalDis,
-          itemGst || newGst,
+          itemGst ? itemGst : newGst,
           tableSession.serviceCharge,
           tableSession.otherTax,
           tableSession.tips,
@@ -2860,7 +2869,7 @@ const posRouter = new Hono()
 
         // Update session after applying the discount
         await updateTableSession(businessId, tableName, session, {
-          gst: Number(itemGst.toFixed(2) || newGst.toFixed(2)),
+          gst: itemGst ? Number(itemGst.toFixed(2)) : Number(newGst.toFixed(2)),
           total: newTotal,
           reasonOfDiscount,
           discountAppliedOn,
@@ -2869,7 +2878,10 @@ const posRouter = new Hono()
           discountRemovedBy: null,
           discount: discountAmount,
           dishIds: dishIdsArray,
-          discountPercentage: value,
+          discountPercentage:
+            discountAppliedOn === "ON_BILL" ? Number(value.toFixed(2)) : 0,
+          itemIds: itemIds ? itemIds : [],
+          itemGst: itemGst ? Number(itemGst.toFixed(2)) : 0,
         });
 
         return respond(c, "Success", true, 200, {});
@@ -2953,10 +2965,19 @@ const posRouter = new Hono()
             tableSession.couponDiscount,
         );
 
+        const totalDiscountPercenatge = Math.min(
+          100,
+          tableSession.discountPercentage +
+            Number(((value / tableSession.subTotal) * 100).toFixed(2)) +
+            tableSession.couponPercentage,
+        );
+
         const items = tableSession.items as CartItem[];
         const { newGst } = calculateUpdatedGstAfterDiscount(
           items,
-          Number((tableSession.subTotal / value) * 100),
+          Number(totalDiscountPercenatge.toFixed(2)),
+          tableSession.itemIds || [],
+          tableSession.itemGst,
         );
 
         const totalDis = calculateTotalDiscount(
@@ -2978,6 +2999,9 @@ const posRouter = new Hono()
           total: newTotal,
           isDiscountApplied: true,
           claimedCoins: coins,
+          coinPercentage: Number(
+            ((coins / tableSession.subTotal) * 100).toFixed(2),
+          ),
         });
 
         return respond(c, "Success", true, 200, {});
@@ -3082,10 +3106,21 @@ const posRouter = new Hono()
             tableSession.claimedCoins,
         );
 
+        const totalDiscountPercenatge = Math.min(
+          100,
+          tableSession.discountPercentage +
+            tableSession.coinPercentage +
+            +Number(
+              ((couponDiscount / tableSession.subTotal) * 100).toFixed(2),
+            ),
+        );
+
         const items = tableSession.items as CartItem[];
         const { newGst } = calculateUpdatedGstAfterDiscount(
           items,
-          Number(((couponDiscount / tableSession.subTotal) * 100).toFixed(2)),
+          Number(totalDiscountPercenatge.toFixed(2)),
+          tableSession.itemIds || [],
+          tableSession.itemGst,
         );
 
         const totalDis = calculateTotalDiscount(
@@ -3108,6 +3143,9 @@ const posRouter = new Hono()
           isDiscountApplied: true,
           couponDiscount,
           couponId,
+          couponPercentage: Number(
+            ((couponDiscount / tableSession.subTotal) * 100).toFixed(2),
+          ),
         });
 
         return respond(c, "Success", true, 200, {});
@@ -3181,7 +3219,18 @@ const posRouter = new Hono()
           return respond(c, "Discount removed successfully", false, 200, {});
         }
 
-        const newGst = tableSession.totalGst;
+        const totalDiscountPercenatge = Math.min(
+          100,
+          0 + tableSession.coinPercentage + tableSession.couponPercentage,
+        );
+
+        const items = tableSession.items as CartItem[];
+        const { newGst } = calculateUpdatedGstAfterDiscount(
+          items,
+          Number(totalDiscountPercenatge.toFixed(2)),
+          tableSession.itemIds || [],
+          tableSession.itemGst,
+        );
 
         const totalDis = calculateTotalDiscount(
           0,
@@ -3210,6 +3259,8 @@ const posRouter = new Hono()
           discountRemovedBy,
           newDishGst: 0,
           discountPercentage: 0,
+          itemIds: [],
+          itemGst: 0,
         });
 
         return respond(c, "Success", true, 200, {});
@@ -3277,7 +3328,18 @@ const posRouter = new Hono()
         const isDiscountApplied =
           tableSession.discount > 0 || tableSession.couponDiscount > 0;
 
-        const newGst = tableSession.totalGst;
+        const totalDiscountPercenatge = Math.min(
+          100,
+          tableSession.discountPercentage + 0 + tableSession.couponPercentage,
+        );
+
+        const items = tableSession.items as CartItem[];
+        const { newGst } = calculateUpdatedGstAfterDiscount(
+          items,
+          Number(totalDiscountPercenatge.toFixed(2)),
+          tableSession.itemIds || [],
+          tableSession.itemGst,
+        );
 
         const totalDis = calculateTotalDiscount(
           tableSession.discount,
@@ -3298,6 +3360,7 @@ const posRouter = new Hono()
           total: newTotal,
           isDiscountApplied,
           claimedCoins: 0,
+          coinPercentage: 0,
         });
 
         return respond(c, "Success", true, 200, {});
@@ -3365,7 +3428,18 @@ const posRouter = new Hono()
         const isDiscountApplied =
           tableSession.discount > 0 || tableSession.claimedCoins > 0;
 
-        const newGst = tableSession.totalGst;
+        const totalDiscountPercenatge = Math.min(
+          100,
+          tableSession.discountPercentage + tableSession.coinPercentage + 0,
+        );
+
+        const items = tableSession.items as CartItem[];
+        const { newGst } = calculateUpdatedGstAfterDiscount(
+          items,
+          Number(totalDiscountPercenatge.toFixed(2)),
+          tableSession.itemIds || [],
+          tableSession.itemGst,
+        );
 
         const totalDis = calculateTotalDiscount(
           tableSession.discount,
@@ -3382,11 +3456,12 @@ const posRouter = new Hono()
         );
 
         await updateTableSession(businessId, tableName, session, {
-          gst: newGst.toFixed(2),
+          gst: Number(newGst.toFixed(2)),
           total: newTotal,
           couponId: null,
           isDiscountApplied,
           couponDiscount: 0,
+          couponPercentage: 0,
         });
 
         return respond(c, "Success", true, 200, {});

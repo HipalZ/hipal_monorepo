@@ -130,11 +130,6 @@ const returnSplitBillVariants = async (
     }
 
     // Recalculate GST if needed
-    const newSubTotal =
-      totalDishTotal -
-      variant.discount -
-      variant.claimedCoins -
-      variant.couponDiscount;
 
     const gst = variant.isDiscountApplied ? variant.gst : totalGst;
     const newGst = gst;
@@ -254,13 +249,6 @@ const returnSplitBillVariantsForItemWise = async (
     if (variant.isServiceChargeRemoved) {
       serviceChargeAmount = 0;
     }
-
-    // Recalculate GST if needed
-    const newSubTotal =
-      totalDishTotal -
-      variant.discount -
-      variant.claimedCoins -
-      variant.couponDiscount;
 
     const gst = variant.isDiscountApplied ? variant.gst : totalGst;
     const newGst = gst;
@@ -406,7 +394,7 @@ const applyDiscountToVariantBill = async ({
   const newTotal = calculateFinalTotal(
     splitTableSession.subTotal,
     totalDis,
-    itemGst || newGst,
+    itemGst ? itemGst : newGst,
     splitTableSession.serviceCharge,
     0,
     splitTableSession.tips,
@@ -416,7 +404,7 @@ const applyDiscountToVariantBill = async ({
   const update = await updateSplitTableSession(
     splitTableSession._id.toString(),
     {
-      gst: Number(itemGst.toFixed(2) || newGst.toFixed(2)),
+      gst: itemGst ? Number(itemGst.toFixed(2)) : Number(newGst.toFixed(2)),
       total: newTotal,
       reasonOfDiscount,
       discountAppliedOn,
@@ -459,7 +447,7 @@ const applyCoinToVariantBill = async (
   const items = splitTableSession.items as CartItem[];
   const { newGst } = calculateUpdatedGstAfterDiscount(
     items,
-    Number((splitTableSession.subTotal / value) * 100),
+    Number(((value / splitTableSession.subTotal) * 100).toFixed(2)),
   );
 
   const totalDis = calculateTotalDiscount(
@@ -479,7 +467,7 @@ const applyCoinToVariantBill = async (
   const updateSpliBillTableSession = await updateSplitTableSession(
     splitTableSession._id.toString(),
     {
-      gst: newGst.toFixed(2),
+      gst: Number(newGst.toFixed(2)),
       total: newTotal,
       isDiscountApplied: true,
       claimedCoins: coins,
@@ -703,7 +691,7 @@ const removeCouponFromVariantBill = async (
   const updateSplitTable = await updateSplitTableSession(
     splitTableSession._id.toString(),
     {
-      gst: newGst.toFixed(2),
+      gst: Number(newGst.toFixed(2)),
       total: newTotal,
       couponId: null,
       isDiscountApplied,

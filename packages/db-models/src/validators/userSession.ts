@@ -54,6 +54,10 @@ export const userSessionSchema = z.object({
   discountPercentage: z.coerce.number().optional().default(0),
   splitType: z.enum(["PORTION", "ITEM"]).optional().default("PORTION"),
   totalGst: z.coerce.number().optional().default(0),
+  coinPercentage: z.coerce.number().optional().default(0),
+  couponPercentage: z.coerce.number().optional().default(0),
+  itemIds: z.array(z.string()).optional(),
+  itemGst: z.coerce.number().optional().default(0),
 });
 
 export type UserSessionSchemaType = z.infer<typeof userSessionSchema>;
