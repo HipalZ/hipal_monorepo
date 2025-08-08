@@ -474,7 +474,97 @@ function calculateItemUpdatedGstAfterDiscount(
   return { itemGstAfterDiscount: Number(itemGstAfterDiscount.toFixed(2)) };
 }
 
+function splitCalculateItemUpdatedGstAfterDiscount(
+  items: CartItem[],
+  discountPercentage: number,
+  itemsIds: string[],
+): {
+  itemGstAfterDiscount: number;
+} {
+  let itemGstAfterDiscount = 0;
+
+  console.log("Items being processed:", itemsIds);
+
+  try {
+    for (const item of items) {
+      console.log("Processing item:", item);
+      if (item.isDeleted || !itemsIds.includes(item._id.toString())) continue;
+
+      console.log("Item being processed:", item);
+
+      const basePrice = item.portion?.price ?? item.dish.price;
+
+      const extrasTotal = item.extras.reduce(
+        (sum, ex) => sum + ex.price * ex.quantity,
+        0,
+      );
+
+      const lineTotal = (basePrice + extrasTotal) * item.quantity;
+
+      const discountAmount = lineTotal * (discountPercentage / 100);
+      const discountedLineTotal = lineTotal - discountAmount;
+
+      const gstRate = item.dish.gst ?? 0;
+      const gstForItem = discountedLineTotal * (gstRate / 100);
+
+      itemGstAfterDiscount += gstForItem;
+
+      console.log("Item GST after discount:", itemGstAfterDiscount);
+    }
+  } catch (err) {
+    console.error("Error calculating GST:", err);
+    throw new Error("Invalid data structure in items");
+  }
+
+  return { itemGstAfterDiscount: Number(itemGstAfterDiscount.toFixed(2)) };
+}
+
 function calculateItemUpdated(
+  items: CartItem[],
+  discountPercentage: number,
+  itemsIds: string[],
+): {
+  itemGstAfter: number;
+} {
+  let itemGstAfter = 0;
+
+  console.log("Items being processed:", itemsIds);
+
+  try {
+    for (const item of items) {
+      console.log("Processing item:", item);
+      if (item.isDeleted || itemsIds.includes(item._id.toString())) continue;
+
+      console.log("Item being processed:", item);
+
+      const basePrice = item.portion?.price ?? item.dish.price;
+
+      const extrasTotal = item.extras.reduce(
+        (sum, ex) => sum + ex.price * ex.quantity,
+        0,
+      );
+
+      const lineTotal = (basePrice + extrasTotal) * item.quantity;
+
+      const discountAmount = lineTotal * (discountPercentage / 100);
+      const discountedLineTotal = lineTotal - discountAmount;
+
+      const gstRate = item.dish.gst ?? 0;
+      const gstForItem = discountedLineTotal * (gstRate / 100);
+
+      itemGstAfter += gstForItem;
+
+      console.log("Item GST after discount:", itemGstAfter);
+    }
+  } catch (err) {
+    console.error("Error calculating GST:", err);
+    throw new Error("Invalid data structure in items");
+  }
+
+  return { itemGstAfter: Number(itemGstAfter.toFixed(2)) };
+}
+
+function splitCalculateItemUpdated(
   items: CartItem[],
   discountPercentage: number,
   itemsIds: string[],
@@ -659,6 +749,8 @@ export {
   calculateTotalDiscount,
   calculateUpdatedGstAfterDiscount,
   groupSplitItemsByGST,
+  splitCalculateItemUpdated,
+  splitCalculateItemUpdatedGstAfterDiscount,
   updateSplitTableSession,
   updateTableSession,
 };

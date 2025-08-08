@@ -21,6 +21,8 @@ import {
   calculateUpdatedGstAfterDiscount,
   groupSplitItemsByGST,
   itemsGroupedByGst,
+  splitCalculateItemUpdated,
+  splitCalculateItemUpdatedGstAfterDiscount,
   updateSplitTableSession,
 } from "../../utils/bill";
 
@@ -159,6 +161,7 @@ const returnSplitBillVariants = async (
         billGeneratedBy: variant.generatedBy || "system",
         subTotal: totalDishTotal,
         items: cartItems,
+        totalGst: totalGst,
       },
       session,
     );
@@ -279,6 +282,7 @@ const returnSplitBillVariantsForItemWise = async (
         subTotal: totalDishTotal,
         items: cartItems,
         billPrintCount: (variant.billPrintCount || 0) + 1,
+        totalGst: totalGst,
       },
       session,
     );
@@ -374,23 +378,47 @@ const applyDiscountToVariantBill = async ({
     );
     newSubTotal -= discountAmount;
 
-    const { newGst } = calculateUpdatedGstAfterDiscount(
+    const { itemGstAfterDiscount } = splitCalculateItemUpdatedGstAfterDiscount(
       cartItems,
       Number(value.toFixed(2)),
       itemIds.length > 0 ? itemIds : [],
-      splitTableSession.itemGstAfterDiscount,
     );
+
+    const { itemGstAfter } = splitCalculateItemUpdated(
+      cartItems,
+      Math.min(
+        100,
+        splitTableSession.coinPercentage || splitTableSession.couponPercentage,
+      ),
+      itemIds.length > 0 ? itemIds : [],
+    );
+    saveGstAfterDiscount = itemGstAfterDiscount;
+
     if (value >= 100) {
-      itemGst = splitTableSession.gst - totalGst;
+      // itemGst = tableSession.totalGst - totalGst;
+      itemGst = itemGstAfter;
     } else {
-      itemGst = splitTableSession.gst - newGst;
+      itemGst = itemGstAfterDiscount + itemGstAfter;
     }
   }
 
-  // GST Calculation
+  const totalDiscountPercenatge = Math.min(
+    100,
+    value +
+      splitTableSession.coinPercentage +
+      splitTableSession.couponPercentage,
+  );
+  const items = splitTableSession.items as CartItem[];
+
   const { newGst } = calculateUpdatedGstAfterDiscount(
-    cartItems,
-    Number(value.toFixed(2)),
+    items,
+    Number(totalDiscountPercenatge.toFixed(2)),
+    discountAppliedOn === "ON_DISH"
+      ? itemIds && itemIds.length > 0
+        ? itemIds
+        : []
+      : [],
+    discountAppliedOn === "ON_DISH" ? itemGst : 0,
   );
 
   // Calculate final total
@@ -420,6 +448,11 @@ const applyDiscountToVariantBill = async ({
       isDiscountApplied: true,
       discountRemovedBy: null,
       discount: discountAmount,
+      discountPercentage:
+        discountAppliedOn === "ON_BILL" ? Number(value.toFixed(2)) : 0,
+      itemIds: itemIds ? itemIds : [],
+      itemGst: itemGst ? Number(itemGst.toFixed(2)) : 0,
+      itemGstAfterDiscount: Number(saveGstAfterDiscount.toFixed(2)),
     },
     session,
   );
@@ -452,10 +485,19 @@ const applyCoinToVariantBill = async (
       splitTableSession.couponDiscount,
   );
 
+  const totalDiscountPercenatge = Math.min(
+    100,
+    splitTableSession.discountPercentage +
+      Number(((value / splitTableSession.subTotal) * 100).toFixed(2)) +
+      splitTableSession.couponPercentage,
+  );
+
   const items = splitTableSession.items as CartItem[];
   const { newGst } = calculateUpdatedGstAfterDiscount(
     items,
-    Number(((value / splitTableSession.subTotal) * 100).toFixed(2)),
+    Number(totalDiscountPercenatge.toFixed(2)),
+    splitTableSession.itemIds || [],
+    splitTableSession.itemGstAfterDiscount || 0,
   );
 
   const totalDis = calculateTotalDiscount(
@@ -479,6 +521,9 @@ const applyCoinToVariantBill = async (
       total: newTotal,
       isDiscountApplied: true,
       claimedCoins: coins,
+      coinPercentage: Number(
+        ((coins / splitTableSession.subTotal) * 100).toFixed(2),
+      ),
     },
     session,
   );
@@ -532,12 +577,20 @@ const applyCouponToVariantBill = async (
       splitTableSession.claimedCoins,
   );
 
+  const totalDiscountPercenatge = Math.min(
+    100,
+    splitTableSession.discountPercentage +
+      splitTableSession.coinPercentage +
+      +Number(((couponDiscount / splitTableSession.subTotal) * 100).toFixed(2)),
+  );
+
   const items = splitTableSession.items as CartItem[];
   const { newGst } = calculateUpdatedGstAfterDiscount(
     items,
-    Number(((couponDiscount / splitTableSession.subTotal) * 100).toFixed(2)),
+    Number(totalDiscountPercenatge.toFixed(2)),
+    splitTableSession.itemIds || [],
+    splitTableSession.itemGstAfterDiscount || 0,
   );
-
   const totalDis = calculateTotalDiscount(
     splitTableSession.discount,
     splitTableSession.claimedCoins,
@@ -582,7 +635,18 @@ const removeDiscountFromVariantBill = async (
     throw new Error("Variant not found");
   }
 
-  const newGst = splitTableSession.totalGst;
+  const totalDiscountPercenatge = Math.min(
+    100,
+    0 + splitTableSession.coinPercentage + splitTableSession.couponPercentage,
+  );
+
+  const items = splitTableSession.items as CartItem[];
+  const { newGst } = calculateUpdatedGstAfterDiscount(
+    items,
+    Number(totalDiscountPercenatge.toFixed(2)),
+    [],
+    0,
+  );
 
   const totalDis = calculateTotalDiscount(
     0,
@@ -612,6 +676,9 @@ const removeDiscountFromVariantBill = async (
       discountAppliedBy: null,
       discountRemovedBy,
       newDishGst: 0,
+      discountPercentage: 0,
+      itemIds: [],
+      itemGst: 0,
     },
     session,
   );
@@ -635,7 +702,20 @@ const removeCoinFromVariantBill = async (
   const isDiscountApplied =
     splitTableSession.discount > 0 || splitTableSession.couponDiscount > 0;
 
-  const newGst = splitTableSession.totalGst;
+  const totalDiscountPercenatge = Math.min(
+    100,
+    splitTableSession.discountPercentage +
+      0 +
+      splitTableSession.couponPercentage,
+  );
+
+  const items = splitTableSession.items as CartItem[];
+  const { newGst } = calculateUpdatedGstAfterDiscount(
+    items,
+    Number(totalDiscountPercenatge.toFixed(2)),
+    splitTableSession.itemIds || [],
+    splitTableSession.itemGstAfterDiscount || 0,
+  );
 
   const totalDis = calculateTotalDiscount(
     splitTableSession.discount,
@@ -658,6 +738,7 @@ const removeCoinFromVariantBill = async (
       total: newTotal,
       isDiscountApplied,
       claimedCoins: 0,
+      coinPercentage: 0,
     },
     session,
   );
@@ -680,7 +761,18 @@ const removeCouponFromVariantBill = async (
   const isDiscountApplied =
     splitTableSession.discount > 0 || splitTableSession.claimedCoins > 0;
 
-  const newGst = splitTableSession.totalGst;
+  const totalDiscountPercenatge = Math.min(
+    100,
+    splitTableSession.discountPercentage + splitTableSession.coinPercentage + 0,
+  );
+
+  const items = splitTableSession.items as CartItem[];
+  const { newGst } = calculateUpdatedGstAfterDiscount(
+    items,
+    Number(totalDiscountPercenatge.toFixed(2)),
+    splitTableSession.itemIds || [],
+    splitTableSession.itemGstAfterDiscount || 0,
+  );
 
   const totalDis = calculateTotalDiscount(
     splitTableSession.discount,
@@ -704,6 +796,7 @@ const removeCouponFromVariantBill = async (
       couponId: null,
       isDiscountApplied,
       couponDiscount: 0,
+      couponPercentage: 0,
     },
     session,
   );

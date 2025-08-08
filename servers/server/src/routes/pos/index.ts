@@ -2788,8 +2788,6 @@ const posRouter = new Hono()
         let itemGst = 0;
         let saveGstAfterDiscount = 0;
 
-        console.log("discountAppliedOn:", discountAppliedOn);
-
         if (discountAppliedOn === "ON_BILL") {
           const dis = Math.round((value / 100) * newSubTotal);
 
