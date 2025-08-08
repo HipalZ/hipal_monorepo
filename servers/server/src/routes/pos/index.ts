@@ -54,6 +54,8 @@ import {
   calculateBillDishIds,
   calculateBillTotals,
   calculateFinalTotal,
+  calculateItemUpdated,
+  calculateItemUpdatedGstAfterDiscount,
   calculateTotalDiscount,
   calculateUpdatedGstAfterDiscount,
   groupItemsByGST,
@@ -2784,6 +2786,9 @@ const posRouter = new Hono()
         let newSubTotal = tableSession.subTotal;
 
         let itemGst = 0;
+        let saveGstAfterDiscount = 0;
+
+        console.log("discountAppliedOn:", discountAppliedOn);
 
         if (discountAppliedOn === "ON_BILL") {
           const dis = Math.round((value / 100) * newSubTotal);
@@ -2796,8 +2801,6 @@ const posRouter = new Hono()
               tableSession.couponDiscount,
           );
           newSubTotal -= discountAmount;
-          itemGst = 0;
-          itemIds = []; // No specific items for bill discount
         }
 
         if (discountAppliedOn === "ON_DISH") {
@@ -2817,21 +2820,43 @@ const posRouter = new Hono()
           dishIdsArray = dishIds;
 
           const dishDis = Math.round((value / 100) * totalDishTotal);
-          discountAmount = Math.min(dishDis, totalDishTotal);
+          // discountAmount = Math.min(dishDis, totalDishTotal);
+          discountAmount = Math.min(
+            dishDis,
+            tableSession.subTotal -
+              tableSession.claimedCoins -
+              tableSession.couponDiscount,
+          );
+
           newSubTotal -= discountAmount;
           const cartItems = tableSession.items as CartItem[];
 
-          const { newGst } = calculateUpdatedGstAfterDiscount(
+          const { itemGstAfterDiscount } = calculateItemUpdatedGstAfterDiscount(
             cartItems,
             Number(value.toFixed(2)),
             itemIds.length > 0 ? itemIds : [],
-            tableSession.itemGst,
           );
 
-          if (Number(value.toFixed(2)) >= 0) {
-            itemGst = tableSession.totalGst - totalGst;
+          const { itemGstAfter } = calculateItemUpdated(
+            cartItems,
+            Math.min(
+              100,
+              tableSession.coinPercentage || tableSession.couponPercentage,
+            ),
+            itemIds.length > 0 ? itemIds : [],
+          );
+
+          console.log("Item GST after discount:", itemGstAfterDiscount); ///
+
+          console.log("Item GST after:", itemGstAfter); // dus
+
+          saveGstAfterDiscount = itemGstAfterDiscount;
+
+          if (value >= 100) {
+            // itemGst = tableSession.totalGst - totalGst;
+            itemGst = itemGstAfter;
           } else {
-            itemGst = newGst;
+            itemGst = itemGstAfterDiscount + itemGstAfter;
           }
         }
 
@@ -2841,6 +2866,8 @@ const posRouter = new Hono()
         );
 
         const items = tableSession.items as CartItem[];
+
+        // no work if discount applied on itemIds
         const { newGst } = calculateUpdatedGstAfterDiscount(
           items,
           Number(totalDiscountPercenatge.toFixed(2)),
@@ -2851,6 +2878,8 @@ const posRouter = new Hono()
             : [],
           discountAppliedOn === "ON_DISH" ? itemGst : 0,
         );
+
+        console.log("Updated GST after discount:", newGst);
 
         // Calculate final total
         const totalDis = calculateTotalDiscount(
@@ -2882,6 +2911,7 @@ const posRouter = new Hono()
             discountAppliedOn === "ON_BILL" ? Number(value.toFixed(2)) : 0,
           itemIds: itemIds ? itemIds : [],
           itemGst: itemGst ? Number(itemGst.toFixed(2)) : 0,
+          itemGstAfterDiscount: Number(saveGstAfterDiscount.toFixed(2)),
         });
 
         return respond(c, "Success", true, 200, {});
@@ -2977,7 +3007,7 @@ const posRouter = new Hono()
           items,
           Number(totalDiscountPercenatge.toFixed(2)),
           tableSession.itemIds || [],
-          tableSession.itemGst,
+          tableSession.itemGstAfterDiscount || 0,
         );
 
         const totalDis = calculateTotalDiscount(
@@ -3120,7 +3150,7 @@ const posRouter = new Hono()
           items,
           Number(totalDiscountPercenatge.toFixed(2)),
           tableSession.itemIds || [],
-          tableSession.itemGst,
+          tableSession.itemGstAfterDiscount || 0,
         );
 
         const totalDis = calculateTotalDiscount(
@@ -3228,8 +3258,8 @@ const posRouter = new Hono()
         const { newGst } = calculateUpdatedGstAfterDiscount(
           items,
           Number(totalDiscountPercenatge.toFixed(2)),
-          tableSession.itemIds || [],
-          tableSession.itemGst,
+          [],
+          0,
         );
 
         const totalDis = calculateTotalDiscount(
@@ -3338,7 +3368,7 @@ const posRouter = new Hono()
           items,
           Number(totalDiscountPercenatge.toFixed(2)),
           tableSession.itemIds || [],
-          tableSession.itemGst,
+          tableSession.itemGstAfterDiscount || 0,
         );
 
         const totalDis = calculateTotalDiscount(
@@ -3438,7 +3468,7 @@ const posRouter = new Hono()
           items,
           Number(totalDiscountPercenatge.toFixed(2)),
           tableSession.itemIds || [],
-          tableSession.itemGst,
+          tableSession.itemGstAfterDiscount || 0,
         );
 
         const totalDis = calculateTotalDiscount(

@@ -58,6 +58,7 @@ export const userSessionSchema = z.object({
   couponPercentage: z.coerce.number().optional().default(0),
   itemIds: z.array(z.string()).optional(),
   itemGst: z.coerce.number().optional().default(0),
+  itemGstAfterDiscount: z.coerce.number().optional().default(0),
 });
 
 export type UserSessionSchemaType = z.infer<typeof userSessionSchema>;

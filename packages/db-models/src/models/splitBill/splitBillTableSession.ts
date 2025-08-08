@@ -218,6 +218,32 @@ const splitBillTableSessionSchema =
       required: false,
       default: 0,
     },
+    discountPercentage: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    itemGst: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    itemGstAfterDiscount: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
+    itemIds: {
+      type: [String],
+      required: false,
+      default: [],
+    },
+    splitType: {
+      type: String,
+      enum: ["PORTION", "ITEM"],
+      required: false,
+      default: "PORTION",
+    },
   });
 
 splitBillTableSessionSchema.index(

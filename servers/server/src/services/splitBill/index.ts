@@ -344,6 +344,7 @@ const applyDiscountToVariantBill = async ({
   let discountAmount = 0;
   let newSubTotal = splitTableSession.subTotal;
   let itemGst = 0;
+  let saveGstAfterDiscount = 0;
 
   if (discountAppliedOn === "ON_BILL") {
     const dis = Math.round((value / 100) * newSubTotal);
@@ -365,12 +366,19 @@ const applyDiscountToVariantBill = async ({
     );
 
     const dishDis = Math.round((value / 100) * totalDishTotal);
-    discountAmount = Math.min(dishDis, totalDishTotal);
+    discountAmount = Math.min(
+      dishDis,
+      splitTableSession.subTotal -
+        splitTableSession.claimedCoins -
+        splitTableSession.couponDiscount,
+    );
     newSubTotal -= discountAmount;
 
     const { newGst } = calculateUpdatedGstAfterDiscount(
       cartItems,
       Number(value.toFixed(2)),
+      itemIds.length > 0 ? itemIds : [],
+      splitTableSession.itemGstAfterDiscount,
     );
     if (value >= 100) {
       itemGst = splitTableSession.gst - totalGst;

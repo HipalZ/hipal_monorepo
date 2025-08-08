@@ -41,6 +41,11 @@ export const splitBillTableSessionSchema = z.object({
   totalGst: z.coerce.number().optional().default(0),
   coinPercentage: z.coerce.number().optional().default(0),
   couponPercentage: z.coerce.number().optional().default(0),
+  discountPercentage: z.coerce.number().optional().default(0),
+  splitType: z.enum(["PORTION", "ITEM"]).optional().default("PORTION"),
+  itemIds: z.array(z.string()).default([]),
+  itemGst: z.coerce.number().optional().default(0),
+  itemGstAfterDiscount: z.coerce.number().optional().default(0),
 });
 
 export type SplitBillTableSessionValidator = z.infer<
