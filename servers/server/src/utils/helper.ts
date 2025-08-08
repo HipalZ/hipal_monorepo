@@ -382,7 +382,7 @@ function convertToPetpoojaCart(
         if (cartItem.extras && cartItem.extras.length > 0) {
           kotItem.AddonItem = JSON.stringify(
             cartItem.extras.map((extra) => ({
-              group_id: "", // Group ID if available
+              group_id: extra?.posAddOnId || "", // Group ID if available
               group_name: "Add-ons", // Default group name
               id: extra.id,
               name: extra.name,
