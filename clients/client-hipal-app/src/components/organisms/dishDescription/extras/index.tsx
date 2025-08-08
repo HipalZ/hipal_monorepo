@@ -42,12 +42,16 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
 
         newCounts.set(addOnId, updatedCount);
         newCounts.set(choiceId, newQuantity);
-        setSelectedChoice({
+        const payload = {
           id: choiceId,
           name: choice.name,
           quantity: newQuantity,
           price: choice.price,
-        });
+        };
+        if (addOn?.posAddOnId) {
+          payload.posAddOnId = addOn.posAddOnId;
+        }
+        setSelectedChoice(payload);
         return newCounts;
       });
     },

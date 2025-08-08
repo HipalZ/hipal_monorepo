@@ -3339,6 +3339,7 @@ const posRouter = new Hono()
       const cartItems = kotOrders.flatMap((order) =>
         order.cart.filter((item) => !item.isDeleted),
       );
+      let g;
 
       if (kotOrders.length > 0) {
         const petpoojaCart = convertToPetpoojaCart(
@@ -3352,6 +3353,7 @@ const posRouter = new Hono()
 
           pos.authToken,
         );
+        g = petpoojaCart;
 
         await KotOrder.updateMany(
           {
@@ -3387,7 +3389,7 @@ const posRouter = new Hono()
         }
       }
 
-      return respond(c, "Success", true, 200, {});
+      return respond(c, "Success", true, 200, { g: g });
     },
   )
 

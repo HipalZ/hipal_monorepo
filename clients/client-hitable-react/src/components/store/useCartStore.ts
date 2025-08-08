@@ -82,6 +82,7 @@ interface ICartStore {
     name: string;
     quantity: number;
     price: number;
+    posAddOnId?: string;
   }) => void;
 
   removeSelectedChoice: (choiceId: string) => void;
