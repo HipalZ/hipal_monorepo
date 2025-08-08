@@ -106,7 +106,24 @@ function splitBillWithPortionAndPercentage(
     customerName: mainTableSession.customerName,
     phoneNumbers: mainTableSession.phoneNumbers,
     totalDishTotal: safeMultiply(mainTableSession.subTotal, percentage),
-    totalGst: safeMultiply(mainTableSession.gst, percentage),
+    totalGst: safeMultiply(mainTableSession.totalGst, percentage),
+    isUserRegistered: mainTableSession.isUserRegistered,
+    discountPercentage: safeMultiply(
+      mainTableSession.discountPercentage,
+      percentage,
+    ),
+    splitType: mainTableSession.splitType,
+    coinPercentage: safeMultiply(mainTableSession.coinPercentage, percentage),
+    couponPercentage: safeMultiply(
+      mainTableSession.couponPercentage,
+      percentage,
+    ),
+    itemIds: mainTableSession.itemIds,
+    itemGst: safeMultiply(mainTableSession.itemGst, percentage),
+    itemGstAfterDiscount: safeMultiply(
+      mainTableSession.itemGstAfterDiscount,
+      percentage,
+    ),
 
     originTableSessionId: mainTableSession._id,
     variantName,
