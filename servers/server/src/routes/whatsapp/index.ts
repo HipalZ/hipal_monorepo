@@ -356,7 +356,7 @@ const whatsappRouter = new Hono()
           isDeleted: false,
         })
           .select("templateId")
-          .limit(10);
+          .limit(30);
 
         const templateIds = getWhatAppTemplate.map(
           (template) => template.templateId,
