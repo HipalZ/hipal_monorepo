@@ -7,6 +7,7 @@ import useCouponTemp from "@/components/store/useCouponTemp";
 import { useCouponz } from "@/components/store/useCouponz";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import useTableData from "@/components/store/useTableData";
 import { DialogTitle } from "@headlessui/react";
 import { useMutation } from "@tanstack/react-query";
 import confetti from "canvas-confetti";
@@ -34,13 +35,21 @@ const AvailableCoinz = () => {
   const addCoinsMutation = useMutation({ mutationFn: addCoins });
   const removeCoinsMutation = useMutation({ mutationFn: removeCoinz });
   const removeCouponMutation = useMutation({ mutationFn: removeCouponz });
+  const  tableName = useTableData(s=>s.tableName);
   const handleApplyCoinz = async (finalValue: number) => {
     setClaimedCoins(finalValue);
     handleCoins(finalValue);
     if (outletInfo?.isPosEnabled) {
-      await addCoinsMutation.mutateAsync({
-        coinz: finalValue,
-      });
+      const payload = {
+        value: finalValue,
+        businessId: outletInfo.businessId,
+        tableName: tableName,
+      };
+      if (billData?.variantId) {
+        payload.variantId = billData.variantId;
+      }
+      await addCoinsMutation.mutateAsync(payload);
+    
     }
   };
 
@@ -108,7 +117,14 @@ const AvailableCoinz = () => {
     if (claimedCoins > 0) {
       setShowAlert(false);
       setClaimedCoins(0);
-      await removeCoinsMutation.mutateAsync();
+      const payload = {
+        businessId: outletInfo.businessId,
+        tableName: tableName,
+      }
+      if (billData?.variantId) {
+        payload.variantId = billData.variantId;
+      }
+      await removeCoinsMutation.mutateAsync(payload);
       closeModal();
       return;
     }

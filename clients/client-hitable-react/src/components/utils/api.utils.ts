@@ -40,9 +40,9 @@ export const getBillQueryKey = (currentBill: IBillData | null): string[] => {
   const baseKey = ["getTableBill"]
   const variantId = getVariantId(currentBill)
 
-  if (variantId) {
-    return [...baseKey, variantId]
-  }
+  // if (variantId) {
+  //   return [...baseKey, variantId]
+  // }
 
   return baseKey
 }

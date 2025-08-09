@@ -1,7 +1,8 @@
 import { memo, useCallback } from "react";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useOrderStore } from "@/components/store/useOrderData";
-import { SlidersHorizontal } from "lucide-react";
+import { Repeat, SlidersHorizontal } from "lucide-react";
+import { useGetBill } from "@/components/hooks/useBill.ts";
 
 interface TableHeaderProps {
   width?: string;
@@ -11,7 +12,11 @@ const MemoTableHeader = ({ width = "30rem" }: TableHeaderProps) => {
   const outletInfo = useBusinessData((s) => s.outletInfo);
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const setShowMoreOption = useOrderStore((s) => s.setShowMoreOption);
-
+    const { getBillCall } = useGetBill();
+  
+ const callBill = useCallback(() => {
+    getBillCall();
+  }, [getBillCall]);
   const openOrderModalHandler = useCallback(() => {
     setShowMoreOption(true);
   }, [setShowMoreOption]);
@@ -37,6 +42,7 @@ const MemoTableHeader = ({ width = "30rem" }: TableHeaderProps) => {
         </section>
 
         <section className="flex items-center space-x-6">
+          <Repeat onClick={callBill} className="text-[#8E24AA]" />
           <SlidersHorizontal
             onClick={openOrderModalHandler}
             className="w-6 h-6 text-[#8E24AA]"

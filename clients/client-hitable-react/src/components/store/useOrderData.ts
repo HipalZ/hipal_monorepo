@@ -248,7 +248,6 @@ export const useOrderStore = create<OrderState>((set, get) => ({
   openAddCoinz: false,
   setOpenAddCoinz: (open) => set({ openAddCoinz: open }),
 
-  //split bill
   isExpanded: false,
   setIsExpanded: (expanded) => set({ isExpanded: expanded }),
 

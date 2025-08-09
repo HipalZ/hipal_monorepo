@@ -16,9 +16,13 @@ import { RxCross2 } from "react-icons/rx";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { useErrorHandling } from "@/utils/helper";
-import { useUpdateBill } from "@/components/hooks/usePayments";
+import {
+  type CouponProps,
+  useUpdateBill,
+} from "@/components/hooks/usePayments";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import useTableData from "@/components/store/useTableData";
 
 const ApplyCouponzComponent = dynamic(() => import("./applyCouponzComponent"), {
   loading: () => <SkeletonLoader height={200} />,
@@ -106,6 +110,7 @@ const MemoApplyCouponz = () => {
   const addCouponMutation = useMutation({ mutationFn: addCouponz });
   const removeCouponMutation = useMutation({ mutationFn: removeCouponz });
   const removeCoinzMutation = useMutation({ mutationFn: removeCoinz });
+  const { tableName } = useTableData();
 
   const [selectedCoupon, setSelectedCouponState] = useState(null);
   const { setApplyCouponz, setIsLoading } = useCouponTemp((s) => ({
@@ -159,7 +164,14 @@ const MemoApplyCouponz = () => {
   const replacePosLoyalty = useCallback(async () => {
     setClaimedCoins(0);
     setShowAlert(false);
-    await removeCoinzMutation.mutateAsync({});
+    const payload ={
+      businessId: businessId,
+      tableName: tableName,
+    }
+    if (billData?.variantId) {
+      payload.variantId = billData.variantId;
+    }
+    await removeCouponMutation.mutateAsync(payload);
     await applyCouponLogic(selectedCoupon);
   }, [
     setClaimedCoins,
@@ -211,9 +223,15 @@ const MemoApplyCouponz = () => {
         claimedCoins,
       );
       if (outletInfo?.isPosEnabled) {
-        await addCouponMutation.mutateAsync({
+        const payload = {
           couponId: coupon?._id,
-        });
+          businessId: businessId,
+          tableName: tableName,
+        };
+        if (billData.variantId) {
+          payload.variantId = billData.variantId;
+        }
+        await addCouponMutation.mutateAsync(payload);
       }
       setClaimCouponz(discountValue);
       if (resetClaimedCoins) {
@@ -252,11 +270,26 @@ const MemoApplyCouponz = () => {
   const removeCoupon = useCallback(async () => {
     setAvailedCoupon({});
     setClaimCouponz(0);
+
     if (outletInfo?.isPosEnabled) {
-      await removeCouponMutation.mutateAsync();
+      const payload: CouponProps = {
+        businessId: businessId,
+        tableName: tableName,
+      };
+      if (billData.variantId) {
+        payload.variantId = billData.variantId;
+      }
+      await removeCouponMutation.mutateAsync(payload);
     }
     setApplyCouponz(false);
-  }, [setClaimCouponz, setAvailedCoupon, setApplyCouponz, removeCoinzMutation]);
+  }, [
+    setClaimCouponz,
+    setAvailedCoupon,
+    setApplyCouponz,
+    removeCoinzMutation,
+    billData,
+    tableName,
+  ]);
 
   // if availedCoupon from the apply couponz then calculate the discount
   useEffect(() => {

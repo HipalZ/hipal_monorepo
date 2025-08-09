@@ -2,13 +2,14 @@
 
 import { motion } from "framer-motion";
 import { Receipt, User } from "lucide-react";
-import { memo, useMemo } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { Coins, Gift } from "lucide-react";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import type { BillItem } from "@hipal/server/src/utils/reportHelper/itemType";
 
 const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
   ssr: false,
@@ -22,48 +23,50 @@ const MemoBillPage = () => {
   );
   const { showBillPage, setShowBillPage, billData } = usePaymentStore();
 
-  const calculateItemTotal = (item: any) => {
-    const dishPrice = item.dish.price;
-    const portionPrice = item.portion?.price || 0;
-    const extrasTotal =
-      item.extras?.reduce(
-        (sum: number, extra: any) => sum + extra.price * extra.quantity,
-        0,
-      ) || 0;
-    return (dishPrice + portionPrice + extrasTotal) * item.quantity;
-  };
+  const calculateItemTotal = useCallback((item: BillItem): number => {
+    const dishPrice    = item.dish?.price   ?? 0;
+    const portionPrice = item?.portion?.price ?? 0;
+
+    const extrasTotal = Array.isArray(item?.extras)
+      ? item.extras.reduce(
+          (sum, extra) => sum + (extra.price   ?? 0) * (extra.quantity ?? 0),
+          0
+        )
+      : 0;
+
+    const quantity = item.quantity ?? 0;
+
+    return (dishPrice + portionPrice + extrasTotal) * quantity;
+  }, []);
 
   // Group items by GST rate and calculate totals
   const itemsByGST = useMemo(() => {
     if (!billData?.billItems) return [];
 
-    const grouped: { [key: number]: any[] } = {};
+    // 1. Pull out the raw items array from each group:
+    const allItems = billData.billItems.flatMap((group) => group.items);
 
-    // Filter out deleted items and group by GST rate
-    billData.billItems
-      .filter((item: any) => !item.isDeleted)
-      .forEach((item: any) => {
-        const gstRate = item.dish.gst || 0;
-        if (!grouped[gstRate]) {
-          grouped[gstRate] = [];
-        }
-        grouped[gstRate].push(item);
-      });
+    // 2. Filter deleted items and group by their dish.gst:
+    const grouped: Record<number, typeof allItems> = {};
+    for (const item of allItems) {
+      if (item.isDeleted) continue;
+      const rate = item.dish?.gst ?? 0;
+      if (!grouped[rate]) grouped[rate] = [];
+      grouped[rate].push(item);
+    }
 
-    // Convert to array with calculated totals
+    // 3. Build the array of { gst, items, subTotal, totalGst }:
     return Object.entries(grouped)
       .map(([gstRate, items]) => {
         const subTotal = items.reduce(
-          (sum, item) => sum + calculateItemTotal(item),
+          (sum, i) => sum + calculateItemTotal(i),
           0,
         );
-        const totalGst = (subTotal * Number(gstRate)) / 100;
-
         return {
           gst: Number(gstRate),
           items,
           subTotal,
-          totalGst,
+          totalGst: (subTotal * Number(gstRate)) / 100,
         };
       })
       .sort((a, b) => a.gst - b.gst);
@@ -357,7 +360,7 @@ const MemoBillPage = () => {
                   <span>Loyalty Coins</span>
                   <span>
                     -{currencySymbol}
-                    {billData?.claimedCoins.toFixed(2)}
+                    {billData?.claimedCoins?.toFixed(2)}
                   </span>
                 </div>
               ) : null}
@@ -367,7 +370,7 @@ const MemoBillPage = () => {
                   <span>Coupon Discount</span>
                   <span>
                     -{currencySymbol}
-                    {billData?.couponDiscount.toFixed(2)}
+                    {billData?.couponDiscount?.toFixed(2)}
                   </span>
                 </div>
               ) : null}
@@ -377,7 +380,7 @@ const MemoBillPage = () => {
                   <span>Service Charge</span>
                   <span>
                     {currencySymbol}
-                    {billData?.serviceCharge.toFixed(2)}
+                    {billData?.serviceCharge?.toFixed(2)}
                   </span>
                 </div>
               ) : null}
@@ -387,7 +390,7 @@ const MemoBillPage = () => {
                   <span>Discount</span>
                   <span>
                     -{currencySymbol}
-                    {billData?.discount.toFixed(2)}
+                    {billData?.discount?.toFixed(2)}
                   </span>
                 </div>
               ) : null}
@@ -397,7 +400,7 @@ const MemoBillPage = () => {
                   <span>Tips</span>
                   <span>
                     {currencySymbol}
-                    {billData?.tips.toFixed(2)}
+                    {billData?.tips?.toFixed(2)}
                   </span>
                 </div>
               ) : null}

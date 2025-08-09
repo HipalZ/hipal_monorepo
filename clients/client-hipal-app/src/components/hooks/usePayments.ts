@@ -133,10 +133,7 @@ export const usePayments = () => {
       const orderId = data?.data as string;
       const coinsObtained =
         finalAmount * (loyaltySetting?.setCashBackPercentage / 100);
-      console.log("coinsObtained", coinsObtained);
-      console.log("claimedCoins", claimedCoins);
       const existingCoins = claimedCoins ? userCoinz - claimedCoins : userCoinz;
-      console.log("existingCoins", existingCoins);
       let finalReward = 0;
       if (
         outletInfo?.isPosEnabled &&
@@ -236,25 +233,31 @@ export const usePayments = () => {
   // create order for razorpay
   const createRazorPayOrder = useCallback(
     async (total: number): Promise<string> => {
+
+      const payload= {
+        businessId: businessId || "",
+        total: finalAmount,
+        currency: "INR",
+        claimedCoins: outletInfo?.isPosEnabled
+          ? billData?.claimedCoins
+          : claimedCoins || claimCouponz,
+        billValue: initialTotal,
+        userId: userDetails?._id,
+        tips: outletInfo?.isPosEnabled ? billData?.tips : tips,
+        tableName: tableName,
+        couponId: availedCoupon?._id,
+        ...(channelId && { channelId }),
+        cashbackAvailable: availedCoupon?.cashbackAvailable,
+      }
+      if (billData?.variantId) {
+        payload.variantId = billData.variantId;
+      }
+
       const res = await apiRpc.payments.createOrder[":merchantId"].$post({
         param: {
           merchantId: merchantDetails.razorpayMerchantId,
         },
-        json: {
-          businessId: businessId || "",
-          total: finalAmount,
-          currency: "INR",
-          claimedCoins: outletInfo?.isPosEnabled
-            ? billData?.claimedCoins
-            : claimedCoins || claimCouponz,
-          billValue: initialTotal,
-          userId: userDetails?._id,
-          tips: outletInfo?.isPosEnabled ? billData?.tips : tips,
-          tableName: tableName,
-          couponId: availedCoupon?._id,
-          ...(channelId && { channelId }),
-          cashbackAvailable: availedCoupon?.cashbackAvailable,
-        },
+        json: payload,
       });
       if (!res.ok) {
         setIsLoading(false);
@@ -445,23 +448,30 @@ export const usePayments = () => {
         "Please wait for the previous transaction to complete",
       );
     }
+    console.log("handleCreateOfflineOrder called",billData);
     setIsLoading(true);
+
+    const payload ={
+      businessId: businessId || "",
+      total: finalAmount,
+      claimedCoins: outletInfo?.isPosEnabled
+        ? billData?.claimedCoins
+        : claimedCoins || claimCouponz,
+      billValue: outletInfo?.isPosEnabled ? billData?.subTotal : initialTotal,
+      userId: userDetails?._id,
+      tips: outletInfo?.isPosEnabled ? billData?.tips : tips,
+      currency: "INR",
+      tableName: tableName,
+      couponId: availedCoupon?._id,
+      ...(channelId && { channelId }),
+      cashbackAvailable: availedCoupon?.cashbackAvailable,
+    }
+    if (billData?.variantId) {
+      payload.variantId = billData.variantId;
+    }
+
     const res = await apiRpc.payments.createOfflineOrder.$post({
-      json: {
-        businessId: businessId || "",
-        total: finalAmount,
-        claimedCoins: outletInfo?.isPosEnabled
-          ? billData?.claimedCoins
-          : claimedCoins || claimCouponz,
-        billValue: outletInfo?.isPosEnabled ? billData?.subTotal : initialTotal,
-        userId: userDetails?._id,
-        tips: outletInfo?.isPosEnabled ? billData?.tips : tips,
-        currency: "INR",
-        tableName: tableName,
-        couponId: availedCoupon?._id,
-        ...(channelId && { channelId }),
-        cashbackAvailable: availedCoupon?.cashbackAvailable,
-      },
+      json:payload
     });
     if (res.status === 401) {
       setIsLoading(false);
@@ -597,12 +607,45 @@ export const useGetBill = () => {
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const tableName = useTableData((state) => state.tableName);
   const userDetails = useLogin((state) => state.userDetails);
-  const setClaimedCoins = usePaymentStore((state) => state.setClaimedCoins);
   const setEditBillModal = usePaymentStore((state) => state.setEditBillModal);
   const setBillValue = usePaymentStore((state) => state.setBillValue);
+  const setClaimedCoins = usePaymentStore((state) => state.setClaimedCoins);
   const setBillData = usePaymentStore((state) => state.setBillData);
-  const selectedMode = usePaymentStore((state) => state.selectedMode);
+  const setIsBillSplit = usePaymentStore((state) => state.setIsBillSplit);
   const setSelectedTip = usePaymentStore((state) => state.setSelectedTip);
+  const selectedMode = usePaymentStore((state) => state.selectedMode);
+  const selectedBill = usePaymentStore((state) => state.selectedBill);
+
+  const normalize = (v?: string | number | null) => (v ?? "").toString().trim();
+
+  function pickSelectedVariantFromPayment(
+    payment: BillData | BillData[],
+    selected?: BillData | null,
+  ): BillData | null {
+    if (!payment) return null;
+
+    // Not a split bill
+    if (!Array.isArray(payment)) return payment;
+
+    // No selection yet → pick first
+    if (!selected) return payment[0] ?? null;
+
+    const selVariantId = normalize(selected.variantId);
+    const selBillId = normalize(selected.billId);
+    const selVariantNum = selected.variantName;
+
+    const match =
+      payment.find(
+        (p) => selVariantId && normalize(p.variantId) === selVariantId,
+      ) ??
+      payment.find((p) => selBillId && normalize(p.billId) === selBillId) ??
+      payment.find(
+        (p) => selVariantNum != null && p.variantName === selVariantNum,
+      );
+
+    return match ?? payment[0] ?? null;
+  }
+
   const getBill = async () => {
     const response = await apiRpc.pos.get_bill.$get({
       query: {
@@ -621,10 +664,27 @@ export const useGetBill = () => {
 
     const res = await response.json();
     const payment = res?.data as BillData;
-    setBillData(payment);
-    setBillValue(payment?.total);
-    setClaimedCoins(payment?.claimedCoins);
-    setSelectedTip(payment?.tips?.toString() || "");
+    const isSplitBill = Array.isArray(payment);
+    if (selectedBill) {
+      const picked = pickSelectedVariantFromPayment(payment, selectedBill);
+      setBillData(picked);
+      setBillValue(picked?.total);
+      setClaimedCoins(picked?.claimedCoins);
+      setSelectedTip(picked?.tips?.toString() || "");
+      return picked;
+    } else if (!selectedBill && isSplitBill) {
+      setIsBillSplit(isSplitBill);
+      setBillData(payment);
+      setBillValue(payment?.total);
+      setClaimedCoins(payment?.claimedCoins);
+      setSelectedTip(payment?.tips?.toString() || "");
+    } else if (!selectedBill && !isSplitBill) {
+      setIsBillSplit(isSplitBill);
+      setBillData(payment);
+      setBillValue(payment?.total);
+      setClaimedCoins(payment?.claimedCoins);
+      setSelectedTip(payment?.tips?.toString() || "");
+    }
     if (payment?.total === 0) {
       setEditBillModal(true);
     }
@@ -673,6 +733,7 @@ export const useBillSummary = () => {
   const { addTips, removeTips } = useUpdateBill();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const removeTipsMutation = useMutation({ mutationFn: removeTips });
+  const billData = usePaymentStore((state) => state.billData);
   const addTipsMutation = useMutation({ mutationFn: addTips });
   const {
     setIsTipActive,
@@ -683,8 +744,15 @@ export const useBillSummary = () => {
     setShowInput,
   } = usePaymentStore();
   const clearTheTip = useCallback(async () => {
+    const payload = {
+      tips: 0,
+    };
+    if (billData.variantId) {
+      payload.variantId = billData.variantId;
+    }
+
     if (outletInfo?.isPosEnabled) {
-      await removeTipsMutation.mutateAsync();
+      await removeTipsMutation.mutateAsync(payload);
     }
     setSelectedTip("");
     setCustomTip("");
@@ -698,6 +766,7 @@ export const useBillSummary = () => {
     removeTipsMutation,
     outletInfo?.isPosEnabled,
   ]);
+  //// addd tips
 
   const handleTipSelect = useCallback(
     async (tip: string) => {
@@ -711,10 +780,15 @@ export const useBillSummary = () => {
       setShowInput(false);
       setCustomTip("");
       setTips(Number(tip));
+
       if (outletInfo?.isPosEnabled) {
-        await addTipsMutation.mutateAsync({
+        const payload = {
           tips: Number(tip),
-        });
+        };
+        if (billData.variantId) {
+          payload.variantId = billData.variantId;
+        }
+        await addTipsMutation.mutateAsync(payload);
       }
     },
     [
@@ -739,9 +813,13 @@ export const useBillSummary = () => {
   const handleSaveTip = useCallback(async () => {
     setShowInput(false);
     if (outletInfo?.isPosEnabled) {
-      await addTipsMutation.mutateAsync({
+      const payload = {
         tips: Number(tips),
-      });
+      };
+      if (billData.variantId) {
+        payload.variantId = billData.variantId;
+      }
+      await addTipsMutation.mutateAsync(payload);
     }
   }, [setShowInput, addTipsMutation, tips, outletInfo?.isPosEnabled]);
 
@@ -937,20 +1015,22 @@ export const usePlaceOrder = () => {
   return { placeOrder };
 };
 
+export interface CouponProps {
+  businessId: string;
+  tableName: string;
+  variantId?: string;
+}
+
 export const useUpdateBill = () => {
   const queryClient = useQueryClient();
   const pathName = usePathname();
   const { loyaltySetting } = useLoyaltyData();
   const { tableName } = useTableData();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
+
   const addCoins = async (data: OptionalPropsData) => {
-    const { coinz } = data;
     const response = await apiRpc.pos.add_coins.$post({
-      json: {
-        businessId: loyaltySetting.businessId,
-        tableName,
-        value: coinz,
-      },
+      json: data,
     });
     const res = await response.json();
     if (response.status === 200 || response.status === 201) {
@@ -970,13 +1050,8 @@ export const useUpdateBill = () => {
   };
 
   const addCouponz = async (data: OptionalPropsData) => {
-    const { couponId } = data;
     const response = await apiRpc.pos.add_coupon.$post({
-      json: {
-        businessId: loyaltySetting.businessId,
-        tableName,
-        couponId,
-      },
+      json: data,
     });
     const res = await response.json();
     if (response.status === 200 || response.status === 201) {
@@ -995,12 +1070,9 @@ export const useUpdateBill = () => {
     return res;
   };
 
-  const removeCoinz = async () => {
+  const removeCoinz = async (payload) => {
     const response = await apiRpc.pos.remove_coins.$post({
-      json: {
-        businessId: loyaltySetting.businessId,
-        tableName,
-      },
+      json: payload,
     });
     const res = await response.json();
     if (response.status === 200 || response.status === 201) {
@@ -1020,12 +1092,9 @@ export const useUpdateBill = () => {
     return res;
   };
 
-  const removeCouponz = async () => {
+  const removeCouponz = async (payload: CouponProps) => {
     const response = await apiRpc.pos.remove_coupon.$post({
-      json: {
-        businessId: loyaltySetting.businessId,
-        tableName,
-      },
+      json: payload,
     });
     const res = await response.json();
     if (response.status === 200 || response.status === 201) {
@@ -1046,13 +1115,17 @@ export const useUpdateBill = () => {
   };
 
   const addTips = async (data: OptionalPropsData) => {
-    const { tips } = data;
+    const { tips, variantId } = data;
+    const payload = {
+      value: tips,
+      businessId: loyaltySetting.businessId,
+      tableName,
+    };
+    if (variantId) {
+      payload.variantId = variantId;
+    }
     const response = await apiRpc.pos.add_tip.$post({
-      json: {
-        businessId: loyaltySetting.businessId,
-        tableName,
-        value: tips,
-      },
+      json: payload,
     });
     const res = await response.json();
     if (response.status === 200 || response.status === 201) {
@@ -1071,11 +1144,12 @@ export const useUpdateBill = () => {
     return res;
   };
 
-  const removeTips = async () => {
+  const removeTips = async (payload) => {
     const response = await apiRpc.pos.remove_tip.$post({
       json: {
         businessId: loyaltySetting.businessId,
         tableName,
+        ...payload,
       },
     });
     const res = await response.json();

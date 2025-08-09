@@ -105,7 +105,7 @@ const MemoBillItemsList = ({
             <div className="bg-gray-50 p-2 rounded-md border">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-700">
-                  Subtotal (GST {billGroup.gst}%)
+                  Subtotal
                 </span>
                 <span className="font-medium">
                   ₹{Number(billGroup.subTotal).toFixed(2)}

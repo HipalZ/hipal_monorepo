@@ -73,10 +73,14 @@ const MemoGetBill = () => {
 
   // Memoized values
   const isSplitBill = useMemo(() => Array.isArray(billData), [billData]);
-  const currentBill = useMemo(
-    () => selectedBill || (isSplitBill ? null : billData),
-    [selectedBill, isSplitBill, billData],
-  );
+
+const currentBill = useMemo(() => {
+  const selectedBillId = selectedBill?.variantId;
+  if (Array.isArray(billData)) {
+    return billData.find(b => b.variantId === selectedBillId) ?? null;
+  }
+  return billData as IBillData;
+}, [billData, selectedBill]);
 
   const allItems = useMemo(() => {
     if (!currentBill?.billItems) return [];
@@ -213,6 +217,7 @@ const MemoGetBill = () => {
     <>
       {!showqr && (
         <Card
+        key={currentBill.id}
           className={cn(
             "max-w-lg py-[5rem] md:py-[8rem] h-[90dvh] mx-auto mb-8 border border-none shadow-none",
             currentBill.isPaid
