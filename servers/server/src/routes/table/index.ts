@@ -1432,7 +1432,9 @@ const tableRouter = new Hono()
             err: false,
             data: {
               qrBillId: billId,
-              path: `https://hipal-test.hipalz.com/${customLink?.customLink}/posPayment?orderId=${billId}`,
+              path: `https://hipal-test.hipalz.com/${
+                customLink?.customLink
+              }/posPayment?orderId=${variantId ? variantId : billId}`,
             },
           },
           200,

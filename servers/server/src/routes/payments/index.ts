@@ -725,7 +725,7 @@ const paymentsRouter = new Hono()
                 return respond(c, "Order not created", true, 400, {});
 
               return respond(c, "Order created successfully", false, 200, {
-                orderId: response.id,
+                order_id: response.id,
               });
             });
           }
@@ -2181,7 +2181,7 @@ const paymentsRouter = new Hono()
                     billValue: tableSession?.subTotal,
                     mode: payload.payment.entity.method,
                     userId: getOrder?.userId,
-                    order_id: getOrder?._id,
+                    order_id: new ObjectId(),
                     paymentMode: "online",
                     tableName: getOrder?.tableName,
                     claimedCoins: tableSession?.claimedCoins,
@@ -3531,7 +3531,7 @@ const paymentsRouter = new Hono()
                     [
                       {
                         businessId: alert.businessId,
-                        order_id: order?._id,
+                        order_id: new ObjectId(),
                         total:
                           paymentMode?.name === "npc" ||
                           paymentMode?.name === "complementary"
@@ -3737,6 +3737,11 @@ const paymentsRouter = new Hono()
                     );
                   }
                 }
+                const updateAlert = await PaymentAlert.findByIdAndUpdate(
+                  alertId,
+                  { isAccepted: true, comment, waiterName },
+                  { new: true, session },
+                );
 
                 return c.json({
                   message: "Order accepted successfully",
