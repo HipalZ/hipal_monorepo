@@ -2173,38 +2173,33 @@ const paymentsRouter = new Hono()
                 getCashBack = cashBackCoins;
               }
 
-              const createPayment = await Payment.create(
-                [
-                  {
-                    businessId: getOrder?.businessId,
-                    total: tableSession?.total,
-                    billValue: tableSession?.subTotal,
-                    mode: payload.payment.entity.method,
-                    userId: getOrder?.userId,
-                    order_id: new ObjectId(),
-                    paymentMode: "online",
-                    tableName: getOrder?.tableName,
-                    claimedCoins: tableSession?.claimedCoins,
-                    tips: tableSession?.tips,
-                    razorpayPaymentId: nanoid(10),
-                    razorpayOrderId: nanoid(10),
-                    razorpayAcquirerData: payload.payment.entity.acquirer_data,
-                    razorpayEventId: nanoid(10),
-                    couponId: tableSession?.couponId,
-                    earnCoins: getCashBack,
-                    date: Date.now(),
-                    tax: tableSession?.gst,
-                    serviceCharge: tableSession?.serviceCharge,
-                    billId: tableSession?._id.toString(),
-                    settleType: tableSession?.settleType || "PAYMENT_GATEWAY",
-                    discount: tableSession?.discount,
-                    couponDiscount: tableSession?.couponDiscount,
-                    billItems: tableSession?.items || [],
-                    isSplit: true,
-                  },
-                ],
-                { session },
-              );
+              const createPayment = await Payment.create({
+                businessId: getOrder?.businessId,
+                total: tableSession?.total,
+                billValue: tableSession?.subTotal,
+                mode: payload.payment.entity.method,
+                userId: getOrder?.userId,
+                order_id: new ObjectId(),
+                paymentMode: "online",
+                tableName: getOrder?.tableName,
+                claimedCoins: tableSession?.claimedCoins,
+                tips: tableSession?.tips,
+                razorpayPaymentId: nanoid(10),
+                razorpayOrderId: nanoid(10),
+                razorpayAcquirerData: payload.payment.entity.acquirer_data,
+                razorpayEventId: nanoid(10),
+                couponId: tableSession?.couponId,
+                earnCoins: getCashBack,
+                date: Date.now(),
+                tax: tableSession?.gst,
+                serviceCharge: tableSession?.serviceCharge,
+                billId: tableSession?._id.toString(),
+                settleType: tableSession?.settleType || "PAYMENT_GATEWAY",
+                discount: tableSession?.discount,
+                couponDiscount: tableSession?.couponDiscount,
+                billItems: tableSession?.items || [],
+                isSplit: true,
+              });
 
               if (pos) {
                 const pay = {
@@ -3527,63 +3522,57 @@ const paymentsRouter = new Hono()
                       }
                     }
                   }
-                  const createPayment = await Payment.create(
-                    [
-                      {
-                        businessId: alert.businessId,
-                        order_id: new ObjectId(),
-                        total:
-                          paymentMode?.name === "npc" ||
-                          paymentMode?.name === "complementary"
-                            ? 0
-                            : tableSession?.total,
-                        mode:
-                          settleModes.length > 1 ? "split" : paymentMode?.name,
-                        status: "SUCCESS",
-                        paymentMode:
-                          settleModes.length > 1 ? "split" : paymentMode?.name,
-                        userId: order?.userId,
+                  const createPayment = await Payment.create({
+                    businessId: alert.businessId,
+                    order_id: new ObjectId(),
+                    total:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : tableSession?.total,
+                    mode: settleModes.length > 1 ? "split" : paymentMode?.name,
+                    status: "SUCCESS",
+                    paymentMode:
+                      settleModes.length > 1 ? "split" : paymentMode?.name,
+                    userId: order?.userId,
 
-                        claimedCoins:
-                          paymentMode?.name === "npc" ||
-                          paymentMode?.name === "complementary"
-                            ? 0
-                            : tableSession?.claimedCoins,
-                        billValue: tableSession?.subTotal,
-                        tips: tableSession?.tips,
-                        tableName: tableSession?.tableName,
-                        earnCoins:
-                          paymentMode?.name === "npc" ||
-                          paymentMode?.name === "complementary"
-                            ? 0
-                            : 0,
-                        razorpayEventId: nanoid(15),
-                        razorpayOrderId: nanoid(15),
-                        razorpayPaymentId: nanoid(15),
-                        couponId: order?.couponId,
-                        channelId: order?.channelId,
-                        billId: tableSession?._id.toString(),
-                        tax:
-                          paymentMode?.name === "npc" ||
-                          paymentMode?.name === "complementary"
-                            ? 0
-                            : tableSession?.gst,
-                        serviceCharge:
-                          paymentMode?.name === "npc" ||
-                          paymentMode?.name === "complementary"
-                            ? 0
-                            : tableSession?.serviceCharge,
-                        splitModes: settleModes,
-                        waiterName,
-                        date: Date.now(),
-                        discount: tableSession?.discount,
-                        couponDiscount: tableSession?.couponDiscount,
-                        billItems: tableSession?.items || [],
-                        isSplit: true,
-                      },
-                    ],
-                    { session },
-                  );
+                    claimedCoins:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : tableSession?.claimedCoins,
+                    billValue: tableSession?.subTotal,
+                    tips: tableSession?.tips,
+                    tableName: tableSession?.tableName,
+                    earnCoins:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : 0,
+                    razorpayEventId: nanoid(15),
+                    razorpayOrderId: nanoid(15),
+                    razorpayPaymentId: nanoid(15),
+                    couponId: order?.couponId,
+                    channelId: order?.channelId,
+                    billId: tableSession?._id.toString(),
+                    tax:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : tableSession?.gst,
+                    serviceCharge:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : tableSession?.serviceCharge,
+                    splitModes: settleModes,
+                    waiterName,
+                    date: Date.now(),
+                    discount: tableSession?.discount,
+                    couponDiscount: tableSession?.couponDiscount,
+                    billItems: tableSession?.items || [],
+                    isSplit: true,
+                  });
 
                   if (isHavePos) {
                     const payload = {
@@ -3737,11 +3726,6 @@ const paymentsRouter = new Hono()
                     );
                   }
                 }
-                const updateAlert = await PaymentAlert.findByIdAndUpdate(
-                  alertId,
-                  { isAccepted: true, comment, waiterName },
-                  { new: true, session },
-                );
 
                 return c.json({
                   message: "Order accepted successfully",
