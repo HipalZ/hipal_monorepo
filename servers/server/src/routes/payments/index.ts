@@ -2138,7 +2138,10 @@ const paymentsRouter = new Hono()
               let getCashBack = 0;
 
               if (payload?.payment?.entity?.notes?.loyaltyId) {
-                if (claimCoins > 0) {
+                if (
+                  claimCoins > 0 &&
+                  (tableSession?.customerIds?.length ?? 0) > 0
+                ) {
                   await removeCoins(
                     claimCoins,
                     getOrder.tableName,
@@ -3450,7 +3453,8 @@ const paymentsRouter = new Hono()
 
                     if (
                       existingLoyalty?.loyaltyId &&
-                      tableSession.claimedCoins > 0
+                      tableSession.claimedCoins > 0 &&
+                      (tableSession.customerIds?.length ?? 0) > 0
                     ) {
                       await removeCoins(
                         Number(tableSession.claimedCoins),

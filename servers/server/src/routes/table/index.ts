@@ -724,8 +724,6 @@ const tableRouter = new Hono()
             );
           }
           if (tableSession?.variantsCounts === 1) {
-            const npcUser = await NpcUser.findById(npcUserId);
-            const uniqueOrderId = nanoid(15);
             await KotOrder.updateMany(
               {
                 tableName: table?.name,
@@ -761,7 +759,10 @@ const tableRouter = new Hono()
               Number(tableSession.subTotal),
               Number(tableSession.claimedCoins),
             );
-            if (tableSession?.claimedCoins > 0) {
+            if (
+              tableSession?.claimedCoins > 0 &&
+              (tableSession?.customerIds ?? []).length > 0
+            ) {
               if (
                 paymentMode?.name !== "complementary" &&
                 paymentMode?.name !== "npc"
@@ -771,7 +772,7 @@ const tableRouter = new Hono()
                   tableSession?.tableName,
                   businessLoyalty?.loyaltyId?.toString() || "",
                   tableSession?._id.toString(),
-                  tableSession?.customerIds?.[0].toString() || "",
+                  tableSession?.customerIds?.[0].toString() || captainId,
                   session,
                 );
               }
