@@ -2110,6 +2110,7 @@ const paymentsRouter = new Hono()
                     variantsCounts: -1,
                   },
                 },
+                { session },
               );
 
               await QrBill.findOneAndUpdate(
@@ -3425,6 +3426,7 @@ const paymentsRouter = new Hono()
                         variantsCounts: -1,
                       },
                     },
+                    { session },
                   );
 
                   const updateAlert = await PaymentAlert.findByIdAndUpdate(
