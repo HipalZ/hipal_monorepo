@@ -27,7 +27,7 @@ import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { Hono } from "hono";
-import { type ClientSession, ObjectId } from "mongodb";
+import { type ClientSession } from "mongodb";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
@@ -754,58 +754,34 @@ const tableRouter = new Hono()
                 }
               }
             }
-            const saveOrder = await Order.create({
-              total:
-                paymentMode?.name === "npc" ||
-                paymentMode?.name === "complementary"
-                  ? 0
-                  : tableSession?.total || 0,
-              currency: "INR",
-              receipt: uniqueOrderId,
-              userId:
-                paymentMode?.name === "npc"
-                  ? npcUser?.userId
-                  : tableSession?.customerIds?.[0] || captainId,
-              claimedCoins: tableSession?.claimedCoins || 0,
-              tableName: table?.name,
-              tips: tableSession?.tips || 0,
-              billValue: tableSession?.subTotal || 0,
-              businessId: table?.businessId,
-              order_id: uniqueOrderId,
-              discount: tableSession?.discount || 0,
-              couponDiscount: tableSession?.couponDiscount || 0,
-              gst: tableSession?.gst || 0,
-
-              date: Date.now(),
-            });
 
             let finalCashBack = 0;
             const cashBack = await calculatedCashbackCoins(
-              saveOrder.businessId.toString(),
-              Number(saveOrder.billValue),
-              Number(saveOrder.claimedCoins),
+              tableSession.businessId.toString(),
+              Number(tableSession.subTotal),
+              Number(tableSession.claimedCoins),
             );
-            if (saveOrder?.claimedCoins > 0) {
+            if (tableSession?.claimedCoins > 0) {
               if (
                 paymentMode?.name !== "complementary" &&
                 paymentMode?.name !== "npc"
               ) {
                 await removeCoins(
-                  Number(saveOrder?.claimedCoins),
-                  saveOrder?.tableName,
+                  Number(tableSession?.claimedCoins),
+                  tableSession?.tableName,
                   businessLoyalty?.loyaltyId?.toString() || "",
-                  saveOrder?._id.toString(),
-                  saveOrder?.userId.toString(),
+                  tableSession?._id.toString(),
+                  tableSession?.customerIds?.[0].toString() || "",
                   session,
                 );
               }
             }
             finalCashBack = await addCoins(
               cashBack,
-              saveOrder?.userId.toString(),
-              saveOrder?._id.toString(),
-              saveOrder?.tableName || "",
-              saveOrder?.businessId.toString(),
+              tableSession?.customerIds?.[0].toString() || "",
+              tableSession?._id.toString(),
+              tableSession?.tableName || "",
+              tableSession?.businessId.toString(),
 
               businessLoyalty?.loyaltyId.toString() || "",
 
@@ -819,47 +795,6 @@ const tableRouter = new Hono()
               pin: tableSession?.pin,
               tableNo: table?.name,
             };
-
-            const createPayment = await Payment.create({
-              businessId: table?.businessId,
-              order_id: new ObjectId(),
-              total: saveOrder.total,
-              mode: settleModes.length > 1 ? "split" : paymentMode?.name,
-              status: "SUCCESS",
-              paymentMode: settleModes.length > 1 ? "split" : paymentMode?.name,
-              userId: saveOrder.userId,
-              claimedCoins: saveOrder.claimedCoins,
-              billValue: saveOrder.billValue,
-              tips: saveOrder.tips,
-              tableName: saveOrder.tableName,
-              earnCoins: finalCashBack,
-              razorpayEventId: nanoid(15),
-              razorpayOrderId: nanoid(15),
-              razorpayPaymentId: nanoid(15),
-              settleType: "NORMAL_SETTLE",
-              comment: "NORMAL SETTLE",
-              posBillId: tableSession?._id,
-              tax:
-                paymentMode?.name === "npc" ||
-                paymentMode?.name === "complementary"
-                  ? 0
-                  : tableSession?.gst,
-              serviceCharge:
-                paymentMode?.name === "npc" ||
-                paymentMode?.name === "complementary"
-                  ? 0
-                  : tableSession?.serviceCharge,
-
-              waiterName: captain?.name,
-              splitModes: settleModes,
-              date: Date.now(),
-              discount: tableSession?.discount,
-              couponDiscount: tableSession?.couponDiscount,
-              billId: tableSession?._id.toString(),
-              billItems: tableSession?.items || [],
-              pin: tableSession?.pin,
-              isSplit: true,
-            });
 
             await Table.findByIdAndUpdate(
               tableId,
@@ -910,7 +845,7 @@ const tableRouter = new Hono()
                       access_token: pos.authToken,
                       restID: pos.restId,
                       bill_request_id,
-                      amount_paid: saveOrder.total,
+                      amount_paid: tableSession?.total || 0,
                       pin: tableSession?.pin,
                     },
                   );
@@ -919,8 +854,8 @@ const tableRouter = new Hono()
                   if (settleData.success === "0") {
                     await UnsettleTable.findOneAndUpdate(
                       {
-                        businessId: saveOrder.businessId,
-                        tableName: saveOrder.tableName,
+                        businessId: tableSession?.businessId,
+                        tableName: tableSession?.tableName,
                         pin: tableSession?.pin,
                       },
                       {
@@ -930,14 +865,14 @@ const tableRouter = new Hono()
                         pin: tableSession?.pin,
                         restId: pos.restId,
                         date: Date.now(),
-                        total: saveOrder.total,
+                        total: tableSession?.total || 0,
                       },
                       { new: true, upsert: true },
                     );
                   }
 
                   const unsettleTable = await UnsettleTable.find({
-                    businessId: saveOrder?.businessId,
+                    businessId: tableSession?.businessId,
                     restId: pos.restId,
                     sync: false,
                   });
