@@ -12,8 +12,8 @@ export const useBillActions = (currentBill: IBillData | null) => {
   const { businessId } = useParams();
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const { captainData: userData } = useHiClientZ();
-  const { removingCoinz } = useRemoveCoinz();
-  const { removingCoupon } = useRemoveCoupon();
+  const { removingCoinz } = useRemoveCoinz(currentBill);
+  const { removingCoupon } = useRemoveCoupon(currentBill);
   const setActiveModal = useOrderStore((s) => s.setActiveModal);
   const setShowMoreOption = useOrderStore((s) => s.setShowMoreOption);
 
