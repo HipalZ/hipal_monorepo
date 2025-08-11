@@ -135,9 +135,8 @@ async function saveSplitBillSessionVariant(
   session: ClientSession,
 ) {
   const checkAlreadyExist = await SplitBillTableSession.exists({
-    businessId: splitBillTableSession.businessId,
-    tableName: splitBillTableSession.tableName,
     variantName: splitBillTableSession.variantName,
+    originTableSessionId: splitBillTableSession.originTableSessionId,
   });
 
   if (checkAlreadyExist) {

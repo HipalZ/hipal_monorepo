@@ -725,7 +725,7 @@ const paymentsRouter = new Hono()
                 return respond(c, "Order not created", true, 400, {});
 
               return respond(c, "Order created successfully", false, 200, {
-                orderId: response.id,
+                order_id: response.id,
               });
             });
           }
@@ -2110,6 +2110,7 @@ const paymentsRouter = new Hono()
                     variantsCounts: -1,
                   },
                 },
+                { session },
               );
 
               await QrBill.findOneAndUpdate(
@@ -2137,7 +2138,10 @@ const paymentsRouter = new Hono()
               let getCashBack = 0;
 
               if (payload?.payment?.entity?.notes?.loyaltyId) {
-                if (claimCoins > 0) {
+                if (
+                  claimCoins > 0 &&
+                  (tableSession?.customerIds?.length ?? 0) > 0
+                ) {
                   await removeCoins(
                     claimCoins,
                     getOrder.tableName,
@@ -2172,39 +2176,6 @@ const paymentsRouter = new Hono()
 
                 getCashBack = cashBackCoins;
               }
-
-              const createPayment = await Payment.create(
-                [
-                  {
-                    businessId: getOrder?.businessId,
-                    total: tableSession?.total,
-                    billValue: tableSession?.subTotal,
-                    mode: payload.payment.entity.method,
-                    userId: getOrder?.userId,
-                    order_id: getOrder?._id,
-                    paymentMode: "online",
-                    tableName: getOrder?.tableName,
-                    claimedCoins: tableSession?.claimedCoins,
-                    tips: tableSession?.tips,
-                    razorpayPaymentId: nanoid(10),
-                    razorpayOrderId: nanoid(10),
-                    razorpayAcquirerData: payload.payment.entity.acquirer_data,
-                    razorpayEventId: nanoid(10),
-                    couponId: tableSession?.couponId,
-                    earnCoins: getCashBack,
-                    date: Date.now(),
-                    tax: tableSession?.gst,
-                    serviceCharge: tableSession?.serviceCharge,
-                    billId: tableSession?._id.toString(),
-                    settleType: tableSession?.settleType || "PAYMENT_GATEWAY",
-                    discount: tableSession?.discount,
-                    couponDiscount: tableSession?.couponDiscount,
-                    billItems: tableSession?.items || [],
-                    isSplit: true,
-                  },
-                ],
-                { session },
-              );
 
               if (pos) {
                 const pay = {
@@ -3458,6 +3429,7 @@ const paymentsRouter = new Hono()
                         variantsCounts: -1,
                       },
                     },
+                    { session },
                   );
 
                   const updateAlert = await PaymentAlert.findByIdAndUpdate(
@@ -3481,7 +3453,8 @@ const paymentsRouter = new Hono()
 
                     if (
                       existingLoyalty?.loyaltyId &&
-                      tableSession.claimedCoins > 0
+                      tableSession.claimedCoins > 0 &&
+                      (tableSession.customerIds?.length ?? 0) > 0
                     ) {
                       await removeCoins(
                         Number(tableSession.claimedCoins),
@@ -3527,63 +3500,6 @@ const paymentsRouter = new Hono()
                       }
                     }
                   }
-                  const createPayment = await Payment.create(
-                    [
-                      {
-                        businessId: alert.businessId,
-                        order_id: order?._id,
-                        total:
-                          paymentMode?.name === "npc" ||
-                          paymentMode?.name === "complementary"
-                            ? 0
-                            : tableSession?.total,
-                        mode:
-                          settleModes.length > 1 ? "split" : paymentMode?.name,
-                        status: "SUCCESS",
-                        paymentMode:
-                          settleModes.length > 1 ? "split" : paymentMode?.name,
-                        userId: order?.userId,
-
-                        claimedCoins:
-                          paymentMode?.name === "npc" ||
-                          paymentMode?.name === "complementary"
-                            ? 0
-                            : tableSession?.claimedCoins,
-                        billValue: tableSession?.subTotal,
-                        tips: tableSession?.tips,
-                        tableName: tableSession?.tableName,
-                        earnCoins:
-                          paymentMode?.name === "npc" ||
-                          paymentMode?.name === "complementary"
-                            ? 0
-                            : 0,
-                        razorpayEventId: nanoid(15),
-                        razorpayOrderId: nanoid(15),
-                        razorpayPaymentId: nanoid(15),
-                        couponId: order?.couponId,
-                        channelId: order?.channelId,
-                        billId: tableSession?._id.toString(),
-                        tax:
-                          paymentMode?.name === "npc" ||
-                          paymentMode?.name === "complementary"
-                            ? 0
-                            : tableSession?.gst,
-                        serviceCharge:
-                          paymentMode?.name === "npc" ||
-                          paymentMode?.name === "complementary"
-                            ? 0
-                            : tableSession?.serviceCharge,
-                        splitModes: settleModes,
-                        waiterName,
-                        date: Date.now(),
-                        discount: tableSession?.discount,
-                        couponDiscount: tableSession?.couponDiscount,
-                        billItems: tableSession?.items || [],
-                        isSplit: true,
-                      },
-                    ],
-                    { session },
-                  );
 
                   if (isHavePos) {
                     const payload = {

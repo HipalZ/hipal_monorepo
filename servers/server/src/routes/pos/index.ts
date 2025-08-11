@@ -500,15 +500,10 @@ const posRouter = new Hono()
         tableSessionData = await UserSession.findById(orderId);
 
         if (!tableSessionData) {
-          return respond(c, "Session not found", true, 404, {});
-        }
-
-        if (tableSessionData.isSplit) {
-          const variantData = await SplitBillTableSession.findById(orderId);
-          if (!variantData) {
-            return respond(c, "Variant not found", true, 404, {});
+          tableSessionData = await SplitBillTableSession.findById(orderId);
+          if (!tableSessionData) {
+            return respond(c, "Session not found", true, 404, {});
           }
-          tableSessionData = variantData;
         }
 
         return respond(c, "Data fetch", false, 200, {
