@@ -21,7 +21,6 @@ import {
   SplitBillTableSession,
   Subscriber,
   Table,
-  TempTableSettle,
   UnsettleTable,
   UpiMode,
   User,
@@ -241,14 +240,12 @@ export const addCoins = async (
 
   session: ClientSession,
 ) => {
-  const existingUser = await UserReward.findOne({ userId, loyaltyId }).select(
-    "rewards",
-  );
+  const existingUser = await UserReward.findOne({ userId, loyaltyId });
 
   const existingLoyalty = await LoyaltySettings.findOne({
     businessId: businessId,
     isActive: true,
-  }).select("rewardLimit");
+  });
   if (existingUser && existingLoyalty) {
     const coinsCalculated = await calculateReward(
       existingUser.rewards,
@@ -1735,6 +1732,7 @@ const paymentsRouter = new Hono()
       }
 
       if (!RAZORPAY_WEBHOOK_SECRET) {
+        console.log("Webhook secret not found");
       }
 
       const headersResult = RazorpayWebhookHeadersSchema.safeParse(
@@ -1850,12 +1848,49 @@ const paymentsRouter = new Hono()
             });
 
             if (!paymentAlreadyExist && getOrder) {
-              const pos = await BusinessPosConfig.findOne({
-                businessId: getOrder?.businessId,
-                isDeleted: false,
-                active: true,
-              });
               const claimCoins = Number(getOrder?.claimedCoins) || 0;
+              let getCashBack = 0;
+
+              if (
+                payload?.payment?.entity?.notes?.loyaltyId &&
+                getOrder?.userId?.toString()
+              ) {
+                if (claimCoins > 0) {
+                  await removeCoins(
+                    claimCoins,
+                    getOrder.tableName,
+                    payload.payment.entity.notes.loyaltyId || "",
+                    getOrder?._id.toString() || "",
+                    getOrder?.userId.toString() || "",
+                    session,
+                  );
+                }
+
+                let cashBack = await calculatedCashbackCoins(
+                  getOrder?.businessId.toString(),
+                  getOrder?.billValue || 0,
+                  claimCoins,
+                );
+
+                if (getOrder?.cashbackAvailable === false) {
+                  cashBack = 0;
+                }
+
+                const cashBackCoins = await addCoins(
+                  cashBack,
+                  getOrder?.userId.toString() || "",
+                  getOrder?._id.toString() || "",
+
+                  getOrder?.tableName,
+                  getOrder?.businessId.toString() || "",
+                  payload.payment.entity.notes.loyaltyId || "",
+
+                  session,
+                );
+
+                getCashBack = cashBackCoins;
+              }
+
               await PaymentAlert.updateOne(
                 {
                   tableName: getOrder?.tableName,
@@ -1885,7 +1920,7 @@ const paymentsRouter = new Hono()
                     razorpayEventId: razorpayEventId,
                     couponId: getOrder?.couponId,
                     channelId: getOrder?.channelId,
-                    earnCoins: 0,
+                    earnCoins: getCashBack,
                     date: Date.now(),
                     tax: splitBillTableSessionData?.gst,
                     serviceCharge: splitBillTableSessionData?.serviceCharge,
@@ -1929,6 +1964,7 @@ const paymentsRouter = new Hono()
                     isPaid: true,
                   },
                 },
+                { session },
               );
               await UserSession.findOneAndUpdate(
                 {
@@ -1940,6 +1976,7 @@ const paymentsRouter = new Hono()
                     variantsCounts: -1,
                   },
                 },
+                { session },
               );
 
               await QrBill.findOneAndUpdate(
@@ -2026,9 +2063,51 @@ const paymentsRouter = new Hono()
                 active: true,
               });
               const claimCoins = Number(getOrder?.claimedCoins) || 0;
+              let getCashBack = 0;
+
+              if (
+                payload?.payment?.entity?.notes?.loyaltyId &&
+                getOrder?.userId?.toString()
+              ) {
+                if (claimCoins > 0) {
+                  await removeCoins(
+                    claimCoins,
+                    getOrder.tableName,
+                    payload.payment.entity.notes.loyaltyId || "",
+                    getOrder?._id.toString() || "",
+                    getOrder?.userId.toString() || "",
+                    session,
+                  );
+                }
+
+                let cashBack = await calculatedCashbackCoins(
+                  getOrder?.businessId.toString(),
+                  getOrder?.billValue || 0,
+                  claimCoins,
+                );
+
+                if (getOrder?.cashbackAvailable === false) {
+                  cashBack = 0;
+                }
+
+                const cashBackCoins = await addCoins(
+                  cashBack,
+                  getOrder?.userId.toString() || "",
+                  getOrder?._id.toString() || "",
+
+                  getOrder?.tableName,
+                  getOrder?.businessId.toString() || "",
+                  payload.payment.entity.notes.loyaltyId || "",
+
+                  session,
+                );
+
+                getCashBack = cashBackCoins;
+              }
               await PaymentAlert.updateOne(
                 {
                   tableName: getOrder?.tableName,
+                  businessId: getOrder?.businessId,
                   isAccepted: false,
                   alertType: "OFFLINE",
                 },
@@ -2055,7 +2134,7 @@ const paymentsRouter = new Hono()
                     razorpayEventId: razorpayEventId,
                     couponId: getOrder?.couponId,
                     channelId: getOrder?.channelId,
-                    earnCoins: 0,
+                    earnCoins: getCashBack,
                     date: Date.now(),
                     tax: splitBillTableSessionData?.gst,
                     serviceCharge: splitBillTableSessionData?.serviceCharge,
@@ -2099,6 +2178,7 @@ const paymentsRouter = new Hono()
                     isPaid: true,
                   },
                 },
+                { session },
               );
               await UserSession.findOneAndUpdate(
                 {
@@ -2134,48 +2214,6 @@ const paymentsRouter = new Hono()
                 isDeleted: false,
                 active: true,
               });
-              const claimCoins = Number(tableSession?.claimedCoins) || 0;
-              let getCashBack = 0;
-
-              if (payload?.payment?.entity?.notes?.loyaltyId) {
-                if (
-                  claimCoins > 0 &&
-                  (tableSession?.customerIds?.length ?? 0) > 0
-                ) {
-                  await removeCoins(
-                    claimCoins,
-                    getOrder.tableName,
-                    payload.payment.entity.notes.loyaltyId || "",
-                    getOrder?._id.toString() || "",
-                    getOrder?.userId.toString() || "",
-                    session,
-                  );
-                }
-
-                let cashBack = await calculatedCashbackCoins(
-                  getOrder?.businessId.toString(),
-                  tableSession?.subTotal || 0,
-                  claimCoins,
-                );
-
-                if (getOrder?.cashbackAvailable === false) {
-                  cashBack = 0;
-                }
-
-                const cashBackCoins = await addCoins(
-                  cashBack,
-                  getOrder?.userId.toString() || "",
-                  getOrder?._id.toString() || "",
-
-                  getOrder?.tableName,
-                  getOrder?.businessId.toString() || "",
-                  payload.payment.entity.notes.loyaltyId || "",
-
-                  session,
-                );
-
-                getCashBack = cashBackCoins;
-              }
 
               if (pos) {
                 const pay = {
@@ -2199,7 +2237,7 @@ const paymentsRouter = new Hono()
                       console.error("Failed to request/settle bill:", err);
                     }
                   })();
-                }, 8000);
+                }, 10000);
 
                 setTimeout(() => {
                   (async () => {
@@ -2210,8 +2248,6 @@ const paymentsRouter = new Hono()
                       } = await axios.post(posApiPaths.requestBill, pay, {
                         headers: { "Content-Type": "application/json" },
                       });
-
-                      console.log("2", bill_request_id);
 
                       // 2. Settle the table
                       const { data: settleData } = await axios.post(
@@ -2273,22 +2309,7 @@ const paymentsRouter = new Hono()
                       console.error("Failed to request/settle bill:", err);
                     }
                   })();
-                }, 32000);
-
-                await TempTableSettle.create(
-                  [
-                    {
-                      businessId: getOrder.businessId,
-                      tableName: getOrder.tableName,
-                      settleBy: getOrder.userId?.name,
-                      hiCode: tableSession?.hiCode,
-                      pin: tableSession?._id.toString(),
-                    },
-                  ],
-                  {
-                    session,
-                  },
-                );
+                }, 35000);
 
                 await UserSession.deleteOne(
                   {
@@ -2305,6 +2326,7 @@ const paymentsRouter = new Hono()
                     tableName: getOrder.tableName,
                     businessId: getOrder.businessId,
                     accepted: true,
+                    settled: false,
                   },
                   {
                     $set: {
@@ -2389,13 +2411,6 @@ const paymentsRouter = new Hono()
       }
 
       if (event === "payment.captured") {
-        const splitBillTableSessionData = await SplitBillTableSession.findOne({
-          _id: getOrder?.variantId,
-        });
-
-        if (!splitBillTableSessionData) {
-          console.log("Split bill session not found");
-        }
         const paymentAlreadyExist = await Payment.findOne({
           razorpayEventId: razorpayEventId,
         });
@@ -2410,12 +2425,55 @@ const paymentsRouter = new Hono()
           await PaymentAlert.updateOne(
             {
               tableName: getOrder?.tableName,
+              businessId: getOrder?.businessId,
               isAccepted: false,
               alertType: "OFFLINE",
             },
             { isAccepted: true, isRejected: true },
             { session },
           );
+
+          let getCashBack = 0;
+
+          if (
+            payload?.payment?.entity?.notes?.loyaltyId &&
+            getOrder?.userId?.toString()
+          ) {
+            if (claimCoins > 0) {
+              await removeCoins(
+                claimCoins,
+                getOrder.tableName,
+                payload.payment.entity.notes.loyaltyId || "",
+                getOrder?._id.toString() || "",
+                getOrder?.userId.toString() || "",
+                session,
+              );
+            }
+
+            let cashBack = await calculatedCashbackCoins(
+              getOrder?.businessId.toString(),
+              getOrder?.billValue || 0,
+              claimCoins,
+            );
+
+            if (getOrder?.cashbackAvailable === false) {
+              cashBack = 0;
+            }
+
+            const cashBackCoins = await addCoins(
+              cashBack,
+              getOrder?.userId.toString() || "",
+              getOrder?._id.toString() || "",
+
+              getOrder?.tableName,
+              getOrder?.businessId.toString() || "",
+              payload.payment.entity.notes.loyaltyId || "",
+
+              session,
+            );
+
+            getCashBack = cashBackCoins;
+          }
 
           const createPayment = await Payment.create(
             [
@@ -2430,22 +2488,21 @@ const paymentsRouter = new Hono()
                 tableName: getOrder?.tableName,
                 claimedCoins: getOrder?.claimedCoins,
                 tips: getOrder?.tips,
-                razorpayPaymentId: payload.payment.entity.id,
+                razorpayPaymentId: payload.payment.entity.id || nanoid(15),
                 razorpayOrderId: payload.payment.entity.order_id,
                 razorpayAcquirerData: payload.payment.entity.acquirer_data,
                 razorpayEventId: razorpayEventId,
-                couponId: getOrder?.couponId,
-                channelId: getOrder?.channelId,
-                earnCoins: 0,
+                couponId: getOrder?.couponId || null,
+                channelId: getOrder?.channelId || null,
+                earnCoins: getCashBack,
                 date: Date.now(),
-                tax: splitBillTableSessionData?.gst,
-                serviceCharge: splitBillTableSessionData?.serviceCharge,
-                billId: splitBillTableSessionData?._id.toString(),
-                settleType:
-                  splitBillTableSessionData?.settleType || "PAYMENT_GATEWAY",
-                discount: splitBillTableSessionData?.discount,
-                couponDiscount: splitBillTableSessionData?.couponDiscount,
-                billItems: splitBillTableSessionData?.items || [],
+                tax: tableSession?.gst,
+                serviceCharge: tableSession?.serviceCharge,
+                billId: tableSession?._id.toString(),
+                settleType: tableSession?.settleType || "PAYMENT_GATEWAY",
+                discount: tableSession?.discount,
+                couponDiscount: tableSession?.couponDiscount,
+                billItems: tableSession?.items || [],
               },
             ],
             { session },
@@ -2461,7 +2518,7 @@ const paymentsRouter = new Hono()
                 status: "SUCCESS",
                 order_id: getOrder?._id,
                 message: `Paid ${getOrder?.total}`,
-                tableName: `T-${getOrder?.tableName?.slice(-2)}`,
+                tableName: `${getOrder?.tableName?.slice(-2)}`,
                 isAccepted: false,
                 userId: getOrder?.userId,
                 date: Date.now(),
@@ -2493,7 +2550,7 @@ const paymentsRouter = new Hono()
                   console.error("Failed to request/settle bill:", err);
                 }
               })();
-            }, 8000);
+            }, 10000);
 
             setTimeout(() => {
               (async () => {
@@ -2504,8 +2561,6 @@ const paymentsRouter = new Hono()
                   } = await axios.post(posApiPaths.requestBill, pay, {
                     headers: { "Content-Type": "application/json" },
                   });
-
-                  console.log("2", bill_request_id);
 
                   // 2. Settle the table
                   const { data: settleData } = await axios.post(
@@ -2520,8 +2575,6 @@ const paymentsRouter = new Hono()
                       pin: tableSession?.pin,
                     },
                   );
-
-                  console.log("3", settleData);
 
                   // 3. If settlement failed (success === "0"), upsert into UnsettleTable
                   if (settleData.success === "0") {
@@ -2569,22 +2622,7 @@ const paymentsRouter = new Hono()
                   console.error("Failed to request/settle bill:", err);
                 }
               })();
-            }, 32000);
-
-            await TempTableSettle.create(
-              [
-                {
-                  businessId: getOrder.businessId,
-                  tableName: getOrder.tableName,
-                  settleBy: getOrder.userId?.name,
-                  hiCode: tableSession?.hiCode,
-                  pin: tableSession?._id.toString(),
-                },
-              ],
-              {
-                session,
-              },
-            );
+            }, 35000);
 
             await QrBill.findOneAndUpdate(
               {
@@ -2614,6 +2652,8 @@ const paymentsRouter = new Hono()
               {
                 tableName: getOrder.tableName,
                 businessId: getOrder.businessId,
+                accepted: true,
+                settled: false,
               },
               {
                 $set: {
@@ -3115,6 +3155,50 @@ const paymentsRouter = new Hono()
                 }
                 if (tableSession.variantsCounts > 1) {
                   const npcUser = await NpcUser.findById(npcUserId);
+                  let finalCashBack = 0;
+                  if (
+                    paymentMode?.name !== "complementary" &&
+                    paymentMode?.name !== "npc"
+                  ) {
+                    let cashBack = await calculatedCashbackCoins(
+                      order.businessId.toString(),
+                      Number(order.billValue),
+                      Number(order.claimedCoins),
+                    );
+
+                    if (
+                      existingLoyalty?.loyaltyId &&
+                      order.claimedCoins > 0 &&
+                      order.userId.toString()
+                    ) {
+                      await removeCoins(
+                        Number(order?.claimedCoins),
+                        order.tableName,
+                        existingLoyalty?.loyaltyId?.toString() || "",
+                        order._id.toString(),
+                        order.userId.toString(),
+                        session,
+                      );
+                      if (order.cashbackAvailable === false) {
+                        cashBack = 0;
+                      }
+                    }
+
+                    if (existingLoyalty?.loyaltyId && order.userId.toString()) {
+                      finalCashBack = await addCoins(
+                        cashBack,
+                        order.userId.toString(),
+                        order._id.toString(),
+                        order.tableName || "",
+                        order.businessId.toString(),
+                        existingLoyalty?.loyaltyId.toString() || "",
+                        session,
+                      );
+                      if (order.cashbackAvailable === false) {
+                        cashBack = 0;
+                      }
+                    }
+                  }
                   let modifyTotal = 0;
                   if (
                     paymentMode?.name === "npc" ||
@@ -3164,7 +3248,7 @@ const paymentsRouter = new Hono()
                           paymentMode?.name === "npc" ||
                           paymentMode?.name === "complementary"
                             ? 0
-                            : 0,
+                            : finalCashBack,
                         razorpayEventId: nanoid(15),
                         razorpayOrderId: nanoid(15),
                         razorpayPaymentId: nanoid(15),
@@ -3267,6 +3351,7 @@ const paymentsRouter = new Hono()
                         variantsCounts: -1,
                       },
                     },
+                    { session },
                   );
 
                   const updateAlert = await PaymentAlert.findByIdAndUpdate(
@@ -3277,6 +3362,52 @@ const paymentsRouter = new Hono()
                 }
                 if (tableSession.variantsCounts === 1) {
                   const npcUser = await NpcUser.findById(npcUserId);
+
+                    let finalCashBack = 0;
+                  if (
+                    paymentMode?.name !== "complementary" &&
+                    paymentMode?.name !== "npc"
+                  ) {
+                    let cashBack = await calculatedCashbackCoins(
+                      order.businessId.toString(),
+                      Number(order.billValue),
+                      Number(order.claimedCoins),
+                    );
+
+                    if (
+                      existingLoyalty?.loyaltyId &&
+                      order.claimedCoins > 0 &&
+                      order.userId.toString()
+                    ) {
+                      await removeCoins(
+                        Number(order?.claimedCoins),
+                        order.tableName,
+                        existingLoyalty?.loyaltyId?.toString() || "",
+                        order._id.toString(),
+                        order.userId.toString(),
+                        session,
+                      );
+                      if (order.cashbackAvailable === false) {
+                        cashBack = 0;
+                      }
+                    }
+
+                    if (existingLoyalty?.loyaltyId && order.userId.toString()) {
+                      finalCashBack = await addCoins(
+                        cashBack,
+                        order.userId.toString(),
+                        order._id.toString(),
+                        order.tableName || "",
+                        order.businessId.toString(),
+                        existingLoyalty?.loyaltyId.toString() || "",
+                        session,
+                      );
+                      if (order.cashbackAvailable === false) {
+                        cashBack = 0;
+                      }
+                    }
+
+
                   let modifyTotal = 0;
                   if (
                     paymentMode?.name === "npc" ||
@@ -3326,7 +3457,7 @@ const paymentsRouter = new Hono()
                           paymentMode?.name === "npc" ||
                           paymentMode?.name === "complementary"
                             ? 0
-                            : 0,
+                            : finalCashBack,
                         razorpayEventId: nanoid(15),
                         razorpayOrderId: nanoid(15),
                         razorpayPaymentId: nanoid(15),
@@ -3440,47 +3571,8 @@ const paymentsRouter = new Hono()
                 }
 
                 if (tableSession.variantsCounts === 1) {
-                  let finalCashBack = 0;
-                  if (
-                    paymentMode?.name !== "complementary" &&
-                    paymentMode?.name !== "npc"
-                  ) {
-                    let cashBack = await calculatedCashbackCoins(
-                      tableSession.businessId.toString(),
-                      Number(tableSession.subTotal),
-                      Number(tableSession.claimedCoins),
-                    );
-
-                    if (
-                      existingLoyalty?.loyaltyId &&
-                      tableSession.claimedCoins > 0 &&
-                      (tableSession.customerIds?.length ?? 0) > 0
-                    ) {
-                      await removeCoins(
-                        Number(tableSession.claimedCoins),
-                        tableSession.tableName,
-                        existingLoyalty?.loyaltyId?.toString() || "",
-                        tableSession._id.toString(),
-                        order.userId.toString(),
-                        session,
-                      );
-                      if (order.cashbackAvailable === false) {
-                        cashBack = 0;
-                      }
-                    }
-
-                    finalCashBack = await addCoins(
-                      cashBack,
-                      order.userId.toString(),
-                      order._id.toString(),
-                      order.tableName || "",
-                      order.businessId.toString(),
-
-                      existingLoyalty?.loyaltyId.toString() || "",
-
-                      session,
-                    );
-                  }
+                 
+                  
 
                   let modifyTotal = 0;
                   if (
@@ -3610,6 +3702,8 @@ const paymentsRouter = new Hono()
                       {
                         tableName: order.tableName,
                         businessId: order.businessId,
+                        accepted: false,
+                        settled: false,
                       },
                       {
                         $set: {
@@ -3917,6 +4011,8 @@ const paymentsRouter = new Hono()
                   {
                     tableName: order.tableName,
                     businessId: order.businessId,
+                    settled: false,
+                    accepted: true,
                   },
                   {
                     $set: {

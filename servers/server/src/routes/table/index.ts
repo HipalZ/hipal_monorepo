@@ -36,7 +36,6 @@ import { calculateCartBill } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 // import { queueClient } from "../../utils/queue/queueClient";
 import { respond } from "../../utils/response";
-import { addCoins, calculatedCashbackCoins, removeCoins } from "../payments";
 import { generateTenDigitCode } from "../pos";
 //
 const tableRouter = new Hono()
@@ -480,6 +479,7 @@ const tableRouter = new Hono()
                 tableName: table?.name,
                 isAccepted: false,
                 alertType: "OFFLINE",
+                businessId: table?.businessId,
               },
               { isAccepted: true, isRejected: true },
               { session },
@@ -676,6 +676,7 @@ const tableRouter = new Hono()
                 tableName: table?.name,
                 isAccepted: false,
                 alertType: "OFFLINE",
+                businessId: table?.businessId,
               },
               { isAccepted: true, isRejected: true },
               { session },
@@ -729,6 +730,7 @@ const tableRouter = new Hono()
                 tableName: table?.name,
                 settled: false,
                 businessId: table?.businessId,
+                accepted: true,
               },
               { $set: { settled: true } },
               { session },
@@ -753,41 +755,6 @@ const tableRouter = new Hono()
               }
             }
 
-            let finalCashBack = 0;
-            const cashBack = await calculatedCashbackCoins(
-              tableSession.businessId.toString(),
-              Number(tableSession.subTotal),
-              Number(tableSession.claimedCoins),
-            );
-            if (
-              tableSession?.claimedCoins > 0 &&
-              (tableSession?.customerIds ?? []).length > 0
-            ) {
-              if (
-                paymentMode?.name !== "complementary" &&
-                paymentMode?.name !== "npc"
-              ) {
-                await removeCoins(
-                  Number(tableSession?.claimedCoins),
-                  tableSession?.tableName,
-                  businessLoyalty?.loyaltyId?.toString() || "",
-                  tableSession?._id.toString(),
-                  tableSession?.customerIds?.[0].toString() || captainId,
-                  session,
-                );
-              }
-            }
-            finalCashBack = await addCoins(
-              cashBack,
-              tableSession?.customerIds?.[0].toString() || "",
-              tableSession?._id.toString(),
-              tableSession?.tableName || "",
-              tableSession?.businessId.toString(),
-
-              businessLoyalty?.loyaltyId.toString() || "",
-
-              session,
-            );
             const payload = {
               app_key: pos.accessKey,
               app_secret: pos.secretKey,
@@ -825,7 +792,7 @@ const tableRouter = new Hono()
                   console.error("Failed to request/settle bill:", err);
                 }
               })();
-            }, 8000);
+            }, 10000);
 
             setTimeout(() => {
               (async () => {
@@ -898,7 +865,7 @@ const tableRouter = new Hono()
                   console.error("Failed to request/settle bill:", err);
                 }
               })();
-            }, 32000);
+            }, 35000);
 
             await UserSession.deleteOne(
               {
@@ -912,13 +879,12 @@ const tableRouter = new Hono()
           return respond(c, "Table settled successfully", false, 200, {});
         }
 
-        /// normal settle
-
         await KotOrder.updateMany(
           {
             tableName: table?.name,
             settled: false,
             businessId: table?.businessId,
+            accepted: true,
           },
           { $set: { settled: true } },
           { session },
@@ -975,38 +941,6 @@ const tableRouter = new Hono()
           { session },
         );
 
-        let finalCashBack = 0;
-        const cashBack = await calculatedCashbackCoins(
-          saveOrder[0].businessId.toString(),
-          Number(saveOrder[0].billValue),
-          Number(saveOrder[0].claimedCoins),
-        );
-        if (saveOrder[0]?.claimedCoins > 0) {
-          if (
-            paymentMode?.name !== "complementary" &&
-            paymentMode?.name !== "npc"
-          ) {
-            await removeCoins(
-              Number(saveOrder[0]?.claimedCoins),
-              saveOrder[0].tableName,
-              businessLoyalty?.loyaltyId?.toString() || "",
-              saveOrder[0]._id.toString(),
-              saveOrder[0].userId.toString(),
-              session,
-            );
-          }
-        }
-        finalCashBack = await addCoins(
-          cashBack,
-          saveOrder[0].userId.toString(),
-          saveOrder[0]._id.toString(),
-          saveOrder[0].tableName || "",
-          saveOrder[0].businessId.toString(),
-
-          businessLoyalty?.loyaltyId.toString() || "",
-
-          session,
-        );
         const payload = {
           app_key: pos.accessKey,
           app_secret: pos.secretKey,
@@ -1030,7 +964,7 @@ const tableRouter = new Hono()
               billValue: saveOrder[0].billValue,
               tips: saveOrder[0].tips,
               tableName: saveOrder[0].tableName,
-              earnCoins: finalCashBack,
+              earnCoins: 0,
               razorpayEventId: nanoid(15),
               razorpayOrderId: nanoid(15),
               razorpayPaymentId: nanoid(15),
@@ -1126,7 +1060,7 @@ const tableRouter = new Hono()
               console.error("Failed to request/settle bill:", err);
             }
           })();
-        }, 8000);
+        }, 10000);
 
         setTimeout(() => {
           (async () => {
@@ -1199,7 +1133,7 @@ const tableRouter = new Hono()
               console.error("Failed to request/settle bill:", err);
             }
           })();
-        }, 32000);
+        }, 35000);
 
         await UserSession.deleteOne(
           {
@@ -1213,6 +1147,7 @@ const tableRouter = new Hono()
             tableName: table?.name,
             isAccepted: false,
             alertType: "OFFLINE",
+            businessId: table?.businessId,
           },
           { isAccepted: true, isRejected: true },
           { session },
