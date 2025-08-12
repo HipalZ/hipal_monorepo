@@ -80,6 +80,15 @@ const checkVariantIsPaid = async (originalTableSessionId: string) => {
   return !!isPaid;
 };
 
+const variantIsPaid = async (variantId: string) => {
+  const isPaid = await SplitBillTableSession.exists?.({
+    _id: variantId,
+    isPaid: true,
+  });
+
+  return !!isPaid;
+};
+
 const returnSplitBillVariants = async (
   originalTableSessionId: string,
   businessId: string,
@@ -1181,4 +1190,5 @@ export {
   removeDiscountFromVariantBill,
   returnSplitBillVariants,
   returnSplitBillVariantsForItemWise,
+  variantIsPaid,
 };

@@ -267,6 +267,21 @@ const splitBillRouter = new Hono()
           return respond(c, "Table session not found", true, 400, {});
         }
 
+        const checkOfflinePaymentReq = await checkOfflinePaymentRequest(
+          businessId,
+          tableName,
+        );
+
+        if (checkOfflinePaymentReq) {
+          return respond(
+            c,
+            "you can not merge with an offline payment request",
+            true,
+            400,
+            {},
+          );
+        }
+
         const variantIsPaid = await checkVariantIsPaid(
           fetchOriginalTableSession._id,
         );

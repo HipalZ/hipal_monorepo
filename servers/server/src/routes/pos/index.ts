@@ -48,6 +48,7 @@ import {
   removeDiscountFromVariantBill,
   returnSplitBillVariants,
   returnSplitBillVariantsForItemWise,
+  variantIsPaid,
 } from "../../services/splitBill";
 import type { CartItem, KotOrderTypes } from "../../utils/bill";
 import {
@@ -2741,17 +2742,6 @@ const posRouter = new Hono()
         const checkOriginBillIs = await checkOriginBillIsSplit(tableSession);
 
         if (checkOriginBillIs) {
-          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
-          if (variantIsPaid) {
-            return respond(
-              c,
-              "You cannot apply discount on paid variant",
-              true,
-              400,
-              {},
-            );
-          }
-
           if (!variantId) {
             return respond(
               c,
@@ -2761,6 +2751,17 @@ const posRouter = new Hono()
               {},
             );
           }
+          const isPaid = await variantIsPaid(variantId);
+          if (isPaid) {
+            return respond(
+              c,
+              "You cannot apply discount on paid variant",
+              true,
+              400,
+              {},
+            );
+          }
+
           const applyDiscount = await applyDiscountToVariantBill({
             variantId,
             value,
@@ -2839,10 +2840,6 @@ const posRouter = new Hono()
             itemIds.length > 0 ? itemIds : [],
           );
 
-          console.log("Item GST after discount:", itemGstAfterDiscount); ///
-
-          console.log("Item GST after:", itemGstAfter); // dus
-
           saveGstAfterDiscount = itemGstAfterDiscount;
 
           if (value >= 100) {
@@ -2871,8 +2868,6 @@ const posRouter = new Hono()
             : [],
           discountAppliedOn === "ON_DISH" ? itemGst : 0,
         );
-
-        console.log("Updated GST after discount:", newGst);
 
         // Calculate final total
         const totalDis = calculateTotalDiscount(
@@ -2959,8 +2954,8 @@ const posRouter = new Hono()
             );
           }
 
-          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
-          if (variantIsPaid) {
+          const isPaid = await variantIsPaid(variantId);
+          if (isPaid) {
             return respond(
               c,
               "You cannot apply discount on paid variant",
@@ -3086,8 +3081,8 @@ const posRouter = new Hono()
               {},
             );
           }
-          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
-          if (variantIsPaid) {
+          const isPaid = await variantIsPaid(variantId);
+          if (isPaid) {
             return respond(
               c,
               "You cannot apply discount on paid variant",
@@ -3219,8 +3214,8 @@ const posRouter = new Hono()
             );
           }
 
-          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
-          if (variantIsPaid) {
+          const isPaid = await variantIsPaid(variantId);
+          if (isPaid) {
             return respond(
               c,
               "You cannot apply discount on paid variant",
@@ -3326,8 +3321,8 @@ const posRouter = new Hono()
             );
           }
 
-          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
-          if (variantIsPaid) {
+          const isPaid = await variantIsPaid(tableSession._id);
+          if (isPaid) {
             return respond(
               c,
               "You cannot apply discount on paid variant",
@@ -3426,8 +3421,8 @@ const posRouter = new Hono()
               {},
             );
           }
-          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
-          if (variantIsPaid) {
+          const isPaid = await variantIsPaid(variantId);
+          if (isPaid) {
             return respond(
               c,
               "You cannot apply discount on paid variant",
@@ -3600,11 +3595,15 @@ const posRouter = new Hono()
             );
           }
 
-          await updateSplitTableSession(variantId, {
-            serviceChargeAppliedBy,
-            isServiceChargeRemoved: false,
-            serviceChargeRemovedBy: null,
-          });
+          await updateSplitTableSession(
+            variantId,
+            {
+              serviceChargeAppliedBy,
+              isServiceChargeRemoved: false,
+              serviceChargeRemovedBy: null,
+            },
+            session,
+          );
 
           return respond(c, "Success", true, 200, {});
         }
@@ -3975,9 +3974,13 @@ const posRouter = new Hono()
             );
           }
 
-          await updateSplitTableSession(variantId, {
-            tips: value,
-          });
+          await updateSplitTableSession(
+            variantId,
+            {
+              tips: value,
+            },
+            session,
+          );
 
           return respond(c, "Success", true, 200, {});
         }
