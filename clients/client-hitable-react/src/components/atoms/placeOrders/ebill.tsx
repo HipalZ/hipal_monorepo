@@ -14,6 +14,7 @@ const MemoEBill = () => {
   const [phoneNumbers, setPhoneNumbers] = useState<string[]>([]);
   const [newPhoneNumber, setNewPhoneNumber] = useState("");
   const setShowEBill = useOrderStore((s) => s.setShowEBill);
+  const selectedBill = useOrderStore((s) => s.selectedBill);
 
   const { businessId } = useParams();
 
@@ -64,12 +65,19 @@ const MemoEBill = () => {
 
   const { isPending, mutateAsync } = useMutation({
     mutationFn: async () => {
+
+      const payload = {
+        tableId:selectedTable?._id || "",
+        businessId: businessId || "",
+        phoneNumbers
+      }
+      if(selectedBill){
+        payload.variantId = selectedBill?.variantId || "";
+      }
+
+
       const response = await apiRpc.table.e_bill.$post({
-        json: {
-          tableId: selectedTable?._id || "",
-          businessId: businessId || "",
-          phoneNumbers,
-        },
+        json: payload,
       });
       return response.json();
     },

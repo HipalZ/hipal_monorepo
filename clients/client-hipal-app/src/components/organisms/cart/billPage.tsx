@@ -24,13 +24,13 @@ const MemoBillPage = () => {
   const { showBillPage, setShowBillPage, billData } = usePaymentStore();
 
   const calculateItemTotal = useCallback((item: BillItem): number => {
-    const dishPrice    = item.dish?.price   ?? 0;
+    const dishPrice = item.dish?.price ?? 0;
     const portionPrice = item?.portion?.price ?? 0;
 
     const extrasTotal = Array.isArray(item?.extras)
       ? item.extras.reduce(
-          (sum, extra) => sum + (extra.price   ?? 0) * (extra.quantity ?? 0),
-          0
+          (sum, extra) => sum + (extra.price ?? 0) * (extra.quantity ?? 0),
+          0,
         )
       : 0;
 
@@ -49,8 +49,7 @@ const MemoBillPage = () => {
     // 2. Filter deleted items and group by their dish.gst:
     const grouped: Record<number, typeof allItems> = {};
     for (const item of allItems) {
-      if (item.isDeleted) continue;
-      const rate = item.dish?.gst ?? 0;
+      const rate = item?.dish?.gst ?? 0;
       if (!grouped[rate]) grouped[rate] = [];
       grouped[rate].push(item);
     }
@@ -337,10 +336,19 @@ const MemoBillPage = () => {
 
               {billData?.gst > 0 ? (
                 <div className="flex justify-between text-black">
-                  <span>Total GST</span>
+                  <span>CGST</span>
                   <span>
                     {currencySymbol}
-                    {billData?.gst.toFixed(2)}
+                    {(billData?.gst / 2).toFixed(2)}
+                  </span>
+                </div>
+              ) : null}
+              {billData?.gst > 0 ? (
+                <div className="flex justify-between text-black">
+                  <span>SGST</span>
+                  <span>
+                    {currencySymbol}
+                    {(billData?.gst / 2).toFixed(2)}
                   </span>
                 </div>
               ) : null}

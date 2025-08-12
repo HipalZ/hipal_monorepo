@@ -27,7 +27,6 @@ const MemoEBill = () => {
     });
 
     const res = await response.json();
-    console.log("res", res.data);
     return res?.data || null;
   };
 
@@ -218,8 +217,14 @@ const MemoEBill = () => {
 
                   {billData.gst > 0 && (
                     <div className="flex justify-between text-gray-700">
-                      <span>GST</span>
-                      <span>₹{billData.gst?.toFixed(2)}</span>
+                      <span>CGST</span>
+                      <span>₹{(billData?.gst / 2)?.toFixed(2)}</span>
+                    </div>
+                  )}
+                  {billData.gst > 0 && (
+                    <div className="flex justify-between text-gray-700">
+                      <span>SGST</span>
+                      <span>₹{(billData?.gst / 2)?.toFixed(2)}</span>
                     </div>
                   )}
 

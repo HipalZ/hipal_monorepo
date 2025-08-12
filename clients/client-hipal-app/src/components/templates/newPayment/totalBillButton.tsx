@@ -75,14 +75,14 @@ const MemoTotalBillButton = () => {
         </span>
       </h1>
       <section className="flex items-center space-x-4">
-        {billData ? (
+        {billData.variantName ? (
           <article
             onClick={goToTheSplit}
             onKeyDown={goToTheSplit}
             className="bg-black gap-2 flex items-center text-white text-center px-2 py-2 rounded-lg inter text-sm on_active_bounce"
           >
             <Split size={16} />
-            <span>Split </span>
+            <span>Split</span>
           </article>
         ) : null}
 
