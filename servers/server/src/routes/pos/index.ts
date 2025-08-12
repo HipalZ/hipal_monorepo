@@ -359,7 +359,7 @@ const posRouter = new Hono()
             subTotal: totalDishTotal,
             items: cartItems,
             billPrintCount: tableSession.billPrintCount + 1,
-            totalGst: totalGst,
+            totalGst: Number(totalGst?.toFixed(2)),
           },
         );
 
@@ -383,7 +383,6 @@ const posRouter = new Hono()
               serviceChargeRemovedBy: serviceChargeRemovedBy,
               discountAppliedBy: discountAppliedBy,
               discountRemovedBy: discountRemovedBy,
-
               billItems,
               subTotal: totalDishTotal,
               gst: tableSession.gst,
