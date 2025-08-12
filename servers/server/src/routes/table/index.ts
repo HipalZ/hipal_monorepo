@@ -1303,17 +1303,39 @@ const tableRouter = new Hono()
     },
   )
   .get(
-    "/qr_webhook/:billId",
+    "/qr_webhook/:billId/:variantId",
     zValidator(
       "param",
       z.object({
         billId: z.string().min(1).max(500),
+        variantId: z.string().min(1).max(500).optional(),
       }),
     ),
     async (c) => {
-      const { billId } = c.req.param();
+      const { billId, variantId } = c.req.param();
+
+      const tableSession = await UserSession.findOne({
+        _id: billId,
+      });
+
+      if (!tableSession) {
+        return respond(c, "Table session not found", true, 404, {});
+      }
+
+      if (tableSession.isSplit) {
+        if (!variantId) {
+          return respond(
+            c,
+            "variantId is required for split bill",
+            true,
+            400,
+            {},
+          );
+        }
+      }
+
       const paymentStatus = await QrBill.findOne({
-        billId: billId,
+        $or: [{ billId: billId }, { billId: variantId }],
       });
 
       return c.json(
