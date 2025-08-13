@@ -2221,7 +2221,7 @@ const whatsappRouter = new Hono()
                 const idParam = userObj?._id.toString();
 
                 longUrl = encodeURI(
-                  `${findLongUrl.shortUrl}?q=wa&id=${idParam}`,
+                  `${findLongUrl.longUrl}?q=wa&id=${idParam}`,
                 );
                 updateLongUrl = encodeURI(
                   `${findLongUrl.longUrl}&id=${idParam}`,
