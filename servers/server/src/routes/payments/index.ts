@@ -4040,7 +4040,6 @@ const paymentsRouter = new Hono()
                     tableName: order.tableName,
                     businessId: order.businessId,
                     settled: false,
-                    accepted: true,
                   },
                   {
                     $set: {
