@@ -2351,7 +2351,7 @@ const paymentsRouter = new Hono()
                   {
                     tableName: getOrder.tableName,
                     businessId: getOrder.businessId,
-                    accepted: true,
+
                     settled: false,
                   },
                   {
@@ -2680,7 +2680,7 @@ const paymentsRouter = new Hono()
               {
                 tableName: getOrder.tableName,
                 businessId: getOrder.businessId,
-                accepted: true,
+
                 settled: false,
               },
               {
@@ -3618,197 +3618,6 @@ const paymentsRouter = new Hono()
                       { new: true, session },
                     );
                   }
-
-                  if (tableSession.variantsCounts === 1) {
-                    let modifyTotal = 0;
-                    if (
-                      paymentMode?.name === "npc" ||
-                      paymentMode?.name === "dues" ||
-                      paymentMode?.name === "complementary"
-                    ) {
-                      modifyTotal = 0;
-                    } else {
-                      modifyTotal = tableSession.total;
-
-                      if (settleModes.length > 1) {
-                        for (const settle of settleModes) {
-                          if (settle.name === "complementary") {
-                            modifyTotal -= settle.amount ?? 0;
-                          }
-                        }
-                      }
-                    }
-
-                    if (isHavePos) {
-                      const payload = {
-                        app_key: isHavePos.accessKey,
-                        app_secret: isHavePos?.secretKey,
-                        access_token: isHavePos.authToken,
-                        restID: isHavePos?.restId,
-                        pin: tableSession?.pin,
-                        tableNo: tableSession?.tableName,
-                      };
-
-                      setTimeout(() => {
-                        (async () => {
-                          try {
-                            // 1. Request the bill
-                            const {
-                              data: { bill_request_id },
-                            } = await axios.post(
-                              posApiPaths.requestBill,
-                              payload,
-                              {
-                                headers: { "Content-Type": "application/json" },
-                              },
-                            );
-                          } catch (err) {
-                            console.error(
-                              "Failed to request/settle bill:",
-                              err,
-                            );
-                          }
-                        })();
-                      }, 8000);
-
-                      setTimeout(() => {
-                        (async () => {
-                          try {
-                            // 1. Request the bill
-                            const {
-                              data: { bill_request_id },
-                            } = await axios.post(
-                              posApiPaths.requestBill,
-                              payload,
-                              {
-                                headers: { "Content-Type": "application/json" },
-                              },
-                            );
-
-                            // 2. Settle the table
-                            const { data: settleData } = await axios.post(
-                              posApiPaths.settleTable,
-                              {
-                                app_key: isHavePos.accessKey,
-                                app_secret: isHavePos.secretKey,
-                                access_token: isHavePos.authToken,
-                                restID: isHavePos.restId,
-                                bill_request_id,
-                                amount_paid: modifyTotal,
-                                pin: tableSession?.pin,
-                              },
-                            );
-
-                            // 3. If settlement failed (success === "0"), upsert into UnsettleTable
-                            if (settleData.success === "0") {
-                              await UnsettleTable.findOneAndUpdate(
-                                {
-                                  businessId: order.businessId,
-                                  tableName: order.tableName,
-                                  pin: tableSession?.pin,
-                                },
-                                {
-                                  sync: false,
-                                  // <-- use settleData.request_id, not response.data.request_id
-                                  requestId: settleData.request_id,
-                                  pin: tableSession?.pin,
-                                  restId: isHavePos.restId,
-                                  date: Date.now(),
-                                  total: tableSession.total,
-                                },
-                                { new: true, upsert: true },
-                              );
-                            }
-                            const unsettleTable = await UnsettleTable.find({
-                              businessId: order.businessId,
-                              restId: isHavePos.restId,
-                              sync: false,
-                            });
-
-                            for (const table of unsettleTable) {
-                              const payload = {
-                                app_key: isHavePos.accessKey,
-                                app_secret: isHavePos.secretKey,
-                                access_token: isHavePos.authToken,
-                                restID: isHavePos.restId,
-                                pin: table?.pin,
-                                tableNo: table?.tableName,
-                              };
-
-                              await axios.post(
-                                posApiPaths.requestBill,
-                                payload,
-                                {
-                                  headers: {
-                                    "Content-Type": "application/json",
-                                  },
-                                },
-                              );
-                            }
-                          } catch (err) {
-                            console.error(
-                              "Failed to request/settle bill:",
-                              err,
-                            );
-                          }
-                        })();
-                      }, 32000);
-
-                      await KotOrder.updateMany(
-                        {
-                          tableName: order.tableName,
-                          businessId: order.businessId,
-                          accepted: false,
-                          settled: false,
-                        },
-                        {
-                          $set: {
-                            settled: true,
-                          },
-                        },
-                        {
-                          session,
-                        },
-                      );
-
-                      await Table.findOneAndUpdate(
-                        {
-                          businessId: order.businessId,
-                          name: order.tableName,
-                        },
-                        {
-                          $set: {
-                            status: "EMPTY",
-                            currentTableAmount: 0,
-                            userIds: [],
-                            totalItemCount: 0,
-                            capacity: 0,
-                            hiCode: "",
-                            isTransfer: false,
-                          },
-                        },
-                        {
-                          session,
-                        },
-                      );
-
-                      await UserSession.deleteOne(
-                        {
-                          tableName: order.tableName,
-                          businessId: order.businessId,
-                        },
-                        {
-                          session,
-                        },
-                      );
-                    }
-                  }
-
-                  return c.json({
-                    message: "Order accepted successfully",
-                    err: false,
-                    data: {},
-                  });
                 }
 
                 if (tableSession?.variantsCounts === 1) {
@@ -3922,7 +3731,6 @@ const paymentsRouter = new Hono()
                         tableName: order.tableName,
                         businessId: order.businessId,
                         settled: false,
-                        accepted: true,
                       },
                       {
                         $set: {
@@ -4232,7 +4040,6 @@ const paymentsRouter = new Hono()
                     tableName: order.tableName,
                     businessId: order.businessId,
                     settled: false,
-                    accepted: true,
                   },
                   {
                     $set: {
