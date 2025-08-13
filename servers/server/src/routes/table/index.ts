@@ -1399,9 +1399,7 @@ const tableRouter = new Hono()
         billId = tableSession?._id.toString();
       }
 
-      const longUrl = `https://hipal-test.hipalz.com/${
-        business?.customLink
-      }/ebill?billId=${tableSession?._id.toString()}`;
+      const longUrl = `https://hipal-test.hipalz.com/${business?.customLink}/ebill?billId=${billId}`;
 
       const uniqueOrderId = nanoid(5);
       let findLongUrl = await BillUrlModel.findOne({ longUrl });
