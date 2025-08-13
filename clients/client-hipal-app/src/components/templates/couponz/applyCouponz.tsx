@@ -172,6 +172,7 @@ const MemoApplyCouponz = () => {
       payload.variantId = billData.variantId;
     }
     await removeCouponMutation.mutateAsync(payload);
+    await removeCoinzMutation.mutateAsync(payload);
     await applyCouponLogic(selectedCoupon);
   }, [
     setClaimedCoins,

@@ -3,6 +3,7 @@ import CommonBottomButton from "@/components/atoms/bottomButton";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { useUpdateBill } from "@/components/hooks/usePayments";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import { useCouponz } from "@/components/store/useCouponz";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
@@ -31,6 +32,8 @@ const AvailableCoinz = () => {
   } = usePaymentStore();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const { addCoins, removeCoinz, removeCouponz } = useUpdateBill();
+   const  businessId  = useBusinessDetails((s) => s.businessDetails?.businessId);
+
   const { loyaltySetting } = useLoyaltyData();
   const addCoinsMutation = useMutation({ mutationFn: addCoins });
   const removeCoinsMutation = useMutation({ mutationFn: removeCoinz });
@@ -150,7 +153,15 @@ const AvailableCoinz = () => {
     setShowAlert(false);
     setAvailedCoupon({});
     toast.success("Coupon removed successfully");
-    await removeCouponMutation.mutateAsync({});
+       const payload ={
+      businessId: businessId,
+      tableName: tableName,
+    }
+    if (billData?.variantId) {
+      payload.variantId = billData.variantId;
+    }
+    await removeCoinsMutation.mutateAsync(payload);
+    await removeCouponMutation.mutateAsync(payload);
     handleApplyCoinz(tempClaimedCoins || 0);
   }, [
     setClaimCouponz,
