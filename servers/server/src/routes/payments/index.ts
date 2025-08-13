@@ -1830,7 +1830,12 @@ const paymentsRouter = new Hono()
               );
 
               QrBill.findOneAndUpdate(
-                { billId: splitTableSessionData?._id.toString() },
+                {
+                  $or: [
+                    { billId: splitTableSessionData?._id?.toString() },
+                    { billId: tableSession?._id?.toString() },
+                  ],
+                },
                 { status: "FAILED" },
                 { session },
               );
@@ -1984,7 +1989,12 @@ const paymentsRouter = new Hono()
               );
 
               await QrBill.findOneAndUpdate(
-                { billId: splitBillTableSessionData?._id.toString() },
+                {
+                  $or: [
+                    { billId: splitTableSessionData?._id?.toString() },
+                    { billId: tableSession?._id?.toString() },
+                  ],
+                },
                 { status: "SUCCESS" },
                 { session },
               );
@@ -2041,7 +2051,12 @@ const paymentsRouter = new Hono()
               );
 
               QrBill.findOneAndUpdate(
-                { billId: splitTableSessionData?._id.toString() },
+                {
+                  $or: [
+                    { billId: splitTableSessionData?._id?.toString() },
+                    { billId: tableSession?._id?.toString() },
+                  ],
+                },
                 { status: "FAILED" },
                 { session },
               );
@@ -2200,7 +2215,12 @@ const paymentsRouter = new Hono()
               );
 
               await QrBill.findOneAndUpdate(
-                { billId: splitBillTableSessionData?._id.toString() },
+                {
+                  $or: [
+                    { billId: splitTableSessionData?._id?.toString() },
+                    { billId: tableSession?._id?.toString() },
+                  ],
+                },
                 { status: "SUCCESS" },
                 { session },
               );
@@ -3329,7 +3349,10 @@ const paymentsRouter = new Hono()
 
                   await QrBill.findOneAndUpdate(
                     {
-                      billId: splitBillTableSessionData?._id.toString(),
+                      $or: [
+                        { billId: splitBillTableSessionData?._id?.toString() },
+                        { billId: tableSession?._id?.toString() },
+                      ],
                     },
                     {
                       $set: {
@@ -3549,7 +3572,12 @@ const paymentsRouter = new Hono()
 
                     await QrBill.findOneAndUpdate(
                       {
-                        billId: splitBillTableSessionData?._id.toString(),
+                        $or: [
+                          {
+                            billId: splitBillTableSessionData?._id?.toString(),
+                          },
+                          { billId: tableSession?._id?.toString() },
+                        ],
                       },
                       {
                         $set: {
