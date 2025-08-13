@@ -478,7 +478,8 @@ const applyCoinToVariantBill = async (
   value: number,
   session: ClientSession,
 ) => {
-  const splitTableSession = await SplitBillTableSession.findById(variantId);
+  const splitTableSession =
+    await SplitBillTableSession.findById(variantId).session(session);
   if (!splitTableSession) {
     throw new Error("Variant not found");
   }
