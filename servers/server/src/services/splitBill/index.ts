@@ -220,7 +220,7 @@ const returnSplitBillVariantsForItemWise = async (
   const fetchVariants = await SplitBillTableSession.find({
     businessId,
     tableName,
-    originalTableSessionId,
+    originTableSessionId: originalTableSessionId,
   }).populate({
     path: "discountAppliedBy discountRemovedBy serviceChargeAppliedBy serviceChargeRemovedBy",
     select: "name phone",
