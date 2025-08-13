@@ -24,7 +24,7 @@ const MemoBillPage = () => {
   const { showBillPage, setShowBillPage, billData } = usePaymentStore();
 
   const calculateItemTotal = useCallback((item: BillItem): number => {
-    const dishPrice = item.dish?.price ?? 0;
+    const dishPrice = item?.dish?.price ?? 0;
     const portionPrice = item?.portion?.price ?? 0;
 
     const extrasTotal = Array.isArray(item?.extras)

@@ -160,7 +160,7 @@ const AvailableCoinz = () => {
     if (billData?.variantId) {
       payload.variantId = billData.variantId;
     }
-    await removeCoinsMutation.mutateAsync(payload);
+    // await removeCoinsMutation.mutateAsync(payload);
     await removeCouponMutation.mutateAsync(payload);
     handleApplyCoinz(tempClaimedCoins || 0);
   }, [
