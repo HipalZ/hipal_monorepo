@@ -2957,7 +2957,7 @@ const posRouter = new Hono()
           if (isPaid) {
             return respond(
               c,
-              "You cannot apply discount on paid variant",
+              "You cannot apply coin on paid variant",
               true,
               400,
               {},
@@ -3084,7 +3084,7 @@ const posRouter = new Hono()
           if (isPaid) {
             return respond(
               c,
-              "You cannot apply discount on paid variant",
+              "You cannot apply coupon on paid variant",
               true,
               400,
               {},
@@ -3324,7 +3324,7 @@ const posRouter = new Hono()
           if (isPaid) {
             return respond(
               c,
-              "You cannot apply discount on paid variant",
+              "You cannot apply coupon on paid variant",
               true,
               400,
               {},
@@ -3424,7 +3424,7 @@ const posRouter = new Hono()
           if (isPaid) {
             return respond(
               c,
-              "You cannot apply discount on paid variant",
+              "You cannot apply coupon on paid variant",
               true,
               400,
               {},
@@ -3587,7 +3587,7 @@ const posRouter = new Hono()
           if (variantIsPaid) {
             return respond(
               c,
-              "You cannot apply discount on paid variant",
+              "You cannot apply servicecharge on paid variant",
               true,
               400,
               {},
@@ -3686,7 +3686,7 @@ const posRouter = new Hono()
           if (variantIsPaid) {
             return respond(
               c,
-              "You cannot apply discount on paid variant",
+              "You cannot apply servicecharge on paid variant",
               true,
               400,
               {},
@@ -3966,7 +3966,7 @@ const posRouter = new Hono()
           if (isPaid) {
             return respond(
               c,
-              "You cannot apply discount on paid variant",
+              "You cannot apply tips on paid variant",
               true,
               400,
               {},
@@ -4049,7 +4049,7 @@ const posRouter = new Hono()
           if (isPaid) {
             return respond(
               c,
-              "You cannot apply discount on paid variant",
+              "You cannot apply tips on paid variant",
               true,
               400,
               {},
