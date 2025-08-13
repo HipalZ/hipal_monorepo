@@ -283,6 +283,8 @@ export const calculatedCashbackCoins = async (
   businessId: string,
   billValue: number,
   claimedCoins: number,
+  couponDiscount: number,
+  discount: number,
 ) => {
   const LoyaltySetting = await LoyaltySettings.findOne({
     businessId,
@@ -293,7 +295,7 @@ export const calculatedCashbackCoins = async (
     console.error("LoyaltySetting not found or setReward is not a number");
     return 0; // Or handle this case as appropriate for your application
   }
-  const subTotal = billValue - claimedCoins;
+  const subTotal = billValue - claimedCoins - couponDiscount - discount;
   const coinsToBeAdded =
     (LoyaltySetting.setCashBackPercentage / 100) * subTotal;
   if (coinsToBeAdded < 0) {
@@ -1828,7 +1830,12 @@ const paymentsRouter = new Hono()
               );
 
               QrBill.findOneAndUpdate(
-                { billId: splitTableSessionData?._id.toString() },
+                {
+                  $or: [
+                    { billId: splitTableSessionData?._id?.toString() },
+                    { billId: tableSession?._id?.toString() },
+                  ],
+                },
                 { status: "FAILED" },
                 { session },
               );
@@ -1870,6 +1877,8 @@ const paymentsRouter = new Hono()
                   getOrder?.businessId.toString(),
                   getOrder?.billValue || 0,
                   claimCoins,
+                  Number(getOrder.couponDiscount),
+                  Number(getOrder.discount),
                 );
 
                 if (getOrder?.cashbackAvailable === false) {
@@ -1980,7 +1989,12 @@ const paymentsRouter = new Hono()
               );
 
               await QrBill.findOneAndUpdate(
-                { billId: splitBillTableSessionData?._id.toString() },
+                {
+                  $or: [
+                    { billId: splitTableSessionData?._id?.toString() },
+                    { billId: tableSession?._id?.toString() },
+                  ],
+                },
                 { status: "SUCCESS" },
                 { session },
               );
@@ -2037,7 +2051,12 @@ const paymentsRouter = new Hono()
               );
 
               QrBill.findOneAndUpdate(
-                { billId: splitTableSessionData?._id.toString() },
+                {
+                  $or: [
+                    { billId: splitTableSessionData?._id?.toString() },
+                    { billId: tableSession?._id?.toString() },
+                  ],
+                },
                 { status: "FAILED" },
                 { session },
               );
@@ -2084,6 +2103,8 @@ const paymentsRouter = new Hono()
                   getOrder?.businessId.toString(),
                   getOrder?.billValue || 0,
                   claimCoins,
+                  Number(getOrder.couponDiscount),
+                  Number(getOrder.discount),
                 );
 
                 if (getOrder?.cashbackAvailable === false) {
@@ -2194,7 +2215,12 @@ const paymentsRouter = new Hono()
               );
 
               await QrBill.findOneAndUpdate(
-                { billId: splitBillTableSessionData?._id.toString() },
+                {
+                  $or: [
+                    { billId: splitTableSessionData?._id?.toString() },
+                    { billId: tableSession?._id?.toString() },
+                  ],
+                },
                 { status: "SUCCESS" },
                 { session },
               );
@@ -2454,6 +2480,8 @@ const paymentsRouter = new Hono()
               getOrder?.businessId.toString(),
               getOrder?.billValue || 0,
               claimCoins,
+              Number(getOrder.couponDiscount),
+              Number(getOrder.discount),
             );
 
             if (getOrder?.cashbackAvailable === false) {
@@ -3164,6 +3192,8 @@ const paymentsRouter = new Hono()
                       order.businessId.toString(),
                       Number(order.billValue),
                       Number(order.claimedCoins),
+                      Number(order.couponDiscount),
+                      Number(order.discount),
                     );
 
                     if (
@@ -3319,7 +3349,10 @@ const paymentsRouter = new Hono()
 
                   await QrBill.findOneAndUpdate(
                     {
-                      billId: splitBillTableSessionData?._id.toString(),
+                      $or: [
+                        { billId: splitBillTableSessionData?._id?.toString() },
+                        { billId: tableSession?._id?.toString() },
+                      ],
                     },
                     {
                       $set: {
@@ -3378,6 +3411,8 @@ const paymentsRouter = new Hono()
                       order.businessId.toString(),
                       Number(order.billValue),
                       Number(order.claimedCoins),
+                      Number(order.couponDiscount),
+                      Number(order.discount),
                     );
 
                     if (
@@ -3537,7 +3572,12 @@ const paymentsRouter = new Hono()
 
                     await QrBill.findOneAndUpdate(
                       {
-                        billId: splitBillTableSessionData?._id.toString(),
+                        $or: [
+                          {
+                            billId: splitBillTableSessionData?._id?.toString(),
+                          },
+                          { billId: tableSession?._id?.toString() },
+                        ],
                       },
                       {
                         $set: {
@@ -3941,6 +3981,8 @@ const paymentsRouter = new Hono()
                   order.businessId.toString(),
                   Number(order.billValue),
                   Number(order.claimedCoins),
+                  Number(order.couponDiscount),
+                  Number(order.discount),
                 );
 
                 if (existingLoyalty?.loyaltyId && order.claimedCoins > 0) {

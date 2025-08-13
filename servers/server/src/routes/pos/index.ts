@@ -2733,7 +2733,7 @@ const posRouter = new Hono()
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
-        });
+        }).session(session);
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
@@ -2924,7 +2924,7 @@ const posRouter = new Hono()
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
-        });
+        }).session(session);
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
@@ -3045,7 +3045,7 @@ const posRouter = new Hono()
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
-        });
+        }).session(session);
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
         }
@@ -3195,7 +3195,7 @@ const posRouter = new Hono()
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
-        });
+        }).session(session);
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
@@ -3302,7 +3302,7 @@ const posRouter = new Hono()
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
-        });
+        }).session(session);
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
@@ -3403,7 +3403,7 @@ const posRouter = new Hono()
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
-        });
+        }).session(session);
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
@@ -3564,7 +3564,7 @@ const posRouter = new Hono()
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
-        });
+        }).session(session);
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
@@ -3665,7 +3665,7 @@ const posRouter = new Hono()
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
-        });
+        }).session(session);
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
@@ -3933,7 +3933,7 @@ const posRouter = new Hono()
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
-        });
+        }).session(session);
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});
@@ -4017,7 +4017,7 @@ const posRouter = new Hono()
         const tableSession = await UserSession.findOne({
           businessId,
           tableName,
-        });
+        }).session(session);
 
         if (!tableSession) {
           return respond(c, "Table session not found", true, 404, {});

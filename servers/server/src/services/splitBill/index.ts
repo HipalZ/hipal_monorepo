@@ -13,7 +13,6 @@ import {
 import type { UserSessionSchemaType } from "@hi/db-models/src/validators";
 import type { ClientSession } from "mongoose";
 import {
-  CartItem,
   calculateFinalTotal,
   calculateSplitBillDishIds,
   calculateSplitTotalsFromItems,
@@ -25,6 +24,8 @@ import {
   splitCalculateItemUpdatedGstAfterDiscount,
   updateSplitTableSession,
 } from "../../utils/bill";
+
+import type { CartItem } from "../../utils/bill";
 
 import { nanoid } from "nanoid";
 import {
@@ -900,6 +901,8 @@ export const handleNormalBillSettlement = async ({
     order.businessId.toString(),
     Number(order.billValue),
     Number(order.claimedCoins),
+    Number(order.couponDiscount),
+    Number(order.discount),
   );
 
   if (
@@ -1061,6 +1064,8 @@ const processOfflineOrderPayment = async ({
       order.businessId.toString(),
       Number(order.billValue),
       Number(order.claimedCoins),
+      Number(order.couponDiscount),
+      Number(order.discount),
     );
 
     if (loyaltySettings?.loyaltyId && order.claimedCoins > 0) {
