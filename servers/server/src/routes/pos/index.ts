@@ -3962,8 +3962,8 @@ const posRouter = new Hono()
             );
           }
 
-          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
-          if (variantIsPaid) {
+          const isPaid = await variantIsPaid(variantId);
+          if (isPaid) {
             return respond(
               c,
               "You cannot apply discount on paid variant",
@@ -4045,8 +4045,8 @@ const posRouter = new Hono()
             );
           }
 
-          const variantIsPaid = await checkVariantIsPaid(tableSession._id);
-          if (variantIsPaid) {
+          const isPaid = await variantIsPaid(variantId);
+          if (isPaid) {
             return respond(
               c,
               "You cannot apply discount on paid variant",
