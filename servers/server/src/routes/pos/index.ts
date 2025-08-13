@@ -3158,7 +3158,7 @@ const posRouter = new Hono()
           gst: Number(newGst.toFixed(2)),
           total: newTotal,
           isDiscountApplied: true,
-          couponDiscount,
+          couponDiscount: Number(couponDiscount.toFixed(2)),
           couponId,
           couponPercentage: Number(
             ((couponDiscount / tableSession.subTotal) * 100).toFixed(2),

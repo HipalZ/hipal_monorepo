@@ -621,7 +621,7 @@ const applyCouponToVariantBill = async (
       gst: Number(newGst.toFixed(2)),
       total: newTotal,
       isDiscountApplied: true,
-      couponDiscount,
+      couponDiscount: Number(couponDiscount?.toFixed(2)),
       couponId,
     },
     session,
