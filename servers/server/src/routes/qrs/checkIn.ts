@@ -77,7 +77,9 @@ const checkInQrRouter = new Hono()
       const checkInQrs = await CheckInQr.find({
         businessId,
         isDeleted: false,
-      }).lean();
+      })
+        .select("name downloadLink date")
+        .lean();
 
       return respond(
         c,

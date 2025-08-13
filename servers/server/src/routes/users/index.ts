@@ -1558,18 +1558,31 @@ const usersRouter = new Hono()
     zValidator(
       "json",
       z.object({
-        dob: z.number(),
+        dob: z.number().optional(),
         birthdayTriggerCount: z.number().optional(),
+        name: z.string().min(2).max(100).optional(),
+        email: z.string().email().optional(),
+
+        address: z.string().min(5).max(200).optional(),
+        profession: z.string().min(2).max(100).optional(),
       }),
     ),
 
     async (c) => {
-      const { dob, birthdayTriggerCount } = await c.req.json();
+      const {
+        dob,
+        birthdayTriggerCount,
+        name,
+        email,
+
+        address,
+        profession,
+      } = await c.req.json();
       const { userId } = c.req.param();
 
       const user = await User.findByIdAndUpdate(
         userId,
-        { dob, birthdayTriggerCount },
+        { dob, birthdayTriggerCount, name, email, address, profession },
         { new: true },
       );
 
@@ -1577,7 +1590,9 @@ const usersRouter = new Hono()
         return respond(c, "User not found", true, 404, {});
       }
 
-      return respond(c, "User data updated successfully", false, 200, user);
+      return respond(c, "User data updated successfully", false, 200, {
+        _id: user._id,
+      });
     },
   )
 
@@ -1655,7 +1670,9 @@ const usersRouter = new Hono()
     async (c) => {
       const { userId } = c.req.param();
 
-      const existingUser = await User.findById(userId).lean();
+      const existingUser = await User.findById(userId)
+        .select("name email phone address profession dob birthdayTriggerCount")
+        .lean();
 
       if (!existingUser) {
         return respond(c, "User not found", true, 404, {});

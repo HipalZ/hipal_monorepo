@@ -15,10 +15,11 @@ const checkInQrUserRouter = new Hono()
         businessId: z.string().min(2).max(50),
         from: z.string().optional(),
         to: z.string().optional(),
+        qrId: z.string().min(2).max(50).optional(),
       }),
     ),
     async (c) => {
-      const { businessId, from, to } = c.req.query();
+      const { businessId, from, to, qrId } = c.req.query();
 
       const fromDate = from ? Number(from) : startOfToday.getTime();
       const toDate = to ? Number(to) : endOfToday.getTime();
@@ -34,11 +35,12 @@ const checkInQrUserRouter = new Hono()
       const checkInQrUsers = await CheckInQrUser.find({
         businessId,
         date: { $gte: fromDate, $lte: toDate },
+        ...(qrId ? { qrId } : {}),
       })
         .sort({ date: -1 })
         .populate({
           path: "userId",
-          select: "name phone",
+          select: "name phone email dob address profession",
         });
 
       return respond(
@@ -58,10 +60,11 @@ const checkInQrUserRouter = new Hono()
         businessId: z.string().min(2).max(50),
         from: z.string().optional(),
         to: z.string().optional(),
+        qrId: z.string().min(2).max(50).optional(),
       }),
     ),
     async (c) => {
-      const { businessId, from, to } = c.req.query();
+      const { businessId, from, to, qrId } = c.req.query();
 
       const fromDate = from ? Number(from) : startOfToday.getTime();
       const toDate = to ? Number(to) : endOfToday.getTime();
@@ -77,11 +80,14 @@ const checkInQrUserRouter = new Hono()
       const checkInQrUsers = await CheckInQrUser.find({
         businessId,
         date: { $gte: fromDate, $lte: toDate },
+        ...(qrId ? { qrId } : {}),
       })
         .sort({ date: -1 })
-        .populate("userId");
+        .populate("userId")
+        .populate("qrId");
 
       const rows = checkInQrUsers.map((item) => ({
+        QR_NAME: item.qrId?.name ?? "",
         CHECKIN_CODE: item.code,
         DATE: item.date ? new Date(item.date).toLocaleString("en-IN") : "",
         USER_NAME: item.userId?.name ?? "",
