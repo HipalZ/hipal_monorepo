@@ -3,6 +3,7 @@ import { apiRpc } from "@hi/common";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import toast from "react-hot-toast";
+import { useParams } from "react-router-dom";
 
 interface ICheckInQrs {
   _id: string;
@@ -221,12 +222,14 @@ export interface ICheckInUserData {
 
 export const useFetchCheckInUsers = (data: ICheckInUsers) => {
   const response = useCallback(async (data: ICheckInUsers) => {
+    const queryPayload = {
+      businessId: data.businessId,
+      from: data.from,
+      to: data.to,
+    };
+    if (data.qrId) queryPayload.qrId = data.qrId;
     const res = await apiRpc.qrs.check_in_user.$get({
-      query: {
-        businessId: data.businessId,
-        from: data.from,
-        to: data.to,
-      },
+      query: queryPayload,
     });
     const checkInUsers: ICheckInUserData[] = (await res.json()).data || [];
     return checkInUsers;
@@ -250,53 +253,80 @@ export const useFetchCheckInUsers = (data: ICheckInUsers) => {
   };
 };
 
+export const useGetCHeckIn = () => {
+  const businessId = useParams().businessId;
+
+  const getCheckin = async () => {
+    const response = await apiRpc.qrs.check_in.$get({
+      query: {
+        businessId: businessId,
+      },
+    });
+    const res = await response.json();
+    return res.data;
+  };
+
+  const { isLoading: gettingCheckInQrs, data: checkInQrsData } = useQuery({
+    queryKey: ["check-in-qr", businessId],
+    queryFn: getCheckin,
+    enabled: !!businessId,
+  });
+  return { gettingCheckInQrs, checkInQrsData };
+};
+
 interface ICheckInCsvPayload {
-  businessId: string
-  from?: string
-  to?: string
+  businessId: string;
+  from?: string;
+  to?: string;
+  qrId?: string;
 }
 
 export const useDownloadCheckInCsv = () => {
   const formatDate = (timestamp: number) => {
-    const d = new Date(timestamp)
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-  }
+    const d = new Date(timestamp);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+      2,
+      "0",
+    )}-${String(d.getDate()).padStart(2, "0")}`;
+  };
 
   const { isPending, mutateAsync } = useMutation({
     mutationFn: async (payload: ICheckInCsvPayload) => {
+      const newPayload = {
+        businessId: payload.businessId,
+        from: payload.from,
+        to: payload.to,
+        ...(payload.qrId ? { qrId: payload.qrId } : {}),
+      };
       const response = await apiRpc.qrs.check_in_user.download_csv.$get({
-        query: {
-          businessId: payload.businessId,
-          from: payload.from,
-          to: payload.to,
-        },
-      })
-      return response.blob()
+        query: newPayload,
+      });
+      return response.blob();
     },
     onSuccess: async (blob, variables) => {
-      const url = window.URL.createObjectURL(new Blob([blob]))
-      const link = document.createElement("a")
-      const fromStr = formatDate(Number(variables.from))
-      const toStr = formatDate(Number(variables.to))
-      const fileName = `checkin_users_${fromStr}_to_${toStr}.csv`
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement("a");
+      const fromStr = formatDate(Number(variables.from));
+      const toStr = formatDate(Number(variables.to));
+      const fileName = `checkin_users_${fromStr}_to_${toStr}.csv`;
 
-      link.href = url
-      link.setAttribute("download", fileName)
-      document.body.appendChild(link)
-      link.click()
-      link.parentNode?.removeChild(link)
-      window.URL.revokeObjectURL(url)
+      link.href = url;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
-      toast.success("CSV downloaded successfully!")
+      toast.success("CSV downloaded successfully!");
     },
     onError: (error) => {
-      console.error("Error downloading CSV:", error)
-      toast.error("Failed to download CSV file")
+      console.error("Error downloading CSV:", error);
+      toast.error("Failed to download CSV file");
     },
-  })
+  });
 
   return {
     downloadCheckInCsv: mutateAsync,
     isDownloadingCsv: isPending,
-  }
-}
+  };
+};

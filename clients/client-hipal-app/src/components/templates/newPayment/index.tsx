@@ -1,7 +1,7 @@
 "use client";
-import { memo, useState } from "react";
+import { memo } from "react";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import type { BillData, IBusinessData } from "@/components/types/businessData";
+import type { IBusinessData } from "@/components/types/businessData";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import {
@@ -169,7 +169,7 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
           show={isSplitBill}
           onClose={() => usePaymentStore.getState().setIsBillSplit(false)}
         >
-         <SplitPayment billData={billData} />
+         <SplitPayment billData={billData} data={data} />
         </BottomPopUp>
       )}
     </main>

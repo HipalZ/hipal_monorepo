@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import type { BillData } from "@/components/types/businessData";
+import type { BillData,IBusinessData } from "@/components/types/businessData";
 import {
   Accordion,
   AccordionContent,
@@ -21,12 +21,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import PaymentBack from "../posPayment/paymentBack";
 
 interface BillDataProps {
   billData: BillData[];
+  data:IBusinessData
 }
 
-const MemoSplitPayment = ({ billData }: BillDataProps) => {
+const MemoSplitPayment = ({ billData,data }: BillDataProps) => {
   const setClaimedCoins = usePaymentStore((state) => state.setClaimedCoins);
   const setBillData = usePaymentStore((state) => state.setBillData);
   const setBillValue = usePaymentStore((state) => state.setBillValue);
@@ -65,8 +67,9 @@ const MemoSplitPayment = ({ billData }: BillDataProps) => {
   };
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6 !poppins-regular !text-black h-[95dvh] overflow-auto">
+      <PaymentBack data={data} />
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold !poppins-regular">Bill Payment</h1>
+        <h1 className="text-3xl font-bold !poppins-regular -mt-10">Bill Payment</h1>
         <p className="text-muted-foreground">
           Select a bill variant to proceed with payment
         </p>

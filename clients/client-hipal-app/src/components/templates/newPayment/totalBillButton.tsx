@@ -24,6 +24,8 @@ const MemoTotalBillButton = () => {
   const { refetch } = useGetBill();
   const accessToken = useUserToken.getState().accessToken;
   const { setUrlFrom } = useLogin();
+  const isSplit = Array.isArray(billData)
+  console.log(isSplit)
   const completeUrl = window.location.href;
   const handleEligibility = useCallback(() => {
     if (billValue === 0) {
@@ -75,7 +77,7 @@ const MemoTotalBillButton = () => {
         </span>
       </h1>
       <section className="flex items-center space-x-4">
-        {billData.variantName ? (
+        {billData?.variantName ? (
           <article
             onClick={goToTheSplit}
             onKeyDown={goToTheSplit}
