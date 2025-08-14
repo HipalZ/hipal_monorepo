@@ -29,7 +29,7 @@ const checkInQrRouter = new Hono()
 
       const businessInfo = await Business.findById(businessId);
 
-      const longUrl = `https://hipal-test.hipalz.com/${businessInfo?.customLink}/info`;
+      const longUrl = `https://hipal-test.hipalz.com/${businessInfo?.customLink}/explore`;
 
       const uniqueOrderId = nanoid(5);
       let findUrl = await UrlModel.findOne({ longUrl });
