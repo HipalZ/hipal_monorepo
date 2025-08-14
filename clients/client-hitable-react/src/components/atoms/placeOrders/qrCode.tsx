@@ -40,20 +40,15 @@ const MemoQrCode = ({
   const { removeOfflineAlert } = useLiteStore((s) => ({
     removeOfflineAlert: s.removeOfflineAlert,
   }));
-  const selectedBill = useOrderStore((s) => s.selectedBill);
   const setSelectedBill = useOrderStore((s) => s.setSelectedBill);
 
-  // Derived IDs
-  const billId = selectedBill?.billId || "";
-  const variantId = selectedBill?.variantId || null;
+  const billId = data?.billId || "";
+  const variantId = data?.variantId || null;
 
-  // Keep previous IDs to detect changes
   const prevKeyRef = useRef<{ billId?: string; variantId?: string | null }>({});
 
-  // Ensure a fresh QR value when bill/variant changes (fallback to prop if you want)
   const qrValue = qrBillId || (variantId ? `${billId}:${variantId}` : billId);
 
-  // --- API calls ---
   const webhook = async () => {
     if (!billId) return null;
 
@@ -64,7 +59,6 @@ const MemoQrCode = ({
       return (await res.json())?.data;
     }
 
-    // Correct single-parameter route when no variantId
     const res = await apiRpc.table.qr_webhook[":billId"][":variantId"].$get({
       param: { billId },
     });
@@ -80,7 +74,6 @@ const MemoQrCode = ({
     return json.data;
   };
 
-  // --- Queries (keys include billId + variantId + showStatus) ---
   const { data: alertData, isFetching: isAlertFetching } = useQuery({
     queryKey: ["tableAlert", billId, showStatus],
     queryFn: tableAlert,
@@ -133,7 +126,7 @@ const MemoQrCode = ({
           setOpenOrderModal(false);
           navigate(`/${businessId}/alerts`);
         } else {
-          setSelectedBill(null)
+          setSelectedBill(null);
           getBillCall();
         }
       }, 4000);
@@ -289,7 +282,7 @@ const MemoQrCode = ({
         <div className="flex items-center justify-center mt-6 space-x-2">
           <CreditCard className="w-6 h-6 text-green-500" />
           <h3 className="text-2xl font-bold text-gray-800">
-            Total: ₹{selectedBill?.total?.toFixed(2)}
+            Total: ₹{data?.total?.toFixed(2)}
           </h3>
         </div>
 
@@ -310,7 +303,7 @@ const MemoQrCode = ({
         >
           <Normalsettle
             closeNormalSettle={closeNormalSettle}
-            data={selectedBill}
+            data={data}
             alertData={alertData}
           />
         </BottomPopUp>
