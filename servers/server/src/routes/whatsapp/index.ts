@@ -2214,7 +2214,7 @@ const whatsappRouter = new Hono()
             }
             if (checkInCode) {
               const findLongUrl = await UrlModel.findOne({
-                longUrl: { $regex: `tag=${checkInCode}`, $options: "i" },
+                urlCode: checkInCode,
                 businessId: config?.businessId,
               });
               if (findLongUrl) {
