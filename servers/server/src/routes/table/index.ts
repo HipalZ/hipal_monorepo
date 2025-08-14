@@ -27,7 +27,7 @@ import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { Hono } from "hono";
-import { type ClientSession } from "mongodb";
+import type { ClientSession } from "mongodb";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
@@ -1312,8 +1312,25 @@ const tableRouter = new Hono()
     async (c) => {
       const { billId, variantId } = c.req.param();
 
+      if (variantId && variantId.length === 24) {
+        const paymentStatus = await QrBill.findOne({
+          billId: variantId,
+        });
+
+        return c.json(
+          {
+            message: "listing qr bill",
+            err: false,
+            data: {
+              status: paymentStatus?.status,
+            },
+          },
+          200,
+        );
+      }
+
       const paymentStatus = await QrBill.findOne({
-        $or: [{ billId: billId }, { billId: variantId }],
+        billId: billId,
       });
 
       return c.json(

@@ -1831,10 +1831,7 @@ const paymentsRouter = new Hono()
 
               QrBill.findOneAndUpdate(
                 {
-                  $or: [
-                    { billId: splitTableSessionData?._id?.toString() },
-                    { billId: tableSession?._id?.toString() },
-                  ],
+                  $or: [{ billId: splitTableSessionData?._id?.toString() }],
                 },
                 { status: "FAILED" },
                 { session },
@@ -1990,10 +1987,7 @@ const paymentsRouter = new Hono()
 
               await QrBill.findOneAndUpdate(
                 {
-                  $or: [
-                    { billId: splitTableSessionData?._id?.toString() },
-                    { billId: tableSession?._id?.toString() },
-                  ],
+                  $or: [{ billId: splitTableSessionData?._id?.toString() }],
                 },
                 { status: "SUCCESS" },
                 { session },
@@ -2052,10 +2046,7 @@ const paymentsRouter = new Hono()
 
               QrBill.findOneAndUpdate(
                 {
-                  $or: [
-                    { billId: splitTableSessionData?._id?.toString() },
-                    { billId: tableSession?._id?.toString() },
-                  ],
+                  $or: [{ billId: splitTableSessionData?._id?.toString() }],
                 },
                 { status: "FAILED" },
                 { session },
@@ -2216,10 +2207,7 @@ const paymentsRouter = new Hono()
 
               await QrBill.findOneAndUpdate(
                 {
-                  $or: [
-                    { billId: splitTableSessionData?._id?.toString() },
-                    { billId: tableSession?._id?.toString() },
-                  ],
+                  $or: [{ billId: splitTableSessionData?._id?.toString() }],
                 },
                 { status: "SUCCESS" },
                 { session },
@@ -3351,7 +3339,6 @@ const paymentsRouter = new Hono()
                     {
                       $or: [
                         { billId: splitBillTableSessionData?._id?.toString() },
-                        { billId: tableSession?._id?.toString() },
                       ],
                     },
                     {
@@ -3576,7 +3563,6 @@ const paymentsRouter = new Hono()
                           {
                             billId: splitBillTableSessionData?._id?.toString(),
                           },
-                          { billId: tableSession?._id?.toString() },
                         ],
                       },
                       {
