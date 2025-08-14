@@ -1312,26 +1312,6 @@ const tableRouter = new Hono()
     async (c) => {
       const { billId, variantId } = c.req.param();
 
-      const tableSession = await UserSession.findOne({
-        _id: billId,
-      });
-
-      if (!tableSession) {
-        return respond(c, "Table session not found", true, 404, {});
-      }
-
-      if (tableSession.isSplit) {
-        if (!variantId) {
-          return respond(
-            c,
-            "variantId is required for split bill",
-            true,
-            400,
-            {},
-          );
-        }
-      }
-
       const paymentStatus = await QrBill.findOne({
         $or: [{ billId: billId }, { billId: variantId }],
       });
