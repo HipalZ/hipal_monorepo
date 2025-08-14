@@ -2416,10 +2416,13 @@ const whatsappRouter = new Hono()
               const outletInfo = await OutLetInfo.findOne({
                 businessId: config?.businessId,
               });
+              const websiteLink = outletInfo?.socialMediaLinks?.find(
+                (item) => item?.icon === "website",
+              )?.link;
               const checkInBody = `Welcome to ${
                 bName?.name
-              }! 👋\n\n we're grateful to have you with us today. 🙏\nYour code: *${code}*\n\n *Discover Us*: ${longUrl}\n\nWe hope you have a great experience! 😊\n\n *Find Us*: ${
-                outletInfo?.socialMediaLinks[3]?.link || ""
+              }! 👋\n\n Thank you for being with us today. 🙏\nYour code: *${code}*\n\n *Discover Us*: ${longUrl}\n\nWe hope you have a great experience! 😊\n\n *Find Us*: ${
+                websiteLink || ""
               }`;
               await axios({
                 method: "POST",
