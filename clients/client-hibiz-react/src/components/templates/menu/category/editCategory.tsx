@@ -1,10 +1,21 @@
 import BottomButton from "@/components/atom/bottomButton";
 import Background from "@/components/atom/feildBackground";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
-import useMenuPageStore from "@/components/store/useMenuStorage";
+import useMenuPageStore, { dayIndex } from "@/components/store/useMenuStorage";
 import { storeImageAfterSave } from "@/components/utils/helper";
 import { useDeleteCategory, useUpdateCategory } from "@/hooks/useCategory";
 import { Switch } from "@headlessui/react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 import { memo, useCallback, type ChangeEvent } from "react";
 import { BiImageAdd } from "react-icons/bi";
@@ -38,6 +49,10 @@ const MemoEditCategory = () => {
     isCatDelete,
     setIsCatDelete,
     selectSingleParentCat,
+    timings,
+    updateTiming,
+    addTiming,
+    removeTiming,
   } = useMenuPageStore((s) => ({
     selectIds: s.selectedIds,
     categoryStep: s.categoryStep,
@@ -59,13 +74,20 @@ const MemoEditCategory = () => {
     isCatDelete: s.isCatDelete,
     setIsCatDelete: s.setIsCatDelete,
     selectSingleParentCat: s.selectSingleParentCat,
+    timings: s.timings,
+    updateTiming: s.updateTiming,
+    addTiming: s.addTiming,
+    removeTiming: s.removeTiming,
   }));
 
   const { mutate, isPending } = useUpdateCategory();
 
   const { isPending: deletePending, mutate: deleteCat } = useDeleteCategory();
 
-  const { businessId,menuId } = useParams<{ businessId: string; menuId: string }>();
+  const { businessId, menuId } = useParams<{
+    businessId: string;
+    menuId: string;
+  }>();
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -172,6 +194,7 @@ const MemoEditCategory = () => {
       coverImage: imageUrl,
       visibility: visibility,
       _id: catId,
+      timings: timings,
     };
 
     const payload =
@@ -188,6 +211,7 @@ const MemoEditCategory = () => {
             dishIds: recommendationIds,
             removeDishIds: removeDishIds,
           };
+    console.log("Payload to update category:", payload);
     mutate(payload);
   };
 
@@ -269,6 +293,7 @@ const MemoEditCategory = () => {
             </div>
           </Background>
         </section>
+
         {!isMenuManager && (
           <section className="flex-1">
             <article className="lg:mx-4">
@@ -301,6 +326,88 @@ const MemoEditCategory = () => {
             <span className="size-4 translate-x-1 rounded-full bg-white transition group-data-[checked]:translate-x-6" />
           </Switch>
         </article>
+      </section>
+      <section className="mx-6 my-6 space-y-4">
+        <h2 className="text-xl font-semibold text-gray-700">Schedule</h2>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {timings.map((t, i) => (
+            <Card key={i} className="flex items-center p-4 space-x-4 shadow-none relative">
+              {/* Slot Label */}
+              <CardHeader className="p-0 w-[3rem]">
+                <CardTitle className="text-sm font-medium">
+                  Slot {i + 1}
+                </CardTitle>
+              </CardHeader>
+
+              <CardContent className="p-0 flex-1 flex flex-wrap items-center gap-3">
+                {/* Day Selector */}
+                <Select
+                  value={String(t.day)}
+                  onValueChange={(val) => updateTiming(i, { day: Number(val) })}
+                  className="w-28"
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Day" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(dayIndex).map(([label, val]) => (
+                      <SelectItem key={val} value={String(val)}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Start Time */}
+                <Input
+                  type="time"
+                  value={`${String(Math.floor(t.start / 60)).padStart(
+                    2,
+                    "0",
+                  )}:${String(t.start % 60).padStart(2, "0")}`}
+                  onChange={(e) => {
+                    const [h, m] = e.target.value.split(":").map(Number);
+                    updateTiming(i, { start: h * 60 + m });
+                  }}
+                  className="w-24"
+                />
+
+                {/* End Time */}
+                <Input
+                  type="time"
+                  value={`${String(Math.floor(t.end / 60)).padStart(
+                    2,
+                    "0",
+                  )}:${String(t.end % 60).padStart(2, "0")}`}
+                  onChange={(e) => {
+                    const [h, m] = e.target.value.split(":").map(Number);
+                    updateTiming(i, { end: h * 60 + m });
+                  }}
+                  className="w-20"
+                />
+
+                {/* Remove Button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeTiming(i)}
+                  className="absolute bottom-0 right-0"  
+                >
+                  <X className="h-5 w-5 text-red-500" />
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Button
+          variant="outline"
+          className="mt-2"
+          onClick={() => addTiming({ day: -1, start: 0, end: 1440 })}
+        >
+          + Add Slot
+        </Button>
       </section>
       <section className="mx-6">
         <LinkingCategoryComp />

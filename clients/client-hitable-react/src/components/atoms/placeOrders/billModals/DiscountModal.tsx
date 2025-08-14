@@ -18,14 +18,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Lock } from "lucide-react";
 import { useOrderStore } from "@/components/store/useOrderData";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
-import {
-  useAddDiscount,
-  useRemoveDiscount,
-  type DiscountType,
-} from "@/components/hooks/useBill";
+
 import { useIsPasswordActive } from "@/components/hooks/usePasswordManager";
 import type { IBillData } from "@/components/types/hiClientzData.ts";
 import toast from "react-hot-toast";
+import type { DiscountType } from "@/components/types/api.types.ts";
+import { useAddDiscount } from "@/components/hooks/api/useDiscount.ts";
+import { useRemoveDiscount } from "@/components/hooks/api/useDiscount.ts";
 
 interface BillItem {
   _id: string;
@@ -89,10 +88,17 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
   const { businessId } = useParams();
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const { captainData: userData } = useHiClientZ();
+  const selectedBill = useOrderStore((s) => s.selectedBill);
 
   // Password management hooks
   const { isLoading: isAddPasswordLoading, isActive: isAddPasswordActive } =
     useIsPasswordActive("DISCOUNT");
+
+  const isSplitBill = useMemo(() => Array.isArray(data), [data]);
+  const currentBill = useMemo(
+    () => selectedBill || (isSplitBill ? null : data),
+    [selectedBill, isSplitBill, data],
+  );
 
   const [discountValue, setDiscountValue] = useState<number>(0);
   const [discountReason, setDiscountReason] = useState<string>("");
@@ -104,8 +110,9 @@ const MemoDiscountModal = ({ data, onClose }: DiscountModalProps) => {
   // Password states
   const [addDiscountPassword, setAddDiscountPassword] = useState<string>("");
 
-  const { addingDiscountLoader, addingDiscount } = useAddDiscount();
-  const { removingDiscountLoader, removingDiscount } = useRemoveDiscount();
+  const { addingDiscountLoader, addingDiscount } = useAddDiscount(currentBill);
+  const { removingDiscountLoader, removingDiscount } =
+    useRemoveDiscount(currentBill);
 
   // Flatten all items from billItems array, excluding deleted items
   const allItems = useMemo(() => {

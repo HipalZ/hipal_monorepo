@@ -32,6 +32,7 @@ import reportRouter from "./report";
 import googleReview from "./reviews";
 import scriptRouter from "./script";
 import settingsRouter from "./settings";
+import splitBillRouter from "./splitBill";
 import subsCriberRouter from "./subscribers";
 import surlRouter from "./surl";
 import tableRouter from "./table";
@@ -91,6 +92,7 @@ export const routes = app
   .route("/kitchen", kitchenRouter)
   .route("/password_manager", passwordManagerRouter)
   .route("/print_section", printSectionRouter)
-  .route("/report", reportRouter);
+  .route("/report", reportRouter)
+  .route("/split_bill", splitBillRouter);
 
 export type AppType = typeof routes;

@@ -223,6 +223,61 @@ const userSessionSchema = new mongoose.Schema<UserSessionSchemaType>({
     required: false,
     default: 0,
   },
+  isSplit: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
+  variantsCounts: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+
+  discountPercentage: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+  splitType: {
+    type: String,
+    enum: ["PORTION", "ITEM"],
+    required: false,
+    default: "PORTION",
+  },
+  totalGst: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+
+  coinPercentage: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+
+  couponPercentage: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+
+  itemIds: {
+    type: [String],
+    required: false,
+  },
+  itemGst: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
+
+  itemGstAfterDiscount: {
+    type: Number,
+    required: false,
+    default: 0,
+  },
 });
 
 userSessionSchema.plugin(autoIncrement.plugin, {

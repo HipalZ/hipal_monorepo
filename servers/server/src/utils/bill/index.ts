@@ -1,4 +1,4 @@
-import { UserSession } from "@hi/db-models";
+import { SplitBillTableSession, UserSession } from "@hi/db-models";
 import type { ClientSession } from "mongoose";
 import type { BillGroup, Item } from "../billTypes";
 
@@ -135,6 +135,77 @@ function calculateBillTotals(kots: KotOrderTypes[]): {
   return { totalDishTotal, totalGst };
 }
 
+function calculateSplitTotalsFromItems(items: CartItem[]): {
+  totalDishTotal: number;
+  totalGst: number;
+} {
+  let totalDishTotal = 0;
+  let totalGst = 0;
+
+  try {
+    for (const item of items) {
+      // Skip deleted items
+      if (item.isDeleted) continue;
+
+      // Base price comes from portion if present, otherwise dish.price
+      const basePrice = item.portion?.price ?? item.dish.price;
+
+      // Sum up all extras (price * quantity)
+      const extrasTotal = item.extras.reduce(
+        (sum, ex) => sum + ex.price * ex.quantity,
+        0,
+      );
+
+      // Line total for this item
+      const lineTotal = (basePrice + extrasTotal) * item.quantity;
+      totalDishTotal += lineTotal;
+
+      // Determine GST percentage (prefer gst field)
+      const gstPercent = item.dish.gst || 0;
+      totalGst += (lineTotal * gstPercent) / 100;
+    }
+  } catch (err) {
+    console.error("Error calculating bill totals:", err);
+    throw new Error("Invalid data structure in KOTs");
+  }
+
+  return { totalDishTotal, totalGst };
+}
+
+function calculateSplitBillTotals(cartItems: Item[]): {
+  totalDishTotal: number;
+  totalGst: number;
+} {
+  let totalDishTotal = 0;
+  let totalGst = 0;
+
+  try {
+    for (const item of cartItems) {
+      // Skip deleted items
+      if (item.isDeleted) continue;
+
+      // Base price comes from portion if present, otherwise dish.price
+      const basePrice = item.portion?.price ?? item.dish.price;
+
+      // Sum up all extras (price * quantity)
+      const extrasTotal = item.extras.reduce((sum, ex) => sum + ex.price, 0);
+
+      // Line total for this item
+      const lineTotal = basePrice + extrasTotal;
+      totalDishTotal += lineTotal;
+      console.log("basePrice", totalDishTotal);
+
+      // Determine GST percentage (prefer gst field)
+      totalGst += item.dish.gst || 0;
+    }
+  } catch (err) {
+    console.error("Error calculating bill totals:", err);
+    throw new Error("Invalid data structure in KOTs");
+  }
+
+  return { totalDishTotal, totalGst };
+}
+
 function calculateBillDishIds(
   kots: KotOrderTypes[],
   itemIds: string[],
@@ -182,6 +253,50 @@ function calculateBillDishIds(
   return { totalDishTotal, totalGst };
 }
 
+function calculateSplitBillDishIds(
+  cartItems: CartItem[],
+  itemIds: string[],
+): {
+  totalDishTotal: number;
+  totalGst: number;
+} {
+  let totalDishTotal = 0;
+  let totalGst = 0;
+
+  // for faster lookups
+  const allowed = new Set(itemIds);
+
+  try {
+    for (const item of cartItems) {
+      // Skip deleted items
+      if (item.isDeleted) continue;
+      // Only include if this item's id is in our list
+      if (!allowed.has(item._id.toString())) continue;
+
+      // Base price comes from portion if present, otherwise dish.price
+      const basePrice = item.portion?.price ?? item.dish.price;
+
+      const extrasTotal = item.extras.reduce(
+        (sum, ex) => sum + ex.price * ex.quantity,
+        0,
+      );
+
+      // Line total for this item
+      const lineTotal = (basePrice + extrasTotal) * item.quantity;
+      totalDishTotal += lineTotal;
+
+      // Determine GST percentage (prefer gst field)
+      const gstPercent = item.dish.gst ?? item.dish.tax ?? 0;
+      totalGst += (lineTotal * gstPercent) / 100;
+    }
+  } catch (err) {
+    console.error("Error calculating bill totals:", err);
+    throw new Error("Invalid data structure in KOTs");
+  }
+
+  return { totalDishTotal, totalGst };
+}
+
 const calculateTotalDiscount = (
   discount: number,
   claimedCoins: number,
@@ -195,7 +310,7 @@ const calculateTotalDiscount = (
 // Calculate the GST for a given subtotal
 const calculateGst = (gstPercentage: number, subtotal: number) => {
   const gst = (gstPercentage / 100) * subtotal;
-  if (gst < 0.5) return 0;
+  if (gst < 0.1) return 0;
   return gst;
 };
 
@@ -229,6 +344,18 @@ const updateTableSession = async (
   );
 };
 
+const updateSplitTableSession = async (
+  splitTableSessionId: string,
+  updatedFields: object,
+  session: ClientSession,
+) => {
+  return await SplitBillTableSession.findByIdAndUpdate(
+    splitTableSessionId,
+    { $set: updatedFields },
+    { new: true, session },
+  );
+};
+
 const billPrintItems = (cartItems: CartItem[]) => {
   return cartItems.map((item) => {
     // pick the correct price
@@ -256,7 +383,314 @@ const billPrintItems = (cartItems: CartItem[]) => {
 
 ///
 
+function calculateUpdatedGstAfterDiscount(
+  items: CartItem[],
+  discountPercentage: number,
+  itemsIds: string[],
+  itemGst: number,
+): {
+  newGst: number;
+} {
+  let newGst = 0;
+
+  try {
+    for (const item of items) {
+      if (item.isDeleted || itemsIds.includes(item._id.toString())) continue;
+
+      const basePrice = item.portion?.price ?? item.dish.price;
+
+      const extrasTotal = item.extras.reduce(
+        (sum, ex) => sum + ex.price * ex.quantity,
+        0,
+      );
+
+      const lineTotal = (basePrice + extrasTotal) * item.quantity;
+
+      const discountAmount = lineTotal * (discountPercentage / 100);
+      const discountedLineTotal = lineTotal - discountAmount;
+
+      const gstRate = item.dish.gst ?? 0;
+      const gstForItem = discountedLineTotal * (gstRate / 100);
+
+      newGst += gstForItem;
+      console.log("New GST for item:", newGst);
+    }
+  } catch (err) {
+    console.error("Error calculating GST:", err);
+    throw new Error("Invalid data structure in items");
+  }
+
+  const updatedGst = itemGst + newGst;
+  if (updatedGst < 0.1) return { newGst: 0 };
+
+  return { newGst: Number(updatedGst.toFixed(2)) };
+}
+
+function calculateItemUpdatedGstAfterDiscount(
+  items: CartItem[],
+  discountPercentage: number,
+  itemsIds: string[],
+): {
+  itemGstAfterDiscount: number;
+} {
+  let itemGstAfterDiscount = 0;
+
+  console.log("Items being processed:", itemsIds);
+
+  try {
+    for (const item of items) {
+      console.log("Processing item:", item);
+      if (item.isDeleted || !itemsIds.includes(item._id.toString())) continue;
+
+      console.log("Item being processed:", item);
+
+      const basePrice = item.portion?.price ?? item.dish.price;
+
+      const extrasTotal = item.extras.reduce(
+        (sum, ex) => sum + ex.price * ex.quantity,
+        0,
+      );
+
+      const lineTotal = (basePrice + extrasTotal) * item.quantity;
+
+      const discountAmount = lineTotal * (discountPercentage / 100);
+      const discountedLineTotal = lineTotal - discountAmount;
+
+      const gstRate = item.dish.gst ?? 0;
+      const gstForItem = discountedLineTotal * (gstRate / 100);
+
+      itemGstAfterDiscount += gstForItem;
+
+      console.log("Item GST after discount:", itemGstAfterDiscount);
+    }
+  } catch (err) {
+    console.error("Error calculating GST:", err);
+    throw new Error("Invalid data structure in items");
+  }
+
+  return { itemGstAfterDiscount: Number(itemGstAfterDiscount.toFixed(2)) };
+}
+
+function splitCalculateItemUpdatedGstAfterDiscount(
+  items: CartItem[],
+  discountPercentage: number,
+  itemsIds: string[],
+): {
+  itemGstAfterDiscount: number;
+} {
+  let itemGstAfterDiscount = 0;
+
+  console.log("Items being processed:", itemsIds);
+
+  try {
+    for (const item of items) {
+      console.log("Processing item:", item);
+      if (item.isDeleted || !itemsIds.includes(item._id.toString())) continue;
+
+      console.log("Item being processed:", item);
+
+      const basePrice = item.portion?.price ?? item.dish.price;
+
+      const extrasTotal = item.extras.reduce(
+        (sum, ex) => sum + ex.price * ex.quantity,
+        0,
+      );
+
+      const lineTotal = (basePrice + extrasTotal) * item.quantity;
+
+      const discountAmount = lineTotal * (discountPercentage / 100);
+      const discountedLineTotal = lineTotal - discountAmount;
+
+      const gstRate = item.dish.gst ?? 0;
+      const gstForItem = discountedLineTotal * (gstRate / 100);
+
+      itemGstAfterDiscount += gstForItem;
+
+      console.log("Item GST after discount:", itemGstAfterDiscount);
+    }
+  } catch (err) {
+    console.error("Error calculating GST:", err);
+    throw new Error("Invalid data structure in items");
+  }
+
+  return { itemGstAfterDiscount: Number(itemGstAfterDiscount.toFixed(2)) };
+}
+
+function calculateItemUpdated(
+  items: CartItem[],
+  discountPercentage: number,
+  itemsIds: string[],
+): {
+  itemGstAfter: number;
+} {
+  let itemGstAfter = 0;
+
+  console.log("Items being processed:", itemsIds);
+
+  try {
+    for (const item of items) {
+      console.log("Processing item:", item);
+      if (item.isDeleted || itemsIds.includes(item._id.toString())) continue;
+
+      console.log("Item being processed:", item);
+
+      const basePrice = item.portion?.price ?? item.dish.price;
+
+      const extrasTotal = item.extras.reduce(
+        (sum, ex) => sum + ex.price * ex.quantity,
+        0,
+      );
+
+      const lineTotal = (basePrice + extrasTotal) * item.quantity;
+
+      const discountAmount = lineTotal * (discountPercentage / 100);
+      const discountedLineTotal = lineTotal - discountAmount;
+
+      const gstRate = item.dish.gst ?? 0;
+      const gstForItem = discountedLineTotal * (gstRate / 100);
+
+      itemGstAfter += gstForItem;
+
+      console.log("Item GST after discount:", itemGstAfter);
+    }
+  } catch (err) {
+    console.error("Error calculating GST:", err);
+    throw new Error("Invalid data structure in items");
+  }
+
+  return { itemGstAfter: Number(itemGstAfter.toFixed(2)) };
+}
+
+function splitCalculateItemUpdated(
+  items: CartItem[],
+  discountPercentage: number,
+  itemsIds: string[],
+): {
+  itemGstAfter: number;
+} {
+  let itemGstAfter = 0;
+
+  console.log("Items being processed:", itemsIds);
+
+  try {
+    for (const item of items) {
+      console.log("Processing item:", item);
+      if (item.isDeleted || itemsIds.includes(item._id.toString())) continue;
+
+      console.log("Item being processed:", item);
+
+      const basePrice = item.portion?.price ?? item.dish.price;
+
+      const extrasTotal = item.extras.reduce(
+        (sum, ex) => sum + ex.price * ex.quantity,
+        0,
+      );
+
+      const lineTotal = (basePrice + extrasTotal) * item.quantity;
+
+      const discountAmount = lineTotal * (discountPercentage / 100);
+      const discountedLineTotal = lineTotal - discountAmount;
+
+      const gstRate = item.dish.gst ?? 0;
+      const gstForItem = discountedLineTotal * (gstRate / 100);
+
+      itemGstAfter += gstForItem;
+
+      console.log("Item GST after discount:", itemGstAfter);
+    }
+  } catch (err) {
+    console.error("Error calculating GST:", err);
+    throw new Error("Invalid data structure in items");
+  }
+
+  return { itemGstAfter: Number(itemGstAfter.toFixed(2)) };
+}
+
 export function groupItemsByGST(items: Item[]): BillGroup[] {
+  const map = items.reduce<Record<number, BillGroup>>((acc, item) => {
+    const rate = item.dish.gst ?? 0;
+
+    if (!acc[rate]) {
+      acc[rate] = {
+        gst: rate,
+        subTotal: 0,
+        totalGst: 0,
+        items: [],
+      };
+    }
+
+    // Pick the right base price
+    const basePrice = item.portion?.price ?? item.dish.price;
+
+    // Compute total extras per unit
+    const extrasPerUnit = item.extras.reduce(
+      (sum, ex) => sum + ex.price * ex.quantity,
+      0,
+    );
+
+    // Net total for this item (without tax)
+    const netTotal = (basePrice + extrasPerUnit) * item.quantity;
+
+    // Accumulate
+    acc[rate].subTotal += netTotal;
+    acc[rate].totalGst += netTotal * (rate / 100);
+    acc[rate].items.push(item);
+
+    return acc;
+  }, {});
+
+  // Round to two decimal places
+  return Object.values(map).map((group) => ({
+    gst: group.gst,
+    subTotal: Number(group.subTotal.toFixed(2)),
+    totalGst: Number(group.totalGst.toFixed(2)),
+    items: group.items,
+  }));
+}
+
+export function itemsGroupedByGst(items: CartItem[]): BillGroup[] {
+  const map = items.reduce<Record<number, BillGroup>>((acc, item) => {
+    const rate = item.dish.gst ?? 0;
+
+    if (!acc[rate]) {
+      acc[rate] = {
+        gst: rate,
+        subTotal: 0,
+        totalGst: 0,
+        items: [],
+      };
+    }
+
+    // Pick the right base price
+    const basePrice = item.portion?.price ?? item.dish.price;
+
+    // Compute total extras per unit
+    const extrasPerUnit = item.extras.reduce(
+      (sum, ex) => sum + ex.price * ex.quantity,
+      0,
+    );
+
+    // Net total for this item (without tax)
+    const netTotal = (basePrice + extrasPerUnit) * item.quantity;
+
+    // Accumulate
+    acc[rate].subTotal += netTotal;
+    acc[rate].totalGst += netTotal * (rate / 100);
+    acc[rate].items.push(item);
+
+    return acc;
+  }, {});
+
+  // Round to two decimal places
+  return Object.values(map).map((group) => ({
+    gst: group.gst,
+    subTotal: Number(group.subTotal.toFixed(2)),
+    totalGst: Number(group.totalGst.toFixed(2)),
+    items: group.items,
+  }));
+}
+
+function groupSplitItemsByGST(items: Item[]): BillGroup[] {
   const map = items.reduce<Record<number, BillGroup>>((acc, item) => {
     const rate = item.dish.gst ?? 0;
 
@@ -304,6 +738,16 @@ export {
   calculateBillTotals,
   calculateFinalTotal,
   calculateGst,
+  calculateItemUpdated,
+  calculateItemUpdatedGstAfterDiscount,
+  calculateSplitBillDishIds,
+  calculateSplitBillTotals,
+  calculateSplitTotalsFromItems,
   calculateTotalDiscount,
+  calculateUpdatedGstAfterDiscount,
+  groupSplitItemsByGST,
+  splitCalculateItemUpdated,
+  splitCalculateItemUpdatedGstAfterDiscount,
+  updateSplitTableSession,
   updateTableSession,
 };

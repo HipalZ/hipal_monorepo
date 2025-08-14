@@ -165,6 +165,8 @@ export const PaymentSchema = z.object({
   pin: z.string().optional(),
   billRequestId: z.string().optional(),
   billInvoice: z.coerce.number().optional().default(0),
+  isSplit: z.boolean().optional().default(false),
+  isSplitBillVariant: z.boolean().optional().default(false),
 });
 
 export type PaymentType = z.infer<typeof PaymentSchema>;

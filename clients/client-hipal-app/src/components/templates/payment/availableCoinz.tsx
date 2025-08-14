@@ -3,10 +3,12 @@ import CommonBottomButton from "@/components/atoms/bottomButton";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { useUpdateBill } from "@/components/hooks/usePayments";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import useBusinessDetails from "@/components/store/useBusinessDetails";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import { useCouponz } from "@/components/store/useCouponz";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
+import useTableData from "@/components/store/useTableData";
 import { DialogTitle } from "@headlessui/react";
 import { useMutation } from "@tanstack/react-query";
 import confetti from "canvas-confetti";
@@ -30,17 +32,27 @@ const AvailableCoinz = () => {
   } = usePaymentStore();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const { addCoins, removeCoinz, removeCouponz } = useUpdateBill();
+   const  businessId  = useBusinessDetails((s) => s.businessDetails?.businessId);
+
   const { loyaltySetting } = useLoyaltyData();
   const addCoinsMutation = useMutation({ mutationFn: addCoins });
   const removeCoinsMutation = useMutation({ mutationFn: removeCoinz });
   const removeCouponMutation = useMutation({ mutationFn: removeCouponz });
+  const  tableName = useTableData(s=>s.tableName);
   const handleApplyCoinz = async (finalValue: number) => {
     setClaimedCoins(finalValue);
     handleCoins(finalValue);
     if (outletInfo?.isPosEnabled) {
-      await addCoinsMutation.mutateAsync({
-        coinz: finalValue,
-      });
+      const payload = {
+        value: finalValue,
+        businessId: outletInfo.businessId,
+        tableName: tableName,
+      };
+      if (billData?.variantId) {
+        payload.variantId = billData.variantId;
+      }
+      await addCoinsMutation.mutateAsync(payload);
+    
     }
   };
 
@@ -108,7 +120,14 @@ const AvailableCoinz = () => {
     if (claimedCoins > 0) {
       setShowAlert(false);
       setClaimedCoins(0);
-      await removeCoinsMutation.mutateAsync();
+      const payload = {
+        businessId: outletInfo.businessId,
+        tableName: tableName,
+      }
+      if (billData?.variantId) {
+        payload.variantId = billData.variantId;
+      }
+      await removeCoinsMutation.mutateAsync(payload);
       closeModal();
       return;
     }
@@ -134,7 +153,15 @@ const AvailableCoinz = () => {
     setShowAlert(false);
     setAvailedCoupon({});
     toast.success("Coupon removed successfully");
-    await removeCouponMutation.mutateAsync({});
+       const payload ={
+      businessId: businessId,
+      tableName: tableName,
+    }
+    if (billData?.variantId) {
+      payload.variantId = billData.variantId;
+    }
+    // await removeCoinsMutation.mutateAsync(payload);
+    await removeCouponMutation.mutateAsync(payload);
     handleApplyCoinz(tempClaimedCoins || 0);
   }, [
     setClaimCouponz,

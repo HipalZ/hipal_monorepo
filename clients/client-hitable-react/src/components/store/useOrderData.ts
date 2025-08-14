@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { TableData } from "./useZonesAndTable";
 import type { CategoryType, DishType } from "@hi/db-models/src/validators";
-import type { OrderData, User } from "../types/hiClientzData";
+import type { IBillData, OrderData, User } from "../types/hiClientzData";
 
 export type orderPages = "online" | "offline" | "history" | "";
 export type TransferTable = "ITEM" | "TABLE" | "" | "FREE" | "DELETE";
@@ -19,7 +19,13 @@ export type orderModal =
   | "alerts"
   | "addItem";
 
-type ModalType = "discount" | "serviceCharge" | "coupon" | "coinz" | "options" ;
+type ModalType =
+  | "discount"
+  | "serviceCharge"
+  | "coupon"
+  | "coinz"
+  | "options"
+  | "split";
 
 interface ISettleMode {
   _id: string;
@@ -36,6 +42,9 @@ export interface IDuesPersonsData {
 interface OrderState {
   currentPage: orderPages;
   setCurrentPage: (page: orderPages) => void;
+
+  showqr: boolean;
+  setShowqr: (show: boolean) => void;
 
   activeModal: ModalType;
   setActiveModal: (modal: ModalType) => void;
@@ -115,6 +124,16 @@ interface OrderState {
 
   openAddCoinz: boolean;
   setOpenAddCoinz: (open: boolean) => void;
+
+  //split bill
+  isExpanded: boolean;
+  setIsExpanded: (expanded: boolean) => void;
+
+  selectedBill: null | IBillData;
+  setSelectedBill: (bill: IBillData | null) => void;
+
+  isBillSplit: boolean;
+  setIsBillSplit: (isBillSplit: boolean) => void;
 }
 
 export const useOrderStore = create<OrderState>((set, get) => ({
@@ -123,6 +142,9 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   activeModal: "options",
   setActiveModal: (modal) => set({ activeModal: modal }),
+
+  showqr: false,
+  setShowqr: (show) => set({ showqr: show }),
 
   openDues: false,
   setOpenDues: (open) => set({ openDues: open }),
@@ -225,4 +247,13 @@ export const useOrderStore = create<OrderState>((set, get) => ({
 
   openAddCoinz: false,
   setOpenAddCoinz: (open) => set({ openAddCoinz: open }),
+
+  isExpanded: false,
+  setIsExpanded: (expanded) => set({ isExpanded: expanded }),
+
+  selectedBill: null,
+  setSelectedBill: (bill) => set({ selectedBill: bill }),
+
+  isBillSplit: false,
+  setIsBillSplit: (isBillSplit) => set({ isBillSplit }),
 }));

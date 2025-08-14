@@ -14,8 +14,9 @@ import SingleMode from "./singleMode";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import { useGetAllModes } from "@/components/hooks/useTableData";
 import { useError } from "@/components/store/useError";
-import { useConfirmSettle } from "@/components/hooks/useBill.ts";
 import { SettleConfirmationDialog } from "./SettleConfirmation.tsx";
+import { useConfirmSettle } from "@/components/hooks/api/useSettle.ts";
+import { useGetBill } from "@/components/hooks/useBill.ts";
 
 export interface IMode {
   _id: string;
@@ -59,8 +60,10 @@ const MemoNormalSettle = ({
   const setOpenDues = useOrderStore((s) => s.setOpenDues);
   const setSaveDueUser = useOrderStore((s) => s.setSaveDueUser);
   const saveDueUser = useOrderStore((s) => s.saveDueUser);
+  const isBillSplit = useOrderStore((s) => s.isBillSplit);
   const { isConfirming, confirmSettle } = useConfirmSettle();
-
+  const { getBillCall } = useGetBill();
+  const setSelectedBill = useOrderStore((s) => s.setSelectedBill);
   const { removeOnlineAlert, removeOnlineCount } = useLiteStore((s) => ({
     removeOnlineAlert: s.removeOnlineAlert,
     removeOnlineCount: s.removeOnlineCount,
@@ -85,6 +88,7 @@ const MemoNormalSettle = ({
       }[];
       split?: boolean;
       duesUserId?: string;
+      variantId?: string;
     }) => {
       const response = await apiRpc.table.normal_settle.$post({
         json: payload,
@@ -109,12 +113,18 @@ const MemoNormalSettle = ({
         toast.success("Table settled successfully!");
         setSettleModes([]);
         closeNormalSettle();
-        setOpenOrderModal(false);
         setIsSplit(false);
         setOpenDues(false);
         setSettleModes([]);
         setSaveDueUser(null);
-        navigate(`/${businessId}/alerts`);
+        if (!isBillSplit) {
+          toast.success("Split bill settled successfully!");
+          setOpenOrderModal(false);
+          navigate(`/${businessId}/alerts`);
+        } else {
+          setSelectedBill(null);
+          getBillCall();
+        }
       }
     },
     onError: (error: any) => {
@@ -226,6 +236,9 @@ const MemoNormalSettle = ({
         if (hasNpcMode && saveDueUser?._id) {
           payload["npcUserId"] = saveDueUser?._id;
         }
+        if (billData?.variantId) {
+          payload["variantId"] = billData?.variantId;
+        }
 
         // Call the API
         await settleTable(payload);
@@ -237,6 +250,9 @@ const MemoNormalSettle = ({
   };
 
   const openNormalSettle = () => {
+    if (billData?.isPaid) {
+      return toast.error("This bill is already settled.");
+    }
     setShowConfirmDialog(true);
   };
 

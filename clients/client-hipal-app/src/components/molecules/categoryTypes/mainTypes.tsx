@@ -330,7 +330,7 @@ const MemoMainTypes = (props: IMainTypes) => {
                         style={{
                           color: primaryColor,
                         }}
-                        className="max-w-full text-base font-medium capitalize poppins-regular  line-clamp-3"
+                        className="max-w-full text-base font-medium capitalize poppins-regular line-clamp-3"
                       >
                         {category.name}
                       </span>

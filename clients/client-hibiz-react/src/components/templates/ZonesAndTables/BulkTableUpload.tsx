@@ -61,7 +61,7 @@ export default function BulkUploadTables() {
 
     const isNextDisabled = () => {
         if (currentStep === 0) {
-            return !tableName || !capacity
+            return  !capacity
         }
         if (currentStep === 1) {
             return !selectZone

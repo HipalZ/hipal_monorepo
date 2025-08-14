@@ -105,4 +105,5 @@ export * from "./zone";
 
 export * from "./discount";
 export * from "./qrs";
+export * from "./splitBill";
 export * from "./termsAndConditions";

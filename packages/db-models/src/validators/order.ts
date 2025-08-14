@@ -91,6 +91,12 @@ export const OrderSchema = z.object({
     })
     .optional()
     .default(0),
+
+  variantId: z
+    .string({
+      message: "Variant ID must be a string",
+    })
+    .optional(),
 });
 
 export type OrderType = z.infer<typeof OrderSchema>;

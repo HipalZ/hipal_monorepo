@@ -93,4 +93,5 @@ export * from "./printerConfig";
 export * from "./printSection";
 export * from "./qrs";
 export * from "./queueLog";
+export * from "./splitBill";
 export * from "./termsAndConditions";

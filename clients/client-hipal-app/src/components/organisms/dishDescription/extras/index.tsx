@@ -49,7 +49,7 @@ function AddOnsWithDish({ dishData }: { dishData: DishType }) {
           price: choice.price,
         };
         if (addOn?.posAddOnId) {
-          payload.posAddOnId = addOn.posAddOnId;
+          payload.posAddOnId = addOn?.posAddOnId || "";
         }
         setSelectedChoice(payload);
         return newCounts;

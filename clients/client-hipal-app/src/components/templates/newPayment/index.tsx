@@ -1,18 +1,26 @@
-"use client";;
+"use client";
 import { memo } from "react";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import type { IBusinessData } from "@/components/types/businessData";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
-import { BottomBarSkeleton, CardSkeleton, HeaderSkeleton, RewardSkeleton } from "@/components/atoms/paymentPageLoader";
+import {
+  BottomBarSkeleton,
+  CardSkeleton,
+  HeaderSkeleton,
+  RewardSkeleton,
+} from "@/components/atoms/paymentPageLoader";
 import useCouponTemp from "@/components/store/useCouponTemp";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
+import BottomPopUp from "@/components/atoms/bottomPopUp";
+import SplitPayment from "./SplitPayment";
+import { useGetBill } from "@/components/hooks/usePayments";
+
 
 const BillPage = dynamic(() => import("@/components/organisms/cart/billPage"), {
   ssr: false,
   loading: () => <LoadingSpinnerCircle />,
 });
-
 
 const NewPaymentComponent = dynamic(
   () => import("@/components/templates/payment/paymentModes"),
@@ -32,10 +40,13 @@ const PaymentHeader = dynamic(() => import("../payment/paymentHeader"), {
   loading: () => <SkeletonLoader height={50} />,
 });
 
-const TotalBillButton = dynamic(() => import("@/components/templates/newPayment/totalBillButton"), {
-  ssr: false,
-  loading: () => <BottomBarSkeleton />,
-});
+const TotalBillButton = dynamic(
+  () => import("@/components/templates/newPayment/totalBillButton"),
+  {
+    ssr: false,
+    loading: () => <BottomBarSkeleton />,
+  },
+);
 
 const ApplyCouponz = dynamic(() => import("../couponz/applyCouponz"), {
   ssr: false,
@@ -103,14 +114,13 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
   const { applyCouponz } = useCouponTemp((s) => ({
     applyCouponz: s.applyCouponz,
   }));
-
+  const isSplitBill = usePaymentStore((state) => state.isBillSplit);
   const { showBillPage } = usePaymentStore();
+  const {refetch} = useGetBill()
 
-  const {
-    isLoading,
-    selectedMode,
-    showError,
-  } = usePaymentStore();
+  const billData = usePaymentStore((state) => state.billData);
+
+  const { isLoading, selectedMode, showError } = usePaymentStore();
 
   return (
     <main className="relative h-screen bg-black">
@@ -123,14 +133,13 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
           <ApplyCouponz />
         ) : (
           <>
-            {showBillPage ?
+            {showBillPage ? (
               <BillPage />
-              : <>
+            ) : (
+              <>
                 <section>
                   <PaymentBack data={data} />
-                  {selectedMode === "INVOICE" ? (
-                    <PaymentHeader />
-                  ) : null}
+                  {selectedMode === "INVOICE" ? <PaymentHeader /> : null}
                 </section>
                 {selectedMode === "INVOICE" ? (
                   <>
@@ -148,10 +157,21 @@ const MemoPaymentWithCouponz = ({ data }: { data: IBusinessData }) => {
                   <NewPaymentComponent />
                 )}
                 <AvailableCoinz />
-              </>}
+              </>
+            )}
           </>
         )}
       </>
+      {isSplitBill && (
+        <BottomPopUp
+          hide
+          height="h-[100dvh]"
+          show={isSplitBill}
+          onClose={() => usePaymentStore.getState().setIsBillSplit(false)}
+        >
+         <SplitPayment billData={billData} data={data} />
+        </BottomPopUp>
+      )}
     </main>
   );
 };

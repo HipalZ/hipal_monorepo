@@ -23,7 +23,7 @@ import {
   requireAuthorization,
 } from "../../../middleware/authorization";
 import { authTokenValidator } from "../../../middleware/tokenValidator";
-import { currentDay, currentMinute } from "../../utils/helper";
+import indianHoursInMinutes from "../../utils/indianHoursInMinutes";
 import { respond } from "../../utils/response";
 
 //updateCategories
@@ -169,6 +169,7 @@ const categoriesRouter = new Hono()
             coverImage: requestData.coverImage,
             visibility: requestData.visibility,
             availability: requestData.availability,
+            timings: requestData.timings,
           },
           { session },
         );
@@ -345,6 +346,7 @@ const categoriesRouter = new Hono()
         active: true,
       });
       if (menu) {
+        const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
         const query = {
           businessId,
           isDeleted: false,
@@ -354,8 +356,8 @@ const categoriesRouter = new Hono()
           timings: {
             $elemMatch: {
               day: { $in: [currentDay, -1] },
-              start: { $lte: currentMinute },
-              end: { $gt: currentMinute },
+              start: { $lte: currentTimeInMinutes },
+              end: { $gt: currentTimeInMinutes },
             },
           },
         };
@@ -391,15 +393,7 @@ const categoriesRouter = new Hono()
           ],
         });
 
-        const indianDate = new Date(
-          new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
-        );
-
-        let currentDay = indianDate.getDay();
-        currentDay = currentDay === 0 ? 7 : currentDay;
-
-        const currentTimeInMinutes =
-          indianDate.getHours() * 60 + indianDate.getMinutes();
+        const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
 
         const menu = await Menu.findOne({
           zoneIds: tableName ? zone?._id : undefined,
@@ -457,15 +451,7 @@ const categoriesRouter = new Hono()
           ],
         });
 
-        const indianDate = new Date(
-          new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }),
-        );
-
-        let currentDay = indianDate.getDay();
-        currentDay = currentDay === 0 ? 7 : currentDay;
-
-        const currentTimeInMinutes =
-          indianDate.getHours() * 60 + indianDate.getMinutes();
+        const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
 
         // Find the active menu for the zone and business
         const menu = await Menu.findOne({
@@ -496,8 +482,8 @@ const categoriesRouter = new Hono()
           timings: {
             $elemMatch: {
               day: { $in: [currentDay, -1] },
-              start: { $lte: currentMinute },
-              end: { $gt: currentMinute },
+              start: { $lte: currentTimeInMinutes },
+              end: { $gt: currentTimeInMinutes },
             },
           },
         };
@@ -521,6 +507,11 @@ const categoriesRouter = new Hono()
         if (!menuId) {
           return respond(c, "MenuId is required", true, 400, {});
         }
+        const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
+
+        console.log("Current Day:", currentDay);
+        console.log("Current Time in Minutes:", currentTimeInMinutes);
+
         const query = {
           businessId,
           hierarchy: "CHILD",
@@ -531,15 +522,15 @@ const categoriesRouter = new Hono()
           timings: {
             $elemMatch: {
               day: { $in: [currentDay, -1] },
-              start: { $lte: currentMinute },
-              end: { $gt: currentMinute },
+              start: { $lte: currentTimeInMinutes },
+              end: { $gt: currentTimeInMinutes },
             },
           },
         };
 
         const existingCategories = await Category.find(query)
           .select(
-            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId",
+            "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId timings",
           )
           .sort({ sequence: 1 });
 
@@ -551,6 +542,7 @@ const categoriesRouter = new Hono()
           existingCategories,
         );
       }
+      const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
 
       const query = {
         businessId,
@@ -562,8 +554,8 @@ const categoriesRouter = new Hono()
         timings: {
           $elemMatch: {
             day: { $in: [currentDay, -1] },
-            start: { $lte: currentMinute },
-            end: { $gt: currentMinute },
+            start: { $lte: currentTimeInMinutes },
+            end: { $gt: currentTimeInMinutes },
           },
         },
       };
@@ -585,7 +577,7 @@ const categoriesRouter = new Hono()
     ),
     async (c) => {
       const { businessId, menuId } = c.req.query();
-
+      const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
       const query = {
         businessId,
         isDeleted: false,
@@ -595,8 +587,8 @@ const categoriesRouter = new Hono()
         timings: {
           $elemMatch: {
             day: { $in: [currentDay, -1] },
-            start: { $lte: currentMinute },
-            end: { $gt: currentMinute },
+            start: { $lte: currentTimeInMinutes },
+            end: { $gt: currentTimeInMinutes },
           },
         },
       };
@@ -658,7 +650,7 @@ const categoriesRouter = new Hono()
     ),
     async (c) => {
       const { businessId } = c.req.query();
-
+      const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
       const existingCategories = await Category.find({
         businessId,
         hierarchy: "CHILD",
@@ -668,8 +660,8 @@ const categoriesRouter = new Hono()
         timings: {
           $elemMatch: {
             day: { $in: [currentDay, -1] },
-            start: { $lte: currentMinute },
-            end: { $gt: currentMinute },
+            start: { $lte: currentTimeInMinutes },
+            end: { $gt: currentTimeInMinutes },
           },
         },
       }).select("_id name coverImage");

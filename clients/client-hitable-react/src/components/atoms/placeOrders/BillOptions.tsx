@@ -1,92 +1,97 @@
-import { memo, useCallback, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { FiCopy } from "react-icons/fi"
-import { MdOutlineCall } from "react-icons/md"
-import { cn } from "@/lib/utils"
-import DiscountModal from "./billModals/DiscountModal.tsx"
-import ServiceChargeModal from "./billModals/ServiceChargeModal.tsx"
-import type { IBillData } from "@/components/types/hiClientzData.ts"
-import { useOrderStore } from "@/components/store/useOrderData.ts"
-import PasswordModal from "../cartItem/PasswordModal.tsx"
+import { memo, useCallback, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FiCopy } from "react-icons/fi";
+import { MdOutlineCall } from "react-icons/md";
+import { cn } from "@/lib/utils";
+import DiscountModal from "./billModals/DiscountModal.tsx";
+import ServiceChargeModal from "./billModals/ServiceChargeModal.tsx";
+import type { IBillData } from "@/components/types/hiClientzData.ts";
+import { useOrderStore } from "@/components/store/useOrderData.ts";
+import PasswordModal from "../cartItem/PasswordModal.tsx";
+import { Split } from "lucide-react";
+import SplitBillModal from "./bill/split/SplitBillModal.tsx";
 
 interface BillOptionsProps {
-  data: IBillData
+  data: IBillData;
 }
 
 const MemoBillOptions = ({ data }: BillOptionsProps) => {
-  const activeModal = useOrderStore((s) => s.activeModal)
-  const setActiveModal = useOrderStore((s) => s.setActiveModal)
-  const setShowMoreOption = useOrderStore((s) => s.setShowMoreOption)
+  const activeModal = useOrderStore((s) => s.activeModal);
+  const setActiveModal = useOrderStore((s) => s.setActiveModal);
+  const setShowMoreOption = useOrderStore((s) => s.setShowMoreOption);
+  const isSplitBill = useOrderStore((s) => s.isBillSplit);
 
   // Password protection states
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isPhoneVerified, setIsPhoneVerified] = useState(false)
-  const [pendingAction, setPendingAction] = useState<"copy" | "call" | null>(null)
-  const [copyTick, setCopyTick] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
+  const [pendingAction, setPendingAction] = useState<"copy" | "call" | null>(
+    null,
+  );
+  const [copyTick, setCopyTick] = useState(false);
 
   const closeModal = useCallback(() => {
-    setActiveModal("options")
-    setShowMoreOption(false)
-  }, [setActiveModal, setShowMoreOption])
+    setActiveModal("options");
+    setShowMoreOption(false);
+  }, [setActiveModal, setShowMoreOption]);
 
   // Phone protection functions
   const hideMiddleNumbers = useCallback((phone: string) => {
-    if (!phone) return ""
-    if (phone.length <= 2) return phone
-    const firstPart = phone.slice(0, 2)
-    const lastPart = phone.slice(-1)
-    return `${firstPart}****${lastPart}`
-  }, [])
+    if (!phone) return "";
+    if (phone.length <= 2) return phone;
+    const firstPart = phone.slice(0, 2);
+    const lastPart = phone.slice(-1);
+    return `${firstPart}****${lastPart}`;
+  }, []);
 
   const handleProtectedAction = useCallback(
     (action: "copy" | "call") => {
       if (isPhoneVerified) {
-        executePhoneAction(action)
+        executePhoneAction(action);
       } else {
-        setPendingAction(action)
-        setIsModalOpen(true)
+        setPendingAction(action);
+        setIsModalOpen(true);
       }
     },
     [isPhoneVerified],
-  )
+  );
 
   const executePhoneAction = useCallback(
     (action: "copy" | "call") => {
-      const phone = data.customerPhone
-      if (!phone) return
+      const phone = data.customerPhone;
+      if (!phone) return;
 
       if (action === "copy") {
         navigator.clipboard.writeText(phone).then(() => {
-          setCopyTick(true)
-          setTimeout(() => setCopyTick(false), 3000)
-        })
+          setCopyTick(true);
+          setTimeout(() => setCopyTick(false), 3000);
+        });
       } else if (action === "call") {
-        window.location.href = `tel:+91${phone}`
+        window.location.href = `tel:+91${phone}`;
       }
     },
     [data.customerPhone],
-  )
+  );
 
   const handlePasswordVerify = useCallback(
     (isCorrect: boolean) => {
       if (isCorrect) {
-        setIsPhoneVerified(true)
+        setIsPhoneVerified(true);
         if (pendingAction) {
-          executePhoneAction(pendingAction)
-          setPendingAction(null)
+          executePhoneAction(pendingAction);
+          setPendingAction(null);
         }
         // Auto-lock after 5 minutes for security
-        setTimeout(() => setIsPhoneVerified(false), 5 * 60 * 1000)
+        setTimeout(() => setIsPhoneVerified(false), 5 * 60 * 1000);
       }
     },
     [pendingAction, executePhoneAction],
-  )
+  );
 
   const handleModalClose = useCallback(() => {
-    setIsModalOpen(false)
-    setPendingAction(null)
-  }, [])
+    setIsModalOpen(false);
+    setPendingAction(null);
+  }, []);
 
   return (
     <>
@@ -99,7 +104,10 @@ const MemoBillOptions = ({ data }: BillOptionsProps) => {
               <div className="flex items-center gap-2">
                 <p className="text-sm text-gray-600">
                   {data.customerName} (
-                  {isPhoneVerified ? data.customerPhone : hideMiddleNumbers(data.customerPhone || "")})
+                  {isPhoneVerified
+                    ? data.customerPhone
+                    : hideMiddleNumbers(data.customerPhone || "")}
+                  )
                 </p>
                 {data.customerPhone && (
                   <div className="flex items-center gap-1">
@@ -107,7 +115,9 @@ const MemoBillOptions = ({ data }: BillOptionsProps) => {
                       type="button"
                       className={cn(
                         "p-1 rounded text-xs",
-                        copyTick ? "bg-green-100 text-green-600" : "bg-purple-100 text-purple-600",
+                        copyTick
+                          ? "bg-green-100 text-green-600"
+                          : "bg-purple-100 text-purple-600",
                       )}
                       onClick={() => handleProtectedAction("copy")}
                     >
@@ -136,11 +146,15 @@ const MemoBillOptions = ({ data }: BillOptionsProps) => {
                   <div>
                     <p className="font-medium">SubTotal: ₹{data.subTotal}</p>
                     <p className="font-medium">GST: ₹{data.gst}</p>
-                    <p className="font-medium">Service Charge: ₹{data.serviceCharge}</p>
+                    <p className="font-medium">
+                      Service Charge: ₹{data.serviceCharge}
+                    </p>
                   </div>
                   <div>
                     <p className="font-medium">Discount: ₹{data.discount}</p>
-                    <p className="font-medium">Claimed Coins: ₹{data.claimedCoins}</p>
+                    <p className="font-medium">
+                      Claimed Coins: ₹{data.claimedCoins}
+                    </p>
                     <p className="font-medium text-lg">Total: ₹{data.total}</p>
                   </div>
                 </div>
@@ -148,32 +162,58 @@ const MemoBillOptions = ({ data }: BillOptionsProps) => {
             </Card>
             {/* Action Buttons */}
             <div className="space-y-3">
-              <Button onClick={() => setActiveModal("discount")} className="h-12 w-full">
+              <Button
+                onClick={() => setActiveModal("discount")}
+                className="h-12 w-full"
+              >
                 <div className="flex justify-between items-center w-full">
                   <p className="font-medium">Add or Remove Discount</p>
                   <p className="text-xs">Current: ₹{data.discount}</p>
                 </div>
               </Button>
-              <Button onClick={() => setActiveModal("serviceCharge")} className="h-12 w-full">
+              <Button
+                onClick={() => setActiveModal("serviceCharge")}
+                className="h-12 w-full"
+              >
                 <div className="flex justify-between items-center w-full">
                   <p className="font-medium">Add or Remove Service Charge</p>
                   <p className="text-xs">Current: ₹{data.serviceCharge}</p>
                 </div>
               </Button>
+              {!isSplitBill && (
+                <Button
+                  onClick={() => setActiveModal("split")}
+                  className="h-12 w-full"
+                >
+                  <Split />
+                  Split Bill
+                </Button>
+              )}
             </div>
           </div>
         </>
       )}
 
       {/* Modals */}
-      {activeModal === "discount" && <DiscountModal data={data} onClose={closeModal} />}
-      {activeModal === "serviceCharge" && <ServiceChargeModal data={data} onClose={closeModal} />}
+      {activeModal === "discount" && (
+        <DiscountModal data={data} onClose={closeModal} />
+      )}
+      {activeModal === "serviceCharge" && (
+        <ServiceChargeModal data={data} onClose={closeModal} />
+      )}
+      {activeModal === "split" && (
+        <SplitBillModal data={data} onClose={closeModal} />
+      )}
 
       {/* Password Modal */}
-      <PasswordModal isOpen={isModalOpen} onVerify={handlePasswordVerify} onClose={handleModalClose} />
+      <PasswordModal
+        isOpen={isModalOpen}
+        onVerify={handlePasswordVerify}
+        onClose={handleModalClose}
+      />
     </>
-  )
-}
+  );
+};
 
-const BillOptions = memo(MemoBillOptions)
-export default BillOptions
+const BillOptions = memo(MemoBillOptions);
+export default BillOptions;

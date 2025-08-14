@@ -10,22 +10,29 @@ import useBusinessData from "@/components/store/useBusinessData";
 import PhoneNumber from "./phoneNumber";
 import OtpStep from "./otpStep";
 import LoyaltySuccess from "./loyaltySuccess";
-import {
-  useAddCoinz,
-  useAddCoupon,
-  useRemoveCoinz,
-  useRemoveCoupon,
-} from "@/components/hooks/useBill";
+
 import SpinnerMemo from "../loadingSpinner/index.tsx";
+import { useAddCoinz } from "@/components/hooks/api/useCoinz.ts";
+import { useAddCoupon } from "@/components/hooks/api/useCoupon.ts";
+import { useRemoveCoupon } from "@/components/hooks/api/useCoupon.ts";
+import { useRemoveCoinz } from "@/components/hooks/api/useCoinz.ts";
 
 const MemoAddCoinz = (props) => {
   const { data: billData } = props;
   const billValue = billData.total || 0;
+  const selectedBill = useOrderStore((s) => s.selectedBill);
+
+  const isSplitBill = useMemo(() => Array.isArray(billData), [billData]);
+  const currentBill = useMemo(
+    () => selectedBill || (isSplitBill ? null : billData),
+    [selectedBill, isSplitBill, billData],
+  );
+
   const [userData, setUserData] = useState<any>({});
-  const { addingCoinzLoader, addingCoinz } = useAddCoinz();
-  const { addingCouponLoader, addingCoupon } = useAddCoupon();
-  const { removingCouponLoader, removingCoupon } = useRemoveCoupon();
-  const {removingCoinzLoader, removingCoinz } = useRemoveCoinz();
+  const { addingCoinzLoader, addingCoinz } = useAddCoinz(currentBill);
+  const { addingCouponLoader, addingCoupon } = useAddCoupon(currentBill);
+  const { removingCouponLoader, removingCoupon } = useRemoveCoupon(currentBill);
+  const { removingCoinzLoader, removingCoinz } = useRemoveCoinz(currentBill);
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const { setOpenAddCoinz } = useOrderStore();
   const { loyaltyData } = useCheckLoyalty();

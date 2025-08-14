@@ -15,6 +15,7 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     date: {
       required: true,
       type: Number,
+      default: Date.now(),
     },
 
     total: {
@@ -241,6 +242,16 @@ const paymentSchema = new mongoose.Schema<PaymentType>(
     billInvoice: {
       type: Number,
       default: 0,
+    },
+    isSplit: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    isSplitBillVariant: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
 

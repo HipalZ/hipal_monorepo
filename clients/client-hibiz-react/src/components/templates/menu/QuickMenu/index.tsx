@@ -5,7 +5,7 @@ import BottomButton from "@/components/atom/bottomButton";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Search, X } from "lucide-react";
 
 import { useEditDishesStore } from "@/components/store/useQuickMenu";
 import { useDishesStore } from "@/components/store/useDishesStore";
@@ -21,6 +21,10 @@ const QuickMenu = ({ isPetpoojaEnabled }: QuickMenuProps) => {
   const { isLoading, refetch } = useDishes();
   const { data: linkedCategories, refetchLinked } = useLinkedDishes();
   const { isPending, mutateAsync } = useUpdateDish();
+
+  // Search and filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   const allDishes = useMemo(() => {
     const linkedDishes = linkedCategories?.flatMap((cat) => cat.dishIds) || [];
@@ -47,6 +51,70 @@ const QuickMenu = ({ isPetpoojaEnabled }: QuickMenuProps) => {
     );
   }, [linkedCategories, allDishes]);
 
+  // Enhanced filtering logic with search and category filter
+  const filteredData = useMemo(() => {
+    const { editedDishes } = useEditDishesStore.getState();
+
+    // Helper function to check if dish matches search query
+    const matchesSearch = (dish: any) => {
+      if (!searchQuery.trim()) return true;
+
+      const edit = editedDishes.find((ed) => ed._id === dish._id);
+      const finalName = edit?.name ?? dish.name;
+
+      return finalName.toLowerCase().includes(searchQuery.toLowerCase());
+    };
+
+    // Filter unlinked dishes
+    const filteredUnlinked = unlinkedDishes.filter((dish) => {
+      if (selectedCategory !== "all" && selectedCategory !== "unlinked")
+        return false;
+      return matchesSearch(dish);
+    });
+
+    // Filter linked categories and their dishes
+    const filteredCategories = filteredLinkedCategories
+      .map((category) => ({
+        ...category,
+        dishIds: category.dishIds.filter((dish) => {
+          if (selectedCategory !== "all" && selectedCategory !== category._id)
+            return false;
+          return matchesSearch(dish);
+        }),
+      }))
+      .filter((category) => category.dishIds.length > 0);
+
+    return {
+      unlinkedDishes: filteredUnlinked,
+      linkedCategories: filteredCategories,
+    };
+  }, [unlinkedDishes, filteredLinkedCategories, searchQuery, selectedCategory]);
+
+  // Get available categories for navigation
+  const availableCategories = useMemo(() => {
+    const categories = [
+      { id: "all", name: "All Dishes", count: allDishes.length },
+    ];
+
+    if (unlinkedDishes.length > 0) {
+      categories.push({
+        id: "unlinked",
+        name: "Unlinked",
+        count: unlinkedDishes.length,
+      });
+    }
+
+    filteredLinkedCategories.forEach((cat) => {
+      categories.push({
+        id: cat._id,
+        name: cat.name,
+        count: cat.dishIds.length,
+      });
+    });
+
+    return categories;
+  }, [allDishes, unlinkedDishes, filteredLinkedCategories]);
+
   const { editedDishes, addEditedDish, clearEditedDishes } =
     useEditDishesStore();
   const [expandedDishes, setExpandedDishes] = useState<Set<string>>(new Set());
@@ -54,9 +122,10 @@ const QuickMenu = ({ isPetpoojaEnabled }: QuickMenuProps) => {
   const [duplicateDishIds, setDuplicateDishIds] = useState<Set<string>>(
     new Set(),
   );
+
   useEffect(() => {
     const nameMap: Record<string, string[]> = {};
-    for (const dish of unlinkedDishes) {
+    for (const dish of filteredData.unlinkedDishes) {
       const edit = editedDishes.find((ed) => ed._id === dish._id);
       const finalName = edit?.name ?? dish.name;
       if (!nameMap[finalName]) {
@@ -65,7 +134,7 @@ const QuickMenu = ({ isPetpoojaEnabled }: QuickMenuProps) => {
       nameMap[finalName].push(dish._id);
     }
 
-    for (const cat of filteredLinkedCategories) {
+    for (const cat of filteredData.linkedCategories) {
       for (const dish of cat.dishIds) {
         const edit = editedDishes.find((ed) => ed._id === dish._id);
         const finalName = edit?.name ?? dish.name;
@@ -85,7 +154,11 @@ const QuickMenu = ({ isPetpoojaEnabled }: QuickMenuProps) => {
     });
 
     setDuplicateDishIds(duplicates);
-  }, [unlinkedDishes, filteredLinkedCategories, editedDishes]);
+  }, [
+    filteredData.unlinkedDishes,
+    filteredData.linkedCategories,
+    editedDishes,
+  ]);
 
   const handleEditField = (
     dishId: string,
@@ -101,16 +174,13 @@ const QuickMenu = ({ isPetpoojaEnabled }: QuickMenuProps) => {
     field: "name" | "price",
     value: string | number,
   ) => {
-    // Find the dish in edited dishes or original dishes
     const editedDish = editedDishes.find((dish) => dish._id === dishId);
     const originalDish = allDishes.find((dish) => dish._id === dishId);
 
     if (!originalDish) return;
 
-    // Get current portions (either from edited dish or original dish)
     const currentPortions = editedDish?.portions || originalDish.portions || [];
 
-    // Create a new array of portions with the updated value
     const updatedPortions = currentPortions.map((portion) => {
       if (portion._id === portionId) {
         return {
@@ -121,7 +191,6 @@ const QuickMenu = ({ isPetpoojaEnabled }: QuickMenuProps) => {
       return portion;
     });
 
-    // Add the updated dish with new portions to edited dishes
     addEditedDish({
       _id: dishId,
       portions: updatedPortions,
@@ -152,6 +221,10 @@ const QuickMenu = ({ isPetpoojaEnabled }: QuickMenuProps) => {
     } catch (err) {
       console.error("Error updating dishes:", err);
     }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
   };
 
   if (isLoading || isPending) {
@@ -258,6 +331,7 @@ const QuickMenu = ({ isPetpoojaEnabled }: QuickMenuProps) => {
                   <Input
                     type="number"
                     value={portion.price}
+                    disabled={isPetpoojaEnabled}
                     onChange={(e) =>
                       handleEditPortion(
                         dish._id,
@@ -285,17 +359,99 @@ const QuickMenu = ({ isPetpoojaEnabled }: QuickMenuProps) => {
   };
 
   return (
-    <div className=" space-y-6 pb-[7rem]">
+    <div className="space-y-6 pb-[7rem]">
       <h1 className="text-xl font-bold pl-4">Quick Menu Edit</h1>
 
-      {/* Unlinked Dishes (if any) */}
-      {unlinkedDishes && unlinkedDishes.length > 0 && (
+      {/* Search and Filter Controls */}
+      <div className="px-4 space-y-4">
+        {/* Search Bar */}
+        <div className="relative">
+          <Search
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            size={20}
+          />
+          <Input
+            type="text"
+            placeholder="Search dishes by name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-10"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearSearch}
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+            >
+              <X size={16} />
+            </Button>
+          )}
+        </div>
+
+        {/* Category Navigation */}
+        <div className="flex flex-wrap gap-2">
+          {availableCategories.map((category) => (
+            <Button
+              key={category.id}
+              variant={selectedCategory === category.id ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCategory(category.id)}
+              className="text-xs"
+            >
+              {category.name}
+              <span className="ml-1 px-1.5 py-0.5 text-xs bg-gray-200 rounded-full">
+                {category.count}
+              </span>
+            </Button>
+          ))}
+        </div>
+
+        {/* Results Summary */}
+        {(searchQuery || selectedCategory !== "all") && (
+          <div className="text-sm text-gray-600">
+            {searchQuery && (
+              <span>
+                Searching for "{searchQuery}"
+                {selectedCategory !== "all" && " in selected category"}
+              </span>
+            )}
+            {!searchQuery && selectedCategory !== "all" && (
+              <span>
+                Showing{" "}
+                {
+                  availableCategories.find((c) => c.id === selectedCategory)
+                    ?.name
+                }{" "}
+                category
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* No Results Message */}
+      {filteredData.unlinkedDishes.length === 0 &&
+        filteredData.linkedCategories.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <Search size={48} className="mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-medium">No dishes found</p>
+            <p className="text-sm">
+              Try adjusting your search or category filter
+            </p>
+          </div>
+        )}
+
+      {/* Unlinked Dishes (if any and matching filters) */}
+      {filteredData.unlinkedDishes.length > 0 && (
         <div className="space-y-2">
           <h2 className="ml-4 text-lg font-semibold opacity-50">
             Unlinked Dishes
+            <span className="ml-2 text-sm font-normal">
+              ({filteredData.unlinkedDishes.length})
+            </span>
           </h2>
 
-          {/* Table for Unlinked Dishes */}
           <div className="overflow-x-auto">
             <table className="w-full text-sm border border-gray-200">
               <thead className="bg-gray-50">
@@ -306,7 +462,7 @@ const QuickMenu = ({ isPetpoojaEnabled }: QuickMenuProps) => {
                 </tr>
               </thead>
               <tbody>
-                {unlinkedDishes.map((dish) => {
+                {filteredData.unlinkedDishes.map((dish) => {
                   const isDuplicate = duplicateDishIds.has(dish._id);
                   return renderDishRow(dish, isDuplicate);
                 })}
@@ -318,13 +474,16 @@ const QuickMenu = ({ isPetpoojaEnabled }: QuickMenuProps) => {
 
       {/* Linked Dishes by Category */}
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {filteredLinkedCategories.map((category) => {
+        {filteredData.linkedCategories.map((category) => {
           if (!category.dishIds || category.dishIds.length === 0) return null;
 
           return (
             <div key={category._id} className="space-y-2">
               <h2 className="text-lg font-semibold opacity-50 pl-4">
                 {category.name}
+                <span className="ml-2 text-sm font-normal">
+                  ({category.dishIds.length})
+                </span>
               </h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border border-gray-200">

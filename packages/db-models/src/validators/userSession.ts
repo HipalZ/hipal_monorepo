@@ -48,6 +48,17 @@ export const userSessionSchema = z.object({
   billPrintCount: z.coerce.number().optional().default(0),
   dishIds: z.array(z.string()).optional(),
   billInvoiceNumber: z.coerce.number().optional().default(0),
+  isSplit: z.boolean().optional().default(false),
+  _id: z.string().optional(),
+  variantsCounts: z.number().optional().default(0),
+  discountPercentage: z.coerce.number().optional().default(0),
+  splitType: z.enum(["PORTION", "ITEM"]).optional().default("PORTION"),
+  totalGst: z.coerce.number().optional().default(0),
+  coinPercentage: z.coerce.number().optional().default(0),
+  couponPercentage: z.coerce.number().optional().default(0),
+  itemIds: z.array(z.string()).optional(),
+  itemGst: z.coerce.number().optional().default(0),
+  itemGstAfterDiscount: z.coerce.number().optional().default(0),
 });
 
 export type UserSessionSchemaType = z.infer<typeof userSessionSchema>;

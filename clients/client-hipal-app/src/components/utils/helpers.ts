@@ -616,7 +616,7 @@ export const calculateFinalBill = (
   const adjustedClaimCouponz =
     claimCouponz >= billValue ? billValue : claimCouponz;
   const finalBillValue = billValue - claimedCoins - adjustedClaimCouponz + tips;
-  return finalBillValue;
+  return finalBillValue.toFixed(2) || 0;
 };
 
 // Function to get the best coupon suggestion

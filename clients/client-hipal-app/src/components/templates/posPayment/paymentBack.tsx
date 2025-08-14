@@ -15,7 +15,7 @@ import { BiArrowBack } from "react-icons/bi";
 
 const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
   useMerchantDetails();
-  useGetBill();
+  // useGetBill();
   useGetOrderId();
   useUserCoinz(data?.loyalty?.loyaltyId || "");
   const pathName = usePathname();

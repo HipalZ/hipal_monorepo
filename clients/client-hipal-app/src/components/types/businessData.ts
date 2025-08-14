@@ -652,6 +652,9 @@ export interface BillData {
   tableName: string;
   subTotal: number;
   billId: string;
+  variantId?: string;
+  variantName?: string;
+  isPaid: boolean;
   _id?: string;
   otherTax: number;
   discountAppliedOn?: string;
@@ -752,6 +755,7 @@ export interface OptionalPropsData {
   tips?: number;
   couponId?: string;
   userId?: string;
+  variantId?: string;
 }
 
 export interface birthdayEvents {

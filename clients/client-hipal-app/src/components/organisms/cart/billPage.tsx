@@ -1,84 +1,214 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Receipt, User } from "lucide-react";
-import { memo, useMemo } from "react";
-import { Coins, Gift } from "lucide-react";
-import useLoyaltyData from "@/components/store/useLoyaltyData";
+import { Receipt, User, Coins, Gift } from "lucide-react";
+import { memo, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
+import useLoyaltyData from "@/components/store/useLoyaltyData";
+import type { BillItem } from "@hipal/server/src/utils/reportHelper/itemType";
 
 const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
   ssr: false,
   loading: () => <SkeletonLoader height={200} />,
 });
 
+/** ==== Types that handle both shapes ==== */
+type FlatItem = BillItem;
+
+type GstGroup = {
+  gst: number;
+  items: FlatItem[];
+  subTotal?: number;
+  totalGst?: number;
+};
+
+type FlatBill = {
+  billItems: FlatItem[];
+  subTotal?: number;
+  gst?: number; // total GST amount
+  otherTax?: number;
+  claimedCoins?: number;
+  couponDiscount?: number;
+  serviceCharge?: number;
+  discount?: number;
+  tips?: number;
+  total?: number;
+  billId?: string;
+  tableName?: string;
+  customerName?: string;
+  customerPhone?: string;
+};
+
+type GroupedBill = {
+  billItems: GstGroup[];
+  subTotal?: number;
+  gst?: number;
+  otherTax?: number;
+  claimedCoins?: number;
+  couponDiscount?: number;
+  serviceCharge?: number;
+  discount?: number;
+  tips?: number;
+  total?: number;
+  billId?: string;
+  tableName?: string;
+  customerName?: string;
+  customerPhone?: string;
+};
+
+type AnyBill = FlatBill | GroupedBill;
+
+/** ==== Shape detector ==== */
+const isGrouped = (
+  billData: AnyBill | undefined | null,
+): billData is GroupedBill => {
+  const arr = billData?.billItems as any[];
+  return (
+    Array.isArray(arr) &&
+    arr.length > 0 &&
+    typeof arr[0] === "object" &&
+    "items" in arr[0]
+  );
+};
+
+/** ==== Helpers ==== */
 const MemoBillPage = () => {
   const { loyaltySetting } = useLoyaltyData();
-  const currencySymbol = _useAllBusiness(
+  const currencySymbolRaw = _useAllBusiness(
     (s) => s.data.outletInfo?.currencySymbol,
   );
+  const currency = currencySymbolRaw || "₹";
   const { showBillPage, setShowBillPage, billData } = usePaymentStore();
+  const data = billData as AnyBill | undefined;
 
-  const calculateItemTotal = (item: any) => {
-    const dishPrice = item.dish.price;
-    const portionPrice = item.portion?.price || 0;
-    const extrasTotal =
-      item.extras?.reduce(
-        (sum: number, extra: any) => sum + extra.price * extra.quantity,
-        0,
-      ) || 0;
-    return (dishPrice + portionPrice + extrasTotal) * item.quantity;
-  };
+  const calculateItemTotal = useCallback((item: FlatItem): number => {
+    const dishPrice = Number(item?.dish?.price ?? 0);
+    const portionPrice = Number(item?.portion?.price ?? 0);
 
-  // Group items by GST rate and calculate totals
-  const itemsByGST = useMemo(() => {
-    if (!billData?.billItems) return [];
+    const extrasTotal = Array.isArray(item?.extras)
+      ? item.extras.reduce((sum, extra) => {
+          const p = Number(extra?.price ?? 0);
+          const q = Number(extra?.quantity ?? 0);
+          return sum + p * q;
+        }, 0)
+      : 0;
 
-    const grouped: { [key: number]: any[] } = {};
+    const quantity = Number(item?.quantity ?? 0);
+    const lineTotal = (dishPrice + portionPrice + extrasTotal) * quantity;
+    const itemDiscount = Number(item?.discount ?? 0);
+    return Math.max(lineTotal - itemDiscount, 0);
+  }, []);
 
-    // Filter out deleted items and group by GST rate
-    billData.billItems
-      .filter((item: any) => !item.isDeleted)
-      .forEach((item: any) => {
-        const gstRate = item.dish.gst || 0;
-        if (!grouped[gstRate]) {
-          grouped[gstRate] = [];
-        }
-        grouped[gstRate].push(item);
-      });
+  /** Normalize to GST groups (works for both shapes) + compute reliable totals */
+  const { itemsByGST, computed } = useMemo(() => {
+    const raw = data?.billItems ?? [];
 
-    // Convert to array with calculated totals
-    return Object.entries(grouped)
-      .map(([gstRate, items]) => {
-        const subTotal = items.reduce(
-          (sum, item) => sum + calculateItemTotal(item),
-          0,
-        );
-        const totalGst = (subTotal * Number(gstRate)) / 100;
+    // If already grouped
+    if (isGrouped(data)) {
+      const groups = (raw as GstGroup[])
+        .map((g) => {
+          const items = (g.items ?? []).filter(
+            (it: any) =>
+              it && it.isDeleted !== true && Number(it?.quantity ?? 0) > 0,
+          );
+          const sub = items.reduce((sum, i) => sum + calculateItemTotal(i), 0);
+          const gstRate = Number(g.gst ?? 0);
+          const tax = (sub * gstRate) / 100;
+          return {
+            gst: gstRate,
+            items,
+            subTotal: Number.isFinite(g.subTotal) ? Number(g.subTotal) : sub,
+            totalGst: Number.isFinite(g.totalGst) ? Number(g.totalGst) : tax,
+          };
+        })
+        .sort((a, b) => a.gst - b.gst);
 
+      const sumSub = groups.reduce((s, gi) => s + (gi.subTotal ?? 0), 0);
+      const sumGst = groups.reduce((s, gi) => s + (gi.totalGst ?? 0), 0);
+
+      return {
+        itemsByGST: groups,
+        computed: { subTotal: sumSub, gst: sumGst },
+      };
+    }
+
+    // Flat items -> group now
+    const flat = (raw as FlatItem[]).filter(
+      (it: any) => it && it.isDeleted !== true && Number(it?.quantity ?? 0) > 0,
+    );
+    const bucket: Record<string, FlatItem[]> = {};
+    for (const it of flat) {
+      const rate = String(Number(it?.dish?.gst ?? 0));
+      if (!bucket[rate]) bucket[rate] = [];
+      bucket[rate].push(it);
+    }
+
+    const groups = Object.entries(bucket)
+      .map(([rate, items]) => {
+        const sub = items.reduce((sum, i) => sum + calculateItemTotal(i), 0);
+        const gstRate = Number(rate);
         return {
-          gst: Number(gstRate),
+          gst: gstRate,
           items,
-          subTotal,
-          totalGst,
+          subTotal: sub,
+          totalGst: (sub * gstRate) / 100,
         };
       })
       .sort((a, b) => a.gst - b.gst);
-  }, [billData?.billItems]);
+
+    const sumSub = groups.reduce((s, gi) => s + (gi.subTotal ?? 0), 0);
+    const sumGst = groups.reduce((s, gi) => s + (gi.totalGst ?? 0), 0);
+
+    return { itemsByGST: groups, computed: { subTotal: sumSub, gst: sumGst } };
+  }, [data, calculateItemTotal]);
+
+  /** Prefer API totals but fall back to computed to keep UI consistent */
+  const footer = useMemo(() => {
+    const subTotal = Number((data as any)?.subTotal ?? computed.subTotal ?? 0);
+    const totalGst = Number((data as any)?.gst ?? computed.gst ?? 0);
+    const otherTax = Number((data as any)?.otherTax ?? 0);
+    const claimedCoins = Number((data as any)?.claimedCoins ?? 0);
+    const couponDiscount = Number((data as any)?.couponDiscount ?? 0);
+    const serviceCharge = Number((data as any)?.serviceCharge ?? 0);
+    const discount = Number((data as any)?.discount ?? 0);
+    const tips = Number((data as any)?.tips ?? 0);
+
+    // If API total present, use it; else reconstruct a sane total
+    const total =
+      typeof (data as any)?.total === "number"
+        ? Number((data as any)?.total)
+        : Math.max(
+            subTotal +
+              totalGst +
+              otherTax +
+              serviceCharge +
+              tips -
+              claimedCoins -
+              couponDiscount -
+              discount,
+            0,
+          );
+
+    return {
+      subTotal,
+      totalGst,
+      otherTax,
+      claimedCoins,
+      couponDiscount,
+      serviceCharge,
+      discount,
+      tips,
+      total,
+    };
+  }, [data, computed]);
 
   const container = {
     hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } },
   };
-
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 },
@@ -98,7 +228,7 @@ const MemoBillPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          {/* Header Section */}
+          {/* Header */}
           <header className="p-4 rounded-t-lg">
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -106,26 +236,29 @@ const MemoBillPage = () => {
                   Bill Details
                 </h1>
                 <p className="text-black text-sm">
-                  Bill ID: {billData?.billId || "Id"}
+                  Bill ID: {(data as any)?.billId || "Id"}
                 </p>
               </div>
               <div className="text-right text-[#008800]">
                 <p className="text-lg font-semibold">
-                  Table {billData?.tableName || "table"}
+                  Table {(data as any)?.tableName || "table"}
                 </p>
                 <p className="text-sm text-black">
-                  Customer: {billData?.customerName || "Guest"}
+                  Customer: {(data as any)?.customerName || "Guest"}
                 </p>
               </div>
             </div>
             <div className="flex gap-4 text-sm text-black">
               <div className="flex items-center gap-1">
                 <User size={16} />
-                <span>{billData?.customerPhone || "Phone not provided"}</span>
+                <span>
+                  {(data as any)?.customerPhone || "Phone not provided"}
+                </span>
               </div>
             </div>
           </header>
 
+          {/* Loyalty Card */}
           {loyaltySetting?.loyaltyId && (
             <motion.div
               className="w-full max-w-md mx-auto p-4"
@@ -133,7 +266,6 @@ const MemoBillPage = () => {
               animate={{ opacity: 1, y: 0 }}
             >
               <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-3 border border-amber-200">
-                {/* Coin Value Proposition */}
                 <div className="flex items-center gap-4 mb-6">
                   <motion.div
                     className="relative"
@@ -147,7 +279,7 @@ const MemoBillPage = () => {
                   >
                     <div className="w-12 h-12 bg-amber-400 rounded-full flex items-center justify-center">
                       <span className="text-2xl font-bold text-white">
-                        {currencySymbol}1
+                        {currency}1
                       </span>
                     </div>
                     <motion.div
@@ -165,15 +297,13 @@ const MemoBillPage = () => {
                   </motion.div>
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-amber-900">
-                      1 Coin = 1 {currencySymbol}
+                      1 Coin = 1 {currency}
                     </h3>
                     <p className="text-amber-700 text-sm">
                       Earn exciting coinz by paying your bill!
                     </p>
                   </div>
                 </div>
-
-                {/* Process Steps */}
                 <div className="space-y-4">
                   <motion.div
                     className="flex items-center gap-3"
@@ -197,7 +327,7 @@ const MemoBillPage = () => {
             </motion.div>
           )}
 
-          {/* Items List */}
+          {/* Items */}
           <motion.section
             className="mx-4 p-4 border-t border-x rounded-t-2xl"
             variants={container}
@@ -212,8 +342,11 @@ const MemoBillPage = () => {
             <div className="space-y-6">
               {itemsByGST.length > 0 ? (
                 itemsByGST.map((billGroup, groupIndex) => (
-                  <div key={groupIndex} className="space-y-4">
-                    {/* GST Group Header */}
+                  <div
+                    key={`gst-${billGroup.gst}-${groupIndex}`}
+                    className="space-y-4"
+                  >
+                    {/* Group header */}
                     <div className="bg-gray-100 p-3 rounded-lg">
                       <h3 className="font-semibold text-gray-700">
                         GST {billGroup.gst}% Items
@@ -221,17 +354,17 @@ const MemoBillPage = () => {
                       <div className="flex justify-between text-sm text-gray-600 mt-1">
                         <span>{billGroup.items.length} items</span>
                         <span>
-                          Subtotal: {currencySymbol}
-                          {billGroup.subTotal.toFixed(2)}
+                          Subtotal: {currency}
+                          {(billGroup.subTotal ?? 0).toFixed(2)}
                         </span>
                       </div>
                     </div>
 
-                    {/* Items in this GST group */}
+                    {/* Items */}
                     <div className="space-y-3 pl-4">
                       {billGroup.items.map((item: any, index: number) => (
                         <motion.article
-                          key={`${item._id}-${index}`}
+                          key={`${item?._id ?? item?.id ?? "row"}-${index}`}
                           variants={itemVariants}
                           className="border-b last:border-0 pb-3 last:pb-0"
                         >
@@ -250,7 +383,7 @@ const MemoBillPage = () => {
                               )}
                             </div>
                             <p className="font-medium text-black">
-                              {currencySymbol}
+                              {currency}
                               {calculateItemTotal(item).toFixed(2)}
                             </p>
                           </div>
@@ -260,8 +393,8 @@ const MemoBillPage = () => {
                               <div className="flex justify-between text-sm text-blue-600">
                                 <span>+ {item?.portion?.name}</span>
                                 <span>
-                                  {currencySymbol}
-                                  {item?.portion?.price}
+                                  {currency}
+                                  {Number(item?.portion?.price ?? 0).toFixed(2)}
                                 </span>
                               </div>
                             </div>
@@ -271,17 +404,20 @@ const MemoBillPage = () => {
                             <div className="mt-2 pl-4 border-l-2 border-green-100">
                               {item?.extras.map((extra: any, idx: number) => (
                                 <div
-                                  key={`${extra.id}-${idx}`}
+                                  key={`${
+                                    extra?.id ?? extra?.name ?? "extra"
+                                  }-${idx}`}
                                   className="flex justify-between text-sm text-green-600"
                                 >
                                   <span>
                                     + {extra?.name} (x{extra?.quantity})
                                   </span>
                                   <span>
-                                    {currencySymbol}
-                                    {(extra?.price * extra?.quantity).toFixed(
-                                      2,
-                                    )}
+                                    {currency}
+                                    {(
+                                      Number(extra?.price ?? 0) *
+                                      Number(extra?.quantity ?? 0)
+                                    ).toFixed(2)}
                                   </span>
                                 </div>
                               ))}
@@ -291,14 +427,14 @@ const MemoBillPage = () => {
                       ))}
                     </div>
 
-                    {/* GST Group Summary */}
+                    {/* Group GST line */}
                     {billGroup.gst > 0 && (
                       <div className="bg-gray-50 p-2 rounded text-sm">
                         <div className="flex justify-between text-gray-600">
                           <span>GST ({billGroup.gst}%)</span>
                           <span>
-                            {currencySymbol}
-                            {billGroup.totalGst.toFixed(2)}
+                            {currency}
+                            {(billGroup.totalGst ?? 0).toFixed(2)}
                           </span>
                         </div>
                       </div>
@@ -314,7 +450,7 @@ const MemoBillPage = () => {
             </div>
           </motion.section>
 
-          {/* Bill Summary */}
+          {/* Footer */}
           <motion.footer
             className="mx-4 p-4 bg-white border rounded-b-2xl"
             initial={{ opacity: 0 }}
@@ -322,93 +458,102 @@ const MemoBillPage = () => {
             transition={{ delay: 0.4 }}
           >
             <div className="space-y-2">
-              {billData?.subTotal ? (
+              {footer.subTotal > 0 && (
                 <div className="flex justify-between text-black">
                   <span>Subtotal</span>
                   <span>
-                    {currencySymbol}
-                    {billData?.subTotal.toFixed(2)}
+                    {currency}
+                    {footer.subTotal.toFixed(2)}
                   </span>
                 </div>
-              ) : null}
+              )}
 
-              {billData?.gst > 0 ? (
-                <div className="flex justify-between text-black">
-                  <span>Total GST</span>
-                  <span>
-                    {currencySymbol}
-                    {billData?.gst.toFixed(2)}
-                  </span>
-                </div>
-              ) : null}
+              {footer.totalGst > 0 && (
+                <>
+                  <div className="flex justify-between text-black">
+                    <span>CGST</span>
+                    <span>
+                      {currency}
+                      {(footer.totalGst / 2).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-black">
+                    <span>SGST</span>
+                    <span>
+                      {currency}
+                      {(footer.totalGst / 2).toFixed(2)}
+                    </span>
+                  </div>
+                </>
+              )}
 
-              {billData?.otherTax > 0 ? (
+              {footer.otherTax > 0 && (
                 <div className="flex justify-between text-black">
                   <span>Other Tax</span>
                   <span>
-                    {currencySymbol}
-                    {billData?.otherTax.toFixed(2)}
+                    {currency}
+                    {footer.otherTax.toFixed(2)}
                   </span>
                 </div>
-              ) : null}
+              )}
 
-              {billData?.claimedCoins > 0 ? (
+              {footer.claimedCoins > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span>Loyalty Coins</span>
                   <span>
-                    -{currencySymbol}
-                    {billData?.claimedCoins.toFixed(2)}
+                    -{currency}
+                    {footer.claimedCoins.toFixed(2)}
                   </span>
                 </div>
-              ) : null}
+              )}
 
-              {billData?.couponDiscount > 0 ? (
+              {footer.couponDiscount > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span>Coupon Discount</span>
                   <span>
-                    -{currencySymbol}
-                    {billData?.couponDiscount.toFixed(2)}
+                    -{currency}
+                    {footer.couponDiscount.toFixed(2)}
                   </span>
                 </div>
-              ) : null}
+              )}
 
-              {billData?.serviceCharge > 0 ? (
+              {footer.serviceCharge > 0 && (
                 <div className="flex justify-between text-black">
                   <span>Service Charge</span>
                   <span>
-                    {currencySymbol}
-                    {billData?.serviceCharge.toFixed(2)}
+                    {currency}
+                    {footer.serviceCharge.toFixed(2)}
                   </span>
                 </div>
-              ) : null}
+              )}
 
-              {billData?.discount > 0 ? (
+              {footer.discount > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span>Discount</span>
                   <span>
-                    -{currencySymbol}
-                    {billData?.discount.toFixed(2)}
+                    -{currency}
+                    {footer.discount.toFixed(2)}
                   </span>
                 </div>
-              ) : null}
+              )}
 
-              {billData?.tips > 0 ? (
+              {footer.tips > 0 && (
                 <div className="flex justify-between text-black">
                   <span>Tips</span>
                   <span>
-                    {currencySymbol}
-                    {billData?.tips.toFixed(2)}
+                    {currency}
+                    {footer.tips.toFixed(2)}
                   </span>
                 </div>
-              ) : null}
+              )}
 
               <div className="h-px bg-gray-200 my-2" />
 
               <div className="text-black flex justify-between text-lg">
                 <span className="font-bold">Total</span>
                 <span className="font-bold">
-                  {currencySymbol}
-                  {billData?.total?.toFixed(2)}
+                  {currency}
+                  {footer.total.toFixed(2)}
                 </span>
               </div>
             </div>
@@ -420,5 +565,4 @@ const MemoBillPage = () => {
 };
 
 const BillPage = memo(MemoBillPage);
-
 export default BillPage;

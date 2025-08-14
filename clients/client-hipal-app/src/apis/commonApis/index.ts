@@ -121,3 +121,12 @@ export const getMenuWithoutTableName = async (businessId: string) => {
   }
   return null;
 };
+
+export const getPropertyImages = async (businessId: string) => {
+  const response = await apiRpc.bucket.images.fetch_bucket_by_business.$get({
+    query: {
+      businessId: businessId,
+    },
+  });
+  return response.json();
+};

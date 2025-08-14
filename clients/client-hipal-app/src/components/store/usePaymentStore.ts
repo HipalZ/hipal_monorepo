@@ -71,6 +71,12 @@ interface IUsePaymentStore {
 
   displayTimer: number;
   setDisplayTimer: (timer: number) => void;
+
+  selectedBill: null | BillData;
+  setSelectedBill: (bill: BillData | null) => void;
+
+  isBillSplit: boolean;
+  setIsBillSplit: (isBillSplit: boolean) => void;
 }
 
 export const usePaymentStore = create<IUsePaymentStore>((set) => ({
@@ -145,6 +151,14 @@ export const usePaymentStore = create<IUsePaymentStore>((set) => ({
 
   showScan: false,
   setShowScan: (show: boolean) => set(() => ({ showScan: show })),
+
+  selectedBill: null,
+  setSelectedBill: (bill: BillData | null) =>
+    set(() => ({ selectedBill: bill })),
+
+  isBillSplit: false,
+  setIsBillSplit: (isBillSplit: boolean) =>
+    set(() => ({ isBillSplit: isBillSplit })),
 
   showBillPage: false,
   setShowBillPage: (show: boolean) => set(() => ({ showBillPage: show })),

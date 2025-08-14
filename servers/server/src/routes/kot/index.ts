@@ -8,6 +8,8 @@ import {
   UserAnalytic,
   UserSession,
 } from "@hi/db-models";
+import type { UserSessionSchemaType } from "@hi/db-models/src/validators";
+
 import { kotOrderAcceptSchema } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
@@ -15,6 +17,7 @@ import { Hono } from "hono";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { ubacMiddleware } from "../../../middleware/checkPermissions";
+import { checkOriginBillIsSplit } from "../../services/splitBill";
 import { calculateCartBill } from "../../utils/helper";
 import {
   deleteKOTPrintEvent,
@@ -211,6 +214,22 @@ const kotRouter = new Hono()
             kotInvoiceNumber: 1,
           },
         ).session(session);
+
+        const tableSession = (await UserSession.findOne({
+          tableName: kotDocs[0].tableName,
+          businessId: kotDocs[0].businessId,
+        })) as UserSessionSchemaType;
+
+        const billAlreadySplit = checkOriginBillIsSplit(tableSession);
+        if (billAlreadySplit) {
+          return respond(
+            c,
+            "Bill already split you cannot delete the KOT",
+            true,
+            400,
+            {},
+          );
+        }
 
         if (password) {
           const passwordManager = await PasswordManager.findOne({
@@ -411,10 +430,20 @@ const kotRouter = new Hono()
         }
 
         if (orderAction === "ACCEPT") {
-          const tableSession = await UserSession.findOne({
+          const tableSession = (await UserSession.findOne({
             tableName: kot.tableName,
             businessId: kot.businessId,
-          });
+          })) as UserSessionSchemaType;
+          const billAlreadySplit = checkOriginBillIsSplit(tableSession);
+          if (billAlreadySplit) {
+            return respond(
+              c,
+              "Bill already split you cannot acept the order",
+              true,
+              400,
+              {},
+            );
+          }
           const orderAlreadyExist = await PaymentAlert.findOne({
             businessId: kot.businessId,
             tableName: kot.tableName,

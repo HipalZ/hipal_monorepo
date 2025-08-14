@@ -30,6 +30,8 @@ export const UserAttrs = z.object({
   isDeleted: z.boolean().optional(),
   _id: z.string().optional(),
   birthdayTriggerCount: z.number().optional(),
+  address: z.string().min(5).max(200).optional(),
+  profession: z.string().min(2).max(100).optional(),
 });
 
 export type UserType = z.infer<typeof UserAttrs>;

@@ -84,6 +84,18 @@ const userSchema = new mongoose.Schema<UserType>(
       required: false,
       default: 0,
     },
+    address: {
+      type: String,
+      required: false,
+      minlength: 5,
+      maxlength: 200,
+    },
+    profession: {
+      type: String,
+      required: false,
+      minlength: 2,
+      maxlength: 100,
+    },
   },
   {
     timestamps: true,

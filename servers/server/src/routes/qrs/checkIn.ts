@@ -29,7 +29,7 @@ const checkInQrRouter = new Hono()
 
       const businessInfo = await Business.findById(businessId);
 
-      const longUrl = `https://hipalz.com/${businessInfo?.customLink}/explore?tag=${updateQrName}`;
+      const longUrl = `https://hipalz.com/${businessInfo?.customLink}/explore`;
 
       const uniqueOrderId = nanoid(5);
       let findUrl = await UrlModel.findOne({ longUrl });
@@ -77,7 +77,9 @@ const checkInQrRouter = new Hono()
       const checkInQrs = await CheckInQr.find({
         businessId,
         isDeleted: false,
-      }).lean();
+      })
+        .select("name downloadLink date")
+        .lean();
 
       return respond(
         c,

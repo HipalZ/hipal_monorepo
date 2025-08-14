@@ -7,9 +7,11 @@ const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,
+      default: null,
     },
     rewards: {
       type: Number,
+      default: 0,
     },
 
     status: {
@@ -26,11 +28,13 @@ const userRewardHistorySchema = new mongoose.Schema<UserRewardHistoryType>(
     order_id: {
       type: ObjectId,
       ref: "Order",
+      default: null,
     },
 
     loyaltyId: {
       type: ObjectId,
       required: true,
+      default: null,
     },
   },
   {
