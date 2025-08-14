@@ -53,9 +53,9 @@ export default function RealEstateLanding({
     const nextAtStr = sessionStorage.getItem("leadFormNextAt");
     const now = Date.now();
 
-    // If we already scheduled a future open, honor it; otherwise 5s initial delay
+    // If we already scheduled a future open, honor it; otherwise 2s initial delay
     const initialDelay =
-      nextAtStr && Number(nextAtStr) > now ? Number(nextAtStr) - now : 5000;
+      nextAtStr && Number(nextAtStr) > now ? Number(nextAtStr) - now : 2000;
 
     scheduleOpen(initialDelay);
 
