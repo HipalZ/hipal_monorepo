@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Calendar, Hash, QrCode, Download, Loader2 } from "lucide-react";
+import { Phone, Calendar, Hash, QrCode, Download, Loader2, User, Mail, Briefcase, MapPin, Cake } from "lucide-react";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import DateRangePicker from "@/components/molecules/dateRangePicker";
 import usePaginationStore from "@/components/store/usePaginationStore";
@@ -25,7 +25,15 @@ import {
 
 interface CheckInUser {
   _id: string;
-  userId: { _id: string; name: string; phone: string };
+  userId: {
+    _id: string;
+    name: string;
+    email: string;
+    phone: string;
+    dob: number;
+    address: string;
+    profession: string;
+  };
   businessId: string;
   code: string;
   date: number;
@@ -44,8 +52,9 @@ interface CheckInUserCardProps {
 }
 
 const CheckInUserCard = memo(({ user }: CheckInUserCardProps) => {
+  console.log(user);
+
   const formattedDate = useMemo(() => {
-    // keep consistent format; change TZ if you prefer IST explicitly
     return new Intl.DateTimeFormat("en-IN", {
       month: "short",
       day: "numeric",
@@ -54,46 +63,90 @@ const CheckInUserCard = memo(({ user }: CheckInUserCardProps) => {
     }).format(user.date);
   }, [user.date]);
 
+  const formattedDOB = useMemo(() => {
+    if (!user.userId.dob) return null;
+    return new Intl.DateTimeFormat("en-IN", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    }).format(user.userId.dob);
+  }, [user.userId.dob]);
+
   return (
     <Card className="w-full hover:shadow-md transition-shadow">
-      <CardContent className="p-3">
-        <div className="flex items-center justify-between gap-2">
-          {/* Left: user */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-semibold text-sm truncate">
-                {user.userId.name}
-              </h3>
-              {user.qrId && (
-                <Badge variant="secondary" className="h-5 px-1.5 text-xs">
-                  <QrCode className="h-3 w-3" />
-                </Badge>
-              )}
+      <CardContent className="p-4">
+        {/* Header with name and QR badge */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-full">
+              <User className="h-4 w-4 text-primary" />
             </div>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Phone className="h-3 w-3" />
-              <a
-                href={`tel:${user.userId.phone}`}
-                className="truncate"
-                aria-label={`Call ${user.userId.name}`}
-              >
-                {user.userId.phone}
-              </a>
-            </div>
+            <h3 className="font-semibold text-base">{user.userId.name}</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            {user.qrId && (
+              <Badge variant="secondary" className="h-6 px-2 text-xs">
+                <QrCode className="h-3 w-3 mr-1" />
+                QR
+              </Badge>
+            )}
+            <Badge variant="outline" className="h-6 px-2 text-xs font-mono">
+              <Hash className="h-3 w-3 mr-1" />
+              {user.code}
+            </Badge>
+          </div>
+        </div>
+
+        {/* Contact Information */}
+        <div className="space-y-2 mb-3">
+          <div className="flex items-center gap-2 text-sm">
+            <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <a
+              href={`tel:${user.userId.phone}`}
+              className="text-primary hover:underline"
+              aria-label={`Call ${user.userId.name}`}
+            >
+              {user.userId.phone}
+            </a>
           </div>
 
-          {/* Right: details */}
-          <div className="flex flex-col items-end gap-1">
-            <div className="flex items-center gap-1">
-              <Hash className="h-3 w-3 text-muted-foreground" />
-              <Badge variant="outline" className="h-5 px-1.5 text-xs font-mono">
-                {user.code}
-              </Badge>
+          <div className="flex items-center gap-2 text-sm">
+            <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <a
+              href={`mailto:${user.userId.email}`}
+              className="text-primary hover:underline truncate"
+              aria-label={`Email ${user.userId.name}`}
+            >
+              {user.userId.email}
+            </a>
+          </div>
+        </div>
+
+        {/* Personal Information */}
+        <div className="space-y-2 mb-3">
+          <div className="flex items-center gap-2 text-sm">
+            <Briefcase className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <span className="text-foreground">{user.userId.profession}</span>
+          </div>
+
+          <div className="flex items-center gap-2 text-sm">
+            <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <span className="text-foreground line-clamp-2">{user.userId.address}</span>
+          </div>
+
+          {formattedDOB && (
+            <div className="flex items-center gap-2 text-sm">
+              <Cake className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <span className="text-foreground">{formattedDOB}</span>
             </div>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Calendar className="h-3 w-3" />
-              <span>{formattedDate}</span>
-            </div>
+          )}
+        </div>
+
+        {/* Check-in Information */}
+        <div className="pt-2 border-t border-border">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar className="h-4 w-4 flex-shrink-0" />
+            <span>Checked in on {formattedDate}</span>
           </div>
         </div>
       </CardContent>
@@ -114,7 +167,7 @@ const CheckInUsersList = memo(({ users }: { users: CheckInUser[] }) => {
   }
 
   return (
-    <section className="grid gap-4 grid-cols-1 md:grid-cols-3 lg:grid-cols-4">
+    <section className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
       {users.map((user) => (
         <CheckInUserCard key={user._id} user={user} />
       ))}
