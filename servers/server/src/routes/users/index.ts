@@ -1562,22 +1562,14 @@ const usersRouter = new Hono()
         birthdayTriggerCount: z.number().optional(),
         name: z.string().min(2).max(100).optional(),
         email: z.string().email().optional(),
-
         address: z.string().min(5).max(200).optional(),
         profession: z.string().min(2).max(100).optional(),
       }),
     ),
 
     async (c) => {
-      const {
-        dob,
-        birthdayTriggerCount,
-        name,
-        email,
-
-        address,
-        profession,
-      } = await c.req.json();
+      const { dob, birthdayTriggerCount, name, email, address, profession } =
+        await c.req.json();
       const { userId } = c.req.param();
 
       const user = await User.findByIdAndUpdate(
