@@ -2130,7 +2130,6 @@ const whatsappRouter = new Hono()
             const tableCodeMatch = userText.match(
               /details\s*[-\s]?([a-zA-Z0-9\s-_]+)/i,
             );
-            console.log("tableCodeMatch", tableCodeMatch);
             const roomCodeMatch = userText.match(
               /room\s*[-\s]?([a-zA-Z0-9\s-]+)/i,
             );
@@ -2182,8 +2181,7 @@ const whatsappRouter = new Hono()
                   urlObj = findLongUrlFallback;
                 }
               }
-            }
-            if (roomCode) {
+            } else if (roomCode) {
               const findLongUrl = await UrlModel.findOne({
                 longUrl: { $regex: `room=${roomCode}`, $options: "i" },
                 businessId: config?.businessId,
@@ -2201,8 +2199,7 @@ const whatsappRouter = new Hono()
                 shortUrlType = findLongUrl.shortUrlType || "";
                 urlObj = findLongUrl;
               }
-            }
-            if (couponCode) {
+            } else if (couponCode) {
               const findLongUrl = await UrlModel.findOne({
                 urlCode: couponCode,
               });
@@ -2211,8 +2208,7 @@ const whatsappRouter = new Hono()
                 shortUrlType = findLongUrl.shortUrlType || "";
                 urlObj = findLongUrl.shortUrl;
               }
-            }
-            if (checkInCode) {
+            } else if (checkInCode) {
               const findLongUrl = await UrlModel.findOne({
                 urlCode: checkInCode,
                 businessId: config?.businessId,
@@ -2277,7 +2273,6 @@ const whatsappRouter = new Hono()
               const room = await HotelRoom.findOne({
                 slug: urlObj?.urlCode, // assuming that room number is stored in slug
               });
-
               // If the room is found and no users are assigned, mark it as occupied
               if (room && room.userIds.length === 0) {
                 const updatedRoom = await HotelRoom.findOneAndUpdate(
@@ -2319,7 +2314,6 @@ const whatsappRouter = new Hono()
                   );
                 }
               }
-
               await axios.post(
                 `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
                 {
@@ -2387,7 +2381,6 @@ const whatsappRouter = new Hono()
                 });
               }
               const code = Math.floor(1000 + Math.random() * 9000).toString();
-
               await CheckInQrUser.findOneAndUpdate(
                 {
                   userId: user?._id,
@@ -2420,7 +2413,14 @@ const whatsappRouter = new Hono()
                   { new: true },
                 );
               }
-              const checkInBody = `Welcome to ${bName?.name}! 👋\n\nThank you for checking in — we're grateful to have you with us today. 🙏\nYour code: *${code}*\n\n *Discover Our Services*: ${longUrl}\n\nWe hope you have a delightful experience! 😊`;
+              const outletInfo = await OutLetInfo.findOne({
+                businessId: config?.businessId,
+              });
+              const checkInBody = `Welcome to ${
+                bName?.name
+              }! 👋\n\n we're grateful to have you with us today. 🙏\nYour code: *${code}*\n\n *Discover Us*: ${longUrl}\n\nWe hope you have a great experience! 😊\n\n *Find Us*: ${
+                outletInfo?.socialMediaLinks[3]?.link || ""
+              }`;
               await axios({
                 method: "POST",
                 url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
