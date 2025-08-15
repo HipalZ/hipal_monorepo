@@ -3883,7 +3883,6 @@ const posRouter = new Hono()
             settled: false,
             accepted: true,
             businessId,
-            accepted: true,
           },
           {
             $set: {
