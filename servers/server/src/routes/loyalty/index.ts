@@ -6,6 +6,7 @@ import {
   UserReward,
 } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
+import axios from "axios";
 import { Hono } from "hono";
 import { z } from "zod";
 import { respond } from "../../utils/response";
@@ -26,29 +27,29 @@ const loyaltyRouter = new Hono().post(
   async (c) => {
     const { phone, otp, name, businessId } = await c.req.json();
 
-    // // Verify OTP
-    // if (otp) {
-    //   const otpResponse = await axios({
-    //     method: "GET",
-    //     url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
-    //     headers: {
-    //       accept: "application/json",
-    //       authkey: "387796AmyGlDBq63b2d75aP1",
-    //     },
-    //   });
+    // Verify OTP
+    if (otp) {
+      const otpResponse = await axios({
+        method: "GET",
+        url: `https://control.msg91.com/api/v5/otp/verify?otp=${otp}&mobile=91${phone}`,
+        headers: {
+          accept: "application/json",
+          authkey: "387796AmyGlDBq63b2d75aP1",
+        },
+      });
 
-    //   const invalidOtpMessages = [
-    //     "Mobile no. not found",
-    //     "OTP not match",
-    //     "OTP expired",
-    //     "Otp empty or not numeric",
-    //     "Max limit reached for this otp verification",
-    //   ];
+      const invalidOtpMessages = [
+        "Mobile no. not found",
+        "OTP not match",
+        "OTP expired",
+        "Otp empty or not numeric",
+        "Max limit reached for this otp verification",
+      ];
 
-    //   if (invalidOtpMessages.includes(otpResponse?.data?.message)) {
-    //     return respond(c, "Please enter valid Otp !!", true, 400, {});
-    //   }
-    // }
+      if (invalidOtpMessages.includes(otpResponse?.data?.message)) {
+        return respond(c, "Please enter valid Otp !!", true, 400, {});
+      }
+    }
 
     // Check loyalty settings
     const loyaltySetting = await LoyaltySettings.findOne({
