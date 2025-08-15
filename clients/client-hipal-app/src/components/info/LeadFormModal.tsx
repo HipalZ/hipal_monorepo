@@ -22,7 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { motion } from "framer-motion";
 import { useGetUserDetails, useSaveUserDetails } from "../hooks/useUserDetails";
 import { toast } from "react-toastify";
@@ -39,10 +38,7 @@ const leadFormSchema = z.object({
     .email("Please enter a valid email address")
     .min(1, "Email is required"),
   contact: z.string().optional(), // Made optional since it's read-only
-  address: z
-    .string()
-    .min(10, "Address must be at least 10 characters")
-    .max(200, "Address must be less than 200 characters"),
+  interestedProperty: z.string().min(1, "Please select an interested property"),
   profession: z.string().min(1, "Please select your profession"),
   otherProfession: z.string().optional(),
   consent: z.boolean().refine((val) => val === true, {
@@ -83,7 +79,7 @@ export default function LeadFormModal({
       fullName: "",
       email: "",
       contact: "",
-      address: "",
+      interestedProperty: "",
       profession: "",
       otherProfession: "",
       consent: false,
@@ -95,7 +91,12 @@ export default function LeadFormModal({
       setValue("fullName", data.name || "");
       setValue("email", data.email || "");
       setValue("contact", data.phone || "");
-      setValue("address", data.address || "");
+      const propertyMapping: { [key: string]: string } = {
+        "Makuta Nirvana - Patancheru": "Makuta Nirvana - Patancheru",
+        "Makuta Taranga - Kukatpally": "Makuta Taranga - Kukatpally",
+        "Makuta Horizon - Kompally": "Makuta Horizon - Kompally",
+      };
+      setValue("interestedProperty", propertyMapping[data.address || ""] || "");
       setValue("profession", data.profession || "");
 
       // Check if profession is "Other" type
@@ -125,6 +126,12 @@ export default function LeadFormModal({
     if (value !== "Other") setValue("otherProfession", "");
   };
 
+  const propertyOptions = [
+    "Makuta Nirvana - Patancheru",
+    "Makuta Taranga - Kukatpally",
+    "Makuta Horizon - Kompally",
+  ];
+
   const onSubmit = async (data: LeadFormData) => {
     setIsSubmitting(true);
 
@@ -136,7 +143,7 @@ export default function LeadFormModal({
     const userdata = {
       name: data.fullName,
       email: data.email,
-      address: data.address,
+      address: data.interestedProperty, // Store selected property as address for backend compatibility
       profession: resolvedProfession,
       consent: true,
     };
@@ -276,28 +283,46 @@ export default function LeadFormModal({
                 </p>
               </div>
 
-              {/* Address */}
               <div className="space-y-2">
                 <Label
-                  htmlFor="address"
+                  htmlFor="interestedProperty"
                   className="text-sm font-medium text-gray-900"
                 >
-                  Address <span className="text-red-500">*</span>
+                  Interested Property <span className="text-red-500">*</span>
                 </Label>
-                <Textarea
-                  id="address"
-                  {...register("address")}
-                  placeholder="Enter your current address"
-                  rows={3}
-                  className={`bg-white/60 backdrop-blur-sm border border-white/30 focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 text-gray-900 placeholder:text-gray-500 resize-none ${
-                    errors.address
-                      ? "border-red-400/50 focus:border-red-400/50 focus:ring-red-400/20"
-                      : ""
-                  }`}
-                />
-                {errors.address && (
+                <Select
+                  onValueChange={(value) =>
+                    setValue("interestedProperty", value)
+                  }
+                  value={watch("interestedProperty")}
+                >
+                  <SelectTrigger
+                    className={`bg-white/60 backdrop-blur-sm border border-white/30 focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 text-gray-900 ${
+                      errors.interestedProperty
+                        ? "border-red-400/50 focus:border-red-400/50 focus:ring-red-400/20"
+                        : ""
+                    }`}
+                  >
+                    <SelectValue
+                      placeholder="Select a property you're interested in"
+                      className="text-gray-500"
+                    />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white/95 backdrop-blur-xl border border-white/20 shadow-xl">
+                    {propertyOptions.map((property) => (
+                      <SelectItem
+                        key={property}
+                        value={property}
+                        className="text-gray-900 hover:bg-white/50"
+                      >
+                        {property}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.interestedProperty && (
                   <p className="text-sm text-red-500">
-                    {errors.address.message}
+                    {errors.interestedProperty.message}
                   </p>
                 )}
               </div>
