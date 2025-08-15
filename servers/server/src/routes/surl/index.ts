@@ -139,11 +139,6 @@ const surlRouter = new Hono()
 
         if (whatsAppBusinessConfig?.menuRedirection === "WA") {
           let tableNumber = urlCode;
-          const tableMatch = result.longUrl.match(/tag=([^&]+)/);
-
-          if (tableMatch?.[1]) {
-            tableNumber = decodeURIComponent(tableMatch[1]);
-          }
 
           const message = `Hi, I have ve checked in via QR-${tableNumber}`;
           const redirectUrl = `https://wa.me/${
