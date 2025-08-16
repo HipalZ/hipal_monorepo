@@ -83,7 +83,7 @@ const zoneRouter = new Hono()
     //@ts-ignore
     return runInTransaction(async (session) => {
       const requestData = await c.req.json();
-      const { zoneId, roomIds } = requestData;
+      const { zoneId, roomIds, staffIds } = requestData;
 
       const zoneNameAlreadyExists = await HotelZone.exists({
         _id: { $ne: zoneId },
@@ -136,6 +136,22 @@ const zoneRouter = new Hono()
       if (!updateRooms) {
         throw new Error("Error updating rooms");
       }
+
+      // if (staffIds && Array.isArray(staffIds)) {
+      //   const updateStaffsInRooms = await HotelRoom.updateMany(
+      //     { _id: { $in: roomIds } },
+      //     {
+      //       $set: {
+      //         staffIds: staffIds, // Replace with exact new list
+      //       },
+      //     },
+      //     { session },
+      //   );
+
+      //   if (!updateStaffsInRooms) {
+      //     throw new Error("Error updating staff assignments in rooms");
+      //   }
+      // }
 
       return respond(c, "Hotel zone updated successfully", false, 200, {
         _id: updatedZone._id,

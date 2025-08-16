@@ -8,6 +8,7 @@ import UniversalNav from "@/components/templates/menu/sideNavbaar/universelSiden
 import { useGetAllHotelRooms } from "@/hooks/hotel/useRoomHook";
 import { useGetAllRoomTypes } from "@/hooks/hotel/useRoomTypeHook";
 import { useGetAllHotelFloors } from "@/hooks/useFloorHook";
+import { useGetAllHotelStaff } from "@/hooks/useHotelStaff";
 import { cn } from "@hi/common";
 import { memo, useState } from "react";
 import { FaArrowLeft } from "react-icons/fa"
@@ -19,6 +20,7 @@ const MemoManageRoomsHotel = () => {
     const { floorsLoading } = useGetAllHotelFloors(businessId as string)
     const { roomLoading } = useGetAllHotelRooms(businessId as string)
     const { roomTypesLoading } = useGetAllRoomTypes(businessId as string)
+    useGetAllHotelStaff(businessId as string)
     const [selectedTab, setSelectedTab] = useState<"floors" | "room types" | "rooms">("floors");
     const changeLayout = (text: string) => {
         setSelectedTab(text.toLowerCase() as "floors" | "rooms");

@@ -1,6 +1,6 @@
 import useBusinessData from "@/components/store/useBusinessData"
 import { type IHotel_Roll, type IHotelRoll, type IHotelStaff, useGetAllHotelStaff } from "@/hooks/useHotelStaff"
-import { Edit, MoreVertical, Phone, Trash, User, UserCircle } from "lucide-react"
+import { Edit, MoreVertical, Phone, User, UserCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -61,10 +61,6 @@ const HotelStaffMain = () => {
       setEditServiceIds(serviceIds)
     }
     setStaffModal(true)
-  }
-
-  const handleDeleteStaff = (staffId: string) => {
-    console.log(staffId)
   }
 
   const handleAddStaff = () => {
@@ -192,7 +188,7 @@ const HotelStaffMain = () => {
         renderEmptyState()
       )}
     </div>
-  )
+  );
 }
 
 export default HotelStaffMain
