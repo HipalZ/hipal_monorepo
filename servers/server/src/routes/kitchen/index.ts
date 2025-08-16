@@ -1,4 +1,4 @@
-import { Dish, Kitchen, PrinterConfig } from "@hi/db-models";
+import { Dish, Kitchen, PrinterConfig, Table, Zone } from "@hi/db-models";
 import { KitchenAttrs, updateKitchenAttrs } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
@@ -188,11 +188,21 @@ const kitchenRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const { businessId, menuId } = c.req.query();
+
+        const allZones = await Zone.find({
+          businessId,
+          active: true,
+          pos: true,
+          isDeleted: false,
+        }).lean();
+
         const printers = await PrinterConfig.find({
+          kitchenId: "BILL_PRINTER",
           businessId,
           menuId,
-          kitchenId: { $eq: "BILL_PRINTER" },
-        });
+        })
+          .select("printerName zoneId zoneName menuId businessId")
+          .session(session);
 
         return respond(c, "fetched successfully", false, 200, printers);
       });
@@ -232,20 +242,32 @@ const kitchenRouter = new Hono()
   )
 
   .get(
-    "/printer/fetch_bill/:kitchenId/:businessId",
+    "/printer/fetch_bill_printer/:tableName/:businessId",
     zValidator(
       "param",
       z.object({
-        kitchenId: z.string().min(2).max(50),
+        tableName: z.string().min(2).max(50),
         businessId: z.string().min(2).max(50),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const { kitchenId, businessId } = c.req.param();
+        const { tableName, businessId } = c.req.param();
+
+        const tableInfo = await Table.findOne({
+          name: tableName,
+          businessId,
+          pos: true,
+          active: true,
+        });
+
+        if (!tableInfo) {
+          return respond(c, "Table not found", true, 404, {});
+        }
+
         const printer = await PrinterConfig.findOne({
-          kitchenId,
+          zoneId: tableInfo.zoneId,
           businessId,
         });
 
@@ -366,6 +388,42 @@ const kitchenRouter = new Hono()
 
           await PrinterConfig.updateOne(
             { kitchenId, businessId, menuId },
+            { $set: { printerName } },
+            { upsert: true, session },
+          );
+        }
+
+        return respond(c, "Printer config updated", false, 200, {});
+      });
+    },
+  )
+
+  .post(
+    "/printer/bill_printer/config",
+    zValidator(
+      "json",
+      z.object({
+        printers: z.array(
+          z.object({
+            printerName: z.string().min(2).max(100),
+            businessId: z.string().min(2).max(50),
+            menuId: z.string().min(2).max(50),
+            zoneId: z.string().min(2).max(50),
+          }),
+        ),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const { printers } = await c.req.json();
+
+        // Example processing logic
+        for (const printer of printers) {
+          const { printerName, businessId, menuId, zoneId } = printer;
+
+          await PrinterConfig.updateOne(
+            { zoneId, businessId, menuId },
             { $set: { printerName } },
             { upsert: true, session },
           );
