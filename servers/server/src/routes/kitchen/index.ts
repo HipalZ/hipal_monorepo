@@ -201,7 +201,7 @@ const kitchenRouter = new Hono()
           businessId,
           menuId,
         })
-          .select("printerName zoneId zoneName menuId businessId")
+          .select("printerName zoneId zoneName menuId businessId kitchenId")
           .session(session);
 
         return respond(c, "fetched successfully", false, 200, printers);
