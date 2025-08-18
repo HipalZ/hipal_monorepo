@@ -992,7 +992,7 @@ const roomRouter = new Hono()
             staffIds: z.array(z.string().min(24).max(24)),
           }),
         ),
-        action: z.enum(["add", "remove"]).default("add"),
+        action: z.enum(["ADD", "REMOVE"]),
       }),
     ),
     async (c) => {
@@ -1001,7 +1001,7 @@ const roomRouter = new Hono()
         const requestData = await c.req.json();
         const { rooms, action } = requestData;
 
-        if (action === "add") {
+        if (action === "ADD") {
           for (const { roomIds, staffIds } of rooms) {
             await HotelRoom.updateMany(
               {
@@ -1013,7 +1013,7 @@ const roomRouter = new Hono()
               { session },
             );
           }
-        } else if (action === "remove") {
+        } else if (action === "REMOVE") {
           for (const { roomIds, staffIds } of rooms) {
             await HotelRoom.updateMany(
               {
