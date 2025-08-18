@@ -1,12 +1,11 @@
 import type { Model } from "mongoose";
 import mongoose from "mongoose";
-import { type HotelType, roomTypeEnum } from "../../validators";
+import type { HotelType } from "../../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 const hotelRoomTypeSchema = new mongoose.Schema<HotelType>({
   roomType: {
     type: String,
     required: true,
-    enum: roomTypeEnum,
   },
   availability: {
     type: Boolean,
