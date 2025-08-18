@@ -982,30 +982,50 @@ const roomRouter = new Hono()
 
   .put(
     "/bulk",
-    // zValidator(
-    //   "json",
-    //   z.array(
-    //     z.object({
-    //       roomIds: z.array(z.string().min(24).max(24)),
-    //       staffIds: z.array(z.string().min(24).max(24)),
-    //     }),
-    //   ),
-    // ),
+    zValidator(
+      "json",
+
+      z.object({
+        rooms: z.array(
+          z.object({
+            roomIds: z.array(z.string().min(24).max(24)),
+            staffIds: z.array(z.string().min(24).max(24)),
+          }),
+        ),
+        action: z.enum(["add", "remove"]).default("add"),
+      }),
+    ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
         const requestData = await c.req.json();
-        const { roomIds, staffIds } = requestData;
+        const { rooms, action } = requestData;
 
-        // await HotelRoom.updateMany(
-        //   {
-        //     _id: { $in: roomIds },
-        //   },
-        //   {
-        //     $addToSet: { staffIds: { $each: staffIds } },
-        //   },
-        //   { session },
-        // );
+        if (action === "add") {
+          for (const { roomIds, staffIds } of rooms) {
+            await HotelRoom.updateMany(
+              {
+                _id: { $in: roomIds },
+              },
+              {
+                $addToSet: { staffIds: { $each: staffIds } },
+              },
+              { session },
+            );
+          }
+        } else if (action === "remove") {
+          for (const { roomIds, staffIds } of rooms) {
+            await HotelRoom.updateMany(
+              {
+                _id: { $in: roomIds },
+              },
+              {
+                $pull: { staffIds: { $in: staffIds } },
+              },
+              { session },
+            );
+          }
+        }
 
         return respond(c, "Bulk update successful", false, 200, {});
       });
