@@ -1,5 +1,6 @@
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import FloorMain from "@/components/hotel/FloorAndRooms/FloorMain";
+import { RoomStaffLinking } from "@/components/hotel/FloorAndRooms/RoomAssign";
 import NewRoomCreation from "@/components/hotel/FloorAndRooms/RoomMain";
 import RoomTypeMain from "@/components/hotel/FloorAndRooms/RoomtypeMain";
 import MemoizedHeader from "@/components/molecules/header"
@@ -9,11 +10,14 @@ import { useGetAllHotelRooms } from "@/hooks/hotel/useRoomHook";
 import { useGetAllRoomTypes } from "@/hooks/hotel/useRoomTypeHook";
 import { useGetAllHotelFloors } from "@/hooks/useFloorHook";
 import { useGetAllHotelStaff } from "@/hooks/useHotelStaff";
+
 import { cn } from "@hi/common";
 import { memo, useState } from "react";
 import { FaArrowLeft } from "react-icons/fa"
 
-const navItems = [{ text: "floors" }, { text: "Room Types" }, { text: "Rooms" },];
+const navItems = [{ text: "floors" }, { text: "Room Types" }, { text: "Rooms" }, {
+    text: "Assign Rooms"
+}];
 
 const MemoManageRoomsHotel = () => {
     const businessId = useBusinessData((s) => s.businessData?._id)
@@ -21,7 +25,7 @@ const MemoManageRoomsHotel = () => {
     const { roomLoading } = useGetAllHotelRooms(businessId as string)
     const { roomTypesLoading } = useGetAllRoomTypes(businessId as string)
     useGetAllHotelStaff(businessId as string)
-    const [selectedTab, setSelectedTab] = useState<"floors" | "room types" | "rooms">("floors");
+    const [selectedTab, setSelectedTab] = useState<"floors" | "room types" | "rooms" | "assign rooms">("floors");
     const changeLayout = (text: string) => {
         setSelectedTab(text.toLowerCase() as "floors" | "rooms");
     };
@@ -72,6 +76,12 @@ const MemoManageRoomsHotel = () => {
             {
                 selectedTab === "room types" && (
                     <RoomTypeMain />
+                )
+            }
+            {
+                selectedTab === "assign rooms" && (
+                    <RoomStaffLinking
+                     />
                 )
             }
 

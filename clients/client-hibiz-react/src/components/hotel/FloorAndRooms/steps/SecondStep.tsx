@@ -9,7 +9,7 @@ import LoadingSpinner from "@/components/atom/loadingSpinner"
 import { useGetAllHotelRooms } from "@/hooks/hotel/useRoomHook"
 import useFloorFormStore from "@/components/store/hotel/useFloorStore"
 
-const SecondStep: React.FC = () => {
+const SecondStep = () => {
   const businessId = useBusinessData((s) => s.businessData?._id)
   const { isLoading,  hotelRoomsData } = useGetAllHotelRooms(businessId as string)
 
@@ -58,15 +58,15 @@ const SecondStep: React.FC = () => {
         </Card>
       ) : (
         <>
-          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+          <div className="max-h-[300px] grid grid-cols-3 gap-2 overflow-y-auto pr-2">
             {hotelRoomsData?.map((room) => (
               <Card
                 key={room._id}
-                className={`border transition-all hover:shadow-md ${isRoomSelected(room._id) ? "border-primary bg-primary/5" : ""}`}
+                className={`border transition-all hover:shadow-md p-2 ${isRoomSelected(room._id) ? "border-primary bg-primary/5" : ""}`}
                 onClick={() => toggleRoom(room)}
               >
-                <CardContent className="flex items-center justify-between p-3">
-                  <div className="flex items-center space-x-2">
+                <CardContent className="relative h-[6rem] p-0">
+                  <div className="flex flex-col items-start gap-2">
                     <Checkbox
                       id={room._id}
                       checked={isRoomSelected(room._id)}
@@ -75,13 +75,13 @@ const SecondStep: React.FC = () => {
                     />
                     <div>
                       <Label htmlFor={room._id} className="flex items-center cursor-pointer">
-                        <span className="font-medium">{room.name}</span>
-                        <Badge variant="outline" className="ml-2 text-xs">
+                        <span className="font-semibold opacity-80">{room.name}</span>
+                        {/* <Badge variant="outline" className="ml-2 text-xs">
                           {getRoomTypeLabel(room.roomType)}
-                        </Badge>
+                        </Badge> */}
                       </Label>
-                      <div className="flex items-center mt-1 space-x-2">
-                        <Badge variant="secondary" className={`text-xs ${getRoomStatusColor(room.roomStatus)}`}>
+                      <div className="flex items-center justify-center mt-1 gap-2 absolute bottom-0 left-0 w-full">
+                        <Badge variant="secondary" className={`text-xs w-full flex items-center justify-center py-2 ${getRoomStatusColor(room.roomStatus)}`}>
                           {room.roomStatus}
                         </Badge>
                         {room.capacity > 0 && (

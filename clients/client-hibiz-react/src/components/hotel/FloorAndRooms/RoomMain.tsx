@@ -41,13 +41,13 @@ const RoomMain = () => {
 
   const floorData = useFloorStore((state) => state.floorData)
   const staffData = useStaffDataStore((state) => state.staffData)
+  console.log("staffData", staffData)
 
   // Get room form actions
   const { setEditMode, setEditRoomId, initializeFormForEdit } = useRoomFormStore((state) => ({
     setEditMode: state.setEditMode,
     setEditRoomId: state.setEditRoomId,
     initializeFormForEdit: state.initializeFormForEdit,
-
   }))
 
   // Filter rooms based on search query and filters
@@ -55,16 +55,12 @@ const RoomMain = () => {
     if (!roomData) return []
 
     return roomData.filter((room) => {
-      // Search by name
       const matchesSearch = searchQuery === "" || room.name.toLowerCase().includes(searchQuery.toLowerCase())
 
-      // Filter by room type
       const matchesType = filterType === "all" || room.roomTypeId === filterType
 
-      // Filter by status
       const matchesStatus = filterStatus === "all" || room.roomStatus === filterStatus
 
-      // Filter by floor
       const matchesFloor = filterFloor === "all" || room.zoneId === filterFloor
 
       return matchesSearch && matchesType && matchesStatus && matchesFloor
@@ -88,9 +84,7 @@ const RoomMain = () => {
     return grouped
   }, [filteredRoomData, roomTypesData])
 
-  // Memoize event handlers to prevent unnecessary re-renders
   const handleAddRoom = useCallback(() => {
-    // Reset form and open modal
     setEditMode(false)
     setEditRoomId(null)
     setOpenAddRoomModal(true)
@@ -98,7 +92,6 @@ const RoomMain = () => {
 
   const handleEditRoom = useCallback(
     (roomId: string) => {
-      // Find the room to edit
       const roomToEdit = roomData.find((room) => room._id === roomId)
       if (roomToEdit) {
         setEditMode(true)
@@ -110,7 +103,6 @@ const RoomMain = () => {
     [roomData, setEditMode, setEditRoomId, initializeFormForEdit, setOpenAddRoomModal],
   )
 
-  // Get floor name by ID
   const getFloorName = useCallback(
     (floorId: string) => {
       const floor = floorData.find((f) => f._id === floorId)
@@ -119,7 +111,6 @@ const RoomMain = () => {
     [floorData],
   )
 
-  // Get staff names by IDs
   const getStaffNames = useCallback(
     (staffIds: string[]) => {
       return staffIds
@@ -132,12 +123,10 @@ const RoomMain = () => {
     [staffData],
   )
 
-  // Toggle filters visibility
   const toggleFilters = useCallback(() => {
     setShowFilters((prev) => !prev)
   }, [])
 
-  // Reset all filters
   const resetFilters = useCallback(() => {
     setSearchQuery("")
     setFilterType("all")
@@ -145,7 +134,6 @@ const RoomMain = () => {
     setFilterFloor("all")
   }, [])
 
-  // Count total filtered rooms
   const totalFilteredRooms = useMemo(() => {
     return Object.values(roomsByType).reduce((total, rooms) => total + rooms.length, 0)
   }, [roomsByType])

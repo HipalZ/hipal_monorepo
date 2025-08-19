@@ -1,3 +1,5 @@
+"use client";
+
 import { lazy, useState, useCallback, useEffect, Suspense } from "react";
 import {
   Check,
@@ -7,6 +9,7 @@ import {
   Settings,
   Loader2,
   Search,
+  Edit3,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import { toast } from "react-hot-toast";
 import useBusinessData from "@/components/store/useBusinessData";
@@ -24,7 +28,17 @@ import {
 } from "@/components/store/hotel/useHotelServices";
 import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
 import PopUp from "@/components/atom/popUp";
+import BirthdayImageUploader from "@/components/templates/events/birthdayImage";
+
 const ServicesForm = lazy(() => import("./HotelServices"));
+
+interface EditServiceData {
+  _id: string;
+  name: string;
+  availability: boolean;
+  image?: string;
+  categoryName: string;
+}
 
 const HotelServices = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
@@ -41,14 +55,19 @@ const HotelServices = () => {
 
   const [openService, setOpenService] = useState(false);
 
-  // Initialize service availability from API data
+  const [editingService, setEditingService] = useState<EditServiceData | null>(
+    null,
+  );
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [newImageUrl, setNewImageUrl] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
   useEffect(() => {
     if (categoriesData) {
       const availabilityMap: Record<string, boolean> = {};
 
       for (const category of categoriesData) {
         for (const service of category.serviceIds) {
-          // Default to true if availability is not specified
           availabilityMap[service._id] =
             service.availability !== undefined ? service.availability : true;
         }
@@ -68,7 +87,6 @@ const HotelServices = () => {
       try {
         setUpdatingServiceId(service._id);
 
-        // Optimistically update the UI
         setServiceAvailability((prev) => ({
           ...prev,
           [service._id]: newAvailability,
@@ -81,8 +99,7 @@ const HotelServices = () => {
           serviceId: service._id,
         });
 
-        // Refetch categories to ensure we have the latest data
-        await refetchCategories();
+        // await refetchCategories();
 
         toast.success(
           `${service.name} is now ${
@@ -90,7 +107,6 @@ const HotelServices = () => {
           }`,
         );
       } catch (error) {
-        // Revert the optimistic update on error
         setServiceAvailability((prev) => ({
           ...prev,
           [service._id]: currentAvailability,
@@ -106,32 +122,101 @@ const HotelServices = () => {
       businessId,
       updateService,
       updateServiceLoading,
-      refetchCategories,
       serviceAvailability,
     ],
   );
 
-  // Filter categories and services based on search query
+  const handleServiceClick = useCallback(
+    (service: IService, categoryName: string) => {
+      setEditingService({
+        _id: service._id,
+        name: service.name,
+        availability: serviceAvailability[service._id] || false,
+        image: service.image,
+        categoryName,
+      });
+      setNewImageUrl(null);
+      setShowEditModal(true);
+    },
+    [serviceAvailability],
+  );
+
+  const handleImageUploadSuccess = useCallback(
+    (url: string) => {
+      if (editingService?.image === url) {
+        toast.error("This image is already uploaded");
+        return;
+      }
+
+      setNewImageUrl(url);
+      toast.success("Image uploaded successfully");
+    },
+    [editingService?.image],
+  );
+
+  const handleSaveService = useCallback(async () => {
+    if (!editingService || !businessId) return;
+
+    try {
+      setUploadingImage(true);
+
+      const imageUrl = newImageUrl || editingService.image;
+
+      await updateService({
+        name: editingService.name,
+        businessId: businessId,
+        availability: editingService.availability,
+        serviceId: editingService._id,
+        image: imageUrl,
+      });
+
+      setServiceAvailability((prev) => ({
+        ...prev,
+        [editingService._id]: editingService.availability,
+      }));
+
+      // await refetchCategories();
+
+      toast.success("Service updated successfully");
+      setShowEditModal(false);
+      setEditingService(null);
+      setNewImageUrl(null);
+    } catch (error) {
+      console.error("Error updating service:", error);
+      toast.error("Failed to update service");
+    } finally {
+      setUploadingImage(false);
+    }
+  }, [
+    editingService,
+    businessId,
+    newImageUrl,
+    updateService,
+  ]);
+
+  const handleCloseEditModal = useCallback(() => {
+    setShowEditModal(false);
+    setEditingService(null);
+    setNewImageUrl(null);
+  }, []);
+
   const filteredCategories = useCallback(() => {
     if (!categoriesData || !searchQuery.trim()) return categoriesData;
 
     return categoriesData
       .map((category) => {
-        // Filter services within this category
         const filteredServices = category.serviceIds.filter((service) =>
           service.name.toLowerCase().includes(searchQuery.toLowerCase()),
         );
 
-        // Return a new category object with filtered services
         return {
           ...category,
           serviceIds: filteredServices,
         };
       })
-      .filter((category) => category.serviceIds.length > 0); // Only keep categories with matching services
+      .filter((category) => category.serviceIds.length > 0);
   }, [categoriesData, searchQuery])();
 
-  // Count total services and filtered services
   const totalServices = useCallback(() => {
     return (
       categoriesData?.reduce(
@@ -154,7 +239,6 @@ const HotelServices = () => {
     setOpenService(!openService);
   };
 
-  // Service Card Component
   const ServiceCard = useCallback(
     ({
       service,
@@ -163,7 +247,10 @@ const HotelServices = () => {
       return (
         <Card className="overflow-hidden transition-shadow hover:shadow-md">
           <CardContent className="p-0">
-            <div className="p-4">
+            <div
+              className="p-4 cursor-pointer hover:bg-muted/30 transition-colors"
+              onClick={() => handleServiceClick(service, categoryName)}
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex-shrink-0 w-10 h-10 overflow-hidden rounded-md bg-muted">
@@ -181,19 +268,29 @@ const HotelServices = () => {
                       </div>
                     )}
                   </div>
-                  <h3 className="font-medium">{service.name}</h3>
+                  <div>
+                    <h3 className="font-medium">{service.name}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Click to edit
+                    </p>
+                  </div>
                 </div>
-                {updatingServiceId === service._id ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                ) : (
-                  <Switch
-                    checked={serviceAvailability[service._id] || false}
-                    onCheckedChange={() =>
-                      handleToggleAvailability(service, categoryName)
-                    }
-                    aria-label={`Toggle ${service.name} availability`}
-                  />
-                )}
+                <div className="flex items-center gap-2">
+                  <Edit3 className="w-4 h-4 text-muted-foreground" />
+                  {updatingServiceId === service._id ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                  ) : (
+                    <Switch
+                      checked={serviceAvailability[service._id] || false}
+                      onCheckedChange={(e) => {
+                        e.stopPropagation();
+                        handleToggleAvailability(service);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label={`Toggle ${service.name} availability`}
+                    />
+                  )}
+                </div>
               </div>
             </div>
 
@@ -237,10 +334,14 @@ const HotelServices = () => {
         </Card>
       );
     },
-    [handleToggleAvailability, serviceAvailability, updatingServiceId],
+    [
+      handleToggleAvailability,
+      serviceAvailability,
+      updatingServiceId,
+      handleServiceClick,
+    ],
   );
 
-  // Empty State Component
   const EmptyState = () => {
     return (
       <Card className="p-8 mt-4 text-center">
@@ -257,7 +358,6 @@ const HotelServices = () => {
     );
   };
 
-  // No Results Component
   const NoResults = () => {
     return (
       <div className="py-10 text-center">
@@ -272,7 +372,7 @@ const HotelServices = () => {
         </p>
         <Button
           variant="outline"
-          className="mt-4"
+          className="mt-4 bg-transparent"
           onClick={() => setSearchQuery("")}
         >
           Clear Search
@@ -290,7 +390,6 @@ const HotelServices = () => {
         </Badge>
       </div>
 
-      {/* Search input */}
       <div className="relative">
         <Search className="absolute w-4 h-4 transform -translate-y-1/2 left-3 top-1/2 text-muted-foreground" />
         <Input
@@ -311,7 +410,6 @@ const HotelServices = () => {
         )}
       </div>
 
-      {/* Search results count */}
       {searchQuery && (
         <div className="flex items-center">
           <Badge variant="outline" className="px-2 py-1">
@@ -380,6 +478,81 @@ const HotelServices = () => {
       ) : (
         <EmptyState />
       )}
+
+      <PopUp
+        width="w-[30rem] md:w-[40rem]"
+        height="h-auto"
+        show={showEditModal}
+        onClose={handleCloseEditModal}
+      >
+        <div className="p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Edit Service</h3>
+            <Button variant="ghost" size="sm" onClick={handleCloseEditModal}>
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {editingService && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-lg bg-muted/30">
+                <h4 className="font-medium">{editingService.name}</h4>
+                <p className="text-sm text-muted-foreground">
+                  Category: {editingService.categoryName}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div>
+                  <Label className="text-sm font-medium">Availability</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Toggle service availability for customers
+                  </p>
+                </div>
+                <Switch
+                  checked={editingService.availability}
+                  onCheckedChange={(checked) =>
+                    setEditingService((prev) =>
+                      prev ? { ...prev, availability: checked } : null,
+                    )
+                  }
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">Service Image</Label>
+
+                <BirthdayImageUploader
+                  image={newImageUrl || editingService.image || ""}
+                  onUploadSuccess={handleImageUploadSuccess}
+                />
+
+                <p className="text-xs text-muted-foreground">
+                  Upload a new image or keep the existing one. Images are
+                  automatically uploaded to cloud storage.
+                </p>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={handleCloseEditModal}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveService} disabled={uploadingImage}>
+                  {uploadingImage ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </PopUp>
+
       <PopUp
         width="w-[30rem] md:w-[48rem]"
         hide

@@ -43,6 +43,7 @@ export interface IHotelRoom {
     roomStatus: HotelStatusEnumType,
     date: string,
     staffIds: string[],
+    roomTypeId: string,
     authCode: string,
     rating: number,
     size: number,
