@@ -29,16 +29,20 @@ const printerConfigSchema = new mongoose.Schema({
   },
   isPageWidthRequired: {
     type: Boolean,
-    default: false,
+    default: true,
     required: true,
   },
   zoneId: {
     type: String,
     required: true,
-    unique: true,
   },
   zoneName: {
     type: String,
+    required: true,
+  },
+  showStaticHeight: {
+    type: Boolean,
+    default: true,
     required: true,
   },
 });

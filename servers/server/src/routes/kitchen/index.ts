@@ -189,8 +189,6 @@ const kitchenRouter = new Hono()
       return runInTransaction(async (session: ClientSession) => {
         const { businessId, menuId } = c.req.query();
 
-      
-
         const printers = await PrinterConfig.find({
           kitchenId: "BILL_PRINTER",
           businessId,
@@ -265,6 +263,8 @@ const kitchenRouter = new Hono()
           zoneId: tableInfo.zoneId,
           businessId,
         });
+
+        console.log(printer);
 
         if (!printer) {
           return c.json(
@@ -417,9 +417,19 @@ const kitchenRouter = new Hono()
         for (const printer of printers) {
           const { printerName, businessId, menuId, zoneId } = printer;
 
+          const zoneData = await Zone.findOne({
+            zoneId: zoneId,
+          });
+
           await PrinterConfig.updateOne(
             { zoneId, businessId, menuId },
-            { $set: { printerName ,kitchenId:"BILL_PRINTER"} },
+            {
+              $set: {
+                printerName,
+                kitchenId: "BILL_PRINTER",
+                zoneName: zoneData?.name,
+              },
+            },
             { upsert: true, session },
           );
         }
