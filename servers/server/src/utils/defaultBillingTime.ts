@@ -15,8 +15,12 @@ export function adjustFromToTimestamps(from: number, to: number) {
   let adjustedTo = to;
 
   if (isTodayIST(from) && isTodayIST(to)) {
-    adjustedTo = to + FOUR_HOURS_IN_MS;
+    console.log("to", adjustedTo);
+    adjustedTo = to + 14400000;
   }
+
+  console.log("from", adjustedFrom);
+  console.log("to", adjustedTo);
 
   return { adjustedFrom, adjustedTo };
 }
