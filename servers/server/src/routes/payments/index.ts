@@ -4237,18 +4237,6 @@ const paymentsRouter = new Hono()
         Number(from),
         Number(to),
       );
-      console.log(
-        "original",
-        new Date(Number(from)).toLocaleString(),
-        "From:",
-        new Date(adjustedFrom).toLocaleString(),
-      );
-      console.log(
-        "original",
-        new Date(Number(to)).toLocaleString(),
-        "To :",
-        new Date(adjustedTo).toLocaleString(),
-      );
 
       // Use the adjusted timestamps as `fromDate` and `toDate`
       const fromDate = adjustedFrom;
@@ -4342,18 +4330,6 @@ const paymentsRouter = new Hono()
       const { adjustedFrom, adjustedTo } = adjustFromToTimestamps(
         Number(from),
         Number(to),
-      );
-      console.log(
-        "original",
-        new Date(Number(from)).toLocaleString(),
-        "From:",
-        new Date(adjustedFrom).toLocaleString(),
-      );
-      console.log(
-        "original",
-        new Date(Number(to)).toLocaleString(),
-        "To :",
-        new Date(adjustedTo).toLocaleString(),
       );
 
       // Use the adjusted timestamps as `fromDate` and `toDate`
@@ -5320,18 +5296,6 @@ const paymentsRouter = new Hono()
         Number(from),
         Number(to),
       );
-      console.log(
-        "original",
-        new Date(Number(from)).toLocaleString(),
-        "From:",
-        new Date(adjustedFrom).toLocaleString(),
-      );
-      console.log(
-        "original",
-        new Date(Number(to)).toLocaleString(),
-        "To :",
-        new Date(adjustedTo).toLocaleString(),
-      );
 
       // Use the adjusted timestamps as `fromDate` and `toDate`
       const fromDate = adjustedFrom;
@@ -5438,18 +5402,6 @@ const paymentsRouter = new Hono()
       const { adjustedFrom, adjustedTo } = adjustFromToTimestamps(
         Number(from),
         Number(to),
-      );
-      console.log(
-        "original",
-        new Date(Number(from)).toLocaleString(),
-        "From:",
-        new Date(adjustedFrom).toLocaleString(),
-      );
-      console.log(
-        "original",
-        new Date(Number(to)).toLocaleString(),
-        "To :",
-        new Date(adjustedTo).toLocaleString(),
       );
 
       // Use the adjusted timestamps as `fromDate` and `toDate`
@@ -5566,18 +5518,6 @@ const paymentsRouter = new Hono()
       const { adjustedFrom, adjustedTo } = adjustFromToTimestamps(
         Number(from),
         Number(to),
-      );
-      console.log(
-        "original",
-        new Date(Number(from)).toLocaleString(),
-        "From:",
-        new Date(adjustedFrom).toLocaleString(),
-      );
-      console.log(
-        "original",
-        new Date(Number(to)).toLocaleString(),
-        "To :",
-        new Date(adjustedTo).toLocaleString(),
       );
 
       // Use the adjusted timestamps as `fromDate` and `toDate`
