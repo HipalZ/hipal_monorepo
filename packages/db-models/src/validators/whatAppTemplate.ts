@@ -130,6 +130,14 @@ export const buttonQuickReplyTypeSchema = z
   })
   .optional();
 
+export const buttonFlowSchema = z
+  .object({
+    type: z.string().min(3).max(100).default("FLOW"),
+    text: z.string().min(3).max(800),
+    flow_id: z.string().min(3).max(100),
+  })
+  .optional();
+
 export const buttonSchema = z.object({
   type: z.string().min(3).max(100).default("BUTTONS"),
   buttons: z.array(
@@ -137,6 +145,7 @@ export const buttonSchema = z.object({
       buttonPhoneTypeSchema,
       buttonUrlTypeSchema,
       buttonQuickReplyTypeSchema,
+      buttonFlowSchema,
     ]),
   ),
 });

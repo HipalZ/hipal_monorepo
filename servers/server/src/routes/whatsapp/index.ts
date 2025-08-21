@@ -1939,7 +1939,18 @@ const whatsappRouter = new Hono()
 
     async (c) => {
       const body = await c.req.json();
-
+      if (body.action === "ping") {
+        return c.json(
+          {
+            version: "3.0",
+            data: { status: "active" },
+          },
+          200,
+        );
+      }
+      if (!body?.object) {
+        return c.json({ message: "ignored", err: false }, 200);
+      }
       if (body.object) {
         const entry = body.entry?.[0];
         const changes = entry?.changes?.[0];
@@ -1952,7 +1963,6 @@ const whatsappRouter = new Hono()
         const config = await WhatsAppBusinessConfig.findOne({
           phoneId: phon_no_id,
         });
-
         const bName = await Business.findById(config?.businessId);
         if (statuses && statuses.length > 0) {
           const firstStatus = statuses[0];
@@ -2224,6 +2234,104 @@ const whatsappRouter = new Hono()
                 );
                 shortUrlType = findLongUrl.shortUrlType || "";
                 urlObj = findLongUrl;
+              }
+            } else {
+              const payload = {
+                messaging_product: "whatsapp",
+                to: from,
+                type: "template",
+                template: {
+                  name: "krishivaas_test",
+                  language: {
+                    code: "en_GB",
+                  },
+                  components: [
+                    {
+                      type: "BODY",
+                      parameters: [
+                        {
+                          type: "text",
+                          text: userObj.name,
+                        },
+                      ],
+                    },
+                    {
+                      type: "FOOTER",
+                      parameters: [
+                        {
+                          type: "text",
+                          text: "Powered by Namaste",
+                        },
+                      ],
+                    },
+                    {
+                      type: "button",
+                      sub_type: "flow",
+                      index: "0",
+                      parameters: [
+                        {
+                          type: "action",
+                          action: {
+                            flow_token: "token",
+                            flow_action_data: {
+                              prefill_name: userObj.name,
+                            },
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              };
+              try {
+                // 1️⃣ Check if customer exists in Krishivaas DB
+                const checkResponse = await axios.get(
+                  `https://api.staging.krishivaas.ai/api/v1/get-name-by-mobile-number/9896000099`,
+                );
+                const name = checkResponse?.data?.data;
+                console.log("name", name);
+                if (!name) {
+                  await axios.post(
+                    `${whatsAppApiBaseUrl.BASE_URL}${config.version}/${config.phoneId}/messages`,
+                    {
+                      messaging_product: "whatsapp",
+                      to: from,
+                      type: "text",
+                      text: {
+                        body: "We are sorry, we are unable to find you in our records. Please contact our support team.",
+                      },
+                    },
+                    {
+                      headers: { Authorization: `Bearer ${config.token}` },
+                    },
+                  );
+
+                  return c.json(
+                    { message: "Fallback text message sent." },
+                    200,
+                  );
+                }
+                await axios.post(
+                  `${whatsAppApiBaseUrl.BASE_URL}${config.version}/${config.phoneId}/messages`,
+                  payload,
+                  {
+                    headers: { Authorization: `Bearer ${config.token}` },
+                  },
+                );
+
+                return c.json({ message: "Template sent successfully." }, 200);
+              } catch (error) {
+                console.error(
+                  "Error in WhatsApp send flow:",
+                  error?.response?.data || error.message,
+                );
+                return c.json(
+                  {
+                    message: "Error sending WhatsApp message",
+                    error: error?.response?.data || error.message,
+                  },
+                  500,
+                );
               }
             }
           }

@@ -83,6 +83,21 @@ export interface CampaignsData {
   overAllCount: OverAllCount;
   campaignAnalytics: CampaignAnalytics[];
 }
+export interface ExampleFlow {
+  name: string;
+  status: string;
+  categories: string[];
+  validation_errors: string[];
+  id: string;
+}
+
+export const exampleFlow2: ExampleFlow = {
+  name: "Example Flow 2",
+  status: "DRAFT",
+  categories: ["CUSTOMER_SUPPORT", "SURVEY"],
+  validation_errors: [],
+  id: "505786989151477",
+};
 
 interface ITempStore {
   isLoading: boolean;
@@ -187,6 +202,9 @@ interface ITempStore {
 
   flowBuilderOpen: boolean;
   setFlowBuilderOpen: (value: boolean) => void;
+
+  flow: ExampleFlow;
+  setFlow: (flow: ExampleFlow) => void;
 }
 
 export const useWhatsappTempStore = create<ITempStore>((set) => ({
@@ -350,4 +368,7 @@ export const useWhatsappTempStore = create<ITempStore>((set) => ({
 
   flowBuilderOpen: false,
   setFlowBuilderOpen: (value: boolean) => set({ flowBuilderOpen: value }),
+
+  flow: {},
+  setFlow: (value: ExampleFlow) => set({ flow: value }),
 }));

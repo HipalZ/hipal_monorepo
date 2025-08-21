@@ -148,7 +148,7 @@ export const generateJsonPayload = (screens: Screen[]) => {
   });
 
   return {
-    version: "3.0",
+    version: "7.2",
     screens: mappedScreens,
   };
 };

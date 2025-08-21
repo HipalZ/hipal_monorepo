@@ -355,7 +355,7 @@ export async function publishWhatsAppFlow(flowJson: any, flowName: string) {
     };
   }
 
-  const apiUrl = `https://graph.facebook.com/v19.0/${WHATSAPP_ID}/flows`;
+  const apiUrl = `https://graph.facebook.com/v21.0/${WHATSAPP_ID}/flows`;
 
   const requestBody = {
     name: flowName.replace(/\s+/g, "_").toLowerCase(),
@@ -398,7 +398,7 @@ export async function publishWhatsAppFlow(flowJson: any, flowName: string) {
 export const useGetFlows = () => {
   const getFlows = async () => {
     const res = await fetch(
-      `https://graph.facebook.com/v19.0/${WHATSAPP_ID}/flows`,
+      `https://graph.facebook.com/v21.0/${WHATSAPP_ID}/flows`,
       {
         method: "GET",
         headers: {

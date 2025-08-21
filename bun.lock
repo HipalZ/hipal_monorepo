@@ -452,6 +452,7 @@
         "@hono/zod-validator": "^0.2.2",
         "axios": "^1.7.7",
         "bullmq": "^5.56.4",
+        "crypto": "^1.0.1",
         "firebase-admin": "^12.6.0",
         "hono": "^4.4.2",
         "hono-rate-limiter": "^0.3.0",
