@@ -72,7 +72,7 @@ const scheduleAlertUpdate = (
       runTime.getMonth() + 1
     } *`;
 
-    const data = schedule(cronExpression, async () => {
+    schedule(cronExpression, async () => {
       const alertData = await HotelAlert.findById(alertId);
 
       if (alertData && alertData?.alertProgress !== "REJECTED") {
@@ -145,7 +145,6 @@ const scheduleAlertUpdate = (
             }
           }
         }
-        console.log("validStaffIds scheduleAlertUpdate", validStaffIds);
         const registrationTokens = await DeviceToken.find({
           businessId: businessId,
           userId: { $in: validStaffIds },
@@ -555,8 +554,12 @@ const hotelAlertRouter = new Hono()
 
         const validStaff = await User.find({
           _id: { $in: roomData.staffIds },
-          "customRole.businessId": requestData.businessId,
-          "customRole.servicesHandled": { $in: [serviceId] },
+          businessId: requestData.businessId,
+          customRole: {
+            $elemMatch: {
+              serviceIds: { $in: [serviceId] },
+            },
+          },
         })
           .select("_id")
           .lean();
