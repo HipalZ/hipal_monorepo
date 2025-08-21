@@ -7,7 +7,7 @@ const printerConfigSchema = new mongoose.Schema({
   },
   printerName: {
     type: String,
-    required: true,
+    required: false,
   },
   businessId: {
     type: String,
@@ -29,7 +29,20 @@ const printerConfigSchema = new mongoose.Schema({
   },
   isPageWidthRequired: {
     type: Boolean,
-    default: false,
+    default: true,
+    required: true,
+  },
+  zoneId: {
+    type: String,
+    required: true,
+  },
+  zoneName: {
+    type: String,
+    required: true,
+  },
+  showStaticHeight: {
+    type: Boolean,
+    default: true,
     required: true,
   },
 });

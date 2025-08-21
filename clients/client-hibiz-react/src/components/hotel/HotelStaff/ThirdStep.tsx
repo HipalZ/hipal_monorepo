@@ -15,13 +15,12 @@ import useStaffStore, {
 } from "@/components/store/hotel/useHotelStaff";
 
 const ThirdStep = () => {
-  const { selectedServices, toggleService, setSelectedServices } =
-    useStaffStore((state) => ({
-      selectedServices: state.selectedServices,
-      toggleService: state.toggleService,
-      setSelectedServices: state.setSelectedServices,
-    }));
-
+  const selectedServices = useStaffStore((state) => state.selectedServices);
+  const toggleService = useStaffStore((state) => state.toggleService);
+  const setSelectedServices = useStaffStore(
+    (state) => state.setSelectedServices,
+  );
+  const editStaffId = useStaffStore((s) => s.editStaffId);
   const staffData = useStaffDataStore((s) => s.staffData);
   const businessId = useBusinessData((s) => s.businessData?._id);
   const { hotelServicesData } = useGetCatServices(businessId as string);
@@ -30,42 +29,15 @@ const ThirdStep = () => {
     () => hotelServicesData?.flatMap((category) => category.serviceIds) || [],
     [hotelServicesData],
   );
-
-  const initialSelectedServices = useMemo(() => {
-    if (!staffData || !hotelServicesData) return [];
-
-    const result = staffData.flatMap((staff) => {
-      return (
-        staff.customRole?.[0]?.serviceIds
-          ?.map((serviceId) => {
-            const match = hotelServicesData
-              .flatMap((cat) => cat.serviceIds)
-              .find((s) => s._id === serviceId);
-            return match
-              ? {
-                  _id: match._id,
-                  name: match.name,
-                  availability: match.availability,
-                }
-              : null;
-          })
-          .filter(Boolean) || []
-      );
-    });
-
-    // Remove duplicates by _id
-    const uniqueMap = new Map();
-    for (const s of result) {
-      if (s?._id) {
-        uniqueMap.set(s._id, s);
-      }
-    }
-    return Array.from(uniqueMap.values());
-  }, [staffData, hotelServicesData]);
-
+  const selectedStaff = staffData?.find((staff) => staff._id === editStaffId); // Example staff _id
+  const selectedServiceIds = selectedStaff?.customRole?.[0]?.serviceIds || [];
   useEffect(() => {
+    // Update the selected services based on selected staff's serviceIds
+    const initialSelectedServices = allServices.filter((service) =>
+      selectedServiceIds.includes(service._id),
+    );
     setSelectedServices(initialSelectedServices);
-  }, [hotelServicesData]);
+  }, [hotelServicesData, staffData]);
 
   const [openCategories, setOpenCategories] = useState<string[]>([]);
 

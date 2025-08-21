@@ -1,22 +1,21 @@
 const FOUR_HOURS_IN_MS = 4 * 60 * 60 * 1000;
+const IST_OFFSET = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
 
-const isToday = (timestamp: number) => {
-  const now = new Date();
-  const input = new Date(timestamp);
-  return (
-    now.getFullYear() === input.getFullYear() &&
-    now.getMonth() === input.getMonth() &&
-    now.getDate() === input.getDate()
-  );
+const isTodayIST = (timestamp: number) => {
+  // Convert to IST by adding UTC offset difference
+  const nowIST = Date.now() + IST_OFFSET;
+  const inputIST = timestamp + IST_OFFSET;
+
+  // Compare dates in IST
+  return new Date(nowIST).toDateString() === new Date(inputIST).toDateString();
 };
 
 export function adjustFromToTimestamps(from: number, to: number) {
   const adjustedFrom = from;
   let adjustedTo = to;
 
-  // If both from and to are today → add +4hrs to "to"
-  if (isToday(from) && isToday(to)) {
-    adjustedTo = to + FOUR_HOURS_IN_MS;
+  if (isTodayIST(from) && isTodayIST(to)) {
+    adjustedTo = to + 14400000;
   }
 
   return { adjustedFrom, adjustedTo };

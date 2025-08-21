@@ -292,7 +292,7 @@ const returnSplitBillVariantsForItemWise = async (
         subTotal: totalDishTotal,
         items: cartItems,
         billPrintCount: (variant.billPrintCount || 0) + 1,
-        totalGst: totalGst,
+        totalGst: Number(totalGst?.toFixed(2)),
       },
       session,
     );

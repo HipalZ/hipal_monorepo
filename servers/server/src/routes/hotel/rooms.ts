@@ -977,6 +977,58 @@ const roomRouter = new Hono()
         });
       });
     },
+  )
+
+  .put(
+    "/bulk",
+    zValidator(
+      "json",
+
+      z.object({
+        rooms: z.array(
+          z.object({
+            roomIds: z.array(z.string().min(24).max(24)),
+            staffIds: z.array(z.string().min(24).max(24)),
+          }),
+        ),
+        action: z.enum(["ADD", "REMOVE"]),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
+        const { rooms, action } = requestData;
+
+        if (action === "ADD") {
+          for (const { roomIds, staffIds } of rooms) {
+            await HotelRoom.updateMany(
+              {
+                _id: { $in: roomIds },
+              },
+              {
+                $addToSet: { staffIds: { $each: staffIds } },
+              },
+              { session },
+            );
+          }
+        } else if (action === "REMOVE") {
+          for (const { roomIds, staffIds } of rooms) {
+            await HotelRoom.updateMany(
+              {
+                _id: { $in: roomIds },
+              },
+              {
+                $pull: { staffIds: { $in: staffIds } },
+              },
+              { session },
+            );
+          }
+        }
+
+        return respond(c, "Bulk update successful", false, 200, {});
+      });
+    },
   );
 
 export default roomRouter;
