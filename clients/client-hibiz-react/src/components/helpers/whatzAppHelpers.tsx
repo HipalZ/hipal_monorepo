@@ -346,7 +346,7 @@ export const formatTriggerTime = (
   return `${minutes.toFixed(2)} minute${minutes > 1 ? "s" : ""}`;
 };
 
-export async function publishWhatsAppFlow(flowJson: any, flowName: string) {
+export async function CreateWhatsAppFlow(flowJson: any, flowName: string) {
   if (!WHATSAPP_ID || !WHATSAPP_TOKEN) {
     return {
       success: false,

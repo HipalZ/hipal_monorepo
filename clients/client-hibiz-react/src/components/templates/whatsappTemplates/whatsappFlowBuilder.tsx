@@ -12,7 +12,7 @@ import { ScreensPanel } from "@/components/flow-builder/screens-panel";
 import { EditorPanel } from "@/components/flow-builder/editor-panel";
 import { PreviewPanel } from "@/components/flow-builder/preview-panel";
 import { generateJsonPayload } from "@/lib/whatsapp-payload-generator";
-import { publishWhatsAppFlow } from "@/components/helpers/whatzAppHelpers";
+import { CreateWhatsAppFlow } from "@/components/helpers/whatzAppHelpers";
 import { BiLeftArrow } from "react-icons/bi";
 import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
 
@@ -140,7 +140,7 @@ export default function FlowBuilderPage() {
     const toastId = toast.loading("Publishing flow...");
     const payload = generateJsonPayload(screens);
     const flowName = activeScreen.name || "My New Flow";
-    const result = await publishWhatsAppFlow(payload, flowName);
+    const result = await CreateWhatsAppFlow(payload, flowName);
     toast.dismiss(toastId);
     setIsSaving(false);
 

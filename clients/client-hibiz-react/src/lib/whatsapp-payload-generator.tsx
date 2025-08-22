@@ -136,7 +136,7 @@ export const generateJsonPayload = (screens: Screen[]) => {
     ].filter(Boolean);
 
     return {
-      id: screen.name.toUpperCase().replace(/\s+/g, "_"),
+      id: "RECOMMEND",
       title: screen.title,
       terminal: screen.button.action === "submit",
       data: {},
@@ -150,5 +150,7 @@ export const generateJsonPayload = (screens: Screen[]) => {
   return {
     version: "7.2",
     screens: mappedScreens,
+    data_api_version: "3.0",
+    routing_model: {},
   };
 };
