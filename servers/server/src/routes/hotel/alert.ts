@@ -616,16 +616,16 @@ const hotelAlertRouter = new Hono()
             serviceData?.name,
             validStaffIds,
           );
-          scheduleAlertUpdate(
-            alert._id.toString(),
-            avgDeliveryTime,
-            "DELIVERED",
-            "WARNING",
-            requestData.businessId,
-            roomData.name,
-            serviceData?.name,
-            validStaffIds,
-          );
+          // scheduleAlertUpdate(
+          //   alert._id.toString(),
+          //   avgDeliveryTime,
+          //   "DELIVERED",
+          //   "WARNING",
+          //   requestData.businessId,
+          //   roomData.name,
+          //   serviceData?.name,
+          //   validStaffIds,
+          // );
         }
 
         scheduleAlert(
