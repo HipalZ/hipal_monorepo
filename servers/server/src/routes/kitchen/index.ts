@@ -239,7 +239,7 @@ const kitchenRouter = new Hono()
     zValidator(
       "param",
       z.object({
-        tableName: z.string().min(2).max(50),
+        tableName: z.string().min(1).max(50),
         businessId: z.string().min(2).max(50),
       }),
     ),
