@@ -2326,7 +2326,7 @@ const whatsappRouter = new Hono()
                           {
                             type: "image",
                             image: {
-                              link: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/547559756.jpg?k=74617099739ca978f6af628d9ad5989243e224d957d82cf49753ab2598988db7&o=&hp=1",
+                              link: "https://t-static.blr1.digitaloceanspaces.com/e3039890-ede4-4fec-bcc4-ad12c2aa87ac.jpeg",
                             },
                           },
                         ],

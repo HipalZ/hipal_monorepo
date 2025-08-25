@@ -374,15 +374,18 @@ export default function ServiceCategoryCard({
                 ) : (
                   <div className="mb-20 grid grid-cols-3 gap-4">
                     {category.serviceIds.length > 0 ? (
-                      category.serviceIds.map((service) => (
-                        <ServiceItem
-                          key={service._id}
-                          service={service}
-                          selected={isSelected(service._id)}
-                          onToggle={() => handleServiceToggle(service._id)}
-                          getInitial={getInitial}
-                        />
-                      ))
+                      category.serviceIds.map((service) => {
+                        if (!service.availability) return null;
+                        return (
+                          <ServiceItem
+                            key={service._id}
+                            service={service}
+                            selected={isSelected(service._id)}
+                            onToggle={() => handleServiceToggle(service._id)}
+                            getInitial={getInitial}
+                          />
+                        );
+                      })
                     ) : (
                       <div className="col-span-3 py-8 text-center text-gray-500">
                         No services available in this category.
