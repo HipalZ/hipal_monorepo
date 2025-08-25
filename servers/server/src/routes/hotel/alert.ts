@@ -8,6 +8,7 @@ import {
   HotelRoomChatComplain,
   HotelRoomChatReply,
   HotelService,
+  OutLetInfo,
   User,
   WhatsAppBusinessConfig,
 } from "@hi/db-models";
@@ -824,6 +825,10 @@ const hotelAlertRouter = new Hono()
         });
 
         if (whatsAppConfig) {
+          const outletInfo = await OutLetInfo.findOne({
+            businessId: alert.businessId,
+          });
+
           const res = await axios.post(
             `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
             {
@@ -861,7 +866,7 @@ const hotelAlertRouter = new Hono()
                       },
                       {
                         type: "text",
-                        text: "https://www.google.com/",
+                        text: `${outletInfo?.placeUrl}`,
                       },
                     ],
                   },

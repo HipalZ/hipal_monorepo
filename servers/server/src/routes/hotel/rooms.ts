@@ -8,6 +8,7 @@ import {
   HotelRoomSession,
   HotelRoomType,
   HotelZone,
+  OutLetInfo,
   Reviews,
   UrlModel,
   User,
@@ -554,7 +555,7 @@ const roomRouter = new Hono()
                     {
                       type: "image",
                       image: {
-                        link: "https://cf.bstatic.com/xdata/images/hotel/max1024x768/547559756.jpg?k=74617099739ca978f6af628d9ad5989243e224d957d82cf49753ab2598988db7&o=&hp=1",
+                        link: "https://t-static.blr1.digitaloceanspaces.com/e3039890-ede4-4fec-bcc4-ad12c2aa87ac.jpeg",
                       },
                     },
                   ],
@@ -613,6 +614,9 @@ const roomRouter = new Hono()
       }).populate("businessId");
 
       if (whatsAppConfig) {
+        const outletInfo = await OutLetInfo.findOne({
+          businessId: roomExists.businessId,
+        });
         for (const userId of requestData.userIds) {
           const userData = await User.findById(userId)
             .select("phone name")
@@ -641,7 +645,7 @@ const roomRouter = new Hono()
                       },
                       {
                         type: "text",
-                        text: "https//:www.google.com",
+                        text: `${outletInfo?.placeUrl}`,
                       },
                     ],
                   },
