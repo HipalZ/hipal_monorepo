@@ -2182,6 +2182,7 @@ const whatsappRouter = new Hono()
                 longUrl: { $regex: `room=${roomCode}`, $options: "i" },
                 businessId: config?.businessId,
               });
+              console.log("findLongUrl", findLongUrl);
 
               if (findLongUrl) {
                 const idParam = userObj?._id.toString();
@@ -2273,7 +2274,6 @@ const whatsappRouter = new Hono()
               });
               // If the room is found and no users are assigned, mark it as occupied
 
-              let roomSession;
               if (room && room.userIds.length === 0) {
                 const updatedRoom = await HotelRoom.findOneAndUpdate(
                   {
@@ -2289,7 +2289,7 @@ const whatsappRouter = new Hono()
                 );
 
                 // Create a session if none exists for the room
-                roomSession = await HotelRoomSession.findOne({
+                const roomSession = await HotelRoomSession.findOne({
                   roomId: updatedRoom?._id.toString(),
                 });
 
@@ -2314,6 +2314,16 @@ const whatsappRouter = new Hono()
                   );
                 }
               }
+              const findRoom = await HotelRoom.findOne({
+                businessId: config?.businessId,
+                name: room?.name,
+                slug: urlObj?.urlCode,
+              });
+
+              const roomSession = await HotelRoomSession.findOne({
+                roomId: findRoom?._id.toString(),
+              });
+
               await axios.post(
                 `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
                 {
