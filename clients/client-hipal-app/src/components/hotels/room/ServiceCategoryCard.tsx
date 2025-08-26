@@ -93,7 +93,7 @@ const ServiceItem = memo(
 
         {/* Avatar/Image at the top */}
         <div className="mb-3 text-center flex items-start justify-center">
-          {!service.image ? (
+          {service.image ? (
             <Image
               src={service.image}
               alt={service.name}
