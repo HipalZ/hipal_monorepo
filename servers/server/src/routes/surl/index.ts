@@ -194,7 +194,7 @@ const surlRouter = new Hono()
             roomNumber = decodeURIComponent(tableMatch[1]);
           }
 
-          const message = `Hi, I'm interested in your services. Can you share more details? I'm in room-${roomNumber}.`;
+          const message = `Hi, I'm interested in your services. Can you share more details? I'm in room-${roomNumber}`;
           const redirectUrl = `https://wa.me/${
             whatsAppBusinessConfig.whatsAppPhone
           }?text=${encodeURIComponent(message)}`;
