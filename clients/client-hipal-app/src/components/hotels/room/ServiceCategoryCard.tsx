@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useCallback, memo, useMemo } from "react";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
@@ -12,7 +11,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import Image from "next/image";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Label } from "@/components/ui/label";
 import {
   useCreateAlert,
   useHotelRoomData,
@@ -24,7 +22,6 @@ import LoadingSpinnerCircle from "@/components/atoms/loader";
 import dynamic from "next/dynamic";
 import { useCartStore } from "@/components/store/useCartStore";
 import type { IMenuLayout } from "@/components/types/businessData";
-import DummyImage from "@/assets/hotel/small.png";
 import { useScreenSize } from "@/components/hooks/useScreenSize";
 
 // Lazy-loaded components for better tree-shaking
@@ -93,7 +90,7 @@ const ServiceItem = memo(
 
         {/* Avatar/Image at the top */}
         <div className="mb-3 text-center flex items-start justify-center">
-          {!service.image ? (
+          {service.image ? (
             <Image
               src={service.image}
               alt={service.name}

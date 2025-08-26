@@ -141,6 +141,21 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   const isAcceptedState = (p?: string) => ACCEPTED_STATES.includes(p ?? "");
   const isClosedState = (p?: string) => CLOSED_STATES.includes(p ?? "");
 
+  const ALERT_PROGRESS_LABELS: Record<string, string> = {
+    CREATED: "Created",
+    NON_ACCEPTED_AND_WARNING: "Warning",
+    NON_ACCEPTED_AND_ESCALATION: "Escalation",
+    IS_ACCEPTED_AND_WARNING: "Warning",
+    IS_ACCEPTED_AND_ESCALATION: "Escalation",
+    ACCEPTED: "Accepted",
+    DELIVERED: "Delivered",
+    NOT_DELIVERED: "Not Delivered",
+    RESOLVED: "Resolved",
+  };
+
+  const getAlertLabel = (progress?: string) =>
+    ALERT_PROGRESS_LABELS[progress ?? ""] || progress || "Unknown";
+
   return (
     <Card
       className={`${
@@ -159,7 +174,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
           </h3>
           <div className="text-xs text-gray-500">{timeAgo}</div>
         </div>
-        <h1 className="my-2">{alert?.alertProgress}</h1>
+        <h1 className="my-2">{getAlertLabel(alert?.alertProgress)}</h1>
         {/* Services */}
         <div className="flex flex-wrap gap-2 mb-3">
           {alert?.serviceIds.map((service) => (
