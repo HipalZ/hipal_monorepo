@@ -56,6 +56,30 @@ const sendPushNotification = async (
   } catch (error) {}
 };
 
+const sendPushNotificationForNotDeliverd = async (
+  token: string,
+  hotelNo: string,
+) => {
+  const pushMessage = {
+    token: token,
+    notification: {
+      title: "Service Delivery Alert 🚨",
+      body: `Heads up! Room ${hotelNo} has a service that wasn't delivered. Please check and resolve ASAP.`,
+    },
+    android: {
+      notification: {
+        channel_id: "custom_channel_id",
+        sound: "order",
+      },
+    },
+  };
+
+  try {
+    const response = await admin.messaging().send(pushMessage);
+    return { success: true, response };
+  } catch (error) {}
+};
+
 const scheduleAlertUpdate = (
   alertId: string,
   avgTime: number,
@@ -1159,6 +1183,22 @@ const hotelAlertRouter = new Hono()
           roomChatComplainId: newChatComplaint._id,
         },
         { session },
+      );
+
+      const roomData = await HotelRoom.findById(roomChat.roomId);
+
+      const registrationTokens = await DeviceToken.find({
+        businessId: roomData?.businessId,
+        notification: true,
+      });
+
+      // Step 3: Send push notifications
+      await Promise.all(
+        registrationTokens.map(async (obj) => {
+          if (obj.notification) {
+            await sendPushNotificationForNotDeliverd(obj.token, roomData?.name);
+          }
+        }),
       );
 
       if (!updateAlert) {
