@@ -95,7 +95,7 @@ const ServiceItem = memo(
         <div className="mb-3 text-center flex items-start justify-center">
           {!service.image ? (
             <Image
-              src={DummyImage}
+              src={service.image}
               alt={service.name}
               width={48}
               height={48}
