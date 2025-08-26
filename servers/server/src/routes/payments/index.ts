@@ -4238,6 +4238,9 @@ const paymentsRouter = new Hono()
         Number(to),
       );
 
+      console.log("Adjusted From:", adjustedFrom);
+      console.log("Adjusted To:", adjustedTo);
+
       // Use the adjusted timestamps as `fromDate` and `toDate`
       const fromDate = adjustedFrom;
       const toDate = adjustedTo;
