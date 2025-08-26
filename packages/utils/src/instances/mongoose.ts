@@ -1,33 +1,32 @@
-import mongoose, { ConnectOptions } from 'mongoose';
+import mongoose, { type ConnectOptions } from "mongoose";
 // import { BASE_URL } from '../base_url';
 
 const db_name = Bun.env.MONGO_DB;
 const db_uri = Bun.env.MONGO_URI || `mongodb://localhost:27017/${db_name}`;
 
-
 const options: ConnectOptions = {
   dbName: db_name,
 };
 
-mongoose.set('strictQuery', true);
+mongoose.set("strictQuery", true);
 
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(db_uri, options);
 
-    conn.connection.on('connected', () => {
+    conn.connection.on("connected", () => {
       console.log(`Mongoose connected to ${db_name} DB`);
     });
 
-    conn.connection.on('error', (err: unknown) => {
+    conn.connection.on("error", (err: unknown) => {
       if (err instanceof Error) console.error(err.message);
     });
-    conn.connection.on('reconnected', () => {
-      console.log('mongodb reconnected');
+    conn.connection.on("reconnected", () => {
+      console.log("mongodb reconnected");
     });
 
-    conn.connection.on('disconnected', () => {
-      console.error('Mongoose connection is disconnected.');
+    conn.connection.on("disconnected", () => {
+      console.error("Mongoose connection is disconnected.");
     });
 
     return conn;

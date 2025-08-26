@@ -2265,11 +2265,15 @@ const whatsappRouter = new Hono()
               }
 
               // Extract room number from urlCode (if URL is passed directly by the user)
-              const authCode = nanoid(4).toUpperCase();
+              const authCode = Math.floor(
+                1000 + Math.random() * 9000,
+              ).toString();
               const room = await HotelRoom.findOne({
                 slug: urlObj?.urlCode, // assuming that room number is stored in slug
               });
               // If the room is found and no users are assigned, mark it as occupied
+
+              let roomSession;
               if (room && room.userIds.length === 0) {
                 const updatedRoom = await HotelRoom.findOneAndUpdate(
                   {
@@ -2285,7 +2289,7 @@ const whatsappRouter = new Hono()
                 );
 
                 // Create a session if none exists for the room
-                const roomSession = await HotelRoomSession.findOne({
+                roomSession = await HotelRoomSession.findOne({
                   roomId: updatedRoom?._id.toString(),
                 });
 
@@ -2345,7 +2349,7 @@ const whatsappRouter = new Hono()
                           },
                           {
                             type: "text",
-                            text: authCode,
+                            text: roomSession?.authCode,
                           },
                         ],
                       },

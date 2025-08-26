@@ -124,13 +124,22 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
   const timeAgo = formatDistanceToNow(new Date(alert?.createdAt), {
     addSuffix: true,
   });
-  // const acceptedTime = formatDistanceToNow(new Date(alert?.acceptedAt), { addSuffix: true })
 
-  const alertProgress: Record<string, string> = {
-    CREATED: "CREATED",
-    WARNING: "WARNING",
-    ESCALATION: "ESCALATION",
-  };
+  const PENDING_STATES = [
+    "CREATED",
+    "NON_ACCEPTED_AND_WARNING",
+    "NON_ACCEPTED_AND_ESCALATION",
+  ];
+  const ACCEPTED_STATES = [
+    "ACCEPTED",
+    "IS_ACCEPTED_AND_WARNING",
+    "IS_ACCEPTED_AND_ESCALATION",
+  ];
+  const CLOSED_STATES = ["REJECTED", "DELIVERED"];
+
+  const isPendingState = (p?: string) => PENDING_STATES.includes(p ?? "");
+  const isAcceptedState = (p?: string) => ACCEPTED_STATES.includes(p ?? "");
+  const isClosedState = (p?: string) => CLOSED_STATES.includes(p ?? "");
 
   return (
     <Card
@@ -240,7 +249,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
 
         {/* Action buttons */}
         <div className="flex gap-2">
-          {alertProgress[alert?.alertProgress] && !alert?.acceptedBy && (
+          {isPendingState(alert?.alertProgress) ? (
             <>
               <Button
                 variant="outline"
@@ -268,9 +277,9 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
                 Accept
               </Button>
             </>
-          )}
+          ) : null}
 
-          {!!alert?.acceptedBy && alert.alertProgress !== "NOT_DELIVERED" && (
+          {isAcceptedState(alert?.alertProgress) ? (
             <Button
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               onClick={() => handleAction(alert?._id, "DELIVERED")}
@@ -283,7 +292,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
               )}
               Mark as Delivered
             </Button>
-          )}
+          ) : null}
 
           {alert.alertProgress === "NOT_DELIVERED" && (
             <Button
@@ -300,8 +309,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
             </Button>
           )}
 
-          {(alert?.alertProgress === "REJECTED" ||
-            alert?.alertProgress === "DELIVERED") && (
+          {isClosedState(alert?.alertProgress) && (
             <div className="w-full text-center text-sm text-gray-500 py-2 bg-gray-50 rounded-md">
               No action required
             </div>
