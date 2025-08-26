@@ -2320,9 +2320,13 @@ const whatsappRouter = new Hono()
                 slug: urlObj?.urlCode,
               });
 
+              console.log("findRoom:", findRoom);
+
               const roomSession = await HotelRoomSession.findOne({
                 roomId: findRoom?._id.toString(),
               });
+
+              console.log("roomSession:", roomSession);
 
               await axios.post(
                 `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
