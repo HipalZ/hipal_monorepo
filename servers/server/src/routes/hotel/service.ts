@@ -201,6 +201,31 @@ const serviceRouter = new Hono()
         _id: updatedService._id,
       });
     });
-  });
+  })
+
+  .delete(
+    "/delete_services",
+    zValidator(
+      "json",
+      z.object({
+        serviceIds: z.array(z.string().min(2).max(26)),
+        businessId: z.string().min(2).max(26),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
+        const { serviceIds, businessId } = requestData;
+
+        await HotelService.deleteMany({
+          _id: { $in: serviceIds },
+          businessId: businessId,
+        });
+
+        return respond(c, "Services deleted successfully", false, 200, {});
+      });
+    },
+  );
 
 export default serviceRouter;
