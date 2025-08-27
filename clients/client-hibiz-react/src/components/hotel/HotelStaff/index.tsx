@@ -1,13 +1,32 @@
-import useBusinessData from "@/components/store/useBusinessData"
-import { type IHotel_Roll, type IHotelRoll, type IHotelStaff, useGetAllHotelStaff } from "@/hooks/useHotelStaff"
-import { Edit, MoreVertical, Phone, User, UserCircle } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import useStaffStore, { type IStaffMember } from "@/components/store/hotel/useHotelStaff"
+import useBusinessData from "@/components/store/useBusinessData";
+import {
+  type IHotel_Roll,
+  type IHotelRoll,
+  type IHotelStaff,
+  useGetAllHotelStaff,
+} from "@/hooks/useHotelStaff";
+import {
+  Edit,
+  MoreVertical,
+  Phone,
+  Trash,
+  User,
+  UserCircle,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import useStaffStore, {
+  type IStaffMember,
+} from "@/components/store/hotel/useHotelStaff";
 
 // Role badge color mapping
 const roleBadgeColors: Record<string, string> = {
@@ -32,40 +51,44 @@ const roleBadgeColors: Record<string, string> = {
   // Food service roles
   WAITER: "bg-indigo-100 text-indigo-800 hover:bg-indigo-100",
   KITCHEN: "bg-rose-100 text-rose-800 hover:bg-rose-100",
-}
+};
 
 // Get badge color based on role
 const getBadgeColor = (role: string) => {
-  return roleBadgeColors[role] || "bg-gray-100 text-gray-800 hover:bg-gray-100"
-}
+  return roleBadgeColors[role] || "bg-gray-100 text-gray-800 hover:bg-gray-100";
+};
 
 const HotelStaffMain = () => {
-
-  const businessId = useBusinessData((s) => s.outletInfo?.businessId)
-  const { staffLoading, staffData } = useGetAllHotelStaff(businessId as string)
-  const { setStaffModal, initializeFormForEdit, setEditRoleStr, setEditServiceIds } = useStaffStore(
-    (state) => ({
-      setStaffModal: state.setStaffModal,
-      initializeFormForEdit: state.initializeFormForEdit,
-      setEditServiceIds: state.setEditServiceIds,
-      setEditRoleStr: state.setEditRoleStr,
-    })
-  )
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
+  const { staffLoading, staffData } = useGetAllHotelStaff(businessId as string);
+  const {
+    setStaffModal,
+    initializeFormForEdit,
+    setEditRoleStr,
+    setEditServiceIds,
+  } = useStaffStore((state) => ({
+    setStaffModal: state.setStaffModal,
+    initializeFormForEdit: state.initializeFormForEdit,
+    setEditServiceIds: state.setEditServiceIds,
+    setEditRoleStr: state.setEditRoleStr,
+  }));
 
   const handleEditStaff = (staff: IStaffMember) => {
-    initializeFormForEdit(staff)
-    const role = staff?.customRole?.[0]?.role as IHotelRoll
-    setEditRoleStr(role)
-    const serviceIds = staff?.customRole?.[0]?.serviceIds || []
+    initializeFormForEdit(staff);
+    const role = staff?.customRole?.[0]?.role as IHotelRoll;
+    setEditRoleStr(role);
+    const serviceIds = staff?.customRole?.[0]?.serviceIds || [];
     if (serviceIds?.length > 0) {
-      setEditServiceIds(serviceIds)
+      setEditServiceIds(serviceIds);
     }
-    setStaffModal(true)
-  }
+    setStaffModal(true);
+  };
+
+  const handleDeleteStaff = (staff: IStaffMember) => {};
 
   const handleAddStaff = () => {
-    setStaffModal(true)
-  }
+    setStaffModal(true);
+  };
 
   const renderSkeletons = () => {
     return Array(3)
@@ -88,8 +111,8 @@ const HotelStaffMain = () => {
             </div>
           </CardContent>
         </Card>
-      ))
-  }
+      ));
+  };
 
   // Render empty state
   const renderEmptyState = () => {
@@ -98,15 +121,17 @@ const HotelStaffMain = () => {
         <div className="flex flex-col items-center justify-center space-y-3">
           <User className="w-12 h-12 text-muted-foreground" />
           <h3 className="text-lg font-medium">No staff members yet</h3>
-          <p className="text-sm text-muted-foreground">Add staff members to help manage your hotel operations</p>
+          <p className="text-sm text-muted-foreground">
+            Add staff members to help manage your hotel operations
+          </p>
           <Button onClick={handleAddStaff} className="mt-2">
             <User className="w-4 h-4 mr-2" />
             Add Staff
           </Button>
         </div>
       </Card>
-    )
-  }
+    );
+  };
   return (
     <div className="container p-4 mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -145,17 +170,19 @@ const HotelStaffMain = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditStaff(staff)}>
+                        <DropdownMenuItem
+                          onClick={() => handleEditStaff(staff)}
+                        >
                           <Edit className="w-4 h-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        {/* <DropdownMenuItem
+                        <DropdownMenuItem
                           onClick={() => handleDeleteStaff(staff?._id)}
                           className="text-destructive focus:text-destructive"
                         >
                           <Trash className="w-4 h-4 mr-2" />
                           Delete
-                        </DropdownMenuItem> */}
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -168,11 +195,16 @@ const HotelStaffMain = () => {
                       <div className="flex flex-wrap gap-2">
                         {staff?.customRole?.map((role: IHotel_Roll) => (
                           <div key={role._id} className="flex flex-col">
-                            <Badge variant="secondary" className={getBadgeColor(role?.role)}>
+                            <Badge
+                              variant="secondary"
+                              className={getBadgeColor(role?.role)}
+                            >
                               {role.role.replace(/_/g, " ")}
                             </Badge>
                             {role?.nickName && (
-                              <span className="mt-1 text-xs text-muted-foreground">Nickname: {role?.nickName}</span>
+                              <span className="mt-1 text-xs text-muted-foreground">
+                                Nickname: {role?.nickName}
+                              </span>
                             )}
                           </div>
                         ))}
@@ -189,6 +221,6 @@ const HotelStaffMain = () => {
       )}
     </div>
   );
-}
+};
 
-export default HotelStaffMain
+export default HotelStaffMain;

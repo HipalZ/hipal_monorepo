@@ -99,13 +99,15 @@ export default function StaffAllocation({
   }, [qLower, floors, roomsByFloor, roomTypeNameById, staffById]);
 
   const openEditForFloor = (floorRooms: IHotelRoom[]) => {
-    // rooms on this floor
-    const roomIds = floorRooms.map((r) => r._id);
-
     // unique staff assigned to those rooms
     const staffIds = Array.from(
       new Set(floorRooms.flatMap((r) => r.staffIds ?? [])),
     );
+
+    // only include roomIds that are linked to at least one staff
+    const roomIds = floorRooms
+      .filter((r) => (r.staffIds ?? []).length > 0)
+      .map((r) => r._id);
 
     // prefill selections
     setSelectedRooms(roomIds);

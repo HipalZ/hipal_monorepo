@@ -1,15 +1,24 @@
-"use client";
-
-import { lazy, useState, useCallback, useEffect, Suspense } from "react";
 import {
-  Check,
+  lazy,
+  useState,
+  useCallback,
+  useEffect,
+  Suspense,
+  useMemo,
+  type ChangeEvent,
+} from "react";
+import {
   X,
   ToggleLeft,
   ToggleRight,
   Settings,
   Loader2,
   Search,
-  Edit3,
+  Clock,
+  Timer,
+  MoreVertical,
+  Trash,
+  Edit,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,13 +32,22 @@ import { toast } from "react-hot-toast";
 import useBusinessData from "@/components/store/useBusinessData";
 import {
   type IService,
+  useDeleteHotelService,
   useGetServiceCategories,
   useUpdateHotelService,
 } from "@/components/store/hotel/useHotelServices";
 import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
 import PopUp from "@/components/atom/popUp";
-import BirthdayImageUploader from "@/components/templates/events/birthdayImage";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
+const BirthdayImageUploader = lazy(
+  () => import("@/components/templates/events/birthdayImage"),
+);
 const ServicesForm = lazy(() => import("./HotelServices"));
 
 interface EditServiceData {
@@ -38,17 +56,19 @@ interface EditServiceData {
   availability: boolean;
   image?: string;
   categoryName: string;
+  avgAcceptanceTime?: number;
+  avgCompletionTime?: number;
 }
 
 const HotelServices = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
-  const { categoriesData, categoriesLoading, refetchCategories } =
-    useGetServiceCategories(businessId as string);
-  const { updateService, updateServiceLoading } = useUpdateHotelService();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [updatingServiceId, setUpdatingServiceId] = useState<string | null>(
-    null,
+  const { categoriesData, categoriesLoading } = useGetServiceCategories(
+    businessId as string,
   );
+  const { updateService } = useUpdateHotelService();
+  const { deleteService } = useDeleteHotelService();
+  const [searchQuery, setSearchQuery] = useState("");
+
   const [serviceAvailability, setServiceAvailability] = useState<
     Record<string, boolean>
   >({});
@@ -61,7 +81,8 @@ const HotelServices = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
-
+  const [responseMin, setResponseMin] = useState<string>("");
+  const [resolutionMin, setResolutionMin] = useState<string>("");
   useEffect(() => {
     if (categoriesData) {
       const availabilityMap: Record<string, boolean> = {};
@@ -77,55 +98,6 @@ const HotelServices = () => {
     }
   }, [categoriesData]);
 
-  const handleToggleAvailability = useCallback(
-    async (service: IService) => {
-      if (!businessId || updateServiceLoading) return;
-
-      const currentAvailability = serviceAvailability[service._id] || false;
-      const newAvailability = !currentAvailability;
-
-      try {
-        setUpdatingServiceId(service._id);
-
-        setServiceAvailability((prev) => ({
-          ...prev,
-          [service._id]: newAvailability,
-        }));
-
-        await updateService({
-          name: service.name,
-          businessId: businessId,
-          availability: newAvailability,
-          serviceId: service._id,
-        });
-
-        // await refetchCategories();
-
-        toast.success(
-          `${service.name} is now ${
-            newAvailability ? "available" : "unavailable"
-          }`,
-        );
-      } catch (error) {
-        setServiceAvailability((prev) => ({
-          ...prev,
-          [service._id]: currentAvailability,
-        }));
-
-        console.error("Error updating service:", error);
-        toast.error("Failed to update service availability");
-      } finally {
-        setUpdatingServiceId(null);
-      }
-    },
-    [
-      businessId,
-      updateService,
-      updateServiceLoading,
-      serviceAvailability,
-    ],
-  );
-
   const handleServiceClick = useCallback(
     (service: IService, categoryName: string) => {
       setEditingService({
@@ -134,7 +106,19 @@ const HotelServices = () => {
         availability: serviceAvailability[service._id] || false,
         image: service.image,
         categoryName,
+        avgAcceptanceTime: service.avgAcceptanceTime,
+        avgCompletionTime: service.avgCompletionTime,
       });
+      setResponseMin(
+        service.avgAcceptanceTime != null
+          ? String(service.avgAcceptanceTime)
+          : "",
+      );
+      setResolutionMin(
+        service.avgCompletionTime != null
+          ? String(service.avgCompletionTime)
+          : "",
+      );
       setNewImageUrl(null);
       setShowEditModal(true);
     },
@@ -162,27 +146,29 @@ const HotelServices = () => {
 
       const imageUrl = newImageUrl || editingService.image;
 
-      await updateService({
+      const payload: any = {
         name: editingService.name,
-        businessId: businessId,
+        businessId,
         availability: editingService.availability,
         serviceId: editingService._id,
         image: imageUrl,
-      });
+      };
+      if (Number(responseMin) != null)
+        payload.avgAcceptanceTime = Number(responseMin);
+      if (Number(resolutionMin) != null)
+        payload.avgCompletionTime = Number(resolutionMin);
+      await updateService(payload);
 
       setServiceAvailability((prev) => ({
         ...prev,
         [editingService._id]: editingService.availability,
       }));
 
-      // await refetchCategories();
-
       toast.success("Service updated successfully");
       setShowEditModal(false);
       setEditingService(null);
       setNewImageUrl(null);
     } catch (error) {
-      console.error("Error updating service:", error);
       toast.error("Failed to update service");
     } finally {
       setUploadingImage(false);
@@ -192,15 +178,19 @@ const HotelServices = () => {
     businessId,
     newImageUrl,
     updateService,
+    responseMin,
+    resolutionMin,
   ]);
 
   const handleCloseEditModal = useCallback(() => {
     setShowEditModal(false);
     setEditingService(null);
     setNewImageUrl(null);
+    setResponseMin("");
+    setResolutionMin("");
   }, []);
 
-  const filteredCategories = useCallback(() => {
+  const filteredCategories = useMemo(() => {
     if (!categoriesData || !searchQuery.trim()) return categoriesData;
 
     return categoriesData
@@ -215,29 +205,83 @@ const HotelServices = () => {
         };
       })
       .filter((category) => category.serviceIds.length > 0);
-  }, [categoriesData, searchQuery])();
+  }, [categoriesData, searchQuery]);
 
-  const totalServices = useCallback(() => {
+  const totalServices = useMemo(() => {
     return (
       categoriesData?.reduce(
         (count, category) => count + category.serviceIds.length,
         0,
       ) || 0
     );
-  }, [categoriesData])();
+  }, [categoriesData]);
 
-  const filteredServicesCount = useCallback(() => {
+  const filteredServicesCount = useMemo(() => {
     return (
       filteredCategories?.reduce(
         (count, category) => count + category.serviceIds.length,
         0,
       ) || 0
     );
-  }, [filteredCategories])();
+  }, [filteredCategories]);
 
-  const openServices = () => {
+  const openServices = useCallback(() => {
     setOpenService(!openService);
+  }, [openService]);
+
+  const handleChange =
+    (setter: (v: string) => void) => (e: ChangeEvent<HTMLInputElement>) => {
+      const raw = e.target.value.replace(/[^\d]/g, "");
+      setter(raw);
+    };
+
+  // helpers
+  const toInt = (time: string) => {
+    if (!time?.trim()) return null;
+    const timeInNumber = Number.parseInt(time, 10);
+    return Number.isFinite(timeInNumber) ? timeInNumber : null;
   };
+
+  const response = toInt(responseMin);
+  const resolution = toInt(resolutionMin);
+
+  const cmpError =
+    response !== null && resolution !== null && resolution <= response
+      ? "Completion time must be greater than acceptance time"
+      : "";
+
+  const canSave =
+    response !== null && resolution !== null && resolution > response;
+
+  const fmtDuration = useCallback((time?: number | null) => {
+    if (time == null) return "—";
+    if (time < 60) return `${time} min`;
+    const h = Math.floor(time / 60);
+    const m = time % 60;
+    return m ? `${h}h ${m}m` : `${h}h`;
+  }, []);
+
+  const handleDeleteService = useCallback(
+    async (service: IService) => {
+      if (!businessId) {
+        toast.error("Missing business id");
+        return;
+      }
+
+      const ok = window.confirm(
+        `Delete “${service.name}”? This action cannot be undone.`,
+      );
+      if (!ok) return;
+
+      try {
+        await deleteService({ serviceId: service._id, businessId });
+        toast.success("Service deleted");
+      } catch (e: any) {
+        toast.error(e?.message ?? "Failed to delete service");
+      }
+    },
+    [businessId, deleteService],
+  );
 
   const ServiceCard = useCallback(
     ({
@@ -247,10 +291,7 @@ const HotelServices = () => {
       return (
         <Card className="overflow-hidden transition-shadow hover:shadow-md">
           <CardContent className="p-0">
-            <div
-              className="p-4 cursor-pointer hover:bg-muted/30 transition-colors"
-              onClick={() => handleServiceClick(service, categoryName)}
-            >
+            <div className="p-4 cursor-pointer hover:bg-muted/30 transition-colors">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex-shrink-0 w-10 h-10 overflow-hidden rounded-md bg-muted">
@@ -270,76 +311,92 @@ const HotelServices = () => {
                   </div>
                   <div>
                     <h3 className="font-medium">{service.name}</h3>
-                    <p className="text-xs text-muted-foreground">
-                      Click to edit
-                    </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Edit3 className="w-4 h-4 text-muted-foreground" />
-                  {updatingServiceId === service._id ? (
-                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                  ) : (
-                    <Switch
-                      checked={serviceAvailability[service._id] || false}
-                      onCheckedChange={(e) => {
-                        e.stopPropagation();
-                        handleToggleAvailability(service);
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                      aria-label={`Toggle ${service.name} availability`}
-                    />
-                  )}
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="w-5 h-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => handleServiceClick(service, categoryName)}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleDeleteService(service)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash className="w-4 h-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
-
             <Separator />
-
-            <div className="flex items-center justify-between p-3 bg-muted/30">
-              <div className="flex items-center">
+            <div className="flex flex-col sm:flex-row items-stretch gap-3 p-3 bg-muted/30">
+              {/* Availability tile (unchanged logic, just styled) */}
+              <div className="sm:w-1/2 flex items-center rounded-md border bg-white px-3 py-2">
                 {serviceAvailability[service._id] ? (
                   <>
-                    <ToggleRight className="h-4 w-4 mr-1.5 text-green-600" />
-                    <span className="text-sm font-medium text-green-600">
+                    <ToggleRight className="h-6 w-6 mr-1.5 text-green-600" />
+                    <span className="text-base font-medium text-green-600">
                       Available
                     </span>
                   </>
                 ) : (
                   <>
-                    <ToggleLeft className="h-4 w-4 mr-1.5 text-gray-500" />
-                    <span className="text-sm font-medium text-gray-500">
+                    <ToggleLeft className="h-6 w-6 mr-1.5 text-gray-500" />
+                    <span className="text-base font-medium text-gray-500">
                       Unavailable
                     </span>
                   </>
                 )}
               </div>
-              <Badge
-                variant="outline"
-                className={`text-xs ${
-                  serviceAvailability[service._id]
-                    ? "bg-green-50 text-green-700 border-green-200"
-                    : "bg-gray-50 text-gray-700 border-gray-200"
-                }`}
-              >
-                {serviceAvailability[service._id] ? (
-                  <Check className="w-3 h-3 mr-1" />
-                ) : (
-                  <X className="w-3 h-3 mr-1" />
-                )}
-                {serviceAvailability[service._id] ? "Active" : "Inactive"}
-              </Badge>
+              <div className="sm:w-1/2 space-y-2">
+                <div className="grid grid-cols-1 xs:grid-cols-2 gap-2">
+                  {/* Response (accept) */}
+                  <div className="rounded-md border bg-white px-3 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-emerald-600" />
+                      <div className="text-sm font-medium">Response Time</div>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {fmtDuration(service?.avgAcceptanceTime)}
+                    </Badge>
+                  </div>
+
+                  {/* Resolution (complete) */}
+                  <div className="rounded-md border bg-white px-3 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Timer className="h-4 w-4 text-purple-600" />
+                      <div className="text-sm font-medium">Resolution Time</div>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {fmtDuration(service?.avgCompletionTime)}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* tiny validation reminder */}
+                {typeof service?.avgAcceptanceTime === "number" &&
+                  typeof service?.avgCompletionTime === "number" &&
+                  service.avgCompletionTime <= service.avgAcceptanceTime && (
+                    <p className="text-[11px] text-rose-600">
+                      Resolution time should be greater than response time.
+                    </p>
+                  )}
+              </div>
             </div>
           </CardContent>
         </Card>
       );
     },
-    [
-      handleToggleAvailability,
-      serviceAvailability,
-      updatingServiceId,
-      handleServiceClick,
-    ],
+    [serviceAvailability, handleServiceClick, handleDeleteService, fmtDuration],
   );
 
   const EmptyState = () => {
@@ -382,7 +439,7 @@ const HotelServices = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mb-24">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Manage Services</h2>
         <Badge variant="outline" className="px-3 py-1">
@@ -485,23 +542,22 @@ const HotelServices = () => {
         show={showEditModal}
         onClose={handleCloseEditModal}
       >
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold">Edit Service</h3>
-            <Button variant="ghost" size="sm" onClick={handleCloseEditModal}>
+            <Button variant="outline" size="sm" onClick={handleCloseEditModal}>
               <X className="w-4 h-4" />
             </Button>
           </div>
 
           {editingService && (
-            <div className="space-y-4">
-              <div className="p-4 rounded-lg bg-muted/30">
+            <>
+              <div className="rounded-lg bg-muted/30">
                 <h4 className="font-medium">{editingService.name}</h4>
                 <p className="text-sm text-muted-foreground">
                   Category: {editingService.categoryName}
                 </p>
               </div>
-
               <div className="flex items-center justify-between p-4 border rounded-lg">
                 <div>
                   <Label className="text-sm font-medium">Availability</Label>
@@ -518,7 +574,64 @@ const HotelServices = () => {
                   }
                 />
               </div>
+              <div className="flex justify-between w-full gap-4">
+                {/* Response Time (accept/acknowledge) */}
+                <div className="w-[45%]">
+                  <Label htmlFor="responseMin" className="text-sm font-medium">
+                    Response Time (min)
+                  </Label>
+                  <div className="relative mt-1">
+                    <Input
+                      id="responseMin"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="e.g., 2"
+                      value={responseMin}
+                      onChange={handleChange(setResponseMin)}
+                      aria-invalid={!!cmpError}
+                      className="pr-10"
+                      maxLength={4}
+                      onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                    />
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                      min
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Time to acknowledge the service request.
+                  </p>
+                </div>
 
+                {/* Resolution Time (complete service) */}
+                <div className="w-[45%]">
+                  <Label
+                    htmlFor="resolutionMin"
+                    className="text-sm font-medium"
+                  >
+                    Resolution Time (min)
+                  </Label>
+                  <div className="relative mt-1">
+                    <Input
+                      id="resolutionMin"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="e.g., 60"
+                      value={resolutionMin}
+                      onChange={handleChange(setResolutionMin)}
+                      aria-invalid={!!cmpError}
+                      className="pr-10"
+                      maxLength={4}
+                      onWheel={(e) => (e.target as HTMLInputElement).blur()}
+                    />
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                      min
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Time to fully complete the service.
+                  </p>
+                </div>
+              </div>
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Service Image</Label>
 
@@ -531,13 +644,20 @@ const HotelServices = () => {
                   Upload a new image or keep the existing one. Images are
                   automatically uploaded to cloud storage.
                 </p>
+                {!canSave && (
+                  <Label className="text-sm font-medium text-rose-500">
+                    Note: Response Time should be less than Resolution Time.
+                  </Label>
+                )}
               </div>
-
               <div className="flex justify-end gap-2 pt-4">
                 <Button variant="outline" onClick={handleCloseEditModal}>
                   Cancel
                 </Button>
-                <Button onClick={handleSaveService} disabled={uploadingImage}>
+                <Button
+                  onClick={handleSaveService}
+                  disabled={uploadingImage || !canSave}
+                >
                   {uploadingImage ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -548,7 +668,7 @@ const HotelServices = () => {
                   )}
                 </Button>
               </div>
-            </div>
+            </>
           )}
         </div>
       </PopUp>

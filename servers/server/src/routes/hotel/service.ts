@@ -89,7 +89,7 @@ const serviceRouter = new Hono()
       })
         .populate({
           path: "serviceIds",
-          select: "name image availability",
+          select: "name image availability avgAcceptanceTime avgCompletionTime",
         })
         .select("name image serviceIds")
         .lean();
@@ -223,6 +223,30 @@ const serviceRouter = new Hono()
           businessId: businessId,
         });
 
+        return respond(c, "Services deleted successfully", false, 200, {});
+      });
+    },
+  )
+  // single service delete
+  .delete(
+    "/delete_service/:serviceId",
+    zValidator("param", z.object({ serviceId: z.string().min(2).max(26) })),
+    zValidator("json", z.object({ businessId: z.string().min(2).max(26) })),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
+        const businessId = requestData.businessId;
+        const { serviceId } = c.req.param();
+
+        const { deletedCount } = await HotelService.deleteOne(
+          { _id: serviceId, businessId },
+          { session },
+        );
+
+        if (!deletedCount) {
+          return respond(c, "Service not found", true, 404, {});
+        }
         return respond(c, "Services deleted successfully", false, 200, {});
       });
     },

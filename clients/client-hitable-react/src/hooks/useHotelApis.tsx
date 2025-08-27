@@ -122,8 +122,6 @@ export const useCheckOut = () => {
     }
     if (response.status === 400) {
       toast.error(res?.message);
-    } else {
-      toast.error("Failed to check out");
     }
   };
 
