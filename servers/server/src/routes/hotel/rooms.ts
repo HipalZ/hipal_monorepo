@@ -609,6 +609,33 @@ const roomRouter = new Hono()
         return respond(c, "Room not found", true, 404, {});
       }
 
+      const isHotelAlertExist = await HotelAlert.findOne({
+        roomId,
+        alertProgress: {
+          $nin: [
+            "REJECTED",
+            "NOT_DELIVERED",
+            "MESSAGE",
+            "DELIVERED",
+            "RESOLVED",
+          ],
+        },
+      });
+
+      if (isHotelAlertExist) {
+        return respond(
+          c,
+          "Cannot check out. There are pending alerts for this room.",
+          true,
+          400,
+          {},
+        );
+      }
+
+      if (roomExists.roomStatus === "AVAILABLE") {
+        return respond(c, "Room is already available", true, 400, {});
+      }
+
       const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
         businessId: roomExists.businessId,
       }).populate("businessId");
