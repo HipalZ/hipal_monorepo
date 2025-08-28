@@ -120,6 +120,9 @@ export const useCheckOut = () => {
       setOpenRoomModal(false);
       return res.data;
     }
+    if (response.status === 400) {
+      toast.error(res?.message);
+    }
   };
 
   return { checkOut };
