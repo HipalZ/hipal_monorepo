@@ -7,6 +7,7 @@ import {
   CouponLink,
   Couponz,
   GroupModel,
+  HotelAnalytics,
   HotelRoom,
   HotelRoomSession,
   OutLetInfo,
@@ -2415,6 +2416,21 @@ const whatsappRouter = new Hono()
                     authCode, // Use nanoid for auth code generation
                   });
 
+                  await HotelAnalytics.findOneAndUpdate(
+                    {
+                      businessId: config?.businessId,
+                      roomId: updatedRoom?._id,
+                    },
+                    {
+                      $setOnInsert: {
+                        date: Date.now(),
+                        userIds: [user?._id],
+                        source: "whatsapp",
+                      },
+                    },
+                    { upsert: true },
+                  );
+
                   // Update the room with the generated authCode
                   await HotelRoom.findOneAndUpdate(
                     {
@@ -2422,6 +2438,54 @@ const whatsappRouter = new Hono()
                     },
                     {
                       authCode: roomSession.authCode,
+                    },
+                  );
+                  await axios.post(
+                    `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
+                    {
+                      messaging_product: "whatsapp",
+                      to: from,
+                      type: "template",
+                      template: {
+                        name: "fi_welcoming_template",
+                        language: { code: "en" },
+                        components: [
+                          {
+                            type: "header",
+                            parameters: [
+                              {
+                                type: "image",
+                                image: {
+                                  link: "https://t-static.blr1.digitaloceanspaces.com/e3039890-ede4-4fec-bcc4-ad12c2aa87ac.jpeg",
+                                },
+                              },
+                            ],
+                          },
+                          {
+                            type: "body",
+                            parameters: [
+                              {
+                                type: "text",
+                                text: bName?.name,
+                              },
+
+                              {
+                                type: "text",
+                                text: `${updateLongUrl}&sessionId=${roomSession?._id}`,
+                              },
+                              {
+                                type: "text",
+                                text: authCode,
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      headers: {
+                        Authorization: `Bearer ${config.token}`,
+                      },
                     },
                   );
                 }
@@ -2432,13 +2496,26 @@ const whatsappRouter = new Hono()
                 slug: urlObj?.urlCode,
               });
 
-              console.log("findRoom:", findRoom);
-
               const roomSession = await HotelRoomSession.findOne({
                 roomId: findRoom?._id.toString(),
               });
 
-              console.log("roomSession:", roomSession);
+              await HotelAnalytics.findOneAndUpdate(
+                {
+                  businessId: config?.businessId,
+                  roomId: findRoom?._id,
+                },
+                {
+                  $setOnInsert: {
+                    userIds: {
+                      $addToSet: user?._id,
+                    },
+                    source: "whatsapp",
+                    date: Date.now(),
+                  },
+                },
+                { upsert: true },
+              );
 
               await axios.post(
                 `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
@@ -2471,11 +2548,11 @@ const whatsappRouter = new Hono()
 
                           {
                             type: "text",
-                            text: updateLongUrl,
+                            text: `${updateLongUrl}&sessionId=${roomSession?._id}`,
                           },
                           {
                             type: "text",
-                            text: roomSession?.authCode,
+                            text: " ",
                           },
                         ],
                       },

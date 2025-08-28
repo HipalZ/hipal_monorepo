@@ -2,6 +2,7 @@ import {
   Business,
   DeviceToken,
   HotelAlert,
+  HotelAnalytics,
   HotelRoom,
   HotelRoomChat,
   HotelRoomChatReply,
@@ -156,6 +157,132 @@ const roomRouter = new Hono()
         data: { _id: roomData._id },
         err: false,
       });
+    },
+  )
+  .get(
+    "/fetch_room_session",
+    zValidator(
+      "query",
+      z.object({
+        sessionId: z.string().min(24).max(24),
+      }),
+    ),
+
+    async (c) => {
+      const { sessionId } = c.req.query();
+
+      const roomSession = await HotelRoomSession.findById(sessionId);
+      if (!roomSession) {
+        return c.json(
+          {
+            message: "Session not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
+
+      return c.json(
+        {
+          message: "Room session fetched successfully",
+          err: false,
+          data: { _id: roomSession._id },
+        },
+        200,
+      );
+    },
+  )
+
+  .get(
+    "/fetch_hotel_analytics",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(24).max(24),
+        from: z.string().optional(),
+        to: z.string().optional(),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId, from, to } = c.req.query();
+      const fromDate = Number(from);
+      const toDate = Number(to);
+
+      if (fromDate > toDate) {
+        return respond(c, "Invalid date range", true, 400, {});
+      }
+
+      const analytics = await HotelAnalytics.find({
+        businessId,
+        date: {
+          $gte: fromDate,
+          $lte: toDate,
+        },
+      })
+        .populate({
+          path: "roomId",
+          select: "name",
+        })
+        .populate({
+          path: "userIds",
+          select: "name phone",
+        });
+
+      return respond(
+        c,
+        "Hotel analytics fetched successfully",
+        false,
+        200,
+        analytics,
+      );
+    },
+  )
+
+  .get(
+    "/fetch_hotel_reviews",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(24).max(24),
+        from: z.string().optional(),
+        to: z.string().optional(),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId, from, to } = c.req.query();
+      const fromDate = Number(from);
+      const toDate = Number(to);
+
+      if (fromDate > toDate) {
+        return respond(c, "Invalid date range", true, 400, {});
+      }
+
+      const reviews = await Reviews.find({
+        businessId,
+        date: {
+          $gte: fromDate,
+          $lte: toDate,
+        },
+      })
+        .populate({
+          path: "roomId",
+          select: "name",
+        })
+        .populate({
+          path: "userId",
+          select: "name phone",
+        });
+
+      return respond(
+        c,
+        "Hotel reviews fetched successfully",
+        false,
+        200,
+        reviews,
+      );
     },
   )
 
@@ -484,52 +611,25 @@ const roomRouter = new Hono()
         throw new Error("Error creating room session");
       }
 
+      await HotelAnalytics.findOneAndUpdate(
+        {
+          businessId: roomExists?.businessId,
+          roomId: roomId,
+        },
+        {
+          $setOnInsert: {
+            userIds: [user._id],
+            source: requestData.source,
+            date: Date.now(),
+          },
+        },
+        { upsert: true },
+      );
+
       if (whatsAppConfig) {
         const business = await Business.findById(roomExists.businessId).select(
           "name",
         );
-        // const res = await axios.post(
-        //   `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
-        //   {
-        //     messaging_product: "whatsapp",
-        //     to: user?.phone?.toString(),
-        //     type: "template",
-        //     template: {
-        //       name: "test_checkin_template",
-        //       language: { code: "en" },
-        //       components: [
-        //         {
-        //           type: "body",
-        //           parameters: [
-        //             {
-        //               type: "text",
-        //               text: user?.name,
-        //             },
-
-        //             {
-        //               type: "text",
-        //               text: authCode,
-        //             },
-
-        //             {
-        //               type: "text",
-        //               text: roomExists?.name,
-        //             },
-        //           ],
-        //         },
-        //       ],
-        //     },
-        //   },
-        //   {
-        //     headers: {
-        //       Authorization: `Bearer ${whatsAppConfig.token}`,
-        //     },
-        //   },
-        // );
-
-        // if (res.status !== 200) {
-        //   throw new Error("Error sending message");
-        // }
 
         const shortUrlObj = await UrlModel.findOne({
           urlCode: updatedRoom.slug,
@@ -570,7 +670,7 @@ const roomRouter = new Hono()
 
                     {
                       type: "text",
-                      text: updateLongUrl,
+                      text: `${updateLongUrl}&sessionId=${roomSession[0]._id.toString()}`,
                     },
                     {
                       type: "text",
@@ -963,6 +1063,7 @@ const roomRouter = new Hono()
           reviewRating,
           staffs: [userId],
           date: Date.now(),
+          roomId: roomChat.roomId,
         });
 
         if (!createReview) {
@@ -1003,6 +1104,20 @@ const roomRouter = new Hono()
         if (!roomSource) {
           return respond(c, "Room session not found", true, 404, {});
         }
+
+        await HotelAnalytics.findOneAndUpdate(
+          {
+            businessId: roomSource?.businessId,
+            roomId: roomId,
+          },
+          {
+            $setOnInsert: {
+              source,
+              date: Date.now(),
+            },
+          },
+          { upsert: true },
+        );
 
         return respond(c, "update ", false, 200, {
           _id: roomSource._id,
