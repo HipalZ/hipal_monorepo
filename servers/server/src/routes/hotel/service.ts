@@ -1,4 +1,9 @@
-import { HotelService, HotelServiceCategory } from "@hi/db-models";
+import {
+  HotelAlert,
+  HotelService,
+  HotelServiceCategory,
+  User,
+} from "@hi/db-models";
 import {
   hotelService,
   hotelServiceCategory,
@@ -187,6 +192,25 @@ const serviceRouter = new Hono()
         }
       }
 
+      const isServiceActive = await HotelAlert.exists({
+        serviceIds: serviceId,
+        businessId: requestData.businessId,
+        alertProgress: {
+          $exists: true,
+          $ne: ["RESOLVED", "MESSAGE", "DELIVERED", "REJECTED"],
+        },
+      });
+
+      if (isServiceActive) {
+        return respond(
+          c,
+          "Service is active and cannot be edited",
+          true,
+          409,
+          {},
+        );
+      }
+
       const updatedService = await HotelService.findOneAndUpdate(
         { _id: serviceId },
         { $set: requestData },
@@ -230,14 +254,31 @@ const serviceRouter = new Hono()
   // single service delete
   .delete(
     "/delete_service/:serviceId",
-    zValidator("param", z.object({ serviceId: z.string().min(2).max(26) })),
-    zValidator("json", z.object({ businessId: z.string().min(2).max(26) })),
+    zValidator("param", z.object({ serviceId: z.string().min(24).max(24) })),
+    zValidator("json", z.object({ businessId: z.string().min(24).max(24) })),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
         const requestData = await c.req.json();
         const businessId = requestData.businessId;
         const { serviceId } = c.req.param();
+        const isServiceActive = await HotelAlert.exists({
+          serviceIds: serviceId,
+          businessId: requestData.businessId,
+          alertProgress: {
+            $exists: true,
+            $ne: ["RESOLVED", "MESSAGE", "DELIVERED", "REJECTED"],
+          },
+        });
+        if (isServiceActive) {
+          return respond(
+            c,
+            "Service is active and cannot be deleted",
+            true,
+            409,
+            {},
+          );
+        }
 
         const { deletedCount } = await HotelService.deleteOne(
           { _id: serviceId, businessId },
@@ -247,6 +288,14 @@ const serviceRouter = new Hono()
         if (!deletedCount) {
           return respond(c, "Service not found", true, 404, {});
         }
+
+        // pull serviceIds from user models
+        await User.updateMany(
+          { "customRole.serviceIds": serviceId },
+          { $pull: { "customRole.$[].serviceIds": serviceId } },
+          { session },
+        );
+
         return respond(c, "Services deleted successfully", false, 200, {});
       });
     },

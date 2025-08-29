@@ -44,5 +44,10 @@ export const editHotelStaff = z.object({
   password: z.string().min(4).max(50).optional(),
 });
 
+export const deleteHotelStaff = z.object({
+  staffId: ObjectIdSchema,
+  businessId: z.string().min(2).max(50),
+});
+
 export type HotelStaffRoleType = z.infer<typeof hotelStaffRole>;
 export type AddHotelStaffType = z.infer<typeof addHotelStaff>;

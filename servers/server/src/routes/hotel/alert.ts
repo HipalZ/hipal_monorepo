@@ -8,6 +8,7 @@ import {
   HotelRoomChatComplain,
   HotelRoomChatReply,
   HotelService,
+  HotelStaffLevel,
   OutLetInfo,
   User,
   WhatsAppBusinessConfig,
@@ -131,21 +132,71 @@ const scheduleAlertUpdate = (
             },
             { new: true },
           );
+
+          const levelOneStaffs = await HotelStaffLevel.findOne({
+            businessId,
+            level: 1,
+            staffIds: { $exists: true, $ne: [] },
+          });
+
+          const levelTwoStaffs = await HotelStaffLevel.findOne({
+            businessId,
+            level: 2,
+            staffIds: { $exists: true, $ne: [] },
+          });
+
+          const levelThreeStaffs = await HotelStaffLevel.findOne({
+            businessId,
+            level: 3,
+            staffIds: { $exists: true, $ne: [] },
+          });
+
+          if (levelOneStaffs) {
+            const nextLevelTime = levelOneStaffs.nextLevelTime;
+            // schedule cron job
+            scheduleLevelWiseAlert(
+              alertId,
+              nextLevelTime,
+              levelOneStaffs.level,
+              roomName,
+              serviceName,
+              levelOneStaffs.staffIds,
+            );
+          } else if (levelTwoStaffs) {
+            const nextLevelTime = levelTwoStaffs.nextLevelTime;
+            // schedule cron job
+            scheduleLevelWiseAlert(
+              alertId,
+              nextLevelTime,
+              levelTwoStaffs.level,
+              roomName,
+              serviceName,
+              levelTwoStaffs.staffIds,
+            );
+          } else if (levelThreeStaffs) {
+            const nextLevelTime = levelThreeStaffs.nextLevelTime;
+            // schedule cron job
+            scheduleLevelWiseAlert(
+              alertId,
+              nextLevelTime,
+              levelThreeStaffs.level,
+              roomName,
+              serviceName,
+              levelThreeStaffs.staffIds,
+            );
+          }
+
           const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
             businessId: alertData?.businessId,
           });
           if (whatsAppConfig) {
-            const managers = await User.find({
-              "customRole.businessId": alertData?.businessId,
-              "customRole.role": "MANAGER",
-            }).lean();
-
-            for (const manager of managers) {
+            for (const staff of levelOneStaffs.staffIds) {
+              const staffData = await User.findById(staff).lean();
               const res = await axios.post(
                 `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
                 {
                   messaging_product: "whatsapp",
-                  to: manager?.phone?.toString(),
+                  to: staffData?.phone?.toString(),
                   type: "template",
                   template: {
                     name: "fi_escalation_template ",
@@ -156,7 +207,7 @@ const scheduleAlertUpdate = (
                         parameters: [
                           {
                             type: "text",
-                            text: manager?.name,
+                            text: staffData?.name,
                           },
 
                           {
@@ -191,21 +242,70 @@ const scheduleAlertUpdate = (
             },
             { new: true },
           );
+          const levelOneStaffs = await HotelStaffLevel.findOne({
+            businessId,
+            level: 1,
+            staffIds: { $exists: true, $ne: [] },
+          });
+
+          const levelTwoStaffs = await HotelStaffLevel.findOne({
+            businessId,
+            level: 2,
+            staffIds: { $exists: true, $ne: [] },
+          });
+
+          const levelThreeStaffs = await HotelStaffLevel.findOne({
+            businessId,
+            level: 3,
+            staffIds: { $exists: true, $ne: [] },
+          });
+
+          if (levelOneStaffs) {
+            const nextLevelTime = levelOneStaffs.nextLevelTime;
+            // schedule cron job
+            scheduleLevelWiseAlert(
+              alertId,
+              nextLevelTime,
+              levelOneStaffs.level,
+              roomName,
+              serviceName,
+              levelOneStaffs.staffIds,
+            );
+          } else if (levelTwoStaffs) {
+            const nextLevelTime = levelTwoStaffs.nextLevelTime;
+            // schedule cron job
+            scheduleLevelWiseAlert(
+              alertId,
+              nextLevelTime,
+              levelTwoStaffs.level,
+              roomName,
+              serviceName,
+              levelTwoStaffs.staffIds,
+            );
+          } else if (levelThreeStaffs) {
+            const nextLevelTime = levelThreeStaffs.nextLevelTime;
+            // schedule cron job
+            scheduleLevelWiseAlert(
+              alertId,
+              nextLevelTime,
+              levelThreeStaffs.level,
+              roomName,
+              serviceName,
+              levelThreeStaffs.staffIds,
+            );
+          }
+
           const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
             businessId: alertData?.businessId,
           });
           if (whatsAppConfig) {
-            const managers = await User.find({
-              "customRole.businessId": alertData?.businessId,
-              "customRole.role": "MANAGER",
-            }).lean();
-
-            for (const manager of managers) {
+            for (const staff of levelOneStaffs.staffIds) {
+              const staffData = await User.findById(staff).lean();
               const res = await axios.post(
                 `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
                 {
                   messaging_product: "whatsapp",
-                  to: manager?.phone?.toString(),
+                  to: staffData?.phone?.toString(),
                   type: "template",
                   template: {
                     name: "fi_escalation_template ",
@@ -216,7 +316,7 @@ const scheduleAlertUpdate = (
                         parameters: [
                           {
                             type: "text",
-                            text: manager?.name,
+                            text: staffData?.name,
                           },
 
                           {
@@ -241,18 +341,94 @@ const scheduleAlertUpdate = (
             }
           }
         }
-
-        const registrationTokens = await DeviceToken.find({
-          businessId: businessId,
-          userId: { $in: validStaffIds },
-          notification: true,
-        });
-        registrationTokens.map(async (obj) => {
-          if (obj.notification) {
-            await sendPushNotification(obj.token, roomName, serviceName);
-          }
-        });
       }
+    });
+  }
+};
+
+const scheduleLevelWiseAlert = (
+  alertId: string,
+  nextLevelTime: number,
+  nextLevel: number,
+  roomName: string,
+  serviceName: string,
+  staffIds: string[],
+) => {
+  if (nextLevelTime > 0) {
+    // Calculate the run time: current time + nextLevelTime minutes
+    const runTime = new Date(Date.now() + nextLevelTime * 60 * 1000);
+    const cronExpression = `${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${
+      runTime.getMonth() + 1
+    } *`;
+
+    schedule(cronExpression, async () => {
+      const alertData = await HotelAlert.findById(alertId).populate({
+        path: "serviceIds",
+        select: "name",
+      });
+
+      // Send push notifications to staff members
+      const registrationTokens = await DeviceToken.find({
+        userId: { $in: staffIds },
+        notification: true,
+      });
+      registrationTokens.map(async (obj) => {
+        if (obj.notification) {
+          await sendPushNotification(obj.token, roomName, serviceName);
+        }
+      });
+
+      const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+        businessId: alertData?.businessId,
+      });
+      if (whatsAppConfig) {
+        for (const staff of staffIds) {
+          const staffData = await User.findById(staff).lean();
+          const res = await axios.post(
+            `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+            {
+              messaging_product: "whatsapp",
+              to: staffData?.phone?.toString(),
+              type: "template",
+              template: {
+                name: "fi_escalation_template ",
+                language: { code: "en" },
+                components: [
+                  {
+                    type: "body",
+                    parameters: [
+                      {
+                        type: "text",
+                        text: staffData?.name,
+                      },
+
+                      {
+                        type: "text",
+                        text: alertData?.serviceIds[0]?.name || "other",
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${whatsAppConfig.token}`,
+              },
+            },
+          );
+
+          if (res.status !== 200) {
+            throw new Error("Error sending message");
+          }
+        }
+      }
+
+      await HotelAlert.findByIdAndUpdate(
+        alertId,
+        { level: nextLevel },
+        { new: true },
+      );
     });
   }
 };
@@ -402,41 +578,24 @@ const hotelAlertRouter = new Hono()
     ),
     async (c) => {
       const { businessId, userId } = c.req.query();
+      const levelData = await HotelStaffLevel.findOne({
+        businessId,
+        staffIds: userId,
+      });
 
-      const staff = await User.findOne(
-        { _id: userId, "customRole.businessId": businessId },
-        { customRole: 1 }, // Fetch only required fields
-      ).lean();
-
-      if (!staff) {
-        return respond(c, "Staff not found", true, 404, {});
-      }
-
-      const customRole = staff.customRole?.find(
-        (role) => role.businessId.toString() === businessId,
-      );
-      if (!customRole) {
-        return respond(c, "Role not found for this business", true, 404, {});
-      }
-
-      const { role } = customRole;
-
-      if (role === "MANAGER") {
-        const alerts = await HotelAlert.find({
-          businessId,
-          alertProgress: {
-            $in: ["IS_ACCEPTED_AND_ESCALATION", "NON_ACCEPTED_AND_ESCALATION"],
-          },
-        })
-          .populate({ path: "serviceIds", select: "name" })
-          .populate({ path: "createdBy", select: "name phone" })
-          .populate({ path: "acceptedBy", select: "name phone" })
-          .populate({ path: "roomId", select: "name" })
-          .lean();
-        return respond(c, "Alerts fetched successfully", false, 200, alerts);
-      }
-
-      return respond(c, "fetch successfully", false, 200, {});
+      const alerts = await HotelAlert.find({
+        businessId,
+        alertProgress: {
+          $in: ["IS_ACCEPTED_AND_ESCALATION", "NON_ACCEPTED_AND_ESCALATION"],
+        },
+        level: levelData?.level,
+      })
+        .populate({ path: "serviceIds", select: "name" })
+        .populate({ path: "createdBy", select: "name phone" })
+        .populate({ path: "acceptedBy", select: "name phone" })
+        .populate({ path: "roomId", select: "name" })
+        .lean();
+      return respond(c, "Alerts fetched successfully", false, 200, alerts);
     },
   )
 

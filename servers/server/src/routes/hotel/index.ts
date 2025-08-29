@@ -8,12 +8,14 @@ import restaurantRouter from "./restaurant";
 import roomRouter from "./rooms";
 import serviceRouter from "./service";
 import staffRouter from "./staff";
+import hotelStaffLevelRouter from "./staffLevel";
 import zoneRouter from "./zones";
 
 const hotelRouter = new Hono()
   .route("/zones", zoneRouter)
   .route("/rooms", roomRouter)
   .route("/staff", staffRouter)
+  .route("/staff_level", hotelStaffLevelRouter)
   .route("/restaurant", restaurantRouter)
   .route("/service", serviceRouter)
   .route("/book", roomBookRouter)

@@ -48,6 +48,7 @@ export const hotelAlert = z.object({
   roomChatComplainId: ObjectIdSchema.optional(),
   message: z.string().optional(),
   isEscalated: z.boolean().optional().default(false),
+  level: z.number().min(1).optional().default(1),
 });
 
 export const acceptHotelAlert = z.object({

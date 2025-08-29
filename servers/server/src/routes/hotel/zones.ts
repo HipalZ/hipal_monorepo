@@ -105,12 +105,24 @@ const zoneRouter = new Hono()
       if (bookedRoomExists) {
         return respond(
           c,
-          "Cannot update zone, some rooms are booked",
+          "Cannot update zone, some rooms are occupied",
           true,
           400,
           {},
         );
       }
+
+      await HotelZone.updateMany(
+        {
+          roomIds: { $in: roomIds },
+        },
+        {
+          $pull: {
+            roomIds: { $in: roomIds },
+          },
+        },
+        { session },
+      );
 
       // Update the hotel zone
       const updatedZone = await HotelZone.findByIdAndUpdate(
@@ -137,21 +149,21 @@ const zoneRouter = new Hono()
         throw new Error("Error updating rooms");
       }
 
-      // if (staffIds && Array.isArray(staffIds)) {
-      //   const updateStaffsInRooms = await HotelRoom.updateMany(
-      //     { _id: { $in: roomIds } },
-      //     {
-      //       $set: {
-      //         staffIds: staffIds, // Replace with exact new list
-      //       },
-      //     },
-      //     { session },
-      //   );
+      if (staffIds && Array.isArray(staffIds)) {
+        const updateStaffsInRooms = await HotelRoom.updateMany(
+          { _id: { $in: roomIds } },
+          {
+            $set: {
+              staffIds: staffIds,
+            },
+          },
+          { session },
+        );
 
-      //   if (!updateStaffsInRooms) {
-      //     throw new Error("Error updating staff assignments in rooms");
-      //   }
-      // }
+        if (!updateStaffsInRooms) {
+          throw new Error("Error updating staff in rooms");
+        }
+      }
 
       return respond(c, "Hotel zone updated successfully", false, 200, {
         _id: updatedZone._id,

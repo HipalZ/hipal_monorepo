@@ -7,5 +7,6 @@ export * from "./roomChat";
 export * from "./rooms";
 export * from "./roomSession";
 export * from "./service";
+export * from "./staffLevel";
 export * from "./staffRole";
 export * from "./zones";

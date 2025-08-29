@@ -1,7 +1,8 @@
-import { HotelStaffRole, User } from "@hi/db-models";
+import { HotelRoom, HotelStaffRole, User } from "@hi/db-models";
 import {
   type AddHotelStaffType,
   addHotelStaff,
+  deleteHotelStaff,
   editHotelStaff,
   hotelStaffRole,
   roles,
@@ -56,7 +57,7 @@ const staffRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.query();
       const hotelStaff = await User.find({
-        customRole: { $elemMatch: { businessId } },
+        customRole: { $elemMatch: { businessId, isDeleted: false } },
       }).select(
         "-password -__v -createdAt -updatedAt -email -role -isDeleted ",
       );
@@ -103,6 +104,7 @@ const staffRouter = new Hono()
 
       const existingStaff = await User.findOne({
         customRole: { $elemMatch: { businessId } },
+        phone,
       });
 
       const customRole = {
@@ -114,7 +116,6 @@ const staffRouter = new Hono()
         serviceIds: serviceIds ?? [],
       };
       const hashPass = await hashPassword(password ?? "6344");
-      console.log();
 
       if (existingStaff) {
         const updatedStaff = await User.findOneAndUpdate(
@@ -123,6 +124,8 @@ const staffRouter = new Hono()
           },
           {
             $addToSet: { customRole },
+            name: name ?? existingStaff.name,
+
             password: hashPass,
           },
           { new: true, session, upsert: true },
@@ -212,6 +215,60 @@ const staffRouter = new Hono()
         200,
         updatedStaff,
       );
+    });
+  })
+
+  .delete("/delete_staff", zValidator("json", deleteHotelStaff), async (c) => {
+    //@ts-ignore
+    return runInTransaction(async (session) => {
+      const requestData = await c.req.json();
+      const { staffId, businessId } = requestData;
+
+      const staff = await User.findById(staffId).lean();
+
+      if (!staff) {
+        return respond(c, "Staff not found", true, 404, {});
+      }
+
+      const customRoleIndex = staff.customRole.findIndex(
+        (r) => r.businessId.toString() === businessId,
+      );
+
+      if (customRoleIndex === -1) {
+        return respond(
+          c,
+          "Business role not found for this staff",
+          true,
+          404,
+          {},
+        );
+      }
+
+      const updatedCustomRole = [...staff.customRole];
+      updatedCustomRole[customRoleIndex] = {
+        ...updatedCustomRole[customRoleIndex],
+        isDeleted: true,
+      };
+
+      const updatedStaff = await User.findByIdAndUpdate(
+        staffId,
+        { customRole: updatedCustomRole },
+        { new: true, session },
+      );
+
+      if (!updatedStaff) {
+        return respond(c, "Error deleting staff role", true, 500, {});
+      }
+
+      await HotelRoom.updateMany(
+        { staffIds: staffId },
+        { $pull: { staffIds: staffId } },
+        { session },
+      );
+
+      return respond(c, "Staff role deleted successfully", false, 200, {
+        _id: staffId,
+      });
     });
   });
 

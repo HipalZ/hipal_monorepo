@@ -6,5 +6,6 @@ export * from "./hotelRoomType";
 export * from "./roomChat";
 export * from "./rooms";
 export * from "./service";
+export * from "./staffLevel";
 export * from "./staffRole";
 export * from "./zones";
