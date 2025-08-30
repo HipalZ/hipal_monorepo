@@ -693,6 +693,47 @@ const hotelAlertRouter = new Hono()
     },
   )
 
+  .get(
+    "/staff_alert_report",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(24).max(24),
+        from: z.string(),
+        to: z.string(),
+      }),
+    ),
+    async (c) => {
+      const { businessId, from, to } = c.req.query();
+      const fromDate = Number(from);
+      const toDate = Number(to);
+
+      if (fromDate > toDate) {
+        return respond(c, "Invalid date range", true, 400, {});
+      }
+
+      const alerts = await HotelAlert.find({
+        businessId,
+        date: { $gte: fromDate, $lte: toDate },
+      })
+
+        .populate({
+          path: "acceptedBy",
+          select: "name phone",
+        })
+        .populate({
+          path: "deliveredBy",
+          select: "name phone",
+        })
+        .populate({
+          path: "rejectedBy",
+          select: "name phone",
+        });
+
+      return respond(c, "Alerts fetched successfully", false, 200, alerts);
+    },
+  )
+
   .post(
     "/fetch_room_complain",
     zValidator(
