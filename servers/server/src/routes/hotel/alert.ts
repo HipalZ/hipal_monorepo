@@ -956,7 +956,7 @@ const hotelAlertRouter = new Hono()
                       },
                       {
                         type: "text",
-                        text: ``,
+                        text: `☝️`,
                       },
                     ],
                   },
