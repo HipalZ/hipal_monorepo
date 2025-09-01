@@ -701,13 +701,17 @@ const hotelAlertRouter = new Hono()
         businessId: z.string().min(24).max(24),
         from: z.string(),
         to: z.string(),
+        staffId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
-      const { businessId, from, to } = c.req.query();
+      const { businessId, from, to, staffId } = c.req.query();
       const fromDate = Number(from);
       const toDate = Number(to);
 
+      if (Number.isNaN(fromDate) || Number.isNaN(toDate)) {
+        return respond(c, "Invalid dates", true, 400, {});
+      }
       if (fromDate > toDate) {
         return respond(c, "Invalid date range", true, 400, {});
       }
@@ -715,22 +719,211 @@ const hotelAlertRouter = new Hono()
       const alerts = await HotelAlert.find({
         businessId,
         date: { $gte: fromDate, $lte: toDate },
+        ...(staffId ? { acceptedBy: staffId } : {}),
       })
-
+        .populate({ path: "acceptedBy", select: "name phone" })
+        .populate({ path: "deliveredBy", select: "name phone" })
         .populate({
-          path: "acceptedBy",
-          select: "name phone",
+          path: "serviceIds",
+          select: "name avgDeliveryTime avgAcceptanceTime",
         })
-        .populate({
-          path: "deliveredBy",
-          select: "name phone",
-        })
-        .populate({
-          path: "rejectedBy",
-          select: "name phone",
-        });
+        .lean();
 
-      return respond(c, "Alerts fetched successfully", false, 200, alerts);
+      // --- helpers ---
+      const getServiceAverages = (serviceIds: HotelServiceType[] = []) => {
+        if (!serviceIds.length) return { avgAccept: 0, avgDeliver: 0 };
+        let aSum = 0,
+          dSum = 0,
+          n = 0;
+        for (const s of serviceIds) {
+          aSum += Number(s?.avgAcceptanceTime ?? 0);
+          dSum += Number(s?.avgDeliveryTime ?? 0);
+          n += 1;
+        }
+        return {
+          avgAccept: n ? aSum / n : 0,
+          avgDeliver: n ? dSum / n : 0,
+        };
+      };
+
+      type Totals = {
+        staffId: string;
+        staffName: string;
+        staffPhone?: string;
+        acceptOnTime: number;
+        acceptTotal: number;
+        deliverOnTime: number;
+        deliverTotal: number;
+        alertIds: Set<string>;
+      };
+      const byStaff: Record<string, Totals> = {};
+
+      const ensureStaff = (staff: any) => {
+        if (!staff || !staff._id) return null;
+        const id = String(staff._id);
+        if (!byStaff[id]) {
+          byStaff[id] = {
+            staffId: id,
+            staffName: staff.name || "Unknown",
+            staffPhone: staff.phone,
+            acceptOnTime: 0,
+            acceptTotal: 0,
+            deliverOnTime: 0,
+            deliverTotal: 0,
+            alertIds: new Set<string>(),
+          };
+        }
+        return byStaff[id];
+      };
+
+      // --- GLOBAL AGGREGATES ---
+      let gAcceptOnTime = 0,
+        gAcceptTotal = 0;
+      let gAcceptActualSum = 0,
+        gAcceptSLASum = 0,
+        gAcceptCount = 0;
+
+      let gDeliverOnTime = 0,
+        gDeliverTotal = 0;
+      let gDeliverActualSum = 0,
+        gDeliverSLASum = 0,
+        gDeliverCount = 0;
+
+      for (const a of alerts) {
+        const createdAt = Number(a?.createdAt);
+        const acceptedAt = Number(a?.acceptedAt);
+        const deliveredAt = Number(a?.deliveredAt);
+        const { avgAccept, avgDeliver } = getServiceAverages(a?.serviceIds);
+
+        // Acceptance (credited to acceptedBy)
+        if (
+          a?.acceptedBy &&
+          Number.isFinite(createdAt) &&
+          Number.isFinite(acceptedAt)
+        ) {
+          const s = ensureStaff(a.acceptedBy);
+          const actualAcceptMin = Math.ceil((acceptedAt - createdAt) / 60000);
+
+          if (s) {
+            s.acceptTotal += 1;
+            s.alertIds.add(String(a._id));
+            if (avgAccept === 0 || actualAcceptMin <= avgAccept)
+              s.acceptOnTime += 1;
+          }
+
+          gAcceptTotal += 1;
+          if (avgAccept === 0 || actualAcceptMin <= avgAccept)
+            gAcceptOnTime += 1;
+
+          if (avgAccept > 0 && Number.isFinite(actualAcceptMin)) {
+            gAcceptActualSum += actualAcceptMin;
+            gAcceptSLASum += avgAccept;
+            gAcceptCount += 1;
+          }
+        }
+
+        // Delivery (credited to deliveredBy)
+        if (
+          a?.deliveredBy &&
+          Number.isFinite(acceptedAt) &&
+          Number.isFinite(deliveredAt)
+        ) {
+          const s = ensureStaff(a.deliveredBy);
+          const actualDeliverMin = Math.ceil(
+            (deliveredAt - acceptedAt) / 60000,
+          );
+
+          if (s) {
+            s.deliverTotal += 1;
+            s.alertIds.add(String(a._id));
+            if (avgDeliver === 0 || actualDeliverMin <= avgDeliver)
+              s.deliverOnTime += 1;
+          }
+
+          gDeliverTotal += 1;
+          if (avgDeliver === 0 || actualDeliverMin <= avgDeliver)
+            gDeliverOnTime += 1;
+
+          if (avgDeliver > 0 && Number.isFinite(actualDeliverMin)) {
+            gDeliverActualSum += actualDeliverMin;
+            gDeliverSLASum += avgDeliver;
+            gDeliverCount += 1;
+          }
+        }
+      }
+
+      // --- per-staff rows ---
+      const report = Object.values(byStaff).map((s) => {
+        const acceptStr = `${s.acceptOnTime}/${s.acceptTotal || 0}`;
+        const deliverStr = `${s.deliverOnTime}/${s.deliverTotal || 0}`;
+        const onTimeTotal = s.acceptOnTime + s.deliverOnTime;
+        const total = s.acceptTotal + s.deliverTotal;
+        const rate = total ? Math.round((onTimeTotal / total) * 100) : 0;
+        const overAllPerformance = rate >= 80 ? "early" : "late";
+        return {
+          staffName: s.staffName,
+          acceptOnTime: acceptStr,
+          completeOnTime: deliverStr,
+          overAllPerformance,
+          rate,
+          serviceCount: s.alertIds.size,
+        };
+      });
+
+      // --- overall block ---
+      const grandOnTime = gAcceptOnTime + gDeliverOnTime; // on-time events
+      const grandTotal = gAcceptTotal + gDeliverTotal; // all events
+      const grandLate = Math.max(grandTotal - grandOnTime, 0);
+
+      const totalActualCount = gAcceptCount + gDeliverCount;
+      const totalActualAvg =
+        totalActualCount > 0
+          ? (gAcceptActualSum + gDeliverActualSum) / totalActualCount
+          : 0;
+      const totalSLAAvg =
+        totalActualCount > 0
+          ? (gAcceptSLASum + gDeliverSLASum) / totalActualCount
+          : 0;
+
+      const overAll = {
+        totalOnTime: `${grandOnTime}/${grandTotal}`,
+        totalAvgCompletionVsSLA: `${totalActualAvg.toFixed(
+          1,
+        )} mins vs ${totalSLAAvg.toFixed(1)} mins`,
+        accept: {
+          onTime: `${gAcceptOnTime}/${gAcceptTotal}`,
+          avgActualVsSLA:
+            gAcceptCount > 0
+              ? `${(gAcceptActualSum / gAcceptCount).toFixed(1)} mins vs ${(
+                  gAcceptSLASum / gAcceptCount
+                ).toFixed(1)} mins`
+              : "0.0 mins vs 0.0 mins",
+        },
+        deliver: {
+          onTime: `${gDeliverOnTime}/${gDeliverTotal}`,
+          avgActualVsSLA:
+            gDeliverCount > 0
+              ? `${(gDeliverActualSum / gDeliverCount).toFixed(1)} mins vs ${(
+                  gDeliverSLASum / gDeliverCount
+                ).toFixed(1)} mins`
+              : "0.0 mins vs 0.0 mins",
+        },
+      };
+
+      // --- plot values for charts ---
+      const plotValue = {
+        totalCompleteCount: grandOnTime, // on-time events across accept+deliver
+        totalLateCount: grandLate, // late events across accept+deliver
+      };
+
+      // final payload
+      const result = {
+        overAll,
+        report,
+        plotValue, // <- add this
+      };
+
+      return respond(c, "Staff alert report generated", false, 200, result);
     },
   )
 
