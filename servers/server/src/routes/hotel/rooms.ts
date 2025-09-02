@@ -1130,12 +1130,11 @@ const roomRouter = new Hono()
     "/bulk",
     zValidator(
       "json",
-
       z.object({
         rooms: z.array(
           z.object({
-            roomIds: z.array(z.string().min(24).max(24)),
-            staffIds: z.array(z.string().min(24).max(24)),
+            roomIds: z.array(z.string().min(24).max(24)).default([]),
+            staffIds: z.array(z.string().min(24).max(24)).default([]),
             removeRoomIds: z.array(z.string().min(24).max(24)).default([]),
             removeStaffIds: z.array(z.string().min(24).max(24)).default([]),
           }),
@@ -1145,31 +1144,31 @@ const roomRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
-        const requestData = await c.req.json();
-        const { rooms } = requestData;
+        const { rooms } = await c.req.json();
 
-        for (const { roomIds, staffIds } of rooms) {
-          await HotelRoom.updateMany(
-            {
-              _id: { $in: roomIds },
-            },
-            {
-              $addToSet: { staffIds: { $each: staffIds } },
-            },
-            { session },
-          );
-        }
+        for (const part of rooms) {
+          const {
+            roomIds = [],
+            staffIds = [],
+            removeRoomIds = [],
+            removeStaffIds = [],
+          } = part;
 
-        for (const { removeRoomIds, removeStaffIds } of rooms) {
-          await HotelRoom.updateMany(
-            {
-              _id: { $in: removeRoomIds },
-            },
-            {
-              $pull: { staffIds: { $in: removeStaffIds } },
-            },
-            { session },
-          );
+          if (roomIds.length && staffIds.length) {
+            await HotelRoom.updateMany(
+              { _id: { $in: roomIds } },
+              { $addToSet: { staffIds: { $each: staffIds } } },
+              { session },
+            );
+          }
+
+          if (removeRoomIds.length && removeStaffIds.length) {
+            await HotelRoom.updateMany(
+              { _id: { $in: removeRoomIds } },
+              { $pull: { staffIds: { $in: removeStaffIds } } },
+              { session },
+            );
+          }
         }
 
         return respond(c, "Bulk update successful", false, 200, {});

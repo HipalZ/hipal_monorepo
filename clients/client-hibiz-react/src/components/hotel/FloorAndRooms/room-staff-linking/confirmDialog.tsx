@@ -30,7 +30,6 @@ export function ConfirmDialog({
             <AlertCircle className="h-5 w-5 text-amber-500" /> Confirm Bulk Add
           </DialogTitle>
           <DialogDescription>
-            You are about to add
             <div className="max-h-[60vh] overflow-auto space-y-4">
               {preview.length === 0 ? (
                 <p className="text-sm text-slate-600">No items to display.</p>
