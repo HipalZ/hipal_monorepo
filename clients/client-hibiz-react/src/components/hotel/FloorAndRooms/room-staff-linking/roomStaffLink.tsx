@@ -70,10 +70,6 @@ export function RoomStaffLink() {
   const baselineStaffRef = useRef<Set<string>>(new Set());
 
   const uniq = <T,>(arr: T[]) => Array.from(new Set(arr));
-  const diff = (oldArr: string[], newArr: string[]) => ({
-    removed: oldArr.filter((id) => !newArr.includes(id)),
-    added: newArr.filter((id) => !oldArr.includes(id)),
-  });
 
   // Preview (used for ADD flow UX)
   const [showPreview, setShowPreview] = useState(false);
