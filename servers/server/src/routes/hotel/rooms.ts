@@ -1136,41 +1136,40 @@ const roomRouter = new Hono()
           z.object({
             roomIds: z.array(z.string().min(24).max(24)),
             staffIds: z.array(z.string().min(24).max(24)),
+            removeRoomIds: z.array(z.string().min(24).max(24)).default([]),
+            removeStaffIds: z.array(z.string().min(24).max(24)).default([]),
           }),
         ),
-        action: z.enum(["ADD", "REMOVE"]),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
         const requestData = await c.req.json();
-        const { rooms, action } = requestData;
+        const { rooms } = requestData;
 
-        if (action === "ADD") {
-          for (const { roomIds, staffIds } of rooms) {
-            await HotelRoom.updateMany(
-              {
-                _id: { $in: roomIds },
-              },
-              {
-                $addToSet: { staffIds: { $each: staffIds } },
-              },
-              { session },
-            );
-          }
-        } else if (action === "REMOVE") {
-          for (const { roomIds, staffIds } of rooms) {
-            await HotelRoom.updateMany(
-              {
-                _id: { $in: roomIds },
-              },
-              {
-                $pull: { staffIds: { $in: staffIds } },
-              },
-              { session },
-            );
-          }
+        for (const { roomIds, staffIds } of rooms) {
+          await HotelRoom.updateMany(
+            {
+              _id: { $in: roomIds },
+            },
+            {
+              $addToSet: { staffIds: { $each: staffIds } },
+            },
+            { session },
+          );
+        }
+
+        for (const { removeRoomIds, removeStaffIds } of rooms) {
+          await HotelRoom.updateMany(
+            {
+              _id: { $in: removeRoomIds },
+            },
+            {
+              $pull: { staffIds: { $in: removeStaffIds } },
+            },
+            { session },
+          );
         }
 
         return respond(c, "Bulk update successful", false, 200, {});
