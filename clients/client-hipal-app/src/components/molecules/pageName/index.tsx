@@ -8,7 +8,7 @@ import Link from "next/link";
 
 function FooterComponent() {
   const onBoardBusiness = () => {
-    window.open("https://wa.me/+917386142525", "_blank");
+    window.open("https://wa.me/+917702605494", "_blank");
   };
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const customLink = useParams()?.businessId as string;
