@@ -1,4 +1,5 @@
 const IST_OFFSET = 5.5 * 60 * 60 * 1000; // IST = UTC+05:30
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 function istClockToUtcTs(
   year: number,
@@ -7,43 +8,33 @@ function istClockToUtcTs(
   hoursIST: number,
   minutesIST = 0,
 ): number {
-  // Create UTC timestamp from IST wall clock
+  // UTC instant that corresponds to an IST wall-clock time
   return Date.UTC(year, month0, day, hoursIST, minutesIST) - IST_OFFSET;
 }
 
-export function adjustFromToTimestamps(from: number, to: number) {
-  const base = typeof to === "number" ? to : from;
+export function adjustFromToTimestamps(from?: number, to?: number) {
+  const hasFrom = Number.isFinite(from);
+  const hasTo = Number.isFinite(to);
 
-  // Current IST
+  // If the caller passed a full custom range, don't touch it.
+  if (hasFrom && hasTo) {
+    return { adjustedFrom: from as number, adjustedTo: to as number };
+  }
+
+  // Otherwise, auto-window around "today" in IST
   const nowIST = new Date(Date.now() + IST_OFFSET);
   const Y = nowIST.getUTCFullYear();
   const M = nowIST.getUTCMonth();
   const D = nowIST.getUTCDate();
 
-  // Today 4am IST
   const today4amUTC = istClockToUtcTs(Y, M, D, 4, 0);
+  const tomorrow4amUTC = today4amUTC + DAY_MS;
+  const yesterday4amUTC = today4amUTC - DAY_MS;
 
-  // Tomorrow 4am IST
-  const tomorrow4amUTC = today4amUTC + 24 * 60 * 60 * 1000;
-
-  // Yesterday 4am IST
-  const yesterday4amUTC = today4amUTC - 24 * 60 * 60 * 1000;
-
-  // Is base date "today" in IST?
-  const baseIST = new Date(base + IST_OFFSET);
-  const isToday = nowIST.toDateString() === baseIST.toDateString();
-
-  if (isToday) {
-    if (Date.now() + IST_OFFSET < today4amUTC + IST_OFFSET) {
-      // Before 4 AM IST → yesterday@4am → today@4am
-      return { adjustedFrom: yesterday4amUTC, adjustedTo: today4amUTC };
-      // biome-ignore lint/style/noUselessElse: <explanation>
-    } else {
-      // After 4 AM IST → today@4am → tomorrow@4am
-      return { adjustedFrom: today4amUTC, adjustedTo: tomorrow4amUTC };
-    }
+  // Before 4 AM IST → use [yesterday@4 → today@4]
+  if (Date.now() < today4amUTC) {
+    return { adjustedFrom: yesterday4amUTC, adjustedTo: today4amUTC };
   }
-
-  // Not today → just return original range
-  return { adjustedFrom: from, adjustedTo: to };
+  // After 4 AM IST → use [today@4 → tomorrow@4]
+  return { adjustedFrom: today4amUTC, adjustedTo: tomorrow4amUTC };
 }
