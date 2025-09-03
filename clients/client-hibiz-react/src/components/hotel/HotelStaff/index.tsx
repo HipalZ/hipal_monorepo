@@ -3,9 +3,11 @@ import {
   type IHotel_Roll,
   type IHotelRoll,
   type IHotelStaff,
+  useDeleteStaffFromHotel,
   useGetAllHotelStaff,
 } from "@/hooks/useHotelStaff";
 import {
+  BadgeAlert,
   Edit,
   MoreVertical,
   Phone,
@@ -27,6 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import useStaffStore, {
   type IStaffMember,
 } from "@/components/store/hotel/useHotelStaff";
+import { useCallback } from "react";
 
 // Role badge color mapping
 const roleBadgeColors: Record<string, string> = {
@@ -61,34 +64,40 @@ const getBadgeColor = (role: string) => {
 const HotelStaffMain = () => {
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const { staffLoading, staffData } = useGetAllHotelStaff(businessId as string);
-  const {
-    setStaffModal,
-    initializeFormForEdit,
-    setEditRoleStr,
-    setEditServiceIds,
-  } = useStaffStore((state) => ({
-    setStaffModal: state.setStaffModal,
-    initializeFormForEdit: state.initializeFormForEdit,
-    setEditServiceIds: state.setEditServiceIds,
-    setEditRoleStr: state.setEditRoleStr,
-  }));
+  const { deleteStaffLoader, deleteStaff } = useDeleteStaffFromHotel();
+  const setStaffModal = useStaffStore((s) => s.setStaffModal);
+  const initializeFormForEdit = useStaffStore((s) => s.initializeFormForEdit);
+  const setEditRoleStr = useStaffStore((s) => s.setEditRoleStr);
+  const setEditServiceIds = useStaffStore((s) => s.setEditServiceIds);
 
-  const handleEditStaff = (staff: IStaffMember) => {
-    initializeFormForEdit(staff);
-    const role = staff?.customRole?.[0]?.role as IHotelRoll;
-    setEditRoleStr(role);
-    const serviceIds = staff?.customRole?.[0]?.serviceIds || [];
-    if (serviceIds?.length > 0) {
-      setEditServiceIds(serviceIds);
-    }
+  const handleEditStaff = useCallback(
+    (staff: IStaffMember) => {
+      initializeFormForEdit(staff);
+      const role = staff?.customRole?.[0]?.role as IHotelRoll;
+      setEditRoleStr(role);
+      const serviceIds = staff?.customRole?.[0]?.serviceIds || [];
+      if (serviceIds?.length > 0) {
+        setEditServiceIds(serviceIds);
+      }
+      setStaffModal(true);
+    },
+    [initializeFormForEdit, setEditRoleStr, setEditServiceIds, setStaffModal],
+  );
+
+  const handleDeleteStaff = useCallback(
+    (id: string) => {
+      deleteStaff(id);
+    },
+    [deleteStaff],
+  );
+
+  const handleAddStaff = useCallback(() => {
     setStaffModal(true);
-  };
+  }, [setStaffModal]);
 
-  const handleDeleteStaff = (staff: IStaffMember) => {};
-
-  const handleAddStaff = () => {
-    setStaffModal(true);
-  };
+  const escalationAssign = useCallback((staff:IStaffMember) => {
+    console.log(staff);
+  }, []);
 
   const renderSkeletons = () => {
     return Array(3)
@@ -141,7 +150,7 @@ const HotelStaffMain = () => {
         </Badge>
       </div>
 
-      {staffLoading ? (
+      {staffLoading || deleteStaffLoader ? (
         renderSkeletons()
       ) : staffData?.length ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -182,6 +191,13 @@ const HotelStaffMain = () => {
                         >
                           <Trash className="w-4 h-4 mr-2" />
                           Delete
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteStaff(staff?._id)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <BadgeAlert className="w-4 h-4 mr-2" />
+                          Assign to Escalation
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

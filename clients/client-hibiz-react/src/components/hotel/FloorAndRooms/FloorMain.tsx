@@ -11,7 +11,6 @@ import useFloorFormStore, {
 import AddFloor from "./AddFloor";
 import { useRoomStore } from "@/components/store/hotel/useRoomStore";
 
-// Define the Floor interface
 interface Floor {
   _id: string;
   businessId: string;
@@ -67,7 +66,7 @@ const MemoFloorMain = () => {
 
   const handleAddFloor = useCallback(() => {
     setAddFloorModal(true);
-  }, [addFloorModal]);
+  }, [setAddFloorModal]);
 
   const handleManageRooms = useCallback(
     (floorId: string) => {
@@ -86,6 +85,7 @@ const MemoFloorMain = () => {
       setEditMode,
       setEditFloorId,
       setAddFloorModal,
+      setCurrentStep,
       roomData,
     ],
   );

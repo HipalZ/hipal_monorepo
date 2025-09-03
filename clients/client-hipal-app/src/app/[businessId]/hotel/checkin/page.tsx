@@ -126,6 +126,7 @@ const page = async ({
   const room =
     typeof searchParams.room === "string" ? searchParams.room : "hipalz";
   const userId = typeof searchParams.id === "string" ? searchParams.id : "";
+  const sessionId = typeof searchParams.sessionId === "string" ? searchParams.sessionId : "";
   const themeData = await getThemeSettings(businessData?.businessId);
   return (
     <HotelBackgroundContainer overlayOpacity={50}>
@@ -146,6 +147,7 @@ const page = async ({
           businessId={businessData.businessId}
           customLink={params.businessId}
           userID={userId || ""}
+          sessionId={sessionId || ""}
         />
 
         <ChatHotel

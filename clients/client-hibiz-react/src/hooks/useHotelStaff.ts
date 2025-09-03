@@ -6,6 +6,7 @@ import { useError } from "@/components/store/useError";
 import { apiRpc } from "@hi/common";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
+import { useParams } from "react-router-dom";
 
 export type IHotelRoll =
   | ""
@@ -242,4 +243,44 @@ export const useUpdateStaffToHotel = () => {
     });
 
   return { updateStaffLoader, updateStaff };
+};
+
+export const useDeleteStaffFromHotel = () => {
+  const { setError, setOpenErrorModal } = useError();
+  const queryClient = useQueryClient();
+  const businessId = useParams().hotelId;
+  const { isPending: deleteStaffLoader, mutateAsync: deleteStaff } =
+    useMutation({
+      mutationFn: async (staffId: string) => {
+        const response = await apiRpc.hotel.staff.delete_staff.$delete({
+          json:{
+            staffId,
+            businessId: businessId as string
+          }
+        })
+        return response;
+      },
+      onSuccess: (data) => {
+        if (data.status === 400 || data.status === 401) {
+          toast.error("Failed to delete staff");
+        }
+        if (data.status === 409) {
+          setOpenErrorModal(true);
+          setError("Staff already exists");
+          return toast.error("Staff already exists");
+        }
+        if (data.status === 200 || data.status === 201) {
+          queryClient.invalidateQueries({
+            queryKey: ["getAllHotelStaff", businessId],
+          });
+          toast.success("Staff deleted successfully");
+          return;
+        }
+      },
+      onError: (data) => {
+        console.log(data);
+      },
+    });
+
+  return { deleteStaffLoader, deleteStaff };
 };
