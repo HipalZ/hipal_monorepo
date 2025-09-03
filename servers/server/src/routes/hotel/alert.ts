@@ -1063,7 +1063,7 @@ const hotelAlertRouter = new Hono()
                       },
                       {
                         type: "text",
-                        text: ``,
+                        text: `☝️`,
                       },
                     ],
                   },
@@ -1076,6 +1076,8 @@ const hotelAlertRouter = new Hono()
               },
             },
           );
+
+          console.log("res", res);
 
           if (res.status !== 200) {
             throw new Error("Error sending message");
