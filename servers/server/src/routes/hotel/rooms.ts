@@ -267,13 +267,23 @@ const roomRouter = new Hono()
           $lte: toDate,
         },
       })
+        .select("userId roomId alertId reviewRating description date staffs")
+        .sort({ date: -1 })
         .populate({
           path: "roomId",
-          select: "name",
+          select: "name -_id",
         })
         .populate({
           path: "userId",
-          select: "name phone",
+          select: "name phone -_id",
+        })
+        .populate({
+          path: "alertId",
+          select: "serviceIds -_id",
+          populate: {
+            path: "serviceIds",
+            select: "name -_id",
+          },
         });
 
       return respond(
@@ -1064,6 +1074,7 @@ const roomRouter = new Hono()
           staffs: [userId],
           date: Date.now(),
           roomId: roomChat.roomId,
+          alertId: roomChat.alertId,
         });
 
         if (!createReview) {

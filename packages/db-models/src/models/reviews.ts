@@ -68,6 +68,11 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
       ref: "hotelroom",
       default: null,
     },
+    alertId: {
+      type: ObjectId,
+      ref: "hotelalert",
+      default: null,
+    },
   },
   {
     timestamps: true,
