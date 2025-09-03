@@ -135,6 +135,35 @@ const hotelStaffLevelRouter = new Hono()
         });
       });
     },
+  )
+  .post(
+    "/remove_staff",
+    zValidator(
+      "json",
+      z.object({
+        staffId: z.string().min(24).max(24),
+        levelId: z.string().min(24).max(24),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const { staffId, levelId } = await c.req.json();
+        const level = await HotelStaffLevel.findById(levelId);
+
+        if (!level) {
+          return respond(c, "Staff level does not exist", true, 404);
+        }
+
+        await HotelStaffLevel.findByIdAndUpdate(
+          levelId,
+          { $pull: { staffIds: staffId } },
+          { session },
+        );
+
+        return respond(c, "Staff removed from level successfully", false, 200);
+      });
+    },
   );
 
 export default hotelStaffLevelRouter;

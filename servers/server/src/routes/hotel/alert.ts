@@ -719,7 +719,16 @@ const hotelAlertRouter = new Hono()
       const alerts = await HotelAlert.find({
         businessId,
         date: { $gte: fromDate, $lte: toDate },
-        ...(staffId ? { acceptedBy: staffId } : {}),
+        ...(staffId
+          ? {
+              $or: [
+                {
+                  acceptedBy: staffId,
+                },
+                { deliveredBy: staffId },
+              ],
+            }
+          : {}),
       })
         .populate({ path: "acceptedBy", select: "name phone" })
         .populate({ path: "deliveredBy", select: "name phone" })
@@ -729,7 +738,6 @@ const hotelAlertRouter = new Hono()
         })
         .lean();
 
-      // --- helpers ---
       const getServiceAverages = (serviceIds: HotelServiceType[] = []) => {
         if (!serviceIds.length) return { avgAccept: 0, avgDeliver: 0 };
         let aSum = 0,
@@ -776,7 +784,6 @@ const hotelAlertRouter = new Hono()
         return byStaff[id];
       };
 
-      // --- GLOBAL AGGREGATES ---
       let gAcceptOnTime = 0,
         gAcceptTotal = 0;
       let gAcceptActualSum = 0,
@@ -852,25 +859,26 @@ const hotelAlertRouter = new Hono()
         }
       }
 
-      // --- per-staff rows ---
       const report = Object.values(byStaff).map((s) => {
         const acceptStr = `${s.acceptOnTime}/${s.acceptTotal || 0}`;
         const deliverStr = `${s.deliverOnTime}/${s.deliverTotal || 0}`;
         const onTimeTotal = s.acceptOnTime + s.deliverOnTime;
         const total = s.acceptTotal + s.deliverTotal;
-        const rate = total ? Math.round((onTimeTotal / total) * 100) : 0;
-        const overAllPerformance = rate >= 80 ? "early" : "late";
+        const efficiencyPercentage = total
+          ? Math.round((onTimeTotal / total) * 100)
+          : 0;
+        const overAllPerformance =
+          efficiencyPercentage >= 80 ? "on-time" : "late";
         return {
           staffName: s.staffName,
           acceptOnTime: acceptStr,
           completeOnTime: deliverStr,
           overAllPerformance,
-          rate,
+          efficiencyPercentage,
           serviceCount: s.alertIds.size,
         };
       });
 
-      // --- overall block ---
       const grandOnTime = gAcceptOnTime + gDeliverOnTime; // on-time events
       const grandTotal = gAcceptTotal + gDeliverTotal; // all events
       const grandLate = Math.max(grandTotal - grandOnTime, 0);
@@ -890,37 +898,17 @@ const hotelAlertRouter = new Hono()
         totalAvgCompletionVsSLA: `${totalActualAvg.toFixed(
           1,
         )} mins vs ${totalSLAAvg.toFixed(1)} mins`,
-        accept: {
-          onTime: `${gAcceptOnTime}/${gAcceptTotal}`,
-          avgActualVsSLA:
-            gAcceptCount > 0
-              ? `${(gAcceptActualSum / gAcceptCount).toFixed(1)} mins vs ${(
-                  gAcceptSLASum / gAcceptCount
-                ).toFixed(1)} mins`
-              : "0.0 mins vs 0.0 mins",
-        },
-        deliver: {
-          onTime: `${gDeliverOnTime}/${gDeliverTotal}`,
-          avgActualVsSLA:
-            gDeliverCount > 0
-              ? `${(gDeliverActualSum / gDeliverCount).toFixed(1)} mins vs ${(
-                  gDeliverSLASum / gDeliverCount
-                ).toFixed(1)} mins`
-              : "0.0 mins vs 0.0 mins",
-        },
       };
 
-      // --- plot values for charts ---
       const plotValue = {
-        totalCompleteCount: grandOnTime, // on-time events across accept+deliver
-        totalLateCount: grandLate, // late events across accept+deliver
+        totalCompleteCount: grandOnTime,
+        totalLateCount: grandLate,
       };
 
-      // final payload
       const result = {
         overAll,
         report,
-        plotValue, // <- add this
+        plotValue,
       };
 
       return respond(c, "Staff alert report generated", false, 200, result);

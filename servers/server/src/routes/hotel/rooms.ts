@@ -195,7 +195,7 @@ const roomRouter = new Hono()
   )
 
   .get(
-    "/fetch_hotel_analytics",
+    "/hotel_user_analytics",
     zValidator(
       "query",
       z.object({
@@ -241,7 +241,7 @@ const roomRouter = new Hono()
   )
 
   .get(
-    "/fetch_hotel_reviews",
+    "/hotel_user_reviews",
     zValidator(
       "query",
       z.object({

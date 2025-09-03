@@ -186,7 +186,7 @@ export function RoomStaffLink() {
           ? { rooms: [{ roomIds: selRooms, staffIds: selStaff }] }
           : {
               rooms: [
-                { removeRoomIds: removedRooms, removeStaffIds: removedStaff },
+                { removeRoomIds: selRooms, removeStaffIds: removedStaff },
               ],
             };
 
