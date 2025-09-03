@@ -141,14 +141,14 @@ const hotelStaffLevelRouter = new Hono()
     zValidator(
       "json",
       z.object({
-        staffId: z.string().min(24).max(24),
+        staffIds: z.array(z.string().min(24).max(24)),
         levelId: z.string().min(24).max(24),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
-        const { staffId, levelId } = await c.req.json();
+        const { staffIds, levelId } = await c.req.json();
         const level = await HotelStaffLevel.findById(levelId);
 
         if (!level) {
@@ -157,7 +157,9 @@ const hotelStaffLevelRouter = new Hono()
 
         await HotelStaffLevel.findByIdAndUpdate(
           levelId,
-          { $pull: { staffIds: staffId } },
+          {
+            $pull: { staffIds: { $in: staffIds } },
+          },
           { session },
         );
 
