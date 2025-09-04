@@ -3,7 +3,6 @@ import { getUserInfo } from "@/components/hooks/useAutoLogin";
 import { useState } from "react";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { useLogin } from "@/components/store/useLogin";
-import { useQuery } from "@tanstack/react-query";
 
 const AutoLogin = ({ userID }: { userID: string }) => {
   const [error, setError] = useState<string | null>(null);

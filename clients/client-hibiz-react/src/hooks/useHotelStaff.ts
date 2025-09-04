@@ -93,9 +93,9 @@ export const useGetAllHotelStaffRoles = (businessId: string) => {
     data: hotelRolesData,
     refetch,
   } = useQuery({
-    queryKey: ["getAllHotelStaffRoles", businessId || "default"], // Use a fallback key
+    queryKey: ["getAllHotelStaffRoles", businessId || "default"], 
     queryFn: getHotelRoles,
-    enabled: !!businessId, // Ensure the query runs only when businessId is valid
+    enabled: !!businessId, 
   });
 
   return { isLoading, hotelRolesData, refetch };
@@ -253,11 +253,11 @@ export const useDeleteStaffFromHotel = () => {
     useMutation({
       mutationFn: async (staffId: string) => {
         const response = await apiRpc.hotel.staff.delete_staff.$delete({
-          json:{
+          json: {
             staffId,
-            businessId: businessId as string
-          }
-        })
+            businessId: businessId as string,
+          },
+        });
         return response;
       },
       onSuccess: (data) => {
@@ -283,4 +283,167 @@ export const useDeleteStaffFromHotel = () => {
     });
 
   return { deleteStaffLoader, deleteStaff };
+};
+
+export type Levels = 1 | 2 | 3;
+
+export interface IStaffHotelLevel {
+  _id: string;
+  name: string;
+  phone: string;
+}
+export interface IHotelStaffLevel {
+  _id: string;
+  level: Levels;
+  nextLevelTime: number;
+  staffIds: IStaffHotelLevel[];
+  businessId: string;
+}
+
+export const useFetchLevels = () => {
+  const businessId = useParams<string>().hotelId;
+  if (!businessId) return { gettingLevels: false, levelsData: [] };
+  const gettingLevelsData = async () => {
+    const response = await apiRpc.hotel.staff_level.fetch_levels.$get({
+      query: {
+        businessId: businessId || "",
+      },
+    });
+    const res = await response.json();
+    const levels = (res?.data as IHotelStaffLevel[]) || [];
+    return levels;
+  };
+
+  const { isLoading: gettingLevels, data: levelsData } = useQuery({
+    queryKey: ["getHotelStaffLevels", businessId],
+    queryFn: gettingLevelsData,
+    enabled: !!businessId,
+  });
+
+  return { gettingLevels, levelsData };
+};
+
+export interface IStaffAddingToLevelPayload {
+  staffIds: string[];
+  businessId: string;
+  level: Levels;
+  nextLevelTime: number;
+}
+
+export const useSaveStaffToLevel = () => {
+  const { setError, setOpenErrorModal } = useError();
+  const queryClient = useQueryClient();
+  const { isPending: saveStaffLoader, mutateAsync: saveStaff } = useMutation({
+    mutationFn: async (payload: IStaffAddingToLevelPayload) => {
+      const response = await apiRpc.hotel.staff_level.add_level.$post({
+        json: payload,
+      });
+      return response;
+    },
+    onSuccess: (data, variables) => {
+      if (data.status === 400 || data.status === 401) {
+        toast.error("Failed to add staff to level");
+      }
+      if (data.status === 409) {
+        setOpenErrorModal(true);
+        setError("Staff already exists");
+        return toast.error("Staff already exists");
+      }
+      if (data.status === 200 || data.status === 201) {
+        queryClient.invalidateQueries({
+          queryKey: ["getHotelStaffLevels", variables.businessId],
+        });
+        toast.success("Staff added to level successfully");
+        return;
+      }
+    },
+    onError: (data) => {
+      console.log(data);
+    },
+  });
+
+  return { saveStaffLoader, saveStaff };
+};
+
+interface IStaffRemoveFromLevel {
+  staffIds: string[];
+  levelId:string
+}
+
+export const useRemoveStaffFromLevel = () => {
+  const { setError, setOpenErrorModal } = useError();
+  const businessId = useParams<string>().hotelId;
+  const queryClient = useQueryClient();
+  const { isPending: removeStaffLoader, mutateAsync: removeStaff } = useMutation({
+    mutationFn: async (payload: IStaffRemoveFromLevel) => {
+      const response = await apiRpc.hotel.staff_level.remove_staff.$post({
+        json: payload,
+      });
+      return response;
+    },
+    onSuccess: (data) => {
+      if (data.status === 400 || data.status === 401) {
+        toast.error("Failed to remove staff from level");
+      }
+      if (data.status === 409) {
+        setOpenErrorModal(true);
+        setError("Staff already exists");
+        return toast.error("Staff already exists");
+      }
+      if (data.status === 200 || data.status === 201) {
+        queryClient.invalidateQueries({
+          queryKey: ["getHotelStaffLevels",businessId ],
+        });
+        toast.success("Staff removed from level successfully");
+        return;
+      }
+    },
+    onError: (data) => {
+      console.log(data);
+    },
+  });
+
+  return { removeStaffLoader, removeStaff };
+};
+
+export interface IStaffUpdateLevel { 
+  staffIds?: string[];
+  levelId: string;
+  nextLevelTime?: number;
+  businessId: string;
+}
+
+export const useUpdateStaffToHotelLevel = () => {
+  const { setError, setOpenErrorModal } = useError();
+  const queryClient = useQueryClient();
+  const { isPending: updateStaffLoader, mutateAsync: updateStaffToLevel } = useMutation({
+    mutationFn: async (payload: IStaffUpdateLevel) => {
+      const response = await apiRpc.hotel.staff_level.update_level.$put({
+        json: payload,
+      });
+      return response;
+    },
+    onSuccess: (data, variables) => {
+      if (data.status === 400 || data.status === 401) {
+        toast.error("Failed to update staff level");
+      }
+      if (data.status === 409) {
+        setOpenErrorModal(true);
+        setError("Staff already exists");
+        return toast.error("Staff already exists");
+      }
+      if (data.status === 200 || data.status === 201) {
+        queryClient.invalidateQueries({
+          queryKey: ["getHotelStaffLevels", variables.businessId],
+        });
+        toast.success("Staff level updated successfully");
+        return;
+      }
+    },
+    onError: (data) => {
+      console.log(data);
+    },
+  });
+
+  return { updateStaffLoader,  updateStaffToLevel };
 };
