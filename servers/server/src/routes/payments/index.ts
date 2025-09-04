@@ -3180,289 +3180,75 @@ const paymentsRouter = new Hono()
                 tableName: order.tableName,
               });
 
-              if (!tableSession) {
-                return respond(c, "Table session not found", true, 404, {});
-              }
-              const originBillIsSplit =
-                await checkOriginBillIsSplit(tableSession);
-              if (originBillIsSplit) {
-                const splitBillTableSessionData =
-                  await SplitBillTableSession.findById(order.variantId);
-                if (!splitBillTableSessionData) {
-                  return respond(
-                    c,
-                    "Split bill table session not found",
-                    true,
-                    404,
-                    {},
-                  );
+              if (isHavePos) {
+                if (!tableSession) {
+                  return respond(c, "Table session not found", true, 404, {});
                 }
-                if (tableSession.variantsCounts > 1) {
-                  const npcUser = await NpcUser.findById(npcUserId);
-                  let finalCashBack = 0;
-                  if (
-                    paymentMode?.name !== "complementary" &&
-                    paymentMode?.name !== "npc"
-                  ) {
-                    let cashBack = await calculatedCashbackCoins(
-                      order.businessId.toString(),
-                      Number(order.billValue),
-                      Number(order.claimedCoins),
-                      Number(order.couponDiscount),
-                      Number(order.discount),
+                const originBillIsSplit =
+                  await checkOriginBillIsSplit(tableSession);
+                if (originBillIsSplit) {
+                  const splitBillTableSessionData =
+                    await SplitBillTableSession.findById(order.variantId);
+                  if (!splitBillTableSessionData) {
+                    return respond(
+                      c,
+                      "Split bill table session not found",
+                      true,
+                      404,
+                      {},
                     );
-
-                    if (
-                      existingLoyalty?.loyaltyId &&
-                      order.claimedCoins > 0 &&
-                      order.userId.toString()
-                    ) {
-                      await removeCoins(
-                        Number(order?.claimedCoins),
-                        order.tableName,
-                        existingLoyalty?.loyaltyId?.toString() || "",
-                        order._id.toString(),
-                        order.userId.toString(),
-                        session,
-                      );
-                      if (order.cashbackAvailable === false) {
-                        cashBack = 0;
-                      }
-                    }
-
-                    if (existingLoyalty?.loyaltyId && order.userId.toString()) {
-                      finalCashBack = await addCoins(
-                        cashBack,
-                        order.userId.toString(),
-                        order._id.toString(),
-                        order.tableName || "",
-                        order.businessId.toString(),
-                        existingLoyalty?.loyaltyId.toString() || "",
-                        session,
-                      );
-                      if (order.cashbackAvailable === false) {
-                        cashBack = 0;
-                      }
-                    }
                   }
-                  let modifyTotal = 0;
-                  if (
-                    paymentMode?.name === "npc" ||
-                    paymentMode?.name === "dues" ||
-                    paymentMode?.name === "complementary"
-                  ) {
-                    modifyTotal = 0;
-                  } else {
-                    modifyTotal = order.total;
+                  if (tableSession.variantsCounts > 1) {
+                    const npcUser = await NpcUser.findById(npcUserId);
+                    let finalCashBack = 0;
+                    if (
+                      paymentMode?.name !== "complementary" &&
+                      paymentMode?.name !== "npc"
+                    ) {
+                      let cashBack = await calculatedCashbackCoins(
+                        order.businessId.toString(),
+                        Number(order.billValue),
+                        Number(order.claimedCoins),
+                        Number(order.couponDiscount),
+                        Number(order.discount),
+                      );
 
-                    if (settleModes.length > 1) {
-                      for (const settle of settleModes) {
-                        if (settle.name === "complementary") {
-                          modifyTotal -= settle.amount ?? 0;
+                      if (
+                        existingLoyalty?.loyaltyId &&
+                        order.claimedCoins > 0 &&
+                        order.userId.toString()
+                      ) {
+                        await removeCoins(
+                          Number(order?.claimedCoins),
+                          order.tableName,
+                          existingLoyalty?.loyaltyId?.toString() || "",
+                          order._id.toString(),
+                          order.userId.toString(),
+                          session,
+                        );
+                        if (order.cashbackAvailable === false) {
+                          cashBack = 0;
+                        }
+                      }
+
+                      if (
+                        existingLoyalty?.loyaltyId &&
+                        order.userId.toString()
+                      ) {
+                        finalCashBack = await addCoins(
+                          cashBack,
+                          order.userId.toString(),
+                          order._id.toString(),
+                          order.tableName || "",
+                          order.businessId.toString(),
+                          existingLoyalty?.loyaltyId.toString() || "",
+                          session,
+                        );
+                        if (order.cashbackAvailable === false) {
+                          cashBack = 0;
                         }
                       }
                     }
-                  }
-                  const createPayment = await Payment.create(
-                    [
-                      {
-                        businessId: alert.businessId,
-                        order_id: order?._id,
-                        total:
-                          paymentMode?.name === "npc" ||
-                          paymentMode?.name === "complementary"
-                            ? 0
-                            : order?.total,
-                        mode:
-                          settleModes.length > 1 ? "split" : paymentMode?.name,
-                        status: "SUCCESS",
-                        paymentMode:
-                          settleModes.length > 1 ? "split" : paymentMode?.name,
-                        userId:
-                          paymentMode?.name === "npc"
-                            ? npcUser?.userId
-                            : order?.userId,
-                        claimedCoins:
-                          paymentMode?.name === "npc" ||
-                          paymentMode?.name === "complementary"
-                            ? 0
-                            : order?.claimedCoins,
-                        billValue: order?.billValue,
-                        tips: order?.tips,
-                        tableName: order?.tableName,
-                        earnCoins:
-                          paymentMode?.name === "npc" ||
-                          paymentMode?.name === "complementary"
-                            ? 0
-                            : finalCashBack,
-                        razorpayEventId: nanoid(15),
-                        razorpayOrderId: nanoid(15),
-                        razorpayPaymentId: nanoid(15),
-                        couponId: order?.couponId,
-                        channelId: order?.channelId,
-                        billId: splitBillTableSessionData?._id.toString(),
-                        tax:
-                          paymentMode?.name === "npc" ||
-                          paymentMode?.name === "complementary"
-                            ? 0
-                            : splitBillTableSessionData?.gst,
-                        serviceCharge:
-                          paymentMode?.name === "npc" ||
-                          paymentMode?.name === "complementary"
-                            ? 0
-                            : splitBillTableSessionData?.serviceCharge,
-                        splitModes: settleModes,
-                        waiterName,
-                        date: Date.now(),
-                        discount: splitBillTableSessionData?.discount,
-                        couponDiscount:
-                          splitBillTableSessionData?.couponDiscount,
-                        billItems: splitBillTableSessionData?.items || [],
-                        isSplitBillVariant: true,
-                      },
-                    ],
-                    { session },
-                  );
-
-                  if (duesUserId && paymentMode?.name === "dues") {
-                    await PendingDues.create(
-                      [
-                        {
-                          billId: createPayment[0]._id,
-                          businessId: order.businessId,
-                          date: Date.now(),
-                          duesUserId: duesUserId,
-                          isSettled: false,
-                        },
-                      ],
-                      {
-                        session,
-                      },
-                    );
-
-                    await DuesUser.findByIdAndUpdate(
-                      duesUserId,
-                      {
-                        $inc: {
-                          totalDuesAmount: order.total,
-                        },
-                      },
-                      { session },
-                    );
-                  }
-
-                  if (npcUserId && paymentMode?.name === "npc") {
-                    await NpcUser.findByIdAndUpdate(
-                      npcUserId,
-                      {
-                        $inc: {
-                          totalNpcAmount: order.total,
-                        },
-                      },
-                      { session },
-                    );
-                  }
-
-                  await QrBill.findOneAndUpdate(
-                    {
-                      $or: [
-                        { billId: splitBillTableSessionData?._id?.toString() },
-                      ],
-                    },
-                    {
-                      $set: {
-                        status: "SUCCESS",
-                      },
-                    },
-                    {
-                      session,
-                    },
-                  );
-
-                  await SplitBillTableSession.findOneAndUpdate(
-                    { _id: order.variantId },
-                    {
-                      $set: {
-                        isPaid: true,
-                      },
-                    },
-                    { new: true, session },
-                  );
-
-                  await UserSession.findOneAndUpdate(
-                    {
-                      businessId: order.businessId,
-                      tableName: order.tableName,
-                    },
-                    {
-                      $inc: {
-                        variantsCounts: -1,
-                      },
-                    },
-                    { session },
-                  );
-
-                  await PaymentAlert.findByIdAndUpdate(
-                    alertId,
-                    { isAccepted: true, comment, waiterName },
-                    { new: true, session },
-                  );
-
-                  return c.json({
-                    message: "Order accepted successfully",
-                    err: false,
-                    data: {},
-                  });
-                }
-                if (tableSession.variantsCounts === 1) {
-                  const npcUser = await NpcUser.findById(npcUserId);
-
-                  let finalCashBack = 0;
-                  if (
-                    paymentMode?.name !== "complementary" &&
-                    paymentMode?.name !== "npc"
-                  ) {
-                    let cashBack = await calculatedCashbackCoins(
-                      order.businessId.toString(),
-                      Number(order.billValue),
-                      Number(order.claimedCoins),
-                      Number(order.couponDiscount),
-                      Number(order.discount),
-                    );
-
-                    if (
-                      existingLoyalty?.loyaltyId &&
-                      order.claimedCoins > 0 &&
-                      order.userId.toString()
-                    ) {
-                      await removeCoins(
-                        Number(order?.claimedCoins),
-                        order.tableName,
-                        existingLoyalty?.loyaltyId?.toString() || "",
-                        order._id.toString(),
-                        order.userId.toString(),
-                        session,
-                      );
-                      if (order.cashbackAvailable === false) {
-                        cashBack = 0;
-                      }
-                    }
-
-                    if (existingLoyalty?.loyaltyId && order.userId.toString()) {
-                      finalCashBack = await addCoins(
-                        cashBack,
-                        order.userId.toString(),
-                        order._id.toString(),
-                        order.tableName || "",
-                        order.businessId.toString(),
-                        existingLoyalty?.loyaltyId.toString() || "",
-                        session,
-                      );
-                      if (order.cashbackAvailable === false) {
-                        cashBack = 0;
-                      }
-                    }
-
                     let modifyTotal = 0;
                     if (
                       paymentMode?.name === "npc" ||
@@ -3631,168 +3417,407 @@ const paymentsRouter = new Hono()
                       { isAccepted: true, comment, waiterName },
                       { new: true, session },
                     );
+
+                    return c.json({
+                      message: "Order accepted successfully",
+                      err: false,
+                      data: {},
+                    });
                   }
-                }
+                  if (tableSession.variantsCounts === 1) {
+                    const npcUser = await NpcUser.findById(npcUserId);
 
-                if (tableSession?.variantsCounts === 1) {
-                  if (isHavePos) {
-                    const payload = {
-                      app_key: isHavePos.accessKey,
-                      app_secret: isHavePos?.secretKey,
-                      access_token: isHavePos.authToken,
-                      restID: isHavePos?.restId,
-                      pin: tableSession?.pin,
-                      tableNo: tableSession?.tableName,
-                    };
+                    let finalCashBack = 0;
+                    if (
+                      paymentMode?.name !== "complementary" &&
+                      paymentMode?.name !== "npc"
+                    ) {
+                      let cashBack = await calculatedCashbackCoins(
+                        order.businessId.toString(),
+                        Number(order.billValue),
+                        Number(order.claimedCoins),
+                        Number(order.couponDiscount),
+                        Number(order.discount),
+                      );
 
-                    setTimeout(() => {
-                      (async () => {
-                        try {
-                          // 1. Request the bill
-                          const {
-                            data: { bill_request_id },
-                          } = await axios.post(
-                            posApiPaths.requestBill,
-                            payload,
-                            {
-                              headers: { "Content-Type": "application/json" },
-                            },
-                          );
-                        } catch (err) {
-                          console.error("Failed to request/settle bill:", err);
+                      if (
+                        existingLoyalty?.loyaltyId &&
+                        order.claimedCoins > 0 &&
+                        order.userId.toString()
+                      ) {
+                        await removeCoins(
+                          Number(order?.claimedCoins),
+                          order.tableName,
+                          existingLoyalty?.loyaltyId?.toString() || "",
+                          order._id.toString(),
+                          order.userId.toString(),
+                          session,
+                        );
+                        if (order.cashbackAvailable === false) {
+                          cashBack = 0;
                         }
-                      })();
-                    }, 10000);
+                      }
 
-                    setTimeout(() => {
-                      (async () => {
-                        try {
-                          // 1. Request the bill
-                          const {
-                            data: { bill_request_id },
-                          } = await axios.post(
-                            posApiPaths.requestBill,
-                            payload,
+                      if (
+                        existingLoyalty?.loyaltyId &&
+                        order.userId.toString()
+                      ) {
+                        finalCashBack = await addCoins(
+                          cashBack,
+                          order.userId.toString(),
+                          order._id.toString(),
+                          order.tableName || "",
+                          order.businessId.toString(),
+                          existingLoyalty?.loyaltyId.toString() || "",
+                          session,
+                        );
+                        if (order.cashbackAvailable === false) {
+                          cashBack = 0;
+                        }
+                      }
+
+                      let modifyTotal = 0;
+                      if (
+                        paymentMode?.name === "npc" ||
+                        paymentMode?.name === "dues" ||
+                        paymentMode?.name === "complementary"
+                      ) {
+                        modifyTotal = 0;
+                      } else {
+                        modifyTotal = order.total;
+
+                        if (settleModes.length > 1) {
+                          for (const settle of settleModes) {
+                            if (settle.name === "complementary") {
+                              modifyTotal -= settle.amount ?? 0;
+                            }
+                          }
+                        }
+                      }
+                      const createPayment = await Payment.create(
+                        [
+                          {
+                            businessId: alert.businessId,
+                            order_id: order?._id,
+                            total:
+                              paymentMode?.name === "npc" ||
+                              paymentMode?.name === "complementary"
+                                ? 0
+                                : order?.total,
+                            mode:
+                              settleModes.length > 1
+                                ? "split"
+                                : paymentMode?.name,
+                            status: "SUCCESS",
+                            paymentMode:
+                              settleModes.length > 1
+                                ? "split"
+                                : paymentMode?.name,
+                            userId:
+                              paymentMode?.name === "npc"
+                                ? npcUser?.userId
+                                : order?.userId,
+                            claimedCoins:
+                              paymentMode?.name === "npc" ||
+                              paymentMode?.name === "complementary"
+                                ? 0
+                                : order?.claimedCoins,
+                            billValue: order?.billValue,
+                            tips: order?.tips,
+                            tableName: order?.tableName,
+                            earnCoins:
+                              paymentMode?.name === "npc" ||
+                              paymentMode?.name === "complementary"
+                                ? 0
+                                : finalCashBack,
+                            razorpayEventId: nanoid(15),
+                            razorpayOrderId: nanoid(15),
+                            razorpayPaymentId: nanoid(15),
+                            couponId: order?.couponId,
+                            channelId: order?.channelId,
+                            billId: splitBillTableSessionData?._id.toString(),
+                            tax:
+                              paymentMode?.name === "npc" ||
+                              paymentMode?.name === "complementary"
+                                ? 0
+                                : splitBillTableSessionData?.gst,
+                            serviceCharge:
+                              paymentMode?.name === "npc" ||
+                              paymentMode?.name === "complementary"
+                                ? 0
+                                : splitBillTableSessionData?.serviceCharge,
+                            splitModes: settleModes,
+                            waiterName,
+                            date: Date.now(),
+                            discount: splitBillTableSessionData?.discount,
+                            couponDiscount:
+                              splitBillTableSessionData?.couponDiscount,
+                            billItems: splitBillTableSessionData?.items || [],
+                            isSplitBillVariant: true,
+                          },
+                        ],
+                        { session },
+                      );
+
+                      if (duesUserId && paymentMode?.name === "dues") {
+                        await PendingDues.create(
+                          [
                             {
-                              headers: { "Content-Type": "application/json" },
+                              billId: createPayment[0]._id,
+                              businessId: order.businessId,
+                              date: Date.now(),
+                              duesUserId: duesUserId,
+                              isSettled: false,
                             },
-                          );
+                          ],
+                          {
+                            session,
+                          },
+                        );
 
-                          // 2. Settle the table
-                          const { data: settleData } = await axios.post(
-                            posApiPaths.settleTable,
+                        await DuesUser.findByIdAndUpdate(
+                          duesUserId,
+                          {
+                            $inc: {
+                              totalDuesAmount: order.total,
+                            },
+                          },
+                          { session },
+                        );
+                      }
+
+                      if (npcUserId && paymentMode?.name === "npc") {
+                        await NpcUser.findByIdAndUpdate(
+                          npcUserId,
+                          {
+                            $inc: {
+                              totalNpcAmount: order.total,
+                            },
+                          },
+                          { session },
+                        );
+                      }
+
+                      await QrBill.findOneAndUpdate(
+                        {
+                          $or: [
                             {
-                              app_key: isHavePos.accessKey,
-                              app_secret: isHavePos.secretKey,
-                              access_token: isHavePos.authToken,
-                              restID: isHavePos.restId,
-                              bill_request_id,
-                              amount_paid: tableSession?.total,
-                              pin: tableSession?.pin,
+                              billId:
+                                splitBillTableSessionData?._id?.toString(),
                             },
-                          );
+                          ],
+                        },
+                        {
+                          $set: {
+                            status: "SUCCESS",
+                          },
+                        },
+                        {
+                          session,
+                        },
+                      );
 
-                          // 3. If settlement failed (success === "0"), upsert into UnsettleTable
-                          if (settleData.success === "0") {
-                            await UnsettleTable.findOneAndUpdate(
+                      await SplitBillTableSession.findOneAndUpdate(
+                        { _id: order.variantId },
+                        {
+                          $set: {
+                            isPaid: true,
+                          },
+                        },
+                        { new: true, session },
+                      );
+
+                      await UserSession.findOneAndUpdate(
+                        {
+                          businessId: order.businessId,
+                          tableName: order.tableName,
+                        },
+                        {
+                          $inc: {
+                            variantsCounts: -1,
+                          },
+                        },
+                        { session },
+                      );
+
+                      await PaymentAlert.findByIdAndUpdate(
+                        alertId,
+                        { isAccepted: true, comment, waiterName },
+                        { new: true, session },
+                      );
+                    }
+                  }
+
+                  if (tableSession?.variantsCounts === 1) {
+                    if (isHavePos) {
+                      const payload = {
+                        app_key: isHavePos.accessKey,
+                        app_secret: isHavePos?.secretKey,
+                        access_token: isHavePos.authToken,
+                        restID: isHavePos?.restId,
+                        pin: tableSession?.pin,
+                        tableNo: tableSession?.tableName,
+                      };
+
+                      setTimeout(() => {
+                        (async () => {
+                          try {
+                            // 1. Request the bill
+                            const {
+                              data: { bill_request_id },
+                            } = await axios.post(
+                              posApiPaths.requestBill,
+                              payload,
                               {
-                                businessId: order.businessId,
-                                tableName: order.tableName,
-                                pin: tableSession?.pin,
+                                headers: { "Content-Type": "application/json" },
                               },
-                              {
-                                sync: false,
-                                // <-- use settleData.request_id, not response.data.request_id
-                                requestId: settleData.request_id,
-                                pin: tableSession?.pin,
-                                restId: isHavePos.restId,
-                                date: Date.now(),
-                                total: tableSession?.total,
-                              },
-                              { new: true, upsert: true },
+                            );
+                          } catch (err) {
+                            console.error(
+                              "Failed to request/settle bill:",
+                              err,
                             );
                           }
-                          const unsettleTable = await UnsettleTable.find({
-                            businessId: order.businessId,
-                            restId: isHavePos.restId,
-                            sync: false,
-                          });
+                        })();
+                      }, 10000);
 
-                          for (const table of unsettleTable) {
-                            const payload = {
-                              app_key: isHavePos.accessKey,
-                              app_secret: isHavePos.secretKey,
-                              access_token: isHavePos.authToken,
-                              restID: isHavePos.restId,
-                              pin: table?.pin,
-                              tableNo: table?.tableName,
-                            };
-
-                            await axios.post(posApiPaths.requestBill, payload, {
-                              headers: {
-                                "Content-Type": "application/json",
+                      setTimeout(() => {
+                        (async () => {
+                          try {
+                            // 1. Request the bill
+                            const {
+                              data: { bill_request_id },
+                            } = await axios.post(
+                              posApiPaths.requestBill,
+                              payload,
+                              {
+                                headers: { "Content-Type": "application/json" },
                               },
+                            );
+
+                            // 2. Settle the table
+                            const { data: settleData } = await axios.post(
+                              posApiPaths.settleTable,
+                              {
+                                app_key: isHavePos.accessKey,
+                                app_secret: isHavePos.secretKey,
+                                access_token: isHavePos.authToken,
+                                restID: isHavePos.restId,
+                                bill_request_id,
+                                amount_paid: tableSession?.total,
+                                pin: tableSession?.pin,
+                              },
+                            );
+
+                            // 3. If settlement failed (success === "0"), upsert into UnsettleTable
+                            if (settleData.success === "0") {
+                              await UnsettleTable.findOneAndUpdate(
+                                {
+                                  businessId: order.businessId,
+                                  tableName: order.tableName,
+                                  pin: tableSession?.pin,
+                                },
+                                {
+                                  sync: false,
+                                  // <-- use settleData.request_id, not response.data.request_id
+                                  requestId: settleData.request_id,
+                                  pin: tableSession?.pin,
+                                  restId: isHavePos.restId,
+                                  date: Date.now(),
+                                  total: tableSession?.total,
+                                },
+                                { new: true, upsert: true },
+                              );
+                            }
+                            const unsettleTable = await UnsettleTable.find({
+                              businessId: order.businessId,
+                              restId: isHavePos.restId,
+                              sync: false,
                             });
+
+                            for (const table of unsettleTable) {
+                              const payload = {
+                                app_key: isHavePos.accessKey,
+                                app_secret: isHavePos.secretKey,
+                                access_token: isHavePos.authToken,
+                                restID: isHavePos.restId,
+                                pin: table?.pin,
+                                tableNo: table?.tableName,
+                              };
+
+                              await axios.post(
+                                posApiPaths.requestBill,
+                                payload,
+                                {
+                                  headers: {
+                                    "Content-Type": "application/json",
+                                  },
+                                },
+                              );
+                            }
+                          } catch (err) {
+                            console.error(
+                              "Failed to request/settle bill:",
+                              err,
+                            );
                           }
-                        } catch (err) {
-                          console.error("Failed to request/settle bill:", err);
-                        }
-                      })();
-                    }, 35000);
+                        })();
+                      }, 35000);
 
-                    await KotOrder.updateMany(
-                      {
-                        tableName: order.tableName,
-                        businessId: order.businessId,
-                        settled: false,
-                      },
-                      {
-                        $set: {
-                          settled: true,
+                      await KotOrder.updateMany(
+                        {
+                          tableName: order.tableName,
+                          businessId: order.businessId,
+                          settled: false,
                         },
-                      },
-                      {
-                        session,
-                      },
-                    );
-
-                    await Table.findOneAndUpdate(
-                      {
-                        businessId: order.businessId,
-                        name: order.tableName,
-                      },
-                      {
-                        $set: {
-                          status: "EMPTY",
-                          currentTableAmount: 0,
-                          userIds: [],
-                          totalItemCount: 0,
-                          capacity: 0,
-                          hiCode: "",
-                          isTransfer: false,
+                        {
+                          $set: {
+                            settled: true,
+                          },
                         },
-                      },
-                      {
-                        session,
-                      },
-                    );
+                        {
+                          session,
+                        },
+                      );
 
-                    await UserSession.deleteOne(
-                      {
-                        tableName: order.tableName,
-                        businessId: order.businessId,
-                      },
-                      {
-                        session,
-                      },
-                    );
+                      await Table.findOneAndUpdate(
+                        {
+                          businessId: order.businessId,
+                          name: order.tableName,
+                        },
+                        {
+                          $set: {
+                            status: "EMPTY",
+                            currentTableAmount: 0,
+                            userIds: [],
+                            totalItemCount: 0,
+                            capacity: 0,
+                            hiCode: "",
+                            isTransfer: false,
+                          },
+                        },
+                        {
+                          session,
+                        },
+                      );
+
+                      await UserSession.deleteOne(
+                        {
+                          tableName: order.tableName,
+                          businessId: order.businessId,
+                        },
+                        {
+                          session,
+                        },
+                      );
+                    }
                   }
+                  return c.json({
+                    message: "Order accepted successfully",
+                    err: false,
+                    data: {},
+                  });
                 }
-                return c.json({
-                  message: "Order accepted successfully",
-                  err: false,
-                  data: {},
-                });
               }
               let finalCashBack = 0;
               if (
@@ -3905,8 +3930,8 @@ const paymentsRouter = new Hono()
                     splitModes: settleModes,
                     waiterName,
                     date: Date.now(),
-                    discount: tableSession?.discount,
-                    couponDiscount: tableSession?.couponDiscount,
+                    discount: tableSession?.discount || 0,
+                    couponDiscount: tableSession?.couponDiscount || 0,
                     billItems: tableSession?.items || [],
                   },
                 ],
