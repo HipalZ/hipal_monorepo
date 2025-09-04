@@ -2256,9 +2256,7 @@ const whatsappRouter = new Hono()
             const linkCodeMatch = userText.match(
               /link\s*[-\s]?([a-zA-Z0-9\s-]+)/i,
             );
-            const checkInCodeMatch = userText.match(
-              /QR\s*[-\s]?([a-zA-Z0-9\s-]+)/i,
-            );
+            const checkInCodeMatch = userText.match(/QR-([A-Z0-9]+__\w+)/);
             const tableCode = tableCodeMatch?.[1];
             const roomCode = roomCodeMatch?.[1];
             const couponCode = linkCodeMatch?.[1];
