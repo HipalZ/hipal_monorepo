@@ -226,7 +226,7 @@ const roomRouter = new Hono()
           select: "name",
         })
         .populate({
-          path: "userIds",
+          path: "userId",
           select: "name phone",
         });
 
@@ -279,11 +279,12 @@ const roomRouter = new Hono()
         })
         .populate({
           path: "alertId",
-          select: "serviceIds -_id",
-          populate: {
-            path: "serviceIds",
-            select: "name -_id",
-          },
+          select: "serviceIds acceptedBy deliveredBy -_id",
+          populate: [
+            { path: "serviceIds", select: "name -_id" },
+            { path: "acceptedBy", select: "name phone -_id" },
+            { path: "deliveredBy", select: "name phone -_id" },
+          ],
         });
 
       return respond(
@@ -625,10 +626,11 @@ const roomRouter = new Hono()
         {
           businessId: roomExists?.businessId,
           roomId: roomId,
+          userId: user._id,
         },
         {
           $setOnInsert: {
-            userIds: [user._id],
+            userId: user._id,
             source: requestData.source,
             date: Date.now(),
           },
@@ -1120,6 +1122,7 @@ const roomRouter = new Hono()
           {
             businessId: roomSource?.businessId,
             roomId: roomId,
+            userId: { $in: roomSource.userIds },
           },
           {
             $setOnInsert: {

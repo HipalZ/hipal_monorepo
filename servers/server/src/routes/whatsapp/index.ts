@@ -2529,12 +2529,13 @@ const whatsappRouter = new Hono()
                     {
                       businessId: config?.businessId,
                       roomId: updatedRoom?._id,
+                      userId: user?._id,
                     },
                     {
                       $setOnInsert: {
                         date: Date.now(),
-                        userIds: [user?._id],
-                        source: "whatsapp",
+                        userId: user?._id,
+                        source: "not-given",
                       },
                     },
                     { upsert: true },
@@ -2613,14 +2614,13 @@ const whatsappRouter = new Hono()
                 {
                   businessId: config?.businessId,
                   roomId: findRoom?._id,
+                  userId: user?._id,
                 },
                 {
                   $setOnInsert: {
-                    userIds: {
-                      $addToSet: user?._id,
-                    },
-                    source: "whatsapp",
                     date: Date.now(),
+                    userId: user?._id,
+                    source: "not-given",
                   },
                 },
                 { upsert: true },

@@ -4,9 +4,9 @@ import { ObjectIdSchema } from "../common";
 export const hotelAnlyticsType = z.object({
   businessId: ObjectIdSchema,
   roomId: ObjectIdSchema,
-  userIds: z.array(ObjectIdSchema).optional().default([]),
+  user: ObjectIdSchema.optional(),
   date: z.number(),
-  source: z.string().min(1).max(100).optional().default("whatsapp"),
+  source: z.string().min(1).max(100).optional().default("not-given"),
 });
 
 export type HotelAnalyticsType = z.infer<typeof hotelAnlyticsType>;

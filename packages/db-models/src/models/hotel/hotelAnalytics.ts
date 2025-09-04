@@ -13,9 +13,9 @@ const hotelAnalyticsSchema = new mongoose.Schema<HotelAnalyticsType>({
     required: true,
     ref: "hotelroom",
   },
-  userIds: {
-    type: [ObjectId],
-    default: [],
+  userId: {
+    type: ObjectId,
+    default: null,
     ref: "User",
   },
   date: {
@@ -24,7 +24,7 @@ const hotelAnalyticsSchema = new mongoose.Schema<HotelAnalyticsType>({
   },
   source: {
     type: String,
-    default: "whatsapp",
+    default: "not-given",
   },
 });
 
