@@ -89,6 +89,24 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
       default: "",
       required: false,
     },
+    serviceIds: {
+      type: [ObjectId],
+      ref: "hotelservice",
+      default: [],
+      required: false,
+    },
+    acceptedBy: {
+      type: ObjectId,
+      ref: "User",
+      default: null,
+      required: false,
+    },
+    deliveredBy: {
+      type: ObjectId,
+      ref: "User",
+      default: null,
+      required: false,
+    },
   },
   {
     timestamps: true,

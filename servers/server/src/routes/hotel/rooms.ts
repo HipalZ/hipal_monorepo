@@ -27,6 +27,8 @@ import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { Hono } from "hono";
+import type { FilterQuery } from "mongoose";
+import { Types } from "mongoose";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { respond } from "../../utils/response";
@@ -55,6 +57,66 @@ const sendPushNotification = async (token: string, hotelNo: string) => {
     console.error("Error sending FCM message:", error);
   }
 };
+
+type RatingKey = "GOOD" | "AVG" | "BAD";
+type NumCmp = Partial<{ $gte: number; $lte: number; $eq: number }>;
+
+interface ReviewDoc {
+  reviewRating: number;
+  roomId: Types.ObjectId;
+  // ...other fields; dotted paths will still work in FilterQuery
+}
+
+// 2) No-`any` rating map
+const ratingMap: Record<RatingKey, NumCmp> = {
+  GOOD: { $gte: 4 }, // 4–5
+  AVG: { $eq: 3 }, // 3
+  BAD: { $lte: 2 }, // 1–2
+};
+
+interface FilterInput {
+  rating?: RatingKey;
+  roomIds?: string[];
+  serviceIds?: string[];
+  staffIds?: string[];
+}
+
+// 3) Build criteria with correct typing
+export function buildCriteria(filter: FilterInput): FilterQuery<ReviewDoc> {
+  const criteria: FilterQuery<ReviewDoc> = {};
+
+  // rating
+  if (filter.rating) {
+    criteria.reviewRating = ratingMap[filter.rating];
+  }
+
+  // roomIds
+  if (filter.roomIds?.length) {
+    criteria.roomId = {
+      $in: filter.roomIds.map((id) => new Types.ObjectId(id)),
+    };
+  }
+
+  // serviceIds (dotted path)
+  if (filter.serviceIds?.length) {
+    criteria.serviceIds = {
+      $in: filter.serviceIds.map((id) => new Types.ObjectId(id)),
+    };
+  }
+
+  // staffIds (dotted paths + $or)
+  if (filter.staffIds?.length) {
+    const staffObjIds = filter.staffIds.map((id) => new Types.ObjectId(id));
+
+    // criteria is FilterQuery<ReviewDoc>
+    criteria.$or = [
+      { acceptedBy: { $in: staffObjIds } },
+      { deliveredBy: { $in: staffObjIds } },
+    ] as FilterQuery<ReviewDoc>["$or"];
+  }
+
+  return criteria;
+}
 const roomRouter = new Hono()
 
   .get(
@@ -246,10 +308,18 @@ const roomRouter = new Hono()
     zValidator(
       "json",
       z.object({
-        businessId: z.string().min(24).max(24),
-        from: z.number().default(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        to: z.number().default(Date.now() - 30 * 24 * 60 * 60 * 1000),
-        filter: z.object({}).default({}),
+        businessId: z.string().length(24),
+        from: z.number().optional(),
+        to: z.number().optional(),
+        filter: z
+          .object({
+            rating: z.enum(["GOOD", "AVG", "BAD"]).optional(),
+            serviceIds: z.array(z.string().length(24)).optional(),
+            roomIds: z.array(z.string().length(24)).optional(),
+            staffIds: z.array(z.string().length(24)).optional(),
+            isRead: z.boolean().optional(),
+          })
+          .default({}),
       }),
     ),
 
@@ -262,12 +332,15 @@ const roomRouter = new Hono()
         return respond(c, "Invalid date range", true, 400, {});
       }
 
+      const criteria = buildCriteria(filter);
+
       const reviews = await Reviews.find({
         businessId,
         date: {
           $gte: fromDate,
           $lte: toDate,
         },
+        ...criteria,
       })
         .select(
           "userId roomId alertId reviewRating description date staffs improvementAreas isRead readAt readBy note",
@@ -1077,6 +1150,8 @@ const roomRouter = new Hono()
           { session },
         );
 
+        const alertOnfo = await HotelAlert.findById(roomChat.alertId);
+
         const createReview = await Reviews.create({
           businessId,
           userId,
@@ -1085,6 +1160,9 @@ const roomRouter = new Hono()
           date: Date.now(),
           roomId: roomChat.roomId,
           alertId: roomChat.alertId,
+          serviceIds: alertOnfo?.serviceIds || [],
+          acceptedBy: alertOnfo?.acceptedBy || [],
+          deliveredBy: alertOnfo?.deliveredBy || [],
         });
 
         if (!createReview) {
