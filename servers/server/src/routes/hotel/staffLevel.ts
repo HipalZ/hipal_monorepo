@@ -121,7 +121,7 @@ const hotelStaffLevelRouter = new Hono()
           {
             level,
             nextLevelTime,
-            staffIds,
+            $addToSet: { staffIds: { $each: staffIds } },
           },
           { new: true, session },
         );
