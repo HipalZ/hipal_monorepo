@@ -59,9 +59,20 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
       ref: "Order",
       required: false,
     },
-    seen: {
+    isRead: {
       type: Boolean,
       default: false,
+    },
+    readAt: {
+      type: Number,
+      default: Date.now(),
+      required: false,
+    },
+    readBy: {
+      type: ObjectId,
+      ref: "User",
+      default: null,
+      required: false,
     },
     roomId: {
       type: ObjectId,
@@ -72,6 +83,11 @@ const reviewsSchema = new mongoose.Schema<ReviewsType>(
       type: ObjectId,
       ref: "hotelalert",
       default: null,
+    },
+    note: {
+      type: String,
+      default: "",
+      required: false,
     },
   },
   {

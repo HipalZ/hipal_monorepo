@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import type { BusinessType } from "../validators";
 import { BusinessEnumType, ExploreLayout, MenuLayout } from "../validators";
 import { GroupModel } from "./group";
+import { HotelStaffLevel } from "./hotel/staffLevel";
 import { MenuBanner } from "./menuBanner";
 import { OutLetInfo } from "./outLetInfo";
 import { PasswordManager } from "./passwordManager/passwordManager";
@@ -196,6 +197,28 @@ businessSchema.post("save", async (doc) => {
   const defaultGroups = getDefaultGroups(doc._id.toString());
 
   await GroupModel.insertMany(defaultGroups);
+
+  const defaultHotelStaffLevels = [
+    {
+      businessId: doc._id,
+      level: 1,
+      staffIds: [],
+      nextLevelTime: 5,
+    },
+    {
+      businessId: doc._id,
+      level: 2,
+      staffIds: [],
+      nextLevelTime: 5,
+    },
+    {
+      businessId: doc._id,
+      level: 3,
+      staffIds: [],
+      nextLevelTime: 5,
+    },
+  ];
+  await HotelStaffLevel.insertMany(defaultHotelStaffLevels);
 });
 
 const Business: Model<BusinessType> = mongoose.model<BusinessType>(

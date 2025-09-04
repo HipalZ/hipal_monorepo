@@ -228,7 +228,8 @@ const roomRouter = new Hono()
         .populate({
           path: "userId",
           select: "name phone",
-        });
+        })
+        .lean();
 
       return respond(
         c,
@@ -267,24 +268,30 @@ const roomRouter = new Hono()
           $lte: toDate,
         },
       })
-        .select("userId roomId alertId reviewRating description date staffs")
+        .select(
+          "userId roomId alertId reviewRating description date staffs improvementAreas isRead readAt readBy note",
+        )
         .sort({ date: -1 })
         .populate({
           path: "roomId",
-          select: "name -_id",
+          select: "name",
         })
         .populate({
           path: "userId",
-          select: "name phone -_id",
+          select: "name phone",
         })
         .populate({
           path: "alertId",
           select: "serviceIds acceptedBy deliveredBy -_id",
           populate: [
-            { path: "serviceIds", select: "name -_id" },
-            { path: "acceptedBy", select: "name phone -_id" },
-            { path: "deliveredBy", select: "name phone -_id" },
+            { path: "serviceIds", select: "name" },
+            { path: "acceptedBy", select: "name phone" },
+            { path: "deliveredBy", select: "name phone" },
           ],
+        })
+        .populate({
+          path: "readBy",
+          select: "name phone",
         });
 
       return respond(
@@ -1186,6 +1193,84 @@ const roomRouter = new Hono()
         }
 
         return respond(c, "Bulk update successful", false, 200, {});
+      });
+    },
+  )
+
+  .put(
+    "/review/read_by",
+    zValidator(
+      "json",
+      z.object({
+        readBy: z.string().min(24).max(24),
+        reviewId: z.string().min(24).max(24),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
+        const { reviewId, readBy } = requestData;
+
+        const checkIsRead = await Reviews.findOne({
+          _id: reviewId,
+          readBy: {
+            $exists: true,
+            $ne: null,
+          },
+        });
+
+        if (checkIsRead) {
+          return respond(c, "Review already read ", true, 409, {});
+        }
+
+        const review = await Reviews.findByIdAndUpdate(
+          reviewId,
+          {
+            readBy: readBy,
+            readAt: Date.now(),
+            isRead: true,
+          },
+          { new: true, session },
+        );
+
+        if (!review) {
+          return respond(c, "Review not found", true, 404, {});
+        }
+
+        return respond(c, "Review updated", false, 200, { _id: review._id });
+      });
+    },
+  )
+
+  .put(
+    "/review/note",
+    zValidator(
+      "json",
+      z.object({
+        note: z.string().min(1).max(200),
+        reviewId: z.string().min(24).max(24),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
+        const { reviewId, note } = requestData;
+
+        const review = await Reviews.findByIdAndUpdate(
+          reviewId,
+          {
+            note,
+          },
+          { new: true, session },
+        );
+
+        if (!review) {
+          return respond(c, "Review not found", true, 404, {});
+        }
+
+        return respond(c, "Review updated", false, 200, { _id: review._id });
       });
     },
   );
