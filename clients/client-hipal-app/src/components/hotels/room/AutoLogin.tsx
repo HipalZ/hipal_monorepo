@@ -3,11 +3,9 @@ import { getUserInfo } from "@/components/hooks/useAutoLogin";
 import { useState } from "react";
 import { useUserToken } from "@hi/common/src/useUserToken";
 import { useLogin } from "@/components/store/useLogin";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 
-const AutoLogin = ({
-  userID,
-}: { userID: string; }) => {
+const AutoLogin = ({ userID }: { userID: string }) => {
   const [error, setError] = useState<string | null>(null);
   const { setAccessToken, setRefreshToken } = useUserToken.getState();
   const { setUserDetails, setIsLogin } = useLogin();
@@ -41,8 +39,6 @@ const AutoLogin = ({
     queryFn: performAutoLogin,
     enabled: !!userID,
   });
-
- 
 
   if (error) {
     return <div className="w-full p-4 text-sm text-center text-red-500" />;
