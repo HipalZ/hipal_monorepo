@@ -241,19 +241,20 @@ const roomRouter = new Hono()
     },
   )
 
-  .get(
+  .post(
     "/hotel_user_reviews",
     zValidator(
-      "query",
+      "json",
       z.object({
         businessId: z.string().min(24).max(24),
-        from: z.string().optional(),
-        to: z.string().optional(),
+        from: z.number().default(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        to: z.number().default(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        filter: z.object({}).default({}),
       }),
     ),
 
     async (c) => {
-      const { businessId, from, to } = c.req.query();
+      const { businessId, from, to, filter } = await c.req.json();
       const fromDate = Number(from);
       const toDate = Number(to);
 
