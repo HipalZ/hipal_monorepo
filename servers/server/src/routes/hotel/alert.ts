@@ -860,8 +860,6 @@ const hotelAlertRouter = new Hono()
       }
 
       const report = Object.values(byStaff).map((s) => {
-        const acceptStr = `${s.acceptOnTime}/${s.acceptTotal || 0}`;
-        const deliverStr = `${s.deliverOnTime}/${s.deliverTotal || 0}`;
         const onTimeTotal = s.acceptOnTime + s.deliverOnTime;
         const total = s.acceptTotal + s.deliverTotal;
         const efficiencyPercentage = total
@@ -871,11 +869,21 @@ const hotelAlertRouter = new Hono()
           efficiencyPercentage >= 80 ? "on-time" : "late";
         return {
           staffName: s.staffName,
-          acceptOnTime: acceptStr,
-          completeOnTime: deliverStr,
-          overAllPerformance,
-          efficiencyPercentage,
-          serviceCount: s.alertIds.size,
+          acceptanceOnTime: s.acceptOnTime,
+          acceptanceTotal: s.acceptTotal,
+          acceptancePercent: s.acceptTotal
+            ? Math.round((s.acceptOnTime / s.acceptTotal) * 100)
+            : 0,
+
+          completionOnTime: s.deliverOnTime,
+          completionTotal: s.deliverTotal,
+          completionPercent: s.deliverTotal
+            ? Math.round((s.deliverOnTime / s.deliverTotal) * 100)
+            : 0,
+
+          overallPerformanceScore: overAllPerformance,
+          efficiencyPercent: efficiencyPercentage,
+          servicesHandled: s.alertIds.size,
         };
       });
 
@@ -894,15 +902,16 @@ const hotelAlertRouter = new Hono()
           : 0;
 
       const overAll = {
-        totalOnTime: `${grandOnTime}/${grandTotal}`,
-        totalAvgCompletionVsSLA: `${totalActualAvg.toFixed(
-          1,
-        )} mins vs ${totalSLAAvg.toFixed(1)} mins`,
+        onTimeCountTotal: grandOnTime,
+
+        serviceCountTotal: grandTotal,
+        avgCompletionMinutes: Number(totalActualAvg.toFixed(1)),
+        avgSlaMinutes: Number(totalSLAAvg.toFixed(1)),
       };
 
       const plotValue = {
-        totalCompleteCount: grandOnTime,
-        totalLateCount: grandLate,
+        onTime: grandOnTime,
+        late: grandLate,
       };
 
       const result = {
