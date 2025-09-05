@@ -36,7 +36,6 @@ async function fetchCategoryPageData(customLink: string, tableName: string) {
   const timingData = await response.json();
 
   const childCategories = await childCategoriesResponse.json();
-  console.log("childCategories", childCategories);
   data["parentCategories"] =
     parentCategories?.data as unknown as CategoryType[];
   data["childCategories"] =

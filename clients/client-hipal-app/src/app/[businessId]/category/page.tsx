@@ -4,6 +4,8 @@ import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import type { BusinessDetails } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
+import { businessApis } from "@/apis/explore/index";
+
 
 // export const dynamic = "force-dynamic";
 // export const fetchCache = "force-no-store";
@@ -161,6 +163,7 @@ export default async function Page({
 
   // Call fetchData with both parameters
   const data = await fetchData(businessId, tableName);
+  const businessData = (await businessApis.all(businessId)) as IBusinessData;
   return (
     <main>
       <div className="relative flex flex-col w-full">
@@ -170,6 +173,7 @@ export default async function Page({
             data?.business?.categoryTopBannerUrl ||
             data?.business?.specialBannerUrl
           }
+          businessData={businessData}
         />
         <MenuBannerPage
           timings={data?.timings}
