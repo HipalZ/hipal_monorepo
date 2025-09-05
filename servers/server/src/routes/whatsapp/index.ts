@@ -2531,9 +2531,10 @@ const whatsappRouter = new Hono()
                     },
                     {
                       $setOnInsert: {
-                        date: Date.now(),
+                        checkIn: Date.now(),
                         userId: user?._id,
                         source: "not-given",
+                        $addToSet: { guestUserIds: user?._id },
                       },
                     },
                     { upsert: true },
@@ -2616,9 +2617,10 @@ const whatsappRouter = new Hono()
                 },
                 {
                   $setOnInsert: {
-                    date: Date.now(),
+                    checkIn: Date.now(),
                     userId: user?._id,
                     source: "not-given",
+                    $addToSet: { guestUserIds: user?._id },
                   },
                 },
                 { upsert: true },

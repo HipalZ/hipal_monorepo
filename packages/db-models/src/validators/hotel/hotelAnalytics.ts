@@ -5,7 +5,9 @@ export const hotelAnlyticsType = z.object({
   businessId: ObjectIdSchema,
   roomId: ObjectIdSchema,
   user: ObjectIdSchema.optional(),
-  date: z.number(),
+  checkIn: z.number().min(0),
+  checkOut: z.number().min(0),
+  guestUserIds: z.array(ObjectIdSchema).optional().default([]),
   source: z.string().min(1).max(100).optional().default("not-given"),
 });
 

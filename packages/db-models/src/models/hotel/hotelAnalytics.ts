@@ -18,13 +18,24 @@ const hotelAnalyticsSchema = new mongoose.Schema<HotelAnalyticsType>({
     default: null,
     ref: "User",
   },
-  date: {
+  checkIn: {
     type: Number,
     required: true,
+    default: 0,
+  },
+  checkOut: {
+    type: Number,
+    required: true,
+    default: 0,
   },
   source: {
     type: String,
     default: "not-given",
+  },
+  guestUserIds: {
+    type: [ObjectId],
+    default: [],
+    ref: "User",
   },
 });
 

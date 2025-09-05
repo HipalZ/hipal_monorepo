@@ -33,7 +33,7 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
-import { startOfToday,endOfToday } from "../payments/index.js";
+import { endOfToday, startOfToday } from "../payments/index.js";
 const admin = require("firebase-admin");
 
 const sendPushNotification = async (token: string, hotelNo: string) => {
@@ -92,7 +92,7 @@ export function buildCriteria(filter: FilterInput): FilterQuery<ReviewDoc> {
     criteria.reviewRating = ratingMap[filter.rating];
   }
 
-  if (filter.isRead !== undefined && filter.isRead !== null ) {
+  if (filter.isRead !== undefined && filter.isRead !== null) {
     criteria.isRead = filter.isRead;
   }
 
@@ -284,7 +284,7 @@ const roomRouter = new Hono()
 
       const analytics = await HotelAnalytics.find({
         businessId,
-        date: {
+        checkIn: {
           $gte: fromDate,
           $lte: toDate,
         },
@@ -297,6 +297,7 @@ const roomRouter = new Hono()
           path: "userId",
           select: "name phone",
         })
+
         .lean();
 
       return respond(
@@ -331,14 +332,14 @@ const roomRouter = new Hono()
 
     async (c) => {
       const { businessId, from, to, filter } = await c.req.json();
-       const fromDate = from ? Number(from) : startOfToday.getTime();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
       const toDate = to ? Number(to) : endOfToday.getTime();
 
       if (fromDate > toDate) {
         return respond(c, "Invalid date range", true, 400, {});
       }
 
-      const criteria = buildCriteria(filter);
+      const criteria = buildCriteria(filter || {});
 
       const reviews = await Reviews.find({
         businessId,
@@ -719,7 +720,8 @@ const roomRouter = new Hono()
           $setOnInsert: {
             userId: user._id,
             source: requestData.source,
-            date: Date.now(),
+            checkIn: Date.now(),
+            $addToSet: { guestUserIds: user._id },
           },
         },
         { upsert: true },
@@ -1219,7 +1221,8 @@ const roomRouter = new Hono()
           {
             $setOnInsert: {
               source,
-              date: Date.now(),
+              checkIn: Date.now(),
+              $addToSet: { guestUserIds: { $each: roomSource.userIds } },
             },
           },
           { upsert: true },
