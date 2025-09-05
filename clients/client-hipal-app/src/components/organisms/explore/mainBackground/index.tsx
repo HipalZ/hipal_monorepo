@@ -52,7 +52,7 @@ const MainBackground = ({ data }: { data: IBusinessData }) => {
     if (data?.business) {
       setBusinessDetails(data?.business);
     }
-  }, [data]);
+  }, [data, setBusinessData, setBusinessDetails]);
 
   // Check if URL is a video
   const isVideo = useCallback((url: string) => {
