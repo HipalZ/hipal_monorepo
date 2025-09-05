@@ -30,6 +30,7 @@ import { schedule } from "node-cron";
 import { z } from "zod";
 import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
+import { endOfToday, startOfToday } from "../payments";
 const admin = require("firebase-admin");
 
 const sendPushNotification = async (
@@ -699,15 +700,15 @@ const hotelAlertRouter = new Hono()
       "query",
       z.object({
         businessId: z.string().min(24).max(24),
-        from: z.string(),
-        to: z.string(),
+        from: z.string().optional(),
+        to: z.string().optional(),
         staffId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
       const { businessId, from, to, staffId } = c.req.query();
-      const fromDate = Number(from);
-      const toDate = Number(to);
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
 
       if (Number.isNaN(fromDate) || Number.isNaN(toDate)) {
         return respond(c, "Invalid dates", true, 400, {});
@@ -741,9 +742,9 @@ const hotelAlertRouter = new Hono()
       //
       const getServiceAverages = (serviceIds: HotelServiceType[] = []) => {
         if (!serviceIds.length) return { avgAccept: 0, avgDeliver: 0 };
-        let aSum = 0,
-          dSum = 0,
-          n = 0;
+        let aSum = 0;
+        let dSum = 0;
+        let n = 0;
         for (const s of serviceIds) {
           aSum += Number(s?.avgAcceptanceTime ?? 0);
           dSum += Number(s?.avgDeliveryTime ?? 0);
@@ -860,8 +861,6 @@ const hotelAlertRouter = new Hono()
       }
 
       const report = Object.values(byStaff).map((s) => {
-        const acceptStr = `${s.acceptOnTime}/${s.acceptTotal || 0}`;
-        const deliverStr = `${s.deliverOnTime}/${s.deliverTotal || 0}`;
         const onTimeTotal = s.acceptOnTime + s.deliverOnTime;
         const total = s.acceptTotal + s.deliverTotal;
         const efficiencyPercentage = total
@@ -871,11 +870,21 @@ const hotelAlertRouter = new Hono()
           efficiencyPercentage >= 80 ? "on-time" : "late";
         return {
           staffName: s.staffName,
-          acceptOnTime: acceptStr,
-          completeOnTime: deliverStr,
-          overAllPerformance,
-          efficiencyPercentage,
-          serviceCount: s.alertIds.size,
+          acceptanceOnTime: s.acceptOnTime,
+          acceptanceTotal: s.acceptTotal,
+          acceptancePercent: s.acceptTotal
+            ? Math.round((s.acceptOnTime / s.acceptTotal) * 100)
+            : 0,
+
+          completionOnTime: s.deliverOnTime,
+          completionTotal: s.deliverTotal,
+          completionPercent: s.deliverTotal
+            ? Math.round((s.deliverOnTime / s.deliverTotal) * 100)
+            : 0,
+
+          overallPerformanceScore: overAllPerformance,
+          efficiencyPercent: efficiencyPercentage,
+          servicesHandled: s.alertIds.size,
         };
       });
 
@@ -894,15 +903,15 @@ const hotelAlertRouter = new Hono()
           : 0;
 
       const overAll = {
-        totalOnTime: `${grandOnTime}/${grandTotal}`,
-        totalAvgCompletionVsSLA: `${totalActualAvg.toFixed(
-          1,
-        )} mins vs ${totalSLAAvg.toFixed(1)} mins`,
+        totalOnTimeCount: grandOnTime,
+        totalServiceActionCount: grandTotal,
+        totalAvgCompletionMinutes: Number(totalActualAvg.toFixed(1)),
+        totalAvgSlaMinutes: Number(totalSLAAvg.toFixed(1)),
       };
 
       const plotValue = {
-        totalCompleteCount: grandOnTime,
-        totalLateCount: grandLate,
+        onTime: grandOnTime,
+        late: grandLate,
       };
 
       const result = {
