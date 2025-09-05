@@ -903,11 +903,10 @@ const hotelAlertRouter = new Hono()
           : 0;
 
       const overAll = {
-        onTimeCountTotal: grandOnTime,
-
-        serviceCountTotal: grandTotal,
-        avgCompletionMinutes: Number(totalActualAvg.toFixed(1)),
-        avgSlaMinutes: Number(totalSLAAvg.toFixed(1)),
+        totalOnTimeCount: grandOnTime,
+        totalServiceActionCount: grandTotal,
+        totalAvgCompletionMinutes: Number(totalActualAvg.toFixed(1)),
+        totalAvgSlaMinutes: Number(totalSLAAvg.toFixed(1)),
       };
 
       const plotValue = {
