@@ -33,6 +33,7 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
+import { startOfToday,endOfToday } from "../payments/index.js";
 const admin = require("firebase-admin");
 
 const sendPushNotification = async (token: string, hotelNo: string) => {
@@ -79,6 +80,7 @@ interface FilterInput {
   roomIds?: string[];
   serviceIds?: string[];
   staffIds?: string[];
+  isRead?: boolean;
 }
 
 // 3) Build criteria with correct typing
@@ -88,6 +90,10 @@ export function buildCriteria(filter: FilterInput): FilterQuery<ReviewDoc> {
   // rating
   if (filter.rating) {
     criteria.reviewRating = ratingMap[filter.rating];
+  }
+
+  if (filter.isRead !== undefined && filter.isRead !== null ) {
+    criteria.isRead = filter.isRead;
   }
 
   // roomIds
@@ -325,8 +331,8 @@ const roomRouter = new Hono()
 
     async (c) => {
       const { businessId, from, to, filter } = await c.req.json();
-      const fromDate = Number(from);
-      const toDate = Number(to);
+       const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
 
       if (fromDate > toDate) {
         return respond(c, "Invalid date range", true, 400, {});
