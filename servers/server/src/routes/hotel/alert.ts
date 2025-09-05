@@ -30,6 +30,7 @@ import { schedule } from "node-cron";
 import { z } from "zod";
 import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
+import { endOfToday, startOfToday } from "../payments";
 const admin = require("firebase-admin");
 
 const sendPushNotification = async (
@@ -699,15 +700,15 @@ const hotelAlertRouter = new Hono()
       "query",
       z.object({
         businessId: z.string().min(24).max(24),
-        from: z.string(),
-        to: z.string(),
+        from: z.string().optional(),
+        to: z.string().optional(),
         staffId: z.string().min(24).max(24).optional(),
       }),
     ),
     async (c) => {
       const { businessId, from, to, staffId } = c.req.query();
-      const fromDate = Number(from);
-      const toDate = Number(to);
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
 
       if (Number.isNaN(fromDate) || Number.isNaN(toDate)) {
         return respond(c, "Invalid dates", true, 400, {});
@@ -741,9 +742,9 @@ const hotelAlertRouter = new Hono()
       //
       const getServiceAverages = (serviceIds: HotelServiceType[] = []) => {
         if (!serviceIds.length) return { avgAccept: 0, avgDeliver: 0 };
-        let aSum = 0,
-          dSum = 0,
-          n = 0;
+        let aSum = 0;
+        let dSum = 0;
+        let n = 0;
         for (const s of serviceIds) {
           aSum += Number(s?.avgAcceptanceTime ?? 0);
           dSum += Number(s?.avgDeliveryTime ?? 0);
