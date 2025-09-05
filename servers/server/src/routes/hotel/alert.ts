@@ -738,6 +738,7 @@ const hotelAlertRouter = new Hono()
         })
         .lean();
 
+      //
       const getServiceAverages = (serviceIds: HotelServiceType[] = []) => {
         if (!serviceIds.length) return { avgAccept: 0, avgDeliver: 0 };
         let aSum = 0,
@@ -784,17 +785,17 @@ const hotelAlertRouter = new Hono()
         return byStaff[id];
       };
 
-      let gAcceptOnTime = 0,
-        gAcceptTotal = 0;
-      let gAcceptActualSum = 0,
-        gAcceptSLASum = 0,
-        gAcceptCount = 0;
+      let gAcceptOnTime = 0; // on-time events
+      let gAcceptTotal = 0; // total events
+      let gAcceptActualSum = 0; // sum of actual times
+      let gAcceptSLASum = 0; // sum of SLA times
+      let gAcceptCount = 0; // count of events with SLA
 
-      let gDeliverOnTime = 0,
-        gDeliverTotal = 0;
-      let gDeliverActualSum = 0,
-        gDeliverSLASum = 0,
-        gDeliverCount = 0;
+      let gDeliverOnTime = 0; // on-time events
+      let gDeliverTotal = 0; // total events
+      let gDeliverActualSum = 0; // sum of actual times
+      let gDeliverSLASum = 0; // sum of SLA times
+      let gDeliverCount = 0; // count of events with SLA
 
       for (const a of alerts) {
         const createdAt = Number(a?.createdAt);
@@ -802,7 +803,6 @@ const hotelAlertRouter = new Hono()
         const deliveredAt = Number(a?.deliveredAt);
         const { avgAccept, avgDeliver } = getServiceAverages(a?.serviceIds);
 
-        // Acceptance (credited to acceptedBy)
         if (
           a?.acceptedBy &&
           Number.isFinite(createdAt) &&
@@ -853,7 +853,7 @@ const hotelAlertRouter = new Hono()
 
           if (avgDeliver > 0 && Number.isFinite(actualDeliverMin)) {
             gDeliverActualSum += actualDeliverMin;
-            gDeliverSLASum += avgDeliver;
+            gDeliverSLASum += avgDeliver || 0;
             gDeliverCount += 1;
           }
         }
