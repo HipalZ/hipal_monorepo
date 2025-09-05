@@ -37,6 +37,16 @@ const hotelAnalyticsSchema = new mongoose.Schema<HotelAnalyticsType>({
     default: [],
     ref: "User",
   },
+  reviewIds: {
+    type: [ObjectId],
+    default: [],
+    ref: "customerReviews",
+  },
+  roomSessionId: {
+    type: ObjectId,
+    default: null,
+    ref: "roomsession",
+  },
 });
 
 const HotelAnalytics: Model<HotelAnalyticsType> =

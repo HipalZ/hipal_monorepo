@@ -722,6 +722,7 @@ const roomRouter = new Hono()
             source: requestData.source,
             checkIn: Date.now(),
             $addToSet: { guestUserIds: user._id },
+            roomSessionId: roomSession[0]._id,
           },
         },
         { upsert: true },
@@ -908,15 +909,6 @@ const roomRouter = new Hono()
         throw new Error("Error checking out");
       }
 
-      const removeSession = await HotelRoomSession.deleteOne(
-        { roomId },
-        { session },
-      );
-
-      if (!removeSession) {
-        throw new Error("Error removing room session");
-      }
-
       const deleteRoomChat = await HotelRoomChat.updateMany(
         { roomId },
         { $set: { isDeleted: true } },
@@ -943,6 +935,22 @@ const roomRouter = new Hono()
           }
         }
       }
+
+      const removeSession = await HotelRoomSession.findOne({
+        roomId,
+      });
+      await HotelAnalytics.updateMany(
+        { roomSessionId: removeSession?._id },
+        {
+          $set: {
+            checkOut: Date.now(),
+          },
+        },
+        {
+          session,
+        },
+      );
+      await HotelRoomSession.deleteOne({ roomId }, { session });
 
       return respond(c, "Checked out successfully", false, 200, {
         _id: updatedRoom._id,
@@ -1177,6 +1185,22 @@ const roomRouter = new Hono()
           throw new Error("Failed to create review");
         }
 
+        const roomSession = await HotelRoomSession.findOne({
+          roomId: roomChat.roomId,
+        });
+
+        await HotelAnalytics.findOneAndUpdate(
+          {
+            roomSessionId: roomSession?._id,
+          },
+          {
+            $setOnInsert: {
+              $addToSet: { reviewIds: createReview._id },
+            },
+          },
+          { upsert: true },
+        );
+
         return respond(c, "Review created successfully", false, 201, {
           _id: createReview._id,
         });
@@ -1212,6 +1236,14 @@ const roomRouter = new Hono()
           return respond(c, "Room session not found", true, 404, {});
         }
 
+        const roomSession = await HotelRoomSession.findOne({
+          roomId,
+        });
+
+        if (!roomSession) {
+          return respond(c, "Room session not found", true, 404, {});
+        }
+
         await HotelAnalytics.findOneAndUpdate(
           {
             businessId: roomSource?.businessId,
@@ -1223,6 +1255,7 @@ const roomRouter = new Hono()
               source,
               checkIn: Date.now(),
               $addToSet: { guestUserIds: { $each: roomSource.userIds } },
+              roomSessionId: roomSession._id,
             },
           },
           { upsert: true },
