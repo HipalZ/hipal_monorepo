@@ -52,7 +52,6 @@ const RoomMain = () => {
 
   const floorData = useFloorStore((state) => state.floorData);
   const staffData = useStaffDataStore((state) => state.staffData);
-  console.log("staffData", staffData);
 
   // Get room form actions
   const { setEditMode, setEditRoomId, initializeFormForEdit } =

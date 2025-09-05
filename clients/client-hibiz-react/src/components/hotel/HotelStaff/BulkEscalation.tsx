@@ -552,7 +552,7 @@ export default function BulkEscalationAssignmentPanel({
                           <div className="font-medium flex items-center gap-2">
                             {s.name}
                             {inLevel && (
-                              <Badge variant="secondary" className="text-xxs">
+                              <Badge variant="secondary" className="text-xs">
                                 In L{level}
                               </Badge>
                             )}
