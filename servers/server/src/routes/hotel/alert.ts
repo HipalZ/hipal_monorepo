@@ -726,7 +726,7 @@ const hotelAlertRouter = new Hono()
         date: { $gte: fromDate, $lte: toDate },
         ...(staffId
           ? {
-              $or: [
+              $and: [
                 {
                   acceptedBy: staffId,
                 },
