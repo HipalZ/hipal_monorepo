@@ -250,7 +250,7 @@ const scriptRouter = new Hono()
           categoryId: categoryMap["AC"],
           avgCompletionTime: 30,
           avgAcceptanceTime: 2,
-          avgDeliveryTime: 30,
+          avgDeliveryTime: 28,
           image:
             "https://t-static.blr1.digitaloceanspaces.com/08c7819f-8ae6-46ee-b2a1-2c62e454de3d.jpeg",
         },
@@ -345,14 +345,6 @@ const scriptRouter = new Hono()
             "https://t-static.blr1.digitaloceanspaces.com/df0e1a24-d146-4387-a2c4-8f9f6f8b786b.png",
         },
         {
-          name: "infrom to vendor",
-          businessId,
-          categoryId: categoryMap["WIFI"],
-          avgCompletionTime: 15,
-          avgAcceptanceTime: 2,
-          avgDeliveryTime: 7,
-        },
-        {
           name: "PRI Line issues - inform vendor",
           businessId,
           categoryId: categoryMap["WIFI"],
@@ -393,14 +385,6 @@ const scriptRouter = new Hono()
             "https://t-static.blr1.digitaloceanspaces.com/4f783149-a697-4197-bcc9-5ce577337bae.png",
         },
         {
-          name: "main door not closing properly",
-          businessId,
-          categoryId: categoryMap["CARPENTER"],
-          avgCompletionTime: 10,
-          avgAcceptanceTime: 2,
-          avgDeliveryTime: 7,
-        },
-        {
           name: "paint touch up",
           businessId,
           categoryId: categoryMap["PAINT"],
@@ -419,22 +403,6 @@ const scriptRouter = new Hono()
           avgDeliveryTime: 7,
           image:
             "https://t-static.blr1.digitaloceanspaces.com/a26da697-236d-42d9-b50e-2e480eae1de1.jpeg",
-        },
-        {
-          name: "Reset",
-          businessId,
-          categoryId: categoryMap["LIFT"],
-          avgCompletionTime: 15,
-          avgAcceptanceTime: 2,
-          avgDeliveryTime: 7,
-        },
-        {
-          name: "Major issue",
-          businessId,
-          categoryId: categoryMap["LIFT"],
-          avgCompletionTime: 15,
-          avgAcceptanceTime: 2,
-          avgDeliveryTime: 7,
         },
         {
           name: "Dental Kit",
