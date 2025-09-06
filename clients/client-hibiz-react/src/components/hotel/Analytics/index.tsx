@@ -10,6 +10,7 @@ import {
 import { GrGraphQl } from "react-icons/gr";
 import { IoAnalytics } from "react-icons/io5";
 import { VscFeedback } from "react-icons/vsc";
+import { SlPeople } from "react-icons/sl";
 
 const essentialCards = [
   {
@@ -41,6 +42,16 @@ const essentialCards = [
       </div>
     ),
     href: "review-reports",
+  },
+  {
+    title: "User Analytics",
+    description: "User Reports",
+    icon: (
+      <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-red-400 to-red-600 hover:scale-105">
+        <SlPeople  className="w-8 h-8 text-white drop-shadow-md" />
+      </div>
+    ),
+    href: "user-reports",
   },
 ];
 
