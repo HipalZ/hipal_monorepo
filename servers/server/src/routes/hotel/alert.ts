@@ -703,10 +703,12 @@ const hotelAlertRouter = new Hono()
         from: z.string().optional(),
         to: z.string().optional(),
         staffId: z.string().min(24).max(24).optional(),
+        overallPerformance: z.enum(["on-time", "late"]).optional(),
       }),
     ),
     async (c) => {
-      const { businessId, from, to, staffId } = c.req.query();
+      const { businessId, from, to, staffId, overallPerformance } =
+        c.req.query();
       const fromDate = from ? Number(from) : startOfToday.getTime();
       const toDate = to ? Number(to) : endOfToday.getTime();
 
@@ -907,6 +909,9 @@ const hotelAlertRouter = new Hono()
         totalServiceActionCount: grandTotal,
         totalAvgCompletionMinutes: Number(totalActualAvg.toFixed(1)),
         totalAvgSlaMinutes: Number(totalSLAAvg.toFixed(1)),
+        totalServicesHandled: new Set(
+          Object.values(byStaff).flatMap((s) => Array.from(s.alertIds)),
+        ).size,
       };
 
       const plotValue = {
@@ -919,6 +924,12 @@ const hotelAlertRouter = new Hono()
         report,
         plotValue,
       };
+
+      if (overallPerformance && report.length) {
+        result.report = report.filter(
+          (r) => r.overallPerformanceScore === overallPerformance,
+        );
+      }
 
       return respond(c, "Staff alert report generated", false, 200, result);
     },

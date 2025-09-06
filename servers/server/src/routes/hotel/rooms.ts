@@ -263,7 +263,7 @@ const roomRouter = new Hono()
   )
 
   .get(
-    "/hotel_user_analytics",
+    "/user_source_analytics",
     zValidator(
       "query",
       z.object({
@@ -307,6 +307,29 @@ const roomRouter = new Hono()
         200,
         analytics,
       );
+    },
+  )
+
+  .get(
+    "/user_analytics",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(24).max(24),
+        userId: z.string().min(24).max(24),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId, userId } = c.req.query();
+
+      const reviews = await Reviews.find({
+        businessId,
+        userId,
+      });
+      const avgReviewRating =
+        reviews.reduce((acc, review) => acc + review.reviewRating, 0) /
+        reviews.length;
     },
   )
 
