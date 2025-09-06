@@ -21,8 +21,6 @@ export default function HotelReviews() {
   const { staffData = [] as IHotelStaff[] } =
     useGetAllHotelStaff(businessId || "") || {};
 
-  // NOTE: pull applyKey from the store so the key changes on Apply
-  // const { createPayload, applyKey, isFiltered } = useReviewsFilterStore();
   const createPayload = useReviewsFilterStore((s) => s.createPayload);
   const isFiltered = useReviewsFilterStore((s) => s.isFiltered);
   const applyKey = useReviewsFilterStore((s) => s.applyKey);
@@ -33,7 +31,6 @@ export default function HotelReviews() {
     [businessId, applyKey],
   );
 
-  // Optional: stable serialized key (prevents reruns if order of arrays changes)
   const payloadKey = useMemo(() => {
     if (!payload) return "nopayload";
     const { from, to, filter } = payload;

@@ -315,6 +315,8 @@ export default function ReviewsFilters({
                       e.preventDefault();
                       const { apply } = useReviewsFilterStore.getState();
                       apply();
+                      setOpen(false)
+
                     },
                   },
                 ]}
