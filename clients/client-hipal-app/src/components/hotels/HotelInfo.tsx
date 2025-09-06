@@ -73,7 +73,7 @@ export const HotelInfoSection = memo(function HotelInfoSection({
                     {name}
                   </h1>
                   {tags?.length > 0 ? (
-                    <div className="gap-2 font-semibold capitalize opacity-60 text-h-base-content">
+                    <div className="gap-2 font-semibold capitalize opacity-60 text-h-base-content poppins-regular">
                       {tags?.join(" | ")}
                     </div>
                   ) : null}
@@ -81,7 +81,7 @@ export const HotelInfoSection = memo(function HotelInfoSection({
               </div>
 
               {/* Description */}
-              <div className="p-2 mt-4 text-sm text-h-base-content pb-4">
+              <div className="p-2 mt-4 text-sm text-h-base-content pb-4 inter">
                 <p>
                   ✨{" "}
                   {description ||
