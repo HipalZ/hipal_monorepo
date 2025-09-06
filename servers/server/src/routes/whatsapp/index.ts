@@ -2528,15 +2528,13 @@ const whatsappRouter = new Hono()
                       businessId: config?.businessId,
                       roomId: updatedRoom?._id,
                       userId: user?._id,
+                      roomSessionId: roomSession?._id,
                     },
                     {
-                      $setOnInsert: {
-                        checkIn: Date.now(),
-                        userId: user?._id,
-                        source: "not-given",
-                        $addToSet: { guestUserIds: user?._id },
-                        roomSessionId: roomSession?._id,
-                      },
+                      checkIn: Date.now(),
+                      userId: user?._id,
+                      source: "not-given",
+                      $addToSet: { guestUserIds: user?._id },
                     },
                     { upsert: true },
                   );
@@ -2615,15 +2613,13 @@ const whatsappRouter = new Hono()
                   businessId: config?.businessId,
                   roomId: findRoom?._id,
                   userId: user?._id,
+                  roomSessionId: roomSession?._id,
                 },
                 {
-                  $setOnInsert: {
-                    checkIn: Date.now(),
-                    userId: user?._id,
-                    source: "not-given",
-                    $addToSet: { guestUserIds: user?._id },
-                    roomSessionId: roomSession?._id,
-                  },
+                  checkIn: Date.now(),
+                  userId: user?._id,
+                  source: "not-given",
+                  $addToSet: { guestUserIds: user?._id },
                 },
                 { upsert: true },
               );

@@ -3,10 +3,12 @@ import {
   Cart,
   DeviceToken,
   HotelAlert,
+  HotelAnalytics,
   HotelRoom,
   HotelRoomChat,
   HotelRoomChatComplain,
   HotelRoomChatReply,
+  HotelRoomSession,
   HotelService,
   HotelStaffLevel,
   OutLetInfo,
@@ -1135,6 +1137,23 @@ const hotelAlertRouter = new Hono()
             );
           }
         }),
+      );
+
+      const roomSession = await HotelRoomSession.findOne({
+        roomId: roomData._id,
+      });
+
+      await HotelAnalytics.findOneAndUpdate(
+        {
+          businessId: requestData.businessId,
+          roomId: roomData._id,
+          userId: requestData.userId,
+          roomSessionId: roomSession?._id,
+        },
+        {
+          $addToSet: { serviceIds: serviceIds },
+        },
+        { upsert: true },
       );
 
       return respond(c, "Alert created successfully", false, 201, {});

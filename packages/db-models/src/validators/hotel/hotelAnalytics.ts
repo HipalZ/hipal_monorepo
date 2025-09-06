@@ -11,6 +11,7 @@ export const hotelAnlyticsType = z.object({
   source: z.string().min(1).max(100).optional().default("not-given"),
   reviewIds: z.array(ObjectIdSchema).optional().default([]),
   roomSessionId: ObjectIdSchema.optional(),
+  serviceIds: z.array(ObjectIdSchema).optional().default([]),
 });
 
 export type HotelAnalyticsType = z.infer<typeof hotelAnlyticsType>;

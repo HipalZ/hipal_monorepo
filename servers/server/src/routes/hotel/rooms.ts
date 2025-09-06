@@ -330,6 +330,47 @@ const roomRouter = new Hono()
       const avgReviewRating =
         reviews.reduce((acc, review) => acc + review.reviewRating, 0) /
         reviews.length;
+
+      const overAll = {
+        averageRating: Number(avgReviewRating.toFixed(1)),
+        totalReviews: reviews.length,
+      };
+
+      const userAnalytics = await HotelAnalytics.find({
+        businessId,
+        userId,
+      })
+        .select("-_id -businessId -roomSessionId -__v")
+        .populate({
+          path: "roomId",
+          select: "name",
+        })
+        .populate({
+          path: "userId",
+          select: "name phone -_id",
+        })
+
+        .populate({
+          path: "serviceIds",
+          select: "name -_id",
+        })
+        .populate({
+          path: "reviewIds",
+          select: "reviewRating description date -_id",
+          populate: {
+            path: "serviceIds",
+            select: "name -_id",
+          },
+        })
+        .populate({
+          path: "guestUserIds",
+          select: "name phone -_id",
+        });
+
+      return respond(c, "User analytics", false, 200, {
+        overAll,
+        userAnalytics,
+      });
     },
   )
 
@@ -738,15 +779,12 @@ const roomRouter = new Hono()
           businessId: roomExists?.businessId,
           roomId: roomId,
           userId: user._id,
+          roomSessionId: roomSession[0]._id,
         },
         {
-          $setOnInsert: {
-            userId: user._id,
-            source: requestData.source,
-            checkIn: Date.now(),
-            $addToSet: { guestUserIds: user._id },
-            roomSessionId: roomSession[0]._id,
-          },
+          userId: user._id,
+          source: requestData.source,
+          checkIn: Date.now(),
         },
         { upsert: true },
       );
@@ -1217,9 +1255,7 @@ const roomRouter = new Hono()
             roomSessionId: roomSession?._id,
           },
           {
-            $setOnInsert: {
-              $addToSet: { reviewIds: createReview._id },
-            },
+            $addToSet: { reviewIds: createReview._id },
           },
           { upsert: true },
         );
@@ -1272,14 +1308,11 @@ const roomRouter = new Hono()
             businessId: roomSource?.businessId,
             roomId: roomId,
             userId: { $in: roomSource.userIds },
+            roomSessionId: roomSession._id,
           },
           {
-            $setOnInsert: {
-              source,
-              checkIn: Date.now(),
-              $addToSet: { guestUserIds: { $each: roomSource.userIds } },
-              roomSessionId: roomSession._id,
-            },
+            source,
+            checkIn: Date.now(),
           },
           { upsert: true },
         );
@@ -1300,8 +1333,6 @@ const roomRouter = new Hono()
           z.object({
             roomIds: z.array(z.string().min(24).max(24)).default([]),
             staffIds: z.array(z.string().min(24).max(24)).default([]),
-            removeRoomIds: z.array(z.string().min(24).max(24)).default([]),
-            removeStaffIds: z.array(z.string().min(24).max(24)).default([]),
           }),
         ),
       }),
@@ -1312,12 +1343,7 @@ const roomRouter = new Hono()
         const { rooms } = await c.req.json();
 
         for (const part of rooms) {
-          const {
-            roomIds = [],
-            staffIds = [],
-            removeRoomIds = [],
-            removeStaffIds = [],
-          } = part;
+          const { roomIds = [], staffIds = [] } = part;
 
           if (roomIds.length && staffIds.length) {
             await HotelRoom.updateMany(
@@ -1326,14 +1352,33 @@ const roomRouter = new Hono()
               { session },
             );
           }
+        }
 
-          if (removeRoomIds.length && removeStaffIds.length) {
-            await HotelRoom.updateMany(
-              { _id: { $in: removeRoomIds } },
-              { $pull: { staffIds: { $in: removeStaffIds } } },
-              { session },
-            );
-          }
+        return respond(c, "Bulk update successful", false, 200, {});
+      });
+    },
+  )
+
+  .put(
+    "/remove_bulk_staff",
+    zValidator(
+      "json",
+      z.object({
+        roomId: z.array(z.string().min(24).max(24)).default([]),
+        staffIds: z.array(z.string().min(24).max(24)).default([]),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const { roomId, staffIds } = await c.req.json();
+
+        if (staffIds.length) {
+          await HotelRoom.updateMany(
+            { _id: { $in: roomId } },
+            { $pull: { staffIds: { $in: staffIds } } },
+            { session },
+          );
         }
 
         return respond(c, "Bulk update successful", false, 200, {});
