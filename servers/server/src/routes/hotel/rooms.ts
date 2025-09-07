@@ -1331,8 +1331,9 @@ const roomRouter = new Hono()
       z.object({
         rooms: z.array(
           z.object({
-            roomIds: z.array(z.string().min(24).max(24)).default([]),
+            roomId: z.string().min(24).max(24),
             staffIds: z.array(z.string().min(24).max(24)).default([]),
+            removeStaffIds: z.array(z.string().min(24).max(24)).default([]),
           }),
         ),
       }),
@@ -1343,12 +1344,27 @@ const roomRouter = new Hono()
         const { rooms } = await c.req.json();
 
         for (const part of rooms) {
-          const { roomIds = [], staffIds = [] } = part;
+          const { roomId, staffIds = [], removeStaffIds = [] } = part;
 
-          if (roomIds.length && staffIds.length) {
-            await HotelRoom.updateMany(
-              { _id: { $in: roomIds } },
+          // CASE 1: Both empty → do nothing
+          if (!staffIds.length && !removeStaffIds.length) {
+            continue;
+          }
+
+          // CASE 2: Add staff
+          if (staffIds.length) {
+            await HotelRoom.updateOne(
+              { _id: roomId },
               { $addToSet: { staffIds: { $each: staffIds } } },
+              { session },
+            );
+          }
+
+          // CASE 3: Remove staff
+          if (removeStaffIds.length) {
+            await HotelRoom.updateOne(
+              { _id: roomId },
+              { $pull: { staffIds: { $in: removeStaffIds } } },
               { session },
             );
           }
@@ -1358,34 +1374,6 @@ const roomRouter = new Hono()
       });
     },
   )
-
-  .put(
-    "/remove_bulk_staff",
-    zValidator(
-      "json",
-      z.object({
-        roomId: z.array(z.string().min(24).max(24)).default([]),
-        staffIds: z.array(z.string().min(24).max(24)).default([]),
-      }),
-    ),
-    async (c) => {
-      //@ts-ignore
-      return runInTransaction(async (session) => {
-        const { roomId, staffIds } = await c.req.json();
-
-        if (staffIds.length) {
-          await HotelRoom.updateMany(
-            { _id: { $in: roomId } },
-            { $pull: { staffIds: { $in: staffIds } } },
-            { session },
-          );
-        }
-
-        return respond(c, "Bulk update successful", false, 200, {});
-      });
-    },
-  )
-
   .put(
     "/review/read_by",
     zValidator(

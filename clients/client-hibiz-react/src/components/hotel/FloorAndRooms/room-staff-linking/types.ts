@@ -1,5 +1,3 @@
-export type BulkAction = "ADD" | "REMOVE";
-
 export type FloorDoc = { _id: string; name: string };
 
 export type RoomDoc = {

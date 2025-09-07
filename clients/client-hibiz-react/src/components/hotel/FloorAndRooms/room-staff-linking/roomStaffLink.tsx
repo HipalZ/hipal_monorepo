@@ -1,353 +1,312 @@
-import { lazy, useMemo, useRef, useState } from "react";
-import type { FloorDoc, GroupedPreview, RoomDoc, StaffDoc } from "./types";
-import { StaffSelector } from "./staffSelector";
-import { useStaffDataStore } from "@/components/store/hotel/useHotelStaff";
-import { useFloorStore } from "@/components/store/hotel/useFloorStore";
-import { useRoomStore } from "@/components/store/hotel/useRoomStore";
-import { useStaffLinking } from "@/hooks/hotel/useStaffLinking";
-import LoadingSpinner from "@/components/atom/loadingSpinner";
-import { ConfirmDialog } from "@/components/hotel/FloorAndRooms/room-staff-linking/confirmDialog";
-import { PreviewDialog } from "@/components/hotel/FloorAndRooms/room-staff-linking/previewDialog";
-import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
-import { RoomsSelector } from "@/components/hotel/FloorAndRooms/room-staff-linking/roomsSelector";
-import { Button } from "@/components/ui/button";
-import { usePreview } from "@/components/hotel/FloorAndRooms/room-staff-linking/usePreview";
-import { ArrowLeft, Plus, Minus } from "lucide-react";
-
+import { useEffect, useMemo, useState } from "react";
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-} from "@/components/ui/dropdown-menu";
+  DndContext,
+  DragOverlay,
+  type DragEndEvent,
+  type DragStartEvent,
+  type DropAnimation,
+  defaultDropAnimationSideEffects,
+} from "@dnd-kit/core";
+import { CheckCircle2 } from "lucide-react";
+import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
+import { useStaffDataStore } from "@/components/store/hotel/useHotelStaff";
+import { useRoomStore } from "@/components/store/hotel/useRoomStore";
+import { useFloorStore } from "@/components/store/hotel/useFloorStore";
+import { useStaffLinking } from "@/hooks/hotel/useStaffLinking";
+import type { FloorDoc, RoomDoc, StaffDoc } from "./types";
+import { DroppableFloor } from "./droppableFloor";
+import DraggableStaff from "./draggableStaff";
+import { StaffAssignmentsDialog } from "./staffAssignmentDialog";
+import { DroppableRoom } from "./droppableRoom";
 
-const StaffAllocation = lazy(() => import("./staffAllocation"));
-
-type Mode = "ADD" | "REMOVE";
+const formatRoleName = (role = "Uncategorized") => {
+  return role
+    .replace(/_/g, " ")
+    .replace(
+      /\w\S*/g,
+      (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(),
+    );
+};
 
 export function RoomStaffLink() {
   const { mutateAsync, isPending } = useStaffLinking();
-
-  // stores
-  const selectedRooms = useStaffDataStore((s) => s.selectedRooms);
-  const selectedStaff = useStaffDataStore((s) => s.selectedStaff);
-  const setSelectedRoomsStore = useStaffDataStore((s) => s.setSelectedRooms);
-  const setSelectedStaffStore = useStaffDataStore((s) => s.setSelectedStaff);
-  const toggleRoomSelectionStore = useStaffDataStore(
-    (s) => s.toggleRoomSelection,
-  );
-  const toggleStaffSelectionStore = useStaffDataStore(
-    (s) => s.toggleStaffSelection,
-  );
-  const clearSelections = useStaffDataStore((s) => s.clearSelections);
-  const getStaffByRoom = useStaffDataStore((s) => s.getStaffByRoom);
-  const getRoomsByStaff = useStaffDataStore((s) => s.getRoomsByStaff);
+  const [infoStaff, setInfoStaff] = useState<StaffDoc | null>(null);
   const staffListRaw = useStaffDataStore((s) => s.staffData);
-
-  const [openTool, setOpenTool] = useState(false);
-  const { roomData: roomDataRaw, roomType: roomTypes } = useRoomStore();
+  const roomRawData = useRoomStore((s) => s.roomData);
   const floorDataRaw = useFloorStore((s) => s.floorData);
 
-  // Safe arrays
-  const rooms = (Array.isArray(roomDataRaw) ? roomDataRaw : []) as RoomDoc[];
   const staff = (Array.isArray(staffListRaw) ? staffListRaw : []) as StaffDoc[];
+  const rooms = (Array.isArray(roomRawData) ? roomRawData : []) as RoomDoc[];
   const floors = (
     Array.isArray(floorDataRaw) ? floorDataRaw : []
   ) as FloorDoc[];
-  const selRooms = Array.isArray(selectedRooms) ? selectedRooms : [];
-  const selStaff = Array.isArray(selectedStaff) ? selectedStaff : [];
 
-  // Track unchecks this session (to be removed)
-  const [removedRooms, setRemovedRooms] = useState<string[]>([]);
-  const [removedStaff, setRemovedStaff] = useState<string[]>([]);
-
-  // Mode + baselines captured at moment of switching to REMOVE
-  const [mode, setMode] = useState<Mode>("ADD");
-  const baselineRoomsRef = useRef<Set<string>>(new Set());
-  const baselineStaffRef = useRef<Set<string>>(new Set());
-
-  const uniq = <T,>(arr: T[]) => Array.from(new Set(arr));
-
-  // Preview (used for ADD flow UX)
-  const [showPreview, setShowPreview] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [successPreview, setSuccessPreview] = useState<GroupedPreview>([]);
-  const { buildPreview, totalPairings } = usePreview(
-    selRooms,
-    selStaff,
-    rooms,
-    staff,
-    floors,
+  const [assignments, setAssignments] = useState<Record<string, Set<string>>>(
+    {},
   );
-  const preview = buildPreview();
+  const [activeStaff, setActiveStaff] = useState<StaffDoc | null>(null);
 
-  // ---- Togglers (mode-aware) ----
-  const handleToggleRoomSelection = (id: string) => {
-    if (mode === "REMOVE") {
-      // Only allow toggling baseline items
-      if (!baselineRoomsRef.current.has(id)) return;
+  const [initialAssignments, setInitialAssignments] = useState<
+    Record<string, Set<string>>
+  >({});
 
-      const wasSelected = selRooms.includes(id);
-      if (wasSelected) {
-        // Unchecking → mark to remove
-        setRemovedRooms((p) => uniq([...p, id]));
-      } else {
-        // Re-checking → undo removal
-        setRemovedRooms((p) => p.filter((x) => x !== id));
+  useEffect(() => {
+    const mapping: Record<string, Set<string>> = {};
+    for (const room of rooms) {
+      if (Array.isArray(room.staffIds) && room.staffIds.length > 0) {
+        mapping[room._id] = new Set(room.staffIds);
       }
-      toggleRoomSelectionStore(id);
-      return;
     }
+    setAssignments(mapping);
+    setInitialAssignments(mapping);
+  }, [rooms]);
 
-    // ADD mode
-    toggleRoomSelectionStore(id);
-  };
+  const groupedStaff = useMemo(() => {
+    return staff.reduce(
+      (acc, staffMember) => {
+        const role = staffMember.customRole?.[0]?.role || "Uncategorized";
+        if (!acc[role]) {
+          acc[role] = [];
+        }
+        acc[role].push(staffMember);
+        return acc;
+      },
+      {} as Record<string, StaffDoc[]>,
+    );
+  }, [staff]);
 
-  const handleToggleStaffSelection = (id: string) => {
-    if (mode === "REMOVE") {
-      if (!baselineStaffRef.current.has(id)) return;
-
-      const wasSelected = selStaff.includes(id);
-      if (wasSelected) {
-        setRemovedStaff((p) => uniq([...p, id]));
-      } else {
-        setRemovedStaff((p) => p.filter((x) => x !== id));
+  const assignedStaffIds = useMemo(() => {
+    const allIds = new Set<string>();
+    for (const staffSet of Object.values(assignments)) {
+      for (const id of staffSet) {
+        allIds.add(id);
       }
-      toggleStaffSelectionStore(id);
-      return;
+    }
+    return allIds;
+  }, [assignments]);
+
+  function handleDragStart(event: DragStartEvent) {
+    const staffData = event.active.data.current?.staff as StaffDoc;
+    if (staffData) setActiveStaff(staffData);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    setActiveStaff(null);
+    const { over, active } = event;
+    if (!over || !active.data.current?.staffId) return;
+
+    const staffId = active.data.current.staffId as string;
+    const dropType = over.data.current?.type;
+
+    if (dropType === "room") {
+      const roomId = over.data.current.roomId as string;
+      setAssignments((prev) => {
+        const next = { ...prev };
+        const set = new Set(next[roomId] || []);
+        set.add(staffId);
+        next[roomId] = set;
+        return next;
+      });
     }
 
-    // ADD mode
-    toggleStaffSelectionStore(id);
-  };
-
-  // ---- Bulk setters (keep safe in REMOVE) ----
-  const handleSetSelectedRooms = (nextIds: string[]) => {
-    if (mode === "REMOVE") {
-      const baseline = baselineRoomsRef.current;
-      const safeNext = nextIds.filter((id) => baseline.has(id)); // clamp
-      const removed = selRooms.filter((id) => !safeNext.includes(id));
-      const addedBack = safeNext.filter((id) => !selRooms.includes(id));
-      setRemovedRooms((p) => uniq([...p, ...removed]));
-      setRemovedRooms((p) => p.filter((id) => !addedBack.includes(id)));
-      setSelectedRoomsStore(safeNext);
-      return;
+    if (dropType === "floor") {
+      const floorId = over.data.current.floorId as string;
+      const floorRooms = rooms.filter((r) => r.zoneId === floorId);
+      setAssignments((prev) => {
+        const next = { ...prev };
+        for (const r of floorRooms) {
+          const set = new Set(next[r._id] || []);
+          set.add(staffId);
+          next[r._id] = set;
+        }
+        return next;
+      });
     }
-    // ADD mode
-    setSelectedRoomsStore(nextIds);
-  };
+  }
 
-  const handleSetSelectedStaff = (nextIds: string[]) => {
-    if (mode === "REMOVE") {
-      const baseline = baselineStaffRef.current;
-      const safeNext = nextIds.filter((id) => baseline.has(id));
-      const removed = selStaff.filter((id) => !safeNext.includes(id));
-      const addedBack = safeNext.filter((id) => !selStaff.includes(id));
-      setRemovedStaff((p) => uniq([...p, ...removed]));
-      setRemovedStaff((p) => p.filter((id) => !addedBack.includes(id)));
-      setSelectedStaffStore(safeNext);
-      return;
-    }
-    // ADD mode
-    setSelectedStaffStore(nextIds);
-  };
+  function handleRemove(roomId: string, staffId: string) {
+    setAssignments((prev) => {
+      const next = { ...prev };
+      const set = new Set(next[roomId] || []);
+      set.delete(staffId);
+      next[roomId] = set;
+      return next;
+    });
+  }
 
-  // ---- Proceed rules ----
-  const canProceed = useMemo(() => {
-    if (mode === "ADD") return selRooms.length > 0 && selStaff.length > 0;
-    return removedRooms.length > 0 && removedStaff.length > 0;
-  }, [mode, selRooms, selStaff, removedRooms, removedStaff]);
+  const floorAssignments = useMemo(() => {
+    return floors.reduce(
+      (acc, f) => {
+        const floorRooms = rooms.filter((r) => r.zoneId === f._id);
+        const staffSet = new Set<string>();
+        for (const r of floorRooms) {
+          for (const sid of assignments[r._id] || new Set()) {
+            staffSet.add(sid);
+          }
+        }
+        acc[f._id] = staff.filter((s) => staffSet.has(s._id));
+        return acc;
+      },
+      {} as Record<string, StaffDoc[]>,
+    );
+  }, [floors, rooms, assignments, staff]);
 
-  const openPreview = () => {
-    if (!canProceed) return;
-    if (mode === "REMOVE") return;
-    setShowPreview(true);
-  };
-
-  const openConfirm = () => {
-    if (!canProceed) return;
-    setShowConfirm(true);
-  };
-
-  // ---- Execute ----
-  const onExecute = async () => {
-    try {
-      if (!canProceed) {
-        setShowConfirm(false);
-        setShowPreview(false);
-        return;
+  function handleRemoveFromFloor(floorId: string, staffId: string) {
+    setAssignments((prev) => {
+      const next = { ...prev };
+      const floorRooms = rooms.filter((r) => r.zoneId === floorId);
+      for (const r of floorRooms) {
+        if (next[r._id]) {
+          const set = new Set(next[r._id]);
+          set.delete(staffId);
+          next[r._id] = set;
+        }
       }
+      return next;
+    });
+  }
 
-      const payload =
-        mode === "ADD"
-          ? { rooms: [{ roomIds: selRooms, staffIds: selStaff }] }
-          : {
-              rooms: [
-                { removeRoomIds: selRooms, removeStaffIds: removedStaff },
-              ],
-            };
+  async function handleSave() {
+    const roomsPayload = Object.keys({
+      ...assignments,
+      ...initialAssignments,
+    }).map((roomId) => {
+      const initial = initialAssignments[roomId] || new Set();
+      const current = assignments[roomId] || new Set();
 
-      await mutateAsync(payload);
+      const added = [...current].filter((id) => !initial.has(id));
+      const removed = [...initial].filter((id) => !current.has(id));
 
-      setSuccessPreview(preview);
-      setShowConfirm(false);
-      setShowPreview(false);
+      return {
+        roomId,
+        staffIds: added,
+        removeStaffIds: removed,
+      };
+    });
 
-      // Reset everything for a clean next action
-      clearSelections();
-      setRemovedRooms([]);
-      setRemovedStaff([]);
-      baselineRoomsRef.current = new Set();
-      baselineStaffRef.current = new Set();
-      setMode("ADD");
-    } catch {
-      setShowConfirm(false);
-    }
+    const payload = { rooms: roomsPayload };
+    console.log("Payload:", payload);
+    await mutateAsync(payload);
+
+    // Update baseline after save
+    setInitialAssignments(assignments);
+  }
+
+  const dropAnimation: DropAnimation = {
+    sideEffects: defaultDropAnimationSideEffects({
+      styles: { active: { opacity: "0.5" } },
+    }),
   };
-
-  // ---- Tool open/close ----
-  const toggleTool = () => {
-    setOpenTool((v) => !v);
-    clearSelections();
-    setRemovedRooms([]);
-    setRemovedStaff([]);
-    baselineRoomsRef.current = new Set();
-    baselineStaffRef.current = new Set();
-    setMode("ADD");
-  };
-
-  // ---- Mode change (no clearing) ----
-  const onModeChange = (next: Mode) => {
-    setMode(next);
-
-    if (next === "REMOVE") {
-      // Snapshot current selection as baseline
-      baselineRoomsRef.current = new Set(selRooms);
-      baselineStaffRef.current = new Set(selStaff);
-      setRemovedRooms([]);
-      setRemovedStaff([]);
-    } else {
-      // Back to ADD
-      baselineRoomsRef.current = new Set();
-      baselineStaffRef.current = new Set();
-      setRemovedRooms([]);
-      setRemovedStaff([]);
-    }
-
-    setShowPreview(false);
-    setShowConfirm(false);
-  };
-
-  if (isPending) return <LoadingSpinner />;
 
   return (
-    <div className="space-y-6 p-4 md:p-6 mx-auto max-w-7xl mb-[3rem]">
-      {!openTool ? (
-        <div className="space-y-2 text-center">
-          <StaffAllocation toggleTool={toggleTool} setOpenTool={setOpenTool} />
-        </div>
-      ) : (
-        <>
-          {/* Header row with Back + Action dropdown */}
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <Button
-              variant="ghost"
-              className="flex items-center gap-2"
-              onClick={toggleTool}
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="text-sm text-gray-600">Back to Overview</span>
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  {mode === "ADD" ? (
-                    <Plus className="h-4 w-4" />
-                  ) : (
-                    <Minus className="h-4 w-4" />
-                  )}
-                  {mode === "ADD" ? "Add mode" : "Remove mode"}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuLabel>Action</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup
-                  value={mode}
-                  onValueChange={(v) => onModeChange(v as Mode)}
-                >
-                  <DropdownMenuRadioItem value="ADD">Add</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="REMOVE">
-                    Remove
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 pb-32 md:pb-20">
-            <RoomsSelector
-              rooms={rooms}
+    <>
+      <div className="h-[90vh] flex flex-col p-4 bg-slate-50">
+        <h1 className="font-semibold text-3xl my-2">Staff Assignment</h1>
+        <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow overflow-hidden">
+            <aside className="col-span-1 flex flex-col bg-white p-4 rounded-lg shadow-sm overflow-y-auto">
+              <h2 className="text-xl font-bold mb-4 text-slate-800 flex-shrink-0">
+                Staff
+              </h2>
+              <div className="overflow-y-auto -mr-4 pr-4">
+                {Object.entries(groupedStaff).map(([role, staffInRole]) => (
+                  <div key={role} className="mb-4">
+                    <h3 className="text-xs font-bold uppercase text-slate-500 mb-2 sticky top-0 bg-white py-1">
+                      {formatRoleName(role)}
+                    </h3>
+                    {staffInRole.map((s) => (
+                      <DraggableStaff
+                        key={s._id}
+                        staff={s}
+                        isAssigned={assignedStaffIds.has(s._id)}
+                        isDragging={activeStaff?._id === s._id}
+                        onInfoClick={(st) => setInfoStaff(st)}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </aside>
+            {/* Info Modal */}
+            <StaffAssignmentsDialog
+              open={!!infoStaff}
+              onClose={() => setInfoStaff(null)}
+              staff={infoStaff}
+              assignments={assignments}
               floors={floors}
-              selectedRooms={selRooms}
-              setSelectedRooms={handleSetSelectedRooms}
-              toggleRoomSelection={handleToggleRoomSelection}
-              getStaffByRoom={getStaffByRoom}
-              roomTypes={roomTypes}
+              rooms={rooms}
             />
-            <StaffSelector
-              staff={staff}
-              selectedStaff={selStaff}
-              setSelectedStaff={handleSetSelectedStaff}
-              toggleStaffSelection={handleToggleStaffSelection}
-              getRoomsByStaff={getRoomsByStaff}
-            />
+
+            <main className="col-span-1 lg:col-span-2 overflow-y-auto bg-white p-4 rounded-lg shadow-sm">
+              <h2 className="text-xl font-bold mb-4 text-slate-800">
+                Floors & Rooms
+              </h2>
+              {floors.map((f) => {
+                const floorRooms = rooms.filter((r) => r.zoneId === f._id);
+                const staffCount = new Set(
+                  floorRooms.flatMap((r) =>
+                    Array.from(assignments[r._id] || []),
+                  ),
+                ).size;
+
+                return (
+                  <DroppableFloor
+                    key={f._id}
+                    floor={f}
+                    roomCount={floorRooms.length}
+                    staffCount={staffCount}
+                    assignedStaff={floorAssignments[f._id] || []}
+                    onRemoveStaff={(sid) => handleRemoveFromFloor(f._id, sid)}
+                  >
+                    {floorRooms.map((r) => (
+                      <DroppableRoom
+                        key={r._id}
+                        room={r}
+                        assigned={staff.filter((s) =>
+                          (assignments[r._id] || new Set()).has(s._id),
+                        )}
+                        onRemove={(sid) => handleRemove(r._id, sid)}
+                      />
+                    ))}
+                  </DroppableFloor>
+                );
+              })}
+            </main>
           </div>
 
-          <AdvancedBottomButton
-            fixed
-            maxWidth="36rem"
-            buttons={[
-              {
-                text: "Preview",
-                onClick: openPreview,
-                disable: mode === "REMOVE" || !canProceed,
-                className:
-                  "w-full sm:w-auto py-3 px-6 ring-1 ring-blue-200 text-blue-700 bg-white hover:bg-blue-50 shadow-lg",
-              },
-              {
-                text:
-                  mode === "ADD"
-                    ? selRooms.length && selStaff.length
-                      ? `Add staff × ${selRooms.length} rooms (${totalPairings})`
-                      : "Add"
-                    : "Apply removals",
-                onClick: openConfirm,
-                disable: !canProceed,
-                className:
-                  "w-full sm:w-auto py-3 px-6 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg",
-              },
-            ]}
-          />
+          <DragOverlay dropAnimation={dropAnimation}>
+            {activeStaff ? (
+              <div className="p-2 flex items-center gap-3 rounded-lg border bg-white shadow-xl">
+                {assignedStaffIds.has(activeStaff._id) ? (
+                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+                ) : (
+                  <div className="w-5 h-5 bg-slate-200 rounded-full" />
+                )}
+                <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center font-bold text-sm text-gray-700">
+                  {activeStaff.name.slice(0, 2).toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-semibold">{activeStaff.name}</p>
+                  <p className="text-xs text-gray-500">{activeStaff.phone}</p>
+                </div>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      </div>
 
-          <PreviewDialog
-            open={showPreview}
-            onOpenChange={setShowPreview}
-            preview={preview}
-            onProceed={openConfirm}
-          />
-          <ConfirmDialog
-            open={showConfirm}
-            onOpenChange={setShowConfirm}
-            onExecute={onExecute}
-            preview={successPreview}
-          />
-        </>
-      )}
-    </div>
+      <AdvancedBottomButton
+        fixed={true}
+        maxWidth="30rem"
+        buttons={[
+          {
+            text: "Save Assignments",
+            onClick: handleSave,
+            className: "w-full pl-3 rounded-md",
+            isLoading: isPending,
+          },
+        ]}
+      />
+    </>
   );
 }
