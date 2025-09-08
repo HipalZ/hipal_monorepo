@@ -1,46 +1,50 @@
-"use client"
+"use client";
 
-import { useState, useEffect, memo } from "react"
-import ShimmerImage from "../atoms/imageshimmer"
-import { useScreenSize } from "../hooks/useScreenSize"
-import type { BusinessDetails } from "../types/businessData"
-import { useHotelBusinessData } from "../store/useHotelBusinessData"
+import { useState, useEffect, memo } from "react";
+import ShimmerImage from "../atoms/imageshimmer";
+import { useScreenSize } from "../hooks/useScreenSize";
+import type { BusinessDetails } from "../types/businessData";
+import { useHotelBusinessData } from "../store/useHotelBusinessData";
 
 interface TopSectionProps {
-  business: BusinessDetails
-  height?: string
-  className?: string
+  business: BusinessDetails;
+  height?: string;
+  className?: string;
 }
 
 // Using named export for better tree-shaking
-export function TopSectionOfHotel({ business, height = "h-[30rem]", className = "" }: TopSectionProps) {
-  const { specialBannerUrl } = business
-  const {setHotelData} = useHotelBusinessData()
+export function TopSectionOfHotel({
+  business,
+  height = "h-[30rem]",
+  className = "",
+}: TopSectionProps) {
+  const { specialBannerUrl } = business;
+  const { setHotelData } = useHotelBusinessData();
   const [mediaState, setMediaState] = useState<{
-    isVideo: boolean
-    isLoading: boolean
-    error: boolean
+    isVideo: boolean;
+    isLoading: boolean;
+    error: boolean;
   }>({
     isVideo: false,
     isLoading: true,
     error: !specialBannerUrl,
-  })
+  });
 
   useEffect(() => {
-    if(business){
-      setHotelData(business)
+    if (business) {
+      setHotelData(business);
     }
 
     if (!specialBannerUrl) {
-      setMediaState({ isVideo: false, isLoading: false, error: true })
-      return
+      setMediaState({ isVideo: false, isLoading: false, error: true });
+      return;
     }
 
-    const isVideoFile = /\.(mp4|webm|ogg|mov)$/i.test(specialBannerUrl)
-    setMediaState({ isVideo: isVideoFile, isLoading: false, error: false })
-  }, [specialBannerUrl])
+    const isVideoFile = /\.(mp4|webm|ogg|mov)$/i.test(specialBannerUrl);
+    setMediaState({ isVideo: isVideoFile, isLoading: false, error: false });
+  }, [specialBannerUrl]);
 
-  const { isVideo, isLoading, error } = mediaState
+  const { isVideo, isLoading, error } = mediaState;
 
   if (isLoading) {
     return (
@@ -49,7 +53,7 @@ export function TopSectionOfHotel({ business, height = "h-[30rem]", className = 
           <span className="text-muted-foreground">Loading...</span>
         </div>
       </div>
-    )
+    );
   }
 
   if (error || !specialBannerUrl) {
@@ -59,11 +63,13 @@ export function TopSectionOfHotel({ business, height = "h-[30rem]", className = 
           <span className="text-muted-foreground">No banner available</span>
         </div>
       </div>
-    )
+    );
   }
 
   return (
-    <div className={`${height} w-full overflow-hidden rounded-b-2xl relative ${className}`}>
+    <div
+      className={`${height} w-full overflow-hidden rounded-b-2xl relative ${className}`}
+    >
       {isVideo ? (
         <VideoContent
           url={specialBannerUrl}
@@ -81,16 +87,16 @@ export function TopSectionOfHotel({ business, height = "h-[30rem]", className = 
         />
       )}
     </div>
-  )
+  );
 }
 
 // Common interface for media content props
 interface MediaContentProps {
-  url: string
-  logoUrl?: string
-  businessName?: string
-  businessDescription?: string
-  tags?: string[]
+  url: string;
+  logoUrl?: string;
+  businessName?: string;
+  businessDescription?: string;
+  tags?: string[];
 }
 
 // Business info component to avoid duplication
@@ -98,12 +104,12 @@ const BusinessInfo = memo(function BusinessInfo({
   logoUrl,
   businessName,
   businessDescription,
-  tags
+  tags,
 }: {
-  logoUrl?: string
-  businessName?: string
-  businessDescription?: string
-  tags?: string[]
+  logoUrl?: string;
+  businessName?: string;
+  businessDescription?: string;
+  tags?: string[];
 }) {
   return (
     <div className="absolute bottom-6 left-4 flex items-end gap-4 max-w-[80%] z-10">
@@ -123,32 +129,32 @@ const BusinessInfo = memo(function BusinessInfo({
       {/* Text content */}
       <div className="text-white ">
         {businessName && (
-          <h1 className="text-xl font-bold md:text-3xl text-shadow font-play">{businessName}</h1>
+          <h1 className="text-xl font-bold md:text-3xl text-shadow font-play">
+            {businessName}
+          </h1>
         )}
-        {
-          tags && tags?.length > 0 && (
-            <div className="text-sm font-semibold md:text-base text-white/70 text-shadow">
-              {tags?.join(" | ")}
-            </div>
-          )
-        }
+        {tags && tags?.length > 0 && (
+          <div className="text-sm font-semibold md:text-base text-white/70 text-shadow inter">
+            {tags?.join(" | ")}
+          </div>
+        )}
         {businessDescription && (
-          <p className="mt-1 text-sm md:text-base text-white/70 line-clamp-2 text-shadow">
+          <p className="mt-1 text-sm md:text-base text-white/70 line-clamp-2 text-shadow inter">
             {businessDescription}
           </p>
         )}
       </div>
     </div>
-  )
-})
+  );
+});
 
 const VideoContent = memo(function VideoContent({
   url,
   logoUrl,
   businessName,
-  businessDescription
+  businessDescription,
 }: MediaContentProps) {
-  const screenSize = useScreenSize()
+  const screenSize = useScreenSize();
 
   return (
     <div className="relative w-full h-full">
@@ -163,31 +169,31 @@ const VideoContent = memo(function VideoContent({
       />
 
       {/* Gradient overlay */}
-      {screenSize !== 'xs' && (
+      {screenSize !== "xs" && (
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
       )}
 
       {/* Business info container */}
-      {(logoUrl || businessName || businessDescription) && screenSize !== 'xs' && (
-        <BusinessInfo
-          logoUrl={logoUrl}
-          businessName={businessName}
-          businessDescription={businessDescription}
-
-        />
-      )}
+      {(logoUrl || businessName || businessDescription) &&
+        screenSize !== "xs" && (
+          <BusinessInfo
+            logoUrl={logoUrl}
+            businessName={businessName}
+            businessDescription={businessDescription}
+          />
+        )}
     </div>
-  )
-})
+  );
+});
 
 const ImageContent = memo(function ImageContent({
   url,
   logoUrl,
   businessName,
   businessDescription,
-  tags
+  tags,
 }: MediaContentProps) {
-  const screenSize = useScreenSize()
+  const screenSize = useScreenSize();
 
   return (
     <div className="relative w-full h-full ">
@@ -205,19 +211,20 @@ const ImageContent = memo(function ImageContent({
       />
 
       {/* Gradient overlay */}
-      {screenSize !== 'xs' && (
+      {screenSize !== "xs" && (
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
       )}
 
       {/* Business info container */}
-      {(logoUrl || businessName || businessDescription) && screenSize !== 'xs' && (
-        <BusinessInfo
-          logoUrl={logoUrl}
-          businessName={businessName}
-          businessDescription={businessDescription}
-          tags={tags}
-        />
-      )}
+      {(logoUrl || businessName || businessDescription) &&
+        screenSize !== "xs" && (
+          <BusinessInfo
+            logoUrl={logoUrl}
+            businessName={businessName}
+            businessDescription={businessDescription}
+            tags={tags}
+          />
+        )}
     </div>
-  )
-})
+  );
+});

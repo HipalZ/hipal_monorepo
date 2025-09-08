@@ -141,6 +141,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 8,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/ade35fc5-6c64-46e6-b3c9-5067d92d171f.png",
         },
         {
           name: "Tv Remote not working",
@@ -149,6 +151,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 8,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/761b3244-a33b-4e9d-ae95-176b387917b5.png",
         },
         {
           name: "Set up box not working",
@@ -157,6 +161,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 8,
           avgAcceptanceTime: 5,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/0a7c0ed5-476f-41df-93e9-d9a56c874524.png",
         },
         {
           name: "operating issue",
@@ -165,6 +171,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 8,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/6925e0e0-3086-4314-b9ad-789f142a80a9.jpeg",
         },
         {
           name: "Battery issue",
@@ -173,6 +181,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 8,
           avgAcceptanceTime: 5,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/d4fc3128-1769-412c-b344-1c3fa8125af4.jpeg",
         },
         {
           name: "switch on issue",
@@ -181,6 +191,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 8,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/2761b5de-fae8-42d8-8f25-8f12cfad7c37.jpeg",
         },
         {
           name: "tv connect to wifi issue",
@@ -189,8 +201,9 @@ const scriptRouter = new Hono()
           avgCompletionTime: 8,
           avgAcceptanceTime: 5,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/84f14a31-ba5c-4b83-9477-fa8c8bbe2744.jpeg",
         },
-
         {
           name: "Ac not working",
           businessId,
@@ -198,6 +211,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 15,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 10,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/c42238ba-f305-441a-bc92-5998b73f95f4.png",
         },
         {
           name: "switch on issue",
@@ -206,6 +221,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 10,
           avgAcceptanceTime: 5,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/2761b5de-fae8-42d8-8f25-8f12cfad7c37.jpeg",
         },
         {
           name: "filter cleaning issue",
@@ -214,8 +231,9 @@ const scriptRouter = new Hono()
           avgCompletionTime: 15,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 10,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/75d206bd-052a-4400-b463-da0929341809.jpeg",
         },
-
         {
           name: "Ac Remote setting changes",
           businessId,
@@ -223,14 +241,18 @@ const scriptRouter = new Hono()
           avgCompletionTime: 7,
           avgAcceptanceTime: 5,
           avgDeliveryTime: 6,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/0c602864-22b7-4b0c-82e8-66bbe39efb36.png",
         },
         {
           name: "AC gas leakage",
           businessId,
           categoryId: categoryMap["AC"],
-          avgCompletionTime: 36000,
+          avgCompletionTime: 30,
           avgAcceptanceTime: 2,
-          avgDeliveryTime: 36000,
+          avgDeliveryTime: 28,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/08c7819f-8ae6-46ee-b2a1-2c62e454de3d.jpeg",
         },
         {
           name: "Water not coming",
@@ -239,6 +261,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 15,
           avgAcceptanceTime: 5,
           avgDeliveryTime: 10,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/3ee2396a-aa8b-46c9-9c68-0af8ee5dfed9.jpeg",
         },
         {
           name: "health Faucet checking",
@@ -247,6 +271,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 10,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/898612a9-e231-49e6-ada1-3cf9ea4b3873.jpeg",
         },
         {
           name: "w.c Tank checking",
@@ -255,6 +281,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 15,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/1568803e-9dc7-49f2-80c1-d7bebfb81803.jpeg",
         },
         {
           name: "sink chowk",
@@ -263,8 +291,9 @@ const scriptRouter = new Hono()
           avgCompletionTime: 10,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/f7d69ec6-9d20-4ae1-86bd-2d6f4a35d216.jpeg",
         },
-
         {
           name: "nani trap Jam",
           businessId,
@@ -272,8 +301,9 @@ const scriptRouter = new Hono()
           avgCompletionTime: 10,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/67c18e9c-e5aa-4a5c-9f44-8c72409ce293.png",
         },
-
         {
           name: "Head shower not working",
           businessId,
@@ -281,8 +311,9 @@ const scriptRouter = new Hono()
           avgCompletionTime: 10,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/487fe49f-b3f7-4a2c-b262-57059f0ad757.png",
         },
-
         {
           name: "Towel rack came out",
           businessId,
@@ -290,8 +321,9 @@ const scriptRouter = new Hono()
           avgCompletionTime: 15,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/4ef851af-1bfe-4b34-94dc-10bac637aeb7.jpeg",
         },
-
         {
           name: "Health faucet stand came out",
           businessId,
@@ -299,8 +331,9 @@ const scriptRouter = new Hono()
           avgCompletionTime: 10,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/543ea042-bb56-4a56-bfa8-e9877a12d454.png",
         },
-
         {
           name: "Wifi not working",
           businessId,
@@ -308,14 +341,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 15,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
-        },
-        {
-          name: "infrom to vendor",
-          businessId,
-          categoryId: categoryMap["WIFI"],
-          avgCompletionTime: 15,
-          avgAcceptanceTime: 2,
-          avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/df0e1a24-d146-4387-a2c4-8f9f6f8b786b.png",
         },
         {
           name: "PRI Line issues - inform vendor",
@@ -324,8 +351,9 @@ const scriptRouter = new Hono()
           avgCompletionTime: 15,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/e8318d15-05fc-4f12-b629-86b4beeed690.png",
         },
-
         {
           name: "Door not closing",
           businessId,
@@ -333,6 +361,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 10,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/2d5308ae-2dc1-4d3b-9690-7e1b08035feb.jpeg",
         },
         {
           name: "Door lock issue",
@@ -341,6 +371,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 10,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/81f48fde-1ca4-4ba2-83c8-a247a936f507.jpeg",
         },
         {
           name: "lock software issue- vendor scope",
@@ -349,16 +381,9 @@ const scriptRouter = new Hono()
           avgCompletionTime: 10,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/4f783149-a697-4197-bcc9-5ce577337bae.png",
         },
-        {
-          name: "main door not closing properly",
-          businessId,
-          categoryId: categoryMap["CARPENTER"],
-          avgCompletionTime: 10,
-          avgAcceptanceTime: 2,
-          avgDeliveryTime: 7,
-        },
-
         {
           name: "paint touch up",
           businessId,
@@ -366,6 +391,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 15,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/2fd2ca97-4067-418e-a875-2c879407b760.jpeg",
         },
         {
           name: "Lift not working",
@@ -374,22 +401,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 15,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 7,
-        },
-        {
-          name: "Reset",
-          businessId,
-          categoryId: categoryMap["LIFT"],
-          avgCompletionTime: 15,
-          avgAcceptanceTime: 2,
-          avgDeliveryTime: 7,
-        },
-        {
-          name: "Major issue",
-          businessId,
-          categoryId: categoryMap["LIFT"],
-          avgCompletionTime: 15,
-          avgAcceptanceTime: 2,
-          avgDeliveryTime: 7,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/a26da697-236d-42d9-b50e-2e480eae1de1.jpeg",
         },
         {
           name: "Dental Kit",
@@ -398,6 +411,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/48191062-48f7-4b87-b26f-b6b8be89ce4c.png",
         },
         {
           name: "Comb",
@@ -406,6 +421,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/a6d31e7e-9876-43b3-bbb2-18ef5a600cbe.png",
         },
         {
           name: "Soap",
@@ -414,6 +431,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/9de82142-c5f7-40db-8127-1676880ef777.png",
         },
         {
           name: "Shaving Kit",
@@ -422,6 +441,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/92f01255-44b2-4d6f-869d-82196ebdc716.png",
         },
         {
           name: "Shower Cap",
@@ -430,6 +451,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/fae2029c-5a93-49a5-aff4-df710730ba52.png",
         },
         {
           name: "TCM(Tea, Coffee Maker)",
@@ -438,6 +461,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/61f43711-42b4-458c-82b5-1e454fe9963e.png",
         },
         {
           name: "Body Lotion",
@@ -446,6 +471,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/a2f4ac5c-8eeb-46a0-afc2-84d5f0facc05.png",
         },
         {
           name: "Toilet Roll",
@@ -454,6 +481,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/615b8d9a-22d8-41f2-8c78-2dbe11d9b436.jpeg",
         },
         {
           name: "Water Bottles",
@@ -462,6 +491,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/008c5343-6637-4896-bfda-2e254a882f55.jpeg",
         },
         {
           name: "Match Box",
@@ -470,6 +501,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/9158bdfd-2dfb-47f6-ad3c-e0662fb6d6e0.png",
         },
         {
           name: "Shower Gel",
@@ -478,6 +511,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/8debdb90-bb3b-4562-b32f-d097d9c463fd.png",
         },
         {
           name: "Pencil",
@@ -486,6 +521,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/685e3dd9-4062-41d7-9f5c-d165469a6d9f.png",
         },
         {
           name: "Note Pad",
@@ -494,6 +531,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/feff4fad-aa62-4ad1-ba2e-b51f1b287011.png",
         },
         {
           name: "Laundry Bag",
@@ -502,6 +541,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/96d5c324-24b7-4cf1-be02-267c3e8f2654.png",
         },
         {
           name: "Slippers",
@@ -510,6 +551,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/a96221ec-e7c9-46b8-bd36-8676276bdf61.png",
         },
         {
           name: "Nail Cutter",
@@ -518,6 +561,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/1108495b-21c3-4b4d-b2ae-26caba4738e2.png",
         },
         {
           name: "Bucket & Mug",
@@ -526,6 +571,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/90aae845-95f5-444c-a569-c96e340347e8.png",
         },
         {
           name: "Iron Box & Board",
@@ -534,6 +581,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/35ded989-27f1-4f48-837d-ada4685737f9.png",
         },
         {
           name: "Hair Oil",
@@ -542,6 +591,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/aa5561f3-192a-4ebe-85fb-96eb267aa9ad.png",
         },
         {
           name: "All Out",
@@ -550,6 +601,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/cbd01c50-82f2-4ba7-98bd-169fa336bc5a.jpeg",
         },
         {
           name: "Tissues",
@@ -558,6 +611,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/757f0068-94a6-4596-b264-586f09fd7099.png",
         },
         {
           name: "Extra Bed",
@@ -566,6 +621,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 30,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 28,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/658ee3c3-21a3-4426-ab38-d0cc24751829.png",
         },
         {
           name: "Extra Pillow",
@@ -574,6 +631,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 10,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 9,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/9b219764-c335-481f-a935-b8db79af6327.png",
         },
         {
           name: "Extra Bedsheet Or Duvet",
@@ -582,6 +641,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 10,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 9,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/3d819319-9cae-4b83-a6cc-03c612b7b6f4.png",
         },
         {
           name: "Room Cleaning",
@@ -590,6 +651,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 10,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 9,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/e01ac2b0-64b4-4d8b-a0d6-03a4cad9e64f.png",
         },
         {
           name: "Laundry Delivery",
@@ -598,6 +661,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 10,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 9,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/29ad8b1a-a8fe-437a-806e-d69f67a95513.png",
         },
         {
           name: "Sanitary Pads",
@@ -606,6 +671,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 5,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 4,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/ec7c639b-485b-4429-9cbb-012034e84a37.png",
         },
         {
           name: "Food Delivery",
@@ -614,6 +681,8 @@ const scriptRouter = new Hono()
           avgCompletionTime: 35,
           avgAcceptanceTime: 2,
           avgDeliveryTime: 30,
+          image:
+            "https://t-static.blr1.digitaloceanspaces.com/e4501ab4-7d9c-440d-b55a-1414b044ba92.jpeg",
         },
       ];
 
