@@ -233,8 +233,7 @@ export const usePayments = () => {
   // create order for razorpay
   const createRazorPayOrder = useCallback(
     async (total: number): Promise<string> => {
-
-      const payload= {
+      const payload = {
         businessId: businessId || "",
         total: finalAmount,
         currency: "INR",
@@ -248,7 +247,7 @@ export const usePayments = () => {
         couponId: availedCoupon?._id,
         ...(channelId && { channelId }),
         cashbackAvailable: availedCoupon?.cashbackAvailable,
-      }
+      };
       if (billData?.variantId) {
         payload.variantId = billData.variantId;
       }
@@ -448,10 +447,10 @@ export const usePayments = () => {
         "Please wait for the previous transaction to complete",
       );
     }
-    console.log("handleCreateOfflineOrder called",billData);
+    console.log("handleCreateOfflineOrder called", billData);
     setIsLoading(true);
 
-    const payload ={
+    const payload = {
       businessId: businessId || "",
       total: finalAmount,
       claimedCoins: outletInfo?.isPosEnabled
@@ -465,13 +464,13 @@ export const usePayments = () => {
       couponId: availedCoupon?._id,
       ...(channelId && { channelId }),
       cashbackAvailable: availedCoupon?.cashbackAvailable,
-    }
+    };
     if (billData?.variantId) {
       payload.variantId = billData.variantId;
     }
 
     const res = await apiRpc.payments.createOfflineOrder.$post({
-      json:payload
+      json: payload,
     });
     if (res.status === 401) {
       setIsLoading(false);
@@ -968,7 +967,7 @@ export const usePlaceOrder = () => {
             businessId: outletInfo?.businessId,
             internalCart: sanitizedCart,
             userId: userDetails?._id,
-            hiCode: hiCode || "",
+            customerPhone: userDetails?.phone,
           },
         });
         await handleApiResponse(response, "", "Failed to place order");
