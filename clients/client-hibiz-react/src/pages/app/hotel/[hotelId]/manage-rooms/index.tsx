@@ -1,6 +1,6 @@
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import FloorMain from "@/components/hotel/FloorAndRooms/FloorMain";
-import { RoomStaffLinking } from "@/components/hotel/FloorAndRooms/RoomAssign";
+import { RoomStaffLink } from "@/components/hotel/FloorAndRooms/room-staff-linking/roomStaffLink";
 import NewRoomCreation from "@/components/hotel/FloorAndRooms/RoomMain";
 import RoomTypeMain from "@/components/hotel/FloorAndRooms/RoomtypeMain";
 import MemoizedHeader from "@/components/molecules/header"
@@ -80,7 +80,7 @@ const MemoManageRoomsHotel = () => {
             }
             {
                 selectedTab === "assign rooms" && (
-                    <RoomStaffLinking
+                    <RoomStaffLink
                      />
                 )
             }
