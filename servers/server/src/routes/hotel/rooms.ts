@@ -1014,44 +1014,43 @@ const roomRouter = new Hono()
     "/bulk",
     zValidator(
       "json",
-
       z.object({
         rooms: z.array(
           z.object({
-            roomIds: z.array(z.string().min(24).max(24)),
-            staffIds: z.array(z.string().min(24).max(24)),
+            roomId: z.string().min(24).max(24),
+            staffIds: z.array(z.string().min(24).max(24)).default([]),
+            removeStaffIds: z.array(z.string().min(24).max(24)).default([]),
           }),
         ),
-        action: z.enum(["ADD", "REMOVE"]),
       }),
     ),
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
-        const requestData = await c.req.json();
-        const { rooms, action } = requestData;
+        const { rooms } = await c.req.json();
 
-        if (action === "ADD") {
-          for (const { roomIds, staffIds } of rooms) {
-            await HotelRoom.updateMany(
-              {
-                _id: { $in: roomIds },
-              },
-              {
-                $addToSet: { staffIds: { $each: staffIds } },
-              },
+        for (const part of rooms) {
+          const { roomId, staffIds = [], removeStaffIds = [] } = part;
+
+          // CASE 1: Both empty → do nothing
+          if (!staffIds.length && !removeStaffIds.length) {
+            continue;
+          }
+
+          // CASE 2: Add staff
+          if (staffIds.length) {
+            await HotelRoom.updateOne(
+              { _id: roomId },
+              { $addToSet: { staffIds: { $each: staffIds } } },
               { session },
             );
           }
-        } else if (action === "REMOVE") {
-          for (const { roomIds, staffIds } of rooms) {
-            await HotelRoom.updateMany(
-              {
-                _id: { $in: roomIds },
-              },
-              {
-                $pull: { staffIds: { $in: staffIds } },
-              },
+
+          // CASE 3: Remove staff
+          if (removeStaffIds.length) {
+            await HotelRoom.updateOne(
+              { _id: roomId },
+              { $pull: { staffIds: { $in: removeStaffIds } } },
               { session },
             );
           }
