@@ -47,7 +47,7 @@ const MemoNavItemsHotel = () => {
             key={type}
             onClick={() => handleNavItemClick(type)}
             className={`
-              flex w-full max-w-[24rem] items-center justify-center px-4 py-2 rounded-full
+              flex w-full max-w-[24rem] items-center justify-center pl-2 pr-4 py-2 rounded-full
               ${selectedNavItem === type
                 ? "bg-purple-100 text-purple-600"
                 : "text-black hover:bg-gray-200"

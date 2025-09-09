@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { arrayMove } from "@dnd-kit/sortable";
 import type { DragEndEvent } from "@dnd-kit/core";
-import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 import type {
@@ -13,7 +12,9 @@ import { ScreensPanel } from "@/components/flow-builder/screens-panel";
 import { EditorPanel } from "@/components/flow-builder/editor-panel";
 import { PreviewPanel } from "@/components/flow-builder/preview-panel";
 import { generateJsonPayload } from "@/lib/whatsapp-payload-generator";
-import { publishWhatsAppFlow } from "@/components/helpers/whatzAppHelpers";
+import { CreateWhatsAppFlow } from "@/components/helpers/whatzAppHelpers";
+import { BiLeftArrow } from "react-icons/bi";
+import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
 
 const initialScreens: Screen[] = [
   {
@@ -35,20 +36,6 @@ const initialScreens: Screen[] = [
           required: false,
         },
       },
-      {
-        id: "content_dd",
-        type: "dropdown",
-        data: {
-          label: "Select your country",
-          options: ["USA", "Canada", "Mexico"],
-          required: true,
-        },
-      },
-      {
-        id: "content_opt",
-        type: "opt-in",
-        data: { label: "I agree to the terms and conditions.", required: true },
-      },
     ],
     button: { text: "Sign Up", action: "submit" },
   },
@@ -60,7 +47,7 @@ export default function FlowBuilderPage() {
     initialScreens[0].id,
   );
   const [isSaving, setIsSaving] = useState(false);
-
+  const setFlowBuilderOpen = useWhatsappTempStore((s) => s.setFlowBuilderOpen);
   const activeScreen = useMemo(
     () => screens.find((s) => s.id === activeScreenId)!,
     [screens, activeScreenId],
@@ -153,7 +140,7 @@ export default function FlowBuilderPage() {
     const toastId = toast.loading("Publishing flow...");
     const payload = generateJsonPayload(screens);
     const flowName = activeScreen.name || "My New Flow";
-    const result = await publishWhatsAppFlow(payload, flowName);
+    const result = await CreateWhatsAppFlow(payload, flowName);
     toast.dismiss(toastId);
     setIsSaving(false);
 
@@ -171,14 +158,21 @@ export default function FlowBuilderPage() {
   }
 
   return (
-    <div className="bg-gray-100 dark:bg-gray-900 h-screen flex flex-col">
-      <header className="flex items-center justify-between px-6 py-3 border-b bg-white dark:bg-gray-950 dark:border-gray-800 shrink-0">
-        <h1 className="text-lg font-semibold">Create flow</h1>
-        <Button variant="ghost" size="icon">
-          <X className="w-5 h-5" />
-        </Button>
+    <div className="min-h-[calc(85dvh-50rem)] bg-gray-100 dark:bg-gray-900 flex flex-col relative pb-20">
+      <header className="flex items-center justify-between px-6 border-b bg-white dark:bg-gray-950 dark:border-gray-800 shrink-0">
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Back"
+            onClick={() => setFlowBuilderOpen(false)}
+          >
+            <BiLeftArrow className="w-5 h-5" />
+          </Button>
+          <h1 className="text-lg font-semibold">Create flow</h1>
+        </div>
       </header>
-      <section className="flex-1 grid grid-cols-1 md:grid-cols-[300px_1fr] lg:grid-cols-[300px_1fr_400px] overflow-hidden">
+      <section className="flex-1 grid grid-cols-1 md:grid-cols-[300px_1fr] lg:grid-cols-[200px_2fr_350px] overflow-hidden">
         <ScreensPanel
           screens={screens}
           activeScreenId={activeScreenId}
@@ -196,7 +190,7 @@ export default function FlowBuilderPage() {
         />
         <PreviewPanel screen={activeScreen} />
       </section>
-      <footer className="flex items-center justify-between px-6 py-3 border-t bg-white dark:bg-gray-950 dark:border-gray-800 shrink-0">
+      <footer className="fixed bottom-0 w-full max-w-[80%] flex items-center justify-between px-6 py-3 border-t bg-white dark:bg-gray-950 dark:border-gray-800 shrink-0">
         <p className="text-sm text-gray-600 dark:text-gray-400">
           Once your message template has been created, this flow cannot be
           edited.

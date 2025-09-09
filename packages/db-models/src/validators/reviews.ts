@@ -53,7 +53,17 @@ export const ReviewsSchema = z.object({
     .optional(),
   date: z.coerce.number().optional(),
   order_id: z.string().optional(),
-  seen: z.boolean().optional(),
+  isRead: z.boolean().optional(),
+  readAt: z.coerce.number().optional(),
+  readBy: ObjectIdSchema.nullable().optional(),
+  // For hotel management
+
+  roomId: z.string().min(24).max(24).optional(),
+  alertId: z.string().min(24).max(24).optional(),
+  note: z.string().min(0).max(500).optional(),
+  serviceIds: z.array(z.string().min(24).max(24)).optional(),
+  acceptedBy: z.string().min(24).max(24).optional(),
+  deliveredBy: z.string().min(24).max(24).optional(),
 });
 
 export type ReviewsType = z.infer<typeof ReviewsSchema>;

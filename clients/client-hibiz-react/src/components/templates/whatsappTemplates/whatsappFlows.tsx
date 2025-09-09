@@ -14,15 +14,16 @@ import {
   flowOptions,
   formatTriggerTime,
 } from "@/components/helpers/whatzAppHelpers";
+import { Button } from "@/components/ui/button";
 
 const MemoWhatsappFlowSection = () => {
   const { flowsData, flowsLoading } = useGetFlows();
-  const { setCreateEditFlow, setSelectedFlowType, setEditFlowObject } =
-    useWhatsappTempStore((s) => ({
-      setCreateEditFlow: s.setCreateEditFlow,
-      setSelectedFlowType: s.setSelectedFlowType,
-      setEditFlowObject: s.setEditFlowObject,
-    }));
+  const setFlowBuilderOpen = useWhatsappTempStore((s) => s.setFlowBuilderOpen);
+  const setCreateEditFlow = useWhatsappTempStore((s) => s.setCreateEditFlow);
+  const setSelectedFlowType = useWhatsappTempStore(
+    (s) => s.setSelectedFlowType,
+  );
+  const setEditFlowObject = useWhatsappTempStore((s) => s.setEditFlowObject);
 
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -67,7 +68,7 @@ const MemoWhatsappFlowSection = () => {
             Automate your WhatsApp messages with timed message templates
           </p>
         </aside>
-        <div className="relative">
+        <div className="relative flex gap-2">
           <button
             type="button"
             className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 rounded-lg shadow-lg hover:bg-blue-500 on_active_bounce"
@@ -75,6 +76,13 @@ const MemoWhatsappFlowSection = () => {
           >
             + Create Flow <ChevronDown className="w-4 h-4" />
           </button>
+          <Button
+            variant="outline"
+            onClick={() => setFlowBuilderOpen(false)}
+            className="ml-2"
+          >
+            Back
+          </Button>
           {showDropdown && (
             <article className="absolute right-0 mt-2 w-48 z-50 bg-white border border-gray-300 rounded-md shadow-lg">
               {flowOptions.map((option) => (

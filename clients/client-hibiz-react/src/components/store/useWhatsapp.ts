@@ -35,6 +35,7 @@ export enum ActionType {
   CallUs = "Call Us",
   MarketingOptOut = "Marketing Opt Out",
   Custom = "Custom",
+  Flow = "Flow",
 }
 
 export enum whastappSteps {
@@ -455,7 +456,9 @@ export const useWhatsapp = create(
             actionType:
               buttonsComponent?.buttons[0]?.type === "URL"
                 ? ActionType.VisitWebsite
-                : ActionType.CallUs,
+                : buttonsComponent?.buttons[0]?.type === "PHONE_NUMBER"
+                  ? ActionType.CallUs
+                  : ActionType.Flow,
             buttonText: buttonsComponent?.buttons[0]?.text || "",
             urlType:
               buttonsComponent?.buttons[0]?.type === "URL"

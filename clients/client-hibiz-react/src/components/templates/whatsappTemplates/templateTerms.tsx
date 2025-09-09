@@ -22,47 +22,26 @@ const MemoTemplateTerms = () => {
   }));
   const { createTemplate } = useCreateTemplate();
   const { editTemplate } = useEditTemplate();
-  const {
-    templateName,
-    templateType,
-    headerType,
-    headerText,
-    bodyText,
-    variables,
-    websiteUrl,
-    buttonText,
-    actionType,
-    phoneNumber,
-    bodyVariableSequence,
-    templateId,
-    setShowSuccessPopup,
-    confirmCreate,
-    setConfirmCreate,
-    imagePreview,
-    secondButtonText,
-  } = useWhatsapp((s) => ({
-    templateId: s.templateId,
-    templateName: s.templateName,
-    templateType: s.templateType,
-    headerType: s.headerType,
-    headerText: s.headerText,
-    bodyText: s.bodyText,
-    variables: s.bodyVariables,
-    websiteUrl: s.websiteUrl,
-    buttonText: s.buttonText,
-    actionType: s.actionType,
-    phoneNumber: s.phoneNumber,
-    bodyVariableSequence: s.bodyVariableSequence,
-    setShowSuccessPopup: s.setShowSuccessPopup,
-    confirmCreate: s.confirmCreate,
-    setConfirmCreate: s.setConfirmCreate,
-    imagePreview: s.imagePreview,
-    secondButtonText: s.secondButtonText,
-  }));
+  const templateName = useWhatsapp((s) => s.templateName);
+  const templateType = useWhatsapp((s) => s.templateType);
+  const headerType = useWhatsapp((s) => s.headerType);
+  const headerText = useWhatsapp((s) => s.headerText);
+  const bodyText = useWhatsapp((s) => s.bodyText);
+  const variables = useWhatsapp((s) => s.bodyVariables);
+  const websiteUrl = useWhatsapp((s) => s.websiteUrl);
+  const buttonText = useWhatsapp((s) => s.buttonText);
+  const actionType = useWhatsapp((s) => s.actionType);
+  const phoneNumber = useWhatsapp((s) => s.phoneNumber);
+  const bodyVariableSequence = useWhatsapp((s) => s.bodyVariableSequence);
+  const templateId = useWhatsapp((s) => s.templateId);
+  const setShowSuccessPopup = useWhatsapp((s) => s.setShowSuccessPopup);
+  const confirmCreate = useWhatsapp((s) => s.confirmCreate);
+  const setConfirmCreate = useWhatsapp((s) => s.setConfirmCreate);
+  const imagePreview = useWhatsapp((s) => s.imagePreview);
+  const secondButtonText = useWhatsapp((s) => s.secondButtonText);
 
-  const { setIsLoading } = useWhatsappTempStore((s) => ({
-    setIsLoading: s.setIsLoading,
-  }));
+  const setIsLoading = useWhatsappTempStore((s) => s.setIsLoading);
+  const flow = useWhatsappTempStore((s) => s.flow);
   // calling media api
   const { uploadMedia } = useMediaUpload();
 
@@ -119,21 +98,22 @@ const MemoTemplateTerms = () => {
               {
                 type: "BUTTONS",
                 buttons: [
-                  actionType === ActionType.VisitWebsite
-                    ? { type: "URL", text: buttonText, url: websiteUrl }
-                    : {
-                        type: "PHONE_NUMBER",
-                        text: buttonText,
-                        phone_number: `+91${phoneNumber}`,
-                      },
-                  actionType === ActionType.MarketingOptOut
-                    ? {
-                        type: "QUICK_REPLY",
-                        text: "Stop sending messages",
-                        footerText: "Stop sending messages",
-                      }
-                    : { type: "QUICK_REPLY", text: secondButtonText },
-                ],
+                  actionType === ActionType.VisitWebsite && {
+                    type: "URL",
+                    text: buttonText,
+                    url: websiteUrl,
+                  },
+                  actionType === ActionType.MarketingOptOut && {
+                    type: "QUICK_REPLY",
+                    text: secondButtonText,
+                    footerText: "Stop sending messages",
+                  },
+                  actionType === ActionType.Flow && {
+                    type: "FLOW",
+                    text: buttonText ? buttonText : "Continue",
+                    flow_id: flow?.id,
+                  },
+                ].filter(Boolean),
               },
             ]
           : []),

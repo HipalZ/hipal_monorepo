@@ -8,6 +8,8 @@ export interface IService {
   name: string;
   image: string;
   availability?: boolean;
+  avgCompletionTime?: number;
+  avgAcceptanceTime?: number;
 }
 export interface ICategoryPayload {
   businessId: string;
@@ -96,6 +98,46 @@ export const useUpdateHotelService = () => {
     });
 
   return { updateServiceLoading, updateService };
+};
+
+export const useDeleteHotelService = () => {
+  const { setError, setOpenErrorModal } = useError();
+  const queryClient = useQueryClient();
+
+  const { isPending: deleteServiceLoading, mutateAsync: deleteService } =
+    useMutation({
+      mutationFn: async (payload: {
+        serviceId: string;
+        businessId: string;
+      }) => {
+        const response = await apiRpc.hotel.service.delete_service[
+          ":serviceId"
+        ].$delete({
+          param: { serviceId: payload.serviceId },
+          json: { businessId: payload.businessId },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData?.error?.message || "Failed to delete service",
+          );
+        }
+
+        return response;
+      },
+      onSuccess: (_, variables) => {
+        queryClient.invalidateQueries({
+          queryKey: ["getServiceCategories", variables.businessId],
+        });
+      },
+      onError: (error: Error) => {
+        setError(error.message);
+        setOpenErrorModal(true);
+      },
+    });
+
+  return { deleteServiceLoading, deleteService };
 };
 
 interface IFetchEscalatedReports {

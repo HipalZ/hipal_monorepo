@@ -167,6 +167,7 @@ const surlRouter = new Hono()
       const result = await UrlModel.findOne({ urlCode }).select(
         "businessId longUrl",
       );
+
       if (!result) {
         return c.json(
           {

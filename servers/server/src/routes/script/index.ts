@@ -10,11 +10,11 @@ import {
   HotelRoomType,
   HotelService,
   HotelServiceCategory,
+  HotelStaffLevel,
   HotelStaffRole,
   LoyaltySettings,
   Menu,
   OutLetInfo,
-  PasswordManager,
   Payment,
   PaymentAlert,
   Reviews,
@@ -206,7 +206,6 @@ const scriptRouter = new Hono()
           image:
             "https://t-static.blr1.digitaloceanspaces.com/84f14a31-ba5c-4b83-9477-fa8c8bbe2744.jpeg",
         },
-
         {
           name: "Ac not working",
           businessId,
@@ -237,7 +236,6 @@ const scriptRouter = new Hono()
           image:
             "https://t-static.blr1.digitaloceanspaces.com/75d206bd-052a-4400-b463-da0929341809.jpeg",
         },
-
         {
           name: "Ac Remote setting changes",
           businessId,
@@ -2637,7 +2635,7 @@ const scriptRouter = new Hono()
   )
 
   .post(
-    "/update_passwords",
+    "/add_staff_levels",
     zValidator(
       "json",
       z.object({
@@ -2646,31 +2644,35 @@ const scriptRouter = new Hono()
     ),
 
     async (c) => {
-      const allBusinesses = await Business.find();
-      for (const business of allBusinesses) {
-        const defaultPasswords = [
+      const allHotelBusiness = await Business.find({
+        businessType: "HOTEL",
+      });
+
+      for (const business of allHotelBusiness) {
+        const defaultHotelStaffLevels = [
           {
             businessId: business._id,
-            name: "DISCOUNT",
-            password: "1234",
-            isActive: false,
+            level: 1,
+            staffIds: [],
+            nextLevelTime: 5,
           },
           {
             businessId: business._id,
-            name: "DELETE_KOT",
-            password: "1234",
-            isActive: false,
+            level: 2,
+            staffIds: [],
+            nextLevelTime: 5,
           },
           {
             businessId: business._id,
-            name: "SERVICE_CHARGE",
-            password: "1234",
-            isActive: false,
+            level: 3,
+            staffIds: [],
+            nextLevelTime: 5,
           },
         ];
-
-        await PasswordManager.insertMany(defaultPasswords);
+        await HotelStaffLevel.insertMany(defaultHotelStaffLevels);
       }
+
+      return respond(c, "All hotel staff levels added", false, 200, {});
     },
   );
 

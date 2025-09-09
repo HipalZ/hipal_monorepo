@@ -44,7 +44,7 @@ const MemoTemplatesCarousel = () => {
                 template?.status === "REJECTED"
                   ? "opacity-75 pointer-events-none"
                   : "cursor-pointer",
-                "overflow-hidden transition-shadow duration-300 max-w-full max-h-[240px] md:max-w-[240px] lg:max-h-[170px] bg-white rounded-lg shadow-md hover:shadow-lg md:h-full",
+                "overflow-hidden transition-shadow duration-300 max-w-full max-h-[240px] md:max-w-[240px] lg:max-h-[170px] rounded-lg shadow-md hover:shadow-lg md:h-full",
               )}
               onClick={() => handleTemplateClick(template)}
               onKeyDown={(e) =>

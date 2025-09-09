@@ -61,8 +61,8 @@ export const PreviewPanel: FC<{ screen: Screen }> = ({ screen }) => {
   };
 
   return (
-    <div className="w-full max-w-sm bg-white dark:bg-black rounded-3xl border-[10px] border-gray-800 dark:border-gray-600 shadow-2xl overflow-hidden">
-      <div className="h-[600px] flex flex-col">
+    <div className="w-full max-w-xs h-[calc(85dvh-4rem)] bg-white dark:bg-black rounded-3xl border-[10px] border-gray-800 dark:border-gray-600 shadow-2xl overflow-auto">
+      <div className="flex flex-col">
         <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-900 shrink-0">
           <X className="w-5 h-5" />
           <p className="font-semibold text-sm truncate px-2">{screen.title}</p>

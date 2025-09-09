@@ -96,6 +96,11 @@ const hotelAlertSchema = new mongoose.Schema<HotelAlertType>({
     required: false,
     default: false,
   },
+  level: {
+    type: Number,
+    required: false,
+    default: 1,
+  },
 });
 
 const HotelAlert: Model<HotelAlertType> = mongoose.model<HotelAlertType>(

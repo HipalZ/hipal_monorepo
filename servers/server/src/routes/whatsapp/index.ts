@@ -7,6 +7,7 @@ import {
   CouponLink,
   Couponz,
   GroupModel,
+  HotelAnalytics,
   HotelRoom,
   HotelRoomSession,
   OutLetInfo,
@@ -46,6 +47,7 @@ import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { createHmac } from "node:crypto";
 
+import Bottleneck from "bottleneck"; // npm i bottleneck
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
@@ -187,7 +189,98 @@ const returnBodyComponents = async (
   return components;
 };
 
-const scheduleCampaign = async (
+const CONCURRENCY = 8; // parallel sends per batch
+const BATCH_SIZE = 100; // customers per logical batch
+const RETRIES = 3; // retry attempts per message
+const BASE_BACKOFF_MS = 500; // base for exponential backoff
+
+// ---- one axios client with keep-alive + sane timeout -----------------------
+const http = axios.create({
+  timeout: 20_000,
+  headers: { "Content-Type": "application/json" },
+  // Node keep-alive (improves throughput + reduces TCP handshakes)
+  httpAgent: new (require("http").Agent)({ keepAlive: true }),
+  httpsAgent: new (require("https").Agent)({ keepAlive: true }),
+});
+
+// ---- gentle rate-limiter on top of concurrency (optional but recommended) --
+const limiter = new Bottleneck({
+  // min distance between jobs (global); 50ms ≈ 20 req/s max
+  minTime: 50,
+  // You can also add a reservoir to cap requests per minute/hour:
+  // reservoir: 1200, // e.g., 1200 requests
+  // reservoirRefreshAmount: 1200,
+  // reservoirRefreshInterval: 60_000, // every minute
+});
+
+// ---- little utils ----------------------------------------------------------
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+const chunk = <T>(arr: T[], size: number): T[][] => {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+};
+
+// simple concurrency pool w/o extra deps
+async function withConcurrency<T>(
+  items: T[],
+  limit: number,
+  worker: (item: T, idx: number) => Promise<void>,
+) {
+  let i = 0;
+  const runners: Promise<void>[] = [];
+  const runNext = (): Promise<void> => {
+    if (i >= items.length) return Promise.resolve();
+    const idx = i++;
+    return worker(items[idx], idx).then(runNext);
+  };
+  for (let k = 0; k < Math.min(limit, items.length); k++) {
+    runners.push(runNext());
+  }
+  await Promise.allSettled(runners);
+}
+
+// POST with retry + backoff; honors Retry-After for 429
+async function sendWithRetry(
+  url: string,
+  payload: any,
+  token: string,
+  retries = RETRIES,
+) {
+  let attempt = 0;
+  // exponential backoff loop
+  while (true) {
+    try {
+      // go through the limiter to be extra safe on RPM/QPS
+      const res = await limiter.schedule(() =>
+        http.post(url, payload, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      );
+      return res;
+    } catch (e) {
+      const err = e as AxiosError<any>;
+      const status = err.response?.status;
+      attempt++;
+
+      // For hard 4xx (except 429), don't retry — usually template/params issues
+      if (status && status < 500 && status !== 429) throw err;
+
+      if (attempt > retries) throw err;
+
+      const retryAfterHeader = err.response?.headers?.["retry-after"];
+      const wait = retryAfterHeader
+        ? Number(retryAfterHeader) * 1000
+        : BASE_BACKOFF_MS * Math.pow(2, attempt - 1) + Math.random() * 250;
+
+      await sleep(wait);
+    }
+  }
+}
+
+// ---- FULL: scheduleCampaign (unchanged name/signature) ---------------------
+export const scheduleCampaign = async (
   customersArray: {
     name: string;
     phone: string;
@@ -213,32 +306,38 @@ const scheduleCampaign = async (
   const templateName = template.templateName;
   const campaignName = getCampaignName(templateName);
 
-  // for track campaign
+  // 1) Create/attach campaign (tracking)
   const createCampaign = await Campaign.create({
     businessId,
     templateId,
-    campaignName: campaignName,
-
+    campaignName,
     date: Date.now(),
   });
 
-  // for recent campaign to track the last campaign sent by the business
-  const recentCamp = await RecentCampaign.findOneAndUpdate(
-    {
-      businessId,
-    },
-    {
-      campaignId: createCampaign._id.toString(),
-      templateId,
-    },
-    {
-      upsert: true,
-      new: true,
-    },
+  // 2) Mark as most recent campaign
+  await RecentCampaign.findOneAndUpdate(
+    { businessId },
+    { campaignId: createCampaign._id.toString(), templateId },
+    { upsert: true, new: true },
   );
 
-  for (const customer of customersArray) {
-    // return components for the body
+  // 3) Prepare endpoint URL
+  const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`;
+
+  // 4) Track stats (don’t fail early)
+  const stats = {
+    sent: 0,
+    failed: 0,
+    errors: [] as Array<{ phone?: string; reason: any }>,
+  };
+
+  // 5) Helper to send one message (with retries)
+  const sendOne = async (customer: {
+    name: string;
+    phone: string;
+    email?: string;
+  }) => {
+    // Prepare components for this customer
     const components = await returnBodyComponents(
       businessName,
       address,
@@ -248,52 +347,64 @@ const scheduleCampaign = async (
       businessId,
     );
 
+    const payload = {
+      messaging_product: "whatsapp",
+      to: customer?.phone?.toString(),
+      type: "template",
+      template: {
+        name: template.templateName,
+        language: { code: template.languageCode },
+        components,
+      },
+    };
+
     try {
-      const res = await axios.post(
-        `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
-        {
-          messaging_product: "whatsapp",
-          to: customer?.phone?.toString(),
-          type: "template",
-          template: {
-            name: template.templateName,
-            language: { code: template.languageCode },
-            components: components,
-          },
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${whatsAppConfig.token}`,
-          },
-        },
-      );
+      const res = await sendWithRetry(url, payload, whatsAppConfig.token);
+      const mid = res.data?.messages?.[0]?.id;
 
-      // for track campaign
-      await setWhatsAppMessageConfig(res.data.messages?.[0].id, {
-        templateId,
-        campaignId: createCampaign._id.toString(),
+      if (mid) {
+        // Associate message with campaign/template for later delivery tracking
+        await setWhatsAppMessageConfig(mid, {
+          templateId,
+          campaignId: createCampaign._id.toString(),
+        });
+      }
+
+      stats.sent++;
+    } catch (e) {
+      const err = e as AxiosError<any>;
+      stats.failed++;
+      stats.errors.push({
+        phone: customer?.phone?.toString(),
+        reason: err.response?.data ?? err.message,
       });
-    } catch (error) {
-      const axiosError = error as AxiosError;
-      const message = axiosError.response?.data?.error?.message;
-
-      return {
-        message: `Error creating template: ${message}`,
-        err: true,
-        data: axiosError.response?.data || {},
-      };
     }
+  };
+
+  // 6) Batch → run each batch with controlled concurrency
+  const batches = chunk(customersArray, BATCH_SIZE);
+
+  console.log("batches SIZE", batches);
+
+  for (const batch of batches) {
+    await withConcurrency(batch, CONCURRENCY, sendOne);
+    console.log("EXCEEDED BATCH SIZE");
   }
+
+  // 7) Cleanup active template marker
   await WhatsAppBusinessConfig.findOneAndUpdate(
-    {
-      businessId,
-    },
-    {
-      activeTemplateId: null,
-    },
+    { businessId },
+    { activeTemplateId: null },
   );
 
-  return true;
+  // 8) Return a summary instead of simple `true`
+  return {
+    ok: stats.failed === 0,
+    campaignId: createCampaign._id.toString(),
+    sent: stats.sent,
+    failed: stats.failed,
+    errors: stats.errors.slice(0, 50), // cap to avoid huge payloads
+  };
 };
 
 const calculateAndCheckBalance = (
@@ -1932,7 +2043,18 @@ const whatsappRouter = new Hono()
 
     async (c) => {
       const body = await c.req.json();
-
+      if (body.action === "ping") {
+        return c.json(
+          {
+            version: "3.0",
+            data: { status: "active" },
+          },
+          200,
+        );
+      }
+      if (!body?.object) {
+        return c.json({ message: "ignored", err: false }, 200);
+      }
       if (body.object) {
         const entry = body.entry?.[0];
         const changes = entry?.changes?.[0];
@@ -2220,6 +2342,104 @@ const whatsappRouter = new Hono()
                 shortUrlType = findLongUrl.shortUrlType || "";
                 urlObj = findLongUrl;
               }
+            } else {
+              const payload = {
+                messaging_product: "whatsapp",
+                to: from,
+                type: "template",
+                template: {
+                  name: "krishivaas_test",
+                  language: {
+                    code: "en_GB",
+                  },
+                  components: [
+                    {
+                      type: "BODY",
+                      parameters: [
+                        {
+                          type: "text",
+                          text: userObj.name,
+                        },
+                      ],
+                    },
+                    {
+                      type: "FOOTER",
+                      parameters: [
+                        {
+                          type: "text",
+                          text: "Powered by Namaste",
+                        },
+                      ],
+                    },
+                    {
+                      type: "button",
+                      sub_type: "flow",
+                      index: "0",
+                      parameters: [
+                        {
+                          type: "action",
+                          action: {
+                            flow_token: "token",
+                            flow_action_data: {
+                              prefill_name: userObj.name,
+                            },
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              };
+              try {
+                // 1️⃣ Check if customer exists in Krishivaas DB
+                const checkResponse = await axios.get(
+                  `https://api.staging.krishivaas.ai/api/v1/get-name-by-mobile-number/9896000099`,
+                );
+                const name = checkResponse?.data?.data;
+                console.log("name", name);
+                if (!name) {
+                  await axios.post(
+                    `${whatsAppApiBaseUrl.BASE_URL}${config.version}/${config.phoneId}/messages`,
+                    {
+                      messaging_product: "whatsapp",
+                      to: from,
+                      type: "text",
+                      text: {
+                        body: "We are sorry, we are unable to find you in our records. Please contact our support team.",
+                      },
+                    },
+                    {
+                      headers: { Authorization: `Bearer ${config.token}` },
+                    },
+                  );
+
+                  return c.json(
+                    { message: "Fallback text message sent." },
+                    200,
+                  );
+                }
+                await axios.post(
+                  `${whatsAppApiBaseUrl.BASE_URL}${config.version}/${config.phoneId}/messages`,
+                  payload,
+                  {
+                    headers: { Authorization: `Bearer ${config.token}` },
+                  },
+                );
+
+                return c.json({ message: "Template sent successfully." }, 200);
+              } catch (error) {
+                console.error(
+                  "Error in WhatsApp send flow:",
+                  error?.response?.data || error.message,
+                );
+                return c.json(
+                  {
+                    message: "Error sending WhatsApp message",
+                    error: error?.response?.data || error.message,
+                  },
+                  500,
+                );
+              }
             }
           }
           if (phon_no_id && from && urlObj) {
@@ -2301,6 +2521,22 @@ const whatsappRouter = new Hono()
                     authCode, // Use nanoid for auth code generation
                   });
 
+                  await HotelAnalytics.findOneAndUpdate(
+                    {
+                      businessId: config?.businessId,
+                      roomId: updatedRoom?._id,
+                      userId: user?._id,
+                      roomSessionId: roomSession?._id,
+                    },
+                    {
+                      checkIn: Date.now(),
+                      userId: user?._id,
+                      source: "not-given",
+                      $addToSet: { guestUserIds: user?._id },
+                    },
+                    { upsert: true },
+                  );
+
                   // Update the room with the generated authCode
                   await HotelRoom.findOneAndUpdate(
                     {
@@ -2308,6 +2544,54 @@ const whatsappRouter = new Hono()
                     },
                     {
                       authCode: roomSession.authCode,
+                    },
+                  );
+                  await axios.post(
+                    `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
+                    {
+                      messaging_product: "whatsapp",
+                      to: from,
+                      type: "template",
+                      template: {
+                        name: "fi_welcoming_template",
+                        language: { code: "en" },
+                        components: [
+                          {
+                            type: "header",
+                            parameters: [
+                              {
+                                type: "image",
+                                image: {
+                                  link: "https://t-static.blr1.digitaloceanspaces.com/e3039890-ede4-4fec-bcc4-ad12c2aa87ac.jpeg",
+                                },
+                              },
+                            ],
+                          },
+                          {
+                            type: "body",
+                            parameters: [
+                              {
+                                type: "text",
+                                text: bName?.name,
+                              },
+
+                              {
+                                type: "text",
+                                text: `${updateLongUrl}&sessionId=${roomSession?._id}`,
+                              },
+                              {
+                                type: "text",
+                                text: authCode,
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    },
+                    {
+                      headers: {
+                        Authorization: `Bearer ${config.token}`,
+                      },
                     },
                   );
                 }
@@ -2318,13 +2602,25 @@ const whatsappRouter = new Hono()
                 slug: urlObj?.urlCode,
               });
 
-              console.log("findRoom:", findRoom);
-
               const roomSession = await HotelRoomSession.findOne({
                 roomId: findRoom?._id.toString(),
               });
 
-              console.log("roomSession:", roomSession);
+              await HotelAnalytics.findOneAndUpdate(
+                {
+                  businessId: config?.businessId,
+                  roomId: findRoom?._id,
+                  userId: user?._id,
+                  roomSessionId: roomSession?._id,
+                },
+                {
+                  checkIn: Date.now(),
+                  userId: user?._id,
+                  source: "not-given",
+                  $addToSet: { guestUserIds: user?._id },
+                },
+                { upsert: true },
+              );
 
               await axios.post(
                 `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
@@ -2357,11 +2653,11 @@ const whatsappRouter = new Hono()
 
                           {
                             type: "text",
-                            text: updateLongUrl,
+                            text: `${updateLongUrl}&sessionId=${roomSession?._id}`,
                           },
                           {
                             type: "text",
-                            text: roomSession?.authCode,
+                            text: "  ",
                           },
                         ],
                       },

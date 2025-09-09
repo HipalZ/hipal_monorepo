@@ -966,8 +966,8 @@ export const usePlaceOrder = () => {
             tableName,
             businessId: outletInfo?.businessId,
             internalCart: sanitizedCart,
-            userId: userDetails?._id,
             customerPhone: userDetails?.phone,
+            userId: userDetails?._id,
           },
         });
         await handleApiResponse(response, "", "Failed to place order");

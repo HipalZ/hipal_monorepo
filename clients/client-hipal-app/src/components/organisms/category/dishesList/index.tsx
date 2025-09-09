@@ -22,7 +22,7 @@ interface IDishesProps {
   menuLayout: IMenuLayout;
 }
 
-const DishesList = ({
+const DishesList: FC<IDishesProps> = ({
   childCategory,
   parentCategory,
   menuLayout,
@@ -74,7 +74,6 @@ const DishesList = ({
     }
     return childCategory?.filter(hasVisibleDishes);
   }, [childCategory, parentCategory]);
-  
 
   useMemo(() => {
     const allDishes = childCategory

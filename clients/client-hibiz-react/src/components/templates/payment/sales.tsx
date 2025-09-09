@@ -126,7 +126,10 @@ const MemoPaymentSales = () => {
               ₹ {totalSales?.toLocaleString("en-IN")}
             </h1>
             <p className="absolute bottom-6 left-6">
-              <span className="opacity-50">Last Synced</span> recently
+              <span className="opacity-50">
+                Last {historyData?.length} transactions
+              </span>{" "}
+              recently
             </p>
           </article>
           <section className="flex gap-2 w-full max-w-[30rem] px-4 md:max-w-full overflow-x-auto">
@@ -239,7 +242,7 @@ const MemoPaymentSales = () => {
         >
           <SalesFilters />
         </PopUp>
-      )} 
+      )}
       {downloadCsv && (
         <PopUp
           height="h-[40rem] lg:h-[35rem]"

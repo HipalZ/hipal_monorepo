@@ -2,6 +2,7 @@ import {
   Business,
   DeviceToken,
   HotelAlert,
+  HotelAnalytics,
   HotelRoom,
   HotelRoomChat,
   HotelRoomChatReply,
@@ -26,10 +27,13 @@ import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import axios from "axios";
 import { Hono } from "hono";
+import type { FilterQuery } from "mongoose";
+import { Types } from "mongoose";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
+import { endOfToday, startOfToday } from "../payments/index.js";
 const admin = require("firebase-admin");
 
 const sendPushNotification = async (token: string, hotelNo: string) => {
@@ -54,6 +58,71 @@ const sendPushNotification = async (token: string, hotelNo: string) => {
     console.error("Error sending FCM message:", error);
   }
 };
+
+type RatingKey = "GOOD" | "AVG" | "BAD";
+type NumCmp = Partial<{ $gte: number; $lte: number; $eq: number }>;
+
+interface ReviewDoc {
+  reviewRating: number;
+  roomId: Types.ObjectId;
+  // ...other fields; dotted paths will still work in FilterQuery
+}
+
+// 2) No-`any` rating map
+const ratingMap: Record<RatingKey, NumCmp> = {
+  GOOD: { $gte: 4 }, // 4–5
+  AVG: { $eq: 3 }, // 3
+  BAD: { $lte: 2 }, // 1–2
+};
+
+interface FilterInput {
+  rating?: RatingKey;
+  roomIds?: string[];
+  serviceIds?: string[];
+  staffIds?: string[];
+  isRead?: boolean;
+}
+
+// 3) Build criteria with correct typing
+export function buildCriteria(filter: FilterInput): FilterQuery<ReviewDoc> {
+  const criteria: FilterQuery<ReviewDoc> = {};
+
+  // rating
+  if (filter.rating) {
+    criteria.reviewRating = ratingMap[filter.rating];
+  }
+
+  if (filter.isRead !== undefined && filter.isRead !== null) {
+    criteria.isRead = filter.isRead;
+  }
+
+  // roomIds
+  if (filter.roomIds?.length) {
+    criteria.roomId = {
+      $in: filter.roomIds.map((id) => new Types.ObjectId(id)),
+    };
+  }
+
+  // serviceIds (dotted path)
+  if (filter.serviceIds?.length) {
+    criteria.serviceIds = {
+      $in: filter.serviceIds.map((id) => new Types.ObjectId(id)),
+    };
+  }
+
+  // staffIds (dotted paths + $or)
+  if (filter.staffIds?.length) {
+    const staffObjIds = filter.staffIds.map((id) => new Types.ObjectId(id));
+
+    // criteria is FilterQuery<ReviewDoc>
+    criteria.$or = [
+      { acceptedBy: { $in: staffObjIds } },
+      { deliveredBy: { $in: staffObjIds } },
+    ] as FilterQuery<ReviewDoc>["$or"];
+  }
+
+  return criteria;
+}
 const roomRouter = new Hono()
 
   .get(
@@ -156,6 +225,283 @@ const roomRouter = new Hono()
         data: { _id: roomData._id },
         err: false,
       });
+    },
+  )
+  .get(
+    "/fetch_room_session",
+    zValidator(
+      "query",
+      z.object({
+        sessionId: z.string().min(24).max(24),
+      }),
+    ),
+
+    async (c) => {
+      const { sessionId } = c.req.query();
+
+      const roomSession = await HotelRoomSession.findById(sessionId);
+      if (!roomSession) {
+        return c.json(
+          {
+            message: "Session not found",
+            err: true,
+            data: {},
+          },
+          404,
+        );
+      }
+
+      return c.json(
+        {
+          message: "Room session fetched successfully",
+          err: false,
+          data: { _id: roomSession._id },
+        },
+        200,
+      );
+    },
+  )
+
+  .get(
+    "/user_source_analytics",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(24).max(24),
+        from: z.string().optional(),
+        to: z.string().optional(),
+        source: z.string().optional(),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId, from, to, source } = c.req.query();
+      const fromDate = Number(from);
+      const toDate = Number(to);
+
+      if (fromDate > toDate) {
+        return respond(c, "Invalid date range", true, 400, {});
+      }
+      const filterAnalytics = await HotelAnalytics.find({
+        businessId,
+        ...(source ? { source } : {}),
+
+        checkIn: {
+          $gte: fromDate,
+          $lte: toDate,
+        },
+      })
+        .populate({
+          path: "roomId",
+          select: "name",
+        })
+        .populate({
+          path: "userId",
+          select: "name phone",
+        })
+        .lean();
+
+      const uniqueByUser = Object.values(
+        filterAnalytics.reduce(
+          (acc, curr) => {
+            if (curr.userId?._id) {
+              acc[curr.userId._id.toString()] = curr; // keep latest entry per user
+            }
+            return acc;
+          },
+          {} as Record<string, (typeof filterAnalytics)[number]>,
+        ),
+      );
+
+      const analytics = await HotelAnalytics.find({
+        businessId,
+        checkIn: {
+          $gte: fromDate,
+          $lte: toDate,
+        },
+      })
+        .populate({
+          path: "roomId",
+          select: "name",
+        })
+        .populate({
+          path: "userId",
+          select: "name phone",
+        })
+        .lean();
+
+      const sourceCount: Record<string, number> = {};
+      const userCount: Record<string, number> = {};
+
+      for (const entry of analytics) {
+        const source = entry.source;
+        if (source) {
+          sourceCount[source] = (sourceCount[source] ?? 0) + 1;
+        }
+        const user = entry.userId?._id?.toString();
+        if (user) {
+          userCount[user] = (userCount[user] ?? 0) + 1;
+        }
+      }
+
+      const totalSources = Object.values(sourceCount).reduce(
+        (a, b) => a + b,
+        0,
+      );
+      const sourcePercentages: Record<string, number> = {};
+
+      for (const [key, value] of Object.entries(sourceCount)) {
+        const percentage = (value / totalSources) * 100;
+        sourcePercentages[key] = Number(percentage.toFixed(1));
+      }
+
+      return respond(c, "Hotel analytics fetched successfully", false, 200, {
+        analytics: uniqueByUser,
+
+        sourcePercentages,
+        userCount: Object.keys(userCount).length,
+      });
+    },
+  )
+
+  .get(
+    "/user_analytics",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(24).max(24),
+        userId: z.string().min(24).max(24),
+        roomId: z.string().min(24).max(24).optional(),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId, userId, roomId } = c.req.query();
+
+      const reviews = await Reviews.find({
+        businessId,
+        userId,
+      });
+      const avgReviewRating =
+        reviews.reduce((acc, review) => acc + review.reviewRating, 0) /
+        reviews.length;
+
+      const overAll = {
+        averageRating: Number(avgReviewRating.toFixed(1)),
+        totalReviews: reviews.length,
+      };
+
+      const userAnalytics = await HotelAnalytics.find({
+        businessId,
+        userId,
+        ...(roomId ? { roomId } : {}),
+      })
+        .select("-_id -businessId -roomSessionId -__v")
+        .populate({
+          path: "roomId",
+          select: "name",
+        })
+        .populate({
+          path: "userId",
+          select: "name phone -_id",
+        })
+
+        .populate({
+          path: "serviceIds",
+          select: "name -_id",
+        })
+        .populate({
+          path: "reviewIds",
+          select: "reviewRating description date -_id",
+          populate: {
+            path: "serviceIds",
+            select: "name -_id",
+          },
+        })
+        .populate({
+          path: "guestUserIds",
+          select: "name phone -_id",
+        });
+
+      return respond(c, "User analytics", false, 200, {
+        overAll,
+        userAnalytics,
+      });
+    },
+  )
+
+  .post(
+    "/hotel_user_reviews",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().length(24),
+        from: z.number().optional(),
+        to: z.number().optional(),
+        filter: z
+          .object({
+            rating: z.enum(["GOOD", "AVG", "BAD"]).optional(),
+            serviceIds: z.array(z.string().length(24)).optional(),
+            roomIds: z.array(z.string().length(24)).optional(),
+            staffIds: z.array(z.string().length(24)).optional(),
+            isRead: z.boolean().optional(),
+          })
+          .default({}),
+      }),
+    ),
+
+    async (c) => {
+      const { businessId, from, to, filter } = await c.req.json();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
+
+      if (fromDate > toDate) {
+        return respond(c, "Invalid date range", true, 400, {});
+      }
+
+      const criteria = buildCriteria(filter || {});
+
+      const reviews = await Reviews.find({
+        businessId,
+        date: {
+          $gte: fromDate,
+          $lte: toDate,
+        },
+        ...criteria,
+      })
+        .select(
+          "userId roomId alertId reviewRating description date staffs improvementAreas isRead readAt readBy note",
+        )
+        .sort({ date: -1 })
+        .populate({
+          path: "roomId",
+          select: "name",
+        })
+        .populate({
+          path: "userId",
+          select: "name phone",
+        })
+        .populate({
+          path: "alertId",
+          select: "serviceIds acceptedBy deliveredBy -_id",
+          populate: [
+            { path: "serviceIds", select: "name" },
+            { path: "acceptedBy", select: "name phone" },
+            { path: "deliveredBy", select: "name phone" },
+          ],
+        })
+        .populate({
+          path: "readBy",
+          select: "name phone",
+        });
+
+      return respond(
+        c,
+        "Hotel reviews fetched successfully",
+        false,
+        200,
+        reviews,
+      );
     },
   )
 
@@ -484,52 +830,25 @@ const roomRouter = new Hono()
         throw new Error("Error creating room session");
       }
 
+      await HotelAnalytics.findOneAndUpdate(
+        {
+          businessId: roomExists?.businessId,
+          roomId: roomId,
+          userId: user._id,
+          roomSessionId: roomSession[0]._id,
+        },
+        {
+          userId: user._id,
+          source: requestData.source,
+          checkIn: Date.now(),
+        },
+        { upsert: true },
+      );
+
       if (whatsAppConfig) {
         const business = await Business.findById(roomExists.businessId).select(
           "name",
         );
-        // const res = await axios.post(
-        //   `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
-        //   {
-        //     messaging_product: "whatsapp",
-        //     to: user?.phone?.toString(),
-        //     type: "template",
-        //     template: {
-        //       name: "test_checkin_template",
-        //       language: { code: "en" },
-        //       components: [
-        //         {
-        //           type: "body",
-        //           parameters: [
-        //             {
-        //               type: "text",
-        //               text: user?.name,
-        //             },
-
-        //             {
-        //               type: "text",
-        //               text: authCode,
-        //             },
-
-        //             {
-        //               type: "text",
-        //               text: roomExists?.name,
-        //             },
-        //           ],
-        //         },
-        //       ],
-        //     },
-        //   },
-        //   {
-        //     headers: {
-        //       Authorization: `Bearer ${whatsAppConfig.token}`,
-        //     },
-        //   },
-        // );
-
-        // if (res.status !== 200) {
-        //   throw new Error("Error sending message");
-        // }
 
         const shortUrlObj = await UrlModel.findOne({
           urlCode: updatedRoom.slug,
@@ -570,7 +889,7 @@ const roomRouter = new Hono()
 
                     {
                       type: "text",
-                      text: updateLongUrl,
+                      text: `${updateLongUrl}&sessionId=${roomSession[0]._id.toString()}`,
                     },
                     {
                       type: "text",
@@ -706,15 +1025,6 @@ const roomRouter = new Hono()
         throw new Error("Error checking out");
       }
 
-      const removeSession = await HotelRoomSession.deleteOne(
-        { roomId },
-        { session },
-      );
-
-      if (!removeSession) {
-        throw new Error("Error removing room session");
-      }
-
       const deleteRoomChat = await HotelRoomChat.updateMany(
         { roomId },
         { $set: { isDeleted: true } },
@@ -741,6 +1051,22 @@ const roomRouter = new Hono()
           }
         }
       }
+
+      const removeSession = await HotelRoomSession.findOne({
+        roomId,
+      });
+      await HotelAnalytics.updateMany(
+        { roomSessionId: removeSession?._id },
+        {
+          $set: {
+            checkOut: Date.now(),
+          },
+        },
+        {
+          session,
+        },
+      );
+      await HotelRoomSession.deleteOne({ roomId }, { session });
 
       return respond(c, "Checked out successfully", false, 200, {
         _id: updatedRoom._id,
@@ -956,17 +1282,38 @@ const roomRouter = new Hono()
           { session },
         );
 
+        const alertOnfo = await HotelAlert.findById(roomChat.alertId);
+
         const createReview = await Reviews.create({
           businessId,
           userId,
           reviewRating,
           staffs: [userId],
           date: Date.now(),
+          roomId: roomChat.roomId,
+          alertId: roomChat.alertId,
+          serviceIds: alertOnfo?.serviceIds || [],
+          acceptedBy: alertOnfo?.acceptedBy || [],
+          deliveredBy: alertOnfo?.deliveredBy || [],
         });
 
         if (!createReview) {
           throw new Error("Failed to create review");
         }
+
+        const roomSession = await HotelRoomSession.findOne({
+          roomId: roomChat.roomId,
+        });
+
+        await HotelAnalytics.findOneAndUpdate(
+          {
+            roomSessionId: roomSession?._id,
+          },
+          {
+            $addToSet: { reviewIds: createReview._id },
+          },
+          { upsert: true },
+        );
 
         return respond(c, "Review created successfully", false, 201, {
           _id: createReview._id,
@@ -1002,6 +1349,28 @@ const roomRouter = new Hono()
         if (!roomSource) {
           return respond(c, "Room session not found", true, 404, {});
         }
+
+        const roomSession = await HotelRoomSession.findOne({
+          roomId,
+        });
+
+        if (!roomSession) {
+          return respond(c, "Room session not found", true, 404, {});
+        }
+
+        await HotelAnalytics.findOneAndUpdate(
+          {
+            businessId: roomSource?.businessId,
+            roomId: roomId,
+            userId: { $in: roomSource.userIds },
+            roomSessionId: roomSession._id,
+          },
+          {
+            source,
+            checkIn: Date.now(),
+          },
+          { upsert: true },
+        );
 
         return respond(c, "update ", false, 200, {
           _id: roomSource._id,
@@ -1057,6 +1426,83 @@ const roomRouter = new Hono()
         }
 
         return respond(c, "Bulk update successful", false, 200, {});
+      });
+    },
+  )
+  .put(
+    "/review/read_by",
+    zValidator(
+      "json",
+      z.object({
+        readBy: z.string().min(24).max(24),
+        reviewId: z.string().min(24).max(24),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
+        const { reviewId, readBy } = requestData;
+
+        const checkIsRead = await Reviews.findOne({
+          _id: reviewId,
+          readBy: {
+            $exists: true,
+            $ne: null,
+          },
+        });
+
+        if (checkIsRead) {
+          return respond(c, "Review already read ", true, 409, {});
+        }
+
+        const review = await Reviews.findByIdAndUpdate(
+          reviewId,
+          {
+            readBy: readBy,
+            readAt: Date.now(),
+            isRead: true,
+          },
+          { new: true, session },
+        );
+
+        if (!review) {
+          return respond(c, "Review not found", true, 404, {});
+        }
+
+        return respond(c, "Review updated", false, 200, { _id: review._id });
+      });
+    },
+  )
+
+  .put(
+    "/review/note",
+    zValidator(
+      "json",
+      z.object({
+        note: z.string().min(1).max(200),
+        reviewId: z.string().min(24).max(24),
+      }),
+    ),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
+        const { reviewId, note } = requestData;
+
+        const review = await Reviews.findByIdAndUpdate(
+          reviewId,
+          {
+            note,
+          },
+          { new: true, session },
+        );
+
+        if (!review) {
+          return respond(c, "Review not found", true, 404, {});
+        }
+
+        return respond(c, "Review updated", false, 200, { _id: review._id });
       });
     },
   );

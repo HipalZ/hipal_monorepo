@@ -53,8 +53,8 @@ export function RoomStaffLink() {
   useEffect(() => {
     const mapping: Record<string, Set<string>> = {};
     for (const room of rooms) {
-      if (Array.isArray(room.staffIds) && room.staffIds.length > 0) {
-        mapping[room._id] = new Set(room.staffIds);
+      if (Array.isArray(room?.staffIds) && room?.staffIds.length > 0) {
+        mapping[room._id] = new Set(room?.staffIds);
       }
     }
     setAssignments(mapping);

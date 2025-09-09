@@ -3,11 +3,14 @@ import {
   Cart,
   DeviceToken,
   HotelAlert,
+  HotelAnalytics,
   HotelRoom,
   HotelRoomChat,
   HotelRoomChatComplain,
   HotelRoomChatReply,
+  HotelRoomSession,
   HotelService,
+  HotelStaffLevel,
   OutLetInfo,
   User,
   WhatsAppBusinessConfig,
@@ -29,6 +32,7 @@ import { schedule } from "node-cron";
 import { z } from "zod";
 import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
+import { endOfToday, startOfToday } from "../payments";
 const admin = require("firebase-admin");
 
 const sendPushNotification = async (
@@ -131,21 +135,71 @@ const scheduleAlertUpdate = (
             },
             { new: true },
           );
+
+          const levelOneStaffs = await HotelStaffLevel.findOne({
+            businessId,
+            level: 1,
+            staffIds: { $exists: true, $ne: [] },
+          });
+
+          const levelTwoStaffs = await HotelStaffLevel.findOne({
+            businessId,
+            level: 2,
+            staffIds: { $exists: true, $ne: [] },
+          });
+
+          const levelThreeStaffs = await HotelStaffLevel.findOne({
+            businessId,
+            level: 3,
+            staffIds: { $exists: true, $ne: [] },
+          });
+
+          if (levelOneStaffs) {
+            const nextLevelTime = levelOneStaffs.nextLevelTime;
+            // schedule cron job
+            scheduleLevelWiseAlert(
+              alertId,
+              nextLevelTime,
+              levelOneStaffs.level,
+              roomName,
+              serviceName,
+              levelOneStaffs.staffIds,
+            );
+          } else if (levelTwoStaffs) {
+            const nextLevelTime = levelTwoStaffs.nextLevelTime;
+            // schedule cron job
+            scheduleLevelWiseAlert(
+              alertId,
+              nextLevelTime,
+              levelTwoStaffs.level,
+              roomName,
+              serviceName,
+              levelTwoStaffs.staffIds,
+            );
+          } else if (levelThreeStaffs) {
+            const nextLevelTime = levelThreeStaffs.nextLevelTime;
+            // schedule cron job
+            scheduleLevelWiseAlert(
+              alertId,
+              nextLevelTime,
+              levelThreeStaffs.level,
+              roomName,
+              serviceName,
+              levelThreeStaffs.staffIds,
+            );
+          }
+
           const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
             businessId: alertData?.businessId,
           });
           if (whatsAppConfig) {
-            const managers = await User.find({
-              "customRole.businessId": alertData?.businessId,
-              "customRole.role": "MANAGER",
-            }).lean();
-
-            for (const manager of managers) {
+            for (const staff of levelOneStaffs.staffIds) {
+              const staffData = await User.findById(staff).lean();
               const res = await axios.post(
                 `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
                 {
                   messaging_product: "whatsapp",
-                  to: manager?.phone?.toString(),
+                  to: staffData?.phone?.toString(),
                   type: "template",
                   template: {
                     name: "fi_escalation_template ",
@@ -156,7 +210,7 @@ const scheduleAlertUpdate = (
                         parameters: [
                           {
                             type: "text",
-                            text: manager?.name,
+                            text: staffData?.name,
                           },
 
                           {
@@ -191,21 +245,70 @@ const scheduleAlertUpdate = (
             },
             { new: true },
           );
+          const levelOneStaffs = await HotelStaffLevel.findOne({
+            businessId,
+            level: 1,
+            staffIds: { $exists: true, $ne: [] },
+          });
+
+          const levelTwoStaffs = await HotelStaffLevel.findOne({
+            businessId,
+            level: 2,
+            staffIds: { $exists: true, $ne: [] },
+          });
+
+          const levelThreeStaffs = await HotelStaffLevel.findOne({
+            businessId,
+            level: 3,
+            staffIds: { $exists: true, $ne: [] },
+          });
+
+          if (levelOneStaffs) {
+            const nextLevelTime = levelOneStaffs.nextLevelTime;
+            // schedule cron job
+            scheduleLevelWiseAlert(
+              alertId,
+              nextLevelTime,
+              levelOneStaffs.level,
+              roomName,
+              serviceName,
+              levelOneStaffs.staffIds,
+            );
+          } else if (levelTwoStaffs) {
+            const nextLevelTime = levelTwoStaffs.nextLevelTime;
+            // schedule cron job
+            scheduleLevelWiseAlert(
+              alertId,
+              nextLevelTime,
+              levelTwoStaffs.level,
+              roomName,
+              serviceName,
+              levelTwoStaffs.staffIds,
+            );
+          } else if (levelThreeStaffs) {
+            const nextLevelTime = levelThreeStaffs.nextLevelTime;
+            // schedule cron job
+            scheduleLevelWiseAlert(
+              alertId,
+              nextLevelTime,
+              levelThreeStaffs.level,
+              roomName,
+              serviceName,
+              levelThreeStaffs.staffIds,
+            );
+          }
+
           const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
             businessId: alertData?.businessId,
           });
           if (whatsAppConfig) {
-            const managers = await User.find({
-              "customRole.businessId": alertData?.businessId,
-              "customRole.role": "MANAGER",
-            }).lean();
-
-            for (const manager of managers) {
+            for (const staff of levelOneStaffs.staffIds) {
+              const staffData = await User.findById(staff).lean();
               const res = await axios.post(
                 `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
                 {
                   messaging_product: "whatsapp",
-                  to: manager?.phone?.toString(),
+                  to: staffData?.phone?.toString(),
                   type: "template",
                   template: {
                     name: "fi_escalation_template ",
@@ -216,7 +319,7 @@ const scheduleAlertUpdate = (
                         parameters: [
                           {
                             type: "text",
-                            text: manager?.name,
+                            text: staffData?.name,
                           },
 
                           {
@@ -241,18 +344,94 @@ const scheduleAlertUpdate = (
             }
           }
         }
-
-        const registrationTokens = await DeviceToken.find({
-          businessId: businessId,
-          userId: { $in: validStaffIds },
-          notification: true,
-        });
-        registrationTokens.map(async (obj) => {
-          if (obj.notification) {
-            await sendPushNotification(obj.token, roomName, serviceName);
-          }
-        });
       }
+    });
+  }
+};
+
+const scheduleLevelWiseAlert = (
+  alertId: string,
+  nextLevelTime: number,
+  nextLevel: number,
+  roomName: string,
+  serviceName: string,
+  staffIds: string[],
+) => {
+  if (nextLevelTime > 0) {
+    // Calculate the run time: current time + nextLevelTime minutes
+    const runTime = new Date(Date.now() + nextLevelTime * 60 * 1000);
+    const cronExpression = `${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${
+      runTime.getMonth() + 1
+    } *`;
+
+    schedule(cronExpression, async () => {
+      const alertData = await HotelAlert.findById(alertId).populate({
+        path: "serviceIds",
+        select: "name",
+      });
+
+      // Send push notifications to staff members
+      const registrationTokens = await DeviceToken.find({
+        userId: { $in: staffIds },
+        notification: true,
+      });
+      registrationTokens.map(async (obj) => {
+        if (obj.notification) {
+          await sendPushNotification(obj.token, roomName, serviceName);
+        }
+      });
+
+      const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+        businessId: alertData?.businessId,
+      });
+      if (whatsAppConfig) {
+        for (const staff of staffIds) {
+          const staffData = await User.findById(staff).lean();
+          const res = await axios.post(
+            `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+            {
+              messaging_product: "whatsapp",
+              to: staffData?.phone?.toString(),
+              type: "template",
+              template: {
+                name: "fi_escalation_template ",
+                language: { code: "en" },
+                components: [
+                  {
+                    type: "body",
+                    parameters: [
+                      {
+                        type: "text",
+                        text: staffData?.name,
+                      },
+
+                      {
+                        type: "text",
+                        text: alertData?.serviceIds[0]?.name || "other",
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${whatsAppConfig.token}`,
+              },
+            },
+          );
+
+          if (res.status !== 200) {
+            throw new Error("Error sending message");
+          }
+        }
+      }
+
+      await HotelAlert.findByIdAndUpdate(
+        alertId,
+        { level: nextLevel },
+        { new: true },
+      );
     });
   }
 };
@@ -402,41 +581,24 @@ const hotelAlertRouter = new Hono()
     ),
     async (c) => {
       const { businessId, userId } = c.req.query();
+      const levelData = await HotelStaffLevel.findOne({
+        businessId,
+        staffIds: userId,
+      });
 
-      const staff = await User.findOne(
-        { _id: userId, "customRole.businessId": businessId },
-        { customRole: 1 }, // Fetch only required fields
-      ).lean();
-
-      if (!staff) {
-        return respond(c, "Staff not found", true, 404, {});
-      }
-
-      const customRole = staff.customRole?.find(
-        (role) => role.businessId.toString() === businessId,
-      );
-      if (!customRole) {
-        return respond(c, "Role not found for this business", true, 404, {});
-      }
-
-      const { role } = customRole;
-
-      if (role === "MANAGER") {
-        const alerts = await HotelAlert.find({
-          businessId,
-          alertProgress: {
-            $in: ["IS_ACCEPTED_AND_ESCALATION", "NON_ACCEPTED_AND_ESCALATION"],
-          },
-        })
-          .populate({ path: "serviceIds", select: "name" })
-          .populate({ path: "createdBy", select: "name phone" })
-          .populate({ path: "acceptedBy", select: "name phone" })
-          .populate({ path: "roomId", select: "name" })
-          .lean();
-        return respond(c, "Alerts fetched successfully", false, 200, alerts);
-      }
-
-      return respond(c, "fetch successfully", false, 200, {});
+      const alerts = await HotelAlert.find({
+        businessId,
+        alertProgress: {
+          $in: ["IS_ACCEPTED_AND_ESCALATION", "NON_ACCEPTED_AND_ESCALATION"],
+        },
+        level: levelData?.level,
+      })
+        .populate({ path: "serviceIds", select: "name" })
+        .populate({ path: "createdBy", select: "name phone" })
+        .populate({ path: "acceptedBy", select: "name phone" })
+        .populate({ path: "roomId", select: "name" })
+        .lean();
+      return respond(c, "Alerts fetched successfully", false, 200, alerts);
     },
   )
 
@@ -531,6 +693,247 @@ const hotelAlertRouter = new Hono()
         });
 
       return respond(c, "Room chat fetched successfully", false, 200, roomChat);
+    },
+  )
+
+  .get(
+    "/staff_alert_report",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(24).max(24),
+        from: z.string().optional(),
+        to: z.string().optional(),
+        staffId: z.string().min(24).max(24).optional(),
+        overallPerformance: z.enum(["on-time", "late"]).optional(),
+      }),
+    ),
+    async (c) => {
+      const { businessId, from, to, staffId, overallPerformance } =
+        c.req.query();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
+
+      if (Number.isNaN(fromDate) || Number.isNaN(toDate)) {
+        return respond(c, "Invalid dates", true, 400, {});
+      }
+      if (fromDate > toDate) {
+        return respond(c, "Invalid date range", true, 400, {});
+      }
+
+      const alerts = await HotelAlert.find({
+        businessId,
+        date: { $gte: fromDate, $lte: toDate },
+        ...(staffId
+          ? {
+              $or: [
+                {
+                  acceptedBy: staffId,
+                },
+                { deliveredBy: staffId },
+              ],
+            }
+          : {}),
+      })
+        .populate({ path: "acceptedBy", select: "name phone" })
+        .populate({ path: "deliveredBy", select: "name phone" })
+        .populate({
+          path: "serviceIds",
+          select: "name avgDeliveryTime avgAcceptanceTime",
+        })
+        .lean();
+
+      //
+      const getServiceAverages = (serviceIds: HotelServiceType[] = []) => {
+        if (!serviceIds.length) return { avgAccept: 0, avgDeliver: 0 };
+        let aSum = 0;
+        let dSum = 0;
+        let n = 0;
+        for (const s of serviceIds) {
+          aSum += Number(s?.avgAcceptanceTime ?? 0);
+          dSum += Number(s?.avgDeliveryTime ?? 0);
+          n += 1;
+        }
+        return {
+          avgAccept: n ? aSum / n : 0,
+          avgDeliver: n ? dSum / n : 0,
+        };
+      };
+
+      type Totals = {
+        staffId: string;
+        staffName: string;
+        staffPhone?: string;
+        acceptOnTime: number;
+        acceptTotal: number;
+        deliverOnTime: number;
+        deliverTotal: number;
+        alertIds: Set<string>;
+      };
+      const byStaff: Record<string, Totals> = {};
+
+      const ensureStaff = (staff: any) => {
+        if (!staff || !staff._id) return null;
+        const id = String(staff._id);
+        if (!byStaff[id]) {
+          byStaff[id] = {
+            staffId: id,
+            staffName: staff.name || "Unknown",
+            staffPhone: staff.phone,
+            acceptOnTime: 0,
+            acceptTotal: 0,
+            deliverOnTime: 0,
+            deliverTotal: 0,
+            alertIds: new Set<string>(),
+          };
+        }
+        return byStaff[id];
+      };
+
+      let gAcceptOnTime = 0; // on-time events
+      let gAcceptTotal = 0; // total events
+      let gAcceptActualSum = 0; // sum of actual times
+      let gAcceptSLASum = 0; // sum of SLA times
+      let gAcceptCount = 0; // count of events with SLA
+
+      let gDeliverOnTime = 0; // on-time events
+      let gDeliverTotal = 0; // total events
+      let gDeliverActualSum = 0; // sum of actual times
+      let gDeliverSLASum = 0; // sum of SLA times
+      let gDeliverCount = 0; // count of events with SLA
+
+      for (const a of alerts) {
+        const createdAt = Number(a?.createdAt);
+        const acceptedAt = Number(a?.acceptedAt);
+        const deliveredAt = Number(a?.deliveredAt);
+        const { avgAccept, avgDeliver } = getServiceAverages(a?.serviceIds);
+
+        if (
+          a?.acceptedBy &&
+          Number.isFinite(createdAt) &&
+          Number.isFinite(acceptedAt)
+        ) {
+          const s = ensureStaff(a.acceptedBy);
+          const actualAcceptMin = Math.ceil((acceptedAt - createdAt) / 60000);
+
+          if (s) {
+            s.acceptTotal += 1;
+            s.alertIds.add(String(a._id));
+            if (avgAccept === 0 || actualAcceptMin <= avgAccept)
+              s.acceptOnTime += 1;
+          }
+
+          gAcceptTotal += 1;
+          if (avgAccept === 0 || actualAcceptMin <= avgAccept)
+            gAcceptOnTime += 1;
+
+          if (avgAccept > 0 && Number.isFinite(actualAcceptMin)) {
+            gAcceptActualSum += actualAcceptMin;
+            gAcceptSLASum += avgAccept;
+            gAcceptCount += 1;
+          }
+        }
+
+        // Delivery (credited to deliveredBy)
+        if (
+          a?.deliveredBy &&
+          Number.isFinite(acceptedAt) &&
+          Number.isFinite(deliveredAt)
+        ) {
+          const s = ensureStaff(a.deliveredBy);
+          const actualDeliverMin = Math.ceil(
+            (deliveredAt - acceptedAt) / 60000,
+          );
+
+          if (s) {
+            s.deliverTotal += 1;
+            s.alertIds.add(String(a._id));
+            if (avgDeliver === 0 || actualDeliverMin <= avgDeliver)
+              s.deliverOnTime += 1;
+          }
+
+          gDeliverTotal += 1;
+          if (avgDeliver === 0 || actualDeliverMin <= avgDeliver)
+            gDeliverOnTime += 1;
+
+          if (avgDeliver > 0 && Number.isFinite(actualDeliverMin)) {
+            gDeliverActualSum += actualDeliverMin;
+            gDeliverSLASum += avgDeliver || 0;
+            gDeliverCount += 1;
+          }
+        }
+      }
+
+      const report = Object.values(byStaff).map((s) => {
+        const onTimeTotal = s.acceptOnTime + s.deliverOnTime;
+        const total = s.acceptTotal + s.deliverTotal;
+        const efficiencyPercentage = total
+          ? Math.round((onTimeTotal / total) * 100)
+          : 0;
+        const overAllPerformance =
+          efficiencyPercentage >= 80 ? "on-time" : "late";
+        return {
+          staffName: s.staffName,
+          acceptanceOnTime: s.acceptOnTime,
+          acceptanceTotal: s.acceptTotal,
+          acceptancePercent: s.acceptTotal
+            ? Math.round((s.acceptOnTime / s.acceptTotal) * 100)
+            : 0,
+
+          completionOnTime: s.deliverOnTime,
+          completionTotal: s.deliverTotal,
+          completionPercent: s.deliverTotal
+            ? Math.round((s.deliverOnTime / s.deliverTotal) * 100)
+            : 0,
+
+          overallPerformanceScore: overAllPerformance,
+          efficiencyPercent: efficiencyPercentage,
+          servicesHandled: s.alertIds.size,
+        };
+      });
+
+      const grandOnTime = gAcceptOnTime + gDeliverOnTime; // on-time events
+      const grandTotal = gAcceptTotal + gDeliverTotal; // all events
+      const grandLate = Math.max(grandTotal - grandOnTime, 0);
+
+      const totalActualCount = gAcceptCount + gDeliverCount;
+      const totalActualAvg =
+        totalActualCount > 0
+          ? (gAcceptActualSum + gDeliverActualSum) / totalActualCount
+          : 0;
+      const totalSLAAvg =
+        totalActualCount > 0
+          ? (gAcceptSLASum + gDeliverSLASum) / totalActualCount
+          : 0;
+
+      const overAll = {
+        totalOnTimeCount: grandOnTime,
+        totalServiceActionCount: grandTotal,
+        totalAvgCompletionMinutes: Number(totalActualAvg.toFixed(1)),
+        totalAvgSlaMinutes: Number(totalSLAAvg.toFixed(1)),
+        totalServicesHandled: new Set(
+          Object.values(byStaff).flatMap((s) => Array.from(s.alertIds)),
+        ).size,
+      };
+
+      const plotValue = {
+        onTime: grandOnTime,
+        late: grandLate,
+      };
+
+      const result = {
+        overAll,
+        report,
+        plotValue,
+      };
+
+      if (overallPerformance && report.length) {
+        result.report = report.filter(
+          (r) => r.overallPerformanceScore === overallPerformance,
+        );
+      }
+
+      return respond(c, "Staff alert report generated", false, 200, result);
     },
   )
 
@@ -734,6 +1137,23 @@ const hotelAlertRouter = new Hono()
             );
           }
         }),
+      );
+
+      const roomSession = await HotelRoomSession.findOne({
+        roomId: roomData._id,
+      });
+
+      await HotelAnalytics.findOneAndUpdate(
+        {
+          businessId: requestData.businessId,
+          roomId: roomData._id,
+          userId: requestData.userId,
+          roomSessionId: roomSession?._id,
+        },
+        {
+          $addToSet: { serviceIds: serviceIds },
+        },
+        { upsert: true },
       );
 
       return respond(c, "Alert created successfully", false, 201, {});

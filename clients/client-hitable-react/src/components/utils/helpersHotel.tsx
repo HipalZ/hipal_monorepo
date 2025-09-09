@@ -12,6 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { format } from "date-fns";
+import { AiOutlineStar } from "react-icons/ai";
 
 export function hotelNavItems(): Array<{
   type: NavItemHotelTypes;
@@ -22,6 +23,7 @@ export function hotelNavItems(): Array<{
     { type: NavItemsHotelEnum.Alerts, icon: MdOutlineNotificationsActive },
     { type: NavItemsHotelEnum.Escalation, icon: ShieldAlert as IconType },
     { type: NavItemsHotelEnum.History, icon: MdOutlineHistory },
+    { type: NavItemsHotelEnum.Reviews, icon: AiOutlineStar },
   ];
   return navItems;
 }

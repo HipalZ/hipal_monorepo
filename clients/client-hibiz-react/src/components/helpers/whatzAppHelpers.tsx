@@ -346,7 +346,7 @@ export const formatTriggerTime = (
   return `${minutes.toFixed(2)} minute${minutes > 1 ? "s" : ""}`;
 };
 
-export async function publishWhatsAppFlow(flowJson: any, flowName: string) {
+export async function CreateWhatsAppFlow(flowJson: any, flowName: string) {
   if (!WHATSAPP_ID || !WHATSAPP_TOKEN) {
     return {
       success: false,
@@ -355,7 +355,7 @@ export async function publishWhatsAppFlow(flowJson: any, flowName: string) {
     };
   }
 
-  const apiUrl = `https://graph.facebook.com/v19.0/${WHATSAPP_ID}/flows`;
+  const apiUrl = `https://graph.facebook.com/v21.0/${WHATSAPP_ID}/flows`;
 
   const requestBody = {
     name: flowName.replace(/\s+/g, "_").toLowerCase(),
@@ -398,7 +398,7 @@ export async function publishWhatsAppFlow(flowJson: any, flowName: string) {
 export const useGetFlows = () => {
   const getFlows = async () => {
     const res = await fetch(
-      `https://graph.facebook.com/v19.0/${WHATSAPP_ID}/flows`,
+      `https://graph.facebook.com/v21.0/${WHATSAPP_ID}/flows`,
       {
         method: "GET",
         headers: {

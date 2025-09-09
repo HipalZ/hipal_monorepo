@@ -120,7 +120,7 @@ const MemoWhatzappDashboard = () => {
         </nav>
       )}
       {activeTab === Tabs.TEMPLATES && !openAnalytics && (
-        <section className="p-4 mb-20 bg-white shadow-sm rounded-xl">
+        <section className="p-4 mb-20 shadow-sm rounded-xl">
           <section className="flex justify-between">
             <h2 className="text-2xl font-semibold text-gray-900">Templates</h2>
             <ul className="hidden gap-2 md:flex">

@@ -1,147 +1,152 @@
-import { memo, useCallback } from 'react'
-import AdvancedBottomButton from '@/components/atom/bottomButton/advancedBottomButton'
-import { Download } from 'lucide-react'
-import DateRangePicker from '@/components/molecules/dateRangePicker'
-import { type Filters, useSalesStore } from '@/components/store/useSalesStore'
-import { useParams } from 'react-router-dom'
-import useTimings from '@/components/store/useTimings'
-import { Button } from '@/components/ui/button'
-import { RxCrossCircled } from 'react-icons/rx'
-import { CiFilter } from 'react-icons/ci'
-import { useMutation } from '@tanstack/react-query'
-import { apiRpc } from '@hi/common'
-import LoadingSpinner from '@/components/atom/loadingSpinner'
+import { memo, useCallback } from "react";
+import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
+import { Download } from "lucide-react";
+import DateRangePicker from "@/components/molecules/dateRangePicker";
+import { type Filters, useSalesStore } from "@/components/store/useSalesStore";
+import { useParams } from "react-router-dom";
+import useTimings from "@/components/store/useTimings";
+import { Button } from "@/components/ui/button";
+import { RxCrossCircled } from "react-icons/rx";
+import { CiFilter } from "react-icons/ci";
+import { useMutation } from "@tanstack/react-query";
+import { apiRpc } from "@hi/common";
+import LoadingSpinner from "@/components/atom/loadingSpinner";
 
 const formatDate = (timestamp: number) => {
-    const d = new Date(timestamp);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const d = new Date(timestamp);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+    2,
+    "0",
+  )}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
 const MemoConvertIntoCsv = () => {
+  const params = useParams();
+  const timeStampStart = useTimings((s) => s.timeStampStart);
+  const timeStampEnd = useTimings((s) => s.timeStampEnd);
+  const {
+    selectedFilters,
+    setSelectedFilters,
+    setDownloadCsv,
+    setOpenFilterModal,
+  } = useSalesStore((s) => ({
+    selectedFilters: s.selectedFilters,
+    setSelectedFilters: s.setSelectedFilters,
+    setDownloadCsv: s.setDownloadCsv,
+    setOpenFilterModal: s.setOpenFilterModal,
+  }));
 
-    const params = useParams()
-    const { timeStampStart, timeStampEnd } = useTimings()
-    const {
-        selectedFilters,
-        setSelectedFilters,
-        setDownloadCsv,
-        setOpenFilterModal
-    } = useSalesStore((s) => ({
-        selectedFilters: s.selectedFilters,
-        setSelectedFilters: s.setSelectedFilters,
-        setDownloadCsv: s.setDownloadCsv,
-        setOpenFilterModal: s.setOpenFilterModal
-    }))
+  const removeSingleFilter = useCallback(
+    (key: string, value: string) => {
+      setSelectedFilters(
+        selectedFilters
+          .map((filter) => {
+            if (filter.key === key) {
+              return {
+                ...filter,
+                value: filter.value.filter((v) => v !== value),
+              };
+            }
+            return filter;
+          })
+          .filter((filter) => filter.value.length > 0),
+      );
+    },
+    [selectedFilters],
+  );
 
-    const removeSingleFilter = useCallback(
-        (key: string, value: string) => {
-            setSelectedFilters(
-                selectedFilters
-                    .map((filter) => {
-                        if (filter.key === key) {
-                            return {
-                                ...filter,
-                                value: filter.value.filter((v) => v !== value),
-                            }
-                        }
-                        return filter
-                    })
-                    .filter((filter) => filter.value.length > 0),
-            )
+  interface ISalesPayloadCSV {
+    businessId: string;
+    from: string;
+    to: string;
+    appliedFilters?: Filters;
+  }
+
+  const { isPending, mutateAsync } = useMutation({
+    mutationFn: async (payload: ISalesPayloadCSV) => {
+      const response = await apiRpc.payments[":id"].bills_csv.$get({
+        query: {
+          ...payload,
+          appliedFilter: JSON.stringify(selectedFilters),
         },
-        [selectedFilters],
-    )
-
-    interface ISalesPayloadCSV {
-        businessId: string
-        from: string
-        to: string
-        appliedFilters?: Filters
-    }
-
-    const { isPending, mutateAsync } = useMutation({
-        mutationFn: async (payload: ISalesPayloadCSV) => {
-            const response = await apiRpc.payments[":id"].bills_csv.$get({
-                query: {
-                    ...payload,
-                    appliedFilter: JSON.stringify(selectedFilters)
-                },
-                param: {
-                    id: payload.businessId
-                }
-            })
-            return response.blob()
+        param: {
+          id: payload.businessId,
         },
-        onSuccess: async (blob, variables) => {
-            const url = window.URL.createObjectURL(new Blob([blob]));
-            const link = document.createElement('a');
-            const fromStr = formatDate(Number(variables.from));
-            const toStr = formatDate(Number(variables.to));
-            const fileName = `payments ${fromStr} to ${toStr}.csv`;
+      });
+      return response.blob();
+    },
+    onSuccess: async (blob, variables) => {
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement("a");
+      const fromStr = formatDate(Number(variables.from));
+      const toStr = formatDate(Number(variables.to));
+      const fileName = `payments ${fromStr} to ${toStr}.csv`;
 
-            link.href = url;
-            link.setAttribute('download', fileName);
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode?.removeChild(link);
-            window.URL.revokeObjectURL(url);
-            setDownloadCsv(false)
-        },
-        onError: (error) => {
-            console.log(error)
-        }
-    })
+      link.href = url;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      setDownloadCsv(false);
+    },
+    onError: (error) => {
+      console.log(error);
+    },
+  });
 
-    if (isPending) {
-        return <LoadingSpinner />
-    }
+  if (isPending) {
+    return <LoadingSpinner />;
+  }
 
-    return (
-        <div className='flex flex-col space-y-4 w-full max-w-[30rem] lg:max-w-[40rem] px-4'>
-            <DateRangePicker />
-            <Button className='w-[7rem]' variant="outline" onClick={() => setOpenFilterModal(true)}>
-                <CiFilter className="mr-2" /> Filters
-            </Button>
-            {selectedFilters && selectedFilters.length > 0 && (
-                <>
-                    {selectedFilters.map((filter) => (
-                        <div key={filter.key} className="flex flex-wrap items-center gap-4">
-                            {filter?.value?.map((value) => (
-                                <Button
-                                    onClick={() => removeSingleFilter(filter.key, value)}
-                                    key={value}
-                                    className="capitalize whitespace-nowrap"
-                                >
-                                    {value}
-                                    <RxCrossCircled className="ml-2" />
-                                </Button>
-                            ))}
-                        </div>
-                    ))}
-                </>
-            )}
-            <AdvancedBottomButton
-                maxWidth='24rem'
-                fixed={false}
-                buttons={
-                    [
-                        {
-                            text: 'Download',
-                            onClick: () => mutateAsync({
-                                businessId: params.businessId,
-                                from: timeStampStart.toString(),
-                                to: timeStampEnd.toString(),
-                            }),
-                            icon: <Download />,
-                            className: 'px-4  w-full'
-                        },
+  return (
+    <div className="flex flex-col space-y-4 w-full max-w-[30rem] lg:max-w-[40rem] px-4">
+      <DateRangePicker />
+      <Button
+        className="w-[7rem]"
+        variant="outline"
+        onClick={() => setOpenFilterModal(true)}
+      >
+        <CiFilter className="mr-2" /> Filters
+      </Button>
+      {selectedFilters && selectedFilters.length > 0 && (
+        <>
+          {selectedFilters.map((filter) => (
+            <div key={filter.key} className="flex flex-wrap items-center gap-4">
+              {filter?.value?.map((value) => (
+                <Button
+                  onClick={() => removeSingleFilter(filter.key, value)}
+                  key={value}
+                  className="capitalize whitespace-nowrap"
+                >
+                  {value}
+                  <RxCrossCircled className="ml-2" />
+                </Button>
+              ))}
+            </div>
+          ))}
+        </>
+      )}
+      <AdvancedBottomButton
+        maxWidth="24rem"
+        fixed={false}
+        buttons={[
+          {
+            text: "Download",
+            onClick: () =>
+              mutateAsync({
+                businessId: params.businessId,
+                from: timeStampStart.toString(),
+                to: timeStampEnd.toString(),
+              }),
+            icon: <Download />,
+            className: "px-4  w-full",
+          },
+        ]}
+      />
+    </div>
+  );
+};
 
-                    ]
-                }
-            />
-        </div>
-    )
-}
-
-const ConvertIntoCsv = memo(MemoConvertIntoCsv)
-export default ConvertIntoCsv
+const ConvertIntoCsv = memo(MemoConvertIntoCsv);
+export default ConvertIntoCsv;
