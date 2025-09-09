@@ -74,6 +74,7 @@ const DishesList = ({
     }
     return childCategory?.filter(hasVisibleDishes);
   }, [childCategory, parentCategory]);
+  
 
   useMemo(() => {
     const allDishes = childCategory
