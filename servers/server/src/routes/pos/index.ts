@@ -1340,7 +1340,7 @@ const posRouter = new Hono()
         tableName: z.string().max(30),
         internalCart: z.array(z.object({})),
         businessId: z.string().min(1).max(50),
-        userId: z.string().min(1).max(100),
+        userId: z.string().min(1).max(100).optional(),
         customerPhone: z.string().min(1).max(10).optional(),
       }),
     ),
