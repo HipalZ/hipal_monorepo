@@ -165,11 +165,18 @@ const Cart = () => {
         }
         if (response.status === 401) {
           resetTableData();
+          return;
         }
         if (response.status === 409) {
           toast.error(res?.message);
           setTableName(res?.data?.data?.tableName);
           setHiCode(res?.data?.data?.hiCode);
+          return;
+        }
+        if (response.status === 404) {
+          toast.error(res?.message || "Business not found");
+          handleUnauthenticatedUser();
+          return;
         }
         if (response.status === 403) {
           setHiCodeUser(res?.data as HiCodeUser);
