@@ -202,6 +202,7 @@ const Cart = () => {
             businessId: outletInfo?.businessId,
             internalCart: sanitizedCart,
             customerPhone: userDetails?.phone,
+            userId: userDetails?._id,
           },
         });
         await handleApiResponse(response, "", "Failed to place order");

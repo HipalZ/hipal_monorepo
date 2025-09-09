@@ -1360,9 +1360,8 @@ const posRouter = new Hono()
           return respond(c, "Table not found", true, 404, {});
         }
 
-        // const userData = await User.findById(userId);
         const userData = await User.findOne({
-          phone: customerPhone,
+          $or: [{ _id: userId }, { phone: customerPhone }],
         });
 
         if (!userData) {
