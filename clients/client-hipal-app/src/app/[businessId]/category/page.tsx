@@ -1,7 +1,7 @@
 import { categoryApis } from "@/apis/category";
 import dynamics from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
-import type { BusinessDetails } from "@/components/types/businessData";
+import type { BusinessDetails, IBusinessData } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { businessApis } from "@/apis/explore/index";
