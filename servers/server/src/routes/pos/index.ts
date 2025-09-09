@@ -1340,7 +1340,7 @@ const posRouter = new Hono()
         tableName: z.string().max(30),
         internalCart: z.array(z.object({})),
         businessId: z.string().min(1).max(50),
-        userId: z.string().min(1).max(100).optional(),
+        userId: z.string().min(1).max(100),
         customerPhone: z.string().min(1).max(10).optional(),
       }),
     ),
@@ -1360,10 +1360,7 @@ const posRouter = new Hono()
           return respond(c, "Table not found", true, 404, {});
         }
 
-        // const userData = await User.findById(userId);
-        const userData = await User.findOne({
-          phone: customerPhone,
-        });
+        const userData = await User.findById(userId);
 
         if (!userData) {
           return respond(c, "User not found", true, 404, {});
