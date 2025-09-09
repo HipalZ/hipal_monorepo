@@ -317,11 +317,12 @@ const roomRouter = new Hono()
       z.object({
         businessId: z.string().min(24).max(24),
         userId: z.string().min(24).max(24),
+        roomId: z.string().min(24).max(24).optional(),
       }),
     ),
 
     async (c) => {
-      const { businessId, userId } = c.req.query();
+      const { businessId, userId, roomId } = c.req.query();
 
       const reviews = await Reviews.find({
         businessId,
@@ -339,6 +340,7 @@ const roomRouter = new Hono()
       const userAnalytics = await HotelAnalytics.find({
         businessId,
         userId,
+        ...(roomId ? { roomId } : {}),
       })
         .select("-_id -businessId -roomSessionId -__v")
         .populate({
