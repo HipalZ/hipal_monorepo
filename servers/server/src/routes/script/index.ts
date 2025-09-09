@@ -10,6 +10,7 @@ import {
   HotelRoomType,
   HotelService,
   HotelServiceCategory,
+  HotelStaffLevel,
   HotelStaffRole,
   LoyaltySettings,
   Menu,
@@ -2629,6 +2630,48 @@ const scriptRouter = new Hono()
       // await billQueue.add("request-only", { payload }, { delay: 8_000 });
 
       return respond(c, "queue sent", false, 200, {});
+    },
+  )
+
+  .post(
+    "/add_staff_levels",
+    zValidator(
+      "json",
+      z.object({
+        businessId: z.string().min(3).max(36).optional(),
+      }),
+    ),
+
+    async (c) => {
+      const allHotelBusiness = await Business.find({
+        businessType: "HOTEL",
+      });
+
+      for (const business of allHotelBusiness) {
+        const defaultHotelStaffLevels = [
+          {
+            businessId: business._id,
+            level: 1,
+            staffIds: [],
+            nextLevelTime: 5,
+          },
+          {
+            businessId: business._id,
+            level: 2,
+            staffIds: [],
+            nextLevelTime: 5,
+          },
+          {
+            businessId: business._id,
+            level: 3,
+            staffIds: [],
+            nextLevelTime: 5,
+          },
+        ];
+        await HotelStaffLevel.insertMany(defaultHotelStaffLevels);
+      }
+
+      return respond(c, "All hotel staff levels added", false, 200, {});
     },
   );
 
