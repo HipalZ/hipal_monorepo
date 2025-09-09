@@ -1362,7 +1362,6 @@ const posRouter = new Hono()
 
         const userData = await User.findOne({
           $or: [{ _id: userId }, { phone: customerPhone }],
-          businessId: businessId,
         });
 
         if (!userData) {
