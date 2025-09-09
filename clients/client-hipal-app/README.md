@@ -46,3 +46,4 @@ test deploy
 vercel json filed testings vercel removed build
 pnpm lock trigger to
 read me trigger
+trigger for hotel flow
