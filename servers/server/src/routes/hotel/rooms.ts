@@ -270,17 +270,48 @@ const roomRouter = new Hono()
         businessId: z.string().min(24).max(24),
         from: z.string().optional(),
         to: z.string().optional(),
+        source: z.string().optional(),
       }),
     ),
 
     async (c) => {
-      const { businessId, from, to } = c.req.query();
+      const { businessId, from, to, source } = c.req.query();
       const fromDate = Number(from);
       const toDate = Number(to);
 
       if (fromDate > toDate) {
         return respond(c, "Invalid date range", true, 400, {});
       }
+      const filterAnalytics = await HotelAnalytics.find({
+        businessId,
+        ...(source ? { source } : {}),
+
+        checkIn: {
+          $gte: fromDate,
+          $lte: toDate,
+        },
+      })
+        .populate({
+          path: "roomId",
+          select: "name",
+        })
+        .populate({
+          path: "userId",
+          select: "name phone",
+        })
+        .lean();
+
+      const uniqueByUser = Object.values(
+        filterAnalytics.reduce(
+          (acc, curr) => {
+            if (curr.userId?._id) {
+              acc[curr.userId._id.toString()] = curr; // keep latest entry per user
+            }
+            return acc;
+          },
+          {} as Record<string, (typeof filterAnalytics)[number]>,
+        ),
+      );
 
       const analytics = await HotelAnalytics.find({
         businessId,
@@ -297,16 +328,39 @@ const roomRouter = new Hono()
           path: "userId",
           select: "name phone",
         })
-
         .lean();
 
-      return respond(
-        c,
-        "Hotel analytics fetched successfully",
-        false,
-        200,
-        analytics,
+      const sourceCount: Record<string, number> = {};
+      const userCount: Record<string, number> = {};
+
+      for (const entry of analytics) {
+        const source = entry.source;
+        if (source) {
+          sourceCount[source] = (sourceCount[source] ?? 0) + 1;
+        }
+        const user = entry.userId?._id?.toString();
+        if (user) {
+          userCount[user] = (userCount[user] ?? 0) + 1;
+        }
+      }
+
+      const totalSources = Object.values(sourceCount).reduce(
+        (a, b) => a + b,
+        0,
       );
+      const sourcePercentages: Record<string, number> = {};
+
+      for (const [key, value] of Object.entries(sourceCount)) {
+        const percentage = (value / totalSources) * 100;
+        sourcePercentages[key] = Number(percentage.toFixed(1));
+      }
+
+      return respond(c, "Hotel analytics fetched successfully", false, 200, {
+        analytics: uniqueByUser,
+
+        sourcePercentages,
+        userCount: Object.keys(userCount).length,
+      });
     },
   )
 
