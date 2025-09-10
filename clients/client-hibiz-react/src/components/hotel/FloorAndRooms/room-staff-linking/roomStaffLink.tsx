@@ -18,6 +18,8 @@ import { DroppableFloor } from "./droppableFloor";
 import DraggableStaff from "./draggableStaff";
 import { StaffAssignmentsDialog } from "./staffAssignmentDialog";
 import { DroppableRoom } from "./droppableRoom";
+import { Input } from "@/components/ui/input";
+import { ScreenDisclaimer } from "./screenDisclaimer";
 
 const formatRoleName = (role = "Uncategorized") => {
   return role
@@ -31,12 +33,16 @@ const formatRoleName = (role = "Uncategorized") => {
 export function RoomStaffLink() {
   const { mutateAsync, isPending } = useStaffLinking();
   const [infoStaff, setInfoStaff] = useState<StaffDoc | null>(null);
+  const [searchTerm, setSearchTerm] = useState(""); // search input
+
   const staffListRaw = useStaffDataStore((s) => s.staffData);
   const roomRawData = useRoomStore((s) => s.roomData);
   const floorDataRaw = useFloorStore((s) => s.floorData);
 
   const staff = (Array.isArray(staffListRaw) ? staffListRaw : []) as StaffDoc[];
-  const rooms = (Array.isArray(roomRawData) ? roomRawData : []) as RoomDoc[];
+  const rooms = (Array.isArray(roomRawData)
+    ? roomRawData
+    : []) as unknown as RoomDoc[];
   const floors = (
     Array.isArray(floorDataRaw) ? floorDataRaw : []
   ) as FloorDoc[];
@@ -61,8 +67,20 @@ export function RoomStaffLink() {
     setInitialAssignments(mapping);
   }, [rooms]);
 
+  // 🔍 Optimized staff filtering
+  const filteredStaff = useMemo(() => {
+    if (!searchTerm.trim()) return staff;
+
+    const lower = searchTerm.toLowerCase();
+    return staff.filter(
+      (s) =>
+        s.name.toLowerCase().includes(lower) ||
+        s?.phone.toLowerCase().includes(lower),
+    );
+  }, [staff, searchTerm]);
+
   const groupedStaff = useMemo(() => {
-    return staff.reduce(
+    return filteredStaff.reduce(
       (acc, staffMember) => {
         const role = staffMember.customRole?.[0]?.role || "Uncategorized";
         if (!acc[role]) {
@@ -73,7 +91,7 @@ export function RoomStaffLink() {
       },
       {} as Record<string, StaffDoc[]>,
     );
-  }, [staff]);
+  }, [filteredStaff]);
 
   const assignedStaffIds = useMemo(() => {
     const allIds = new Set<string>();
@@ -99,7 +117,7 @@ export function RoomStaffLink() {
     const dropType = over.data.current?.type;
 
     if (dropType === "room") {
-      const roomId = over.data.current.roomId as string;
+      const roomId = over?.data?.current?.roomId as string;
       setAssignments((prev) => {
         const next = { ...prev };
         const set = new Set(next[roomId] || []);
@@ -110,7 +128,7 @@ export function RoomStaffLink() {
     }
 
     if (dropType === "floor") {
-      const floorId = over.data.current.floorId as string;
+      const floorId = over?.data?.current?.floorId as string;
       const floorRooms = rooms.filter((r) => r.zoneId === floorId);
       setAssignments((prev) => {
         const next = { ...prev };
@@ -170,26 +188,43 @@ export function RoomStaffLink() {
     const roomsPayload = Object.keys({
       ...assignments,
       ...initialAssignments,
-    }).map((roomId) => {
-      const initial = initialAssignments[roomId] || new Set();
-      const current = assignments[roomId] || new Set();
+    })
+      .map((roomId) => {
+        const initial = initialAssignments[roomId] || new Set();
+        const current = assignments[roomId] || new Set();
 
-      const added = [...current].filter((id) => !initial.has(id));
-      const removed = [...initial].filter((id) => !current.has(id));
+        const added = [...current].filter((id) => !initial.has(id));
+        const removed = [...initial].filter((id) => !current.has(id));
 
-      return {
-        roomId,
-        staffIds: added,
-        removeStaffIds: removed,
-      };
-    });
+        if (added.length === 0 && removed.length === 0) {
+          return null;
+        }
+
+        return {
+          roomId,
+          staffIds: added,
+          removeStaffIds: removed,
+        };
+      })
+      .filter(Boolean);
+
+    if (roomsPayload.length === 0) {
+      return;
+    }
 
     const payload = { rooms: roomsPayload };
     console.log("Payload:", payload);
+
     await mutateAsync(payload);
 
-    // Update baseline after save
-    setInitialAssignments(assignments);
+    // ✅ update baseline only for changed rooms
+    setInitialAssignments((prev) => {
+      const next = { ...prev };
+      for (const r of roomsPayload) {
+        next[r?.roomId] = new Set([...(assignments[r?.roomId] || [])]);
+      }
+      return next;
+    });
   }
 
   const dropAnimation: DropAnimation = {
@@ -202,6 +237,16 @@ export function RoomStaffLink() {
     <>
       <div className="h-[90vh] flex flex-col p-4 bg-slate-50">
         <h1 className="font-semibold text-3xl my-2">Staff Assignment</h1>
+        <ScreenDisclaimer />
+        {/* 🔍 Search Box */}
+        <Input
+          type="text"
+          placeholder="Search staff by name or phone..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="mb-4 p-2 border rounded-md text-sm focus:ring-2 focus:ring-purple-400"
+        />
+
         <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow overflow-hidden">
             <aside className="col-span-1 flex flex-col bg-white p-4 rounded-lg shadow-sm overflow-y-auto">
