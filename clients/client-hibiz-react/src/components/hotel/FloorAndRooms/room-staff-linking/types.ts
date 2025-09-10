@@ -1,12 +1,14 @@
 export type FloorDoc = { _id: string; name: string };
 
 export type RoomDoc = {
+  type: string;
   _id: string;
   name: string;
   roomTypeId?: string;
   capacity?: number;
   availability?: boolean;
-  zoneId: string; // floor id
+  zoneId: string;
+  staffIds?: string[];
 };
 
 export type StaffDoc = {

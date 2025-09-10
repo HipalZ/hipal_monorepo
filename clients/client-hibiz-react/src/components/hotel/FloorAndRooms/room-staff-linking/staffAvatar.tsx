@@ -11,10 +11,10 @@ export default function StaffAvatar({
   return (
     <div className="relative group">
       <div
-        className="w-9 h-9 rounded-full bg-purple-100 text-purple-800 flex items-center justify-center text-sm font-semibold border-2 border-white"
+        className="w-full h-9 px-2 rounded-full bg-purple-100 text-purple-800 flex items-center justify-center text-sm font-semibold border-2 border-white whitespace-nowrap"
         title={staff.name}
       >
-        {staff.name.slice(0, 2).toUpperCase()}
+        {staff.name}
       </div>
       {onRemove && (
         <button

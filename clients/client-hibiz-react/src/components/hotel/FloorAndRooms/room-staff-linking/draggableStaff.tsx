@@ -57,7 +57,7 @@ export default function DraggableStaff({
         type="button"
         onPointerDown={(e) => e.stopPropagation()}
         onClick={() => onInfoClick(staff)}
-        className="p-1 rounded-full hover:bg-slate-100 z-50"
+        className="p-1 rounded-full hover:bg-slate-100"
       >
         <Info className="w-4 h-4 text-slate-500" />
       </button>
