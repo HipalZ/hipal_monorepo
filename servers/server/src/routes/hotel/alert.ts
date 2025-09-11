@@ -193,8 +193,12 @@ const scheduleAlertUpdate = (
             businessId: alertData?.businessId,
           });
           if (whatsAppConfig) {
-            for (const staff of levelOneStaffs.staffIds) {
-              const staffData = await User.findById(staff).lean();
+            for (const staffId of validStaffIds) {
+              const staffData = await User.findOne({
+                _id: staffId,
+                customRole: { $elemMatch: { businessId, role: "MANAGER" } },
+              });
+
               const res = await axios.post(
                 `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
                 {
@@ -304,42 +308,43 @@ const scheduleAlertUpdate = (
           if (whatsAppConfig) {
             for (const staff of levelOneStaffs.staffIds) {
               const staffData = await User.findById(staff).lean();
-              const res = await axios.post(
-                `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
-                {
-                  messaging_product: "whatsapp",
-                  to: staffData?.phone?.toString(),
-                  type: "template",
-                  template: {
-                    name: "fi_escalation_template ",
-                    language: { code: "en" },
-                    components: [
-                      {
-                        type: "body",
-                        parameters: [
-                          {
-                            type: "text",
-                            text: staffData?.name,
-                          },
+              try {
+                const res = await axios.post(
+                  `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+                  {
+                    messaging_product: "whatsapp",
+                    to: staffData?.phone?.toString(),
+                    type: "template",
+                    template: {
+                      name: "fi_escalation_template ",
+                      language: { code: "en" },
+                      components: [
+                        {
+                          type: "body",
+                          parameters: [
+                            {
+                              type: "text",
+                              text: staffData?.name,
+                            },
 
-                          {
-                            type: "text",
-                            text: alertData?.serviceIds[0]?.name || "other",
-                          },
-                        ],
-                      },
-                    ],
+                            {
+                              type: "text",
+                              text: alertData?.serviceIds[0]?.name || "other",
+                            },
+                          ],
+                        },
+                      ],
+                    },
                   },
-                },
-                {
-                  headers: {
-                    Authorization: `Bearer ${whatsAppConfig.token}`,
+                  {
+                    headers: {
+                      Authorization: `Bearer ${whatsAppConfig.token}`,
+                    },
                   },
-                },
-              );
-
-              if (res.status !== 200) {
-                throw new Error("Error sending message");
+                );
+                console.log("WhatsApp response:", res.data);
+              } catch (e) {
+                console.log("Error sending message", e);
               }
             }
           }
@@ -1069,6 +1074,8 @@ const hotelAlertRouter = new Hono()
           );
         }
         validStaffIds = validStaff.map((u) => u._id);
+
+        console.log("validStaffIds", validStaffIds);
         const matchedStaff = await User.find({
           _id: { $in: roomData.staffIds },
           customRole: {
