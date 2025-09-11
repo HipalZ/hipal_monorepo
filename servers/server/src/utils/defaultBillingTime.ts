@@ -8,7 +8,6 @@ function istClockToUtcTs(
   hoursIST: number,
   minutesIST = 0,
 ): number {
-  // UTC instant that corresponds to an IST wall-clock time
   return Date.UTC(year, month0, day, hoursIST, minutesIST) - IST_OFFSET;
 }
 
@@ -16,12 +15,6 @@ export function adjustFromToTimestamps(from?: number, to?: number) {
   const hasFrom = Number.isFinite(from);
   const hasTo = Number.isFinite(to);
 
-  // If the caller passed a full custom range, don't touch it.
-  if (hasFrom && hasTo) {
-    return { adjustedFrom: from as number, adjustedTo: to as number };
-  }
-
-  // Otherwise, auto-window around "today" in IST
   const nowIST = new Date(Date.now() + IST_OFFSET);
   const Y = nowIST.getUTCFullYear();
   const M = nowIST.getUTCMonth();
@@ -31,10 +24,30 @@ export function adjustFromToTimestamps(from?: number, to?: number) {
   const tomorrow4amUTC = today4amUTC + DAY_MS;
   const yesterday4amUTC = today4amUTC - DAY_MS;
 
-  // Before 4 AM IST → use [yesterday@4 → today@4]
+  // 📌 Special case: if caller explicitly asks for "today"
+  if (hasFrom && !hasTo) {
+    const fromDateIST = new Date((from as number) + IST_OFFSET);
+    if (
+      fromDateIST.getUTCFullYear() === Y &&
+      fromDateIST.getUTCMonth() === M &&
+      fromDateIST.getUTCDate() === D
+    ) {
+      // Force today's sales window: [today@4am → tomorrow@4am]
+      return { adjustedFrom: today4amUTC, adjustedTo: tomorrow4amUTC };
+    }
+  }
+
+  // 📌 If both are provided, keep caller’s custom range untouched
+  if (hasFrom && hasTo) {
+    return { adjustedFrom: from as number, adjustedTo: to as number };
+  }
+
+  // 📌 Auto-window around "today" in IST
   if (Date.now() < today4amUTC) {
+    // Before 4 AM IST → yesterday@4 → today@4
     return { adjustedFrom: yesterday4amUTC, adjustedTo: today4amUTC };
   }
-  // After 4 AM IST → use [today@4 → tomorrow@4]
+
+  // After 4 AM IST → today@4 → tomorrow@4
   return { adjustedFrom: today4amUTC, adjustedTo: tomorrow4amUTC };
 }
