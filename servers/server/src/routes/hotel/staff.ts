@@ -103,7 +103,6 @@ const staffRouter = new Hono()
         requestData as AddHotelStaffType;
 
       const existingStaff = await User.findOne({
-        customRole: { $elemMatch: { businessId } },
         phone,
       });
 
