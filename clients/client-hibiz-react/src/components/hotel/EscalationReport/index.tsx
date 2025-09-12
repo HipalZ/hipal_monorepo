@@ -43,7 +43,7 @@ export default function EscalationReport() {
     const handleExport = () => exportToCSV(filteredData)
 
     return (
-        <div className="container mx-auto py-6 px-4 space-y-8">
+        <div className="container mx-auto xl:mt-0 pb-6 px-4 space-y-8">
             {/* Header with title and actions */}
             <DashboardHeader
                 isLoading={escalatedReportsLoading}

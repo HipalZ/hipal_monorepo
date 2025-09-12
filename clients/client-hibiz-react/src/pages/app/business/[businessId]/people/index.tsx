@@ -47,7 +47,6 @@ const HiPeople = () => {
     navigate(`/app/business/${businessId}`);
   };
 
-  console.log("Selected Page:", selectedPage);
 
   return (
     <main>

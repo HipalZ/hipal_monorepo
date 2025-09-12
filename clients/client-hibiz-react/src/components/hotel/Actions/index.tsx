@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Home, ChevronRight, ArrowLeft, Cog } from "lucide-react";
+import { ArrowLeft, Cog } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -9,13 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import HotelServices from "./Services";
 
 // Define the service types
@@ -90,7 +83,7 @@ const HotelActions = () => {
 
   // Render the service cards grid
   const renderServiceCards = () => (
-    <div className="grid grid-cols-1 gap-4 px-4 xl:px-0 md:grid-cols-2 lg:grid-cols-3 pb-[3rem]">
+    <div className="grid grid-cols-1 gap-4 xl:px-0 md:grid-cols-2 lg:grid-cols-3 pb-[3rem]">
       {serviceCards.map((service) => (
         <Card
           key={service.id}
@@ -142,50 +135,11 @@ const HotelActions = () => {
     }
   };
 
-  // Get the active service title for breadcrumb
-  const getActiveServiceTitle = () => {
-    return (
-      serviceCards.find((service) => service.id === activeService)?.title || ""
-    );
-  };
-
+  
   return (
-    <div className="container px-4 py-8 mx-auto">
-      {/* Breadcrumb navigation */}
-      <Breadcrumb className="mb-6">
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink href="#" onClick={handleBackClick}>
-              <Home className="w-4 h-4 mr-1" />
-              <span>Dashboard</span>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
+    <div className="px-4 pt-6 pb-8 xl:pt-0 mx-auto">
+      <h2 className="mb-6 text-3xl font-bold xl:px-0">Actions</h2>
 
-          <BreadcrumbSeparator>
-            <ChevronRight className="w-4 h-4" />
-          </BreadcrumbSeparator>
-
-          <BreadcrumbItem>
-            <BreadcrumbLink href="#" onClick={handleBackClick}>
-              Hotel Actions
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-
-          {activeService && (
-            <>
-              <BreadcrumbSeparator>
-                <ChevronRight className="w-4 h-4" />
-              </BreadcrumbSeparator>
-
-              <BreadcrumbItem>
-                <BreadcrumbLink href="#">
-                  {getActiveServiceTitle()}
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-            </>
-          )}
-        </BreadcrumbList>
-      </Breadcrumb>
 
       {/* Back button when viewing a service */}
       {activeService && (

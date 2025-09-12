@@ -1,12 +1,10 @@
-// HotelStaffMain.tsx
-"use client";
-
 import useBusinessData from "@/components/store/useBusinessData";
 import {
   type IHotel_Roll,
   type IHotelRoll,
   type IHotelStaff,
   useDeleteStaffFromHotel,
+  useGetAllHotelServices,
   useGetAllHotelStaff,
 } from "@/hooks/useHotelStaff";
 import {
@@ -33,10 +31,19 @@ import { Skeleton } from "@/components/ui/skeleton";
 import useStaffStore, {
   type IStaffMember,
 } from "@/components/store/hotel/useHotelStaff";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import EscalationAssignmentModal from "./EscalationAssignmentModal";
 import PopUp from "@/components/atom/popUp/index.tsx";
 import BulkEscalationAssignmentPanel from "./BulkEscalation.tsx";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { IService } from "@/components/store/hotel/useHotelServices.ts";
 
 const roleBadgeColors: Record<string, string> = {
   MANAGER: "bg-purple-100 text-purple-800 hover:bg-purple-100",
@@ -62,17 +69,47 @@ const HotelStaffMain = () => {
     businessId as string,
   );
   const { deleteStaffLoader, deleteStaff } = useDeleteStaffFromHotel();
+  const [escalationModalOpen, setEscalationModalOpen] = useState(false);
+  const [selectedStaffForEscalation, setSelectedStaffForEscalation] =
+    useState<IStaffMember | null>(null);
+
+  const { hotelServicesData } = useGetAllHotelServices(businessId as string);
+
+  const [bulkModalOpen, setBulkModalOpen] = useState(false);
 
   const setStaffModal = useStaffStore((s) => s.setStaffModal);
   const initializeFormForEdit = useStaffStore((s) => s.initializeFormForEdit);
   const setEditRoleStr = useStaffStore((s) => s.setEditRoleStr);
   const setEditServiceIds = useStaffStore((s) => s.setEditServiceIds);
 
-  const [escalationModalOpen, setEscalationModalOpen] = useState(false);
-  const [selectedStaffForEscalation, setSelectedStaffForEscalation] =
-    useState<IStaffMember | null>(null);
+  // 🔎 New state for filters
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("ALL");
+  const [serviceFilter, setServiceFilter] = useState<string>("ALL");
 
-  const [bulkModalOpen, setBulkModalOpen] = useState(false);
+  const allServices = useMemo(() => {
+    if (!hotelServicesData) return [];
+    return hotelServicesData;
+  }, [hotelServicesData]);
+
+  // 🔎 Filter logic
+  const filteredStaff = staffData.filter((staff: IHotelStaff) => {
+    const matchesSearch =
+      staff?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      staff?.phone?.includes(searchTerm);
+
+    const matchesRole =
+      roleFilter === "ALL" ||
+      staff?.customRole?.some((r) => r?.role === roleFilter);
+
+    const matchesService =
+      serviceFilter === "ALL" ||
+      staff?.customRole?.some((r) =>
+        (r?.serviceIds || []).includes(serviceFilter),
+      );
+
+    return matchesSearch && matchesRole && matchesService;
+  });
 
   const handleEditStaff = useCallback(
     (staff: IStaffMember) => {
@@ -150,31 +187,81 @@ const HotelStaffMain = () => {
   return (
     <div className=" p-4 mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">Hotel Staff</h2>
+        <h2 className="text-2xl font-bold">
+          Hotel Staff ({filteredStaff.length})
+        </h2>
 
-        <div className="flex items-center gap-3">
-          {/* Show "Add to Escalation" only if there is at least one staff */}
-          {staffData.length > 0 && (
-            <Button
-              variant="default"
-              onClick={() => setBulkModalOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Add to Escalation
-            </Button>
+        {staffData.length > 0 && (
+          <Button
+            variant="default"
+            onClick={() => setBulkModalOpen(true)}
+            className="flex items-center gap-2 text-white"
+          >
+            <Plus className="w-4 h-4" />
+            Add to Escalation
+          </Button>
+        )}
+      </div>
+
+      <Input
+        placeholder="Search staff by name or phone..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="w-full"
+      />
+
+      <div className="flex gap-3 my-4 md:items-center">
+        {/* Role filter */}
+        <div className="relative">
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Filter by Role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Roles</SelectItem>
+              {Object.keys(roleBadgeColors).map((role) => (
+                <SelectItem key={role} value={role}>
+                  {role.replace(/_/g, " ")}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {roleFilter !== "ALL" && (
+            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600" />
+            </span>
           )}
-          <Badge variant="outline" className="px-3 py-1">
-            {staffData.length} Staff
-          </Badge>
+        </div>
+
+        <div className="relative">
+          <Select value={serviceFilter} onValueChange={setServiceFilter}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Filter by Service" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Services</SelectItem>
+              {allServices.map((service: IService) => (
+                <SelectItem key={service._id} value={service._id}>
+                  {service.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {serviceFilter !== "ALL" && (
+            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600" />
+            </span>
+          )}
         </div>
       </div>
 
       {staffLoading || deleteStaffLoader ? (
         renderSkeletons()
-      ) : staffData.length ? (
+      ) : filteredStaff.length ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {staffData.map((staff: IHotelStaff) => (
+          {filteredStaff.map((staff: IHotelStaff) => (
             <Card key={staff._id} className="overflow-hidden">
               <CardContent className="p-0">
                 <div className="p-4">
@@ -200,7 +287,7 @@ const HotelStaffMain = () => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() => handleEditStaff(staff as any)}
+                          onClick={() => handleEditStaff(staff as IHotelStaff)}
                         >
                           <Edit className="w-4 h-4 mr-2" />
                           Edit
@@ -213,7 +300,7 @@ const HotelStaffMain = () => {
                           Delete
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => escalationAssign(staff as any)}
+                          onClick={() => escalationAssign(staff as IHotelStaff)}
                         >
                           <BadgeAlert className="w-4 h-4 mr-2" />
                           Assign to Escalation
@@ -266,7 +353,7 @@ const HotelStaffMain = () => {
           <EscalationAssignmentModal
             isOpen={escalationModalOpen}
             onClose={handleCloseEscalationModal}
-            staff={selectedStaffForEscalation as any}
+            staff={selectedStaffForEscalation as IHotelStaff}
           />
         </PopUp>
       )}

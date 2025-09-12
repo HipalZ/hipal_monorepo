@@ -22,17 +22,35 @@ export type IHotelRoll =
   | "KITCHEN"
   | "ELECTRICIAN"
   | "PLUMBER";
+export interface IHotelStaffCustomRolePermissions {
+  normal_settle: boolean;
+  force_settle: boolean;
+  resolve_table: boolean;
+  free_table: boolean;
+  sale_summary: boolean;
+  bill: boolean;
+  order_accept: boolean;
+  place_order: boolean;
+  offline_settle: boolean;
+}
+
+export interface IHotelStaffCustomRole {
+  _id: string;
+  businessId: string;
+  role: IHotelRoll;
+  permissions: IHotelStaffCustomRolePermissions;
+  permissionGroupIds: string[];
+  permissionIds: string[];
+  bookMark: boolean;
+  isDeleted: boolean;
+  serviceIds: string[];
+}
 
 export interface IHotelStaff {
   _id: string;
   name: string;
   phone: string;
-  customRole: {
-    businessId: string;
-    nickName: string;
-    role: IHotelRoll;
-    _id: string;
-  }[];
+  customRole: IHotelStaffCustomRole[];
 }
 
 export const useGetAllHotelStaff = (businessId: string) => {
@@ -93,9 +111,9 @@ export const useGetAllHotelStaffRoles = (businessId: string) => {
     data: hotelRolesData,
     refetch,
   } = useQuery({
-    queryKey: ["getAllHotelStaffRoles", businessId || "default"], 
+    queryKey: ["getAllHotelStaffRoles", businessId || "default"],
     queryFn: getHotelRoles,
-    enabled: !!businessId, 
+    enabled: !!businessId,
   });
 
   return { isLoading, hotelRolesData, refetch };
@@ -367,46 +385,47 @@ export const useSaveStaffToLevel = () => {
 
 interface IStaffRemoveFromLevel {
   staffIds: string[];
-  levelId:string
+  levelId: string;
 }
 
 export const useRemoveStaffFromLevel = () => {
   const { setError, setOpenErrorModal } = useError();
   const businessId = useParams<string>().hotelId;
   const queryClient = useQueryClient();
-  const { isPending: removeStaffLoader, mutateAsync: removeStaff } = useMutation({
-    mutationFn: async (payload: IStaffRemoveFromLevel) => {
-      const response = await apiRpc.hotel.staff_level.remove_staff.$post({
-        json: payload,
-      });
-      return response;
-    },
-    onSuccess: (data) => {
-      if (data.status === 400 || data.status === 401) {
-        toast.error("Failed to remove staff from level");
-      }
-      if (data.status === 409) {
-        setOpenErrorModal(true);
-        setError("Staff already exists");
-        return toast.error("Staff already exists");
-      }
-      if (data.status === 200 || data.status === 201) {
-        queryClient.invalidateQueries({
-          queryKey: ["getHotelStaffLevels",businessId ],
+  const { isPending: removeStaffLoader, mutateAsync: removeStaff } =
+    useMutation({
+      mutationFn: async (payload: IStaffRemoveFromLevel) => {
+        const response = await apiRpc.hotel.staff_level.remove_staff.$post({
+          json: payload,
         });
-        toast.success("Staff removed from level successfully");
-        return;
-      }
-    },
-    onError: (data) => {
-      console.log(data);
-    },
-  });
+        return response;
+      },
+      onSuccess: (data) => {
+        if (data.status === 400 || data.status === 401) {
+          toast.error("Failed to remove staff from level");
+        }
+        if (data.status === 409) {
+          setOpenErrorModal(true);
+          setError("Staff already exists");
+          return toast.error("Staff already exists");
+        }
+        if (data.status === 200 || data.status === 201) {
+          queryClient.invalidateQueries({
+            queryKey: ["getHotelStaffLevels", businessId],
+          });
+          toast.success("Staff removed from level successfully");
+          return;
+        }
+      },
+      onError: (data) => {
+        console.log(data);
+      },
+    });
 
   return { removeStaffLoader, removeStaff };
 };
 
-export interface IStaffUpdateLevel { 
+export interface IStaffUpdateLevel {
   staffIds?: string[];
   levelId: string;
   nextLevelTime?: number;
@@ -416,34 +435,35 @@ export interface IStaffUpdateLevel {
 export const useUpdateStaffToHotelLevel = () => {
   const { setError, setOpenErrorModal } = useError();
   const queryClient = useQueryClient();
-  const { isPending: updateStaffLoader, mutateAsync: updateStaffToLevel } = useMutation({
-    mutationFn: async (payload: IStaffUpdateLevel) => {
-      const response = await apiRpc.hotel.staff_level.update_level.$put({
-        json: payload,
-      });
-      return response;
-    },
-    onSuccess: (data, variables) => {
-      if (data.status === 400 || data.status === 401) {
-        toast.error("Failed to update staff level");
-      }
-      if (data.status === 409) {
-        setOpenErrorModal(true);
-        setError("Staff already exists");
-        return toast.error("Staff already exists");
-      }
-      if (data.status === 200 || data.status === 201) {
-        queryClient.invalidateQueries({
-          queryKey: ["getHotelStaffLevels", variables.businessId],
+  const { isPending: updateStaffLoader, mutateAsync: updateStaffToLevel } =
+    useMutation({
+      mutationFn: async (payload: IStaffUpdateLevel) => {
+        const response = await apiRpc.hotel.staff_level.update_level.$put({
+          json: payload,
         });
-        toast.success("Staff level updated successfully");
-        return;
-      }
-    },
-    onError: (data) => {
-      console.log(data);
-    },
-  });
+        return response;
+      },
+      onSuccess: (data, variables) => {
+        if (data.status === 400 || data.status === 401) {
+          toast.error("Failed to update staff level");
+        }
+        if (data.status === 409) {
+          setOpenErrorModal(true);
+          setError("Staff already exists");
+          return toast.error("Staff already exists");
+        }
+        if (data.status === 200 || data.status === 201) {
+          queryClient.invalidateQueries({
+            queryKey: ["getHotelStaffLevels", variables.businessId],
+          });
+          toast.success("Staff level updated successfully");
+          return;
+        }
+      },
+      onError: (data) => {
+        console.log(data);
+      },
+    });
 
-  return { updateStaffLoader,  updateStaffToLevel };
+  return { updateStaffLoader, updateStaffToLevel };
 };

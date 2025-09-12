@@ -66,6 +66,9 @@ interface IStaffData {
 
   roomStaffAssignments: RoomStaffAssignment[];
 
+  showStaffReport: boolean;
+  setShowStaffReport: (value: boolean) => void;
+
   // Batch selection state
   selectedRooms: string[];
   selectedStaff: string[];
@@ -97,6 +100,9 @@ interface IStaffData {
 export const useStaffDataStore = create<IStaffData>((set, get) => ({
   staffData: [],
   setStaffData: (data: IStaffMember[]) => set({ staffData: data }),
+
+  showStaffReport: false,
+  setShowStaffReport: (value: boolean) => set({ showStaffReport: value }),
 
   roomStaffAssignments: [],
   selectedRooms: [],

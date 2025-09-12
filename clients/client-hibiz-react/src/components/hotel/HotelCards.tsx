@@ -68,7 +68,7 @@ const essentialCards = [
 const HotelCards = () => {
     return (
         <>
-            <h2 className="px-4 mt-6 mb-6 text-3xl font-bold xl:px-0">Essentials</h2>
+            <h2 className="px-4 mt-6 xl:mt-0 mb-6 text-3xl font-bold xl:px-0">Essentials</h2>
             <div className="grid grid-cols-1 gap-4 px-4 xl:px-0 md:grid-cols-2 lg:grid-cols-3 pb-[3rem]">
                 {essentialCards.map((card, index) => (
                     <Link to={`${card.href}`} key={index?.toString()} className="block h-full">

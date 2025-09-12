@@ -1,11 +1,13 @@
 import { categoryApis } from "@/apis/category";
 import dynamics from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
-import type { BusinessDetails, IBusinessData } from "@/components/types/businessData";
+import type {
+  BusinessDetails,
+  IBusinessData,
+} from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { businessApis } from "@/apis/explore/index";
-
 
 export const dynamic = "force-dynamic";
 export const fetchCache = "force-no-store";
@@ -161,13 +163,11 @@ export default async function Page({
   const { businessId } = params;
   const { tableName } = searchParams;
 
-  // Call fetchData with both parameters
   const data = await fetchData(businessId, tableName);
   const businessData = (await businessApis.all(businessId)) as IBusinessData;
   return (
     <main>
       <div className="relative flex flex-col w-full">
-        {/* <TopSectionVideo /> */}
         <TopBackground
           specialBanner={
             data?.business?.categoryTopBannerUrl ||

@@ -481,7 +481,7 @@ const Cart = () => {
                     <motion.button
                       type="button"
                       className={cn(
-                        "w-full flex justify-center items-center gap-2 py-3 rounded-lg border border-gray-300", // ensure full width & good spacing
+                        "w-full flex justify-center items-center gap-2 py-3 rounded-lg border border-gray-300",
                         "text-sm font-medium text-white bg-black shadow-sm",
                       )}
                       whileHover={{ scale: 1.02 }}

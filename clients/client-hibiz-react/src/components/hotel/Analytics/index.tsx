@@ -11,6 +11,7 @@ import { GrGraphQl } from "react-icons/gr";
 import { IoAnalytics } from "react-icons/io5";
 import { VscFeedback } from "react-icons/vsc";
 import { SlPeople } from "react-icons/sl";
+import { memo } from "react";
 
 const essentialCards = [
   {
@@ -44,21 +45,33 @@ const essentialCards = [
     href: "review-reports",
   },
   {
+    title: "Staff Analytics",
+    description: "Staff Reports",
+    icon: (
+      <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-red-400 to-red-600 hover:scale-105">
+        <SlPeople className="w-8 h-8 text-white drop-shadow-md" />
+      </div>
+    ),
+    href: "staff-reports",
+  },
+  {
     title: "User Analytics",
     description: "User Reports",
     icon: (
-      <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-red-400 to-red-600 hover:scale-105">
-        <SlPeople  className="w-8 h-8 text-white drop-shadow-md" />
+      <div className="p-3 transition-transform transform rounded-full shadow-lg bg-gradient-to-br from-green-400 to-green-600 hover:scale-105">
+        <SlPeople className="w-8 h-8 text-white drop-shadow-md" />
       </div>
     ),
     href: "user-reports",
   },
 ];
 
-const AnalyticsCards = () => {
+const MemoAnalyticsCards = () => {
   return (
     <>
-      <h2 className="px-4 mt-6 mb-6 text-3xl font-bold xl:px-0">Analytics</h2>
+      <h2 className="px-4 mt-6 xl:mt-0 mb-6 text-3xl font-bold xl:px-0">
+        Analytics
+      </h2>
       <div className="grid grid-cols-1 gap-4 px-4 xl:px-0 md:grid-cols-2 lg:grid-cols-3 pb-[3rem]">
         {essentialCards.map((card, index) => (
           <Link
@@ -89,4 +102,5 @@ const AnalyticsCards = () => {
   );
 };
 
+const AnalyticsCards = memo(MemoAnalyticsCards);
 export default AnalyticsCards;

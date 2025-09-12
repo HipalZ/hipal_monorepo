@@ -1,5 +1,5 @@
 import { memo, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { PiSealWarningFill } from "react-icons/pi";
@@ -18,8 +18,8 @@ const Business = () => {
   const setSelectedDashboard = useSelectedIcon((s) => s.setSelectedDashboard);
   const selectedDashboard = useSelectedIcon((s) => s.selectedDashboard);
   const navigate = useNavigate();
-  const { businessId } = useParams<{ businessId: string }>();
   const businessData = useBusinessData((s) => s.businessData);
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const outLetType = useBusinessData((s) => s?.outletInfo?.outLetType);
   const isPosEnabled = useBusinessData((s) => s?.outletInfo?.isPosEnabled);
 

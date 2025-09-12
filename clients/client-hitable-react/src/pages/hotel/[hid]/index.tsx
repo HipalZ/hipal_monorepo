@@ -6,84 +6,6 @@ import PopUp from "@/components/atoms/popUp";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import HotelReviews from "@/components/hotel/HotelReview";
 
-const data = [
-  {
-    _id: "68b996ef8c91cf69f0576d20",
-    userId: {
-      _id: "665ee910b437be96f17c6f68",
-      name: "Stae captain",
-      phone: "2222222222",
-    },
-    reviewRating: 3,
-    improvementAreas: [],
-    staffs: ["665ee910b437be96f17c6f68"],
-    date: 1756993263154,
-    isRead: false,
-    readAt: 1756992903228,
-    readBy: null,
-    roomId: {
-      _id: "67ff3875456972385d102eda",
-      name: "premium-1",
-    },
-    alertId: {
-      serviceIds: [
-        {
-          _id: "6802393fd7cb2c1ae67c77a7",
-          name: "Match Box",
-        },
-      ],
-      acceptedBy: {
-        _id: "665ee910b437be96f17c6f68",
-        name: "Stae captain",
-        phone: "2222222222",
-      },
-      deliveredBy: {
-        _id: "665ee910b437be96f17c6f68",
-        name: "Stae captain",
-        phone: "2222222222",
-      },
-    },
-    note: "",
-  },
-  {
-    _id: "68b996d68c91cf69f0576c72",
-    userId: {
-      _id: "665ee910b437be96f17c6f68",
-      name: "Stae captain",
-      phone: "2222222222",
-    },
-    reviewRating: 5,
-    improvementAreas: [],
-    staffs: ["665ee910b437be96f17c6f68"],
-    date: 1756993238073,
-    isRead: false,
-    readAt: 1756992903228,
-    readBy: null,
-    roomId: {
-      _id: "67ff3875456972385d102eda",
-      name: "premium-1",
-    },
-    alertId: {
-      serviceIds: [
-        {
-          _id: "6802393fd7cb2c1ae67c77a5",
-          name: "Toilet Roll",
-        },
-      ],
-      acceptedBy: {
-        _id: "665ee910b437be96f17c6f68",
-        name: "Stae captain",
-        phone: "2222222222",
-      },
-      deliveredBy: {
-        _id: "665ee910b437be96f17c6f68",
-        name: "Stae captain",
-        phone: "2222222222",
-      },
-    },
-    note: "",
-  },
-];
 
 const ViewCart = lazy(() => import("@/components/hotel/ViewCart"));
 const EscalationAlerts = lazy(
@@ -136,7 +58,7 @@ const MemoHotel = () => {
         </Suspense>
       )}
       {selectedNavItem === NavItemsHotelEnum.Reviews && (
-        <HotelReviews reviews={data} />
+        <HotelReviews />
       )}
       <div className="fixed bottom-0 h-[4.5rem] lg:hidden w-full shadow-2xl flex justify-around items-center bg-white z-50">
         <nav className="flex w-full p-2 mx-4 rounded-full bg-gray-50">
@@ -147,12 +69,13 @@ const MemoHotel = () => {
       </div>
       {openRoomModal && (
         <PopUp
-          width="w-[30rem]"
+          width="w-[30rem] md:w-[40rem]"
           onClose={() => setOpenRoomModal(false)}
           show={openRoomModal}
+          rightTopBack
           hide
         >
-          <section className="overflow-y-scroll h-[90vh] bg-gray-50">
+          <section className="overflow-y-scroll h-[100vh] lg:h-[90dvh] bg-gray-50">
             <Suspense fallback={<SpinnerMemo />}>
               {roomData?.roomStatus === "AVAILABLE" ? (
                 <AvailableRoomHotel />
@@ -165,7 +88,7 @@ const MemoHotel = () => {
       )}
       {openCartModal && (
         <PopUp
-          width="w-[30rem]"
+          width="w-[30rem] "
           onClose={() => setOpenCartModal(false)}
           show={openCartModal}
           hide
