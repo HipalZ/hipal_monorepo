@@ -122,7 +122,7 @@ export const createRefreshToken = (id: string, role: string) => {
   );
 };
 
-async function createPermissionObject(
+export async function createPermissionObject(
   permissionIds: string[],
   permissionGroupIds: string[],
 ) {

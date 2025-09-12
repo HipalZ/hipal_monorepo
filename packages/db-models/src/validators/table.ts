@@ -75,7 +75,6 @@ export const updateTableSchema = z.object({
   staffIds: z.array(ObjectIdSchema).optional(),
   capacity: z.number().optional(),
   visibility: z.boolean().default(true),
-  tableId: z.string().min(3).max(100).optional(),
 
   internalZoneId: ObjectIdSchema,
 });

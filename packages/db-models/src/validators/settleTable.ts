@@ -127,7 +127,6 @@ export const forceSettleSchema = z
 
 export const duesSettleSchema = z
   .object({
-    businessId: z.string().min(1).max(50),
     duesUserId: z.string().min(1).max(50),
     settleModes: duessettleModesSchema,
     npcUserId: z.string().max(100).optional(),

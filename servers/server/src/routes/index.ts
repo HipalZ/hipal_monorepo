@@ -15,6 +15,7 @@ import groupRouter from "./groups";
 import hipalzRouter from "./hipalz";
 import hotelRouter from "./hotel";
 import iconRouter from "./icon";
+import jewelleryRouter from "./jewellery";
 import kitchenRouter from "./kitchen";
 import kotRouter from "./kot";
 import loyaltyRouter from "./loyalty";
@@ -93,6 +94,7 @@ export const routes = app
   .route("/password_manager", passwordManagerRouter)
   .route("/print_section", printSectionRouter)
   .route("/report", reportRouter)
-  .route("/split_bill", splitBillRouter);
+  .route("/split_bill", splitBillRouter)
+  .route("/jewellery", jewelleryRouter);
 
 export type AppType = typeof routes;

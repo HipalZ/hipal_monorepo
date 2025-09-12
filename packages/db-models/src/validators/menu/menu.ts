@@ -76,7 +76,6 @@ export const UpdateMenuSchema = z.object({
   endTime: z.coerce.number().optional(),
   isActive: z.boolean().optional().default(false),
   isDeleted: z.boolean().optional().default(false),
-  menuId: ObjectIdSchema,
   primaryColor: z.string().min(1).max(7).optional(),
   secondaryColor: z.string().min(1).max(7).optional(),
 });
