@@ -11,7 +11,7 @@ import BottomButton from "@/components/atom/bottomButton";
 import { apiRpc } from "@hi/common";
 import toast from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
-
+import { useNavigate } from "react-router-dom";
 
 const CardOneLayout = lazy(() => import("./cardOne"));
 const CardTwoLayout = lazy(() => import("./cardTwo"));
@@ -66,7 +66,7 @@ const MemoCardSelection = () => {
   }));
 
   const queryClient = useQueryClient();
-
+  const navigate = useNavigate();
   const logo = useBusinessData((state) => state?.businessData?.logo);
   const name = useOwnerLogin((state) => state?.user?.name);
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
