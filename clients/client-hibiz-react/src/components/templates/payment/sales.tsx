@@ -18,6 +18,7 @@ import SalesFilters from "./SalesFiltes";
 import { useGetallSalesByGet } from "@/hooks/useSales";
 import SalesCards from "./SalesCards";
 import ConvertIntoCsv from "./ConvertIntoCsv";
+import useBusinessData from "@/components/store/useBusinessData.ts";
 
 const MemoPaymentSales = () => {
   const params = useParams();
@@ -53,8 +54,8 @@ const MemoPaymentSales = () => {
     downloadCsv: s.downloadCsv,
     setDownloadCsv: s.setDownloadCsv,
   }));
-  const businessId = params?.businessId;
   const [currentSalesIndex, setCurrentSalesIndex] = useState(0);
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
 
   const { pageNumber } = usePaginationStore((s) => ({
     pageNumber: s.pageNumber,

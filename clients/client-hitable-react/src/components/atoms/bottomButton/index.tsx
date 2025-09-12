@@ -71,13 +71,8 @@ function getButtonInnerContent(button: ButtonConfig) {
     );
   }
 
-  if (isBackButton) {
-    return <ChevronLeft />;
-  }
-
-  if (isLoading) {
-    return <SpinnerMemo />;
-  }
+  if (isBackButton) return <ChevronLeft />;
+  if (isLoading) return <SpinnerMemo />;
 
   return (
     <div className="flex items-center justify-center gap-2 truncate">
@@ -87,7 +82,6 @@ function getButtonInnerContent(button: ButtonConfig) {
   );
 }
 
-// SwipeButton - only used when button.swipe === true
 function SwipeButton({
   button,
   index,
@@ -98,13 +92,10 @@ function SwipeButton({
   buttonsLength: number;
 }) {
   const x = useMotionValue(0);
-  // Optionally transform the circle color or background color
   const background = useTransform(x, [0, 200], ["#fff", "#22c55e"]);
 
   const handleDragEnd = () => {
-    if (x.get() > 150 && button.onClick) {
-      button.onClick();
-    }
+    if (x.get() > 150 && button.onClick) button.onClick();
     x.set(0);
   };
 
@@ -157,6 +148,9 @@ const MemoBottomButton = (props: MemoBottomButtonProps) => {
     shadow,
   } = props;
 
+  const visibleButtons = buttons.filter((b) => !b.hide);
+  const isSingle = visibleButtons.length === 1;
+
   return (
     <article
       className={cn(
@@ -166,67 +160,66 @@ const MemoBottomButton = (props: MemoBottomButtonProps) => {
           absolute: !fixed,
           "left-0": position === "left",
           "right-0": position === "right",
-          "mx-auto": position === "mid",
-          "w-full": position === "mid",
+          "left-1/2 -translate-x-1/2": position === "mid",
+          "w-full": !isSingle,
+          "w-auto": isSingle, 
         },
         shadow ? "shadow-[0_-2px_15px_rgba(0,0,0,0.1)]" : "",
       )}
       style={{
         backgroundColor: backgroundColor,
         [align]: offset,
-        maxWidth: maxWidth,
+        maxWidth: isSingle ? maxWidth ?? "min(640px, 92vw)" : maxWidth,
       }}
     >
       <div
         className={cn("flex", {
-          "justify-between": buttons.length === 2,
-          "justify-center": buttons.length !== 2,
+          "justify-between gap-4": visibleButtons.length === 2,
+          "justify-center": visibleButtons.length !== 2,
         })}
       >
-        {buttons.map((button, index) =>
-          !button.hide ? (
-            button.swipe ? (
-              // If swipe is enabled
-              <SwipeButton
-                key={button.text}
-                button={button}
-                index={index}
-                buttonsLength={buttons.length}
-              />
-            ) : (
-              // The original motion.button for normal usage
-              <motion.button
-                key={button.text}
-                className={cn(
-                  "rounded-full w-full text-center py-3 transition-all duration-300 relative overflow-hidden",
-                  button.className,
-                  button?.isLoading ? "pointer-events-none" : "",
-                  {
-                    "opacity-50 cursor-not-allowed": button.disable,
-                    // "flex-1": buttons.length > 1 && !button.isBackButton,
-                    "w-[54px]": button.isBackButton && index === 0,
-                    "ml-4": index > 0 && !button.isBackButton,
-                  },
-                )}
-                style={{
-                  backgroundColor: button.disable
-                    ? "#cccccc"
-                    : button.color ?? "#000000",
-                  color: button.textColor ?? "#ffffff",
-                }}
-                onClick={!button.disable ? button.onClick : undefined}
-                type={button.type ?? "button"}
-                disabled={button.disable}
-                variants={buttonVariants}
-                initial="idle"
-                whileHover="hover"
-                whileTap="tap"
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-              >
-                {getButtonInnerContent(button)}
-              </motion.button>
-            )
-          ) : null,
+        {visibleButtons.map((button, index) =>
+          button.swipe ? (
+            <SwipeButton
+              key={button.text}
+              button={button}
+              index={index}
+              buttonsLength={visibleButtons.length}
+            />
+          ) : (
+            <motion.button
+              key={button.text}
+              className={cn(
+                "rounded-full text-center py-3 transition-all duration-300 relative overflow-hidden",
+                button.className,
+                button?.isLoading ? "pointer-events-none" : "",
+                {
+                  "opacity-50 cursor-not-allowed": button.disable,
+                  // single vs multi width
+                  "w-auto px-6": isSingle && !button.isBackButton,
+                  "w-full": !isSingle && !button.isBackButton,
+                  "w-[54px]": button.isBackButton && index === 0,
+                  "ml-4": index > 0 && !button.isBackButton && !isSingle,
+                },
+              )}
+              style={{
+                backgroundColor: button.disable
+                  ? "#cccccc"
+                  : button.color ?? "#000000",
+                color: button.textColor ?? "#ffffff",
+              }}
+              onClick={!button.disable ? button.onClick : undefined}
+              type={button.type ?? "button"}
+              disabled={button.disable}
+              variants={buttonVariants}
+              initial="idle"
+              whileHover="hover"
+              whileTap="tap"
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+              {getButtonInnerContent(button)}
+            </motion.button>
+          ),
         )}
       </div>
     </article>

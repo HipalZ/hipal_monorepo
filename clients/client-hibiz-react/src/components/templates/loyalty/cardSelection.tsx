@@ -1,7 +1,6 @@
 import MemoizedHeader from "@/components/molecules/header";
 import { lazy, memo, Suspense, useCallback } from "react";
 import { FaArrowLeft, FaChevronRight } from "react-icons/fa";
-import { useNavigate, useParams } from "react-router-dom";
 import { useLoyalty } from "@/components/store/useLoyalty";
 import SelectCardFromBottom from "./bottomSelectionPanel";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
@@ -11,6 +10,8 @@ import PopUp from "@/components/atom/popUp";
 import BottomButton from "@/components/atom/bottomButton";
 import { apiRpc } from "@hi/common";
 import toast from "react-hot-toast";
+import { useQueryClient } from "@tanstack/react-query";
+
 
 const CardOneLayout = lazy(() => import("./cardOne"));
 const CardTwoLayout = lazy(() => import("./cardTwo"));
@@ -33,7 +34,6 @@ const calculateDaysRemaining = (timestamp: number) => {
 
 const MemoCardSelection = () => {
   const {
-    setSelectedPage,
     selectedCardType,
     openModal,
     setOpenModal,
@@ -49,7 +49,6 @@ const MemoCardSelection = () => {
     loyaltyStartDate,
     cardColor,
   } = useLoyalty((state) => ({
-    setSelectedPage: state.setSelectedPage,
     selectedCardType: state.selectedCardType,
     openModal: state.openModal,
     setOpenModal: state.setOpenModal,
@@ -66,10 +65,11 @@ const MemoCardSelection = () => {
     cardColor: state.cardColor,
   }));
 
+  const queryClient = useQueryClient();
+
   const logo = useBusinessData((state) => state?.businessData?.logo);
   const name = useOwnerLogin((state) => state?.user?.name);
-  const businessId = useParams()?.businessId;
-  const navigate = useNavigate();
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
 
   const LoyaltyToggleArray = [
     {
@@ -196,97 +196,111 @@ const MemoCardSelection = () => {
     }
   }, [changeModalLayout]);
 
-  const saveLoyalty = useCallback(async () => {
-    if (!selectedCardType) {
-      return toast.error("Please select a card type");
-    }
-    const payload = {
+  const getLoyaltyPayload = (
+    isNew: boolean,
+    businessId: string,
+    coinzBack: number,
+    maxRedemption: number,
+    resetExpiry: number,
+    signupBonus: number,
+    selectedCardType: string | undefined,
+    selectedCardLayout: string | undefined,
+    loyaltyStartDate: number,
+    cardColor: string | undefined,
+  ) => ({
+    ...(isNew && {
       businessId: businessId ?? "",
       loyaltyId: businessId ?? "",
-      setCashBackPercentage: coinzBack,
-      setClaimedPercentage: maxRedemption,
-      loyaltyExpiryDate: resetExpiry,
-      signUpBonus: signupBonus,
       rewardLimit: 4999,
-      cardType: selectedCardType || "CARD_ONE",
-      cardLayout: selectedCardLayout || "LAYOUT_THREE",
-      loyaltyStartDate: loyaltyStartDate,
-      cardColor: cardColor,
-    };
+    }),
+    setCashBackPercentage: coinzBack,
+    setClaimedPercentage: maxRedemption,
+    loyaltyExpiryDate: resetExpiry,
+    signUpBonus: signupBonus,
+    cardType: selectedCardType || "CARD_ONE",
+    cardLayout: selectedCardLayout || "LAYOUT_THREE",
+    loyaltyStartDate,
+    cardColor: cardColor || "#6549F3",
+  });
 
-    try {
-      const response = await apiRpc.businesses[":businessId"].loyalty.$post({
-        param: {
-          businessId: businessId,
-        },
-        json: payload,
-      });
-
-      if (response.ok) {
-        toast.success("Loyalty settings saved successfully!");
-        resetFields();
-        setOpenModal(false);
-        navigate(`/app/business/${businessId}`);
-      } else {
-        toast.error("Failed to save loyalty settings.");
+  const handleLoyalty = useCallback(
+    async (isNew: boolean) => {
+      if (!selectedCardType) {
+        toast.error("Please select a card type");
+        return;
       }
-    } catch (error) {
-      console.error("An error occurred while saving loyalty settings:", error);
-    }
-  }, [
-    businessId,
-    selectedCardType,
-    selectedCardLayout,
-    signupBonus,
-    coinzBack,
-    resetExpiry,
-    maxRedemption,
-  ]);
-
-  const updateLoyalty = useCallback(async () => {
-    const payload = {
-      setCashBackPercentage: coinzBack,
-      setClaimedPercentage: maxRedemption,
-      loyaltyExpiryDate: resetExpiry,
-      signUpBonus: signupBonus,
-      cardType: selectedCardType,
-      cardLayout: selectedCardLayout,
-      loyaltyStartDate: loyaltyStartDate,
-      cardColor: cardColor,
-    };
-
-    try {
-      const response = await apiRpc.businesses[":loyaltyId"].loyalty.$put({
-        param: {
-          loyaltyId: loyaltyID,
-        },
-        json: payload,
-      });
-
-      if (response.ok) {
-        toast.success("Loyalty settings updated successfully!");
-        resetFields();
-        setOpenModal(false);
-        navigate(`/app/business/${businessId}`);
-      } else {
-        toast.error("Failed to update loyalty settings.");
-      }
-    } catch (error) {
-      console.error(
-        "An error occurred while updating loyalty settings:",
-        error,
+      const payload = getLoyaltyPayload(
+        isNew,
+        businessId,
+        coinzBack,
+        maxRedemption,
+        resetExpiry,
+        signupBonus,
+        selectedCardType,
+        selectedCardLayout,
+        loyaltyStartDate,
+        cardColor,
       );
-    }
-  }, [
-    businessId,
-    selectedCardType,
-    selectedCardLayout,
-    signupBonus,
-    coinzBack,
-    resetExpiry,
-    maxRedemption,
-    loyaltyID,
-  ]);
+
+      try {
+        const response = isNew
+          ? await apiRpc.businesses[":businessId"].loyalty.$post({
+              param: { businessId },
+              json: payload,
+            })
+          : await apiRpc.businesses[":loyaltyId"].loyalty.$put({
+              param: { loyaltyId: loyaltyID },
+              json: payload,
+            });
+
+        if (response.ok) {
+          toast.success(
+            isNew
+              ? "Loyalty settings saved successfully!"
+              : "Loyalty settings updated successfully!",
+          );
+          resetFields();
+          setOpenModal(false);
+          queryClient.invalidateQueries({
+            queryKey: ["hotelLoyalty", businessId],
+          });
+        } else {
+          toast.error(
+            isNew
+              ? "Failed to save loyalty settings."
+              : "Failed to update loyalty settings.",
+          );
+        }
+      } catch (error) {
+        console.error(
+          `An error occurred while ${
+            isNew ? "saving" : "updating"
+          } loyalty settings:`,
+          error,
+        );
+      }
+    },
+    [
+      businessId,
+      selectedCardType,
+      selectedCardLayout,
+      signupBonus,
+      coinzBack,
+      resetExpiry,
+      maxRedemption,
+      loyaltyID,
+      loyaltyStartDate,
+      cardColor,
+      resetFields,
+      setOpenModal,
+    ],
+  );
+
+  const saveLoyalty = useCallback(() => handleLoyalty(true), [handleLoyalty]);
+  const updateLoyalty = useCallback(
+    () => handleLoyalty(false),
+    [handleLoyalty],
+  );
 
   return (
     <center>

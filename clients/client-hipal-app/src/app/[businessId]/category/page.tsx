@@ -163,13 +163,11 @@ export default async function Page({
   const { businessId } = params;
   const { tableName } = searchParams;
 
-  // Call fetchData with both parameters
   const data = await fetchData(businessId, tableName);
   const businessData = (await businessApis.all(businessId)) as IBusinessData;
   return (
     <main>
       <div className="relative flex flex-col w-full">
-        {/* <TopSectionVideo /> */}
         <TopBackground
           specialBanner={data?.business?.categoryTopBannerUrl}
           businessData={businessData}

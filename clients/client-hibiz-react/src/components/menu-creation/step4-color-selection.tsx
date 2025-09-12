@@ -1,5 +1,3 @@
-"use client";
-
 import { memo, useCallback, useState, useEffect } from "react";
 import { HexColorPicker } from "react-colorful";
 import type { Category, Dish } from "@/components/store/useMenuCreationStore";

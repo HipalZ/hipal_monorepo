@@ -3,7 +3,7 @@ import PopUp from "@/components/atom/popUp";
 import MemoizedHeader from "@/components/molecules/header";
 import useHiPeopleStore from "@/components/store/useHipeopleStore";
 import { useGetGroupData } from "@/hooks/usePeopleData";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback } from "react";
 import { FaArrowLeft } from "react-icons/fa";
 import Hi from "@/assets/svg/hi.svg";
 import AddToGroup from "./addToGroup";
@@ -12,29 +12,16 @@ import CreateGroup from "./createGroup";
 import UsersList from "./usersList";
 
 const MemoClient = () => {
-  const {
-    selectedUserIds,
-    addGroupModal,
-    setAddGroupModal,
-    setAddGroupPage,
-    addGroupPage,
-    reset,
-  } = useHiPeopleStore((state) => ({
-    selectedUserIds: state.selectedUserIds,
-    addGroupModal: state.addGroupModal,
-    setAddGroupModal: state.setAddGroupModal,
-    setAddGroupPage: state.setAddGroupPage,
-    addGroupPage: state.addGroupPage,
-    reset: state.reset,
-  }));
-  const [fetchGroupData, setFetchGroupData] = useState<boolean>(false);
+  const addGroupModal = useHiPeopleStore((state) => state.addGroupModal);
+  const addGroupPage = useHiPeopleStore((state) => state.addGroupPage);
+  const setAddGroupModal = useHiPeopleStore((state) => state.setAddGroupModal);
+  const setAddGroupPage = useHiPeopleStore((state) => state.setAddGroupPage);
+  const reset = useHiPeopleStore((state) => state.reset);
+  const fetchGroupData = useHiPeopleStore((state) => state.fetchGroupData);
+  const setFetchGroupData = useHiPeopleStore(
+    (state) => state.setFetchGroupData,
+  );
   const { groupData, groupLoading } = useGetGroupData(fetchGroupData);
-
-  const openGroup = useCallback(() => {
-    setAddGroupModal(true);
-    setFetchGroupData(true);
-    setAddGroupPage("ADD TO GROUP");
-  }, []);
 
   const closeGroupModel = useCallback(() => {
     setAddGroupModal(false);
@@ -59,7 +46,7 @@ const MemoClient = () => {
       default:
         break;
     }
-  }, [addGroupPage, addGroupModal]);
+  }, [addGroupPage, closeGroupModel, setAddGroupPage]);
 
   const dynamicHeader = useCallback(() => {
     switch (addGroupPage) {
@@ -72,7 +59,7 @@ const MemoClient = () => {
       default:
         return "Add to group";
     }
-  }, [addGroupPage, addGroupModal]);
+  }, [addGroupPage]);
 
   if (groupLoading) {
     return (
@@ -110,12 +97,6 @@ const MemoClient = () => {
             {addGroupPage === "CONFIRM" && <Confirm />}
           </section>
         </PopUp>
-      )}
-
-      {selectedUserIds.length > 0 && (
-        <button onClick={openGroup} type="button" className="bottom_btn">
-          Add users to group
-        </button>
       )}
     </div>
   );

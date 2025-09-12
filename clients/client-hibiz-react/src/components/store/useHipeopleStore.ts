@@ -313,11 +313,18 @@ interface IHiPeople {
 
   selectedTags: ITag[];
   clearSelectedTags: () => void;
+
+  fetchGroupData: boolean;
+  setFetchGroupData: (fetch: boolean) => void;
+
 }
 
 const useHiPeopleStore = create<IHiPeople>((set, get) => ({
   selectedPage: "SUMMARY",
   setSelectedPage: (page: HiPeoplePages) => set({ selectedPage: page }),
+
+  fetchGroupData: false,
+  setFetchGroupData: (fetch: boolean) => set({ fetchGroupData: fetch }),
 
   addGroupPage: "",
   setAddGroupPage: (page: AddToGroup) => set({ addGroupPage: page }),

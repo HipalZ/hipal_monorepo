@@ -1,12 +1,15 @@
 import { memo, useCallback, lazy, Suspense } from "react";
 import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomButton";
 import MemoizedHeader from "@/components/molecules/header";
-import { User } from "lucide-react";
+import { FileText, User } from "lucide-react";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import PopUp from "@/components/atom/popUp";
-import useStaffStore from "@/components/store/hotel/useHotelStaff";
+import useStaffStore, {
+  useStaffDataStore,
+} from "@/components/store/hotel/useHotelStaff";
+import StaffRepoComp from "@/components/hotel/Analytics/StaffMainComp.tsx";
 
 const HotelStaffMain = lazy(() => import("@/components/hotel/HotelStaff"));
 const AddStaffToHotel = lazy(
@@ -15,14 +18,22 @@ const AddStaffToHotel = lazy(
 
 const MemoStaffManagementHotel = () => {
   const navigate = useNavigate();
-  const { staffModal, setStaffModal } = useStaffStore((s) => ({
-    staffModal: s.staffModal,
-    setStaffModal: s.setStaffModal,
-  }));
+  const staffModal = useStaffStore((s) => s.staffModal);
+  const setStaffModal = useStaffStore((s) => s.setStaffModal);
+  const showStaffReport = useStaffDataStore((s) => s.showStaffReport);
+  const setShowStaffReport = useStaffDataStore((s) => s.setShowStaffReport);
 
   const goBack = useCallback(() => {
     return navigate(-1);
   }, [navigate]);
+
+  const openShowStaffReport = useCallback(() => {
+    setShowStaffReport(true);
+  }, [setShowStaffReport]);
+
+  const closeShowStaffReport = useCallback(() => {
+    setShowStaffReport(false);
+  }, [setShowStaffReport]);
 
   const toggleModal = () => {
     setStaffModal(!staffModal);
@@ -54,6 +65,19 @@ const MemoStaffManagementHotel = () => {
         </Suspense>
       </PopUp>
 
+      <PopUp
+        height="h-[100dvh]"
+        width="w-[30rem] md:w-[64rem]"
+        show={showStaffReport}
+        onClose={closeShowStaffReport}
+        hide
+        rightTopBack
+      >
+        <section className="h-[95dvh] overflow-y-auto hide-scrollbar">
+          <StaffRepoComp hide={true} />
+        </section>
+      </PopUp>
+
       <AdvancedBottomButton
         fixed={true}
         maxWidth="30rem"
@@ -63,6 +87,12 @@ const MemoStaffManagementHotel = () => {
             onClick: goBack,
             isBackButton: true,
             className: "pl-3 rounded-md",
+          },
+          {
+            text: "Reports",
+            onClick: openShowStaffReport,
+            icon: <FileText size={24} />,
+            className: "rounded-md w-full !bg-purple-600",
           },
           {
             text: "Add Staff",

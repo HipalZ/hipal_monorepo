@@ -186,9 +186,11 @@ const MemoAvailableRoomHotel = () => {
                     </Button>
                 </center>
             </CardContent>
+
             <CommonBottomButton
                 maxWidth="30rem"
                 position="mid"
+                
                 fixed
                 shadow
                 buttons={[

@@ -10,7 +10,7 @@ import './index.css';
 
 const HiClientZAnimation = () => {
     return (
-        <div className="container">
+        <div className="">
             <div className="main-logo">
                 <img src={MainIcon} alt="Central Icon"  />
             </div>
