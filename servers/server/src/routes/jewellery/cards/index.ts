@@ -87,7 +87,7 @@ const cardRouter = new Hono().get(
           name: "zones",
           description: "manage your zones and tables",
           inprogress: false,
-          visibility: false,
+          visibility: true,
           image: "https://example.com/zones.png",
           redirectionUrl: "/zones",
         },
