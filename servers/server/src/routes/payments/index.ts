@@ -59,7 +59,10 @@ import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { checkOriginBillIsSplit } from "../../services/splitBill";
 import type { KotOrderTypes } from "../../utils/bill";
 import { getMerchantConfig } from "../../utils/cacheHelper";
-import { adjustFromToTimestamps } from "../../utils/defaultBillingTime";
+import {
+  adjustFromToTimestamps,
+  getISTDateRange,
+} from "../../utils/defaultBillingTime";
 import { convertToPetpoojaCart } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
 // import { queueClient } from "../../utils/queue/queueClient";
@@ -4257,18 +4260,11 @@ const paymentsRouter = new Hono()
     async (c) => {
       const { businessId, from, to } = c.req.query();
 
-      // Adjust `from` and `to` timestamps based on whether they are today's date or not
-      const { adjustedFrom, adjustedTo } = adjustFromToTimestamps(
-        Number(from),
-        Number(to),
-      );
+      const fromDate = Number(from) || startOfToday.getTime();
+      const toDate = Number(to) || endOfToday.getTime();
 
-      console.log("Adjusted From:", adjustedFrom);
-      console.log("Adjusted To:", adjustedTo);
-
-      // Use the adjusted timestamps as `fromDate` and `toDate`
-      const fromDate = adjustedFrom;
-      const toDate = adjustedTo;
+      const dateRange = getISTDateRange(fromDate);
+      console.log("Date Range:", dateRange);
       if (fromDate > toDate) {
         return c.json({
           err: true,

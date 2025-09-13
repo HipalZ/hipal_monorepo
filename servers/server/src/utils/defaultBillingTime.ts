@@ -57,3 +57,47 @@ export function adjustFromToTimestamps(from?: number, to?: number) {
   // otherwise → today’s window
   return { adjustedFrom: today4amUTC, adjustedTo: tomorrow4amUTC };
 }
+
+export function getISTDateRange(givenTs: number) {
+  const IST_OFFSET = 5.5 * 60 * 60 * 1000; // IST = UTC+5:30
+
+  // Convert timestamp → IST Date
+  const givenDateIST = new Date(givenTs + IST_OFFSET);
+
+  // Get today's IST boundaries
+  const now = new Date(Date.now() + IST_OFFSET);
+  const todayY = now.getUTCFullYear();
+  const todayM = now.getUTCMonth();
+  const todayD = now.getUTCDate();
+
+  // Start & end of today in IST
+  const todayStartIST = Date.UTC(todayY, todayM, todayD, 0, 0) - IST_OFFSET;
+  const todayEndIST = todayStartIST + 24 * 60 * 60 * 1000 - 1;
+
+  // Check if given timestamp is today (in IST)
+  if (givenTs >= todayStartIST && givenTs <= todayEndIST) {
+    // Get hour of given timestamp in IST
+    const hourIST = givenDateIST.getUTCHours();
+    const minuteIST = givenDateIST.getUTCMinutes();
+
+    // Today 4 AM (in UTC timestamp)
+    const today4amUTC = Date.UTC(todayY, todayM, todayD, 4, 0) - IST_OFFSET;
+    const tomorrow4amUTC = today4amUTC + 24 * 60 * 60 * 1000;
+
+    if (hourIST < 4) {
+      // Case 1: Between 00:00:00 and 03:59:59
+      return {
+        from: today4amUTC - 24 * 60 * 60 * 1000, // yesterday 4 AM
+        to: today4amUTC, // today 4 AM
+      };
+    } else {
+      // Case 2: Between 04:00:00 and 23:59:59
+      return {
+        from: today4amUTC,
+        to: todayEndIST,
+      };
+    }
+  } else {
+    return { error: "Given timestamp is not today (IST)" };
+  }
+}
