@@ -173,6 +173,42 @@ const cataloguesRouter = new Hono()
       return respond(c, "fetched successfully", false, 200, existingCategories);
     },
   )
+  .get(
+    "/:businessId/dishes",
+    zValidator(
+      "param",
+      z.object({
+        businessId: z.string().min(24).max(24),
+      }),
+    ),
+    async (c) => {
+      const { businessId } = c.req.query();
+
+      const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
+
+      const query = {
+        businessId,
+        hierarchy: "CHILD",
+        isDeleted: false,
+        active: true,
+        timings: {
+          $elemMatch: {
+            day: { $in: [currentDay, -1] },
+            start: { $lte: currentTimeInMinutes },
+            end: { $gt: currentTimeInMinutes },
+          },
+        },
+      };
+
+      const existingCatalogue = await Category.find(query).populate({
+        path: "dishIds",
+        match: { businessId: businessId, isDeleted: false, visibility: true },
+        populate: { path: "addOnIds" },
+      });
+
+      return respond(c, "fetched successfully", false, 200, existingCatalogue);
+    },
+  )
   .put(
     "/:catalogueId",
     // authTokenValidator,
@@ -341,45 +377,6 @@ const cataloguesRouter = new Hono()
           _id: deleteCatalogue._id,
         });
       });
-    },
-  )
-
-  .get(
-    "/",
-    zValidator(
-      "query",
-      z.object({
-        businessId: z.string(),
-        // menuId: z.string().optional(),
-      }),
-    ),
-    async (c) => {
-      const { businessId, menuId } = c.req.query();
-
-      const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
-
-      const query = {
-        businessId,
-        hierarchy: "CHILD",
-        isDeleted: false,
-        menuId: menuId,
-        active: true,
-        timings: {
-          $elemMatch: {
-            day: { $in: [currentDay, -1] },
-            start: { $lte: currentTimeInMinutes },
-            end: { $gt: currentTimeInMinutes },
-          },
-        },
-      };
-
-      const existingCategories = await Category.find(query)
-        .select(
-          "_id name visibility availability dishIds parentCategoryIds subCategoryIds coverImage sequence hierarchy businessId timings",
-        )
-        .sort({ sequence: 1 });
-
-      return respond(c, "fetched successfully", false, 200, existingCategories);
     },
   );
 

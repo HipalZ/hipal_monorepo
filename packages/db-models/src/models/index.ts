@@ -87,6 +87,7 @@ export * from "./zone";
 
 export * from "./discount";
 export * from "./dues";
+export * from "./jewellery";
 export * from "./passwordManager/passwordManager";
 export * from "./printerConfig";
 export * from "./printSection";
