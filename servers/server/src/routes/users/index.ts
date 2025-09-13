@@ -643,9 +643,9 @@ const usersRouter = new Hono()
         const updateUser = await User.findOneAndUpdate(
           { phone },
           {
+            password: hashPass,
             $addToSet: {
               customRole: customRole,
-              password: hashPass,
             },
           },
           { new: true },

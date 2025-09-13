@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import cardRouter from "./cards";
+import cart from "./carts";
 import cataloguesRouter from "./catalogues";
 import menuRouter from "./menus";
 import paymentsRouter from "./payments";
@@ -18,6 +19,7 @@ const jewelleryRouter = new Hono()
   .route("/menus", menuRouter)
   .route("/services", serviceRouter)
   .route("/catalogues", cataloguesRouter)
-  .route("/payments", paymentsRouter);
+  .route("/payments", paymentsRouter)
+  .route("/carts", cart);
 
 export default jewelleryRouter;

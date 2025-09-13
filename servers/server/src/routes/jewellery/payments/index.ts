@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import alertRouter from "./alert";
 import billRouter from "./bill";
 import dashboardRouter from "./dashboard";
 import duesRouter from "./dues";
@@ -10,6 +11,7 @@ const paymentsRouter = new Hono()
   .route("/bills", billRouter)
   .route("/dues", duesRouter)
   .route("/npcs", npcRouter)
-  .route("/upi_modes", upiModeRouter);
+  .route("/upi_modes", upiModeRouter)
+  .route("/alerts", alertRouter);
 
 export default paymentsRouter;
