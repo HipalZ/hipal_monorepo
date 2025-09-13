@@ -11,19 +11,19 @@ const cardRouter = new Hono().get(
     z.object({
       businessId: z.string().min(1).max(500),
       userId: z.string().min(1).max(500),
-      tab: z.string().min(1).max(500),
     }),
   ),
   async (c) => {
     const { businessId, userId, tab } = c.req.query();
-    if (tab === "management") {
-      const cards = [
+    const output = {
+      management: [
         {
           name: "themes",
           description: "make your app look good",
           inprogress: false,
           visibility: true,
           image: "https://example.com/theme.png",
+          redirectionUrl: "/themes",
         },
         {
           name: "payments",
@@ -31,6 +31,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: false,
           image: "https://example.com/payment.png",
+          redirectionUrl: "/payments",
         },
         {
           name: "reports",
@@ -38,6 +39,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: false,
           image: "https://example.com/report.png",
+          redirectionUrl: "/reports",
         },
         {
           name: "point_of_sale",
@@ -45,6 +47,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: false,
           image: "https://example.com/pos.png",
+          redirectionUrl: "/pos",
         },
         {
           name: "staff",
@@ -52,6 +55,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/staff.png",
+          redirectionUrl: "/staff",
         },
         {
           name: "password_management",
@@ -59,6 +63,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: false,
           image: "https://example.com/password.png",
+          redirectionUrl: "/password",
         },
         {
           name: "settings",
@@ -66,34 +71,33 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/settings.png",
+          redirectionUrl: "/settings",
         },
-      ];
-
-      return respond(c, "fetched cards", false, 200, cards);
-    }
-
-    if (tab === "services") {
-      const cards = [
+      ],
+      services: [
         {
           name: "explore_page",
           description: "make your website more beautiful",
           inprogress: false,
           visibility: true,
           image: "https://example.com/explore_page.png",
+          redirectionUrl: "/explorepage",
         },
         {
           name: "zones",
           description: "manage your zones and tables",
           inprogress: false,
-          visibility: true,
+          visibility: false,
           image: "https://example.com/zones.png",
+          redirectionUrl: "/zones",
         },
         {
           name: "menu",
           description: "manage your menu items",
           inprogress: false,
-          visibility: true,
+          visibility: false,
           image: "https://example.com/menu.png",
+          redirectionUrl: "/select-menu",
         },
         {
           name: "birthday_events",
@@ -101,6 +105,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/birthday_events.png",
+          redirectionUrl: "/events",
         },
         {
           name: "my_gallery",
@@ -108,19 +113,17 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/my_gallery.png",
+          redirectionUrl: "/thumbnail",
         },
-      ];
-
-      return respond(c, "fetched cards", false, 200, cards);
-    }
-    if (tab === "coupon_and_loyalty") {
-      const cards = [
+      ],
+      coupon_and_loyalty: [
         {
           name: "loyalty",
           description: "manage your loyalty",
           inprogress: false,
           visibility: true,
           image: "https://example.com/loyalty.png",
+          redirectionUrl: "/loyalty",
         },
         {
           name: "coupons",
@@ -128,19 +131,17 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/coupons.png",
+          redirectionUrl: "/coupons",
         },
-      ];
-
-      return respond(c, "fetched cards", false, 200, cards);
-    }
-    if (tab === "marketing") {
-      const cards = [
+      ],
+      marketing: [
         {
           name: "hi_people",
           description: "manage your hi_people",
           inprogress: false,
-          visibility: false,
+          visibility: true,
           image: "https://example.com/hi_people.png",
+          redirectionUrl: "/people",
         },
         {
           name: "reviews",
@@ -148,6 +149,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/reviews.png",
+          redirectionUrl: "/reviews",
         },
         {
           name: "whatsapp",
@@ -155,6 +157,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/whatsapp.png",
+          redirectionUrl: "/whatzapp",
         },
         {
           name: "analytics",
@@ -162,11 +165,12 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/analytics.png",
+          redirectionUrl: "/analytics",
         },
-      ];
+      ],
+    };
 
-      return respond(c, "fetched cards", false, 200, cards);
-    }
+    return respond(c, "Success", false, 200, output);
   },
 );
 
