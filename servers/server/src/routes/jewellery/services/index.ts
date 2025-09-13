@@ -1,8 +1,9 @@
 // books.ts
 import { Category, Dish } from "@hi/db-models";
+
 import {
-  dishSchema as serviceSchema,
-  updateDishSchema as updateServiceSchema,
+  serviceChema,
+  updateServiceSchema,
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
@@ -16,7 +17,7 @@ const serviceRouter = new Hono()
     "/",
     // authTokenValidator,
     // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
-    zValidator("json", serviceSchema),
+    zValidator("json", serviceChema),
     async (c) => {
       //@ts-ignore
       return await runInTransaction(async (session: ClientSession) => {
@@ -54,7 +55,7 @@ const serviceRouter = new Hono()
       "query",
       z.object({
         businessId: z.string(),
-        menuId: z.string(),
+        // menuId: z.string(),
       }),
     ),
     async (c) => {

@@ -2,9 +2,10 @@
 import { Business, Category, Dish } from "@hi/db-models";
 
 import {
-  categorySchema as catalogueshema,
-  updateCategorySchema as updateCatalogueSchema,
+  catalogueSchema,
+  updateCatalogueSchema,
 } from "@hi/db-models/src/validators";
+import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -19,10 +20,10 @@ const cataloguesRouter = new Hono()
     // authTokenValidator,
     // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
 
-    zValidator("json", catalogueshema),
+    zValidator("json", catalogueSchema),
     async (c) => {
       //@ts-ignore
-      return await runInTransaction(async (session: ClientSession) => {
+      return runInTransaction(async (session: ClientSession) => {
         const requestData = await c.req.json();
         const {
           businessId,
@@ -140,7 +141,7 @@ const cataloguesRouter = new Hono()
       "query",
       z.object({
         businessId: z.string(),
-        menuId: z.string().optional(),
+        // menuId: z.string().optional(),
       }),
     ),
     async (c) => {
@@ -181,7 +182,7 @@ const cataloguesRouter = new Hono()
     zValidator("param", z.object({ id: z.string() })),
     async (c) => {
       //@ts-ignore
-      return await runInTransaction(async (session: ClientSession) => {
+      return runInTransaction(async (session: ClientSession) => {
         const requestData = await c.req.json();
         const { catalogueId } = c.req.param();
         const {
@@ -349,7 +350,7 @@ const cataloguesRouter = new Hono()
       "query",
       z.object({
         businessId: z.string(),
-        menuId: z.string().optional(),
+        // menuId: z.string().optional(),
       }),
     ),
     async (c) => {
