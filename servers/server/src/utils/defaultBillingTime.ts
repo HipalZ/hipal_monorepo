@@ -101,3 +101,15 @@ export function getISTDateRange(givenTs: number) {
     return { error: "Given timestamp is not today (IST)" };
   }
 }
+
+export function isTodayIST(ts: number): boolean {
+  const IST_OFFSET = 5.5 * 60 * 60 * 1000; // +05:30
+  const d = new Date(ts + IST_OFFSET);
+  const now = new Date(Date.now() + IST_OFFSET);
+
+  return (
+    d.getUTCFullYear() === now.getUTCFullYear() &&
+    d.getUTCMonth() === now.getUTCMonth() &&
+    d.getUTCDate() === now.getUTCDate()
+  );
+}

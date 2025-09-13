@@ -62,6 +62,7 @@ import { getMerchantConfig } from "../../utils/cacheHelper";
 import {
   adjustFromToTimestamps,
   getISTDateRange,
+  isTodayIST,
 } from "../../utils/defaultBillingTime";
 import { convertToPetpoojaCart } from "../../utils/helper";
 import { posApiPaths } from "../../utils/posConfig/petPooja";
@@ -4262,9 +4263,11 @@ const paymentsRouter = new Hono()
 
       const fromDate = Number(from) || startOfToday.getTime();
       const toDate = Number(to) || endOfToday.getTime();
+      const isToday = isTodayIST(fromDate);
+      console.log("isToday", isToday);
 
-      const dateRange = getISTDateRange(fromDate);
-      console.log("Date Range:", dateRange);
+      const dateRange = getISTDateRange(Date.now());
+      console.log("dateRange", dateRange);
       if (fromDate > toDate) {
         return c.json({
           err: true,
@@ -4276,7 +4279,10 @@ const paymentsRouter = new Hono()
       const payments = await Payment.find({
         businessId,
         isDeleted: false,
-        date: { $gte: fromDate, $lte: toDate },
+        date: {
+          $gte: isToday ? dateRange.from : fromDate,
+          $lte: isToday ? dateRange.to : toDate,
+        },
       });
 
       const totalOrders = payments.length;
@@ -4349,16 +4355,12 @@ const paymentsRouter = new Hono()
     async (c) => {
       let { appliedFilter } = c.req.query();
       const { businessId, from, to } = c.req.query();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
 
-      // Adjust `from` and `to` timestamps based on whether they are today's date or not
-      const { adjustedFrom, adjustedTo } = adjustFromToTimestamps(
-        Number(from),
-        Number(to),
-      );
+      const isToday = isTodayIST(fromDate);
 
-      // Use the adjusted timestamps as `fromDate` and `toDate`
-      const fromDate = adjustedFrom;
-      const toDate = adjustedTo;
+      const dateRange = getISTDateRange(Date.now());
 
       if (fromDate > toDate) {
         return c.json({
@@ -4374,7 +4376,12 @@ const paymentsRouter = new Hono()
 
       const filterConditions = [
         { businessId },
-        { date: { $gte: fromDate, $lte: toDate } },
+        {
+          date: {
+            $gte: isToday ? dateRange.from : fromDate,
+            $lte: isToday ? dateRange.to : toDate,
+          },
+        },
       ];
 
       if (typeof appliedFilter === "string") {
@@ -5315,15 +5322,10 @@ const paymentsRouter = new Hono()
     async (c) => {
       const { businessId, from, to } = c.req.query();
 
-      // Adjust `from` and `to` timestamps based on whether they are today's date or not
-      const { adjustedFrom, adjustedTo } = adjustFromToTimestamps(
-        Number(from),
-        Number(to),
-      );
-
-      // Use the adjusted timestamps as `fromDate` and `toDate`
-      const fromDate = adjustedFrom;
-      const toDate = adjustedTo;
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
+      const isToday = isTodayIST(fromDate);
+      const dateRange = getISTDateRange(Date.now());
 
       if (fromDate > toDate) {
         return c.json({
@@ -5336,7 +5338,10 @@ const paymentsRouter = new Hono()
       const payments = await Payment.find({
         businessId,
         isDeleted: false,
-        date: { $gte: fromDate, $lte: toDate },
+        date: {
+          $gte: isToday ? dateRange.from : fromDate,
+          $lte: isToday ? dateRange.to : toDate,
+        },
       });
 
       let totalDiscount = 0;
@@ -5421,16 +5426,11 @@ const paymentsRouter = new Hono()
     ),
     async (c) => {
       const { businessId, from, to } = c.req.query();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
 
-      // Adjust `from` and `to` timestamps based on whether they are today's date or not
-      const { adjustedFrom, adjustedTo } = adjustFromToTimestamps(
-        Number(from),
-        Number(to),
-      );
-
-      // Use the adjusted timestamps as `fromDate` and `toDate`
-      const fromDate = adjustedFrom;
-      const toDate = adjustedTo;
+      const isToday = isTodayIST(fromDate);
+      const dateRange = getISTDateRange(Date.now());
 
       if (fromDate > toDate) {
         return c.json({
@@ -5443,7 +5443,10 @@ const paymentsRouter = new Hono()
       const payments = await Payment.find({
         businessId,
         isDeleted: false,
-        date: { $gte: fromDate, $lte: toDate },
+        date: {
+          $gte: isToday ? dateRange.from : fromDate,
+          $lte: isToday ? dateRange.to : toDate,
+        },
       });
 
       let totalTax = 0;
