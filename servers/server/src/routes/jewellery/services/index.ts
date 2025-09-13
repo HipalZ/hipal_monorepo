@@ -1,5 +1,5 @@
 // books.ts
-import { Category, Dish } from "@hi/db-models";
+import { Category, Dish, UniquelyYours } from "@hi/db-models";
 
 import {
   serviceChema,
@@ -71,6 +71,21 @@ const serviceRouter = new Hono()
       const existingDishes = await Dish.find(query);
 
       return respond(c, "Fetched successfully", false, 200, existingDishes);
+    },
+  )
+
+  .get(
+    "/:businessId/special",
+    // authTokenValidator,
+    // requireAuthorization([ClientRoles.OWNER, ClientRoles.HIPAL_ADMIN]),
+    zValidator("param", z.object({ businessId: z.string() })),
+
+    async (c) => {
+      const { businessId } = c.req.param();
+
+      const dishes = await UniquelyYours.find({ businessId, isDeleted: false });
+
+      return respond(c, "fetched successfully", false, 200, dishes);
     },
   )
 
