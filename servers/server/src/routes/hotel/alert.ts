@@ -417,6 +417,16 @@ const scheduleLevelWiseAlert = (
         select: "name",
       });
 
+       console.log(
+        `Level ${nextLevel} alert notification sent to staff members.`,
+      );
+
+       await HotelAlert.findByIdAndUpdate(
+        alertId,
+        { level: nextLevel },
+        { new: true },
+      );
+
       // Send push notifications to staff members
       const registrationTokens = await DeviceToken.find({
         userId: { $in: staffIds },
@@ -474,15 +484,9 @@ const scheduleLevelWiseAlert = (
         }
       }
 
-      console.log(
-        `Level ${nextLevel} alert notification sent to staff members.`,
-      );
+     
 
-      await HotelAlert.findByIdAndUpdate(
-        alertId,
-        { level: nextLevel },
-        { new: true },
-      );
+     
     });
   }
 };
