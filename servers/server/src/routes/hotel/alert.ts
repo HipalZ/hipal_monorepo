@@ -174,7 +174,7 @@ const scheduleAlertUpdate = (
             scheduleLevelWiseAlert(
               alertId,
               nextLevelTime,
-              levelOneStaffs.level,
+              levelOneStaffs.level + 1,
               roomName,
               serviceName,
               validManagerIds,
@@ -185,7 +185,7 @@ const scheduleAlertUpdate = (
             scheduleLevelWiseAlert(
               alertId,
               nextLevelTime,
-              levelTwoStaffs.level,
+              levelTwoStaffs.level + 1,
               roomName,
               serviceName,
               validManagerIds,
@@ -196,7 +196,7 @@ const scheduleAlertUpdate = (
             scheduleLevelWiseAlert(
               alertId,
               nextLevelTime,
-              levelThreeStaffs.level,
+              levelThreeStaffs.level + 1,
               roomName,
               serviceName,
               validManagerIds,
@@ -306,7 +306,7 @@ const scheduleAlertUpdate = (
             scheduleLevelWiseAlert(
               alertId,
               nextLevelTime,
-              levelOneStaffs.level,
+              levelOneStaffs.level + 1,
               roomName,
               serviceName,
               validManagerIds,
@@ -317,7 +317,7 @@ const scheduleAlertUpdate = (
             scheduleLevelWiseAlert(
               alertId,
               nextLevelTime,
-              levelTwoStaffs.level,
+              levelTwoStaffs.level + 1,
               roomName,
               serviceName,
               validManagerIds,
@@ -328,7 +328,7 @@ const scheduleAlertUpdate = (
             scheduleLevelWiseAlert(
               alertId,
               nextLevelTime,
-              levelThreeStaffs.level,
+              levelThreeStaffs.level + 1,
               roomName,
               serviceName,
               validManagerIds,
@@ -590,28 +590,20 @@ const hotelAlertRouter = new Hono()
         },
 
         roomId: { $in: roomIds },
+        serviceIds: { $in: serviceIds || [] },
       };
 
-      if (role !== "FRONT_OFFICE") {
-        if (!serviceIds || serviceIds.length === 0) {
-          return respond(
-            c,
-            "No assigned services found for this staff",
-            true,
-            403,
-            {},
-          );
-        }
-        alertQuery.serviceIds = { $in: serviceIds };
-      }
-
       // Step 4: Fetch and populate alerts
-      const alerts = await HotelAlert.find(alertQuery)
+      let alerts = await HotelAlert.find(alertQuery)
         .populate({ path: "serviceIds", select: "name" })
         .populate({ path: "createdBy", select: "name phone" })
         .populate({ path: "acceptedBy", select: "name phone" })
         .populate({ path: "roomId", select: "name" })
         .lean();
+
+      if (role === "MANAGER") {
+        alerts = [];
+      }
 
       return respond(c, "Alerts fetched successfully", false, 200, alerts);
     },
@@ -1114,6 +1106,7 @@ const hotelAlertRouter = new Hono()
           customRole: {
             $elemMatch: {
               serviceIds: { $in: [serviceId] },
+              role: { $ne: "MANAGER" },
             },
           },
         })
