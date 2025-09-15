@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,12 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Users, AlertTriangle, Trash2 } from "lucide-react";
+import { Users, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   useFetchLevels,
   useUpdateStaffToHotelLevel,
-  useRemoveStaffFromLevel,
   type IHotelStaff,
   type IHotelStaffLevel,
 } from "@/hooks/useHotelStaff";
@@ -29,29 +28,41 @@ export default function BulkEscalationAssignmentPanel({
   onClose,
 }: BulkEscalationAssignmentPanelProps) {
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
-
+  const [roleFilter, setRoleFilter] = useState<string>("ALL");
   const { levelsData = [], gettingLevels } = useFetchLevels();
   const { updateStaffToLevel, updateStaffLoader } =
     useUpdateStaffToHotelLevel();
-  const { removeStaff, removeStaffLoader } = useRemoveStaffFromLevel();
 
   const [query, setQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [level, setLevel] = useState<1 | 2 | 3>(1);
-  const [minutes, setMinutes] = useState<number>(5);
-  const [mode, setMode] = useState<"add" | "remove">("add");
+  const [minutes, setMinutes] = useState<number>(5); // will be synced from levelDoc below
 
-  // NEW: selection for "Current members" bulk removal
-  const [membersRemoveSet, setMembersRemoveSet] = useState<Set<string>>(
-    new Set(),
-  );
-
+  // currently selected level document
   const levelDoc = useMemo(
     () => levelsData.find((l) => l.level === level),
     [levelsData, level],
-  );
+  ) as IHotelStaffLevel | undefined;
 
-  // membership lookup per level
+  // Pull minutes from the selected level (supports either nextLevelTime or nextLevelDelayMinutes)
+  const levelMinutes = useMemo(() => {
+    const raw =
+      (levelDoc as any)?.nextLevelTime ??
+      (levelDoc as any)?.nextLevelDelayMinutes;
+    return Number.isFinite(raw) ? Number(raw) : undefined;
+  }, [levelDoc]);
+
+  // Keep minutes input in sync with selected level's stored value
+  useEffect(() => {
+    if (typeof levelMinutes === "number") {
+      setMinutes(levelMinutes);
+    } else {
+      // fallback if the level has no saved value yet
+      setMinutes(5);
+    }
+  }, [levelMinutes, level]);
+
+  // membership lookup per level — robustly handle object or string ids
   const assignedSets = useMemo(() => {
     const map: Record<1 | 2 | 3, Set<string>> = {
       1: new Set(),
@@ -59,13 +70,37 @@ export default function BulkEscalationAssignmentPanel({
       3: new Set(),
     };
     for (const lvl of levelsData as IHotelStaffLevel[]) {
-      const L = lvl.level as 1 | 2 | 3;
-      for (const s of lvl.staffIds ?? []) map[L].add(s._id);
+      const L = (lvl.level as 1 | 2 | 3) ?? 1;
+      for (const s of lvl.staffIds ?? []) {
+        const id = typeof s === "string" ? s : s._id;
+        if (id) map[L].add(id);
+      }
     }
     return map;
   }, [levelsData]);
 
-  const filtered = useMemo(() => {
+  const getRole = (s: IHotelStaff) =>
+    s.customRole?.[0]?.role?.trim() || "Unassigned";
+
+  // All roles + counts (for the role chips)
+  const roleIndex = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const s of staffList) {
+      const r = getRole(s);
+      map.set(r, (map.get(r) || 0) + 1);
+    }
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0])); // [role, count][]
+  }, [staffList]);
+
+  // Slug for heading IDs
+  const slug = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+
+  // 1) Search filter only
+  const searchFiltered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return staffList;
     return staffList.filter(
@@ -75,17 +110,29 @@ export default function BulkEscalationAssignmentPanel({
     );
   }, [query, staffList]);
 
-  // eligible ids based on the visible MODE (used by "Select All")
-  const eligibleFilteredIds = useMemo(() => {
-    if (mode === "add") {
-      return filtered
-        .map((s) => s._id)
-        .filter((id) => !assignedSets[level].has(id));
+  // 2) Apply role filter on top of search
+  const filtered = useMemo(() => {
+    if (roleFilter === "ALL") return searchFiltered;
+    return searchFiltered.filter((s) => getRole(s) === roleFilter);
+  }, [searchFiltered, roleFilter]);
+
+  // 3) Group by role for display
+  const groupedByRole = useMemo(() => {
+    const map = new Map<string, IHotelStaff[]>();
+    for (const s of filtered) {
+      const r = getRole(s);
+      if (!map.has(r)) map.set(r, []);
+      map.get(r)!.push(s);
     }
-    return filtered
-      .map((s) => s._id)
-      .filter((id) => assignedSets[level].has(id));
-  }, [filtered, assignedSets, level, mode]);
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0])); // [role, staff[]][]
+  }, [filtered]);
+
+  // Eligible to add = not already in the selected level
+  const eligibleFilteredIds = useMemo(
+    () =>
+      filtered.map((s) => s._id).filter((id) => !assignedSets[level].has(id)),
+    [filtered, assignedSets, level],
+  );
 
   const toggleSelect = (id: string, disabled: boolean) => {
     if (disabled) return;
@@ -100,13 +147,8 @@ export default function BulkEscalationAssignmentPanel({
   const selectAllFiltered = () => setSelectedIds(new Set(eligibleFilteredIds));
   const clearSelection = () => setSelectedIds(new Set());
 
-  // compute both action sets regardless of mode (for footer buttons)
   const selectedForAdd = useMemo(
     () => Array.from(selectedIds).filter((id) => !assignedSets[level].has(id)),
-    [selectedIds, assignedSets, level],
-  );
-  const selectedForRemove = useMemo(
-    () => Array.from(selectedIds).filter((id) => assignedSets[level].has(id)),
     [selectedIds, assignedSets, level],
   );
 
@@ -116,48 +158,6 @@ export default function BulkEscalationAssignmentPanel({
         .length,
     [selectedIds, assignedSets, level],
   );
-
-  // handlers (footer)
-  const handleAdd = async () => {
-    if (!businessId) return;
-    if (!levelDoc?._id)
-      return toast.error(`Level L${level} not configured yet`);
-    if (selectedForAdd.length === 0) return toast("Nothing to add");
-
-    try {
-      await updateStaffToLevel({
-        levelId: levelDoc._id,
-        businessId,
-        staffIds: selectedForAdd,
-        nextLevelTime: minutes,
-      });
-      toast.success(`Added ${selectedForAdd.length} staff to L${level}`);
-      onClose();
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to add staff");
-    }
-  };
-
-  const handleRemove = async () => {
-    if (!levelDoc?._id)
-      return toast.error(`Level L${level} not configured yet`);
-    if (selectedForRemove.length === 0) return toast("Nothing to remove");
-
-    try {
-      await removeStaff({
-        levelId: levelDoc._id,
-        staffIds: selectedForRemove,
-      });
-      toast.success(`Removed ${selectedForRemove.length} staff from L${level}`);
-      onClose();
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to remove staff");
-    }
-  };
-
-  const isSaving = updateStaffLoader || removeStaffLoader;
 
   // maps for preview panes
   const staffMap = useMemo(() => {
@@ -170,64 +170,37 @@ export default function BulkEscalationAssignmentPanel({
     .map((id) => staffMap.get(id))
     .filter(Boolean) as IHotelStaff[];
 
-  // current members of selected level
-  const currentMembersObjects = (levelDoc?.staffIds ?? []).map((s) => ({
-    _id: s._id,
-    name: s.name,
-    phone: s.phone,
-  }));
+  // current members of selected level (read-only)
+  const currentMembersObjects =
+    (levelDoc?.staffIds ?? []).map((s: any) => ({
+      _id: typeof s === "string" ? s : s._id,
+      name: typeof s === "string" ? "" : s.name,
+      phone: typeof s === "string" ? "" : s.phone,
+    })) ?? [];
 
-  // === Current Members tools ===
-  const toggleMemberRemove = (id: string) => {
-    setMembersRemoveSet((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const selectAllMembers = () => {
-    setMembersRemoveSet(new Set(currentMembersObjects.map((m) => m._id)));
-  };
-
-  const clearMembersSelection = () => setMembersRemoveSet(new Set());
-
-  const handleRemoveSelectedMembers = async () => {
+  // ADD handler only
+  const handleAdd = async () => {
+    if (!businessId) return;
     if (!levelDoc?._id)
       return toast.error(`Level L${level} not configured yet`);
-    const ids = Array.from(membersRemoveSet);
-    if (ids.length === 0) return toast("No members selected");
-    try {
-      await removeStaff({ levelId: levelDoc._id, staffIds: ids });
-      toast.success(
-        `Removed ${ids.length} member${
-          ids.length > 1 ? "s" : ""
-        } from L${level}`,
-      );
-      setMembersRemoveSet(new Set());
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to remove selected members");
-    }
-  };
+    if (selectedForAdd.length === 0) return toast("Nothing to add");
 
-  const handleRemoveSingleMember = async (id: string) => {
-    if (!levelDoc?._id)
-      return toast.error(`Level L${level} not configured yet`);
     try {
-      await removeStaff({ levelId: levelDoc._id, staffIds: [id] });
-      toast.success("Removed from level");
-      setMembersRemoveSet((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
+      await updateStaffToLevel({
+        levelId: levelDoc._id,
+        businessId,
+        staffIds: selectedForAdd,
+        nextLevelTime: minutes, // minutes input is synced from levelDoc or user-changed
       });
+      toast.success(`Added ${selectedForAdd.length} staff to L${level}`);
+      onClose();
     } catch (err) {
       console.error(err);
-      toast.error("Failed to remove");
+      toast.error("Failed to add staff");
     }
   };
+
+  const isSaving = updateStaffLoader;
 
   return (
     <section
@@ -240,11 +213,11 @@ export default function BulkEscalationAssignmentPanel({
       <div className="mb-4">
         <div className="flex items-center gap-2 text-xl font-semibold">
           <AlertTriangle className="w-5 h-5" />
-          Bulk Escalation — {mode === "add" ? "Add" : "Remove"}
+          Bulk Escalation — Add Members
         </div>
         <p className="text-sm text-muted-foreground">
-          Search/select staff, choose a level, set time (for Add), then add or
-          remove.
+          Search/select staff, choose a level, set the escalation time
+          (minutes), then add.
         </p>
       </div>
 
@@ -277,9 +250,7 @@ export default function BulkEscalationAssignmentPanel({
                     size="sm"
                     onClick={selectAllFiltered}
                   >
-                    {mode === "add"
-                      ? `Select All Eligible (${eligibleFilteredIds.length})`
-                      : `Select All In L${level} (${eligibleFilteredIds.length})`}
+                    Select All Eligible ({eligibleFilteredIds.length})
                   </Button>
                   <Button variant="ghost" size="sm" onClick={clearSelection}>
                     Clear
@@ -289,33 +260,6 @@ export default function BulkEscalationAssignmentPanel({
               </div>
 
               <div className="space-y-2">
-                {/* Mode Switch */}
-                <Label>Mode</Label>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant={mode === "add" ? "default" : "outline"}
-                    onClick={() => {
-                      setMode("add");
-                      setSelectedIds(new Set());
-                    }}
-                    className={cn(mode === "add" && "ring-2 ring-primary")}
-                  >
-                    Add
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={mode === "remove" ? "default" : "outline"}
-                    onClick={() => {
-                      setMode("remove");
-                      setSelectedIds(new Set());
-                    }}
-                    className={cn(mode === "remove" && "ring-2 ring-primary")}
-                  >
-                    Remove
-                  </Button>
-                </div>
-
                 <Label className="mt-2">Level</Label>
                 <div className="flex gap-2">
                   {[1, 2, 3].map((lv) => (
@@ -328,7 +272,6 @@ export default function BulkEscalationAssignmentPanel({
                       onClick={() => {
                         setLevel(lv as 1 | 2 | 3);
                         setSelectedIds(new Set());
-                        setMembersRemoveSet(new Set());
                       }}
                       className={cn(level === lv && "ring-2 ring-primary")}
                     >
@@ -337,7 +280,6 @@ export default function BulkEscalationAssignmentPanel({
                   ))}
                 </div>
 
-                {/* Time only for Add */}
                 <div className="mt-2">
                   <Label htmlFor="minutes">Escalation Time (minutes)</Label>
                   <Input
@@ -352,8 +294,12 @@ export default function BulkEscalationAssignmentPanel({
                       )
                     }
                     className="mt-1"
-                    disabled={mode === "remove"}
                   />
+                  <div className="text-[11px] text-muted-foreground mt-1">
+                    {typeof levelMinutes === "number"
+                      ? `Loaded from L${level}: ${levelMinutes} min`
+                      : `No saved time for L${level} yet. Using 5 min default.`}
+                  </div>
                 </div>
 
                 {/* Counters */}
@@ -363,15 +309,12 @@ export default function BulkEscalationAssignmentPanel({
                     <strong>{currentMembersObjects.length}</strong>
                   </div>
                   <div>
-                    Selected in L{level}: <strong>{alreadyInSelected}</strong>
+                    Selected already in L{level}:{" "}
+                    <strong>{alreadyInSelected}</strong>
                   </div>
                   <div>
                     Will add to L{level}:{" "}
                     <strong>{selectedForAdd.length}</strong>
-                  </div>
-                  <div>
-                    Will remove from L{level}:{" "}
-                    <strong>{selectedForRemove.length}</strong>
                   </div>
                 </div>
               </div>
@@ -380,49 +323,13 @@ export default function BulkEscalationAssignmentPanel({
 
           {/* Details panes */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Current members of selected level — with delete tools */}
+            {/* Current members of selected level — read-only */}
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">
                     Current members of L{level}
                   </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={selectAllMembers}
-                      disabled={currentMembersObjects.length === 0}
-                    >
-                      Select All
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearMembersSelection}
-                      disabled={membersRemoveSet.size === 0}
-                    >
-                      Clear
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={handleRemoveSelectedMembers}
-                      disabled={
-                        !levelDoc?._id ||
-                        membersRemoveSet.size === 0 ||
-                        isSaving
-                      }
-                      title={
-                        membersRemoveSet.size
-                          ? `Remove ${membersRemoveSet.size} selected`
-                          : "Select members to remove"
-                      }
-                    >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Remove Selected
-                    </Button>
-                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -432,44 +339,17 @@ export default function BulkEscalationAssignmentPanel({
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {currentMembersObjects.map((m) => {
-                      const checked = membersRemoveSet.has(m._id);
-                      return (
-                        <div
-                          key={m._id}
-                          className={cn(
-                            "rounded-md border p-2 text-xs flex items-center justify-between gap-2",
-                            checked &&
-                              "border-destructive ring-1 ring-destructive/30",
-                          )}
-                        >
-                          <label className="flex items-center gap-2 flex-1 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4"
-                              checked={checked}
-                              onChange={() => toggleMemberRemove(m._id)}
-                            />
-                            <div>
-                              <div className="font-medium">{m.name}</div>
-                              <div className="text-muted-foreground">
-                                {m.phone}
-                              </div>
-                            </div>
-                          </label>
-                          <Button
-                            size="icon"
-                            variant="destructive"
-                            className="shrink-0"
-                            title="Remove this member"
-                            onClick={() => handleRemoveSingleMember(m._id)}
-                            disabled={!levelDoc?._id || isSaving}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                    {currentMembersObjects.map((m) => (
+                      <div
+                        key={m._id}
+                        className="rounded-md border p-2 text-xs"
+                      >
+                        <div className="font-medium">
+                          {m.name || "(Unnamed)"}{" "}
                         </div>
-                      );
-                    })}
+                        <div className="text-muted-foreground">{m.phone}</div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>
@@ -485,9 +365,8 @@ export default function BulkEscalationAssignmentPanel({
               <CardContent>
                 {selectedObjects.length === 0 ? (
                   <div className="text-sm text-muted-foreground">
-                    {mode === "add"
-                      ? `Choose staff from the list below. Staff already in L${level} are disabled.`
-                      : `Choose staff from the list below. Only staff in L${level} are selectable.`}
+                    Choose staff from the list below. Staff already in L{level}{" "}
+                    are disabled.
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -514,63 +393,121 @@ export default function BulkEscalationAssignmentPanel({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {filtered.map((s) => {
-                  const inLevel = assignedSets[level].has(s._id);
-                  const checked = selectedIds.has(s._id);
-                  const disabled = mode === "add" ? inLevel : !inLevel;
+              {/* Role quick filter chips */}
+              <div className="flex items-center gap-2 overflow-x-auto p-2 mb-3 border-b">
+                <Button
+                  variant={roleFilter === "ALL" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setRoleFilter("ALL")}
+                  className={cn(roleFilter === "ALL" && "ring-2 ring-primary")}
+                >
+                  All{" "}
+                  <Badge variant="secondary" className="ml-2">
+                    {staffList.length}
+                  </Badge>
+                </Button>
 
-                  return (
-                    <label
-                      key={s._id}
-                      className={cn(
-                        "flex items-center justify-between rounded-md border p-3 cursor-pointer transition",
-                        checked
-                          ? "border-primary ring-2 ring-primary/30"
-                          : "hover:bg-muted/40",
-                        disabled && "opacity-60 cursor-not-allowed bg-muted/50",
-                      )}
-                      title={
-                        disabled
-                          ? mode === "add"
-                            ? `Already in Level ${level}`
-                            : `Not in Level ${level}`
-                          : mode === "add"
-                            ? "Select to add"
-                            : "Select to remove"
-                      }
-                    >
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          disabled={disabled}
-                          onChange={() => toggleSelect(s._id, disabled)}
-                          className="h-4 w-4"
-                        />
-                        <div>
-                          <div className="font-medium flex items-center gap-2">
-                            {s.name}
-                            {inLevel && (
-                              <Badge variant="secondary" className="text-xs">
-                                In L{level}
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {s.phone}
-                          </div>
-                        </div>
-                      </div>
-                    </label>
-                  );
-                })}
-                {filtered.length === 0 && (
-                  <div className="text-sm text-muted-foreground">
-                    No staff match your search.
-                  </div>
-                )}
+                {roleIndex.map(([role, count]) => (
+                  <Button
+                    key={role}
+                    variant={roleFilter === role ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setRoleFilter(role)}
+                    className={cn(roleFilter === role && "ring-2 ring-primary")}
+                  >
+                    {role}{" "}
+                    <Badge variant={roleFilter === role ? "default" : "outline"} className="ml-2">
+                      {count}
+                    </Badge>
+                  </Button>
+                ))}
               </div>
+
+              {/* When filtering to one role, still show its heading; when "ALL", show all groups */}
+              {groupedByRole.length === 0 ? (
+                <div className="text-sm text-muted-foreground">
+                  No staff match your search.
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {groupedByRole.map(([role, people]) => (
+                    <section
+                      key={role}
+                      id={`role-${slug(role)}`}
+                      className="space-y-2"
+                    >
+                      <h3 className="text-sm font-semibold tracking-wide">
+                        {role}{" "}
+                        <span className="text-muted-foreground">
+                          ({people.length})
+                        </span>
+                      </h3>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {people.map((s) => {
+                          const inLevel = assignedSets[level].has(s._id);
+                          const checked = selectedIds.has(s._id);
+                          const disabled = inLevel;
+                          const staffRole = getRole(s);
+
+                          return (
+                            <label
+                              key={s._id}
+                              className={cn(
+                                "flex items-center justify-between rounded-md border p-3 cursor-pointer transition",
+                                checked
+                                  ? "border-primary ring-2 ring-primary/30"
+                                  : "hover:bg-muted/40",
+                                disabled &&
+                                  "opacity-60 cursor-not-allowed bg-muted/50",
+                              )}
+                              title={
+                                disabled
+                                  ? `Already in Level ${level}`
+                                  : "Select to add"
+                              }
+                            >
+                              <div className="flex gap-3">
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  disabled={disabled}
+                                  onChange={() => toggleSelect(s._id, disabled)}
+                                  className="h-4 w-4"
+                                />
+                                <div>
+                                  <div className="font-medium flex flex-wrap items-center gap-2">
+                                    {s.name}
+                                    {inLevel && (
+                                      <Badge
+                                        variant="secondary"
+                                        className="text-xs"
+                                      >
+                                        In L{level}
+                                      </Badge>
+                                    )}
+                                    {staffRole && (
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs"
+                                      >
+                                        {staffRole}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground">
+                                    {s.phone}
+                                  </div>
+                                </div>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -588,13 +525,6 @@ export default function BulkEscalationAssignmentPanel({
             isBackButton: true,
             onClick: onClose,
             className: "pl-3 rounded-md",
-          },
-          {
-            text: `Remove from L${level}`,
-            onClick: handleRemove,
-            className: "pl-3 rounded-md",
-            disable:
-              isSaving || selectedForRemove.length === 0 || gettingLevels,
           },
           {
             text: `Add to L${level}`,
