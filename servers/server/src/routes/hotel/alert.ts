@@ -168,7 +168,12 @@ const scheduleAlertUpdate = (
             staffIds: { $in: validManagerIds },
           });
 
+          console.log("levelOneStaffs", levelOneStaffs);
+          console.log("levelTwoStaffs", levelTwoStaffs);
+          console.log("levelThreeStaffs", levelThreeStaffs);
+
           if (levelOneStaffs) {
+            console.log("Level 1 staff found");
             const nextLevelTime = levelOneStaffs.nextLevelTime;
             // schedule cron job
             scheduleLevelWiseAlert(
@@ -180,6 +185,7 @@ const scheduleAlertUpdate = (
               validManagerIds,
             );
           } else if (levelTwoStaffs) {
+            console.log("Level 2 staff found");
             const nextLevelTime = levelTwoStaffs.nextLevelTime;
             // schedule cron job
             scheduleLevelWiseAlert(
@@ -191,6 +197,7 @@ const scheduleAlertUpdate = (
               validManagerIds,
             );
           } else if (levelThreeStaffs) {
+            console.log("Level 3 staff found");
             const nextLevelTime = levelThreeStaffs.nextLevelTime;
             // schedule cron job
             scheduleLevelWiseAlert(
@@ -202,6 +209,7 @@ const scheduleAlertUpdate = (
               validManagerIds,
             );
           } else {
+            console.log("No level staff found, sending notification");
             const registrationTokens = await DeviceToken.find({
               userId: { $in: validManagerIds },
               notification: true,
@@ -300,6 +308,10 @@ const scheduleAlertUpdate = (
             staffIds: { $in: validManagerIds },
           });
 
+          console.log("levelOneStaffs", levelOneStaffs);
+          console.log("levelTwoStaffs", levelTwoStaffs);
+          console.log("levelThreeStaffs", levelThreeStaffs);
+
           if (levelOneStaffs) {
             console.log("Level 1 staff found");
             const nextLevelTime = levelOneStaffs.nextLevelTime;
@@ -313,6 +325,7 @@ const scheduleAlertUpdate = (
               validManagerIds,
             );
           } else if (levelTwoStaffs) {
+            console.log("Level 2 staff found");
             const nextLevelTime = levelTwoStaffs.nextLevelTime;
             // schedule cron job
             scheduleLevelWiseAlert(
@@ -324,6 +337,7 @@ const scheduleAlertUpdate = (
               validManagerIds,
             );
           } else if (levelThreeStaffs) {
+            console.log("Level 3 staff found");
             const nextLevelTime = levelThreeStaffs.nextLevelTime;
             // schedule cron job
             scheduleLevelWiseAlert(
@@ -335,6 +349,7 @@ const scheduleAlertUpdate = (
               validManagerIds,
             );
           } else {
+            console.log("No level staff found, sending notification");
             const registrationTokens = await DeviceToken.find({
               userId: { $in: validManagerIds },
               notification: true,
