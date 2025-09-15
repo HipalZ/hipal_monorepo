@@ -174,7 +174,7 @@ const scheduleAlertUpdate = (
             scheduleLevelWiseAlert(
               alertId,
               nextLevelTime,
-              levelOneStaffs.level + 1,
+              2,
               roomName,
               serviceName,
               validManagerIds,
@@ -185,7 +185,7 @@ const scheduleAlertUpdate = (
             scheduleLevelWiseAlert(
               alertId,
               nextLevelTime,
-              levelTwoStaffs.level + 1,
+              3,
               roomName,
               serviceName,
               validManagerIds,
@@ -196,7 +196,7 @@ const scheduleAlertUpdate = (
             scheduleLevelWiseAlert(
               alertId,
               nextLevelTime,
-              levelThreeStaffs.level + 1,
+              4,
               roomName,
               serviceName,
               validManagerIds,
@@ -306,7 +306,7 @@ const scheduleAlertUpdate = (
             scheduleLevelWiseAlert(
               alertId,
               nextLevelTime,
-              levelOneStaffs.level + 1,
+              2,
               roomName,
               serviceName,
               validManagerIds,
@@ -317,7 +317,7 @@ const scheduleAlertUpdate = (
             scheduleLevelWiseAlert(
               alertId,
               nextLevelTime,
-              levelTwoStaffs.level + 1,
+              3,
               roomName,
               serviceName,
               validManagerIds,
@@ -328,7 +328,7 @@ const scheduleAlertUpdate = (
             scheduleLevelWiseAlert(
               alertId,
               nextLevelTime,
-              levelThreeStaffs.level + 1,
+              4,
               roomName,
               serviceName,
               validManagerIds,
@@ -472,6 +472,10 @@ const scheduleLevelWiseAlert = (
           }
         }
       }
+
+      console.log(
+        `Level ${nextLevel} alert notification sent to staff members.`,
+      );
 
       await HotelAlert.findByIdAndUpdate(
         alertId,
