@@ -28,7 +28,7 @@ export const MenuView = ({ restaurant, onBack, isLoading }: MenuViewProps) => {
   );
   console.log("menuData", menuData);
   return (
-    <div className="relative p-2">
+    <div className="relative">
       <div className="flex items-center mb-4">
         <button
           type="button"
@@ -48,19 +48,17 @@ export const MenuView = ({ restaurant, onBack, isLoading }: MenuViewProps) => {
         </div>
       ) : (
         <>
-          <div className="mb-20">
-            <MenuBannerPage
-              timings={menuData?.timings}
-              childCategory={menuData?.childCategories || []}
-            />
-            <DishesList
-              parentCategory={menuData?.parentCategories || []}
-              childCategory={menuData?.childCategories || []}
-              timings={menuData?.timings}
-              menuLayout={menuData?.menuData}
-            />
-            <LiveCartHotel />
-          </div>
+          <MenuBannerPage
+            timings={menuData?.timings}
+            childCategory={menuData?.childCategories || []}
+          />
+          <DishesList
+            parentCategory={menuData?.parentCategories || []}
+            childCategory={menuData?.childCategories || []}
+            timings={menuData?.timings}
+            menuLayout={menuData?.menuData}
+          />
+          <LiveCartHotel />
         </>
       )}
     </div>
