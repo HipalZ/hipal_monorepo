@@ -196,8 +196,7 @@ const serviceRouter = new Hono()
         serviceIds: serviceId,
         businessId: requestData.businessId,
         alertProgress: {
-          $exists: true,
-          $ne: ["RESOLVED", "MESSAGE", "DELIVERED", "REJECTED"],
+          $nin: ["RESOLVED", "MESSAGE", "DELIVERED", "REJECTED"],
         },
       });
 
