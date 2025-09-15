@@ -1114,6 +1114,9 @@ const hotelAlertRouter = new Hono()
           customRole: {
             $elemMatch: {
               serviceIds: { $in: [serviceId] },
+              role: {
+                $ne: "MANAGER",
+              },
             },
           },
         })
