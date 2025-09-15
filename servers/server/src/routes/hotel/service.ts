@@ -197,7 +197,11 @@ const serviceRouter = new Hono()
         businessId: requestData.businessId,
         alertProgress: {
           $exists: true,
-          $ne: ["RESOLVED", "MESSAGE", "DELIVERED", "REJECTED"],
+          $not: {
+            $elemMatch: {
+              $in: ["RESOLVED", "MESSAGE", "DELIVERED", "REJECTED"],
+            },
+          },
         },
       });
 

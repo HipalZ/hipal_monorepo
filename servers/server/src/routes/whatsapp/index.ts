@@ -2532,7 +2532,6 @@ const whatsappRouter = new Hono()
                       checkIn: Date.now(),
                       userId: user?._id,
                       source: "not-given",
-                      $addToSet: { guestUserIds: user?._id },
                     },
                     { upsert: true },
                   );

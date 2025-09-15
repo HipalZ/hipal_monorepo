@@ -306,7 +306,7 @@ const scheduleAlertUpdate = (
             scheduleLevelWiseAlert(
               alertId,
               nextLevelTime,
-              levelOneStaffs.level,
+              levelOneStaffs.level + 1,
               roomName,
               serviceName,
               validManagerIds,
@@ -317,7 +317,7 @@ const scheduleAlertUpdate = (
             scheduleLevelWiseAlert(
               alertId,
               nextLevelTime,
-              levelTwoStaffs.level,
+              levelTwoStaffs.level + 1,
               roomName,
               serviceName,
               validManagerIds,
@@ -328,7 +328,7 @@ const scheduleAlertUpdate = (
             scheduleLevelWiseAlert(
               alertId,
               nextLevelTime,
-              levelThreeStaffs.level,
+              levelThreeStaffs.level + 1,
               roomName,
               serviceName,
               validManagerIds,
