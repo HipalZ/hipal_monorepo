@@ -31,6 +31,6 @@ const orderSchema = new mongoose.Schema<JewelleryOrderTypeValidator>(
 );
 
 const JewelleryOrder: Model<JewelleryOrderTypeValidator> =
-  mongoose.model<JewelleryOrderTypeValidator>("jewelleryorder", orderSchema);
+  mongoose.model<JewelleryOrderTypeValidator>("jewelleryOrder", orderSchema);
 
 export { JewelleryOrder };

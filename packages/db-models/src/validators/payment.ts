@@ -169,4 +169,117 @@ export const PaymentSchema = z.object({
   isSplitBillVariant: z.boolean().optional().default(false),
 });
 
+export const jewelleryPaymentSchema = z.object({
+  businessId: ObjectIdSchema,
+  total: z.coerce
+    .number({
+      message: "Total must be a number",
+    })
+    .default(0),
+  subTotal: z.coerce
+    .number({
+      message: "Bill value must be a number",
+    })
+    .positive(),
+  userId: ObjectIdSchema,
+  mode: z
+    .string({
+      message: "Mode must be a string",
+    })
+    .min(2)
+    .max(100),
+  paymentMode: z.string().min(3).max(100),
+
+  claimedCoins: z.coerce
+    .number({
+      message: "Claimed coins must be a number",
+    })
+    .optional()
+    .default(0),
+  tips: z.coerce
+    .number({
+      message: "Tips must be a number",
+    })
+    .default(0),
+  orderId: ObjectIdSchema,
+  date: z.coerce.number({
+    message: " Date must be a number",
+  }),
+  razorpayPaymentId: z
+    .string({
+      message: "Payment id must be a string",
+    })
+    .min(3, {
+      message: "Payment id must be at least 3 characters",
+    })
+    .max(200, {
+      message: "Payment id must be at most 200 characters",
+    })
+    .optional(),
+  razorpayOrderId: z
+    .string({
+      message: "Order id must be a string",
+    })
+    .min(3, {
+      message: "Order id must be at least 3 characters",
+    })
+    .max(200)
+    .optional(),
+  razorpayAcquirerData: z.any().optional(),
+  razorpayEventId: z
+    .string({
+      message: "Event id must be a string",
+    })
+    .min(3, {
+      message: "Event id must be at least 3 characters",
+    })
+    .max(200, {
+      message: "Event id must be at most 200 characters",
+    })
+    .optional(),
+
+  reviewId: ObjectIdSchema.optional(),
+
+  earnCoins: z.coerce.number({}).optional().default(0),
+  couponId: ObjectIdSchema.optional(),
+
+  settleType: z
+    .enum([
+      "NORMAL_SETTLE",
+      "HI_SETTLE",
+      "PAYMENT_GATEWAY",
+      "DUES_SETTLE",
+      "NPC_SETTLE",
+      "COMPLIMENTARY_SETTLE",
+    ])
+    .optional(),
+  serviceCharge: z.coerce.number({}).optional().default(0),
+  tax: z.coerce.number({}).optional().default(0),
+  splitModes: z
+    .array(
+      z.object({
+        name: z.string().max(100),
+        amount: z.coerce.number().positive(),
+        _id: z.string().max(100),
+      }),
+    )
+    .default([])
+    .optional(),
+  discount: z.coerce.number().default(0).optional(),
+  discountType: z.enum(["COINZ", "COUPONZ"]).optional().default("COINZ"),
+  downloadUrl: z.string().min(3).max(200).optional(),
+  isDeleted: z
+    .boolean({
+      required_error: "isDeleted must be a boolean",
+      invalid_type_error: "isDeleted must be a boolean",
+    })
+    .default(false),
+  couponDiscount: z.coerce.number().optional().default(0),
+  billItems: z.array(z.object({})).optional(),
+  billInvoice: z.coerce.number().optional().default(0),
+  // isSplit: z.boolean().optional().default(false),
+  // isSplitBillVariant: z.boolean().optional().default(false),
+});
+
 export type PaymentType = z.infer<typeof PaymentSchema>;
+export type JewelleryPaymentType = z.infer<typeof jewelleryPaymentSchema>;
