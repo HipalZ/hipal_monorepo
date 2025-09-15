@@ -301,6 +301,7 @@ const scheduleAlertUpdate = (
           });
 
           if (levelOneStaffs) {
+            console.log("Level 1 staff found");
             const nextLevelTime = levelOneStaffs.nextLevelTime;
             // schedule cron job
             scheduleLevelWiseAlert(
