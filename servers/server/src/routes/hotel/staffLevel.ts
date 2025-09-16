@@ -103,8 +103,13 @@ const hotelStaffLevelRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
-        const { level, nextLevelTime, staffIds, levelId, businessId } =
-          await c.req.json();
+        const {
+          level,
+          nextLevelTime,
+          staffIds = [],
+          levelId,
+          businessId,
+        } = await c.req.json();
 
         const isDuplicate = await HotelStaffLevel.exists({
           _id: { $ne: levelId }, // exclude the current document
@@ -148,7 +153,7 @@ const hotelStaffLevelRouter = new Hono()
     async (c) => {
       //@ts-ignore
       return runInTransaction(async (session) => {
-        const { staffIds, levelId } = await c.req.json();
+        const { staffIds = [], levelId } = await c.req.json();
         const level = await HotelStaffLevel.findById(levelId);
 
         if (!level) {

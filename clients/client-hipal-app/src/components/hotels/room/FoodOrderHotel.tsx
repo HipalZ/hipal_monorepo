@@ -196,12 +196,7 @@ export default function FoodOrderPopup({
   };
 
   return (
-    <BottomPopUp
-      hide
-      height={currentView === "menu" ? "100dvh" : "75dvh"}
-      show={show}
-      onClose={onClose}
-    >
+    <BottomPopUp hide show={show} onClose={onClose}>
       <section className="relative overflow-auto hide-scrollbar">
         {renderContent()}
       </section>
