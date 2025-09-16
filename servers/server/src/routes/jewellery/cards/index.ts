@@ -23,15 +23,15 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/theme.png",
-          redirectionUrl: "/themes",
+          redirectionUrl: "themes",
         },
         {
           name: "payments",
           description: "all payment related stuff",
           inprogress: false,
-          visibility: false,
+          visibility: true,
           image: "https://example.com/payment.png",
-          redirectionUrl: "/payments",
+          redirectionUrl: "payments",
         },
         {
           name: "reports",
@@ -39,7 +39,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: false,
           image: "https://example.com/report.png",
-          redirectionUrl: "/reports",
+          redirectionUrl: "reports",
         },
         {
           name: "point_of_sale",
@@ -47,7 +47,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: false,
           image: "https://example.com/pos.png",
-          redirectionUrl: "/pos",
+          redirectionUrl: "pos",
         },
         {
           name: "staff",
@@ -55,7 +55,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/staff.png",
-          redirectionUrl: "/staff",
+          redirectionUrl: "staff",
         },
         {
           name: "password_management",
@@ -63,7 +63,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: false,
           image: "https://example.com/password.png",
-          redirectionUrl: "/password",
+          redirectionUrl: "password",
         },
         {
           name: "settings",
@@ -71,7 +71,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/settings.png",
-          redirectionUrl: "/settings",
+          redirectionUrl: "settings",
         },
       ],
       services: [
@@ -81,15 +81,15 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/explore_page.png",
-          redirectionUrl: "/explorepage",
+          redirectionUrl: "explorepage",
         },
         {
           name: "zones",
           description: "manage your zones and tables",
           inprogress: false,
-          visibility: true,
+          visibility: false,
           image: "https://example.com/zones.png",
-          redirectionUrl: "/zones",
+          redirectionUrl: "zones",
         },
         {
           name: "menu",
@@ -97,7 +97,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: false,
           image: "https://example.com/menu.png",
-          redirectionUrl: "/select-menu",
+          redirectionUrl: "select-menu",
         },
         {
           name: "birthday_events",
@@ -105,7 +105,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/birthday_events.png",
-          redirectionUrl: "/events",
+          redirectionUrl: "events",
         },
         {
           name: "my_gallery",
@@ -113,7 +113,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/my_gallery.png",
-          redirectionUrl: "/thumbnail",
+          redirectionUrl: "thumbnail",
         },
       ],
       coupon_and_loyalty: [
@@ -123,7 +123,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/loyalty.png",
-          redirectionUrl: "/loyalty",
+          redirectionUrl: "loyalty",
         },
         {
           name: "coupons",
@@ -131,7 +131,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/coupons.png",
-          redirectionUrl: "/coupons",
+          redirectionUrl: "coupons",
         },
       ],
       marketing: [
@@ -141,7 +141,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/hi_people.png",
-          redirectionUrl: "/people",
+          redirectionUrl: "people",
         },
         {
           name: "reviews",
@@ -149,7 +149,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/reviews.png",
-          redirectionUrl: "/reviews",
+          redirectionUrl: "reviews",
         },
         {
           name: "whatsapp",
@@ -157,7 +157,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/whatsapp.png",
-          redirectionUrl: "/whatzapp",
+          redirectionUrl: "whatzapp",
         },
         {
           name: "analytics",
@@ -165,7 +165,7 @@ const cardRouter = new Hono().get(
           inprogress: false,
           visibility: true,
           image: "https://example.com/analytics.png",
-          redirectionUrl: "/analytics",
+          redirectionUrl: "analytics",
         },
       ],
     };
