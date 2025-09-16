@@ -148,120 +148,113 @@ const scheduleAlertUpdate = (
             },
           }).lean();
 
-          const validManagerIds = validManagers.map((manager) => manager._id);
+          const validManagerIds = validManagers.map((manager) =>
+            manager._id.toString(),
+          );
+
+          const l2AndL3ManagerIds = [] as string[];
 
           const levelOneStaffs = await HotelStaffLevel.findOne({
             businessId,
             level: 1,
-            staffIds: { $in: validManagerIds },
           });
 
           const levelTwoStaffs = await HotelStaffLevel.findOne({
             businessId,
             level: 2,
-            staffIds: { $in: validManagerIds },
           });
+
+          for (const id of levelTwoStaffs?.staffIds || []) {
+            l2AndL3ManagerIds.push(id.toString());
+          }
 
           const levelThreeStaffs = await HotelStaffLevel.findOne({
             businessId,
             level: 3,
-            staffIds: { $in: validManagerIds },
           });
 
-          console.log("levelOneStaffs", levelOneStaffs);
-          console.log("levelTwoStaffs", levelTwoStaffs);
-          console.log("levelThreeStaffs", levelThreeStaffs);
+          for (const id of levelThreeStaffs?.staffIds || []) {
+            l2AndL3ManagerIds.push(id.toString());
+          }
 
-          if (levelOneStaffs) {
-            console.log("Level 1 staff found");
-            const nextLevelTime = levelOneStaffs.nextLevelTime;
-            // schedule cron job
-            scheduleLevelWiseAlert(
-              alertId,
-              nextLevelTime,
-              2,
-              roomName,
-              serviceName,
-              validManagerIds,
-            );
-          } else if (levelTwoStaffs) {
-            console.log("Level 2 staff found");
-            const nextLevelTime = levelTwoStaffs.nextLevelTime;
-            // schedule cron job
-            scheduleLevelWiseAlert(
-              alertId,
-              nextLevelTime,
-              3,
-              roomName,
-              serviceName,
-              validManagerIds,
-            );
-          } else if (levelThreeStaffs) {
-            console.log("Level 3 staff found");
-            const nextLevelTime = levelThreeStaffs.nextLevelTime;
-            // schedule cron job
-            scheduleLevelWiseAlert(
-              alertId,
-              nextLevelTime,
-              4,
-              roomName,
-              serviceName,
-              validManagerIds,
-            );
-          } else {
-            console.log("No level staff found, sending notification");
-            const registrationTokens = await DeviceToken.find({
-              userId: { $in: validManagerIds },
-              notification: true,
-            });
-            registrationTokens.map(async (obj) => {
-              if (obj.notification) {
-                await sendPushNotification(obj.token, roomName, serviceName);
-              }
-            });
+          const filteredManagerIds = validManagerIds.filter(
+            (id) => !l2AndL3ManagerIds.includes(id),
+          );
 
-            const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
-              businessId: alertData?.businessId,
-            });
-            if (whatsAppConfig) {
-              for (const staffData of validManagers) {
-                const res = await axios.post(
-                  `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
-                  {
-                    messaging_product: "whatsapp",
-                    to: staffData?.phone?.toString(),
-                    type: "template",
-                    template: {
-                      name: "fi_escalation_template ",
-                      language: { code: "en" },
-                      components: [
-                        {
-                          type: "body",
-                          parameters: [
-                            {
-                              type: "text",
-                              text: staffData?.name,
-                            },
+          const filterL2ManagerIds =
+            levelTwoStaffs?.staffIds.filter((id) =>
+              validManagerIds.includes(id.toString()),
+            ) || [];
 
-                            {
-                              type: "text",
-                              text: alertData?.serviceIds[0]?.name || "other",
-                            },
-                          ],
-                        },
-                      ],
-                    },
+          const filterL3ManagerIds =
+            levelThreeStaffs?.staffIds.filter((id) =>
+              validManagerIds.includes(id.toString()),
+            ) || [];
+
+          const registrationTokens = await DeviceToken.find({
+            userId: { $in: filteredManagerIds },
+            notification: true,
+          });
+          registrationTokens.map(async (obj) => {
+            if (obj.notification) {
+              await sendPushNotification(obj.token, roomName, serviceName);
+            }
+          });
+
+          const nextLevelTime = levelOneStaffs?.nextLevelTime;
+          // schedule cron job
+          scheduleLevelWiseAlert(
+            alertId,
+            nextLevelTime || 0,
+            2,
+            roomName,
+            serviceName,
+            filterL2ManagerIds,
+            filterL3ManagerIds,
+          );
+
+          const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+            businessId: alertData?.businessId,
+          });
+          if (whatsAppConfig) {
+            for (const staffId of filteredManagerIds) {
+              const staffData = await User.findById(staffId).lean();
+              const res = await axios.post(
+                `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+                {
+                  messaging_product: "whatsapp",
+                  to: staffData?.phone?.toString(),
+                  type: "template",
+                  template: {
+                    name: "fi_escalation_template ",
+                    language: { code: "en" },
+                    components: [
+                      {
+                        type: "body",
+                        parameters: [
+                          {
+                            type: "text",
+                            text: staffData?.name,
+                          },
+
+                          {
+                            type: "text",
+                            text: alertData?.serviceIds[0]?.name || "other",
+                          },
+                        ],
+                      },
+                    ],
                   },
-                  {
-                    headers: {
-                      Authorization: `Bearer ${whatsAppConfig.token}`,
-                    },
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${whatsAppConfig.token}`,
                   },
-                );
+                },
+              );
 
-                if (res.status !== 200) {
-                  throw new Error("Error sending message");
-                }
+              if (res.status !== 200) {
+                throw new Error("Error sending message");
               }
             }
           }
@@ -288,120 +281,113 @@ const scheduleAlertUpdate = (
             },
           }).lean();
 
-          const validManagerIds = validManagers.map((manager) => manager._id);
+          const validManagerIds = validManagers.map((manager) =>
+            manager._id.toString(),
+          );
+
+          const l2AndL3ManagerIds = [] as string[];
 
           const levelOneStaffs = await HotelStaffLevel.findOne({
             businessId,
             level: 1,
-            staffIds: { $in: validManagerIds },
           });
 
           const levelTwoStaffs = await HotelStaffLevel.findOne({
             businessId,
             level: 2,
-            staffIds: { $in: validManagerIds },
           });
+
+          for (const id of levelTwoStaffs?.staffIds || []) {
+            l2AndL3ManagerIds.push(id.toString());
+          }
 
           const levelThreeStaffs = await HotelStaffLevel.findOne({
             businessId,
             level: 3,
-            staffIds: { $in: validManagerIds },
           });
 
-          console.log("levelOneStaffs", levelOneStaffs);
-          console.log("levelTwoStaffs", levelTwoStaffs);
-          console.log("levelThreeStaffs", levelThreeStaffs);
+          for (const id of levelThreeStaffs?.staffIds || []) {
+            l2AndL3ManagerIds.push(id.toString());
+          }
 
-          if (levelOneStaffs) {
-            console.log("Level 1 staff found");
-            const nextLevelTime = levelOneStaffs.nextLevelTime;
-            // schedule cron job
-            scheduleLevelWiseAlert(
-              alertId,
-              nextLevelTime,
-              2,
-              roomName,
-              serviceName,
-              validManagerIds,
-            );
-          } else if (levelTwoStaffs) {
-            console.log("Level 2 staff found");
-            const nextLevelTime = levelTwoStaffs.nextLevelTime;
-            // schedule cron job
-            scheduleLevelWiseAlert(
-              alertId,
-              nextLevelTime,
-              3,
-              roomName,
-              serviceName,
-              validManagerIds,
-            );
-          } else if (levelThreeStaffs) {
-            console.log("Level 3 staff found");
-            const nextLevelTime = levelThreeStaffs.nextLevelTime;
-            // schedule cron job
-            scheduleLevelWiseAlert(
-              alertId,
-              nextLevelTime,
-              4,
-              roomName,
-              serviceName,
-              validManagerIds,
-            );
-          } else {
-            console.log("No level staff found, sending notification");
-            const registrationTokens = await DeviceToken.find({
-              userId: { $in: validManagerIds },
-              notification: true,
-            });
-            registrationTokens.map(async (obj) => {
-              if (obj.notification) {
-                await sendPushNotification(obj.token, roomName, serviceName);
-              }
-            });
+          const filteredManagerIds = validManagerIds.filter(
+            (id) => !l2AndL3ManagerIds.includes(id),
+          );
 
-            const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
-              businessId: alertData?.businessId,
-            });
-            if (whatsAppConfig) {
-              for (const staffData of validManagers) {
-                const res = await axios.post(
-                  `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
-                  {
-                    messaging_product: "whatsapp",
-                    to: staffData?.phone?.toString(),
-                    type: "template",
-                    template: {
-                      name: "fi_escalation_template ",
-                      language: { code: "en" },
-                      components: [
-                        {
-                          type: "body",
-                          parameters: [
-                            {
-                              type: "text",
-                              text: staffData?.name,
-                            },
+          const filterL2ManagerIds =
+            levelTwoStaffs?.staffIds.filter((id) =>
+              validManagerIds.includes(id.toString()),
+            ) || [];
 
-                            {
-                              type: "text",
-                              text: alertData?.serviceIds[0]?.name || "other",
-                            },
-                          ],
-                        },
-                      ],
-                    },
+          const filterL3ManagerIds =
+            levelThreeStaffs?.staffIds.filter((id) =>
+              validManagerIds.includes(id.toString()),
+            ) || [];
+
+          const registrationTokens = await DeviceToken.find({
+            userId: { $in: filteredManagerIds },
+            notification: true,
+          });
+          registrationTokens.map(async (obj) => {
+            if (obj.notification) {
+              await sendPushNotification(obj.token, roomName, serviceName);
+            }
+          });
+
+          const nextLevelTime = levelOneStaffs?.nextLevelTime;
+          // schedule cron job
+          scheduleLevelWiseAlert(
+            alertId,
+            nextLevelTime || 0,
+            2,
+            roomName,
+            serviceName,
+            filterL2ManagerIds,
+            filterL3ManagerIds,
+          );
+
+          const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+            businessId: alertData?.businessId,
+          });
+          if (whatsAppConfig) {
+            for (const staffId of filteredManagerIds) {
+              const staffData = await User.findById(staffId).lean();
+              const res = await axios.post(
+                `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+                {
+                  messaging_product: "whatsapp",
+                  to: staffData?.phone?.toString(),
+                  type: "template",
+                  template: {
+                    name: "fi_escalation_template ",
+                    language: { code: "en" },
+                    components: [
+                      {
+                        type: "body",
+                        parameters: [
+                          {
+                            type: "text",
+                            text: staffData?.name,
+                          },
+
+                          {
+                            type: "text",
+                            text: alertData?.serviceIds[0]?.name || "other",
+                          },
+                        ],
+                      },
+                    ],
                   },
-                  {
-                    headers: {
-                      Authorization: `Bearer ${whatsAppConfig.token}`,
-                    },
+                },
+                {
+                  headers: {
+                    Authorization: `Bearer ${whatsAppConfig.token}`,
                   },
-                );
+                },
+              );
 
-                if (res.status !== 200) {
-                  throw new Error("Error sending message");
-                }
+              if (res.status !== 200) {
+                throw new Error("Error sending message");
               }
             }
           }
@@ -417,7 +403,8 @@ const scheduleLevelWiseAlert = (
   nextLevel: number,
   roomName: string,
   serviceName: string,
-  staffIds: string[],
+  l2ManagerIds: string[],
+  l3ManagerIds: string[],
 ) => {
   if (nextLevelTime > 0) {
     // Calculate the run time: current time + nextLevelTime minutes
@@ -432,11 +419,7 @@ const scheduleLevelWiseAlert = (
         select: "name",
       });
 
-       console.log(
-        `Level ${nextLevel} alert notification sent to staff members.`,
-      );
-
-       await HotelAlert.findByIdAndUpdate(
+      await HotelAlert.findByIdAndUpdate(
         alertId,
         { level: nextLevel },
         { new: true },
@@ -444,7 +427,7 @@ const scheduleLevelWiseAlert = (
 
       // Send push notifications to staff members
       const registrationTokens = await DeviceToken.find({
-        userId: { $in: staffIds },
+        userId: { $in: l2ManagerIds },
         notification: true,
       });
       registrationTokens.map(async (obj) => {
@@ -453,11 +436,20 @@ const scheduleLevelWiseAlert = (
         }
       });
 
+      scheduleLevelWiseAlertl2(
+        alertId,
+        nextLevelTime || 0,
+        3,
+        roomName,
+        serviceName,
+        l3ManagerIds,
+      );
+
       const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
         businessId: alertData?.businessId,
       });
       if (whatsAppConfig) {
-        for (const staff of staffIds) {
+        for (const staff of l2ManagerIds) {
           const staffData = await User.findById(staff).lean();
           const res = await axios.post(
             `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
@@ -498,10 +490,93 @@ const scheduleLevelWiseAlert = (
           }
         }
       }
+    });
+  }
+};
 
-     
+const scheduleLevelWiseAlertl2 = (
+  alertId: string,
+  nextLevelTime: number,
+  nextLevel: number,
+  roomName: string,
+  serviceName: string,
+  l3ManagerIds: string[],
+) => {
+  if (nextLevelTime > 0) {
+    // Calculate the run time: current time + nextLevelTime minutes
+    const runTime = new Date(Date.now() + nextLevelTime * 60 * 1000);
+    const cronExpression = `${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${
+      runTime.getMonth() + 1
+    } *`;
 
-     
+    schedule(cronExpression, async () => {
+      const alertData = await HotelAlert.findById(alertId).populate({
+        path: "serviceIds",
+        select: "name",
+      });
+
+      await HotelAlert.findByIdAndUpdate(
+        alertId,
+        { level: nextLevel },
+        { new: true },
+      );
+
+      // Send push notifications to staff members
+      const registrationTokens = await DeviceToken.find({
+        userId: { $in: l3ManagerIds },
+        notification: true,
+      });
+      registrationTokens.map(async (obj) => {
+        if (obj.notification) {
+          await sendPushNotification(obj.token, roomName, serviceName);
+        }
+      });
+
+      const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+        businessId: alertData?.businessId,
+      });
+      if (whatsAppConfig) {
+        for (const staff of l3ManagerIds) {
+          const staffData = await User.findById(staff).lean();
+          const res = await axios.post(
+            `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
+            {
+              messaging_product: "whatsapp",
+              to: staffData?.phone?.toString(),
+              type: "template",
+              template: {
+                name: "fi_escalation_template ",
+                language: { code: "en" },
+                components: [
+                  {
+                    type: "body",
+                    parameters: [
+                      {
+                        type: "text",
+                        text: staffData?.name,
+                      },
+
+                      {
+                        type: "text",
+                        text: alertData?.serviceIds[0]?.name || "other",
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${whatsAppConfig.token}`,
+              },
+            },
+          );
+
+          if (res.status !== 200) {
+            throw new Error("Error sending message");
+          }
+        }
+      }
     });
   }
 };
