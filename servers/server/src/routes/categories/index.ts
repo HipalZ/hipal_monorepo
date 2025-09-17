@@ -489,11 +489,17 @@ const categoriesRouter = new Hono()
           },
         };
 
-        const existingCategories = await Category.find(query).populate({
-          path: "dishIds",
-          match: { businessId: businessId, isDeleted: false, visibility: true },
-          populate: { path: "addOnIds" },
-        });
+        const existingCategories = await Category.find(query)
+          .populate({
+            path: "dishIds",
+            match: {
+              businessId: businessId,
+              isDeleted: false,
+              visibility: true,
+            },
+            populate: { path: "addOnIds" },
+          })
+          .sort(businessPosConfig ? { rank: 1 } : {});
 
         return respond(
           c,

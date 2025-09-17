@@ -149,6 +149,20 @@ export const catalogueSchema = z.object({
   timings: z.array(timingSchema).optional(),
 });
 
+export const timingsArraySchema = z
+  .array(timingSchema)
+  .max(7, { message: "You can define timings for at most 7 days" })
+  .refine(
+    (arr) => {
+      // If "all days" (-1) exists, it must be the ONLY entry
+      const hasAllDay = arr.some((t) => t.day === -1);
+      return !hasAllDay || arr.length === 1;
+    },
+    {
+      message: "If 'day = -1 (All)', only one object is allowed",
+    },
+  );
+
 export const updateCategorySchema = z.object({
   name: z
     .string({
@@ -198,6 +212,7 @@ export const updateCategorySchema = z.object({
   removeDishIds: z.array(ObjectIdSchema).optional().default([]),
   removeParentCategoryIds: z.array(ObjectIdSchema).optional().default([]),
   sequence: z.number().optional(),
+  timings: timingsArraySchema.optional(),
 });
 
 export const updateCatalogueSchema = z.object({
