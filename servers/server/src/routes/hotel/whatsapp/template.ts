@@ -132,6 +132,80 @@ const whatsappTemplateRouter = new Hono()
       );
     }
   })
+  .get(
+    "/",
+
+    zValidator("query", z.object({ businessId: z.string().min(24).max(24) })),
+
+    async (c) => {
+      try {
+        const { businessId } = c.req.query();
+
+        const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
+          businessId,
+        });
+
+        if (!whatsAppConfigData) {
+          return c.json(
+            {
+              message: "whatsAppConfigData not found",
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
+
+        const getWhatAppTemplate = await WhatAppTemplate.find({
+          businessId,
+          isDeleted: false,
+        })
+          .select("templateId")
+          .limit(30);
+
+        const templateIds = getWhatAppTemplate.map(
+          (template) => template.templateId,
+        );
+
+        const templatesArray = [];
+
+        for (const templateId of templateIds) {
+          const getWhatAppTemplate = await axios.get(
+            `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${templateId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${whatsAppConfigData.token}`,
+              },
+            },
+          );
+
+          templatesArray.push(getWhatAppTemplate.data);
+        }
+
+        return c.json(
+          {
+            message: "fetched successfully",
+            err: false,
+            data: templatesArray,
+          },
+          200,
+        );
+      } catch (error) {
+        const axiosError = error as AxiosError;
+        const message =
+          axiosError.response?.data?.error?.message || axiosError.message;
+
+        return c.json(
+          {
+            message: `Error fetching template: ${message}`,
+            err: true,
+            data: axiosError.response?.data || {},
+          },
+          400,
+        );
+      }
+    },
+  )
 
   .put(
     "/:templateId",
