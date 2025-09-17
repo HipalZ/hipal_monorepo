@@ -9,9 +9,9 @@ import { apiRpc } from "@hi/common";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { businessApis } from "@/apis/explore/index";
 
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
-// export const revalidate = 300;
+// export const dynamic = "force-dynamic";
+// export const fetchCache = "force-no-store";
+export const revalidate = 300;
 
 const MenuBannerPage = dynamics(
   () => import("@/components/organisms/menuBanner"),
@@ -169,10 +169,7 @@ export default async function Page({
     <main>
       <div className="relative flex flex-col w-full">
         <TopBackground
-          specialBanner={
-            data?.business?.categoryTopBannerUrl ||
-            data?.business?.specialBannerUrl
-          }
+          specialBanner={data?.business?.categoryTopBannerUrl}
           businessData={businessData}
         />
         <MenuBannerPage

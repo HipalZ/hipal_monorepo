@@ -29,8 +29,6 @@ const DishesList: FC<IDishesProps> = ({
 }: IDishesProps) => {
   const { isSearchActive } = useSearch();
 
-  console.log("Menu Layout:", menuLayout);
-
   const primaryColor = menuLayout?.primaryColor || "#ec4899";
   const secondaryColor = menuLayout?.secondaryColor || "#fce7f3";
 
