@@ -83,16 +83,25 @@ const CategoryMainForm = memo(() => {
     [resetStore, selectedCategory, setSelectedCategory],
   );
 
+  // check if All day exists
+  const hasAllDay = timings.some((t) => t.day === -1);
+
   const handleSaveCategory = useCallback(() => {
     if (!categoryName.trim()) {
       toast.error("Category name is required");
       return;
     }
+
+    // sanitize timings -> keep only All-day slot if exists
+    const sanitizedTimings = hasAllDay
+      ? [timings.find((t) => t.day === -1)!]
+      : timings;
+
     const commonPayload = {
       name: categoryName,
       businessId: businessId?.toString() || "",
       menuId,
-      timings: timings as Timing[],
+      timings: sanitizedTimings as Timing[],
     };
 
     const payload =
@@ -115,6 +124,7 @@ const CategoryMainForm = memo(() => {
     selectSingleParentCat,
     recommendationIds,
     timings,
+    hasAllDay,
     createCategory,
   ]);
 
@@ -208,7 +218,10 @@ const CategoryMainForm = memo(() => {
         <h2 className="text-xl font-semibold text-gray-700">Schedule</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {timings.map((t, i) => (
-            <Card key={i} className="relative flex items-center p-4 space-x-4 shadow-md">
+            <Card
+              key={i}
+              className="relative flex items-center p-4 space-x-4 shadow-md"
+            >
               <CardHeader className="p-0 w-16">
                 <CardTitle className="text-sm font-medium">
                   Slot {i + 1}
@@ -217,8 +230,26 @@ const CategoryMainForm = memo(() => {
               <CardContent className="p-0 flex-1 flex flex-wrap items-center gap-3">
                 <Select
                   value={String(t.day)}
-                  onValueChange={(val) => updateTiming(i, { day: Number(val) })}
-                  className="w-28"
+                  onValueChange={(val) => {
+                    const day = Number(val);
+
+                    // Prevent selecting All (-1) if other slots exist
+                    if (
+                      day === -1 &&
+                      (timings.length > 1 ||
+                        timings.some((s, idx) => idx !== i && s.day !== -1))
+                    ) {
+                      toast.error(
+                        "You can select ‘All day’ only if it is the only slot.",
+                      );
+                      return;
+                    }
+
+                    updateTiming(i, { day });
+                    if (day === -1) {
+                      updateTiming(i, { start: 0, end: 1440 });
+                    }
+                  }}
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Day" />
@@ -243,6 +274,7 @@ const CategoryMainForm = memo(() => {
                     updateTiming(i, { start: h * 60 + m });
                   }}
                   className="w-24"
+                  disabled={t.day === -1}
                 />
 
                 <Input
@@ -256,6 +288,7 @@ const CategoryMainForm = memo(() => {
                     updateTiming(i, { end: h * 60 + m });
                   }}
                   className="w-24"
+                  disabled={t.day === -1}
                 />
 
                 <Button
@@ -273,7 +306,9 @@ const CategoryMainForm = memo(() => {
         <Button
           variant="outline"
           className="mt-2"
-          onClick={() => addTiming({ day: -1, start: 0, end: 1440 })}
+          onClick={() => addTiming({ day: 0, start: 0, end: 60 })}
+          disabled={hasAllDay && timings.length >= 1}
+          title={hasAllDay ? "‘All day’ allows only one slot" : undefined}
         >
           + Add Slot
         </Button>

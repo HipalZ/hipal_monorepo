@@ -14,6 +14,7 @@ import ShimmerImage from "../imageshimmer";
 import MemoFoodType from "../foodType";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import foodImage from "@/assets/food.png";
+import Image from "next/image";
 interface HorizontalDishCardProps {
   dishData: DishType;
   primaryColor?: string;
@@ -147,15 +148,16 @@ const HorizontalCard = ({
           >
             {dishData?.images &&
             (dishData?.images.length > 0 || dishData?.images?.[0] === "") ? (
-              <ShimmerImage
-                src={dishData?.images?.[0] || foodImage}
+              <Image
+                src={dishData?.images?.[0]}
                 alt="dish"
                 quality={95}
                 width={128}
                 height={128}
                 onClick={openDishDetails}
                 className={cn(
-                  "object-cover w-full h-full rounded-lg",
+                  "rounded-lg !object-cover !object-center",
+                  compactLayout ? "w-28 h-28" : "w-32 h-32",
                   !dishData.availability && "grayscale",
                 )}
               />

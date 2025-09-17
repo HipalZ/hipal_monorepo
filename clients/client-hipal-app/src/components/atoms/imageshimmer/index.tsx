@@ -47,11 +47,7 @@ const MemoShimmerImage: FC<ShimmerImageProps> = ({
   };
 
   return (
-    <div className={cn(
-      !hide ? "relative" : "",
-      "overflow-hidden",
-      className
-    )}>
+    <div className={cn(!hide ? "relative" : "", "overflow-hidden", className)}>
       {isLoading && (
         <div className="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-shimmer" />
       )}
@@ -61,18 +57,19 @@ const MemoShimmerImage: FC<ShimmerImageProps> = ({
         width={width}
         height={height}
         quality={quality}
-        style={{
-          ...style,
-          objectFit: style?.objectFit || 'cover',
-        }}
         onClick={onClick}
         priority={priority}
         sizes={sizes}
         fill={fill}
+        style={{
+          ...style,
+          objectFit: style?.objectFit || "cover",
+          objectPosition: "center",
+        }}
         className={cn(
           isAvailable ? "" : "grayscale",
           "transition-opacity",
-          isLoading ? "opacity-0" : "opacity-100"
+          isLoading ? "opacity-0" : "opacity-100",
         )}
         onLoad={handleImageLoad}
       />

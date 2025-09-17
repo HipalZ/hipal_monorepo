@@ -171,10 +171,7 @@ export default async function Page({
       <div className="relative flex flex-col w-full">
         {/* <TopSectionVideo /> */}
         <TopBackground
-          specialBanner={
-            data?.business?.categoryTopBannerUrl ||
-            data?.business?.specialBannerUrl
-          }
+          specialBanner={data?.business?.categoryTopBannerUrl}
           businessData={businessData}
         />
         <MenuBannerPage

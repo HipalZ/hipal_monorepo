@@ -78,7 +78,12 @@ const GridDishCard = ({
       >
         {/* Image section */}
         <div
-          className="w-full cursor-pointer aspect-square "
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              openDishDetails();
+            }
+          }}
+          className="w-full cursor-pointer aspect-square overflow-hidden rounded-md"
           onClick={openDishDetails}
         >
           {dishData.images &&
