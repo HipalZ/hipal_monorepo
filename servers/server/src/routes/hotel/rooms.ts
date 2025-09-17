@@ -8,11 +8,14 @@ import {
   HotelRoomChatReply,
   HotelRoomSession,
   HotelRoomType,
+  HotelServiceTemplateMapping,
   HotelZone,
   OutLetInfo,
   Reviews,
   UrlModel,
   User,
+  WhatAppTemplate,
+  WhatsAppWallet,
 } from "@hi/db-models";
 import { WhatsAppBusinessConfig } from "@hi/db-models/src/models/whatsAppBusinessConfig";
 import {
@@ -82,6 +85,120 @@ interface FilterInput {
   staffIds?: string[];
   isRead?: boolean;
 }
+
+const hotelTemplateBodySequence = async (
+  businessName: string,
+  address: string,
+  bodyVariableSequence: string[],
+  roomLink: string,
+  roomNumber: string,
+  authCode: string,
+  name: string,
+  serviceName: string,
+  staffName: string,
+  chatLink: string,
+  googleReviewLink: string,
+  serviceRejectionReason: string,
+  phone: string,
+) => {
+  const ans = [];
+
+  for (const variable of bodyVariableSequence) {
+    let value: string | undefined;
+
+    if (variable === "name") {
+      value = name?.toString();
+    } else if (variable === "phone") {
+      value = phone?.toString();
+    } else if (variable === "businessName") {
+      value = businessName?.toString();
+    } else if (variable === "address") {
+      value = address?.toString();
+    } else if (variable === "roomLink") {
+      value = roomLink?.toString();
+    } else if (variable === "roomNumber") {
+      value = roomNumber?.toString();
+    } else if (variable === "authCode") {
+      value = authCode?.toString();
+    } else if (variable === "serviceName") {
+      value = serviceName?.toString();
+    } else if (variable === "staffName") {
+      value = staffName?.toString();
+    } else if (variable === "chatLink") {
+      value = chatLink?.toString();
+    } else if (variable === "googleReviewLink") {
+      value = googleReviewLink?.toString();
+    } else if (variable === "serviceRejectionReason") {
+      value = serviceRejectionReason?.toString();
+    }
+
+    if (value !== undefined) {
+      ans.push({
+        type: "text",
+        text: value,
+      });
+    }
+  }
+
+  return ans;
+};
+
+const returnHotelBodyComponents = async (
+  businessName: string,
+  address: string,
+  bodyVariableSequence: string[],
+  roomLink: string,
+  roomNumber: string,
+  authCode: string,
+  name: string,
+  serviceName: string,
+  staffName: string,
+  chatLink: string,
+  googleReviewLink: string,
+  serviceRejectionReason: string,
+  phone: string,
+  imageUrl?: string,
+) => {
+  // return components for the body
+  const parameters = await hotelTemplateBodySequence(
+    businessName,
+    address,
+    bodyVariableSequence,
+    roomLink,
+    roomNumber,
+    authCode,
+    name,
+    serviceName,
+    staffName,
+    chatLink,
+    googleReviewLink,
+    serviceRejectionReason,
+    phone,
+  );
+
+  const components = [];
+
+  if (imageUrl) {
+    components.push({
+      type: "HEADER",
+      parameters: [
+        {
+          type: "image",
+          image: {
+            link: imageUrl,
+          },
+        },
+      ],
+    });
+  }
+
+  components.push({
+    type: "BODY",
+    parameters: parameters,
+  });
+
+  return components;
+};
 
 // 3) Build criteria with correct typing
 export function buildCriteria(filter: FilterInput): FilterQuery<ReviewDoc> {
@@ -844,6 +961,103 @@ const roomRouter = new Hono()
         },
         { upsert: true },
       );
+
+      const serviceTemplateMapping = await HotelServiceTemplateMapping.findOne({
+        businessId: roomExists.businessId,
+        serviceName: "welcome",
+      });
+
+      if (serviceTemplateMapping) {
+        const templateId = serviceTemplateMapping.templateId;
+
+        const template = (await WhatAppTemplate.findOne({
+          businessId: roomExists.businessId,
+          templateId,
+          isDeleted: false,
+        })) as {
+          templateName: string;
+          bodyVariableSequence: string[];
+          imageUrl: string;
+          templateId: string;
+          languageCode: string;
+          category: string;
+        };
+
+        const businessWallet = await WhatsAppWallet.findOne({
+          businessId: roomExists.businessId,
+        }).select("currentBalance");
+
+        const bodyVariableSequence = template?.bodyVariableSequence as string[];
+
+        const imageUrl = template?.imageUrl;
+
+        if (!template) {
+          return c.json(
+            {
+              message: "Template not found",
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
+
+        const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
+          businessId: roomExists.businessId,
+        });
+
+        if (!whatsAppConfig) {
+          return c.json(
+            {
+              message: "whatsAppConfig not found",
+              err: true,
+              data: {},
+            },
+            404,
+          );
+        }
+
+        const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`;
+        const components = await returnHotelBodyComponents(
+          "hi",
+          "address",
+          bodyVariableSequence,
+          `${updatedRoom.downLoadLink}&id=${user?._id.toString()}`,
+          updatedRoom.name,
+          authCode,
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          phone,
+          imageUrl,
+        );
+
+        const payload = {
+          messaging_product: "whatsapp",
+          to: user?.phone?.toString(),
+          type: "template",
+          template: {
+            name: template.templateName,
+            language: { code: template.languageCode },
+            components,
+          },
+        };
+
+        const axiosConfig = {
+          headers: {
+            Authorization: `Bearer ${whatsAppConfig.token}`,
+          },
+        };
+
+        try {
+          await axios.post(url, payload, axiosConfig);
+        } catch (error) {
+          console.error("Error sending message:", error);
+        }
+      }
 
       if (whatsAppConfig) {
         const business = await Business.findById(roomExists.businessId).select(

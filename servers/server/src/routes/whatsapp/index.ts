@@ -145,6 +145,63 @@ const bodySequence = async (
   return ans;
 };
 
+const hotelTemplateBodySequence = async (
+  businessName: string,
+  address: string,
+  bodyvariblesequence: string[],
+  roomLink: string,
+  roomNumber: string,
+  authCode: string,
+  name: string,
+  serviceName: string,
+  staffName: string,
+  chatLink: string,
+  googleReviewLink: string,
+  serviceRejectionReason: string,
+  phone: string,
+) => {
+  const ans = [];
+
+  for (const variable of bodyvariblesequence) {
+    let value: string | undefined;
+
+    if (variable === "name") {
+      value = name?.toString();
+    } else if (variable === "phone") {
+      value = phone?.toString();
+    } else if (variable === "businessName") {
+      value = businessName?.toString();
+    } else if (variable === "address") {
+      value = address?.toString();
+    } else if (variable === "roomLink") {
+      value = roomLink?.toString();
+    } else if (variable === "roomNumber") {
+      value = roomNumber?.toString();
+    } else if (variable === "authCode") {
+      value = authCode?.toString();
+    } else if (variable === "serviceName") {
+      value = serviceName?.toString();
+    } else if (variable === "staffName") {
+      value = staffName?.toString();
+    } else if (variable === "chatLink") {
+      value = chatLink?.toString();
+    } else if (variable === "googleReviewLink") {
+      value = googleReviewLink?.toString();
+    } else if (variable === "serviceRejectionReason") {
+      value = serviceRejectionReason?.toString();
+    }
+
+    if (value !== undefined) {
+      ans.push({
+        type: "text",
+        text: value,
+      });
+    }
+  }
+
+  return ans;
+};
+
 const returnBodyComponents = async (
   businessName: string,
   address: string,
