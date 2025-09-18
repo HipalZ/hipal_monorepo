@@ -1,9 +1,11 @@
 import { HotelServiceTemplateMapping } from "@hi/db-models";
 import {
   hotelServiceTemplateMapping,
-  HotelServiceTemplateMappingType,
   updateHotelServiceTemplateMapping,
 } from "@hi/db-models/src/validators";
+
+import type { HotelServiceTemplateMappingType } from "@hi/db-models/src/validators";
+
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
@@ -18,23 +20,33 @@ const hotelServiceTemplateMappingRouter = new Hono()
       const requestData =
         (await c.req.json()) as HotelServiceTemplateMappingType;
 
-      // Check if service template mapping already exists
-      const serviceTemplateMappingExists =
-        await HotelServiceTemplateMapping.exists({
-          businessId: requestData.businessId,
-          serviceName: requestData.serviceName,
-        });
+      const existingMapping =
+        await HotelServiceTemplateMapping.findOneAndUpdate(
+          {
+            businessId: requestData.businessId,
+            serviceName: requestData.serviceName,
+          },
+          {
+            $set: {
+              isActive: requestData.isActive,
+              templateId: requestData.templateId,
+            },
+          },
+          { session, upsert: true },
+        );
 
-      if (serviceTemplateMappingExists) {
-        return respond(c, "Service template mapping already exists", true, 409);
+      if (!existingMapping) {
+        return respond(
+          c,
+          "Service template created successfully",
+          false,
+          400,
+          {},
+        );
       }
-      const newServiceTemplate = new HotelServiceTemplateMapping({
-        ...requestData,
-      });
-      await newServiceTemplate.save({ session });
 
       return respond(c, "Service template created successfully", false, 201, {
-        _id: newServiceTemplate._id,
+        _id: existingMapping._id,
       });
     });
   })
