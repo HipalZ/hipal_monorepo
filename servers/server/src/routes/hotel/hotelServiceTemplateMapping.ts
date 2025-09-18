@@ -1,10 +1,8 @@
 import { HotelServiceTemplateMapping } from "@hi/db-models";
 import {
-  hotelServiceTemplateMapping,
+  hotelServiceTemplateMappingArray,
   updateHotelServiceTemplateMapping,
 } from "@hi/db-models/src/validators";
-
-import type { HotelServiceTemplateMappingType } from "@hi/db-models/src/validators";
 
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
@@ -14,42 +12,43 @@ import { respond } from "../../utils/response";
 
 const hotelServiceTemplateMappingRouter = new Hono()
 
-  .post("/", zValidator("json", hotelServiceTemplateMapping), async (c) => {
-    //@ts-ignore
-    return runInTransaction(async (session) => {
-      const requestData =
-        (await c.req.json()) as HotelServiceTemplateMappingType;
+  .post(
+    "/",
+    zValidator("json", hotelServiceTemplateMappingArray),
+    async (c) => {
+      //@ts-ignore
+      return runInTransaction(async (session) => {
+        const requestData = await c.req.json();
 
-      const existingMapping =
-        await HotelServiceTemplateMapping.findOneAndUpdate(
-          {
-            businessId: requestData.businessId,
-            serviceName: requestData.serviceName,
-          },
-          {
-            $set: {
-              isActive: requestData.isActive,
-              templateId: requestData.templateId,
-            },
-          },
-          { session, upsert: true },
-        );
+        const { data } = requestData;
 
-      if (!existingMapping) {
+        for (const item of data) {
+          const existingMapping =
+            await HotelServiceTemplateMapping.findOneAndUpdate(
+              {
+                businessId: item.businessId,
+                serviceName: item.serviceName,
+              },
+              {
+                $set: {
+                  isActive: item.isActive,
+                  templateId: item.templateId,
+                },
+              },
+              { session, upsert: true },
+            );
+        }
+
         return respond(
           c,
           "Service template created successfully",
           false,
-          400,
+          200,
           {},
         );
-      }
-
-      return respond(c, "Service template created successfully", false, 201, {
-        _id: existingMapping._id,
       });
-    });
-  })
+    },
+  )
   .get(
     "/:businessId/service_names",
 

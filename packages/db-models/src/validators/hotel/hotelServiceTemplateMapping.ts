@@ -7,6 +7,10 @@ export const hotelServiceTemplateMapping = z.object({
   businessId: z.string().min(24).max(24),
 });
 
+export const hotelServiceTemplateMappingArray = z.object({
+  data: z.array(hotelServiceTemplateMapping),
+});
+
 export const updateHotelServiceTemplateMapping = z.object({
   isActive: z.boolean().optional(),
   templateId: z.number().optional(),
