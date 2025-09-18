@@ -1,4 +1,4 @@
-import { lazy, memo, useCallback } from "react";
+import { lazy, memo, useCallback, useState } from "react";
 import useWhatsapp, {
   Step,
   TemplateSteps,
@@ -18,6 +18,7 @@ import {
 import { MessageCircle, Workflow } from "lucide-react";
 import { TbSettingsAutomation } from "react-icons/tb";
 
+const LinkTemplatePopup = lazy(() => import("./linkTemplatePopup"));
 const WhatsappFlowSection = lazy(() => import("./whatsappFlows"));
 const WhatsAppAutomationFlow = lazy(() => import("./whatsappAutomation"));
 const FlowBuilderPage = lazy(() => import("./whatsappFlowBuilder"));
@@ -30,26 +31,19 @@ const TemplatesCarousel = lazy(() => import("./templatesCarousel"));
 const CampaignAnalytics = lazy(() => import("./campaignAnalytics"));
 
 const MemoWhatzappDashboard = () => {
-  const {
-    setStep,
-    setTemplateSteps,
-    setTemplateType,
-    resetTemplateData,
-    setShowSuccessPopup,
-  } = useWhatsapp((s) => ({
-    setStep: s.setStep,
-    setTemplateSteps: s.setTemplateSteps,
-    setTemplateType: s.setTemplateType,
-    resetTemplateData: s.resetTemplateData,
-    setShowSuccessPopup: s.setShowSuccessPopup,
-  }));
+  const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
   const activeTab = useWhatsappTempStore((s) => s.activeTab);
+  const setStep = useWhatsapp((s) => s.setStep);
+  const setTemplateSteps = useWhatsapp((s) => s.setTemplateSteps);
+  const setTemplateType = useWhatsapp((s) => s.setTemplateType);
+  const resetTemplateData = useWhatsapp((s) => s.resetTemplateData);
+  const setShowSuccessPopup = useWhatsapp((s) => s.setShowSuccessPopup);
   const setActiveTab = useWhatsappTempStore((s) => s.setActiveTab);
   const openAnalytics = useWhatsappTempStore((s) => s.openAnalytics);
   const createEditFlow = useWhatsappTempStore((s) => s.createEditFlow);
   const flowBuilderOpen = useWhatsappTempStore((s) => s.flowBuilderOpen);
   const setFlowBuilderOpen = useWhatsappTempStore((s) => s.setFlowBuilderOpen);
-
+  const [openLinkTemplatePopup, setOpenLinkTemplatePopup] = useState(false);
   const businessId = useBusinessData((s) => s.businessData?._id);
 
   const { getTemplates } = useFetchTemplates();
@@ -72,18 +66,22 @@ const MemoWhatzappDashboard = () => {
     ],
   );
 
+  const handleLinkTemplate = useCallback(() => {
+    setOpenLinkTemplatePopup(true);
+  }, []);
+
   const getTabIcon = useCallback((tab: Tabs) => {
     switch (tab) {
       case Tabs.CAMPAIGNS:
         return <MdCampaign className="w-5 h-5 mr-2" />;
       case Tabs.TEMPLATES:
         return <HiOutlineTemplate className="w-5 h-5 mr-2" />;
-      case Tabs.FLOWS:
-        return <Workflow className="w-5 h-5 mr-2" />;
-      case Tabs.AUTOMATION:
-        return <TbSettingsAutomation className="w-5 h-5 mr-2" />;
-      case Tabs.CHATS:
-        return <MessageCircle className="w-5 h-5 mr-2" />;
+      // case Tabs.FLOWS:
+      //   return <Workflow className="w-5 h-5 mr-2" />;
+      // case Tabs.AUTOMATION:
+      //   return <TbSettingsAutomation className="w-5 h-5 mr-2" />;
+      // case Tabs.CHATS:
+      //   return <MessageCircle className="w-5 h-5 mr-2" />;
       default:
         return null;
     }
@@ -124,6 +122,17 @@ const MemoWhatzappDashboard = () => {
           <section className="flex justify-between">
             <h2 className="text-2xl font-semibold text-gray-900">Templates</h2>
             <ul className="hidden gap-2 md:flex">
+              {outLetType === "HOTEL" && (
+                <li>
+                  <button
+                    type="button"
+                    className="px-4 py-2 text-white bg-green-600 rounded-lg shadow-lg hover:bg-green-500 on_active_bounce"
+                    onClick={handleLinkTemplate}
+                  >
+                    + Link Your Template
+                  </button>
+                </li>
+              )}
               <li>
                 <button
                   type="button"
@@ -170,10 +179,10 @@ const MemoWhatzappDashboard = () => {
           </article>
         </section>
       )}
-      {activeTab === Tabs.AUTOMATION && !createEditFlow && (
+      {/* {activeTab === Tabs.AUTOMATION && !createEditFlow && (
         <WhatsappFlowSection />
-      )}
-      {activeTab === Tabs.FLOWS && (
+      )} */}
+      {/* {activeTab === Tabs.FLOWS && (
         <>
           {!flowBuilderOpen ? (
             <div className="p-4 mb-6">
@@ -190,15 +199,21 @@ const MemoWhatzappDashboard = () => {
             <FlowBuilderPage />
           )}
         </>
-      )}
+      )} */}
 
-      {activeTab === Tabs.AUTOMATION && createEditFlow && (
+      {/* {activeTab === Tabs.AUTOMATION && createEditFlow && (
         <WhatsAppAutomationFlow />
-      )}
-      {activeTab === Tabs.CHATS && <WhatsappChats />}
+      )} */}
+      {/* {activeTab === Tabs.CHATS && <WhatsappChats />} */}
       {activeTab === Tabs.CAMPAIGNS && !openAnalytics && <CampaignAnalytics />}
       {activeTab === Tabs.CAMPAIGNS && openAnalytics && (
         <CampaignAdvancedAnalytics />
+      )}
+      {openLinkTemplatePopup && (
+        <LinkTemplatePopup
+          openLinkTemplatePopup={openLinkTemplatePopup}
+          setOpenLinkTemplatePopup={setOpenLinkTemplatePopup}
+        />
       )}
     </main>
   );

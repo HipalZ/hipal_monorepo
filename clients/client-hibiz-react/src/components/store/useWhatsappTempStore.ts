@@ -9,9 +9,9 @@ import { ISelectedFlowType } from "../helpers/whatzAppHelpers";
 export enum Tabs {
   TEMPLATES = "templates",
   CAMPAIGNS = "campaigns",
-  FLOWS = "flows",
-  AUTOMATION = "automation",
-  CHATS = "chats",
+  // FLOWS = "flows",
+  // AUTOMATION = "automation",
+  // CHATS = "chats",
 }
 
 export interface Message {

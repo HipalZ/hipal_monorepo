@@ -47,8 +47,10 @@ const MemoStaffRepoComp = ({ hide = false }: IStaffRepoCompProps) => {
 
   return (
     <main className="pb-20 ">
-      <header className={cn("linear_gradient_background", hide && "lg:!rounded-2xl")}>
-        <MemoizedHeader title="Staff performance Dashboard" hideBack={hide} />
+      <header
+        className={cn("linear_gradient_background", hide && "lg:!rounded-2xl")}
+      >
+        <MemoizedHeader title="Staff Performance Dashboard" hideBack={hide} />
       </header>
       <Suspense fallback={<LoadingSpinner />}>
         <DateRangePicker />

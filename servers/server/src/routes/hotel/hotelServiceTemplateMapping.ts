@@ -19,9 +19,7 @@ const hotelServiceTemplateMappingRouter = new Hono()
       //@ts-ignore
       return runInTransaction(async (session) => {
         const requestData = await c.req.json();
-
         const { data } = requestData;
-
         for (const item of data) {
           const existingMapping =
             await HotelServiceTemplateMapping.findOneAndUpdate(

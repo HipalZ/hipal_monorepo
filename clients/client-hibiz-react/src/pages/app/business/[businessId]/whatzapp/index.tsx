@@ -9,7 +9,6 @@ import useWhatsapp, {
 import { lazy, memo, useCallback } from "react";
 import { useCheckRegistration } from "@/hooks/useTemplates";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
 import WhatsAppRegistration from "@/components/templates/whatsappTemplates/mainForm";
 import { FaArrowLeft } from "react-icons/fa";
@@ -38,7 +37,7 @@ const WhyNotEditPopup = lazy(
 );
 
 const MemoWhatzapp = () => {
-  const { checkRegistration } = useCheckRegistration();
+  const { isLoading } = useCheckRegistration();
   const step = useWhatsapp((s) => s.step);
   const setStep = useWhatsapp((s) => s.setStep);
   const notEditPopup = useWhatsapp((s) => s.notEditPopup);
@@ -49,14 +48,12 @@ const MemoWhatzapp = () => {
   const businessData = useBusinessData((s) => s.businessData);
   const {
     whatzappStatus,
-    checkReg,
     setOpenAnalytics,
     openAnalytics,
     setCreateEditFlow,
     createEditFlow,
   } = useWhatsappTempStore((s) => ({
     whatzappStatus: s.whatzappStatus,
-    checkReg: s.checkReg,
     setOpenAnalytics: s.setOpenAnalytics,
     openAnalytics: s.openAnalytics,
     setCreateEditFlow: s.setCreateEditFlow,
@@ -66,8 +63,6 @@ const MemoWhatzapp = () => {
   const navigate = useNavigate();
 
   const handleBack = useCallback(() => {
-    console.log("templateSteps", templateSteps);
-    console.log("step", step);
     if (templateSteps !== TemplateSteps.NONE) {
       switch (templateSteps) {
         case TemplateSteps.MODIFY:
@@ -118,11 +113,11 @@ const MemoWhatzapp = () => {
             setCreateEditFlow(false);
             console.log("createEditFlow", createEditFlow);
           } else {
-            navigate(-1);
+            navigate(`/app/business/${businessData?._id}/`);
           }
           break;
         default:
-          navigate(-1);
+          navigate(`/app/business/${businessData?._id}/`);
           break;
       }
     }
@@ -139,12 +134,6 @@ const MemoWhatzapp = () => {
     setCreateEditFlow,
     navigate,
   ]);
-
-  const { isLoading } = useQuery({
-    queryKey: ["fetchWaba", businessData?._id],
-    queryFn: checkRegistration,
-    enabled: !!businessData?._id && !checkReg,
-  });
 
   return (
     <>
