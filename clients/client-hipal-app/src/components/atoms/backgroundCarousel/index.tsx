@@ -3,6 +3,7 @@ import { Splide, SplideSlide } from "@splidejs/react-splide";
 import { memo, useCallback, useState } from "react";
 import ShimmerImage from "../imageshimmer";
 import "@splidejs/react-splide/css";
+import Image from "next/image";
 
 interface WallpaperCarouselProps {
   wallpapers: string[];
@@ -23,9 +24,9 @@ const WallpaperCarousel = ({
   const renderImage = useCallback(
     (wallpaper: string) => (
       <figure className="w-full -mt-0 overflow-hidden scale-90 aspect-square rounded-2xl">
-        <ShimmerImage
+        <Image
           src={wallpaper}
-          className={`w-full h-full object-contain m-0 ${
+          className={`w-full h-full object-cover object-center m-0 ${
             isAvailable ? "" : "grayscale"
           }`}
           alt="dish"

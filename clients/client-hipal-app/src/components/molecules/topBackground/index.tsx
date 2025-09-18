@@ -10,6 +10,7 @@ function TopBackground({
   specialBanner,
   businessData,
 }: { specialBanner: string | undefined; businessData: IBusinessData }) {
+ 
   const setBusinessData = _useAllBusiness((s) => s.setData);
   const { setBusinessDetails } = useBusinessDetails();
   const isVideo = useCallback((url: string) => {
@@ -24,10 +25,11 @@ function TopBackground({
     if (businessData?.business) {
       setBusinessDetails(businessData?.business);
     }
-  }, [businessData,
-    setBusinessData,
-    setBusinessDetails
-  ]);
+  }, [businessData, setBusinessData, setBusinessDetails]);
+
+    if (!specialBanner || specialBanner.trim() === "") {
+    return null;
+  }
 
   return (
     <>

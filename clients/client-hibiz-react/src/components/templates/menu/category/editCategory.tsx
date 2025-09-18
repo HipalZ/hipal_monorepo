@@ -21,6 +21,7 @@ import { memo, useCallback, type ChangeEvent } from "react";
 import { BiImageAdd } from "react-icons/bi";
 import LinkingCategoryComp from "./linkingCategoryComp";
 import { useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const MAX_WIDTH = 500;
 const MAX_HEIGHT = 500;
@@ -28,66 +29,44 @@ const MIME_TYPE = "image/jpeg";
 const QUALITY = 0.9;
 
 const MemoEditCategory = () => {
-  const {
-    catId,
-    imagePreview,
-    setImagePreview,
-    selectedFile,
-    categoryStep,
-    setCategoryName,
-    setSelectedFile,
-    categoryName,
-    selectIds,
-    visibility,
-    setVisibility,
-    idCheck,
-    recommendationIds,
-    removeRecommendationIds,
-    isLoading,
-    setIsLoading,
-    isMenuManager,
-    isCatDelete,
-    setIsCatDelete,
-    selectSingleParentCat,
-    timings,
-    updateTiming,
-    addTiming,
-    removeTiming,
-  } = useMenuPageStore((s) => ({
-    selectIds: s.selectedIds,
-    categoryStep: s.categoryStep,
-    imagePreview: s.imagePreview,
-    categoryName: s.categoryName,
-    catId: s.catId,
-    visibility: s.visibility,
-    setVisibility: s.setVisibility,
-    setImagePreview: s.setImagePreview,
-    selectedFile: s.selectedFile,
-    setSelectedFile: s.setSelectedFile,
-    setCategoryName: s.setCategoryName,
-    idCheck: s.idCheck,
-    recommendationIds: s.recommendationIds,
-    removeRecommendationIds: s.removeRecommendationIds,
-    isLoading: s.isLoading,
-    setIsLoading: s.setIsLoading,
-    isMenuManager: s.isMenuManager,
-    isCatDelete: s.isCatDelete,
-    setIsCatDelete: s.setIsCatDelete,
-    selectSingleParentCat: s.selectSingleParentCat,
-    timings: s.timings,
-    updateTiming: s.updateTiming,
-    addTiming: s.addTiming,
-    removeTiming: s.removeTiming,
-  }));
+  const removeTiming = useMenuPageStore((s) => s.removeTiming);
+  const addTiming = useMenuPageStore((s) => s.addTiming);
+  const updateTiming = useMenuPageStore((s) => s.updateTiming);
+  const timings = useMenuPageStore((s) => s.timings);
+  const selectSingleParentCat = useMenuPageStore(
+    (s) => s.selectSingleParentCat,
+  );
+  const setIsCatDelete = useMenuPageStore((s) => s.setIsCatDelete);
+  const isCatDelete = useMenuPageStore((s) => s.isCatDelete);
+  const isMenuManager = useMenuPageStore((s) => s.isMenuManager);
+  const setIsLoading = useMenuPageStore((s) => s.setIsLoading);
+  const isLoading = useMenuPageStore((s) => s.isLoading);
+  const removeRecommendationIds = useMenuPageStore(
+    (s) => s.removeRecommendationIds,
+  );
+  const recommendationIds = useMenuPageStore((s) => s.recommendationIds);
+  const idCheck = useMenuPageStore((s) => s.idCheck);
+  const setCategoryName = useMenuPageStore((s) => s.setCategoryName);
+  const categoryName = useMenuPageStore((s) => s.categoryName);
+  const setSelectedFile = useMenuPageStore((s) => s.setSelectedFile);
+  const selectedFile = useMenuPageStore((s) => s.selectedFile);
+  const setImagePreview = useMenuPageStore((s) => s.setImagePreview);
+  const imagePreview = useMenuPageStore((s) => s.imagePreview);
+  const catId = useMenuPageStore((s) => s.catId);
+  const visibility = useMenuPageStore((s) => s.visibility);
+  const setVisibility = useMenuPageStore((s) => s.setVisibility);
+  const categoryStep = useMenuPageStore((s) => s.categoryStep);
 
   const { mutate, isPending } = useUpdateCategory();
-
   const { isPending: deletePending, mutate: deleteCat } = useDeleteCategory();
 
   const { businessId, menuId } = useParams<{
     businessId: string;
     menuId: string;
   }>();
+
+  // check if All-day slot exists
+  const hasAllDay = timings.some((t) => t.day === -1);
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -187,6 +166,12 @@ const MemoEditCategory = () => {
       removeRecommendationIds,
       recommendationIds,
     );
+
+    // sanitize timings -> keep only All-day if exists
+    const sanitizedTimings = hasAllDay
+      ? [timings.find((t) => t.day === -1)!]
+      : timings;
+
     const commonPayload = {
       name: categoryName,
       businessId: businessId.toString() || "",
@@ -194,7 +179,7 @@ const MemoEditCategory = () => {
       coverImage: imageUrl,
       visibility: visibility,
       _id: catId,
-      timings: timings,
+      timings: sanitizedTimings,
     };
 
     const payload =
@@ -215,23 +200,7 @@ const MemoEditCategory = () => {
     mutate(payload);
   };
 
-  if (isPending) {
-    return (
-      <div>
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div>
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  if (deletePending) {
+  if (isPending || isLoading || deletePending) {
     return (
       <div>
         <LoadingSpinner />
@@ -241,10 +210,10 @@ const MemoEditCategory = () => {
 
   return (
     <>
+      {/* Image Upload */}
       <article className="mx-6 lg:flex">
         <section className="flex-1">
           <h1 className="font-semibold opacity-50"> Category Image</h1>
-
           <Background>
             <div className="flex justify-between gap-4 mx-4">
               <div className="rounded-full w-[7rem] h-[7rem]">
@@ -315,6 +284,8 @@ const MemoEditCategory = () => {
           </section>
         )}
       </article>
+
+      {/* Visibility */}
       <section className="gap-4 mx-6 lg:flex">
         <article className="flex justify-between px-4 py-3 my-4 bg-white rounded-full lg:flex-1 lg:mt-6">
           <h1 className="font-semibold opacity-50">Category visibility</h1>
@@ -327,24 +298,42 @@ const MemoEditCategory = () => {
           </Switch>
         </article>
       </section>
+
+      {/* Timings */}
       <section className="mx-6 my-6 space-y-4">
         <h2 className="text-xl font-semibold text-gray-700">Schedule</h2>
-
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {timings.map((t, i) => (
-            <Card key={i} className="flex items-center p-4 space-x-4 shadow-none relative">
-              {/* Slot Label */}
+            <Card
+              key={i}
+              className="flex items-center p-4 space-x-4 shadow-none relative"
+            >
               <CardHeader className="p-0 w-[3rem]">
                 <CardTitle className="text-sm font-medium">
                   Slot {i + 1}
                 </CardTitle>
               </CardHeader>
-
               <CardContent className="p-0 flex-1 flex flex-wrap items-center gap-3">
-                {/* Day Selector */}
                 <Select
                   value={String(t.day)}
-                  onValueChange={(val) => updateTiming(i, { day: Number(val) })}
+                  onValueChange={(val) => {
+                    const day = Number(val);
+
+                    // Block multiple All-day slots
+                    if (
+                      day === -1 &&
+                      (timings.length > 1 ||
+                        timings.some((s, idx) => idx !== i && s.day !== -1))
+                    ) {
+                      toast.error("‘All day’ can only be the single slot.");
+                      return;
+                    }
+
+                    updateTiming(i, { day });
+                    if (day === -1) {
+                      updateTiming(i, { start: 0, end: 1440 });
+                    }
+                  }}
                   className="w-28"
                 >
                   <SelectTrigger className="w-full">
@@ -359,7 +348,6 @@ const MemoEditCategory = () => {
                   </SelectContent>
                 </Select>
 
-                {/* Start Time */}
                 <Input
                   type="time"
                   value={`${String(Math.floor(t.start / 60)).padStart(
@@ -371,9 +359,9 @@ const MemoEditCategory = () => {
                     updateTiming(i, { start: h * 60 + m });
                   }}
                   className="w-24"
+                  disabled={t.day === -1}
                 />
 
-                {/* End Time */}
                 <Input
                   type="time"
                   value={`${String(Math.floor(t.end / 60)).padStart(
@@ -385,14 +373,14 @@ const MemoEditCategory = () => {
                     updateTiming(i, { end: h * 60 + m });
                   }}
                   className="w-20"
+                  disabled={t.day === -1}
                 />
 
-                {/* Remove Button */}
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => removeTiming(i)}
-                  className="absolute bottom-0 right-0"  
+                  className="absolute bottom-0 right-0"
                 >
                   <X className="h-5 w-5 text-red-500" />
                 </Button>
@@ -400,18 +388,23 @@ const MemoEditCategory = () => {
             </Card>
           ))}
         </div>
-
         <Button
           variant="outline"
           className="mt-2"
-          onClick={() => addTiming({ day: -1, start: 0, end: 1440 })}
+          onClick={() => addTiming({ day: 0, start: 0, end: 60 })}
+          disabled={hasAllDay && timings.length >= 1}
+          title={hasAllDay ? "‘All day’ allows only one slot" : undefined}
         >
           + Add Slot
         </Button>
       </section>
+
+      {/* Linking Categories */}
       <section className="mx-6">
         <LinkingCategoryComp />
       </section>
+
+      {/* Footer */}
       {isCatDelete ? (
         <BottomButton
           buttons={[

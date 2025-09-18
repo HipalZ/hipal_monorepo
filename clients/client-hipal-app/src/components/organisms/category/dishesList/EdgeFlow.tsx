@@ -18,8 +18,6 @@ interface EdgeFlowProps {
   secondaryColor?: string;
 }
 
-// function DishRenderer({
-
 const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
   const typeMap: Record<string, string[]> = {
     all: [],
@@ -44,22 +42,22 @@ const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
   );
 };
 
-const EdgeFlow: FC<EdgeFlowProps> = ({
+const EdgeFlow = ({
   childCategory,
   isHorizontalCard = true,
   primaryColor = "#ec4899",
   secondaryColor = "#fce7f3",
-}) => {
+}: EdgeFlowProps) => {
   const { setDishes } = useDishesStore();
-  const {
-    isActiveDishType,
-    isActiveCategory,
-    setActiveCategory,
-    observerActive,
-    isActiveChildCategory,
-    setActiveChildCategory,
-    setObserverActive,
-  } = useActiveClass();
+  const isActiveDishType = useActiveClass((s) => s.isActiveDishType);
+  const isActiveCategory = useActiveClass((s) => s.isActiveCategory);
+  const setActiveCategory = useActiveClass((s) => s.setActiveCategory);
+  const observerActive = useActiveClass((s) => s.observerActive);
+  const isActiveChildCategory = useActiveClass((s) => s.isActiveChildCategory);
+  const setActiveChildCategory = useActiveClass(
+    (s) => s.setActiveChildCategory,
+  );
+  const setObserverActive = useActiveClass((s) => s.setObserverActive);
 
   const visibleCategoriesRef = useRef<{ [key: string]: number }>({});
   const updateActiveCategory = () => {
@@ -139,7 +137,7 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
     <div className="flex h-[calc(100vh-5rem)]">
       {/* Left sidebar for categories - Edge layout style */}
       <div
-        className="w-[20%] h-full overflow-y-auto sticky pb-[5rem] top-[3rem] max-h-[calc(100vh-8rem)] border-r border-gray-200 hide-scrollbar"
+        className="w-[20%] h-full overflow-y-auto sticky pb-[5rem] top-[2.5rem] max-h-[calc(100vh-8rem)] border-r border-gray-200 hide-scrollbar"
         id="category-sidebar"
       >
         {/* Add a container div that will ensure content fills the entire scrollable area */}
@@ -149,6 +147,7 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
 
             return (
               <button
+                type="button"
                 id={`sidebar-category-${category._id}`}
                 key={category._id}
                 className={cn(
@@ -183,7 +182,7 @@ const EdgeFlow: FC<EdgeFlowProps> = ({
                     }}
                   >
                     <Image
-                      src={category.coverImage || "/placeholder.svg"}
+                      src={category.coverImage}
                       alt={category.name}
                       width={32}
                       height={32}
