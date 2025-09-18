@@ -1592,7 +1592,7 @@ const tableRouter = new Hono()
               transferType: "TABLE",
             },
           },
-          { session },
+          { session, upsert: true },
         );
 
         await Table.findByIdAndUpdate(
