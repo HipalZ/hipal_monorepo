@@ -24,7 +24,7 @@ const defaultData = [
 const defaultHotelOptions = [
   { label: "businessName", value: "businessName" },
   { label: "roomLink", value: "https://business name.com" },
-  { label: "authCode", value: "1234" },
+  { label: "roomKey", value: "1234" },
   { label: "name", value: "Rajesh" },
   { label: "serviceName", value: "Food Delivery" },
   { label: "roomNumber", value: "402" },

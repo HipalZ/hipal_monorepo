@@ -91,7 +91,7 @@ export const hotelTemplateBodySequence = async (
   bodyVariableSequence: string[],
   roomLink: string,
   roomNumber: string,
-  authCode: string,
+  roomKey: string,
   name: string,
   serviceName: string,
   staffName: string,
@@ -117,8 +117,8 @@ export const hotelTemplateBodySequence = async (
       value = roomLink?.toString();
     } else if (variable === "roomNumber") {
       value = roomNumber?.toString();
-    } else if (variable === "authCode") {
-      value = authCode?.toString();
+    } else if (variable === "roomKey") {
+      value = roomKey?.toString();
     } else if (variable === "serviceName") {
       value = serviceName?.toString();
     } else if (variable === "staffName") {
@@ -148,7 +148,7 @@ export const returnHotelBodyComponents = async (
   bodyVariableSequence: string[],
   roomLink: string,
   roomNumber: string,
-  authCode: string,
+  roomKey: string,
   name: string,
   serviceName: string,
   staffName: string,
@@ -165,7 +165,7 @@ export const returnHotelBodyComponents = async (
     bodyVariableSequence,
     roomLink,
     roomNumber,
-    authCode,
+    roomKey,
     name,
     serviceName,
     staffName,
@@ -966,6 +966,10 @@ const roomRouter = new Hono()
           roomExists.businessId,
         ).select("name");
 
+        const outLetInfo = await OutLetInfo.findOne({
+          businessId: roomExists.businessId,
+        });
+
         const shortUrlObj = await UrlModel.findOne({
           urlCode: updatedRoom.slug,
         });
@@ -1014,18 +1018,18 @@ const roomRouter = new Hono()
           const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`;
           const components = await returnHotelBodyComponents(
             businessInfo?.name as string,
-            "address",
+            outLetInfo?.address as string,
             template.bodyVariableSequence,
             `${updateLongUrl}&sessionId=${roomSession[0]._id.toString()}`,
-            "16",
+            updatedRoom.name,
             authCode,
-            "datta",
-            "get towel",
-            "dibesh",
+            user?.name as string,
+            "Room Service",
+            user?.name as string,
             "https://chatlink.com",
-            "googleReviewLink",
+            outLetInfo?.placeUrl as string,
             "serviceRejectionReason",
-            "phone",
+            user?.phone as string,
             imageUrl,
           );
 
@@ -1154,6 +1158,8 @@ const roomRouter = new Hono()
         businessId: roomExists.businessId,
       }).populate("businessId");
 
+      console.log("whatsAppConfig", whatsAppConfig);
+
       if (whatsAppConfig) {
         const outletInfo = await OutLetInfo.findOne({
           businessId: roomExists.businessId,
@@ -1162,6 +1168,8 @@ const roomRouter = new Hono()
           const userData = await User.findById(userId)
             .select("phone name")
             .lean();
+
+          console.log("userData", userData);
 
           const serviceTemplateMapping =
             await HotelServiceTemplateMapping.findOne({
@@ -1202,18 +1210,19 @@ const roomRouter = new Hono()
             const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`;
             const components = await returnHotelBodyComponents(
               outletInfo?.name as string,
-              "address",
+              outletInfo?.address as string,
               template.bodyVariableSequence,
               "roomlink",
-              "16",
+              roomExists.name,
               "authCode",
               userData?.name as string,
               "get towel",
-              "dibesh",
+              userData?.name as string,
+
               "https://chatlink.com",
               `${outletInfo?.placeUrl}`,
               "serviceRejectionReason",
-              "phone",
+              userData?.phone as string,
             );
 
             const payload = {
@@ -1235,8 +1244,10 @@ const roomRouter = new Hono()
 
             try {
               const respo = await axios.post(url, payload, axiosConfig);
+
+              console.log("WhatsApp thank you message response:", respo.data);
             } catch (error) {
-              console.error("Error sending message:", error);
+              console.error("Error sending message:", error.message);
             }
           }
 
@@ -1432,21 +1443,25 @@ const roomRouter = new Hono()
               );
             }
 
+            const outLetInfo = await OutLetInfo.findOne({
+              businessId: roomExists.businessId,
+            });
+
             const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`;
             const components = await returnHotelBodyComponents(
               business?.name as string,
-              "address",
+              outLetInfo?.address as string,
               template.bodyVariableSequence,
               "roomlink",
               roomExists?.name as string,
               "authCode",
               userData?.name as string,
               "get towel",
-              "dibesh",
+              userData?.name as string,
               "https://chatlink.com",
-              "googleReviewLink",
+              outLetInfo?.placeUrl as string,
               "serviceRejectionReason",
-              "phone",
+              userData?.phone as string,
             );
 
             const payload = {

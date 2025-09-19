@@ -12,6 +12,7 @@ import {
   HotelService,
   HotelServiceTemplateMapping,
   HotelStaffLevel,
+  OutLetInfo,
   User,
   WhatAppTemplate,
   WhatsAppBusinessConfig,
@@ -245,21 +246,25 @@ const scheduleAlertUpdate = (
                 //   businessId: roomExists.businessId,
                 // }).select("currentBalance");
 
+                const outLetInfo = await OutLetInfo.findOne({
+                  businessId: alertData?.businessId,
+                });
+
                 const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`;
                 const components = await returnHotelBodyComponents(
-                  "businessName",
-                  "address",
+                  outLetInfo?.name || "businessName",
+                  outLetInfo?.address || "address",
                   template.bodyVariableSequence,
-                  "roomName",
-                  "16",
+                  "roomLink",
+                  roomName,
                   "authCode",
-                  "datta",
+                  (staffData?.name as string) || "datta",
                   alertData?.serviceIds[0]?.name || "other",
                   staffData?.name as string,
                   "https://chatlink.com",
-                  "googleReviewLink",
+                  outLetInfo?.placeUrl || "googleReviewLink",
                   "serviceRejectionReason",
-                  "phone",
+                  staffData?.phone || "9588413799",
                 );
 
                 const payload = {
@@ -443,21 +448,25 @@ const scheduleAlertUpdate = (
                 //   businessId: roomExists.businessId,
                 // }).select("currentBalance");
 
+                const outLetInfo = await OutLetInfo.findOne({
+                  businessId: alertData?.businessId,
+                });
+
                 const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`;
                 const components = await returnHotelBodyComponents(
-                  "businessName",
-                  "address",
+                  outLetInfo?.name as string,
+                  outLetInfo?.address as string,
                   template.bodyVariableSequence,
                   "roomName",
-                  "16",
+                  roomName,
                   "authCode",
-                  "datta",
+                  (staffData?.name as string) || "datta",
                   alertData?.serviceIds[0]?.name || "other",
                   staffData?.name as string,
                   "https://chatlink.com",
-                  "googleReviewLink",
+                  outLetInfo?.placeUrl || "googleReviewLink",
                   "serviceRejectionReason",
-                  "phone",
+                  staffData?.phone || "9588413799",
                 );
 
                 const payload = {
@@ -607,21 +616,25 @@ const scheduleLevelWiseAlert = (
             //   businessId: roomExists.businessId,
             // }).select("currentBalance");
 
+            const outLetInfo = await OutLetInfo.findOne({
+              businessId: alertData?.businessId,
+            });
+
             const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`;
             const components = await returnHotelBodyComponents(
-              "businessName",
-              "address",
+              outLetInfo?.name as string,
+              outLetInfo?.address as string,
               template.bodyVariableSequence,
-              "roomName",
-              "16",
+              "roomLink",
+              roomName,
               "authCode",
-              "datta",
+              (staffData?.name as string) || "datta",
               alertData?.serviceIds[0]?.name || "other",
               staffData?.name as string,
               "https://chatlink.com",
-              "googleReviewLink",
+              outLetInfo?.placeUrl || "googleReviewLink",
               "serviceRejectionReason",
-              "phone",
+              staffData?.phone || "9588413799",
             );
 
             const payload = {
@@ -759,19 +772,23 @@ const scheduleLevelWiseAlertl2 = (
             //   businessId: roomExists.businessId,
             // }).select("currentBalance");
 
+            const outLetInfo = await OutLetInfo.findOne({
+              businessId: alertData?.businessId,
+            });
+
             const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`;
             const components = await returnHotelBodyComponents(
-              "businessName",
-              "address",
+              outLetInfo?.name as string,
+              outLetInfo?.address as string,
               template.bodyVariableSequence,
-              "roomName",
-              "16",
+              "roomLink",
+              roomName,
               "authCode",
-              "datta",
+              (staffData?.name as string) || "datta",
               alertData?.serviceIds[0]?.name || "other",
               staffData?.name as string,
               "https://chatlink.com",
-              "googleReviewLink",
+              outLetInfo?.placeUrl || "googleReviewLink",
               "serviceRejectionReason",
               "phone",
             );
@@ -1770,12 +1787,16 @@ const hotelAlertRouter = new Hono()
               );
             }
 
+            const outLetInfo = await OutLetInfo.findOne({
+              businessId: alert.businessId,
+            });
+
             const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`;
             const components = await returnHotelBodyComponents(
-              "businessName",
-              "address",
+              outLetInfo?.name as string,
+              outLetInfo?.address as string,
               template.bodyVariableSequence,
-              "",
+              "roomLink",
               roomData?.name as string,
               "authCode",
               userData?.name as string,
@@ -1783,7 +1804,7 @@ const hotelAlertRouter = new Hono()
               alert?.serviceIds[0]?.name || "other",
               captainData?.name as string,
               `https://hipal-test.hipalz.com/${businessData.customLink}/hotel/chat?room=${roomData.name}&id=${userData._id}`,
-              "☝️",
+              outLetInfo?.placeUrl as string,
               "serviceRejectionReason",
               "phone",
             );
@@ -1951,12 +1972,16 @@ const hotelAlertRouter = new Hono()
               );
             }
 
+            const outLetInfo = await OutLetInfo.findOne({
+              businessId: alert.businessId,
+            });
+
             const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`;
             const components = await returnHotelBodyComponents(
-              "businessName",
-              "address",
+              outLetInfo?.name as string,
+              outLetInfo?.address as string,
               template.bodyVariableSequence,
-              "",
+              "ROOMlINK",
               roomData?.name as string,
               "authCode",
               userData?.name as string,
@@ -1964,7 +1989,7 @@ const hotelAlertRouter = new Hono()
               alert?.serviceIds[0]?.name || "other",
               captainData?.name as string,
               `https://hipal-test.hipalz.com/${businessData.customLink}/hotel/chat?room=${roomData.name}&id=${userData._id}`,
-              "☝️",
+              outLetInfo?.placeUrl as string,
               "serviceRejectionReason",
               "phone",
             );
@@ -2057,19 +2082,23 @@ const hotelAlertRouter = new Hono()
               );
             }
 
+            const outLetInfo = await OutLetInfo.findOne({
+              businessId: alert.businessId,
+            });
+
             const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`;
             const components = await returnHotelBodyComponents(
-              "businessName",
-              "address",
+              outLetInfo?.name as string,
+              outLetInfo?.address as string,
               template.bodyVariableSequence,
               "roomLink",
-              "16",
+              roomData?.name as string,
               "authCode",
               userData.name as string,
               alert?.serviceIds[0]?.name || "other",
-              "dibesh",
+              captainData?.name as string,
               "https://chatlink.com",
-              "googleReviewLink",
+              outLetInfo?.placeUrl as string,
               "serviceRejectionReason",
               "phone",
             );
