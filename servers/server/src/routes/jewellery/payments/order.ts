@@ -1,11 +1,7 @@
 import { JewelleryOrder, JewelleryPaymentAlert } from "@hi/db-models";
-import {
-  jewelleryRazorpayOrderSchema,
-  //   RazorpayWebhookBodySchema,
-  //   RazorpayWebhookHeadersSchema,
-  razorpayOrderSchema,
-} from "@hi/db-models/src/validators";
+import { jewelleryPaymentOrderSchema } from "@hi/db-models/src/validators";
 
+import { runInTransaction } from "@hi/utils";
 // import type { RazorpayWebhookHeaders } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
@@ -35,58 +31,37 @@ const roles = [
 ];
 const orderRouter = new Hono()
   .post(
-    "/:merchantId/online",
+    "/:merchantId/pay_online",
 
-    zValidator("json", jewelleryRazorpayOrderSchema),
+    zValidator("json", jewelleryPaymentOrderSchema),
     zValidator("param", z.object({ merchantId: z.string() })),
 
     async (c) => {
       const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
-      const {
-        total,
-        billValue,
-        tips,
-        currency,
-        userId,
-        claimedCoins,
-        businessId,
-        couponId,
-        cashbackAvailable,
-      } = requestData;
+      const { orderId } = requestData;
 
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const { merchantId } = c.req.param();
-        const uniqueOrderId = nanoid(15);
+
+        const order = await JewelleryOrder.findById(orderId).session(session);
+
+        if (!order) return respond(c, "Order not found", true, 404, {});
 
         const client = await razorpayWrapper.getClient(merchantId);
         const response = await client.orders.create({
-          amount: total * 100, // Fixed multiplication logic
-          currency: currency,
-          receipt: uniqueOrderId,
+          amount: order.total * 100,
+          currency: order.currency,
+          receipt: order.receipt,
         });
 
-        const saveOrder = await JewelleryOrder.create(
-          [
-            {
-              total: total,
-              currency,
-              billValue: billValue,
-              businessId,
-              receipt: uniqueOrderId,
-              userId,
-              claimedCoins: claimedCoins,
-              order_id: response.id,
-              tips: tips,
-              couponId,
-              cashbackAvailable,
-              date: Date.now(),
-            },
-          ],
+        if (!response) throw new Error("Razorpay order creation failed");
+
+        await JewelleryOrder.updateOne(
+          { _id: order._id },
+          { razorpayOrderId: response.id },
           { session },
         );
-        if (!saveOrder || !response)
-          return respond(c, "Order not created", true, 400, {});
 
         return respond(c, "Order created successfully", false, 200, {
           orderId: response.id,
@@ -96,39 +71,20 @@ const orderRouter = new Hono()
   )
 
   .post(
-    "/offline",
+    "/",
 
-    zValidator("json", razorpayOrderSchema),
+    zValidator(
+      "json",
+      z.object({
+        billValue: z.number().positive(),
+        businessId: z.string().min(24).max(24),
+        userId: z.string().min(24).max(24),
+      }),
+    ),
 
     async (c) => {
       const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
-      const {
-        total,
-        billValue,
-        tips,
-        currency,
-        userId,
-        claimedCoins,
-        businessId,
-        couponId,
-        cashbackAvailable,
-      } = requestData;
-
-      //   const orderAlreadyExist = await PaymentAlert.findOne({
-      //     businessId,
-      //     tableName,
-      //     alertType: "OFFLINE",
-      //     isAccepted: false,
-      //   });
-
-      //   if (orderAlreadyExist)
-      //     return respond(
-      //       c,
-      //       "A request for this service is already in progress. Please wait for the staff to take action",
-      //       true,
-      //       400,
-      //       {},
-      //     );
+      const { billValue, userId, businessId } = requestData;
 
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
@@ -137,36 +93,84 @@ const orderRouter = new Hono()
         const saveOrder = await JewelleryOrder.create(
           [
             {
-              total: total,
-              currency,
+              total: billValue,
+              currency: "INR",
+              subTotal: billValue,
+              businessId,
               receipt: uniqueOrderId,
               userId,
-              claimedCoins: claimedCoins,
-              tips: tips,
-              billValue: billValue,
-              businessId,
-              order_id: uniqueOrderId,
-              couponId,
-              cashbackAvailable,
+              claimedCoins: 0,
+              tips: 0,
               date: Date.now(),
+              discount: 0,
+              couponId: null,
+              couponDiscount: 0,
+              gst: 0,
             },
           ],
           { session },
         );
         if (!saveOrder) return respond(c, "Order not created", true, 400, {});
 
+        return respond(c, "Order created successfully", false, 200, {
+          orderId: saveOrder?.[0]._id,
+        });
+      });
+    },
+  )
+
+  .get(
+    "/bill/:orderId",
+
+    zValidator(
+      "param",
+      z.object({
+        orderId: z.string().min(24).max(24),
+      }),
+    ),
+
+    async (c) => {
+      const { orderId } = c.req.param();
+
+      const orderDetails = await JewelleryOrder.findById(orderId);
+
+      if (!orderDetails) return respond(c, "Order not found", true, 404, {});
+
+      return respond(
+        c,
+        "Order details fetched successfully",
+        false,
+        200,
+        orderDetails,
+      );
+    },
+  )
+
+  .post(
+    "/pay_offline",
+
+    zValidator("json", jewelleryPaymentOrderSchema),
+
+    async (c) => {
+      const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
+      const { orderId } = requestData;
+
+      const order = await JewelleryOrder.findById(orderId);
+      if (!order) return respond(c, "Order not found", true, 404, {});
+
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
         await JewelleryPaymentAlert.create(
           [
             {
-              businessId: businessId,
-              userId: userId,
               alertType: "OFFLINE",
-              orderId: saveOrder?.[0]._id,
+              orderId: order._id,
               status: "SUCCESS",
-              coinsApplied: !!(claimedCoins > 0),
-              message: `Paid ${total}`,
+              coinsApplied: !!(order.claimedCoins > 0),
+              message: `Paid ${order.total}`,
               date: Date.now(),
               mode: "OFFLINE",
+              businessId: order.businessId,
             },
           ],
           { session },
@@ -176,7 +180,7 @@ const orderRouter = new Hono()
         // });
 
         return respond(c, "Order created successfully", false, 200, {
-          orderId: saveOrder?.[0]._id,
+          orderId: order._id,
         });
       });
     },

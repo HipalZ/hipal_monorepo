@@ -49,6 +49,22 @@ export const RazorpayWebhookBodySchema = z.object({
   }),
 });
 
+export const jewelleryRazorpayWebhookBodySchema = z.object({
+  event: z.string(),
+  payload: z.object({
+    payment: z.object({
+      entity: z.object({
+        orderId: z.string(),
+        acquirer_data: z.any(), // Define more specifically if possible
+        method: z.string(),
+        error_reason: z.any().optional(),
+        error_description: z.any().optional(),
+        id: z.string().optional(),
+      }),
+    }),
+  }),
+});
+
 export const WhatAppRazorpayWebhookBodySchema = z.object({
   event: z.string(),
   payload: z.object({

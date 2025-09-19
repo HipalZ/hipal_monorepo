@@ -3,12 +3,13 @@ import {
   JewelleryOrder,
   JewelleryPayment,
   JewelleryPaymentAlert,
+  LoyaltySettings,
 } from "@hi/db-models";
 import type { RazorpayWebhookHeaders } from "@hi/db-models/src/validators";
 
 import {
-  RazorpayWebhookBodySchema,
   RazorpayWebhookHeadersSchema,
+  jewelleryRazorpayWebhookBodySchema,
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
@@ -72,7 +73,7 @@ const webhookRouter = new Hono()
         return respond(c, "Invalid signature", true, 200, {});
       }
 
-      const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
+      const bodyResult = jewelleryRazorpayWebhookBodySchema.safeParse(body);
 
       if (!bodyResult.success) {
         return respond(c, "Invalid body", true, 200, {});
@@ -82,7 +83,11 @@ const webhookRouter = new Hono()
       const { event, payload } = bodyResult.data;
 
       const getOrder = await JewelleryOrder.findOne({
-        orderId: payload.payment.entity.order_id,
+        orderId: payload.payment.entity.orderId,
+      });
+
+      const businessLoyalty = await LoyaltySettings.findOne({
+        businessId: getOrder?.businessId,
       });
 
       if (event === "payment.failed") {
@@ -101,13 +106,11 @@ const webhookRouter = new Hono()
                 businessId: getOrder?.businessId,
                 alertType: "ONLINE",
                 orderId: getOrder?._id,
-                userId: getOrder?.userId,
                 status: "FAIL",
                 coinsApplied: claimCoins > 0,
                 isAccepted: false,
                 date: Date.now(),
                 message: `Fail ${getOrder?.total}`,
-                couponId: payload?.payment?.entity.notes?.couponId,
                 mode: payload?.payment?.entity?.method,
               },
             ],
@@ -125,7 +128,7 @@ const webhookRouter = new Hono()
           const claimCoins = Number(getOrder?.claimedCoins) || 0;
           await JewelleryPaymentAlert.updateOne(
             {
-              businessId: getOrder?.businessId,
+              orderId: getOrder?._id,
               isAccepted: false,
               alertType: "OFFLINE",
             },
@@ -135,35 +138,30 @@ const webhookRouter = new Hono()
 
           let getCashBack = 0;
 
-          if (
-            payload?.payment?.entity?.notes?.loyaltyId &&
-            getOrder?.userId?.toString()
-          ) {
+          if (businessLoyalty?.loyaltyId && getOrder?.userId?.toString()) {
             if (claimCoins > 0) {
               await deductUserCoins(
                 claimCoins,
-                payload.payment.entity.notes.loyaltyId || "",
+                businessLoyalty.loyaltyId || "",
                 getOrder?._id.toString() || "",
                 getOrder?.userId.toString() || "",
                 session,
               );
             }
-            let cashBack = await calculateCashbackCoins(
+            const cashBack = await calculateCashbackCoins(
               getOrder?.businessId.toString(),
               getOrder?.billValue || 0,
               claimCoins,
               Number(getOrder.couponDiscount),
               Number(getOrder.discount),
             );
-            if (getOrder?.cashbackAvailable === false) {
-              cashBack = 0;
-            }
+
             const cashBackCoins = await creditUserCoins(
               cashBack,
               getOrder?.userId.toString() || "",
               getOrder?._id.toString() || "",
               getOrder?.businessId.toString() || "",
-              payload.payment.entity.notes.loyaltyId || "",
+              businessLoyalty.loyaltyId || "",
               session,
             );
             getCashBack = cashBackCoins;
@@ -173,26 +171,17 @@ const webhookRouter = new Hono()
             [
               {
                 businessId: getOrder?.businessId,
-                total: getOrder?.total,
-                subTotal: getOrder?.billValue,
                 mode: payload.payment.entity.method,
                 userId: getOrder?.userId,
-                order_id: getOrder?._id,
+                orderId: getOrder?._id,
                 paymentMode: "online",
-                claimedCoins: getOrder?.claimedCoins,
-                tips: getOrder?.tips,
                 razorpayPaymentId: payload.payment.entity.id || nanoid(15),
-                razorpayOrderId: payload.payment.entity.order_id,
+                razorpayOrderId: getOrder?.razorpayOrderId,
                 razorpayAcquirerData: payload.payment.entity.acquirer_data,
                 razorpayEventId: razorpayEventId,
-                couponId: getOrder?.couponId || null,
                 earnCoins: getCashBack,
                 date: Date.now(),
-                tax: 0,
-                serviceCharge: 0,
                 settleType: "PAYMENT_GATEWAY",
-                discount: 0,
-                couponDiscount: getOrder?.couponDiscount || 0,
                 billItems: [],
               },
             ],
@@ -204,17 +193,25 @@ const webhookRouter = new Hono()
               {
                 businessId: getOrder?.businessId,
                 alertType: "ONLINE",
-                payment_id: createPayment[0]._id,
                 coinsApplied: claimCoins > 0,
                 status: "SUCCESS",
                 orderId: getOrder?._id,
                 message: `Paid ${getOrder?.total}`,
                 isAccepted: false,
-                userId: getOrder?.userId,
                 date: Date.now(),
                 mode: payload.payment.entity.method,
               },
             ],
+            { session },
+          );
+
+          await JewelleryPaymentAlert.updateOne(
+            {
+              orderId: getOrder?._id,
+              isAccepted: false,
+              alertType: "OFFLINE",
+            },
+            { isAccepted: true, isRejected: true },
             { session },
           );
         }
@@ -232,23 +229,11 @@ const webhookRouter = new Hono()
     async (c) => {
       const { orderId } = c.req.param();
 
-      const getOrder = await JewelleryOrder.findOne({}, { orderId });
-
-      if (!getOrder) {
-        return respond(c, "Order not found", true, 404, {});
-      }
-
-      const getPayment = await JewelleryPayment.findOne(
-        { order_id: getOrder._id },
-        {},
-      );
-
-      if (!getPayment) {
-        return respond(c, "Payment not found", true, 404, {});
-      }
-
+      const fetchPayment = await JewelleryPayment.findOne({
+        orderId,
+      });
       return respond(c, "Payment found", false, 200, {
-        paymentId: getPayment._id,
+        success: fetchPayment,
       });
     },
   );

@@ -171,16 +171,7 @@ export const PaymentSchema = z.object({
 
 export const jewelleryPaymentSchema = z.object({
   businessId: ObjectIdSchema,
-  total: z.coerce
-    .number({
-      message: "Total must be a number",
-    })
-    .default(0),
-  subTotal: z.coerce
-    .number({
-      message: "Bill value must be a number",
-    })
-    .positive(),
+
   userId: ObjectIdSchema,
   mode: z
     .string({
@@ -190,17 +181,6 @@ export const jewelleryPaymentSchema = z.object({
     .max(100),
   paymentMode: z.string().min(3).max(100),
 
-  claimedCoins: z.coerce
-    .number({
-      message: "Claimed coins must be a number",
-    })
-    .optional()
-    .default(0),
-  tips: z.coerce
-    .number({
-      message: "Tips must be a number",
-    })
-    .default(0),
   orderId: ObjectIdSchema,
   date: z.coerce.number({
     message: " Date must be a number",
@@ -241,7 +221,6 @@ export const jewelleryPaymentSchema = z.object({
   reviewId: ObjectIdSchema.optional(),
 
   earnCoins: z.coerce.number({}).optional().default(0),
-  couponId: ObjectIdSchema.optional(),
 
   settleType: z
     .enum([
@@ -253,8 +232,6 @@ export const jewelleryPaymentSchema = z.object({
       "COMPLIMENTARY_SETTLE",
     ])
     .optional(),
-  serviceCharge: z.coerce.number({}).optional().default(0),
-  tax: z.coerce.number({}).optional().default(0),
   splitModes: z
     .array(
       z.object({
@@ -265,7 +242,6 @@ export const jewelleryPaymentSchema = z.object({
     )
     .default([])
     .optional(),
-  discount: z.coerce.number().default(0).optional(),
   discountType: z.enum(["COINZ", "COUPONZ"]).optional().default("COINZ"),
   downloadUrl: z.string().min(3).max(200).optional(),
   isDeleted: z
@@ -274,11 +250,8 @@ export const jewelleryPaymentSchema = z.object({
       invalid_type_error: "isDeleted must be a boolean",
     })
     .default(false),
-  couponDiscount: z.coerce.number().optional().default(0),
   billItems: z.array(z.object({})).optional(),
   billInvoice: z.coerce.number().optional().default(0),
-  // isSplit: z.boolean().optional().default(false),
-  // isSplitBillVariant: z.boolean().optional().default(false),
 });
 
 export type PaymentType = z.infer<typeof PaymentSchema>;

@@ -56,6 +56,33 @@ export const acceptOrderSchema = z
       path: ["settleModes"], // specify the path to the field that caused the error
     },
   );
+
+export const jewelleryAcceptOrderSchema = z
+  .object({
+    staffId: z.string().min(24).max(24),
+    settleModes: settleModesSchema,
+    duesUserId: z.string().max(100).optional(),
+    npcUserId: z.string().max(100).optional(),
+  })
+  .refine(
+    (data) => {
+      const names = data.settleModes?.map((mode) => mode.name) || [];
+      const hasDues = names.includes("dues");
+      const hasNpc = names.includes("npc");
+      if (hasDues && !data.duesUserId) {
+        return false;
+      }
+      if (hasNpc && !data.npcUserId) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message:
+        "If settleModes includes 'dues', duesUserId is required. If settleModes includes 'npc', npcUserId is required.",
+      path: ["settleModes"], // specify the path to the field that caused the error
+    },
+  );
 const discountSchema = z
   .object({
     tableName: z.string().min(1).max(200),

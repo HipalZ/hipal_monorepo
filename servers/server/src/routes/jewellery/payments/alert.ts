@@ -1,12 +1,252 @@
-import { PaymentAlert } from "@hi/db-models";
-import { paramsSchema } from "@hi/db-models/src/validators";
+import {
+  JewelleryOrder,
+  JewelleryPayment,
+  JewelleryPaymentAlert,
+  LoyaltySettings,
+  NpcUser,
+  PaymentAlert,
+  PendingDues,
+  UpiMode,
+} from "@hi/db-models";
+import {
+  jewelleryAcceptOrderSchema,
+  paramsSchema,
+} from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
+import { nanoid } from "nanoid";
 import { z } from "zod";
+import {
+  calculateCashbackCoins,
+  creditUserCoins,
+  deductUserCoins,
+} from "../../../utils/jewellery/common";
 import { respond } from "../../../utils/response";
 import { endOfToday, startOfToday } from "../../payments";
 //
 const alertRouter = new Hono()
+  .put(
+    "/:alertId/accept",
+
+    zValidator("param", z.object({ alertId: z.string() })),
+    zValidator("json", jewelleryAcceptOrderSchema),
+
+    async (c) => {
+      const { alertId } = c.req.param();
+      const requestData = await c.req.json();
+      const { staffId, settleModes = [], duesUserId, npcUserId } = requestData;
+      //@ts-ignore
+      return runInTransaction(async (session: ClientSession) => {
+        const alert = await JewelleryPaymentAlert.findOne(
+          { _id: alertId, isAccepted: false },
+          null,
+          { session },
+        );
+
+        if (!alert) {
+          return c.json({ message: "Alert not found", err: true, data: {} });
+        }
+
+        const existingLoyalty = await LoyaltySettings.findOne({
+          businessId: alert.businessId,
+          isActive: true,
+        }).select("loyaltyId");
+
+        if (alert.alertType !== "OFFLINE") {
+          const updateAlert = await PaymentAlert.findByIdAndUpdate(
+            alertId,
+            { isAccepted: true, staffId },
+            { new: true, session },
+          );
+          return c.json({
+            message: "Order accepted successfully",
+            err: false,
+            data: updateAlert,
+          });
+        }
+
+        if (alert.alertType === "OFFLINE") {
+          if (alert && !alert.isAccepted) {
+            const order = await JewelleryOrder.findById(alert.orderId);
+
+            const paymentMode = await UpiMode.findById(settleModes[0]._id);
+
+            if (!paymentMode) {
+              return c.json({
+                message: "Payment mode not found",
+                err: true,
+                data: {},
+              });
+            }
+
+            if (order) {
+              let finalCashBack = 0;
+              if (
+                paymentMode?.name !== "complementary" &&
+                paymentMode?.name !== "npc"
+              ) {
+                let cashBack = await calculateCashbackCoins(
+                  order.businessId.toString(),
+                  Number(order.billValue),
+                  Number(order.claimedCoins),
+                  Number(order.couponDiscount),
+                  Number(order.discount),
+                );
+
+                if (existingLoyalty?.loyaltyId && order.claimedCoins > 0) {
+                  await deductUserCoins(
+                    Number(order?.claimedCoins),
+                    existingLoyalty?.loyaltyId?.toString() || "",
+                    order._id.toString(),
+                    order.userId.toString(),
+                    session,
+                  );
+                  if (order.cashbackAvailable === false) {
+                    cashBack = 0;
+                  }
+                }
+
+                finalCashBack = await creditUserCoins(
+                  cashBack,
+                  order.userId.toString(),
+                  order._id.toString(),
+                  order.businessId.toString(),
+
+                  existingLoyalty?.loyaltyId.toString() || "",
+
+                  session,
+                );
+              }
+
+              const npcUser = await NpcUser.findById(npcUserId);
+
+              let modifyTotal = 0;
+              if (
+                paymentMode?.name === "npc" ||
+                paymentMode?.name === "dues" ||
+                paymentMode?.name === "complementary"
+              ) {
+                modifyTotal = 0;
+              } else {
+                modifyTotal = order.total;
+
+                if (settleModes.length > 1) {
+                  for (const settle of settleModes) {
+                    if (settle.name === "complementary") {
+                      modifyTotal -= settle.amount ?? 0;
+                    }
+                  }
+                }
+              }
+
+              await JewelleryOrder.updateOne(
+                { _id: order._id },
+                {
+                  $set: {
+                    total:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : order?.total,
+                    claimedCoins:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : order?.claimedCoins,
+                  },
+                },
+                { new: true, session },
+              );
+
+              const createPayment = await JewelleryPayment.create(
+                [
+                  {
+                    businessId: alert.businessId,
+                    orderId: order?._id,
+
+                    mode: settleModes.length > 1 ? "split" : paymentMode?.name,
+                    status: "SUCCESS",
+                    paymentMode:
+                      settleModes.length > 1 ? "split" : paymentMode?.name,
+                    userId:
+                      paymentMode?.name === "npc"
+                        ? npcUser?.userId
+                        : order?.userId,
+
+                    earnCoins:
+                      paymentMode?.name === "npc" ||
+                      paymentMode?.name === "complementary"
+                        ? 0
+                        : finalCashBack,
+                    razorpayEventId: nanoid(15),
+                    razorpayOrderId: nanoid(15),
+                    razorpayPaymentId: nanoid(15),
+
+                    splitModes: settleModes,
+                    date: Date.now(),
+                    billItems: [],
+                  },
+                ],
+                { session },
+              );
+
+              if (duesUserId && paymentMode?.name === "dues") {
+                await PendingDues.create(
+                  [
+                    {
+                      billId: createPayment[0]._id,
+                      businessId: order.businessId,
+                      date: Date.now(),
+                      duesUserId: duesUserId,
+                      isSettled: false,
+                    },
+                  ],
+                  {
+                    session,
+                  },
+                );
+
+                await DuesUser.findByIdAndUpdate(
+                  duesUserId,
+                  {
+                    $inc: {
+                      totalDuesAmount: order.total,
+                    },
+                  },
+                  { session },
+                );
+              }
+
+              if (npcUserId && paymentMode?.name === "npc") {
+                await NpcUser.findByIdAndUpdate(
+                  npcUserId,
+                  {
+                    $inc: {
+                      totalNpcAmount: order.total,
+                    },
+                  },
+                  { session },
+                );
+              }
+            }
+
+            const updateAlert = await PaymentAlert.findByIdAndUpdate(
+              alertId,
+              { isAccepted: true, staffId },
+              { new: true, session },
+            );
+
+            return c.json({
+              message: "Order accepted successfully",
+              err: false,
+              data: updateAlert,
+            });
+          }
+        }
+        return c.json({ message: "Invalid alert type", err: true, data: {} });
+      });
+    },
+  )
 
   .get(
     "/waiter",
@@ -16,7 +256,7 @@ const alertRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.query();
 
-      const existingPaymentAlerts = await PaymentAlert.find({
+      const existingPaymentAlerts = await JewelleryPaymentAlert.find({
         businessId,
         alertType: ["WAITER"],
         isAccepted: false,
@@ -46,7 +286,7 @@ const alertRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.query();
 
-      const existingPaymentAlerts = await PaymentAlert.find({
+      const existingPaymentAlerts = await JewelleryPaymentAlert.find({
         businessId,
         alertType: {
           $in: ["ONLINE", "NORMAL_SETTLE", "OFFLINE"],
@@ -91,7 +331,7 @@ const alertRouter = new Hono()
         });
       }
       if (!from && !to) {
-        const existingPaymentAlerts = await PaymentAlert.find({
+        const existingPaymentAlerts = await JewelleryPaymentAlert.find({
           businessId,
           isAccepted: true,
           isRejected: false,
@@ -104,11 +344,7 @@ const alertRouter = new Hono()
           .skip(skip)
           .limit(PAGE_SIZE)
           .populate({
-            path: "order_id",
-          })
-          .populate({
-            path: "userId",
-            select: "name phone",
+            path: "orderId",
           });
 
         return c.json({
@@ -119,7 +355,7 @@ const alertRouter = new Hono()
       }
 
       if (from && to) {
-        const existingPaymentAlerts = await PaymentAlert.find({
+        const existingPaymentAlerts = await JewelleryPaymentAlert.find({
           businessId,
           isAccepted: true,
           isRejected: false,
@@ -132,11 +368,7 @@ const alertRouter = new Hono()
           .skip(skip)
           .limit(PAGE_SIZE)
           .populate({
-            path: "order_id",
-          })
-          .populate({
-            path: "userId",
-            select: "name phone",
+            path: "orderId",
           });
 
         return c.json({

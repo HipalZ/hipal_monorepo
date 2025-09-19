@@ -7,25 +7,18 @@ const jewelleryPaymentAlertSchema =
     {
       businessId: { type: ObjectId, required: true, ref: "Business" },
       status: { type: String, default: null },
-      userId: {
-        type: ObjectId,
-        required: true,
-        ref: "User",
-      },
+
       alertType: {
         type: String,
         enum: ["ONLINE", "OFFLINE", "WAITER", "NORMAL_SETTLE"],
         required: true,
       },
-      orderId: { type: ObjectId, required: false, ref: "Order" },
+      orderId: { type: ObjectId, required: false, ref: "jewelleryOrder" },
 
       isAccepted: { type: Boolean, default: false },
-      message: { type: String, default: "" },
-
       isRejected: { type: Boolean, default: false },
       errorReason: { type: String, default: null },
       errorDescription: { type: String, default: null },
-      waiterName: { type: String, default: null },
       coinsApplied: { type: Boolean, default: false },
       date: { type: Number },
       mode: { type: String, default: "" },

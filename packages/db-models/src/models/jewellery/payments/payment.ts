@@ -8,7 +8,6 @@ const jewelleryPaymentSchema = new mongoose.Schema<JewelleryPaymentType>(
     businessId: {
       required: true,
       type: ObjectId,
-      index: true,
       ref: "Business",
     },
 
@@ -18,17 +17,10 @@ const jewelleryPaymentSchema = new mongoose.Schema<JewelleryPaymentType>(
       default: Date.now(),
     },
 
-    total: {
-      required: true,
-      type: Number,
-      default: 0,
-    },
-
     userId: {
       type: ObjectId,
       required: true,
       ref: "User",
-      index: true,
     },
 
     mode: {
@@ -39,23 +31,12 @@ const jewelleryPaymentSchema = new mongoose.Schema<JewelleryPaymentType>(
       required: true,
       type: String,
     },
-    billValue: {
-      required: true,
-      type: Number,
-      default: 0,
-    },
 
     orderId: {
       type: ObjectId,
-      ref: "Order",
+      ref: "jewelleryOrder",
       required: true,
       unique: true,
-    },
-
-    tips: {
-      type: Number,
-      default: 0,
-      required: false,
     },
 
     razorpayPaymentId: {
@@ -68,10 +49,6 @@ const jewelleryPaymentSchema = new mongoose.Schema<JewelleryPaymentType>(
       type: String,
       required: true,
       unique: true,
-    },
-    claimedCoins: {
-      type: Number,
-      default: 0,
     },
 
     razorpayAcquirerData: {
@@ -88,12 +65,6 @@ const jewelleryPaymentSchema = new mongoose.Schema<JewelleryPaymentType>(
       type: Number,
       default: 0,
       required: false,
-    },
-
-    couponId: {
-      type: ObjectId,
-      required: false,
-      ref: "COUPONZ",
     },
 
     reviewId: {
@@ -115,17 +86,6 @@ const jewelleryPaymentSchema = new mongoose.Schema<JewelleryPaymentType>(
       required: false,
     },
 
-    tax: {
-      type: Number,
-      required: false,
-      default: 0,
-    },
-    serviceCharge: {
-      type: Number,
-      required: false,
-      default: 0,
-    },
-
     splitModes: [
       {
         name: {
@@ -143,17 +103,6 @@ const jewelleryPaymentSchema = new mongoose.Schema<JewelleryPaymentType>(
         },
       },
     ],
-    discount: {
-      type: Number,
-      default: 0,
-    },
-
-    discountType: {
-      type: String,
-      enum: ["COINZ", "COUPONZ"],
-      required: false,
-      default: "COINZ",
-    },
 
     downloadUrl: {
       type: String,
@@ -165,10 +114,6 @@ const jewelleryPaymentSchema = new mongoose.Schema<JewelleryPaymentType>(
       default: false,
     },
 
-    couponDiscount: {
-      type: Number,
-      default: 0,
-    },
     billItems: {
       type: [Object],
       required: false,
@@ -179,16 +124,6 @@ const jewelleryPaymentSchema = new mongoose.Schema<JewelleryPaymentType>(
       type: Number,
       default: 0,
     },
-    // isSplit: {
-    //   type: Boolean,
-    //   required: false,
-    //   default: false,
-    // },
-    // isSplitBillVariant: {
-    //   type: Boolean,
-    //   required: false,
-    //   default: false,
-    // },
   },
 
   { timestamps: true },

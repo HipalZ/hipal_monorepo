@@ -62,20 +62,8 @@ export const jewelleryPaymentAlertSchema = z.object({
   isAccepted: z.boolean().default(false).optional(),
   coinsApplied: z.boolean().default(false).optional(),
 
-  waiterName: z
-    .string({
-      message: "Waiter name must be a string",
-    })
-    .min(3, {
-      message: "Waiter name must be at least 3 characters",
-    })
-    .max(100, {
-      message: "Waiter name must be at most 100 characters",
-    })
-    .optional(),
   isRejected: z.boolean().default(false).optional(),
   date: z.number(),
-  userId: ObjectIdSchema,
 });
 
 export type PaymentAlertType = z.infer<typeof PaymentAlertSchema>;

@@ -1,4 +1,4 @@
-import { Payment } from "@hi/db-models";
+import { JewelleryPayment } from "@hi/db-models";
 import { paramsSchema } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
@@ -31,7 +31,7 @@ const dashboardRouter = new Hono()
         });
       }
 
-      const payments = await Payment.find({
+      const payments = await JewelleryPayment.find({
         businessId,
         isDeleted: false,
         date: { $gte: fromDate, $lte: toDate },
@@ -117,7 +117,7 @@ const dashboardRouter = new Hono()
         });
       }
 
-      const payments = await Payment.find({
+      const payments = await JewelleryPayment.find({
         businessId,
         isDeleted: false,
         date: { $gte: fromDate, $lte: toDate },
@@ -181,7 +181,7 @@ const dashboardRouter = new Hono()
         });
       }
 
-      const payments = await Payment.find({
+      const payments = await JewelleryPayment.find({
         businessId,
         isDeleted: false,
         date: { $gte: fromDate, $lte: toDate },

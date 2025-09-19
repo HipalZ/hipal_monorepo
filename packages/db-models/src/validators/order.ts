@@ -178,6 +178,18 @@ export const jewelleryOrderSchema = z.object({
     })
     .optional()
     .default(0),
+
+  isCoinApplied: z.boolean().optional().default(false),
+  isCouponApplied: z.boolean().optional().default(false),
+  isDiscountApplied: z.boolean().optional().default(false),
+  subTotal: z.coerce
+    .number({
+      message: "Sub total must be a number",
+    })
+    .optional()
+    .default(0),
+  razorpayOrderId: z.string().optional(),
+  staffId: ObjectIdSchema.optional(),
 });
 
 export type OrderType = z.infer<typeof OrderSchema>;

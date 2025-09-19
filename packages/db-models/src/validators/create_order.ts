@@ -101,4 +101,8 @@ export const jewelleryRazorpayOrderSchema = z.object({
   cashbackAvailable: z.boolean().optional(),
 });
 
+export const jewelleryPaymentOrderSchema = z.object({
+  orderId: z.string().length(24),
+});
+
 export type RazorpayOrderType = z.infer<typeof razorpayOrderSchema>;
