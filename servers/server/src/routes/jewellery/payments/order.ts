@@ -136,6 +136,8 @@ const orderRouter = new Hono()
 
       if (!orderDetails) return respond(c, "Order not found", true, 404, {});
 
+      if (orderDetails.isPaid) return respond(c, "Order paid", true, 409, {});
+
       return respond(
         c,
         "Order details fetched successfully",

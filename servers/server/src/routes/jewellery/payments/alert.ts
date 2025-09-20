@@ -153,6 +153,7 @@ const alertRouter = new Hono()
                       paymentMode?.name === "complementary"
                         ? 0
                         : order?.claimedCoins,
+                    isPaid: true,
                   },
                 },
                 { new: true, session },
@@ -244,6 +245,34 @@ const alertRouter = new Hono()
           }
         }
         return c.json({ message: "Invalid alert type", err: true, data: {} });
+      });
+    },
+  )
+  .put(
+    "/:alertId/reject",
+
+    zValidator("json", z.object({ staffId: z.string().min(24).max(24) })),
+
+    async (c) => {
+      const { alertId } = c.req.param();
+      const requestData = await c.req.json();
+      const { staffId } = requestData;
+
+      const updateAlert = await PaymentAlert.findByIdAndUpdate(
+        alertId,
+        { isRejected: true, isAccepted: true, staffId },
+        { new: true },
+      );
+
+      if (!updateAlert)
+        return c.json({ message: "Alert not found", err: true, data: {} });
+
+      return c.json({
+        message: "Order rejected successfully",
+        err: false,
+        data: {
+          alertId: updateAlert._id,
+        },
       });
     },
   )

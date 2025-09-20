@@ -167,6 +167,16 @@ const webhookRouter = new Hono()
             getCashBack = cashBackCoins;
           }
 
+          await JewelleryOrder.updateOne(
+            { _id: getOrder._id },
+            {
+              $set: {
+                isPaid: true,
+              },
+            },
+            { session },
+          );
+
           const createPayment = await JewelleryPayment.create(
             [
               {
