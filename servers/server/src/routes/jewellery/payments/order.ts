@@ -132,7 +132,14 @@ const orderRouter = new Hono()
     async (c) => {
       const { orderId } = c.req.param();
 
-      const orderDetails = await JewelleryOrder.findById(orderId);
+      const orderDetails = await JewelleryOrder.findById(orderId)
+        .select(
+          "total userId tips claimedCoins discount couponId couponDiscount gst subTotal",
+        )
+        .populate({
+          path: "userId",
+          select: "name phone",
+        });
 
       if (!orderDetails) return respond(c, "Order not found", true, 404, {});
 

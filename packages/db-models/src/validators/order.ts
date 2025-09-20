@@ -125,13 +125,7 @@ export const jewelleryOrderSchema = z.object({
     .max(200, {
       message: "Receipt must be at most 100 characters",
     }),
-  billValue: z.coerce
-    .number({
-      message: "Bill value must be a number",
-    })
-    .positive({
-      message: "Bill value must be positive",
-    }),
+
   userId: ObjectIdSchema,
   tips: z.coerce
     .number({
@@ -152,16 +146,6 @@ export const jewelleryOrderSchema = z.object({
     .optional()
     .default(0),
   businessId: ObjectIdSchema,
-  order_id: z
-    .string({
-      message: "Order id must be a string",
-    })
-    .min(3, {
-      message: "Order id must be at least 3 characters",
-    })
-    .max(200, {
-      message: "Order id must be at most 150 characters",
-    }),
 
   date: z.number(),
   couponId: ObjectIdSchema.optional(),
