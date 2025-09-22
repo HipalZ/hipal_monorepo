@@ -35,7 +35,7 @@ const dashboardRouter = new Hono()
         businessId,
         isDeleted: false,
         date: { $gte: fromDate, $lte: toDate },
-      });
+      }).populate("orderId");
 
       const totalOrders = payments.length;
 
@@ -44,7 +44,7 @@ const dashboardRouter = new Hono()
       const offlineSales: Record<string, number> = {};
 
       for (const payment of payments) {
-        const { total = 0, paymentMode, mode, splitModes } = payment;
+        const { paymentMode, mode, splitModes } = payment;
 
         if (mode === "split" && Array.isArray(splitModes)) {
           let splitTotal = 0;
@@ -59,13 +59,14 @@ const dashboardRouter = new Hono()
 
           overAllAmount += splitTotal; // Only add non-complementary split values
         } else if (!["dues", "npc", "complementary"].includes(mode)) {
-          overAllAmount += total; // Add total if it's not dues, npc, or complementary
+          overAllAmount += payment.orderId.total; // Add total if it's not dues, npc, or complementary
         }
 
         if (paymentMode === "online") {
-          totalOnlineSale += total;
+          totalOnlineSale += payment.orderId.total;
         } else if (!["dues", "npc", "complementary"].includes(paymentMode)) {
-          offlineSales[mode] = (offlineSales[mode] || 0) + total;
+          offlineSales[mode] =
+            (offlineSales[mode] || 0) + payment.orderId.total;
         }
       }
 
@@ -121,7 +122,7 @@ const dashboardRouter = new Hono()
         businessId,
         isDeleted: false,
         date: { $gte: fromDate, $lte: toDate },
-      });
+      }).populate("orderId");
 
       let totalTax = 0;
       let totalTip = 0;
@@ -129,10 +130,10 @@ const dashboardRouter = new Hono()
 
       for (const payment of payments) {
         if (payment.mode !== "dues") {
-          totalTax += payment.tax ?? 0;
+          totalTax += payment.orderId.tax ?? 0;
         }
-        totalTip += payment.tips ?? 0;
-        totalServiceCharge += payment.serviceCharge ?? 0;
+        totalTip += payment.orderId.tips ?? 0;
+        totalServiceCharge += payment.orderId.serviceCharge ?? 0;
       }
 
       return c.json({
@@ -185,7 +186,7 @@ const dashboardRouter = new Hono()
         businessId,
         isDeleted: false,
         date: { $gte: fromDate, $lte: toDate },
-      });
+      }).populate("orderId");
 
       let totalDiscount = 0;
       let totalDuesGiven = 0;
@@ -196,18 +197,18 @@ const dashboardRouter = new Hono()
       let totalCoinsUsed = 0;
 
       for (const payment of payments) {
-        totalDiscount += payment.discount ?? 0;
+        totalDiscount += payment.orderId.discount ?? 0;
 
         if (payment.mode === "dues") {
-          totalDuesGiven += payment.total;
+          totalDuesGiven += payment.orderId.total;
         }
 
         if (payment.mode === "npc") {
-          totalNpc += payment.billValue;
+          totalNpc += payment.orderId.total;
         }
 
         if (payment.mode === "complementary") {
-          totalComplementary += payment.billValue;
+          totalComplementary += payment.orderId.total;
         }
 
         if (
@@ -223,12 +224,12 @@ const dashboardRouter = new Hono()
 
         totalCoinsGiven += payment.earnCoins ?? 0;
 
-        if (payment.claimedCoins && !payment.couponId) {
-          totalCoinsUsed += payment.claimedCoins ?? 0;
+        if (payment.orderId.claimedCoins && !payment.orderId.couponId) {
+          totalCoinsUsed += payment.orderId.claimedCoins ?? 0;
         }
 
-        if (payment.couponDiscount > 0) {
-          totalCouponDiscount += payment.couponDiscount ?? 0;
+        if (payment.orderId.couponDiscount > 0) {
+          totalCouponDiscount += payment.orderId.couponDiscount ?? 0;
         }
       }
 

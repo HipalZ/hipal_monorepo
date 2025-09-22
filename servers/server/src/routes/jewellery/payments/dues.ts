@@ -1,8 +1,8 @@
 import {
   DuesHistory,
   DuesUser,
-  Order,
-  Payment,
+  JewelleryOrder,
+  JewelleryPayment,
   PendingDues,
   UpiMode,
   User,
@@ -179,7 +179,7 @@ const duesRouter = new Hono()
 
       const billIds = pendingDues.map((due) => due.billId);
 
-      const payments = await Payment.find({
+      const payments = await JewelleryPayment.find({
         businessId,
         mode: "dues",
         _id: { $in: billIds },
@@ -250,7 +250,7 @@ const duesRouter = new Hono()
           }
         }
 
-        const saveOrder = await Order.create(
+        const saveOrder = await JewelleryOrder.create(
           [
             {
               total:
@@ -259,14 +259,11 @@ const duesRouter = new Hono()
                   ? 0
                   : totalAmount,
               currency: "INR",
-              receipt: uniqueOrderId,
               userId: duesUser?.userId,
               claimedCoins: 0,
-              tableName: "DUES",
               tips: 0,
-              billValue: totalAmount,
+              subTotal: totalAmount,
               businessId: businessId,
-              order_id: uniqueOrderId,
 
               date: Date.now(),
             },
@@ -274,26 +271,20 @@ const duesRouter = new Hono()
           { session },
         );
 
-        const savePayment = await Payment.create(
+        const savePayment = await JewelleryPayment.create(
           [
             {
               businessId: businessId,
-              order_id: saveOrder[0]._id,
-              total: saveOrder[0].total,
+              orderId: saveOrder[0]._id,
               mode: settleModes.length > 1 ? "split" : paymentMode?.name,
               status: "SUCCESS",
               paymentMode: settleModes.length > 1 ? "split" : paymentMode?.name,
               userId: duesUser?.userId,
-              claimedCoins: 0,
-              billValue: saveOrder[0].billValue,
-              tips: 0,
-              tableName: saveOrder[0].tableName,
               earnCoins: 0,
               razorpayEventId: nanoid(15),
               razorpayOrderId: nanoid(15),
               razorpayPaymentId: nanoid(15),
               settleType: "DUES_SETTLE",
-              comment: "DUES_SETTLE",
 
               splitModes: settleModes,
               date: Date.now(),

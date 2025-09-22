@@ -1,4 +1,5 @@
 import {
+  DuesUser,
   JewelleryOrder,
   JewelleryPayment,
   JewelleryPaymentAlert,
@@ -87,7 +88,7 @@ const alertRouter = new Hono()
               ) {
                 let cashBack = await calculateCashbackCoins(
                   order.businessId.toString(),
-                  Number(order.billValue),
+                  Number(order.subTotal),
                   Number(order.claimedCoins),
                   Number(order.couponDiscount),
                   Number(order.discount),

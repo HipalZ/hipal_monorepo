@@ -1,4 +1,4 @@
-import { Payment } from "@hi/db-models";
+import { JewelleryPayment } from "@hi/db-models";
 import { paramsSchema } from "@hi/db-models/src/validators";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
@@ -107,11 +107,11 @@ const billRouter = new Hono()
 
       const queryObject = { $and: filterConditions, isDeleted: false };
 
-      const existingPayments = await Payment.find(queryObject)
+      const existingPayments = await JewelleryPayment.find(queryObject)
         .sort({ _id: -1 })
         .skip(skip)
         .limit(PAGE_SIZE)
-        .populate({ path: "order_id" })
+        .populate({ path: "orderId" })
         .populate({ path: "userId", select: "name phone" });
 
       let totalSale = 0;
@@ -229,9 +229,9 @@ const billRouter = new Hono()
 
       const queryObject = { $and: filterConditions, isDeleted: false };
 
-      const existingPayments = await Payment.find(queryObject)
+      const existingPayments = await JewelleryPayment.find(queryObject)
         .sort({ _id: -1 })
-        .populate({ path: "order_id" })
+        .populate({ path: "orderId" })
         .populate({ path: "userId", select: "name phone" });
 
       // initialize all totals

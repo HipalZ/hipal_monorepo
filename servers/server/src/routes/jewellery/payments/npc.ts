@@ -1,4 +1,4 @@
-import { NpcUser, Payment, User } from "@hi/db-models";
+import { JewelleryPayment, NpcUser, User } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -177,7 +177,7 @@ const npcRouter = new Hono()
         userId,
       };
 
-      const payments = await Payment.find(query)
+      const payments = await JewelleryPayment.find(query)
         .sort({
           _id: -1,
         })
