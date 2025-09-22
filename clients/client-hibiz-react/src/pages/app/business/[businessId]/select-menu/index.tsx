@@ -335,7 +335,6 @@ const MemoSelectMenu = () => {
               }
             >
               {renderStep()}
-              
             </Suspense>
           </div>
 
@@ -513,7 +512,7 @@ const MemoSelectMenu = () => {
                   <div className="flex flex-wrap gap-4 mt-6">
                     {!outletInfo?.isPosEnabled ? (
                       <Button
-                        variant="secondary"
+                        variant="default"
                         className="transition-transform hover:scale-105"
                         onClick={(e) => {
                           e.stopPropagation();

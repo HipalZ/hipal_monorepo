@@ -21,21 +21,13 @@ const formatDate = (date: Date) => {
 };
 
 const DateRangePicker: React.FC = memo(() => {
-  const {
-    setInTime,
-    setTimeStampStart,
-    setTimeStampEnd,
-    setOutTime,
-    selectedRange,
-    setSelectedRange,
-  } = useTimings((s) => ({
-    setInTime: s.setInTime,
-    setTimeStampStart: s.setTimeStampStart,
-    setTimeStampEnd: s.setTimeStampEnd,
-    setOutTime: s.setOutTime,
-    selectedRange: s.selectedRange,
-    setSelectedRange: s.setSelectedRange,
-  }));
+  const setInTime = useTimings((s) => s.setInTime);
+  const setTimeStampStart = useTimings((s) => s.setTimeStampStart);
+  const setTimeStampEnd = useTimings((s) => s.setTimeStampEnd);
+  const setOutTime = useTimings((s) => s.setOutTime);
+  const selectedRange = useTimings((s) => s.selectedRange);
+  const setSelectedRange = useTimings((s) => s.setSelectedRange);
+
   const { setPageNumber } = usePaginationStore((s) => ({
     setPageNumber: s.setPageNumber,
   }));
