@@ -704,7 +704,24 @@ const hotelAlertRouter = new Hono()
         alerts = [];
       }
 
-      return respond(c, "Alerts fetched successfully", false, 200, alerts);
+      const checkOutRequestalerts = await HotelAlert.find({
+        businessId,
+        alertProgress: "MESSAGE",
+        roomId: { $in: roomIds },
+      })
+        .populate({ path: "serviceIds", select: "name" })
+        .populate({ path: "createdBy", select: "name phone" })
+        .populate({ path: "acceptedBy", select: "name phone" })
+        .populate({ path: "roomId", select: "name" })
+        .lean();
+
+      if (role === "MANAGER") {
+        alerts = [];
+      }
+
+      const newArray = alerts.concat(checkOutRequestalerts);
+
+      return respond(c, "Alerts fetched successfully", false, 200, newArray);
     },
   )
   .get(
@@ -762,32 +779,18 @@ const hotelAlertRouter = new Hono()
       z.object({
         businessId: z.string().min(2).max(50),
         userId: z.string().min(2).max(50),
+        from: z.string().optional(),
+        to: z.string().optional(),
       }),
     ),
     async (c) => {
-      const { businessId, userId } = c.req.query();
-
-      const staff = await User.findOne(
-        { _id: userId, "customRole.businessId": businessId },
-        { customRole: 1 },
-      ).lean();
-
-      if (!staff) {
-        return respond(c, "Staff not found", true, 404, {});
-      }
-
-      const customRole = staff.customRole?.find(
-        (role) => role.businessId.toString() === businessId,
-      );
-      if (!customRole) {
-        return respond(c, "Role not found for this business", true, 404, {});
-      }
-
-      const { role, serviceIds } = customRole;
+      const { businessId, userId, from, to } = c.req.query();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
 
       const alertQuery = {
         businessId,
-        alertProgress: "DELIVERED",
+        createdAt: { $gte: fromDate, $lte: toDate },
       };
 
       const alerts = await HotelAlert.find(alertQuery)
@@ -876,7 +879,7 @@ const hotelAlertRouter = new Hono()
 
       const alerts = await HotelAlert.find({
         businessId,
-        date: { $gte: fromDate, $lte: toDate },
+        createdAt: { $gte: fromDate, $lte: toDate },
         ...(staffId
           ? {
               $or: [
@@ -887,6 +890,9 @@ const hotelAlertRouter = new Hono()
               ],
             }
           : {}),
+        alertProgress: {
+          $nin: ["MESSAGE", "REJECTED" /* Exclude non-service alerts */],
+        },
       })
         .populate({ path: "acceptedBy", select: "name phone" })
         .populate({ path: "deliveredBy", select: "name phone" })
@@ -895,6 +901,8 @@ const hotelAlertRouter = new Hono()
           select: "name avgDeliveryTime avgAcceptanceTime",
         })
         .lean();
+
+      console.log("alerts", alerts);
 
       //
       const getServiceAverages = (serviceIds: HotelServiceType[] = []) => {
