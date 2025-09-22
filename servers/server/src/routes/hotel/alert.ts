@@ -791,6 +791,7 @@ const hotelAlertRouter = new Hono()
       const alertQuery = {
         businessId,
         createdAt: { $gte: fromDate, $lte: toDate },
+        alertsProgress: { $in: ["DELIVERED", "RESOLVED"] },
       };
 
       const alerts = await HotelAlert.find(alertQuery)
