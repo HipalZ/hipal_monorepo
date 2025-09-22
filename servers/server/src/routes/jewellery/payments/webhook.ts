@@ -231,7 +231,7 @@ const webhookRouter = new Hono()
     });
   })
 
-  .post(
+  .get(
     "/status/:orderId",
 
     zValidator("param", z.object({ orderId: z.string() })),
