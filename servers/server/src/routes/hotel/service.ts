@@ -195,7 +195,7 @@ const serviceRouter = new Hono()
       const isServiceActive = await HotelAlert.exists({
         serviceIds: serviceId,
         businessId: requestData.businessId,
-        alertProgress: { 
+        alertProgress: {
           $nin: ["RESOLVED", "MESSAGE", "DELIVERED", "REJECTED"],
         },
       });
@@ -266,7 +266,7 @@ const serviceRouter = new Hono()
           businessId: requestData.businessId,
           alertProgress: {
             $exists: true,
-            $ne: ["RESOLVED", "MESSAGE", "DELIVERED", "REJECTED"],
+            $nin: ["RESOLVED", "MESSAGE", "DELIVERED", "REJECTED"],
           },
         });
         if (isServiceActive) {

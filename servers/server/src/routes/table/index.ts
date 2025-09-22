@@ -1386,6 +1386,30 @@ const tableRouter = new Hono()
           );
         }
       }
+      const phone = phoneNumbers[0];
+      let user = await User.findOne({ phone });
+
+      if (tableSession?.customerIds?.length === 0) {
+        if (!user) {
+          user = await User.create({
+            phone: phone,
+            name: "Guest",
+          });
+        }
+
+        await UserSession.findOneAndUpdate(
+          {
+            tableName: tableData?.name,
+            businessId: businessId,
+          },
+          {
+            $set: {
+              customerName: user.name,
+              phoneNumbers: [phone],
+            },
+          },
+        );
+      }
 
       let billId: string;
       if (billAlreadySplit) {
