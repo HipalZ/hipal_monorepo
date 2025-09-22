@@ -7,6 +7,7 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { nanoid } from "nanoid";
 import { z } from "zod";
+import { getTimeDifferenceInMinutes } from "../../../utils/jewellery/dateAndTime";
 import { razorpayWrapper } from "../../../utils/razorpay-wrapper";
 import { respond } from "../../../utils/response";
 // import {
@@ -86,10 +87,31 @@ const orderRouter = new Hono()
       const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
       const { billValue, userId, businessId } = requestData;
 
+      const oldLatestOrderByUser = await JewelleryOrder.findOne({
+        userId,
+        businessId,
+      }).sort({ date: -1 });
+
+      if (oldLatestOrderByUser?.date) {
+        const mins = getTimeDifferenceInMinutes(
+          oldLatestOrderByUser.date,
+          Date.now(),
+        );
+
+        // Check if the difference is greater than 10 minutes (10 minutes = 10 * 60 * 1000 milliseconds)
+        if (mins > 10) {
+          return respond(
+            c,
+            "Order already placed in last 10 minutes",
+            true,
+            400,
+            {},
+          );
+        }
+      }
+
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
-        const uniqueOrderId = nanoid(15);
-
         const saveOrder = await JewelleryOrder.create(
           [
             {
@@ -97,7 +119,7 @@ const orderRouter = new Hono()
               currency: "INR",
               subTotal: billValue,
               businessId,
-              receipt: uniqueOrderId,
+              razorpayOrderId: nanoid(15),
               userId,
               claimedCoins: 0,
               tips: 0,
