@@ -1364,6 +1364,7 @@ const hotelAlertRouter = new Hono()
           "CREATED",
           "NON_ACCEPTED_AND_WARNING",
           "NON_ACCEPTED_AND_ESCALATION",
+          "MESSAGE",
         ],
         RESOLVED: ["NOT_DELIVERED"],
       };
