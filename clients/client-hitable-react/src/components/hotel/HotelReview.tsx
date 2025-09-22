@@ -4,9 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useGetAllHotelServices, type IService } from "@/hooks/useServices";
 import { useGetAllHotelStaff, type IHotelStaff } from "@/hooks/useStaff";
-import {
-  fetchReviews
-} from "@/hooks/useReview";
+import { fetchReviews } from "@/hooks/useReview";
 import { useReviewsFilterStore } from "../store/useReviewsFilterStore";
 import ReviewsFilters from "./HotelReviewFilter";
 import ReviewAccordionCard from "./ReviewCardAccordion.tsx";

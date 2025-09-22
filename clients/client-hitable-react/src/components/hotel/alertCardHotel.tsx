@@ -151,6 +151,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
     DELIVERED: "Delivered",
     NOT_DELIVERED: "Not Delivered",
     RESOLVED: "Resolved",
+    MESSAGE: "Message",
   };
 
   const getAlertLabel = (progress?: string) =>
@@ -306,6 +307,21 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
                 <CheckCheck className="h-4 w-4 mr-2" />
               )}
               Mark as Delivered
+            </Button>
+          ) : null}
+
+          {alert?.alertProgress === "MESSAGE" ? (
+            <Button
+              className="w-full bg-black hover:bg-black text-white"
+              onClick={() => handleAction(alert?._id, "REJECTED")}
+              disabled={isLoading !== null}
+            >
+              {isLoading === "REJECTED" ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <CheckCheck className="h-4 w-4 mr-2" />
+              )}
+              Remove
             </Button>
           ) : null}
 

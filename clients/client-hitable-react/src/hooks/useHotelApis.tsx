@@ -2,6 +2,7 @@ import { useAlertsStore } from "@/components/store/useAlertStore";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useHotelStore } from "@/components/store/useHotelStore";
+import useTimings from "@/components/store/useTimings";
 import type { Alert, Cart } from "@/components/types/hotelData";
 import { apiRpc } from "@hi/common";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -223,12 +224,16 @@ export const useRespondAlerts = () => {
 };
 
 export const useHistoryAlerts = () => {
+  const timeStampStart = useTimings((s) => s.timeStampStart);
+  const timeStampEnd = useTimings((s) => s.timeStampEnd);
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const userId = useHiClientZ((s) => s.captainData._id);
   const historyAlerts = async () => {
     const response = await apiRpc.hotel.alert.fetch_alert_history.$get({
       query: {
         businessId,
+        from: timeStampStart.toString(),
+        to: timeStampEnd.toString(),
         userId,
       },
     });
@@ -238,9 +243,9 @@ export const useHistoryAlerts = () => {
     }
   };
   const { data: historyData, isPending } = useQuery({
-    queryKey: ["historyAlerts", businessId, userId],
+    queryKey: ["historyAlerts", businessId, userId, timeStampStart, timeStampEnd],
     queryFn: historyAlerts,
-    enabled: !!businessId && !!userId,
+    enabled: !!businessId && !!userId && !!timeStampStart && !!timeStampEnd,
   });
 
   return { historyData, isPending };

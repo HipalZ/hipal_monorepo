@@ -7,21 +7,19 @@ import "react-datepicker/dist/react-datepicker.css";
 import { memo } from "react";
 
 const MemoDateRangePicker = () => {
-  const {
-    dateRange,
-    setDateRange,
-    selectedOption,
-    setSelectedOption,
-    setDateInTimeStamp,
-    setOpenDatePickerModal,
-  } = useHiPeopleStore((state) => ({
-    dateRange: state.dateRange,
-    setDateRange: state.setDateRange,
-    selectedOption: state.selectedOption,
-    setSelectedOption: state.setSelectedOption,
-    setDateInTimeStamp: state.setDateInTimeStamp,
-    setOpenDatePickerModal: state.setOpenDatePickerModal,
-  }));
+  const dateRange = useHiPeopleStore((state) => state.dateRange);
+  const setDateRange = useHiPeopleStore((state) => state.setDateRange);
+  const selectedOption = useHiPeopleStore((state) => state.selectedOption);
+  const setSelectedOption = useHiPeopleStore(
+    (state) => state.setSelectedOption,
+  );
+  const setDateInTimeStamp = useHiPeopleStore(
+    (state) => state.setDateInTimeStamp,
+  );
+  const setOpenDatePickerModal = useHiPeopleStore(
+    (state) => state.setOpenDatePickerModal,
+  );
+
   const [startDate, endDate] = dateRange;
 
   const handleOptionClick = (option) => {

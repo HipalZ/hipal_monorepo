@@ -92,7 +92,9 @@ export interface Alert {
     | "DELIVERED"
     | "WARNING"
     | "ESCALATION"
-    | "NOT_DELIVERED";
+    | "NOT_DELIVERED"
+    | "MESSAGE"
+    ;
   serviceIds: Service[];
   businessId: string;
   userId: string;
