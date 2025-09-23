@@ -4,7 +4,6 @@ import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
-import { sumShiftBreakHours } from "../../utils/dateAndTime";
 import { respond } from "../../utils/response";
 import { endOfToday, startOfToday } from "../payments";
 
@@ -118,40 +117,13 @@ const attendenceRouter = new Hono()
         })
         .lean();
 
-      const staffTotals = new Map<
-        string,
-        {
-          staffName: string;
-          staffPhone: string;
-          activeHrs: number;
-          lastActiveAt: number;
-          shiftBreaks: { startTime: number; endTime: number }[];
-          shiftBreaksHrs: number;
-        }
-      >();
-
-      for (const attendence of existingAttendence) {
-        const key = String(attendence.staffId._id);
-        if (!staffTotals.has(key)) {
-          staffTotals.set(key, {
-            staffName: attendence.staffId.name ?? "",
-            staffPhone: attendence.staffId.phone ?? "",
-            activeHrs: 0,
-            lastActiveAt: attendence.lastActiveAt || 0,
-            shiftBreaks: attendence.shiftBreaks || [],
-            shiftBreaksHrs: sumShiftBreakHours(attendence.shiftBreaks || []),
-          });
-        }
-        const entry = staffTotals.get(key)!;
-        entry.activeHrs += Number(attendence.activeHrs ?? 0);
-      }
-
-      const output = Array.from(staffTotals.values()).map((x) => ({
-        ...x,
-        activeHrs: Number(x.activeHrs.toFixed(2)), // optional rounding
-      }));
-
-      return respond(c, "Attendence fetched successfully", false, 200, output);
+      return respond(
+        c,
+        "Attendence fetched successfully",
+        false,
+        200,
+        existingAttendence,
+      );
     },
   );
 
