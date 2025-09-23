@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import addonRouter from "./addons";
 import adminRouter from "./admin";
+import staffAttendenceRouter from "./attendence";
 import bucketRouter from "./bucket";
 import businessRouter from "./businesses";
 import cartRouter from "./cart";
@@ -95,6 +96,7 @@ export const routes = app
   .route("/print_section", printSectionRouter)
   .route("/report", reportRouter)
   .route("/split_bill", splitBillRouter)
-  .route("/jewellery", jewelleryRouter);
+  .route("/jewellery", jewelleryRouter)
+  .route("/attendence", staffAttendenceRouter);
 
 export type AppType = typeof routes;

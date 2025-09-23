@@ -85,6 +85,7 @@ export * from "./whatsAppWallet";
 export * from "./whatsAppWalletHistory";
 export * from "./zone";
 
+export * from "./attendence";
 export * from "./discount";
 export * from "./dues";
 export * from "./jewellery";
