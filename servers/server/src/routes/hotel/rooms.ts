@@ -1169,8 +1169,6 @@ const roomRouter = new Hono()
             .select("phone name")
             .lean();
 
-          console.log("userData", userData);
-
           const serviceTemplateMapping =
             await HotelServiceTemplateMapping.findOne({
               businessId: roomExists.businessId,
@@ -1319,10 +1317,10 @@ const roomRouter = new Hono()
         throw new Error("Error deleting room chat");
       }
 
-      const deleteRoomAlert = await HotelAlert.deleteMany(
-        { roomId: roomId },
-        { session },
-      );
+      // const deleteRoomAlert = await HotelAlert.deleteMany(
+      //   { roomId: roomId },
+      //   { session },
+      // );
 
       const registrationToken = await DeviceToken.find({
         businessId: requestData.businessId,
