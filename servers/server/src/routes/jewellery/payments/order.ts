@@ -7,7 +7,6 @@ import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { nanoid } from "nanoid";
 import { z } from "zod";
-import { getTimeDifferenceInMinutes } from "../../../utils/jewellery/dateAndTime";
 import { razorpayWrapper } from "../../../utils/razorpay-wrapper";
 import { respond } from "../../../utils/response";
 // import {
@@ -92,23 +91,23 @@ const orderRouter = new Hono()
         businessId,
       }).sort({ date: -1 });
 
-      if (oldLatestOrderByUser?.date) {
-        const mins = getTimeDifferenceInMinutes(
-          oldLatestOrderByUser.date,
-          Date.now(),
-        );
+      // if (oldLatestOrderByUser?.date) {
+      //   const mins = getTimeDifferenceInMinutes(
+      //     oldLatestOrderByUser.date,
+      //     Date.now(),
+      //   );
 
-        // Check if the difference is greater than 10 minutes (10 minutes = 10 * 60 * 1000 milliseconds)
-        if (mins > 10) {
-          return respond(
-            c,
-            "Order already placed in last 10 minutes",
-            true,
-            400,
-            {},
-          );
-        }
-      }
+      //   // Check if the difference is greater than 10 minutes (10 minutes = 10 * 60 * 1000 milliseconds)
+      //   if (mins > 10) {
+      //     return respond(
+      //       c,
+      //       "Order already placed in last 10 minutes",
+      //       true,
+      //       400,
+      //       {},
+      //     );
+      //   }
+      // }
 
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
