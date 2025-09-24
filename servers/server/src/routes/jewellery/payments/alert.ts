@@ -5,7 +5,6 @@ import {
   JewelleryPaymentAlert,
   LoyaltySettings,
   NpcUser,
-  PaymentAlert,
   PendingDues,
   UpiMode,
 } from "@hi/db-models";
@@ -54,7 +53,7 @@ const alertRouter = new Hono()
         }).select("loyaltyId");
 
         if (alert.alertType !== "OFFLINE") {
-          const updateAlert = await PaymentAlert.findByIdAndUpdate(
+          const updateAlert = await JewelleryPaymentAlert.findByIdAndUpdate(
             alertId,
             { isAccepted: true, staffId },
             { new: true, session },
@@ -232,7 +231,7 @@ const alertRouter = new Hono()
               }
             }
 
-            const updateAlert = await PaymentAlert.findByIdAndUpdate(
+            const updateAlert = await JewelleryPaymentAlert.findByIdAndUpdate(
               alertId,
               { isAccepted: true, staffId },
               { new: true, session },
@@ -259,7 +258,7 @@ const alertRouter = new Hono()
       const requestData = await c.req.json();
       const { staffId } = requestData;
 
-      const updateAlert = await PaymentAlert.findByIdAndUpdate(
+      const updateAlert = await JewelleryPaymentAlert.findByIdAndUpdate(
         alertId,
         { isRejected: true, isAccepted: true, staffId },
         { new: true },
@@ -278,37 +277,37 @@ const alertRouter = new Hono()
     },
   )
 
-  .get(
-    "/waiter",
+  // .get(
+  //   "/waiter",
 
-    zValidator("query", z.object({ businessId: z.string() })),
+  //   zValidator("query", z.object({ businessId: z.string() })),
 
-    async (c) => {
-      const { businessId } = c.req.query();
+  //   async (c) => {
+  //     const { businessId } = c.req.query();
 
-      const existingPaymentAlerts = await JewelleryPaymentAlert.find({
-        businessId,
-        alertType: ["WAITER"],
-        isAccepted: false,
-      })
-        .sort({ _id: -1 })
-        .populate({
-          path: "order_id",
-        })
-        .populate({
-          path: "userId",
-          select: "name phone",
-        });
+  //     const existingPaymentAlerts = await JewelleryPaymentAlert.find({
+  //       businessId,
+  //       alertType: ["WAITER"],
+  //       isAccepted: false,
+  //     })
+  //       .sort({ _id: -1 })
+  //       .populate({
+  //         path: "order_id",
+  //       })
+  //       .populate({
+  //         path: "userId",
+  //         select: "name phone",
+  //       });
 
-      return respond(
-        c,
-        "existing paymentAlert",
-        false,
-        200,
-        existingPaymentAlerts,
-      );
-    },
-  )
+  //     return respond(
+  //       c,
+  //       "existing paymentAlert",
+  //       false,
+  //       200,
+  //       existingPaymentAlerts,
+  //     );
+  //   },
+  // )
   .get(
     "/",
     zValidator("query", z.object({ businessId: z.string().min(24).max(24) })),
@@ -325,10 +324,14 @@ const alertRouter = new Hono()
       })
         .sort({ _id: -1 })
         .populate({
-          path: "order_id",
+          path: "orderId",
         })
         .populate({
           path: "userId",
+          select: "name phone",
+        })
+        .populate({
+          path: "staffId",
           select: "name phone",
         });
 
@@ -375,6 +378,14 @@ const alertRouter = new Hono()
           .limit(PAGE_SIZE)
           .populate({
             path: "orderId",
+          })
+          .populate({
+            path: "userId",
+            select: "name phone",
+          })
+          .populate({
+            path: "staffId",
+            select: "name phone",
           });
 
         return c.json({
@@ -399,6 +410,14 @@ const alertRouter = new Hono()
           .limit(PAGE_SIZE)
           .populate({
             path: "orderId",
+          })
+          .populate({
+            path: "userId",
+            select: "name phone",
+          })
+          .populate({
+            path: "staffId",
+            select: "name phone",
           });
 
         return c.json({

@@ -124,6 +124,11 @@ const jewelleryPaymentSchema = new mongoose.Schema<JewelleryPaymentType>(
       type: Number,
       default: 0,
     },
+    staffId: {
+      type: ObjectId,
+      required: false,
+      ref: "User",
+    },
   },
 
   { timestamps: true },

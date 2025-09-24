@@ -252,6 +252,7 @@ export const jewelleryPaymentSchema = z.object({
     .default(false),
   billItems: z.array(z.object({})).optional(),
   billInvoice: z.coerce.number().optional().default(0),
+  staffId: ObjectIdSchema.optional(),
 });
 
 export type PaymentType = z.infer<typeof PaymentSchema>;

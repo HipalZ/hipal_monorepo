@@ -22,6 +22,7 @@ const jewelleryPaymentAlertSchema =
       coinsApplied: { type: Boolean, default: false },
       date: { type: Number },
       mode: { type: String, default: "" },
+      staffId: { type: ObjectId, required: false, ref: "User" },
     },
     {
       timestamps: true,

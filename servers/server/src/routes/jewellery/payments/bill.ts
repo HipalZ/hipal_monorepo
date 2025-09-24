@@ -112,7 +112,8 @@ const billRouter = new Hono()
         .skip(skip)
         .limit(PAGE_SIZE)
         .populate({ path: "orderId" })
-        .populate({ path: "userId", select: "name phone" });
+        .populate({ path: "userId", select: "name phone" })
+        .populate({ path: "staffId", select: "name phone" });
 
       let totalSale = 0;
 

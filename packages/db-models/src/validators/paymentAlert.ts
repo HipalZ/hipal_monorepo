@@ -63,6 +63,7 @@ export const jewelleryPaymentAlertSchema = z.object({
   coinsApplied: z.boolean().default(false).optional(),
 
   isRejected: z.boolean().default(false).optional(),
+  staffId: ObjectIdSchema,
   date: z.number(),
 });
 
