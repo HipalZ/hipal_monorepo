@@ -12,9 +12,26 @@ import {
   useMediaUpload,
 } from "@/hooks/useTemplates";
 import { memo, useCallback, useState } from "react";
-import toast from "react-hot-toast";
 import { FiAlertCircle, FiCheckCircle } from "react-icons/fi";
 
+export const clean = (s?: string | null, max = 1024) =>
+  (s ?? "").replace(/\s+/g, " ").trim().slice(0, Math.max(0, max));
+
+export const cap = (s?: string | null, max = 25) => {
+  const t = clean(s, max);
+  return t || undefined;
+};
+
+export const httpsUrl = (u?: string | null) => {
+  const t = (u ?? "").trim();
+  if (!t) return undefined;
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+};
+
+export const e164 = (p?: string | null) => {
+  const t = (p ?? "").replace(/[^\d+]/g, "");
+  return t || undefined;
+};
 const MemoTemplateTerms = () => {
   const { businessId, businessName } = useBusinessData((s) => ({
     businessId: s.businessData?._id,
@@ -46,81 +63,83 @@ const MemoTemplateTerms = () => {
   const { uploadMedia } = useMediaUpload();
 
   const handleConfirmPopUp = useCallback(async () => {
-    if (!businessId) return;
-    if (variables.includes("")) {
-      toast.error("Please select a variable");
-      return;
-    }
     // Step 1: Upload media if required
     setIsLoading(true);
     let whatsappImageHandler = imagePreview || "";
     let storageImageUrl = "";
-    if (
-      headerType === HeaderInterface.Image &&
-      imagePreview.length > 0 &&
-      imagePreview.includes("data:")
-    ) {
-      const { url, handle } = await uploadMedia();
-      whatsappImageHandler = handle;
-      storageImageUrl = url;
+    const components: any[] = [];
+    // HEADER
+    if (headerType === HeaderInterface.Text) {
+      const header = clean(headerText, 60);
+      if (header)
+        components.push({ type: "HEADER", format: "TEXT", text: header });
+    } else if (headerType === HeaderInterface.Image && whatsappImageHandler) {
+      components.push({
+        type: "HEADER",
+        format: "IMAGE",
+        example: { header_handle: [whatsappImageHandler] },
+      });
     }
-    // Step 2: Prepare the payload
+
+    // BODY (required)
+    const body = clean(bodyText, 1024) || ""; // Body must exist
+    const bodyComp: any = { type: "BODY", text: body };
+    const bodyVars = Array.isArray(variables)
+      ? variables.map((v) => clean(v) || "")
+      : [];
+    if (bodyVars.length > 0) bodyComp.example = { body_text: [bodyVars] };
+    components.push(bodyComp);
+
+    // FOOTER (optional)
+    const footer = businessName ? clean(`Powered by ${businessName}`, 60) : "";
+    if (footer) components.push({ type: "FOOTER", text: footer });
+    console.log("actionType", actionType);
+    // BUTTONS (optional)
+    const buttons: any[] = [];
+    switch (actionType) {
+      case ActionType.VisitWebsite: {
+        const text = cap(buttonText, 25);
+        const url = httpsUrl(websiteUrl);
+        if (text && url) buttons.push({ type: "URL", text, url });
+        break;
+      }
+      case ActionType.MarketingOptOut: {
+        // QUICK_REPLY supports only "text"
+        const text = cap(secondButtonText || "Stop", 25);
+        if (text) buttons.push({ type: "QUICK_REPLY", text });
+        break;
+      }
+      case ActionType.Flow: {
+        const text = cap(buttonText || "Continue", 25);
+        const flow_id = flow?.id;
+        if (text && flow_id) buttons.push({ type: "FLOW", text, flow_id });
+        break;
+      }
+      case ActionType.CallUs: {
+        const text = cap(buttonText, 25);
+        const phone_number = e164(phoneNumber);
+        if (text && phone_number)
+          buttons.push({ type: "PHONE_NUMBER", text, phone_number });
+        break;
+      }
+      default:
+        // no buttons
+        break;
+    }
+    if (buttons.length > 0) components.push({ type: "BUTTONS", buttons });
+
+    // FINAL payload
     const payload: WhatsAppTemplatePayload = {
-      businessId: businessId,
+      businessId,
       name: templateName,
       language: "en_GB",
-      ...(templateId?.length > 0 && { templateId: templateId }),
+      ...(templateId?.length ? { templateId } : {}),
       category: templateType,
-      components: [
-        ...(headerType && (headerText || whatsappImageHandler)
-          ? [
-              {
-                type: "HEADER",
-                format: headerType === HeaderInterface.Text ? "TEXT" : "IMAGE",
-                ...(headerType === HeaderInterface.Text
-                  ? { text: headerText }
-                  : {
-                      example: { header_handle: [whatsappImageHandler] },
-                    }),
-              },
-            ]
-          : []),
-        {
-          type: "BODY",
-          text: bodyText,
-          ...(variables.length > 0 && {
-            example: { body_text: [variables] },
-          }),
-        },
-        { type: "FOOTER", text: `Powered by ${businessName}` },
-        ...(buttonText && (websiteUrl || phoneNumber)
-          ? [
-              {
-                type: "BUTTONS",
-                buttons: [
-                  actionType === ActionType.VisitWebsite && {
-                    type: "URL",
-                    text: buttonText,
-                    url: websiteUrl,
-                  },
-                  actionType === ActionType.MarketingOptOut && {
-                    type: "QUICK_REPLY",
-                    text: secondButtonText,
-                    footerText: "Stop sending messages",
-                  },
-                  actionType === ActionType.Flow && {
-                    type: "FLOW",
-                    text: buttonText ? buttonText : "Continue",
-                    flow_id: flow?.id,
-                  },
-                ].filter(Boolean),
-              },
-            ]
-          : []),
-      ],
-      ...(storageImageUrl && { imageUrl: storageImageUrl }),
-      bodyVariableSequence: bodyVariableSequence,
+      components,
+      ...(storageImageUrl ? { imageUrl: storageImageUrl } : {}),
+      ...(Array.isArray(bodyVariableSequence) ? { bodyVariableSequence } : {}),
     };
+
     console.log("payload", payload);
     // Step 3: Call the appropriate API (create or edit)
     if (templateId?.length > 0) {
