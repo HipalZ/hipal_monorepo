@@ -83,6 +83,15 @@ const MemoTemplateTerms = () => {
     setIsLoading(true);
     let whatsappImageHandler = imagePreview || "";
     let storageImageUrl = "";
+        if (
+      headerType === HeaderInterface.Image &&
+      imagePreview.length > 0 &&
+      imagePreview.includes("data:")
+    ) {
+      const { url, handle } = await uploadMedia();
+      whatsappImageHandler = handle;
+      storageImageUrl = url;
+    }
     const components: any[] = [];
     // HEADER
     if (headerType === HeaderInterface.Text) {
