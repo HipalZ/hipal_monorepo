@@ -119,7 +119,11 @@ const MemoTemplateTerms = () => {
         const text = cap(buttonText, 25);
         const phone_number = e164(phoneNumber);
         if (text && phone_number)
-          buttons.push({ type: "PHONE_NUMBER", text, phone_number });
+          buttons.push({
+            type: "PHONE_NUMBER",
+            text,
+            phone_number: `+91${phone_number}`,
+          });
         break;
       }
       default:
