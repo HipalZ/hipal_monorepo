@@ -28,10 +28,26 @@ export const httpsUrl = (u?: string | null) => {
   return /^https?:\/\//i.test(t) ? t : `https://${t}`;
 };
 
-export const e164 = (p?: string | null) => {
-  const t = (p ?? "").replace(/[^\d+]/g, "");
-  return t || undefined;
+// Normalizes to E.164; if no country code, uses IN by default.
+export const e164 = (p?: string | null, defaultCC = "91") => {
+  const raw = (p ?? "").trim();
+
+  // strip spaces, dashes, parentheses
+  let t = raw.replace(/[^\d+]/g, "");
+
+  // handle "00" international prefix (e.g., 0091...)
+  if (t.startsWith("00")) t = `+${t.slice(2)}`;
+
+  // if it already starts with +, keep it
+  if (t.startsWith("+")) return t;
+
+  // if it starts with country code digits (e.g., 91...) and length > 10, keep it
+  if (t.startsWith(defaultCC) && t.length > 10) return `+${t}`;
+
+  // otherwise assume local number -> prepend default CC
+  return `+${defaultCC}${t}`;
 };
+
 const MemoTemplateTerms = () => {
   const { businessId, businessName } = useBusinessData((s) => ({
     businessId: s.businessData?._id,
@@ -93,7 +109,6 @@ const MemoTemplateTerms = () => {
     // FOOTER (optional)
     const footer = businessName ? clean(`Powered by ${businessName}`, 60) : "";
     if (footer) components.push({ type: "FOOTER", text: footer });
-    console.log("actionType", actionType);
     // BUTTONS (optional)
     const buttons: any[] = [];
     switch (actionType) {
@@ -122,7 +137,7 @@ const MemoTemplateTerms = () => {
           buttons.push({
             type: "PHONE_NUMBER",
             text,
-            phone_number: `+91${phone_number}`,
+            phone_number,
           });
         break;
       }
