@@ -78,6 +78,8 @@ const discountRouter = new Hono()
       return runInTransaction(async (session: ClientSession) => {
         const order = await JewelleryOrder.findById(orderId).session(session);
         if (!order) return respond(c, "Order not found", true, 404, {});
+        if (order.isCoinApplied)
+          return respond(c, "coins already applied", true, 400, {});
 
         const coupon = await Couponz.findById(couponId).session(session);
         if (!coupon) return respond(c, "Coupon not found", true, 404, {});
