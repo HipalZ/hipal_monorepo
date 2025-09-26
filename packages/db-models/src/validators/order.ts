@@ -174,7 +174,12 @@ export const jewelleryOrderSchema = z.object({
     .default(0),
   razorpayOrderId: z.string().optional(),
   staffId: ObjectIdSchema.optional(),
-  isPaid: z.boolean().optional().default(false),
+  isPaid: z
+    .string({
+      message: "isPaid must be a string",
+    })
+    .optional()
+    .default("IN_PROGRESS"),
 });
 
 export type OrderType = z.infer<typeof OrderSchema>;

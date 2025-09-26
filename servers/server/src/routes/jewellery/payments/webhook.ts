@@ -116,6 +116,16 @@ const webhookRouter = new Hono()
             ],
             { session },
           );
+
+          await JewelleryOrder.updateOne(
+            { _id: getOrder?._id },
+            {
+              $set: {
+                isPaid: "FAIL",
+              },
+            },
+            { session },
+          );
         }
       }
 
@@ -150,7 +160,7 @@ const webhookRouter = new Hono()
             }
             const cashBack = await calculateCashbackCoins(
               getOrder?.businessId.toString(),
-              getOrder?.billValue || 0,
+              getOrder?.subTotal || 0,
               claimCoins,
               Number(getOrder.couponDiscount),
               Number(getOrder.discount),
@@ -171,7 +181,7 @@ const webhookRouter = new Hono()
             { _id: getOrder._id },
             {
               $set: {
-                isPaid: true,
+                isPaid: "SUCCESS",
               },
             },
             { session },
@@ -239,11 +249,12 @@ const webhookRouter = new Hono()
     async (c) => {
       const { orderId } = c.req.param();
 
-      const fetchPayment = await JewelleryPayment.findOne({
-        orderId,
+      const fetchPayment = await JewelleryOrder.findOne({
+        _id: orderId,
       });
-      return respond(c, "Payment found", false, 200, {
-        success: fetchPayment,
+
+      return respond(c, "Order fetched", false, 200, {
+        status: fetchPayment?.isPaid,
       });
     },
   );
