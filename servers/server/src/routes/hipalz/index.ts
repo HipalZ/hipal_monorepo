@@ -1,4 +1,4 @@
-import { Business, UrlModel, WhatsAppBusinessConfig } from "@hi/db-models";
+import { UrlModel, WhatsAppBusinessConfig } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -32,13 +32,6 @@ const hipalzRouter = new Hono().get(
         businessId: result.businessId,
       });
       if (whatsAppBusinessConfig?.menuRedirection === "WA") {
-        let linkNumber = urlCode;
-        const linkMatch = result.longUrl.match(/link=([^&]+)/);
-
-        if (linkMatch?.[1]) {
-          linkNumber = decodeURIComponent(linkMatch[1]);
-        }
-
         const message = `Hi, I'm interested to know coupon, can you share me link-${urlCode}`;
         const redirectUrl = `https://wa.me/${
           whatsAppBusinessConfig.whatsAppPhone

@@ -1,32 +1,20 @@
 import {
-  Business,
   BusinessSettings,
   Campaign,
-  CheckInQr,
-  CheckInQrUser,
   CouponLink,
   Couponz,
   GroupModel,
-  HotelAnalytics,
-  HotelRoom,
-  HotelRoomSession,
-  HotelServiceTemplateMapping,
-  OutLetInfo,
   RecentCampaign,
   Subscriber,
-  TagModel,
-  UrlModel,
   User,
-  UserAnalytic,
   UserReward,
-  UserTags,
   WhatAppOrder,
   WhatAppTemplate,
   WhatsAppAnalyticsUser,
   WhatsAppBlockedUser,
   WhatsAppBusinessConfig,
+  WhatsAppChat,
   WhatsAppPayment,
-  WhatsAppUser,
   WhatsAppWABA,
   WhatsAppWallet,
   WhatsAppWalletHistory,
@@ -68,14 +56,17 @@ import {
 import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
 import {
-  type CampaignConfig,
-  deleteBlockedUser,
   getBlockedUser,
-  getTemplateId,
-  setBlockedUser,
   setWhatsAppMessageConfig,
 } from "../../utils/whatsAppUserCache";
-import { returnHotelBodyComponents } from "../hotel/rooms";
+import { qrHandlers } from "../../utils/whatsappWebhookHandlers/allQrHandler";
+import { whatsAppCampaignHandler } from "../../utils/whatsappWebhookHandlers/campaign";
+import { whatsAppChatHandler } from "../../utils/whatsappWebhookHandlers/chatHandler";
+import {
+  identifyQrTypeFromMessage,
+  whatsAppEventData,
+  whatsAppUserAndTextMessage,
+} from "../../utils/whatsappWebhookHandlers/helper";
 interface AxiosError {
   response?: {
     status?: number;
@@ -1669,6 +1660,8 @@ const whatsappRouter = new Hono()
         businessId,
       });
 
+      console.log("wallet", wallet);
+
       if (!wallet) {
         return c.json(
           {
@@ -2121,987 +2114,48 @@ const whatsappRouter = new Hono()
         return c.json({ message: "ignored", err: false }, 200);
       }
       if (body.object) {
-        const entry = body.entry?.[0];
-        const changes = entry?.changes?.[0];
-        const value = changes?.value;
-        const messages = value?.messages?.[0];
-        const contacts = value?.contacts?.[0];
-        const statuses = value?.statuses;
+        const { messages, contacts, statuses, whatsAppBusinessConfigData } =
+          await whatsAppEventData(body);
 
-        const phon_no_id = value?.metadata?.phone_number_id;
-        const config = await WhatsAppBusinessConfig.findOne({
-          phoneId: phon_no_id,
-        });
-        const bName = await Business.findById(config?.businessId);
-        if (statuses && statuses.length > 0) {
-          const firstStatus = statuses[0];
-          const extractedData = {
-            status: firstStatus.status,
-            category: firstStatus.pricing?.category,
-          };
+        if (
+          messages &&
+          messages?.text?.body?.length > 1 &&
+          whatsAppBusinessConfigData
+        ) {
+          const { userData, userInput } = await whatsAppUserAndTextMessage(
+            contacts,
+            messages,
+          );
 
-          const wamid = firstStatus.id;
-          const userPhoneNumber = firstStatus?.recipient_id.toString().slice(2);
+          const qrType = identifyQrTypeFromMessage(userInput);
 
-          const getTemplateIdInfo = (await getTemplateId(
-            wamid,
-          )) as CampaignConfig;
-
-          const userInfo = await User.findOne({
-            phone: userPhoneNumber,
-          });
-
-          if (getTemplateIdInfo && extractedData.category !== "service") {
-            await WhatsAppAnalyticsUser.findOneAndUpdate(
-              {
-                businessId: config?.businessId,
-                phone: userInfo?.phone,
-                status: extractedData?.status,
-                templateId: getTemplateIdInfo.templateId,
-                campaignId: getTemplateIdInfo.campaignId,
-              },
-              {
-                businessId: config?.businessId,
-                name: userInfo?.name,
-                phone: userInfo?.phone,
-                status: extractedData?.status,
-                templateId: getTemplateIdInfo.templateId,
-                date: Date.now(),
-                campaignId: getTemplateIdInfo.campaignId,
-              },
-              {
-                upsert: true,
-                new: true,
-              },
+          if (qrType?.qrType && qrHandlers[qrType.qrType]) {
+            await qrHandlers[qrType.qrType](
+              qrType.value,
+              userData.phone,
+              userData._id.toString(),
+              userData.name || "Guest",
+              whatsAppBusinessConfigData,
             );
           }
-
-          if (
-            extractedData?.status === "delivered" &&
-            extractedData?.category === "marketing"
-          ) {
-            // Fetch the current balance
-            const wallet = await WhatsAppWallet.findOne({
-              businessId: config?.businessId,
-            });
-
-            const minimumAmount = config?.marketingTemplateCost || 0.89;
-
-            if (wallet && wallet.currentBalance >= minimumAmount) {
-              // Update the balance only if it won't go negative
-              await WhatsAppWallet.findOneAndUpdate(
-                { businessId: config?.businessId },
-                { $inc: { currentBalance: -minimumAmount } },
-              );
-            } else {
-              console.log("Insufficient balance to decrement");
-            }
+          if (whatsAppBusinessConfigData.chat) {
+            await whatsAppChatHandler(
+              messages?.text?.body,
+              userData._id.toString(),
+              whatsAppBusinessConfigData,
+            );
           }
         }
-        if (messages && config) {
-          const from = messages?.from;
-          const userName = contacts?.profile?.name;
-          let userPhone = contacts?.wa_id;
-          const userText = messages?.text?.body;
 
-          let longUrl = "";
-          let shortUrlType = "";
-          let urlObj;
-          let updateLongUrl;
-
-          if (userText) {
-            if (userText.trim().toLowerCase() === "stop") {
-              const RecentCampaignData = await RecentCampaign.findOne({
-                businessId: config?.businessId,
-              });
-
-              const ifAlreadyBlocked = await WhatsAppBlockedUser.findOne({
-                phone: userPhone.toString().slice(2),
-              });
-
-              if (!ifAlreadyBlocked) {
-                await WhatsAppAnalyticsUser.create({
-                  businessId: RecentCampaignData?.businessId,
-                  name: userName,
-                  phone: userPhone.toString().slice(2),
-                  status: "blocked",
-                  templateId: RecentCampaignData?.templateId,
-                  date: Date.now(),
-                  campaignId: RecentCampaignData?.campaignId,
-                });
-              }
-              const findBlockedUser = await getBlockedUser(
-                userPhone.toString().slice(2),
-              );
-
-              if (!findBlockedUser) {
-                await WhatsAppBlockedUser.findOneAndUpdate(
-                  {
-                    phone: userPhone.toString().slice(2),
-                  },
-                  {
-                    phone: userPhone.toString().slice(2),
-                  },
-                  {
-                    upsert: true,
-                    new: true,
-                  },
-                );
-                await setBlockedUser(
-                  userPhone.toString().slice(2),
-                  userPhone.toString().slice(2),
-                );
-              }
-            }
-            if (userText.trim().toLowerCase() === "unstop") {
-              await WhatsAppBlockedUser.findOneAndDelete({
-                phone: userPhone.toString().slice(2),
-              });
-              await deleteBlockedUser(userPhone.toString().slice(2));
-            }
-          }
-          let userObj;
-          if (userPhone) {
-            userPhone = userPhone.toString().slice(2);
-            if (userPhone.length === 10) {
-              const userData = await User.findOneAndUpdate(
-                {
-                  phone: userPhone,
-                },
-                {
-                  name: userName,
-                  role: [
-                    "HIPAL_CUSTOMER",
-                    "OWNER",
-                    "MANAGER",
-                    "CAPTAIN",
-                    "CO_OWNER",
-                  ],
-                },
-                {
-                  upsert: true,
-                },
-              );
-
-              const userAnalytics = await UserAnalytic.exists({
-                userId: userData?._id,
-                businessId: config?.businessId,
-              });
-
-              if (!userAnalytics) {
-                await UserAnalytic.create({
-                  userId: userData?._id,
-                  businessId: config?.businessId,
-                  avgSpend: 0,
-                  coinzIssued: 0,
-                  coinzUsed: 0,
-                  couponCount: 0,
-                  currentCoins: 0,
-                  dateOfJoining: Date.now(),
-                  totalSpend: 0,
-                  visitCount: 1,
-                });
-              }
-              userObj = userData;
-            }
-          }
-          if (userText) {
-            const tableCodeMatch = userText.match(
-              /details\s*[-\s]?([a-zA-Z0-9\s-_]+)/i,
-            );
-            const roomCodeMatch = userText.match(
-              /room\s*[-\s]?([a-zA-Z0-9\s-]+)/i,
-            );
-            const linkCodeMatch = userText.match(
-              /link\s*[-\s]?([a-zA-Z0-9\s-]+)/i,
-            );
-            const checkInCodeMatch = userText.match(/QR-([A-Z0-9]+__\w+)/);
-            const tableCode = tableCodeMatch?.[1];
-            const roomCode = roomCodeMatch?.[1];
-            const couponCode = linkCodeMatch?.[1];
-            const checkInCode = checkInCodeMatch?.[1];
-            if (tableCode) {
-              const findLongUrl = await UrlModel.findOne({
-                longUrl: { $regex: `tableName=${tableCode}`, $options: "i" },
-                businessId: config?.businessId,
-              });
-
-              if (findLongUrl) {
-                const idParam = userObj?._id.toString();
-
-                longUrl = encodeURI(
-                  `${findLongUrl.shortUrl}?q=wa&id=${idParam}`,
-                );
-                updateLongUrl = encodeURI(
-                  `${findLongUrl.longUrl}&id=${idParam}`,
-                );
-                shortUrlType = findLongUrl.shortUrlType || "";
-                urlObj = findLongUrl;
-              } else {
-                const findLongUrlFallback = await UrlModel.findOne({
-                  urlCode: tableCode,
-                });
-                if (findLongUrlFallback) {
-                  const idParam = userObj?._id.toString();
-                  const urlSeparator = "?";
-
-                  // Construct the longUrl and update it properly
-                  longUrl = encodeURI(
-                    `${findLongUrlFallback.longUrl}${urlSeparator}id=${idParam}`,
-                  );
-
-                  updateLongUrl = encodeURI(
-                    `${findLongUrlFallback.longUrl}${urlSeparator}id=${idParam}`,
-                  );
-
-                  shortUrlType = findLongUrlFallback.shortUrlType || "";
-                  urlObj = findLongUrlFallback;
-                }
-              }
-            } else if (roomCode) {
-              const findLongUrl = await UrlModel.findOne({
-                longUrl: { $regex: `room=${roomCode}`, $options: "i" },
-                businessId: config?.businessId,
-              });
-              console.log("findLongUrl", findLongUrl);
-
-              if (findLongUrl) {
-                const idParam = userObj?._id.toString();
-
-                longUrl = encodeURI(
-                  `${findLongUrl.shortUrl}?q=wa&id=${idParam}`,
-                );
-                updateLongUrl = encodeURI(
-                  `${findLongUrl.longUrl}&id=${idParam}`,
-                );
-                shortUrlType = findLongUrl.shortUrlType || "";
-                urlObj = findLongUrl;
-              }
-            } else if (couponCode) {
-              const findLongUrl = await UrlModel.findOne({
-                urlCode: couponCode,
-              });
-              if (findLongUrl) {
-                longUrl = encodeURI(`${findLongUrl.longUrl}`);
-                shortUrlType = findLongUrl.shortUrlType || "";
-                urlObj = findLongUrl.shortUrl;
-              }
-            } else if (checkInCode) {
-              const findLongUrl = await UrlModel.findOne({
-                urlCode: checkInCode,
-                businessId: config?.businessId,
-              });
-              if (findLongUrl) {
-                const idParam = userObj?._id.toString();
-
-                longUrl = encodeURI(
-                  `${findLongUrl.longUrl}?q=wa&id=${idParam}`,
-                );
-                updateLongUrl = encodeURI(
-                  `${findLongUrl.longUrl}&id=${idParam}`,
-                );
-                shortUrlType = findLongUrl.shortUrlType || "";
-                urlObj = findLongUrl;
-              }
-            } else {
-              const payload = {
-                messaging_product: "whatsapp",
-                to: from,
-                type: "template",
-                template: {
-                  name: "krishivaas_test",
-                  language: {
-                    code: "en_GB",
-                  },
-                  components: [
-                    {
-                      type: "BODY",
-                      parameters: [
-                        {
-                          type: "text",
-                          text: userObj.name,
-                        },
-                      ],
-                    },
-                    {
-                      type: "FOOTER",
-                      parameters: [
-                        {
-                          type: "text",
-                          text: "Powered by Namaste",
-                        },
-                      ],
-                    },
-                    {
-                      type: "button",
-                      sub_type: "flow",
-                      index: "0",
-                      parameters: [
-                        {
-                          type: "action",
-                          action: {
-                            flow_token: "token",
-                            flow_action_data: {
-                              prefill_name: userObj.name,
-                            },
-                          },
-                        },
-                      ],
-                    },
-                  ],
-                },
-              };
-              try {
-                // 1️⃣ Check if customer exists in Krishivaas DB
-                const checkResponse = await axios.get(
-                  `https://api.staging.krishivaas.ai/api/v1/get-name-by-mobile-number/9896000099`,
-                );
-                const name = checkResponse?.data?.data;
-                console.log("name", name);
-                if (!name) {
-                  await axios.post(
-                    `${whatsAppApiBaseUrl.BASE_URL}${config.version}/${config.phoneId}/messages`,
-                    {
-                      messaging_product: "whatsapp",
-                      to: from,
-                      type: "text",
-                      text: {
-                        body: "We are sorry, we are unable to find you in our records. Please contact our support team.",
-                      },
-                    },
-                    {
-                      headers: { Authorization: `Bearer ${config.token}` },
-                    },
-                  );
-
-                  return c.json(
-                    { message: "Fallback text message sent." },
-                    200,
-                  );
-                }
-                await axios.post(
-                  `${whatsAppApiBaseUrl.BASE_URL}${config.version}/${config.phoneId}/messages`,
-                  payload,
-                  {
-                    headers: { Authorization: `Bearer ${config.token}` },
-                  },
-                );
-
-                return c.json({ message: "Template sent successfully." }, 200);
-              } catch (error) {
-                console.error(
-                  "Error in WhatsApp send flow:",
-                  error?.response?.data || error.message,
-                );
-                return c.json(
-                  {
-                    message: "Error sending WhatsApp message",
-                    error: error?.response?.data || error.message,
-                  },
-                  500,
-                );
-              }
-            }
-          }
-          if (phon_no_id && from && urlObj) {
-            if (shortUrlType === "COUPON") {
-              await axios({
-                method: "POST",
-                url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
-                data: {
-                  messaging_product: "whatsapp",
-                  to: from,
-                  text: {
-                    body: `🎉 *${bName?.name}* offers you exclusive benefits.\n🔗 Click below to grab your special coupon curated just for you. \n${longUrl}`,
-                  },
-                },
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              });
-              //coupon template
-            } else if (shortUrlType === "ROOM") {
-              const user = await User.findOne({
-                phone: userPhone,
-              }).select("_id name phone");
-              // Check if user analytics exists, if not, create new user analytics
-              const userAnalytics = await UserAnalytic.exists({
-                userId: user?._id,
-              });
-
-              if (!userAnalytics) {
-                await UserAnalytic.create({
-                  userId: user?._id,
-                  businessId: config?.businessId,
-                  avgSpend: 0,
-                  coinzIssued: 0,
-                  coinzUsed: 0,
-                  couponCount: 0,
-                  currentCoins: 0,
-                  dateOfJoining: Date.now(),
-                  totalSpend: 0,
-                  visitCount: 1,
-                });
-              }
-
-              // Extract room number from urlCode (if URL is passed directly by the user)
-              const authCode = Math.floor(
-                1000 + Math.random() * 9000,
-              ).toString();
-              const room = await HotelRoom.findOne({
-                slug: urlObj?.urlCode, // assuming that room number is stored in slug
-              });
-              // If the room is found and no users are assigned, mark it as occupied
-
-              if (room && room.userIds.length === 0) {
-                const updatedRoom = await HotelRoom.findOneAndUpdate(
-                  {
-                    businessId: config?.businessId,
-                    name: room?.name,
-                    slug: urlObj?.urlCode,
-                  },
-                  {
-                    $addToSet: { userIds: user?._id },
-                    source: "",
-                    roomStatus: "OCCUPIED",
-                  },
-                );
-
-                // Create a session if none exists for the room
-                const roomSession = await HotelRoomSession.findOne({
-                  roomId: updatedRoom?._id.toString(),
-                });
-
-                if (!roomSession) {
-                  const roomSession = await HotelRoomSession.create({
-                    roomId: updatedRoom?._id,
-                    name: room?.name,
-                    userIds: [user?._id],
-                    date: Date.now(),
-                    checkIn: Date.now(),
-                    authCode, // Use nanoid for auth code generation
-                  });
-
-                  await HotelAnalytics.findOneAndUpdate(
-                    {
-                      businessId: config?.businessId,
-                      roomId: updatedRoom?._id,
-                      userId: user?._id,
-                      roomSessionId: roomSession?._id,
-                    },
-                    {
-                      checkIn: Date.now(),
-                      userId: user?._id,
-                      source: "not-given",
-                      $addToSet: { guestUserIds: user?._id },
-                    },
-                    { upsert: true },
-                  );
-
-                  // Update the room with the generated authCode
-                  await HotelRoom.findOneAndUpdate(
-                    {
-                      _id: updatedRoom?._id,
-                    },
-                    {
-                      authCode: roomSession.authCode,
-                    },
-                  );
-
-                  const serviceTemplateMapping =
-                    await HotelServiceTemplateMapping.findOne({
-                      businessId: config.businessId,
-                      serviceName: "welcome",
-                    });
-
-                  if (serviceTemplateMapping) {
-                    const template = (await WhatAppTemplate.findOne({
-                      businessId: config.businessId,
-                      templateId: serviceTemplateMapping.templateId,
-                      isDeleted: false,
-                    })) as {
-                      templateName: string;
-                      bodyVariableSequence: string[];
-                      templateId: string;
-                      languageCode: string;
-                      category: string;
-                      imageUrl?: string;
-                    };
-
-                    // const businessWallet = await WhatsAppWallet.findOne({
-                    //   businessId: roomExists.businessId,
-                    // }).select("currentBalance");
-
-                    const imageUrl = template?.imageUrl;
-
-                    if (!template) {
-                      return c.json(
-                        {
-                          message: "Template not found",
-                          err: true,
-                          data: {},
-                        },
-                        404,
-                      );
-                    }
-
-                    const url = `${whatsAppApiBaseUrl.BASE_URL}${config.version}/${config.phoneId}/messages`;
-                    const components = await returnHotelBodyComponents(
-                      bName?.name as string,
-                      "address",
-                      template.bodyVariableSequence,
-                      `${updateLongUrl}&sessionId=${roomSession?._id}`,
-                      "16",
-                      authCode,
-                      user?.name as string,
-                      "get towel",
-                      "dibesh",
-                      "https://chatlink.com",
-                      "googleReviewLink",
-                      "serviceRejectionReason",
-                      "phone",
-                      imageUrl,
-                    );
-
-                    const payload = {
-                      messaging_product: "whatsapp",
-                      to: from,
-                      type: "template",
-                      template: {
-                        name: template.templateName,
-                        language: { code: template.languageCode },
-                        components,
-                      },
-                    };
-
-                    const axiosConfig = {
-                      headers: {
-                        Authorization: `Bearer ${config.token}`,
-                      },
-                    };
-
-                    try {
-                      const respo = await axios.post(url, payload, axiosConfig);
-                    } catch (error) {
-                      console.error("Error sending message:", error);
-                    }
-                  }
-
-                  // await axios.post(
-                  //   `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
-                  //   {
-                  //     messaging_product: "whatsapp",
-                  //     to: from,
-                  //     type: "template",
-                  //     template: {
-                  //       name: "fi_welcoming_template",
-                  //       language: { code: "en" },
-                  //       components: [
-                  //         {
-                  //           type: "header",
-                  //           parameters: [
-                  //             {
-                  //               type: "image",
-                  //               image: {
-                  //                 link: "https://t-static.blr1.digitaloceanspaces.com/e3039890-ede4-4fec-bcc4-ad12c2aa87ac.jpeg",
-                  //               },
-                  //             },
-                  //           ],
-                  //         },
-                  //         {
-                  //           type: "body",
-                  //           parameters: [
-                  //             {
-                  //               type: "text",
-                  //               text: bName?.name,
-                  //             },
-
-                  //             {
-                  //               type: "text",
-                  //               text: `${updateLongUrl}&sessionId=${roomSession?._id}`,
-                  //             },
-                  //             {
-                  //               type: "text",
-                  //               text: authCode,
-                  //             },
-                  //           ],
-                  //         },
-                  //       ],
-                  //     },
-                  //   },
-                  //   {
-                  //     headers: {
-                  //       Authorization: `Bearer ${config.token}`,
-                  //     },
-                  //   },
-                  // );
-                }
-              }
-              const findRoom = await HotelRoom.findOne({
-                businessId: config?.businessId,
-                name: room?.name,
-                slug: urlObj?.urlCode,
-              });
-
-              const roomSession = await HotelRoomSession.findOne({
-                roomId: findRoom?._id.toString(),
-              });
-
-              await HotelAnalytics.findOneAndUpdate(
-                {
-                  businessId: config?.businessId,
-                  roomId: findRoom?._id,
-                  userId: user?._id,
-                  roomSessionId: roomSession?._id,
-                },
-                {
-                  checkIn: Date.now(),
-                  userId: user?._id,
-                  source: "not-given",
-                  $addToSet: { guestUserIds: user?._id },
-                },
-                { upsert: true },
-              );
-
-              const serviceTemplateMapping =
-                await HotelServiceTemplateMapping.findOne({
-                  businessId: config.businessId,
-                  serviceName: "welcome",
-                });
-
-              if (serviceTemplateMapping) {
-                const template = (await WhatAppTemplate.findOne({
-                  businessId: config.businessId,
-                  templateId: serviceTemplateMapping.templateId,
-                  isDeleted: false,
-                })) as {
-                  templateName: string;
-                  bodyVariableSequence: string[];
-                  templateId: string;
-                  languageCode: string;
-                  category: string;
-                  imageUrl?: string;
-                };
-
-                // const businessWallet = await WhatsAppWallet.findOne({
-                //   businessId: roomExists.businessId,
-                // }).select("currentBalance");
-
-                const imageUrl = template?.imageUrl;
-
-                if (!template) {
-                  return c.json(
-                    {
-                      message: "Template not found",
-                      err: true,
-                      data: {},
-                    },
-                    404,
-                  );
-                }
-
-                const url = `${whatsAppApiBaseUrl.BASE_URL}${config.version}/${config.phoneId}/messages`;
-                const components = await returnHotelBodyComponents(
-                  bName?.name as string,
-                  "address",
-                  template.bodyVariableSequence,
-                  `${updateLongUrl}&sessionId=${roomSession?._id}`,
-                  "16",
-                  "  ",
-                  "datta",
-                  "get towel",
-                  "dibesh",
-                  "https://chatlink.com",
-                  "googleReviewLink",
-                  "serviceRejectionReason",
-                  "phone",
-                  imageUrl,
-                );
-
-                const payload = {
-                  messaging_product: "whatsapp",
-                  to: from,
-                  type: "template",
-                  template: {
-                    name: template.templateName,
-                    language: { code: template.languageCode },
-                    components,
-                  },
-                };
-
-                const axiosConfig = {
-                  headers: {
-                    Authorization: `Bearer ${config.token}`,
-                  },
-                };
-
-                try {
-                  const respo = await axios.post(url, payload, axiosConfig);
-                } catch (error) {
-                  console.error("Error sending message:", error);
-                }
-              }
-
-              // await axios.post(
-              //   `${whatsAppApiBaseUrl.BASE_URL}${config?.version}/${config?.phoneId}/messages`,
-              //   {
-              //     messaging_product: "whatsapp",
-              //     to: from,
-              //     type: "template",
-              //     template: {
-              //       name: "fi_welcoming_template",
-              //       language: { code: "en" },
-              //       components: [
-              //         {
-              //           type: "header",
-              //           parameters: [
-              //             {
-              //               type: "image",
-              //               image: {
-              //                 link: "https://t-static.blr1.digitaloceanspaces.com/e3039890-ede4-4fec-bcc4-ad12c2aa87ac.jpeg",
-              //               },
-              //             },
-              //           ],
-              //         },
-              //         {
-              //           type: "body",
-              //           parameters: [
-              //             {
-              //               type: "text",
-              //               text: bName?.name,
-              //             },
-
-              //             {
-              //               type: "text",
-              //               text: `${updateLongUrl}&sessionId=${roomSession?._id}`,
-              //             },
-              //             {
-              //               type: "text",
-              //               text: " ",
-              //             },
-              //           ],
-              //         },
-              //       ],
-              //     },
-              //   },
-              //   {
-              //     headers: {
-              //       Authorization: `Bearer ${config.token}`,
-              //     },
-              //   },
-              // );
-            } else if (shortUrlType === "CHECK_IN") {
-              let user = await User.findOne({
-                phone: userPhone,
-              });
-
-              if (!user) {
-                user = await User.create({
-                  phone: userPhone,
-                  name: userName,
-                  role: [
-                    "HIPAL_CUSTOMER",
-                    "OWNER",
-                    "MANAGER",
-                    "CAPTAIN",
-                    "CO_OWNER",
-                  ],
-                });
-              }
-              const code = Math.floor(1000 + Math.random() * 9000).toString();
-              await CheckInQrUser.findOneAndUpdate(
-                {
-                  userId: user?._id,
-                  businessId: config?.businessId,
-                },
-                {
-                  userId: user?._id,
-                  businessId: config?.businessId,
-                  code,
-                  qrId: urlObj?.qrId,
-                  date: Date.now(),
-                },
-                {
-                  upsert: true,
-                  new: true,
-                },
-              );
-
-              const checkInUserExist = await CheckInQrUser.exists({
-                userId: user?._id,
-                businessId: config?.businessId,
-              });
-
-              if (!checkInUserExist) {
-                await CheckInQr.findByIdAndUpdate(
-                  urlObj?.qrId,
-                  {
-                    $inc: { userCount: 1 },
-                  },
-                  { new: true },
-                );
-              }
-              const outletInfo = await OutLetInfo.findOne({
-                businessId: config?.businessId,
-              });
-              const websiteLink = outletInfo?.socialMediaLinks?.find(
-                (item) => item?.icon === "website",
-              )?.link;
-              const checkInBody = `Welcome to ${
-                bName?.name
-              }! 👋\n\n Thank you for being with us today. 🙏\nYour code: *${code}*\n\n *Discover Us*: ${longUrl}\n\nWe hope you have a great experience! 😊\n\n *Find Us*: ${
-                websiteLink || ""
-              }`;
-              await axios({
-                method: "POST",
-                url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
-                data: {
-                  messaging_product: "whatsapp",
-                  to: from,
-                  text: {
-                    body: checkInBody,
-                  },
-                },
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              });
-            } else {
-              let tag = await TagModel.findOne({
-                businessId: config?.businessId,
-                name: "whatsapp",
-              });
-              if (!tag) {
-                tag = await TagModel.create({
-                  businessId: config?.businessId,
-                  name: "whatsapp",
-                  createdBy: bName?.staffIds?.[0],
-                });
-              }
-
-              const userTag = await UserTags.findOneAndUpdate(
-                {
-                  userId: userObj?._id,
-                  businessId: config?.businessId,
-                },
-                {
-                  tagId: tag?._id,
-                },
-                {
-                  upsert: true,
-                  new: true,
-                },
-              );
-              const menuTemplate = `Welcome to ${bName?.name}! \n\n We’re excited to offer you an exceptional dining experience.\n🔗 Explore Menu: ${updateLongUrl}\n\n🍽️ View our curated menu featuring handcrafted delights.`;
-              const otherTemplate = `Welcome to ${bName?.name}! \n\n🔗 Explore our offerings: ${updateLongUrl}\n\n🌟 Discover our curated services/products crafted with care.`;
-              const outletInfo = await OutLetInfo.findOne({
-                businessId: config?.businessId,
-              });
-              const outletType = outletInfo?.outLetType;
-              const FoodCondition =
-                outletType === "FOOD" ||
-                outletType === "RESTAURANT" ||
-                outletType === "MENU";
-              await axios({
-                method: "POST",
-                url: `${whatsAppApiBaseUrl.BASE_URL}/${config?.version}/${phon_no_id}/messages?access_token=${config?.token}`,
-                data: {
-                  messaging_product: "whatsapp",
-                  to: from,
-                  text: {
-                    body: FoodCondition ? menuTemplate : otherTemplate,
-                  },
-                },
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              });
-            }
-          } else {
-            const user = await User.findOne({
-              phone: userPhone,
-            }).select("_id");
-
-            const userAnalytics = await UserAnalytic.exists({
-              userId: user?._id,
-              businessId: config?.businessId,
-            });
-
-            if (!userAnalytics) {
-              await UserAnalytic.create({
-                userId: user?._id,
-                businessId: config?.businessId,
-                avgSpend: 0,
-                coinzIssued: 0,
-                coinzUsed: 0,
-                couponCount: 0,
-                currentCoins: 0,
-                dateOfJoining: Date.now(),
-                totalSpend: 0,
-                visitCount: 1,
-              });
-            }
-
-            if (user && messages?.text?.body) {
-              await WhatsAppUser.create({
-                businessId: config?.businessId,
-                date: Date.now(),
-                message: messages?.text?.body,
-                isOwner: false,
-                userId: user?._id,
-                ownerId: config?.ownerId,
-              });
-
-              const unseenMessages = await WhatsAppUser.find({
-                businessId: config?.businessId,
-                userId: user?._id,
-                isOwner: false,
-                seen: false,
-              }).select("seen");
-
-              await Subscriber.findOneAndUpdate(
-                {
-                  userId: user?._id,
-                  businessId: config?.businessId,
-                },
-                {
-                  $set: {
-                    whatsappMsgUnseenCount: unseenMessages.length,
-                  },
-                },
-                { new: true },
-              );
-            }
-          }
-
-          return c.json({
-            message: "Webhook verified",
-            err: false,
-            data: {},
-          });
+        if (statuses && statuses.length > 0 && whatsAppBusinessConfigData) {
+          await whatsAppCampaignHandler(whatsAppBusinessConfigData);
         }
+
+        return respond(c, "event received", false, 200, {});
       }
-
-      return c.json({
-        message: "running",
-        err: true,
-        data: {},
-      });
     },
   )
 
-  .get(
-    "/testing",
-
-    async (c) => {
-      //@ts-ignore
-
-      const redirectUrl =
-        "https://wa.me/7075179325?text=Hi, I'm interested in your menu. Could you share more details? I am sitting at qpxIq";
-
-      return c.redirect(redirectUrl);
-    },
-  )
   .get(
     "/whatsapp_config/:businessId",
 
@@ -3206,15 +2260,15 @@ const whatsappRouter = new Hono()
         },
       });
 
-      const saveUserMessage = await WhatsAppUser.create({
+      const saveOwnerChat = await WhatsAppChat.create({
         businessId,
         date: Date.now(),
         message: text,
-        isOwner: isOwner,
+        isOwner: true,
         userId: userId,
         ownerId: ownerId,
       });
-      if (!saveUserMessage) {
+      if (!saveOwnerChat) {
         return c.json({
           message: "Error sending message",
           err: true,
@@ -3236,16 +2290,17 @@ const whatsappRouter = new Hono()
     async (c) => {
       const { userId, ownerId, businessId } = c.req.param();
 
-      const user = await WhatsAppUser.find({
+      const userChats = await WhatsAppChat.find({
         userId,
-        ownerId,
+        businessId,
         isDeleted: false,
       });
 
-      await WhatsAppUser.updateMany(
+      await WhatsAppChat.updateMany(
         {
           userId,
-          ownerId,
+          businessId,
+          seen: false,
         },
         {
           $set: {
@@ -3267,7 +2322,7 @@ const whatsappRouter = new Hono()
       return c.json({
         message: "Messages found",
         err: false,
-        data: user,
+        data: userChats,
       });
     },
   )
@@ -3277,28 +2332,36 @@ const whatsappRouter = new Hono()
     async (c) => {
       const { ownerId } = c.req.param();
 
-      const user = await WhatsAppUser.find({
-        ownerId,
-      });
+      // const user = await WhatsAppUser.find({
+      //   ownerId,
+      // });
 
-      return c.json({
-        message: "Messages found",
-        err: false,
-        data: user,
-      });
+      // return c.json({
+      //   message: "Messages found",
+      //   err: false,
+      //   data: user,
+      // });
     },
   )
 
   .delete(
-    "/user-messages/:userId/:ownerId",
+    "/user-messages/:userId/:ownerId/:businessId",
+    zValidator(
+      "param",
+      z.object({
+        userId: z.string(),
+        ownerId: z.string(),
+        businessId: z.string(),
+      }),
+    ),
 
     async (c) => {
-      const { userId, ownerId } = c.req.param();
+      const { userId, ownerId, businessId } = c.req.param();
 
-      const user = await WhatsAppUser.updateMany(
+      const user = await WhatsAppChat.updateMany(
         {
           userId,
-          ownerId,
+          businessId,
         },
         {
           $set: {
@@ -3310,7 +2373,7 @@ const whatsappRouter = new Hono()
       return c.json({
         message: "Messages found",
         err: false,
-        data: user,
+        data: {},
       });
     },
   )

@@ -1,4 +1,11 @@
-import { BillUrlModel, UrlModel, WhatsAppBusinessConfig } from "@hi/db-models";
+import {
+  BillUrlModel,
+  CheckInQr,
+  HotelRoom,
+  Table,
+  UrlModel,
+  WhatsAppBusinessConfig,
+} from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
@@ -41,13 +48,12 @@ const surlRouter = new Hono()
         });
 
         if (whatsAppBusinessConfig?.menuRedirection === "WA") {
-          let tableNumber = urlCode;
-          const tableMatch = result.longUrl.match(/tableName=([^&]+)/);
+          const tableInfo = await Table.findOne({
+            businessId: whatsAppBusinessConfig.businessId,
+            tableLink: result.shortUrl,
+          });
 
-          if (tableMatch?.[1]) {
-            tableNumber = decodeURIComponent(tableMatch[1]);
-          }
-          const message = `Hi! I’m interested. Could you share more details-${tableNumber}`;
+          const message = `Hi! I’m interested. Could you share more details-${tableInfo?.name}`;
           const redirectUrl = `https://wa.me/${
             whatsAppBusinessConfig.whatsAppPhone
           }?text=${encodeURIComponent(message)}`;
@@ -138,14 +144,16 @@ const surlRouter = new Hono()
         });
 
         if (whatsAppBusinessConfig?.menuRedirection === "WA") {
-          let tableNumber = urlCode;
-          const tableMatch = result.longUrl.match(/tag=([^&]+)/);
+          const urlModelData = await UrlModel.findOne({
+            urlCode: urlCode,
+          });
 
-          if (tableMatch?.[1]) {
-            tableNumber = decodeURIComponent(tableMatch[1]);
-          }
+          const checkInQrInfo = await CheckInQr.findOne({
+            businessId: whatsAppBusinessConfig.businessId,
+            downloadLink: urlModelData?.shortUrl,
+          });
 
-          const message = `Hi, I have ve checked in via QR-${tableNumber}`;
+          const message = `Hi, I have checked in via QR-${checkInQrInfo?.name}`;
           const redirectUrl = `https://wa.me/${
             whatsAppBusinessConfig.whatsAppPhone
           }?text=${encodeURIComponent(message)}`;
@@ -188,14 +196,16 @@ const surlRouter = new Hono()
           businessId: result.businessId,
         });
         if (whatsAppBusinessConfig?.menuRedirection === "WA") {
-          let roomNumber = urlCode;
-          const tableMatch = result.longUrl.match(/room=([^&]+)/);
+          const urlModelData = await UrlModel.findOne({
+            urlCode: urlCode,
+          });
 
-          if (tableMatch?.[1]) {
-            roomNumber = decodeURIComponent(tableMatch[1]);
-          }
+          const roomInfo = await HotelRoom.findOne({
+            businessId: whatsAppBusinessConfig.businessId,
+            downLoadLink: urlModelData?.shortUrl,
+          });
 
-          const message = `Hi, I'm interested in your services. Can you share more details? I'm in room-${roomNumber}`;
+          const message = `Hi, I'm interested in your services. Can you share more details? I'm in room-${roomInfo?.name}`;
           const redirectUrl = `https://wa.me/${
             whatsAppBusinessConfig.whatsAppPhone
           }?text=${encodeURIComponent(message)}`;

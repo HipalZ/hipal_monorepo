@@ -1,8 +1,8 @@
 import mongoose, { type Model } from "mongoose";
-import type { WhatsappUserType } from "../validators";
+import type { WhatsAppChatType } from "../validators";
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
-const whatsAppUserSchema = new mongoose.Schema<WhatsappUserType>({
+const whatsAppChatSchema = new mongoose.Schema<WhatsAppChatType>({
   businessId: {
     type: ObjectId,
     required: true,
@@ -34,6 +34,7 @@ const whatsAppUserSchema = new mongoose.Schema<WhatsappUserType>({
     type: ObjectId,
     required: false,
     ref: "User",
+    default: null,
   },
   seen: {
     type: Boolean,
@@ -45,8 +46,8 @@ const whatsAppUserSchema = new mongoose.Schema<WhatsappUserType>({
   },
 });
 
-const WhatsAppUser: Model<WhatsappUserType> = mongoose.model<WhatsappUserType>(
-  "whatsappuser",
-  whatsAppUserSchema,
+const WhatsAppChat: Model<WhatsAppChatType> = mongoose.model<WhatsAppChatType>(
+  "whatsappchat",
+  whatsAppChatSchema,
 );
-export { WhatsAppUser };
+export { WhatsAppChat };

@@ -23,6 +23,8 @@ export const whatsAppBusinessConfigSchema = z.object({
   direction: z.string().min(3).max(250),
   socialLink: z.string().min(3).max(250),
   campaign: z.boolean().default(false),
+  outLetId: ObjectIdSchema.optional(),
+  chat: z.boolean().default(false),
 });
 
 export type WhatsAppBusinessConfigType = z.infer<
