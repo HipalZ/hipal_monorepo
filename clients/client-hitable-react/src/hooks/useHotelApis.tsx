@@ -8,6 +8,8 @@ import { apiRpc } from "@hi/common";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
+import { useMemo } from "react";
+
 interface IHotelRoomData {
   businessId: string;
   roomName: string;
@@ -132,10 +134,25 @@ export const useCheckOut = () => {
 export const useRoomAlerts = () => {
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const { tableId } = useParams();
-  const userId = useHiClientZ((s) => s.captainData._id);
+  const captainData = useHiClientZ((s) => s.captainData);
+  const customRoles = captainData?.customRole ?? [];
+  const userId = captainData?._id;
+
   const { setAlerts } = useAlertsStore();
   const { setHotelAlertsCount } = useHotelStore();
   const outletInfo = useBusinessData((s) => s?.outletInfo);
+
+  const roleName = useMemo(() => {
+    const match = customRoles.find(
+      (r) => String(r?.businessId) === String(businessId),
+    );
+    return (match?.role ?? "").toString().trim().toUpperCase();
+  }, [customRoles, businessId]);
+
+  const isFrontOffice = roleName === "FRONT_OFFICE";
+  const isManager = roleName === "MANAGER";
+  const hasAllowedRole = isFrontOffice || isManager;
+
   const roomAlerts = async () => {
     const response = await apiRpc.hotel.alert.fetch_room_alerts.$get({
       query: { businessId, userId },
@@ -149,18 +166,16 @@ export const useRoomAlerts = () => {
     return [];
   };
 
-  const enabled = Boolean(
-    businessId && userId && !tableId && outletInfo?.outLetType === "HOTEL",
-  );
+  const enabled = Boolean(businessId && userId && !tableId && hasAllowedRole);
 
-  const { data: alerts, isPending } = useQuery({
+  useQuery({
     queryKey: ["roomAlerts", businessId, userId],
     queryFn: roomAlerts,
     enabled,
     refetchInterval: 11000,
   });
 
-  return { alerts, isPending };
+  return { roomAlerts };
 };
 
 export const useAllServices = () => {
@@ -243,7 +258,13 @@ export const useHistoryAlerts = () => {
     }
   };
   const { data: historyData, isPending } = useQuery({
-    queryKey: ["historyAlerts", businessId, userId, timeStampStart, timeStampEnd],
+    queryKey: [
+      "historyAlerts",
+      businessId,
+      userId,
+      timeStampStart,
+      timeStampEnd,
+    ],
     queryFn: historyAlerts,
     enabled: !!businessId && !!userId && !!timeStampStart && !!timeStampEnd,
   });
@@ -325,6 +346,15 @@ export const useEscalatedAlerts = () => {
   const { setHotelEscalationCount, setEscalatedData } = useHotelStore();
   const captainData = useHiClientZ((s) => s.captainData);
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
+  const customRoles = captainData?.customRole ?? [];
+
+  const roleName = useMemo(() => {
+    const match = customRoles.find(
+      (r) => String(r?.businessId) === String(businessId),
+    );
+    return (match?.role ?? "").toString().trim().toUpperCase();
+  }, [customRoles, businessId]);
+
   const escalatedAlerts = async () => {
     const response = await apiRpc.hotel.alert.fetch_escalation_alerts.$get({
       query: {
@@ -339,13 +369,11 @@ export const useEscalatedAlerts = () => {
       return res.data;
     }
   };
-  const isEnabled = Boolean(
-    captainData &&
-      captainData._id &&
-      Array.isArray(captainData.customRole) &&
-      captainData.customRole.length > 0 &&
-      ["FRONT_OFFICE", "MANAGER"].includes(captainData.customRole[0]?.role),
-  );
+
+  const roleNamesAllowed = ["MANAGER", "FRONT_OFFICE"];
+  const isEnabled =
+    Boolean(businessId && captainData?._id) &&
+    roleNamesAllowed.includes(roleName);
 
   useQuery({
     queryKey: ["escalatedAlerts"],
