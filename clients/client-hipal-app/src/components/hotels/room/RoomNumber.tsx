@@ -47,7 +47,7 @@ export default function RoomCard({
               alt={i?.toString()}
               width={500}
               height={180}
-              className="w-full h-full object-cover"
+              className="w-full max-h-[16rem] object-cover"
               style={{ borderRadius: "1.25rem" }}
             />
           </SplideSlide>
