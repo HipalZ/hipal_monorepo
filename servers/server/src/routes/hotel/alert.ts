@@ -1654,28 +1654,30 @@ const hotelAlertRouter = new Hono()
         }
       }
       if (action === "REJECTED") {
-        const roomChatReply = new HotelRoomChatReply({
-          action: false,
-          description: "your cart is rejected",
-          roomChatId: roomChat?._id,
-          userId: alert.userId,
-          status: "NORMAL",
-          date: Date.now(),
-        });
+        if (alert.alertProgress !== "MESSAGE") {
+          const roomChatReply = new HotelRoomChatReply({
+            action: false,
+            description: "your cart is rejected",
+            roomChatId: roomChat?._id,
+            userId: alert.userId,
+            status: "NORMAL",
+            date: Date.now(),
+          });
 
-        await roomChatReply.save({ session });
+          await roomChatReply.save({ session });
 
-        if (!roomChatReply) {
-          throw new Error("Failed to create room chat reply");
+          if (!roomChatReply) {
+            throw new Error("Failed to create room chat reply");
+          }
+
+          await HotelRoomChat.findByIdAndUpdate(
+            roomChat?._id,
+            {
+              $addToSet: { roomChatReplyIds: roomChatReply._id },
+            },
+            { session },
+          );
         }
-
-        await HotelRoomChat.findByIdAndUpdate(
-          roomChat?._id,
-          {
-            $addToSet: { roomChatReplyIds: roomChatReply._id },
-          },
-          { session },
-        );
       }
 
       return respond(c, `Alert ${action} successfully`, false, 200, {
