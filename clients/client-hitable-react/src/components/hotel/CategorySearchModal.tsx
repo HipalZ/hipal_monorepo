@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Search as SearchIcon, Grid3x3 } from "lucide-react";
 import PopUp from "../atoms/popUp/index.tsx";
+import { useHotelStore } from "../store/useHotelStore.ts";
 
 export interface IService {
   _id: string;
@@ -45,6 +46,8 @@ export default function AllCategoriesServicesModal({
 }: Props) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const roomData = useHotelStore((state) => state.roomData);
+  console.log("roomData in CategorySearchModal:", roomData);
 
   // Build normalized model for search
   const modeled = useMemo(() => {
@@ -105,7 +108,6 @@ export default function AllCategoriesServicesModal({
   }, []);
 
   const handleConfirm = useCallback(() => {
-    console.log("Confirming selected services:", Array.from(selected));
     onConfirm?.(Array.from(selected));
   }, [onConfirm, selected]);
 
@@ -118,7 +120,6 @@ export default function AllCategoriesServicesModal({
   return (
     <PopUp show={show} onClose={handleClose}>
       <div className="p-4 max-h-[90dvh] overflow-hidden flex flex-col bg-white">
-        {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-xl font-bold text-primary">{title}</h2>
           <span className="text-xs text-gray-500">
@@ -126,7 +127,6 @@ export default function AllCategoriesServicesModal({
           </span>
         </div>
 
-        {/* Search */}
         <div className="relative mb-3">
           <SearchIcon
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -141,7 +141,6 @@ export default function AllCategoriesServicesModal({
           />
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-auto hide-scrollbar pb-24 space-y-6">
           {modeled.length === 0 ? (
             <EmptyState
@@ -200,14 +199,13 @@ export default function AllCategoriesServicesModal({
                     <div className="ml-auto flex items-center gap-2">
                       <Button
                         variant="outline"
-                        size="xs"
+                        className="p-2"
                         onClick={() => selectAllInCategory(c._services)}
                       >
                         Select All
                       </Button>
                       <Button
                         variant="ghost"
-                        size="xs"
                         onClick={() => clearAllInCategory(c._services)}
                       >
                         Clear

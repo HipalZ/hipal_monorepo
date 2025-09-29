@@ -175,6 +175,15 @@ const MemoZones = () => {
                                   {table?.status}
                                 </Badge>
                               </div>
+
+                              {/* 👇 Show hiCode only if ACTIVE */}
+                              {table?.status?.toUpperCase() === "ACTIVE" &&
+                                table?.hiCode && (
+                                  <div className="mb-2 text-sm font-medium text-purple-600">
+                                    Code: {table.hiCode}
+                                  </div>
+                                )}
+
                               <Separator className="my-2" />
                               <div className="flex items-center justify-between mt-2">
                                 <div className="flex items-center space-x-1">

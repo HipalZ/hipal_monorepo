@@ -24,8 +24,6 @@ const MemoTotalBillButton = () => {
   const { refetch } = useGetBill();
   const accessToken = useUserToken.getState().accessToken;
   const { setUrlFrom } = useLogin();
-  const isSplit = Array.isArray(billData)
-  console.log(isSplit)
   const completeUrl = window.location.href;
   const handleEligibility = useCallback(() => {
     if (billValue === 0) {

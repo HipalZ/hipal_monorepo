@@ -66,15 +66,15 @@ const MemoBillItemsList = ({
             <div className=" pl-2 pt-2">
               {billGroup.items.map((item, index) => (
                 <div key={`${item._id}-${index}`} className="px-2 text-sm">
-                  <div className="flex items-start gap-1 justify-between">
-                    <Salad size={16} className="-ml-2" />
-                    <div className="flex-1">
-                      <p className="font-medium">{item?.dish?.name}</p>
+                  {/* Dish Row */}
+                  <div className="grid grid-cols-12 items-center gap-2">
+                    {/* Name */}
+                    <div className="col-span-6 font-medium">
+                      {item?.dish?.name}
                       {item?.portion && (
-                        <p className="text-xs text-blue-600">
-                          Portion: {item.portion.name} (+₹
-                          {item.portion.price})
-                        </p>
+                        <span className="text-xs text-blue-600 ml-1">
+                          ({item.portion.name})
+                        </span>
                       )}
                       {item?.dish?.instruction && (
                         <p className="text-xs text-orange-600 italic">
@@ -82,21 +82,69 @@ const MemoBillItemsList = ({
                         </p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-gray-600">Qty: {item?.quantity}</p>
-                      <p className="font-medium">₹{calculateItemTotal(item)}</p>
+
+                    {/* Quantity */}
+                    <div className="col-span-2 text-center">
+                      x{item.quantity}
+                    </div>
+
+                    {/* Unit Price */}
+                    <div className="col-span-2 text-right">
+                      ₹
+                      {(item.dish.price === 0
+                        ? item.portion?.price || 0
+                        : item.dish.price
+                      ).toFixed(2)}
+                    </div>
+
+                    {/* Total Price */}
+                    <div className="col-span-2 text-right font-semibold">
+                      ₹
+                      {(
+                        (item.dish.price === 0
+                          ? item.portion?.price || 0
+                          : item.dish.price) * item.quantity
+                      ).toFixed(2)}
                     </div>
                   </div>
+
+                  {/* Extras Rows */}
                   {item?.extras?.length > 0 && (
-                    <div className="mt-1 text-xs text-gray-600 ml-3">
-                      <p className="font-medium">Extras:</p>
-                      {item?.extras?.map((extra, idx) => (
-                        <p key={`${extra.id}-${idx}`}>
-                          {extra?.name} - ₹{extra?.price} x {extra?.quantity}
-                        </p>
-                      ))}
+                    <div className="ml-4 mt-1 space-y-1 text-xs text-gray-600">
+                      {item.extras.map((extra, idx) => {
+                        const unitTotal = extra.price * extra.quantity;
+                        const finalTotal = unitTotal * item.quantity;
+
+                        return (
+                          <div
+                            key={`${extra.id}-${idx}`}
+                            className="grid grid-cols-12 items-center gap-2"
+                          >
+                            {/* Extra Name */}
+                            <div className="col-span-6 pl-2">
+                              + {extra.name}
+                            </div>
+
+                            {/* Quantity */}
+                            <div className="col-span-2 text-center">
+                              x{extra.quantity * item.quantity}
+                            </div>
+
+                            {/* Unit Price */}
+                            <div className="col-span-2 text-right">
+                              ₹{extra.price}
+                            </div>
+
+                            {/* Total Price */}
+                            <div className="col-span-2 text-right font-semibold">
+                              ₹{finalTotal.toFixed(2)}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
+
                   <Separator className="my-2" />
                 </div>
               ))}
@@ -104,9 +152,7 @@ const MemoBillItemsList = ({
             {/* Section Totals */}
             <div className="bg-gray-50 p-2 rounded-md border">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-700">
-                  Subtotal
-                </span>
+                <span className="text-gray-700">Subtotal</span>
                 <span className="font-medium">
                   ₹{Number(billGroup.subTotal).toFixed(2)}
                 </span>

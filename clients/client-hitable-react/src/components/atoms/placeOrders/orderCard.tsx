@@ -52,7 +52,6 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
       <Card className="mb-8 overflow-hidden ">
         <CardContent className="p-3">
           <div className="absolute top-2 right-2 z-[1] flex items-center gap-1">
-           
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8 -mr-2">
@@ -176,12 +175,17 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                             className="grid grid-cols-12 gap-2"
                           >
                             <span className={`col-span-8 ${itemTextClasses}`}>
-                              {extra.name} (x{extra.quantity})
+                              {extra.name} (x{extra.quantity * item.quantity})
                             </span>
                             <span
                               className={`col-span-4 text-right ${itemTextClasses}`}
                             >
-                              ₹{(extra.price * extra.quantity).toFixed(2)}
+                              ₹
+                              {(
+                                extra.price *
+                                extra.quantity *
+                                item.quantity
+                              ).toFixed(2)}
                             </span>
                           </div>
                         ))}
@@ -235,10 +239,10 @@ const MemoEnhancedOrderCard = ({ order }: CompactOrderCardProps) => {
                     ? item.portion.price * item.quantity
                     : 0;
                   const extrasTotal =
-                    item.extras?.reduce(
+                    (item.extras?.reduce(
                       (sum, extra) => sum + extra.price * extra.quantity,
                       0,
-                    ) || 0;
+                    ) || 0) * item.quantity;
                   return total + itemTotal + portionTotal + extrasTotal;
                 }, 0)
                 .toFixed(2)}

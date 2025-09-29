@@ -1,5 +1,3 @@
-"use client";
-
 import { Badge } from "@/components/ui/badge";
 import {
   BedDouble,
@@ -10,7 +8,11 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCheckOut, useUpdateSource } from "@/hooks/useHotelApis";
+import {
+  useCheckOut,
+  useCreateAlert,
+  useUpdateSource,
+} from "@/hooks/useHotelApis";
 import { useHotelStore } from "../store/useHotelStore";
 import { useMutation } from "@tanstack/react-query";
 import CommonBottomButton from "../atoms/bottomButton";
@@ -21,8 +23,9 @@ import { sources } from "./availableRoomHotel";
 import { Input } from "../ui/input";
 
 import { useGetServiceCategories } from "../hooks/useServices.ts";
-import PopUp from "../atoms/popUp/index.tsx";
 import CategorySearchModal from "./CategorySearchModal.tsx";
+import { useHiClientZ } from "../store/useHiClientzData.ts";
+import toast from "react-hot-toast";
 
 const GuestInformation = lazy(() => import("./guestInformation"));
 const ChatHotel = lazy(() => import("./ChatHotel"));
@@ -39,6 +42,8 @@ const MemoBookedRoomHotel = () => {
   const [selectedSource, setSelectedSource] = useState("");
   const [customSource, setCustomSource] = useState("");
   const [isCustomSource, setIsCustomSource] = useState(false);
+  const { creatingAlert, createAlert } = useCreateAlert();
+  const userData = useHiClientZ((s) => s.captainData);
 
   // 🔽 NEW: state for services picker modal
   const [showServicePicker, setShowServicePicker] = useState(false);
@@ -92,6 +97,20 @@ const MemoBookedRoomHotel = () => {
   const openServices = useCallback(() => setShowServicePicker(true), []);
   const closeServices = useCallback(() => setShowServicePicker(false), []);
 
+  const createAlertHiclient = async (serviceIds: string[]) => {
+    const result = await createAlert({
+      serviceIds: serviceIds,
+      businessId: businessId,
+      roomId: roomData?._id || "",
+      userId: userData?._id || "",
+    });
+    if (result.status === 200 || result.status === 201) {
+      toast.success("Alert created successfully");
+      closeServices();
+    }
+    console.log("Creating alert for service IDs:", serviceIds);
+  };
+
   return (
     <section className="w-full">
       {isOpenChat ? (
@@ -108,7 +127,7 @@ const MemoBookedRoomHotel = () => {
               <header className="text-center">Room {roomData?.name}</header>
             </CardTitle>
           </CardHeader>
-          <PopUp></PopUp>
+
           <center className="flex justify-around items-center gap-2 text-sm text-black bg-white mx-4 py-1 rounded-lg">
             <Badge className="bg-blue-600">Booked</Badge>
             <span className="flex items-center gap-1">
@@ -246,10 +265,7 @@ const MemoBookedRoomHotel = () => {
           onClose={closeServices}
           categories={categoriesData}
           businessId={businessId}
-          onConfirm={(serviceIds) => {
-            console.log("Selected service IDs:", serviceIds);
-            closeServices();
-          }}
+          onConfirm={createAlertHiclient}
         />
       )}
     </section>

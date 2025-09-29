@@ -1,4 +1,4 @@
-import { memo, useCallback,useEffect, useMemo, useState, useRef } from "react";
+import { memo, useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -341,7 +341,8 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
       {transfer && (
         <CommonBottomButton
           fixed
-          maxWidth="48rem"
+          maxWidth="30rem"
+          position="mid"
           buttons={[
             {
               text: "Cancel",

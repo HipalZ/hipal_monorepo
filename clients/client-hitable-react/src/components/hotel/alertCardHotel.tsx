@@ -380,7 +380,7 @@ export function AlertCardHotel({ alert }: AlertCardProps) {
             )}
           </div>
           <CommonBottomButton
-            maxWidth="48rem"
+            maxWidth="30rem"
             position="mid"
             fixed
             shadow

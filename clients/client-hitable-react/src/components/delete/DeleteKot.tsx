@@ -449,7 +449,8 @@ const MemoDeleteKot = () => {
       {/* Universal Delete Button */}
       <CommonBottomButton
         fixed={true}
-        maxWidth="48rem"
+        maxWidth="30rem"
+        position="mid"
         buttons={[
           {
             text: `Delete Selected (${totalSelectedItems} items, ${totalSelectedQuantity} qty)`,
