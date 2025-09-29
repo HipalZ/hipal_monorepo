@@ -145,7 +145,7 @@ const cataloguesRouter = new Hono()
       }),
     ),
     async (c) => {
-      const { businessId, menuId } = c.req.query();
+      const { businessId } = c.req.query();
 
       const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
 
@@ -153,7 +153,7 @@ const cataloguesRouter = new Hono()
         businessId,
         hierarchy: "CHILD",
         isDeleted: false,
-        menuId: menuId,
+
         active: true,
         timings: {
           $elemMatch: {
@@ -182,7 +182,8 @@ const cataloguesRouter = new Hono()
       }),
     ),
     async (c) => {
-      const { businessId } = c.req.query();
+      const { businessId } = c.req.param();
+      console.log("businessId", businessId);
 
       const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
 

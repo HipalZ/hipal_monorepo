@@ -2,6 +2,7 @@ import type { Job } from "bullmq";
 import { Worker } from "bullmq";
 import { redis } from "./connection";
 import { QUEUE_NAME, type QueueName } from "./constants/queueNames";
+import connectDB from "./dbConnection";
 import { pushToDLQ } from "./dlq";
 import { handlers } from "./handlers";
 import { payloadSchemas } from "./schemas";
@@ -38,7 +39,7 @@ function createWorker(
     lockDuration: 300_000,
     ...(withLimiter && {
       limiter: {
-        max: 20, // 20 jobs
+        max: 2, // 20 jobs
         duration: 1000, // per second
       },
     }),
@@ -60,6 +61,9 @@ function createWorker(
     }
   });
 }
+(async () => {
+  await connectDB();
+})();
 
 console.log("🚀 Unified worker started");
 createWorker(QUEUE_NAME.BILL_QUEUE, 2); // normal worker
