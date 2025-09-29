@@ -20,17 +20,22 @@ const MemoizedCartItem = ({
   hide,
   dishId,
 }: { hide?: boolean; dishId?: string }) => {
-  const {
-    cart,
-    updateCartItem,
-    removeFromCart,
-    showInstructionPopup,
-    setShowInstructionPopup,
-    instructionText,
-    addInstructionToCartItem,
-    removeInstructionFromCartItem,
-    setInstructionText,
-  } = useCartStore();
+  const cart = useCartStore((s) => s.cart);
+  const updateCartItem = useCartStore((s) => s.updateCartItem);
+  const removeFromCart = useCartStore((s) => s.removeFromCart);
+  const showInstructionPopup = useCartStore((s) => s.showInstructionPopup);
+  const setShowInstructionPopup = useCartStore(
+    (s) => s.setShowInstructionPopup,
+  );
+  const instructionText = useCartStore((s) => s.instructionText);
+  const addInstructionToCartItem = useCartStore(
+    (s) => s.addInstructionToCartItem,
+  );
+  const removeInstructionFromCartItem = useCartStore(
+    (s) => s.removeInstructionFromCartItem,
+  );
+
+  const setInstructionText = useCartStore((s) => s.setInstructionText);
   const { setIsCartEdit, isCartEdit } = useCart();
   const captainData = useHiClientZ((s) => s.captainData);
   const { businessId } = useParams();
@@ -77,7 +82,7 @@ const MemoizedCartItem = ({
     const basePrice = cartItem.dish.price;
     const extrasPrice =
       cartItem.extras?.reduce(
-        (total, extra) => total + extra.price * extra.quantity,
+        (total, extra) => (total + extra.price) * extra.quantity,
         0,
       ) || 0;
     const portionPrice = cartItem.portion?.price || 0;
@@ -151,7 +156,12 @@ const MemoizedCartItem = ({
                         <span className="italic">
                           Extra:{" "}
                           {cartItem.extras
-                            .map((extra) => `${extra.name} (${extra.quantity})`)
+                            .map(
+                              (extra) =>
+                                `${extra.name} (${
+                                  extra.quantity * cartItem.quantity
+                                })`,
+                            )
                             .join(", ")}
                         </span>
                       )}
@@ -287,7 +297,7 @@ const MemoizedCartItem = ({
 
       {!hide && (
         <CommonBottomButton
-          maxWidth="48rem"
+          maxWidth="30rem"
           position="mid"
           fixed
           shadow

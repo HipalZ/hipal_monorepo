@@ -341,7 +341,8 @@ const MemoEmptyTableList = ({ transfer }: EmptyTableListProps) => {
       {transfer && (
         <CommonBottomButton
           fixed
-          maxWidth="48rem"
+          maxWidth="30rem"
+          position="mid"
           buttons={[
             {
               text: "Cancel",

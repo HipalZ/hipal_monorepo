@@ -9,6 +9,8 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import type { BillItem } from "@hipal/server/src/utils/reportHelper/itemType";
+import { Button } from "../../ui/button";
+import type { IBusinessData } from "../../types/businessData";
 
 const BottomPopUp = dynamic(() => import("@/components/atoms/bottomPopUp"), {
   ssr: false,
@@ -75,7 +77,7 @@ const isGrouped = (
 };
 
 /** ==== Helpers ==== */
-const MemoBillPage = () => {
+const MemoBillPage = ({ bizData }: { bizData: IBusinessData }) => {
   const { loyaltySetting } = useLoyaltyData();
   const currencySymbolRaw = _useAllBusiness(
     (s) => s.data.outletInfo?.currencySymbol,
@@ -83,7 +85,11 @@ const MemoBillPage = () => {
   const currency = currencySymbolRaw || "₹";
   const { showBillPage, setShowBillPage, billData } = usePaymentStore();
   const data = billData as AnyBill | undefined;
+  const formatMoney = (n: number) => Number(n || 0).toFixed(1);
 
+  const { name: businessName, address, gst, fssai } = bizData?.outletInfo || {};
+
+  console.log(bizData);
   const calculateItemTotal = useCallback((item: FlatItem): number => {
     const dishPrice = Number(item?.dish?.price ?? 0);
     const portionPrice = Number(item?.portion?.price ?? 0);
@@ -204,6 +210,246 @@ const MemoBillPage = () => {
       total,
     };
   }, [data, computed]);
+  /** ==== Download Invoice (HTML) ==== */
+  const handleDownloadInvoice = useCallback(() => {
+    const safeName = businessName.replace(/\s+/g, "_");
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const filename = `${safeName}_Invoice_${dateStr}.html`;
+
+    // Build a simple, clean HTML invoice using current grouped data
+    const headerHtml = `
+        <div style="text-align:center;margin-bottom:8px">
+          <h1 style="margin:0;font-size:18px;">${businessName}</h1>
+          ${
+            address
+              ? `<div style="font-size:12px;margin-top:2px;">${address}</div>`
+              : ""
+          }
+          <div style="font-size:12px;margin-top:2px;">
+            ${gst ? `gst: ${gst}` : ""} ${
+              fssai ? `&nbsp;&nbsp;FSSAI: ${fssai}` : ""
+            }
+          </div>
+          <hr style="margin:8px 0;border:0;border-top:1px solid #000"/>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+          <div>Bill ID: ${(data as any)?.billId || "-"}</div>
+          <div>Date: ${new Date().toLocaleString("en-IN")}</div>
+        </div>
+        <div style="display:flex;gap:16px;font-size:12px;margin-bottom:8px;">
+          <div>Table: ${(data as any)?.tableName || "-"}</div>
+          <div>Customer: ${(data as any)?.customerName || "Guest"}</div>
+          <div>Phone: ${(data as any)?.customerPhone || "-"}</div>
+        </div>
+        <hr style="margin:8px 0;border:0;border-top:1px solid #000"/>
+        <div style="font-weight:700;font-size:12px;display:grid;grid-template-columns:1fr 60px 70px 80px;gap:8px;">
+          <div>Item</div>
+          <div style="text-align:center">Qty</div>
+          <div style="text-align:right">Price</div>
+          <div style="text-align:right">Amount</div>
+        </div>
+        <hr style="margin:6px 0;border:0;border-top:1px dashed #888"/>
+      `;
+
+    const itemsHtml = itemsByGST
+      .map((group) => {
+        const groupHead =
+          group.gst > 0
+            ? `<div style="background:#f6f6f6;border:1px solid #eee;padding:6px;margin:8px 0 6px 0;font-size:12px;font-weight:600;">
+                  GST ${
+                    group.gst
+                  }% Items &nbsp;|&nbsp; Subtotal: ${currency}${formatMoney(
+                    group.subTotal ?? 0,
+                  )}
+                </div>`
+            : "";
+
+        const rows = group.items
+          .map((item) => {
+            const qty = Number(item?.quantity ?? 0);
+            const unitPrice =
+              Number(item?.dish?.price ?? 0) === 0
+                ? Number(item?.portion?.price ?? 0)
+                : Number(item?.dish?.price ?? 0);
+            const lineTotal = unitPrice * qty;
+
+            const baseRow = `
+                <div style="display:grid;grid-template-columns:1fr 60px 70px 80px;gap:8px;font-size:12px;padding:4px 0;border-bottom:1px dashed #ddd;">
+                  <div>${item?.dish?.name}${
+                    item?.portion ? ` (${item?.portion?.name})` : ""
+                  }</div>
+                  <div style="text-align:center">${qty}</div>
+                  <div style="text-align:right">${currency}${formatMoney(
+                    unitPrice,
+                  )}</div>
+                  <div style="text-align:right">${currency}${formatMoney(
+                    lineTotal,
+                  )}</div>
+                </div>
+              `;
+
+            const extrasHtml = (item?.extras || [])
+              .map((ex) => {
+                const exQty = Number(ex?.quantity ?? 0) * qty;
+                const exUnit = Number(ex?.price ?? 0);
+                const exTotal = exUnit * exQty;
+                return `
+                    <div style="margin-left:10px;display:grid;grid-template-columns:1fr 60px 70px 80px;gap:8px;font-size:11px;padding:3px 0;">
+                      <div>+ ${ex?.name}</div>
+                      <div style="text-align:center">${exQty}</div>
+                      <div style="text-align:right">${currency}${formatMoney(
+                        exUnit,
+                      )}</div>
+                      <div style="text-align:right">${currency}${formatMoney(
+                        exTotal,
+                      )}</div>
+                    </div>
+                  `;
+              })
+              .join("");
+
+            return baseRow + (extrasHtml || "");
+          })
+          .join("");
+
+        const gstLine =
+          group.gst > 0
+            ? `
+              <div style="background:#fafafa;padding:6px;border:1px solid #eee;margin-top:4px;font-size:12px;">
+                <div style="display:flex;justify-content:space-between;">
+                  <span>CGST (${(group.gst / 2).toFixed(2)}%)</span>
+                  <span>${currency}${formatMoney((group.totalGst ?? 0) / 2)}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                  <span>SGST (${(group.gst / 2).toFixed(2)}%)</span>
+                  <span>${currency}${formatMoney((group.totalGst ?? 0) / 2)}</span>
+                </div>
+              </div>`
+            : "";
+
+        return groupHead + rows + gstLine;
+      })
+      .join("");
+
+    const summaryHtml = `
+        <hr style="margin:8px 0;border:0;border-top:1px solid #000"/>
+        <div style="font-size:12px;display:flex;flex-direction:column;gap:4px;">
+          <div style="display:flex;justify-content:space-between;">
+            <span>Subtotal</span>
+            <span>${currency}${formatMoney(footer.subTotal)}</span>
+          </div>
+          ${
+            footer.totalGst > 0
+              ? `<div style="display:flex;justify-content:space-between;">
+                   <span>CGST</span>
+                   <span>${currency}${formatMoney(footer.totalGst / 2)}</span>
+                 </div>
+                 <div style="display:flex;justify-content:space-between;">
+                   <span>SGST</span>
+                   <span>${currency}${formatMoney(footer.totalGst / 2)}</span>
+                 </div>`
+              : ""
+          }
+          ${
+            footer.otherTax > 0
+              ? `<div style="display:flex;justify-content:space-between;">
+                   <span>Other Tax</span>
+                   <span>${currency}${formatMoney(footer.otherTax)}</span>
+                 </div>`
+              : ""
+          }
+          ${
+            footer.serviceCharge > 0
+              ? `<div style="display:flex;justify-content:space-between;">
+                   <span>Service Charge</span>
+                   <span>${currency}${formatMoney(footer.serviceCharge)}</span>
+                 </div>`
+              : ""
+          }
+          ${
+            footer.discount > 0
+              ? `<div style="display:flex;justify-content:space-between;color:#137a13;">
+                   <span>Discount</span>
+                   <span>-${currency}${formatMoney(footer.discount)}</span>
+                 </div>`
+              : ""
+          }
+          ${
+            footer.claimedCoins > 0
+              ? `<div style="display:flex;justify-content:space-between;color:#137a13;">
+                   <span>Loyalty Coins</span>
+                   <span>-${currency}${formatMoney(footer.claimedCoins)}</span>
+                 </div>`
+              : ""
+          }
+          ${
+            footer.couponDiscount > 0
+              ? `<div style="display:flex;justify-content:space-between;color:#137a13;">
+                   <span>Coupon Discount</span>
+                   <span>-${currency}${formatMoney(footer.couponDiscount)}</span>
+                 </div>`
+              : ""
+          }
+          ${
+            footer.tips > 0
+              ? `<div style="display:flex;justify-content:space-between;">
+                   <span>Tips</span>
+                   <span>${currency}${formatMoney(footer.tips)}</span>
+                 </div>`
+              : ""
+          }
+          <div style="border-top:2px solid #000;margin-top:6px;padding-top:6px;display:flex;justify-content:space-between;font-weight:700;">
+            <span>GRAND TOTAL</span>
+            <span>${currency}${formatMoney(footer.total)}</span>
+          </div>
+        </div>
+        <div style="text-align:center;margin-top:10px;font-size:12px;">
+          <hr style="margin:6px 0;border:0;border-top:1px solid #000"/>
+          <em>Thank you! Visit Again.</em>
+        </div>
+      `;
+
+    const html = `<!doctype html>
+  <html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>${businessName} Invoice</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  </head>
+  <body style="font-family:Arial,Helvetica,'Segoe UI',sans-serif;color:#000;margin:12px;">
+    ${headerHtml}
+    ${itemsHtml || "<div style='font-size:12px;'>No items</div>"}
+    ${summaryHtml}
+  </body>
+  </html>`;
+
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, [
+    businessName,
+    currency,
+    itemsByGST,
+    footer.subTotal,
+    footer.totalGst,
+    footer.otherTax,
+    footer.claimedCoins,
+    footer.couponDiscount,
+    footer.serviceCharge,
+    footer.discount,
+    footer.tips,
+    footer.total,
+    address,
+    gst,
+    fssai,
+    data,
+  ]);
 
   const container = {
     hidden: { opacity: 0 },
@@ -217,7 +463,6 @@ const MemoBillPage = () => {
   return (
     <BottomPopUp
       height="h-[100dvh]"
-      bottomCross
       hide
       show={showBillPage}
       onClose={() => setShowBillPage(false)}
@@ -236,7 +481,7 @@ const MemoBillPage = () => {
                   Bill Details
                 </h1>
                 <p className="text-black text-sm">
-                  Bill ID: {(data as any)?.billId || "Id"}
+                  Bill ID: {(data as any)?.billId.slice(-6) || "Id"}
                 </p>
               </div>
               <div className="text-right text-[#008800]">
@@ -410,13 +655,15 @@ const MemoBillPage = () => {
                                   className="flex justify-between text-sm text-green-600"
                                 >
                                   <span>
-                                    + {extra?.name} (x{extra?.quantity})
+                                    + {extra?.name} (x
+                                    {extra?.quantity * item?.quantity})
                                   </span>
                                   <span>
                                     {currency}
                                     {(
                                       Number(extra?.price ?? 0) *
-                                      Number(extra?.quantity ?? 0)
+                                      Number(extra?.quantity ?? 0) *
+                                      Number(item?.quantity ?? 0)
                                     ).toFixed(2)}
                                   </span>
                                 </div>
@@ -558,6 +805,20 @@ const MemoBillPage = () => {
               </div>
             </div>
           </motion.footer>
+          <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t flex gap-4">
+            <Button
+              className="flex-1 bg-black text-white"
+              onClick={handleDownloadInvoice}
+            >
+              Download Invoice
+            </Button>
+            <Button
+              className="flex-1 bg-red-400"
+              onClick={() => setShowBillPage(false)}
+            >
+              Close
+            </Button>
+          </div>
         </motion.div>
       </main>
     </BottomPopUp>

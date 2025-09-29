@@ -390,7 +390,7 @@ const MemoCartWithPos = () => {
           </div>
           <CommonBottomButton
             position="mid"
-            maxWidth="48rem"
+            maxWidth="30rem"
             fixed
             buttons={[
               {

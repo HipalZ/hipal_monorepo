@@ -8,6 +8,7 @@ import { apiRpc } from "@hi/common";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
+import { useError } from "../components/store/useError";
 interface IHotelRoomData {
   businessId: string;
   roomName: string;
@@ -243,7 +244,13 @@ export const useHistoryAlerts = () => {
     }
   };
   const { data: historyData, isPending } = useQuery({
-    queryKey: ["historyAlerts", businessId, userId, timeStampStart, timeStampEnd],
+    queryKey: [
+      "historyAlerts",
+      businessId,
+      userId,
+      timeStampStart,
+      timeStampEnd,
+    ],
     queryFn: historyAlerts,
     enabled: !!businessId && !!userId && !!timeStampStart && !!timeStampEnd,
   });
@@ -409,4 +416,43 @@ export const useEditAlertCart = () => {
   });
 
   return { editCart, editingCart };
+};
+
+interface CreateAlertPayload {
+  serviceIds: string[];
+  businessId: string;
+  userId: string;
+  roomId: string;
+  cart?: any;
+}
+
+export const useCreateAlert = () => {
+  const { setError, setOpenErrorModal } = useError();
+  const {
+    isPending: creatingAlert,
+    mutateAsync: createAlert,
+    isError: alertError,
+    isSuccess: alertSuccess,
+  } = useMutation({
+    mutationFn: async (payload: CreateAlertPayload) => {
+      const response = await apiRpc.hotel.alert.create_alert.$post({
+        json: payload,
+      });
+      return response;
+    },
+    onSuccess: (data) => {
+      if (data.status === 400 || data.status === 401) {
+        setError(extraData.message || "Failed to split bill");
+        setOpenErrorModal(true);
+        return;
+      }
+    },
+    onError: (error) => {
+      console.error("Error creating alert:", error);
+      setError(error.message || "Something went wrong.");
+      setOpenErrorModal(true);
+    },
+  });
+
+  return { creatingAlert, createAlert, alertError, alertSuccess };
 };
