@@ -39,7 +39,6 @@ import { createHmac } from "node:crypto";
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
 import { nanoid } from "nanoid";
-import { schedule } from "node-cron";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
 import { z } from "zod";
 import {
@@ -49,20 +48,22 @@ import {
 import { authTokenValidator } from "../../../middleware/tokenValidator";
 import { enqueueWhatsAppJob } from "../../queues/enqueue";
 import { getMerchantConfig } from "../../utils/cacheHelper";
+import { getFutureSeconds } from "../../utils/dateAndTime";
 import {
   type MerchantConfig,
   razorpayWrapper,
 } from "../../utils/razorpay-wrapper";
 import { respond } from "../../utils/response";
 import whatsAppApiBaseUrl from "../../utils/whatsAppApiBaseUrl/apiPaths";
-import { getBlockedUser } from "../../utils/whatsAppUserCache";
 import { qrHandlers } from "../../utils/whatsappWebhookHandlers/allQrHandler";
+import { whatsAppCampaignHandler } from "../../utils/whatsappWebhookHandlers/campaign";
 import { whatsAppChatHandler } from "../../utils/whatsappWebhookHandlers/chatHandler";
 import {
   identifyQrTypeFromMessage,
   whatsAppEventData,
   whatsAppUserAndTextMessage,
 } from "../../utils/whatsappWebhookHandlers/helper";
+import { whatsAppBlockUserHandler } from "../../utils/whatsappWebhookHandlers/whatsappBlockUser";
 interface AxiosError {
   response?: {
     status?: number;
@@ -328,6 +329,7 @@ const pushToQueue = async (
   },
   businessId: string,
   templateId: string,
+  delay: number,
 ) => {
   const templateName = template.templateName;
   const campaignName = getCampaignName(templateName);
@@ -354,78 +356,26 @@ const pushToQueue = async (
     },
   );
 
-  console.log("pushing to queue");
+  const payload = {
+    businessName: businessName,
+    address: address,
+    bodyVariableSequence: bodyVariableSequence,
+    imageUrl: imageUrl,
+    token: whatsAppConfig.token,
+    version: whatsAppConfig.version,
+    phoneId: whatsAppConfig.phoneId,
+    templateName: template.templateName,
+    languageCode: template.languageCode,
+    whatsAppApiBaseUrl: whatsAppApiBaseUrl.BASE_URL,
+    businessId,
+    templateId,
+    campaignId: createCampaign._id.toString(),
+    customersArray: customersArray,
+  };
 
-  for (const customer of customersArray) {
-    // return components for the body
-    const components = await returnBodyComponents(
-      businessName,
-      address,
-      bodyVariableSequence,
-      imageUrl,
-      customer,
-      businessId,
-    );
-
-    const payload = {
-      whatsAppApiBaseUrl: whatsAppApiBaseUrl.BASE_URL,
-      version: whatsAppConfig.version,
-      phoneId: whatsAppConfig.phoneId,
-      to: customer?.phone?.toString(),
-      templateName: template.templateName,
-      languageCode: template.languageCode,
-      components: components,
-      token: whatsAppConfig.token,
-      businessId,
-      templateId,
-      campaignId: createCampaign._id.toString(),
-      userId: customer._id,
-    };
-
-    await enqueueWhatsAppJob("sendTemplate", payload);
-
-    // try {
-    //   const res = await axios.post(
-    //     `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig.version}/${whatsAppConfig.phoneId}/messages`,
-    //     {
-    //       messaging_product: "whatsapp",
-    //       to: customer?.phone?.toString(),
-    //       type: "template",
-    //       template: {
-    //         name: template.templateName,
-    //         language: { code: template.languageCode },
-    //         components: components,
-    //       },
-    //     },
-    //     {
-    //       headers: {
-    //         Authorization: `Bearer ${whatsAppConfig.token}`,
-    //       },
-    //     },
-    //   );
-
-    //   await WhatsAppAnalyticsUser.create({
-    //     messageId: res.data?.messages?.[0]?.id,
-    //     businessId,
-    //     templateId,
-    //     campaignId: createCampaign._id.toString(),
-    //     date: Date.now(),
-    //     status: "pending",
-    //     userId: customer._id,
-    //     error: [],
-    //   });
-    // } catch (error) {
-    //   const axiosError = error as AxiosError;
-    //   console.log("error", axiosError.response?.data);
-    //   const message = axiosError.response?.data?.error?.message;
-
-    //   return {
-    //     message: `Error creating template: ${message}`,
-    //     err: true,
-    //     data: axiosError.response?.data || {},
-    //   };
-    // }
-  }
+  await enqueueWhatsAppJob("pushCustomerIntoQueue", payload, {
+    delay: delay,
+  });
 
   return true;
 };
@@ -888,6 +838,8 @@ const whatsappRouter = new Hono()
           address,
         } = requestData;
 
+        const upcomingSeconds = getFutureSeconds(sendLaterTime) || 2000;
+
         const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
           businessId,
         });
@@ -941,80 +893,47 @@ const whatsappRouter = new Hono()
             name: string;
             phone: string;
             email?: string;
+            _id: string;
           }[];
 
           for (const customer of allCustomersList) {
-            let findBlockedUser = await getBlockedUser(customer?.userId?.phone);
-            if (!findBlockedUser) {
-              const blockedUser = await WhatsAppBlockedUser.findOne({
-                phone: customer?.userId?.phone,
-              }).select("phone");
+            const blockedUser = await WhatsAppBlockedUser.findOne({
+              phone: customer?.userId?.phone,
+            }).select("phone");
 
-              findBlockedUser = blockedUser?.phone;
-            }
-
-            if (findBlockedUser !== customer?.userId?.phone) {
+            if (!blockedUser) {
               customersArray.push({
                 name: customer?.userId?.name,
                 phone: customer?.userId?.phone,
                 email: customer?.userId?.email,
+                _id: customer?.userId?._id.toString() || "",
               });
             }
           }
 
-          const { insufficientBalance, reduceAmount } =
-            calculateAndCheckBalance(
-              template.category,
-              customersArray.length,
-              whatsAppConfigData,
-              businessWallet,
-            );
-
-          if (insufficientBalance) {
-            return c.json(
-              {
-                message: "Insufficient balance",
-                err: true,
-                data: {},
-              },
-              400,
-            );
-          }
-
-          schedule(
-            cronExpression,
-            async () => {
-              console.log("scheduled");
-              await scheduleCampaign(
-                customersArray,
-                template,
-                businessName,
-                address,
-                bodyVariableSequence,
-                imageUrl,
-                whatsAppConfigData,
-                businessId,
-                templateId,
-              );
-            },
-            {
-              scheduled: true,
-              timezone: "Asia/Kolkata",
-            },
+          const { insufficientBalance } = calculateAndCheckBalance(
+            template.category,
+            customersArray.length,
+            whatsAppConfigData,
+            businessWallet,
           );
 
-          if (template.category === "UTILITY") {
-            await WhatsAppWallet.findOneAndUpdate(
-              {
-                businessId,
-              },
-              {
-                $inc: {
-                  currentBalance: -reduceAmount,
-                },
-              },
-            );
+          if (insufficientBalance) {
+            return respond(c, "Insufficient balance", true, 400, {});
           }
+
+          await pushToQueue(
+            customersArray,
+            template,
+            businessName,
+            address,
+            bodyVariableSequence,
+            imageUrl,
+            whatsAppConfigData,
+            businessId,
+            templateId,
+            upcomingSeconds,
+          );
 
           return c.json({
             message: "Campaign scheduled successfully",
@@ -1091,6 +1010,7 @@ const whatsappRouter = new Hono()
             whatsAppConfigData,
             businessId,
             templateId,
+            upcomingSeconds,
           );
 
           return respond(c, "Campaign scheduled successfully", false, 200, {});
@@ -1100,6 +1020,7 @@ const whatsappRouter = new Hono()
           const groupIdsList = [] as {
             name: string;
             phone: string;
+            _id: string;
           }[];
 
           for (let i = 0; i < groupIds.length; i++) {
@@ -1127,78 +1048,44 @@ const whatsappRouter = new Hono()
                   path: "userId",
                   select: "phone name",
                 });
-              let findBlockedUser = await getBlockedUser(
-                findUser?.userId?.phone,
-              );
-              if (!findBlockedUser) {
-                const blockedUser = await WhatsAppBlockedUser.findOne({
-                  phone: findUser?.userId?.phone,
-                }).select("phone");
 
-                findBlockedUser = blockedUser?.phone;
-              }
+              const blockedUser = await WhatsAppBlockedUser.findOne({
+                phone: findUser?.userId?.phone,
+              }).select("phone");
 
-              if (findBlockedUser !== findUser?.userId?.phone) {
+              if (!blockedUser) {
                 groupIdsList.push({
                   name: findUser?.userId?.name,
                   phone: findUser?.userId?.phone,
+                  _id: findUser?.userId?.id,
                 });
               }
             }
           }
 
-          const { insufficientBalance, reduceAmount } =
-            calculateAndCheckBalance(
-              template.category,
-              groupIdsList.length,
-              whatsAppConfigData,
-              businessWallet,
-            );
-
-          if (insufficientBalance) {
-            return c.json(
-              {
-                message: "Insufficient balance",
-                err: true,
-                data: {},
-              },
-              400,
-            );
-          }
-
-          schedule(
-            cronExpression,
-            async () => {
-              await scheduleCampaign(
-                groupIdsList,
-                template,
-                businessName,
-                address,
-                bodyVariableSequence,
-                imageUrl,
-                whatsAppConfigData,
-                businessId,
-                templateId,
-              );
-            },
-            {
-              scheduled: true,
-              timezone: "Asia/Kolkata",
-            },
+          const { insufficientBalance } = calculateAndCheckBalance(
+            template.category,
+            groupIdsList.length,
+            whatsAppConfigData,
+            businessWallet,
           );
 
-          if (template.category === "UTILITY") {
-            await WhatsAppWallet.findOneAndUpdate(
-              {
-                businessId,
-              },
-              {
-                $inc: {
-                  currentBalance: -reduceAmount,
-                },
-              },
-            );
+          if (insufficientBalance) {
+            return respond(c, "Insufficient balance", true, 400, {});
           }
+
+          await pushToQueue(
+            groupIdsList,
+            template,
+            businessName,
+            address,
+            bodyVariableSequence,
+            imageUrl,
+            whatsAppConfigData,
+            businessId,
+            templateId,
+            upcomingSeconds,
+          );
 
           return c.json({
             message: "Campaign scheduled successfully",
@@ -2053,97 +1940,17 @@ const whatsappRouter = new Hono()
             );
           }
 
-          if (messages?.text?.body.trim().toLowerCase() === "stop") {
-            const RecentCampaignData = await RecentCampaign.findOne({
-              businessId: whatsAppBusinessConfigData?.businessId,
-            });
-
-            const ifAlreadyBlocked = await WhatsAppBlockedUser.findOne({
-              phone: userData?.phone,
-            });
-
-            if (!ifAlreadyBlocked) {
-              await WhatsAppAnalyticsUser.create({
-                businessId: RecentCampaignData?.businessId,
-                userId: userData?._id,
-                status: "blocked",
-                templateId: RecentCampaignData?.templateId,
-                date: Date.now(),
-                campaignId: RecentCampaignData?.campaignId,
-                messageId: messages?.id,
-              });
-
-              await WhatsAppBlockedUser.findOneAndUpdate(
-                {
-                  phone: userData?.phone,
-                },
-                {
-                  phone: userData?.phone,
-                },
-                {
-                  upsert: true,
-                  new: true,
-                },
-              );
-            }
-          }
-          if (messages?.text?.body.trim().toLowerCase() === "unstop") {
-            await WhatsAppBlockedUser.findOneAndDelete({
-              phone: userData?.phone,
-            });
-          }
+          await whatsAppBlockUserHandler(
+            whatsAppBusinessConfigData,
+            userData?.phone,
+            userData._id.toString(),
+            messages?.id,
+            messages?.text?.body,
+          );
         }
 
         if (statuses && statuses.length > 0 && whatsAppBusinessConfigData) {
-          // await whatsAppCampaignHandler(whatsAppBusinessConfigData);
-
-          const firstStatus = statuses[0];
-          const extractedData = {
-            status: firstStatus.status,
-            category: firstStatus.pricing?.category,
-          };
-
-          const wamid = firstStatus.id;
-
-          const findUserByMessageId = await WhatsAppAnalyticsUser.findOne({
-            messageId: wamid,
-          });
-
-          if (findUserByMessageId) {
-            await WhatsAppAnalyticsUser.create({
-              businessId: findUserByMessageId?.businessId,
-              campaignId: findUserByMessageId?.campaignId,
-              userId: findUserByMessageId?.userId,
-              templateId: findUserByMessageId?.templateId,
-              status: firstStatus?.status,
-              date: Date.now(),
-              messageId: wamid,
-              error: firstStatus?.error,
-            });
-          }
-
-          if (
-            extractedData?.status === "delivered" &&
-            extractedData?.category === "marketing"
-          ) {
-            // Fetch the current balance
-            const wallet = await WhatsAppWallet.findOne({
-              businessId: whatsAppBusinessConfigData?.businessId,
-            });
-
-            const minimumAmount =
-              whatsAppBusinessConfigData?.marketingTemplateCost || 0.89;
-
-            if (wallet && wallet.currentBalance >= minimumAmount) {
-              // Update the balance only if it won't go negative
-              await WhatsAppWallet.findOneAndUpdate(
-                { businessId: whatsAppBusinessConfigData?.businessId },
-                { $inc: { currentBalance: -minimumAmount } },
-              );
-            } else {
-              console.log("Insufficient balance to decrement");
-            }
-          }
+          await whatsAppCampaignHandler(whatsAppBusinessConfigData, statuses);
         }
 
         return respond(c, "event received", false, 200, {});
@@ -2519,6 +2326,9 @@ const whatsappRouter = new Hono()
       const waAnalyticsUser = await WhatsAppAnalyticsUser.find({
         businessId,
         campaignId,
+        status: {
+          $ne: "pending",
+        },
       }).populate({
         path: "userId",
         select: "name phone",

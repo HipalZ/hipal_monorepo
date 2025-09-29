@@ -29,4 +29,16 @@ function sumShiftBreakHours(shiftBreaks: Shift[], nowTs = Date.now()): number {
   return Number((totalMs / (1000 * 60 * 60)).toFixed(2)); // hours
 }
 
+// utils/timeHelpers.ts
+export function getFutureSeconds(futureTimestampMs: number): number {
+  const nowMs = Date.now();
+  const diffMs = futureTimestampMs - nowMs;
+
+  if (diffMs <= 0) {
+    return 0; // already past or now
+  }
+
+  return Math.floor(diffMs / 1000); // convert ms → seconds
+}
+
 export { sumShiftBreakHours };

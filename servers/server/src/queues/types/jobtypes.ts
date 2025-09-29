@@ -32,6 +32,28 @@ export const sendTemplateSchema = z.object({
 
 export type sendTemplateTypeValidator = z.infer<typeof sendTemplateSchema>;
 
+export const pushCustomerIntoQueueSchema = z.object({
+  businessName: z.string(),
+  address: z.string(),
+  bodyVariableSequence: z.array(z.string()),
+  imageUrl: z.string(),
+  token: z.string(),
+  version: z.string(),
+  phoneId: z.string(),
+
+  templateName: z.string(),
+  languageCode: z.string(),
+  whatsAppApiBaseUrl: z.string(),
+  businessId: z.string(),
+  templateId: z.string(),
+  campaignId: z.string(),
+  customersArray: z.array(z.object({})),
+});
+
+export type pushCustomerIntoQueueTypeValidator = z.infer<
+  typeof pushCustomerIntoQueueSchema
+>;
+
 export type BillJobTypes = {
   requestOnly: { payload: { orderId: string } };
   requestAndSettle: { payload: { total: number } };
@@ -39,6 +61,7 @@ export type BillJobTypes = {
 
 export type WhatsAppJobTypes = {
   sendTemplate: sendTemplateTypeValidator;
+  pushCustomerIntoQueue: pushCustomerIntoQueueTypeValidator;
 };
 
 export type JobMap = {

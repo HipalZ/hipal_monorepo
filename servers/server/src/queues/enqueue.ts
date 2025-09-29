@@ -15,6 +15,10 @@ export async function enqueueBillJob<
 
 export async function enqueueWhatsAppJob<
   T extends keyof JobMap[typeof QUEUE_NAME.WHATSAPP_CAMPAIGN_QUEUE],
->(type: T, data: JobMap[typeof QUEUE_NAME.WHATSAPP_CAMPAIGN_QUEUE][T]) {
-  return await whatsappCampaignQueue.add(type as string, data);
+>(
+  type: T,
+  data: JobMap[typeof QUEUE_NAME.WHATSAPP_CAMPAIGN_QUEUE][T],
+  opts: { delay?: number } = {},
+) {
+  return await whatsappCampaignQueue.add(type as string, data, opts);
 }

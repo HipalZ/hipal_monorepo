@@ -2,23 +2,12 @@ import type { Job } from "bullmq";
 import { Worker } from "bullmq";
 import { redis } from "./connection";
 import { QUEUE_NAME, type QueueName } from "./constants/queueNames";
+
 import connectDB from "./dbConnection";
-import { pushToDLQ } from "./dlq";
 import { handlers } from "./handlers";
-import { payloadSchemas } from "./schemas";
 
 async function jobHandler(job: Job) {
   console.log("📝 Job received:", job.name);
-  const schema = payloadSchemas[job.name as keyof typeof payloadSchemas];
-  if (schema) {
-    const parsed = schema.safeParse(job.data);
-    if (!parsed.success) {
-      throw new Error(
-        `[ValidationError] ${job.name} → ${parsed.error.message}`,
-      );
-    }
-    job.data = parsed.data;
-  }
 
   const queueHandlers = handlers[job.queueName as QueueName];
   console.log("queueHandlers", queueHandlers);
@@ -40,7 +29,7 @@ function createWorker(
     ...(withLimiter && {
       limiter: {
         max: 2, // 20 jobs
-        duration: 1000, // per second
+        duration: 2000, // per second
       },
     }),
   });
@@ -57,7 +46,7 @@ function createWorker(
       err.message,
     );
     if (job && job.attemptsMade >= (job.opts.attempts ?? 1)) {
-      await pushToDLQ(job);
+      // await pushToDLQ(job);
     }
   });
 }
