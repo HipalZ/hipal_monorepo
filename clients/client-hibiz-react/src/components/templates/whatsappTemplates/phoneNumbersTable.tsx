@@ -217,11 +217,13 @@ const MemoPhoneNumbersTable = () => {
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-base font-medium text-gray-900">
-                        {item.phone}
+                        {item?.userId?.phone}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-base text-gray-900">{item.name}</div>
+                      <div className="text-base text-gray-900">
+                        {item?.userId.name}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
