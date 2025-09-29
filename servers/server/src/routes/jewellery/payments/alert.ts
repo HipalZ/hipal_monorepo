@@ -12,6 +12,7 @@ import {
   jewelleryAcceptOrderSchema,
   paramsSchema,
 } from "@hi/db-models/src/validators";
+import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { nanoid } from "nanoid";
