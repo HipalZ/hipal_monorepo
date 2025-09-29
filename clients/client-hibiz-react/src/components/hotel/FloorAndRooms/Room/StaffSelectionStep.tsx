@@ -14,6 +14,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { findRole } from "@/components/utils/helper";
 
 const StaffSelectionStep = ({ formData, toggleStaff }: StepProps) => {
   const businessId = useBusinessData((s) => s.businessData?._id) as string;
@@ -211,7 +212,7 @@ const StaffSelectionStep = ({ formData, toggleStaff }: StepProps) => {
                       </Label>
                       {staff.customRole && staff.customRole.length > 0 && (
                         <div className="mt-1 text-xs text-muted-foreground">
-                          {staff.customRole[0].role.replace(/_/g, " ")}
+                          {findRole(staff.customRole)}
                         </div>
                       )}
                     </div>
