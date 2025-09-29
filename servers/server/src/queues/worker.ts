@@ -10,7 +10,6 @@ async function jobHandler(job: Job) {
   console.log("📝 Job received:", job.name);
 
   const queueHandlers = handlers[job.queueName as QueueName];
-  console.log("queueHandlers", queueHandlers);
   const handler = queueHandlers?.[job.name as keyof typeof queueHandlers];
 
   if (!handler) throw new Error(`No handler for ${job.queueName}:${job.name}`);
