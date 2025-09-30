@@ -4,57 +4,110 @@ import Star from "@/assets/svg/Star.svg";
 import googleImage from "@/assets/img/googleImg.png";
 import { memo } from "react";
 
-const MemoExplorePageReviewCard = ({
-  signInWithGoogle,
-}: { signInWithGoogle: () => void }) => {
+interface Props {
+  signInWithGoogle: () => void;
+  id?: string;
+}
+
+const MemoExplorePageReviewCard = ({ signInWithGoogle, id }: Props) => {
+  const hasLoyalty = Boolean(!id);
+
   return (
     <div className="p-4 mb-4">
-      <div
-        onClick={signInWithGoogle}
-        onKeyDown={signInWithGoogle}
-        className="bg-[#FFC600] w-full min-h-full max-h-[11rem] rounded-2xl p-4 flex relative overflow-hidden"
-      >
-        <div className="z-10 space-y-4">
-          <div className="text-black">
-            <h1 className="text-xs font-bold">Write a review &</h1>
-            <p className="relative inline-flex items-center text-xl font-bold">
-              Earn Coinz{" "}
-              <Image
-                src={Star}
-                alt="Star"
-                width={8}
-                height={8}
-                className="absolute transform translate-x-1/2 -translate-y-1/2 -right-4 -top-1"
-              />
-              <Image
-                src={Star}
-                alt="Star"
-                width={12}
-                height={12}
-                className="absolute transform translate-x-1/2 -translate-y-1/2 top-1 -right-2"
-              />
-            </p>
-            <p className="text-sm text-[#000000B8]">
-              Leave a review on Google <br /> & Claim your reward.
-            </p>
-          </div>
-          <div className="w-full h-10 on_active_bounce">
+      {hasLoyalty ? (
+        <div
+          onClick={signInWithGoogle}
+          onKeyDown={signInWithGoogle}
+          role="button"
+          tabIndex={0}
+          className="bg-[#FFC600] w-full h-44 rounded-2xl p-4 flex relative overflow-hidden cursor-pointer group"
+        >
+          <div className="z-10 flex flex-col justify-between space-y-4">
+            <div className="text-black">
+              <h1 className="text-xs font-bold">Write a review &</h1>
+              <p className="relative inline-flex items-center text-xl font-bold">
+                Earn Coinz{" "}
+                <Image
+                  src={Star}
+                  alt="Star"
+                  width={8}
+                  height={8}
+                  className="absolute -right-4 -top-1"
+                />
+                <Image
+                  src={Star}
+                  alt="Star"
+                  width={12}
+                  height={12}
+                  className="absolute -right-2 top-1"
+                />
+              </p>
+              <p className="text-sm text-[#000000B8]">
+                Leave a review on Google <br /> & Claim your reward.
+              </p>
+            </div>
             <button
               type="button"
-              className="flex items-center px-4 py-1.5 -ml-4 text-sm font-bold text-white scale-90 rounded-full bg-black/60"
+              className="flex items-center gap-1 rounded-md transition px-2 py-1.5 cursor-pointer group bg-gray-700 text-white"
             >
-              Write a review <LuArrowRight size={20} />
+              <span className="text-sm font-medium group-hover:underline pl-2">
+                Write a review
+              </span>
+              <LuArrowRight
+                size={18}
+                className="group-hover:translate-x-1 transition-transform duration-200"
+              />
             </button>
           </div>
+          <div className="absolute top-0 -right-12 z-0 w-48 h-full">
+            <Image
+              src={googleImage}
+              alt="Google Review"
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-110"
+            />
+          </div>
         </div>
-        <div className="absolute top-0 -right-6 z-0 w-[10rem] h-full">
-          <Image
-            src={googleImage}
-            alt="Google Review"
-            className="object-cover w-full h-full scale-150 rounded-md"
-          />
+      ) : (
+        <div
+          onClick={signInWithGoogle}
+          onKeyDown={signInWithGoogle}
+          role="button"
+          tabIndex={0}
+          className="bg-[#FFC600] w-full h-44 rounded-2xl p-4 flex relative overflow-hidden cursor-pointer group"
+        >
+          <div className="z-10 flex flex-col justify-between">
+            <div className="text-black space-y-1">
+              <h1 className="text-xl font-bold">
+                Share your experience <br /> on Google?
+              </h1>
+              <p className="text-sm text-[#000000B8]">
+                We’d love to hear from you.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="flex items-center w-40 gap-1 rounded-md transition px-2 py-1.5 cursor-pointer group bg-gray-700 text-white"
+            >
+              <span className="text-sm font-medium group-hover:underline pl-2">
+                Write a review
+              </span>
+              <LuArrowRight
+                size={18}
+                className="group-hover:translate-x-1 transition-transform duration-200"
+              />
+            </button>
+          </div>
+          <div className="absolute top-0 -right-12 z-0 w-48 h-full">
+            <Image
+              src={googleImage}
+              alt="Google Review"
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-110"
+            />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

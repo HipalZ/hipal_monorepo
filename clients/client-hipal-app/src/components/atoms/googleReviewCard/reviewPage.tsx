@@ -4,55 +4,105 @@ import Star from "@/assets/svg/Star.svg";
 import googleImage from "@/assets/img/googleImg.png";
 import { memo } from "react";
 
-const MemoGoogleReviewPagePopup = ({
-  signInWithGoogle,
-}: { signInWithGoogle: () => void }) => {
+interface Props {
+  signInWithGoogle: () => void;
+  id: string;
+}
+
+const MemoGoogleReviewPagePopup = ({ signInWithGoogle, id }: Props) => {
+  const hasLoyalty = Boolean(id);
+
   return (
-    <div className="z-10 p-2 mb-4">
-      <div className="bg-[#FFC600] lg:w-1/2 w-full min-h-full h-[16rem] rounded-2xl p-4 flex relative overflow-hidden">
-        <div className="z-10 flex flex-col justify-center">
-          <div className="space-y-2 text-black">
-            <h1 className="text-xs font-bold">Write a review &</h1>
-            <p className="relative inline-flex items-center text-xl font-bold">
-              Earn Coinz{" "}
+    <>
+      {hasLoyalty ? (
+        <div className="z-10 p-2 mb-4">
+          <div
+            onClick={signInWithGoogle}
+            onKeyDown={signInWithGoogle}
+            role="button"
+            tabIndex={0}
+            className="bg-[#FFC600] lg:w-1/2 w-full min-h-full h-[16rem] rounded-2xl p-4 flex relative overflow-hidden"
+          >
+            <div className="z-10 flex flex-col justify-center">
+              <div className="space-y-2 text-black">
+                <h1 className="text-xs font-bold">Write a review &</h1>
+                <p className="relative inline-flex items-center text-xl font-bold">
+                  Earn Coinz{" "}
+                  <Image
+                    src={Star}
+                    alt="Star"
+                    width={8}
+                    height={8}
+                    className="absolute transform translate-x-1/2 -translate-y-1/2 -right-4 -top-1"
+                  />
+                  <Image
+                    src={Star}
+                    alt="Star"
+                    width={12}
+                    height={12}
+                    className="absolute transform translate-x-1/2 -translate-y-1/2 top-1 -right-2"
+                  />
+                </p>
+                <p className="text-sm text-[#000000B8]">
+                  Leave a review on Google <br /> & Claim your reward.
+                </p>
+              </div>
+            </div>
+            <div className="absolute top-0 z-0 h-full -right-12">
               <Image
-                src={Star}
-                alt="Star"
-                width={8}
-                height={8}
-                className="absolute transform translate-x-1/2 -translate-y-1/2 -right-4 -top-1"
+                src={googleImage}
+                alt="Google Review"
+                className="object-cover h-full rounded-md"
               />
-              <Image
-                src={Star}
-                alt="Star"
-                width={12}
-                height={12}
-                className="absolute transform translate-x-1/2 -translate-y-1/2 top-1 -right-2"
-              />
-            </p>
-            <p className="text-sm text-[#000000B8]">
-              Leave a review on Google <br /> & Claim your reward.
-            </p>
+            </div>
+          </div>
+          <div className="relative z-20 w-full h-16">
+            <button
+              type="button"
+              className="z-30 flex items-center justify-center w-full p-3 mt-4 text-sm font-bold text-white bg-black rounded-full"
+            >
+              Write a review <LuArrowRight size={20} />
+            </button>
           </div>
         </div>
-        <div className="absolute top-0 z-0 h-full -right-12">
-          <Image
-            src={googleImage}
-            alt="Google Review"
-            className="object-cover h-full rounded-md"
-          />
+      ) : (
+        <div className="z-10 p-2 mb-4">
+          <div
+            onClick={signInWithGoogle}
+            onKeyDown={signInWithGoogle}
+            role="button"
+            tabIndex={0}
+            className="bg-[#FFC600] lg:w-1/2 w-full min-h-full h-[16rem] rounded-2xl p-4 flex relative overflow-hidden"
+          >
+            <div className="z-10 flex flex-col justify-center">
+              <div className="text-black space-y-3">
+                <h1 className="text-2xl font-bold">
+                  Share your experience <br /> on Google?
+                </h1>
+                <p className="text-base text-[#000000B8]">
+                  We’d love to hear from you.
+                </p>
+              </div>
+            </div>
+            <div className="absolute top-0 z-0 h-full -right-12">
+              <Image
+                src={googleImage}
+                alt="Google Review"
+                className="object-cover h-full rounded-md"
+              />
+            </div>
+          </div>
+          <div className="relative z-20 w-full h-16">
+            <button
+              type="button"
+              className="z-30 flex items-center justify-center w-full p-3 mt-4 text-sm font-bold text-white bg-black rounded-full"
+            >
+              Write a review <LuArrowRight size={20} />
+            </button>
+          </div>
         </div>
-      </div>
-      <div className="relative z-20 w-full h-16">
-        <button
-          type="button"
-          onClick={signInWithGoogle}
-          className="z-30 flex items-center justify-center w-full p-3 mt-4 text-sm font-bold text-white bg-black rounded-full"
-        >
-          Write a review <LuArrowRight size={20} />
-        </button>
-      </div>
-    </div>
+      )}
+    </>
   );
 };
 

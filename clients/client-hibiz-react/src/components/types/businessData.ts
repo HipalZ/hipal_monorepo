@@ -160,6 +160,7 @@ export interface IOutletInfo {
   serviceChargePercentage: number;
   isPosEnabled: boolean;
   shareCart: boolean;
+  posWithOnlyMenu: boolean;
 }
 
 export interface Order {

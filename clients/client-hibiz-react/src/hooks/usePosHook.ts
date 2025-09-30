@@ -143,3 +143,40 @@ export const usePosSync = () => {
     mutate,
   };
 };
+
+export const usePosSyncWithMenu = () => {
+  const businessId = useParams<{ businessId: string }>().businessId;
+  const { setError, setOpenErrorModal } = useError();
+  const { isPending, mutate } = useMutation({
+    mutationFn: async (payload: { restId: string; tableName?: string }) => {
+      const response = await apiRpc.sync_pos_menu_config.sync.$post({
+        json: {
+          businessId: businessId || "",
+          restId: payload.restId || "",
+          tableName: payload.tableName || "1",
+        },
+      });
+      return response;
+    },
+    onSuccess: async (data) => {
+      const extraData = await data.json();
+      if (data.status === 400 || data.status === 401) {
+        setError(extraData?.error?.issues[0]?.message);
+        setOpenErrorModal(true);
+        return toast.error("Failed to sync POS");
+      }
+      if (data.status === 200 || data.status === 201) {
+        toast.success("POS synced successfully");
+        return;
+      }
+    },
+    onError: (error) => {
+      setError(error.message);
+      setOpenErrorModal(true);
+    },
+  });
+  return {
+    isPending,
+    mutate,
+  };
+};

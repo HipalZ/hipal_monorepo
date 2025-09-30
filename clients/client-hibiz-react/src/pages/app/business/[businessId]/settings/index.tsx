@@ -1,7 +1,6 @@
 import { useSettings } from "@/components/store/useSettings";
 import SettingsForm from "@/components/templates/settingsForm/mainSetting";
 import { memo, useCallback } from "react";
-import HiSiteMiddleImage from "@/assets/hisite/hisiteHeader.png";
 import MemoizedHeader from "@/components/molecules/header";
 import { useNavigate } from "react-router-dom";
 import useBusinessData from "@/components/store/useBusinessData";
@@ -24,34 +23,21 @@ const MemoSettingsForm = () => {
     }
   }, [pageToggle, setPageToggle, businessData, navigate]);
 
+  let headerTitle = "Settings";
+  if (pageToggle === "OUTLET_FORM") {
+    headerTitle = "Outlet Setting";
+  } else if (pageToggle === "BUSINESS_FORM") {
+    headerTitle = "Business Setting";
+  }
+
   return (
     <main>
       <header className="linear_gradient_background">
         <MemoizedHeader
           onBack={goBack}
           isIconBusinessShow={false}
-          title={
-            pageToggle === "OUTLET_FORM"
-              ? "Outlet Setting"
-              : pageToggle === "BUSINESS_FORM"
-                ? "Business Setting"
-                : ""
-          }
-        >
-          {pageToggle === "MAIN" && (
-            <>
-              <img
-                src={HiSiteMiddleImage}
-                alt="HiSiteMiddleImage"
-                loading="lazy"
-              />
-              <h1 className="mt-4 mb-2 text-2xl font-semibold">Settings</h1>
-              <p className="mx-16 pb-4 text-[#7D7D7D]">
-                Manage outlet & business settings
-              </p>
-            </>
-          )}
-        </MemoizedHeader>
+          title={headerTitle}
+        />
       </header>
       {pageToggle === "MAIN" && <SettingsForm />}
       {pageToggle === "OUTLET_FORM" && <OutletForm />}

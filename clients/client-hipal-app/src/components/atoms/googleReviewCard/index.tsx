@@ -29,7 +29,7 @@ const MemoGoogleReviewCard = () => {
   const { setShowGoogleReview } = useReview((s) => ({
     setShowGoogleReview: s.setShowGoogleReview,
   }));
-  const { setCheckLogin } = usePaymentStore()
+  const { setCheckLogin } = usePaymentStore();
   const { loyaltySetting } = useLoyaltyData();
   const businessDetails = useBusinessDetails((s) => s.businessDetails);
 
@@ -51,6 +51,12 @@ const MemoGoogleReviewCard = () => {
   const isReviewPage = useMemo(() => path.includes("review"), [path]);
 
   const signInWithGoogle = async () => {
+    const url = businessDetails?.placeUrl || "";
+    // if no loyalty is there then redirect to Google review page
+    if (!loyaltySetting?.loyaltyId) {
+      const newWindow = window.open(url, "_blank");
+      return;
+    }
     if (!isLogin) {
       setDirection("explore-googleReview");
       setReviewPopup(false);
@@ -63,7 +69,6 @@ const MemoGoogleReviewCard = () => {
     }
 
     // Open the intended URL immediately to avoid being blocked
-    const url = businessDetails?.placeUrl || "";
     const newWindow = window.open(url, "_blank");
     try {
       const res = await apiRpc.reviews["update-google-review"].$put({
@@ -107,9 +112,15 @@ const MemoGoogleReviewCard = () => {
   return (
     <>
       {isReviewPage ? (
-        <GoogleReviewPagePopup signInWithGoogle={signInWithGoogle} />
+        <GoogleReviewPagePopup
+          signInWithGoogle={signInWithGoogle}
+          id={loyaltySetting?.loyaltyId}
+        />
       ) : (
-        <ExplorePageReviewCard signInWithGoogle={signInWithGoogle} />
+        <ExplorePageReviewCard
+          signInWithGoogle={signInWithGoogle}
+          id={loyaltySetting?.loyaltyId}
+        />
       )}
     </>
   );
