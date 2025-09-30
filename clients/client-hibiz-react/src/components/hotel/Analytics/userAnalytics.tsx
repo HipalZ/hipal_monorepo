@@ -181,7 +181,7 @@ export default function StaffPerformanceDashboard({
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-primary">
-                    {data.overAll.totalServiceActionCount}
+                    {data.overAll.totalServicesHandled}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Service actions completed
