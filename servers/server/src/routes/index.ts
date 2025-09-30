@@ -36,6 +36,7 @@ import scriptRouter from "./script";
 import settingsRouter from "./settings";
 import splitBillRouter from "./splitBill";
 import subsCriberRouter from "./subscribers";
+import syncPosMenuRouter from "./suncPosMenu";
 import surlRouter from "./surl";
 import tableRouter from "./table";
 import tagRouter from "./tags";
@@ -97,6 +98,7 @@ export const routes = app
   .route("/report", reportRouter)
   .route("/split_bill", splitBillRouter)
   .route("/jewellery", jewelleryRouter)
-  .route("/attendence", staffAttendenceRouter);
+  .route("/attendence", staffAttendenceRouter)
+  .route("/sync_pos_menu", syncPosMenuRouter);
 
 export type AppType = typeof routes;
