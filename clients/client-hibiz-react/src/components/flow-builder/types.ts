@@ -38,4 +38,6 @@ export interface Screen {
     action: ButtonAction;
     targetScreenId?: string;
   };
+  mode: "static" | "dynamic" | "message";
+  endpoint?: string;
 }

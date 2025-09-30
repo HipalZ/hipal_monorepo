@@ -4,7 +4,7 @@ import "@splidejs/react-splide/css"; // Basic Splide styles
 import ShimmerImage from "@/components/atoms/imageshimmer";
 import { useState } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion"
+import { motion } from "framer-motion";
 import BottomPopUp from "@/components/atoms/bottomPopUp";
 import { useLogin } from "@/components/store/useLogin";
 import { User, MapPin } from "lucide-react";
@@ -47,7 +47,7 @@ export default function RoomCard({
               alt={i?.toString()}
               width={500}
               height={180}
-              className="w-full max-h-[16rem] object-cover"
+              className="w-full h-full max-h-[16rem] object-cover"
               style={{ borderRadius: "1.25rem" }}
             />
           </SplideSlide>
@@ -89,86 +89,92 @@ export default function RoomCard({
         >
           <div className=" !poppins-regular">
             {/* Header */}
-             <motion.div
-            className="relative z-10 flex gap-2 items-start rounded-t-2xl px-4 bg-gradient-to-r from-purple-200 to-purple-50 pt-4 pb-4 overflow-hidden"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          >
             <motion.div
-              className="w-11 h-11 bg-white rounded-full border flex items-center justify-center shadow-lg"
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{
-                duration: 0.6,
-                delay: 0.2,
-                type: "spring",
-                stiffness: 200,
-                damping: 15,
-              }}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
+              className="relative z-10 flex gap-2 items-start rounded-t-2xl px-4 bg-gradient-to-r from-purple-200 to-purple-50 pt-4 pb-4 overflow-hidden"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
             >
-              <span className="font-bold text-xl text-black poppins-regular uppercase">
-                {(guestName?.[0] || "G").toUpperCase()}
-              </span>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <motion.p
-                className="text-black text-xl poppins-regular !font-semibold"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
+              <motion.div
+                className="w-11 h-11 bg-white rounded-full border flex items-center justify-center shadow-lg"
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{
+                  duration: 0.6,
+                  delay: 0.2,
+                  type: "spring",
+                  stiffness: 200,
+                  damping: 15,
+                }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {guestName || "Guest User"}
-              </motion.p>
-              <motion.p
-                className="text-xs text-black poppins-regular"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
-              >
-                {userDetails?.phone}
-              </motion.p>
-            </motion.div>
+                <span className="font-bold text-xl text-black poppins-regular uppercase">
+                  {(guestName?.[0] || "G").toUpperCase()}
+                </span>
+              </motion.div>
 
-            <motion.div
-              className="absolute bottom-2 right-4"
-              initial={{
-                opacity: 0,
-                scale: 0,
-                rotate: -45,
-                x: 20,
-                y: 20,
-              }}
-              animate={{
-                opacity: 0.8,
-                scale: 1,
-                rotate: 0,
-                x: 0,
-                y: 0,
-              }}
-              transition={{
-                duration: 0.8,
-                delay: 0.6,
-                type: "spring",
-                stiffness: 150,
-                damping: 12,
-              }}
-              whileHover={{
-                scale: 1.1,
-                rotate: [0, -10, 10, -5, 0],
-                transition: { duration: 0.5 },
-              }}
-            >
-              <Image src={HI || "/placeholder.svg"} alt="Hi" width={52} height={52} className="mix-blend-screen" />
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <motion.p
+                  className="text-black text-xl poppins-regular !font-semibold"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                >
+                  {guestName || "Guest User"}
+                </motion.p>
+                <motion.p
+                  className="text-xs text-black poppins-regular"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.5 }}
+                >
+                  {userDetails?.phone}
+                </motion.p>
+              </motion.div>
+
+              <motion.div
+                className="absolute bottom-2 right-4"
+                initial={{
+                  opacity: 0,
+                  scale: 0,
+                  rotate: -45,
+                  x: 20,
+                  y: 20,
+                }}
+                animate={{
+                  opacity: 0.8,
+                  scale: 1,
+                  rotate: 0,
+                  x: 0,
+                  y: 0,
+                }}
+                transition={{
+                  duration: 0.8,
+                  delay: 0.6,
+                  type: "spring",
+                  stiffness: 150,
+                  damping: 12,
+                }}
+                whileHover={{
+                  scale: 1.1,
+                  rotate: [0, -10, 10, -5, 0],
+                  transition: { duration: 0.5 },
+                }}
+              >
+                <Image
+                  src={HI || "/placeholder.svg"}
+                  alt="Hi"
+                  width={52}
+                  height={52}
+                  className="mix-blend-screen"
+                />
+              </motion.div>
             </motion.div>
-          </motion.div>
 
             {/* User Details */}
             <div className="space-y-4 poppins-regular p-6">

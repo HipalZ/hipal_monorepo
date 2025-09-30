@@ -282,6 +282,13 @@ interface whatsappTemplate {
 
   whatzappFormEnabled: boolean;
   setWhatzappFormEnabled: (value: boolean) => void;
+
+  selectedLangs: string[];
+  setSelectedLangs: (value: string[]) => void;
+  toggleLang: (code: string) => void;
+
+  showPreview: boolean;
+  setShowPreview: (showPreview: boolean) => void;
 }
 
 export const useWhatsapp = create(
@@ -427,16 +434,16 @@ export const useWhatsapp = create(
         setTemplateId: (templateId: string) => set({ templateId }),
 
         setTemplateData: (data: any) => {
-          const headerComponent = data.components.find(
+          const headerComponent = data?.components?.find(
             (component: IWhatsappHeaderType) => component.type === "HEADER",
           );
-          const bodyComponent = data.components.find(
+          const bodyComponent = data?.components?.find(
             (component: IWhatsappHeaderType) => component.type === "BODY",
           );
-          const footerComponent = data.components.find(
+          const footerComponent = data?.components?.find(
             (component: IWhatsappHeaderType) => component.type === "FOOTER",
           );
-          const buttonsComponent = data.components.find(
+          const buttonsComponent = data?.components?.find(
             (component: IWhatsappHeaderType) => component.type === "BUTTONS",
           );
 
@@ -444,6 +451,29 @@ export const useWhatsapp = create(
             bodyComponent?.example?.body_text[0]?.map((text: string) => text) ||
             [];
           const headerImage = headerComponent?.example?.header_handle[0] || "";
+          let actionType = ActionType.Flow;
+          let urlType: string | undefined = undefined;
+          let websiteUrl = "";
+          let phoneNumber = "";
+
+          switch (buttonsComponent?.buttons[0]?.type) {
+            case "URL":
+              actionType = ActionType.VisitWebsite;
+              urlType = "Static";
+              websiteUrl = buttonsComponent?.buttons[0]?.url;
+              break;
+            case "PHONE_NUMBER":
+              actionType = ActionType.CallUs;
+              phoneNumber = buttonsComponent?.buttons[0]?.phone_number?.replace(
+                /^\+91/,
+                "",
+              );
+              break;
+            default:
+              actionType = ActionType.Flow;
+              break;
+          }
+
           set({
             templateType: data.category,
             templateName: data.name,
@@ -453,22 +483,11 @@ export const useWhatsapp = create(
             bodyText: bodyComponent?.text,
             bodyVariables: variables,
             footerText: footerComponent?.text,
-            actionType:
-              buttonsComponent?.buttons[0]?.type === "URL"
-                ? ActionType.VisitWebsite
-                : buttonsComponent?.buttons[0]?.type === "PHONE_NUMBER"
-                  ? ActionType.CallUs
-                  : ActionType.Flow,
+            actionType,
             buttonText: buttonsComponent?.buttons[0]?.text || "",
-            urlType:
-              buttonsComponent?.buttons[0]?.type === "URL"
-                ? "Static"
-                : undefined,
-            websiteUrl: buttonsComponent?.buttons[0]?.url,
-            phoneNumber: buttonsComponent?.buttons[0]?.phone_number?.replace(
-              /^\+91/,
-              "",
-            ),
+            urlType,
+            websiteUrl,
+            phoneNumber,
             templateId: data.id,
             templateStatus: data?.status,
             bodyVariableSequence: variables,
@@ -501,9 +520,8 @@ export const useWhatsapp = create(
             actionType: ActionType.VisitWebsite,
             buttonText: "",
             urlType: "Static",
-            websiteUrl: `${BASE_URL}/${
-              useBusinessData.getState().businessData?.customLink || ""
-            }`,
+            websiteUrl: `${BASE_URL}/${useBusinessData.getState().businessData?.customLink || ""
+              }`,
             phoneNumber: "",
             templateId: "",
             imageFiles: null,
@@ -625,7 +643,19 @@ export const useWhatsapp = create(
         whatzappFormEnabled: false,
         setWhatzappFormEnabled: (value: boolean) =>
           set({ whatzappFormEnabled: value }),
-      };
+
+        selectedLangs: ["en"],
+        setSelectedLangs: (value: string[]) => set({ selectedLangs: value }),
+
+        toggleLang: (code) =>
+          set((state) => ({
+            selectedLangs: state.selectedLangs.includes(code)
+              ? state.selectedLangs.filter((x) => x !== code)
+              : [...state.selectedLangs, code],
+          })),
+        showPreview: false,
+        setShowPreview: (showPreview: boolean) => set({ showPreview }),
+      }
     },
     {
       name: "whatsapp-storage",

@@ -8,6 +8,7 @@ import { useMessageRecipientsStore } from "../store/useMessageRecipientsStore";
 import { apiRpc } from "@hi/common";
 import useBusinessData from "../store/useBusinessData";
 import { WHATSAPP_ID, WHATSAPP_TOKEN } from "@/configs";
+import { useTranslate } from "@/hooks/useTranslate";
 
 export const useWhatzappCroppedImg = () => {
   const {
@@ -379,7 +380,7 @@ export async function CreateWhatsAppFlow(flowJson: any, flowName: string) {
       console.error("API Error:", responseData);
       const errorMessage =
         responseData.error?.error_user_title &&
-        responseData.error?.error_user_msg
+          responseData.error?.error_user_msg
           ? `${responseData.error.error_user_title}: ${responseData.error.error_user_msg}`
           : responseData.error?.message || "An unknown API error occurred.";
       return { success: false, error: errorMessage };
@@ -426,4 +427,29 @@ export const useGetFlows = () => {
     queryFn: getFlows,
   });
   return { flows, isLoading, error };
+};
+
+// --- Helpers ---
+export const clean = (s?: string | null, max = 1024) =>
+  (s ?? "").replace(/\s+/g, " ").trim().slice(0, Math.max(0, max));
+
+export const cap = (s?: string | null, max = 25) => {
+  const t = clean(s, max);
+  return t || undefined;
+};
+
+export const httpsUrl = (u?: string | null) => {
+  const t = (u ?? "").trim();
+  if (!t) return undefined;
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
+};
+
+// Normalizes to E.164; if no country code, uses IN by default.
+export const e164 = (p?: string | null, defaultCC = "91") => {
+  const raw = (p ?? "").trim();
+  let t = raw.replace(/[^\d+]/g, "");
+  if (t.startsWith("00")) t = `+${t.slice(2)}`;
+  if (t.startsWith("+")) return t;
+  if (t.startsWith(defaultCC) && t.length > 10) return `+${t}`;
+  return `+${defaultCC}${t}`;
 };

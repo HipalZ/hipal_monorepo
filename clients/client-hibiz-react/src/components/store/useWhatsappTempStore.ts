@@ -9,7 +9,7 @@ import type {
 export enum Tabs {
   TEMPLATES = "templates",
   CAMPAIGNS = "campaigns",
-  // FLOWS = "flows",
+  FLOWS = "flows",
   // AUTOMATION = "automation",
   CHATS = "chats",
 }

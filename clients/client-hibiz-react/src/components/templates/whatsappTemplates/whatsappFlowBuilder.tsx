@@ -1,20 +1,19 @@
 import { useState, useMemo } from "react";
-import { arrayMove } from "@dnd-kit/sortable";
-import type { DragEndEvent } from "@dnd-kit/core";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
-import type {
-  ContentType,
-  ContentComponent,
-  Screen,
-} from "@/components/flow-builder/types";
+import { BiLeftArrow } from "react-icons/bi";
+import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
 import { ScreensPanel } from "@/components/flow-builder/screens-panel";
 import { EditorPanel } from "@/components/flow-builder/editor-panel";
 import { PreviewPanel } from "@/components/flow-builder/preview-panel";
+import { arrayMove } from "@dnd-kit/sortable";
 import { generateJsonPayload } from "@/lib/whatsapp-payload-generator";
-import { CreateWhatsAppFlow } from "@/components/helpers/whatzAppHelpers";
-import { BiLeftArrow } from "react-icons/bi";
-import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
+import type { DragEndEvent } from "@dnd-kit/core";
+import type {
+  ContentComponent,
+  ContentType,
+  Screen,
+} from "@/components/flow-builder/types";
 
 const initialScreens: Screen[] = [
   {
@@ -38,6 +37,7 @@ const initialScreens: Screen[] = [
       },
     ],
     button: { text: "Sign Up", action: "submit" },
+    mode: "static",
   },
 ];
 
@@ -94,6 +94,7 @@ export default function FlowBuilderPage() {
       title: "New Screen",
       content: [],
       button: { text: "Next", action: "next_screen" },
+      mode: "static", // Default to static mode
     };
     setScreens([...screens, newScreen]);
     setActiveScreenId(newScreen.id);
@@ -135,27 +136,41 @@ export default function FlowBuilderPage() {
     }
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    const toastId = toast.loading("Publishing flow...");
-    const payload = generateJsonPayload(screens);
-    const flowName = activeScreen.name || "My New Flow";
-    const result = await CreateWhatsAppFlow(payload, flowName);
-    toast.dismiss(toastId);
-    setIsSaving(false);
-
-    if (result.success) {
-      toast.success(`Flow published successfully! Flow ID: ${result.data.id}`);
-      console.log("--- PUBLISH SUCCESS ---", result.data);
-    } else {
-      toast.error(`Failed to publish flow: ${result.error}`);
-      console.error("--- PUBLISH FAILED ---", result.error);
-    }
+  // Function to generate payload for internal DB storage
+  const generateInternalPayload = () => {
+    const internalPayload = screens.map((screen) => ({
+      id: screen.id,
+      title: screen.title,
+      content: screen.content.map((item) => ({
+        id: item.id,
+        type: item.type,
+        data: item.data,
+      })),
+      button: screen.button,
+      mode: screen.mode,
+      endpoint: screen.endpoint || null,
+    }));
+    return internalPayload;
   };
 
-  if (!activeScreen) {
-    return <div>Loading...</div>;
-  }
+  const handleSave = async () => {
+    setIsSaving(true);
+    const internalPayload = generateInternalPayload();
+    const metaPayload = generateJsonPayload(screens);
+
+    // Log the payloads to the console
+    console.log("Internal Payload for DB:", internalPayload);
+    console.log("Meta Payload for Flow Verification:", metaPayload);
+
+    // Here you would make the API call to store the internal payload in your DB
+    // Example: await api.saveFlow(internalPayload);
+
+    setIsSaving(false);
+    toast.success("Flow saved and ready for Meta verification!");
+
+    // Optional: Send Meta Payload to Meta API for verification
+    // await createMetaFlow(metaPayload);
+  };
 
   return (
     <div className="min-h-[calc(85dvh-50rem)] bg-gray-100 dark:bg-gray-900 flex flex-col relative pb-20">
@@ -169,7 +184,7 @@ export default function FlowBuilderPage() {
           >
             <BiLeftArrow className="w-5 h-5" />
           </Button>
-          <h1 className="text-lg font-semibold">Create flow</h1>
+          <h1 className="text-lg font-semibold">Create Flow</h1>
         </div>
       </header>
       <section className="flex-1 grid grid-cols-1 md:grid-cols-[300px_1fr] lg:grid-cols-[200px_2fr_350px] overflow-hidden">

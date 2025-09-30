@@ -1,12 +1,12 @@
-import { lazy, memo, useCallback, useEffect } from "react";
-import { BiPlus } from "react-icons/bi";
-import { IoMdClose } from "react-icons/io";
-import useWhatsapp, { HeaderInterface } from "@/components/store/useWhatsapp";
 import {
   normalizeInput,
   useAddTemplate,
 } from "@/components/helpers/whatzAppHelpers";
 import useBusinessData from "@/components/store/useBusinessData";
+import useWhatsapp, { HeaderInterface } from "@/components/store/useWhatsapp";
+import { lazy, memo, useCallback, useEffect } from "react";
+import { BiPlus } from "react-icons/bi";
+import { IoMdClose } from "react-icons/io";
 
 const CouponContent = lazy(() => import("./couponContent"));
 const ImageContent = lazy(() => import("./imageContent"));
@@ -57,7 +57,6 @@ const MemoContent = () => {
     (s) => s.updateDisplayBodySequenceVariable,
   );
   const { addTemplateName, handleBodyTextChange } = useAddTemplate();
-
   const handleAddVariable = useCallback(() => {
     addVariable();
   }, [addVariable]);
@@ -79,9 +78,9 @@ const MemoContent = () => {
   }, [outLetType, setVariableOptions]);
 
   return (
-    <section className="w-full max-w-2xl p-3 mx-auto mb-4 bg-white rounded-lg shadow-md">
+    <section className="mx-auto mb-4 w-full max-w-2xl rounded-lg bg-white p-3 shadow-md">
       <div className="mb-4">
-        <label htmlFor="templateName" className="block mb-2 font-bold">
+        <label htmlFor="templateName" className="mb-2 block font-bold">
           Template Name <span className="text-red-500">*</span>
         </label>
         <div className="relative">
@@ -92,22 +91,22 @@ const MemoContent = () => {
             maxLength={100}
             onChange={addTemplateName}
             placeholder="Enter template name"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            className="w-full rounded-md border border-gray-300 px-3 py-2"
           />
-          <small className="absolute text-gray-500 bottom-2 right-3">
+          <small className="absolute bottom-2 right-3 text-gray-500">
             {templateName?.length || 0}/100
           </small>
         </div>
       </div>
       <div className="mb-4">
-        <label htmlFor="headerType" className="block mb-2 font-bold">
+        <label htmlFor="headerType" className="mb-2 block font-bold">
           Header (optional)
         </label>
-        <div className="flex flex-wrap gap-3 mb-4">
+        <div className="mb-4 flex flex-wrap gap-3">
           <button
             type="button"
             onClick={() => setHeaderType(HeaderInterface.Text)}
-            className={`px-4 py-2 rounded-md ${
+            className={`rounded-md px-4 py-2 ${
               headerType === HeaderInterface.Text
                 ? "bg-blue-600 text-white"
                 : "bg-gray-200 text-gray-800"
@@ -118,7 +117,7 @@ const MemoContent = () => {
           <button
             type="button"
             onClick={() => setHeaderType(HeaderInterface.Image)}
-            className={`px-4 py-2 rounded-md ${
+            className={`rounded-md px-4 py-2 ${
               headerType === HeaderInterface.Image
                 ? "bg-blue-600 text-white"
                 : "bg-gray-200 text-gray-800"
@@ -139,9 +138,9 @@ const MemoContent = () => {
                 const trimmedValue = normalizeInput(e.target.value);
                 setHeaderText(trimmedValue);
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full rounded-md border border-gray-300 px-3 py-2"
             />
-            <small className="absolute text-gray-500 bottom-2 right-3">
+            <small className="absolute bottom-2 right-3 text-gray-500">
               {headerText?.length || 0}/512
             </small>
           </div>
@@ -151,7 +150,7 @@ const MemoContent = () => {
       {headerType === HeaderInterface.Image && <ImageContent />}
 
       <div>
-        <label htmlFor="bodyText" className="block mb-2 font-bold">
+        <label htmlFor="bodyText" className="mb-2 block font-bold">
           Message Body <span className="text-red-500">*</span>
         </label>
         <div className="relative">
@@ -163,36 +162,36 @@ const MemoContent = () => {
             placeholder="Write your message content here"
             value={bodyText}
             onChange={handleBodyTextChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none"
+            className="w-full resize-none rounded-md border border-gray-300 px-3 py-2"
           />
-          <small className="absolute text-gray-500 bottom-2 right-3">
+          <small className="absolute bottom-2 right-3 text-gray-500">
             {bodyText?.length || 0}/1028
           </small>
         </div>
       </div>
 
       <div className="mb-4">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <label htmlFor="dynamicVariables" className="font-bold">
             Dynamic Variables
           </label>
           <button
             type="button"
             onClick={handleAddVariable}
-            className="flex items-center px-3 py-2 text-sm text-white bg-blue-600 rounded-md"
+            className="flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm text-white"
           >
             <BiPlus className="mr-1" /> Add Variable
           </button>
         </div>
         <div
           id="dynamicVariables"
-          className="relative space-y-3 transition-all bg-white rounded-lg group"
+          className="group relative space-y-3 rounded-lg bg-white transition-all"
         >
           {bodyVariables
             ? bodyVariables?.map((_, index) => (
                 <div key={index?.toString()} className="flex flex-col gap-3">
-                  <div className="flex items-center w-full gap-3 sm:w-auto">
-                    <div className="flex items-center justify-center w-8 h-8 text-sm font-medium text-gray-900 bg-gray-100 rounded-full shrink-0">
+                  <div className="flex w-full items-center gap-3 sm:w-auto">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-900">
                       {index + 1}
                     </div>
                     <div className="relative flex-1 sm:w-64 sm:flex-none">
@@ -208,7 +207,7 @@ const MemoContent = () => {
                           updateDisplayBodySequenceVariable(index, value);
                           updateVariable(index, label);
                         }}
-                        className="block w-full px-3 py-2 pr-8 text-sm text-gray-900 bg-white border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 pr-8 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       >
                         <option value="">Select Variable</option>
                         {variableOptions.map((option) => (
@@ -225,10 +224,10 @@ const MemoContent = () => {
                     <button
                       type="button"
                       onClick={() => handleRemoveVariable(index)}
-                      className="inline-flex items-center justify-center text-red-600 transition-colors rounded-lg h-9 w-9 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-red-50 text-red-600 transition-colors hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
                       aria-label="Remove variable"
                     >
-                      <IoMdClose className="w-5 h-5" />
+                      <IoMdClose className="h-5 w-5" />
                     </button>
                   </div>
                 </div>

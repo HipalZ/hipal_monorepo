@@ -43,6 +43,11 @@ const MemoSuccessPopup = () => {
     };
   }, []);
 
+  const handleCancel = useCallback(() => {
+    setShowSuccessPopup(false);
+    setTemplateSteps(TemplateSteps.SHOW_OPTIONS);
+  }, [setTemplateSteps, setShowSuccessPopup]);
+
   return (
     <MiddlePopUp onlyPopUp show={showSuccessPopup} onClose={handleProceed}>
       <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-xl">
@@ -98,6 +103,16 @@ const MemoSuccessPopup = () => {
           ) : null}
         </motion.div>
         <div className="flex justify-center mt-8">
+          <button
+            type="button"
+            onClick={handleCancel}
+            className={cn(
+              timer > 0 ? "opacity-50" : "bg-red-500",
+              "px-4 py-2 font-semibold text-white transition duration-300 ease-in-out transform rounded-full hover:scale-105",
+            )}
+          >
+            Cancel
+          </button>
           <button
             type="button"
             onClick={handleProceed}

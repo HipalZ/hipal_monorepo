@@ -76,8 +76,8 @@ const MemoWhatzappDashboard = () => {
         return <MdCampaign className="w-5 h-5 mr-2" />;
       case Tabs.TEMPLATES:
         return <HiOutlineTemplate className="w-5 h-5 mr-2" />;
-      // case Tabs.FLOWS:
-      //   return <Workflow className="w-5 h-5 mr-2" />;
+      case Tabs.FLOWS:
+        return <Workflow className="w-5 h-5 mr-2" />;
       // case Tabs.AUTOMATION:
       //   return <TbSettingsAutomation className="w-5 h-5 mr-2" />;
       // case Tabs.CHATS:
@@ -182,7 +182,7 @@ const MemoWhatzappDashboard = () => {
       {/* {activeTab === Tabs.AUTOMATION && !createEditFlow && (
         <WhatsappFlowSection />
       )} */}
-      {/* {activeTab === Tabs.FLOWS && (
+      {activeTab === Tabs.FLOWS && (
         <>
           {!flowBuilderOpen ? (
             <div className="p-4 mb-6">
@@ -199,7 +199,7 @@ const MemoWhatzappDashboard = () => {
             <FlowBuilderPage />
           )}
         </>
-      )} */}
+      )}
 
       {/* {activeTab === Tabs.AUTOMATION && createEditFlow && (
         <WhatsAppAutomationFlow />

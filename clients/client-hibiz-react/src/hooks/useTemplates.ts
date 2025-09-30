@@ -25,23 +25,15 @@ export const useCreateTemplate = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
   const setIsLoading = useWhatsappTempStore((s) => s.setIsLoading);
   const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
-  const {
-    setStep,
-    setShowSuccessPopup,
-    setTemplateStatus,
-    setTemplateData,
-    setTemplateId,
-    setTemplateSteps,
-  } = useWhatsapp((s) => ({
-    setStep: s.setStep,
-    setShowSuccessPopup: s.setShowSuccessPopup,
-    setTemplateStatus: s.setTemplateStatus,
-    setTemplateData: s.setTemplateData,
-    setTemplateId: s.setTemplateId,
-    setTemplateSteps: s.setTemplateSteps,
-  }));
+  const setStep = useWhatsapp((s) => s.setStep);
+  const setShowSuccessPopup = useWhatsapp((s) => s.setShowSuccessPopup);
+  const setTemplateStatus = useWhatsapp((s) => s.setTemplateStatus);
+  const setTemplateData = useWhatsapp((s) => s.setTemplateData);
+  const setTemplateId = useWhatsapp((s) => s.setTemplateId);
+  const setTemplateSteps = useWhatsapp((s) => s.setTemplateSteps);
+  const setConfirmCreate = useWhatsapp((s) => s.setConfirmCreate);
 
-  const { mutateAsync: createTemplate, isPending: createTemplateLoading } =
+  const { mutateAsync: createTemplate } =
     useMutation({
       mutationFn: async (payload: WhatsAppTemplatePayload) => {
         if (!businessId) return null;
@@ -82,6 +74,8 @@ export const useCreateTemplate = () => {
         setTemplateData(data?.data);
         setStep(Step.SETUP);
         setTemplateSteps(TemplateSteps.NONE);
+        toast.success("Template created successfully");
+        setConfirmCreate(false);
         queryClient.invalidateQueries({ queryKey: ["templates"] });
       },
       onError: (error) => {
@@ -779,3 +773,41 @@ export const useTempAnalyticsById = () => {
 
   return { getTemplateAnaylyticsById };
 };
+
+type TranslateInput = {
+  text: string;
+  target: string;
+  source?: string;
+};
+
+export function useTranslate() {
+  return useMutation<string, Error, TranslateInput>({
+    mutationFn: async ({ text, target, source }) => {
+      const res = await apiRpc.googleTranslate.$post({
+        json: { text, target, ...(source ? { source } : {}) },
+      });
+
+      const j = await res.json();
+      if (!res.ok || j?.err) {
+        throw new Error(j?.message || "Translate failed");
+      }
+      return j?.data?.translated ?? j?.translated ?? "";
+    },
+  });
+}
+
+export function useSafeTranslate() {
+  const { mutateAsync: translate } = useTranslate();
+  return async (text: string, lang: string) => {
+    if (!text) return "";
+    const tokens: string[] = [];
+    const masked = text.replace(/{{\d+}}/g, (m) => {
+      tokens.push(m);
+      return `__TKN_${tokens.length - 1}__`;
+    });
+
+    const translated = await translate({ text: masked, target: lang });
+
+    return translated.replace(/__TKN_(\d+)__/g, (_, i) => tokens[+i]);
+  };
+}

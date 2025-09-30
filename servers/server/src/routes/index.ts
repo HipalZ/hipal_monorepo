@@ -46,6 +46,7 @@ import usersRouter from "./users";
 import whatsappRouter from "./whatsapp";
 import whatsAppFlowRouter from "./whatsappflow";
 import zonesAndTablesRouter from "./zonesAndTables";
+import googleTranslateRoute from "./googleTranslate";
 
 ////
 const app = new Hono();
@@ -99,6 +100,7 @@ export const routes = app
   .route("/split_bill", splitBillRouter)
   .route("/jewellery", jewelleryRouter)
   .route("/attendence", staffAttendenceRouter)
-  .route("/sync_pos_menu_config", syncPosMenuConfigRouter);
+  .route("/sync_pos_menu_config", syncPosMenuConfigRouter)
+  .route("/googleTranslate", googleTranslateRoute);
 
 export type AppType = typeof routes;

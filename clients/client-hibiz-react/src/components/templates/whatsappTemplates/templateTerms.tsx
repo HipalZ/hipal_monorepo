@@ -10,44 +10,12 @@ import {
   useCreateTemplate,
   useEditTemplate,
   useMediaUpload,
+  useSafeTranslate,
 } from "@/hooks/useTemplates";
 import { memo, useCallback, useState } from "react";
 import { FiAlertCircle, FiCheckCircle } from "react-icons/fi";
 
-export const clean = (s?: string | null, max = 1024) =>
-  (s ?? "").replace(/\s+/g, " ").trim().slice(0, Math.max(0, max));
-
-export const cap = (s?: string | null, max = 25) => {
-  const t = clean(s, max);
-  return t || undefined;
-};
-
-export const httpsUrl = (u?: string | null) => {
-  const t = (u ?? "").trim();
-  if (!t) return undefined;
-  return /^https?:\/\//i.test(t) ? t : `https://${t}`;
-};
-
-// Normalizes to E.164; if no country code, uses IN by default.
-export const e164 = (p?: string | null, defaultCC = "91") => {
-  const raw = (p ?? "").trim();
-
-  // strip spaces, dashes, parentheses
-  let t = raw.replace(/[^\d+]/g, "");
-
-  // handle "00" international prefix (e.g., 0091...)
-  if (t.startsWith("00")) t = `+${t.slice(2)}`;
-
-  // if it already starts with +, keep it
-  if (t.startsWith("+")) return t;
-
-  // if it starts with country code digits (e.g., 91...) and length > 10, keep it
-  if (t.startsWith(defaultCC) && t.length > 10) return `+${t}`;
-
-  // otherwise assume local number -> prepend default CC
-  return `+${defaultCC}${t}`;
-};
-
+// --- Main Component ---
 const MemoTemplateTerms = () => {
   const { businessId, businessName } = useBusinessData((s) => ({
     businessId: s.businessData?._id,
@@ -72,111 +40,126 @@ const MemoTemplateTerms = () => {
   const setConfirmCreate = useWhatsapp((s) => s.setConfirmCreate);
   const imagePreview = useWhatsapp((s) => s.imagePreview);
   const secondButtonText = useWhatsapp((s) => s.secondButtonText);
-
+  const selectedLangs = useWhatsapp((s) => s.selectedLangs);
   const setIsLoading = useWhatsappTempStore((s) => s.setIsLoading);
   const flow = useWhatsappTempStore((s) => s.flow);
-  // calling media api
+
   const { uploadMedia } = useMediaUpload();
+  const [isAccepted, setIsAccepted] = useState(false);
+
+  const safeTranslate = useSafeTranslate();
 
   const handleConfirmPopUp = useCallback(async () => {
-    // Step 1: Upload media if required
     setIsLoading(true);
+
+    // Step 1: upload media if required
     let whatsappImageHandler = imagePreview || "";
     let storageImageUrl = "";
-        if (
+    if (
       headerType === HeaderInterface.Image &&
-      imagePreview.length > 0 &&
+      imagePreview?.length > 0 &&
       imagePreview.includes("data:")
     ) {
       const { url, handle } = await uploadMedia();
       whatsappImageHandler = handle;
       storageImageUrl = url;
     }
-    const components: any[] = [];
-    // HEADER
-    if (headerType === HeaderInterface.Text) {
-      const header = clean(headerText, 60);
-      if (header)
-        components.push({ type: "HEADER", format: "TEXT", text: header });
-    } else if (headerType === HeaderInterface.Image && whatsappImageHandler) {
-      components.push({
-        type: "HEADER",
-        format: "IMAGE",
-        example: { header_handle: [whatsappImageHandler] },
-      });
+
+    // Step 2: build all payloads per language
+    const tasks = selectedLangs.map(async (lang) => {
+      // translate relevant fields
+      const translatedHeader =
+        headerType === HeaderInterface.Text
+          ? await safeTranslate(headerText, lang)
+          : headerText;
+
+      const translatedBody = await safeTranslate(bodyText, lang);
+      const translatedFooter = businessName
+        ? await safeTranslate(`Powered by ${businessName}`, lang)
+        : "";
+
+      const components: any[] = [];
+      if (headerType === HeaderInterface.Text && translatedHeader) {
+        components.push({
+          type: "HEADER",
+          format: "TEXT",
+          text: translatedHeader,
+        });
+      } else if (headerType === HeaderInterface.Image && whatsappImageHandler) {
+        components.push({
+          type: "HEADER",
+          format: "IMAGE",
+          example: { header_handle: [whatsappImageHandler] },
+        });
+      }
+
+      // body
+      const bodyComp: any = { type: "BODY", text: translatedBody };
+      if (variables?.length > 0) {
+        bodyComp.example = { body_text: [variables] };
+      }
+      components.push(bodyComp);
+
+      // footer
+      if (translatedFooter) components.push({ type: "FOOTER", text: translatedFooter });
+
+      // buttons
+      const buttons: any[] = [];
+      switch (actionType) {
+        case ActionType.VisitWebsite: {
+          const text = cap(buttonText, 25);
+          const url = httpsUrl(websiteUrl);
+          if (text && url) buttons.push({ type: "URL", text, url });
+          break;
+        }
+        case ActionType.MarketingOptOut: {
+          const text = cap(secondButtonText || "Stop", 25);
+          if (text) buttons.push({ type: "QUICK_REPLY", text });
+          break;
+        }
+        case ActionType.Flow: {
+          const text = cap(buttonText || "Continue", 25);
+          const flow_id = flow?.id;
+          if (text && flow_id) buttons.push({ type: "FLOW", text, flow_id });
+          break;
+        }
+        case ActionType.CallUs: {
+          const text = cap(buttonText, 25);
+          const phone_number = e164(phoneNumber);
+          if (text && phone_number)
+            buttons.push({ type: "PHONE_NUMBER", text, phone_number });
+          break;
+        }
+        default:
+          break;
+      }
+      if (buttons.length > 0) components.push({ type: "BUTTONS", buttons });
+
+      const payload: WhatsAppTemplatePayload = {
+        businessId,
+        name: `${templateName}_${lang}`,
+        language: lang,
+        ...(templateId?.length ? { templateId } : {}),
+        category: templateType,
+        components,
+        ...(storageImageUrl ? { imageUrl: storageImageUrl } : {}),
+        ...(bodyVariableSequence ? { bodyVariableSequence } : {}),
+      };
+
+      return payload;
+    });
+
+    const payloads = await Promise.all(tasks);
+
+    for (const payload of payloads) {
+      console.log("Submitting payload:", payload);
+      if (templateId?.length > 0) {
+        await editTemplate(payload);
+      } else {
+        await createTemplate(payload);
+      }
     }
 
-    // BODY (required)
-    const body = clean(bodyText, 1024) || ""; // Body must exist
-    const bodyComp: any = { type: "BODY", text: body };
-    const bodyVars = Array.isArray(variables)
-      ? variables.map((v) => clean(v) || "")
-      : [];
-    if (bodyVars.length > 0) bodyComp.example = { body_text: [bodyVars] };
-    components.push(bodyComp);
-
-    // FOOTER (optional)
-    const footer = businessName ? clean(`Powered by ${businessName}`, 60) : "";
-    if (footer) components.push({ type: "FOOTER", text: footer });
-    // BUTTONS (optional)
-    const buttons: any[] = [];
-    switch (actionType) {
-      case ActionType.VisitWebsite: {
-        const text = cap(buttonText, 25);
-        const url = httpsUrl(websiteUrl);
-        if (text && url) buttons.push({ type: "URL", text, url });
-        break;
-      }
-      case ActionType.MarketingOptOut: {
-        // QUICK_REPLY supports only "text"
-        const text = cap(secondButtonText || "Stop", 25);
-        if (text) buttons.push({ type: "QUICK_REPLY", text });
-        break;
-      }
-      case ActionType.Flow: {
-        const text = cap(buttonText || "Continue", 25);
-        const flow_id = flow?.id;
-        if (text && flow_id) buttons.push({ type: "FLOW", text, flow_id });
-        break;
-      }
-      case ActionType.CallUs: {
-        const text = cap(buttonText, 25);
-        const phone_number = e164(phoneNumber);
-        if (text && phone_number)
-          buttons.push({
-            type: "PHONE_NUMBER",
-            text,
-            phone_number,
-          });
-        break;
-      }
-      default:
-        // no buttons
-        break;
-    }
-    if (buttons.length > 0) components.push({ type: "BUTTONS", buttons });
-
-    // FINAL payload
-    const payload: WhatsAppTemplatePayload = {
-      businessId,
-      name: templateName,
-      language: "en_GB",
-      ...(templateId?.length ? { templateId } : {}),
-      category: templateType,
-      components,
-      ...(storageImageUrl ? { imageUrl: storageImageUrl } : {}),
-      ...(Array.isArray(bodyVariableSequence) ? { bodyVariableSequence } : {}),
-    };
-
-    console.log("payload", payload);
-    // Step 3: Call the appropriate API (create or edit)
-    if (templateId?.length > 0) {
-      await editTemplate(payload);
-    } else {
-      await createTemplate(payload);
-    }
-
-    // Success: Update UI state
     setShowSuccessPopup(true);
     setIsLoading(false);
   }, [
@@ -201,16 +184,17 @@ const MemoTemplateTerms = () => {
     setIsLoading,
     imagePreview,
     secondButtonText,
+    flow,
+    selectedLangs,
+    safeTranslate,
   ]);
-
-  const [isAccepted, setIsAccepted] = useState(false);
 
   return (
     <MiddlePopUp show={confirmCreate} onlyPopUp>
       <div className="w-full max-w-2xl overflow-hidden bg-white rounded-lg shadow-2xl">
         <div className="h-20 text-white bg-gradient-to-r from-[#075E54] to-[#25D366]">
           <center className="h-full py-2 text-2xl font-bold text-center">
-            Whatzapp Meta template <br />
+            WhatsApp Meta Template <br />
             <span className="text-sm">Terms and Conditions</span>
           </center>
         </div>
@@ -218,10 +202,8 @@ const MemoTemplateTerms = () => {
         <div className="p-2">
           <p className="flex items-center mb-4 text-gray-600">
             <FiAlertCircle className="mr-2 text-yellow-500" />
-            Please read and accept the following terms before creating a
-            template.
+            Please read and accept the following terms before creating a template.
           </p>
-
           <div className="h-[250px] overflow-y-auto border rounded-lg p-4 mb-6 custom-scrollbar">
             <div className="space-y-4">
               <p className="font-semibold">
@@ -261,7 +243,7 @@ const MemoTemplateTerms = () => {
           <label className="flex items-center mx-4 cursor-pointer">
             <input
               type="checkbox"
-              className="w-5 h-5 text-blue-600 transition duration-150 ease-in-out form-checkbox"
+              className="w-5 h-5 text-blue-600 form-checkbox"
               checked={isAccepted}
               onChange={(e) => setIsAccepted(e.target.checked)}
             />
@@ -275,7 +257,7 @@ const MemoTemplateTerms = () => {
           <button
             type="button"
             onClick={() => setConfirmCreate(false)}
-            className="px-4 py-2 text-gray-600 transition-colors bg-white border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-100"
           >
             Cancel
           </button>
@@ -286,11 +268,8 @@ const MemoTemplateTerms = () => {
               await handleConfirmPopUp();
             }}
             disabled={!isAccepted}
-            className={`px-4 py-2 text-white transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-              isAccepted
-                ? "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
-                : "bg-gray-400 cursor-not-allowed"
-            }`}
+            className={`px-4 py-2 text-white rounded-md ${isAccepted ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-400 cursor-not-allowed"
+              }`}
           >
             <span className="flex items-center">
               <FiCheckCircle className="mr-2" />I Accept

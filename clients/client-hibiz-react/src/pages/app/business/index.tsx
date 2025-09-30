@@ -52,7 +52,9 @@ const Business = () => {
     const outletInfo = response.data as IOutletInfo
     if (res.status === 200 || res.status === 201) {
       useBusinessData.getState().setOutletInfo(outletInfo);
-
+      if (id === "68d570dce612b3f1fd22b9bf") {
+        return navigate("/app/krishivaas/")
+      }
       if (["MENU", "FOOD", "OTHER"].includes(outletInfo?.outLetType)) {
         return navigate(routePathsWithId[PAGE_TYPES.BUSINESS_DETAILS](id));
       }

@@ -1,9 +1,19 @@
+import { memo, useCallback, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { FiTag } from "react-icons/fi";
 import useWhatsapp from "@/components/store/useWhatsapp";
 import type { ICouponzLinks } from "@/components/types/businessData";
 import { useCouponzLinks } from "@/hooks/useTemplates";
-import { useQuery } from "@tanstack/react-query";
-import { memo, useCallback, useMemo, useState } from "react";
-import { FiChevronDown, FiTag } from "react-icons/fi";
+
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const MemoCouponContent = () => {
   const { couponzLinks, selectedCoupon, setSelectedCoupon, addCouponzText } =
@@ -13,88 +23,82 @@ const MemoCouponContent = () => {
       setSelectedCoupon: s.setSelectedCoupon,
       addCouponzText: s.addCouponzText,
     }));
-  const { getCouponzLinks } = useCouponzLinks();
-  const [isCouponDropdownOpen, setIsCouponDropdownOpen] = useState(false);
-  const handleCouponSelect = useCallback(
-    (coupon: ICouponzLinks) => {
-      setSelectedCoupon(coupon.name);
-      addCouponzText(coupon);
-      setIsCouponDropdownOpen(false);
-    },
-    [setSelectedCoupon, addCouponzText],
-  );
 
-  const { data: fetchedCouponzLinks, isLoading } = useQuery({
+  const { getCouponzLinks } = useCouponzLinks();
+  const [open, setOpen] = useState(false);
+
+  const { data: fetched, isLoading } = useQuery({
     queryKey: ["couponzLinks"],
     queryFn: getCouponzLinks,
-    enabled: isCouponDropdownOpen && couponzLinks.length === 0,
+    enabled: open && couponzLinks.length === 0,
   });
 
-  const displayedCouponzLinks = useMemo(
-    () =>
-      couponzLinks.length > 0 ? couponzLinks : fetchedCouponzLinks?.data || [],
-    [couponzLinks, fetchedCouponzLinks],
+  const displayedCouponzLinks: ICouponzLinks[] = useMemo(
+    () => (couponzLinks.length > 0 ? couponzLinks : fetched?.data || []),
+    [couponzLinks, fetched],
   );
+
+  const handleChange = useCallback(
+    (value: string) => {
+      const c = displayedCouponzLinks.find((x) => x.name === value);
+      if (!c) return;
+      setSelectedCoupon(c.name);
+      addCouponzText(c);
+    },
+    [displayedCouponzLinks, setSelectedCoupon, addCouponzText],
+  );
+
   return (
-    <div className="mb-4">
-      <label htmlFor="couponSelect" className="block font-bold text-gray-700">
+    <div className="mb-4 space-y-2">
+      <Label htmlFor="couponSelect" className="font-semibold">
         Add Coupon
-      </label>
-      <h1 className="mb-2 text-xs font-medium text-gray-700">
-        share your coupon links from here
-      </h1>
-      <div className="relative">
-        <button
-          type="button"
-          onClick={() => setIsCouponDropdownOpen(!isCouponDropdownOpen)}
-          className="w-full px-4 py-2 text-left text-gray-700 transition-colors duration-200 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:bg-gray-50"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <FiTag className="w-5 h-5 mr-2 text-blue-500" />
-              <span className="truncate">
-                {selectedCoupon || "Select a coupon"}
-              </span>
-            </div>
-            <FiChevronDown
-              className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                isCouponDropdownOpen ? "transform rotate-180" : ""
-              }`}
-            />
+      </Label>
+      <p className="text-xs text-muted-foreground">
+        Share your coupon links from here
+      </p>
+
+      <Select
+        open={open}
+        onOpenChange={setOpen}
+        value={selectedCoupon ?? ""}
+        onValueChange={handleChange}
+      >
+        <SelectTrigger id="couponSelect" className="justify-start">
+          <div className="mr-2 text-blue-500">
+            <FiTag className="h-4 w-4" />
           </div>
-        </button>
-        {isCouponDropdownOpen && (
-          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
-            {isLoading ? (
-              <div className="p-4 text-center text-gray-600">
-                Loading couponz...
-              </div>
-            ) : (
-              <ul className="py-1 overflow-auto max-h-60">
-                {displayedCouponzLinks.map((coupon: ICouponzLinks) => {
-                  if (!coupon?.name) return null;
-                  return (
-                    <li
-                      key={coupon.name}
-                      className="px-4 py-2 transition-colors duration-200 cursor-pointer hover:bg-blue-50"
-                      onClick={() => handleCouponSelect(coupon)}
-                      onKeyDown={() => handleCouponSelect(coupon)}
-                    >
-                      <div className="flex items-center">
-                        <FiTag className="w-4 h-4 mr-2 text-blue-500" />
-                        <span className="truncate">{coupon.name}</span>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-        )}
-      </div>
+          <SelectValue
+            placeholder="Select a coupon"
+            aria-label={selectedCoupon || "Select a coupon"}
+          />
+        </SelectTrigger>
+        <SelectContent>
+          {isLoading ? (
+            <SelectItem value="__loading" disabled>
+              Loading coupons…
+            </SelectItem>
+          ) : displayedCouponzLinks.length === 0 ? (
+            <SelectItem value="__empty" disabled>
+              No coupons found
+            </SelectItem>
+          ) : (
+            <ScrollArea className="h-56">
+              {displayedCouponzLinks.map((c) =>
+                c?.name ? (
+                  <SelectItem key={c.name} value={c.name}>
+                    <div className="flex items-center">
+                      <FiTag className="mr-2 h-4 w-4 text-blue-500" />
+                      <span className="truncate">{c.name}</span>
+                    </div>
+                  </SelectItem>
+                ) : null,
+              )}
+            </ScrollArea>
+          )}
+        </SelectContent>
+      </Select>
     </div>
   );
 };
 
-const CouponContent = memo(MemoCouponContent);
-export default CouponContent;
+export default memo(MemoCouponContent);
