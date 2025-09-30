@@ -212,7 +212,7 @@ const StaffSelectionStep = ({ formData, toggleStaff }: StepProps) => {
                       </Label>
                       {staff.customRole && staff.customRole.length > 0 && (
                         <div className="mt-1 text-xs text-muted-foreground">
-                          {findRole(staff.customRole)}
+                          {findRole(staff.customRole, businessId)}
                         </div>
                       )}
                     </div>

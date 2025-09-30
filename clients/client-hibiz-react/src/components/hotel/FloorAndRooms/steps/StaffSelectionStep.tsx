@@ -44,7 +44,7 @@ const StaffPreviewStep: React.FC = () => {
                       <span className="font-medium">{staff.name}</span>
                       {staff.customRole && staff.customRole.length > 0 && (
                         <Badge variant="outline" className="text-xs">
-                          {findRole(staff.customRole)}
+                          {findRole(staff.customRole, businessId)}
                         </Badge>
                       )}
                     </div>

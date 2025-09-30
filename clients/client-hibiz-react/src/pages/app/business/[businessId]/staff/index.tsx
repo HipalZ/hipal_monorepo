@@ -210,14 +210,18 @@ const StaffPage = () => {
                             className={`
                           scale-90 -ml-2 px-2 py-1 rounded-full text-sm font-medium shadow-lg 
                           text-white ${
-                            roleGradients[findRole(staff.customRole) as Role] ||
-                            roleGradients.CAPTAIN
+                            roleGradients[
+                              findRole(
+                                staff.customRole,
+                                businessData?._id,
+                              ) as Role
+                            ] || roleGradients.CAPTAIN
                           }
                         `}
                           >
                             <div className="flex items-center gap-1">
                               <Shield className="w-3 h-3" />
-                              {findRole(staff.customRole)}
+                              {findRole(staff.customRole, businessData?._id)}
                             </div>
                           </div>
                         </div>

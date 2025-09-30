@@ -669,9 +669,9 @@ export const getDayNames = (days: number[]) => {
 
 export const findRole = (
   customRoles: { businessId: string; role: string }[] | undefined,
+  businessId?: string,
 ) => {
   if (!customRoles || customRoles.length === 0) return "";
-  const businessId = useBusinessData((s) => s.businessData?._id);
   return (
     customRoles
       .find((r) => String(r?.businessId) === String(businessId))

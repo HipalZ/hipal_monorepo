@@ -115,13 +115,20 @@ const HotelStaffMain = () => {
   const handleEditStaff = useCallback(
     (staff: IStaffMember) => {
       initializeFormForEdit(staff);
-      const role = findRole(staff.customRole) as IHotelRoll;
+      const role = findRole(staff.customRole, businessId) as IHotelRoll;
       setEditRoleStr(role);
-      const serviceIds = (findRole(staff.customRole) as any)?.serviceIds || [];
+      const serviceIds =
+        findRole(staff.customRole, businessId)?.serviceIds || [];
       if (serviceIds?.length > 0) setEditServiceIds(serviceIds);
       setStaffModal(true);
     },
-    [initializeFormForEdit, setEditRoleStr, setEditServiceIds, setStaffModal],
+    [
+      initializeFormForEdit,
+      setEditRoleStr,
+      setEditServiceIds,
+      setStaffModal,
+      businessId,
+    ],
   );
 
   const handleDeleteStaff = useCallback(
