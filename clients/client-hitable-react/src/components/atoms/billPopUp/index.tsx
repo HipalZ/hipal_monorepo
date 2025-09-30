@@ -85,7 +85,8 @@ const BillPopUpMemo = () => {
           selectedNavItem === NavItemTypesEnum.HISTORY ? (
             <CommonBottomButton
               fixed={true}
-              maxWidth="48rem"
+              maxWidth="30rem"
+              position="mid"
               buttons={[
                 {
                   text: "Print Bill",

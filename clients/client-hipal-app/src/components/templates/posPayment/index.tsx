@@ -139,7 +139,7 @@ const MemoPosPayment = ({ data }: { data: IBusinessData }) => {
       ) : (
         <>
           {showBillPage ? (
-            <BillPage />
+            <BillPage bizData={data} />
           ) : (
             <div>
               <section>

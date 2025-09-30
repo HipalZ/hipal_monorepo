@@ -44,6 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { IService } from "@/components/store/hotel/useHotelServices.ts";
+import { findRole } from "@/components/utils/helper";
 
 const roleBadgeColors: Record<string, string> = {
   MANAGER: "bg-purple-100 text-purple-800 hover:bg-purple-100",
@@ -114,13 +115,20 @@ const HotelStaffMain = () => {
   const handleEditStaff = useCallback(
     (staff: IStaffMember) => {
       initializeFormForEdit(staff);
-      const role = staff?.customRole?.[0]?.role as IHotelRoll;
+      const role = findRole(staff.customRole, businessId) as IHotelRoll;
       setEditRoleStr(role);
-      const serviceIds = (staff?.customRole?.[0] as any)?.serviceIds || [];
+      const serviceIds =
+        findRole(staff.customRole, businessId)?.serviceIds || [];
       if (serviceIds?.length > 0) setEditServiceIds(serviceIds);
       setStaffModal(true);
     },
-    [initializeFormForEdit, setEditRoleStr, setEditServiceIds, setStaffModal],
+    [
+      initializeFormForEdit,
+      setEditRoleStr,
+      setEditServiceIds,
+      setStaffModal,
+      businessId,
+    ],
   );
 
   const handleDeleteStaff = useCallback(

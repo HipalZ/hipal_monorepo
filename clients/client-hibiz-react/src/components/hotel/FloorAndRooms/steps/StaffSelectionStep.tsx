@@ -4,12 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Check } from "lucide-react";
 import useFloorFormStore from "@/components/store/hotel/useFloorStore";
 import { useStaffDataStore } from "@/components/store/hotel/useHotelStaff";
+import useBusinessData from "@/components/store/useBusinessData";
+import { findRole } from "@/components/utils/helper";
 
 const StaffPreviewStep: React.FC = () => {
   const { selectedStaffIds } = useFloorFormStore();
   const staffData = useStaffDataStore((s) => s.staffData);
-
-  console.log("staffData", staffData);
+  const businessId = useBusinessData((s) => s?.outletInfo?.businessId);
 
   return (
     <Card>
@@ -37,11 +38,13 @@ const StaffPreviewStep: React.FC = () => {
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      {isSelected && <Check className="h-3.5 w-3.5 text-primary" />}
+                      {isSelected && (
+                        <Check className="h-3.5 w-3.5 text-primary" />
+                      )}
                       <span className="font-medium">{staff.name}</span>
-                      {staff.customRole?.[0]?.role && (
+                      {staff.customRole && staff.customRole.length > 0 && (
                         <Badge variant="outline" className="text-xs">
-                          {staff.customRole[0].role.replace(/_/g, " ")}
+                          {findRole(staff.customRole, businessId)}
                         </Badge>
                       )}
                     </div>
@@ -50,7 +53,9 @@ const StaffPreviewStep: React.FC = () => {
               })}
             </div>
           ) : (
-            <span className="text-sm text-muted-foreground">No staff available</span>
+            <span className="text-sm text-muted-foreground">
+              No staff available
+            </span>
           )}
         </div>
       </CardContent>

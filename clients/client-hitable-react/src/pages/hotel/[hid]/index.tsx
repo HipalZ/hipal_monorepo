@@ -6,7 +6,6 @@ import PopUp from "@/components/atoms/popUp";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 import HotelReviews from "@/components/hotel/HotelReview";
 
-
 const ViewCart = lazy(() => import("@/components/hotel/ViewCart"));
 const EscalationAlerts = lazy(
   () => import("@/components/hotel/EscalationAlerts"),
@@ -30,6 +29,7 @@ const MemoHotel = () => {
   const roomData = useHotelStore((state) => state.roomData);
   const openCartModal = useHotelStore((state) => state.openCartModal);
   const setOpenCartModal = useHotelStore((state) => state.setOpenCartModal);
+  console.log("Rendering Hotel Component", roomData);
 
   const handleBack = () => {
     setOpenCartModal(false);
@@ -57,9 +57,7 @@ const MemoHotel = () => {
           <HistoryHotel />
         </Suspense>
       )}
-      {selectedNavItem === NavItemsHotelEnum.Reviews && (
-        <HotelReviews />
-      )}
+      {selectedNavItem === NavItemsHotelEnum.Reviews && <HotelReviews />}
       <div className="fixed bottom-0 h-[4.5rem] lg:hidden w-full shadow-2xl flex justify-around items-center bg-white z-50">
         <nav className="flex w-full p-2 mx-4 rounded-full bg-gray-50">
           <Suspense fallback={<SpinnerMemo />}>

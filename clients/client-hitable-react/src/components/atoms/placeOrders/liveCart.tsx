@@ -18,7 +18,7 @@ const MemoLiveCart = () => {
 
   return (
     <CommonBottomButton
-      maxWidth="48rem"
+      maxWidth="30rem"
       position="mid"
       fixed
       shadow
