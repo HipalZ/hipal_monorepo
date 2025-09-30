@@ -1100,6 +1100,64 @@ const hotelAlertRouter = new Hono()
     },
   )
 
+  .get(
+    "/staff_services",
+    zValidator(
+      "query",
+      z.object({
+        businessId: z.string().min(24).max(24),
+        from: z.string().optional(),
+        to: z.string().optional(),
+        staffId: z.string().min(24).max(24),
+      }),
+    ),
+    async (c) => {
+      const { businessId, from, to, staffId } = c.req.query();
+      const fromDate = from ? Number(from) : startOfToday.getTime();
+      const toDate = to ? Number(to) : endOfToday.getTime();
+
+      if (Number.isNaN(fromDate) || Number.isNaN(toDate)) {
+        return respond(c, "Invalid dates", true, 400, {});
+      }
+      if (fromDate > toDate) {
+        return respond(c, "Invalid date range", true, 400, {});
+      }
+
+      const alerts = await HotelAlert.find({
+        businessId,
+        createdAt: { $gte: fromDate, $lte: toDate },
+        ...(staffId
+          ? {
+              $or: [
+                {
+                  acceptedBy: staffId,
+                },
+                { deliveredBy: staffId },
+              ],
+            }
+          : {}),
+        alertProgress: {
+          $nin: ["MESSAGE", "REJECTED" /* Exclude non-service alerts */],
+        },
+      })
+        .populate({ path: "acceptedBy", select: "name phone" })
+        .populate({ path: "deliveredBy", select: "name phone" })
+        .populate({
+          path: "serviceIds",
+          select: "name avgDeliveryTime avgAcceptanceTime",
+        })
+        .lean();
+
+      return respond(
+        c,
+        "Staff services fetched successfully",
+        false,
+        200,
+        alerts,
+      );
+    },
+  )
+
   .post(
     "/fetch_room_complain",
     zValidator(
