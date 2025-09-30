@@ -95,4 +95,5 @@ export * from "./printSection";
 export * from "./qrs";
 export * from "./queueLog";
 export * from "./splitBill";
+export * from "./syncPosMenu";
 export * from "./termsAndConditions";
