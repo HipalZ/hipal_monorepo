@@ -40,12 +40,11 @@ async function checkInQrHandler(
       name: checkInQrName,
     });
 
-    console.log("checkInQrInfo", checkInQrInfo);
     if (!checkInQrInfo) {
       return null;
     }
     let checkInQrShortUrl = checkInQrInfo?.downloadLink;
-    checkInQrShortUrl = `${checkInQrShortUrl}?q=wa&id=${userId}}`;
+    checkInQrShortUrl = `${checkInQrShortUrl}?q=wa&id=${userId}`;
     const code = Math.floor(1000 + Math.random() * 9000).toString();
     await CheckInQrUser.findOneAndUpdate(
       {

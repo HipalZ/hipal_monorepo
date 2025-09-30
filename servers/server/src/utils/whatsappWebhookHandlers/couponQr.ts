@@ -39,7 +39,6 @@ async function couponQrHandler(
       urlCode: couponCode,
     });
 
-    console.log("couponQrInfo", couponQrInfo);
     if (!couponQrInfo) {
       return null;
     }

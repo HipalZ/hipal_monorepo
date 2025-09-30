@@ -76,20 +76,19 @@ async function roomQrHandler(
       businessId: whatsAppBusinessConfigData?.businessId,
       name: roomNumber,
     });
-    console.log("roomInfo", roomInfo);
     if (!roomInfo) {
       return null;
     }
     let roomQrShortUrl = roomInfo?.downLoadLink;
-    roomQrShortUrl = `${roomQrShortUrl}?q=wa&id=${userId}}`;
 
     const authCode = Math.floor(1000 + Math.random() * 9000).toString();
-    const roomSession = await HotelRoomSession.findOne({
+    let roomSession = await HotelRoomSession.findOne({
       roomId: roomInfo?._id,
     });
+
     if (roomInfo && roomInfo.userIds.length === 0) {
       if (!roomSession) {
-        const roomSession = await HotelRoomSession.create({
+        roomSession = await HotelRoomSession.create({
           roomId: roomInfo?._id,
           name: roomInfo?.name,
           userIds: [userId],
@@ -126,6 +125,7 @@ async function roomQrHandler(
             roomStatus: "OCCUPIED",
           },
         );
+        roomQrShortUrl = `${roomQrShortUrl}?q=wa&id=${userId}&sessionId=${roomSession?._id}`;
 
         await sendWhatsAppTemplateForRoomQr(
           whatsAppBusinessConfigData,
@@ -134,78 +134,7 @@ async function roomQrHandler(
           true,
           authCode,
         );
-
-        // const serviceTemplateMapping =
-        //   await HotelServiceTemplateMapping.findOne({
-        //     businessId: whatsAppBusinessConfigData?.businessId,
-        //     serviceName: "welcome",
-        //   });
-
-        // if (serviceTemplateMapping) {
-        //   const template = (await WhatAppTemplate.findOne({
-        //     businessId: whatsAppBusinessConfigData?.businessId,
-        //     templateId: serviceTemplateMapping.templateId,
-        //     isDeleted: false,
-        //   })) as {
-        //     templateName: string;
-        //     bodyVariableSequence: string[];
-        //     templateId: string;
-        //     languageCode: string;
-        //     category: string;
-        //     imageUrl?: string;
-        //   };
-
-        //   // const businessWallet = await WhatsAppWallet.findOne({
-        //   //   businessId: roomExists.businessId,
-        //   // }).select("currentBalance");
-
-        //   const imageUrl = template?.imageUrl;
-
-        //   if (!template) {
-        //     console.error("Template not found for welcome service.");
-        //   }
-
-        //   const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppBusinessConfigData.version}/${whatsAppBusinessConfigData.phoneId}/messages`;
-        //   const components = await returnHotelBodyComponents(
-        //     whatsAppBusinessConfigData?.businessName as string,
-        //     "address",
-        //     template.bodyVariableSequence,
-        //     `${roomQrShortUrl}&sessionId=${roomSession?._id}`,
-        //     "16",
-        //     authCode,
-        //     userName as string,
-        //     "get towel",
-        //     "dibesh",
-        //     "https://chatlink.com",
-        //     (whatsAppBusinessConfigData?.outLetId?.placeUrl as string) || "",
-        //     "serviceRejectionReason",
-        //     userPhone as string,
-        //     imageUrl,
-        //   );
-
-        //   const payload = {
-        //     messaging_product: "whatsapp",
-        //     to: userPhone,
-        //     type: "template",
-        //     template: {
-        //       name: template.templateName,
-        //       language: { code: template.languageCode },
-        //       components,
-        //     },
-        //   };
-
-        //   const axiosConfig = {
-        //     headers: {
-        //       Authorization: `Bearer ${whatsAppBusinessConfigData.token}`,
-        //     },
-        //   };
-
-        //   try {
-        //     const respo = await axios.post(url, payload, axiosConfig);
-        //   } catch (error) {
-        //     console.error("Error sending message:", error);
-        //   }
-        // }
+        return null;
       }
     }
     await HotelAnalytics.findOneAndUpdate(
@@ -223,6 +152,8 @@ async function roomQrHandler(
       },
       { upsert: true },
     );
+
+    roomQrShortUrl = `${roomQrShortUrl}?q=wa&id=${userId}&sessionId=${roomSession?._id}`;
 
     await sendWhatsAppTemplateForRoomQr(
       whatsAppBusinessConfigData,

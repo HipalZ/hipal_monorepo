@@ -14,9 +14,8 @@ const hipalzRouter = new Hono().get(
   async (c) => {
     const { urlCode } = c.req.param();
     const { q, id } = c.req.query();
-    const result = await UrlModel.findOne({ urlCode }).select(
-      "businessId longUrl",
-    );
+    const queryParams = c.req.query();
+    const result = await UrlModel.findOne({ urlCode });
     if (!result) {
       return c.json(
         {
@@ -40,11 +39,25 @@ const hipalzRouter = new Hono().get(
         return c.redirect(redirectUrl);
       }
     }
+    let longUrl = result.longUrl;
 
-    // Redirect to the original URL
-    return c.redirect(
-      `${result.longUrl} ${q ? `?${q}` : ""}${id ? `&id=${id}` : ""}`,
-    );
+    try {
+      const urlObj = new URL(longUrl);
+
+      // Append all query params except "q"
+      for (const [key, value] of Object.entries(queryParams)) {
+        if (key !== "q" && value) {
+          urlObj.searchParams.set(key, String(value));
+        }
+      }
+
+      longUrl = urlObj.toString();
+    } catch (err) {
+      console.error("Invalid longUrl in DB:", longUrl, err);
+      return c.json({ message: "Invalid long URL", err: true }, 400);
+    }
+
+    return c.redirect(longUrl);
   },
 );
 

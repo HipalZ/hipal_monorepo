@@ -49,20 +49,24 @@ async function whatsAppUserAndTextMessage(contacts, messages) {
   };
 }
 
-function identifyQrTypeFromMessage(userInput: string): QrParseResult {
+function identifyQrTypeFromMessage(userInput: string): QrParseResult | null {
   if (!userInput) return null;
 
   const patterns: Array<{ qrType: QrType; re: RegExp }> = [
-    { qrType: "TABLE_QR", re: /\bdetails-\s*([A-Za-z0-9_-]+)/i },
-    { qrType: "CHECK_IN_QR", re: /\bQR-\s*([A-Za-z0-9_-]+)/i },
-    { qrType: "COUPON_QR", re: /\blink-\s*([A-Za-z0-9_-]+)/i },
-    { qrType: "ROOM_QR", re: /\broom-\s*([A-Za-z0-9_-]+)/i },
+    { qrType: "TABLE_QR", re: /\bdetails\s*-\s*([\w\W]+)/i },
+    { qrType: "CHECK_IN_QR", re: /\bQR\s*-\s*([\w\W]+)/i },
+    { qrType: "COUPON_QR", re: /\blink\s*-\s*([\w\W]+)/i },
+    { qrType: "ROOM_QR", re: /\broom\s*-\s*([\w\W]+)/i },
   ];
 
   for (const { qrType, re } of patterns) {
     const m = userInput.match(re);
     if (m) {
-      return { qrType, value: m[1], match: m[0] };
+      return {
+        qrType,
+        value: m[1].trim(), // ✅ allows any characters, trims spaces
+        match: m[0],
+      };
     }
   }
   return null;

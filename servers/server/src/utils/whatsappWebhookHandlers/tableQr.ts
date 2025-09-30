@@ -35,6 +35,8 @@ async function tableQrHandler(
   whatsAppBusinessConfigData: WhatsAppBusinessConfigType,
 ) {
   try {
+    console.log("tableQrHandler", tableName);
+    console.log("businessId", whatsAppBusinessConfigData?.businessId);
     const tableInfo = await Table.findOne({
       businessId: whatsAppBusinessConfigData?.businessId,
       name: tableName,
@@ -44,7 +46,7 @@ async function tableQrHandler(
       return null;
     }
     let tableQrShortUrl = tableInfo?.tableLink;
-    tableQrShortUrl = `${tableQrShortUrl}?q=wa&id=${userId}}`;
+    tableQrShortUrl = `${tableQrShortUrl}?q=wa&id=${userId}`;
 
     await sendWhatsAppTemplateForTableQr(
       whatsAppBusinessConfigData,
