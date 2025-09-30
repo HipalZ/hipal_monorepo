@@ -1315,6 +1315,7 @@ const hotelAlertRouter = new Hono()
           efficiencyPercentage >= 80 ? "on-time" : "late";
         return {
           staffName: s.staffName,
+          staffId: s.staffId,
           acceptanceOnTime: s.acceptOnTime,
           acceptanceTotal: s.acceptTotal,
           acceptancePercent: s.acceptTotal
