@@ -1,12 +1,8 @@
-import { lazy, memo, Suspense, useState } from "react";
 import LoadingSpinner from "@/components/atom/loadingSpinner/index.tsx";
+import StaffPerformanceDashboard from "@/components/hotel/Analytics/userAnalytics.tsx";
 import MemoizedHeader from "@/components/molecules/header/index.tsx";
-import useTimings from "@/components/store/useTimings.ts";
-import {
-  type IHotelStaff,
-  useGetAllHotelStaff,
-} from "@/hooks/useHotelStaff.ts";
 import useBusinessData from "@/components/store/useBusinessData.ts";
+import useTimings from "@/components/store/useTimings.ts";
 import {
   Select,
   SelectContent,
@@ -15,8 +11,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useStaffAlertReport } from "@/hooks/hotel/useStaffAlertReport.ts";
-import StaffPerformanceDashboard from "@/components/hotel/Analytics/userAnalytics.tsx";
+import {
+  type IHotelStaff,
+  useGetAllHotelStaff,
+} from "@/hooks/useHotelStaff.ts";
 import { cn } from "@/lib/utils.ts";
+import { lazy, memo, Suspense, useState } from "react";
 
 const DateRangePicker = lazy(
   () => import("@/components/molecules/dateRangePicker"),
@@ -47,15 +47,17 @@ const MemoStaffRepoComp = ({ hide = false }: IStaffRepoCompProps) => {
 
   return (
     <main className="pb-20 ">
-      <header className={cn("linear_gradient_background", hide && "lg:!rounded-2xl")}>
+      <header
+        className={cn("linear_gradient_background", hide && "lg:!rounded-2xl")}
+      >
         <MemoizedHeader title="Staff performance Dashboard" hideBack={hide} />
       </header>
       <Suspense fallback={<LoadingSpinner />}>
         <DateRangePicker />
       </Suspense>
 
-      <div className="px-4 mt-4">
-        <div className="flex items-center gap-4 mb-4">
+      <div className="mt-4 px-4">
+        <div className="mb-4 flex items-center gap-4">
           <label
             htmlFor="staff-filter"
             className="text-sm font-medium text-gray-700"
@@ -78,7 +80,7 @@ const MemoStaffRepoComp = ({ hide = false }: IStaffRepoCompProps) => {
         </div>
       </div>
 
-      <div className="px-4 mt-6">
+      <div className="mt-6 px-4">
         <StaffPerformanceDashboard isLoading={isLoading} data={data} />
       </div>
     </main>
