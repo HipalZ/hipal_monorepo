@@ -1,17 +1,17 @@
 import { create } from "zustand";
+import { ISelectedFlowType } from "../helpers/whatzAppHelpers";
 import type {
   IWhatsAppFlows,
   IWhatsAppMessage,
   WhatsAppTemplatePayload,
 } from "../types/businessData";
-import { ISelectedFlowType } from "../helpers/whatzAppHelpers";
 
 export enum Tabs {
   TEMPLATES = "templates",
   CAMPAIGNS = "campaigns",
   // FLOWS = "flows",
   // AUTOMATION = "automation",
-  // CHATS = "chats",
+  CHATS = "chats",
 }
 
 export interface Message {

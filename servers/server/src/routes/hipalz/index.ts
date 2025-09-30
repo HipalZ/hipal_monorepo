@@ -1,4 +1,4 @@
-import { Business, UrlModel, WhatsAppBusinessConfig } from "@hi/db-models";
+import { UrlModel, WhatsAppBusinessConfig } from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -14,9 +14,8 @@ const hipalzRouter = new Hono().get(
   async (c) => {
     const { urlCode } = c.req.param();
     const { q, id } = c.req.query();
-    const result = await UrlModel.findOne({ urlCode }).select(
-      "businessId longUrl",
-    );
+    const queryParams = c.req.query();
+    const result = await UrlModel.findOne({ urlCode });
     if (!result) {
       return c.json(
         {
@@ -32,13 +31,6 @@ const hipalzRouter = new Hono().get(
         businessId: result.businessId,
       });
       if (whatsAppBusinessConfig?.menuRedirection === "WA") {
-        let linkNumber = urlCode;
-        const linkMatch = result.longUrl.match(/link=([^&]+)/);
-
-        if (linkMatch?.[1]) {
-          linkNumber = decodeURIComponent(linkMatch[1]);
-        }
-
         const message = `Hi, I'm interested to know coupon, can you share me link-${urlCode}`;
         const redirectUrl = `https://wa.me/${
           whatsAppBusinessConfig.whatsAppPhone
@@ -47,11 +39,25 @@ const hipalzRouter = new Hono().get(
         return c.redirect(redirectUrl);
       }
     }
+    let longUrl = result.longUrl;
 
-    // Redirect to the original URL
-    return c.redirect(
-      `${result.longUrl} ${q ? `?${q}` : ""}${id ? `&id=${id}` : ""}`,
-    );
+    try {
+      const urlObj = new URL(longUrl);
+
+      // Append all query params except "q"
+      for (const [key, value] of Object.entries(queryParams)) {
+        if (key !== "q" && value) {
+          urlObj.searchParams.set(key, String(value));
+        }
+      }
+
+      longUrl = urlObj.toString();
+    } catch (err) {
+      console.error("Invalid longUrl in DB:", longUrl, err);
+      return c.json({ message: "Invalid long URL", err: true }, 400);
+    }
+
+    return c.redirect(longUrl);
   },
 );
 

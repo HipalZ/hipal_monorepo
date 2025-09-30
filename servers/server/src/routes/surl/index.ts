@@ -1,8 +1,13 @@
-import { BillUrlModel, UrlModel, WhatsAppBusinessConfig } from "@hi/db-models";
+import {
+  BillUrlModel,
+  CheckInQr,
+  HotelRoom,
+  Table,
+  UrlModel,
+  WhatsAppBusinessConfig,
+} from "@hi/db-models";
 import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import { getCookie, setCookie } from "hono/cookie";
-import jwt from "jsonwebtoken";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { setShortUrl } from "../../utils/cacheHelper";
@@ -18,11 +23,10 @@ const surlRouter = new Hono()
     ),
     async (c) => {
       const { urlCode } = c.req.param();
-      const { q, id } = c.req.query();
+      const { q, id, sessionId } = c.req.query();
+      const queryParams = c.req.query();
 
-      const result = await UrlModel.findOne({ urlCode }).select(
-        "businessId longUrl",
-      );
+      const result = await UrlModel.findOne({ urlCode });
 
       if (!result) {
         return c.json(
@@ -41,13 +45,12 @@ const surlRouter = new Hono()
         });
 
         if (whatsAppBusinessConfig?.menuRedirection === "WA") {
-          let tableNumber = urlCode;
-          const tableMatch = result.longUrl.match(/tableName=([^&]+)/);
+          const tableInfo = await Table.findOne({
+            businessId: whatsAppBusinessConfig.businessId,
+            tableLink: result.shortUrl,
+          });
 
-          if (tableMatch?.[1]) {
-            tableNumber = decodeURIComponent(tableMatch[1]);
-          }
-          const message = `Hi! I’m interested. Could you share more details-${tableNumber}`;
+          const message = `Hi! I’m interested. Could you share more details-${tableInfo?.name}`;
           const redirectUrl = `https://wa.me/${
             whatsAppBusinessConfig.whatsAppPhone
           }?text=${encodeURIComponent(message)}`;
@@ -56,55 +59,25 @@ const surlRouter = new Hono()
         }
       }
 
-      setShortUrl(urlCode, result.longUrl);
+      let longUrl = result.longUrl;
 
-      if (id) {
-        const getToken = getCookie(c, "token");
+      try {
+        const urlObj = new URL(longUrl);
 
-        if (getToken) {
-          try {
-            const decoded = jwt.verify(
-              getToken,
-              Bun.env.JWT_SECRET as string,
-            ) as { id: string; role: string };
-
-            if (decoded.id !== id) {
-              return c.json(
-                {
-                  message: "please scan the QR code again",
-                  err: true,
-                  data: {},
-                },
-                400,
-              );
-            }
-          } catch {
-            return c.json(
-              {
-                message: "Invalid token",
-                err: true,
-                data: {},
-              },
-              401,
-            );
+        // Append all query params except "q"
+        for (const [key, value] of Object.entries(queryParams)) {
+          if (key !== "q" && value) {
+            urlObj.searchParams.set(key, String(value));
           }
         }
 
-        const token = jwt.sign(
-          {
-            id: id,
-            role: "HIPAL_CUSTOMER",
-          },
-          Bun.env.JWT_SECRET as string,
-        );
-
-        setCookie(c, "token", token, {
-          httpOnly: false,
-          secure: false,
-        });
+        longUrl = urlObj.toString();
+      } catch (err) {
+        console.error("Invalid longUrl in DB:", longUrl, err);
+        return c.json({ message: "Invalid long URL", err: true }, 400);
       }
 
-      return c.redirect(`${result.longUrl}${id ? `&id=${id}` : ""}`);
+      return c.redirect(longUrl);
     },
   )
 
@@ -119,9 +92,8 @@ const surlRouter = new Hono()
     async (c) => {
       const { urlCode } = c.req.param();
       const { q } = c.req.query();
-      const result = await UrlModel.findOne({ urlCode }).select(
-        "businessId longUrl",
-      );
+      const queryParams = c.req.query();
+      const result = await UrlModel.findOne({ urlCode });
       if (!result) {
         return c.json(
           {
@@ -138,14 +110,16 @@ const surlRouter = new Hono()
         });
 
         if (whatsAppBusinessConfig?.menuRedirection === "WA") {
-          let tableNumber = urlCode;
-          const tableMatch = result.longUrl.match(/tag=([^&]+)/);
+          const urlModelData = await UrlModel.findOne({
+            urlCode: urlCode,
+          });
 
-          if (tableMatch?.[1]) {
-            tableNumber = decodeURIComponent(tableMatch[1]);
-          }
+          const checkInQrInfo = await CheckInQr.findOne({
+            businessId: whatsAppBusinessConfig.businessId,
+            downloadLink: urlModelData?.shortUrl,
+          });
 
-          const message = `Hi, I have ve checked in via QR-${tableNumber}`;
+          const message = `Hi, I have checked in via QR-${checkInQrInfo?.name}`;
           const redirectUrl = `https://wa.me/${
             whatsAppBusinessConfig.whatsAppPhone
           }?text=${encodeURIComponent(message)}`;
@@ -153,8 +127,25 @@ const surlRouter = new Hono()
           return c.redirect(redirectUrl);
         }
       }
-      // Redirect to the original URL
-      return c.redirect(result.longUrl);
+      let longUrl = result.longUrl;
+
+      try {
+        const urlObj = new URL(longUrl);
+
+        // Append all query params except "q"
+        for (const [key, value] of Object.entries(queryParams)) {
+          if (key !== "q" && value) {
+            urlObj.searchParams.set(key, String(value));
+          }
+        }
+
+        longUrl = urlObj.toString();
+      } catch (err) {
+        console.error("Invalid longUrl in DB:", longUrl, err);
+        return c.json({ message: "Invalid long URL", err: true }, 400);
+      }
+
+      return c.redirect(longUrl);
     },
   )
 
@@ -169,9 +160,8 @@ const surlRouter = new Hono()
     async (c) => {
       const { urlCode } = c.req.param();
       const { q, id } = c.req.query();
-      const result = await UrlModel.findOne({ urlCode }).select(
-        "businessId longUrl",
-      );
+      const queryParams = c.req.query();
+      const result = await UrlModel.findOne({ urlCode });
 
       if (!result) {
         return c.json(
@@ -188,14 +178,16 @@ const surlRouter = new Hono()
           businessId: result.businessId,
         });
         if (whatsAppBusinessConfig?.menuRedirection === "WA") {
-          let roomNumber = urlCode;
-          const tableMatch = result.longUrl.match(/room=([^&]+)/);
+          const urlModelData = await UrlModel.findOne({
+            urlCode: urlCode,
+          });
 
-          if (tableMatch?.[1]) {
-            roomNumber = decodeURIComponent(tableMatch[1]);
-          }
+          const roomInfo = await HotelRoom.findOne({
+            businessId: whatsAppBusinessConfig.businessId,
+            downLoadLink: urlModelData?.shortUrl,
+          });
 
-          const message = `Hi, I'm interested in your services. Can you share more details? I'm in room-${roomNumber}`;
+          const message = `Hi, I'm interested in your services. Can you share more details? I'm in room-${roomInfo?.name}`;
           const redirectUrl = `https://wa.me/${
             whatsAppBusinessConfig.whatsAppPhone
           }?text=${encodeURIComponent(message)}`;
@@ -203,11 +195,25 @@ const surlRouter = new Hono()
           return c.redirect(redirectUrl);
         }
       }
+      let longUrl = result.longUrl;
 
-      // Redirect to the original URL
-      return c.redirect(
-        `${result.longUrl} ${q ? `?${q}` : ""}${id ? `&id=${id}` : ""}`,
-      );
+      try {
+        const urlObj = new URL(longUrl);
+
+        // Append all query params except "q"
+        for (const [key, value] of Object.entries(queryParams)) {
+          if (key !== "q" && value) {
+            urlObj.searchParams.set(key, String(value));
+          }
+        }
+
+        longUrl = urlObj.toString();
+      } catch (err) {
+        console.error("Invalid longUrl in DB:", longUrl, err);
+        return c.json({ message: "Invalid long URL", err: true }, 400);
+      }
+
+      return c.redirect(longUrl);
     },
   )
 

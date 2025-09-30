@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { ObjectIdSchema } from "./common";
 
-export const WhatsappUserSchema = z.object({
+export const WhatsAppChatSchema = z.object({
   userId: ObjectIdSchema,
   ownerId: ObjectIdSchema,
   message: z.string().min(2).max(2000),
@@ -13,4 +13,4 @@ export const WhatsappUserSchema = z.object({
   seen: z.boolean().default(false),
 });
 
-export type WhatsappUserType = z.infer<typeof WhatsappUserSchema>;
+export type WhatsAppChatType = z.infer<typeof WhatsAppChatSchema>;

@@ -12,14 +12,13 @@ const whatsAppAnalyticsUserSchema =
         required: true,
         ref: "Business",
       },
-      name: {
-        type: String,
-        required: true,
+      userId: {
+        type: ObjectId,
+        required: false,
+        ref: "User",
+        default: null,
       },
-      phone: {
-        type: String,
-        required: true,
-      },
+
       templateId: {
         type: String,
         required: false,
@@ -35,6 +34,15 @@ const whatsAppAnalyticsUserSchema =
       campaignId: {
         type: ObjectId,
         required: false,
+      },
+      messageId: {
+        type: String,
+        required: true,
+      },
+      error: {
+        type: [],
+        required: false,
+        default: [],
       },
     },
     {
