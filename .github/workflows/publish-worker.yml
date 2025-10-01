@@ -41,10 +41,10 @@ jobs:
           docker build -f Dockerfile.worker --target worker -t ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG .
           docker push ${{ env.DIGITALOCEAN_REGISTRY }}/$DOCKER_REPOSITORY:$IMAGE_TAG
 
-    #   - name: Configure kubectl
-    #     run: |
-    #       doctl kubernetes cluster kubeconfig save ${{ secrets.TEST_CLUSTER_ID }}
+      - name: Configure kubectl
+        run: |
+          doctl kubernetes cluster kubeconfig save ${{ secrets.TEST_CLUSTER_ID }}
 
-    #   - name: Restart Kubernetes deployment
-    #     run: |
-    #       kubectl rollout restart deployment -n hipalz test-wa-and-camp-worker
+      - name: Restart Kubernetes deployment
+        run: |
+          kubectl rollout restart deployment -n hipalz test-wa-and-camp-worker
