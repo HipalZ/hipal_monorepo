@@ -1,6 +1,13 @@
-import { HotelAnalytics, HotelRoom, HotelRoomSession } from "@hi/db-models";
+import {
+  HotelAnalytics,
+  HotelRoom,
+  HotelRoomSession,
+  HotelServiceTemplateMapping,
+  WhatAppTemplate,
+} from "@hi/db-models";
 import type { WhatsAppBusinessConfigType } from "@hi/db-models/src/validators";
 import axios from "axios";
+import { returnHotelBodyComponents } from "../../routes/hotel/rooms";
 import whatsAppApiBaseUrl from "../whatsAppApiBaseUrl/apiPaths";
 
 async function sendWhatsAppTemplateForRoomQr(
@@ -9,56 +16,75 @@ async function sendWhatsAppTemplateForRoomQr(
   roomLink: string,
   showAuthCode: boolean,
   authCode: string,
+  userName: string,
 ) {
   try {
-    await axios.post(
-      `${whatsAppApiBaseUrl.BASE_URL}${whatsAppBusinessConfigData?.version}/${whatsAppBusinessConfigData?.phoneId}/messages`,
-      {
+    const serviceTemplateMapping = await HotelServiceTemplateMapping.findOne({
+      businessId: whatsAppBusinessConfigData.businessId,
+      serviceName: "welcome",
+    });
+
+    if (serviceTemplateMapping) {
+      const template = (await WhatAppTemplate.findOne({
+        businessId: whatsAppBusinessConfigData.businessId,
+        templateId: serviceTemplateMapping.templateId,
+        isDeleted: false,
+      })) as {
+        templateName: string;
+        bodyVariableSequence: string[];
+        templateId: string;
+        languageCode: string;
+        category: string;
+        imageUrl?: string;
+      };
+
+      const imageUrl = template?.imageUrl;
+
+      if (!template) {
+        return null;
+      }
+
+      const url = `${whatsAppApiBaseUrl.BASE_URL}${whatsAppBusinessConfigData.version}/${whatsAppBusinessConfigData.phoneId}/messages`;
+      const components = await returnHotelBodyComponents(
+        whatsAppBusinessConfigData?.businessName as string,
+        "address",
+        template.bodyVariableSequence,
+        roomLink,
+        "16",
+        showAuthCode ? authCode : "  ",
+        userName,
+        "get towel",
+        "dibesh",
+        "https://chatlink.com",
+        "gooleReviewLink",
+        "serviceRejectionReason",
+        "phone",
+        imageUrl,
+      );
+
+      const payload = {
         messaging_product: "whatsapp",
         to: userPhone,
         type: "template",
         template: {
-          name: "fi_welcoming_template",
-          language: { code: "en" },
-          components: [
-            {
-              type: "header",
-              parameters: [
-                {
-                  type: "image",
-                  image: {
-                    link: "https://t-static.blr1.digitaloceanspaces.com/e3039890-ede4-4fec-bcc4-ad12c2aa87ac.jpeg",
-                  },
-                },
-              ],
-            },
-            {
-              type: "body",
-              parameters: [
-                {
-                  type: "text",
-                  text: whatsAppBusinessConfigData?.businessName,
-                },
-
-                {
-                  type: "text",
-                  text: roomLink,
-                },
-                {
-                  type: "text",
-                  text: showAuthCode ? authCode : "  ",
-                },
-              ],
-            },
-          ],
+          name: template.templateName,
+          language: { code: template.languageCode },
+          components,
         },
-      },
-      {
+      };
+
+      const axiosConfig = {
         headers: {
           Authorization: `Bearer ${whatsAppBusinessConfigData.token}`,
         },
-      },
-    );
+      };
+
+      try {
+        const respo = await axios.post(url, payload, axiosConfig);
+      } catch (error) {
+        console.error("Error sending message:", error);
+      }
+    }
   } catch (error) {
     console.error("Error sendWhatsAppTemplateForTableQr:", error);
   }
@@ -133,6 +159,7 @@ async function roomQrHandler(
           roomQrShortUrl,
           true,
           authCode,
+          userName,
         );
         return null;
       }
@@ -160,7 +187,8 @@ async function roomQrHandler(
       userPhone,
       roomQrShortUrl,
       false,
-      "",
+      "   ",
+      userName,
     );
   } catch (error) {
     console.error("Error in tableQrHandler:", error);
