@@ -17,6 +17,7 @@ async function whatsAppCampaignHandler(
 
     const findUserByMessageId = await WhatsAppAnalyticsUser.findOne({
       messageId: wamid,
+      businessId: whatsAppBusinessConfigData?.businessId,
     });
 
     await WhatsAppAnalyticsUser.create({
