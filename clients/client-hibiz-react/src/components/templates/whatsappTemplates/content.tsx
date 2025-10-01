@@ -1,4 +1,4 @@
-import { lazy, memo, useCallback } from "react";
+import { lazy, memo, useCallback, useEffect } from "react";
 import { BiPlus } from "react-icons/bi";
 import { IoMdClose } from "react-icons/io";
 import useWhatsapp, { HeaderInterface } from "@/components/store/useWhatsapp";
@@ -6,46 +6,56 @@ import {
   normalizeInput,
   useAddTemplate,
 } from "@/components/helpers/whatzAppHelpers";
+import useBusinessData from "@/components/store/useBusinessData";
 
 const CouponContent = lazy(() => import("./couponContent"));
 const ImageContent = lazy(() => import("./imageContent"));
 
+const defaultData = [
+  { label: "name", value: "Rajesh" },
+  { label: "email", value: "rajesh@gmail.com" },
+  { label: "businessName", value: "Business Name" },
+  { label: "phone", value: "+913456789090" },
+  { label: "address", value: "Bangalore" },
+  { label: "time", value: "10:00 AM" },
+  { label: "date", value: "31st Dec, 2024" },
+];
+
+const defaultHotelOptions = [
+  { label: "businessName", value: "businessName" },
+  { label: "roomLink", value: "https://business name.com" },
+  { label: "roomKey", value: "1234" },
+  { label: "name", value: "Rajesh" },
+  { label: "serviceName", value: "Food Delivery" },
+  { label: "roomNumber", value: "402" },
+  { label: "staffName", value: "John" },
+  { label: "chatLink", value: "https://business name.com" },
+  { label: "googleReviewLink", value: "Review Link" },
+  { label: "serviceRejectionReason", value: "Maintainance Issue" },
+];
+
 const MemoContent = () => {
-  const {
-    headerType,
-    setHeaderType,
-    headerText,
-    setHeaderText,
-    bodyText,
-    bodyVariableSequence,
-    setBodyVariableSequence,
-    addVariable,
-    removeVariable,
-    bodyVariables,
-    updateVariable,
-    templateName,
-    updateBodySequenceVariable,
-    updateDisplayBodySequenceVariable,
-    variableOptions,
-  } = useWhatsapp((s) => ({
-    headerType: s.headerType,
-    setHeaderType: s.setHeaderType,
-    headerText: s.headerText,
-    setHeaderText: s.setHeaderText,
-    bodyText: s.bodyText,
-    footerText: s.footerText,
-    setFooterText: s.setFooterText,
-    bodyVariableSequence: s.bodyVariableSequence,
-    setBodyVariableSequence: s.setBodyVariableSequence,
-    addVariable: s.addVariable,
-    removeVariable: s.removeVariable,
-    bodyVariables: s.bodyVariables,
-    updateVariable: s.updateVariable,
-    templateName: s.templateName,
-    updateBodySequenceVariable: s.updateBodySequenceVariable,
-    updateDisplayBodySequenceVariable: s.updateDisplayBodySequenceVariable,
-    variableOptions: s.variableOptions,
-  }));
+  const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
+  const headerType = useWhatsapp((s) => s.headerType);
+  const setHeaderType = useWhatsapp((s) => s.setHeaderType);
+  const headerText = useWhatsapp((s) => s.headerText);
+  const setHeaderText = useWhatsapp((s) => s.setHeaderText);
+  const bodyText = useWhatsapp((s) => s.bodyText);
+  const bodyVariableSequence = useWhatsapp((s) => s.bodyVariableSequence);
+  const setBodyVariableSequence = useWhatsapp((s) => s.setBodyVariableSequence);
+  const addVariable = useWhatsapp((s) => s.addVariable);
+  const removeVariable = useWhatsapp((s) => s.removeVariable);
+  const bodyVariables = useWhatsapp((s) => s.bodyVariables);
+  const updateVariable = useWhatsapp((s) => s.updateVariable);
+  const templateName = useWhatsapp((s) => s.templateName);
+  const variableOptions = useWhatsapp((s) => s.variableOptions);
+  const setVariableOptions = useWhatsapp((s) => s.setVariableOptions);
+  const updateBodySequenceVariable = useWhatsapp(
+    (s) => s.updateBodySequenceVariable,
+  );
+  const updateDisplayBodySequenceVariable = useWhatsapp(
+    (s) => s.updateDisplayBodySequenceVariable,
+  );
   const { addTemplateName, handleBodyTextChange } = useAddTemplate();
 
   const handleAddVariable = useCallback(() => {
@@ -60,6 +70,13 @@ const MemoContent = () => {
     },
     [removeVariable, setBodyVariableSequence, bodyVariableSequence],
   );
+  useEffect(() => {
+    if (outLetType === "HOTEL") {
+      setVariableOptions(defaultHotelOptions);
+    } else {
+      setVariableOptions(defaultData);
+    }
+  }, [outLetType, setVariableOptions]);
 
   return (
     <section className="w-full max-w-2xl p-3 mx-auto mb-4 bg-white rounded-lg shadow-md">
