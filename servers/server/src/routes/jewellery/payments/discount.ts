@@ -15,17 +15,25 @@ const discountRouter = new Hono()
       "json",
       z.object({
         orderId: z.string().length(24),
-        coinsAppliedPercent: z.number().int().min(1).max(100),
+        coinsClaimed: z.number().int().positive(),
       }),
     ),
     async (c) => {
-      const { orderId, coinsAppliedPercent } = await c.req.json();
+      const { orderId, coinsClaimed } = await c.req.json();
       //@ts-ignore
       return runInTransaction(async (session: ClientSession) => {
         const order = await JewelleryOrder.findById(orderId).session(session);
         if (!order) return respond(c, "Order not found", true, 404, {});
         if (order.isCouponApplied)
           return respond(c, "Coupon already applied", true, 400, {});
+
+        if (coinsClaimed > order.subTotal) {
+          return respond(c, "Coins claimed exceeds order total", true, 400, {});
+        }
+
+        const coinsAppliedPercent = Math.round(
+          (coinsClaimed / order.subTotal) * 100,
+        );
 
         const subTotal = order.subTotal ?? 0;
         const coinsApplied = Math.round((subTotal * coinsAppliedPercent) / 100);
