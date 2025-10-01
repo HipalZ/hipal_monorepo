@@ -19,18 +19,16 @@ async function whatsAppCampaignHandler(
       messageId: wamid,
     });
 
-    if (findUserByMessageId) {
-      await WhatsAppAnalyticsUser.create({
-        businessId: findUserByMessageId?.businessId,
-        campaignId: findUserByMessageId?.campaignId,
-        userId: findUserByMessageId?.userId,
-        templateId: findUserByMessageId?.templateId,
-        status: firstStatus?.status,
-        date: Date.now(),
-        messageId: wamid,
-        error: firstStatus?.errors,
-      });
-    }
+    await WhatsAppAnalyticsUser.create({
+      businessId: findUserByMessageId?.businessId,
+      campaignId: findUserByMessageId?.campaignId,
+      userId: findUserByMessageId?.userId,
+      templateId: findUserByMessageId?.templateId,
+      status: firstStatus?.status,
+      date: Date.now(),
+      messageId: wamid,
+      error: firstStatus?.errors,
+    });
 
     if (
       extractedData?.status === "delivered" &&
