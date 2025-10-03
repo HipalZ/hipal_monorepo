@@ -1933,6 +1933,7 @@ const whatsappRouter = new Hono()
             );
           }
           if (whatsAppBusinessConfigData.chat) {
+            console.log("statuses chat", statuses);
             await whatsAppChatHandler(
               messages?.text?.body,
               userData._id.toString(),
@@ -1950,7 +1951,7 @@ const whatsappRouter = new Hono()
         }
 
         if (statuses && statuses.length > 0 && whatsAppBusinessConfigData) {
-          console.log("whatsAppBusinessConfigData", whatsAppBusinessConfigData);
+          console.log("statuses campaign", statuses);
           await whatsAppCampaignHandler(whatsAppBusinessConfigData, statuses);
         }
 

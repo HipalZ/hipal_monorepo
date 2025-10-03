@@ -20,9 +20,6 @@ async function whatsAppCampaignHandler(
       businessId: whatsAppBusinessConfigData?.businessId,
     });
 
-    console.log("findUserByMessageId", findUserByMessageId);
-    console.log(" whatsAppBusinessConfigData", whatsAppBusinessConfigData);
-
     await WhatsAppAnalyticsUser.create({
       businessId: whatsAppBusinessConfigData?.businessId,
       campaignId: findUserByMessageId?.campaignId,
