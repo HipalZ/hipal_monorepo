@@ -83,7 +83,7 @@ const webhookRouter = new Hono()
       const { event, payload } = bodyResult.data;
 
       const getOrder = await JewelleryOrder.findOne({
-        orderId: payload.payment.entity.orderId,
+        razorpayOrderId: payload.payment.entity.orderId,
       });
 
       const businessLoyalty = await LoyaltySettings.findOne({

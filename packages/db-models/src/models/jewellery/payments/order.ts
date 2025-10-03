@@ -26,7 +26,7 @@ const jewelleryOrderSchema = new mongoose.Schema<JewelleryOrderTypeValidator>(
     coinAppliedPercent: { type: Number, default: 0 },
     couponAppliedPercent: { type: Number, default: 0 },
     discountAppliedPercent: { type: Number, default: 0 },
-    razorpayOrderId: { type: String, default: null, unique: true },
+    razorpayOrderId: { type: String, unique: true },
     staffId: { type: ObjectId, ref: "User", default: null },
     isPaid: { type: String, default: "IN_PROGRESS" },
   },

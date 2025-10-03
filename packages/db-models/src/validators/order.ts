@@ -172,7 +172,7 @@ export const jewelleryOrderSchema = z.object({
     })
     .optional()
     .default(0),
-  razorpayOrderId: z.string().optional(),
+  razorpayOrderId: z.string(),
   staffId: ObjectIdSchema.optional(),
   isPaid: z
     .string({
