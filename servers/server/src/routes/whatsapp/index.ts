@@ -1950,6 +1950,7 @@ const whatsappRouter = new Hono()
         }
 
         if (statuses && statuses.length > 0 && whatsAppBusinessConfigData) {
+          console.log("whatsAppBusinessConfigData", whatsAppBusinessConfigData);
           await whatsAppCampaignHandler(whatsAppBusinessConfigData, statuses);
         }
 
