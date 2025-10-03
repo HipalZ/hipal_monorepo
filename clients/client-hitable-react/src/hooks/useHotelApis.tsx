@@ -119,7 +119,6 @@ export const useCheckOut = () => {
 export const useRoomAlerts = () => {
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const captainData = useHiClientZ((s) => s.captainData);
-  const customRoles = captainData?.customRole ?? [];
   const userId = captainData?._id;
 
   const { setAlerts } = useAlertsStore();
