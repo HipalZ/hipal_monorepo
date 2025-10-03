@@ -57,4 +57,52 @@ export const razorpayOrderSchema = z.object({
   variantId: ObjectIdSchema.optional(),
 });
 
+export const jewelleryRazorpayOrderSchema = z.object({
+  businessId: ObjectIdSchema,
+  total: z.coerce
+    .number({
+      message: "Total must be a number",
+    })
+    .default(0),
+  billValue: z.coerce
+    .number({
+      message: "Bill value must be a number",
+    })
+    .positive({
+      message: "Bill value must be positive",
+    }),
+  claimedCoins: z.coerce
+    .number({
+      message: "Claimed coins must be a number",
+    })
+
+    .default(0)
+    .optional(),
+  tips: z.coerce
+    .number({
+      message: "Tips must be a number",
+    })
+    .default(0)
+    .optional(),
+  currency: z
+    .string({
+      message: "Currency must be a string",
+    })
+    .min(3)
+    .max(3),
+  userId: ObjectIdSchema,
+
+  date: z.coerce
+    .number({
+      message: "Date must be a number",
+    })
+    .optional(),
+  couponId: ObjectIdSchema.optional(),
+  cashbackAvailable: z.boolean().optional(),
+});
+
+export const jewelleryPaymentOrderSchema = z.object({
+  orderId: z.string().length(24),
+});
+
 export type RazorpayOrderType = z.infer<typeof razorpayOrderSchema>;

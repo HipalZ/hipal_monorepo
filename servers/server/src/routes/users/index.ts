@@ -122,7 +122,7 @@ export const createRefreshToken = (id: string, role: string) => {
   );
 };
 
-async function createPermissionObject(
+export async function createPermissionObject(
   permissionIds: string[],
   permissionGroupIds: string[],
 ) {
@@ -642,6 +642,7 @@ const usersRouter = new Hono()
         const updateUser = await User.findOneAndUpdate(
           { phone },
           {
+            password: hashPass,
             $addToSet: {
               customRole: customRole,
             },

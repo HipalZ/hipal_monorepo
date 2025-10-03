@@ -101,6 +101,16 @@ const whatsAppBusinessConfigSchema =
         required: false,
         default: false,
       },
+      chat: {
+        type: Boolean,
+        required: false,
+        default: false,
+      },
+      outLetId: {
+        type: ObjectId,
+        required: false,
+        ref: "outlet",
+      },
     },
     {
       timestamps: true,

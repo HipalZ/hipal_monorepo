@@ -1,23 +1,22 @@
-import { memo, useCallback } from "react";
-import { RxAvatar } from "react-icons/rx";
-import whatzAppDoodle from "@/assets/whatzapp/whatsappdoodle.jpg";
-import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
-import { useDeleteChats, useFetchUserChats } from "@/hooks/useTemplates";
-import { BiArrowBack, BiCheck, BiTrash } from "react-icons/bi";
-import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import { useQuery } from "@tanstack/react-query";
+import whatzAppDoodle from '@/assets/whatzapp/whatsappdoodle.jpg';
+import { useOwnerLogin } from '@/components/store/useOwnerLogin';
+import { useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
+import { useDeleteChats, useFetchUserChats } from '@/hooks/useTemplates';
+import { useQuery } from '@tanstack/react-query';
+import { memo, useCallback } from 'react';
+import { BiArrowBack, BiCheck, BiTrash } from 'react-icons/bi';
+import { RxAvatar } from 'react-icons/rx';
 
 const MemoChatHistory = ({ isPending }: { isPending: boolean }) => {
   const ownerId = useOwnerLogin((s) => s.user?._id);
   const { fetchUserChats } = useFetchUserChats();
 
-  const { selectedUser, userChat, isMobileListView, setIsMobileListView } =
-    useWhatsappTempStore((s) => ({
-      selectedUser: s.selectedUser,
-      userChat: s.userChat,
-      isMobileListView: s.isMobileListView,
-      setIsMobileListView: s.setIsMobileListView,
-    }));
+  const { selectedUser, userChat, isMobileListView, setIsMobileListView } = useWhatsappTempStore((s) => ({
+    selectedUser: s.selectedUser,
+    userChat: s.userChat,
+    isMobileListView: s.isMobileListView,
+    setIsMobileListView: s.setIsMobileListView,
+  }));
   const { mutate: deleteChats } = useDeleteChats();
 
   const handleDeleteUserChat = useCallback(
@@ -34,17 +33,17 @@ const MemoChatHistory = ({ isPending }: { isPending: boolean }) => {
     yesterday.setDate(yesterday.getDate() - 1);
 
     if (messageDate.toDateString() === today.toDateString()) {
-      return messageDate.toLocaleTimeString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
+      return messageDate.toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
       });
     }
     if (messageDate.toDateString() === yesterday.toDateString()) {
-      return "Yesterday";
+      return 'Yesterday';
     }
-    return messageDate.toLocaleDateString("en-IN", {
-      month: "short",
-      day: "numeric",
+    return messageDate.toLocaleDateString('en-IN', {
+      month: 'short',
+      day: 'numeric',
     });
   }, []);
 
@@ -53,10 +52,10 @@ const MemoChatHistory = ({ isPending }: { isPending: boolean }) => {
   }, [isMobileListView, setIsMobileListView]);
 
   const { isLoading: isChatsLoading } = useQuery({
-    queryKey: ["fetchUserChats", selectedUser?._id],
+    queryKey: ['fetchUserChats', selectedUser?._id],
     queryFn: fetchUserChats,
     enabled: !!selectedUser,
-    refetchInterval: 1000,
+    refetchInterval: 5000,
   });
 
   return (
@@ -68,62 +67,37 @@ const MemoChatHistory = ({ isPending }: { isPending: boolean }) => {
         backgroundImage: `url(${whatzAppDoodle})`,
       }}
     >
-      <nav className="sticky top-0 flex justify-between items-center gap-4 h-[4rem] p-2 bg-gray-200">
+      <nav className="sticky top-0 flex h-[4rem] items-center justify-between gap-4 bg-gray-200 p-2">
         <section className="flex items-center gap-4 overflow-hidden rounded-full">
-          <button
-            type="button"
-            className="p-2 text-gray-600 bg-gray-200 md:hidden"
-            onClick={toggleMobileView}
-          >
+          <button type="button" className="bg-gray-200 p-2 text-gray-600 md:hidden" onClick={toggleMobileView}>
             <BiArrowBack size={24} />
           </button>
           <RxAvatar size={60} />
           <article className="w-full">
-            <h1>{selectedUser ? selectedUser.name : "Select a User"}</h1>
+            <h1>{selectedUser ? selectedUser.name : 'Select a User'}</h1>
             <p>{selectedUser?.phone}</p>
           </article>
         </section>
         <div className="justify-end">
           <button
             type="button"
-            onClick={() =>
-              selectedUser?._id && handleDeleteUserChat(selectedUser._id)
-            }
-            className="p-2 bg-red-100 rounded-full hover:bg-red-200"
+            onClick={() => selectedUser?._id && handleDeleteUserChat(selectedUser._id)}
+            className="rounded-full bg-red-100 p-2 hover:bg-red-200"
           >
             <BiTrash className="text-red-700" size={24} />
           </button>
         </div>
       </nav>
 
-      <div className="p-4 space-y-4">
+      <div className="space-y-4 p-4">
         {userChat
           ? userChat?.map((chat, index) => (
-              <article
-                key={chat?._id}
-                className={`flex ${
-                  chat?.isOwner ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[70%] rounded-lg p-3 ${
-                    chat?.isOwner
-                      ? "bg-green-500 text-white"
-                      : "bg-white text-gray-900"
-                  }`}
-                >
-                  <p>
-                    {isPending && index === userChat.length - 1
-                      ? "Sending ..."
-                      : chat?.message}
-                  </p>
-                  <div
-                    className={`text-xs mt-1 flex items-center gap-1 ${
-                      chat?.isOwner ? "text-green-100" : "text-gray-500"
-                    }`}
-                  >
+              <article key={chat?._id} className={`flex ${chat?.isOwner ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[70%] rounded-lg p-3 ${chat?.isOwner ? 'bg-green-500 text-white' : 'bg-white text-gray-900'}`}>
+                  <p>{isPending && index === userChat.length - 1 ? 'Sending ...' : chat?.message}</p>
+                  <div className={`mt-1 flex items-center gap-1 text-xs ${chat?.isOwner ? 'text-green-100' : 'text-gray-500'}`}>
                     <time>{formatMessageDate(chat?.date)}</time>
-                    {chat?.isOwner && <BiCheck className="inline w-4 h-4" />}
+                    {chat?.isOwner && <BiCheck className="inline h-4 w-4" />}
                   </div>
                 </div>
               </article>

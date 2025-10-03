@@ -194,6 +194,93 @@ export const dishSchema = z.object({
   vat: z.coerce.number().positive().optional(),
 });
 
+export const serviceChema = z.object({
+  _id: ObjectIdSchema.optional(),
+  businessId: ObjectIdSchema,
+  name: z
+    .string({ message: "name is required " })
+    .min(3, {
+      message: "name must be atleast 3 characters long",
+    })
+    .max(100, {
+      message: "name must be atmost 100 characters long",
+    }),
+  price: z.coerce
+    .number({
+      message: "price is required",
+    })
+    .positive({
+      message: "price must be positive",
+    })
+    .refine(
+      (val) => Number.isFinite(val) && /^\d+(\.\d{1,2})?$/.test(val.toString()),
+      { message: "price must have at most 2 decimal places" },
+    ),
+  visibility: z.boolean().default(true),
+
+  dishTypes: z.array(
+    z.enum(DishTypeEnum, {
+      message: "dishType is required",
+    }),
+    {
+      message: "dishType must be one of VEG, NON_VEG, EGG, VEGAN, GLUTEN_FREE",
+    },
+  ),
+  categoryIds: z
+    .array(ObjectIdSchema, {
+      message: "categoryIds is required",
+    })
+    .optional(),
+  portions: z
+    .array(portionSchema, {
+      message: "portions is required",
+    })
+    .optional(),
+
+  images: z
+    .array(
+      z
+        .string({
+          message: "images is required",
+        })
+        .url({
+          message: "images must be a valid url",
+        })
+        .min(6, {
+          message: "images must be atleast 6 characters long",
+        })
+        .max(100, {
+          message: "images must be atmost 100 characters long",
+        }),
+    )
+    .optional(),
+  description: z
+    .string({
+      message: "description is required",
+    })
+    .min(10, {
+      message: "description must be atleast 10 characters long",
+    })
+    .max(400, {
+      message: "description must be atmost 400 characters long",
+    })
+    .optional(),
+
+  recommendationIds: z
+    .array(ObjectIdSchema, {
+      message: "recommendationids is required",
+    })
+    .default([])
+    .optional(),
+  availability: z.boolean().default(true).optional(),
+  isDeleted: z.boolean().default(false).optional(),
+
+  rank: z.number().min(1).max(100).optional(),
+  active: z.boolean().default(true).optional(),
+  gst: z.coerce.number().positive().optional(),
+  vat: z.coerce.number().positive().optional(),
+});
+
 export const updateDishSchema = z
   .object({
     _id: ObjectIdSchema.optional(),
@@ -226,6 +313,37 @@ export const updateDishSchema = z
     removeRecommendationIds: z.array(ObjectIdSchema).optional(),
     removeKitchenId: ObjectIdSchema.optional(),
     menuId: ObjectIdSchema.optional(),
+    gst: z.coerce.number().optional(),
+  })
+  .strict();
+
+
+export const updateServiceSchema = z
+  .object({
+    _id: ObjectIdSchema.optional(),
+    name: z.string().min(2).max(100).optional(),
+    businessId: ObjectIdSchema.optional(),
+    price: z.coerce
+      .number()
+      .positive()
+      .refine(
+        (val) =>
+          Number.isFinite(val) && /^\d+(\.\d{1,2})?$/.test(val.toString()),
+        { message: "price must have at most 2 decimal places" },
+      )
+      .optional(),
+    visibility: z.boolean().optional(),
+    dishTypes: z.array(z.enum(DishTypeEnum)).optional(),
+    categoryIds: z.array(ObjectIdSchema).optional(),
+    portions: z.array(portionSchema).optional(),
+    images: z.array(z.string().url().min(6).max(100)).optional(),
+    description: z.string().min(3).max(400).optional(),
+    recommendationIds: z.array(ObjectIdSchema).optional(),
+    availability: z.boolean().optional(),
+    isDeleted: z.boolean().optional(),
+    removeCategoryIds: z.array(ObjectIdSchema).optional(),
+    removeAddOnIds: z.array(ObjectIdSchema).optional(),
+    removeRecommendationIds: z.array(ObjectIdSchema).optional(),
     gst: z.coerce.number().optional(),
   })
   .strict();

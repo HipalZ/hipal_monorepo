@@ -12,6 +12,7 @@ import { AlertCircle, DownloadCloud, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 import { twMerge } from "tailwind-merge";
 import { DishSteps } from "../store/useMenuStorage";
+import useBusinessData from "@/components/store/useBusinessData";
 
 export async function storeImageAfterSave(
   image: File,
@@ -664,4 +665,16 @@ export const getDayNames = (days: number[]) => {
   if (days.length === 7) return "All days";
 
   return days.map((day) => dayMap[day]).join(", ");
+};
+
+export const findRole = (
+  customRoles: { businessId: string; role: string }[] | undefined,
+  businessId?: string,
+) => {
+  if (!customRoles || customRoles.length === 0) return "";
+  return (
+    customRoles
+      .find((r) => String(r?.businessId) === String(businessId))
+      ?.role.replace(/_/g, " ") ?? ""
+  );
 };

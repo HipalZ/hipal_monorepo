@@ -25,9 +25,9 @@ export enum HeaderInterface {
 }
 
 export enum TemplateType {
+  LinkTemplate = "LINK_TEMPLATE",
   Marketing = "MARKETING",
   Utility = "UTILITY",
-  INTERACTIVE_FLOW = "INTERACTIVE_FLOW",
 }
 
 export enum ActionType {
@@ -528,7 +528,7 @@ export const useWhatsapp = create(
         setShowNotifications: (showNotifications: boolean) =>
           set({ showNotifications }),
 
-        walletBalance: 500,
+        walletBalance: 0,
         setWalletBalance: (walletBalance: number) => set({ walletBalance }),
 
         notEditPopup: false,
@@ -609,36 +609,7 @@ export const useWhatsapp = create(
         imageUrl: "",
         setImageUrl: (imageUrl: string) => set({ imageUrl }),
 
-        variableOptions: [
-          {
-            label: "name",
-            value: "Rajesh",
-          },
-          {
-            label: "email",
-            value: "rajesh@gmail.com",
-          },
-          {
-            label: "businessName",
-            value: businessName,
-          },
-          {
-            label: "phone",
-            value: "+913456789090",
-          },
-          {
-            label: "address",
-            value: "Bangalore",
-          },
-          {
-            label: "time",
-            value: "10:00 AM",
-          },
-          {
-            label: "date",
-            value: "31st Dec, 2024",
-          },
-        ],
+        variableOptions: [],
 
         setVariableOptions: (variableOptions: defaultOptions[]) =>
           set({ variableOptions }),

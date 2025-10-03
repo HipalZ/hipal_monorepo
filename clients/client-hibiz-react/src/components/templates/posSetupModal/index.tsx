@@ -4,6 +4,9 @@ import { apiRpc } from "@hi/common";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import toast from "react-hot-toast";
 import { useParams } from "react-router-dom";
+import PosOnlyMenu from "./posOnlyMenu";
+import { Switch } from "@/components/ui/switch";
+import useBusinessData from "@/components/store/useBusinessData";
 
 interface PosData {
   _id: string;
@@ -44,12 +47,18 @@ const MemoPosSetupModal = ({
   const businessId = useParams<{ businessId: string }>().businessId;
   const [step, setStep] = useState(existingConfig ? 2 : 1);
   const [selectedPos, setSelectedPos] = useState<PosData | null>(null);
+  const posWithOnlyMenu = useBusinessData((s)=>s.outletInfo?.posWithOnlyMenu)
+  const [posMenuWithoutOrdering, setPosMenuWithoutOrdering] = useState(posWithOnlyMenu);
+
+  const handleMenuWithoutOrderingChange = useCallback((checked: boolean) => {
+    setPosMenuWithoutOrdering(checked);
+  }, []);
+
   const [formData, setFormData] = useState({
     restId: existingConfig?.restId || "",
     orderVerificationType:
       existingConfig?.orderVerificationType || ("USER" as "CAPTAIN" | "USER"),
   });
-
   const fetchAllPos = useCallback(async (businessId: string) => {
     try {
       const response = await apiRpc.pos.all_pos.$get({
@@ -101,9 +110,9 @@ const MemoPosSetupModal = ({
     onError: (error: any) => {
       toast.error(
         error?.message ||
-          (existingConfig
-            ? "Failed to update POS configuration."
-            : "Failed to submit POS details."),
+        (existingConfig
+          ? "Failed to update POS configuration."
+          : "Failed to submit POS details."),
       );
     },
   });
@@ -135,14 +144,7 @@ const MemoPosSetupModal = ({
   };
 
   const renderStep1 = () => (
-    <div className="h-[70vh] overflow-y-auto">
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Select POS System
-        </h2>
-        <p className="text-gray-600">Choose your Point of Sale system</p>
-      </div>
-
+    <div className="overflow-y-auto">
       {isLoading ? (
         <LoadingSpinner />
       ) : (
@@ -152,14 +154,13 @@ const MemoPosSetupModal = ({
               type="button"
               key={pos._id}
               onClick={() => handlePosSelect(pos)}
-              className="bg-white border-2 border-gray-200 hover:border-blue-500 rounded-xl p-6 text-left transition-all hover:shadow-md"
+              className="bg-white border-2 border-gray-200 hover:border-blue-500 rounded-xl p-1 text-left transition-all hover:shadow-md"
             >
-              <div className="flex items-center justify-center h-16 mb-4">
+              <div className="flex items-center justify-center mb-4">
                 {pos.name === "petPooja" ? (
                   <img
                     alt="petPooja"
-                    src="https://gdm-catalog-fmapi-prod.imgix.net/ProductLogo/5ee5d327-b1e8-44ae-a2c6-6c9e358f3ec7.png"
-                    className="h-12 object-contain"
+                    src="https://www.indifi.com/blog/wp-content/uploads/2019/12/How-To-Successfully-Sell-On-Petpooja-.jpg"
                   />
                 ) : (
                   <div className="text-2xl font-bold text-gray-700 capitalize">
@@ -182,17 +183,6 @@ const MemoPosSetupModal = ({
       onSubmit={handleFormSubmitAction}
       className="h-[70vh] overflow-y-auto"
     >
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          {existingConfig ? "Edit POS Configuration" : "Configure POS Settings"}
-        </h2>
-        <p className="text-gray-600">
-          {existingConfig
-            ? "Update your POS settings"
-            : "Set up your POS configuration"}
-        </p>
-      </div>
-
       <div className="space-y-6">
         {!existingConfig && (
           <div>
@@ -218,7 +208,6 @@ const MemoPosSetupModal = ({
             </p>
           </div>
         )}
-
         {existingConfig && (
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="text-sm font-semibold text-gray-700 mb-2">
@@ -244,11 +233,10 @@ const MemoPosSetupModal = ({
             </legend>
             <div className="space-y-4">
               <label
-                className={`relative flex p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                  formData.orderVerificationType === "USER"
-                    ? "border-green-500 bg-green-50 ring-2 ring-green-200"
-                    : "border-gray-200 hover:border-green-200"
-                }`}
+                className={`relative flex p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.orderVerificationType === "USER"
+                  ? "border-green-500 bg-green-50 ring-2 ring-green-200"
+                  : "border-gray-200 hover:border-green-200"
+                  }`}
               >
                 <input
                   type="radio"
@@ -282,11 +270,10 @@ const MemoPosSetupModal = ({
               </label>
 
               <label
-                className={`relative flex p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                  formData.orderVerificationType === "CAPTAIN"
-                    ? "border-orange-500 bg-orange-50 ring-2 ring-orange-200"
-                    : "border-gray-200 hover:border-orange-200"
-                }`}
+                className={`relative flex p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.orderVerificationType === "CAPTAIN"
+                  ? "border-orange-500 bg-orange-50 ring-2 ring-orange-200"
+                  : "border-gray-200 hover:border-orange-200"
+                  }`}
               >
                 <input
                   type="radio"
@@ -352,9 +339,41 @@ const MemoPosSetupModal = ({
     </form>
   );
 
+  const renderStep3 = () => <PosOnlyMenu />;
   return (
     <div className="bg-white rounded-xl shadow-lg max-w-2xl mx-auto">
-      <div className="p-6">{step === 1 ? renderStep1() : renderStep2()}</div>
+      <div className="text-center mt-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-1">
+          {existingConfig ? "Edit POS Configuration" : "Configure POS Settings"}
+        </h2>
+        <p className="text-gray-600">
+          {existingConfig
+            ? "Update your POS settings"
+            : "Set up your POS configuration"}
+        </p>
+      </div>
+      <div className="p-6">
+        {step === 1
+          ? renderStep1()
+          : (
+            <>
+              <div className="flex flex-row justify-between gap-2 mb-6">
+                <label
+                  htmlFor="restId"
+                  className="block text-sm font-semibold text-gray-700 mb-2"
+                >
+                  Pos Menu Without Ordering
+                </label>
+                <Switch
+                  checked={posMenuWithoutOrdering}
+                  onCheckedChange={handleMenuWithoutOrderingChange}
+                />
+              </div>
+              {posMenuWithoutOrdering ? renderStep3() : renderStep2()}
+            </>
+          )
+        }
+      </div>
     </div>
   );
 };

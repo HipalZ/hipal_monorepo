@@ -165,7 +165,6 @@ const MemoContent = () => {
             onChange={handleBodyTextChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md resize-none"
           />
-
           <small className="absolute text-gray-500 bottom-2 right-3">
             {bodyText?.length || 0}/1028
           </small>

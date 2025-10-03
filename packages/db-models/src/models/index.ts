@@ -85,8 +85,10 @@ export * from "./whatsAppWallet";
 export * from "./whatsAppWalletHistory";
 export * from "./zone";
 
+export * from "./attendence";
 export * from "./discount";
 export * from "./dues";
+export * from "./jewellery";
 export * from "./passwordManager/passwordManager";
 export * from "./petpoojaCartItem";
 export * from "./printerConfig";
@@ -94,4 +96,5 @@ export * from "./printSection";
 export * from "./qrs";
 export * from "./queueLog";
 export * from "./splitBill";
+export * from "./syncPosMenu";
 export * from "./termsAndConditions";

@@ -3,12 +3,14 @@ import hotelALertRouter from "./alert";
 import hotelAmenitiesRouter from "./amenities";
 import roomBookRouter from "./book";
 import roomTypeRouter from "./hotelRoomType";
+import hotelServiceTemplateMappingRouter from "./hotelServiceTemplateMapping";
 import reportRouter from "./report";
 import restaurantRouter from "./restaurant";
 import roomRouter from "./rooms";
 import serviceRouter from "./service";
 import staffRouter from "./staff";
 import hotelStaffLevelRouter from "./staffLevel";
+import whatsappRouter from "./whatsapp";
 import zoneRouter from "./zones";
 
 const hotelRouter = new Hono()
@@ -22,6 +24,8 @@ const hotelRouter = new Hono()
   .route("/amenities", hotelAmenitiesRouter)
   .route("/alert", hotelALertRouter)
   .route("/room_type", roomTypeRouter)
-  .route("/report", reportRouter);
+  .route("/report", reportRouter)
+  .route("/hotel_service_template_mapping", hotelServiceTemplateMappingRouter)
+  .route("/whats_app", whatsappRouter);
 
 export default hotelRouter;

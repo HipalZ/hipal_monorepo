@@ -3,6 +3,7 @@ export * from "./amenities";
 export * from "./book";
 export * from "./hotelAnalytics";
 export * from "./hotelRoomType";
+export * from "./hotelServiceTemplateMapping";
 export * from "./roomChat";
 export * from "./rooms";
 export * from "./roomSession";

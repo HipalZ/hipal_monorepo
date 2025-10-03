@@ -309,6 +309,10 @@ const outLetInfoSchema = new mongoose.Schema<OutLetInfoType>({
     type: Number,
     default: 0,
   },
+  posWithOnlyMenu: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 //middlewares

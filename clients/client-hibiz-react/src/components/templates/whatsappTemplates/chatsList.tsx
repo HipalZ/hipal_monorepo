@@ -1,21 +1,20 @@
-import { memo, useState, useMemo, useCallback } from "react";
-import { RxAvatar } from "react-icons/rx";
-import { useFetchAllUsers, useSearchUserByPhone } from "@/hooks/useTemplates";
-import { BiSearch } from "react-icons/bi";
-import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
-import { useQuery } from "@tanstack/react-query";
+import { useWhatsappTempStore } from '@/components/store/useWhatsappTempStore';
+import { useFetchAllUsers, useSearchUserByPhone } from '@/hooks/useTemplates';
+import { useQuery } from '@tanstack/react-query';
+import { memo, useCallback, useMemo, useState } from 'react';
+import { BiSearch } from 'react-icons/bi';
+import { RxAvatar } from 'react-icons/rx';
 
 const MemoChatsList = () => {
-  const { users, setSelectedUser, selectedUser, setIsMobileListView } =
-    useWhatsappTempStore((s) => ({
-      users: s.users,
-      setSelectedUser: s.setSelectedUser,
-      selectedUser: s.selectedUser,
-      setIsMobileListView: s.setIsMobileListView,
-    }));
+  const { users, setSelectedUser, selectedUser, setIsMobileListView } = useWhatsappTempStore((s) => ({
+    users: s.users,
+    setSelectedUser: s.setSelectedUser,
+    selectedUser: s.selectedUser,
+    setIsMobileListView: s.setIsMobileListView,
+  }));
   const { fetchAllUserMessages } = useFetchAllUsers();
   const { searchUserByPhone } = useSearchUserByPhone();
-  const [searchNumber, setSearchNumber] = useState("");
+  const [searchNumber, setSearchNumber] = useState('');
 
   const handleUserClick = useCallback(
     (user) => {
@@ -27,7 +26,7 @@ const MemoChatsList = () => {
 
   const handleSearchChange = useCallback(
     (e) => {
-      const value = e.target.value.replace(/\D/g, ""); // Remove non-digit characters
+      const value = e.target.value.replace(/\D/g, ''); // Remove non-digit characters
       setSearchNumber(value);
 
       // If a 10-digit number is entered, call the API to fetch the user
@@ -52,25 +51,25 @@ const MemoChatsList = () => {
   }, [searchNumber, users]);
 
   const { isLoading: isUserMessages } = useQuery({
-    queryKey: ["fetchSubscribers"],
+    queryKey: ['fetchSubscribers'],
     queryFn: fetchAllUserMessages,
-    refetchInterval: 1000,
+    refetchInterval: 5000,
   });
 
   return (
-    <aside className="md:flex flex-col w-full md:w-[380px] bg-gray-50 border-r rounded-lg">
-      <header className="flex items-center justify-between px-4 pt-3 rounded-l-lg bg-gray-50">
+    <aside className="w-full flex-col rounded-lg border-r bg-gray-50 md:flex md:w-[380px]">
+      <header className="flex items-center justify-between rounded-l-lg bg-gray-50 px-4 pt-3">
         <h1 className="text-xl font-semibold">Chats</h1>
       </header>
       <div className="p-3 shadow-md">
         <div className="relative">
-          <BiSearch className="absolute w-4 h-4 text-gray-500 transform -translate-y-1/2 left-3 top-1/2" />
+          <BiSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-500" />
           <input
             type="search"
             value={searchNumber}
             maxLength={10}
             onChange={handleSearchChange}
-            className="w-full py-2 pl-10 pr-4 bg-gray-100 rounded-lg outline-none focus:ring-2 focus:ring-green-500"
+            className="w-full rounded-lg bg-gray-100 py-2 pl-10 pr-4 outline-none focus:ring-2 focus:ring-green-500"
             placeholder="Search Phone Number"
           />
         </div>
@@ -83,21 +82,17 @@ const MemoChatsList = () => {
               <article
                 key={user.userId._id}
                 onClick={() => handleUserClick(user)}
-                className={`flex items-center gap-3 p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-100 ${
-                  selectedUser?._id === user.userId._id ? "bg-green-200" : ""
+                className={`flex cursor-pointer items-center gap-3 border-b border-gray-200 p-3 hover:bg-gray-100 ${
+                  selectedUser?._id === user.userId._id ? 'bg-green-200' : ''
                 }`}
               >
                 <div className="flex-shrink-0 overflow-hidden rounded-full">
                   <RxAvatar size={48} />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-medium truncate">{user?.userId?.name}</h3>
+                  <h3 className="truncate font-medium">{user?.userId?.name}</h3>
                 </div>
-                {user?.whatsappMsgUnseenCount > 0 && (
-                  <span className="text-sm text-green-500">
-                    {user?.whatsappMsgUnseenCount}
-                  </span>
-                )}
+                {user?.whatsappMsgUnseenCount > 0 && <span className="text-sm text-green-500">{user?.whatsappMsgUnseenCount}</span>}
               </article>
             ))
           : isUserMessages && <p>Loading...</p>}

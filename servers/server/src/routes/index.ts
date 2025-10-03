@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import addonRouter from "./addons";
 import adminRouter from "./admin";
+import staffAttendenceRouter from "./attendence";
 import bucketRouter from "./bucket";
 import businessRouter from "./businesses";
 import cartRouter from "./cart";
@@ -15,6 +16,7 @@ import groupRouter from "./groups";
 import hipalzRouter from "./hipalz";
 import hotelRouter from "./hotel";
 import iconRouter from "./icon";
+import jewelleryRouter from "./jewellery";
 import kitchenRouter from "./kitchen";
 import kotRouter from "./kot";
 import loyaltyRouter from "./loyalty";
@@ -34,6 +36,7 @@ import scriptRouter from "./script";
 import settingsRouter from "./settings";
 import splitBillRouter from "./splitBill";
 import subsCriberRouter from "./subscribers";
+import syncPosMenuConfigRouter from "./suncPosMenuConfig";
 import surlRouter from "./surl";
 import tableRouter from "./table";
 import tagRouter from "./tags";
@@ -93,6 +96,9 @@ export const routes = app
   .route("/password_manager", passwordManagerRouter)
   .route("/print_section", printSectionRouter)
   .route("/report", reportRouter)
-  .route("/split_bill", splitBillRouter);
+  .route("/split_bill", splitBillRouter)
+  .route("/jewellery", jewelleryRouter)
+  .route("/attendence", staffAttendenceRouter)
+  .route("/sync_pos_menu_config", syncPosMenuConfigRouter);
 
 export type AppType = typeof routes;

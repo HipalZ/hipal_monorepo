@@ -7,16 +7,16 @@ import useWhatsapp, {
   TemplateSteps,
 } from "@/components/store/useWhatsapp";
 import { useWhatsappTempStore } from "@/components/store/useWhatsappTempStore";
+import type { LinkedTemplate } from "@/components/templates/whatsappTemplates/linkTemplatePopup";
 import type {
   ICouponzLinks,
   ISendOptionsPayload,
   IUserMessage,
   IWalletHistory,
-  MainResponseHandling,
   WhatsAppTemplatePayload,
 } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -24,6 +24,7 @@ export const useCreateTemplate = () => {
   const queryClient = useQueryClient();
   const businessId = useBusinessData((s) => s.businessData?._id);
   const setIsLoading = useWhatsappTempStore((s) => s.setIsLoading);
+  const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
   const {
     setStep,
     setShowSuccessPopup,
@@ -40,42 +41,63 @@ export const useCreateTemplate = () => {
     setTemplateSteps: s.setTemplateSteps,
   }));
 
-  const createTemplate = async (payload: WhatsAppTemplatePayload) => {
-    // API call to create template
-    if (!businessId) return null;
-    const res = await apiRpc.whatsapp.template.$post({
-      json: {
-        ...payload,
-        businessId: businessId,
+  const { mutateAsync: createTemplate, isPending: createTemplateLoading } =
+    useMutation({
+      mutationFn: async (payload: WhatsAppTemplatePayload) => {
+        if (!businessId) return null;
+        const url =
+          outLetType === "HOTEL"
+            ? "hotel/whats_app/templates"
+            : "whatsapp/template";
+
+        const res = await apiRpc[url].$post({
+          json: {
+            ...payload,
+            businessId: businessId,
+          },
+        });
+
+        const data = await res.json();
+        if (!data) throw new Error("Failed to create template");
+        return data;
+      },
+      onMutate: () => {
+        setIsLoading(true); // Set loading before mutation
+      },
+      onSuccess: (data) => {
+        setIsLoading(false);
+        if (data?.err || !data?.data) {
+          setStep(Step.SETUP);
+          setTemplateSteps(TemplateSteps.NONE);
+          setShowSuccessPopup(false);
+          toast.error(
+            data?.data?.error?.error_user_msg || "Failed to create template",
+          );
+          return;
+        }
+
+        setTemplateId(data?.data?.id);
+        setShowSuccessPopup(true);
+        setTemplateStatus(data?.data?.status);
+        setTemplateData(data?.data);
+        setStep(Step.SETUP);
+        setTemplateSteps(TemplateSteps.NONE);
+        queryClient.invalidateQueries({ queryKey: ["templates"] });
+      },
+      onError: (error) => {
+        setIsLoading(false);
+        toast.error(
+          error.message || "An error occurred while creating the template.",
+        );
       },
     });
-
-    const data = (await res.json()) as MainResponseHandling;
-    setIsLoading(false);
-    if (data?.err || res.status === 400) {
-      setStep(Step.SETUP);
-      setTemplateSteps(TemplateSteps.NONE);
-      setShowSuccessPopup(false);
-      return toast.error(
-        data?.data?.error?.error_user_msg || "Failed to create template",
-      );
-    }
-    // Handle success response
-    setTemplateId(data?.data?.id);
-    setShowSuccessPopup(true);
-    setTemplateStatus(data?.data?.status);
-    setTemplateData(data?.data);
-    setStep(Step.SETUP);
-    setTemplateSteps(TemplateSteps.NONE);
-    queryClient.invalidateQueries({ queryKey: ["templates"] });
-    return data;
-  };
 
   return { createTemplate };
 };
 
 export const useEditTemplate = () => {
   const queryClient = useQueryClient();
+  const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
   const { setStep, setShowSuccessPopup, setTemplateStatus, setTemplateSteps } =
     useWhatsapp((s) => ({
       setStep: s.setStep,
@@ -84,54 +106,142 @@ export const useEditTemplate = () => {
       setTemplateSteps: s.setTemplateSteps,
     }));
   const setIsLoading = useWhatsappTempStore((s) => s.setIsLoading);
-  const editTemplate = async (payload: WhatsAppTemplatePayload) => {
-    // API call to edit template
-    const res = await apiRpc.whatsapp.template[":templateid"][
-      ":businessId"
-    ].$put({
-      json: payload,
-      param: { templateid: payload.templateId, businessId: payload.businessId },
-    });
 
-    const data = await res.json();
-    setIsLoading(false);
-    // Handle error response
-    if (data?.err || res.status === 400) {
+  const { mutateAsync: editTemplate } = useMutation({
+    mutationFn: async (payload: WhatsAppTemplatePayload) => {
+      let res;
+      if (outLetType === "HOTEL") {
+        res = await apiRpc.hotel.whats_app.templates[":templateId"].$put({
+          json: payload,
+          param: {
+            templateId: payload.templateId,
+          },
+        });
+      } else {
+        res = await apiRpc.whatsapp.template[":templateId"].$put({
+          json: payload,
+          param: {
+            templateid: payload.templateId,
+            businessId: payload.businessId,
+          },
+        });
+      }
+
+      const data = await res.json();
+      if (!data) throw new Error("Failed to update template");
+      return data;
+    },
+    onMutate: () => {
+      setIsLoading(true);
+    },
+    onSuccess: (data) => {
+      setIsLoading(false);
+      if (data?.err || !data?.data) {
+        setStep(Step.SETUP);
+        setTemplateSteps(TemplateSteps.NONE);
+        setShowSuccessPopup(false);
+        toast.error(
+          data?.data?.error?.error_user_msg || "Failed to update template",
+        );
+        return;
+      }
+
+      setShowSuccessPopup(true);
+      setTemplateStatus(data?.data?.status);
       setStep(Step.SETUP);
       setTemplateSteps(TemplateSteps.NONE);
-      setShowSuccessPopup(false);
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+    },
+    onError: (error) => {
+      setIsLoading(false);
       toast.error(
-        data?.data?.error?.error_user_msg || "Failed to update template",
+        error.message || "An error occurred while updating the template.",
       );
-      return null;
-    }
-    setShowSuccessPopup(true);
-    setTemplateStatus(data?.data?.status);
-    setStep(Step.SETUP);
-    setTemplateSteps(TemplateSteps.NONE);
-    queryClient.invalidateQueries({ queryKey: ["templates"] });
-    return data;
-  };
+    },
+  });
 
   return { editTemplate };
 };
 
+export const useLinkTemplate = () => {
+  const setIsLoading = useWhatsappTempStore((s) => s.setIsLoading);
+  const { mutateAsync: linkTemplate } = useMutation({
+    mutationFn: async (payload: LinkedTemplate[]) => {
+      const res = await apiRpc.hotel.hotel_service_template_mapping.$post({
+        json: {
+          data: payload,
+        },
+      });
+      const response = await res.json();
+      return response;
+    },
+    onMutate: () => {
+      setIsLoading(true);
+    },
+    onError: (error: Error) => {
+      toast.error(`Error: ${error.message}`);
+    },
+    onSuccess: () => {
+      toast.success("Template linked successfully");
+    },
+  });
+
+  return { linkTemplate };
+};
+
 export const useFetchTemplates = () => {
   const businessId = useBusinessData((s) => s.businessData?._id);
+  const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
   const { setAllTemplates } = useWhatsappTempStore((s) => ({
     setAllTemplates: s.setAllTemplates,
   }));
+
   const getTemplates = async () => {
+    if (outLetType === "HOTEL") {
+      const res = await apiRpc.hotel.whats_app.templates.$get({
+        query: { businessId },
+      });
+      const response = await res.json();
+      setAllTemplates(response?.data);
+      return response?.data || {};
+    }
     const res = await apiRpc.whatsapp.template.all[":businessId"].$get({
-      param: {
-        businessId,
-      },
+      param: { businessId },
     });
     const response = await res.json();
     setAllTemplates(response?.data);
     return response?.data || {};
   };
+
   return { getTemplates };
+};
+
+export const useServiceNames = () => {
+  const businessId = useBusinessData((s) => s.businessData?._id);
+
+  const getServiceNames = async () => {
+    const res = await apiRpc.hotel.hotel_service_template_mapping[
+      ":businessId"
+    ].service_names.$get({
+      param: {
+        businessId,
+      },
+    });
+    const response = await res.json();
+    return response?.data || [];
+  };
+
+  const {
+    data: serviceNames = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["serviceNames", businessId],
+    queryFn: getServiceNames,
+    enabled: !!businessId,
+  });
+
+  return { serviceNames };
 };
 
 export const useMediaUpload = () => {
@@ -485,8 +595,12 @@ export const useCheckRegistration = () => {
     setCheckReg,
     checkReg,
   ]);
-
-  return { checkRegistration };
+  const { isLoading } = useQuery({
+    queryKey: ["fetchWaba", businessId],
+    queryFn: checkRegistration,
+    enabled: !!businessId && !checkReg,
+  });
+  return { isLoading };
 };
 
 export const useCreateRegistration = () => {

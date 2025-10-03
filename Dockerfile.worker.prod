@@ -1,0 +1,22 @@
+FROM --platform=$BUILDPLATFORM node:lts-slim AS base
+RUN npm i -g bun@1.2.20
+
+WORKDIR /app
+
+# Copy root + workspace package.json files
+COPY bun.lock package.json tsconfig.json ./
+COPY servers/server/package.json servers/server/
+COPY packages/instances/package.json packages/instances/
+COPY packages/db-models/package.json packages/db-models/
+
+# Install deps with workspaces
+RUN bun install
+
+# Now copy full source
+COPY . .
+
+FROM base AS worker
+RUN rm -rf /app/clients
+
+WORKDIR /app
+CMD ["bun", "run", "servers/server/src/queues/worker.ts"]

@@ -51,4 +51,23 @@ export const PaymentAlertSchema = z.object({
   updateFeature: z.array(z.string()).optional(),
 });
 
+export const jewelleryPaymentAlertSchema = z.object({
+  businessId: ObjectIdSchema,
+  message: z.string().min(4).max(300).optional(),
+  alertType: z.enum(["ONLINE", "OFFLINE", "WAITER", "NORMAL_SETTLE"]),
+  status: z.enum(["SUCCESS", "FAIL", "WAITER"]),
+  orderId: ObjectIdSchema,
+  errorReason: z.string().optional(),
+  errorDescription: z.string().optional(),
+  isAccepted: z.boolean().default(false).optional(),
+  coinsApplied: z.boolean().default(false).optional(),
+
+  isRejected: z.boolean().default(false).optional(),
+  staffId: ObjectIdSchema,
+  date: z.number(),
+});
+
 export type PaymentAlertType = z.infer<typeof PaymentAlertSchema>;
+export type JewelleryPaymentAlertType = z.infer<
+  typeof jewelleryPaymentAlertSchema
+>;
