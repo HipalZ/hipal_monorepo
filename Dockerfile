@@ -4,7 +4,7 @@
 # FROM oven/bun:1.0.31 AS base-server
 FROM --platform=$BUILDPLATFORM node:lts-slim AS base
 RUN npm i -g bun@1.2.17
-COPY  bun.lock /app/bun.lock
+COPY  bun.lockb /app/bun.lockb
 COPY . /app
 WORKDIR /app
 RUN bun install
