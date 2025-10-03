@@ -28,7 +28,7 @@ async function whatsAppChatHandler(
       { new: true },
     );
   } catch (error) {
-    console.error("Error in checkInQrHandler:", error);
+    console.error("Error in whatsAppChatHandler:", error);
   }
 }
 

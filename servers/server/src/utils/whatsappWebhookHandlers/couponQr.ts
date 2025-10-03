@@ -51,7 +51,7 @@ async function couponQrHandler(
       `🎉 *${whatsAppBusinessConfigData?.businessName}* offers you exclusive benefits.\n🔗 Click below to grab your special coupon curated just for you. \n${couponQrShortUrl}`,
     );
   } catch (error) {
-    console.error("Error in checkInQrHandler:", error);
+    console.error("Error in sendWhatsAppTemplateForCouponQr:", error);
   }
 }
 

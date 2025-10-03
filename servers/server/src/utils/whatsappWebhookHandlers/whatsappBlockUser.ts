@@ -55,7 +55,7 @@ async function whatsAppBlockUserHandler(
     }
     console.log("whatsAppCampaignHandler called with statuses:");
   } catch (error) {
-    console.error("Error in checkInQrHandler:", error);
+    console.error("Error in whatsAppBlockUserHandler:", error);
   }
 }
 

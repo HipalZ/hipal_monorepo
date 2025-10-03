@@ -20,8 +20,11 @@ async function whatsAppCampaignHandler(
       businessId: whatsAppBusinessConfigData?.businessId,
     });
 
+    console.log("findUserByMessageId", findUserByMessageId);
+    console.log(" whatsAppBusinessConfigData", whatsAppBusinessConfigData);
+
     await WhatsAppAnalyticsUser.create({
-      businessId: findUserByMessageId?.businessId,
+      businessId: whatsAppBusinessConfigData?.businessId,
       campaignId: findUserByMessageId?.campaignId,
       userId: findUserByMessageId?.userId,
       templateId: findUserByMessageId?.templateId,
@@ -76,7 +79,7 @@ async function whatsAppCampaignHandler(
       }
     }
   } catch (error) {
-    console.error("Error in checkInQrHandler:", error);
+    console.error("Error in whatsAppCampaignHandler:", error);
   }
 }
 

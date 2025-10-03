@@ -77,7 +77,7 @@ async function checkInQrHandler(
       }`,
     );
   } catch (error) {
-    console.error("Error in checkInQrHandler:", error);
+    console.error("Error in sendWhatsAppTemplateForCheckInQr:", error);
   }
 }
 
