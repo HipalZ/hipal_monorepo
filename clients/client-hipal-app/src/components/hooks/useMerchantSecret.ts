@@ -5,13 +5,11 @@ import { usePaymentStore } from "../store/usePaymentStore";
 import { useCouponz } from "../store/useCouponz";
 import useCouponTemp from "../store/useCouponTemp";
 import { toast } from "react-toastify";
-import { useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import { flushSync } from "react-dom";
 
 export const useMerchantDetails = () => {
-  const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
-  const searchParams = useSearchParams();
+  const businessId = useBusinessDetails((s) => s.businessDetails?._id);
   const { setAvailedCoupon } = useCouponz((s) => ({
     setAvailedCoupon: s.setAvailedCoupon,
   }));
@@ -20,7 +18,6 @@ export const useMerchantDetails = () => {
   }));
   const {
     setMerchantDetails,
-    setBillValue,
     setClaimedCoins,
     setClaimCouponz,
     setTips,
@@ -28,7 +25,6 @@ export const useMerchantDetails = () => {
     setCustomTip,
   } = usePaymentStore((s) => ({
     setMerchantDetails: s.setMerchantDetails,
-    setBillValue: s.setBillValue,
     setClaimedCoins: s.setClaimedCoins,
     setClaimCouponz: s.setClaimCouponz,
     setTips: s.setTips,
