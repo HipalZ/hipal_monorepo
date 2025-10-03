@@ -7,9 +7,12 @@ import useCouponTemp from "../store/useCouponTemp";
 import { toast } from "react-toastify";
 import { useCallback } from "react";
 import { flushSync } from "react-dom";
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 export const useMerchantDetails = () => {
-  const businessId = useBusinessDetails((s) => s.businessDetails?._id);
+  const businessId = _useAllBusiness(
+    (state) => state.data.outletInfo?.businessId,
+  );
   const { setAvailedCoupon } = useCouponz((s) => ({
     setAvailedCoupon: s.setAvailedCoupon,
   }));
