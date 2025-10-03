@@ -1,4 +1,4 @@
-import { HotelRoom, HotelZone } from "@hi/db-models";
+import { HotelRoom, HotelZone, Menu } from "@hi/db-models";
 import { hotelZones, updateHotelZones } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
 import { zValidator } from "@hono/zod-validator";
@@ -72,6 +72,18 @@ const zoneRouter = new Hono()
       if (!newZone) {
         throw new Error("Failed to create zone");
       }
+
+      await Menu.updateOne(
+        {
+          businessId: requestData.businessId,
+        },
+        {
+          $addToSet: {
+            zoneIds: newZone._id,
+          },
+        },
+        { session },
+      );
 
       return respond(c, "Hotel zone created successfully", false, 201, {
         _id: newZone._id,

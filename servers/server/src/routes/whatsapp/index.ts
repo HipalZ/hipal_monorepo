@@ -1,3 +1,5 @@
+import { createHmac } from "node:crypto";
+import { createHmac } from "node:crypto";
 import {
   BusinessSettings,
   Campaign,
@@ -32,9 +34,8 @@ import {
   whatsAppWalletHistorySchema,
 } from "@hi/db-models/src/validators";
 import { runInTransaction } from "@hi/utils";
-import { zValidator } from "@hono/zod-validator";
-import axios from "axios";
-import { createHmac } from "node:crypto";
+import { zValidator }
+fr;
 
 import { Hono } from "hono";
 import type { ClientSession } from "mongoose";
@@ -64,6 +65,7 @@ import {
   whatsAppUserAndTextMessage,
 } from "../../utils/whatsappWebhookHandlers/helper";
 import { whatsAppBlockUserHandler } from "../../utils/whatsappWebhookHandlers/whatsappBlockUser";
+import axios from "axios";
 interface AxiosError {
   response?: {
     status?: number;
@@ -680,6 +682,7 @@ const whatsappRouter = new Hono()
 
     async (c) => {
       const { templateid, businessId } = c.req.param();
+      const requestData = await c.req.json();
 
       const whatsAppConfigData = await WhatsAppBusinessConfig.findOne({
         businessId,
@@ -696,8 +699,6 @@ const whatsappRouter = new Hono()
         );
       }
 
-      const requestData = await c.req.json();
-
       try {
         const updateWhatAppTemplate = await axios.post(
           `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfigData.version}/${templateid}`,
@@ -708,6 +709,13 @@ const whatsappRouter = new Hono()
             headers: {
               Authorization: `Bearer ${whatsAppConfigData.token}`,
             },
+          },
+        );
+
+        await WhatAppTemplate.findOneAndUpdate(
+          { templateId: templateid, businessId },
+          {
+            bodyVariableSequence: requestData.bodyVariableSequence || [],
           },
         );
 
