@@ -99,6 +99,14 @@ const scheduleAlertUpdate = (
 ) => {
   if (avgTime > 0) {
     // Calculate the run time: current time + avgTime minutes
+
+    console.log(
+      "Scheduling alert update for alertId:",
+      alertId,
+      "in",
+      avgTime,
+      "minutes",
+    );
     const runTime = new Date(Date.now() + avgTime * 60 * 1000);
     const cronExpression = `${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${
       runTime.getMonth() + 1
@@ -112,6 +120,7 @@ const scheduleAlertUpdate = (
 
       if (alertData && alertData?.alertProgress !== "REJECTED") {
         if (alertData.alertProgress === "CREATED") {
+          console.log("step-1");
           await HotelAlert.findByIdAndUpdate(
             alertId,
             {
@@ -204,16 +213,18 @@ const scheduleAlertUpdate = (
             }
           });
 
-          const nextLevelTime = levelOneStaffs?.nextLevelTime;
+          const l2Time = levelOneStaffs?.nextLevelTime;
+          const l3Time = levelTwoStaffs?.nextLevelTime;
           // schedule cron job
-          scheduleLevelWiseAlert(
+          scheduleLevel2Alert(
             alertId,
-            nextLevelTime || 0,
+            l2Time || 0,
             2,
             roomName,
             serviceName,
             filterL2ManagerIds,
             filterL3ManagerIds,
+            l3Time,
           );
 
           const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
@@ -221,6 +232,7 @@ const scheduleAlertUpdate = (
           });
           if (whatsAppConfig) {
             for (const staffId of filteredManagerIds) {
+              console.log("filteredManagerIds", filteredManagerIds);
               const staffData = await User.findById(staffId).lean();
 
               const serviceTemplateMapping =
@@ -290,44 +302,6 @@ const scheduleAlertUpdate = (
                   console.error("Error sending message:", error);
                 }
               }
-
-              // const res = await axios.post(
-              //   `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
-              //   {
-              //     messaging_product: "whatsapp",
-              //     to: staffData?.phone?.toString(),
-              //     type: "template",
-              //     template: {
-              //       name: "fi_escalation_template ",
-              //       language: { code: "en" },
-              //       components: [
-              //         {
-              //           type: "body",
-              //           parameters: [
-              //             {
-              //               type: "text",
-              //               text: staffData?.name,
-              //             },
-
-              //             {
-              //               type: "text",
-              //               text: alertData?.serviceIds[0]?.name || "other",
-              //             },
-              //           ],
-              //         },
-              //       ],
-              //     },
-              //   },
-              //   {
-              //     headers: {
-              //       Authorization: `Bearer ${whatsAppConfig.token}`,
-              //     },
-              //   },
-              // );
-
-              // if (res.status !== 200) {
-              //   throw new Error("Error sending message");
-              // }
             }
           }
         }
@@ -341,7 +315,7 @@ const scheduleAlertUpdate = (
             },
             { new: true },
           );
-
+          // manager who are assigned to that room and service
           const validManagers = await User.find({
             _id: { $in: roomStaffIds },
             customRole: {
@@ -352,7 +326,7 @@ const scheduleAlertUpdate = (
               },
             },
           }).lean();
-
+          // extract ids
           const validManagerIds = validManagers.map((manager) =>
             manager._id.toString(),
           );
@@ -406,22 +380,25 @@ const scheduleAlertUpdate = (
             }
           });
 
-          const nextLevelTime = levelOneStaffs?.nextLevelTime;
+          const l2Time = levelOneStaffs?.nextLevelTime;
+          const l3Time = levelTwoStaffs?.nextLevelTime;
           // schedule cron job
-          scheduleLevelWiseAlert(
+          scheduleLevel2Alert(
             alertId,
-            nextLevelTime || 0,
+            l2Time || 0,
             2,
             roomName,
             serviceName,
             filterL2ManagerIds,
             filterL3ManagerIds,
+            l3Time,
           );
 
           const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
             businessId: alertData?.businessId,
           });
           if (whatsAppConfig) {
+            console.log("filteredManagerIds", filteredManagerIds);
             for (const staffId of filteredManagerIds) {
               const staffData = await User.findById(staffId).lean();
 
@@ -492,44 +469,6 @@ const scheduleAlertUpdate = (
                   console.error("Error sending message:", error);
                 }
               }
-
-              // const res = await axios.post(
-              //   `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
-              //   {
-              //     messaging_product: "whatsapp",
-              //     to: staffData?.phone?.toString(),
-              //     type: "template",
-              //     template: {
-              //       name: "fi_escalation_template ",
-              //       language: { code: "en" },
-              //       components: [
-              //         {
-              //           type: "body",
-              //           parameters: [
-              //             {
-              //               type: "text",
-              //               text: staffData?.name,
-              //             },
-
-              //             {
-              //               type: "text",
-              //               text: alertData?.serviceIds[0]?.name || "other",
-              //             },
-              //           ],
-              //         },
-              //       ],
-              //     },
-              //   },
-              //   {
-              //     headers: {
-              //       Authorization: `Bearer ${whatsAppConfig.token}`,
-              //     },
-              //   },
-              // );
-
-              // if (res.status !== 200) {
-              //   throw new Error("Error sending message");
-              // }
             }
           }
         }
@@ -538,18 +477,26 @@ const scheduleAlertUpdate = (
   }
 };
 
-const scheduleLevelWiseAlert = (
+const scheduleLevel2Alert = (
   alertId: string,
-  nextLevelTime: number,
+  l2Time: number,
   nextLevel: number,
   roomName: string,
   serviceName: string,
   l2ManagerIds: string[],
   l3ManagerIds: string[],
+  l3Time?: number,
 ) => {
-  if (nextLevelTime > 0) {
-    // Calculate the run time: current time + nextLevelTime minutes
-    const runTime = new Date(Date.now() + nextLevelTime * 60 * 1000);
+  if (l2Time > 0) {
+    console.log(
+      "Scheduling alert update for alertId:",
+      alertId,
+      "in",
+      l2Time,
+      "minutes",
+    );
+
+    const runTime = new Date(Date.now() + l2Time * 60 * 1000);
     const cronExpression = `${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${
       runTime.getMonth() + 1
     } *`;
@@ -559,6 +506,9 @@ const scheduleLevelWiseAlert = (
         path: "serviceIds",
         select: "name",
       });
+
+      console.log("2 level escalated ");
+      console.log("l2ManagerIds", l2ManagerIds);
 
       await HotelAlert.findByIdAndUpdate(
         alertId,
@@ -577,9 +527,9 @@ const scheduleLevelWiseAlert = (
         }
       });
 
-      scheduleLevelWiseAlertl2(
+      scheduleLevel3Alert(
         alertId,
-        nextLevelTime || 0,
+        l3Time || 0,
         3,
         roomName,
         serviceName,
@@ -591,6 +541,7 @@ const scheduleLevelWiseAlert = (
       });
       if (whatsAppConfig) {
         for (const staff of l2ManagerIds) {
+          console.log("l2ManagerIds", l2ManagerIds);
           const staffData = await User.findById(staff).lean();
 
           const serviceTemplateMapping =
@@ -660,61 +611,29 @@ const scheduleLevelWiseAlert = (
               console.error("Error sending message:", error);
             }
           }
-
-          // const res = await axios.post(
-          //   `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
-          //   {
-          //     messaging_product: "whatsapp",
-          //     to: staffData?.phone?.toString(),
-          //     type: "template",
-          //     template: {
-          //       name: "fi_escalation_template ",
-          //       language: { code: "en" },
-          //       components: [
-          //         {
-          //           type: "body",
-          //           parameters: [
-          //             {
-          //               type: "text",
-          //               text: staffData?.name,
-          //             },
-
-          //             {
-          //               type: "text",
-          //               text: alertData?.serviceIds[0]?.name || "other",
-          //             },
-          //           ],
-          //         },
-          //       ],
-          //     },
-          //   },
-          //   {
-          //     headers: {
-          //       Authorization: `Bearer ${whatsAppConfig.token}`,
-          //     },
-          //   },
-          // );
-
-          // if (res.status !== 200) {
-          //   throw new Error("Error sending message");
-          // }
         }
       }
     });
   }
 };
 
-const scheduleLevelWiseAlertl2 = (
+const scheduleLevel3Alert = (
   alertId: string,
-  nextLevelTime: number,
+  l3Time: number,
   nextLevel: number,
   roomName: string,
   serviceName: string,
   l3ManagerIds: string[],
 ) => {
-  if (nextLevelTime > 0) {
-    // Calculate the run time: current time + nextLevelTime minutes
-    const runTime = new Date(Date.now() + nextLevelTime * 60 * 1000);
+  if (l3Time > 0) {
+    console.log(
+      "Scheduling alert update for alertId:",
+      alertId,
+      "in",
+      l3Time,
+      "minutes",
+    );
+    const runTime = new Date(Date.now() + l3Time * 60 * 1000);
     const cronExpression = `${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${
       runTime.getMonth() + 1
     } *`;
@@ -730,6 +649,8 @@ const scheduleLevelWiseAlertl2 = (
         { level: nextLevel },
         { new: true },
       );
+      console.log("3 level escalated ");
+      console.log("l3ManagerIds", l3ManagerIds);
 
       // Send push notifications to staff members
       const registrationTokens = await DeviceToken.find({
@@ -747,6 +668,7 @@ const scheduleLevelWiseAlertl2 = (
       });
       if (whatsAppConfig) {
         for (const staff of l3ManagerIds) {
+          console.log("l3ManagerIds", l3ManagerIds);
           const staffData = await User.findById(staff).lean();
 
           const serviceTemplateMapping =
@@ -816,44 +738,6 @@ const scheduleLevelWiseAlertl2 = (
               console.error("Error sending message:", error);
             }
           }
-
-          // const res = await axios.post(
-          //   `${whatsAppApiBaseUrl.BASE_URL}${whatsAppConfig?.version}/${whatsAppConfig?.phoneId}/messages`,
-          //   {
-          //     messaging_product: "whatsapp",
-          //     to: staffData?.phone?.toString(),
-          //     type: "template",
-          //     template: {
-          //       name: "fi_escalation_template ",
-          //       language: { code: "en" },
-          //       components: [
-          //         {
-          //           type: "body",
-          //           parameters: [
-          //             {
-          //               type: "text",
-          //               text: staffData?.name,
-          //             },
-
-          //             {
-          //               type: "text",
-          //               text: alertData?.serviceIds[0]?.name || "other",
-          //             },
-          //           ],
-          //         },
-          //       ],
-          //     },
-          //   },
-          //   {
-          //     headers: {
-          //       Authorization: `Bearer ${whatsAppConfig.token}`,
-          //     },
-          //   },
-          // );
-
-          // if (res.status !== 200) {
-          //   throw new Error("Error sending message");
-          // }
         }
       }
     });
@@ -1546,7 +1430,10 @@ const hotelAlertRouter = new Hono()
         serviceData = await HotelService.findById(serviceId).lean();
         const avgCompletionTime = serviceData?.avgCompletionTime || 0;
         const avgAcceptanceTime = serviceData?.avgAcceptanceTime || 0;
+        console.log("avgCompletionTime", avgCompletionTime);
+        console.log("avgAcceptanceTime", avgAcceptanceTime);
 
+        // Find valid staff for this room and service
         const validStaff = await User.find({
           _id: { $in: roomData.staffIds },
           customRole: {
