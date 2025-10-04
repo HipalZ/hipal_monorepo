@@ -663,15 +663,6 @@ const scheduleLevel3Alert = (
         }
       });
 
-      scheduleLevelWiseAlertl2(
-        alertId,
-        nextLevelTime || 0,
-        3,
-        roomName,
-        serviceName,
-        l3ManagerIds,
-      );
-
       const whatsAppConfig = await WhatsAppBusinessConfig.findOne({
         businessId: alertData?.businessId,
       });
