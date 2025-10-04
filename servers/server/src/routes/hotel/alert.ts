@@ -1759,7 +1759,7 @@ const hotelAlertRouter = new Hono()
 
               alert?.serviceIds[0]?.name || "other",
               captainData?.name as string,
-              `https://hipal-test.hipalz.com/${businessData.customLink}/hotel/chat?room=${roomData.name}&id=${userData._id}`,
+              `https://hipalz.com/${businessData.customLink}/hotel/chat?room=${roomData.name}&id=${userData._id}`,
               outLetInfo?.placeUrl as string,
               "serviceRejectionReason",
               "phone",
@@ -1889,7 +1889,7 @@ const hotelAlertRouter = new Hono()
 
               alert?.serviceIds[0]?.name || "other",
               captainData?.name as string,
-              `https://hipal-test.hipalz.com/${businessData.customLink}/hotel/chat?room=${roomData.name}&id=${userData._id}`,
+              `https://hipalz.com/${businessData.customLink}/hotel/chat?room=${roomData.name}&id=${userData._id}`,
               outLetInfo?.placeUrl as string,
               "serviceRejectionReason",
               "phone",
