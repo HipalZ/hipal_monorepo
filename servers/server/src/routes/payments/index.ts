@@ -1737,6 +1737,8 @@ const paymentsRouter = new Hono()
         RAZORPAY_WEBHOOK_SECRET = merchantConfig.razorpayWebhookSecret;
       }
 
+      console.log("step_1", RAZORPAY_WEBHOOK_SECRET);
+
       if (!RAZORPAY_WEBHOOK_SECRET) {
         console.log("Webhook secret not found");
       }
@@ -1749,6 +1751,8 @@ const paymentsRouter = new Hono()
 
         return respond(c, "Invalid headers", true, 200, {});
       }
+
+      console.log("step_2", headersResult);
 
       const {
         "x-razorpay-signature": razorpaySignature,
@@ -1764,12 +1768,14 @@ const paymentsRouter = new Hono()
         console.log("Invalid signature");
         return respond(c, "Invalid signature", true, 200, {});
       }
+      console.log("step_3", isSignatureValid);
 
       const bodyResult = RazorpayWebhookBodySchema.safeParse(body);
 
       if (!bodyResult.success) {
         return respond(c, "Invalid body", true, 200, {});
       }
+      console.log("step_4", bodyResult);
 
       //@ts-ignore
       const { event, payload } = bodyResult.data;
@@ -1781,8 +1787,10 @@ const paymentsRouter = new Hono()
         businessId: getOrder?.businessId,
         tableName: getOrder?.tableName,
       });
+      console.log("step_5");
 
       const originBillIsSplit = await checkOriginBillIsSplit(tableSession);
+      console.log("originBillIsSplit", originBillIsSplit);
 
       if (originBillIsSplit) {
         const splitBillTableSessionData = await SplitBillTableSession.findOne({
@@ -2390,6 +2398,12 @@ const paymentsRouter = new Hono()
         );
       }
 
+      console.log("event", event);
+      console.log("order_id", payload.payment.entity.order_id);
+      console.log("getOrder", getOrder);
+      console.log("tableSession", tableSession);
+      console.log("payload", payload);
+
       if (event === "payment.failed") {
         const claimCoins = Number(getOrder?.claimedCoins) || 0;
         const alertExist = await PaymentAlert.findOne({
@@ -2433,7 +2447,10 @@ const paymentsRouter = new Hono()
           razorpayEventId: razorpayEventId,
         });
 
+        console.log("step_6", paymentAlreadyExist);
+
         if (!paymentAlreadyExist && getOrder) {
+          console.log("step_7");
           const pos = await BusinessPosConfig.findOne({
             businessId: getOrder?.businessId,
             isDeleted: false,
@@ -2450,6 +2467,7 @@ const paymentsRouter = new Hono()
             { isAccepted: true, isRejected: true },
             { session },
           );
+          console.log("step_8");
 
           let getCashBack = 0;
 
@@ -2495,6 +2513,8 @@ const paymentsRouter = new Hono()
             getCashBack = cashBackCoins;
           }
 
+          console.log("step_9");
+
           const createPayment = await Payment.create(
             [
               {
@@ -2528,6 +2548,8 @@ const paymentsRouter = new Hono()
             { session },
           );
 
+          console.log("step_10");
+
           await PaymentAlert.create(
             [
               {
@@ -2547,6 +2569,8 @@ const paymentsRouter = new Hono()
             ],
             { session },
           );
+
+          console.log("step_11");
 
           if (pos) {
             const pay = {
@@ -2658,6 +2682,8 @@ const paymentsRouter = new Hono()
               },
             );
 
+            console.log("step_12");
+
             await UserSession.deleteOne(
               {
                 tableName: getOrder.tableName,
@@ -2667,6 +2693,8 @@ const paymentsRouter = new Hono()
                 session,
               },
             );
+
+            console.log("step_13");
 
             await KotOrder.updateMany(
               {
@@ -2684,6 +2712,8 @@ const paymentsRouter = new Hono()
                 session,
               },
             );
+
+            console.log("step_14");
 
             await Table.findOneAndUpdate(
               {
@@ -2705,9 +2735,13 @@ const paymentsRouter = new Hono()
                 session,
               },
             );
+
+            console.log("step_15");
           }
         }
       }
+
+      console.log("step_16");
 
       return respond(c, "Webhook received successfully", false, 200, {});
     });
