@@ -50,7 +50,6 @@ async function whatsAppCampaignHandler(
           { $inc: { currentBalance: -minimumAmount } },
         );
       } else {
-        console.log("Insufficient balance to decrement");
       }
     }
     if (
@@ -72,7 +71,6 @@ async function whatsAppCampaignHandler(
           { $inc: { currentBalance: -minimumAmount } },
         );
       } else {
-        console.log("Insufficient balance to decrement");
       }
     }
   } catch (error) {

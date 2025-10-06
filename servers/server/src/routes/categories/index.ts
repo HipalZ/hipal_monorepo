@@ -515,9 +515,6 @@ const categoriesRouter = new Hono()
         }
         const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
 
-        console.log("Current Day:", currentDay);
-        console.log("Current Time in Minutes:", currentTimeInMinutes);
-
         const query = {
           businessId,
           hierarchy: "CHILD",

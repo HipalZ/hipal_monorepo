@@ -35,13 +35,10 @@ async function tableQrHandler(
   whatsAppBusinessConfigData: WhatsAppBusinessConfigType,
 ) {
   try {
-    console.log("tableQrHandler", tableName);
-    console.log("businessId", whatsAppBusinessConfigData?.businessId);
     const tableInfo = await Table.findOne({
       businessId: whatsAppBusinessConfigData?.businessId,
       name: tableName,
     });
-    console.log("tableInfoHandle", tableInfo);
     if (!tableInfo) {
       return null;
     }

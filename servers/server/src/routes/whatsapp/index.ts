@@ -1327,8 +1327,6 @@ const whatsappRouter = new Hono()
         businessId,
       });
 
-      console.log("wallet", wallet);
-
       if (!wallet) {
         return c.json(
           {

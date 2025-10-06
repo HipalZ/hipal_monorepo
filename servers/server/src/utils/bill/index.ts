@@ -193,7 +193,6 @@ function calculateSplitBillTotals(cartItems: Item[]): {
       // Line total for this item
       const lineTotal = basePrice + extrasTotal;
       totalDishTotal += lineTotal;
-      console.log("basePrice", totalDishTotal);
 
       // Determine GST percentage (prefer gst field)
       totalGst += item.dish.gst || 0;
@@ -413,7 +412,6 @@ function calculateUpdatedGstAfterDiscount(
       const gstForItem = discountedLineTotal * (gstRate / 100);
 
       newGst += gstForItem;
-      console.log("New GST for item:", newGst);
     }
   } catch (err) {
     console.error("Error calculating GST:", err);
@@ -435,14 +433,9 @@ function calculateItemUpdatedGstAfterDiscount(
 } {
   let itemGstAfterDiscount = 0;
 
-  console.log("Items being processed:", itemsIds);
-
   try {
     for (const item of items) {
-      console.log("Processing item:", item);
       if (item.isDeleted || !itemsIds.includes(item._id.toString())) continue;
-
-      console.log("Item being processed:", item);
 
       const basePrice = item.portion?.price ?? item.dish.price;
 
@@ -460,8 +453,6 @@ function calculateItemUpdatedGstAfterDiscount(
       const gstForItem = discountedLineTotal * (gstRate / 100);
 
       itemGstAfterDiscount += gstForItem;
-
-      console.log("Item GST after discount:", itemGstAfterDiscount);
     }
   } catch (err) {
     console.error("Error calculating GST:", err);
@@ -480,14 +471,9 @@ function splitCalculateItemUpdatedGstAfterDiscount(
 } {
   let itemGstAfterDiscount = 0;
 
-  console.log("Items being processed:", itemsIds);
-
   try {
     for (const item of items) {
-      console.log("Processing item:", item);
       if (item.isDeleted || !itemsIds.includes(item._id.toString())) continue;
-
-      console.log("Item being processed:", item);
 
       const basePrice = item.portion?.price ?? item.dish.price;
 
@@ -505,8 +491,6 @@ function splitCalculateItemUpdatedGstAfterDiscount(
       const gstForItem = discountedLineTotal * (gstRate / 100);
 
       itemGstAfterDiscount += gstForItem;
-
-      console.log("Item GST after discount:", itemGstAfterDiscount);
     }
   } catch (err) {
     console.error("Error calculating GST:", err);
@@ -525,14 +509,9 @@ function calculateItemUpdated(
 } {
   let itemGstAfter = 0;
 
-  console.log("Items being processed:", itemsIds);
-
   try {
     for (const item of items) {
-      console.log("Processing item:", item);
       if (item.isDeleted || itemsIds.includes(item._id.toString())) continue;
-
-      console.log("Item being processed:", item);
 
       const basePrice = item.portion?.price ?? item.dish.price;
 
@@ -550,8 +529,6 @@ function calculateItemUpdated(
       const gstForItem = discountedLineTotal * (gstRate / 100);
 
       itemGstAfter += gstForItem;
-
-      console.log("Item GST after discount:", itemGstAfter);
     }
   } catch (err) {
     console.error("Error calculating GST:", err);
@@ -570,14 +547,9 @@ function splitCalculateItemUpdated(
 } {
   let itemGstAfter = 0;
 
-  console.log("Items being processed:", itemsIds);
-
   try {
     for (const item of items) {
-      console.log("Processing item:", item);
       if (item.isDeleted || itemsIds.includes(item._id.toString())) continue;
-
-      console.log("Item being processed:", item);
 
       const basePrice = item.portion?.price ?? item.dish.price;
 
@@ -595,8 +567,6 @@ function splitCalculateItemUpdated(
       const gstForItem = discountedLineTotal * (gstRate / 100);
 
       itemGstAfter += gstForItem;
-
-      console.log("Item GST after discount:", itemGstAfter);
     }
   } catch (err) {
     console.error("Error calculating GST:", err);

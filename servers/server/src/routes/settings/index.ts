@@ -83,12 +83,7 @@ const settingsRouter = new Hono()
       ) {
         await razorpayWrapper
           .create(createSetting.razorpayMerchantId)
-          .then(() => {
-            console.log(
-              "Razorpay instance created successfully",
-              createSetting.razorpayMerchantId,
-            );
-          })
+          .then(() => {})
           .catch((err) => {
             console.error("Error creating Razorpay instance", err);
           });

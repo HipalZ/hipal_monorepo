@@ -1018,10 +1018,6 @@ const scriptRouter = new Hono()
 
           try {
             await razorpayWrapper.create(requestData.razorpayMerchantId);
-            console.log(
-              "Razorpay instance created successfully",
-              requestData.razorpayMerchantId,
-            );
           } catch (err) {
             return respond(
               c,
@@ -1677,9 +1673,7 @@ const scriptRouter = new Hono()
                       },
                     },
                   );
-                } catch (error) {
-                  console.log("Error sending WhatsApp message:", error);
-                }
+                } catch (error) {}
               }
             }
           },
@@ -2491,8 +2485,6 @@ const scriptRouter = new Hono()
           },
         );
 
-        console.log("check bill response", response.data);
-
         if (
           response.data.success === "1" &&
           response.data.bill_request_id !== 0
@@ -2604,9 +2596,7 @@ const scriptRouter = new Hono()
     async (c) => {
       const payload = await c.req.json();
       const header = c.req.header();
-      console.log("queue", payload, header);
 
-      console.log("queue", payload);
       return respond(
         c,
         "All pos dishes, addons and categories deleted",

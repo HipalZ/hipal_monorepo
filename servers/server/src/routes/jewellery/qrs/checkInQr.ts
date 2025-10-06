@@ -133,15 +133,11 @@ const checkInQrRouter = new Hono()
       const requestData = (await c.req.json()) || {};
       const { qrId } = requestData;
 
-      console.log("qrId", qrId);
-
       const checkInQr = await CheckInQr.findByIdAndUpdate(
         qrId,
 
         { new: true },
       ).lean();
-
-      console.log("checkInQr", checkInQr);
 
       if (!checkInQr) {
         return respond(c, "Check-in QR not found", true, 404, {});

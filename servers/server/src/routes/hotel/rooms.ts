@@ -1158,8 +1158,6 @@ const roomRouter = new Hono()
         businessId: roomExists.businessId,
       }).populate("businessId");
 
-      console.log("whatsAppConfig", whatsAppConfig);
-
       if (whatsAppConfig) {
         const outletInfo = await OutLetInfo.findOne({
           businessId: roomExists.businessId,
@@ -1242,8 +1240,6 @@ const roomRouter = new Hono()
 
             try {
               const respo = await axios.post(url, payload, axiosConfig);
-
-              console.log("WhatsApp thank you message response:", respo.data);
             } catch (error) {
               console.error("Error sending message:", error);
             }
