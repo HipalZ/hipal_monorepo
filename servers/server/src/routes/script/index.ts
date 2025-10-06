@@ -2689,10 +2689,8 @@ const scriptRouter = new Hono()
     async (c) => {
       const { businessId, from, to } = c.req.query();
 
-      const fromDate = from
-        ? new Date(Number(from))
-        : new Date(Date.now() - 5 * 24 * 60 * 60 * 1000);
-      const toDate = to ? new Date(Number(to)) : new Date();
+      const fromDate = Number(from) || startOfToday.getTime();
+      const toDate = Number(to) || endOfToday.getTime();
 
       const payments = await Payment.find({
         businessId,

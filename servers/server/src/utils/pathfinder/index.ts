@@ -6,9 +6,9 @@ export function transformBillData(bills) {
     date: bill.date,
     total: bill.total,
     userId: {
-      $oid: bill.userId._id,
-      name: bill.userId.name,
-      phone: bill.userId.phone,
+      $oid: bill?.userId?._id || "123",
+      name: bill?.userId?.name || "guest",
+      phone: bill?.userId?.phone || "9999999999",
     },
     mode: bill.mode,
     subTotal: bill.billValue,
