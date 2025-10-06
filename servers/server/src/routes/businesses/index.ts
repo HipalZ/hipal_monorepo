@@ -455,7 +455,6 @@ const businessesRouter = new Hono()
     async (c) => {
       const { businessId } = c.req.param();
       const requestData = await c.req.json();
-      console.log("from fro", requestData);
       if (requestData?.primaryColor && requestData?.secondaryColor) {
         const convertedColors = convertToHsl({
           primary: requestData.primaryColor,
@@ -596,8 +595,6 @@ const businessesRouter = new Hono()
     ),
     async (c) => {
       const { id } = c.req.query();
-
-      console.log("id", id);
 
       const existingBusinesses = await Business.find({
         staffIds: id,

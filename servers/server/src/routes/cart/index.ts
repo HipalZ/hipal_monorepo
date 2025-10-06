@@ -287,7 +287,6 @@ const cartRouter = new Hono()
               .messaging()
               .send(pushMessage)
               .then((response: unknown) => {
-                console.log("Successfully sent message:", response);
                 return c.json({
                   message: "FCM message sent successfully",
                   err: false,
@@ -295,7 +294,6 @@ const cartRouter = new Hono()
                 });
               })
               .catch((err: Error) => {
-                console.log("Error sending FCM message:", err);
                 return c.json(
                   {
                     message: "Error sending FCM message",

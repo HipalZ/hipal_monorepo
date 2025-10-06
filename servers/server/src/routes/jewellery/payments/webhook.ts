@@ -46,15 +46,12 @@ const webhookRouter = new Hono()
       }
 
       if (!RAZORPAY_WEBHOOK_SECRET) {
-        console.log("Webhook secret not found");
       }
 
       const headersResult = RazorpayWebhookHeadersSchema.safeParse(
         c.req.header(),
       );
       if (!headersResult.success) {
-        console.log("Invalid headers");
-
         return respond(c, "Invalid headers", true, 200, {});
       }
 
@@ -69,7 +66,6 @@ const webhookRouter = new Hono()
         RAZORPAY_WEBHOOK_SECRET,
       );
       if (!isSignatureValid) {
-        console.log("Invalid signature");
         return respond(c, "Invalid signature", true, 200, {});
       }
 

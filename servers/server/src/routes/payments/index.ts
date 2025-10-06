@@ -2401,7 +2401,7 @@ const paymentsRouter = new Hono()
       console.log("event", event);
       console.log("order_id", payload.payment.entity.order_id);
       console.log("getOrder", getOrder);
-      console.log("tableSession", tableSession);
+
       console.log("payload", payload);
 
       if (event === "payment.failed") {

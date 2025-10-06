@@ -100,13 +100,6 @@ const scheduleAlertUpdate = (
   if (avgTime > 0) {
     // Calculate the run time: current time + avgTime minutes
 
-    console.log(
-      "Scheduling alert update for alertId:",
-      alertId,
-      "in",
-      avgTime,
-      "minutes",
-    );
     const runTime = new Date(Date.now() + avgTime * 60 * 1000);
     const cronExpression = `${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${
       runTime.getMonth() + 1
@@ -120,7 +113,6 @@ const scheduleAlertUpdate = (
 
       if (alertData && alertData?.alertProgress !== "REJECTED") {
         if (alertData.alertProgress === "CREATED") {
-          console.log("step-1");
           await HotelAlert.findByIdAndUpdate(
             alertId,
             {
@@ -232,7 +224,6 @@ const scheduleAlertUpdate = (
           });
           if (whatsAppConfig) {
             for (const staffId of filteredManagerIds) {
-              console.log("filteredManagerIds", filteredManagerIds);
               const staffData = await User.findById(staffId).lean();
 
               const serviceTemplateMapping =
@@ -398,7 +389,6 @@ const scheduleAlertUpdate = (
             businessId: alertData?.businessId,
           });
           if (whatsAppConfig) {
-            console.log("filteredManagerIds", filteredManagerIds);
             for (const staffId of filteredManagerIds) {
               const staffData = await User.findById(staffId).lean();
 
@@ -488,14 +478,6 @@ const scheduleLevel2Alert = (
   l3Time?: number,
 ) => {
   if (l2Time > 0) {
-    console.log(
-      "Scheduling alert update for alertId:",
-      alertId,
-      "in",
-      l2Time,
-      "minutes",
-    );
-
     const runTime = new Date(Date.now() + l2Time * 60 * 1000);
     const cronExpression = `${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${
       runTime.getMonth() + 1
@@ -506,9 +488,6 @@ const scheduleLevel2Alert = (
         path: "serviceIds",
         select: "name",
       });
-
-      console.log("2 level escalated ");
-      console.log("l2ManagerIds", l2ManagerIds);
 
       await HotelAlert.findByIdAndUpdate(
         alertId,
@@ -541,7 +520,6 @@ const scheduleLevel2Alert = (
       });
       if (whatsAppConfig) {
         for (const staff of l2ManagerIds) {
-          console.log("l2ManagerIds", l2ManagerIds);
           const staffData = await User.findById(staff).lean();
 
           const serviceTemplateMapping =
@@ -626,13 +604,6 @@ const scheduleLevel3Alert = (
   l3ManagerIds: string[],
 ) => {
   if (l3Time > 0) {
-    console.log(
-      "Scheduling alert update for alertId:",
-      alertId,
-      "in",
-      l3Time,
-      "minutes",
-    );
     const runTime = new Date(Date.now() + l3Time * 60 * 1000);
     const cronExpression = `${runTime.getMinutes()} ${runTime.getHours()} ${runTime.getDate()} ${
       runTime.getMonth() + 1
@@ -649,8 +620,6 @@ const scheduleLevel3Alert = (
         { level: nextLevel },
         { new: true },
       );
-      console.log("3 level escalated ");
-      console.log("l3ManagerIds", l3ManagerIds);
 
       // Send push notifications to staff members
       const registrationTokens = await DeviceToken.find({
@@ -668,7 +637,6 @@ const scheduleLevel3Alert = (
       });
       if (whatsAppConfig) {
         for (const staff of l3ManagerIds) {
-          console.log("l3ManagerIds", l3ManagerIds);
           const staffData = await User.findById(staff).lean();
 
           const serviceTemplateMapping =
@@ -1066,8 +1034,6 @@ const hotelAlertRouter = new Hono()
         })
         .lean();
 
-      console.log("alerts", alerts);
-
       //
       const getServiceAverages = (serviceIds: HotelServiceType[] = []) => {
         if (!serviceIds.length) return { avgAccept: 0, avgDeliver: 0 };
@@ -1430,8 +1396,6 @@ const hotelAlertRouter = new Hono()
         serviceData = await HotelService.findById(serviceId).lean();
         const avgCompletionTime = serviceData?.avgCompletionTime || 0;
         const avgAcceptanceTime = serviceData?.avgAcceptanceTime || 0;
-        console.log("avgCompletionTime", avgCompletionTime);
-        console.log("avgAcceptanceTime", avgAcceptanceTime);
 
         // Find valid staff for this room and service
         const validStaff = await User.find({

@@ -183,7 +183,6 @@ const cataloguesRouter = new Hono()
     ),
     async (c) => {
       const { businessId } = c.req.param();
-      console.log("businessId", businessId);
 
       const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
 

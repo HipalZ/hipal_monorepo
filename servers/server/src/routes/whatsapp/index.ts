@@ -203,7 +203,6 @@ const scheduleCampaign = async (
   businessId: string,
   templateId: string,
 ) => {
-  console.log("running campaign");
   const templateName = template.templateName;
   const campaignName = getCampaignName(templateName);
 
@@ -284,7 +283,6 @@ const scheduleCampaign = async (
       });
     } catch (error) {
       const axiosError = error as AxiosError;
-      console.log("error", axiosError.response?.data);
       const message = axiosError.response?.data?.error?.message;
 
       return {
@@ -1460,8 +1458,6 @@ const whatsappRouter = new Hono()
         businessId,
       });
 
-      console.log("wallet", wallet);
-
       if (!wallet) {
         return c.json(
           {
@@ -1689,14 +1685,12 @@ const whatsappRouter = new Hono()
       }
 
       if (!RAZORPAY_WEBHOOK_SECRET) {
-        console.log("razorpay_webhook_secret missing");
       }
 
       const headersResult = RazorpayWebhookHeadersSchema.safeParse(
         c.req.header(),
       );
       if (!headersResult.success) {
-        console.log("Invalid headers");
         return respond(c, "Invalid headers", true, 200, {});
       }
 
@@ -1711,15 +1705,12 @@ const whatsappRouter = new Hono()
         RAZORPAY_WEBHOOK_SECRET,
       );
       if (!isSignatureValid) {
-        console.log("Invalid signature");
         return respond(c, "Invalid signature", true, 200, {});
       }
 
       const bodyResult = WhatAppRazorpayWebhookBodySchema.safeParse(body);
 
       if (!bodyResult.success) {
-        console.log("Invalid body", bodyResult);
-
         return respond(c, "Invalid body", true, 200, {});
       }
       //@ts-ignore

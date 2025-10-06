@@ -174,7 +174,6 @@ const usersRouter = new Hono()
       };
       await axios(options);
     } catch (e) {
-      console.log(e);
       return respond(c, "Otp not sent", true, 400, {});
     }
 
@@ -1160,7 +1159,6 @@ const usersRouter = new Hono()
       try {
         if (loyaltyId && signUpBonus && signUpBonus > 0) {
           const bonus = await addSignUpBonus(loyaltyId, userId, signUpBonus);
-          console.log("bonus", bonus);
         }
       } catch (e) {
         return respond(c, "Error in adding sign up bonus", true, 400, {});

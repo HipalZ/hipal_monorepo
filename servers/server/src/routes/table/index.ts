@@ -1840,7 +1840,6 @@ const tableRouter = new Hono()
               "Content-Type": "application/json",
             },
           });
-          console.log("s", s.data);
         }
 
         return respond(c, "updated successfully", false, 200, {});

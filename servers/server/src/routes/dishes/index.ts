@@ -129,7 +129,6 @@ const dishesRouter = new Hono()
           isDeleted: false,
           active: true,
         });
-        console.log("businessPosConfig", businessPosConfig);
 
         if (businessPosConfig) {
           const posDishEditFields = await PosDishConfig.findOne({
@@ -139,8 +138,6 @@ const dishesRouter = new Hono()
               "description images visibility recommendationIds availability kitchenId menuId",
             )
             .lean();
-
-          console.log("posDishEditFields", posDishEditFields);
 
           if (!posDishEditFields) {
             return respond(c, "POS dish config not found", true, 400, {});

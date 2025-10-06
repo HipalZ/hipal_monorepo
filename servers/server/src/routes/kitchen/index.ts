@@ -264,8 +264,6 @@ const kitchenRouter = new Hono()
           businessId,
         });
 
-        console.log(printer);
-
         if (!printer) {
           return c.json(
             {

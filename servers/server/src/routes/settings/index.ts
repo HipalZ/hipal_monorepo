@@ -83,12 +83,7 @@ const settingsRouter = new Hono()
       ) {
         await razorpayWrapper
           .create(createSetting.razorpayMerchantId)
-          .then(() => {
-            console.log(
-              "Razorpay instance created successfully",
-              createSetting.razorpayMerchantId,
-            );
-          })
+          .then(() => {})
           .catch((err) => {
             console.error("Error creating Razorpay instance", err);
           });
@@ -327,7 +322,6 @@ const settingsRouter = new Hono()
 
       // Update each banner's sequence according to the order in bannerIds
       for (let i = 0; i < sequenceOfBannerIds.length; i++) {
-        console.log("sequenceOfBannerIds[i]", sequenceOfBannerIds[i], i);
         await Banner.updateOne(
           { _id: sequenceOfBannerIds[i] },
           { $set: { sequence: i + 1 } },
@@ -400,7 +394,6 @@ const settingsRouter = new Hono()
         businessId as string,
       )) as MerChantDetails;
       if (!merchant) {
-        console.log("from db");
         merchant = await BusinessSettings.findOne({
           businessId,
         })
