@@ -97,7 +97,7 @@ const Step4ColorSelection = memo(
       { primary: "#f59e0b", secondary: "#fef3c7" },
       { primary: "#ef4444", secondary: "#fee2e2" },
       { primary: "#8b5cf6", secondary: "#ede9fe" },
-      { primary: "#ec4899", secondary: "#fce7f3" },
+      { primary: "#641626", secondary: "#F9E9C7" },
     ];
 
     const handlePresetSelect = useCallback(

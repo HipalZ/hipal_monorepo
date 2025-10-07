@@ -24,8 +24,8 @@ interface HorizontalDishCardProps {
 
 const HorizontalCard = ({
   dishData,
-  primaryColor = "#ec4899",
-  secondaryColor = "#fce7f3",
+  primaryColor = "#641626",
+  secondaryColor = "#F9E9C7",
   isEdgeLayout = false,
 }: HorizontalDishCardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -92,10 +92,8 @@ const HorizontalCard = ({
           )}
           <h3
             className={cn(
-              "font-semibold line-clamp-2  max-h-[3.125rem] poppins-regular ",
-              compactLayout
-                ? "text-base leading-4"
-                : "text-lg leading-[1.25rem]",
+              "font-semibold line-clamp-3  max-h-[4rem] poppins-regular ",
+              compactLayout ? "text-base leading-5" : "text-lg leading-5",
             )}
             style={{ color: primaryColor }}
           >

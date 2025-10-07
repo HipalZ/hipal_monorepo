@@ -1,14 +1,14 @@
-import { type ClassValue, clsx } from 'clsx';
-import toast from 'react-hot-toast';
-import type { IconType } from 'react-icons';
-import { BsGraphUpArrow } from 'react-icons/bs';
-import { CiGlobe } from 'react-icons/ci';
-import { HiOutlineShoppingCart } from 'react-icons/hi';
-import { MdOutlineHistory, MdOutlineTableBar } from 'react-icons/md';
-import { useNavigate } from 'react-router-dom';
-import { twMerge } from 'tailwind-merge';
-import { useHiClientZ } from '../store/useHiClientzData';
-import type { NavItemTypes } from '../types/hiClientzData';
+import { type ClassValue, clsx } from "clsx";
+import toast from "react-hot-toast";
+import type { IconType } from "react-icons";
+import { BsGraphUpArrow } from "react-icons/bs";
+import { CiGlobe } from "react-icons/ci";
+import { HiOutlineShoppingCart } from "react-icons/hi";
+import { MdOutlineHistory, MdOutlineTableBar } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
+import { twMerge } from "tailwind-merge";
+import { useHiClientZ } from "../store/useHiClientzData";
+import type { NavItemTypes } from "../types/hiClientzData";
 
 export function timestampToDateTime(timestamp: number): string {
   const IST_OFFSET = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
@@ -16,7 +16,20 @@ export function timestampToDateTime(timestamp: number): string {
   const hours = date.getUTCHours();
   const minutes = date.getUTCMinutes();
   const day = date.getUTCDate();
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
   const month = monthNames[date.getUTCMonth()];
 
   // Determine the day suffix
@@ -25,24 +38,24 @@ export function timestampToDateTime(timestamp: number): string {
     case 1:
     case 21:
     case 31:
-      daySuffix = 'st';
+      daySuffix = "st";
       break;
     case 2:
     case 22:
-      daySuffix = 'nd';
+      daySuffix = "nd";
       break;
     case 3:
     case 23:
-      daySuffix = 'rd';
+      daySuffix = "rd";
       break;
     default:
-      daySuffix = 'th';
+      daySuffix = "th";
   }
 
   // Convert to 12-hour format
   const hourFormatted = hours % 12 || 12; // Converts 0 to 12 for midnight
   const minuteFormatted = minutes < 10 ? `0${minutes}` : minutes;
-  const amPm = hours < 12 ? 'AM' : 'PM';
+  const amPm = hours < 12 ? "AM" : "PM";
 
   return `${day}${daySuffix} ${month} ${hourFormatted}:${minuteFormatted} ${amPm}`;
 }
@@ -54,10 +67,10 @@ export const cn = (...inputs: ClassValue[]) => {
 
 export const getDate = (timeStampStart: number) => {
   const date = new Date(timeStampStart);
-  return date.toLocaleDateString('en-IN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  return date.toLocaleDateString("en-IN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 };
 
@@ -65,9 +78,9 @@ export const useErrorHandling = () => {
   const navigate = useNavigate();
 
   const errorText = () => {
-    let message = '';
-    navigate('/');
-    message = 'Session Expired: Please log in again to continue.';
+    let message = "";
+    navigate("/");
+    message = "Session Expired: Please log in again to continue.";
     toast.error(message);
     return message;
   };
@@ -82,19 +95,21 @@ export function createNavItems(isPos: boolean): Array<{
   const permissions = useHiClientZ((s) => s.selectedBiz?.permissions);
 
   let navItems = [
-    { type: 'Cart' as NavItemTypes, icon: HiOutlineShoppingCart },
-    { type: 'Alerts' as NavItemTypes, icon: CiGlobe },
-    { type: 'Sales' as NavItemTypes, icon: BsGraphUpArrow },
-    { type: 'History' as NavItemTypes, icon: MdOutlineHistory },
+    { type: "Cart" as NavItemTypes, icon: HiOutlineShoppingCart },
+    { type: "Alerts" as NavItemTypes, icon: CiGlobe },
+    { type: "Sales" as NavItemTypes, icon: BsGraphUpArrow },
+    { type: "History" as NavItemTypes, icon: MdOutlineHistory },
   ];
 
   if (permissions?.sale_summary === false) {
-    navItems = navItems.filter((item) => item.type !== 'Sales' && item.type !== 'History');
+    navItems = navItems.filter(
+      (item) => item.type !== "Sales" && item.type !== "History",
+    );
   }
 
   if (isPos) {
     navItems.unshift({
-      type: 'Tables' as NavItemTypes,
+      type: "Tables" as NavItemTypes,
       icon: MdOutlineTableBar,
     });
   }
@@ -103,10 +118,45 @@ export function createNavItems(isPos: boolean): Array<{
 }
 
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
 }
+
+export const businessCardTypes = {
+  RESTAURANT: "restaurant",
+  HOTEL: "hotel",
+  JEWELLERY: "jewellery",
+  SALON: "salon",
+  SPA: "spa",
+  GYM: "gym",
+  CLINIC: "clinic",
+  DENTAL: "dental",
+  CLOTHING: "clothing",
+} as const;
+
+export type BusinessCardType = keyof typeof businessCardTypes;
+
+export const getBusinessApiType = (type: BusinessCardType) => {
+  return businessCardTypes[type];
+};
+
+export const handleNavigation = (outletType: string, businessId: string) => {
+  if (
+    outletType === "MENU" ||
+    outletType === "RESTAURANT" ||
+    outletType === "OTHER"
+  ) {
+    return `/${businessId}/alerts`;
+  }
+  if (outletType === "HOTEL") {
+    return `/hotel/${businessId}/`;
+  }
+  if (outletType === "JEWELLERY") {
+    return `/j/${businessId}/alerts`;
+  }
+  return "/";
+};

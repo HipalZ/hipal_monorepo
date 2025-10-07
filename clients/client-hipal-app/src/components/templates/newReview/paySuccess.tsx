@@ -19,14 +19,10 @@ import { usePaymentStore } from "@/components/store/usePaymentStore";
 import { CardSkeleton } from "@/components/atoms/paymentPageLoader";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
 import { useCart } from "@/components/store/useCart";
+import { getUserLoyaltyCoinz } from "../../../apis/userApis";
 const Avatar = dynamic(() => import("@/components/atoms/avatar"), {
   ssr: false,
   loading: () => <CardSkeleton />,
-});
-
-const CouponzBlink = dynamic(() => import("../newPayment/couponzBlink"), {
-  ssr: false,
-  loading: () => <LoadingSpinnerCircle />,
 });
 
 const MemoPayOnlineSuccess = () => {
@@ -59,14 +55,10 @@ const MemoPayOnlineSuccess = () => {
     )
       return;
 
-    const userReward = await apiRpc.users[":businessId"].getUserReward.$get({
-      param: {
-        businessId: businessDetails?._id,
-      },
-      query: {
-        userId: userDetails?._id,
-        loyaltyId: loyaltySetting?.loyaltyId,
-      },
+    const userReward = await getUserLoyaltyCoinz({
+      userId: userDetails?._id as string,
+      businessId: businessDetails?._id as string,
+      loyaltyId: loyaltySetting?.loyaltyId as string,
     });
     const response = (await userReward.json()).data;
     if (userReward.status === 404 || userReward.status === 400) {
@@ -170,11 +162,7 @@ const MemoPayOnlineSuccess = () => {
       </section>
       {Number(claim) > 0 ? <center>{textContent?.coinzContent}</center> : null}
       <br />
-      {/* coinz earned */}
-
-      {/* <section className="relative mb-[5rem]">
-        <CouponzBlink />
-      </section> */}
+     
       <section
         style={{
           boxShadow: "0px 0px 2px 0px #0000001F",

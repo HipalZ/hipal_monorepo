@@ -1,46 +1,51 @@
-import { _useAllBusiness } from "@/components/store/useAllBusiness";
-import { apiRpc } from "@hi/common";
-import { cn } from "@/components/utils/helpers";
+"use client";
+
+import { memo, useCallback, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
+import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { FaArrowLeft } from "react-icons/fa";
 import { MdOutlineShoppingCart } from "react-icons/md";
-import { memo, useCallback, useMemo, useState } from "react";
-import { motion } from "framer-motion";
-import { PiArrowBendUpLeftBold } from "react-icons/pi";
 import { toast } from "react-toastify";
-import { useCallTheCaptain } from "@/components/hooks/useCartHook";
+
+import { cn } from "@/components/utils/helpers";
+import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
+
+import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { useCart } from "@/components/store/useCart";
 import { useCartStore } from "@/components/store/useCartStore";
 import { useLogin } from "@/components/store/useLogin";
-import { useParams, useRouter } from "next/navigation";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import { useUserToken } from "@hi/common/src/useUserToken";
-import dynamic from "next/dynamic";
-import glassTable from "@/assets/cart/glassTable.png";
-import Image from "next/image";
-import LoadingSpinner from "@/components/atoms/progressBar/loadingSpinner";
+import useTableData from "@/components/store/useTableData";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
-import useTableData, {
-  resetTableData,
-  type HiCodeUser,
-} from "@/components/store/useTableData";
-import { BsHandIndexThumb } from "react-icons/bs";
 
+import glassTable from "@/assets/cart/glassTable.png";
+
+import { useUserToken } from "@hi/common/src/useUserToken";
+import { useCallTheCaptain } from "@/components/hooks/useCartHook";
+
+// ✅ Flow router + per-flow API handlers
+import {
+  menuPos_placeOrder,
+  menuShare_shareCart,
+  other_shareCart,
+  jewellery_shareSelection,
+} from "./cartFlows";
+import Buttons from "./CartButtons";
+
+// Lazy parts
 const EmptyCart = dynamic(() => import("./emptyCart"), { ssr: false });
 const PaymentAlert = dynamic(() => import("./paymentAlert"), { ssr: false });
-const SwipeToPlaceOrder = dynamic(() => import("./swipeToPlaceOrder"));
 const CartItem = dynamic(() => import("./cartItem"), {
   ssr: false,
   loading: () => <LoadingSpinner />,
 });
-const CommonBottomButton = dynamic(
-  () => import("@/components/atoms/bottomButton"),
-  { ssr: false },
-);
+
 const CartWarning = dynamic(() => import("./cartWarning"), { ssr: false });
 const ShareCartButtons = dynamic(() => import("./shareCartButtons"), {
   ssr: false,
 });
-// const HistoryCartItems = dynamic(() => import("./historyItem"), { ssr: false });
 const ItemDescriptionPopup = dynamic(
   () => import("@/components/atoms/dishDescription/itemDescription"),
   { ssr: false },
@@ -56,15 +61,16 @@ const Orders = dynamic(() => import("./orders"), {
 const Cart = () => {
   const { cart, cartHistory } = useCartStore();
   const { mutate, isPending } = useCallTheCaptain();
-  const outLetInfo = _useAllBusiness((state) => state.data.outletInfo);
+
+  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
+
   const setShowCart = useCart((s) => s.setShowCart);
   const cartPage = useCart((s) => s.cartPage);
   const setCartPage = useCart((s) => s.setCartPage);
   const setInputModal = useCart((s) => s.setInputModal);
   const setOrderPlaced = useCart((s) => s.setOrderPlaced);
-  const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
-  const [showPayAlert, setShowPayAlert] = useState<boolean>(false);
+
   const tableName = useTableData((s) => s.tableName);
   const hiCode = useTableData((s) => s.hiCode);
   const hiCodePopup = useTableData((s) => s.hiCodePopup);
@@ -72,13 +78,28 @@ const Cart = () => {
   const setTableName = useTableData((s) => s.setTableName);
   const setHiCodePopup = useTableData((s) => s.setHiCodePopup);
   const setHiCode = useTableData((s) => s.setHiCode);
+
   const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
+
   const accessToken = useUserToken.getState().accessToken;
   const userDetails = useLogin((state) => state.userDetails);
-  const router = useRouter();
   const setDirection = useLogin((s) => s.setDirection);
+
+  const router = useRouter();
   const customLink = useParams()?.businessId as string;
 
+  const [showPayAlert, setShowPayAlert] = useState<boolean>(false);
+
+  // OUTLET TYPE + simple helper
+  const outletType = (outletInfo?.outLetType || "OTHER").toUpperCase() as
+    | "MENU"
+    | "RESTAURANT"
+    | "OTHER"
+    | "JEWELLERY";
+  const cartHasTableRequirement =
+    outletType === "MENU" || outletType === "RESTAURANT";
+
+  // Sanitize cart payload before network
   const sanitizedCart = useMemo(() => {
     return cart.map(({ dish, ...item }) => {
       const { recommendationIds, addOnIds, ...sanitizedDish } = dish;
@@ -91,22 +112,27 @@ const Cart = () => {
   }, [setInputModal]);
 
   const triggerCallWaiter = useCallback(() => {
+    // For MENU/RESTAURANT we use table flow; for others still allow "help" action
     setDirection("category");
-    if (!tableName) {
+
+    if (cartHasTableRequirement && !tableName) {
+      toast.error("Please scan QR");
       return router.push(`/${customLink}/scan`);
     }
+
     if (!accessToken) {
       setCheckLogin(true);
       return;
     }
+
     const payload = {
       businessId: businessId,
-      tableName: tableName,
+      tableName: tableName || "N/A",
       message: "I need help",
       alertType: "WAITER",
       status: "WAITER",
       name: userDetails?.name || "user",
-      userId: userDetails._id,
+      userId: userDetails?._id,
     };
 
     mutate(payload);
@@ -120,6 +146,7 @@ const Cart = () => {
     mutate,
     setCheckLogin,
     userDetails,
+    cartHasTableRequirement,
   ]);
 
   const triggerModal = useCallback(() => {
@@ -131,277 +158,163 @@ const Cart = () => {
     }, 5000);
   }, [setOrderPlaced, setShowCart]);
 
-  const placeOrder = useCallback(async () => {
+  /* ------------------------------------------------------------------ */
+  /*                   FLOW-SPECIFIC HANDLERS (separate)                */
+  /* ------------------------------------------------------------------ */
+
+  const ensureLogin = useCallback(() => {
     if (!accessToken) {
       setCheckLogin(true);
-      return;
+      return false;
     }
-    const handleUnauthenticatedUser = () => {
-      setDirection("category");
-      setCheckLogin(true);
-    };
+    return true;
+  }, [accessToken, setCheckLogin]);
 
-    const handleMissingTableName = () => {
-      setDirection("category");
+  const guardTableIfNeeded = useCallback(() => {
+    if (cartHasTableRequirement && !tableName) {
       toast.error("Please scan QR");
       router.push(`/${customLink}/scan`);
-    };
-
-    const handleApiResponse = async (
-      response,
-      successMessage,
-      errorMessage,
-    ) => {
-      try {
-        const res = await response.json();
-        if (response.status === 200 || response.status === 201) {
-          if (successMessage?.length > 0) {
-            toast.success(successMessage);
-          }
-          setShowCart(true);
-          triggerModal();
-          setHiCode(res?.data?.hiCode || null);
-          return true;
-        }
-        if (response.status === 401) {
-          resetTableData();
-          return;
-        }
-        if (response.status === 409) {
-          toast.error(res?.message);
-          setTableName(res?.data?.data?.tableName);
-          setHiCode(res?.data?.data?.hiCode);
-          return;
-        }
-        if (response.status === 404) {
-          toast.error(res?.message || "Business not found");
-          handleUnauthenticatedUser();
-          return;
-        }
-        if (response.status === 403) {
-          setHiCodeUser(res?.data as HiCodeUser);
-          setHiCodePopup(true);
-        } else {
-          toast.error(res?.message || errorMessage || "Order failed");
-        }
-      } catch (error) {
-        console.error("Error processing response:", error);
-        toast.error("An error occurred while processing the response");
-      }
       return false;
-    };
-
-    if (!accessToken) {
-      handleUnauthenticatedUser();
-      return;
     }
+    return true;
+  }, [cartHasTableRequirement, tableName, router, customLink]);
 
-    if (!tableName && outletInfo?.outLetType !== "OTHER") {
-      handleMissingTableName();
-      return;
-    }
+  const handleMenuPosPlaceOrder = useCallback(async () => {
+    if (!ensureLogin()) return;
+    if (!guardTableIfNeeded()) return;
 
-    if (outletInfo?.isPosEnabled) {
-      try {
-        const response = await apiRpc.pos.save_kot.$post({
-          json: {
-            tableName,
-            businessId: outletInfo?.businessId,
-            internalCart: sanitizedCart,
-            customerPhone: userDetails?.phone,
-            userId: userDetails?._id,
-          },
-        });
-        await handleApiResponse(response, "", "Failed to place order");
-      } catch (error) {
-        console.error("Error placing POS order:", error);
-      }
-    } else {
-      try {
-        const response = await apiRpc.cart.create.$post({
-          json: {
-            businessId: outletInfo?.businessId,
-            userId: userDetails?._id,
-            tableName,
-            cart: sanitizedCart,
-            name: userDetails?.name || "Guest",
-            phone: userDetails?.phone,
-          },
-        });
-        await handleApiResponse(
-          response,
-          "Cart shared successfully",
-          "Failed to share cart",
-        );
-      } catch (error) {
-        console.error("Error placing non-POS order:", error);
-        toast.error("An error occurred while placing the non-POS order");
-      }
+    try {
+      await menuPos_placeOrder({
+        businessId: outletInfo?.businessId!,
+        tableName: tableName!,
+        cart: sanitizedCart,
+        userId: userDetails?._id,
+        customerPhone: userDetails?.phone,
+      });
+      // Light success UX — open/close modal flow like before
+      setShowCart(true);
+      triggerModal();
+      // If API returns hiCode in future, you can set via setHiCode(...)
+    } catch (e) {
+      console.error("Menu POS place order failed", e);
     }
   }, [
-    accessToken,
-    setDirection,
-    router,
-    customLink,
+    ensureLogin,
+    guardTableIfNeeded,
+    outletInfo?.businessId,
     tableName,
-    outletInfo,
     sanitizedCart,
-    userDetails,
-    setHiCode,
+    userDetails?._id,
+    userDetails?.phone,
     setShowCart,
-    setHiCodeUser,
-    setHiCodePopup,
     triggerModal,
-    setCheckLogin,
-    hiCode,
-    setTableName,
   ]);
 
-  const payBill = useCallback(() => {
-    setShowPayAlert(true);
-  }, []);
+  const handleMenuShareCart = useCallback(async () => {
+    if (!ensureLogin()) return;
+    if (!guardTableIfNeeded()) return;
 
-  const getBottomButtons = useMemo(() => {
-    if (!tableName || outletInfo?.outLetType === "OTHER") {
-      return [];
+    try {
+      await menuShare_shareCart({
+        businessId: outletInfo?.businessId!,
+        tableName: tableName!,
+        cart: sanitizedCart,
+        name: userDetails?.name || "Guest",
+        phone: userDetails?.phone,
+        userId: userDetails?._id,
+      });
+      setShowCart(true);
+      triggerModal();
+    } catch (e) {
+      console.error("Menu share cart failed", e);
     }
-
-    if (cartPage === "cart") {
-      if (cart.length > 0) {
-        return [
-          {
-            text: "Place Order",
-            onClick: placeOrder,
-            type: "button" as const,
-            highlight: true,
-          },
-        ];
-      }
-      return [
-        {
-          text: "Order more",
-          onClick: () => setShowCart(false),
-          type: "button" as const,
-        },
-      ];
-    }
-
-    if (cartPage === "order") {
-      return cartHistory && cartHistory.length > 0
-        ? [
-            {
-              text: "Pay Bill",
-              onClick: payBill,
-              type: "button" as const,
-            },
-          ]
-        : [
-            {
-              text: "Order more",
-              onClick: () => setShowCart(false),
-              type: "button" as const,
-            },
-          ];
-    }
-
-    if (cartPage === "history") {
-      return [
-        {
-          text: "Back",
-          onClick: () => setCartPage("cart"),
-          type: "button" as const,
-        },
-      ];
-    }
-
-    return [];
   }, [
+    ensureLogin,
+    guardTableIfNeeded,
+    outletInfo?.businessId,
     tableName,
-    outletInfo?.outLetType,
-    cartPage,
-    cart.length,
-    placeOrder,
-    payBill,
-    setCartPage,
+    sanitizedCart,
+    userDetails?.name,
+    userDetails?.phone,
+    userDetails?._id,
     setShowCart,
-    cartHistory,
+    triggerModal,
   ]);
 
-  const getButtonForPopcorn = useMemo(() => {
-    if (!tableName || outletInfo?.outLetType === "OTHER") {
-      return [];
-    }
-    if (cartPage === "cart") {
-      if (cart.length > 0) {
-        return outLetInfo?.shareCart
-          ? [
-              {
-                text: "Share Cart",
-                onClick: placeOrder,
-                type: "button" as const,
-              },
-            ]
-          : [
-              {
-                text: "Back to Menu",
-                onClick: () => setShowCart(false),
-                type: "button" as const,
-                isLoading: isPending,
-              },
-              {
-                text: "Need Help?",
-                onClick: triggerCallWaiter,
-                type: "button" as const,
-                isLoading: isPending,
-              },
-            ];
-      }
-      return [
-        {
-          text: "Order more",
-          onClick: () => setShowCart(false),
-          type: "button" as const,
-          isLoading: isPending,
-        },
-        {
-          text: "Need Help?",
-          onClick: triggerCallWaiter,
-          type: "button" as const,
-          isLoading: isPending,
-        },
-      ];
-    }
-    if (cartPage === "order") {
-      return [
-        {
-          text: "Pay Bill",
-          onClick: payPopCorn,
-          type: "button" as const,
-        },
-      ];
-    }
-
-    if (cartPage === "history") {
-      return [
-        {
-          text: "Back",
-          onClick: () => setCartPage("cart"),
-          type: "button" as const,
-        },
-      ];
+  const handleOtherShareCart = useCallback(async () => {
+    if (!ensureLogin()) return;
+    try {
+      await other_shareCart({
+        businessId: outletInfo?.businessId!,
+        cart: sanitizedCart,
+      });
+      setShowCart(true);
+      triggerModal();
+    } catch (e) {
+      console.error("OTHER share cart failed", e);
     }
   }, [
-    tableName,
-    outletInfo?.outLetType,
-    cartPage,
-    cart.length,
-    payPopCorn,
-    setCartPage,
+    ensureLogin,
+    outletInfo?.businessId,
+    sanitizedCart,
     setShowCart,
-    isPending,
-    outLetInfo,
-    placeOrder,
-    triggerCallWaiter,
+    triggerModal,
+  ]);
+
+  const handleJewelleryShareSelection = useCallback(async () => {
+    if (!ensureLogin()) return;
+    try {
+      await jewellery_shareSelection({
+        id: outletInfo?.businessId!,
+        cart: sanitizedCart,
+        userId: userDetails?._id,
+        businessId: outletInfo?.businessId!,
+        name: userDetails?.name || "Guest",
+        phone: userDetails?.phone,
+      });
+      setShowCart(true);
+      triggerModal();
+    } catch (e) {
+      console.error("Jewellery share selection failed", e);
+    }
+  }, [
+    ensureLogin,
+    outletInfo?.businessId,
+    sanitizedCart,
+    userDetails?._id,
+    userDetails?.name,
+    userDetails?.phone,
+    setShowCart,
+    triggerModal,
+  ]);
+
+  // For HiCodeValidate modal we still pass a single placeOrder function.
+  // It decides based on current flow:
+  const placeOrderUnified = useCallback(async () => {
+    if (
+      outletInfo?.isPosEnabled &&
+      (outletType === "MENU" || outletType === "RESTAURANT")
+    ) {
+      await handleMenuPosPlaceOrder();
+      return;
+    }
+    if (outletType === "MENU" || outletType === "RESTAURANT") {
+      await handleMenuShareCart();
+      return;
+    }
+    if (outletType === "JEWELLERY") {
+      await handleJewelleryShareSelection();
+      return;
+    }
+    // fallback OTHER
+    await handleOtherShareCart();
+  }, [
+    outletInfo?.isPosEnabled,
+    outletType,
+    handleMenuPosPlaceOrder,
+    handleMenuShareCart,
+    handleJewelleryShareSelection,
+    handleOtherShareCart,
   ]);
 
   const handleBack = useCallback(() => {
@@ -418,8 +331,10 @@ const Cart = () => {
         "overflow-y-auto h-[100dvh] hide-scrollbar text-[#000000] bg-[#ffffff] relative",
       )}
     >
+      {/* CART PAGE */}
       {cartPage === "cart" && (
         <section className="relative h-[calc(91dvh+5px)]">
+          {/* Header */}
           <div className="bg-white z-[500] sticky top-0 flex items-center justify-between px-4 py-3 border-b border-gray-200">
             <article className="flex items-center gap-2">
               {outletInfo?.outLetType === "OTHER" ? (
@@ -436,19 +351,23 @@ const Cart = () => {
               ) : null}
               <h2 className="text-lg font-medium">Live cart</h2>
             </article>
+
             {hiCode && (
               <div className="!text-sm text-black inline-flex items-center gap-2">
                 <Image src={glassTable} alt="Table" />
                 <span>code {hiCode}</span>
               </div>
             )}
+
             <article className="flex items-center text-black">
               <MdOutlineShoppingCart size={24} />
               <span className="text-sm">{cart?.length} items</span>
             </article>
           </div>
+
+          {/* Body */}
           <div className="flex flex-col h-full overflow-y-auto">
-            <div className="flex-1 divide-y divide-gray-100">
+            <div className="flex-1 divide-y divide-gray-100 pb-[5rem]">
               {cart?.length > 0 ? (
                 cart?.map((cartItem) => (
                   <CartItem key={cartItem.id} cartItem={cartItem} />
@@ -457,7 +376,10 @@ const Cart = () => {
                 <EmptyCart />
               )}
             </div>
+
+            {/* Footer (sticky) */}
             <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+              {/* POS cancel note */}
               {outletInfo?.isPosEnabled && outletInfo?.placeOrderButton ? (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -467,68 +389,53 @@ const Cart = () => {
                   Orders once placed, cannot be cancelled!
                 </motion.div>
               ) : null}
-              {/* Cart Info */}
-              {outletInfo?.isPosEnabled ? (
-                <div className="flex items-center gap-3 px-2">
-                  <button
-                    onClick={handleBack}
-                    type="button"
-                    className="h-12 w-16 px-4 py-1 border border-[#CACACA] rounded-lg text-center"
-                  >
-                    <PiArrowBendUpLeftBold size={24} />
-                  </button>
-                  {!outletInfo?.placeOrderButton ? (
-                    <motion.button
-                      type="button"
-                      className={cn(
-                        "w-full flex justify-center items-center gap-2 py-3 rounded-lg border border-gray-300",
-                        "text-sm font-medium text-white bg-black shadow-sm",
-                      )}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={triggerCallWaiter}
-                    >
-                      <BsHandIndexThumb size={20} />
-                      <span>Call Captain</span>
-                    </motion.button>
-                  ) : (
-                    <SwipeToPlaceOrder
-                      placeOrder={placeOrder}
-                      disabled={cart?.length === 0}
-                    />
-                  )}
-                </div>
-              ) : (
-                <CommonBottomButton
-                  fixed
-                  buttons={
-                    outletInfo?.isPosEnabled
-                      ? getBottomButtons ?? []
-                      : getButtonForPopcorn ?? []
-                  }
-                />
-              )}
+
+              {/* ✅ Flow-driven buttons */}
+              <Buttons
+                outletType={outletType}
+                isPosEnabled={!!outletInfo?.isPosEnabled}
+                cartPage={cartPage}
+                cart={cart}
+                cartHistory={cartHistory}
+                isPending={isPending}
+                shareCart={!!outletInfo?.shareCart}
+                placeOrderButton={!!outletInfo?.placeOrderButton}
+                // common handlers
+                onBack={handleBack}
+                onTriggerWaiter={triggerCallWaiter}
+                onPayPopcorn={payPopCorn}
+                setShowCart={setShowCart}
+                setCartPage={setCartPage}
+                // flow handlers
+                onMenuPosPlaceOrder={handleMenuPosPlaceOrder}
+                onMenuShareCart={handleMenuShareCart}
+                onOtherShareCart={handleOtherShareCart}
+                onJewelleryShareSelection={handleJewelleryShareSelection}
+              />
             </div>
           </div>
         </section>
       )}
-      {cartPage === "order" && <Orders />}
 
-      {outletInfo?.outLetType !== "OTHER" && <CartWarning />}
+      {/* ORDER PAGE */}
+      {cartPage === "order" && <Orders />}
 
       {cart.length > 0 && outletInfo?.outLetType === "OTHER" && (
         <ShareCartButtons />
       )}
+
+      {/* HiCode validate modal (uses unified flow) */}
       {hiCodePopup && (
         <ItemDescriptionPopup
           show={hiCodePopup}
           onClose={() => setHiCodePopup(false)}
           bottomCross
         >
-          <HiCodeValidate placeOrder={placeOrder} />
+          <HiCodeValidate placeOrder={placeOrderUnified} />
         </ItemDescriptionPopup>
       )}
 
+      {/* Pay alert modal */}
       {showPayAlert && (
         <ItemDescriptionPopup
           show={showPayAlert}
@@ -538,18 +445,30 @@ const Cart = () => {
         </ItemDescriptionPopup>
       )}
 
-      {tableName &&
-        outletInfo?.outLetType !== "OTHER" &&
-        cartPage === "history" && (
-          <CommonBottomButton
-            fixed
-            buttons={
-              outletInfo?.isPosEnabled
-                ? getBottomButtons ?? []
-                : getButtonForPopcorn ?? []
-            }
-          />
-        )}
+      {/* HISTORY page footer for non-cart pages (matches your original conditional placement) */}
+      {tableName && outletInfo?.outLetType !== "OTHER" && (
+        <Buttons
+          outletType={outletType}
+          isPosEnabled={!!outletInfo?.isPosEnabled}
+          cartPage={cartPage}
+          cart={cart}
+          cartHistory={cartHistory}
+          isPending={isPending}
+          shareCart={!!outletInfo?.shareCart}
+          placeOrderButton={!!outletInfo?.placeOrderButton}
+          // common handlers
+          onBack={handleBack}
+          onTriggerWaiter={triggerCallWaiter}
+          onPayPopcorn={payPopCorn}
+          setShowCart={setShowCart}
+          setCartPage={setCartPage}
+          // flow handlers
+          onMenuPosPlaceOrder={handleMenuPosPlaceOrder}
+          onMenuShareCart={handleMenuShareCart}
+          onOtherShareCart={handleOtherShareCart}
+          onJewelleryShareSelection={handleJewelleryShareSelection}
+        />
+      )}
     </div>
   );
 };

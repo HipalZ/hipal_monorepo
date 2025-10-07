@@ -1,5 +1,4 @@
 import DateRangePickerMemo from "@/components/atoms/dateRangePicker";
-import { useHiClientZ } from "@/components/store/useHiClientzData";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import useTimings from "@/components/store/useTimings";
 import type { Alert } from "@/components/types/hiClientzData";
@@ -7,24 +6,19 @@ import { useQuery } from "@tanstack/react-query";
 import { memo, useCallback, useState } from "react";
 import { BiChevronsLeft, BiChevronsRight } from "react-icons/bi";
 import HistoryCard from "./historyCard";
-import { apiRpc } from "@hi/common";
 import { useErrorHandling } from "@/components/utils/helpers";
+import useBusinessData from "../../store/useBusinessData";
+import { fetchAlertHistory } from "../../../api/alert";
 
 const History = () => {
   const { errorText } = useErrorHandling();
   const [pageNumber, setPageNumber] = useState(1);
-  const { selectedBiz } = useHiClientZ((s) => ({
-    selectedBiz: s.selectedBiz,
-  }));
-  const { historyData, setHistoryData } = useLiteStore((s) => ({
-    historyData: s.historyData,
-    setHistoryData: s.setHistoryData,
-  }));
-  const { timeStampStart, timeStampEnd } = useTimings((s) => ({
-    timeStampStart: s.timeStampStart,
-    timeStampEnd: s.timeStampEnd,
-  }));
-  const businessId = selectedBiz?.businessId?._id;
+  const outletType = useBusinessData((s) => s.outletInfo?.outLetType);
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
+  const historyData = useLiteStore((s) => s.historyData);
+  const setHistoryData = useLiteStore((s) => s.setHistoryData);
+  const timeStampStart = useTimings((s) => s.timeStampStart);
+  const timeStampEnd = useTimings((s) => s.timeStampEnd);
 
   const handleClick = useCallback((newPage: number) => {
     if (newPage < 1) return;
@@ -32,23 +26,28 @@ const History = () => {
   }, []);
 
   const handleHistoryData = async () => {
-    const res = await apiRpc.payments[":id"].paymentAlertHistory.$get({
-      param: { id: businessId },
-      query: {
-        businessId: businessId,
-        from: timeStampStart.toString(),
-        to: timeStampEnd.toString(),
-        pageNumber: pageNumber.toString(),
+    const res = await fetchAlertHistory({
+      payload: {
+        businessId: businessId!,
+        startDate: timeStampStart!,
+        endDate: timeStampEnd!,
+        page: pageNumber,
       },
+      outletType,
     });
+
     if (res.status === 401) {
       return errorText();
     }
-    const response = (await res.json()).data as Alert[];
+
+    const json = await res.json();
+    const response = (json?.data || []) as Alert[];
+
     if (res.status === 200) {
       setHistoryData(response);
       return response;
     }
+
     return [];
   };
   const defaultClass =
@@ -56,7 +55,7 @@ const History = () => {
 
   useQuery({
     queryKey: [
-      "onlineAlerts",
+      "historyAlerts",
       businessId,
       timeStampStart,
       timeStampEnd,

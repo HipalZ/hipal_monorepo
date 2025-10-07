@@ -64,35 +64,46 @@ export async function generateMetadata({
   };
 }
 
-const Page = async ({ params, searchParams }: {
+const Page = async ({
+  params,
+  searchParams,
+}: {
   params: { businessId: string };
   searchParams: { [key: string]: string | string[] | undefined };
 }) => {
   const businessData = await getBusinessData(params?.businessId);
 
   // Handle redirects based on outlet type
-  if (["MENU", "FOOD"].includes(businessData?.outLetType)) {
-    const queryString = new URLSearchParams()
-    Object.entries(searchParams).forEach(([key, value]) => {
+  if (["MENU", "FOOD", "RESTAURANT"].includes(businessData?.outLetType)) {
+    const queryString = new URLSearchParams();
+    for (const [key, value] of Object.entries(searchParams)) {
       if (Array.isArray(value)) {
-        value.forEach(v => queryString.append(key, v));
+        for (const v of value) {
+          queryString.append(key, v);
+        }
       } else if (value) {
         queryString.append(key, value);
       }
-    });
+    }
 
-    const redirectUrl = `/${params.businessId}/explore${queryString.toString() ? `?${queryString.toString()}` : ""
-      }`;
+    const redirectUrl = `/${params.businessId}/explore${
+      queryString.toString() ? `?${queryString.toString()}` : ""
+    }`;
 
     redirect(redirectUrl);
   }
-  if(businessData?.outLetType === "OTHER"){
+  if (businessData?.outLetType === "OTHER") {
     const reDirectUrl = `/${params.businessId}/o`;
     redirect(reDirectUrl);
   }
-  
-  if(businessData?.outLetType === 'HOTEL'){
+
+  if (businessData?.outLetType === "HOTEL") {
     const redirectUrl = `/${params.businessId}/hotel`;
+    redirect(redirectUrl);
+  }
+
+  if (businessData?.outLetType === "JEWELLERY") {
+    const redirectUrl = `/${params.businessId}/j`;
     redirect(redirectUrl);
   }
 

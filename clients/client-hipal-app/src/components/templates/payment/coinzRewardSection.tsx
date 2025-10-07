@@ -62,23 +62,14 @@ const MemoCoinzRewardSection = () => {
   const { loyaltySetting } = useLoyaltyData((s) => ({
     loyaltySetting: s.loyaltySetting,
   }));
-  const {
-    billValue,
-    claimedCoins,
-    claimCouponz,
-    setIsModalOpen,
-    editBillModal,
-    setEditBillModal,
-    billData,
-  } = usePaymentStore((s) => ({
-    billValue: s.billValue,
-    claimedCoins: s.claimedCoins,
-    claimCouponz: s.claimCouponz,
-    setIsModalOpen: s.setIsModalOpen,
-    editBillModal: s.editBillModal,
-    setEditBillModal: s.setEditBillModal,
-    billData: s.billData,
-  }));
+
+  const billValue = usePaymentStore((s) => s.billValue);
+  const claimedCoins = usePaymentStore((s) => s.claimedCoins);
+  const claimCouponz = usePaymentStore((s) => s.claimCouponz);
+  const setIsModalOpen = usePaymentStore((s) => s.setIsModalOpen);
+  const editBillModal = usePaymentStore((s) => s.editBillModal);
+  const setEditBillModal = usePaymentStore((s) => s.setEditBillModal);
+  const billData = usePaymentStore((s) => s.billData);
 
   const openCoinz = useCallback(() => {
     if (!accessToken) {

@@ -42,28 +42,19 @@ const MainCoupon = ({ business }: { business: IBiz }) => {
   const customLink = useParams()?.businessId as string;
   const { couponId, channelId } = useParams();
   const router = useRouter();
-  console.log("router", router);
-  const searchParams = useSearchParams();
-  console.log("searchParams", searchParams);
-  const { setBusinessDetails } = useBusinessDetails((s) => ({
-    businessDetails: s.businessDetails,
-    setBusinessDetails: s.setBusinessDetails,
-  }));
-  const { setTableName, setTableNameTimeStamp } = useTableData();
-  const { openTc, displayTermsAndConditions, isLoading, setIsLoading } =
-    useCouponTemp((s) => ({
-      openTc: s.openTc,
-      displayTermsAndConditions: s.displayTermsAndConditions,
-      isLoading: s.isLoading,
-      setIsLoading: s.setIsLoading,
-    }));
-  const { currentPage, setSelectedCoupon, setChannelId, setCurrentPage } =
-    useCouponz((s) => ({
-      currentPage: s.currentPage,
-      setSelectedCoupon: s.setSelectedCoupon,
-      setChannelId: s.setChannelId,
-      setCurrentPage: s.setCurrentPage,
-    }));
+  const setBusinessDetails = useBusinessDetails((s) => s.setBusinessDetails);
+  const setTableName = useTableData((s) => s.setTableName);
+
+  const openTc = useCouponTemp((s) => s.openTc);
+  const displayTermsAndConditions = useCouponTemp(
+    (s) => s.displayTermsAndConditions,
+  );
+  const isLoading = useCouponTemp((s) => s.isLoading);
+  const setIsLoading = useCouponTemp((s) => s.setIsLoading);
+  const currentPage = useCouponz((s) => s.currentPage);
+  const setSelectedCoupon = useCouponz((s) => s.setSelectedCoupon);
+  const setChannelId = useCouponz((s) => s.setChannelId);
+  const setCurrentPage = useCouponz((s) => s.setCurrentPage);
 
   const fetchSingleCouponz = async () => {
     setIsLoading(true);
@@ -78,7 +69,7 @@ const MainCoupon = ({ business }: { business: IBiz }) => {
       if (couponResponse?.status === 404) {
         toast.error("Coupon Expired");
         setIsLoading(false);
-        router.push(`/${customLink}/explore`);
+        router.push(`/${customLink}`);
       }
       setSelectedCoupon(coupon?.data as Coupon);
       setBusinessDetails(business);
@@ -87,7 +78,7 @@ const MainCoupon = ({ business }: { business: IBiz }) => {
     } catch (err) {
       setIsLoading(false);
       if (couponId === undefined) {
-        router.push(`/${customLink}/explore`);
+        router.push(`/${customLink}`);
       }
     } finally {
       setIsLoading(false);

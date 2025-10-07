@@ -45,8 +45,8 @@ const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
 const EdgeFlow = ({
   childCategory,
   isHorizontalCard = true,
-  primaryColor = "#ec4899",
-  secondaryColor = "#fce7f3",
+  primaryColor = "#641626",
+  secondaryColor = "#F9E9C7",
 }: EdgeFlowProps) => {
   const { setDishes } = useDishesStore();
   const isActiveDishType = useActiveClass((s) => s.isActiveDishType);

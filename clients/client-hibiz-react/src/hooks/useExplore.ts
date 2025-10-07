@@ -1,3 +1,4 @@
+import useBusinessData from "@/components/store/useBusinessData.ts";
 import {
   ExplorePages,
   useExploreStore,
@@ -11,7 +12,7 @@ import type {
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 export function useIsExplorePage() {
   const { toggleExplorePages } = useExploreStore((s) => ({
@@ -31,8 +32,7 @@ export function useIsExplorePage() {
 }
 
 export const useOutletInfo = () => {
-  const businessId = useParams()?.businessId;
-  const hotelId = useParams()?.hotelId;
+  const businessId = useBusinessData(s=>s.outletInfo?.businessId)
   const { socialMediaLinks, setSocialMediaLinks } = useExploreTemp((s) => ({
     socialMediaLinks: s.socialMediaLinks,
     setSocialMediaLinks: s.setSocialMediaLinks,
@@ -47,7 +47,7 @@ export const useOutletInfo = () => {
   const getAllBizInfo = async () => {
     return await apiRpc.businesses.outletInfo[":businessId"].$get({
       param: {
-        businessId: businessId || hotelId,
+        businessId: businessId,
       },
     });
   };
@@ -98,14 +98,14 @@ export const useOutletInfo = () => {
   const { isLoading: isBizLoading } = useQuery({
     queryKey: ["bizInfo"],
     queryFn: fetchBizInfo,
-    enabled: !!businessId || !!hotelId,
+    enabled: !!businessId,
   });
   return { isBizLoading };
 };
 
 export const useUniquelyYours = () => {
-  const businessId = useParams()?.businessId;
-  const hotelId = useParams()?.hotelId;
+  const businessId = useBusinessData(s=>s.outletInfo?.businessId)
+
   const { setUniquelyDishes } = useExploreStore((s) => ({
     setUniquelyDishes: s.setUniquelyDishes,
   }));
@@ -116,7 +116,7 @@ export const useUniquelyYours = () => {
   const fetchUniquelyYours = async () => {
     const res = await apiRpc.dishes.uniquelyDishes[":businessId"].$get({
       param: {
-        businessId: businessId || hotelId,
+        businessId: businessId || "",
       },
     });
     const response: IBannerResponse = await res.json();
@@ -148,15 +148,15 @@ export const useUniquelyYours = () => {
 };
 
 export const useBanners = () => {
-  const businessId = useParams()?.businessId;
-  const hotelId = useParams()?.hotelId;
+  const businessId = useBusinessData(s=>s.outletInfo?.businessId)
+
   const { setBanners } = useExploreStore((s) => ({
     setBanners: s.setBanners,
   }));
   const fetchBanners = async () => {
     const res = await apiRpc.settings.banners[":businessId"].$get({
       param: {
-        businessId: businessId || hotelId,
+        businessId: businessId || "",
       },
     });
     const response = await res.json();
@@ -169,7 +169,7 @@ export const useBanners = () => {
   const { isLoading: bannersLoading } = useQuery({
     queryKey: ["banners", businessId],
     queryFn: fetchBanners,
-    enabled: !!businessId || !!hotelId,
+    enabled: !!businessId ,
   });
 
   return { bannersLoading };

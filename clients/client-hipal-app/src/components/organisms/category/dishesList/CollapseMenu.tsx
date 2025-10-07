@@ -34,8 +34,8 @@ const filterDishes = (visibleDishes: DishType[], isActiveDishType: string) => {
 const CollapseMenu: FC<CollapseMenuProps> = ({
   parentCategories,
   childCategories,
-  primaryColor = "#ec4899",
-  secondaryColor = "#fce7f3",
+  primaryColor = "#641626",
+  secondaryColor = "#F9E9C7",
 }) => {
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(
     parentCategories[0]?._id || null,

@@ -6,7 +6,6 @@ import type {
 import { apiRpc } from "@hi/common";
 import type { ILoyaltySetting } from "@/components/store/useLoyaltyData";
 import { getBusinessData } from "../commonApis";
-import { updateTheme } from "@/components/utils/themes";
 
 export const getInfoForHotel = async (
   businessIdOrCustomLink: string,

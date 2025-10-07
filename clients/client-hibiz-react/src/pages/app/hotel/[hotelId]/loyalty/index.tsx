@@ -40,7 +40,6 @@ const Loyalty = () => {
   }));
 
   const businessId = useBusinessData((s) => s.outletInfo?.businessId) || "";
-  const businessData = useBusinessData((s) => s.outletInfo);
 
   const getLoyaltyData = async () => {
     const response = await apiRpc.businesses[":businessId"].loyalty.$get({

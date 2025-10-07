@@ -36,15 +36,13 @@ export default function BulkEscalationAssignmentPanel({
   const [query, setQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [level, setLevel] = useState<1 | 2 | 3>(1);
-  const [minutes, setMinutes] = useState<number>(5); // will be synced from levelDoc below
+  const [minutes, setMinutes] = useState<number>(5);
 
-  // currently selected level document
   const levelDoc = useMemo(
     () => levelsData.find((l) => l.level === level),
     [levelsData, level],
   ) as IHotelStaffLevel | undefined;
 
-  // Pull minutes from the selected level (supports either nextLevelTime or nextLevelDelayMinutes)
   const levelMinutes = useMemo(() => {
     const raw =
       (levelDoc as any)?.nextLevelTime ??
@@ -52,17 +50,14 @@ export default function BulkEscalationAssignmentPanel({
     return Number.isFinite(raw) ? Number(raw) : undefined;
   }, [levelDoc]);
 
-  // Keep minutes input in sync with selected level's stored value
   useEffect(() => {
     if (typeof levelMinutes === "number") {
       setMinutes(levelMinutes);
     } else {
-      // fallback if the level has no saved value yet
       setMinutes(5);
     }
   }, [levelMinutes, level]);
 
-  // membership lookup per level — robustly handle object or string ids
   const assignedSets = useMemo(() => {
     const map: Record<1 | 2 | 3, Set<string>> = {
       1: new Set(),
@@ -82,24 +77,21 @@ export default function BulkEscalationAssignmentPanel({
   const getRole = (s: IHotelStaff) =>
     s.customRole?.[0]?.role?.trim() || "Unassigned";
 
-  // All roles + counts (for the role chips)
   const roleIndex = useMemo(() => {
     const map = new Map<string, number>();
     for (const s of staffList) {
       const r = getRole(s);
       map.set(r, (map.get(r) || 0) + 1);
     }
-    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0])); // [role, count][]
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   }, [staffList]);
 
-  // Slug for heading IDs
   const slug = (s: string) =>
     s
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, "");
 
-  // 1) Search filter only
   const searchFiltered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return staffList;
@@ -110,13 +102,11 @@ export default function BulkEscalationAssignmentPanel({
     );
   }, [query, staffList]);
 
-  // 2) Apply role filter on top of search
   const filtered = useMemo(() => {
     if (roleFilter === "ALL") return searchFiltered;
     return searchFiltered.filter((s) => getRole(s) === roleFilter);
   }, [searchFiltered, roleFilter]);
 
-  // 3) Group by role for display
   const groupedByRole = useMemo(() => {
     const map = new Map<string, IHotelStaff[]>();
     for (const s of filtered) {
@@ -124,10 +114,9 @@ export default function BulkEscalationAssignmentPanel({
       if (!map.has(r)) map.set(r, []);
       map.get(r)!.push(s);
     }
-    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0])); // [role, staff[]][]
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   }, [filtered]);
 
-  // Eligible to add = not already in the selected level
   const eligibleFilteredIds = useMemo(
     () =>
       filtered.map((s) => s._id).filter((id) => !assignedSets[level].has(id)),
@@ -159,7 +148,6 @@ export default function BulkEscalationAssignmentPanel({
     [selectedIds, assignedSets, level],
   );
 
-  // maps for preview panes
   const staffMap = useMemo(() => {
     const m = new Map<string, IHotelStaff>();
     for (const s of staffList) m.set(s._id, s);
@@ -170,7 +158,6 @@ export default function BulkEscalationAssignmentPanel({
     .map((id) => staffMap.get(id))
     .filter(Boolean) as IHotelStaff[];
 
-  // current members of selected level (read-only)
   const currentMembersObjects =
     (levelDoc?.staffIds ?? []).map((s: any) => ({
       _id: typeof s === "string" ? s : s._id,
@@ -178,7 +165,6 @@ export default function BulkEscalationAssignmentPanel({
       phone: typeof s === "string" ? "" : s.phone,
     })) ?? [];
 
-  // ADD handler only
   const handleAdd = async () => {
     if (!businessId) return;
     if (!levelDoc?._id)
@@ -190,7 +176,7 @@ export default function BulkEscalationAssignmentPanel({
         levelId: levelDoc._id,
         businessId,
         staffIds: selectedForAdd,
-        nextLevelTime: minutes, // minutes input is synced from levelDoc or user-changed
+        nextLevelTime: minutes,
       });
       toast.success(`Added ${selectedForAdd.length} staff to L${level}`);
       onClose();
@@ -229,7 +215,6 @@ export default function BulkEscalationAssignmentPanel({
         </div>
       ) : (
         <div className="space-y-5">
-          {/* Controls */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Selection</CardTitle>
@@ -259,9 +244,9 @@ export default function BulkEscalationAssignmentPanel({
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="mt-2">Level</Label>
-                <div className="flex gap-2">
+              <div className="">
+                <Label className="">Level</Label>
+                <div className="flex gap-2 mt-1">
                   {[1, 2, 3].map((lv) => (
                     <Button
                       key={lv}
@@ -302,7 +287,6 @@ export default function BulkEscalationAssignmentPanel({
                   </div>
                 </div>
 
-                {/* Counters */}
                 <div className="text-xs text-muted-foreground mt-2 space-y-1">
                   <div>
                     Already in L{level}:{" "}
@@ -321,9 +305,7 @@ export default function BulkEscalationAssignmentPanel({
             </CardContent>
           </Card>
 
-          {/* Details panes */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Current members of selected level — read-only */}
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
@@ -354,8 +336,6 @@ export default function BulkEscalationAssignmentPanel({
                 )}
               </CardContent>
             </Card>
-
-            {/* Selected list preview (from the search list) */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">
@@ -384,8 +364,6 @@ export default function BulkEscalationAssignmentPanel({
               </CardContent>
             </Card>
           </div>
-
-          {/* Selectable staff list */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
@@ -393,7 +371,6 @@ export default function BulkEscalationAssignmentPanel({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {/* Role quick filter chips */}
               <div className="flex items-center gap-2 overflow-x-auto p-2 mb-3 border-b">
                 <Button
                   variant={roleFilter === "ALL" ? "default" : "outline"}
@@ -402,7 +379,10 @@ export default function BulkEscalationAssignmentPanel({
                   className={cn(roleFilter === "ALL" && "ring-2 ring-primary")}
                 >
                   All{" "}
-                  <Badge variant="secondary" className="ml-2">
+                  <Badge
+                    variant={roleFilter === "ALL" ? "default" : "outline"}
+                    className="ml-2"
+                  >
                     {staffList.length}
                   </Badge>
                 </Button>
@@ -416,14 +396,16 @@ export default function BulkEscalationAssignmentPanel({
                     className={cn(roleFilter === role && "ring-2 ring-primary")}
                   >
                     {role}{" "}
-                    <Badge variant={roleFilter === role ? "default" : "outline"} className="ml-2">
+                    <Badge
+                      variant={roleFilter === role ? "default" : "outline"}
+                      className="ml-2"
+                    >
                       {count}
                     </Badge>
                   </Button>
                 ))}
               </div>
 
-              {/* When filtering to one role, still show its heading; when "ALL", show all groups */}
               {groupedByRole.length === 0 ? (
                 <div className="text-sm text-muted-foreground">
                   No staff match your search.
@@ -517,8 +499,8 @@ export default function BulkEscalationAssignmentPanel({
       )}
 
       <AdvancedBottomButton
-        fixed
-        maxWidth="36rem"
+        fixed={true}
+        maxWidth="30rem"
         buttons={[
           {
             text: "Back",

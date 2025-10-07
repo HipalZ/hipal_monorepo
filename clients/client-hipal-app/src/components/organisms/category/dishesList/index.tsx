@@ -22,23 +22,22 @@ interface IDishesProps {
   menuLayout: IMenuLayout;
 }
 
-const DishesList: FC<IDishesProps> = ({
+const DishesList = ({
   childCategory,
   parentCategory,
   menuLayout,
 }: IDishesProps) => {
   const { isSearchActive } = useSearch();
 
-  const primaryColor = menuLayout?.primaryColor || "#ec4899";
-  const secondaryColor = menuLayout?.secondaryColor || "#fce7f3";
-
-  const categoryLayout = menuLayout?.categoryLayout;
+  const primaryColor = menuLayout?.primaryColor || "#641626";
+  const secondaryColor = menuLayout?.secondaryColor || "#F9E9C7";
+  const categoryLayout = menuLayout?.categoryLayout || 1;
   const isEdgeLayout = categoryLayout === 1;
   const isClassicLayout = categoryLayout === 2;
   const isCollapseLayout = categoryLayout === 3;
 
   const isHorizontalCard = menuLayout?.cardLayout === 1;
-  const { setDishes } = useDishesStore();
+  const setDishes = useDishesStore((s) => s.setDishes);
 
   const subTypes = useMemo(() => {
     const hasVisibleDishes = (category: CategoryType): boolean => {

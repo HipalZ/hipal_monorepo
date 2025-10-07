@@ -1,7 +1,7 @@
 import { memo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import {  FaArrowRight } from "react-icons/fa";
 import { PiSealWarningFill } from "react-icons/pi";
 import useBusinessData from "@/components/store/useBusinessData";
 import {
@@ -58,7 +58,6 @@ const Business = () => {
         <header className="linear_gradient_background">
           <MemoizedHeader
             title={businessData?.name}
-            leftIcon={<FaArrowLeft />}
             onBack={handleBack}
           />
         </header>

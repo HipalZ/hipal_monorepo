@@ -19,6 +19,9 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
 import useTableData from "@/components/store/useTableData";
+import { useAuthTableUser } from "../../hooks/usePayments";
+import HiCodeValidate from "../../organisms/cart/hicodeValidate";
+import ItemDescriptionPopup from "../../atoms/dishDescription/itemDescription";
 
 const MemoCart = dynamic(() => import("@/components/organisms/cart"), {
   ssr: false,
@@ -103,7 +106,10 @@ export default function BottomButton({
   const inputModal = useCart((s) => s.inputModal);
   const setInputModal = useCart((s) => s.setInputModal);
   const setCartPage = useCart((s) => s.setCartPage);
-
+  const { authTableUser } = useAuthTableUser();
+  const hiCodePopupBeforeBill = useCart((s) => s.hiCodePopupBeforeBill);
+  const setHiCodePopupBeforeBill = useCart((s) => s.setHiCodePopupBeforeBill);
+  const userDetails = useLogin((s) => s.userDetails);
   const { setCheckLogin } = usePaymentStore();
   const customLink = useParams()?.businessId || "";
   const { subscribeModal, reviewPopup } = useLogin((s) => ({
@@ -144,6 +150,25 @@ export default function BottomButton({
       router.push(`/${customLink}/loyalty`);
     }
   }, [accessToken, setDirection, setCheckLogin, customLink]);
+
+  const promptHiCode = useCallback(async () => {
+    if (!accessToken && !userDetails?._id) {
+      setCheckLogin(true);
+      return;
+    }
+    if (outletInfo?.isPosEnabled) {
+      await authTableUser();
+      return;
+    }
+    setInputModal(true);
+  }, [
+    accessToken,
+    setCheckLogin,
+    outletInfo?.isPosEnabled,
+    authTableUser,
+    userDetails?._id,
+    setInputModal,
+  ]);
 
   const goBack = () => {
     if (showBack) {
@@ -211,7 +236,7 @@ export default function BottomButton({
             <MenuItem
               icon={MdAccountBalanceWallet}
               label="Pay Bill"
-              onClick={openModal}
+              onClick={promptHiCode}
               isSelected={false}
             />
           ) : (
@@ -245,6 +270,15 @@ export default function BottomButton({
         >
           <AddAmountModal />
         </BottomPopUp>
+      )}
+
+      {hiCodePopupBeforeBill && (
+        <ItemDescriptionPopup
+          show={hiCodePopupBeforeBill}
+          onClose={() => setHiCodePopupBeforeBill(false)}
+        >
+          <HiCodeValidate isOpenMyOrders={true} />
+        </ItemDescriptionPopup>
       )}
 
       {showCart && (

@@ -1,4 +1,5 @@
 import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 interface StartDatePickerProps {
   startDate: Date;
@@ -7,12 +8,12 @@ interface StartDatePickerProps {
   setValidationError: (error: string) => void;
 }
 
-const StartDatePicker: React.FC<StartDatePickerProps> = ({
+const StartDatePicker = ({
   startDate,
   endDate,
   setStartDate,
   setValidationError,
-}) => {
+}: StartDatePickerProps) => {
   return (
     <DatePicker
       selected={startDate}

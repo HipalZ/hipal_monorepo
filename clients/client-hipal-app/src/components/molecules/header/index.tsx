@@ -74,7 +74,9 @@ function Header({
             </h5>
           )}
         </h3>
-        {outletInfo?.outLetType !== "OTHER" && (
+        {(outletInfo?.outLetType === "RESTAURANT" ||
+          outletInfo?.outLetType === "MENU" ||
+          outletInfo?.outLetType === "OTHER") && (
           <motion.div
             className="mt-2 mr-2"
             initial={{ opacity: 0, y: -20 }}

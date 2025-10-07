@@ -7,13 +7,12 @@ import { useNavigate } from "react-router-dom";
 import HiAnimation from "@/components/atoms/hiClientzAnimation";
 import { usePushTokenApi, useUpdateNotifications } from "@/utils/apiService";
 import useBusinessData from "@/components/store/useBusinessData";
+import { handleNavigation } from "../../components/utils/helpers";
 
 const ViewInBizMemo = () => {
   const { savePushToken } = usePushTokenApi();
-  const { selectedBiz, captainData } = useHiClientZ((s) => ({
-    selectedBiz: s.selectedBiz,
-    captainData: s.captainData,
-  }));
+  const selectedBiz = useHiClientZ((s) => s.selectedBiz);
+  const captainData = useHiClientZ((s) => s.captainData);
   const { updateNotificationsApi } = useUpdateNotifications();
   const outletInfo = useBusinessData((s) => s?.outletInfo);
   const businessId = selectedBiz?.businessId?._id;
@@ -31,17 +30,12 @@ const ViewInBizMemo = () => {
   const navigateToBiz = async () => {
     await savePushToken();
     await updateNotificationsApi(true);
-    if (!outletInfo?.isPosEnabled && outletInfo?.outLetType !== "HOTEL") {
-      navigate(`/${businessId}/navigate`);
-    } else if (outletInfo?.outLetType === "HOTEL") {
-      navigate(`/hotel/${businessId}/`);
-    } else {
-      navigate(`/${businessId}/alerts`);
-    }
+    const link = handleNavigation(outletInfo?.outLetType, businessId);
+    navigate(link);
   };
 
   return (
-    <main className="relative flex flex-col h-screen">
+    <main className="relative flex flex-col h-screen overflow-auto">
       <article className="absolute flex justify-center my-10 transform -translate-x-1/2 -translate-y-1/2 left-1/2">
         <img src={logo} alt="a" width={32} height={20} />
         &nbsp;
@@ -52,15 +46,12 @@ const ViewInBizMemo = () => {
       {!showMainComponent ? (
         <HiAnimation />
       ) : (
-        <article
-          className="absolute left-1/2 top-1/2 m-auto flex min-w-[10rem] 
-      max-w-[10rem] -translate-x-1/2 -translate-y-1/2 transform flex-col items-center"
-        >
+        <article className="absolute left-1/2 top-1/2 m-auto flex min-w-[10rem] max-w-[10rem] -translate-x-1/2 -translate-y-1/2 transform flex-col items-center">
           <span className="wave-hand text-[2rem]">👋</span>
           <h1 className="text-3xl font-semibold">{captainData?.name}</h1>
           &nbsp;
           <img
-            className="border border-black rounded-full border-1"
+            className="border border-black rounded-full"
             src={selectedBiz?.businessId?.logo || hipalLogo}
             alt="logo"
             width={125}

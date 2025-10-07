@@ -1,6 +1,5 @@
-import { type Filters, useSalesStore } from "@/components/store/useSalesStore";
-import type { HistoryData } from "@/components/types/businessData";
-import { apiRpc } from "@hi/common";
+import { fetchBills } from "@/api/salesQueries.ts";
+import type { Filters } from "@/components/store/useSalesStore";
 import { useQuery } from "@tanstack/react-query";
 
 export interface salesPayload {
@@ -10,31 +9,12 @@ export interface salesPayload {
   to: string;
   appliedFilters?: Filters;
   download?: string;
+  outletType: string;
 }
 
 export const useGetallSalesByGet = (payload: salesPayload) => {
-  const { setHistoryData, setTotalSales, selectedFilters } = useSalesStore();
   if (!payload.businessId) return;
-
-  const allSalesData = async (payload: salesPayload) => {
-    const response = await apiRpc.payments[":id"].bills.$get({
-      query: {
-        ...payload,
-        appliedFilter: JSON.stringify(selectedFilters),
-      },
-      param: {
-        id: payload.businessId,
-      },
-    });
-    const data = (await response.json()).data as HistoryData;
-    if (response.status === 200) {
-      setHistoryData(data.existingPayments);
-      setTotalSales(data.totalSale);
-    }
-    return data;
-  };
-
-  const { isLoading } = useQuery({
+  const { isLoading, data } = useQuery({
     queryKey: [
       "allSalesDataByGet",
       payload.businessId,
@@ -42,15 +22,10 @@ export const useGetallSalesByGet = (payload: salesPayload) => {
       payload.to,
       payload.pageNumber,
       payload.appliedFilters,
-      JSON.stringify(selectedFilters),
     ],
-    queryFn: () => allSalesData(payload),
-    enabled:
-      !!payload.businessId &&
-      !!payload.from &&
-      !!payload.to &&
-      !!payload.pageNumber,
+    queryFn: () => fetchBills(payload),
+    enabled: !!payload.businessId && !!payload.from && !!payload.to,
   });
 
-  return { isLoading };
+  return { isLoading,data };
 };

@@ -16,6 +16,11 @@ interface IHotelRoomData {
 }
 
 export const useGetAllRooms = () => {
+  const outletType = useBusinessData((s) => s.outletInfo?.outLetType);
+  if (outletType !== "HOTEL") {
+    return;
+  }
+
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const getRooms = async () => {
     const response = await apiRpc.hotel.rooms.fetch_rooms.$get({
@@ -117,6 +122,10 @@ export const useCheckOut = () => {
 };
 
 export const useRoomAlerts = () => {
+  const outletType = useBusinessData((s) => s.outletInfo?.outLetType);
+  if (outletType !== "HOTEL") {
+    return;
+  }
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const captainData = useHiClientZ((s) => s.captainData);
   const userId = captainData?._id;
@@ -302,7 +311,16 @@ export const useReviewChat = () => {
 };
 
 export const useEscalatedAlerts = () => {
-  const { setHotelEscalationCount, setEscalatedData } = useHotelStore();
+  const outletType = useBusinessData((s) => s.outletInfo?.outLetType);
+  if (outletType !== "HOTEL") {
+    return;
+  }
+
+  // const { setHotelEscalationCount, setEscalatedData } = useHotelStore();
+  const setHotelEscalationCount = useHotelStore(
+    (s) => s.setHotelEscalationCount,
+  );
+  const setEscalatedData = useHotelStore((s) => s.setEscalatedData);
   const captainData = useHiClientZ((s) => s.captainData);
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const customRoles = captainData?.customRole ?? [];

@@ -3,10 +3,7 @@ import { useCouponz } from "../store/useCouponz";
 import { useQuery } from "@tanstack/react-query";
 
 const useUserCouponz = (businessId: string, userId: string) => {
-  const { userCouponz, setUserCouponz } = useCouponz((s) => ({
-    userCouponz: s.userCouponz,
-    setUserCouponz: s.setUserCouponz,
-  }));
+  const setUserCouponz = useCouponz((s) => s.setCouponz);
   const getUserCouponz = async () => {
     try {
       const response = await apiRpc.couponz["eligible-coupons"][":businessId"][
@@ -18,7 +15,6 @@ const useUserCouponz = (businessId: string, userId: string) => {
         },
       });
       const res = await response.json();
-      console.log("res", res);
       setUserCouponz(res.data || []);
       return res.data;
     } catch (err) {
@@ -26,13 +22,17 @@ const useUserCouponz = (businessId: string, userId: string) => {
     }
   };
 
-  const { error, isLoading } = useQuery({
+  const {
+    data: couponData,
+    error,
+    isLoading,
+  } = useQuery({
     queryKey: ["getUserCouponz", businessId, userId],
     queryFn: getUserCouponz,
     enabled: !!businessId && !!userId,
   });
 
-  return { userCouponz, error, isLoading };
+  return { couponData, error, isLoading };
 };
 
 export default useUserCouponz;

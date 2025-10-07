@@ -4,13 +4,13 @@ import { useLiteStore } from "@/components/store/useLiteStore";
 import { useSearch } from "@/components/store/useSearch";
 
 const OnlineAlerts = () => {
-  const { onlineAlertData } = useLiteStore((s) => ({
-    onlineAlertData: s.onlineAlertData,
-    isAscending: s.isAscending,
-  }));
+  const onlineAlertData = useLiteStore((s) => s.onlineAlertData);
+  const onlineCount = useLiteStore((s) => s.onlineCount);
   const { searchText } = useSearch((s) => ({
     searchText: s.searchText,
   }));
+
+  console.log("Rendering OnlineAlerts with data:", onlineAlertData);
 
   const sortedAndFilteredData = useMemo(() => {
     const data = Array.isArray(onlineAlertData) ? onlineAlertData : [];
@@ -29,9 +29,14 @@ const OnlineAlerts = () => {
     }
 
     return filteredData;
-  }, [onlineAlertData, searchText]);
+  }, [onlineAlertData, searchText, onlineCount]);
 
-  return <OnlineAlertCard onlineAlertData={sortedAndFilteredData} />;
+  return (
+    <OnlineAlertCard
+      key={onlineCount}
+      onlineAlertData={sortedAndFilteredData}
+    />
+  );
 };
 
 const OnlineAlertsMemo = memo(OnlineAlerts);

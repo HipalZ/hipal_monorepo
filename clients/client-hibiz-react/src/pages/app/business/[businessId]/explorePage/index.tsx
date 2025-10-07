@@ -7,9 +7,7 @@ import { FaArrowLeft } from "react-icons/fa";
 import MemoizedHeader from "@/components/molecules/header";
 import { BannerPage } from "@/components/utils/bannerLayouts";
 import { useBannerStore } from "@/components/store/useBannerStore";
-import {
-  useOutletInfo,
-} from "@/hooks/useExplore";
+import { useOutletInfo } from "@/hooks/useExplore";
 import { useExploreNavigation } from "@/components/helpers/explorePageHelpers";
 
 // Lazy loading components
@@ -23,20 +21,20 @@ const Banners = lazy(() => import("@/components/templates/banners"));
 const MainForm = lazy(
   () => import("@/components/templates/explorePage/mainForm"),
 );
-const BizInformation = lazy(
-  () => import("@/components/templates/explorePage/businessInformation"),
+const BizJewelleryInformation = lazy(
+  () => import("@/components/jewellery/explorePage/BusinessInfoJewellery.tsx"),
 );
+
 const LoadingSpinner = lazy(() => import("@/components/atom/loadingSpinner"));
 const HisiteHeader = lazy(() => import("@/components/molecules/hisiteHeader"));
 
 const MemoExplorePage = () => {
-  const {
-    toggleExplorePages,
-    setToggleExplorePages,
-  } = useExploreStore((state) => ({
-    toggleExplorePages: state.toggleExplorePages,
-    setToggleExplorePages: state.setToggleExplorePages,
-  }));
+  const { toggleExplorePages, setToggleExplorePages } = useExploreStore(
+    (state) => ({
+      toggleExplorePages: state.toggleExplorePages,
+      setToggleExplorePages: state.setToggleExplorePages,
+    }),
+  );
 
   const { setBannerPage } = useBannerStore((s) => ({
     setBannerPage: s.setBannerPage,
@@ -53,29 +51,27 @@ const MemoExplorePage = () => {
     setBannerPage(BannerPage.VIEW);
   }, [setToggleExplorePages, setBannerPage]);
 
-  if (isBizLoading)
-    return <LoadingSpinner />;
+  if (isBizLoading) return <LoadingSpinner />;
 
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <main>
         {toggleExplorePages === ExplorePages.MAINFORM ||
-          toggleExplorePages === ExplorePages.BIZINFO ? (
+        toggleExplorePages === ExplorePages.BIZINFO ? (
           <HisiteHeader
             onBack={handleNavigate}
-            title={`${toggleExplorePages === ExplorePages.BIZINFO
-              ? "Business Info"
-              : "Explore Page"
-              } `}
+            title={`${
+              toggleExplorePages === ExplorePages.BIZINFO
+                ? "Business Info"
+                : "Explore Page"
+            } `}
             isIconBusinessShow={false}
             classes="linear_gradient_background"
           />
         ) : null}
-        {toggleExplorePages === ExplorePages.MAINFORM && (
-          <MainForm />
-        )}
+        {toggleExplorePages === ExplorePages.MAINFORM && <MainForm />}
         {toggleExplorePages === ExplorePages.BIZINFO && (
-          <BizInformation />
+          <BizJewelleryInformation />
         )}
         {toggleExplorePages === ExplorePages.BANNERLAYOUTS && (
           <section className="max-w-[69rem] m-auto">

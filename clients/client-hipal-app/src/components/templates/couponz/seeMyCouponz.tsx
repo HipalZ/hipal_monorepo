@@ -59,7 +59,7 @@ const MemoSeeMyCouponz = () => {
   }));
 
   const redirectExplore = useCallback(() => {
-    router.push(`/${customLink}/explore`);
+    router.push(`/${customLink}`);
   }, [customLink]);
 
   const openPaymentModal = useCallback(() => {

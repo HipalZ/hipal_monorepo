@@ -11,9 +11,9 @@ import { apiRpc } from "@hi/common";
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 
-export const revalidate = 300;
-// export const dynamic = "force-dynamic";
-// export const fetchCache = "force-no-store";
+// export const revalidate = 300;
+export const dynamics = "force-dynamic";
+export const fetchCache = "force-no-store";
 
 // Dynamic Imports with Skeleton Loaders
 const AllCouponz = dynamic(

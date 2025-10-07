@@ -22,6 +22,7 @@ const SocialMediaLinks = lazy(
 const BannerSection = lazy(
   () => import("@/components/templates/explorePage/bannerSection"),
 );
+
 const ExplorePageTopSection = lazy(
   () => import("@/components/templates/explorePage/explorePageTopSection"),
 );
@@ -30,9 +31,11 @@ const UniquelyYoursPopUp = lazy(
 );
 
 const PopUp = lazy(() => import("@/components/atom/popUp"));
+
 const FooterSection = lazy(
   () => import("@/components/templates/explorePage/footerSection"),
 );
+
 const UniquelyYoursSection = lazy(
   () => import("@/components/templates/explorePage/uniquelyYoursSection"),
 );

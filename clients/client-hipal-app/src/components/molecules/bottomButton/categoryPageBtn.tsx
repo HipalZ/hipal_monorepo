@@ -26,6 +26,7 @@ import ItemDescriptionPopup from "@/components/atoms/dishDescription/itemDescrip
 import { cn } from "@/components/utils/helpers";
 import type { IMenuLayout } from "@/components/types/businessData";
 import InstructionPopup from "@/components/hotels/room/InstructionPopup";
+import MemoCart from "@/components/organisms/cart";
 
 interface CategoryPageBtnProps {
   menuLayout: IMenuLayout;
@@ -34,8 +35,8 @@ interface CategoryPageBtnProps {
 const MemoCategoryPageBtn = ({ menuLayout }: CategoryPageBtnProps) => {
   const accessToken = useUserToken.getState().accessToken;
   const { userDetails } = useLogin();
-  const primaryColor = menuLayout?.primaryColor || "#ec4899";
-  const secondaryColor = menuLayout?.secondaryColor || "#fce7f3";
+  const primaryColor = menuLayout?.primaryColor || "#641626";
+  const secondaryColor = menuLayout?.secondaryColor || "#F9E9C7";
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const { isSearchActive, setIsSearchActive, setShowHeader } = useSearch();
   const { authTableUser } = useAuthTableUser();
@@ -53,6 +54,8 @@ const MemoCategoryPageBtn = ({ menuLayout }: CategoryPageBtnProps) => {
   const setInputModal = useCart((s) => s.setInputModal);
   const setCallWaiterModal = useCart((s) => s.setCallWaiterModal);
   const setOrderPlaced = useCart((s) => s.setOrderPlaced);
+  const setShowCart = useCart((s) => s.setShowCart);
+  const showCart = useCart((s) => s.showCart);
 
   const openInstructionModal = useCartStore((s) => s.openInstructionModal);
 
@@ -69,19 +72,17 @@ const MemoCategoryPageBtn = ({ menuLayout }: CategoryPageBtnProps) => {
     setCallWaiterModal(false);
   }, [setCallWaiterModal]);
 
-  const promptHiCode = useCallback(() => {
-    setDirection("category");
+  const promptHiCode = useCallback(async () => {
     if (!accessToken && !userDetails?._id) {
       setCheckLogin(true);
       return;
     }
     if (outletInfo?.isPosEnabled) {
-      authTableUser();
+      await authTableUser();
       return;
     }
     setInputModal(true);
   }, [
-    setDirection,
     accessToken,
     setCheckLogin,
     outletInfo?.isPosEnabled,
@@ -149,103 +150,96 @@ const MemoCategoryPageBtn = ({ menuLayout }: CategoryPageBtnProps) => {
 
   return (
     <>
-      {outletInfo?.outLetType !== "OTHER" ? (
-        <AnimatePresence>
-          {!isSearchActive && (
-            <motion.section
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="px-2 sticky z-50 bottom-0 w-full max-w-[30rem] bg-[#FCFCFC] overflow-hidden py-2 text-black flex gap-2 justify-evenly"
-              style={{
-                backgroundColor: secondaryColor,
-                color: primaryColor,
-              }}
-            >
-              {/* Explore Button */}
-              <motion.div variants={itemVariants}>
-                <Link href={`/${customLink}/explore`} className="">
-                  <motion.section
-                    className="p-2 border rounded-md"
-                    style={{ borderColor: primaryColor }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <PiArrowBendUpLeftBold size={24} />
-                  </motion.section>
-                </Link>
-              </motion.div>
-
-              {/* Search Button */}
-              <motion.div
-                variants={itemVariants}
-                style={{ borderColor: primaryColor }}
-                className={cn(
-                  tableName?.length === 0
-                    ? "w-full "
-                    : "gap-1 flex items-center",
-                  "border border-[#B0B0B0] p-2 rounded-md",
-                )}
-              >
-                <motion.button
-                  type="button"
-                  onClick={openSearchModal}
-                  className={cn(
-                    tableName?.length === 0
-                      ? "w-full flex justify-center items-center"
-                      : "flex items-center",
-                    "text-sm gap-1",
-                  )}
+      <AnimatePresence>
+        {!isSearchActive && (
+          <motion.section
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="px-2 sticky z-50 bottom-0 w-full max-w-[30rem] bg-[#FCFCFC] overflow-hidden py-2 text-black flex gap-2 justify-evenly"
+            style={{
+              backgroundColor: secondaryColor,
+              color: primaryColor,
+            }}
+          >
+            {/* Explore Button */}
+            <motion.div variants={itemVariants}>
+              <Link href={`/${customLink}/explore`} className="">
+                <motion.section
+                  className="p-2 border rounded-md"
+                  style={{ borderColor: primaryColor }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <FiSearch size={24} />{" "}
-                  <span className="text-base">
-                    {tableName?.length === 0 ? "Search" : ""}
-                  </span>
-                </motion.button>
-              </motion.div>
-              {/* Call Captain Button */}
-              <motion.div
-                variants={itemVariants}
-                style={{ borderColor: primaryColor }}
-                className={cn(
-                  tableName?.length === 0
-                    ? "hidden"
-                    : "gap-1 flex items-center",
-                  "border border-[#B0B0B0] p-2 rounded-md",
-                )}
-              >
-                <motion.button
-                  type="button"
-                  onClick={triggerCallWaiter}
-                  className={cn(
-                    tableName?.length === 0
-                      ? "w-full flex justify-center items-center"
-                      : "flex items-center",
-                    "text-sm gap-1",
-                  )}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <BsHandIndexThumb size={24} />
-                  <span className="text-sm">Call Captain</span>
-                </motion.button>
-              </motion.div>
+                  <PiArrowBendUpLeftBold size={24} />
+                </motion.section>
+              </Link>
+            </motion.div>
 
-              {/* TimeBadge */}
-              {tableName?.length > 0 && (
-                <motion.div variants={itemVariants}>
-                  <TimeBadge onClick={promptHiCode} />
-                </motion.div>
+            {/* Search Button */}
+            <motion.div
+              variants={itemVariants}
+              style={{ borderColor: primaryColor }}
+              className={cn(
+                tableName?.length === 0 ? "w-full " : "gap-1 flex items-center",
+                "border border-[#B0B0B0] p-2 rounded-md",
               )}
-            </motion.section>
-          )}
-        </AnimatePresence>
-      ) : (
-        <BottomButton selected={"catalogue"} showBack />
-      )}
+            >
+              <motion.button
+                type="button"
+                onClick={openSearchModal}
+                className={cn(
+                  tableName?.length === 0
+                    ? "w-full flex justify-center items-center"
+                    : "flex items-center",
+                  "text-sm gap-1",
+                )}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <FiSearch size={24} />{" "}
+                <span className="text-base">
+                  {tableName?.length === 0 ? "Search" : ""}
+                </span>
+              </motion.button>
+            </motion.div>
+            {/* Call Captain Button */}
+            <motion.div
+              variants={itemVariants}
+              style={{ borderColor: primaryColor }}
+              className={cn(
+                tableName?.length === 0 ? "hidden" : "gap-1 flex items-center",
+                "border border-[#B0B0B0] p-2 rounded-md",
+              )}
+            >
+              <motion.button
+                type="button"
+                onClick={triggerCallWaiter}
+                className={cn(
+                  tableName?.length === 0
+                    ? "w-full flex justify-center items-center"
+                    : "flex items-center",
+                  "text-sm gap-1",
+                )}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <BsHandIndexThumb size={24} />
+                <span className="text-sm">Call Captain</span>
+              </motion.button>
+            </motion.div>
+
+            {/* TimeBadge */}
+            {tableName?.length > 0 && (
+              <motion.div variants={itemVariants}>
+                <TimeBadge onClick={promptHiCode} />
+              </motion.div>
+            )}
+          </motion.section>
+        )}
+      </AnimatePresence>
+
       {hiCodePopupBeforeBill && (
         <ItemDescriptionPopup
           show={hiCodePopupBeforeBill}
@@ -309,6 +303,11 @@ const MemoCategoryPageBtn = ({ menuLayout }: CategoryPageBtnProps) => {
           </motion.div>
         )}
       </AnimatePresence>
+      {showCart && (
+        <BottomPopUp hide show={showCart} onClose={() => setShowCart(false)}>
+          <MemoCart />
+        </BottomPopUp>
+      )}
     </>
   );
 };

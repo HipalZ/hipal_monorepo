@@ -18,15 +18,13 @@ import SmartWatch from "@/assets/payment/SmartWatch.png";
 
 const MemoPaymentModes = () => {
   const { handleCreateOrder } = usePayments();
-  const {
-    isLoading,
-    billValue,
-    claimedCoins,
-    claimCouponz,
-    tips,
-    merchantDetails,
-    billData,
-  } = usePaymentStore();
+  const isLoading = usePaymentStore((s) => s.isLoading);
+  const billValue = usePaymentStore((s) => s.billValue);
+  const claimedCoins = usePaymentStore((s) => s.claimedCoins);
+  const claimCouponz = usePaymentStore((s) => s.claimCouponz);
+  const tips = usePaymentStore((s) => s.tips);
+  const merchantDetails = usePaymentStore((s) => s.merchantDetails);
+  const billData = usePaymentStore((s) => s.billData);
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const total = outletInfo?.isPosEnabled
     ? billData?.total

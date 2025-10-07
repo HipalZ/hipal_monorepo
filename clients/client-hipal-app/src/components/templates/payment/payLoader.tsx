@@ -2,7 +2,11 @@ import React, { memo } from "react";
 import hipalLoader from "@/assets/hipalLoader.png";
 import Image from "next/image";
 
-const PayLoader = ({ selectedMode }) => {
+interface PayLoaderProps {
+  selectedMode?: "ONLINE" | "OFFLINE" | "WALLET" | "UPI" | "CARD" | "CASH";
+}
+
+const PayLoader = ({ selectedMode }: PayLoaderProps) => {
   return (
     <section className="relative h-[70vh] overflow-hidden">
       <article className="hipal_loader">
@@ -14,7 +18,7 @@ const PayLoader = ({ selectedMode }) => {
       </center>
       <center className="mx-6 text-sm opacity-50">
         We are processing your payment{" "}
-        {`${selectedMode === "ONLINE" ? "by Razor pay" : ""}`} please wait.
+        {selectedMode && `using ${selectedMode}`} please wait.
       </center>
     </section>
   );

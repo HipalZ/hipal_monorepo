@@ -1,33 +1,36 @@
 import { useMerchantDetails } from "@/components/hooks/useMerchantSecret";
-import { useGetBill, useGetOrderId } from "@/components/hooks/usePayments";
+import { useGetOrderId } from "@/components/hooks/usePayments";
 import { useUserCoinz } from "@/components/hooks/useUserCoinz";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import useBusinessDetails from "@/components/store/useBusinessDetails";
 import { useCart } from "@/components/store/useCart";
 import useLoyaltyData from "@/components/store/useLoyaltyData";
 import { usePaymentStore } from "@/components/store/usePaymentStore";
-import useTableData from "@/components/store/useTableData";
 import type { IBusinessData } from "@/components/types/businessData";
 import { cn } from "@/components/utils/helpers";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { memo, useCallback, useEffect } from "react";
 import { BiArrowBack } from "react-icons/bi";
+import { useOrderStore } from "@/components/store/useOrder";
+import { paymentBack } from "@/utils/helper";
 
 const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
   useMerchantDetails();
-  // useGetBill();
   useGetOrderId();
   useUserCoinz(data?.loyalty?.loyaltyId || "");
   const pathName = usePathname();
   const { setShowCart } = useCart();
   const setBusinessData = _useAllBusiness((s) => s.setData);
   const { setBusinessDetails } = useBusinessDetails();
+  const clearAll = useOrderStore((s) => s.clearAll);
   const router = useRouter();
-  const customLink = useParams()?.businessId as string;
-  const tableName = useTableData((s) => s.tableName);
+  const customLink = useParams()?.businessId || "";
   const { setLoyaltySetting } = useLoyaltyData();
   const { billValue, setEditBillModal } = usePaymentStore();
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
+
+  const selectedMode = usePaymentStore((s) => s.selectedMode);
+  const setSelectedMode = usePaymentStore((s) => s.setSelectedMode);
 
   useEffect(() => {
     setBusinessData(data);
@@ -52,10 +55,10 @@ const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
     setEditBillModal,
   ]);
 
-  const { selectedMode, setSelectedMode } = usePaymentStore((s) => ({
-    selectedMode: s.selectedMode,
-    setSelectedMode: s.setSelectedMode,
-  }));
+  const handleLink = useCallback(() => {
+    const link = paymentBack(customLink, outletInfo.outLetType);
+    router.push(link);
+  }, [router, customLink, outletInfo]);
 
   const handleBack = useCallback(() => {
     switch (selectedMode) {
@@ -64,12 +67,13 @@ const MemoPaymentBack = ({ data }: { data: IBusinessData }) => {
       case "OFFLINE":
         return setSelectedMode("INVOICE");
       case "INVOICE":
-        router.push(`/${customLink}/category?tableName=${tableName}`);
+        clearAll()
+        handleLink();
         break;
       default:
         break;
     }
-  }, [selectedMode, customLink, router, setSelectedMode]);
+  }, [selectedMode, setSelectedMode, clearAll]);
 
   return (
     <>

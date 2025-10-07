@@ -24,6 +24,7 @@ import {
 } from "../../../utils/jewellery/common";
 import type { MerchantConfig } from "../../../utils/razorpay-wrapper";
 import { respond } from "../../../utils/response";
+import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
 
 const webhookRouter = new Hono()
   .post("/razorpay_webhook/:merchantId", async (c) => {
@@ -73,6 +74,8 @@ const webhookRouter = new Hono()
         return respond(c, "Invalid signature", true, 200, {});
       }
 
+      console.log("body", body);
+
       const bodyResult = jewelleryRazorpayWebhookBodySchema.safeParse(body);
 
       if (!bodyResult.success) {
@@ -81,10 +84,13 @@ const webhookRouter = new Hono()
 
       //@ts-ignore
       const { event, payload } = bodyResult.data;
+      console.log("Razorpay Webhook Event:", event);
 
       const getOrder = await JewelleryOrder.findOne({
-        razorpayOrderId: payload.payment.entity.orderId,
+        razorpayOrderId: payload.payment.entity.order_id,
       });
+
+      console.log("body", body);
 
       const businessLoyalty = await LoyaltySettings.findOne({
         businessId: getOrder?.businessId,
@@ -133,6 +139,9 @@ const webhookRouter = new Hono()
         const paymentAlreadyExist = await JewelleryPayment.findOne({
           razorpayEventId: razorpayEventId,
         });
+
+        console.log("paymentAlreadyExist", paymentAlreadyExist);
+        console.log("getOrder", getOrder);
 
         if (!paymentAlreadyExist && getOrder) {
           const claimCoins = Number(getOrder?.claimedCoins) || 0;

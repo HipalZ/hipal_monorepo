@@ -23,8 +23,8 @@ interface RecommendedDishesProps {
 function RecommendedDishes({
   recommendations,
   openModal,
-  primaryColor = "#ec4899",
-  secondaryColor = "#fce7f3",
+  primaryColor = "#641626",
+  secondaryColor = "#F9E9C7",
 }: RecommendedDishesProps) {
   // Use useMemo to prepare the dishes for rendering
   const { setSelectedDish } = useActiveClass();

@@ -15,28 +15,33 @@ import { useCouponz } from "@/components/store/useCouponz";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 import { useCallTheCaptain } from "@/components/hooks/useCartHook";
 import CommonBottomButton from "@/components/atoms/bottomButton";
-import { usePayments } from "@/components/hooks/usePayments";
-import { useMutation } from "@tanstack/react-query";
+import { useJewelleryOrderCreate } from "@/components/hooks/useOrderCreate";
+import { useOrderStore } from "../../store/useOrder";
 
-const AddAmountModal = memo(() => {
+interface AddAmountModalProps {
+  onClose?: () => void;
+}
+
+const AddAmountModal = memo(({ onClose }: AddAmountModalProps) => {
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const business = useBusinessDetails((s) => s.businessDetails);
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
   const { mutate, isPending } = useCallTheCaptain();
-  const {
-    billValue,
-    setBillValue,
-    setEditBillModal,
-    setClaimCouponz,
-    setClaimedCoins,
-    setCustomTip,
-    setTips,
-    setSelectedTip,
-    setShowInput,
-    setIsTipActive,
-  } = usePaymentStore();
+  const billValue = usePaymentStore((s) => s.billValue);
+  const setBillValue = usePaymentStore((s) => s.setBillValue);
+  const setEditBillModal = usePaymentStore((s) => s.setEditBillModal);
+  const setClaimCouponz = usePaymentStore((s) => s.setClaimCouponz);
+  const setClaimedCoins = usePaymentStore((s) => s.setClaimedCoins);
+  const setCustomTip = usePaymentStore((s) => s.setCustomTip);
+  const setTips = usePaymentStore((s) => s.setTips);
+  const setSelectedTip = usePaymentStore((s) => s.setSelectedTip);
+  const setShowInput = usePaymentStore((s) => s.setShowInput);
+  const setIsTipActive = usePaymentStore((s) => s.setIsTipActive);
+  const outLetType = outletInfo?.outLetType;
+  const { mutateAsync, isPending: jewelleryPending } =
+    useJewelleryOrderCreate();
 
   const { setAvailedCoupon } = useCouponz((s) => ({
     setAvailedCoupon: s.setAvailedCoupon,
@@ -52,27 +57,20 @@ const AddAmountModal = memo(() => {
   };
   const { tableName } = useTableData();
 
-  const proceedToPayment = useCallback(() => {
-    if (billValue === 0) {
-      toast.error("Please enter amount");
-      return;
-    }
-    setLoading(true);
-    if (billValue > 0) {
-      setIsPayment(false);
-      setEditBillModal(false);
-      setClaimCouponz(0);
-      setClaimedCoins(0);
-      setSelectedTip("");
-      setCustomTip("");
-      setShowInput(false);
-      setIsTipActive(false);
-      setTips(0);
-      setAvailedCoupon({});
-      router.push(`/${customLink}/payment`);
-    }
+  const normalFlow = useCallback(() => {
+    setIsPayment(false);
+    setEditBillModal(false);
+    setClaimCouponz(0);
+    setClaimedCoins(0);
+    setSelectedTip("");
+    setCustomTip("");
+    setShowInput(false);
+    setIsTipActive(false);
+    setTips(0);
+    setAvailedCoupon({});
+    // onClose?.();
+    router.push(`/${customLink}/payment`);
   }, [
-    billValue,
     customLink,
     router,
     setEditBillModal,
@@ -84,9 +82,35 @@ const AddAmountModal = memo(() => {
     setSelectedTip,
     setShowInput,
     setIsTipActive,
-    setTips,
     setAvailedCoupon,
+    // onClose,
   ]);
+
+  const proceedToPayment = useCallback(async () => {
+    if (billValue === 0 || billValue < 0) {
+      toast.error("Please enter amount");
+      return;
+    }
+    if (
+      outLetType === "RESTAURANT" ||
+      outLetType === "MENU" ||
+      outLetType === "OTHER"
+    ) {
+      setLoading(true);
+      normalFlow();
+    }
+    if (outLetType === "JEWELLERY") {
+      const res = await mutateAsync({
+        billValue: billValue,
+        businessId: businessId,
+        userId: userDetails!._id,
+      });
+      if (res.status === 200) {
+        setLoading(true);
+        normalFlow();
+      }
+    }
+  }, [billValue, outLetType, businessId, userDetails, mutateAsync]);
 
   const callTheWaiter = useCallback(async () => {
     if (!tableName) {
@@ -106,6 +130,7 @@ const AddAmountModal = memo(() => {
 
     mutate(payload);
   }, [businessId, tableName, name, userDetails._id, mutate]);
+
   return (
     <section className=" relative overflow-y-auto overflow-x-hidden mb-[2rem]">
       <header className="bg-base-100 h-[4.25rem] flex items-center text-primary">
@@ -160,7 +185,9 @@ const AddAmountModal = memo(() => {
       <CommonBottomButton
         fixed
         buttons={[
-          ...(outletInfo?.outLetType !== "OTHER"
+          ...(outletInfo?.outLetType === "RESTAURANT" ||
+          outletInfo?.outLetType === "MENU" ||
+          outletInfo?.outLetType === "OTHER"
             ? [
                 {
                   text: "Call Captain",
@@ -173,8 +200,8 @@ const AddAmountModal = memo(() => {
           {
             text: "Next",
             onClick: proceedToPayment,
-            disable: isPending,
-            isLoading: isPending,
+            disable: isPending || loading || jewelleryPending,
+            isLoading: isPending || loading || jewelleryPending,
           },
         ]}
       />

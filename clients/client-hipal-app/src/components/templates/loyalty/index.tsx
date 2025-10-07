@@ -21,13 +21,9 @@ import { useErrorHandling } from "@/utils/helper";
 import { toast } from "react-toastify";
 import { BottomBarSkeleton } from "@/components/atoms/paymentPageLoader";
 import Link from "next/link";
+import { getUserLoyaltyCoinz } from "../../../apis/userApis";
 const Avatar = dynamic(() => import("@/components/atoms/avatar"), {
   loading: () => <BottomBarSkeleton />,
-});
-
-const CouponzBlink = dynamic(() => import("../newPayment/couponzBlink"), {
-  ssr: false,
-  loading: () => <SkeletonLoader height={200} />,
 });
 
 const RefferalCouponz = dynamic(() => import("../newPayment/refferalCouponz"), {
@@ -37,7 +33,7 @@ const RefferalCouponz = dynamic(() => import("../newPayment/refferalCouponz"), {
 
 function LoyaltyCardPage({ data }: { data: IBusinessData }) {
   const { errorText } = useErrorHandling();
-  const router = useRouter()
+  const router = useRouter();
   const userName = useLogin((s) => s.userDetails.name);
   const [HiCode, setHiCode] = useState();
   const { userDetails, setUserCoinZ } = useLogin((s) => ({
@@ -59,14 +55,10 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
     )
       return;
 
-    const userReward = await apiRpc.users[":businessId"].getUserReward.$get({
-      param: {
-        businessId: businessDetails?._id,
-      },
-      query: {
-        userId: userDetails?._id,
-        loyaltyId: loyaltySetting?.loyaltyId,
-      },
+    const userReward = await getUserLoyaltyCoinz({
+      userId: userDetails?._id as string,
+      businessId: businessDetails?._id as string,
+      loyaltyId: loyaltySetting?.loyaltyId as string,
     });
     const response = (await userReward.json()).data;
     if (userReward.status === 404 || userReward.status === 400) {
@@ -144,7 +136,7 @@ function LoyaltyCardPage({ data }: { data: IBusinessData }) {
   });
   const goBack = () => {
     return router.back();
-  }
+  };
 
   return (
     <main

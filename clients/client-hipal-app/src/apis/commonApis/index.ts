@@ -52,6 +52,17 @@ export async function fetchCommonData(
   const settings = await settingsResponse.json();
   data["settings"] = settings?.data?.theme || {};
 
+  const outletInfoData = await apiRpc.businesses.outletInfo[":businessId"].$get(
+    {
+      param: {
+        businessId: bizId,
+      },
+    },
+  );
+
+  const outletInfo = await outletInfoData.json();
+  data["outletInfo"] = outletInfo?.data;
+
   return { data, bizId };
 }
 

@@ -11,7 +11,6 @@ import StartDatePicker from "./start";
 import EndDatePicker from "./end";
 import { FaArrowLeft } from "react-icons/fa";
 import PopUp from "../popUp";
-import "react-datepicker/dist/react-datepicker.css";
 import CommonBottomButton from "@/components/atoms/bottomButton";
 
 const formatDate = (date: Date) => {
@@ -20,7 +19,7 @@ const formatDate = (date: Date) => {
   ).padStart(2, "0")}-${date?.getFullYear()}`;
 };
 
-const DateRangePicker: React.FC = memo(() => {
+const DateRangePicker = memo(() => {
   const setInTime = useTimings((s) => s.setInTime);
   const setTimeStampStart = useTimings((s) => s.setTimeStampStart);
   const setTimeStampEnd = useTimings((s) => s.setTimeStampEnd);

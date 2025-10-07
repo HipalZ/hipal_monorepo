@@ -1,17 +1,13 @@
 import { categoryApis } from "@/apis/category";
 import dynamics from "next/dynamic";
 import SkeletonLoader from "@/components/atoms/loader/skeletonLoader";
-import type {
-  BusinessDetails,
-  IBusinessData,
-} from "@/components/types/businessData";
+import type { BusinessDetails } from "@/components/types/businessData";
 import { apiRpc } from "@hi/common";
 import LoadingSpinnerCircle from "@/components/atoms/loader";
-import { businessApis } from "@/apis/explore/index";
 
-// export const dynamic = "force-dynamic";
-// export const fetchCache = "force-no-store";
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+// export const revalidate = 300;
 
 const MenuBannerPage = dynamics(
   () => import("@/components/organisms/menuBanner"),
@@ -41,19 +37,6 @@ const CategoryPageBtn = dynamics(
 
 const LiveCart = dynamics(
   () => import("@/components/molecules/bottomButton/livecart"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-16 text-black">
-        {" "}
-        <LoadingSpinnerCircle />
-      </div>
-    ),
-  },
-);
-
-const CategoryHeader = dynamics(
-  () => import("@/components/organisms/category/categoryHeader"),
   {
     ssr: false,
     loading: () => (
@@ -164,13 +147,12 @@ export default async function Page({
   const { tableName } = searchParams;
 
   const data = await fetchData(businessId, tableName);
-  const businessData = (await businessApis.all(businessId)) as IBusinessData;
   return (
     <main>
       <div className="relative flex flex-col w-full">
         <TopBackground
           specialBanner={data?.business?.categoryTopBannerUrl}
-          businessData={businessData}
+          businessData={data}
         />
         <MenuBannerPage
           timings={data?.timings}

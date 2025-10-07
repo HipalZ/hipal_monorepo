@@ -1,14 +1,13 @@
-import HipeopleLogo from "@/assets/hibizNewLogo.png";
-import hipalHandLogo from "@/assets/login/hand.png";
-import Header from "@/components/molecules/header";
 import useBusinessData from "@/components/store/useBusinessData";
 import { useOwnerLogin } from "@/components/store/useOwnerLogin";
-import type { IBusinessData, IOutletInfo } from "@/components/types/businessData";
+import type {
+  IBusinessData,
+  IOutletInfo,
+} from "@/components/types/businessData";
 import { PAGE_TYPES, routePathsWithId } from "@/components/utils/routes";
 import { apiRpc } from "@hi/common";
 import { useQuery } from "@tanstack/react-query";
 import { memo } from "react";
-import { FaArrowLeft } from "react-icons/fa";
 import { IoWarning } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import logoPlaceholder from "@/assets/hisite/logoPlaceholder.png";
@@ -17,6 +16,7 @@ import useBusinessCtrl from "@/components/store/useBusinessCtrl";
 import type { LoyaltyType } from "@hi/db-models/src/validators";
 import { useCategoryStore } from "@/components/store/useCategoryStore";
 import { useExploreStore } from "@/components/store/useExploreStore";
+import MemoizedHeader from "@/components/molecules/header";
 
 const Business = () => {
   const setBanners = useExploreStore((s) => s.setBanners);
@@ -48,8 +48,10 @@ const Business = () => {
         businessId: id,
       },
     });
-    const response = (await res.json())
-    const outletInfo = response.data as IOutletInfo
+    const response = await res.json();
+    const outletInfo = response.data as IOutletInfo;
+
+    console.log("outletInfo", outletInfo);
     if (res.status === 200 || res.status === 201) {
       useBusinessData.getState().setOutletInfo(outletInfo);
 
@@ -59,6 +61,10 @@ const Business = () => {
 
       if (outletInfo?.outLetType === "HOTEL") {
         return navigate(`/app/hotel/${id}`);
+      }
+
+      if (outletInfo?.outLetType === "JEWELLERY") {
+        return navigate(`/app/j/${id}`, { replace: true } );
       }
     }
   };
@@ -85,45 +91,23 @@ const Business = () => {
     enabled: !!user._id,
   });
   return (
-    <section className="h-screen min-h-screen overflow-auto">
-      <div className="business_gradient">
-        <section className="sticky top-0 z-10 w-full px-0 pb-4">
-          <Header
-            leftIcon={<FaArrowLeft />}
-            centerImage={HipeopleLogo}
-            rightImage={HipeopleLogo}
-          />
-        </section>
-        <section className="business_gradient_hero_section">
-          <div className="h-[4rem] w-[4rem] rounded-full bg-[#000000] pt-4 text-center text-xl capitalize">
-            {user?.name?.charAt(0)}
-          </div>
-          <article className="pl-4">
-            <div className="flex h-[1.25rem] w-full items-center text-2xl text-[#000000]">
-              <img
-                width={16}
-                height={16}
-                src={hipalHandLogo}
-                alt="hipalHandLogo"
-              />
-              <span className="ml-2 font-bold">Hi</span>
-            </div>
-            <div className="text-base font-medium leading-8 text-[#000000]">
-              {user.name}
-            </div>
-          </article>
-        </section>
-      </div>
+    <section className="min-h-screen">
+      <section className="sticky top-0 z-10 w-full px-0">
+        <header className="linear_gradient_background">
+          <MemoizedHeader title="Businesses" />
+        </header>
+      </section>
       <div className="parent_business_cards">
         {sample?.data?.map((ele: IBusinessData) => (
           <button
             type="button"
             onClick={() => handleRoute(ele)}
             key={ele._id}
-            className={`${ele?.status || ele.isActive
-              ? "pointer-events-auto"
-              : "pointer-events-none opacity-90"
-              } child_business_card`}
+            className={`${
+              ele?.status || ele.isActive
+                ? "pointer-events-auto"
+                : "pointer-events-none opacity-90"
+            } child_business_card`}
           >
             <div className="text-xl capitalize">
               {!ele?.status && (

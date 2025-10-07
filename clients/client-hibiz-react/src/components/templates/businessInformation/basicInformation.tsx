@@ -4,6 +4,7 @@ import { lazy, memo } from "react";
 
 const Paragraph = lazy(() => import("@/components/atom/paragraph"));
 const SubHeader = lazy(() => import("@/components/atom/subHeader"));
+
 const MemoBasicInformationSection = () => {
   const { handleDescriptionChange, handleTagChange } = useBizInfoChanges();
   const { description, tags } = useExploreTemp((s) => ({

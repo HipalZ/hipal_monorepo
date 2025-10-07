@@ -5,6 +5,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 import Boundary from "./components/boundary";
 import App from "./App.tsx";
 import { Toaster } from "react-hot-toast";
+
 import "./index.css";
 
 ///

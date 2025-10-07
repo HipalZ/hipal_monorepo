@@ -14,6 +14,7 @@ import useBusinessData from "@/components/store/useBusinessData";
 import { useQuery } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
 import { NavItemTypesEnum } from "@/components/types/hiClientzData";
+import { useOnlineAlertsQuery, useCartsQuery } from "@/hooks/useHiClients";
 
 const HeaderAlerts = ({
   hide,
@@ -26,29 +27,27 @@ const HeaderAlerts = ({
   const navigate = useNavigate();
   const outletInfo = useBusinessData((s) => s.outletInfo);
   const { setIsFilterOpen } = useZonesAndTablesStore();
-  const {
-    selectedNavItem,
-    refetchOfflineAlerts,
-    refetchOnlineAlerts,
-    loading,
-  } = useLiteStore((s) => ({
-    selectedNavItem: s.selectedNavItem,
-    refetchOfflineAlerts: s.refetchOfflineAlerts,
-    refetchOnlineAlerts: s.refetchOnlineAlerts,
-    loading: s.loading,
-  }));
+  const isSlow = useLiteStore((s) => s.isSlow);
+  const selectedNavItem = useLiteStore((s) => s.selectedNavItem);
+  const loading = useLiteStore((s) => s.loading);
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
+
+  const { refetch: onlineRefetch } = useOnlineAlertsQuery(businessId, isSlow);
+  const { refetch: cartRefetch } = useCartsQuery(businessId, isSlow);
 
   const refetchData = () => {
     if (selectedNavItem === NavItemTypesEnum.ALERTS) {
-      refetchOnlineAlerts();
-      refetchOfflineAlerts();
+      onlineRefetch?.();
+    }
+    if (selectedNavItem === NavItemTypesEnum.CART) {
+      cartRefetch?.();
     }
   };
 
   const sessionStart = async () => {
     const response = await apiRpc.users.set_session.$post({
       json: {
-        businessId: selectedBiz.businessId._id,
+        businessId: businessId,
         userId: captainData._id,
       },
     });
@@ -56,13 +55,13 @@ const HeaderAlerts = ({
   };
 
   useQuery({
-    queryKey: ["session", selectedBiz.businessId._id, captainData._id],
+    queryKey: ["session", businessId, captainData._id],
     queryFn: sessionStart,
     enabled: !!captainData._id,
   });
 
   const navigateToBiz = () => {
-    navigate(`/${selectedBiz.businessId._id}/navigate`);
+    navigate(`/${businessId}/navigate`);
   };
   return (
     <header className="sticky top-0 z-10 flex items-center justify-between w-full h-16 px-6 py-4 bg-white shadow-md md:h-20">
@@ -89,14 +88,16 @@ const HeaderAlerts = ({
 
       {!hide && (
         <section className="nav">
-          <section className="flex ">
+          <section className="flex">
             <NavItems />
           </section>
         </section>
       )}
 
       <div className="flex items-center space-x-3">
-        {selectedNavItem === NavItemTypesEnum.ALERTS && !hide ? (
+        {(selectedNavItem === NavItemTypesEnum.ALERTS ||
+          selectedNavItem === NavItemTypesEnum.CART) &&
+        !hide ? (
           <HiOutlineRefresh
             onClick={refetchData}
             size={24}

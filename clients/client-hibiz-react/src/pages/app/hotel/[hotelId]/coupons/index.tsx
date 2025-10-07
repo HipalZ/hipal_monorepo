@@ -2,11 +2,9 @@ import { lazy, memo, Suspense, useCallback } from "react";
 import Hi from "@/assets/svg/hi.svg";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
 import MemoizedHeader from "@/components/molecules/header";
-import useBusinessData from "@/components/store/useBusinessData";
 import useCouponsStore, {
   type CouponFlow,
 } from "@/components/store/useCouponsStore";
-import { routeToDashboard } from "@/components/utils/routes";
 import { cn } from "@hi/common";
 import { useNavigate } from "react-router-dom";
 const Manage = lazy(() => import("@/components/templates/coupons/Manage"));

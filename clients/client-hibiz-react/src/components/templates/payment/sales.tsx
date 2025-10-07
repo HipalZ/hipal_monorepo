@@ -1,7 +1,6 @@
 import PopUp from "@/components/atom/popUp";
 import useTimings from "@/components/store/useTimings";
-import { memo, useCallback, useState } from "react";
-import { useParams } from "react-router-dom";
+import { memo, useCallback, useMemo, useState } from "react";
 import PaymentModal from "./paymentModal";
 import { CiFilter } from "react-icons/ci";
 import { RxCrossCircled } from "react-icons/rx";
@@ -15,59 +14,49 @@ import { TableView } from "./TableView";
 import { Download, LayoutGrid, Table } from "lucide-react";
 import { useSalesStore } from "@/components/store/useSalesStore";
 import SalesFilters from "./SalesFiltes";
-import { useGetallSalesByGet } from "@/hooks/useSales";
 import SalesCards from "./SalesCards";
 import ConvertIntoCsv from "./ConvertIntoCsv";
 import useBusinessData from "@/components/store/useBusinessData.ts";
+import { useGetallSalesByGet } from "@/hooks/useSales.ts";
 
 const MemoPaymentSales = () => {
-  const params = useParams();
   const { timeStampStart, timeStampEnd, selectedRange } = useTimings();
-  const {
-    open,
-    setOpen,
-    totalSales,
-    historyData,
-    viewMode,
-    setViewMode,
-    salesData,
-    setSalesData,
-    openFilterModal,
-    setOpenFilterModal,
-    selectedFilters,
-    setSelectedFilters,
-    downloadCsv,
-    setDownloadCsv,
-  } = useSalesStore((s) => ({
-    open: s.open,
-    setOpen: s.setOpen,
-    totalSales: s.totalSales,
-    historyData: s.historyData,
-    viewMode: s.viewMode,
-    setViewMode: s.setViewMode,
-    salesData: s.salesData,
-    setSalesData: s.setSalesData,
-    openFilterModal: s.openFilterModal,
-    setOpenFilterModal: s.setOpenFilterModal,
-    selectedFilters: s.selectedFilters,
-    setSelectedFilters: s.setSelectedFilters,
-    downloadCsv: s.downloadCsv,
-    setDownloadCsv: s.setDownloadCsv,
-  }));
+  const open = useSalesStore((s) => s.open);
+  const setOpen = useSalesStore((s) => s.setOpen);
+  const totalSales = useSalesStore((s) => s.totalSales);
+  const historyData = useSalesStore((s) => s.historyData);
+  const viewMode = useSalesStore((s) => s.viewMode);
+  const setViewMode = useSalesStore((s) => s.setViewMode);
+  const salesData = useSalesStore((s) => s.salesData);
+  const setSalesData = useSalesStore((s) => s.setSalesData);
+  const openFilterModal = useSalesStore((s) => s.openFilterModal);
+  const setOpenFilterModal = useSalesStore((s) => s.setOpenFilterModal);
+  const selectedFilters = useSalesStore((s) => s.selectedFilters);
+  const setSelectedFilters = useSalesStore((s) => s.setSelectedFilters);
+  const downloadCsv = useSalesStore((s) => s.downloadCsv);
+  const setDownloadCsv = useSalesStore((s) => s.setDownloadCsv);
   const [currentSalesIndex, setCurrentSalesIndex] = useState(0);
   const businessId = useBusinessData((s) => s.outletInfo?.businessId);
+  const outletType = useBusinessData((s) => s.outletInfo?.outLetType);
+  const pageNumber = usePaginationStore((s) => s.pageNumber);
+  const setHistoryData = useSalesStore((s) => s.setHistoryData);
+  const setTotalSales = useSalesStore((s) => s.setTotalSales);
+  console.log("selectedFilters", selectedFilters);
 
-  const { pageNumber } = usePaginationStore((s) => ({
-    pageNumber: s.pageNumber,
-  }));
-
-  const { isLoading } = useGetallSalesByGet({
+  const { isLoading, data } = useGetallSalesByGet({
     businessId: businessId || "",
     pageNumber: pageNumber.toString(),
     from: timeStampStart.toString(),
     to: timeStampEnd.toString(),
     appliedFilters: selectedFilters,
+    outletType: outletType || "",
   });
+
+  useMemo(() => {
+    if (!data) return;
+    setHistoryData(data.existingPayments);
+    setTotalSales(data.totalSale);
+  }, [data, setHistoryData, setTotalSales]);
 
   const closeModel = useCallback(() => {
     setOpen(false);

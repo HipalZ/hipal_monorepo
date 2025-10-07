@@ -25,17 +25,19 @@ interface GridDishCardProps {
 
 const GridDishCard = ({
   dishData,
-  primaryColor = "#ec4899",
-  secondaryColor = "#fce7f3",
+  primaryColor = "#641626",
+  secondaryColor = "#F9E9C7",
   isEdgeLayout,
 }: GridDishCardProps) => {
   const currencySymbol = _useAllBusiness(
     (s) => s.data.outletInfo?.currencySymbol,
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { cart } = useCartStore();
-  const { setSelectedDish, isSelectedDish } = useActiveClass();
-  const { setCartPage, setShowCart } = useCart();
+  const cart = useCartStore((s) => s.cart);
+  const setSelectedDish = useActiveClass((s) => s.setSelectedDish);
+  const isSelectedDish = useActiveClass((s) => s.isSelectedDish);
+  const setCartPage = useCart((s) => s.setCartPage);
+  const setShowCart = useCart((s) => s.setShowCart);
 
   // Open dish details modal
   const openDishDetails = useCallback(() => {
@@ -119,7 +121,7 @@ const GridDishCard = ({
             <MemoFoodType types={dishData?.dishTypes} />
           </div>
           <h3
-            className="text-lg font-semibold poppins-regular  leading-[1.25rem] text-black h-[3.75rem] line-clamp-3"
+            className="text-base font-semibold poppins-regular  leading-[1.25rem] text-black h-[3.75rem] line-clamp-3"
             onClick={openDishDetails}
           >
             {dishData.name}

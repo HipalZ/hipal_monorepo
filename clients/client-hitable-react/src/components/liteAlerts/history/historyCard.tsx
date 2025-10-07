@@ -1,10 +1,11 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { useLiteStore } from "@/components/store/useLiteStore";
 import type { Alert } from "@/components/types/hiClientzData";
 import { cn, timestampToDateTime } from "@/components/utils/helpers";
 import { PiCoinsFill } from "react-icons/pi";
 import { FaUser, FaUserTie } from "react-icons/fa";
 import { MdTableBar } from "react-icons/md";
+import useBusinessData from "@/components/store/useBusinessData";
 
 interface IOnlineProp {
   onlineAlertData: Alert[];
@@ -15,12 +16,24 @@ const HistoryCard = (props: IOnlineProp) => {
   const { setViewData } = useLiteStore((s) => ({
     setViewData: s.setViewData,
   }));
+  const outLetType = useBusinessData((s) => s.outletInfo?.outLetType);
   const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
 
   const handleViewMore = (alert: Alert) => {
     setViewData(alert);
     setClickViewMore(true);
   };
+
+  const orderData = useCallback(
+    (alert: Alert) => {
+      console.log("onlineAlertData", onlineAlertData);
+      if (outLetType === "JEWELLERY") {
+        return alert.orderId;
+      }
+      return alert.order_id;
+    },
+    [onlineAlertData, outLetType],
+  );
 
   return (
     <main className="grid gap-6 p-6 pb-20 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -29,6 +42,7 @@ const HistoryCard = (props: IOnlineProp) => {
           if (alert?.alertType === "WAITER") {
             return null;
           }
+          const order = orderData(alert);
           return (
             <section
               key={alert?._id}
@@ -62,26 +76,21 @@ const HistoryCard = (props: IOnlineProp) => {
                 <div className="space-y-2">
                   <p className="text-sm">
                     Bill value:{" "}
-                    <span className="font-semibold">
-                      ₹{alert?.order_id?.billValue}
-                    </span>
+                    <span className="font-semibold">₹{order?.billValue}</span>
                   </p>
                   <p className="text-sm">
                     Discount:{" "}
                     <span className="font-semibold">
-                      ₹{alert?.order_id?.claimedCoins}
+                      ₹{order?.claimedCoins}
                     </span>
                   </p>
                   <p className="text-sm">
-                    Tips:{" "}
-                    <span className="font-semibold">
-                      ₹{alert?.order_id?.tips}
-                    </span>
+                    Tips: <span className="font-semibold">₹{order?.tips}</span>
                   </p>
                   {alert?.coinsApplied && (
                     <div className="flex items-center px-3 py-1 mt-2 text-xs font-medium text-gray-800 bg-gray-100 rounded-full">
                       <PiCoinsFill className="mr-1" />
-                      {alert?.order_id?.claimedCoins} Used
+                      {order?.claimedCoins} Used
                     </div>
                   )}
                 </div>
@@ -103,9 +112,7 @@ const HistoryCard = (props: IOnlineProp) => {
                     <MdTableBar className="mr-1" />
                     {alert?.tableName}
                   </p>
-                  <p className="text-2xl font-bold">
-                    ₹{alert?.order_id?.total}
-                  </p>
+                  <p className="text-2xl font-bold">₹{order?.total}</p>
                 </div>
               </div>
 

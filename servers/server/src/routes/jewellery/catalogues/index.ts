@@ -153,7 +153,6 @@ const cataloguesRouter = new Hono()
         businessId,
         hierarchy: "CHILD",
         isDeleted: false,
-
         active: true,
         timings: {
           $elemMatch: {
@@ -183,7 +182,6 @@ const cataloguesRouter = new Hono()
     ),
     async (c) => {
       const { businessId } = c.req.param();
-      console.log("businessId", businessId);
 
       const { currentDay, currentTimeInMinutes } = indianHoursInMinutes();
 
@@ -206,6 +204,7 @@ const cataloguesRouter = new Hono()
         match: { businessId: businessId, isDeleted: false, visibility: true },
         populate: { path: "addOnIds" },
       });
+      console.log("Existing Catalogue:", existingCatalogue);
 
       return respond(c, "fetched successfully", false, 200, existingCatalogue);
     },

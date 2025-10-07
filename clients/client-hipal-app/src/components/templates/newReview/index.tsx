@@ -159,18 +159,21 @@ const MemoReviewPage = () => {
     return response?.data;
   }, [setStaffs, businessId]);
 
-  const skipUserReview = useCallback(() => {
+  const skipUserReview = () => {
+      router.push(`/${customLink}`);
+
     if (googleReviewCount === 0) {
       setShowGoogleReview(true)
     } else {
-      router.push(`/${customLink}/explore`);
+      console.log("skip review");
       flushSync(() => setShowGoogleReview(false));
+      router.push(`/${customLink}`);
     }
-  }, [googleReviewCount, setShowGoogleReview, router, customLink]);
+  }
 
   const toggleReviewPopup = useCallback(() => {
     flushSync(() => setReviewPopup(!reviewPopup));
-    router.push(`/${customLink}/explore`);
+    router.push(`/${customLink}`);
   }, [reviewPopup, setReviewPopup, router, customLink]);
 
   useQuery({
@@ -197,7 +200,7 @@ const MemoReviewPage = () => {
         <center
           onKeyDown={skipUserReview}
           onClick={skipUserReview}
-          className="absolute pb-1 mb-8 text-xs text-gray-500 underline -translate-x-1/2 left-1/2 bottom-10"
+          className="absolute z-[1000] pb-1 mb-12 text-xs text-gray-500 underline -translate-x-1/2 left-1/2 bottom-10"
         >
           Skip
         </center>

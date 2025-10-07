@@ -21,8 +21,8 @@ interface HorizontalDishCardProps {
 
 const HorizontalTileCard = ({
   dishData,
-  primaryColor = "#ec4899",
-  secondaryColor = "#fce7f3",
+  primaryColor = "#641626",
+  secondaryColor = "#F9E9C7",
 }: HorizontalDishCardProps) => {
   if (!dishData?.availability) return null;
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { apiRpc } from "@hi/common";
@@ -11,12 +11,13 @@ import { useOrderStore } from "@/components/store/useOrderData";
 import { useHiClientZ } from "@/components/store/useHiClientzData";
 import MultipleModes from "./multipleModes";
 import SingleMode from "./singleMode";
-import { useLiteStore } from "@/components/store/useLiteStore";
 import { useGetAllModes } from "@/components/hooks/useTableData";
 import { useError } from "@/components/store/useError";
 import { SettleConfirmationDialog } from "./SettleConfirmation.tsx";
 import { useConfirmSettle } from "@/components/hooks/api/useSettle.ts";
 import { useGetBill } from "@/components/hooks/useBill.ts";
+import { useFinalPopcornSettle } from "@/components/hooks/payments/useFinalSettle.ts";
+import useBusinessData from "@/components/store/useBusinessData.ts";
 
 export interface IMode {
   _id: string;
@@ -47,8 +48,7 @@ const MemoNormalSettle = ({
   const { businessId } = useParams();
   const navigate = useNavigate();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-
-  const setClickViewMore = useLiteStore((s) => s.setClickViewMore);
+  const { confirmAlert, isAlertLoading } = useFinalPopcornSettle();
   const { setError, setOpenErrorModal } = useError();
   const selectedTable = useOrderStore((s) => s.selectedTable);
   const setOpenOrderModal = useOrderStore((s) => s.setOpenOrderModal);
@@ -64,10 +64,22 @@ const MemoNormalSettle = ({
   const { isConfirming, confirmSettle } = useConfirmSettle();
   const { getBillCall } = useGetBill();
   const setSelectedBill = useOrderStore((s) => s.setSelectedBill);
-  const { removeOnlineAlert, removeOnlineCount } = useLiteStore((s) => ({
-    removeOnlineAlert: s.removeOnlineAlert,
-    removeOnlineCount: s.removeOnlineCount,
-  }));
+  const outletInfo = useBusinessData((s) => s.outletInfo);
+
+  const orderData = useMemo(() => {
+    const outletType = outletInfo?.outLetType || "OTHER";
+    switch (outletType) {
+      case "RESTAURANT":
+      case "MENU":
+      case "OTHER":
+        return alertData?.order_id;
+      case "JEWELLERY":
+      case "GROCERY":
+        return alertData?.orderId;
+      default:
+        return alertData?.order_id;
+    }
+  }, [alertData, outletInfo?.outLetType]);
 
   const captainData = useHiClientZ((s) => s.captainData);
 
@@ -132,50 +144,6 @@ const MemoNormalSettle = ({
     },
   });
 
-  const { mutateAsync: confirmAlert, isPending: isAlertLoading } = useMutation({
-    mutationFn: async (payload: {
-      id: string;
-      comment: string;
-      waiterName: string;
-      settleModes: { _id: string; name: string; amount: number }[];
-      duesUserId?: string;
-    }) => {
-      const res = await apiRpc.payments[":pid"].order[":alertId"].$put({
-        param: { alertId: payload.id },
-        json: payload,
-      });
-      if (res.status === 401 || res.status === 403) {
-        setOpenErrorModal(true);
-        setError("You are not authorized to perform this action");
-        return res.json();
-      }
-      if (res.status === 200 || res.status === 201) {
-        removeOnlineAlert(payload.id);
-        removeOnlineCount();
-        toast.success("Order confirmed successfully!");
-        setSettleModes([]);
-        setIsSplit(false);
-        closeNormalSettle();
-        setOpenOrderModal(false);
-        setClickViewMore(false);
-        setOpenDues(false);
-        setSettleModes([]);
-        setSaveDueUser(null);
-        navigate(`/${businessId}/alerts`);
-        return res.json();
-      }
-    },
-    onSuccess: (data) => {
-      if (data?.err) {
-        toast.error(data.message);
-        return;
-      }
-    },
-    onError: (error: any) => {
-      toast.error(error?.message || "Something went wrong.");
-    },
-  });
-
   const handleConfirm = async (alertData: Alert) => {
     try {
       if (settleModes.length === 0) {
@@ -184,12 +152,7 @@ const MemoNormalSettle = ({
       }
       // Validate total
       const sum = settleModes.reduce((acc, item) => acc + item.amount, 0);
-      if (
-        sum !==
-        (alertData?.order_id?.total
-          ? alertData.order_id.total
-          : billData?.total ?? 0)
-      ) {
+      if (sum !== (orderData?.total ? orderData.total : billData?.total ?? 0)) {
         toast.error("Selected amounts must match the total bill.");
         return;
       }
@@ -204,12 +167,13 @@ const MemoNormalSettle = ({
 
       if (alertData?.alertType === "OFFLINE") {
         const payload = {
-          id: alertData._id,
+          alertId: alertData._id,
           waiterName: captainData?.name,
           comment: isMultiple
             ? "Confirmed by waiter (split)."
             : "Confirmed by waiter (single).",
           settleModes,
+          staffId: captainData?._id || "",
         };
 
         if (hasDuesMode && saveDueUser?._id) {
@@ -219,7 +183,10 @@ const MemoNormalSettle = ({
           payload["npcUserId"] = saveDueUser?._id;
         }
 
-        await confirmAlert(payload);
+        const res = await confirmAlert(payload);
+        if (res.status === 200 || res.status === 201) {
+          closeNormalSettle();
+        }
       } else {
         const payload = {
           tableId: selectedTable?._id || "",
@@ -281,12 +248,7 @@ const MemoNormalSettle = ({
     <section className="mx-auto">
       <h2 className="flex items-center justify-between p-4 mb-2 text-2xl font-bold text-center">
         <span>{isSplit ? "Split Payment" : "Select Payment Mode"}</span>
-        <span>
-          ₹
-          {alertData?.order_id?.total
-            ? alertData.order_id.total
-            : billData?.total}
-        </span>
+        <span>₹{orderData?.total ? orderData.total : billData?.total}</span>
       </h2>
 
       {/* =======================
@@ -296,9 +258,7 @@ const MemoNormalSettle = ({
         <SingleMode
           paymentModes={paymentMode || []}
           billData={
-            alertData?.order_id?.total
-              ? { total: Number(alertData.order_id.total) }
-              : billData
+            orderData?.total ? { total: Number(orderData.total) } : billData
           }
         />
       )}
@@ -310,9 +270,7 @@ const MemoNormalSettle = ({
         <MultipleModes
           paymentModes={paymentMode || []}
           billData={
-            alertData?.order_id?.total
-              ? { total: Number(alertData.order_id.total) }
-              : billData
+            orderData?.total ? { total: Number(orderData.total) } : billData
           }
         />
       )}

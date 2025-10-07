@@ -27,11 +27,7 @@ import { cn, triggerConfettiBlast } from "@/components/utils/helpers";
 import { useCart } from "@/components/store/useCart";
 
 const MemoCombinedLogin = () => {
-  const pathName = usePathname();
   const searchParams = useSearchParams();
-  const amount = searchParams?.get("amount");
-  const tableName = searchParams?.get("tableName");
-  const query = useSearchParams();
   const { goNext } = useGoNext();
   const { errorText } = useErrorHandling();
   const [otp, setOtp] = useState(["", "", "", ""]);
@@ -42,21 +38,23 @@ const MemoCombinedLogin = () => {
     useRef<HTMLInputElement>(null),
   );
   const { loyaltyId, signUpBonus } = useLoyaltyData((s) => s.loyaltySetting);
-  const {
-    setUserDetails,
-    userDetails,
-    setUserCoinZ,
-    setIsLogin,
-    sendOtp,
-    setDirection,
-  } = useLogin();
+
+  const setIsLogin = useLogin((s) => s.setIsLogin);
+  const setUserDetails = useLogin((s) => s.setUserDetails);
+  const userDetails = useLogin((s) => s.userDetails);
+  const setUserCoinZ = useLogin((s) => s.setUserCoinZ);
+  const sendOtp = useLogin((s) => s.sendOtp);
+  const pathName = usePathname();
   const [phone, setPhone] = useState(userDetails?.phone || "");
   const { setShowCart, setInputModal } = useCart();
   const [customerName, setCustomerName] = useState(userDetails?.name);
   const businessId = useBusinessDetails((s) => s.businessDetails.businessId);
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
-  const { openBlastModal, setOpenBlastModal, setCheckLogin, setCoinz } =
-    usePaymentStore();
+
+  const openBlastModal = usePaymentStore((s) => s.openBlastModal);
+  const setOpenBlastModal = usePaymentStore((s) => s.setOpenBlastModal);
+  const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
+  const setCoinz = usePaymentStore((s) => s.setCoinz);
   const businessData = useBusinessDetails((s) => s.businessDetails);
   const customLink = useParams()?.businessId as string;
   const setAccessToken = useUserToken.getState().setAccessToken;
@@ -96,32 +94,6 @@ const MemoCombinedLogin = () => {
       toast.error(response?.message || "Failed to send OTP");
     }
     setLoading(false);
-    if (pathName?.includes("checkin")) {
-      const hotelUrl = `room=${query.get("room")}`;
-      setDirection(hotelUrl);
-    }
-    if (pathName?.includes("explore")) {
-      setDirection("explore");
-    }
-    if (pathName?.includes("loyalty")) {
-      setDirection("loyalty");
-    }
-    if (pathName?.includes("category")) {
-      setDirection("category");
-    }
-    if (pathName?.includes("invoice")) {
-      setDirection("invoice");
-    }
-    if (pathName?.includes("payment")) {
-      console.log("vamsi", pathName);
-      setDirection("payment");
-    }
-    if (pathName?.includes("posPayment")) {
-      setDirection("posPayment");
-    }
-    if (pathName?.includes("couponz")) {
-      setDirection("couponz");
-    }
   };
 
   const handleOtpChange = (index: number, value: string) => {

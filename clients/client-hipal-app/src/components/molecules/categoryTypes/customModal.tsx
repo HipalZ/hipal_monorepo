@@ -1,17 +1,22 @@
-"use client"
+"use client";
 
-import { memo } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import type { ReactNode } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { memo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import type { ReactNode } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface CustomModalProps {
-  show: boolean
-  onClose: () => void
-  children: ReactNode
-  backgroundColor?: string
-  primaryColor?: string
-  title?: string
+  show: boolean;
+  onClose: () => void;
+  children: ReactNode;
+  backgroundColor?: string;
+  primaryColor?: string;
+  title?: string;
 }
 
 const CustomModal = ({
@@ -19,7 +24,7 @@ const CustomModal = ({
   onClose,
   children,
   backgroundColor = "#ffffff",
-  primaryColor = "#ec4899",
+  primaryColor = "#641626",
   title = "Choose Category",
 }: CustomModalProps) => {
   return (
@@ -32,7 +37,10 @@ const CustomModal = ({
           maxHeight: "85vh",
         }}
       >
-        <DialogHeader className="px-4 py-2 border-b" style={{ color: primaryColor }}>
+        <DialogHeader
+          className="px-4 py-2 border-b"
+          style={{ color: primaryColor }}
+        >
           <DialogTitle className="text-center">{title}</DialogTitle>
         </DialogHeader>
         <AnimatePresence>
@@ -55,8 +63,7 @@ const CustomModal = ({
         </AnimatePresence>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default memo(CustomModal)
-
+export default memo(CustomModal);

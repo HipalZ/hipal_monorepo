@@ -376,7 +376,7 @@ const MemoSelectMenu = () => {
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {allMenuLayouts?.data?.map((layout) => {
             // Generate a gradient based on the layout's primary color or use a default
-            const primaryColor = layout?.primaryColor || "#ec4899";
+            const primaryColor = layout?.primaryColor || "#641626";
             const isActive = layout?.isActive;
 
             return (

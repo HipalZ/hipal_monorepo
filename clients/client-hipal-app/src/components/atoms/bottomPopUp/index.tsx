@@ -3,6 +3,7 @@ import { useTransition, animated } from "@react-spring/web";
 import { HiX } from "react-icons/hi";
 import { cn } from "@/components/utils/helpers";
 import { createPortal } from "react-dom";
+import { Button } from "../../ui/button";
 
 const MemoBottomPopUp = ({
   children,
@@ -12,6 +13,7 @@ const MemoBottomPopUp = ({
   linearGradTheme,
   bottomCross,
   height,
+  rightTopBack,
 }: {
   children: React.ReactNode;
   show: boolean;
@@ -20,6 +22,7 @@ const MemoBottomPopUp = ({
   linearGradTheme?: boolean;
   bottomCross?: boolean;
   height?: string;
+  rightTopBack?: boolean;
 }) => {
   const transitions = useTransition(show, {
     from: { transform: "translateY(100%)", opacity: 0 },
@@ -98,6 +101,14 @@ const MemoBottomPopUp = ({
               >
                 <HiX />
               </button>
+            )}
+            {rightTopBack && (
+              <Button
+                className="absolute z-50 w-8 h-8 bg-black rounded-full top-2 right-2"
+                onClick={onClose}
+              >
+                <HiX className="text-2xl cursor-pointer text-white" />
+              </Button>
             )}
           </animated.div>
         </animated.div>

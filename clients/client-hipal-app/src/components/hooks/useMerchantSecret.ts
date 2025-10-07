@@ -6,31 +6,23 @@ import { useCouponz } from "../store/useCouponz";
 import useCouponTemp from "../store/useCouponTemp";
 import { toast } from "react-toastify";
 import { useCallback } from "react";
-import { flushSync } from "react-dom";
 
 export const useMerchantDetails = () => {
-  const businessId = useBusinessDetails((s) => s.businessDetails?._id);
+  const businessId = useBusinessDetails((s) => s.businessDetails?.businessId);
   const { setAvailedCoupon } = useCouponz((s) => ({
     setAvailedCoupon: s.setAvailedCoupon,
   }));
   const { setApplyCouponz } = useCouponTemp((s) => ({
     setApplyCouponz: s.setApplyCouponz,
   }));
-  const {
-    setMerchantDetails,
-    setClaimedCoins,
-    setClaimCouponz,
-    setTips,
-    setSelectedTip,
-    setCustomTip,
-  } = usePaymentStore((s) => ({
-    setMerchantDetails: s.setMerchantDetails,
-    setClaimedCoins: s.setClaimedCoins,
-    setClaimCouponz: s.setClaimCouponz,
-    setTips: s.setTips,
-    setSelectedTip: s.setSelectedTip,
-    setCustomTip: s.setCustomTip,
-  }));
+
+  const setMerchantDetails = usePaymentStore((s) => s.setMerchantDetails);
+  const setClaimedCoins = usePaymentStore((s) => s.setClaimedCoins);
+  const setClaimCouponz = usePaymentStore((s) => s.setClaimCouponz);
+  const setTips = usePaymentStore((s) => s.setTips);
+  const setSelectedTip = usePaymentStore((s) => s.setSelectedTip);
+  const setCustomTip = usePaymentStore((s) => s.setCustomTip);
+
   const getMerchantKeySecret = useCallback(async () => {
     const res = await apiRpc.settings[":businessId"].getMerchantKeySecret.$get({
       param: {
@@ -39,12 +31,10 @@ export const useMerchantDetails = () => {
     });
     const response = await res.json();
     if (res.status === 200) {
-      flushSync(() => {
-        setMerchantDetails({
-          businessId: businessId || "",
-          razorpayMerchantId: response?.data?.razorpayMerchantId,
-          razorpayKeyId: response?.data?.razorpayKeyId,
-        });
+      setMerchantDetails({
+        businessId: businessId || "",
+        razorpayMerchantId: response?.data?.razorpayMerchantId,
+        razorpayKeyId: response?.data?.razorpayKeyId,
       });
       // by default setting to zero instead of previous stale data
       setClaimedCoins(0);

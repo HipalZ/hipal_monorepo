@@ -3,14 +3,14 @@ import AdvancedBottomButton from "@/components/atom/bottomButton/advancedBottomB
 import { Download } from "lucide-react";
 import DateRangePicker from "@/components/molecules/dateRangePicker";
 import { type Filters, useSalesStore } from "@/components/store/useSalesStore";
-import { useParams } from "react-router-dom";
 import useTimings from "@/components/store/useTimings";
 import { Button } from "@/components/ui/button";
 import { RxCrossCircled } from "react-icons/rx";
 import { CiFilter } from "react-icons/ci";
 import { useMutation } from "@tanstack/react-query";
-import { apiRpc } from "@hi/common";
 import LoadingSpinner from "@/components/atom/loadingSpinner";
+import useBusinessData from "@/components/store/useBusinessData";
+import { fetchBillsCsvByType } from "@/api/billsQueries.ts";
 
 const formatDate = (timestamp: number) => {
   const d = new Date(timestamp);
@@ -20,21 +20,22 @@ const formatDate = (timestamp: number) => {
   )}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
+interface ISalesPayloadCSV {
+  businessId: string;
+  from: string;
+  to: string;
+  appliedFilters?: Filters;
+}
+
 const MemoConvertIntoCsv = () => {
-  const params = useParams();
   const timeStampStart = useTimings((s) => s.timeStampStart);
   const timeStampEnd = useTimings((s) => s.timeStampEnd);
-  const {
-    selectedFilters,
-    setSelectedFilters,
-    setDownloadCsv,
-    setOpenFilterModal,
-  } = useSalesStore((s) => ({
-    selectedFilters: s.selectedFilters,
-    setSelectedFilters: s.setSelectedFilters,
-    setDownloadCsv: s.setDownloadCsv,
-    setOpenFilterModal: s.setOpenFilterModal,
-  }));
+  const selectedFilters = useSalesStore((s) => s.selectedFilters);
+  const setSelectedFilters = useSalesStore((s) => s.setSelectedFilters);
+  const setDownloadCsv = useSalesStore((s) => s.setDownloadCsv);
+  const setOpenFilterModal = useSalesStore((s) => s.setOpenFilterModal);
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
+  const outletType = useBusinessData((s) => s?.outletInfo?.outLetType);
 
   const removeSingleFilter = useCallback(
     (key: string, value: string) => {
@@ -49,55 +50,45 @@ const MemoConvertIntoCsv = () => {
             }
             return filter;
           })
-          .filter((filter) => filter.value.length > 0),
+          .filter((f) => f.value.length > 0),
       );
     },
     [selectedFilters],
   );
 
-  interface ISalesPayloadCSV {
-    businessId: string;
-    from: string;
-    to: string;
-    appliedFilters?: Filters;
-  }
+  const { isPending, mutateAsync } = useMutation<Blob, Error, ISalesPayloadCSV>(
+    {
+      mutationFn: async (payload) =>
+        fetchBillsCsvByType({
+          businessId: payload.businessId,
+          from: payload.from,
+          to: payload.to,
+          appliedFilter: selectedFilters,
+          outletType,
+        }),
+      onSuccess: async (blob, variables) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        const fromStr = formatDate(Number(variables.from));
+        const toStr = formatDate(Number(variables.to));
+        const prefix = (outletType || "payments").toString();
+        const fileName = `${prefix} ${fromStr} to ${toStr}.csv`;
 
-  const { isPending, mutateAsync } = useMutation({
-    mutationFn: async (payload: ISalesPayloadCSV) => {
-      const response = await apiRpc.payments[":id"].bills_csv.$get({
-        query: {
-          ...payload,
-          appliedFilter: JSON.stringify(selectedFilters),
-        },
-        param: {
-          id: payload.businessId,
-        },
-      });
-      return response.blob();
+        link.href = url;
+        link.setAttribute("download", fileName);
+        document.body.appendChild(link);
+        link.click();
+        link.parentNode?.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        setDownloadCsv(false);
+      },
+      onError: (error) => {
+        console.error(error);
+      },
     },
-    onSuccess: async (blob, variables) => {
-      const url = window.URL.createObjectURL(new Blob([blob]));
-      const link = document.createElement("a");
-      const fromStr = formatDate(Number(variables.from));
-      const toStr = formatDate(Number(variables.to));
-      const fileName = `payments ${fromStr} to ${toStr}.csv`;
+  );
 
-      link.href = url;
-      link.setAttribute("download", fileName);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode?.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      setDownloadCsv(false);
-    },
-    onError: (error) => {
-      console.log(error);
-    },
-  });
-
-  if (isPending) {
-    return <LoadingSpinner />;
-  }
+  if (isPending) return <LoadingSpinner />;
 
   return (
     <div className="flex flex-col space-y-4 w-full max-w-[30rem] lg:max-w-[40rem] px-4">
@@ -109,6 +100,7 @@ const MemoConvertIntoCsv = () => {
       >
         <CiFilter className="mr-2" /> Filters
       </Button>
+
       {selectedFilters && selectedFilters.length > 0 && (
         <>
           {selectedFilters.map((filter) => (
@@ -127,6 +119,7 @@ const MemoConvertIntoCsv = () => {
           ))}
         </>
       )}
+
       <AdvancedBottomButton
         maxWidth="24rem"
         fixed={false}
@@ -135,12 +128,12 @@ const MemoConvertIntoCsv = () => {
             text: "Download",
             onClick: () =>
               mutateAsync({
-                businessId: params.businessId,
+                businessId: businessId || "",
                 from: timeStampStart.toString(),
                 to: timeStampEnd.toString(),
               }),
             icon: <Download />,
-            className: "px-4  w-full",
+            className: "px-4 w-full",
           },
         ]}
       />

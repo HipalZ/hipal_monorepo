@@ -15,8 +15,11 @@ import { useSearch } from "@/components/store/useSearch";
 import { _useAllBusiness } from "@/components/store/useAllBusiness";
 
 const MemoLiveCart = () => {
-  const { cart, setSelectedDish } = useCartStore();
-  const { setShowCart, setCartPage, showCart } = useCart();
+  const cart = useCartStore((s) => s.cart);
+  const setSelectedDish = useCartStore((s) => s.setSelectedDish);
+  const setShowCart = useCart((s) => s.setShowCart);
+  const setCartPage = useCart((s) => s.setCartPage);
+  const showCart = useCart((s) => s.showCart);
 
   const { tableNameMissing, setTableNameMissing, tableName } = useTableData();
   const { isSearchActive } = useSearch();
@@ -48,13 +51,17 @@ const MemoLiveCart = () => {
   };
 
   const openCart = useCallback(() => {
-    if (!tableNameMissing) {
-      setTableNameMissing(true);
+    if (
+      (outletInfo?.outLetType === "MENU" ||
+        outletInfo?.outLetType === "RESTAURANT") &&
+      !tableNameMissing
+    ) {
+      setTableNameMissing(false);
     }
     setSelectedDish(null);
     setCartPage("cart");
     setShowCart(true);
-  }, [setShowCart, setCartPage, tableNameMissing, setTableNameMissing]);
+  }, [setShowCart, setCartPage, setTableNameMissing, setSelectedDish]);
 
   return (
     <>
@@ -64,7 +71,7 @@ const MemoLiveCart = () => {
             onClick={openCart}
             className="fixed flex items-center justify-between overflow-hidden !text-sm
               px-4 py-3 text-[#FFF] max-w-[30rem] z-50 transform
-              -translate-x-1/2 left-1/2 bg-[#008800]"
+              -translate-x-1/2 left-1/2 bg-[#008800] mb-4"
             variants={cartVariants}
             initial="initial"
             animate="animate"
@@ -103,19 +110,20 @@ const MemoLiveCart = () => {
         )}
       </AnimatePresence>
 
-      {showCart && tableName ? (
-        <BottomPopUp show={showCart} onClose={() => setShowCart(false)} hide>
-          <MemoCart />
-        </BottomPopUp>
-      ) : (
+      {!tableNameMissing && showCart && (
         <ItemDescriptionPopup
           bottomCross
-          show={showCart}
-          onClose={() => setShowCart(false)}
+          show={tableNameMissing && showCart}
+          onClose={() => setTableNameMissing(false)}
           heading="Table Name Missing"
         >
           <TableNameMissing />
         </ItemDescriptionPopup>
+      )}
+      {showCart && (
+        <BottomPopUp show={showCart} onClose={() => setShowCart(false)} hide>
+          <MemoCart />
+        </BottomPopUp>
       )}
     </>
   );

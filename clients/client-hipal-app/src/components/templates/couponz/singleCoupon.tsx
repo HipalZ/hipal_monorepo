@@ -156,7 +156,7 @@ const MemoCouponz = () => {
   }, [selectedCoupon]);
 
   const redirectBack = useCallback(() => {
-    router.push(`/${customLink}/explore`);
+    router.push(`/${customLink}`);
     setDirection("");
     setUrlFrom("");
   }, [setDirection, setUrlFrom, router, customLink]);

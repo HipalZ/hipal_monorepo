@@ -44,32 +44,17 @@ import BulkUploadModal from "@/components/templates/menu/dish/BulkUploadModal.ts
 const MemoizeDishAndCat = () => {
   const navigate = useNavigate();
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
-
-  const {
-    selectedPage,
-    setSelectedPage,
-    openMenu,
-    setOpenMenu,
-    resetStore,
-    editOpenMenu,
-    setEditOpenMenu,
-    setSelectedCategory,
-    resetEditDish,
-    setIsMenuManager,
-    setTempPage,
-  } = useMenuPageStore((s) => ({
-    selectedPage: s.selectedPage,
-    setSelectedPage: s.setSelectedPage,
-    setSelectedCategory: s.setSelectedCategory,
-    openMenu: s.openMenu,
-    setOpenMenu: s.setOpenMenu,
-    editOpenMenu: s.editOpenMenu,
-    setEditOpenMenu: s.setEditOpenMenu,
-    resetStore: s.resetStore,
-    resetEditDish: s.resetEditDish,
-    setIsMenuManager: s.setIsMenuManager,
-    setTempPage: s.setTempPage,
-  }));
+  const selectedPage = useMenuPageStore((s) => s.selectedPage);
+  const setSelectedPage = useMenuPageStore((s) => s.setSelectedPage);
+  const setSelectedCategory = useMenuPageStore((s) => s.setSelectedCategory);
+  const openMenu = useMenuPageStore((s) => s.openMenu);
+  const setOpenMenu = useMenuPageStore((s) => s.setOpenMenu);
+  const editOpenMenu = useMenuPageStore((s) => s.editOpenMenu);
+  const setEditOpenMenu = useMenuPageStore((s) => s.setEditOpenMenu);
+  const resetStore = useMenuPageStore((s) => s.resetStore);
+  const resetEditDish = useMenuPageStore((s) => s.resetEditDish);
+  const setIsMenuManager = useMenuPageStore((s) => s.setIsMenuManager);
+  const setTempPage = useMenuPageStore((s) => s.setTempPage);
 
   // File upload hooks
   const { mutate: handleFileUpload, isPending } = useBulkUploadDishes();

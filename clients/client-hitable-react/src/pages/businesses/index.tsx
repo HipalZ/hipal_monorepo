@@ -50,7 +50,7 @@ const BusinessesMemo = memo(() => {
   };
 
   return (
-    <main className="relative h-screen">
+    <main className="relative">
       <header className="flex h-[5rem] items-center justify-between px-6 py-4">
         <h1 className="text-xl font-medium">Hi, {captainData?.name}</h1>
         <ProfileHeader />
@@ -78,14 +78,14 @@ const BusinessesMemo = memo(() => {
       </article>
       <br />
       <h1 className="mx-5 mb-4 text-2xl text-black">You are added to</h1>
-      <section className="mx-5 lg:grid lg:grid-cols-2">
+      <section className="mx-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
         {captainData?.customRole ? (
           captainData?.customRole?.map((biz) => (
             <section
               onClick={() => exploreBusiness(biz)}
               onKeyDown={() => exploreBusiness(biz)}
               key={biz?.businessId?._id}
-              className="my-4 flex h-[6rem] items-center justify-between rounded-2xl p-4"
+              className=" flex h-[6rem] items-center justify-between rounded-2xl p-4"
               style={{ backgroundColor: "#f2f2f2" }}
             >
               <article className="flex items-center">

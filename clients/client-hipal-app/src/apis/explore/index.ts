@@ -6,13 +6,6 @@ import { fetchCommonData } from "../commonApis";
 async function fetchBusinessData(customLink: string) {
   const { data, bizId } = await fetchCommonData(customLink);
 
-  const outletInfoData = await apiRpc.businesses.outletInfo[":businessId"].$get(
-    {
-      param: {
-        businessId: bizId,
-      },
-    },
-  );
   const uniquelyDishesResponse = await apiRpc.dishes.uniquelyDishes[
     ":businessId"
   ].$get({
@@ -34,11 +27,9 @@ async function fetchBusinessData(customLink: string) {
     },
   });
 
-  const outletInfo = await outletInfoData.json();
   const uniquelyDishes = await uniquelyDishesResponse.json();
   const loyalty = await loyaltyResponse.json();
   const banners = await bannersResponse.json();
-  data["outletInfo"] = outletInfo?.data;
   data["banners"] = banners?.data as unknown as IBanner[];
   data["uniquelyDishes"] = uniquelyDishes?.data as unknown as IUniquelyDishes[];
   data["loyalty"] = loyalty?.data as unknown as ILoyaltySetting;

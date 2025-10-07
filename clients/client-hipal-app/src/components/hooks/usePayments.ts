@@ -18,7 +18,6 @@ import { useCouponz } from "../store/useCouponz";
 import { useError } from "../store/useError";
 import { useLogin } from "../store/useLogin";
 import useLoyaltyData from "../store/useLoyaltyData";
-import usePayment from "../store/usePayment";
 import { usePaymentStore } from "../store/usePaymentStore";
 import useTableData, {
   type HiCodeUser,
@@ -38,37 +37,21 @@ export const usePayments = () => {
   const { loyaltySetting } = useLoyaltyData();
   const customLink = useParams()?.businessId as string;
   const router = useRouter();
-  const { availedCoupon, channelId, setChannelId } = useCouponz((s) => ({
-    availedCoupon: s.availedCoupon,
-    channelId: s.channelId,
-    setChannelId: s.setChannelId,
-  }));
-  const { userDetails } = useLogin((s) => ({ userDetails: s.userDetails }));
-  const { setRazorPayPaymentId, setRazorPayOrderId, setRazorPaySignature } =
-    usePayment();
-  const {
-    isLoading,
-    setIsLoading,
-    merchantDetails,
-    billValue,
-    billData,
-    claimedCoins,
-    claimCouponz,
-    tips,
-    userCoinz,
-    setShowError,
-  } = usePaymentStore((s) => ({
-    isLoading: s.isLoading,
-    setIsLoading: s.setIsLoading,
-    merchantDetails: s.merchantDetails,
-    billValue: s.billValue,
-    billData: s.billData,
-    claimedCoins: s.claimedCoins,
-    claimCouponz: s.claimCouponz,
-    tips: s.tips,
-    userCoinz: s.userCoinz,
-    setShowError: s.setShowError,
-  }));
+
+  const availedCoupon = useCouponz((s) => s.availedCoupon);
+  const channelId = useCouponz((s) => s.channelId);
+  const setChannelId = useCouponz((s) => s.setChannelId);
+  const userDetails = useLogin((s) => s.userDetails);
+  const isLoading = usePaymentStore((s) => s.isLoading);
+  const setIsLoading = usePaymentStore((s) => s.setIsLoading);
+  const merchantDetails = usePaymentStore((s) => s.merchantDetails);
+  const billValue = usePaymentStore((s) => s.billValue);
+  const billData = usePaymentStore((s) => s.billData);
+  const claimedCoins = usePaymentStore((s) => s.claimedCoins);
+  const claimCouponz = usePaymentStore((s) => s.claimCouponz);
+  const tips = usePaymentStore((s) => s.tips);
+  const userCoinz = usePaymentStore((s) => s.userCoinz);
+  const setShowError = usePaymentStore((s) => s.setShowError);
   const outletInfo = _useAllBusiness((state) => state.data.outletInfo);
   const businessDetails = useBusinessDetails((s) => s.businessDetails);
   const businessId = _useAllBusiness(
@@ -159,12 +142,8 @@ export const usePayments = () => {
           loyaltySetting?.rewardLimit,
         )?.finalReward;
       }
-      console.log("finalReward", finalReward);
       if (res.status === 200) {
         toast.success("Payment successful");
-        setRazorPaySignature("");
-        setRazorPayOrderId("");
-        setRazorPayPaymentId("");
         resetTableData();
         setChannelId("");
         // setIsLoading(false);
@@ -189,9 +168,7 @@ export const usePayments = () => {
       loyaltySetting?.setCashBackPercentage,
       loyaltySetting?.rewardLimit,
       userCoinz,
-      setRazorPaySignature,
-      setRazorPayOrderId,
-      setRazorPayPaymentId,
+
       setTableName,
       router,
       customLink,
@@ -202,38 +179,26 @@ export const usePayments = () => {
     async (response: any) => {
       setIsLoading(true);
       await sendPaymentResponse(response);
-      setRazorPaySignature(response.razorpay_signature);
-      setRazorPayOrderId(response.razorpay_order_id);
-      setRazorPayPaymentId(response.razorpay_payment_id);
     },
     [
       setIsLoading,
-      setRazorPaySignature,
-      setRazorPayOrderId,
-      setRazorPayPaymentId,
+
       sendPaymentResponse,
     ],
   );
   // payment dismiss
   const handlePaymentDismiss = useCallback(() => {
-    setRazorPaySignature("");
-    setRazorPayOrderId("");
-    setRazorPayPaymentId("");
     setShowError(true);
     toast.error("Payment failed");
     setTimeout(() => {
       setShowError(false);
     }, 1000);
-  }, [
-    setRazorPaySignature,
-    setRazorPayOrderId,
-    setRazorPayPaymentId,
-    setShowError,
-  ]);
+  }, [setShowError]);
   // create order for razorpay
   const createRazorPayOrder = useCallback(
     async (total: number): Promise<string> => {
       const payload = {
+        // remove all payload pass only orderId
         businessId: businessId || "",
         total: finalAmount,
         currency: "INR",
@@ -264,7 +229,6 @@ export const usePayments = () => {
       }
       const response = (await res.json()) as unknown as { data: string };
       const orderId = response.data.order_id;
-      setRazorPayOrderId(orderId);
       return orderId;
     },
     [
@@ -279,7 +243,6 @@ export const usePayments = () => {
       availedCoupon?._id,
       channelId,
       availedCoupon?.cashbackAvailable,
-      setRazorPayOrderId,
     ],
   );
   // create order
@@ -310,8 +273,6 @@ export const usePayments = () => {
       } catch (error) {
         toast.error("Something went wrong! Please try again later.");
         console.log("error", error);
-        setRazorPayPaymentId("");
-        setRazorPaySignature("");
         setIsLoading(false);
       }
     },
@@ -322,8 +283,6 @@ export const usePayments = () => {
       createRazorPayOrder,
       router,
       setIsLoading,
-      setRazorPayPaymentId,
-      setRazorPaySignature,
     ],
   );
   // create razorpay options
@@ -354,9 +313,9 @@ export const usePayments = () => {
         amount: finalAmount,
         currency: "INR",
         name: businessDetails?.name,
-        description: "Test Transaction",
+        description: "transaction",
         image: businessDetails?.logoUrl,
-        order_id: orderId,
+        orderId: orderId,
         handler: (response) => {
           handlePaymentSuccess(response);
           window.onpopstate = null;
@@ -381,18 +340,17 @@ export const usePayments = () => {
         },
 
         notes: {
-          address: "Paltribe solutions",
-          businessId: businessId,
-          total: finalAmount,
+          businessId: businessId, //
+          total: finalAmount, //
           claimedCoins: outletInfo?.isPosEnabled
             ? billData?.claimedCoins
-            : claimedCoins || claimCouponz,
-          billValue: initialTotal,
-          tips: outletInfo?.isPosEnabled ? billData?.tips : tips,
-          loyaltyId: loyaltySetting.loyaltyId,
-          tableName: tableName,
-          couponId: availedCoupon?._id,
-          cashbackAvailable: availedCoupon?.cashbackAvailable,
+            : claimedCoins || claimCouponz, //
+          billValue: initialTotal, //
+          tips: outletInfo?.isPosEnabled ? billData?.tips : tips, //
+          loyaltyId: loyaltySetting.loyaltyId, //
+          tableName: tableName, //
+          couponId: availedCoupon?._id, //
+          cashbackAvailable: availedCoupon?.cashbackAvailable, //
         },
         theme: {
           color: "#3399cc",
@@ -451,11 +409,12 @@ export const usePayments = () => {
     setIsLoading(true);
 
     const payload = {
-      businessId: businessId || "",
-      total: finalAmount,
-      claimedCoins: outletInfo?.isPosEnabled
+      // remove all payload pass only orderId
+      businessId: businessId || "", //
+      total: finalAmount, //
+      claimedCoins: outletInfo?.isPosEnabled //
         ? billData?.claimedCoins
-        : claimedCoins || claimCouponz,
+        : claimedCoins || claimCouponz, //
       billValue: outletInfo?.isPosEnabled ? billData?.subTotal : initialTotal,
       userId: userDetails?._id,
       tips: outletInfo?.isPosEnabled ? billData?.tips : tips,
@@ -537,7 +496,7 @@ export const usePayments = () => {
   ]);
   // payment failure
   const handlePaymentFailure = useCallback((response: any) => {
-    setRazorPayOrderId(response.error.metadata.order_id);
+    console.log("response", response);
   }, []);
 
   return {
@@ -847,7 +806,7 @@ export const useAuthTableUser = () => {
       },
     });
     const res = await response.json();
-    if (response.status === 200) {
+    if (response.status === 200 || response.status === 201) {
       setCartPage("order");
       setShowCart(true);
     }

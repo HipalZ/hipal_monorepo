@@ -41,7 +41,7 @@ export interface CustomRole {
   customRoleId: string;
   role: string;
   accessControl: AccessControl;
-  permissions: Ipermissions
+  permissions: Ipermissions;
   permissionIds: string[];
   permissionGroupIds: string[];
   bookMark: boolean;
@@ -83,6 +83,46 @@ export interface Order {
   __v: number;
 }
 
+interface JewelleryOrderId {
+  _id: string;
+  businessId: string;
+  total: number;
+  currency: string;
+  subTotal: number;
+  userId: {
+    _id: string;
+    name: string;
+    email: string;
+    phone: string;
+    role: string[];
+    isDeleted: boolean;
+    birthdayTriggerCount: number;
+    customRole: string[];
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+    dob: number;
+  };
+  tips: number;
+  claimedCoins: number;
+  discount: number;
+  couponId: string | null;
+  date: number;
+  couponDiscount: number;
+  gst: number;
+  isCoinApplied: boolean;
+  isCouponApplied: boolean;
+  isDiscountApplied: boolean;
+  coinAppliedPercent: number;
+  couponAppliedPercent: number;
+  discountAppliedPercent: number;
+  razorpayOrderId: string;
+  staffId: string | null;
+  isPaid: "IN_PROGRESS" | "PAID" | "FAILED";
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
 export interface Alert {
   updateFeature: string[];
   appUrl: string;
@@ -105,12 +145,30 @@ export interface Alert {
   tableName: string;
   alertType: string;
   order_id: Order;
+  orderId: JewelleryOrderId;
   payment_id: string;
   isAccepted: boolean;
   message: string;
   coinsApplied: boolean;
   date: number;
   name: string;
+}
+export interface OfflineAlert {
+  _id: string;
+  businessId: string;
+  status: "SUCCESS" | "FAIL";
+  alertType: "OFFLINE";
+  orderId: JewelleryOrderId;
+  isAccepted: boolean;
+  isRejected: boolean;
+  errorReason: string | null;
+  errorDescription: string | null;
+  coinsApplied: boolean;
+  date: number;
+  mode: "OFFLINE";
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
 }
 
 export interface ISalesLite {

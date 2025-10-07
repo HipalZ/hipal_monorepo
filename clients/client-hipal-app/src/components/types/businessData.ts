@@ -615,23 +615,6 @@ export interface IMerchantDetails {
   razorpayKeyId: string;
 }
 
-interface Extra {
-  name: string;
-  price: number;
-  quantity: number;
-}
-
-interface DishItem {
-  portion: any;
-  quantity: ReactNode;
-  dish: {
-    name: string;
-    price: number;
-    quantity: number;
-  };
-  extras: Extra[];
-}
-
 export interface BillData {
   tips: number;
   claimedCoins: number;
@@ -715,12 +698,29 @@ export interface BillData {
   }>;
 }
 
+export interface JewelleryData {
+  claimedCoins: number;
+  couponDiscount: number;
+  couponId: string | null;
+  discount: number;
+  gst: number;
+  subTotal: number;
+  tips: number;
+  total: number;
+  userId: {
+    _id: string;
+    name: string;
+    phone: string;
+  };
+  _id: string;
+}
+
 interface CartItem {
   id: string;
   portion: string | null;
   extras: string[];
   quantity: number;
-  dish: Dish;
+  dish: IDish;
 }
 
 export interface KotOrder {

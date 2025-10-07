@@ -821,8 +821,8 @@ const scriptRouter = new Hono()
           categoryLayout: 2,
           cardLayout: 2,
           default: true,
-          primaryColor: "#ec4899",
-          secondaryColor: "#fce7f3",
+          primaryColor: "#641626",
+          secondaryColor: "#F9E9C7",
         });
 
         await menu.save();
@@ -914,8 +914,8 @@ const scriptRouter = new Hono()
           isDeleted: false,
           categoryLayout: 2,
           cardLayout: 2,
-          primaryColor: "#ec4899",
-          secondaryColor: "#fce7f3",
+          primaryColor: "#641626",
+          secondaryColor: "#F9E9C7",
         });
       }
     }

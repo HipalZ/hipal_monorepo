@@ -1,174 +1,154 @@
+// Overview.tsx
 import { memo, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useHiClientZ } from "@/components/store/useHiClientzData";
-import useTimings from "@/components/store/useTimings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { apiRpc } from "@hi/common";
-import DateRangePickerMemo from "../dateRangePicker";
+import useTimings from "@/components/store/useTimings";
+import useBusinessData from "@/components/store/useBusinessData";
 import { InfoCard } from "./InfoCard";
 import { PieChart } from "./PieCharts";
-import { BarChart } from "./BarChart";
-import { LineChart } from "./LineChart";
 import { motion } from "framer-motion";
 import { CreditCard, Gift, AlertTriangle, IndianRupee } from "lucide-react";
-import type { TableData } from "@/components/store/useZonesAndTable.ts";
+import { BarChart } from "./BarChart";
 
-export interface SalesData {
-  overAllAmount: number;
-  onlineSale: Record<string, number>;
-  offlineSale: Record<string, number>;
-  totalOrders: number;
-  totalActiveTableValue: number;
-}
+import {
+  useSalesData,
+  useOtherAndWarning,
+  useSalesException,
+  useTables,
+} from "@/components/hooks/payments/usePayment.ts";
+import DateRangePickerMemo from "../dateRangePicker/index.tsx";
 
-interface OtherAndWarningData {
-  otherSale: {
-    totalTax: number;
-    totalTip: number;
-    totalServiceCharge: number;
-  };
-  warningSale: {
-    totalForceSettle: number;
-    totalFreeSettle: number;
-  };
-}
-
-interface SalesExceptionData {
-  exceptionSale: {
-    totalDuesReceived: number;
-    totalDuesGiven: number;
-    totalNpc: number;
-    totalComplementary: number;
-    totalDiscount: number;
-  };
-  rewardSale: {
-    totalCoinsGiven: number;
-    totalCoinUsed: number;
-    totalCouponUsed: number;
-  };
-}
-
+const isToday = (timestamp: string | number | Date) => {
+  const date = new Date(timestamp);
+  const today = new Date();
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  );
+};
 const SalesLite = () => {
-  const { selectedBiz } = useHiClientZ((s) => ({
-    selectedBiz: s.selectedBiz,
-  }));
-  const businessId = selectedBiz?.businessId?._id;
-
+  const businessId = useBusinessData((s) => s.outletInfo?.businessId);
   const timeStampStart = useTimings((s) => s.timeStampStart);
   const timeStampEnd = useTimings((s) => s.timeStampEnd);
-
-    const isToday = (timestamp: string | number | Date) => {
-    const date = new Date(timestamp);
-    const today = new Date();
-
-    return (
-      date.getDate() === today.getDate() &&
-      date.getMonth() === today.getMonth() &&
-      date.getFullYear() === today.getFullYear()
-    );
-  };
-
-  const shouldShowCard =
-  isToday(timeStampStart) && isToday(timeStampEnd);
-
-
-  const handleHistoryData = async (): Promise<SalesData> => {
-    try {
-      const response = await apiRpc.payments[":id"].salesDashboard.$get({
-        query: {
-          businessId: businessId,
-          from: timeStampStart.toString(),
-          to: timeStampEnd.toString(),
-        },
-        param: { id: businessId || "" },
-      });
-      const data = (await response.json()).data as SalesData;
-      if (response.status === 200) {
-        return data;
-      }
-      throw new Error("Failed to fetch sales data");
-    } catch (err) {
-      console.error(err);
-      throw err;
-    }
-  };
-
-  const otherAndWarning = async (): Promise<OtherAndWarningData> => {
-    const response = await apiRpc.payments.sale.other_and_warnings.$get({
-      query: {
-        businessId: businessId,
-        from: timeStampStart.toString(),
-        to: timeStampEnd.toString(),
-      },
-    });
-    const data = (await response.json()).data as OtherAndWarningData;
-    return data;
-  };
-
-  const salesException = async (): Promise<SalesExceptionData> => {
-    const response = await apiRpc.payments.sale.exception_and_rewards.$get({
-      query: {
-        businessId: businessId,
-        from: timeStampStart.toString(),
-        to: timeStampEnd.toString(),
-      },
-    });
-    const data = (await response.json()).data as SalesExceptionData;
-    return data;
-  };
-
- const fetchTables = async (businessId: string): Promise<TableData[]> => {
-    const response = await apiRpc.table.all[":businessId"].$get({
-      param: { businessId },
-    });
-    const json = await response.json();
-    return json.data || [];
-  };
+  const shouldShowRunningTables =
+    isToday(timeStampStart) && isToday(timeStampEnd);
 
   const {
     data: salesData,
     isLoading,
     error,
-  } = useQuery<SalesData, Error>({
-    queryKey: ["salesData", businessId, timeStampStart, timeStampEnd],
-    queryFn: handleHistoryData,
-    enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
-  });
+  } = useSalesData(timeStampStart, timeStampEnd);
 
-  const { data: otherData } = useQuery<OtherAndWarningData, Error>({
-    queryKey: ["otherAndWarning", businessId, timeStampStart, timeStampEnd],
-    queryFn: otherAndWarning,
-    enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
-  });
+  const { data: otherData } = useOtherAndWarning(timeStampStart, timeStampEnd);
 
-  const { data: salesExceptionData } = useQuery<SalesExceptionData, Error>({
-    queryKey: ["salesException", businessId, timeStampStart, timeStampEnd],
-    queryFn: salesException,
-    enabled: !!businessId && !!timeStampStart && !!timeStampEnd,
-  });
+  const { data: salesExceptionData } = useSalesException(
+    timeStampStart,
+    timeStampEnd,
+  );
 
-    const {  data: tablesData } = useQuery({
-      queryKey: ["tables", businessId],
-      queryFn: () => fetchTables(businessId || ""),
-      enabled: !!businessId,
-      refetchInterval: 1000 * 30,
-    });
-  
-    const runningTablesBreakdown = useMemo(() => {
-      return tablesData
-        ? tablesData
-            .filter((table) => table.active && table.currentTableAmount > 0)
-            .map((table) => ({
-              label: ` ${table.name}`,
-              value: table.currentTableAmount,
-            }))
-        : [];
-    }, [tablesData]);
+  const { data: tablesData } = useTables(businessId);
 
-  if (isLoading) {
-    return <OverviewSkeleton />;
-  }
+  const totalOfflineSale = useMemo(() => {
+    if (!salesData?.offlineSale) return 0;
+    return Object.values(salesData.offlineSale).reduce(
+      (acc, curr) => acc + curr,
+      0,
+    );
+  }, [salesData]);
+
+  const totalExceptionAndReward = useMemo(() => {
+    if (!salesExceptionData) return 0;
+    const ex = salesExceptionData.exceptionSale;
+    const rw = salesExceptionData.rewardSale;
+    // handle both totalCoinUsed/totalCoinsUsed just in case
+    const coinsUsed = (rw.totalCoinsUsed ?? 0) + (rw.totalCoinUsed ?? 0);
+    return (
+      (ex.totalComplementary ?? 0) +
+      (ex.totalDiscount ?? 0) +
+      (rw.totalCoinsGiven ?? 0) +
+      coinsUsed +
+      (rw.totalCouponDiscount ?? 0)
+    );
+  }, [salesExceptionData]);
+
+  const totalOtherAndWarning = useMemo(() => {
+    if (!otherData) return 0;
+    const o = otherData.otherSale;
+    return (o.totalTax ?? 0) + (o.totalTip ?? 0) + (o.totalServiceCharge ?? 0);
+  }, [otherData]);
+
+  const runningTablesBreakdown = useMemo(() => {
+    if (!tablesData) return [];
+    return tablesData
+      .filter((t) => t.active && t.currentTableAmount > 0)
+      .map((t) => ({ label: `${t.name}`, value: t.currentTableAmount }));
+  }, [tablesData]);
+
+  const totalSalesBreakdown = useMemo(
+    () =>
+      salesData
+        ? [
+            {
+              label: "Hipalz Razorpay Sales",
+              value: salesData.onlineSale?.online ?? 0,
+            },
+            { label: "Pay To Captain Sales", value: totalOfflineSale },
+          ].filter((x) => x.value > 0)
+        : [],
+    [salesData, totalOfflineSale],
+  );
+
+  const onlineSalesBreakdown = useMemo(
+    () =>
+      salesData
+        ? [
+            {
+              label: "Online Payment",
+              value: salesData.onlineSale?.online ?? 0,
+            },
+          ].filter((x) => x.value > 0)
+        : [],
+    [salesData],
+  );
+
+  const offlineSalesBreakdown = useMemo(() => {
+    if (!salesData) return [];
+    return Object.entries(salesData.offlineSale || {})
+      .map(([method, amount]) => ({
+        label: method.charAt(0).toUpperCase() + method.slice(1),
+        value: amount,
+      }))
+      .filter((x) => x.value > 0);
+  }, [salesData]);
+
+  const loyaltyRewardsBreakdown = useMemo(() => {
+    if (!salesExceptionData) return [];
+    const ex = salesExceptionData.exceptionSale;
+    const rw = salesExceptionData.rewardSale;
+    const coinsUsed = (rw.totalCoinsUsed ?? 0) + (rw.totalCoinUsed ?? 0);
+    const items = [
+      { label: "Total Complementary", value: ex.totalComplementary ?? 0 },
+      { label: "Total Discount", value: ex.totalDiscount ?? 0 },
+      { label: "Total Coins Given", value: rw.totalCoinsGiven ?? 0 },
+      { label: "Total Coins Used", value: coinsUsed },
+      { label: "Total Coupon Discount", value: rw.totalCouponDiscount ?? 0 },
+    ];
+    return items.filter((i) => i.value > 0);
+  }, [salesExceptionData]);
+
+  const taxesServiceBreakdown = useMemo(() => {
+    if (!otherData) return [];
+    const o = otherData.otherSale;
+    const items = [
+      { label: "Total Tax", value: o.totalTax ?? 0 },
+      { label: "Total Tip", value: o.totalTip ?? 0 },
+      { label: "Total Service Charge", value: o.totalServiceCharge ?? 0 },
+    ];
+    return items.filter((i) => i.value > 0);
+  }, [otherData]);
+
+  if (isLoading) return <OverviewSkeleton />;
 
   if (error || !salesData) {
     return (
@@ -183,84 +163,33 @@ const SalesLite = () => {
     );
   }
 
- const totalOfflineSale = Object.values(salesData.offlineSale).reduce(
-    (acc, curr) => acc + curr,
-    0,
-  );
+  // --- Show "no sale today" if total is zero ---
+  if ((salesData.overAllAmount ?? 0) === 0) {
+    return (
+      <Card className="w-full h-[70vh] px-4 mx-auto xl:container">
+        <DateRangePickerMemo />
+        <CardContent>
+          <p className="text-center text-muted-foreground text-lg">
+            There is no sale today.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  const totalExceptionAndReward = salesExceptionData
-    ? salesExceptionData.exceptionSale.totalComplementary +
-      salesExceptionData.exceptionSale.totalDiscount +
-      salesExceptionData.rewardSale.totalCoinsGiven +
-      salesExceptionData.rewardSale.totalCoinsUsed +
-      salesExceptionData.rewardSale.totalCouponDiscount
-    : 0;
-
-  const totalOtherAndWarning = otherData
-    ? otherData.otherSale.totalTax +
-      otherData.otherSale.totalTip +
-      otherData.otherSale.totalServiceCharge
-    : 0;
-
-  // Create breakdown data
-  const totalSalesBreakdown = [
-    { label: "Hipalz Razorpay Sales", value: salesData.onlineSale.online },
-    { label: "Pay To Captain Sales", value: totalOfflineSale },
-  ];
-
-  const onlineSalesBreakdown = [
-    { label: "Online Payment", value: salesData.onlineSale.online },
-  ];
-
-  const offlineSalesBreakdown = Object.entries(salesData.offlineSale).map(
-    ([method, amount]) => ({
-      label: method.charAt(0).toUpperCase() + method.slice(1),
-      value: amount,
-    }),
-  );
-
-  const loyaltyRewardsBreakdown = salesExceptionData
-    ? [
-        {
-          label: "Total Complementary",
-          value: salesExceptionData.exceptionSale.totalComplementary,
-        },
-        {
-          label: "Total Discount",
-          value: salesExceptionData.exceptionSale.totalDiscount,
-        },
-        {
-          label: "Total Coins Given",
-          value: salesExceptionData.rewardSale.totalCoinsGiven,
-        },
-        {
-          label: "Total Coins Used",
-          value: salesExceptionData.rewardSale.totalCoinsUsed,
-        },
-        {
-          label: "Total Coupon Discount",
-          value: salesExceptionData.rewardSale.totalCouponDiscount,
-        },
-      ]
-    : [];
-
-  const taxesServiceBreakdown = otherData
-    ? [
-        { label: "Total Tax", value: otherData.otherSale.totalTax },
-        { label: "Total Tip", value: otherData.otherSale.totalTip },
-        {
-          label: "Total Service Charge",
-          value: otherData.otherSale.totalServiceCharge,
-        },
-      ]
-    : [];
+  const hasOfflineAny = totalOfflineSale > 0;
+  const hasOnlineAny = (salesData.onlineSale?.online ?? 0) > 0;
+  const hasLoyaltyAny = totalExceptionAndReward > 0;
+  const hasOtherAny = totalOtherAndWarning > 0;
+  const hasRunningTables =
+    shouldShowRunningTables && (salesData.totalActiveTableValue ?? 0) > 0;
 
   return (
     <div className="mx-auto lg:px-4 xl:container">
+      {/* TOTAL SALES */}
       <DateRangePickerMemo />
-
-      <div className="grid grid-cols-2 gap-4 p-4 md:grid-cols-4 lg:grid-cols-4">
-        <section className="col-span-2">
+      {salesData.overAllAmount > 0 && (
+        <section className="col-span-2 grid gap-4 px-4 mt-4">
           <InfoCard
             title="Total Sales"
             value={salesData.overAllAmount}
@@ -268,85 +197,83 @@ const SalesLite = () => {
             breakdown={totalSalesBreakdown}
           />
         </section>
-        <section className="col-span-2">
-        <InfoCard
-                    title="Hipalz Razorpay Sales"
-                    value={salesData.onlineSale.online}
-                    icon={<IndianRupee className="w-4 h-4" />}
-                    breakdown={onlineSalesBreakdown}
-                  />
-        </section>
-       
-               <InfoCard
-                 title="Pay To Captain Sales"
-                 value={totalOfflineSale}
-                 icon={<CreditCard className="w-4 h-4" />}
-                 breakdown={offlineSalesBreakdown}
-               />
+      )}
+
+      {/* TOP CARDS (auto-hide when value is 0) */}
+      <div className="grid grid-cols-2 gap-4 px-4 mt-4 md:grid-cols-4 lg:grid-cols-4">
+        {hasOnlineAny && (
+          <section className="col-span-2">
+            <InfoCard
+              title="Hipalz Razorpay Sales"
+              value={salesData.onlineSale.online}
+              icon={<IndianRupee className="w-4 h-4" />}
+              breakdown={onlineSalesBreakdown}
+            />
+          </section>
+        )}
+
+        {hasOfflineAny && (
           <InfoCard
-          title="Loyalty & Rewards"
-          value={totalExceptionAndReward}
-          icon={<Gift className="w-4 h-4" />}
-          breakdown={loyaltyRewardsBreakdown}
-        />
+            title="Pay To Captain Sales"
+            value={totalOfflineSale}
+            icon={<CreditCard className="w-4 h-4" />}
+            breakdown={offlineSalesBreakdown}
+          />
+        )}
 
-        <InfoCard
-          title="Taxes & Service Charges"
-          value={totalOtherAndWarning}
-          icon={<AlertTriangle className="w-4 h-4" />}
-          breakdown={taxesServiceBreakdown}
-        />
+        {hasLoyaltyAny && (
+          <InfoCard
+            title="Loyalty & Rewards"
+            value={totalExceptionAndReward}
+            icon={<Gift className="w-4 h-4" />}
+            breakdown={loyaltyRewardsBreakdown}
+          />
+        )}
 
-        {shouldShowCard && <InfoCard
-          title="Running Tables"
-          value={salesData.totalActiveTableValue}
-          icon={<CreditCard className="w-4 h-4" />}
-          breakdown={runningTablesBreakdown}
-        />}
+        {hasOtherAny && (
+          <InfoCard
+            title="Taxes & Service Charges"
+            value={totalOtherAndWarning}
+            icon={<AlertTriangle className="w-4 h-4" />}
+            breakdown={taxesServiceBreakdown}
+          />
+        )}
+
+        {hasRunningTables && (
+          <InfoCard
+            title="Running Tables"
+            value={salesData.totalActiveTableValue}
+            icon={<CreditCard className="w-4 h-4" />}
+            breakdown={runningTablesBreakdown}
+          />
+        )}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>Sales Distribution</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <PieChart
-                data={[
-                  ...Object.entries(salesData.offlineSale).map(
-                    ([mode, amount]) => ({ name: mode, value: amount }),
-                  ),
-                ]}
-              />
-            </CardContent>
-          </Card>
-        </motion.div>
+      {/* CHARTS: render only when there’s data > 0 */}
+      <div className="grid grid-cols-1 gap-6 p-4 md:pb-4 md:grid-cols-1">
+        {hasOfflineAny && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Total In-store sales</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <PieChart
+                  data={offlineSalesBreakdown.map((x) => ({
+                    name: x.label,
+                    value: x.value,
+                  }))}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle>Offline Payment Modes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <BarChart
-                data={Object.entries(salesData.offlineSale).map(
-                  ([mode, amount]) => ({ name: mode, value: amount }),
-                )}
-              />
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {salesExceptionData && (
+        {hasLoyaltyAny && salesExceptionData && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -357,14 +284,14 @@ const SalesLite = () => {
                 <CardTitle>Loyalty & Rewards</CardTitle>
               </CardHeader>
               <CardContent>
-                <LineChart
+                <BarChart
                   data={[
-                    ...Object.entries(salesExceptionData.exceptionSale).map(
-                      ([key, value]) => ({ name: key, value }),
-                    ),
-                    ...Object.entries(salesExceptionData.rewardSale).map(
-                      ([key, value]) => ({ name: key, value }),
-                    ),
+                    ...Object.entries(salesExceptionData.exceptionSale)
+                      .map(([k, v]) => ({ name: k, value: v as number }))
+                      .filter((d) => d.value > 0),
+                    ...Object.entries(salesExceptionData.rewardSale)
+                      .map(([k, v]) => ({ name: k, value: v as number }))
+                      .filter((d) => d.value > 0),
                   ]}
                 />
               </CardContent>
@@ -372,7 +299,7 @@ const SalesLite = () => {
           </motion.div>
         )}
 
-        {otherData && (
+        {hasOtherAny && otherData && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -385,12 +312,12 @@ const SalesLite = () => {
               <CardContent>
                 <BarChart
                   data={[
-                    ...Object.entries(otherData.otherSale).map(
-                      ([key, value]) => ({ name: key, value }),
-                    ),
-                    ...Object.entries(otherData.warningSale).map(
-                      ([key, value]) => ({ name: key, value }),
-                    ),
+                    ...Object.entries(otherData.otherSale)
+                      .map(([k, v]) => ({ name: k, value: v as number }))
+                      .filter((d) => d.value > 0),
+                    ...Object.entries(otherData.warningSale)
+                      .map(([k, v]) => ({ name: k, value: v as number }))
+                      .filter((d) => d.value > 0),
                   ]}
                 />
               </CardContent>

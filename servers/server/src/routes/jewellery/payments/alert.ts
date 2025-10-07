@@ -326,11 +326,11 @@ const alertRouter = new Hono()
         .sort({ _id: -1 })
         .populate({
           path: "orderId",
+          populate: {
+            path: "userId", // field inside orderId you want to populate
+          },
         })
-        .populate({
-          path: "userId",
-          select: "name phone",
-        })
+
         .populate({
           path: "staffId",
           select: "name phone",

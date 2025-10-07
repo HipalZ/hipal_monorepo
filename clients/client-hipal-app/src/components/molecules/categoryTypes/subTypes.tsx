@@ -92,19 +92,21 @@ interface ISubTypes {
 
 function MemoSubTypes({
   childCategory,
-  primaryColor = "#ec4899",
-  secondaryColor = "#fce7f3",
+  primaryColor = "#641626",
+  secondaryColor = "#F9E9C7",
   isHorizontalCard = false,
 }: ISubTypes) {
-  const {
-    isActiveCategory,
-    isActiveDishType,
-    setActiveCategory,
-    setActiveParentCategory,
-    setActiveChildCategory,
-    setObserverActive,
-    observerActive,
-  } = useActiveClass();
+  const isActiveCategory = useActiveClass((s) => s.isActiveCategory);
+  const isActiveDishType = useActiveClass((s) => s.isActiveDishType);
+  const setActiveCategory = useActiveClass((s) => s.setActiveCategory);
+  const setActiveParentCategory = useActiveClass(
+    (s) => s.setActiveParentCategory,
+  );
+  const setActiveChildCategory = useActiveClass(
+    (s) => s.setActiveChildCategory,
+  );
+  const setObserverActive = useActiveClass((s) => s.setObserverActive);
+  const observerActive = useActiveClass((s) => s.observerActive);
 
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
 

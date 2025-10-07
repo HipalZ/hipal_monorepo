@@ -1,7 +1,15 @@
 {
+  "files": [],
+  "references": [
+    { "path": "./servers/server" },
+    { "path": "./clients/client-hipal-app" },
+    { "path": "./clients/client-hibiz-react" },
+    { "path": "./clients/client-hitable-react" }
+  ],
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "composite": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",

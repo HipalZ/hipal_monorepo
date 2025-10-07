@@ -86,10 +86,10 @@ const orderRouter = new Hono()
       const requestData = await c.req.json(); // Assuming c.req.json() is async, which might not be the case.
       const { billValue, userId, businessId } = requestData;
 
-      const oldLatestOrderByUser = await JewelleryOrder.findOne({
-        userId,
-        businessId,
-      }).sort({ date: -1 });
+      // const oldLatestOrderByUser = await JewelleryOrder.findOne({
+      //   userId,
+      //   businessId,
+      // }).sort({ date: -1 });
 
       // if (oldLatestOrderByUser?.date) {
       //   const mins = getTimeDifferenceInMinutes(

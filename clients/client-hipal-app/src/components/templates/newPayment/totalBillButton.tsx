@@ -8,15 +8,13 @@ import { Split } from "lucide-react";
 import { memo, useCallback } from "react";
 
 const MemoTotalBillButton = () => {
-  const {
-    claimedCoins,
-    claimCouponz,
-    tips,
-    setEditBillModal,
-    billValue,
-    billData,
-    setCheckLogin,
-  } = usePaymentStore();
+  const claimedCoins = usePaymentStore((s) => s.claimedCoins);
+  const claimCouponz = usePaymentStore((s) => s.claimCouponz);
+  const tips = usePaymentStore((s) => s.tips);
+  const setEditBillModal = usePaymentStore((s) => s.setEditBillModal);
+  const billValue = usePaymentStore((s) => s.billValue);
+  const billData = usePaymentStore((s) => s.billData);
+  const setCheckLogin = usePaymentStore((s) => s.setCheckLogin);
   const { handleMode } = useHandleMode();
   const outletInfo = _useAllBusiness((s) => s.data.outletInfo);
   const setBillData = usePaymentStore((state) => state.setBillData);
